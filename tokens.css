@@ -1,0 +1,150 @@
+/* @hb/ui design tokens + semantic utilities.
+ *
+ * The single source of truth for the shared appearance layer: brand + data
+ * colours (theme-aware via `.dark`), the semantic money utilities, the brand
+ * accent for checkboxes/radios, and the global keyframes/scrollbar chrome.
+ *
+ * Consumers import this ONCE (after their own `@import "tailwindcss"`):
+ *   @import "@hb/ui/tokens.css";
+ * and add the package to Tailwind's source scan so its class names are kept:
+ *   @source "../node_modules/@hb/ui/src";
+ *
+ * NOTE: these :root/.dark values are the canonical DEFAULT and are mirrored by
+ * DEFAULT_PRESET in the palette theme module, which is what actually paints them
+ * — the palette layer writes the active preset tokens inline on <html> at runtime
+ * (Tailwind v4 strips a root block that holds only custom properties, so this
+ * block is a documentation mirror, not the live source). */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-page: #e9e2d2;          /* warm dim sand — low-glare light page */
+  --bg-surface: #f4efe3;       /* warm off-white card/panel (not pure white) */
+  --bg-surface-2: #e2dac7;     /* inset/well surface */
+  --border: #d9cfba;           /* warm hairline border */
+  --text-primary: #3a352b;     /* warm dark grey — not pure black */
+  --brand: #4f46e5;            /* indigo-600 */
+  --brand-hover: #4338ca;      /* indigo-700 */
+  --brand-contrast: #ffffff;
+  --money-income: #0f766e;     /* teal-700 */
+  --money-expense: #b45309;    /* amber-700 */
+  --money-net: #6d28d9;        /* violet-700 */
+  --money-neutral: #6b6253;    /* warm slate */
+  --chart-1: #332288;
+  --chart-2: #88ccee;
+  --chart-3: #44aa99;
+  --chart-4: #117733;
+  --chart-5: #999933;
+  --chart-6: #ddcc77;
+  --chart-7: #cc6677;
+  --chart-8: #882255;
+  --chart-9: #aa4499;
+}
+
+.dark {
+  --bg-page: #0a0a0c;          /* zinc near-black */
+  --bg-surface: #18181b;       /* zinc-900 */
+  --bg-surface-2: #27272a;     /* zinc-800 */
+  --border: #34343a;           /* zinc-700-ish */
+  --text-primary: #e8e8ea;     /* zinc-100 */
+  --brand: #818cf8;            /* indigo-400 */
+  --brand-hover: #a5b4fc;      /* indigo-300 */
+  --brand-contrast: #1e1b4b;   /* indigo-950 */
+  --money-income: #2dd4bf;     /* teal-400 */
+  --money-expense: #fbbf24;    /* amber-400 */
+  --money-net: #a98fd6;
+  --money-neutral: #a1a1aa;    /* zinc-400 */
+  --chart-1: #7e72d6;
+  --chart-2: #9fd8f2;
+  --chart-3: #5fc4b0;
+  --chart-4: #3fa45f;
+  --chart-5: #bfbf5e;
+  --chart-6: #e8dda0;
+  --chart-7: #e08c9a;
+  --chart-8: #c25a78;
+  --chart-9: #cc78be;
+}
+
+/* Semantic colour utilities backed by the tokens above. Unlayered so they win
+   over Tailwind's layered colour utilities, and theme-aware for free (the var
+   flips under .dark) — no dark: variant needed at the call site. */
+.text-money-pos { color: var(--money-income); }
+.text-money-neg { color: var(--money-expense); }
+.text-money-net { color: var(--money-net); }
+.text-money-pos-muted { color: var(--money-income); opacity: 0.72; }
+.text-money-neg-muted { color: var(--money-expense); opacity: 0.72; }
+.text-brand { color: var(--brand); }
+.bg-brand { background-color: var(--brand); }
+.bg-money-pos { background-color: var(--money-income); }
+.bg-money-neg { background-color: var(--money-expense); }
+.border-brand { border-color: var(--brand); }
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Checkboxes/radios default to a visible brand accent. The native dark fill
+   blended into the dark UI, so a checked box was almost indistinguishable from
+   an unchecked one (feedback #219). Must live in the base layer: unlayered
+   styles beat Tailwind's layered utilities regardless of specificity, which
+   silently overrode deliberate `accent-*` utilities like the destructive rose
+   fresh-start checkbox (feedback #264). */
+@layer base {
+  :where(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--brand); /* unified indigo brand accent (theme-aware) */
+  }
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+/* Indeterminate progress bar (e.g. long imports, feedback #270): a third-width
+   segment sweeping the track. */
+@keyframes indeterminate-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+.animate-indeterminate {
+  animation: indeterminate-sweep 1.4s ease-in-out infinite;
+}
+
+/* Chart drilldown fan-out/-in (feedback #260 rework): the remounted chart eases
+   in instead of snapping. */
+@keyframes drill-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.animate-drill {
+  animation: drill-in 0.25s ease-out;
+}
+
+/* Scrollbars: keep light defaults; theme to slate when dark mode is active. */
+.dark {
+  color-scheme: dark;
+  scrollbar-color: rgb(51 65 85) rgb(15 23 42); /* slate-700 thumb on slate-900 track */
+}
+
+.dark ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: rgb(15 23 42); /* slate-900 */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(51 65 85); /* slate-700 */
+  border-radius: 6px;
+  border: 2px solid rgb(15 23 42); /* slate-900 — creates inset padding */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(71 85 105); /* slate-600 */
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background-color: rgb(15 23 42); /* slate-900 */
+}

@@ -1,0 +1,1241 @@
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  Filter,
+  X,
+} from "lucide-react";
+import { useSearchParams } from "react-router";
+import { Card } from "./ui";
+import { cn } from "../lib/cn";
+import {
+  decodeFilterValue,
+  defaultFilterState,
+  encodeFilterValue,
+  isFilterActive,
+  resolveFilter,
+  rowMatches,
+} from "./data-table-filters";
+import type { ColumnFilter, FilterValue } from "./data-table-filters";
+import {
+  decodeSorts,
+  encodeSorts,
+  nextSorts,
+  normalizeSorts,
+} from "./data-table-sort";
+import type { SortState } from "./data-table-sort";
+import { FilterPopover } from "./data-table-filter-popover";
+import { Pagination } from "./data-table-pagination";
+import { useBackdropClose } from "./modal";
+import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
+import { Popover } from "./popover";
+import { useMediaQuery } from "../hooks/use-media-query";
+import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+
+// ---------- Types ----------
+
+export interface DataTableColumn<T> {
+  key: string;
+  header: ReactNode;
+  cell: (row: T) => ReactNode;
+  sortBy?: (row: T) => string | number | null | undefined;
+  filter?: ColumnFilter<T>;
+  filterBy?: (row: T) => string;
+  className?: string;
+  headClassName?: string;
+  // Mobile card layout: when no `mobilePrimary` column is set the first
+  // visible non-hidden column acts as the primary. The primary cell renders
+  // bold at the top of the card without a label; the rest stack below as
+  // labelled key/value pairs. `mobileHidden` skips a column entirely on
+  // narrow viewports — useful for noisy details (IDs, raw URLs, internal
+  // bookkeeping) that would crowd a card without aiding scanning.
+  mobilePrimary?: boolean;
+  mobileHidden?: boolean;
+}
+
+export interface ServerPagination {
+  page: number; // 0-based
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  isLoading?: boolean;
+}
+
+export interface DataTableProps<T> {
+  rows: T[];
+  columns: DataTableColumn<T>[];
+  rowKey: (row: T) => string | number;
+  defaultPageSize?: number;
+  onRowClick?: (row: T) => void;
+  expandedRow?: (row: T) => ReactNode | null;
+  isExpanded?: (row: T) => boolean;
+  rowClassName?: (row: T) => string | undefined;
+  empty?: ReactNode;
+  /**
+   * If set, the table persists filter / sort / page-size state to localStorage under this key.
+   * Use a stable, unique key per table (e.g. "transactions-table").
+   */
+  storageKey?: string;
+  /**
+   * When true, mirror filter/sort/page state into URL search params so views are
+   * shareable and bookmarkable. URL params used: `f.<column>`, `sort`, `p`, `ps`.
+   * URL state takes precedence over localStorage on initial load. Requires the
+   * consuming app to render inside a react-router Router.
+   */
+  urlSync?: boolean;
+  /**
+   * When true (desktop only), the table fills its parent's height and scrolls
+   * INTERNALLY, with the header pinned — so the page itself doesn't add a second,
+   * outer scrollbar. The parent must give it a bounded height (e.g. a flex
+   * column inside the viewport-locked app shell). See feedback #207.
+   */
+  fillHeight?: boolean;
+  /**
+   * When provided, the table renders the supplied rows as-is (no client-side
+   * filtering/sorting/slicing) and the pagination footer is driven by these
+   * server-controlled values. Column-level filters and sorting are hidden
+   * UNLESS the caller takes them over via `onFiltersChange`/`onSortsChange` —
+   * the caller is then expected to translate the state into the server query
+   * that produces `rows`.
+   */
+  serverPagination?: ServerPagination;
+  /**
+   * Controlled filter/sort state. When the `on*Change` callback is provided
+   * the table stops owning that piece of state: it renders `filters`/`sorts`
+   * as given and reports user interactions through the callback (including
+   * in serverPagination mode, where the UI is otherwise disabled). The owner
+   * is responsible for any page reset on change.
+   */
+  filters?: FilterState;
+  onFiltersChange?: (next: FilterState) => void;
+  sorts?: SortState[];
+  onSortsChange?: (next: SortState[]) => void;
+  /**
+   * Opt-in multi-row selection (desktop table only). When provided, a leading
+   * checkbox column is rendered with a select-all box in the header; the owner
+   * holds the selected set and reacts via the callbacks. Rows for which
+   * `isSelectable` returns false render no checkbox and are excluded from
+   * select-all. See feedback #285 (bulk edit).
+   */
+  selection?: {
+    isSelectable?: (row: T) => boolean;
+    isSelected: (row: T) => boolean;
+    onToggle: (row: T, checked: boolean) => void;
+    allSelected: boolean;
+    someSelected: boolean;
+    onToggleAll: (checked: boolean) => void;
+  };
+  /** User-facing strings (English defaults); pass translated overrides. */
+  labels?: Partial<DataTableLabels>;
+  /** BCP-47 locale for the date-filter picker. Defaults to "en". */
+  locale?: string;
+  /** localStorage namespace prefix for `storageKey` persistence. Defaults to
+   *  "hbui-table:"; pass your app's own prefix to keep a stable namespace. */
+  storageKeyPrefix?: string;
+  /**
+   * On phones, surface the expanded row's detail in a full-screen dialog instead
+   * of unfolding it inline (feedback #204). Desktop always uses inline expansion.
+   */
+  mobileExpandAsDialog?: boolean;
+}
+
+export type FilterState = Record<string, FilterValue>;
+export type { SortState };
+
+// ---------- Main DataTable ----------
+
+interface PersistedState {
+  // Multi-sort array; blobs from before the upgrade hold a single {key, dir}
+  // object (or null) — read back through normalizeSorts.
+  sort: SortState[] | { key: string; dir: string } | null;
+  filters: FilterState;
+  pageSize: number | "all";
+  widths?: Record<string, number>;
+  hidden?: string[];
+}
+
+const DEFAULT_PERSIST_PREFIX = "hbui-table:";
+
+function loadPersisted(storageKey: string | undefined, prefix: string): Partial<PersistedState> {
+  if (!storageKey || typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(prefix + storageKey);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Partial<PersistedState>;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePersisted(storageKey: string | undefined, state: PersistedState, prefix: string): void {
+  if (!storageKey || typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(prefix + storageKey, JSON.stringify(state));
+  } catch {
+    // ignore quota / privacy-mode errors
+  }
+}
+
+// ---------- URL sync helpers ----------
+
+const URL_FILTER_PREFIX = "f.";
+const URL_SORT_KEY = "sort";
+const URL_PAGE_KEY = "p";
+const URL_PAGE_SIZE_KEY = "ps";
+
+interface UrlState {
+  sorts?: SortState[];
+  filters?: FilterState;
+  pageSize?: number; // Infinity for "all"
+  page?: number; // 0-based
+}
+
+function readUrlState<T>(columns: DataTableColumn<T>[]): UrlState {
+  if (typeof window === "undefined") return {};
+  const sp = new URLSearchParams(window.location.search);
+  const out: UrlState = {};
+
+  const filters: FilterState = {};
+  for (const col of columns) {
+    const filter = resolveFilter(col);
+    if (!filter) continue;
+    const raw = sp.get(URL_FILTER_PREFIX + col.key);
+    if (raw == null) continue;
+    filters[col.key] = decodeFilterValue(filter, raw);
+  }
+  if (Object.keys(filters).length) out.filters = filters;
+
+  const sortRaw = sp.get(URL_SORT_KEY);
+  if (sortRaw) {
+    const decoded = decodeSorts(sortRaw, new Set(columns.map((c) => c.key)));
+    if (decoded.length) out.sorts = decoded;
+  }
+
+  const psRaw = sp.get(URL_PAGE_SIZE_KEY);
+  if (psRaw === "all") out.pageSize = Infinity;
+  else if (psRaw && Number(psRaw) > 0) out.pageSize = Number(psRaw);
+
+  const pRaw = sp.get(URL_PAGE_KEY);
+  if (pRaw && Number(pRaw) >= 1) out.page = Number(pRaw) - 1;
+
+  return out;
+}
+
+function writeUrlState<T>(
+  setSearchParams: ReturnType<typeof useSearchParams>[1],
+  columns: DataTableColumn<T>[],
+  sorts: SortState[],
+  filters: FilterState,
+  pageSize: number,
+  page: number,
+  defaultPageSize: number,
+): void {
+  setSearchParams(
+    (prev) => {
+      const next = new URLSearchParams(prev);
+      // clear managed keys
+      for (const col of columns) next.delete(URL_FILTER_PREFIX + col.key);
+      next.delete(URL_SORT_KEY);
+      next.delete(URL_PAGE_KEY);
+      next.delete(URL_PAGE_SIZE_KEY);
+      // write filters
+      for (const col of columns) {
+        const state = filters[col.key];
+        if (!state || !isFilterActive(state)) continue;
+        const enc = encodeFilterValue(state);
+        if (enc != null) next.set(URL_FILTER_PREFIX + col.key, enc);
+      }
+      // write sort
+      const sortEnc = encodeSorts(sorts);
+      if (sortEnc) next.set(URL_SORT_KEY, sortEnc);
+      // write page size if non-default
+      if (pageSize === Infinity) next.set(URL_PAGE_SIZE_KEY, "all");
+      else if (pageSize !== defaultPageSize) next.set(URL_PAGE_SIZE_KEY, String(pageSize));
+      // write page if not first
+      if (page > 0) next.set(URL_PAGE_KEY, String(page + 1));
+      return next;
+    },
+    { replace: true },
+  );
+}
+
+export function DataTable<T>({
+  rows,
+  columns,
+  rowKey,
+  defaultPageSize = 25,
+  onRowClick,
+  expandedRow,
+  isExpanded,
+  rowClassName,
+  empty,
+  storageKey,
+  urlSync = false,
+  fillHeight = false,
+  serverPagination,
+  filters: filtersProp,
+  onFiltersChange,
+  sorts: sortsProp,
+  onSortsChange,
+  selection,
+  labels: labelsProp,
+  locale,
+  storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
+  mobileExpandAsDialog = false,
+}: DataTableProps<T>) {
+  const isServer = !!serverPagination;
+  const labels = resolveDataTableLabels(labelsProp);
+  const [, setSearchParams] = useSearchParams();
+  // Read URL once on mount so URL-encoded views (e.g. shared links, deep links
+  // from other pages) populate initial state. After mount, state is local.
+  const [urlInitial] = useState<UrlState>(() => (urlSync ? readUrlState(columns) : {}));
+  const initial = useMemo(() => loadPersisted(storageKey, storageKeyPrefix), [storageKey, storageKeyPrefix]);
+  const [internalSorts, setInternalSorts] = useState<SortState[]>(() =>
+    urlInitial.sorts !== undefined ? urlInitial.sorts : normalizeSorts(initial.sort),
+  );
+  const [internalFilters, setInternalFilters] = useState<FilterState>(
+    () => urlInitial.filters ?? initial.filters ?? {},
+  );
+  // Controlled when the owner passes state + callback (server-driven tables);
+  // self-owned otherwise.
+  const sorts = sortsProp ?? internalSorts;
+  const filters = filtersProp ?? internalFilters;
+  const [page, setPage] = useState(() => urlInitial.page ?? 0);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (urlInitial.pageSize !== undefined) return urlInitial.pageSize;
+    if (initial.pageSize === "all") return Infinity;
+    if (typeof initial.pageSize === "number" && initial.pageSize > 0) return initial.pageSize;
+    return defaultPageSize;
+  });
+  const [widths, setWidths] = useState<Record<string, number>>(() => initial.widths ?? {});
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(() => new Set(initial.hidden ?? []));
+  const [showSettings, setShowSettings] = useState(false);
+  const headRefs = useMemo(() => new Map<string, HTMLTableCellElement>(), []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    savePersisted(storageKey, {
+      sort: sorts,
+      filters,
+      pageSize: pageSize === Infinity ? "all" : pageSize,
+      widths,
+      hidden: Array.from(hiddenCols),
+    }, storageKeyPrefix);
+  }, [storageKey, storageKeyPrefix, sorts, filters, pageSize, widths, hiddenCols]);
+
+  useEffect(() => {
+    if (!urlSync) return;
+    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize);
+    // columns identity changes per render but URL output only depends on column keys;
+    // including columns would re-run on every render. We rely on data state only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSync, sorts, filters, pageSize, page, defaultPageSize]);
+
+  const selectOptionsByKey = useMemo(() => {
+    const map: Record<string, { value: string; label: string }[]> = {};
+    for (const col of columns) {
+      const f = resolveFilter(col);
+      if (!f || f.type !== "select") continue;
+      if (f.options && f.options.length > 0) {
+        map[col.key] = f.options.map((o) => ({ value: o.value, label: o.label ?? o.value }));
+        continue;
+      }
+      const seen = new Set<string>();
+      for (const row of rows) {
+        const v = f.getValue(row);
+        if (v && !seen.has(v)) seen.add(v);
+      }
+      map[col.key] = Array.from(seen)
+        .sort()
+        .map((v) => ({ value: v, label: v }));
+    }
+    return map;
+  }, [columns, rows]);
+
+  const filtered = useMemo(() => {
+    if (isServer) return rows;
+    let result = rows;
+    for (const col of columns) {
+      const state = filters[col.key];
+      if (!state || !isFilterActive(state)) continue;
+      result = result.filter((row) => rowMatches(col, row, state));
+    }
+    return result;
+  }, [rows, columns, filters, isServer]);
+
+  const sorted = useMemo(() => {
+    if (isServer) return filtered;
+    // Priority chain: the first sort key that distinguishes two rows wins;
+    // nulls sort last for that key regardless of direction (as before).
+    const chain = sorts
+      .map((s) => {
+        const col = columns.find((c) => c.key === s.key);
+        return col?.sortBy ? { sortBy: col.sortBy, dir: s.dir } : null;
+      })
+      .filter((c): c is { sortBy: (row: T) => string | number | null | undefined; dir: "asc" | "desc" } => c !== null);
+    if (!chain.length) return filtered;
+    const copy = [...filtered];
+    copy.sort((a, b) => {
+      for (const { sortBy, dir } of chain) {
+        const av = sortBy(a);
+        const bv = sortBy(b);
+        if (av == null && bv == null) continue;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (av < bv) return dir === "asc" ? -1 : 1;
+        if (av > bv) return dir === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    return copy;
+  }, [filtered, sorts, columns, isServer]);
+
+  const effectivePageSize = isServer
+    ? serverPagination!.pageSize
+    : pageSize === Infinity
+      ? sorted.length || 1
+      : pageSize;
+  const paginationTotal = isServer ? serverPagination!.total : sorted.length;
+  const paginationPageSize = isServer ? serverPagination!.pageSize : pageSize;
+  const totalPages = isServer
+    ? Math.max(1, Math.ceil(serverPagination!.total / Math.max(1, serverPagination!.pageSize)))
+    : Math.max(1, Math.ceil(sorted.length / effectivePageSize));
+  const safePage = isServer
+    ? Math.min(Math.max(0, serverPagination!.page), totalPages - 1)
+    : Math.min(page, totalPages - 1);
+  const slice = isServer
+    ? sorted
+    : pageSize === Infinity
+      ? sorted
+      : sorted.slice(safePage * effectivePageSize, safePage * effectivePageSize + effectivePageSize);
+
+  const toggleSort = (key: string, additive: boolean) => {
+    const next = nextSorts(sorts, key, additive);
+    if (onSortsChange) onSortsChange(next);
+    else setInternalSorts(next);
+  };
+
+  const setFilterValue = (key: string, value: FilterValue) => {
+    if (onFiltersChange) {
+      onFiltersChange({ ...filters, [key]: value });
+      return; // page reset is the controlling owner's job
+    }
+    setInternalFilters((s) => ({ ...s, [key]: value }));
+    setPage(0);
+  };
+
+  const clearFilter = (key: string) => {
+    if (onFiltersChange) {
+      const rest = { ...filters };
+      delete rest[key];
+      onFiltersChange(rest);
+      return;
+    }
+    setInternalFilters((s) => {
+      const rest = { ...s };
+      delete rest[key];
+      return rest;
+    });
+    setPage(0);
+  };
+
+  // Clear every column filter at once (drives the mobile filter sheet's
+  // "clear all"). Only touches keys the table actually exposes as filters.
+  const clearAllFilters = () => {
+    const keys = columns
+      .filter((col) => ((!isServer || onFiltersChange) ? resolveFilter(col) : null))
+      .map((col) => col.key);
+    if (!keys.length) return;
+    if (onFiltersChange) {
+      const rest = { ...filters };
+      for (const k of keys) delete rest[k];
+      onFiltersChange(rest);
+      return;
+    }
+    setInternalFilters((s) => {
+      const rest = { ...s };
+      for (const k of keys) delete rest[k];
+      return rest;
+    });
+    setPage(0);
+  };
+
+  const visibleColumns = useMemo(
+    () => columns.filter((c) => !hiddenCols.has(c.key)),
+    [columns, hiddenCols],
+  );
+
+  const startResize = (e: React.MouseEvent, key: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = headRefs.get(key);
+    const startWidth = th?.getBoundingClientRect().width ?? 100;
+    const startX = e.clientX;
+    const onMove = (ev: MouseEvent) => {
+      const next = Math.max(40, Math.round(startWidth + (ev.clientX - startX)));
+      setWidths((w) => ({ ...w, [key]: next }));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  const autoSizeAll = () => {
+    // Clear widths so the table reflows to natural sizes, then snapshot each
+    // column's width and write it back — except for the last visible column,
+    // which is left unconstrained so it absorbs any remaining horizontal space.
+    setWidths({});
+    requestAnimationFrame(() => {
+      const next: Record<string, number> = {};
+      const cols = columns.filter((c) => !hiddenCols.has(c.key));
+      cols.forEach((col, idx) => {
+        if (idx === cols.length - 1) return;
+        const th = headRefs.get(col.key);
+        if (th) next[col.key] = Math.ceil(th.getBoundingClientRect().width);
+      });
+      setWidths(next);
+    });
+  };
+
+  const visibleCount = visibleColumns.length;
+  const totalCount = columns.length;
+  // Spans the full row width including the optional leading selection column.
+  const totalColSpan = visibleCount + (selection ? 1 : 0);
+  const columnsCountLabel = `${labels.columns} (${visibleCount}/${totalCount})`;
+  // Match Tailwind's `md` breakpoint: we render either the table or the card
+  // list — never both — so we don't double up DOM nodes that screen readers and
+  // integration tests would have to disambiguate.
+  const isMdUp = useMediaQuery("(min-width: 768px)", true);
+
+  // ---- Mobile card list (md:hidden) ----
+  // Renders the same paged/filtered/sorted slice but as stacked cards instead
+  // of a horizontally-scrolling table. Filters / sort / column settings are
+  // intentionally hidden here — the mobile layout assumes the user wants to
+  // scan rows quickly. Switch to a wider viewport for fine-grained control.
+  const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden);
+  const mobilePrimaryCol =
+    mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
+  const mobileSecondaryColumns = mobileColumns.filter((c) => c !== mobilePrimaryCol);
+
+  // Mobile uses endless scrolling instead of pager buttons (feedback #232):
+  // since client-side tables already hold every row, we just reveal more of the
+  // sorted list as a sentinel scrolls into view. Server-paginated tables keep
+  // their pager (the rows aren't all here to reveal). The reveal count only ever
+  // grows and self-caps at the (re-filtered) list length, so no reset is needed.
+  const [mobileLimit, setMobileLimit] = useState(defaultPageSize);
+  const mobileSlice = isServer ? slice : sorted.slice(0, mobileLimit);
+  const canRevealMoreMobile = !isServer && !isMdUp && mobileLimit < sorted.length;
+  const loadMoreRef = useRef<HTMLLIElement | null>(null);
+  // Index of the last row whose selection was toggled, so Shift+click can select
+  // the range up to it (feedback #289). Indexes into `slice` (the rendered rows).
+  const selectionAnchor = useRef<number | null>(null);
+  const canSelect = (row: T) => !!selection && (selection.isSelectable?.(row) ?? true);
+  const selectRange = (toIndex: number) => {
+    if (!selection || selectionAnchor.current === null) return false;
+    const [lo, hi] = [selectionAnchor.current, toIndex].sort((a, b) => a - b);
+    for (let i = lo; i <= hi; i++) {
+      const r = slice[i];
+      if (r && canSelect(r)) selection.onToggle(r, true);
+    }
+    return true;
+  };
+  useEffect(() => {
+    if (!canRevealMoreMobile) return;
+    const el = loadMoreRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMobileLimit((n) => n + (defaultPageSize || 25));
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [canRevealMoreMobile, mobileLimit, defaultPageSize]);
+
+  // When dialog-mode is on, the expanded row's detail goes into a bottom-sheet
+  // modal instead of unfolding inline. Only one row is ever expanded at a time.
+  const mobileDialogRow = mobileExpandAsDialog && !isMdUp ? mobileSlice.find((r) => isExpanded?.(r)) : undefined;
+  const mobileDialogContent = mobileDialogRow ? expandedRow?.(mobileDialogRow) : null;
+  // Lock background scrolling while the full-screen row dialog is open so the
+  // table behind it can't scroll/jump under the overlay (feedback #204).
+  const dialogOpen = !!(mobileDialogRow && mobileDialogContent);
+  const dialogBackdropClose = useBackdropClose(() => {
+    if (mobileDialogRow) onRowClick?.(mobileDialogRow);
+  });
+  useBodyScrollLock(dialogOpen);
+
+  return (
+    <Card flush className={cn("overflow-clip", fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0")}>
+      {!isMdUp && (
+      <div>
+        {/* Mobile filter access (feedback #299): the per-column filter popovers
+            live in the desktop header, which the card list doesn't render — so
+            expose the same filters through a bottom sheet here. */}
+        {(!isServer || onFiltersChange) && (
+          <MobileFilters
+            columns={columns}
+            filters={filters}
+            selectOptionsByKey={selectOptionsByKey}
+            isServer={isServer}
+            hasFilterCallback={!!onFiltersChange}
+            onSetFilter={setFilterValue}
+            onClearFilter={clearFilter}
+            onClearAll={clearAllFilters}
+            labels={labels}
+            locale={locale}
+          />
+        )}
+        <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          {mobileSlice.map((row) => {
+            const expanded = isExpanded?.(row) ?? false;
+            const expansion = expanded ? expandedRow?.(row) : null;
+            const tint = rowClassName?.(row);
+            // Use div+role="button" rather than a real <button> so cells that
+            // contain their own interactive controls (status toggles, action
+            // icons) don't end up as illegal nested buttons.
+            const interactive = !!onRowClick;
+            return (
+              <li key={rowKey(row)} className={cn(tint)}>
+                <div
+                  role={interactive ? "button" : undefined}
+                  tabIndex={interactive ? 0 : undefined}
+                  onClick={interactive ? () => onRowClick!(row) : undefined}
+                  onKeyDown={
+                    interactive
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick!(row);
+                          }
+                        }
+                      : undefined
+                  }
+                  aria-expanded={expandedRow ? expanded : undefined}
+                  className={cn(
+                    "w-full px-4 py-3 text-left flex flex-col gap-2",
+                    interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
+                  )}
+                >
+                  {mobilePrimaryCol && (
+                    <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>
+                  )}
+                  {mobileSecondaryColumns.length > 0 && (
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                      {mobileSecondaryColumns.map((col) => (
+                        <Fragment key={col.key}>
+                          <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
+                            {col.header}
+                          </dt>
+                          <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
+                            {col.cell(row)}
+                          </dd>
+                        </Fragment>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+                {expansion && !mobileExpandAsDialog && (
+                  <div className="px-4 py-3 bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
+                    {expansion}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+          {mobileSlice.length === 0 && (
+            <li className="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              {empty ?? "—"}
+            </li>
+          )}
+          {/* Endless-scroll sentinel: observed by IntersectionObserver to pull in
+              the next chunk as it nears the viewport (feedback #232). */}
+          {canRevealMoreMobile && (
+            <li
+              ref={loadMoreRef}
+              className="px-4 py-4 text-center text-xs text-slate-400 dark:text-slate-500"
+            >
+              {labels.loading}
+            </li>
+          )}
+        </ul>
+        {/* Client-side mobile lists scroll endlessly (sentinel above); only
+            server-paginated tables keep the pager here. */}
+        {isServer && (
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            pageSize={paginationPageSize}
+            total={paginationTotal}
+            onPage={serverPagination!.onPageChange}
+            onPageSize={(n) => serverPagination!.onPageSizeChange?.(n)}
+            labels={labels}
+          />
+        )}
+        {mobileDialogRow &&
+          mobileDialogContent &&
+          createPortal(
+            // Almost-full-screen overlay dialog: a dimmed backdrop with an inset,
+            // rounded panel so it reads as an overlay rather than a full takeover
+            // (feedback #204). Body scroll is locked while open (see effect above),
+            // so the table behind stays put; the panel body scrolls on its own.
+            // Tapping the backdrop closes it, matching the X button.
+            <div
+              className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-3"
+              role="dialog"
+              aria-modal="true"
+              {...dialogBackdropClose}
+            >
+              <div className="flex w-full max-h-full flex-col overflow-hidden rounded-xl bg-white shadow-xl dark:bg-slate-900">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                  <div className="min-w-0 font-medium">{mobilePrimaryCol?.cell(mobileDialogRow)}</div>
+                  <button
+                    type="button"
+                    onClick={() => onRowClick?.(mobileDialogRow)}
+                    aria-label={labels.close}
+                    className="-mr-1 shrink-0 rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+                  {mobileDialogContent}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+      </div>
+      )}
+      {isMdUp && (
+      <div className={cn("flex", fillHeight && "min-h-0 flex-1")}>
+        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col min-h-0")}>
+          <div className={cn("overflow-auto", fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]")}>
+        <table className="w-full text-sm">
+          {/* Sticky header. position:sticky pins to the nearest scroll-container
+              ancestor — so the header can only stick to THIS wrapper, never the
+              page. For that to actually hold the header in place, the wrapper
+              must be the thing that scrolls vertically: hence overflow-auto +
+              a bounded max-height (rather than overflow-x-auto, which scrolls
+              only sideways and lets the header ride away on page scroll). The
+              header then stays put as you scroll the rows. position:sticky on
+              <thead> isn't reliable across browsers, so we put it on each <th>
+              (see headClassName below). */}
+          <thead className="bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400">
+            <tr className="text-left">
+              {selection && (
+                <th className="sticky top-0 z-10 w-10 bg-slate-50 px-3 py-2 align-middle dark:bg-slate-800/95 backdrop-blur-sm">
+                  <input
+                    type="checkbox"
+                    className="size-4 align-middle accent-indigo-600"
+                    checked={selection.allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = selection.someSelected && !selection.allSelected;
+                    }}
+                    onChange={(e) => selection.onToggleAll(e.target.checked)}
+                    aria-label={labels.selectAllRows}
+                  />
+                </th>
+              )}
+              {visibleColumns.map((col) => {
+                // In server mode the utilities stay hidden unless the caller
+                // takes them over and feeds them back into the server query.
+                const sortable = (!isServer || !!onSortsChange) && !!col.sortBy;
+                const filter = !isServer || onFiltersChange ? resolveFilter(col) : null;
+                const filterState = filters[col.key] ?? (filter ? defaultFilterState(filter) : undefined);
+                const sortIdx = sorts.findIndex((s) => s.key === col.key);
+                const active = sortIdx !== -1;
+                const Icon = active ? (sorts[sortIdx].dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+                const filterActive = filterState && isFilterActive(filterState);
+                const isRightAligned = col.headClassName?.includes("text-right");
+                const width = widths[col.key];
+                return (
+                  <th
+                    key={col.key}
+                    ref={(el) => {
+                      if (el) headRefs.set(col.key, el);
+                      else headRefs.delete(col.key);
+                    }}
+                    aria-sort={
+                      sortIdx === 0
+                        ? sorts[0].dir === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : undefined
+                    }
+                    style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+                    className={cn(
+                      "relative px-3 py-2 font-medium align-middle whitespace-nowrap",
+                      // Keep the header visible while the user scrolls the page.
+                      // Each <th> carries its own bg so the row doesn't render
+                      // transparent over the data rows underneath.
+                      "sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/95 backdrop-blur-sm",
+                      col.headClassName,
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex items-center gap-1",
+                        isRightAligned && "flex-row-reverse",
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
+                        disabled={!sortable}
+                        title={sortable ? labels.sortHint : undefined}
+                        className={cn(
+                          "flex items-center gap-1 text-left",
+                          sortable && "hover:text-slate-900 dark:hover:text-slate-200",
+                        )}
+                      >
+                        <span>{col.header}</span>
+                        {sortable && (
+                          <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
+                        )}
+                        {/* Priority badge, only meaningful with 2+ sort keys */}
+                        {active && sorts.length > 1 && (
+                          <span className="text-[9px] font-semibold leading-none text-brand">
+                            {sortIdx + 1}
+                          </span>
+                        )}
+                      </button>
+                      {filter && (
+                        <Popover
+                          width={filter.type === "date" ? 420 : undefined}
+                          trigger={({ toggle, ref }) => (
+                            <button
+                              type="button"
+                              ref={ref}
+                              onClick={toggle}
+                              aria-label={labels.filter}
+                              className={cn(
+                                "rounded p-1 transition-colors",
+                                filterActive
+                                  ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
+                                  : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-slate-200 dark:hover:bg-slate-800",
+                              )}
+                            >
+                              <Filter className="size-3" />
+                            </button>
+                          )}
+                        >
+                          {() => (
+                            <FilterPopover
+                              column={col}
+                              state={filterState ?? defaultFilterState(filter)}
+                              onChange={(next) => setFilterValue(col.key, next)}
+                              onClear={() => clearFilter(col.key)}
+                              selectOptions={selectOptionsByKey[col.key] ?? []}
+                              labels={labels}
+                              locale={locale}
+                            />
+                          )}
+                        </Popover>
+                      )}
+                    </div>
+                    <span
+                      role="separator"
+                      aria-orientation="vertical"
+                      onMouseDown={(e) => startResize(e, col.key)}
+                      onDoubleClick={(e) => {
+                        e.preventDefault();
+                        setWidths((w) => {
+                          const next = { ...w };
+                          delete next[col.key];
+                          return next;
+                        });
+                      }}
+                      className="absolute right-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize select-none hover:bg-indigo-300/60 dark:hover:bg-indigo-500/40"
+                    />
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {slice.map((row, rowIndex) => {
+              const expanded = isExpanded?.(row) ?? false;
+              const expansion = expanded ? expandedRow?.(row) : null;
+              const rowInteractive = !!onRowClick || !!selection;
+              return (
+                <Fragment key={rowKey(row)}>
+                  <tr
+                    className={cn(
+                      "border-t border-slate-100 dark:border-slate-800",
+                      rowInteractive && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40",
+                      rowClassName?.(row),
+                    )}
+                    onClick={
+                      rowInteractive
+                        ? (e) => {
+                            // Modifier-clicks anywhere in the row drive
+                            // selection instead of expanding it (feedback #289):
+                            // Ctrl/Cmd toggles a single row, Shift selects the
+                            // range from the last-toggled row (inclusive of this
+                            // one) — the same as the checkbox, but for the whole
+                            // row, which is what the checkbox-only version was
+                            // missing.
+                            if (selection && canSelect(row)) {
+                              if (e.shiftKey) {
+                                // Drop the text selection a shift-click would
+                                // otherwise smear across the rows.
+                                window.getSelection?.()?.removeAllRanges();
+                                if (selectRange(rowIndex)) return;
+                                // No anchor yet: treat it as the first pick.
+                                selectionAnchor.current = rowIndex;
+                                selection.onToggle(row, !selection.isSelected(row));
+                                return;
+                              }
+                              if (e.metaKey || e.ctrlKey) {
+                                selectionAnchor.current = rowIndex;
+                                selection.onToggle(row, !selection.isSelected(row));
+                                return;
+                              }
+                            }
+                            onRowClick?.(row);
+                          }
+                        : undefined
+                    }
+                  >
+                    {selection && (
+                      <td
+                        className="w-10 px-3 py-2 align-top"
+                        // Don't let selecting a row also trigger the row click
+                        // (which expands/edits it).
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {canSelect(row) && (
+                          <input
+                            type="checkbox"
+                            className="size-4 accent-indigo-600"
+                            checked={selection.isSelected(row)}
+                            // Shift+click selects the range from the last toggled
+                            // row; preventDefault stops the native toggle (and the
+                            // onChange that would double-handle it).
+                            onClick={(e) => {
+                              if (e.shiftKey && selectRange(rowIndex)) e.preventDefault();
+                            }}
+                            onChange={(e) => {
+                              selectionAnchor.current = rowIndex;
+                              selection.onToggle(row, e.target.checked);
+                            }}
+                            aria-label={labels.selectRow}
+                          />
+                        )}
+                      </td>
+                    )}
+                    {visibleColumns.map((col) => {
+                      const width = widths[col.key];
+                      return (
+                        <td
+                          key={col.key}
+                          style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+                          className={cn("px-3 py-2 align-top", width && "overflow-hidden text-ellipsis", col.className)}
+                        >
+                          {col.cell(row)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {expansion && (
+                    <tr className="bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
+                      <td colSpan={totalColSpan} className="px-3 py-3">
+                        {expansion}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+            {slice.length === 0 && (
+              <tr>
+                <td
+                  colSpan={totalColSpan}
+                  className="px-3 py-4 text-center text-slate-500 dark:text-slate-400"
+                >
+                  {empty ?? "—"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            pageSize={paginationPageSize}
+            total={paginationTotal}
+            onPage={isServer ? serverPagination!.onPageChange : setPage}
+            onPageSize={
+              isServer
+                ? (n) => serverPagination!.onPageSizeChange?.(n)
+                : (n) => {
+                    setPageSize(n);
+                    setPage(0);
+                  }
+            }
+            labels={labels}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowSettings(true)}
+          aria-label={columnsCountLabel}
+          title={columnsCountLabel}
+          aria-hidden={showSettings}
+          tabIndex={showSettings ? -1 : 0}
+          className={cn(
+            "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
+            "border-l border-slate-100 dark:border-slate-800",
+            "hover:bg-slate-50 dark:hover:bg-slate-800/40",
+            showSettings ? "w-0 border-l-0" : "w-8 cursor-pointer",
+          )}
+        >
+          <span
+            className="whitespace-nowrap text-xs font-medium tracking-wide text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200"
+            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+          >
+            {columnsCountLabel}
+          </span>
+        </button>
+        <div
+          className={cn(
+            "shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
+            showSettings ? "w-56" : "w-0",
+          )}
+        >
+          <div className="flex w-56 flex-col border-l border-slate-100 p-2 dark:border-slate-800">
+            <div className="mb-2 flex items-center justify-between gap-1">
+              <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {columnsCountLabel}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSettings(false)}
+                aria-label={labels.close}
+                title={labels.close}
+                className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={autoSizeAll}
+              className="mb-2 rounded border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              {labels.autoSize}
+            </button>
+            <div className="flex flex-col gap-0.5">
+              {columns.map((col) => {
+                const checked = !hiddenCols.has(col.key);
+                const headerLabel = typeof col.header === "string" ? col.header : col.key;
+                return (
+                  <label
+                    key={col.key}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-3.5"
+                      checked={checked}
+                      onChange={(e) => {
+                        setHiddenCols((s) => {
+                          const next = new Set(s);
+                          if (e.target.checked) next.delete(col.key);
+                          else next.add(col.key);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span className="truncate">{headerLabel}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+    </Card>
+  );
+}
+
+// ---------- Mobile filter sheet ----------
+
+/**
+ * Filter access for the mobile card list (feedback #299). The desktop table
+ * houses per-column filters in its header; the card list has no header, so the
+ * same filters were unreachable on phones. This renders a compact "Filters" bar
+ * that opens a bottom sheet listing each filterable column as a collapsible
+ * section, reusing the very same {@link FilterPopover} and filter state the
+ * desktop table drives — so it filters identically and stays URL-synced.
+ */
+function MobileFilters<T>({
+  columns,
+  filters,
+  selectOptionsByKey,
+  isServer,
+  hasFilterCallback,
+  onSetFilter,
+  onClearFilter,
+  onClearAll,
+  labels,
+  locale,
+}: {
+  columns: DataTableColumn<T>[];
+  filters: FilterState;
+  selectOptionsByKey: Record<string, { value: string; label: string }[]>;
+  isServer: boolean;
+  hasFilterCallback: boolean;
+  onSetFilter: (key: string, value: FilterValue) => void;
+  onClearFilter: (key: string) => void;
+  onClearAll: () => void;
+  labels: DataTableLabels;
+  locale?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const backdropClose = useBackdropClose(() => setOpen(false));
+  useBodyScrollLock(open);
+
+  const filterable = useMemo(
+    () =>
+      columns
+        .map((col) => ({ col, filter: !isServer || hasFilterCallback ? resolveFilter(col) : null }))
+        .filter((x): x is { col: DataTableColumn<T>; filter: ColumnFilter<T> } => !!x.filter),
+    [columns, isServer, hasFilterCallback],
+  );
+
+  if (filterable.length === 0) return null;
+
+  const activeCount = filterable.filter(({ col }) => {
+    const s = filters[col.key];
+    return s && isFilterActive(s);
+  }).length;
+
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2 dark:border-slate-800">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+      >
+        <Filter className="size-4" />
+        <span>{labels.filters}</span>
+        {activeCount > 0 && (
+          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-sky-100 px-1 text-[11px] font-semibold text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
+            {activeCount}
+          </span>
+        )}
+      </button>
+      {activeCount > 0 && (
+        <button
+          type="button"
+          onClick={onClearAll}
+          className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        >
+          {labels.clearAll}
+        </button>
+      )}
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            role="dialog"
+            aria-modal="true"
+            {...backdropClose}
+          >
+            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                <div className="font-medium">{labels.filters}</div>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label={labels.close}
+                  className="-mr-1 rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+              <div className="flex-1 divide-y divide-slate-100 overflow-y-auto overscroll-contain dark:divide-slate-800">
+                {filterable.map(({ col, filter }) => {
+                  const state = filters[col.key];
+                  const active = !!state && isFilterActive(state);
+                  const isItemOpen = expanded === col.key;
+                  return (
+                    <div key={col.key}>
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(isItemOpen ? null : col.key)}
+                        aria-expanded={isItemOpen}
+                        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+                      >
+                        <span className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                          {col.header}
+                          {active && <span className="size-1.5 rounded-full bg-brand" />}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "size-4 shrink-0 text-slate-400 transition-transform",
+                            isItemOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
+                      {isItemOpen && (
+                        <div className="px-4 pb-3">
+                          <FilterPopover
+                            column={col}
+                            state={state ?? defaultFilterState(filter)}
+                            onChange={(next) => onSetFilter(col.key, next)}
+                            onClear={() => onClearFilter(col.key)}
+                            selectOptions={selectOptionsByKey[col.key] ?? []}
+                            labels={labels}
+                            locale={locale}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  disabled={activeCount === 0}
+                  className="text-sm text-slate-500 hover:text-slate-700 disabled:opacity-40 dark:text-slate-400 dark:hover:text-slate-200"
+                >
+                  {labels.clearAll}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900"
+                >
+                  {labels.done}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
