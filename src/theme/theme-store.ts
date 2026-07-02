@@ -4,10 +4,19 @@ import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
 
 export type ThemeMode = "light" | "dark";
+/** What the user chose; "system" tracks the OS `prefers-color-scheme`. */
+export type ThemePreference = "light" | "dark" | "system";
 
 export interface ThemeState {
+  /** The user's choice (persisted). */
+  preference: ThemePreference;
+  /** The RESOLVED light/dark actually in effect (system → OS). Read this for
+   *  anything that needs the concrete theme (e.g. token selection, toasts). */
   mode: ThemeMode;
+  setPreference: (preference: ThemePreference) => void;
+  /** Set an explicit light/dark choice (preference follows). */
   setMode: (mode: ThemeMode) => void;
+  /** Flip the effective theme to the opposite explicit choice. */
   toggle: () => void;
 }
 
@@ -19,30 +28,50 @@ function systemPreference(): ThemeMode {
   }
 }
 
+function resolve(preference: ThemePreference): ThemeMode {
+  return preference === "system" ? systemPreference() : preference;
+}
+
 /**
- * Build a light/dark theme store bound to a consumer-supplied localStorage key,
- * so each app persists its own preference under its own namespace. Returns the
- * `useTheme` hook plus a `useApplyTheme` effect hook that toggles the `.dark`
- * class on <html>.
+ * Build a theme store bound to a consumer-supplied localStorage key. Tracks a
+ * light/dark/system PREFERENCE (feedback #330) and exposes the resolved `mode`.
+ * Returns the `useTheme` hook plus a `useApplyTheme` effect that toggles the
+ * `.dark` class on <html> and, while on "system", follows OS theme changes live.
  */
 export function createThemeStore(storageKey: string) {
   const useTheme = create<ThemeState>()(
     logger(
       persist(
         (set, get) => ({
+          preference: "system" as ThemePreference,
           mode: systemPreference(),
-          setMode: (mode) => set({ mode }),
-          toggle: () => set({ mode: get().mode === "dark" ? "light" : "dark" }),
+          setPreference: (preference) => set({ preference, mode: resolve(preference) }),
+          setMode: (mode) => set({ preference: mode, mode }),
+          toggle: () => {
+            const next: ThemeMode = get().mode === "dark" ? "light" : "dark";
+            set({ preference: next, mode: next });
+          },
         }),
         {
           name: storageKey,
-          version: 1,
-          migrate: (persistedState, version) => {
-            const s = persistedState as { mode?: string } | null;
-            if (version < 1 && s?.mode === "system") {
-              return { mode: systemPreference() } as ThemeState;
+          version: 2,
+          // Only the preference is persisted; `mode` is derived on load.
+          partialize: (s) => ({ preference: s.preference }),
+          migrate: (persistedState): { preference: ThemePreference } => {
+            const s = persistedState as { mode?: string; preference?: string } | null;
+            if (s?.preference === "light" || s?.preference === "dark" || s?.preference === "system") {
+              return { preference: s.preference };
             }
-            return persistedState as ThemeState;
+            // Older blobs persisted `mode` (light/dark). Carry it over as an
+            // explicit preference so the choice survives the upgrade.
+            if (s?.mode === "light" || s?.mode === "dark") {
+              return { preference: s.mode };
+            }
+            return { preference: "system" };
+          },
+          onRehydrateStorage: () => (state) => {
+            // The persisted preference decides the concrete mode at load.
+            if (state) state.mode = resolve(state.preference);
           },
         },
       ),
@@ -58,9 +87,24 @@ export function createThemeStore(storageKey: string) {
 
   function useApplyTheme(): void {
     const mode = useTheme((s) => s.mode);
+    const preference = useTheme((s) => s.preference);
     useEffect(() => {
       apply(mode);
     }, [mode]);
+    // While tracking the system, follow OS theme changes live.
+    useEffect(() => {
+      if (preference !== "system") return;
+      let mq: MediaQueryList;
+      try {
+        mq = window.matchMedia("(prefers-color-scheme: dark)");
+      } catch {
+        return;
+      }
+      const onChange = () => useTheme.setState({ mode: mq.matches ? "dark" : "light" });
+      onChange();
+      mq.addEventListener?.("change", onChange);
+      return () => mq.removeEventListener?.("change", onChange);
+    }, [preference]);
   }
 
   return { useTheme, useApplyTheme };

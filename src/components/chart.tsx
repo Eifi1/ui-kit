@@ -142,7 +142,7 @@ export function ChartTooltipContent({
                 style={{ backgroundColor: color }}
               />
               <span className="text-slate-500 dark:text-slate-400">{name}</span>
-              <span className="ml-auto font-mono font-medium tabular-nums text-slate-900 dark:text-slate-100">
+              <span data-private className="ml-auto font-mono font-medium tabular-nums text-slate-900 dark:text-slate-100">
                 {valueFormatter ? valueFormatter(raw) : raw}
               </span>
             </div>

@@ -14,7 +14,6 @@
 // app-wide default, copy its values into the :root/.dark blocks in tokens.css
 // (the default preset here mirrors those exactly).
 
-import { PALETTE_HEX } from "./chart-palette";
 import type { HeatStops } from "./chart-palette";
 
 export interface TokenSet {
@@ -47,60 +46,62 @@ export interface PalettePreset {
   dark: TokenSet;
 }
 
-// The shipped default — mirrored by the :root / .dark blocks in tokens.css.
-// Combines the user's picks (feedback #307 rework): SOLAR-DUSK warm light + ZINC
-// neutral dark. The light surfaces are deliberately a low-glare warm off-white
-// (NOT pure white) at a dialled-down brightness — research on long-session light
-// themes favours an off-white background + dark-grey (not pure-black) text to
-// cut eye strain. The accents (indigo brand, teal/amber/violet money, Paul Tol
-// Muted charts) are kept IDENTICAL across light & dark so the app has one
-// identity even though the base surface hue differs by mode (warm vs neutral).
+// The shipped default (feedback #328): SOLAR-DUSK warm light + INDIGO-NOIR deep
+// dark surfaces — the two curated presets the user picked per mode — but with a
+// SINGLE unified brand accent (indigo) across both modes rather than each
+// preset's own accent (the user asked for the brand accent to stay the same).
+// So the light block is Solar Dusk with its teal brand overridden to indigo, and
+// the dark block is Indigo Noir (already indigo). The money trio
+// (income/expense/net) drives the chart bars and stays palette-driven so those
+// semantic colours adapt to each mode's contrast (best practice — feedback #328).
 export const DEFAULT_PRESET: PalettePreset = {
   id: "default",
   name: "Default",
-  blurb: "Warm low-glare light · neutral dark",
+  blurb: "Solar-dusk light · indigo-noir dark",
   light: {
-    bgPage: "#e9e2d2", // warm dim sand — easier on the eyes than bright cream
-    bgSurface: "#f4efe3", // warm off-white, gently elevated above the page
-    bgSurface2: "#e2dac7",
-    border: "#d9cfba",
-    textPrimary: "#3a352b", // warm dark grey, not pure black
+    // Solar Dusk (light) surfaces, with the brand unified to indigo (see above).
+    bgPage: "#ede3cf",
+    bgSurface: "#f6ecd9",
+    bgSurface2: "#f3ead6",
+    border: "#e2d6bd",
+    textPrimary: "#463f33",
     brand: "#4f46e5",
     brandHover: "#4338ca",
     brandContrast: "#ffffff",
-    moneyIncome: "#0f766e",
-    moneyExpense: "#b45309",
-    moneyNet: "#6d28d9",
-    moneyNeutral: "#6b6253",
-    chart: [...PALETTE_HEX.light],
+    moneyIncome: "#0b6650",
+    moneyExpense: "#9c6418",
+    moneyNet: "#7a4fa3",
+    moneyNeutral: "#6b6453",
+    chart: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
     heat: {
-      neutral: "#e2dac7",
-      under: "#0f766e",
-      over: "#b45309",
-      seqLow: "#f4e6cb",
-      seqHigh: "#b45309",
+      neutral: "#f1e7d2",
+      under: "#0b6650",
+      over: "#9c6418",
+      seqLow: "#f6ecd0",
+      seqHigh: "#9c6418",
       empty: "rgba(148,163,184,0.14)",
     },
   },
   dark: {
-    bgPage: "#0a0a0c", // zinc near-black
-    bgSurface: "#18181b",
-    bgSurface2: "#27272a",
-    border: "#34343a",
-    textPrimary: "#e8e8ea",
-    brand: "#818cf8",
-    brandHover: "#a5b4fc",
-    brandContrast: "#1e1b4b",
-    moneyIncome: "#2dd4bf",
+    // Indigo Noir (dark)
+    bgPage: "#0e0f1c",
+    bgSurface: "#181a2c",
+    bgSurface2: "#21243a",
+    border: "#2e3252",
+    textPrimary: "#e6e8f4",
+    brand: "#8b93f8",
+    brandHover: "#aab1fb",
+    brandContrast: "#16182b",
+    moneyIncome: "#22c3b6",
     moneyExpense: "#fbbf24",
-    moneyNet: "#a98fd6",
-    moneyNeutral: "#a1a1aa",
-    chart: [...PALETTE_HEX.dark],
+    moneyNet: "#b39aef",
+    moneyNeutral: "#9aa1bd",
+    chart: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],
     heat: {
-      neutral: "#34343a",
-      under: "#2dd4bf",
+      neutral: "#363a5a",
+      under: "#22c3b6",
       over: "#fbbf24",
-      seqLow: "#3a2410",
+      seqLow: "#3a2c14",
       seqHigh: "#fbbf24",
       empty: "rgba(148,163,184,0.10)",
     },
@@ -366,9 +367,15 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
   },
 ];
 
-export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, ...ALTERNATIVE_PRESETS];
+// Only the shipped default is selectable now (feedback #328): the alternative
+// presets + the top-bar switcher were an evaluation aid and have been retired, so
+// the default is the single source of truth. ALTERNATIVE_PRESETS is retained in
+// source purely as a reference bank of vetted schemes should a real theme picker
+// return; presetById falls back to the default for any stale persisted id.
+export const PALETTES: PalettePreset[] = [DEFAULT_PRESET];
 
 export function presetById(id: string): PalettePreset {
+  // Only the default is live now, so any stale persisted id resolves to it.
   return PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;
 }
 

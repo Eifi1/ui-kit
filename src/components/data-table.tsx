@@ -142,6 +142,23 @@ export interface DataTableProps<T> {
    * of unfolding it inline (feedback #204). Desktop always uses inline expansion.
    */
   mobileExpandAsDialog?: boolean;
+  /**
+   * Group the mobile card list into sections, each with a sticky header — the
+   * "assistance"-style list (like the transactions list grouped by date, but by
+   * whatever key you return, e.g. a name's first letter). The returned string is
+   * the section a row belongs to; rows must already be ordered so equal keys are
+   * contiguous (pair with a matching default sort). `mobileGroupLabel` formats
+   * the header. Desktop is unaffected. Feedback #317.
+   */
+  mobileGroupBy?: (row: T) => string;
+  mobileGroupLabel?: (key: string) => ReactNode;
+  /**
+   * Fully replace the default mobile card body (bold primary + labelled
+   * key/value rows) with a compact custom layout, while keeping the shared
+   * clickable/expandable row wrapper. Use when the stacked label/value grid
+   * wastes space (feedback #317). Desktop is unaffected.
+   */
+  mobileCard?: (row: T) => ReactNode;
 }
 
 export type FilterState = Record<string, FilterValue>;
@@ -288,6 +305,9 @@ export function DataTable<T>({
   locale,
   storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
   mobileExpandAsDialog = false,
+  mobileGroupBy,
+  mobileGroupLabel,
+  mobileCard,
 }: DataTableProps<T>) {
   const isServer = !!serverPagination;
   const labels = resolveDataTableLabels(labelsProp);
@@ -580,6 +600,82 @@ export function DataTable<T>({
   });
   useBodyScrollLock(dialogOpen);
 
+  // One mobile card. Extracted so the flat list and the grouped list (below)
+  // share identical row markup.
+  const renderMobileRow = (row: T) => {
+    const expanded = isExpanded?.(row) ?? false;
+    const expansion = expanded ? expandedRow?.(row) : null;
+    const tint = rowClassName?.(row);
+    // Use div+role="button" rather than a real <button> so cells that
+    // contain their own interactive controls (status toggles, action
+    // icons) don't end up as illegal nested buttons.
+    const interactive = !!onRowClick;
+    return (
+      <li key={rowKey(row)} className={cn(tint)}>
+        <div
+          role={interactive ? "button" : undefined}
+          tabIndex={interactive ? 0 : undefined}
+          onClick={interactive ? () => onRowClick!(row) : undefined}
+          onKeyDown={
+            interactive
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onRowClick!(row);
+                  }
+                }
+              : undefined
+          }
+          aria-expanded={expandedRow ? expanded : undefined}
+          className={cn(
+            "w-full px-4 py-3 text-left flex flex-col gap-2",
+            interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
+          )}
+        >
+          {mobileCard ? (
+            mobileCard(row)
+          ) : (
+            <>
+              {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
+              {mobileSecondaryColumns.length > 0 && (
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                  {mobileSecondaryColumns.map((col) => (
+                    <Fragment key={col.key}>
+                      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
+                        {col.header}
+                      </dt>
+                      <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
+                        {col.cell(row)}
+                      </dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              )}
+            </>
+          )}
+        </div>
+        {expansion && !mobileExpandAsDialog && (
+          <div className="px-4 py-3 bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
+            {expansion}
+          </div>
+        )}
+      </li>
+    );
+  };
+
+  // Consecutive grouping of the (already-sorted) mobile slice into labelled
+  // sections for the "assistance"-style list (feedback #317). Null unless the
+  // caller opts in via `mobileGroupBy`.
+  const mobileGroups: { key: string; rows: T[] }[] | null = mobileGroupBy
+    ? mobileSlice.reduce<{ key: string; rows: T[] }[]>((acc, row) => {
+        const key = mobileGroupBy(row);
+        const last = acc[acc.length - 1];
+        if (last && last.key === key) last.rows.push(row);
+        else acc.push({ key, rows: [row] });
+        return acc;
+      }, [])
+    : null;
+
   return (
     <Card flush className={cn("overflow-clip", fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0")}>
       {!isMdUp && (
@@ -602,62 +698,16 @@ export function DataTable<T>({
           />
         )}
         <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-          {mobileSlice.map((row) => {
-            const expanded = isExpanded?.(row) ?? false;
-            const expansion = expanded ? expandedRow?.(row) : null;
-            const tint = rowClassName?.(row);
-            // Use div+role="button" rather than a real <button> so cells that
-            // contain their own interactive controls (status toggles, action
-            // icons) don't end up as illegal nested buttons.
-            const interactive = !!onRowClick;
-            return (
-              <li key={rowKey(row)} className={cn(tint)}>
-                <div
-                  role={interactive ? "button" : undefined}
-                  tabIndex={interactive ? 0 : undefined}
-                  onClick={interactive ? () => onRowClick!(row) : undefined}
-                  onKeyDown={
-                    interactive
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onRowClick!(row);
-                          }
-                        }
-                      : undefined
-                  }
-                  aria-expanded={expandedRow ? expanded : undefined}
-                  className={cn(
-                    "w-full px-4 py-3 text-left flex flex-col gap-2",
-                    interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
-                  )}
-                >
-                  {mobilePrimaryCol && (
-                    <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>
-                  )}
-                  {mobileSecondaryColumns.length > 0 && (
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                      {mobileSecondaryColumns.map((col) => (
-                        <Fragment key={col.key}>
-                          <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
-                            {col.header}
-                          </dt>
-                          <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
-                            {col.cell(row)}
-                          </dd>
-                        </Fragment>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-                {expansion && !mobileExpandAsDialog && (
-                  <div className="px-4 py-3 bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
-                    {expansion}
-                  </div>
-                )}
-              </li>
-            );
-          })}
+          {mobileGroups
+            ? mobileGroups.map((g) => (
+                <Fragment key={`hb-group:${g.key}`}>
+                  <li className="sticky top-0 z-10 bg-slate-50/95 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur dark:bg-slate-800/80 dark:text-slate-400">
+                    {mobileGroupLabel ? mobileGroupLabel(g.key) : g.key}
+                  </li>
+                  {g.rows.map(renderMobileRow)}
+                </Fragment>
+              ))
+            : mobileSlice.map(renderMobileRow)}
           {mobileSlice.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
               {empty ?? "—"}

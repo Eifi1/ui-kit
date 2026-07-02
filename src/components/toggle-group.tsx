@@ -11,6 +11,9 @@ interface ToggleGroupProps<T extends string> {
   onChange: (value: T) => void;
   options: ToggleOption<T>[];
   className?: string;
+  /** Applied to every option button (e.g. to tune height/rounding to match
+   *  adjacent fields). Per-option `className` still wins over this. */
+  optionClassName?: string;
   ariaLabel?: string;
 }
 
@@ -19,6 +22,7 @@ export function ToggleGroup<T extends string>({
   onChange,
   options,
   className,
+  optionClassName,
   ariaLabel,
 }: ToggleGroupProps<T>) {
   return (
@@ -44,6 +48,7 @@ export function ToggleGroup<T extends string>({
               active
                 ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                 : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+              optionClassName,
               opt.className,
             )}
           >

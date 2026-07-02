@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 
@@ -102,7 +103,12 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
     }
   };
 
-  return (
+  // Portal to <body> so the `fixed inset-0 z-50` overlay escapes whatever stacking
+  // context its caller sits in. Rendered inline, a modal opened from e.g. the top
+  // bar (a z-30 context) could paint BELOW a sibling z-30 sticky element like the
+  // expanded transaction editor (feedback #320). The tour/command-palette overlays
+  // already portal for the same reason.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center"
       {...backdropClose}
@@ -123,6 +129,7 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

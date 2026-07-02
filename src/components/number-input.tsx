@@ -1,9 +1,11 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton } from "./calculator";
+import { MathKeys } from "./math-keys";
 import { FIELD_BASE, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { cn } from "../lib/cn";
 import { commitExpression, sanitizeLive } from "../lib/calc";
+import { useMediaQuery } from "../hooks/use-media-query";
 
 interface NumberInputProps {
   value: string;
@@ -54,7 +56,13 @@ export function NumberInput({
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const labelled = label !== undefined;
-  const showCalc = calculator && !disabled;
+  // On phones the native numeric keypad already covers entry, so the calculator
+  // trigger is hidden to declutter the field (feedback #334).
+  const isMobile = useMediaQuery("(max-width: 767px)", false);
+  const showCalc = calculator && !disabled && !isMobile;
+  const [focused, setFocused] = useState(false);
+  // Mobile keypads lack operators, so show an inline math bar on focus (#334).
+  const showMathBar = isMobile && !disabled && focused;
 
   const commit = () => {
     const next = commitExpression(value);
@@ -79,7 +87,11 @@ export function NumberInput({
         placeholder={labelled ? " " : placeholder}
         value={value}
         onChange={(e) => onChange(sanitizeLive(e.target.value))}
-        onBlur={commit}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          commit();
+          setFocused(false);
+        }}
         onKeyDown={onKeyDown}
         // `pr-9` sits last so it always wins the right-padding that makes room
         // for the calculator icon, even when inputClassName sets its own px.
@@ -87,6 +99,13 @@ export function NumberInput({
       />
       {showCalc && (
         <CalculatorButton value={value} onChange={onChange} className="absolute inset-y-0 right-0 px-2.5" />
+      )}
+      {showMathBar && (
+        <MathKeys
+          className="mt-1"
+          onInsert={(ch) => onChange(sanitizeLive(value + ch))}
+          onBackspace={() => onChange(value.slice(0, -1))}
+        />
       )}
     </FloatingField>
   );

@@ -1,10 +1,12 @@
-import { forwardRef, useId, useMemo } from "react";
+import { forwardRef, useId, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
-import { FIELD_BASE, FLOATING_LABEL_CLASS } from "./ui";
+import { FIELD_BASE, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS } from "./ui";
 import { cn } from "../lib/cn";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton } from "./calculator";
+import { MathKeys } from "./math-keys";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import { commitExpression, sanitizeLive } from "../lib/calc";
 
@@ -26,7 +28,15 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
-    const showCalc = !disabled;
+    // On phones the native numeric keypad already covers entry, so the calculator
+    // trigger is hidden to declutter the field (feedback #334). The right-padding
+    // below keys off showCalc, so it tightens up automatically.
+    const isMobile = useMediaQuery("(max-width: 767px)", false);
+    const showCalc = !disabled && !isMobile;
+    const [focused, setFocused] = useState(false);
+    // On mobile the OS keypad lacks operators, so an inline math bar appears
+    // under the focused field instead of the desktop calculator popover (#334).
+    const showMathBar = isMobile && !disabled && focused;
     const commit = () => onChange(commitExpression(value));
     const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
@@ -43,7 +53,11 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     }, [query]);
 
     return (
-      <div ref={wrapperRef} className={cn("relative w-full", className)}>
+      <div ref={wrapperRef} className={cn("w-full", className)}>
+        {/* Inner relative box holds the input + its absolutely-positioned
+            trailing controls (calculator / currency), so those stay anchored to
+            the INPUT even when the mobile math bar is rendered below (#334). */}
+        <div className="relative w-full">
         <input
           ref={ref}
           id={fieldId}
@@ -55,16 +69,24 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           placeholder={label !== undefined ? " " : placeholder}
           value={value}
           onChange={(e) => onChange(sanitizeLive(e.target.value))}
-          onBlur={commit}
+          onFocus={() => setFocused(true)}
+          onBlur={() => {
+            commit();
+            setFocused(false);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") commit();
           }}
           className={cn(
-            FIELD_BASE,
+            // With a label, use the floating-input padding (pt-4 pb-1) like every
+            // other labelled field so the value sits BELOW the floated label rather
+            // than vertically centred where it overlaps the resting label
+            // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
+            // transparent-placeholder bits.
+            label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
             showCalc
               ? currency ? (editable ? "pr-24" : "pr-16") : "pr-10"
               : currency ? (editable ? "pr-20" : "pr-14") : "pr-3",
-            label !== undefined && "peer placeholder:text-transparent",
           )}
         />
         {label !== undefined && (
@@ -132,6 +154,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                 );
               })}
           </DropdownPanel>
+        )}
+        </div>
+        {showMathBar && (
+          <MathKeys
+            className="mt-1"
+            onInsert={(ch) => onChange(sanitizeLive(value + ch))}
+            onBackspace={() => onChange(value.slice(0, -1))}
+          />
         )}
       </div>
     );

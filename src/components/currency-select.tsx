@@ -64,22 +64,33 @@ interface CurrencySelectProps {
   placeholder?: string;
   className?: string;
   label?: ReactNode;
+  /**
+   * Restrict the pickable currencies to these ISO codes (e.g. only the
+   * currencies actually present in a budget). Order is preserved. Defaults to
+   * the full {@link CURRENCIES} list.
+   */
+  options?: string[];
 }
 
-export function CurrencySelect({ value, onChange, placeholder, className, label }: CurrencySelectProps) {
+export function CurrencySelect({ value, onChange, placeholder, className, label, options }: CurrencySelectProps) {
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
   const selected = getCurrency(value);
+  const pool = useMemo(() => {
+    if (!options) return CURRENCIES;
+    // Keep the caller's order; drop codes we don't have a definition for.
+    return options.map((code) => getCurrency(code)).filter((c): c is CurrencyOption => !!c);
+  }, [options]);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return CURRENCIES;
-    return CURRENCIES.filter(
+    if (!q) return pool;
+    return pool.filter(
       (c) =>
         c.code.toLowerCase().includes(q) ||
         c.name.toLowerCase().includes(q) ||
         c.symbol.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, pool]);
 
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
@@ -89,13 +100,14 @@ export function CurrencySelect({ value, onChange, placeholder, className, label 
         onClick={() => setOpen((v) => !v)}
         className={cn(FIELD_TRIGGER, label !== undefined && FIELD_FLOATING_PAD)}
       >
+        {/* The trigger stays COMPACT — flag + code only — so it never clips in a
+            narrow field; the full names live in the (wider) popup (feedback
+            #308). */}
         <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500")}>
           {selected ? (
             <>
               <CurrencyFlag country={selected.country} />
-              <span className="font-mono text-slate-500 dark:text-slate-400 w-8 shrink-0">{selected.symbol}</span>
               <span className="font-medium">{selected.code}</span>
-              <span className="text-slate-500 dark:text-slate-400 truncate">{selected.name}</span>
             </>
           ) : (
             placeholder ?? "Currency"
@@ -105,7 +117,11 @@ export function CurrencySelect({ value, onChange, placeholder, className, label 
       </button>
       {open && (
         <DropdownPanel
-          className="w-full"
+          // At least as wide as the trigger, but grows to fit the full currency
+          // names and caps so it never runs off-screen. RIGHT-aligned so it grows
+          // leftward instead of pushing the page width when there's content to the
+          // right of the field (feedback #308).
+          className="right-0 min-w-full w-max max-w-[min(20rem,calc(100vw-2rem))]"
           empty={filtered.length === 0}
           header={
             <DropdownSearchHeader

@@ -27,6 +27,7 @@ export * from "./components/ui";
 export * from "./components/dropdown";
 export * from "./components/popover";
 export * from "./components/calculator";
+export * from "./components/math-keys";
 export * from "./components/number-input";
 export * from "./components/currency-select";
 export * from "./components/amount-input";
@@ -35,6 +36,9 @@ export * from "./components/entity-combobox";
 export * from "./components/multi-entity-combobox";
 export * from "./components/multi-select";
 export * from "./components/tooltip";
+export * from "./components/user-avatar";
+export * from "./components/settings-fields";
+export * from "./components/account-settings";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 export * from "./components/wizard-stepper";
@@ -62,6 +66,7 @@ export * from "./shell/topbar-controls";
 export * from "./shell/top-bar";
 export * from "./shell/app-shell";
 export * from "./shell/option-switcher-menu";
+export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
 
 // ── feedback (generic form shell; app wires its own API/inbox) ───────────────

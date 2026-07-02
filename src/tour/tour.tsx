@@ -60,6 +60,11 @@ const DEFAULT_LABELS: TourLabels = {
 };
 
 interface StartOptions {
+  /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
+   *  the URL (deep-link / evaluation tracking) and record completion. */
+  id?: string;
+  /** Start at this step index instead of 0 (clamped) — for URL/deep-link resume. */
+  startIndex?: number;
   /** Fires synchronously when the tour starts (e.g. enable a mock interceptor). */
   onStart?: () => void;
   onFinish?: () => void;
@@ -68,6 +73,8 @@ interface StartOptions {
 
 interface TourContextValue {
   active: boolean;
+  /** Id of the running tour (from {@link StartOptions.id}), else null. */
+  activeId: string | null;
   /** Start a tour with the given steps. */
   start: (steps: TourStep[], opts?: StartOptions) => void;
   /** End the current tour (no callbacks fire). */
@@ -110,6 +117,7 @@ export function TourProvider({
   const merged: TourLabels = { ...DEFAULT_LABELS, ...labels };
   const [steps, setSteps] = useState<TourStep[] | null>(null);
   const [index, setIndex] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const optsRef = useRef<StartOptions>({});
   // Live mirrors so the step-control callbacks can stay stable (identity-safe for
   // consumers) while still reading the current steps/index.
@@ -123,17 +131,23 @@ export function TourProvider({
   const start = useCallback((s: TourStep[], opts?: StartOptions) => {
     optsRef.current = opts ?? {};
     optsRef.current.onStart?.();
-    setIndex(0);
+    setIndex(Math.min(Math.max(0, opts?.startIndex ?? 0), Math.max(0, s.length - 1)));
+    setActiveId(opts?.id ?? null);
     setSteps(s);
   }, []);
-  const stop = useCallback(() => setSteps(null), []);
+  const stop = useCallback(() => {
+    setSteps(null);
+    setActiveId(null);
+  }, []);
   const finish = useCallback(() => {
     optsRef.current.onFinish?.();
     setSteps(null);
+    setActiveId(null);
   }, []);
   const skip = useCallback(() => {
     optsRef.current.onSkip?.();
     setSteps(null);
+    setActiveId(null);
   }, []);
 
   const goToStep = useCallback((i: number) => {
@@ -152,7 +166,7 @@ export function TourProvider({
   }, []);
 
   return (
-    <TourContext.Provider value={{ active, start, stop, next, prev, goToStep, index, total }}>
+    <TourContext.Provider value={{ active, activeId, start, stop, next, prev, goToStep, index, total }}>
       {children}
       {active && (
         <TourOverlay
@@ -176,8 +190,28 @@ interface Rect {
 }
 
 function isVisible(el: Element): boolean {
+  // A non-zero box already rules out display:none on the element or any ancestor
+  // (an unrendered element measures 0x0). We deliberately do NOT test
+  // offsetParent: it is null for position:fixed elements even when fully visible,
+  // which made the mobile bottom-nav bar (fixed) un-highlightable on mobile
+  // (feedback #313). visibility:hidden keeps a box, so check it explicitly.
   const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 && (el as HTMLElement).offsetParent !== null;
+  if (r.width <= 0 || r.height <= 0) return false;
+  const style = getComputedStyle(el);
+  return style.visibility !== "hidden" && style.display !== "none";
+}
+
+// The first VISIBLE element matching the selector, not merely the first in DOM
+// order. This lets a step target the same control across layouts with one
+// combined selector — e.g. the desktop sidebar link AND the mobile bottom-bar
+// link — where the off-layout copy is present but `display:none` (feedback
+// #313). Returns null while none is visible so the finder keeps retrying.
+function queryVisibleTarget(selector: string): Element | null {
+  const els = document.querySelectorAll(selector);
+  for (const el of els) {
+    if (isVisible(el)) return el;
+  }
+  return null;
 }
 
 function sameRect(a: Rect | null, b: Rect | null): boolean {
@@ -223,8 +257,8 @@ function TourOverlay({
       let tries = 0;
       const find = () => {
         if (cancelled) return;
-        const el = document.querySelector(step.target!);
-        if (el && isVisible(el)) {
+        const el = queryVisibleTarget(step.target!);
+        if (el) {
           el.scrollIntoView({ block: "center", behavior: "smooth" });
           const r = el.getBoundingClientRect();
           setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
@@ -246,8 +280,8 @@ function TourOverlay({
   useEffect(() => {
     if (!step.target) return;
     const update = () => {
-      const el = document.querySelector(step.target!);
-      if (el && isVisible(el)) {
+      const el = queryVisibleTarget(step.target!);
+      if (el) {
         const r = el.getBoundingClientRect();
         const next = { top: r.top, left: r.left, width: r.width, height: r.height };
         setRect((prev) => (sameRect(prev, next) ? prev : next));
@@ -268,7 +302,7 @@ function TourOverlay({
   // handler runs first; we step forward on the next macrotask.
   useEffect(() => {
     if (!ready || !step.awaitClick || !step.target) return;
-    const el = document.querySelector(step.target);
+    const el = queryVisibleTarget(step.target);
     if (!el) return;
     const onClick = () => window.setTimeout(() => onNext(), 0);
     el.addEventListener("click", onClick, { once: true });
@@ -428,31 +462,38 @@ function TourCard({
       <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{step.title}</div>
       <div className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{step.body}</div>
       {step.action && <div className="mt-3">{step.action}</div>}
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={onSkip}
-          className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-        >
-          {labels.skip}
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500">
-            {labels.step(index + 1, total)}
-          </span>
-          {!isFirst && (
-            <Button variant="secondary" onClick={onBack} className="px-2.5 py-1 text-xs">
-              {labels.back}
-            </Button>
-          )}
-          {step.awaitClick && step.target ? (
-            <span className="text-xs italic text-slate-400 dark:text-slate-500">{labels.awaitClickHint}</span>
-          ) : (
-            <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
-              {isLast ? labels.done : labels.next}
-            </Button>
-          )}
+      <div className="mt-4 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+          >
+            {labels.skip}
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="whitespace-nowrap text-xs tabular-nums text-slate-400 dark:text-slate-500">
+              {labels.step(index + 1, total)}
+            </span>
+            {!isFirst && (
+              <Button variant="secondary" onClick={onBack} className="px-2.5 py-1 text-xs">
+                {labels.back}
+              </Button>
+            )}
+            {/* On an awaitClick step the Next button is replaced by a hint on its
+                own row below, so it doesn't cram the counter + buttons and wrap. */}
+            {!(step.awaitClick && step.target) && (
+              <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
+                {isLast ? labels.done : labels.next}
+              </Button>
+            )}
+          </div>
         </div>
+        {step.awaitClick && step.target && (
+          <div className="text-center text-xs italic text-slate-400 dark:text-slate-500">
+            {labels.awaitClickHint}
+          </div>
+        )}
       </div>
     </div>
   );

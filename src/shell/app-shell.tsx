@@ -23,6 +23,10 @@ export interface AppShellNavItem {
   icon: LucideIcon;
   /** Passed to NavLink's `end` (exact match). Defaults to true. */
   end?: boolean;
+  /** Optional `data-tour` value rendered on this item's link (both the desktop
+   *  sidebar and the mobile bottom bar), so a guided tour can spotlight ONE nav
+   *  entry precisely instead of matching by href (feedback #338). */
+  dataTour?: string;
   /** Optional sub-items. When present, hovering (or focusing) the item opens a
    *  flyout to the right of the sidebar with a header (this item's label) and the
    *  sub-items as icon + title links. Works collapsed or expanded; the mobile
@@ -84,10 +88,18 @@ export function AppShell({
             collapsed ? "md:w-14" : "md:w-60"
           }`}
         >
-          <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
-            {nav.map((item) => (
-              <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
-            ))}
+          {/* The `<nav>` is flex-1 so it fills the sidebar's height (with empty
+              space below the items); the data-tour marker goes on the INNER,
+              fit-content wrapper so the guided-tour spotlight hugs the actual nav
+              items instead of the whole tall column (feedback #322). The marker
+              also tags the mobile bottom bar below; the tour targets
+              `[data-tour="nav"]` and resolves to whichever is visible (#313). */}
+          <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
+            <div data-tour="nav" className="space-y-1">
+              {nav.map((item) => (
+                <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+              ))}
+            </div>
           </nav>
           {sidebarFooter?.(collapsed)}
           <div className="border-t border-slate-200 dark:border-slate-800 p-2">
@@ -128,6 +140,7 @@ export function AppShell({
       </div>
 
       <nav
+        data-tour="nav"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 grid"
         style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
       >
@@ -136,10 +149,18 @@ export function AppShell({
             key={item.to}
             to={item.to}
             end={item.end ?? true}
+            data-tour={item.dataTour}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-2 text-[11px] gap-0.5 ${
-                isActive ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
-              }`
+              // The active page needs a clear marker, not just a subtle text
+              // shade (feedback #327): brand-accent icon + label, bolder weight,
+              // and a top accent bar spanning the cell so it reads at a glance.
+              cn(
+                "relative flex flex-col items-center justify-center py-2 text-[11px] gap-0.5 transition-colors",
+                "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
+                isActive
+                  ? "font-semibold text-[var(--brand)] before:bg-[var(--brand)]"
+                  : "text-slate-500 dark:text-slate-400 before:bg-transparent",
+              )
             }
           >
             <span className="relative">
@@ -170,6 +191,7 @@ function SidebarNavItem({ item, collapsed }: { item: AppShellNavItem; collapsed:
     <NavLink
       to={item.to}
       end={item.end ?? true}
+      data-tour={item.dataTour}
       className={navLinkClass(collapsed)}
       aria-haspopup={hasSub ? "menu" : undefined}
     >

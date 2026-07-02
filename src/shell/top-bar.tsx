@@ -18,7 +18,11 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--bg-surface)] px-3 md:px-6",
+        // z-40 keeps the app header above sticky page content — notably the
+        // expanded transaction editor (z-30), which on mobile shares the page
+        // scroll and otherwise slid over the header while scrolling (feedback
+        // #320). Modals/tour (z-50/60) still sit above it.
+        "sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--bg-surface)] px-3 md:px-6",
         className,
       )}
     >

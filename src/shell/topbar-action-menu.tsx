@@ -11,8 +11,8 @@ import { TOPBAR_MENU_ITEM_CLASS, TOPBAR_TRIGGER_CLASS } from "./topbar-controls"
  * actions, keeping the common case terse.
  */
 export type TopBarMenuEntry =
-  | { kind?: "action"; key: string; icon?: ReactNode; label: ReactNode; onSelect: () => void }
-  | { kind: "link"; key: string; icon?: ReactNode; label: ReactNode; to: string }
+  | { kind?: "action"; key: string; icon?: ReactNode; label: ReactNode; trailing?: ReactNode; onSelect: () => void }
+  | { kind: "link"; key: string; icon?: ReactNode; label: ReactNode; trailing?: ReactNode; to: string }
   | { kind: "divider"; key: string };
 
 /**
@@ -57,9 +57,10 @@ export function TopBarActionMenu({
               return <li key={entry.key} className="my-1 border-t border-slate-100 dark:border-slate-800" />;
             }
             const content = (
-              <span className="flex items-center gap-2">
+              <span className="flex w-full items-center gap-2">
                 {entry.icon}
                 {entry.label}
+                {entry.trailing && <span className="ml-auto pl-2">{entry.trailing}</span>}
               </span>
             );
             return (
