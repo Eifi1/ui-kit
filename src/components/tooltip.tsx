@@ -19,7 +19,7 @@ export function Tooltip({
   portal = false,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   side?: TooltipSide;
   className?: string;
   portal?: boolean;
@@ -78,7 +78,7 @@ function PortalTooltip({
   className,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   side: TooltipSide;
   className?: string;
   children: ReactNode;

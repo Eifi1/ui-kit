@@ -1,6 +1,6 @@
 import { forwardRef, useId, useState } from "react";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
@@ -315,6 +315,69 @@ export function Card({
   );
 }
 
+// Composed shadcn-style Card sub-parts. `Card` stays padding-less (callers set
+// their own padding via className), so these own the padding/rhythm. Token-driven
+// so they re-skin with the palette. Use CardHeader → CardTitle/CardDescription
+// (+ optional CardAction, top-right) → CardContent → CardFooter.
+export function CardHeader({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        // Grid (not flex) so CardAction can occupy a top-right column; with no
+        // action it collapses to one column and title/description stack.
+        "grid auto-rows-min items-start gap-1.5 px-6 pt-6 has-data-[slot=card-action]:grid-cols-[1fr_auto]",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function CardTitle({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn("font-semibold leading-none", className)}
+      {...props}
+    />
+  );
+}
+
+export function CardDescription({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-sm text-[var(--money-neutral)]", className)}
+      {...props}
+    />
+  );
+}
+
+export function CardAction({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn("col-start-2 row-start-1 row-span-2 self-start justify-self-end", className)}
+      {...props}
+    />
+  );
+}
+
+export function CardContent({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return <div data-slot="card-content" className={cn("px-6", className)} {...props} />;
+}
+
+export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center px-6 pb-6", className)}
+      {...props}
+    />
+  );
+}
+
 export function Spinner({ className }: { className?: string }) {
   return (
     <span
@@ -349,7 +412,9 @@ export function EmptyState({
 }
 
 export interface TabsProps<T extends string> {
-  tabs: { id: T; label: string }[];
+  /** `label` is a ReactNode so tabs can pair an icon with text; `badge` is an
+   *  optional trailing node (e.g. a count pill). */
+  tabs: { id: T; label: ReactNode; badge?: ReactNode }[];
   active: T;
   onChange: (id: T) => void;
   className?: string;
@@ -379,7 +444,10 @@ export function Tabs<T extends string>({ tabs, active, onChange, className }: Ta
                 : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200",
             )}
           >
-            {tab.label}
+            <span className="inline-flex items-center gap-1.5">
+              {tab.label}
+              {tab.badge != null ? tab.badge : null}
+            </span>
           </button>
         );
       })}
