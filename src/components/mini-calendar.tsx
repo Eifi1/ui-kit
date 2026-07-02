@@ -8,16 +8,27 @@ export interface MiniCalendarProps {
   to: string;
   locale: string;
   onSelect: (from: string, to: string) => void;
+  /** `"range"` (default) = two-click from→to; `"single"` = one click selects a
+   *  single day (emitted as `onSelect(iso, iso)`). */
+  mode?: "single" | "range";
+  /** Optional inclusive ISO bounds; days outside `[min, max]` are disabled. */
+  min?: string;
+  max?: string;
 }
 
 /**
  * Month-grid range picker used by the data-table date filter. Click once to set
  * the start (and clear the end), click again to set the end; clicking with a
  * full range already selected starts over. Monday-first, locale-aware labels.
+ * In `single` mode each click selects one day. Days outside `min`/`max` (when
+ * given) are disabled.
  */
-export function MiniCalendar({ from, to, locale, onSelect }: MiniCalendarProps) {
+export function MiniCalendar({ from, to, locale, onSelect, mode = "range", min, max }: MiniCalendarProps) {
   const fromDate = parseIsoDate(from);
   const toDate = parseIsoDate(to);
+  const minDate = min ? parseIsoDate(min) : null;
+  const maxDate = max ? parseIsoDate(max) : null;
+  const isDisabled = (d: Date) => Boolean((minDate && d < minDate) || (maxDate && d > maxDate));
   const initial = fromDate ?? toDate ?? new Date();
   const [view, setView] = useState<{ year: number; month: number }>({
     year: initial.getFullYear(),
@@ -63,6 +74,10 @@ export function MiniCalendar({ from, to, locale, onSelect }: MiniCalendarProps) 
 
   const handleClick = (d: Date) => {
     const iso = toLocalIso(d);
+    if (mode === "single") {
+      onSelect(iso, iso);
+      return;
+    }
     const f = parseIsoDate(from);
     const tt = parseIsoDate(to);
     if (!f || (f && tt)) {
@@ -113,23 +128,27 @@ export function MiniCalendar({ from, to, locale, onSelect }: MiniCalendarProps) 
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="h-7" />;
-          const isStart = fromDate && sameYmd(d, fromDate);
-          const isEnd = toDate && sameYmd(d, toDate);
+          const disabled = isDisabled(d);
+          const isStart = !disabled && fromDate && sameYmd(d, fromDate);
+          const isEnd = !disabled && toDate && sameYmd(d, toDate);
           const isToday = sameYmd(d, today);
-          const isInRange = inRange(d) && !isStart && !isEnd;
+          const isInRange = !disabled && inRange(d) && !isStart && !isEnd;
           return (
             <button
               key={i}
               type="button"
+              disabled={disabled}
               onClick={() => handleClick(d)}
               className={cn(
                 "h-7 text-xs rounded transition-colors",
-                isStart || isEnd
-                  ? "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
-                  : isInRange
-                    ? "bg-sky-100 text-sky-800 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-200"
-                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
-                isToday && !isStart && !isEnd && !isInRange && "ring-1 ring-inset ring-slate-300 dark:ring-slate-600",
+                disabled
+                  ? "cursor-not-allowed text-slate-300 dark:text-slate-600"
+                  : isStart || isEnd
+                    ? "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+                    : isInRange
+                      ? "bg-sky-100 text-sky-800 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-200"
+                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-slate-300 dark:ring-slate-600",
               )}
             >
               {d.getDate()}

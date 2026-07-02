@@ -31,6 +31,8 @@ export * from "./components/number-input";
 export * from "./components/currency-select";
 export * from "./components/amount-input";
 export * from "./components/combobox";
+export * from "./components/entity-combobox";
+export * from "./components/multi-entity-combobox";
 export * from "./components/multi-select";
 export * from "./components/tooltip";
 export * from "./components/alert-banner";
@@ -41,6 +43,7 @@ export * from "./components/modal";
 export * from "./components/grouped-picker";
 export * from "./components/file-dropzone";
 export * from "./components/mini-calendar";
+export * from "./components/date-picker";
 export * from "./components/chart";
 
 // ── data-table suite ─────────────────────────────────────────────────────────

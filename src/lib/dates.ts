@@ -96,6 +96,18 @@ export function parseIsoDate(s: string): Date | null {
   return dt;
 }
 
+/** Format a "YYYY-MM-DD" string for display in `locale` (empty string when
+ *  unparseable). Defaults to the locale's short numeric date; pass `options` to
+ *  override (e.g. `{ dateStyle: "medium" }`). */
+export function formatIsoDate(
+  iso: string,
+  locale: string,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  const d = parseIsoDate(iso);
+  return d ? d.toLocaleDateString(locale, options) : "";
+}
+
 /** Whether two Dates fall on the same local calendar day. */
 export function sameYmd(a: Date, b: Date): boolean {
   return (
