@@ -12,6 +12,8 @@ import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui";
 
+export type TourPlacement = "top" | "right" | "bottom" | "left" | "center";
+
 export interface TourStep {
   /** CSS selector for the element to spotlight. Omit for a centered step
    *  (welcome/finish). If the target isn't found/visible, the step centers. */
@@ -22,6 +24,16 @@ export interface TourStep {
   action?: ReactNode;
   /** Spotlight padding around the target, px (default 8). */
   padding?: number;
+  /** Where the card sits relative to the target. Omit for auto placement
+   *  (below → above → centered). "center" ignores the target and centers on
+   *  screen. An explicit side flips to the opposite side if it would overflow,
+   *  then clamps into the viewport. */
+  placement?: TourPlacement;
+  /** Advance only when the user clicks the spotlighted target itself (not the
+   *  card's Next button). Requires `target`: the real control's own handler runs
+   *  first, then the tour steps forward on a microtask. The overlay stays
+   *  click-through to the target. */
+  awaitClick?: boolean;
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
    *  May be async; the step waits for it, then locates the target. */
   beforeStep?: () => void | Promise<void>;
@@ -32,6 +44,8 @@ export interface TourLabels {
   back: string;
   skip: string;
   done: string;
+  /** Shown in place of the Next button on an `awaitClick` step. */
+  awaitClickHint: string;
   /** Step counter, e.g. (2, 7) => "2 / 7". */
   step: (current: number, total: number) => string;
 }
@@ -41,10 +55,13 @@ const DEFAULT_LABELS: TourLabels = {
   back: "Back",
   skip: "Skip",
   done: "Done",
+  awaitClickHint: "Click the highlighted element to continue",
   step: (c, t) => `${c} / ${t}`,
 };
 
 interface StartOptions {
+  /** Fires synchronously when the tour starts (e.g. enable a mock interceptor). */
+  onStart?: () => void;
   onFinish?: () => void;
   onSkip?: () => void;
 }
@@ -55,6 +72,16 @@ interface TourContextValue {
   start: (steps: TourStep[], opts?: StartOptions) => void;
   /** End the current tour (no callbacks fire). */
   stop: () => void;
+  /** Advance one step; past the last step it finishes the tour (fires onFinish). */
+  next: () => void;
+  /** Go back one step (no-op on the first). */
+  prev: () => void;
+  /** Jump to a step by index, clamped to range — e.g. for URL/deep-link resume. */
+  goToStep: (index: number) => void;
+  /** Current step (0-based; 0 while inactive). */
+  index: number;
+  /** Total steps (0 while inactive). */
+  total: number;
 }
 
 const TourContext = createContext<TourContextValue | null>(null);
@@ -68,8 +95,10 @@ export function useTour(): TourContextValue {
 /**
  * Provides the guided-tour engine: a dimmed spotlight overlay + step card driven
  * by a list of {@link TourStep}s. Domain-free — the app supplies the steps (copy,
- * selectors, per-step navigation) and the translated {@link TourLabels}. Mount
- * once inside the router; start a tour from anywhere via {@link useTour}.
+ * selectors, per-step navigation, placement) and the translated {@link TourLabels}.
+ * Mount once inside the router; start a tour from anywhere via {@link useTour},
+ * which also exposes step control (`next`/`prev`/`goToStep`) and the current
+ * `index`/`total` for URL mirroring, `awaitClick` and deep-link resume.
  */
 export function TourProvider({
   children,
@@ -82,10 +111,18 @@ export function TourProvider({
   const [steps, setSteps] = useState<TourStep[] | null>(null);
   const [index, setIndex] = useState(0);
   const optsRef = useRef<StartOptions>({});
+  // Live mirrors so the step-control callbacks can stay stable (identity-safe for
+  // consumers) while still reading the current steps/index.
+  const stepsRef = useRef<TourStep[] | null>(null);
+  stepsRef.current = steps;
+  const indexRef = useRef(0);
+  indexRef.current = index;
   const active = !!steps && steps.length > 0;
+  const total = steps?.length ?? 0;
 
   const start = useCallback((s: TourStep[], opts?: StartOptions) => {
     optsRef.current = opts ?? {};
+    optsRef.current.onStart?.();
     setIndex(0);
     setSteps(s);
   }, []);
@@ -99,16 +136,31 @@ export function TourProvider({
     setSteps(null);
   }, []);
 
+  const goToStep = useCallback((i: number) => {
+    const len = stepsRef.current?.length ?? 0;
+    if (len === 0) return;
+    setIndex(Math.min(Math.max(0, i), len - 1));
+  }, []);
+  const next = useCallback(() => {
+    const len = stepsRef.current?.length ?? 0;
+    if (len === 0) return;
+    if (indexRef.current >= len - 1) finish();
+    else setIndex(indexRef.current + 1);
+  }, [finish]);
+  const prev = useCallback(() => {
+    if (indexRef.current > 0) setIndex(indexRef.current - 1);
+  }, []);
+
   return (
-    <TourContext.Provider value={{ active, start, stop }}>
+    <TourContext.Provider value={{ active, start, stop, next, prev, goToStep, index, total }}>
       {children}
       {active && (
         <TourOverlay
           steps={steps!}
           index={index}
           labels={merged}
-          onIndex={setIndex}
-          onFinish={finish}
+          onNext={next}
+          onPrev={prev}
           onSkip={skip}
         />
       )}
@@ -138,15 +190,15 @@ function TourOverlay({
   steps,
   index,
   labels,
-  onIndex,
-  onFinish,
+  onNext,
+  onPrev,
   onSkip,
 }: {
   steps: TourStep[];
   index: number;
   labels: TourLabels;
-  onIndex: (i: number) => void;
-  onFinish: () => void;
+  onNext: () => void;
+  onPrev: () => void;
   onSkip: () => void;
 }) {
   const step = steps[index];
@@ -211,21 +263,39 @@ function TourOverlay({
     };
   }, [index, step]);
 
-  // Keyboard: Esc skips, →/Enter advance, ← goes back.
+  // awaitClick: advance when the *real* target is clicked. The overlay is
+  // click-through (pointer-events-none except the card) so the element's own
+  // handler runs first; we step forward on the next macrotask.
+  useEffect(() => {
+    if (!ready || !step.awaitClick || !step.target) return;
+    const el = document.querySelector(step.target);
+    if (!el) return;
+    const onClick = () => window.setTimeout(() => onNext(), 0);
+    el.addEventListener("click", onClick, { once: true });
+    return () => el.removeEventListener("click", onClick);
+  }, [ready, index, step, onNext]);
+
+  // Keyboard: Esc skips, →/Enter advance, ← goes back. On awaitClick steps Enter
+  // is ignored (it would fire the target's click AND advance) — → stays as an
+  // escape hatch.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onSkip();
-      else if (e.key === "ArrowRight" || e.key === "Enter") {
+      if (e.key === "Escape") {
+        onSkip();
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        if (isLast) onFinish();
-        else onIndex(index + 1);
+        onNext();
+      } else if (e.key === "Enter") {
+        if (step.awaitClick) return;
+        e.preventDefault();
+        onNext();
       } else if (e.key === "ArrowLeft") {
-        if (!isFirst) onIndex(index - 1);
+        if (!isFirst) onPrev();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [index, isFirst, isLast, onFinish, onSkip, onIndex]);
+  }, [isFirst, step, onNext, onPrev, onSkip]);
 
   if (!ready) return null;
 
@@ -258,14 +328,61 @@ function TourOverlay({
         isFirst={isFirst}
         isLast={isLast}
         rect={spot}
-        onBack={() => onIndex(index - 1)}
-        onNext={() => onIndex(index + 1)}
-        onFinish={onFinish}
+        onBack={onPrev}
+        onNext={onNext}
         onSkip={onSkip}
       />
     </div>,
     document.body,
   );
+}
+
+/**
+ * Card position (viewport px) for the given placement relative to the padded
+ * spotlight `rect`. Omitted placement keeps the original auto behavior
+ * (below → above → vertically centered); an explicit side flips to its opposite
+ * if it would overflow, then clamps into the viewport. "center" (or no rect)
+ * centers on screen.
+ */
+function placeCard(
+  rect: Rect | null,
+  cw: number,
+  ch: number,
+  vw: number,
+  vh: number,
+  m: number,
+  placement?: TourPlacement,
+): { top: number; left: number } {
+  if (!rect || placement === "center") {
+    return { top: Math.max(m, (vh - ch) / 2), left: Math.max(m, (vw - cw) / 2) };
+  }
+  const clampX = (x: number) => Math.min(Math.max(m, x), Math.max(m, vw - cw - m));
+  const clampY = (y: number) => Math.min(Math.max(m, y), Math.max(m, vh - ch - m));
+  const centerX = clampX(rect.left + rect.width / 2 - cw / 2);
+  const centerY = clampY(rect.top + rect.height / 2 - ch / 2);
+  const belowTop = rect.top + rect.height + m;
+  const aboveTop = rect.top - ch - m;
+  const rightLeft = rect.left + rect.width + m;
+  const leftLeft = rect.left - cw - m;
+  const fitsBelow = belowTop + ch <= vh;
+  const fitsAbove = aboveTop >= 0;
+  const fitsRight = rightLeft + cw <= vw;
+  const fitsLeft = leftLeft >= 0;
+
+  switch (placement) {
+    case "top":
+      return { top: fitsAbove ? aboveTop : fitsBelow ? belowTop : clampY(aboveTop), left: centerX };
+    case "bottom":
+      return { top: fitsBelow ? belowTop : fitsAbove ? aboveTop : clampY(belowTop), left: centerX };
+    case "right":
+      return { top: centerY, left: fitsRight ? rightLeft : fitsLeft ? leftLeft : clampX(rightLeft) };
+    case "left":
+      return { top: centerY, left: fitsLeft ? leftLeft : fitsRight ? rightLeft : clampX(leftLeft) };
+    default:
+      if (fitsBelow) return { top: belowTop, left: centerX };
+      if (fitsAbove) return { top: aboveTop, left: centerX };
+      return { top: Math.max(m, (vh - ch) / 2), left: centerX };
+  }
 }
 
 function TourCard({
@@ -278,7 +395,6 @@ function TourCard({
   rect,
   onBack,
   onNext,
-  onFinish,
   onSkip,
 }: {
   step: TourStep;
@@ -290,7 +406,6 @@ function TourCard({
   rect: Rect | null;
   onBack: () => void;
   onNext: () => void;
-  onFinish: () => void;
   onSkip: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -299,25 +414,10 @@ function TourCard({
   useLayoutEffect(() => {
     const card = ref.current;
     if (!card) return;
-    const cw = card.offsetWidth;
-    const ch = card.offsetHeight;
-    const m = 12;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    if (!rect) {
-      setStyle({ top: Math.max(m, (vh - ch) / 2), left: Math.max(m, (vw - cw) / 2) });
-      return;
-    }
-    const below = rect.top + rect.height + m;
-    const above = rect.top - ch - m;
-    let top: number;
-    if (below + ch <= vh) top = below;
-    else if (above >= m) top = above;
-    else top = Math.max(m, (vh - ch) / 2);
-    let left = rect.left + rect.width / 2 - cw / 2;
-    left = Math.min(Math.max(m, left), vw - cw - m);
-    setStyle({ top, left });
-  }, [rect, index]);
+    setStyle(
+      placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement),
+    );
+  }, [rect, index, step.placement]);
 
   return (
     <div
@@ -345,13 +445,13 @@ function TourCard({
               {labels.back}
             </Button>
           )}
-          <Button
-            variant="brand"
-            onClick={isLast ? onFinish : onNext}
-            className={cn("px-2.5 py-1 text-xs")}
-          >
-            {isLast ? labels.done : labels.next}
-          </Button>
+          {step.awaitClick && step.target ? (
+            <span className="text-xs italic text-slate-400 dark:text-slate-500">{labels.awaitClickHint}</span>
+          ) : (
+            <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
+              {isLast ? labels.done : labels.next}
+            </Button>
+          )}
         </div>
       </div>
     </div>
