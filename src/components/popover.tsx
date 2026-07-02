@@ -1,6 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
+import { useAnchoredRect } from "../hooks/use-anchored-rect";
+import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 
 interface PopoverProps {
   trigger: (state: { open: boolean; toggle: () => void; ref: RefObject<HTMLButtonElement | null> }) => ReactNode;
@@ -19,52 +21,21 @@ export function Popover({ trigger, children, width = POPOVER_WIDTH }: PopoverPro
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const close = () => setOpen(false);
   const toggle = () => setOpen((v) => !v);
 
-  useLayoutEffect(() => {
-    if (!open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM-measured positioning
-      setPos(null);
-      return;
-    }
-    const update = () => {
-      const r = triggerRef.current?.getBoundingClientRect();
-      if (!r) return;
-      const left = Math.min(
-        Math.max(8, r.right - width),
-        window.innerWidth - width - 8,
-      );
-      setPos({ top: r.bottom + 4, left });
-    };
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, width]);
+  // Align the panel's right edge to the trigger's, sitting just below it, and
+  // clamp it into the viewport. The hook re-measures on scroll/resize.
+  const rect = useAnchoredRect(triggerRef, open);
+  const pos = rect
+    ? {
+        top: rect.bottom + 4,
+        left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
+      }
+    : null;
 
-  useEffect(() => {
-    if (!open) return;
-    const onMouseDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (triggerRef.current?.contains(t)) return;
-      if (panelRef.current?.contains(t)) return;
-      close();
-    };
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onMouseDown);
-      document.removeEventListener("keydown", onEsc);
-    };
-  }, [open]);
+  useOutsideClick([triggerRef, panelRef], close, open);
+  useEscapeKey(close, open);
 
   return (
     <>

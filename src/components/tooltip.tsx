@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
+import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 
 type TooltipSide = "top" | "bottom" | "left" | "right";
 
@@ -56,6 +57,21 @@ const portalTransformBySide: Record<TooltipSide, string> = {
   bottom: "translate(-50%, 0)",
 };
 
+/** Anchor point (viewport px) for the tooltip on the given side of `r`. Paired
+ *  with {@link portalTransformBySide}, which shifts the box onto that point. */
+function tooltipAnchor(r: AnchorRect, side: TooltipSide): { left: number; top: number } {
+  switch (side) {
+    case "right":
+      return { left: r.right + TOOLTIP_GAP, top: r.top + r.height / 2 };
+    case "left":
+      return { left: r.left - TOOLTIP_GAP, top: r.top + r.height / 2 };
+    case "top":
+      return { left: r.left + r.width / 2, top: r.top - TOOLTIP_GAP };
+    case "bottom":
+      return { left: r.left + r.width / 2, top: r.bottom + TOOLTIP_GAP };
+  }
+}
+
 function PortalTooltip({
   label,
   side,
@@ -69,46 +85,10 @@ function PortalTooltip({
 }) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  useEffect(() => {
-    if (!visible || !triggerRef.current) {
-      setPos(null);
-      return;
-    }
-    const update = () => {
-      if (!triggerRef.current) return;
-      const r = triggerRef.current.getBoundingClientRect();
-      let left = 0;
-      let top = 0;
-      switch (side) {
-        case "right":
-          left = r.right + TOOLTIP_GAP;
-          top = r.top + r.height / 2;
-          break;
-        case "left":
-          left = r.left - TOOLTIP_GAP;
-          top = r.top + r.height / 2;
-          break;
-        case "top":
-          left = r.left + r.width / 2;
-          top = r.top - TOOLTIP_GAP;
-          break;
-        case "bottom":
-          left = r.left + r.width / 2;
-          top = r.bottom + TOOLTIP_GAP;
-          break;
-      }
-      setPos({ left, top });
-    };
-    update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-    };
-  }, [visible, side]);
+  // The measure + scroll/resize-tracking lifecycle is owned by useAnchoredRect;
+  // here we only map the rect to a side-specific anchor point.
+  const rect = useAnchoredRect(triggerRef, visible);
+  const pos = rect ? tooltipAnchor(rect, side) : null;
 
   return (
     <>

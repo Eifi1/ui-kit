@@ -81,6 +81,13 @@ household-books' `main.tsx` for the pattern, using `applyTokenSet`/`presetById`)
   `PaletteMenu`, `LanguageMenu`, `TOPBAR_TRIGGER_CLASS`, `TOPBAR_MENU_ITEM_CLASS`.
 - **Subpath:** date helpers at `@hb/ui/dates`; stylesheet at `@hb/ui/tokens.css`.
 
+## Forms / refs
+
+`Input`, `Select`, `Textarea` and `AmountInput` forward their `ref` to the
+underlying DOM element, so they work directly with react-hook-form:
+`<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
+focus-and-scroll-to-error for free.
+
 ## i18n
 
 The package carries no translation catalog. Components with user-facing text take

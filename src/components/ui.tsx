@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { forwardRef, useId, useState } from "react";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
@@ -139,14 +139,10 @@ export function FieldLabel({ children, className }: { children: ReactNode; class
 // open the picker on a click anywhere in the field instead (feedback #224).
 const PICKER_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
 
-export function Input({
-  className,
-  label,
-  id,
-  placeholder,
-  type,
-  ...rest
-}: InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode }) {
+export const Input = forwardRef<
+  HTMLInputElement,
+  InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode }
+>(function Input({ className, label, id, placeholder, type, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   // Password fields get a reveal toggle so users can check what they typed.
@@ -181,6 +177,7 @@ export function Input({
     if (!isPassword) {
       return (
         <input
+          ref={ref}
           id={id}
           type={type}
           placeholder={placeholder}
@@ -193,6 +190,7 @@ export function Input({
     return (
       <div className={cn("relative", className)}>
         <input
+          ref={ref}
           id={id}
           type={effectiveType}
           placeholder={placeholder}
@@ -206,6 +204,7 @@ export function Input({
   return (
     <FloatingField className={className} htmlFor={fieldId} label={label}>
       <input
+        ref={ref}
         id={fieldId}
         type={effectiveType}
         placeholder=" "
@@ -216,16 +215,13 @@ export function Input({
       {revealToggle}
     </FloatingField>
   );
-}
+});
+Input.displayName = "Input";
 
-export function Select({
-  className,
-  label,
-  id,
-  children,
-  invalid,
-  ...rest
-}: SelectHTMLAttributes<HTMLSelectElement> & { label?: ReactNode; invalid?: boolean }) {
+export const Select = forwardRef<
+  HTMLSelectElement,
+  SelectHTMLAttributes<HTMLSelectElement> & { label?: ReactNode; invalid?: boolean }
+>(function Select({ className, label, id, children, invalid, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
@@ -240,6 +236,7 @@ export function Select({
     return (
       <div className={cn("relative", className)}>
         <select
+          ref={ref}
           {...rest}
           aria-invalid={invalid || undefined}
           className={cn(FIELD_BASE, "appearance-none pr-9", invalid && FIELD_INVALID)}
@@ -253,6 +250,7 @@ export function Select({
   return (
     <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel>
       <select
+        ref={ref}
         id={fieldId}
         {...rest}
         aria-invalid={invalid || undefined}
@@ -263,28 +261,27 @@ export function Select({
       {chevron}
     </FloatingField>
   );
-}
+});
+Select.displayName = "Select";
 
-export function Textarea({
-  className,
-  label,
-  id,
-  placeholder,
-  ...rest
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: ReactNode }) {
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: ReactNode }
+>(function Textarea({ className, label, id, placeholder, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   if (label === undefined) {
     return (
-      <textarea id={id} placeholder={placeholder} {...rest} className={cn(FIELD_BASE, className)} />
+      <textarea ref={ref} id={id} placeholder={placeholder} {...rest} className={cn(FIELD_BASE, className)} />
     );
   }
   return (
     <FloatingField className={className} htmlFor={fieldId} label={label}>
-      <textarea id={fieldId} placeholder=" " {...rest} className={FLOATING_INPUT_CLASS} />
+      <textarea ref={ref} id={fieldId} placeholder=" " {...rest} className={FLOATING_INPUT_CLASS} />
     </FloatingField>
   );
-}
+});
+Textarea.displayName = "Textarea";
 
 export function Card({
   className,

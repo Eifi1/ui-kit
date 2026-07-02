@@ -1,9 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { NavLink } from "react-router";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "../lib/cn";
 import { Tooltip } from "../components/tooltip";
+import { useAnchoredRect } from "../hooks/use-anchored-rect";
+import { useEscapeKey } from "../hooks/use-dismiss";
+
+export interface AppShellSubItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  /** Passed to NavLink's `end` (exact match). Defaults to true. */
+  end?: boolean;
+}
 
 export interface AppShellNavItem {
   to: string;
@@ -11,6 +23,11 @@ export interface AppShellNavItem {
   icon: LucideIcon;
   /** Passed to NavLink's `end` (exact match). Defaults to true. */
   end?: boolean;
+  /** Optional sub-items. When present, hovering (or focusing) the item opens a
+   *  flyout to the right of the sidebar with a header (this item's label) and the
+   *  sub-items as icon + title links. Works collapsed or expanded; the mobile
+   *  bottom bar ignores sub-items and links to `to`. */
+  items?: AppShellSubItem[];
 }
 
 interface AppShellProps {
@@ -68,36 +85,9 @@ export function AppShell({
           }`}
         >
           <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
-            {nav.map((item) => {
-              const link = (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 min-h-9 ${
-                      collapsed ? "justify-center px-2" : "px-3"
-                    } py-2 rounded-md text-sm ${
-                      isActive
-                        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                        : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                    }`
-                  }
-                  end={item.end ?? true}
-                >
-                  <span className="relative shrink-0">
-                    <item.icon className="size-4" />
-                  </span>
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </NavLink>
-              );
-              return collapsed ? (
-                <Tooltip key={item.to} label={item.label} side="right" portal className="block">
-                  {link}
-                </Tooltip>
-              ) : (
-                link
-              );
-            })}
+            {nav.map((item) => (
+              <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+            ))}
           </nav>
           {sidebarFooter?.(collapsed)}
           <div className="border-t border-slate-200 dark:border-slate-800 p-2">
@@ -159,6 +149,139 @@ export function AppShell({
           </NavLink>
         ))}
       </nav>
+    </div>
+  );
+}
+
+const navLinkClass = (collapsed: boolean) =>
+  ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 min-h-9 ${collapsed ? "justify-center px-2" : "px-3"} py-2 rounded-md text-sm ${
+      isActive
+        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+        : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+    }`;
+
+/** A single desktop sidebar entry. Plain link (with a tooltip when collapsed) —
+ *  unless it has sub-items, in which case hovering/focusing opens a flyout. */
+function SidebarNavItem({ item, collapsed }: { item: AppShellNavItem; collapsed: boolean }) {
+  const hasSub = !!item.items?.length;
+
+  const link = (
+    <NavLink
+      to={item.to}
+      end={item.end ?? true}
+      className={navLinkClass(collapsed)}
+      aria-haspopup={hasSub ? "menu" : undefined}
+    >
+      <span className="relative shrink-0">
+        <item.icon className="size-4" />
+      </span>
+      {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+      {!collapsed && hasSub && <ChevronRight className="size-3.5 shrink-0 opacity-60" />}
+    </NavLink>
+  );
+
+  if (hasSub) return <SidebarFlyout item={item}>{link}</SidebarFlyout>;
+  return collapsed ? (
+    <Tooltip label={item.label} side="right" portal className="block">
+      {link}
+    </Tooltip>
+  ) : (
+    link
+  );
+}
+
+/**
+ * Wraps a nav item that has sub-items: on hover or keyboard focus it opens a
+ * portalled flyout to the right of the sidebar (portalled so the sidebar's
+ * `overflow-hidden` can't clip it) with the item's label as a header and each
+ * sub-item as an icon + title link. A short close delay lets the cursor travel
+ * from the item onto the panel; Escape / outside-move close it.
+ */
+function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: ReactNode }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [open, setOpen] = useState(false);
+
+  // Anchor the flyout to the item's right edge; the hook re-measures on
+  // scroll/resize (the nav list can scroll).
+  const rect = useAnchoredRect(wrapperRef, open);
+  const pos = rect ? { top: rect.top, left: rect.right } : null;
+
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const openMenu = () => {
+    cancelClose();
+    setOpen(true);
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), 140);
+  };
+
+  // Close on Escape while open.
+  useEscapeKey(() => setOpen(false), open);
+
+  useEffect(() => () => cancelClose(), []);
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative"
+      onMouseEnter={openMenu}
+      onMouseLeave={scheduleClose}
+      onFocus={openMenu}
+      onBlur={scheduleClose}
+    >
+      {children}
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            style={{ position: "fixed", top: pos.top, left: pos.left }}
+            className="z-40 pl-1"
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
+          >
+            <div
+              role="menu"
+              aria-label={item.label}
+              className="min-w-52 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+            >
+              <div className="border-b border-slate-100 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                {item.label}
+              </div>
+              <ul className="py-1">
+                {item.items!.map((sub) => (
+                  <li key={sub.to}>
+                    <NavLink
+                      to={sub.to}
+                      end={sub.end ?? true}
+                      role="menuitem"
+                      onClick={() => setOpen(false)}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-2.5 px-3 py-2 text-sm",
+                          isActive
+                            ? "bg-slate-100 font-medium text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                            : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800",
+                        )
+                      }
+                    >
+                      <sub.icon className="size-4 shrink-0 text-slate-400 dark:text-slate-500" />
+                      <span className="truncate">{sub.label}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

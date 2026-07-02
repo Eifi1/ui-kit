@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useOutsideClick } from "../hooks/use-dismiss";
 
 interface HoverMenuProps {
   trigger: (state: { open: boolean; toggle: () => void }) => ReactNode;
@@ -69,16 +70,7 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
     };
   }, [open, close]);
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        close();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, close]);
+  useOutsideClick(wrapperRef, close, open);
 
   return (
     <div

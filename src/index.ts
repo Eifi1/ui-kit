@@ -12,6 +12,9 @@ export { logger } from "./lib/logger";
 // ── hooks ────────────────────────────────────────────────────────────────────
 export { useMediaQuery } from "./hooks/use-media-query";
 export { useBodyScrollLock } from "./hooks/use-body-scroll-lock";
+export { useAnchoredRect } from "./hooks/use-anchored-rect";
+export type { AnchorRect } from "./hooks/use-anchored-rect";
+export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
 export * from "./theme/chart-palette";
@@ -55,3 +58,14 @@ export type { DataTableColumn, DataTableProps, ServerPagination, FilterState } f
 export * from "./shell/topbar-controls";
 export * from "./shell/top-bar";
 export * from "./shell/app-shell";
+export * from "./shell/option-switcher-menu";
+export * from "./shell/topbar-action-menu";
+
+// ── feedback (generic form shell; app wires its own API/inbox) ───────────────
+export * from "./feedback/feedback-dialog";
+
+// ── guided tours ─────────────────────────────────────────────────────────────
+export * from "./tour/tour";
+
+// ── command palette / global search ──────────────────────────────────────────
+export * from "./search/command-palette";
