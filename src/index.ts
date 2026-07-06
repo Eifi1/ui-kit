@@ -1,6 +1,6 @@
 // @hb/ui — shared design-system barrel.
 //
-// Domain-free UI + theme surface extracted from household-books. Consumers import
+// Domain-free UI + theme surface shared across apps (lead app: Keksdose). Consumers import
 // components/theme from "@hb/ui" and the token stylesheet from "@hb/ui/tokens.css".
 
 // ── lib ────────────────────────────────────────────────────────────────────

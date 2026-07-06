@@ -1,6 +1,6 @@
 # @hb/ui
 
-The shared design system extracted from **household-books** (the lead app). It is
+The shared, app-agnostic design system for all sibling apps (lead app: **Keksdose**). It is
 the single live source: HB consumes it directly, so design changes here flow into
 every consumer. Domain-free — no app data models, currency/formatting, auth,
 budgets, or i18n catalog.
@@ -13,7 +13,7 @@ its own Vite + Tailwind. Changes are picked up live.
 ```jsonc
 // package.json
 "dependencies": {
-  "@hb/ui": "file:../../household-books/packages/ui"
+  "@hb/ui": "file:../../keksdose/packages/ui"
 }
 ```
 
@@ -58,7 +58,7 @@ export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useH
 
 Call `useApplyTheme()` + `useApplyPalette()` once near the root. For a no-flash
 first paint, apply the persisted theme class + token set before hydration (see
-household-books' `main.tsx` for the pattern, using `applyTokenSet`/`presetById`).
+Keksdose's `main.tsx` for the pattern, using `applyTokenSet`/`presetById`).
 
 ## What's exported
 

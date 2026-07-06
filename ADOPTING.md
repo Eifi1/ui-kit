@@ -1,20 +1,20 @@
 # Brief: adopt the `@hb/ui` design system
 
 Hand this to the consuming repo's agent (e.g. `property-management`). It assumes
-`household-books` is checked out as a sibling, so this package is readable at
-`../household-books/packages/ui` and its full contract is in
-`../household-books/packages/ui/README.md`.
+`keksdose` is checked out as a sibling, so this package is readable at
+`../keksdose/packages/ui` and its full contract is in
+`../keksdose/packages/ui/README.md`.
 
-**Goal.** Consume household-books' shared design system (`@hb/ui`) so future HB
+**Goal.** Consume the shared design system (`@hb/ui`) so future design-system
 design changes flow in automatically, and replace this app's own generic UI
 primitives with the shared ones. Keep this app's domain-specific pieces local.
 
 ## Steps
 
 1. **Add the dependency** (path is relative to the package.json you add it to;
-   `../../household-books/...` is correct from an app at `<repo>/frontend`):
+   `../../keksdose/...` is correct from an app at `<repo>/frontend`):
    ```jsonc
-   "dependencies": { "@hb/ui": "file:../../household-books/packages/ui" }
+   "dependencies": { "@hb/ui": "file:../../keksdose/packages/ui" }
    ```
    Then install. Ensure these peers exist in your app: `react`, `react-dom`
    (required); `recharts` (only for the chart kit), `sonner` (only for
@@ -45,7 +45,7 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    ```
    Call `useApplyTheme()` + `useApplyPalette()` once at the root. For no flash on
    load, apply the persisted `.dark` class + token set before hydration — copy the
-   pattern in `../household-books/frontend/src/main.tsx` (uses `applyTokenSet` /
+   pattern in `../keksdose/frontend/src/main.tsx` (uses `applyTokenSet` /
    `presetById` / `DEFAULT_PRESET`).
 
 5. **Replace local primitives.** Swap your own `Button`/`Input`/`Select`/`Card`/
@@ -62,7 +62,7 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
 
 ## Reference
 
-`../household-books/packages/ui/README.md` — full wiring detail + the complete list
+`../keksdose/packages/ui/README.md` — full wiring detail + the complete list
 of exported components/theme/shell.
 
 ## Definition of done

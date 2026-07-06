@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Shared design system extracted from household-books (single live source).",
+  "description": "App-agnostic shared design system (single live source). Lead app: Keksdose.",
   "exports": {
     ".": "./src/index.ts",
     "./dates": "./src/lib/dates.ts",
