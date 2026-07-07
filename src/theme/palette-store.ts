@@ -5,7 +5,27 @@ import type { StoreApi, UseBoundStore } from "zustand";
 import { logger } from "../lib/logger";
 import type { HeatStops } from "./chart-palette";
 import { applyTokenSet, DEFAULT_PRESET, presetById, type TokenSet } from "./palette-presets";
-import type { ThemeState } from "./theme-store";
+import type { ThemeState, ThemeMode } from "./theme-store";
+
+/**
+ * Pre-hydration counterpart to `applyPersistedTheme`: read the palette id
+ * persisted under `storageKey` straight from localStorage and apply that preset's
+ * tokens for the given resolved `mode` to <html>, BEFORE React mounts (no flash of
+ * the default palette). Falls back to the default preset for missing/malformed
+ * state, so an app entrypoint never re-types the persist envelope.
+ */
+export function applyPersistedPalette(storageKey: string, mode: ThemeMode): void {
+  let id = DEFAULT_PRESET.id;
+  try {
+    const blob = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as {
+      state?: { id?: string };
+    };
+    if (blob.state?.id) id = blob.state.id;
+  } catch {
+    /* malformed storage → default preset */
+  }
+  applyTokenSet(document.documentElement, presetById(id)[mode]);
+}
 
 // The palette layer flips the whole app between candidate appearance presets at
 // runtime (feedback #307), re-skinning every token-driven surface and chart.

@@ -3,7 +3,13 @@ import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
+
+// Shared base ring for every button-styled element. Kept as a named const so the
+// <Button> component and the {@link buttonClasses} helper draw from one source and
+// can never drift apart.
+const BUTTON_BASE =
+  "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
 // Actions default to a warm bordered look (primary = filled warm chip, secondary =
@@ -21,6 +27,17 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
     "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus:ring-[var(--brand)]",
 };
 
+/**
+ * Button classes for the rare case where the styling must land on a non-`<button>`
+ * element that {@link Button} can't render — e.g. a router `<Link>` or a Radix
+ * AlertDialog Action/Cancel (which must stay the Radix element). Everywhere a real
+ * button works, prefer `<Button>`. Draws from the same base + variant maps as
+ * `<Button>`, so the two stay in lockstep.
+ */
+export function buttonClasses(variant: ButtonVariant = "primary", className?: string): string {
+  return cn(BUTTON_BASE, buttonVariantClasses[variant], className);
+}
+
 export function Button({
   variant = "primary",
   stretch,
@@ -31,7 +48,7 @@ export function Button({
     <button
       {...rest}
       className={cn(
-        "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed",
+        BUTTON_BASE,
         // In a flex row next to a taller labelled field, `stretch` makes the button
         // fill the field's height so the two line up (self-stretch overrides the row's
         // align-items). No effect outside a flex row / when it's already the tallest.
