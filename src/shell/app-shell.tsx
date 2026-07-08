@@ -84,7 +84,7 @@ export function AppShell({
       {topBar}
       <div className="flex flex-1 min-h-0">
         <aside
-          className={`hidden md:flex md:flex-col md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)] border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 transition-[width] duration-200 ease-out overflow-hidden ${
+          className={`hidden md:flex md:flex-col md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)] border-r border-[var(--border)] bg-[var(--bg-surface)] transition-[width] duration-200 ease-out overflow-hidden ${
             collapsed ? "md:w-14" : "md:w-60"
           }`}
         >
@@ -102,7 +102,7 @@ export function AppShell({
             </div>
           </nav>
           {sidebarFooter?.(collapsed)}
-          <div className="border-t border-slate-200 dark:border-slate-800 p-2">
+          <div className="border-t border-[var(--border)] p-2">
             {collapsed ? (
               <Tooltip label={expandLabel} side="right" portal className="block">
                 <button
@@ -141,7 +141,7 @@ export function AppShell({
 
       <nav
         data-tour="nav"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 grid"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[var(--bg-surface)] border-t border-[var(--border)] grid"
         style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
       >
         {nav.map((item) => (
