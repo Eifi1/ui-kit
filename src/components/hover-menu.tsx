@@ -29,10 +29,28 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
   const [phase, setPhase] = useState<Phase>("closed");
   const open = phase === "open" || phase === "closing";
 
-  const close = useCallback(() => setPhase("closed"), []);
+  // Whether the panel is open *because hover opened it*, vs. an explicit
+  // click/keyboard toggle. A real mouse click on the trigger is always
+  // preceded by a real mouseenter — the cursor has to land on the button
+  // before it can be clicked — so once hover has opened the panel, the click
+  // that inevitably follows is the same physical gesture, not a request to
+  // close what was just opened (feedback #19). Toggling closed on click stays
+  // for keyboard/touch activation, which reaches "open" without going through
+  // the hover path.
+  const openedByHoverRef = useRef(false);
+
+  const close = useCallback(() => {
+    openedByHoverRef.current = false;
+    setPhase("closed");
+  }, []);
 
   const toggle = useCallback(
-    () => setPhase((p) => (p === "open" || p === "closing" ? "closed" : "open")),
+    () =>
+      setPhase((p) => {
+        if (p === "open" || p === "closing") return openedByHoverRef.current ? p : "closed";
+        openedByHoverRef.current = false;
+        return "open";
+      }),
     [],
   );
 
@@ -49,7 +67,10 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
   // Drive the delayed transitions; unmount/phase changes cancel the timer.
   useEffect(() => {
     if (phase === "opening") {
-      const id = setTimeout(() => setPhase("open"), OPEN_DELAY_MS);
+      const id = setTimeout(() => {
+        openedByHoverRef.current = true;
+        setPhase("open");
+      }, OPEN_DELAY_MS);
       return () => clearTimeout(id);
     }
     if (phase === "closing") {
