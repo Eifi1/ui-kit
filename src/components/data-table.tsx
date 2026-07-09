@@ -159,6 +159,15 @@ export interface DataTableProps<T> {
    * wastes space (feedback #317). Desktop is unaffected.
    */
   mobileCard?: (row: T) => ReactNode;
+  /**
+   * Renders as a full-width row above the data rows in the desktop table
+   * (mobile has no equivalent list-row slot, so it's desktop-only). For a
+   * toggle that shows/hides a slice of rows, style it as an expand/collapse
+   * disclosure (chevron + label) so it reads as part of the table rather
+   * than a floating control above it. See feedback #10/#11 (transactions'
+   * "hide upcoming/scheduled" toggle).
+   */
+  leadingRow?: ReactNode;
 }
 
 export type FilterState = Record<string, FilterValue>;
@@ -308,6 +317,7 @@ export function DataTable<T>({
   mobileGroupBy,
   mobileGroupLabel,
   mobileCard,
+  leadingRow,
 }: DataTableProps<T>) {
   const isServer = !!serverPagination;
   const labels = resolveDataTableLabels(labelsProp);
@@ -919,6 +929,13 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
+            {leadingRow && (
+              <tr className="border-t border-slate-100 dark:border-slate-800">
+                <td colSpan={totalColSpan} className="p-0">
+                  {leadingRow}
+                </td>
+              </tr>
+            )}
             {slice.map((row, rowIndex) => {
               const expanded = isExpanded?.(row) ?? false;
               const expansion = expanded ? expandedRow?.(row) : null;
