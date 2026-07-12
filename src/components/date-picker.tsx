@@ -61,6 +61,9 @@ function DateField({
             type="button"
             disabled={disabled}
             onClick={toggle}
+            // The visual FieldLabel is a plain span (not a <label htmlFor>), so give
+            // the trigger an accessible name from a string label — a11y + testable.
+            aria-label={typeof label === "string" ? label : undefined}
             className={cn(
               FIELD_TRIGGER,
               "pr-9",

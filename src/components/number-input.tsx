@@ -1,7 +1,7 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton } from "./calculator";
-import { MathKeys } from "./math-keys";
+import { NumberPadSheet } from "./numpad-sheet";
 import { FIELD_BASE, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { cn } from "../lib/cn";
 import { commitExpression, sanitizeLive } from "../lib/calc";
@@ -56,13 +56,15 @@ export function NumberInput({
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const labelled = label !== undefined;
-  // On phones the native numeric keypad already covers entry, so the calculator
-  // trigger is hidden to declutter the field (feedback #334).
+  // On phones we suppress the OS keyboard (inputMode="none" below) for our own
+  // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
   const isMobile = useMediaQuery("(max-width: 767px)", false);
   const showCalc = calculator && !disabled && !isMobile;
   const [focused, setFocused] = useState(false);
-  // Mobile keypads lack operators, so show an inline math bar on focus (#334).
-  const showMathBar = isMobile && !disabled && focused;
+  // On mobile, focusing opens the numpad bottom sheet instead of the native
+  // keyboard (#334); the ref lets its "Done" blur → commit + close.
+  const showNumpad = isMobile && !disabled && focused;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const commit = () => {
     const next = commitExpression(value);
@@ -77,10 +79,13 @@ export function NumberInput({
   return (
     <FloatingField className={cn("w-full", className)} htmlFor={fieldId} label={label}>
       <input
+        ref={inputRef}
         id={fieldId}
         aria-label={ariaLabel}
         type="text"
-        inputMode="decimal"
+        // Mobile: suppress the OS keyboard so the numpad sheet owns entry (field
+        // keeps focus/caret); desktop keeps the native decimal keypad.
+        inputMode={isMobile ? "none" : "decimal"}
         autoComplete="off"
         autoFocus={autoFocus}
         disabled={disabled}
@@ -100,12 +105,8 @@ export function NumberInput({
       {showCalc && (
         <CalculatorButton value={value} onChange={onChange} className="absolute inset-y-0 right-0 px-2.5" />
       )}
-      {showMathBar && (
-        <MathKeys
-          className="mt-1"
-          onInsert={(ch) => onChange(sanitizeLive(value + ch))}
-          onBackspace={() => onChange(value.slice(0, -1))}
-        />
+      {showNumpad && (
+        <NumberPadSheet value={value} onChange={onChange} onDone={() => inputRef.current?.blur()} label={label} />
       )}
     </FloatingField>
   );

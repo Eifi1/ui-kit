@@ -1,4 +1,4 @@
-import { forwardRef, useId, useMemo, useState } from "react";
+import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
@@ -6,7 +6,7 @@ import { FIELD_BASE, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS } from "./ui";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton } from "./calculator";
-import { MathKeys } from "./math-keys";
+import { NumberPadSheet } from "./numpad-sheet";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import { commitExpression, sanitizeLive } from "../lib/calc";
 
@@ -28,15 +28,26 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
-    // On phones the native numeric keypad already covers entry, so the calculator
-    // trigger is hidden to declutter the field (feedback #334). The right-padding
-    // below keys off showCalc, so it tightens up automatically.
+    // On phones we suppress the OS keyboard (inputMode="none" below) and show our
+    // own calculator numpad, so the desktop popover trigger is hidden. The
+    // right-padding keys off showCalc, so it tightens up automatically.
     const isMobile = useMediaQuery("(max-width: 767px)", false);
     const showCalc = !disabled && !isMobile;
     const [focused, setFocused] = useState(false);
-    // On mobile the OS keypad lacks operators, so an inline math bar appears
-    // under the focused field instead of the desktop calculator popover (#334).
-    const showMathBar = isMobile && !disabled && focused;
+    // On mobile, focusing the field opens the numpad bottom sheet in place of the
+    // native keyboard (feedback #334) — a full calculator keypad, not just the old
+    // operator bar. An internal ref lets the sheet's "Done" blur the input, which
+    // commits + closes via the existing onBlur handler.
+    const showNumpad = isMobile && !disabled && focused;
+    const innerRef = useRef<HTMLInputElement>(null);
+    const setRefs = useCallback(
+      (el: HTMLInputElement | null) => {
+        innerRef.current = el;
+        if (typeof ref === "function") ref(el);
+        else if (ref) ref.current = el;
+      },
+      [ref],
+    );
     const commit = () => onChange(commitExpression(value));
     const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
@@ -59,11 +70,13 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             the INPUT even when the mobile math bar is rendered below (#334). */}
         <div className="relative w-full">
         <input
-          ref={ref}
+          ref={setRefs}
           id={fieldId}
           aria-label={ariaLabel}
           type="text"
-          inputMode="decimal"
+          // On mobile suppress the OS keyboard so our numpad sheet owns entry; the
+          // field keeps focus/caret. Desktop keeps the native decimal keypad.
+          inputMode={isMobile ? "none" : "decimal"}
           autoComplete="off"
           disabled={disabled}
           placeholder={label !== undefined ? " " : placeholder}
@@ -156,12 +169,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           </DropdownPanel>
         )}
         </div>
-        {showMathBar && (
-          <MathKeys
-            className="mt-1"
-            onInsert={(ch) => onChange(sanitizeLive(value + ch))}
-            onBackspace={() => onChange(value.slice(0, -1))}
-          />
+        {showNumpad && (
+          <NumberPadSheet value={value} onChange={onChange} onDone={() => innerRef.current?.blur()} label={label} />
         )}
       </div>
     );

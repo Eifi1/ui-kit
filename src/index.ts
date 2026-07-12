@@ -27,7 +27,7 @@ export * from "./components/ui";
 export * from "./components/dropdown";
 export * from "./components/popover";
 export * from "./components/calculator";
-export * from "./components/math-keys";
+export * from "./components/numpad-sheet";
 export * from "./components/number-input";
 export * from "./components/currency-select";
 export * from "./components/amount-input";

@@ -46,6 +46,13 @@ export interface ModalProps {
    * for that event.
    */
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+  /**
+   * Drop the backdrop's mobile margin so the panel can reach the screen edges
+   * (a full-screen sheet on phones). The panel still needs its own
+   * `h-[100dvh] max-w-full rounded-none` classes via `className` to fill it; the
+   * desktop `md:p-4` margin is kept. Defaults to false (padded on all sizes).
+   */
+  fullBleed?: boolean;
 }
 
 /**
@@ -55,7 +62,7 @@ export interface ModalProps {
  * scroll lock (feedback #204), focus into the panel on open and back to the
  * trigger on close, a Tab focus trap, and `role="dialog"`/`aria-modal`.
  */
-export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown }: ModalProps) {
+export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown, fullBleed }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const backdropClose = useBackdropClose(onClose);
 
@@ -110,7 +117,10 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
   // already portal for the same reason.
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center"
+      className={cn(
+        "fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
+        fullBleed ? "p-0 md:p-4" : "p-4",
+      )}
       {...backdropClose}
     >
       <div
