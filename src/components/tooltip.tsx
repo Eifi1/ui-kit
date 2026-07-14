@@ -5,6 +5,12 @@ import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 
 type TooltipSide = "top" | "bottom" | "left" | "right";
 
+/** The floating bubble itself. Uses the shared surface/border/text tokens so it
+ *  reads as part of the app's chrome (like the top bar and cards) rather than the
+ *  cold slate pill it used to be. */
+const TOOLTIP_SURFACE =
+  "whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
+
 const sidePositionClass: Record<TooltipSide, string> = {
   top: "bottom-full left-1/2 -translate-x-1/2 mb-1",
   bottom: "top-full left-1/2 -translate-x-1/2 mt-1",
@@ -38,7 +44,8 @@ export function Tooltip({
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute z-50 whitespace-nowrap rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-medium text-white opacity-0 shadow-md group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100 dark:bg-slate-100 dark:text-slate-900",
+          TOOLTIP_SURFACE,
+          "pointer-events-none absolute z-50 opacity-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
           sidePositionClass[side],
         )}
       >
@@ -114,7 +121,7 @@ function PortalTooltip({
               top: pos.top,
               transform: portalTransformBySide[side],
             }}
-            className="pointer-events-none z-50 whitespace-nowrap rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-medium text-white shadow-md dark:bg-slate-100 dark:text-slate-900"
+            className={cn(TOOLTIP_SURFACE, "pointer-events-none z-50")}
           >
             {label}
           </span>,
