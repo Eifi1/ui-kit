@@ -750,19 +750,22 @@ export function DataTable<T>({
         {mobileDialogRow &&
           mobileDialogContent &&
           createPortal(
-            // Almost-full-screen overlay dialog: a dimmed backdrop with an inset,
-            // rounded panel so it reads as an overlay rather than a full takeover
-            // (feedback #204). Body scroll is locked while open (see effect above),
-            // so the table behind stays put; the panel body scrolls on its own.
-            // Tapping the backdrop closes it, matching the X button.
+            // Full-bleed mobile dialog: the panel covers the viewport edge to edge
+            // (feedback #32 — the inset panel of #204 left a strip of page showing
+            // beside it on a phone, and tapping that strip dismissed the form
+            // mid-edit). With no backdrop exposed there is nothing to mis-tap, so
+            // the X button is the way out; `dialogBackdropClose` stays wired for
+            // any layout that does leave a backdrop visible. Body scroll is locked
+            // while open (see effect above), so the table behind stays put; the
+            // panel body scrolls on its own.
             <div
-              className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-3"
+              className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40"
               role="dialog"
               aria-modal="true"
               {...dialogBackdropClose}
             >
-              <div className="flex w-full max-h-full flex-col overflow-hidden rounded-xl bg-white shadow-xl dark:bg-slate-900">
-                <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+              <div className="flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-3 dark:border-slate-800">
                   <div className="min-w-0 font-medium">{mobilePrimaryCol?.cell(mobileDialogRow)}</div>
                   <button
                     type="button"
@@ -773,7 +776,9 @@ export function DataTable<T>({
                     <X className="size-5" />
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+                {/* px-3, not px-4: every pixel of chrome here is width the form
+                    fields lose on a phone (feedback #32). */}
+                <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
                   {mobileDialogContent}
                 </div>
               </div>
