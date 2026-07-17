@@ -60,6 +60,38 @@ export function Button({
   );
 }
 
+// Canonical square icon-only button. Unlike <Button> (which carries text
+// geometry — px-3 py-2 gap-2 — and would render an icon-only control as a tiny
+// padded glyph), this fixes a square box and, crucially, forces the child icon
+// to a consistent 20px via `[&_svg]:size-5` so callers can't under-size it. Use
+// this everywhere an action is a bare icon (edit/delete/tools) so they all match
+// the top-bar icon buttons and can never drift apart again.
+const ICON_BUTTON_BASE =
+  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-5";
+
+export const IconButton = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: ButtonVariant;
+    /** Box size: md = 36px (matches the top bar), sm = 32px. Icon stays 20px. */
+    size?: "sm" | "md";
+  }
+>(function IconButton({ variant = "ghost", size = "md", className, ...rest }, ref) {
+  return (
+    <button
+      ref={ref}
+      {...rest}
+      className={cn(
+        ICON_BUTTON_BASE,
+        size === "sm" ? "size-8" : "size-9",
+        buttonVariantClasses[variant],
+        className,
+      )}
+    />
+  );
+});
+IconButton.displayName = "IconButton";
+
 export const FIELD_BASE =
   "block w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[var(--brand)] focus:ring-[var(--brand)] dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
 
@@ -382,7 +414,10 @@ export function CardAction({ className, ...props }: ComponentPropsWithoutRef<"di
 }
 
 export function CardContent({ className, ...props }: ComponentPropsWithoutRef<"div">) {
-  return <div data-slot="card-content" className={cn("px-6", className)} {...props} />;
+  // px-6 + pb-6 (matches shadcn's `p-6 pt-0`): CardHeader owns the top padding,
+  // so footer-less cards would otherwise have their last field flush against the
+  // bottom edge — feedback: language input touching the card bottom on /profile.
+  return <div data-slot="card-content" className={cn("px-6 pb-6", className)} {...props} />;
 }
 
 export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {

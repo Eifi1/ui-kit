@@ -785,7 +785,11 @@ export function DataTable<T>({
       {isMdUp && (
       <div className={cn("flex", fillHeight && "min-h-0 flex-1")}>
         <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col min-h-0")}>
-          <div className={cn("overflow-auto", fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]")}>
+          <div className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]")}>
+        {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up front,
+            so expanding a row (which adds height and can bring in the scrollbar)
+            no longer shrinks the content width and reflows the auto-layout column
+            widths — the reported "expanding an item resizes the columns" bug. */}
         <table className="w-full text-sm">
           {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the
@@ -1022,8 +1026,17 @@ export function DataTable<T>({
                   </tr>
                   {expansion && (
                     <tr className="bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
-                      <td colSpan={totalColSpan} className="px-3 py-3">
-                        {expansion}
+                      {/* Decouple the expanded panel's width from the table's
+                          auto-layout column sizing. `w-0` gives the panel a zero
+                          intrinsic basis while `min-w-full` stretches it to the
+                          current table width, so a wide expansion (long URLs,
+                          screenshots) can no longer widen a column or push a
+                          horizontal scrollbar in and reflow the header — the
+                          "expanding a row resizes the columns / a scrollbar
+                          appears" bug. Pairs with the scroll wrapper's
+                          scrollbar-gutter:stable, which covers the vertical case. */}
+                      <td colSpan={totalColSpan} className="p-0">
+                        <div className="w-0 min-w-full px-3 py-3">{expansion}</div>
                       </td>
                     </tr>
                   )}

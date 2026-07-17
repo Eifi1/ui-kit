@@ -208,7 +208,7 @@ export function ComboboxPanel<V extends string | number>({
         inputRef={inputRef}
         placeholder={searchPlaceholder}
       />
-      <ul role="listbox" aria-multiselectable={multi} className="max-h-64 overflow-y-auto py-1">
+      <ul role="listbox" aria-multiselectable={multi} className="max-h-96 overflow-y-auto py-1">
         {busy && results.length === 0 && (
           <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">…</li>
         )}

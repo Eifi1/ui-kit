@@ -69,7 +69,7 @@ function DateField({
             )}
           >
             <span className={cn("truncate", !hasValue && "text-slate-400 dark:text-slate-500")}>
-              {triggerText}
+              {triggerText || " "}
             </span>
           </button>
         )}

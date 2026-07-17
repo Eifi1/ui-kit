@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router";
@@ -213,6 +213,12 @@ function SidebarNavItem({ item, collapsed }: { item: AppShellNavItem; collapsed:
   );
 }
 
+// Only one sidebar flyout should be open at a time. Tracking the open one lets
+// hovering a different nav item close the previous flyout *immediately* instead
+// of waiting out its close delay, which otherwise leaves two panels visible for
+// a moment as the cursor travels down the nav list.
+let activeFlyoutClose: (() => void) | null = null;
+
 /**
  * Wraps a nav item that has sub-items: on hover or keyboard focus it opens a
  * portalled flyout to the right of the sidebar (portalled so the sidebar's
@@ -230,25 +236,40 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
   const rect = useAnchoredRect(wrapperRef, open);
   const pos = rect ? { top: rect.top, left: rect.right } : null;
 
-  const cancelClose = () => {
+  const cancelClose = useCallback(() => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
       closeTimer.current = null;
     }
-  };
-  const openMenu = () => {
+  }, []);
+  // Stable "close immediately" — used locally and by the shared coordinator so
+  // a sibling item can dismiss this flyout without its 140ms travel delay.
+  const closeNow = useCallback(() => {
     cancelClose();
+    setOpen(false);
+  }, [cancelClose]);
+  const openMenu = useCallback(() => {
+    cancelClose();
+    // Close whichever other flyout is open right away (no overlap).
+    if (activeFlyoutClose && activeFlyoutClose !== closeNow) activeFlyoutClose();
+    activeFlyoutClose = closeNow;
     setOpen(true);
-  };
-  const scheduleClose = () => {
+  }, [cancelClose, closeNow]);
+  const scheduleClose = useCallback(() => {
     cancelClose();
     closeTimer.current = setTimeout(() => setOpen(false), 140);
-  };
+  }, [cancelClose]);
 
   // Close on Escape while open.
   useEscapeKey(() => setOpen(false), open);
 
-  useEffect(() => () => cancelClose(), []);
+  useEffect(
+    () => () => {
+      cancelClose();
+      if (activeFlyoutClose === closeNow) activeFlyoutClose = null;
+    },
+    [cancelClose, closeNow],
+  );
 
   return (
     <div

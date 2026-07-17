@@ -114,6 +114,7 @@ export function FeedbackDialog({
   return (
     <Modal
       onClose={onClose}
+      draggable
       onKeyDown={(e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
           e.preventDefault();

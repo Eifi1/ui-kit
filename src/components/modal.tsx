@@ -1,6 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import type {
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from "react";
 import { cn } from "../lib/cn";
 
 /**
@@ -46,6 +51,12 @@ export interface ModalProps {
    * for that event.
    */
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+  /**
+   * When true, the panel gets a drag handle at its top so the user can move the
+   * dialog aside to read the content it covers (feedback #6). Opt-in so it never
+   * interferes with dialogs that don't want it.
+   */
+  draggable?: boolean;
 }
 
 /**
@@ -55,9 +66,31 @@ export interface ModalProps {
  * scroll lock (feedback #204), focus into the panel on open and back to the
  * trigger on close, a Tab focus trap, and `role="dialog"`/`aria-modal`.
  */
-export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown }: ModalProps) {
+export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown, draggable = false }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const backdropClose = useBackdropClose(onClose);
+
+  // Drag-to-move offset (feedback #6). Applied as a transform so the centered
+  // flex layout is preserved as the resting position.
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ x: number; y: number; baseX: number; baseY: number } | null>(null);
+  const onHandleDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      dragRef.current = { x: e.clientX, y: e.clientY, baseX: offset.x, baseY: offset.y };
+    },
+    [offset.x, offset.y],
+  );
+  const onHandleMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    setOffset({ x: d.baseX + (e.clientX - d.x), y: d.baseY + (e.clientY - d.y) });
+  }, []);
+  const onHandleUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  }, []);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -120,6 +153,11 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
         aria-labelledby={labelledBy}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
+        style={
+          draggable && (offset.x !== 0 || offset.y !== 0)
+            ? { transform: `translate(${offset.x}px, ${offset.y}px)` }
+            : undefined
+        }
         className={cn(
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
           size === "lg" ? "max-w-lg" : "max-w-md",
@@ -127,6 +165,17 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
           className,
         )}
       >
+        {draggable && (
+          <div
+            onPointerDown={onHandleDown}
+            onPointerMove={onHandleMove}
+            onPointerUp={onHandleUp}
+            className="-mx-4 -mt-4 mb-2 flex h-6 cursor-move touch-none items-center justify-center rounded-t-lg"
+            aria-hidden="true"
+          >
+            <div className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+          </div>
+        )}
         {children}
       </div>
     </div>,

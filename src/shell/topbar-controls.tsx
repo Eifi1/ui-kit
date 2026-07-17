@@ -171,7 +171,7 @@ export function LanguageMenu({
                   <span className="flex items-center gap-2">
                     <span
                       aria-hidden
-                      className={`fi fi-${lang.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+                      className={`fi fi-${lang.country} shrink-0 rounded-[2px] ring-1 ring-black/10 dark:ring-white/15`}
                     />
                     {lang.label}
                   </span>
