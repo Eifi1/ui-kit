@@ -21,10 +21,13 @@ interface AmountInputProps {
   className?: string;
   id?: string;
   ariaLabel?: string;
+  /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
+   *  new-transaction form can jump straight to amount entry (feedback #70). */
+  autoFocus?: boolean;
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
@@ -74,6 +77,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           id={fieldId}
           aria-label={ariaLabel}
           type="text"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in per call site (feedback #70)
+          autoFocus={autoFocus}
           // On mobile suppress the OS keyboard so our numpad sheet owns entry; the
           // field keeps focus/caret. Desktop keeps the native decimal keypad.
           inputMode={isMobile ? "none" : "decimal"}

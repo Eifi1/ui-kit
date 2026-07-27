@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Paperclip, X } from "lucide-react";
+import { FileText, Paperclip, X } from "lucide-react";
 import { Button, Input, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
 
@@ -136,13 +136,21 @@ export function FeedbackDialog({
           <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {labels.attachment}
           </div>
-          {attachment && attachmentPreview ? (
+          {attachment ? (
             <div className="flex items-start gap-2">
-              <img
-                src={attachmentPreview}
-                alt={attachment.name}
-                className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
-              />
+              {attachment.type.startsWith("image/") && attachmentPreview ? (
+                <img
+                  src={attachmentPreview}
+                  alt={attachment.name}
+                  className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
+                />
+              ) : (
+                // Non-image attachments (PDF, text) can't preview as an <img>, so
+                // show a neutral file tile with the name/size beside it instead.
+                <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                  <FileText className="size-8" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm text-slate-700 dark:text-slate-200">{attachment.name}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">{Math.round(attachment.size / 1024)} KB</div>

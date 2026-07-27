@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useOutsideClick } from "../hooks/use-dismiss";
@@ -93,6 +93,32 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
 
   useOutsideClick(wrapperRef, close, open);
 
+  // Keep the panel inside the viewport (feedback #85): a wide panel anchored to a
+  // trigger near a screen edge would otherwise spill off it (on mobile the guided-
+  // tours menu ran off the left). Once open, measure and translate it horizontally
+  // just enough to sit within an 8px margin. Recomputed on each open; `shiftX` is
+  // subtracted first so the measurement is against the natural position.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [shiftX, setShiftX] = useState(0);
+  useLayoutEffect(() => {
+    if (!open) {
+      setShiftX(0);
+      return;
+    }
+    const el = panelRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0) return; // unmeasured (e.g. jsdom) — leave as-is
+    const margin = 8;
+    const naturalLeft = rect.left - shiftX;
+    const naturalRight = rect.right - shiftX;
+    let next = 0;
+    if (naturalRight > window.innerWidth - margin) next = window.innerWidth - margin - naturalRight;
+    if (naturalLeft + next < margin) next = margin - naturalLeft;
+    setShiftX(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute only on open/close
+  }, [open]);
+
   return (
     <div
       ref={wrapperRef}
@@ -104,15 +130,17 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
       {trigger({ open, toggle })}
       {open && (
         <div
+          ref={panelRef}
           className={cn(
             "absolute top-full z-40 pt-2",
             align === "right" ? "right-0" : "left-0",
           )}
+          style={shiftX ? { transform: `translateX(${shiftX}px)` } : undefined}
         >
           <div
             role="menu"
             className={cn(
-              "min-w-44 rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900",
+              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900",
               panelClassName,
             )}
           >

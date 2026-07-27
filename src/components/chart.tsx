@@ -6,8 +6,8 @@
 // The value on show is the *structure*: config-driven colors injected as CSS
 // vars, muted axis/grid styling, and a polished tooltip/legend — the things
 // that make shadcn charts read as "designed" rather than "default Recharts".
-import { createContext, useContext, useId } from "react";
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { createContext, useContext, useId, useRef } from "react";
+import type { ComponentProps, CSSProperties, ReactNode, RefObject } from "react";
 import {
   Legend as RechartsLegend,
   ResponsiveContainer,
@@ -100,6 +100,13 @@ interface ChartTooltipContentProps {
   hideLabel?: boolean;
   labelFormatter?: (label: string | number) => ReactNode;
   valueFormatter?: (value: number) => string;
+  /** Cursor position within the chart, injected by recharts. Used with
+   *  {@link boundaryRef} to decide whether to flip the tooltip. */
+  coordinate?: { x?: number; y?: number };
+  /** When set, the tooltip flips to the LEFT of the cursor if it would otherwise
+   *  spill past the right edge of this (usually horizontally-scrolling) container
+   *  — e.g. a wide chart whose rightmost bars sat off-screen (feedback #77). */
+  boundaryRef?: RefObject<HTMLElement | null>;
 }
 
 export function ChartTooltipContent({
@@ -110,11 +117,28 @@ export function ChartTooltipContent({
   hideLabel = false,
   labelFormatter,
   valueFormatter,
+  coordinate,
+  boundaryRef,
 }: ChartTooltipContentProps) {
   const config = useChart();
+  const tipRef = useRef<HTMLDivElement>(null);
   if (!active || !payload?.length) return null;
+  // Recharts anchors the tooltip at coordinate.x inside the full (scrolled) chart
+  // width; subtract the container's scrollLeft to get its on-screen x, then flip
+  // left if the tooltip's own width would run past the visible right edge.
+  let flip = false;
+  const boundary = boundaryRef?.current;
+  if (boundary && coordinate?.x != null) {
+    const visibleX = coordinate.x - boundary.scrollLeft;
+    const tipWidth = tipRef.current?.offsetWidth ?? 160;
+    flip = visibleX + tipWidth + 12 > boundary.clientWidth;
+  }
   return (
-    <div className="min-w-[9rem] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs shadow-xl dark:border-slate-700 dark:bg-slate-900">
+    <div
+      ref={tipRef}
+      style={boundaryRef ? { transform: flip ? "translateX(calc(-100% - 12px))" : "translateX(12px)" } : undefined}
+      className="min-w-[9rem] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs shadow-xl dark:border-slate-700 dark:bg-slate-900"
+    >
       {!hideLabel && label != null && (
         <div className="mb-1.5 font-medium text-slate-900 dark:text-slate-100">
           {labelFormatter ? labelFormatter(label) : label}
