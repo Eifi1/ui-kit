@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { FileText, Paperclip, X } from "lucide-react";
+import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button, Input, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
 
@@ -16,6 +16,8 @@ export interface FeedbackDialogLabels {
   body: string;
   attachment: string;
   attachmentAdd: string;
+  /** Label for the "capture screenshot" button. Optional — falls back to an English default. */
+  attachmentCapture?: string;
   attachmentRemove: string;
   submitHint: string;
   cancel: string;
@@ -51,6 +53,7 @@ export function FeedbackDialog({
   attachmentAccept = DEFAULT_ACCEPT,
   maxAttachmentBytes = DEFAULT_MAX_BYTES,
   onAttachmentError,
+  onCaptureScreenshot,
 }: {
   open: boolean;
   onClose: () => void;
@@ -64,11 +67,18 @@ export function FeedbackDialog({
   attachmentAccept?: string[];
   maxAttachmentBytes?: number;
   onAttachmentError?: (kind: "type" | "size") => void;
+  /**
+   * Optional: capture a screenshot of the underlying app view and return it as a
+   * File. When provided, a "Capture screenshot" button is shown next to "Add
+   * attachment"; the returned file is fed through the same validation + preview.
+   */
+  onCaptureScreenshot?: () => Promise<File | null>;
 }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const [capturing, setCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset the form whenever the dialog is (re)opened.
@@ -77,6 +87,7 @@ export function FeedbackDialog({
       setTitle("");
       setBody("");
       setAttachment(null);
+      setCapturing(false);
     }
   }, [open]);
 
@@ -102,6 +113,17 @@ export function FeedbackDialog({
       return;
     }
     setAttachment(file);
+  };
+
+  const captureScreenshot = async () => {
+    if (!onCaptureScreenshot || capturing) return;
+    setCapturing(true);
+    try {
+      const file = await onCaptureScreenshot();
+      if (file) pickAttachment(file);
+    } finally {
+      setCapturing(false);
+    }
   };
 
   const canSubmit = !!title && !!body && !submitting;
@@ -165,9 +187,16 @@ export function FeedbackDialog({
               </button>
             </div>
           ) : (
-            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-              <Paperclip className="size-4" /> {labels.attachmentAdd}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                <Paperclip className="size-4" /> {labels.attachmentAdd}
+              </Button>
+              {onCaptureScreenshot && (
+                <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
+                  <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
+                </Button>
+              )}
+            </div>
           )}
           <input
             ref={fileInputRef}
