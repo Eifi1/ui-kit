@@ -367,15 +367,72 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
   },
 ];
 
-// Only the shipped default is selectable now (feedback #328): the alternative
-// presets + the top-bar switcher were an evaluation aid and have been retired, so
-// the default is the single source of truth. ALTERNATIVE_PRESETS is retained in
-// source purely as a reference bank of vetted schemes should a real theme picker
-// return; presetById falls back to the default for any stale persisted id.
-export const PALETTES: PalettePreset[] = [DEFAULT_PRESET];
+// ── "Imprint" chart hues (feedback #119) ──────────────────────────────────────
+// anyplot's categorical palette (https://anyplot.ai/palette), by a colleague of
+// Marcel's. 8 hues + an amber semantic anchor, derived from Wong 2011 by a
+// Petroff-style max-min ΔE search in CAM02-UCS with Machado 2009 CVD simulation —
+// the same lineage as our default Paul Tol "Muted", one generation on, and tuned
+// for exactly the warm cream paper our light theme uses.
+//
+// This preset is DEFAULT_PRESET with ONLY the 9 categorical chart hues swapped;
+// surfaces, brand and the semantic money trio stay put, because those were their
+// own deliberate decisions (#307/#328) and are not what the palette is for. The
+// heatmap stops likewise stay teal/amber: they encode under/over, and imprint's
+// own diverging ramp is red↔blue, which would fight the money semantics.
+//
+// Measured on our surfaces (CIEDE2000, Machado severity-100, 8 like-for-like
+// slots on the cream light surface #f6ecd9) — neither palette dominates:
+//   Paul Tol Muted  min-contrast 1.38 · worst-CVD ΔE00 11.8 · normal ΔE00 16.1
+//   imprint         min-contrast 1.95 · worst-CVD ΔE00  7.2 · normal ΔE00 22.2
+// i.e. imprint is punchier and has no near-invisible pale slot (Tol's #88ccee
+// sits at 1.5:1 on cream), while Tol separates better under colour-vision
+// deficiency. So this ships as a CHOICE, not as a new default.
+//
+// The dark set keeps imprint's hues verbatim except matte-red and rose, whose
+// lightness is lifted (oklch L 0.50→0.55) because verbatim they land at 2.67:1
+// and 2.76:1 on our deep-indigo dark surface — under WCAG 2.1 SC 1.4.11's 3:1
+// non-text minimum. Lifted they clear it at 3.30:1 / 3.28:1. anyplot documents
+// the same shortfall on their own dark ground and answers it with a stroke halo;
+// lifting keeps the fix in the token layer instead of every chart component.
+const IMPRINT_HUES_LIGHT = [
+  "#009E73", // brand green   — first series
+  "#C475FD", // lavender      — creative
+  "#4467A3", // blue          — cool / info
+  "#BD8233", // ochre         — earth / commodity
+  "#AE3030", // matte red     — bad / loss / error
+  "#2ABCCD", // cyan          — sky / tech-cool
+  "#954477", // rose          — wellness / health
+  "#99B314", // lime          — growth / nature
+  "#DDCC77", // amber         — anyplot's semantic anchor, used here as slot 9
+];
+const IMPRINT_HUES_DARK = [
+  "#009E73",
+  "#C475FD",
+  "#4467A3",
+  "#BD8233",
+  "#BF413E", // matte red, L-lifted for our dark surface
+  "#2ABCCD",
+  "#A25083", // rose, L-lifted for our dark surface
+  "#99B314",
+  "#DDCC77",
+];
+
+export const IMPRINT_PRESET: PalettePreset = {
+  id: "imprint",
+  name: "Imprint",
+  blurb: "Colourblind-safe chart hues by anyplot.ai",
+  light: { ...DEFAULT_PRESET.light, chart: IMPRINT_HUES_LIGHT },
+  dark: { ...DEFAULT_PRESET.dark, chart: IMPRINT_HUES_DARK },
+};
+
+// The full-theme switcher from #307 stayed retired (feedback #328) — the default
+// is still the single source of truth for surfaces, brand and money, and
+// ALTERNATIVE_PRESETS above remains a reference bank only. What IS selectable is
+// the categorical chart ramp (feedback #119), so these two presets are the live
+// set; presetById falls back to the default for any stale persisted id.
+export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, IMPRINT_PRESET];
 
 export function presetById(id: string): PalettePreset {
-  // Only the default is live now, so any stale persisted id resolves to it.
   return PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;
 }
 
