@@ -1,4 +1,4 @@
-import { Check, Languages, Moon, Palette, Sun } from "lucide-react";
+import { Check, Globe, Moon, Palette, Sun } from "lucide-react";
 import { cn } from "../lib/cn";
 import { HoverMenu } from "../components/hover-menu";
 import type { PalettePreset } from "../theme/palette-presets";
@@ -133,7 +133,14 @@ export interface LanguageOption {
 }
 
 /** Language switcher: a hover menu of options with flags and a check on the
- *  active one. Controlled — the app owns the current code and change handler. */
+ *  active one. Controlled — the app owns the current code and change handler.
+ *
+ *  The trigger is the *active* option's flag, not an icon: lucide's `Languages`
+ *  glyph (文A) is the same mark Chrome puts in the omnibox for "translate this
+ *  page", so it read as machine-translation rather than "pick the UI language"
+ *  (Keksdose feedback #121). The flag also shows which language is currently on,
+ *  which no icon can, and costs the same width on a crowded mobile bar. A globe
+ *  covers the case where `current` matches nothing in `options`. */
 export function LanguageMenu({
   options,
   current,
@@ -145,19 +152,33 @@ export function LanguageMenu({
   onChange: (code: string) => void;
   ariaLabel?: string;
 }) {
+  const active = options.find((o) => o.code === current);
   return (
     <HoverMenu
       ariaLabel={ariaLabel}
       trigger={({ toggle }) => (
-        <button type="button" onClick={toggle} aria-label={ariaLabel} className={TOPBAR_TRIGGER_CLASS}>
-          <Languages className="size-5" />
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={ariaLabel}
+          title={active?.label ?? ariaLabel}
+          className={TOPBAR_TRIGGER_CLASS}
+        >
+          {active ? (
+            <span
+              aria-hidden
+              className={`fi fi-${active.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+            />
+          ) : (
+            <Globe className="size-5" />
+          )}
         </button>
       )}
     >
       {(close) => (
         <ul className="py-1">
           {options.map((lang) => {
-            const active = lang.code === current;
+            const isActive = lang.code === current;
             return (
               <li key={lang.code}>
                 <button
@@ -175,7 +196,7 @@ export function LanguageMenu({
                     />
                     {lang.label}
                   </span>
-                  {active && <Check className="size-4 text-slate-700 dark:text-slate-200" />}
+                  {isActive && <Check className="size-4 text-slate-700 dark:text-slate-200" />}
                 </button>
               </li>
             );
