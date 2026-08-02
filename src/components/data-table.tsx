@@ -1027,8 +1027,19 @@ export function DataTable<T>({
                   </tr>
                   {expansion && (
                     <tr className="bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
-                      <td colSpan={totalColSpan} className="px-3 py-3">
-                        {expansion}
+                      {/* The detail panel spans every column. In an `auto` table
+                          layout (the default here — columns only get fixed style
+                          widths once the user resizes/auto-sizes them) the cell's
+                          content preferred-width is redistributed across the
+                          spanned columns, so a long expansion visibly re-sizes the
+                          columns above it — and one-line content does not, since
+                          its preferred width is small (feedback #104). Wrapping the
+                          content in `w-0 min-w-full` pins the cell's preferred
+                          width to ~0 (the explicit width:0 child), so it can never
+                          perturb the columns; the div then fills to the full row
+                          width only at paint time, and long text wraps within it. */}
+                      <td colSpan={totalColSpan} className="p-0">
+                        <div className="w-0 min-w-full px-3 py-3">{expansion}</div>
                       </td>
                     </tr>
                   )}
