@@ -132,7 +132,19 @@ export function AppShell({
             sits at the bottom — at the viewport edge when content is short,
             beside the sidebar rather than under it. */}
         <div className="flex flex-1 flex-col min-w-0 md:min-h-0">
-          <main className="flex-1 max-w-full overflow-x-clip pb-20 md:pb-0 md:min-h-0 md:overflow-y-auto">
+          {/* `scrollbar-gutter: stable` reserves the scrollbar's track whether or
+              not it is currently needed. Without it this element — the app's only
+              scroll container from md up — narrows its own client box by the
+              scrollbar width the moment a page's content outgrows it, and widens
+              it again when the next page fits. Every centred `mx-auto` container
+              inside then jumps sideways by half a scrollbar, and any fluid-width
+              content changes width outright. Keksdose feedback #403 caught it as
+              "slight width increase/decrease" when switching to the notifications
+              settings section and back: that section is the only one tall enough
+              to scroll. Platform-dependent, which is why it is easy to miss —
+              overlay scrollbars (macOS, most Linux builds) take no layout space,
+              classic ones (Windows) take ~15px. */}
+          <main className="flex-1 max-w-full overflow-x-clip pb-20 md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable]">
             {children}
           </main>
           {footer}
