@@ -21,6 +21,8 @@ export type {
   ViewportBox,
 } from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
+export { useRowSwipe } from "./hooks/use-row-swipe";
+export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
 export * from "./theme/chart-palette";
@@ -32,6 +34,8 @@ export * from "./theme/palette-store";
 export * from "./components/ui";
 export * from "./components/dropdown";
 export * from "./components/popover";
+export { SwipeableRow } from "./components/swipeable-row";
+export type { SwipeAction, SwipeableRowProps } from "./components/swipeable-row";
 export * from "./components/calculator";
 export * from "./components/numpad-sheet";
 export * from "./components/number-input";

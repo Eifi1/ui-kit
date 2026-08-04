@@ -30,6 +30,7 @@ import {
 import type { SortState } from "./data-table-sort";
 import { FilterPopover } from "./data-table-filter-popover";
 import { Pagination } from "./data-table-pagination";
+import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { Popover } from "./popover";
@@ -159,6 +160,17 @@ export interface DataTableProps<T> {
    * wastes space (feedback #317). Desktop is unaffected.
    */
   mobileCard?: (row: T) => ReactNode;
+  /**
+   * Swipe actions for a mobile row, revealed by dragging it horizontally. Return
+   * `null` (or empty sides) for rows that should not move — a locked row, one whose
+   * mutation is in flight, one the user has expanded.
+   *
+   * Mobile only, and deliberately so: the desktop table already has room for an
+   * actions column, and a drag gesture on a pointer device is a worse version of a
+   * button. Wraps only the row body, so an expansion panel below stays put while the
+   * row above it slides.
+   */
+  mobileSwipeActions?: (row: T) => { left?: SwipeAction[]; right?: SwipeAction[] } | null;
   /**
    * Renders as a full-width row above the data rows in the desktop table
    * (mobile has no equivalent list-row slot, so it's desktop-only). For a
@@ -317,6 +329,7 @@ export function DataTable<T>({
   mobileGroupBy,
   mobileGroupLabel,
   mobileCard,
+  mobileSwipeActions,
   leadingRow,
 }: DataTableProps<T>) {
   const isServer = !!serverPagination;
@@ -620,8 +633,11 @@ export function DataTable<T>({
     // contain their own interactive controls (status toggles, action
     // icons) don't end up as illegal nested buttons.
     const interactive = !!onRowClick;
-    return (
-      <li key={rowKey(row)} className={cn(tint)}>
+    const swipe = mobileSwipeActions?.(row);
+    // An expanded row never swipes: the editor below it owns the horizontal space,
+    // and dragging the header away from its own form reads as a glitch.
+    const swipeEnabled = !!swipe && !expanded;
+    const body = (
         <div
           role={interactive ? "button" : undefined}
           tabIndex={interactive ? 0 : undefined}
@@ -664,6 +680,16 @@ export function DataTable<T>({
             </>
           )}
         </div>
+    );
+    return (
+      <li key={rowKey(row)} className={cn(tint)}>
+        {swipeEnabled ? (
+          <SwipeableRow enabled left={swipe!.left} right={swipe!.right}>
+            {body}
+          </SwipeableRow>
+        ) : (
+          body
+        )}
         {expansion && !mobileExpandAsDialog && (
           <div className="px-4 py-3 bg-slate-50/60 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800">
             {expansion}
