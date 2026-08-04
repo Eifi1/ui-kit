@@ -77,6 +77,10 @@
 .bg-brand { background-color: var(--brand); }
 .bg-money-pos { background-color: var(--money-income); }
 .bg-money-neg { background-color: var(--money-expense); }
+/* "No money has moved" — the fill for markers on rows that are not real yet
+   (scheduled / future-dated). Deliberately NOT brand and NOT money-pos: those
+   two mean settled, and a future row wearing one of them reads as done. */
+.bg-money-neutral { background-color: var(--money-neutral); }
 .border-brand { border-color: var(--brand); }
 
 html, body, #root {
