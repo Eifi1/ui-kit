@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
-import { useAnchoredRect } from "../hooks/use-anchored-rect";
+import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 
 interface PopoverProps {
@@ -24,12 +24,15 @@ export function Popover({ trigger, children, width = POPOVER_WIDTH }: PopoverPro
   const close = () => setOpen(false);
   const toggle = () => setOpen((v) => !v);
 
-  // Align the panel's right edge to the trigger's, sitting just below it, and
-  // clamp it into the viewport. The hook re-measures on scroll/resize.
-  const rect = useAnchoredRect(triggerRef, open);
+  // Align the panel's right edge to the trigger's and clamp it horizontally; the
+  // hook owns the vertical half — below by default, flipped above (and height-capped)
+  // when that is where the room is, e.g. once a mobile keyboard has eaten the bottom
+  // of the screen (feedback #135). It re-measures on scroll/resize.
+  const placement = useAnchoredPanel(triggerRef, open);
+  const rect = placement.rect;
   const pos = rect
     ? {
-        top: rect.bottom + 4,
+        top: placement.top,
         left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
       }
     : null;
@@ -44,8 +47,14 @@ export function Popover({ trigger, children, width = POPOVER_WIDTH }: PopoverPro
         createPortal(
           <div
             ref={panelRef}
-            style={{ position: "fixed", top: pos.top, left: pos.left, width }}
-            className="z-50 rounded-md border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+            style={{
+              position: "fixed",
+              top: pos.top,
+              left: pos.left,
+              width,
+              maxHeight: placement.maxHeight,
+            }}
+            className="z-50 overflow-y-auto rounded-md border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900"
           >
             {children(close)}
           </div>,

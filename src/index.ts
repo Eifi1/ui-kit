@@ -14,6 +14,12 @@ export { useMediaQuery } from "./hooks/use-media-query";
 export { useBodyScrollLock } from "./hooks/use-body-scroll-lock";
 export { useAnchoredRect } from "./hooks/use-anchored-rect";
 export type { AnchorRect } from "./hooks/use-anchored-rect";
+export { useAnchoredPanel, anchoredPanelPlacement } from "./hooks/use-anchored-panel";
+export type {
+  AnchoredPanel,
+  AnchoredPanelOptions,
+  ViewportBox,
+} from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────

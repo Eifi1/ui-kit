@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { Fragment, useId, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
@@ -33,6 +33,7 @@ export function Combobox({
   id,
   placeholder,
   className,
+  groupBy,
   "aria-label": ariaLabel,
 }: {
   value: string;
@@ -43,6 +44,12 @@ export function Combobox({
   id?: string;
   placeholder?: string;
   className?: string;
+  /** Heading an option belongs under. Supplying it makes this list read exactly
+   *  like {@link InlineEntityCombobox}'s — one heading per group with its rows
+   *  indented beneath — instead of a flat list (feedback #136 rework: the payee
+   *  field sat next to the newly-grouped category field and no longer matched).
+   *  Omit for a plain list. */
+  groupBy?: (option: string) => string;
   "aria-label"?: string;
 }) {
   const generated = useId();
@@ -54,14 +61,30 @@ export function Combobox({
   const matches = useMemo(() => {
     const seen = new Set<string>();
     const uniq = options.filter((o) => o && !seen.has(o) && seen.add(o));
-    if (!query) return uniq.slice(0, 8);
-    // Prefix matches first, then substring matches — most relevant on top.
-    const starts = uniq.filter((o) => o.toLowerCase().startsWith(query));
-    const contains = uniq.filter(
-      (o) => !o.toLowerCase().startsWith(query) && o.toLowerCase().includes(query),
-    );
-    return [...starts, ...contains].slice(0, 8);
-  }, [options, query]);
+    let ranked: string[];
+    if (!query) {
+      ranked = uniq.slice(0, 8);
+    } else {
+      // Prefix matches first, then substring matches — most relevant on top.
+      const starts = uniq.filter((o) => o.toLowerCase().startsWith(query));
+      const contains = uniq.filter(
+        (o) => !o.toLowerCase().startsWith(query) && o.toLowerCase().includes(query),
+      );
+      ranked = [...starts, ...contains].slice(0, 8);
+    }
+    if (!groupBy) return ranked;
+    // Keep each group contiguous so a heading appears once instead of every time
+    // the ranking interleaves two groups — while preserving "best match first":
+    // a Map keeps insertion order, so groups come out ordered by their best-ranked
+    // member and members keep their rank order inside the group.
+    const byGroup = new Map<string, string[]>();
+    for (const o of ranked) {
+      const key = groupBy(o);
+      if (!byGroup.has(key)) byGroup.set(key, []);
+      byGroup.get(key)!.push(o);
+    }
+    return [...byGroup.values()].flat();
+  }, [options, query, groupBy]);
 
   const commit = (v: string) => {
     onChange(v);
@@ -127,23 +150,39 @@ export function Combobox({
       </div>
       {open && matches.length > 0 && (
         <ul role="listbox" className={LIST_CLASS}>
-          {matches.map((o, i) => (
-            <li key={o} role="option" aria-selected={i === active}>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  // mousedown (not click) so the blur from the input firing first
-                  // doesn't close the list before the selection registers.
-                  e.preventDefault();
-                  commit(o);
-                }}
-                onMouseEnter={() => setActive(i)}
-                className={rowClass(i === active)}
-              >
-                {o}
-              </button>
-            </li>
-          ))}
+          {matches.map((o, i) => {
+            const group = groupBy?.(o);
+            // Heading at each group boundary only — `matches` is group-contiguous,
+            // so comparing against the previous row is enough.
+            const startsGroup = group != null && group !== (matches[i - 1] && groupBy?.(matches[i - 1]));
+            return (
+              <Fragment key={o}>
+                {startsGroup && (
+                  <li
+                    role="presentation"
+                    className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 first:pt-1 dark:text-slate-400"
+                  >
+                    {group}
+                  </li>
+                )}
+                <li role="option" aria-selected={i === active}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      // mousedown (not click) so the blur from the input firing first
+                      // doesn't close the list before the selection registers.
+                      e.preventDefault();
+                      commit(o);
+                    }}
+                    onMouseEnter={() => setActive(i)}
+                    className={cn(rowClass(i === active), group != null && "pl-6")}
+                  >
+                    {o}
+                  </button>
+                </li>
+              </Fragment>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -200,13 +239,29 @@ export function InlineEntityCombobox<V extends string | number>({
   // the FULL list instead of a single-row "filter" of its own value.
   const query = text !== null && text !== (selected?.label ?? "") ? text.trim().toLowerCase() : "";
   const matches = useMemo(() => {
-    if (!query) return options;
-    const hit = (s: string | undefined) => s?.toLowerCase().includes(query) ?? false;
-    const starts = options.filter((o) => o.label.toLowerCase().startsWith(query));
-    const rest = options.filter(
-      (o) => !o.label.toLowerCase().startsWith(query) && (hit(o.label) || hit(o.sublabel)),
-    );
-    return [...starts, ...rest];
+    let ranked = options;
+    if (query) {
+      const hit = (s: string | undefined) => s?.toLowerCase().includes(query) ?? false;
+      const starts = options.filter((o) => o.label.toLowerCase().startsWith(query));
+      const rest = options.filter(
+        (o) =>
+          !o.label.toLowerCase().startsWith(query) &&
+          (hit(o.label) || hit(o.sublabel) || hit(o.group)),
+      );
+      ranked = [...starts, ...rest];
+    }
+    if (!ranked.some((o) => o.group)) return ranked;
+    // Keep each group contiguous so the headings below appear once instead of
+    // re-appearing every time the ranking interleaves two groups — while preserving
+    // "best match first": a Map keeps insertion order, so groups come out ordered by
+    // their best-ranked member and members keep their rank order inside the group.
+    const blocks = new Map<string, ComboOption<V>[]>();
+    for (const o of ranked) {
+      const key = o.group ?? "";
+      if (!blocks.has(key)) blocks.set(key, []);
+      blocks.get(key)!.push(o);
+    }
+    return [...blocks.values()].flat();
   }, [options, query]);
 
   const close = () => {
@@ -294,24 +349,46 @@ export function InlineEntityCombobox<V extends string | number>({
       {open && matches.length > 0 && (
         <ul role="listbox" className={LIST_CLASS}>
           {matches.map((o, i) => (
-            <li key={String(o.value)} role="option" aria-selected={o.value === value}>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  // mousedown (not click) so the input's blur can't close the
-                  // list before the selection registers.
-                  e.preventDefault();
-                  commit(o);
-                }}
-                onMouseEnter={() => setActive(i)}
-                className={cn(rowClass(i === active), o.value === value && "font-medium")}
-              >
-                {o.label}
-                {o.sublabel && (
-                  <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">{o.sublabel}</span>
-                )}
-              </button>
-            </li>
+            // A group heading is emitted at each group boundary rather than repeating
+            // the group on every row (feedback #136). `matches` is group-contiguous,
+            // so comparing with the previous row is enough. Fragment key sits here;
+            // the heading and the option carry their own list semantics.
+            <Fragment key={String(o.value)}>
+              {o.group && o.group !== matches[i - 1]?.group && (
+                <li
+                  role="presentation"
+                  className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 first:pt-1 dark:text-slate-400"
+                >
+                  {o.group}
+                </li>
+              )}
+              <li role="option" aria-selected={o.value === value}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // mousedown (not click) so the input's blur can't close the
+                    // list before the selection registers.
+                    e.preventDefault();
+                    commit(o);
+                  }}
+                  onMouseEnter={() => setActive(i)}
+                  className={cn(
+                    rowClass(i === active),
+                    // Indented under its heading, so the hierarchy is readable at a
+                    // glance instead of inferred from grey trailing text.
+                    o.group && "pl-6",
+                    o.value === value && "font-medium",
+                  )}
+                >
+                  {o.label}
+                  {o.sublabel && (
+                    <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">
+                      {o.sublabel}
+                    </span>
+                  )}
+                </button>
+              </li>
+            </Fragment>
           ))}
         </ul>
       )}

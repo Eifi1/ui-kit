@@ -10,7 +10,8 @@ import type {
 import { Check, Plus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
-import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
+import { type AnchorRect } from "../hooks/use-anchored-rect";
+import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 
 export interface ComboOption<V extends string | number> {
@@ -18,6 +19,14 @@ export interface ComboOption<V extends string | number> {
   label: string;
   sublabel?: string;
   icon?: ReactNode;
+  /**
+   * Section this option belongs to. Where a consumer renders it as a heading with the
+   * members indented beneath — {@link InlineEntityCombobox} does — this is a genuine
+   * grouping, not decoration: the name appears once per section rather than trailing
+   * every row in small grey type, which is barely legible on a phone (feedback #136).
+   * Searchable like `sublabel`.
+   */
+  group?: string;
 }
 
 export interface ComboboxCoreOptions<V extends string | number> {
@@ -42,6 +51,8 @@ export interface ComboboxCore<V extends string | number> {
   results: ComboOption<V>[];
   busy: boolean;
   rect: AnchorRect | null;
+  /** Where the dropdown goes, clamped to the visible viewport (feedback #135). */
+  placement: AnchoredPanel;
   cacheRef: RefObject<Map<V, ComboOption<V>>>;
   resolve: (v: V) => ComboOption<V> | null;
 }
@@ -74,7 +85,10 @@ export function useComboboxCore<V extends string | number>({
   const reqId = useRef(0);
 
   const close = () => setOpen(false);
-  const rect = useAnchoredRect(triggerRef, open);
+  // Placement, not just the anchor rect: the panel has to dodge the on-screen
+  // keyboard its own search box summons (feedback #135).
+  const placement = useAnchoredPanel(triggerRef, open);
+  const rect = placement.rect;
   useOutsideClick([triggerRef, panelRef], close, open);
   useEscapeKey(close, open);
 
@@ -144,6 +158,7 @@ export function useComboboxCore<V extends string | number>({
     results,
     busy,
     rect,
+    placement,
     cacheRef,
     resolve,
   };
@@ -176,7 +191,8 @@ export function ComboboxPanel<V extends string | number>({
   onCreate: () => void;
   createContent: ReactNode;
 }) {
-  const { rect, panelRef, inputRef, query, setQuery, results, busy, active, setActive } = core;
+  const { rect, placement, panelRef, inputRef, query, setQuery, results, busy, active, setActive } =
+    core;
   const rowCount = results.length + (showCreate ? 1 : 0);
 
   const onKeyDown = (e: ReactKeyboardEvent) => {
@@ -199,8 +215,18 @@ export function ComboboxPanel<V extends string | number>({
     <div
       ref={panelRef}
       onKeyDown={onKeyDown}
-      style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, minWidth: 220 }}
-      className="z-50 rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+      // `placement` keeps the panel inside the region actually on screen: on a phone
+      // the search box below pulls up the keyboard, and a panel pinned under a
+      // low trigger would otherwise sit entirely behind it (feedback #135).
+      style={{
+        position: "fixed",
+        top: placement.top,
+        left: rect.left,
+        width: rect.width,
+        minWidth: 220,
+        maxHeight: placement.maxHeight,
+      }}
+      className="z-50 flex flex-col rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
     >
       <DropdownSearchHeader
         query={query}
@@ -208,7 +234,10 @@ export function ComboboxPanel<V extends string | number>({
         inputRef={inputRef}
         placeholder={searchPlaceholder}
       />
-      <ul role="listbox" aria-multiselectable={multi} className="max-h-64 overflow-y-auto py-1">
+      {/* min-h-0 so the list, not the panel, is what shrinks: a flex child defaults
+          to min-height:auto and would refuse to go below its content height, pushing
+          the panel past the maxHeight above. */}
+      <ul role="listbox" aria-multiselectable={multi} className="min-h-0 flex-1 overflow-y-auto py-1">
         {busy && results.length === 0 && (
           <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">…</li>
         )}
