@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
-import { Calendar, X } from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
+import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { formatIsoDate } from "../lib/dates";
-import { FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { addDaysIso, formatIsoDate } from "../lib/dates";
+import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
 import { MiniCalendar } from "./mini-calendar";
 import { Popover } from "./popover";
 
@@ -98,10 +98,55 @@ function DateField({
   );
 }
 
+/** One ‹ / › day-step button, sized to sit flush beside the field. */
+function StepButton({
+  icon: Icon,
+  label,
+  disabled,
+  onClick,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        FIELD_BASE,
+        // FIELD_BASE is `block w-full` for text inputs; a step button is neither, and
+        // px-3 would make it wider than it needs to be. twMerge lets these win.
+        "flex w-10 shrink-0 items-center justify-center px-0 text-slate-500 dark:text-slate-400",
+        "hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200",
+        "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-900",
+      )}
+    >
+      <Icon className="size-4" />
+    </button>
+  );
+}
+
 export interface DatePickerProps extends DatePickerBaseProps {
   /** ISO "YYYY-MM-DD", or "" for empty. */
   value: string;
   onChange: (iso: string) => void;
+  /**
+   * Flank the field with ‹ › buttons that move the value one day. For fields whose
+   * typical edit is a day or two — opening a calendar to go "yesterday" is three
+   * interactions for what should be one.
+   *
+   * Off by default: on a filter or a far-away date the buttons are dead weight, and
+   * they cost ~5rem of width that a narrow layout may not have.
+   */
+  step?: boolean;
+  /** Accessible names for the step buttons. Required with `step` — this package
+   *  ships no strings of its own, so every label is passed in by the consumer. */
+  stepLabels?: { prev: string; next: string };
 }
 
 /** Single-date picker: a field showing the formatted date, opening a calendar. */
@@ -113,11 +158,15 @@ export function DatePicker({
   min,
   max,
   formatOptions,
+  step,
+  stepLabels,
+  className,
   ...rest
 }: DatePickerProps) {
-  return (
+  const field = (
     <DateField
       {...rest}
+      className={step ? "min-w-0 flex-1" : className}
       hasValue={Boolean(value)}
       triggerText={value ? formatIsoDate(value, locale, formatOptions) : (placeholder ?? "")}
       onClear={() => onChange("")}
@@ -137,6 +186,35 @@ export function DatePicker({
         />
       )}
     </DateField>
+  );
+  if (!step) return field;
+
+  // An empty field has nothing to step from, so both buttons are dead until a date
+  // is picked. Bounds are compared as strings: "YYYY-MM-DD" sorts chronologically.
+  const target = (days: number) => (value ? addDaysIso(value, days) : "");
+  const blocked = (days: number) => {
+    const next = target(days);
+    if (!next || rest.disabled) return true;
+    return Boolean((min && next < min) || (max && next > max));
+  };
+  return (
+    // items-stretch, not items-center: the buttons match the field's height, which
+    // varies with whether it carries a floating label.
+    <div className={cn("flex items-stretch gap-1", className)}>
+      <StepButton
+        icon={ChevronLeft}
+        label={stepLabels?.prev ?? "Previous day"}
+        disabled={blocked(-1)}
+        onClick={() => onChange(target(-1))}
+      />
+      {field}
+      <StepButton
+        icon={ChevronRight}
+        label={stepLabels?.next ?? "Next day"}
+        disabled={blocked(1)}
+        onClick={() => onChange(target(1))}
+      />
+    </div>
   );
 }
 

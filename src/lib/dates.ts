@@ -108,6 +108,19 @@ export function formatIsoDate(
   return d ? d.toLocaleDateString(locale, options) : "";
 }
 
+/** A "YYYY-MM-DD" string shifted by `days` (negative shifts back), or the input
+ *  unchanged when it isn't a parseable date.
+ *
+ *  Local-time throughout — {@link parseIsoDate} builds a local-midnight Date and
+ *  {@link toLocalIso} reads local components back, so this never slides a day the way
+ *  a `toISOString()` round-trip does west of UTC. */
+export function addDaysIso(iso: string, days: number): string {
+  const d = parseIsoDate(iso);
+  if (!d) return iso;
+  d.setDate(d.getDate() + days);
+  return toLocalIso(d);
+}
+
 /** Whether two Dates fall on the same local calendar day. */
 export function sameYmd(a: Date, b: Date): boolean {
   return (
