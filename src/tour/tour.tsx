@@ -342,17 +342,36 @@ function TourOverlay({
     <div className="pointer-events-none fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={step.title}>
       {spot ? (
         <div
-          className="pointer-events-none fixed rounded-lg ring-2 ring-white/80 transition-all duration-200 ease-out"
+          className="pointer-events-none fixed rounded-lg transition-all duration-200 ease-out"
           style={{
             top: spot.top,
             left: spot.left,
             width: spot.width,
             height: spot.height,
-            boxShadow: "0 0 0 9999px rgba(15,23,42,0.55)",
+            // A two-tone frame, not a single translucent ring.
+            //
+            // The old treatment was `ring-2 ring-white/80` over a 55% scrim, and it
+            // "was barely visible" on the app's blue-tinted surfaces. Two reasons,
+            // and a single ring can't fix either: at 55% the surround stays bright
+            // enough that the un-dimmed hole barely reads AS a hole, and a 80%-white
+            // ring sitting on the edge of a light card is white-on-near-white.
+            //
+            // So: an opaque white band immediately around the target, a dark keyline
+            // outside it, then the scrim. Whatever the target's own colour is, one of
+            // the two bands is always in contrast with it and the other is always in
+            // contrast with the dimmed surround — there is no background that can
+            // swallow both. The blurred layer between them softens the step so the
+            // frame reads as lighting rather than as a pasted-on rectangle.
+            boxShadow: [
+              "0 0 0 3px rgba(255,255,255,0.98)",
+              "0 0 0 5px rgba(15,23,42,0.92)",
+              "0 0 18px 6px rgba(15,23,42,0.45)",
+              "0 0 0 9999px rgba(15,23,42,0.70)",
+            ].join(", "),
           }}
         />
       ) : (
-        <div className="pointer-events-auto fixed inset-0 bg-slate-900/55" />
+        <div className="pointer-events-auto fixed inset-0 bg-slate-900/70" />
       )}
       <TourCard
         step={step}
