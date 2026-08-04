@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
-import { Check, ChevronDown } from "lucide-react";
-import { FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { Check } from "lucide-react";
+import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 
@@ -98,7 +98,7 @@ export function CurrencySelect({ value, onChange, placeholder, className, label,
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={cn(FIELD_TRIGGER, label !== undefined && FIELD_FLOATING_PAD)}
+        className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD)}
       >
         {/* The trigger stays COMPACT — flag + code only — so it never clips in a
             narrow field; the full names live in the (wider) popup (feedback
@@ -113,7 +113,7 @@ export function CurrencySelect({ value, onChange, placeholder, className, label,
             placeholder ?? "Currency"
           )}
         </span>
-        <ChevronDown className="size-4 text-slate-500 dark:text-slate-400 shrink-0" />
+        <FieldChevron />
       </button>
       {open && (
         <DropdownPanel

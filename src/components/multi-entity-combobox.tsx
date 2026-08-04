@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
 
 export interface MultiEntityComboboxProps<V extends string | number> {
@@ -89,6 +89,7 @@ export function MultiEntityCombobox<V extends string | number>({
         onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
           FIELD_TRIGGER,
+          "pr-9",
           label !== undefined && FIELD_FLOATING_PAD,
           disabled && "cursor-not-allowed opacity-50",
         )}
@@ -110,12 +111,12 @@ export function MultiEntityCombobox<V extends string | number>({
               e.stopPropagation();
               onChange([]);
             }}
-            className="-mr-1 shrink-0 rounded p-0.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
           >
             <X className="size-4" />
           </span>
         ) : (
-          <ChevronDown className="size-4 shrink-0 text-slate-500 dark:text-slate-400" />
+          <FieldChevron />
         )}
       </button>
       <ComboboxPanel

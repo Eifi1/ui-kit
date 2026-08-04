@@ -82,10 +82,32 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
 // so they don't hand-copy the field classes. Add FIELD_FLOATING_PAD only when the
 // trigger carries a label (unlabelled triggers stay normal height to match buttons /
 // adjacent controls). Pair the labelled case with a static FieldLabel.
+// `relative` so the trigger can host an absolutely-centred FieldChevron / clear
+// button the way the native Select does.
 export const FIELD_TRIGGER = cn(
   FIELD_BASE,
-  "flex items-center justify-between gap-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800",
+  "relative flex items-center justify-between gap-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800",
 );
+
+/** The dropdown chevron, shared by the native {@link Select} and every custom
+ * {@link FIELD_TRIGGER} control.
+ *
+ * Absolutely positioned and centred on the FIELD box. As an ordinary flex child
+ * it centres on the *content* box instead, and `FIELD_FLOATING_PAD` (pt-4 pb-1)
+ * pushes that box's midline down — so a labelled currency/multi-select chevron
+ * sat visibly lower than the native select's right beside it (feedback #400).
+ * Pair it with `pr-9` on the trigger so the value can't run underneath. */
+export function FieldChevron({ className }: { className?: string }) {
+  return (
+    <ChevronDown
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
+        className,
+      )}
+    />
+  );
+}
 
 // Animated label that starts centred (as a placeholder) in an empty field and
 // floats up INSIDE the top strip on focus or once the field has a value. Sits on
@@ -158,8 +180,16 @@ const PICKER_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]
 
 export const Input = forwardRef<
   HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode }
->(function Input({ className, label, id, placeholder, type, ...rest }, ref) {
+  InputHTMLAttributes<HTMLInputElement> & {
+    label?: ReactNode;
+    /** Classes for the `<input>` itself, as distinct from `className`, which
+     *  styles the field WRAPPER once a `label` turns this into a FloatingField.
+     *  Without it a labelled Input had no way to reach its own element — so
+     *  `tabular-nums` on a numeric text field, which NumberInput has supported
+     *  all along through the identically named prop, was simply unavailable. */
+    inputClassName?: string;
+  }
+>(function Input({ className, inputClassName, label, id, placeholder, type, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   // Password fields get a reveal toggle so users can check what they typed.
@@ -200,7 +230,7 @@ export const Input = forwardRef<
           placeholder={placeholder}
           {...rest}
           onClick={handleClick}
-          className={cn(FIELD_BASE, className)}
+          className={cn(FIELD_BASE, className, inputClassName)}
         />
       );
     }
@@ -212,7 +242,7 @@ export const Input = forwardRef<
           type={effectiveType}
           placeholder={placeholder}
           {...rest}
-          className={cn(FIELD_BASE, "pr-9")}
+          className={cn(FIELD_BASE, "pr-9", inputClassName)}
         />
         {revealToggle}
       </div>
@@ -227,7 +257,7 @@ export const Input = forwardRef<
         placeholder=" "
         {...rest}
         onClick={handleClick}
-        className={cn(FLOATING_INPUT_CLASS, isPassword && "pr-9")}
+        className={cn(FLOATING_INPUT_CLASS, isPassword && "pr-9", inputClassName)}
       />
       {revealToggle}
     </FloatingField>
@@ -243,12 +273,7 @@ export const Select = forwardRef<
   const fieldId = id ?? generated;
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
   // in from the right border and matches both themes — feedback #223.
-  const chevron = (
-    <ChevronDown
-      aria-hidden
-      className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-    />
-  );
+  const chevron = <FieldChevron />;
   if (label === undefined) {
     return (
       <div className={cn("relative", className)}>
