@@ -76,6 +76,22 @@ export interface DataTableProps<T> {
   expandedRow?: (row: T) => ReactNode | null;
   isExpanded?: (row: T) => boolean;
   rowClassName?: (row: T) => string | undefined;
+  /**
+   * Extra DOM attributes for a row's container — the `<tr>` on desktop, the
+   * `<li>` on mobile. For hooks that have to sit on the row itself rather than
+   * inside a cell: guided-tour anchors, analytics ids, e2e selectors. Undefined
+   * values are dropped, so a per-row conditional needs no filtering at the call
+   * site. Not a styling escape hatch — that is `rowClassName`.
+   */
+  rowAttributes?: (row: T) => Record<string, string | undefined> | undefined;
+  /**
+   * Set false for a table that is short by construction — an invoice's line
+   * items, a wizard's picks — where the pager is chrome around a list that can
+   * never need one. Renders every row and drops the footer entirely. Ignored in
+   * `serverPagination` mode, where the pager is the only way to reach the rest
+   * of the data.
+   */
+  paginated?: boolean;
   empty?: ReactNode;
   /**
    * If set, the table persists filter / sort / page-size state to localStorage under this key.
@@ -184,6 +200,18 @@ export interface DataTableProps<T> {
 
 export type FilterState = Record<string, FilterValue>;
 export type { SortState };
+
+/** Drop the undefined entries of a {@link DataTableProps.rowAttributes} map, so a
+ *  caller can write `{ "data-x": cond ? "y" : undefined }` and get no attribute
+ *  at all rather than the string "undefined" in the DOM. */
+function cleanAttrs(
+  attrs: Record<string, string | undefined> | undefined,
+): Record<string, string> | undefined {
+  if (!attrs) return undefined;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(attrs)) if (v !== undefined) out[k] = v;
+  return out;
+}
 
 // ---------- Main DataTable ----------
 
@@ -312,6 +340,8 @@ export function DataTable<T>({
   expandedRow,
   isExpanded,
   rowClassName,
+  rowAttributes,
+  paginated = true,
   empty,
   storageKey,
   urlSync = false,
@@ -439,9 +469,13 @@ export function DataTable<T>({
     return copy;
   }, [filtered, sorts, columns, isServer]);
 
+  // `paginated={false}` is expressed as "page size = everything" rather than as a
+  // second code path, so slicing, the page clamp and the range summary all keep
+  // exactly one definition.
+  const unpaged = !isServer && !paginated;
   const effectivePageSize = isServer
     ? serverPagination!.pageSize
-    : pageSize === Infinity
+    : unpaged || pageSize === Infinity
       ? sorted.length || 1
       : pageSize;
   const paginationTotal = isServer ? serverPagination!.total : sorted.length;
@@ -452,9 +486,8 @@ export function DataTable<T>({
   const safePage = isServer
     ? Math.min(Math.max(0, serverPagination!.page), totalPages - 1)
     : Math.min(page, totalPages - 1);
-  const slice = isServer
-    ? sorted
-    : pageSize === Infinity
+  const slice =
+    isServer || unpaged || pageSize === Infinity
       ? sorted
       : sorted.slice(safePage * effectivePageSize, safePage * effectivePageSize + effectivePageSize);
 
@@ -682,7 +715,7 @@ export function DataTable<T>({
         </div>
     );
     return (
-      <li key={rowKey(row)} className={cn(tint)}>
+      <li key={rowKey(row)} className={cn(tint)} {...cleanAttrs(rowAttributes?.(row))}>
         {swipeEnabled ? (
           <SwipeableRow enabled left={swipe!.left} right={swipe!.right}>
             {body}
@@ -974,6 +1007,7 @@ export function DataTable<T>({
               return (
                 <Fragment key={rowKey(row)}>
                   <tr
+                    {...cleanAttrs(rowAttributes?.(row))}
                     className={cn(
                       "border-t border-slate-100 dark:border-slate-800",
                       rowInteractive && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40",
@@ -1085,22 +1119,24 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-          <Pagination
-            page={safePage}
-            totalPages={totalPages}
-            pageSize={paginationPageSize}
-            total={paginationTotal}
-            onPage={isServer ? serverPagination!.onPageChange : setPage}
-            onPageSize={
-              isServer
-                ? (n) => serverPagination!.onPageSizeChange?.(n)
-                : (n) => {
-                    setPageSize(n);
-                    setPage(0);
-                  }
-            }
-            labels={labels}
-          />
+          {!unpaged && (
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              pageSize={paginationPageSize}
+              total={paginationTotal}
+              onPage={isServer ? serverPagination!.onPageChange : setPage}
+              onPageSize={
+                isServer
+                  ? (n) => serverPagination!.onPageSizeChange?.(n)
+                  : (n) => {
+                      setPageSize(n);
+                      setPage(0);
+                    }
+              }
+              labels={labels}
+            />
+          )}
         </div>
         <button
           type="button"
