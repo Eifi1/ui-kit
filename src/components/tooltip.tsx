@@ -7,9 +7,17 @@ type TooltipSide = "top" | "bottom" | "left" | "right";
 
 /** The floating bubble itself. Uses the shared surface/border/text tokens so it
  *  reads as part of the app's chrome (like the top bar and cards) rather than the
- *  cold slate pill it used to be. */
+ *  cold slate pill it used to be.
+ *
+ *  `w-max` keeps a short label on one line — the old `whitespace-nowrap` did that
+ *  too, but it also let a sentence-length label grow without bound, and a bubble
+ *  wider than the space beside its trigger gets clipped by whatever overflow
+ *  container it sits in. So cap it and let long text wrap instead. The cap tracks
+ *  the viewport as well, for narrow screens where 20rem is already most of it.
+ *  Placement is still the caller's job: a capped bubble can only wrap, not move,
+ *  so a trigger hard against the right edge wants `side="left"`. */
 const TOOLTIP_SURFACE =
-  "whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
+  "w-max max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
 
 const sidePositionClass: Record<TooltipSide, string> = {
   top: "bottom-full left-1/2 -translate-x-1/2 mb-1",
