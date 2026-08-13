@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
 
 /**
  * Backdrop handlers that close only when a press starts AND ends on the
@@ -58,13 +59,19 @@ export interface ModalProps {
 /**
  * Centered (bottom-sheet on mobile) modal dialog: dimmed backdrop, single
  * rounded panel. Owns the overlay mechanics that the hand-rolled dialogs each
- * re-implemented or lacked — backdrop-click + Escape to close, background
- * scroll lock (feedback #204), focus into the panel on open and back to the
- * trigger on close, a Tab focus trap, and `role="dialog"`/`aria-modal`.
+ * re-implemented or lacked — backdrop-click + Escape to close, the platform Back
+ * gesture (Keksdose feedback #172), background scroll lock (feedback #204), focus
+ * into the panel on open and back to the trigger on close, a Tab focus trap, and
+ * `role="dialog"`/`aria-modal`.
  */
 export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown, fullBleed }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const backdropClose = useBackdropClose(onClose);
+  // Back means the same as Escape here. On a phone Escape doesn't exist, so without
+  // this the only way out of a dialog is finding its close button — and Back, the
+  // gesture everyone reaches for, navigated the page underneath instead (#172).
+  // Mounted only while open, hence the constant `true`.
+  useOverlayHistory(true, onClose);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;

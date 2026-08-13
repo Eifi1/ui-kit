@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Camera, FileText, Paperclip, X } from "lucide-react";
-import { Button, Input, Select, Textarea } from "../components/ui";
+import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
+import { useMediaQuery } from "../hooks/use-media-query";
 
 export interface FeedbackCategoryOption {
   value: string;
@@ -80,6 +81,7 @@ export function FeedbackDialog({
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useMediaQuery(PHONE_QUERY, false);
 
   // Reset the form whenever the dialog is (re)opened.
   useEffect(() => {
@@ -133,6 +135,82 @@ export function FeedbackDialog({
 
   if (!open) return null;
 
+  const categoryField = (
+    <Select label={labels.category} value={category} onChange={(e) => onCategoryChange(e.target.value)}>
+      {categories.map((c) => (
+        <option key={c.value} value={c.value}>
+          {c.label}
+        </option>
+      ))}
+    </Select>
+  );
+  // On a phone the subject leads as a heading rather than as the second of two
+  // identical boxes under a select (Keksdose feedback #179). `variant="display"`
+  // is a no-op above the phone breakpoint, so the desktop dialog is unchanged.
+  const subjectField = (
+    <Input label={labels.subject} value={title} onChange={(e) => setTitle(e.target.value)} variant="display" />
+  );
+  const bodyField = (
+    <Textarea rows={5} label={labels.body} value={body} onChange={(e) => setBody(e.target.value)} />
+  );
+  const attachmentField = (
+    <div>
+      <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {labels.attachment}
+      </div>
+      {attachment ? (
+        <div className="flex items-start gap-2">
+          {attachment.type.startsWith("image/") && attachmentPreview ? (
+            <img
+              src={attachmentPreview}
+              alt={attachment.name}
+              className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
+            />
+          ) : (
+            // Non-image attachments (PDF, text) can't preview as an <img>, so
+            // show a neutral file tile with the name/size beside it instead.
+            <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500">
+              <FileText className="size-8" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm text-slate-700 dark:text-slate-200">{attachment.name}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{Math.round(attachment.size / 1024)} KB</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAttachment(null)}
+            aria-label={labels.attachmentRemove}
+            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            <Paperclip className="size-4" /> {labels.attachmentAdd}
+          </Button>
+          {onCaptureScreenshot && (
+            <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
+              <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
+            </Button>
+          )}
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={attachmentAccept.join(",")}
+        className="sr-only"
+        onChange={(e) => {
+          pickAttachment(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+
   return (
     <Modal
       onClose={onClose}
@@ -145,71 +223,30 @@ export function FeedbackDialog({
     >
       <h2 className="mb-3 text-lg font-semibold">{labels.title}</h2>
       <div className="space-y-3">
-        <Select label={labels.category} value={category} onChange={(e) => onCategoryChange(e.target.value)}>
-          {categories.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </Select>
-        <Input label={labels.subject} value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea rows={5} label={labels.body} value={body} onChange={(e) => setBody(e.target.value)} />
-        <div>
-          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {labels.attachment}
-          </div>
-          {attachment ? (
-            <div className="flex items-start gap-2">
-              {attachment.type.startsWith("image/") && attachmentPreview ? (
-                <img
-                  src={attachmentPreview}
-                  alt={attachment.name}
-                  className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
-                />
-              ) : (
-                // Non-image attachments (PDF, text) can't preview as an <img>, so
-                // show a neutral file tile with the name/size beside it instead.
-                <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                  <FileText className="size-8" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-slate-700 dark:text-slate-200">{attachment.name}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">{Math.round(attachment.size / 1024)} KB</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAttachment(null)}
-                aria-label={labels.attachmentRemove}
-                className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              >
-                <X className="size-4" />
-              </button>
+        {isMobile ? (
+          // Phone shape, the same reasoning as the transaction editor's (#177):
+          // the desktop order is the DATA MODEL's order — category, then subject,
+          // then body — but nobody opens this dialog to pick a category. What they
+          // came to do is say the thing, so that leads; the classification and the
+          // evidence follow, a tier down.
+          <>
+            {subjectField}
+            {bodyField}
+            <div className="space-y-3 border-t border-[var(--border)] pt-3">
+              {categoryField}
+              {attachmentField}
+              {contextSlot}
             </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                <Paperclip className="size-4" /> {labels.attachmentAdd}
-              </Button>
-              {onCaptureScreenshot && (
-                <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
-                  <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
-                </Button>
-              )}
-            </div>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={attachmentAccept.join(",")}
-            className="sr-only"
-            onChange={(e) => {
-              pickAttachment(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-        </div>
-        {contextSlot}
+          </>
+        ) : (
+          <>
+            {categoryField}
+            {subjectField}
+            {bodyField}
+            {attachmentField}
+            {contextSlot}
+          </>
+        )}
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs text-slate-400 dark:text-slate-500">{labels.submitHint}</div>
           <div className="flex gap-2">

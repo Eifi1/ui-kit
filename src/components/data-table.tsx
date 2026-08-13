@@ -6,6 +6,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
+  ChevronRight,
   Filter,
   X,
 } from "lucide-react";
@@ -33,6 +34,7 @@ import { Pagination } from "./data-table-pagination";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { Popover } from "./popover";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
@@ -655,6 +657,12 @@ export function DataTable<T>({
     if (mobileDialogRow) onRowClick?.(mobileDialogRow);
   });
   useBodyScrollLock(dialogOpen);
+  // ...and Back closes it, like any other dialog (Keksdose feedback #172). This one
+  // is the phone's row EDITOR, so the alternative was the worst case of the bug: the
+  // gesture people use to back out of a form navigated the page away instead.
+  useOverlayHistory(dialogOpen, () => {
+    if (mobileDialogRow) onRowClick?.(mobileDialogRow);
+  });
 
   // One mobile card. Extracted so the flat list and the grouped list (below)
   // share identical row markup.
@@ -666,6 +674,13 @@ export function DataTable<T>({
     // contain their own interactive controls (status toggles, action
     // icons) don't end up as illegal nested buttons.
     const interactive = !!onRowClick;
+    // Say that the card OPENS something (Keksdose feedback #163). A phone card had
+    // only a cursor and a tap-tint to advertise its editor — on the invoice review
+    // screen, whose entire purpose is correcting mis-read lines, that read as "these
+    // values are not editable". A chevron is the affordance every list on a phone
+    // uses for exactly this, and it points the way the row actually opens: right into
+    // a sheet, or down into an inline panel that flips it when expanded.
+    const opensDetail = interactive && !!expandedRow;
     const swipe = mobileSwipeActions?.(row);
     // An expanded row never swipes: the editor below it owns the horizontal space,
     // and dragging the header away from its own form reads as a glitch.
@@ -687,31 +702,49 @@ export function DataTable<T>({
           }
           aria-expanded={expandedRow ? expanded : undefined}
           className={cn(
-            "w-full px-4 py-3 text-left flex flex-col gap-2",
+            "w-full px-4 py-3 text-left flex items-center gap-3",
             interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
           )}
         >
-          {mobileCard ? (
-            mobileCard(row)
-          ) : (
-            <>
-              {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
-              {mobileSecondaryColumns.length > 0 && (
-                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                  {mobileSecondaryColumns.map((col) => (
-                    <Fragment key={col.key}>
-                      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
-                        {col.header}
-                      </dt>
-                      <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
-                        {col.cell(row)}
-                      </dd>
-                    </Fragment>
-                  ))}
-                </dl>
-              )}
-            </>
-          )}
+          {/* The card's own content keeps the column it always had; the chevron sits
+              beside it rather than inside, so a caller's `mobileCard` is untouched. */}
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            {mobileCard ? (
+              mobileCard(row)
+            ) : (
+              <>
+                {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
+                {mobileSecondaryColumns.length > 0 && (
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                    {mobileSecondaryColumns.map((col) => (
+                      <Fragment key={col.key}>
+                        <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
+                          {col.header}
+                        </dt>
+                        <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
+                          {col.cell(row)}
+                        </dd>
+                      </Fragment>
+                    ))}
+                  </dl>
+                )}
+              </>
+            )}
+          </div>
+          {opensDetail &&
+            // `aria-hidden`: the row already announces itself as a button with
+            // `aria-expanded`, so the icon would only add a second, wordless stop.
+            (mobileExpandAsDialog ? (
+              <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+            ) : (
+              <ChevronDown
+                aria-hidden
+                className={cn(
+                  "size-4 shrink-0 text-slate-400 transition-transform",
+                  expanded && "rotate-180",
+                )}
+              />
+            ))}
         </div>
     );
     return (
@@ -1259,6 +1292,10 @@ function MobileFilters<T>({
   const [expanded, setExpanded] = useState<string | null>(null);
   const backdropClose = useBackdropClose(() => setOpen(false));
   useBodyScrollLock(open);
+  // Back dismisses the filter sheet too (Keksdose feedback #172) — it is the same
+  // full-screen surface, and the filters it sets are already in the URL, so closing
+  // it never loses anything.
+  useOverlayHistory(open, () => setOpen(false));
 
   const filterable = useMemo(
     () =>

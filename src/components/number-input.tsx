@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton } from "./calculator";
 import { NumberPadSheet } from "./numpad-sheet";
-import { FIELD_BASE, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { commitExpression, sanitizeLive } from "../lib/calc";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -30,6 +30,12 @@ interface NumberInputProps {
    * and tear the editor down before the popover could open — inline typing
    * (e.g. "200+50" → Enter) still evaluates there. */
   calculator?: boolean;
+  /** {@link FIELD_DISPLAY} — on a phone, the figure at display size with the field
+   *  chrome dropped. The currency-free half of the same treatment `AmountInput`
+   *  carries, for a dialog whose whole point is the one number (a budget goal's
+   *  target); not for a field among many, and never for the compact inline
+   *  editors this control also serves. */
+  variant?: "field" | "display";
 }
 
 /**
@@ -52,13 +58,15 @@ export function NumberInput({
   inputClassName,
   id,
   calculator = true,
+  variant = "field",
 }: NumberInputProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
-  const isMobile = useMediaQuery("(max-width: 767px)", false);
+  const isMobile = useMediaQuery(PHONE_QUERY, false);
+  const asDisplay = isMobile && variant === "display";
   const showCalc = calculator && !disabled && !isMobile;
   const [focused, setFocused] = useState(false);
   // On mobile, focusing opens the numpad bottom sheet instead of the native
@@ -77,7 +85,12 @@ export function NumberInput({
   };
 
   return (
-    <FloatingField className={cn("w-full", className)} htmlFor={fieldId} label={label}>
+    <FloatingField
+      className={cn("w-full", className)}
+      htmlFor={fieldId}
+      label={label}
+      srOnlyLabel={asDisplay}
+    >
       <input
         ref={inputRef}
         id={fieldId}
@@ -89,7 +102,10 @@ export function NumberInput({
         autoComplete="off"
         autoFocus={autoFocus}
         disabled={disabled}
-        placeholder={labelled ? " " : placeholder}
+        // Display mode has no floating label to feed the blank-placeholder trick,
+        // and an empty borderless figure shows nothing — so it keeps whatever
+        // placeholder the caller gave, falling back to a zero to aim at.
+        placeholder={asDisplay ? (placeholder ?? "0") : labelled ? " " : placeholder}
         value={value}
         onChange={(e) => onChange(sanitizeLive(e.target.value))}
         onFocus={() => setFocused(true)}
@@ -100,7 +116,15 @@ export function NumberInput({
         onKeyDown={onKeyDown}
         // `pr-9` sits last so it always wins the right-padding that makes room
         // for the calculator icon, even when inputClassName sets its own px.
-        className={cn(labelled ? FLOATING_INPUT_CLASS : FIELD_BASE, inputClassName, showCalc && "pr-9")}
+        className={cn(
+          asDisplay
+            ? cn(FIELD_DISPLAY, "text-4xl font-semibold leading-tight tracking-tight tabular-nums")
+            : labelled
+              ? FLOATING_INPUT_CLASS
+              : FIELD_BASE,
+          inputClassName,
+          showCalc && "pr-9",
+        )}
       />
       {showCalc && (
         <CalculatorButton value={value} onChange={onChange} className="absolute inset-y-0 right-0 px-2.5" />

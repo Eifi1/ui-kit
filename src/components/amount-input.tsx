@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
-import { FIELD_BASE, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton } from "./calculator";
@@ -24,17 +24,75 @@ interface AmountInputProps {
   /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
    *  new-transaction form can jump straight to amount entry (feedback #70). */
   autoFocus?: boolean;
+  /**
+   * Tint the typed figure by what it will DO (Keksdose feedback #167).
+   *
+   * The field is deliberately unitless — no sign, no symbol — because the direction
+   * is chosen with a toggle beside it, not typed. That leaves the number itself
+   * saying nothing about which way the money goes, on the one screen where getting
+   * that backwards is the expensive mistake. Colour is the cheapest way to say it
+   * continuously, and it costs no layout.
+   *
+   * Never the ONLY signal: the toggle it mirrors is right there, labelled, so this
+   * is reinforcement rather than the sole carrier of the meaning.
+   */
+  tone?: "neutral" | "outflow" | "inflow";
+  /**
+   * How the field presents itself ON A PHONE (Keksdose feedback #176).
+   *
+   * `"field"` (default) is the labelled, bordered input used everywhere else.
+   *
+   * `"display"` keeps every mechanic — the same `<input>`, the same numpad sheet,
+   * the same currency picker, the same commit/blur contract — and only drops the
+   * chrome: no border, no fill, no floating label, the figure set at display size.
+   * On a form whose whole point is one number, a bordered `text-sm` box draws the
+   * amount at the same weight as the memo beside it; this makes it the headline
+   * instead. It stays fully editable — the underline and the caret are what say so.
+   *
+   * Phone-only by construction: it keys off the same breakpoint as the numpad, so
+   * from `md` up the field is byte-for-byte the normal one and a desktop grid keeps
+   * its column rhythm.
+   */
+  variant?: "field" | "display";
+  /**
+   * Where the figure sits in its row, for `variant="display"` only (Keksdose
+   * feedback #176 rework).
+   *
+   * `"start"` (default) keeps it flush left, in the reading column the fields
+   * below it share. `"center"` makes it a centred headline — right when the
+   * amount opens the form and nothing above it establishes a left edge to align
+   * to. The trailing currency control stays pinned to the right edge either way,
+   * so centring also pads the figure's LEFT by the same amount the control
+   * reserves on the right: without that the text centres inside a box that is
+   * narrower on one side and lands visibly off-centre.
+   */
+  align?: "start" | "center";
 }
 
+const TONE_CLASS: Record<"neutral" | "outflow" | "inflow", string> = {
+  neutral: "",
+  outflow: "text-rose-600 dark:text-rose-400",
+  inflow: "text-emerald-600 dark:text-emerald-400",
+};
+
+// The shared chrome-less treatment at money size. `tabular-nums` so digits don't
+// reflow the figure as they are typed; FIELD_DISPLAY's own muted placeholder
+// colour is what keeps an EMPTY form from painting its zero in the direction tint
+// (`tone` is computed from 0, which reads as an inflow).
+const DISPLAY_INPUT_CLASS = cn(
+  FIELD_DISPLAY,
+  "text-4xl font-semibold leading-tight tracking-tight tabular-nums",
+);
+
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", variant = "field", align = "start" }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
     // right-padding keys off showCalc, so it tightens up automatically.
-    const isMobile = useMediaQuery("(max-width: 767px)", false);
+    const isMobile = useMediaQuery(PHONE_QUERY, false);
     const showCalc = !disabled && !isMobile;
     const [focused, setFocused] = useState(false);
     // On mobile, focusing the field opens the numpad bottom sheet in place of the
@@ -42,6 +100,12 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // operator bar. An internal ref lets the sheet's "Done" blur the input, which
     // commits + closes via the existing onBlur handler.
     const showNumpad = isMobile && !disabled && focused;
+    // Gate the display treatment on the SAME `isMobile` the numpad uses rather than
+    // on `max-md:` classes, so the two can never drift apart on the breakpoint —
+    // and so the two shapes are separate class strings instead of one string
+    // fighting itself through responsive overrides. `useMediaQuery` reads
+    // synchronously on mount, so there is no field→figure flash.
+    const asDisplay = variant === "display" && isMobile;
     const innerRef = useRef<HTMLInputElement>(null);
     const setRefs = useCallback(
       (el: HTMLInputElement | null) => {
@@ -84,7 +148,12 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           inputMode={isMobile ? "none" : "decimal"}
           autoComplete="off"
           disabled={disabled}
-          placeholder={label !== undefined ? " " : placeholder}
+          // The floating-label pattern needs a blank placeholder for its
+          // peer-placeholder-shown trick. The display shape has no floating label,
+          // so it spends the placeholder on what an empty borderless form actually
+          // needs: a zero to aim at, at full size. The caller supplies it because
+          // only the app knows the locale's decimal separator.
+          placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
           value={value}
           onChange={(e) => onChange(sanitizeLive(e.target.value))}
           onFocus={() => setFocused(true)}
@@ -101,23 +170,57 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // than vertically centred where it overlaps the resting label
             // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
             // transparent-placeholder bits.
-            label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
-            showCalc
-              ? currency ? (editable ? "pr-24" : "pr-16") : "pr-10"
-              : currency ? (editable ? "pr-20" : "pr-14") : "pr-3",
+            asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
+            // Room for the trailing controls. showCalc is always false on a phone,
+            // so the display shape only ever has to clear the currency chip.
+            asDisplay
+              ? currency ? (editable ? "pr-20" : "pr-14") : "pr-0"
+              : showCalc
+                ? currency ? (editable ? "pr-24" : "pr-16") : "pr-10"
+                : currency ? (editable ? "pr-20" : "pr-14") : "pr-3",
+            // Centred display shape: mirror the trailing control's reservation on
+            // the left so the figure centres in the VISIBLE row rather than in a
+            // box that is short on one side (feedback #176 rework).
+            asDisplay &&
+              align === "center" &&
+              cn(
+                "text-center",
+                currency ? (editable ? "pl-20" : "pl-14") : "pl-0",
+              ),
+            // Last, so it wins over the base class's own text colour.
+            TONE_CLASS[tone],
           )}
         />
         {label !== undefined && (
-          <label htmlFor={fieldId} className={FLOATING_LABEL_CLASS}>
+          // The display shape drops the label VISUALLY, not from the accessibility
+          // tree: a 36px tinted figure at the top of a transaction form is legibly
+          // the amount, but a screen reader still needs the name, and callers that
+          // pass `label` without `ariaLabel` would otherwise be left with none.
+          <label htmlFor={fieldId} className={asDisplay ? "sr-only" : FLOATING_LABEL_CLASS}>
             {label}
           </label>
         )}
         {/* Trailing controls share one flex track so the calculator icon and the
             currency suffix/picker sit side by side without overlapping. */}
-        <div className="absolute inset-y-1 right-1 flex items-center gap-0.5">
+        {/* The display shape has no box to inset from, so the controls align to the
+            figure's own right edge and its baseline strip (`bottom-1`, matching the
+            input's pb-1) instead of floating inside a field. */}
+        <div
+          className={cn(
+            "absolute flex items-center gap-0.5",
+            asDisplay ? "bottom-1 right-0" : "inset-y-1 right-1",
+          )}
+        >
           {showCalc && <CalculatorButton value={value} onChange={onChange} className="px-1.5" />}
           {currency && !editable && (
-            <span aria-hidden className="pointer-events-none px-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span
+              aria-hidden
+              className={cn(
+                "pointer-events-none px-1 font-medium text-slate-500 dark:text-slate-400",
+                // A text-xs chip next to a 36px figure reads as a stray footnote.
+                asDisplay ? "text-sm" : "text-xs",
+              )}
+            >
               {currency}
             </span>
           )}
@@ -126,7 +229,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-label={selected ? `Currency: ${selected.code}` : "Currency"}
-              className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              className={cn(
+                "flex items-center gap-1 rounded px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                asDisplay ? "text-sm" : "text-xs",
+              )}
             >
               {currency}
               <ChevronDown className="size-3" />

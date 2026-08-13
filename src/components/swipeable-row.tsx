@@ -34,17 +34,31 @@ export interface SwipeableRowProps {
   children: ReactNode;
 }
 
+/** How much of the row stays on screen at full drag. A row that can be pulled
+ *  entirely off its own track reads as already deleted, and there is nothing left to
+ *  drag back; a sliver keeps the gesture reversible and the row identifiable. */
+const PEEK_PX = 40;
+
 /**
  * A row whose horizontal drag reveals actions underneath it.
  *
- * Both reveal panels are always mounted, each a half-width block behind the content;
- * the content slides over them like a curtain drawing aside, so an action looks like it
- * was there all along rather than popping into existence.
+ * The reveal panel spans the FULL row width (Keksdose feedback #174). It used to be
+ * two half-width blocks side by side, which capped the drag at half the row so the
+ * opposite panel could never be exposed — and on a row bound to three actions that
+ * left ~55px between stages on a phone, close enough that the wrong one committed.
+ * Only the side being dragged toward is painted now, so full width costs nothing:
+ * at rest the content covers both anyway, and a drag only ever reveals one side.
  *
- * Thresholds are not fixed pixel values. They are spread evenly across half the
- * measured row width, so every action stays reachable on a narrow phone — a fixed
- * 72/150/228px ladder overshoots the available half-width there. Half, specifically,
- * so a drag can never pull the row far enough to expose the opposite side's panel.
+ * Thresholds are still not fixed pixel values — they are spread evenly across the
+ * available drag, which is now the row width less a {@link PEEK_PX} sliver. A fixed
+ * 72/150/228px ladder overshoots a narrow phone; a proportional one keeps every
+ * action reachable and roughly doubles the room between them.
+ *
+ * **Whether the action will fire is stated three ways, not one** (feedback #174): the
+ * panel goes from dimmed to solid, the icon grows and gains a filled disc, and the
+ * label turns bold — plus the existing haptic tick per newly armed stage. A colour
+ * shift alone is easy to miss mid-gesture, and it is invisible to anyone who cannot
+ * distinguish the two tones.
  *
  * Clicks that follow a drag are swallowed in the capture phase: without that, a swipe
  * would also fire whatever click handler the row content carries (expanding it, opening
@@ -74,7 +88,10 @@ export function SwipeableRow({
   const rightActions = right ?? [];
   const leftActions = left ?? [];
   const active = enabled && (rightActions.length > 0 || leftActions.length > 0);
-  const maxDrag = rowWidth > 0 ? Math.round(rowWidth / 2) : 200;
+  // The whole row less a sliver, not half of it (feedback #174). `Math.max` keeps a
+  // very narrow row (or one measured before layout) from producing a zero or
+  // negative drag, which would arm every stage at once.
+  const maxDrag = rowWidth > 0 ? Math.max(96, Math.round(rowWidth - PEEK_PX)) : 200;
   const spread = (actions: SwipeAction[]): SwipeStage[] =>
     actions.map((a, i) => ({
       threshold: Math.round((maxDrag * (i + 1)) / (actions.length + 1)),
@@ -97,50 +114,48 @@ export function SwipeableRow({
   }, [armedNow]);
 
   // Index -1 (nothing armed yet) still previews the nearest action, idle-coloured.
-  const rightShown = rightActions[Math.max(0, swipe.armedRightIndex)];
-  const leftShown = leftActions[Math.max(0, swipe.armedLeftIndex)];
-  const rightArmed = swipe.armedRightIndex >= 0;
-  const leftArmed = swipe.armedLeftIndex >= 0;
   const dx = swipe.dx;
+  // Only the side being dragged toward is painted, which is what makes a full-width
+  // panel safe. At rest (dx 0) nothing is exposed, so the right-hand default is
+  // arbitrary — it just avoids an empty first paint mid-gesture.
+  const draggingLeft = dx < 0;
+  const shown = draggingLeft
+    ? leftActions[Math.max(0, swipe.armedLeftIndex)]
+    : rightActions[Math.max(0, swipe.armedRightIndex)];
+  const armed = draggingLeft ? swipe.armedLeftIndex >= 0 : swipe.armedRightIndex >= 0;
 
   return (
     <div ref={rowRef} className={cn("relative overflow-hidden", className)}>
-      {active && (
-        <div className="pointer-events-none absolute inset-0 flex">
-          <div
-            className={cn(
-              "flex w-1/2 items-center gap-1.5 px-4 text-xs font-medium text-white transition-colors",
-              rightShown ? (rightArmed ? rightShown.armedClassName : rightShown.className) : "",
-            )}
-          >
-            {rightShown && (
-              <>
-                {rightShown.icon && (
-                  <span className={cn("shrink-0 transition-transform", rightArmed && "scale-125")}>
-                    {rightShown.icon}
-                  </span>
-                )}
-                <span className="truncate">{rightShown.label}</span>
-              </>
-            )}
-          </div>
-          <div
-            className={cn(
-              "flex w-1/2 items-center justify-end gap-1.5 px-4 text-xs font-medium text-white transition-colors",
-              leftShown ? (leftArmed ? leftShown.armedClassName : leftShown.className) : "",
-            )}
-          >
-            {leftShown && (
-              <>
-                <span className="truncate">{leftShown.label}</span>
-                {leftShown.icon && (
-                  <span className={cn("shrink-0 transition-transform", leftArmed && "scale-125")}>
-                    {leftShown.icon}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
+      {active && shown && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 flex items-center gap-2 px-4",
+            "text-xs font-medium text-white transition-all",
+            // Dimmed until the drag has actually passed a threshold: "nothing will
+            // happen yet" has to look different from "let go and this fires", and on
+            // a moving row a one-step colour change was too quiet to notice.
+            armed ? "opacity-100" : "opacity-60",
+            armed ? shown.armedClassName : shown.className,
+            // The panel is anchored to the edge the row is uncovering, so the label
+            // sits where the eye already is rather than across the screen.
+            draggingLeft && "flex-row-reverse",
+          )}
+        >
+          {shown.icon && (
+            <span
+              className={cn(
+                "flex shrink-0 items-center justify-center rounded-full transition-all",
+                // Armed, the icon gets a disc of its own and grows — a second,
+                // non-colour signal, and the one that stays readable at a glance.
+                armed ? "size-8 scale-110 bg-white/25" : "size-7 bg-white/10",
+              )}
+            >
+              {shown.icon}
+            </span>
+          )}
+          <span className={cn("truncate transition-all", armed && "text-sm font-semibold")}>
+            {shown.label}
+          </span>
         </div>
       )}
       <div

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { cn } from "../lib/cn";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
 
 export interface CommandItem {
   id: string;
@@ -75,6 +76,12 @@ export function CommandPalette({ open, onClose, search, labels }: CommandPalette
   const searchRef = useRef(search);
   searchRef.current = search;
   const reqId = useRef(0);
+
+  // Back dismisses the palette (Keksdose feedback #172). Declared with the other
+  // hooks, above the `if (!open) return null` below — a hook past a conditional
+  // return changes the hook order between renders. Passing `open` rather than
+  // mounting-while-open is what lets it sit here.
+  useOverlayHistory(open, onClose);
 
   // Reset + focus when opened.
   useEffect(() => {

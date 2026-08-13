@@ -2,6 +2,7 @@ import { forwardRef, useId, useState } from "react";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
+import { useMediaQuery } from "../hooks/use-media-query";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
 
@@ -77,6 +78,36 @@ export const FIELD_INVALID =
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
+/** The phone breakpoint the display treatment below keys off — the same one the
+ *  numpad sheet uses, kept in one place so the two can't drift apart. */
+export const PHONE_QUERY = "(max-width: 767px)";
+
+/**
+ * The PHONE display treatment (Keksdose feedback #176, carried across the entry
+ * forms by #179): the field chrome removed so the ONE input a form is actually
+ * about reads as the thing itself, not as another boxed row in a stack.
+ *
+ * Every control that takes `variant="display"` — {@link Input}, `NumberInput`,
+ * `AmountInput` — means exactly the same thing by it: the treatment applies below
+ * {@link PHONE_QUERY} and the field is untouched above it, so a caller never has
+ * to ask the viewport, and a form can't end up half-treated across breakpoints.
+ *
+ * What stays, deliberately:
+ *  - A hairline baseline. With the box gone something still has to say "you can
+ *    type here"; it takes the brand colour on focus, where a bordered field would
+ *    light its whole outline. Each edge is set exactly once (`border-x-0
+ *    border-t-0 border-b`) so the rule can't hinge on utility order.
+ *  - The muted placeholder colour, because a display field is usually empty at
+ *    the moment it matters most and has nothing else to show.
+ *  - The label, moved to `sr-only` rather than dropped: display type is legible
+ *    to the eye, not to a screen reader.
+ *
+ * Size and weight are NOT here — an amount wants display type, a subject line
+ * wants a heading — so each control adds its own on top.
+ */
+export const FIELD_DISPLAY =
+  "block w-full border-x-0 border-t-0 border-b border-[var(--border)] bg-transparent px-0 pt-0 pb-1 text-[var(--text-primary)] shadow-none placeholder:text-slate-400 focus:border-[var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60 dark:placeholder:text-slate-500";
+
 // A field-styled button trigger for the custom dropdown controls (MultiSelect,
 // CurrencySelect) — the field look (border/bg) as a flex row for the value + chevron,
 // so they don't hand-copy the field classes. Add FIELD_FLOATING_PAD only when the
@@ -141,19 +172,29 @@ export function FloatingField({
   htmlFor,
   label,
   staticLabel,
+  srOnlyLabel,
   children,
 }: {
   className?: string;
   htmlFor?: string;
   label?: ReactNode;
   staticLabel?: boolean;
+  /** Keep the label in the accessibility tree but out of the layout — what
+   *  {@link FIELD_DISPLAY} needs, since a floating label inside a field with no
+   *  field left would have nothing to float in. */
+  srOnlyLabel?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className={cn("relative", className)}>
       {children}
       {label !== undefined && (
-        <label htmlFor={htmlFor} className={staticLabel ? FLOATING_LABEL_STATIC : FLOATING_LABEL_CLASS}>
+        <label
+          htmlFor={htmlFor}
+          className={
+            srOnlyLabel ? "sr-only" : staticLabel ? FLOATING_LABEL_STATIC : FLOATING_LABEL_CLASS
+          }
+        >
           {label}
         </label>
       )}
@@ -188,10 +229,19 @@ export const Input = forwardRef<
      *  `tabular-nums` on a numeric text field, which NumberInput has supported
      *  all along through the identically named prop, was simply unavailable. */
     inputClassName?: string;
+    /** {@link FIELD_DISPLAY} — on a phone, drop the chrome and set the value as a
+     *  heading. For the one field a form is about (a feedback subject, an account
+     *  name), never for a stack of them. Labelled fields only: the label is what
+     *  the placeholder falls back to once it goes `sr-only`. */
+    variant?: "field" | "display";
   }
->(function Input({ className, inputClassName, label, id, placeholder, type, ...rest }, ref) {
+>(function Input(
+  { className, inputClassName, label, id, placeholder, type, variant = "field", ...rest },
+  ref,
+) {
   const generated = useId();
   const fieldId = id ?? generated;
+  const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
   const [revealed, setRevealed] = useState(false);
@@ -249,15 +299,25 @@ export const Input = forwardRef<
     );
   }
   return (
-    <FloatingField className={className} htmlFor={fieldId} label={label}>
+    <FloatingField className={className} htmlFor={fieldId} label={label} srOnlyLabel={asDisplay}>
       <input
         ref={ref}
         id={fieldId}
         type={effectiveType}
-        placeholder=" "
+        // A labelled field's placeholder is normally a single space, feeding the
+        // floating label's peer-placeholder-shown trick. With the label sr-only
+        // there is no float left to drive, and an empty borderless line would say
+        // nothing at all — so the label text becomes the placeholder.
+        placeholder={asDisplay ? (placeholder ?? (typeof label === "string" ? label : " ")) : " "}
         {...rest}
         onClick={handleClick}
-        className={cn(FLOATING_INPUT_CLASS, isPassword && "pr-9", inputClassName)}
+        className={cn(
+          asDisplay
+            ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
+            : FLOATING_INPUT_CLASS,
+          isPassword && "pr-9",
+          inputClassName,
+        )}
       />
       {revealToggle}
     </FloatingField>

@@ -21,6 +21,7 @@ export type {
   ViewportBox,
 } from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
+export { useOverlayHistory } from "./hooks/use-overlay-history";
 export { useRowSwipe } from "./hooks/use-row-swipe";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
 
