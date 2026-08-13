@@ -59,12 +59,18 @@ interface AmountInputProps {
    * feedback #176 rework).
    *
    * `"start"` (default) keeps it flush left, in the reading column the fields
-   * below it share. `"center"` makes it a centred headline — right when the
-   * amount opens the form and nothing above it establishes a left edge to align
-   * to. The trailing currency control stays pinned to the right edge either way,
-   * so centring also pads the figure's LEFT by the same amount the control
-   * reserves on the right: without that the text centres inside a box that is
-   * narrower on one side and lands visibly off-centre.
+   * below it share — and it is what the entry forms use, because a figure that
+   * starts at a known edge is legible at any width: when the value outgrows the
+   * field, the digits that scroll out of sight are the trailing ones, not the
+   * magnitude (Keksdose feedback #430 rework).
+   *
+   * `"center"` makes it a centred headline. It centres in the width that REMAINS
+   * after the trailing currency control, not in the whole box: the control is
+   * pinned to the right edge, so a plain `text-center` would centre the figure
+   * under it and the last digits would sit behind the chip. This used to mirror
+   * the control's reservation onto the left instead, which centred correctly but
+   * spent twice the control's width on padding — fatal on a 375px screen, where
+   * it left a 36px figure 16px to live in.
    */
   align?: "start" | "center";
 }
@@ -172,21 +178,22 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // transparent-placeholder bits.
             asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
             // Room for the trailing controls. showCalc is always false on a phone,
-            // so the display shape only ever has to clear the currency chip.
+            // so the display shape only ever has to clear the currency chip — and
+            // it clears it by the chip's actual width (a text-sm code plus a
+            // chevron, ~58px) rather than the 5rem the boxed shape reserves. On a
+            // 375px screen those 16px are the difference between a readable figure
+            // and a clipped one (feedback #430 rework).
             asDisplay
-              ? currency ? (editable ? "pr-20" : "pr-14") : "pr-0"
+              ? currency ? (editable ? "pr-16" : "pr-12") : "pr-0"
               : showCalc
                 ? currency ? (editable ? "pr-24" : "pr-16") : "pr-10"
                 : currency ? (editable ? "pr-20" : "pr-14") : "pr-3",
-            // Centred display shape: mirror the trailing control's reservation on
-            // the left so the figure centres in the VISIBLE row rather than in a
-            // box that is short on one side (feedback #176 rework).
-            asDisplay &&
-              align === "center" &&
-              cn(
-                "text-center",
-                currency ? (editable ? "pl-20" : "pl-14") : "pl-0",
-              ),
+            // Centred display shape: centre in what is LEFT of the currency chip.
+            // `text-center` alone would centre the figure in the whole box, i.e.
+            // partly underneath the chip; the padding above is what takes the chip
+            // out of the centring, and nothing is added on the left because a
+            // mirrored reservation would spend the width twice (see `align`).
+            asDisplay && align === "center" && "text-center",
             // Last, so it wins over the base class's own text colour.
             TONE_CLASS[tone],
           )}
