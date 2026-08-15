@@ -17,6 +17,13 @@ export interface CommandItem {
   icon?: ReactNode;
   /** Invoked when the item is chosen (navigate, run an action, …). */
   onSelect: () => void;
+  /** Where this item leads, when it is a navigation rather than an action. Renders
+   *  the row as a real anchor so it can be middle-/⌘-clicked into a new tab
+   *  (Keksdose feedback #451); `onSelect` still runs for a plain click and for ↵, so
+   *  in-app navigation stays client-side. `href` only adds what the browser can do
+   *  with a link and JavaScript cannot fake — the rejected alternative, an
+   *  `onAuxClick` calling `window.open`, gets the middle click and nothing else. */
+  href?: string;
 }
 
 export interface CommandPaletteLabels {
@@ -204,33 +211,67 @@ export function CommandPalette({ open, onClose, search, labels }: CommandPalette
                   flatIndex += 1;
                   const idx = flatIndex;
                   const isActive = idx === active;
+                  // Written once and worn by either tag below, so the anchor and the
+                  // button can never drift apart in looks or in listbox semantics.
+                  // `role="option"` on an <a href> is fine: the browser's middle-click
+                  // behaviour keys off the element, not the ARIA role.
+                  const shared = {
+                    id: `command-item-${item.id}`,
+                    role: "option" as const,
+                    "aria-selected": isActive,
+                    "data-index": idx,
+                    onMouseMove: () => setActive(idx),
+                    className: cn(
+                      "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm",
+                      isActive
+                        ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                        : "text-slate-700 dark:text-slate-300",
+                    ),
+                  };
+                  const inner = (
+                    <>
+                      {item.icon && (
+                        <span className="flex size-4 shrink-0 items-center justify-center text-slate-400 dark:text-slate-500">
+                          {item.icon}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.hint && (
+                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{item.hint}</span>
+                      )}
+                    </>
+                  );
                   return (
                     <li key={item.id}>
-                      <button
-                        type="button"
-                        id={`command-item-${item.id}`}
-                        role="option"
-                        aria-selected={isActive}
-                        data-index={idx}
-                        onMouseMove={() => setActive(idx)}
-                        onClick={() => choose(item)}
-                        className={cn(
-                          "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm",
-                          isActive
-                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-                            : "text-slate-700 dark:text-slate-300",
-                        )}
-                      >
-                        {item.icon && (
-                          <span className="flex size-4 shrink-0 items-center justify-center text-slate-400 dark:text-slate-500">
-                            {item.icon}
-                          </span>
-                        )}
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                        {item.hint && (
-                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{item.hint}</span>
-                        )}
-                      </button>
+                      {item.href ? (
+                        <a
+                          {...shared}
+                          href={item.href}
+                          draggable={false}
+                          onClick={(e) => {
+                            // A modified click belongs to the browser (feedback
+                            // #451) — and the palette deliberately stays OPEN for
+                            // it: ⌘-clicking three results in a row is the reason to
+                            // want this, and closing after the first would undo it.
+                            if (
+                              e.button !== 0 ||
+                              e.metaKey ||
+                              e.ctrlKey ||
+                              e.shiftKey ||
+                              e.altKey
+                            )
+                              return;
+                            e.preventDefault();
+                            choose(item);
+                          }}
+                        >
+                          {inner}
+                        </a>
+                      ) : (
+                        <button type="button" {...shared} onClick={() => choose(item)}>
+                          {inner}
+                        </button>
+                      )}
                     </li>
                   );
                 })}

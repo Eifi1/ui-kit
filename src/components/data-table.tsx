@@ -58,6 +58,19 @@ export interface DataTableColumn<T> {
   // bookkeeping) that would crowd a card without aiding scanning.
   mobilePrimary?: boolean;
   mobileHidden?: boolean;
+  /**
+   * Set on a column whose cell renders its own `<a>` (or anything else that must
+   * keep its own click): the row anchor of `rowHref` then skips it and lands on
+   * the next column that allows wrapping (Keksdose feedback #451). Without it the
+   * fallback can wrap such a cell the moment the headline column is hidden from
+   * the settings panel — `<a>` inside `<a>`, which React warns about and which
+   * kills the inner link outright, since RowLink cancels the click on the capture
+   * phase and the cell's own `stopPropagation` then blocks the row handler too.
+   * The rejected alternative was sniffing the rendered output for an anchor: a
+   * cell that renders a link is a fact its author knows and the renderer cannot
+   * see without reaching into React elements it deliberately treats as opaque.
+   */
+  noRowLink?: boolean;
 }
 
 export interface ServerPagination {
@@ -75,6 +88,26 @@ export interface DataTableProps<T> {
   rowKey: (row: T) => string | number;
   defaultPageSize?: number;
   onRowClick?: (row: T) => void;
+  /**
+   * The URL that shows this row, when one exists — the table then renders a REAL
+   * anchor for it (Keksdose feedback #451, "to be able to middle click with the
+   * mouse and open in a new tab"). A row that opens through `onRowClick` alone is
+   * invisible to the browser: no middle click, no ⌘/Ctrl-click, no "copy link
+   * address", no status-bar preview, no long-press menu on a phone. The
+   * alternative was an `onAuxClick` that calls `window.open` — it buys back only
+   * the middle click and loses the other four, none of which JavaScript can fake.
+   *
+   * Return `undefined` for a row that has no address of its own. Only wire this up
+   * where the OPEN row is genuinely in the URL (a `?row=` param, a detail route);
+   * a row whose expansion lives in local component state has no link to hand out,
+   * and a link the target page cannot honour is worse than no link.
+   *
+   * The anchor covers the row's primary cell, not the whole `<tr>`: an `<a>` may
+   * not wrap table cells, and the absolutely-positioned row overlay that is the
+   * usual workaround would sit on top of the per-cell controls these rows carry
+   * (status toggles, the selection checkbox, nested links) and swallow them.
+   */
+  rowHref?: (row: T) => string | undefined;
   expandedRow?: (row: T) => ReactNode | null;
   isExpanded?: (row: T) => boolean;
   rowClassName?: (row: T) => string | undefined;
@@ -215,6 +248,79 @@ function cleanAttrs(
   return out;
 }
 
+/** A click the APP owns. Anything else — middle, ⌘/Ctrl, Shift, Alt — belongs to
+ *  the browser, and the whole feature is not touching it. */
+const isPlainLeftClick = (e: React.MouseEvent) =>
+  e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
+/**
+ * The anchor a linkable row is opened through (Keksdose feedback #451).
+ *
+ * The plain left click is OURS: cancelled, then handed to the row's own handler, so
+ * clicking a row still expands it in place instead of reloading the page. Every
+ * other click — middle, ⌘/Ctrl, Shift, Alt — is left completely untouched, which is
+ * the entire point of using an anchor rather than an `onAuxClick` + `window.open`:
+ * that imitation buys back the middle click and still loses ⌘/Ctrl-click, "copy link
+ * address", the status-bar preview and the phone's long-press menu.
+ *
+ * Modified clicks DO stop propagating: on a table with `selection`, ⌘/Ctrl-click and
+ * Shift-click on a row mean "select" (feedback #289), and a row must not change its
+ * selection while the browser is opening a tab. The rest of the row still selects —
+ * the link is one cell, not the row.
+ *
+ * `draggable={false}` because an anchor otherwise hijacks a horizontal mouse drag as
+ * a link-drag: that is both drag-to-select-text on the desktop table and the mouse
+ * path through SwipeableRow's gesture on the mobile card.
+ */
+function RowLink({
+  href,
+  onActivate,
+  className,
+  children,
+  ...rest
+}: {
+  href: string;
+  /** Runs on a plain left click. Omit it where an ANCESTOR already handles the
+   *  click (the desktop `<tr>`), or the row would toggle twice. */
+  onActivate?: () => void;
+  className?: string;
+  children: ReactNode;
+} & Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href" | "className" | "children" | "onClick" | "onClickCapture"
+>) {
+  return (
+    <a
+      {...rest}
+      href={href}
+      draggable={false}
+      className={className}
+      // CAPTURE phase, and it has to be: on the mobile card the whole card is the
+      // anchor, so a nested control sits INSIDE it — and the ones that matter
+      // (the feedback row's status toggles) stop the click propagating so the row
+      // won't also expand. A bubble-phase handler would never run for those, and
+      // the browser would follow the link out from under the button press. Cancelling
+      // here happens before any descendant can silence the event; `stopPropagation`
+      // does not undo a `preventDefault`.
+      onClickCapture={(e) => {
+        if (isPlainLeftClick(e)) e.preventDefault();
+      }}
+      onClick={(e) => {
+        if (!isPlainLeftClick(e)) {
+          e.stopPropagation();
+          return;
+        }
+        // Already cancelled above; this phase only decides what opens. A nested
+        // control that stopped propagation deliberately never reaches it, which is
+        // exactly how the row behaved before it became a link.
+        onActivate?.();
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 // ---------- Main DataTable ----------
 
 interface PersistedState {
@@ -339,6 +445,7 @@ export function DataTable<T>({
   rowKey,
   defaultPageSize = 25,
   onRowClick,
+  rowHref,
   expandedRow,
   isExpanded,
   rowClassName,
@@ -549,6 +656,23 @@ export function DataTable<T>({
     [columns, hiddenCols],
   );
 
+  // Which cell carries the row's link when `rowHref` is set (feedback #451). The
+  // `mobilePrimary` column is the row's headline by declaration, so it is both the
+  // widest target and the one the pointer is already over; falls back to the first
+  // column, and falls back again if the user has hidden the primary one from the
+  // column panel. Resolved from `visibleColumns` for exactly that reason — off a
+  // raw `columns` lookup a hidden headline would leave the row with no link at all.
+  //
+  // `noRowLink` columns are skipped in BOTH steps: wrapping a cell that owns an
+  // anchor nests two links and disables the inner one (see the prop's note). If
+  // nothing visible is left to wrap, the row gets NO anchor — an anchor over the
+  // one cell there is would cancel that cell's own click and hand back nothing,
+  // and a row without a link still behaves exactly as it did before #451.
+  const linkColumn = rowHref
+    ? (visibleColumns.find((c) => c.mobilePrimary && !c.noRowLink) ??
+      visibleColumns.find((c) => !c.noRowLink))
+    : undefined;
+
   const startResize = (e: React.MouseEvent, key: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -607,6 +731,14 @@ export function DataTable<T>({
   const mobilePrimaryCol =
     mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
   const mobileSecondaryColumns = mobileColumns.filter((c) => c !== mobilePrimaryCol);
+  // The phone card IS the anchor, so unlike the desktop table there is no other
+  // cell to move the row link into: if any cell the card renders owns a link, the
+  // card itself cannot be one (feedback #451 — same nesting rule as `linkColumn`
+  // above). It then falls back to the pre-#451 role="button" card, which still
+  // opens the row and leaves the cell's own link working. A caller's `mobileCard`
+  // renderer is opaque to us; a link inside one is the caller's to declare by
+  // marking the column it comes from.
+  const mobileCardLinkable = mobileColumns.every((c) => !c.noRowLink);
 
   // Mobile uses endless scrolling instead of pager buttons (feedback #232):
   // since client-side tables already hold every row, we just reveal more of the
@@ -685,7 +817,82 @@ export function DataTable<T>({
     // An expanded row never swipes: the editor below it owns the horizontal space,
     // and dragging the header away from its own form reads as a glitch.
     const swipeEnabled = !!swipe && !expanded;
-    const body = (
+    const href = mobileCardLinkable ? rowHref?.(row) : undefined;
+    const cardClass = cn(
+      "w-full px-4 py-3 text-left flex items-center gap-3",
+      interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
+    );
+    // The card's content is written once and worn by either tag below. Note that
+    // the primary cell is rendered RAW here, never through `linkColumn` — the card
+    // itself is the anchor, and routing it through `linkColumn` too would nest an
+    // <a> inside an <a>. Desktop and mobile are mutually exclusive (`isMdUp`), so
+    // exactly one anchor exists per row.
+    const cardInner = (
+      <>
+        {/* The card's own content keeps the column it always had; the chevron sits
+            beside it rather than inside, so a caller's `mobileCard` is untouched. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {mobileCard ? (
+            mobileCard(row)
+          ) : (
+            <>
+              {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
+              {mobileSecondaryColumns.length > 0 && (
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                  {mobileSecondaryColumns.map((col) => (
+                    <Fragment key={col.key}>
+                      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
+                        {col.header}
+                      </dt>
+                      <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
+                        {col.cell(row)}
+                      </dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              )}
+            </>
+          )}
+        </div>
+        {opensDetail &&
+          // `aria-hidden`: the row already announces itself as a button with
+          // `aria-expanded`, so the icon would only add a second, wordless stop.
+          (mobileExpandAsDialog ? (
+            <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+          ) : (
+            <ChevronDown
+              aria-hidden
+              className={cn(
+                "size-4 shrink-0 text-slate-400 transition-transform",
+                expanded && "rotate-180",
+              )}
+            />
+          ))}
+      </>
+    );
+    const body =
+      interactive && href ? (
+        // A card with a URL of its own is a LINK, not a div wearing role="button"
+        // (feedback #451): the phone's long-press "open in new tab" and a screen
+        // reader's link semantics both come free, and the fake role goes away.
+        <RowLink
+          href={href}
+          onActivate={() => onRowClick!(row)}
+          aria-expanded={expandedRow ? expanded : undefined}
+          className={cardClass}
+          // Enter already activates a link natively, and that routes through
+          // RowLink's own onClick — handling it here too would open the row twice.
+          // Space is the only key left, and only so it opens the row instead of
+          // scrolling the list.
+          onKeyDown={(e) => {
+            if (e.key !== " ") return;
+            e.preventDefault();
+            onRowClick!(row);
+          }}
+        >
+          {cardInner}
+        </RowLink>
+      ) : (
         <div
           role={interactive ? "button" : undefined}
           tabIndex={interactive ? 0 : undefined}
@@ -701,52 +908,11 @@ export function DataTable<T>({
               : undefined
           }
           aria-expanded={expandedRow ? expanded : undefined}
-          className={cn(
-            "w-full px-4 py-3 text-left flex items-center gap-3",
-            interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
-          )}
+          className={cardClass}
         >
-          {/* The card's own content keeps the column it always had; the chevron sits
-              beside it rather than inside, so a caller's `mobileCard` is untouched. */}
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            {mobileCard ? (
-              mobileCard(row)
-            ) : (
-              <>
-                {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
-                {mobileSecondaryColumns.length > 0 && (
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                    {mobileSecondaryColumns.map((col) => (
-                      <Fragment key={col.key}>
-                        <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 self-center">
-                          {col.header}
-                        </dt>
-                        <dd className="min-w-0 text-slate-700 dark:text-slate-200 self-center">
-                          {col.cell(row)}
-                        </dd>
-                      </Fragment>
-                    ))}
-                  </dl>
-                )}
-              </>
-            )}
-          </div>
-          {opensDetail &&
-            // `aria-hidden`: the row already announces itself as a button with
-            // `aria-expanded`, so the icon would only add a second, wordless stop.
-            (mobileExpandAsDialog ? (
-              <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
-            ) : (
-              <ChevronDown
-                aria-hidden
-                className={cn(
-                  "size-4 shrink-0 text-slate-400 transition-transform",
-                  expanded && "rotate-180",
-                )}
-              />
-            ))}
+          {cardInner}
         </div>
-    );
+      );
     return (
       <li key={rowKey(row)} className={cn(tint)} {...cleanAttrs(rowAttributes?.(row))}>
         {swipeEnabled ? (
@@ -1037,6 +1203,7 @@ export function DataTable<T>({
               const expanded = isExpanded?.(row) ?? false;
               const expansion = expanded ? expandedRow?.(row) : null;
               const rowInteractive = !!onRowClick || !!selection;
+              const href = rowHref?.(row);
               return (
                 <Fragment key={rowKey(row)}>
                   <tr
@@ -1113,7 +1280,16 @@ export function DataTable<T>({
                           style={width ? { width, minWidth: width, maxWidth: width } : undefined}
                           className={cn("px-3 py-2 align-top", width && "overflow-hidden text-ellipsis", col.className)}
                         >
-                          {col.cell(row)}
+                          {col === linkColumn && href ? (
+                            // No `onActivate`: the click is left to bubble to the
+                            // <tr> handler above, which already owns expand-vs-select.
+                            // Calling it here as well would toggle the row twice.
+                            <RowLink href={href} className="block">
+                              {col.cell(row)}
+                            </RowLink>
+                          ) : (
+                            col.cell(row)
+                          )}
                         </td>
                       );
                     })}

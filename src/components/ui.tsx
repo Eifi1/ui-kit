@@ -515,8 +515,12 @@ export function EmptyState({
 
 export interface TabsProps<T extends string> {
   /** `label` is a ReactNode so tabs can pair an icon with text; `badge` is an
-   *  optional trailing node (e.g. a count pill). */
-  tabs: { id: T; label: ReactNode; badge?: ReactNode }[];
+   *  optional trailing node (e.g. a count pill). `href` marks a tab that IS a route:
+   *  it renders as an anchor so it can be middle-/⌘-clicked into a new tab (Keksdose
+   *  feedback #451), while a plain click still goes through `onChange` and stays
+   *  client-side. Tabs that only flip local state leave it unset — a link to a URL
+   *  that does not select the tab would be worse than no link. */
+  tabs: { id: T; label: ReactNode; badge?: ReactNode; href?: string }[];
   active: T;
   onChange: (id: T) => void;
   className?: string;
@@ -533,23 +537,57 @@ export function Tabs<T extends string>({ tabs, active, onChange, className }: Ta
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
-        return (
-          <button
+        // Written once and worn by either tag below, so a routed tab and a
+        // state-only tab stay indistinguishable to the eye and to a screen reader.
+        const shared = {
+          role: "tab" as const,
+          "aria-selected": isActive,
+          className: cn(
+            "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-slate-300",
+            isActive
+              ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
+              : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200",
+          ),
+        };
+        const inner = (
+          <span className="inline-flex items-center gap-1.5">
+            {tab.label}
+            {tab.badge != null ? tab.badge : null}
+          </span>
+        );
+        return tab.href ? (
+          <a
             key={tab.id}
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-slate-300",
-              isActive
-                ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
-                : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200",
-            )}
+            {...shared}
+            href={tab.href}
+            draggable={false}
+            onClick={(e) => {
+              // Middle-, ⌘/Ctrl-, Shift- and Alt-click belong to the browser
+              // (feedback #451); only the plain left click is ours to cancel and
+              // route through `onChange`, which keeps the switch client-side.
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              onChange(tab.id);
+            }}
+            // A <button> tab activated on Space; an anchor does not, so becoming a
+            // link (feedback #451) would have quietly cost keyboard users the tab
+            // strip. Enter is deliberately untouched — it is the anchor's own
+            // default and already arrives at `onChange` through the click handler
+            // above, so handling it here too would switch tabs twice. Same three
+            // lines the mobile row card carries, for the same reason; the rejected
+            // alternative — keeping a button and faking the middle click with
+            // window.open — is what the whole item is moving away from.
+            onKeyDown={(e) => {
+              if (e.key !== " ") return;
+              e.preventDefault();
+              onChange(tab.id);
+            }}
           >
-            <span className="inline-flex items-center gap-1.5">
-              {tab.label}
-              {tab.badge != null ? tab.badge : null}
-            </span>
+            {inner}
+          </a>
+        ) : (
+          <button key={tab.id} {...shared} onClick={() => onChange(tab.id)}>
+            {inner}
           </button>
         );
       })}
