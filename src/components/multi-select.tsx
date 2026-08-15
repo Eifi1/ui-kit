@@ -30,6 +30,9 @@ interface Props {
   /** "Clear" action label (default "Clear"). */
   clearLabel?: string;
   className?: string;
+  /** Extra classes for the open dropdown PANEL — the way to widen it past its
+   *  16rem default when the rows carry more than a label (Keksdose feedback #147). */
+  panelClassName?: string;
 }
 
 export function MultiSelect({
@@ -44,6 +47,7 @@ export function MultiSelect({
   selectAllLabel = "Select all",
   clearLabel = "Clear",
   className,
+  panelClassName,
 }: Props) {
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
@@ -87,7 +91,13 @@ export function MultiSelect({
       </button>
       {open && (
         <DropdownPanel
-          className="w-64"
+          // 16rem by default; `panelClassName` is how a caller widens it (Keksdose
+          // feedback #147: the market picker's rows carry a postcode, a town, a
+          // distance and a receipt count, all of which were being truncated). The
+          // override used to be applied from the OUTSIDE with a
+          // `[&>div]:w-full` descendant selector, which worked and was a hack —
+          // "change the package" was the right call.
+          className={cn("w-64", panelClassName)}
           empty={filtered.length === 0}
           header={
             <>

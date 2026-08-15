@@ -1,8 +1,54 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import type {
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from "react";
 import { cn } from "../lib/cn";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+
+/**
+ * Drag the panel by its top strip, in pointer space (dev#460).
+ *
+ * Deliberately not a library and not persisted: the offset is component state that
+ * dies with the dialog. It starts only on a press that lands on the panel's own
+ * chrome — never on a field, a button or a link, which is what keeps "drag to select
+ * text in the textarea" working. Above `md` only: below it the panel is a
+ * full-width bottom sheet with nothing beside it to uncover.
+ */
+function useDragOffset(enabled: boolean) {
+  const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
+  const from = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+
+  const onPointerMove = (e: PointerEvent) => {
+    const start = from.current;
+    if (!start) return;
+    setOffset({ x: start.ox + e.clientX - start.x, y: start.oy + e.clientY - start.y });
+  };
+  const onPointerUp = () => {
+    from.current = null;
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+  };
+
+  return {
+    style: offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined,
+    onPointerDown: !enabled
+      ? undefined
+      : (e: ReactPointerEvent<HTMLDivElement>) => {
+          if (e.button !== 0 || window.innerWidth < 768) return;
+          const target = e.target as HTMLElement;
+          // Only the panel itself and its non-interactive chrome start a drag; a
+          // press inside any control belongs to that control.
+          if (target.closest("input,textarea,select,button,a,[role='button']")) return;
+          from.current = { x: e.clientX, y: e.clientY, ox: offset?.x ?? 0, oy: offset?.y ?? 0 };
+          window.addEventListener("pointermove", onPointerMove);
+          window.addEventListener("pointerup", onPointerUp);
+        },
+  };
+}
 
 /**
  * Backdrop handlers that close only when a press starts AND ends on the
@@ -54,6 +100,21 @@ export interface ModalProps {
    * desktop `md:p-4` margin is kept. Defaults to false (padded on all sizes).
    */
   fullBleed?: boolean;
+  /**
+   * Let the user drag the panel out of the way by its top edge (Keksdose feedback
+   * dev#460: *"Make the feedback dialog draggable so I can see behind it if it
+   * blocks something."*).
+   *
+   * Opt-in, because it only makes sense for a dialog whose content is ABOUT the page
+   * behind it — the feedback composer is the case, an ordinary form is not, and a
+   * draggable panel that has nothing to reveal is a control that can only get lost.
+   *
+   * Pointer-only by design: it is a "move this out of the way" gesture, not a layout
+   * choice worth persisting, and the position resets when the dialog closes. On a
+   * phone the panel is a bottom sheet the width of the screen, so dragging is
+   * suppressed there — there is nothing beside it to see.
+   */
+  draggable?: boolean;
 }
 
 /**
@@ -64,8 +125,18 @@ export interface ModalProps {
  * into the panel on open and back to the trigger on close, a Tab focus trap, and
  * `role="dialog"`/`aria-modal`.
  */
-export function Modal({ onClose, children, size = "md", className, labelledBy, onKeyDown, fullBleed }: ModalProps) {
+export function Modal({
+  onClose,
+  children,
+  size = "md",
+  className,
+  labelledBy,
+  onKeyDown,
+  fullBleed,
+  draggable,
+}: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const drag = useDragOffset(Boolean(draggable));
   const backdropClose = useBackdropClose(onClose);
   // Back means the same as Escape here. On a phone Escape doesn't exist, so without
   // this the only way out of a dialog is finding its close button — and Back, the
@@ -137,10 +208,15 @@ export function Modal({ onClose, children, size = "md", className, labelledBy, o
         aria-labelledby={labelledBy}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
+        onPointerDown={drag.onPointerDown}
+        style={drag.style}
         className={cn(
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
           size === "lg" ? "max-w-lg" : "max-w-md",
           "p-4",
+          // The grab affordance sits on the panel's own top strip: a drag handle of
+          // its own would be one more control in a dialog that is mostly one field.
+          draggable && "md:[&>*:first-child]:cursor-grab",
           className,
         )}
       >

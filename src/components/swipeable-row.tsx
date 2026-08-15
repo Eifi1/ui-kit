@@ -116,9 +116,24 @@ export function SwipeableRow({
   // Index -1 (nothing armed yet) still previews the nearest action, idle-coloured.
   const dx = swipe.dx;
   // Only the side being dragged toward is painted, which is what makes a full-width
-  // panel safe. At rest (dx 0) nothing is exposed, so the right-hand default is
-  // arbitrary — it just avoids an empty first paint mid-gesture.
-  const draggingLeft = dx < 0;
+  // panel safe.
+  //
+  // The side has to SURVIVE the release, though, and that is what this ref is for
+  // (Keksdose feedback dev#467): *"Swiping a category to the left with no option — if
+  // letting it go it gets, for the way back, the background color of the opposite
+  // swipe direction where there should be no color change at all."* On release dx
+  // snaps to 0 while the row itself slides back over 150ms, so a plain `dx < 0` read
+  // "right" for exactly the frames where the left side was still uncovered — and
+  // painted the RIGHT action's colour into the gap. With no left action at all that
+  // colour was the only thing the gesture ever showed.
+  //
+  // Written during render rather than in an effect: an effect would repaint a frame
+  // later (visibly, at 150ms) and `setState` in an effect body is an eslint error in
+  // the consuming app. The value is derived from this render's own dx, so a
+  // concurrent re-render recomputes it identically.
+  const lastSide = useRef<"left" | "right">("right");
+  if (dx !== 0) lastSide.current = dx < 0 ? "left" : "right";
+  const draggingLeft = dx !== 0 ? dx < 0 : lastSide.current === "left";
   const shown = draggingLeft
     ? leftActions[Math.max(0, swipe.armedLeftIndex)]
     : rightActions[Math.max(0, swipe.armedRightIndex)];

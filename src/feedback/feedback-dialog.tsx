@@ -214,6 +214,10 @@ export function FeedbackDialog({
   return (
     <Modal
       onClose={onClose}
+      // The one dialog whose subject is the page behind it (Keksdose dev#460: "Make
+      // the feedback dialog draggable so I can see behind it if it blocks
+      // something") — you are describing what is under it while you type.
+      draggable
       onKeyDown={(e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
           e.preventDefault();
@@ -221,6 +225,8 @@ export function FeedbackDialog({
         }
       }}
     >
+      {/* Also the drag handle: pressing anywhere on the panel's own chrome moves it,
+          and the heading is the strip a user reaches for. */}
       <h2 className="mb-3 text-lg font-semibold">{labels.title}</h2>
       <div className="space-y-3">
         {isMobile ? (
