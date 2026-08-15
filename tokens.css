@@ -51,7 +51,13 @@
   --brand-hover: #a5b4fc;      /* indigo-300 */
   --brand-contrast: #1e1b4b;   /* indigo-950 */
   --money-income: #2dd4bf;     /* teal-400 */
-  --money-expense: #fbbf24;    /* amber-400 */
+  /* Deliberately NOT amber-400 (#fbbf24). Every other colour on a dark surface
+     sits around OKLab L 0.68–0.74 (brand 0.68, net 0.70, neutral 0.71, income
+     0.74); amber-400 lands at 0.84, so outflows — most rows in a register — shouted
+     a tenth of a lightness step louder than inflows carrying the same weight of
+     meaning. Same hue (84°) and chroma, pulled to L 0.785: still 8.9:1 on the card
+     surface, still far from income in CVD space (Keksdose dev#434). */
+  --money-expense: #e4b035;
   --money-net: #a98fd6;
   --money-neutral: #a1a1aa;    /* zinc-400 */
   --chart-1: #7e72d6;

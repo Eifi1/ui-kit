@@ -93,7 +93,12 @@ export const DEFAULT_PRESET: PalettePreset = {
     brandHover: "#aab1fb",
     brandContrast: "#16182b",
     moneyIncome: "#22c3b6",
-    moneyExpense: "#fbbf24",
+    // Amber-400 (#fbbf24) sat at OKLab L 0.84 while every other dark token lives
+    // at 0.68–0.74, so outflows outshouted the inflows they are paired with. Same
+    // hue and chroma, pulled to L 0.785 (dev#434). The heat stops below keep the
+    // brighter amber on purpose: a gradient endpoint is meant to be the loudest
+    // thing in its scale, and it is a fill, not a figure.
+    moneyExpense: "#e4b035",
     moneyNet: "#b39aef",
     moneyNeutral: "#9aa1bd",
     chart: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],
@@ -249,7 +254,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       brandHover: "#aab1fb",
       brandContrast: "#16182b",
       moneyIncome: "#22c3b6",
-      moneyExpense: "#fbbf24",
+      // Kept byte-identical to DEFAULT_PRESET.dark, which IS this preset (dev#434).
+      moneyExpense: "#e4b035",
       moneyNet: "#b39aef",
       moneyNeutral: "#9aa1bd",
       chart: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],

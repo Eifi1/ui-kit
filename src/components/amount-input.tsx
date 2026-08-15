@@ -75,10 +75,16 @@ interface AmountInputProps {
   align?: "start" | "center";
 }
 
+// The consuming app's ONE money palette (`--money-expense` / `--money-income`),
+// not a bespoke rose/emerald pairing: a figure being typed has to wear the same
+// colour the same figure will wear once it is a row in the table behind the form
+// (Keksdose dev#434). The utilities are unlayered and theme-aware, so no `dark:`
+// variant is needed and they win over the field's own text colour regardless of
+// where `cn` puts them.
 const TONE_CLASS: Record<"neutral" | "outflow" | "inflow", string> = {
   neutral: "",
-  outflow: "text-rose-600 dark:text-rose-400",
-  inflow: "text-emerald-600 dark:text-emerald-400",
+  outflow: "text-money-neg",
+  inflow: "text-money-pos",
 };
 
 // The shared chrome-less treatment at money size. `tabular-nums` so digits don't
