@@ -1,14 +1,27 @@
 /**
- * ISO date helpers, collected from copies that were scattered across the
- * pages. Two timezone families live here and they are NOT interchangeable:
+ * ISO date helpers, collected from copies that were scattered across the pages.
  *
- *  - {@link todayIso} is UTC-based (`Date.toISOString()`), matching the
- *    existing filter / server-facing call sites. Near midnight it can differ
- *    from the local calendar day — that behaviour is preserved deliberately;
- *    don't "fix" it to local time without checking every caller.
- *  - {@link toLocalIso} / {@link monthKey} read local-time components
- *    (getFullYear/getMonth/getDate), matching the user-facing month/day call
- *    sites (budget cursor, calendar heatmap, report ranges).
+ * **Every "what day is it" helper here reads the LOCAL calendar** — one family, not
+ * two. It used to be two: these all built a local Date and then read it back through
+ * `toISOString()`, which is UTC, so east of Greenwich they all returned YESTERDAY
+ * between local midnight and the UTC rollover. The old module note called that
+ * deliberate and warned against changing it. It was not defensible, and dev#471 is
+ * what it cost:
+ *
+ * > *"Just entered a tx now from scheduled. But it still shows as upcoming. Is there
+ * > a problem with timezones? It is currently 1 o clock middle european summer time."*
+ *
+ * There was: at 01:00 CEST `todayIso()` answered with the 14th, the row the scheduler
+ * had just booked was dated the 15th, and `isUpcoming` compares the two strings — so a
+ * transaction entered a second ago read as one still to come. The same slip moved
+ * `startOfMonthIso()` onto the last day of the PREVIOUS month for an hour every first
+ * of the month, which is a report range nobody would have questioned.
+ *
+ * A calendar day only means anything to the human reading it, and every caller here —
+ * the register's today, the date-range presets, the budget cursor, a new
+ * transaction's default date — is asking that question. There is no caller for whom
+ * "the UTC day" is the right answer; the server compares plain dates with no zone at
+ * all, so sending it the user's local day is also what it wants.
  */
 
 /** Zero-pad a number to two digits ("3" -> "03"). */
@@ -16,9 +29,9 @@ export function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** Today as "YYYY-MM-DD", UTC-based (see module note on timezones). */
+/** Today as "YYYY-MM-DD" on the LOCAL calendar (see the module note). */
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalIso(new Date());
 }
 
 /** A Date as a local-time "YYYY-MM-DD" string. */
@@ -32,14 +45,16 @@ export function monthKey(d: Date): string {
 }
 
 // ---------- Date-range presets + calendar helpers ----------
-// UTC-based like todayIso (see module note); used by the data-table date filter
-// and its MiniCalendar.
+// Local-calendar like todayIso (see the module note); used by the data-table date
+// filter and its MiniCalendar. Each one mutates a local Date and must therefore READ
+// it back locally — going out through toISOString() is what shifted every one of
+// these by a day near midnight (dev#471).
 
 /** Today shifted by `days`, as "YYYY-MM-DD". */
 export function shiftIso(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** First day (Monday) of the current week, as "YYYY-MM-DD". */
@@ -48,7 +63,7 @@ export function startOfWeekIso(): string {
   const day = d.getDay();
   const diff = (day + 6) % 7; // monday = 0
   d.setDate(d.getDate() - diff);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** First day of the month `offsetMonths` from now, as "YYYY-MM-DD". */
@@ -56,7 +71,7 @@ export function startOfMonthIso(offsetMonths = 0): string {
   const d = new Date();
   d.setDate(1);
   d.setMonth(d.getMonth() + offsetMonths);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** Last day of the month `offsetMonths` from now, as "YYYY-MM-DD". */
@@ -65,7 +80,7 @@ export function endOfMonthIso(offsetMonths = 0): string {
   d.setDate(1);
   d.setMonth(d.getMonth() + offsetMonths + 1);
   d.setDate(0);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** First day of the year `offsetYears` from now, as "YYYY-MM-DD". */
@@ -74,7 +89,7 @@ export function startOfYearIso(offsetYears = 0): string {
   d.setMonth(0);
   d.setDate(1);
   d.setFullYear(d.getFullYear() + offsetYears);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** Last day of the year `offsetYears` from now, as "YYYY-MM-DD". */
@@ -83,7 +98,7 @@ export function endOfYearIso(offsetYears = 0): string {
   d.setMonth(11);
   d.setDate(31);
   d.setFullYear(d.getFullYear() + offsetYears);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 /** Parse a "YYYY-MM-DD" string to a local-midnight Date, or null if malformed. */
