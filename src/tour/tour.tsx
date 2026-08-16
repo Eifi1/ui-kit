@@ -500,15 +500,21 @@ function TourCard({
               </Button>
             )}
             {/* On an awaitClick step the Next button is replaced by a hint on its
-                own row below, so it doesn't cram the counter + buttons and wrap. */}
-            {!(step.awaitClick && step.target) && (
+                own row below, so it doesn't cram the counter + buttons and wrap.
+                Only when the target was actually FOUND, though — `rect` is null
+                when the finder gave up, and the click listener early-returns on
+                the same absence. Keyed on `step.target` alone this hid the only
+                way forward on any step whose anchor happens not to be rendered
+                for this user (a guest sees no "add account" button), leaving the
+                undocumented ArrowRight key as the sole escape. */}
+            {!(step.awaitClick && step.target && rect) && (
               <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
                 {isLast ? labels.done : labels.next}
               </Button>
             )}
           </div>
         </div>
-        {step.awaitClick && step.target && (
+        {step.awaitClick && step.target && rect && (
           <div className="text-center text-xs italic text-slate-400 dark:text-slate-500">
             {labels.awaitClickHint}
           </div>

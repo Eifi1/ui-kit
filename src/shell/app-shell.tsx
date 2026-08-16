@@ -143,8 +143,19 @@ export function AppShell({
               settings section and back: that section is the only one tall enough
               to scroll. Platform-dependent, which is why it is easy to miss —
               overlay scrollbars (macOS, most Linux builds) take no layout space,
-              classic ones (Windows) take ~15px. */}
-          <main className="flex-1 max-w-full overflow-x-clip pb-20 md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable]">
+              classic ones (Windows) take ~15px.
+
+              `both-edges`, not the bare `stable`: a one-sided reservation keeps the
+              width stable but moves the middle. On a page short enough not to
+              scroll, nothing is painted into the reserved track, so every centred
+              `mx-auto` container sits half a scrollbar left of the optical centre
+              and every full-bleed child stops ~15px short on the right. Keksdose
+              feedback #491 (/settings#data) and #498 (/budgets) both reported it as
+              "the left boundary looks smaller / cut off compared to the right" on
+              the one element per page whose frame is a saturated colour — the rose
+              destructive-action cards. Reserving the track on both edges keeps the
+              content centred whether or not the scrollbar is showing. */}
+          <main className="flex-1 max-w-full overflow-x-clip pb-20 md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]">
             {children}
           </main>
           {footer}
