@@ -8,7 +8,15 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton } from "./calculator";
 import { NumberPadSheet } from "./numpad-sheet";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
-import { commitExpression, sanitizeLive } from "../lib/calc";
+import {
+  commitExpression,
+  evaluateExpression,
+  formatResult,
+  isBareAmount,
+  looksLikeExpression,
+  sanitizeLive,
+  splitLeadingSign,
+} from "../lib/calc";
 
 interface AmountInputProps {
   value: string;
@@ -27,16 +35,45 @@ interface AmountInputProps {
   /**
    * Tint the typed figure by what it will DO (Keksdose feedback #167).
    *
-   * The field is deliberately unitless — no sign, no symbol — because the direction
-   * is chosen with a toggle beside it, not typed. That leaves the number itself
-   * saying nothing about which way the money goes, on the one screen where getting
-   * that backwards is the expensive mistake. Colour is the cheapest way to say it
-   * continuously, and it costs no layout.
+   * The direction is chosen with a toggle beside the field rather than typed, so
+   * the digits alone say nothing about which way the money goes — on the one screen
+   * where getting that backwards is the expensive mistake. Colour says it
+   * continuously, and it costs no layout. It stays the MAIN indication (live #201
+   * rework: *"The main indication shall still be the color"*); {@link negative}
+   * renders the sign as a second, quieter signal in front of the figure.
    *
    * Never the ONLY signal: the toggle it mirrors is right there, labelled, so this
    * is reinforcement rather than the sole carrier of the meaning.
    */
   tone?: "neutral" | "outflow" | "inflow";
+  /**
+   * The SIGN of the figure, owned by the caller's direction control (Keksdose live
+   * #201 rework: *"Outflow should be negative and inflow positive … the sign shall
+   * be displayed but not necessarily be typed in"*).
+   *
+   * `value` stays the MAGNITUDE. The minus is glued on at render time and stripped
+   * off again before anything is reported back, so the caller never sees its own
+   * prefix echoed and no code path can end up applying it twice. That is the whole
+   * cure: there is exactly ONE place the sign lives, and it is not the text.
+   *
+   * Because it is rendered rather than stored it cannot be deleted (the next render
+   * puts it back), a select-all-and-retype keeps the direction, and the caret needs
+   * no minding.
+   */
+  negative?: boolean;
+  /**
+   * A sign the user TYPED, or a calculation that resolved to a signed number.
+   *
+   * SET, never flip. A "-" means *"this is an outflow"*, so typing it twice says the
+   * same thing twice — which is exactly what the rework asks for (*"Subtracting
+   * values twice resulting in inflow -> outflow and back to inflow seems not
+   * reasonable"*). "+" says the other direction.
+   *
+   * Its presence is what ARMS the whole sign behaviour. A field with no direction
+   * control — an account's starting balance, a loan payment, a holding's cost —
+   * passes neither prop and keeps a text that is the whole truth, minus included.
+   */
+  onNegativeChange?: (negative: boolean) => void;
   /**
    * How the field presents itself ON A PHONE (Keksdose feedback #176).
    *
@@ -96,8 +133,26 @@ const DISPLAY_INPUT_CLASS = cn(
   "text-4xl font-semibold leading-tight tracking-tight tabular-nums",
 );
 
+/**
+ * Is `text` the ANSWER to `previous`, or something typed OVER it?
+ *
+ * "The old text was a sum and the new one is bare" cannot tell those apart, and both
+ * gestures are ordinary: select-all-and-retype after a typo, or backspacing "-20+"
+ * back down to a fresh figure. Read as an answer, they move the direction chip — so
+ * an outflow of 7 quietly booked +7.00 (live #201 rework).
+ *
+ * The question that does separate them is arithmetic, not shape: evaluate what the
+ * text replaced and see whether this IS that number. "-12+30" → "18" still is, so a
+ * sum that comes out positive still takes the chip with it; "-20+50" → "7" is not,
+ * and "-20+" evaluates to nothing at all.
+ */
+function isResultOf(previous: string, text: string): boolean {
+  const n = evaluateExpression(previous);
+  return n !== null && formatResult(n) === text.trim();
+}
+
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", variant = "field", align = "start" }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start" }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
@@ -127,7 +182,46 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       },
       [ref],
     );
-    const commit = () => onChange(commitExpression(value));
+    // The sign is DISPLAYED, not stored (live #201 rework). `value` is the
+    // magnitude; the minus is glued on here and taken off again in handleText, so
+    // the two can never disagree and the caller can never double-apply it. Only in
+    // front of a bare amount: an expression being typed ("12-30") owns its own
+    // minus and has to survive keystroke-for-keystroke.
+    const signOwned = onNegativeChange !== undefined;
+    const shown = signOwned && negative && isBareAmount(value) ? `-${value}` : value;
+    // Every route into the field — typing, the numpad sheet, the desktop
+    // calculator, the blur/Enter commit — funnels through here, so the split is
+    // written once and the four entry paths cannot drift.
+    //
+    // `previous` is the text this one REPLACES, and it is what says whether a bare
+    // figure arriving here is an answer or a magnitude. For the three paths that
+    // edit the field's own text that is simply what the field was showing; the
+    // desktop calculator keeps its expression in a popover the field never sees,
+    // so it passes it in (see `CalculatorButton`'s `onChange`).
+    const handleText = (raw: string, previous: string = shown) => {
+      const text = sanitizeLive(raw);
+      if (!signOwned) {
+        onChange(text);
+        return;
+      }
+      const { sign, rest } = splitLeadingSign(text);
+      if (sign) {
+        // SET, not flip: re-reporting the same sign on every keystroke is a no-op.
+        onNegativeChange(sign === "-");
+      } else if (looksLikeExpression(previous) && isBareAmount(text) && isResultOf(previous, text)) {
+        // A calculation that just RESOLVED states its sign in both directions. The
+        // figure it ran on is the SIGNED one the user could see — "-12+30" is +18 —
+        // so a positive result has to move the chip too, or the field would answer
+        // that sum with "-18" and contradict the arithmetic it just showed.
+        //
+        // Only when it really resolved, though: see {@link isResultOf}. A bare figure
+        // arriving on top of an expression is far more often a replacement than an
+        // answer, and reading it as an answer flips the direction of money.
+        onNegativeChange(false);
+      }
+      onChange(sign ? rest : text);
+    };
+    const commit = () => handleText(commitExpression(shown));
     const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
     const selected = getCurrency(currency);
@@ -166,8 +260,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // needs: a zero to aim at, at full size. The caller supplies it because
           // only the app knows the locale's decimal separator.
           placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
-          value={value}
-          onChange={(e) => onChange(sanitizeLive(e.target.value))}
+          value={shown}
+          onChange={(e) => handleText(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             commit();
@@ -224,7 +318,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             asDisplay ? "bottom-1 right-0" : "inset-y-1 right-1",
           )}
         >
-          {showCalc && <CalculatorButton value={value} onChange={onChange} className="px-1.5" />}
+          {showCalc && <CalculatorButton value={shown} onChange={handleText} className="px-1.5" />}
           {currency && !editable && (
             <span
               aria-hidden
@@ -294,7 +388,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         )}
         </div>
         {showNumpad && (
-          <NumberPadSheet value={value} onChange={onChange} onDone={() => innerRef.current?.blur()} label={label} />
+          <NumberPadSheet value={shown} onChange={handleText} onDone={() => innerRef.current?.blur()} label={label} />
         )}
       </div>
     );

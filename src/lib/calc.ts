@@ -154,12 +154,18 @@ export function evaluateExpression(expr: string): number | null {
 
 /** True when `s` carries arithmetic beyond a single leading minus — i.e. a plain
  * number (or a lone negative like "-5") is NOT an expression, but "12+5" is.
- * Used to decide whether a field's text should be evaluated on commit. */
+ * Used to decide whether a field's text should be evaluated on commit.
+ *
+ * The operator set is the one {@link evaluateExpression} accepts, on-screen glyphs
+ * included: the calculator keypad inserts `× ÷ −`, and a `−` that this said was not
+ * arithmetic went on to be read as a plain number — where the digits-only fallback
+ * in {@link commitExpression} silently ate it, turning "-42−−50" (= 8) into a bare
+ * 8 with no record that a sum had happened at all. */
 export function looksLikeExpression(s: string): boolean {
   const t = s.trim();
   if (t === "") return false;
   if (/^-?\d*[.,]?\d*$/.test(t)) return false; // plain (optionally negative) decimal
-  return /[+\-*/×÷()]/.test(t.replace(/^-/, ""));
+  return /[+\-*/×÷−–—()]/.test(t.replace(/^-/, ""));
 }
 
 /** Render an evaluated number back to a field-friendly string, trimming binary
@@ -171,7 +177,17 @@ export function formatResult(n: number): string {
 
 /** The single "on blur / Enter" transform a numeric field applies: evaluate the
  * text if it's an expression, otherwise normalise it to a bare number string
- * (comma → dot, dropping stray characters and non-leading minuses). */
+ * (comma → dot, dropping stray characters, non-leading minuses and anything after
+ * a second decimal point).
+ *
+ * The last clause is the backstop for Keksdose live #201. A field the user typed in
+ * cannot reach here malformed any more — {@link sanitizeLive} runs on every change,
+ * including a paste — but a value handed in from elsewhere (a recurring rule, an
+ * import, a test) still can, and "1.2.3" is not an expression (no operator), so it
+ * used to fall straight through unchanged and be read as NaN. Here the text is CUT
+ * at the second dot ("1.2") rather than joined ("1.23"): with no keystroke to
+ * ignore there is nothing to say which reading was meant, and the shorter one
+ * cannot silently invent a bigger number. */
 export function commitExpression(raw: string): string {
   const s = raw.trim();
   if (looksLikeExpression(s)) {
@@ -179,15 +195,79 @@ export function commitExpression(raw: string): string {
     if (n !== null) return formatResult(n);
     // Unparseable (e.g. a half-typed "12+"): fall through to a digits-only clean.
   }
-  return s.replace(",", ".").replace(/[^0-9.-]/g, "").replace(/(?!^)-/g, "");
+  const cleaned = s.replace(",", ".").replace(/[^0-9.-]/g, "").replace(/(?!^)-/g, "");
+  return cleaned.replace(/^(-?\d*\.?\d*).*$/, "$1");
 }
 
 /** The live, per-keystroke transform a numeric field applies: comma → dot and
  * drop anything that isn't a digit, decimal point, arithmetic operator (incl.
  * the on-screen `× ÷` glyphs) or paren — so a typed calculation survives
  * keystroke-by-keystroke but stray characters can't be entered. A lone leading
- * `-` is kept (a negative amount, feedback #214); the text is resolved to a
- * plain number on blur/Enter via {@link commitExpression}. */
+ * `-` is kept — in a plain field it is simply a negative amount; in a field whose
+ * caller owns the sign it is read off again by {@link splitLeadingSign}. The text
+ * is resolved to a plain number on blur/Enter via {@link commitExpression}. */
 export function sanitizeLive(raw: string): string {
-  return raw.replace(/,/g, ".").replace(/[^0-9.+\-*/×÷()]/g, "");
+  return dropExtraDots(raw.replace(/,/g, ".").replace(/[^0-9.+\-*/×÷()]/g, ""));
+}
+
+/**
+ * At most ONE decimal point per number (Keksdose live #201).
+ *
+ * Per NUMBER, not per string: "1.5+2.5" is a legitimate calculation with two dots
+ * in two operands, so the counter resets at every operator and parenthesis.
+ *
+ * A second dot inside one operand is a **no-op keystroke** — the digits after it
+ * keep landing, so "1.2" + "." + "3" is "1.23". That is what every calculator does
+ * with a repeated decimal point, and it is the only option that does not make the
+ * field feel broken ("my 3 disappeared"). This runs on paste as well as on typing,
+ * so the malformed value never reaches the rest of the app: everything downstream
+ * reads the field with `Number()`, NaN became a silent 0, and on the create form
+ * that 0 was painted with the income green — a figure that was not a number at all
+ * asserting money was coming in.
+ */
+function dropExtraDots(s: string): string {
+  let out = "";
+  let dotInNumber = false;
+  for (const ch of s) {
+    if (ch === ".") {
+      if (dotInNumber) continue;
+      dotInNumber = true;
+    } else if (ch < "0" || ch > "9") {
+      // An operator or a paren ends the current operand.
+      dotInNumber = false;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** A bare, unsigned amount: digits with at most one decimal separator and nothing
+ *  else — "42", "42.", ".5", "0,5". NOT "" (an empty field has no figure to put a
+ *  sign in front of), not "-42", not "12+5". It is the only shape a DISPLAYED sign
+ *  prefix makes sense in front of; an expression carries its own arithmetic and has
+ *  to survive keystroke-for-keystroke. */
+export function isBareAmount(s: string): boolean {
+  const t = s.trim();
+  return t !== "" && /^\d*[.,]?\d*$/.test(t);
+}
+
+/**
+ * Split a LEADING sign off a plain signed number (Keksdose live #201 rework):
+ * `"-42"` → `{ sign: "-", rest: "42" }`, everything else → `{ sign: "", rest: text }`.
+ *
+ * Only in front of a bare amount, because a minus with arithmetic after it IS
+ * arithmetic: "12-30" is a subtraction, and "-12+5" is -7, not -(12+5). Those come
+ * back untouched and are resolved by {@link commitExpression} on blur — at which
+ * point the RESULT is a plain signed number and this function does get to speak.
+ *
+ * A lone "-" splits (rest ""): the sign is a statement about the direction the
+ * moment it is typed, before any digit exists.
+ */
+export function splitLeadingSign(text: string): { sign: "" | "-" | "+"; rest: string } {
+  const trimmed = text.trimStart();
+  const sign = trimmed.charAt(0);
+  if (sign !== "-" && sign !== "+") return { sign: "", rest: text };
+  const rest = trimmed.slice(1);
+  if (rest !== "" && !isBareAmount(rest)) return { sign: "", rest: text };
+  return { sign, rest };
 }

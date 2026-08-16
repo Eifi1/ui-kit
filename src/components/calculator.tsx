@@ -2,15 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
-import { evaluateExpression, formatResult } from "../lib/calc";
+import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 
 interface CalculatorButtonProps {
   /** Current field text — seeds the keypad so the user can keep calculating
    * from what's already entered. */
   value: string;
-  /** Called with the evaluated result whenever the running expression resolves
-   * to a number, so the host field tracks the keypad live. */
-  onChange: (value: string) => void;
+  /**
+   * Called with the evaluated result whenever the running expression resolves
+   * to a number, so the host field tracks the keypad live.
+   *
+   * `expression` is the TEXT that result came out of — `"-42+50"` for an 8 — and
+   * is omitted when there was no calculation (a cleared pad). A host that keeps
+   * the sign of its figure OUTSIDE the text (see `AmountInput`'s `negative` /
+   * `onNegativeChange`, where a direction toggle owns it) cannot otherwise tell
+   * that 8 from a freshly typed one: the first is a sum that came out positive
+   * and has to take the direction with it, the second is a magnitude that must
+   * leave the direction alone. Hosts whose text carries its own sign can take
+   * the one argument and ignore this.
+   */
+  onChange: (value: string, expression?: string) => void;
   className?: string;
   ariaLabel?: string;
 }
@@ -56,11 +67,20 @@ function CalculatorPanel({
   onChange,
 }: {
   initial: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, expression?: string) => void;
 }) {
   const [expr, setExpr] = useState(() => seed(initial));
   const inputRef = useRef<HTMLInputElement>(null);
-  const result = evaluateExpression(expr);
+  // What the pad SHOWS. Normally the expression it holds — but when the host owns
+  // the sign of the figure, the magnitude it hands back is not the whole number:
+  // type 50 into a pad opened on an outflow and the host answers "-50". Derived
+  // rather than stored, so there is no echo to guard against and a host that
+  // ignores `onChange` entirely (a static `value`) still sees its own keystrokes:
+  // the pad only defers when the host's text is character-for-character its own
+  // last number with a minus in front.
+  const host = splitLeadingSign(initial.trim());
+  const text = host.sign === "-" && isBareAmount(expr) && host.rest === expr.trim() ? initial.trim() : expr;
+  const result = evaluateExpression(text);
 
   // Focus the display on open so the user can type or hit Enter immediately.
   useEffect(() => {
@@ -68,11 +88,12 @@ function CalculatorPanel({
   }, []);
 
   // Update the host field whenever the expression resolves to a number; an
-  // incomplete expression (e.g. "12+") simply leaves the field untouched.
+  // incomplete expression (e.g. "12+") simply leaves the field untouched. The
+  // expression rides along with the result — see `onChange` above.
   const apply = (next: string) => {
     setExpr(next);
     const n = evaluateExpression(next);
-    if (n !== null) onChange(formatResult(n));
+    if (n !== null) onChange(formatResult(n), next);
   };
 
   const clearAll = () => {
@@ -84,7 +105,7 @@ function CalculatorPanel({
     if (result === null) return;
     const out = formatResult(result);
     setExpr(out);
-    onChange(out);
+    onChange(out, text);
   };
 
   return (
@@ -92,7 +113,7 @@ function CalculatorPanel({
       <input
         ref={inputRef}
         aria-label="Calculation"
-        value={expr}
+        value={text}
         inputMode="decimal"
         onChange={(e) => apply(e.target.value)}
         onKeyDown={(e) => {
@@ -104,7 +125,7 @@ function CalculatorPanel({
         className="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-right font-mono text-sm text-slate-900 focus:border-slate-500 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
       />
       <div className="h-4 pr-1 text-right font-mono text-xs text-slate-400 dark:text-slate-500">
-        {result !== null && formatResult(result) !== expr.trim() ? `= ${formatResult(result)}` : ""}
+        {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
       </div>
       <div className="grid grid-cols-4 gap-1.5">
         {KEYS.map((key, i) =>
@@ -113,7 +134,7 @@ function CalculatorPanel({
               key="back"
               type="button"
               aria-label="Backspace"
-              onClick={() => apply(expr.slice(0, -1))}
+              onClick={() => apply(text.slice(0, -1))}
               className={cn(KEY_BASE, KEY_ACCENT)}
             >
               <Delete className="size-4" />
@@ -122,7 +143,7 @@ function CalculatorPanel({
             <button
               key={`${key.ins}-${i}`}
               type="button"
-              onClick={() => apply(expr + key.ins)}
+              onClick={() => apply(text + key.ins)}
               className={cn(KEY_BASE, key.accent ? KEY_ACCENT : KEY_DIGIT)}
             >
               {key.label}
