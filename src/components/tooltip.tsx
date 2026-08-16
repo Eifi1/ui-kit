@@ -26,6 +26,25 @@ const sidePositionClass: Record<TooltipSide, string> = {
   right: "left-full top-1/2 -translate-y-1/2 ml-1",
 };
 
+/**
+ * Hover/focus label for a control.
+ *
+ * Two implementations, and the choice matters more than it looks. The default is
+ * CSS-only: the bubble is always mounted next to the trigger and fades in on
+ * `:hover`, which costs no state and works in a plain render test. The `portal`
+ * variant mounts the bubble in `document.body` only while hovered, positioned by
+ * measurement.
+ *
+ * ⚠️ **Inside a scroll container, use `portal`.** An always-mounted bubble is
+ * absolutely positioned, but an absolutely positioned descendant still counts
+ * towards its scroll-container ancestor's scrollable overflow — so an invisible
+ * bubble on a control near the right edge makes the container scroll sideways
+ * with nothing to reveal. That is what Keksdose feedback dev#488 reported on the
+ * admin roster: 66px of horizontal scroll on a table that fit, 44px of it owed to
+ * tooltips nobody could see. The portalled bubble is `position: fixed` and absent
+ * until hovered, so it adds no width — and, being outside the container, it also
+ * cannot be clipped by it.
+ */
 export function Tooltip({
   label,
   side = "top",
