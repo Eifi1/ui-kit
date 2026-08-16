@@ -23,6 +23,11 @@ export interface MultiEntityComboboxProps<V extends string | number> {
   itemLabel?: (count: number) => string;
   clearable?: boolean;
   clearLabel?: string;
+  /** The phone sheet's close button. Its own prop rather than a reuse of
+   *  `clearLabel`: "clear the selection" and "close this screen" are different
+   *  actions, and on a full-screen sheet the close button is the only way out —
+   *  so it is the one control here that MUST be in the reader's language. */
+  closeLabel?: string;
   disabled?: boolean;
   /** When set, a "create" row appears for a non-empty query with no exact match.
    *  The panel stays open (adding the new entity to `value` is the caller's job). */
@@ -49,6 +54,7 @@ export function MultiEntityCombobox<V extends string | number>({
   itemLabel,
   clearable,
   clearLabel,
+  closeLabel,
   disabled,
   onCreate,
   createLabel,
@@ -85,6 +91,14 @@ export function MultiEntityCombobox<V extends string | number>({
       <button
         ref={core.triggerRef}
         type="button"
+        // The label is a floating <span>, not a <label for>, so without this the
+        // trigger's accessible name is whatever value happens to be selected —
+        // "Checking" with nothing saying it is the account. The label AND the
+        // value, because `aria-label` replaces the content rather than adding to
+        // it, and a control that announces only its name has lost the answer.
+        aria-label={
+          typeof label === "string" ? `${label}: ${summary}` : undefined
+        }
         disabled={disabled}
         onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
@@ -97,7 +111,9 @@ export function MultiEntityCombobox<V extends string | number>({
         <span
           className={cn(
             "min-w-0 truncate",
-            value.length ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500",
+            // Inherit FIELD_BASE's ink for a value, keep the placeholder grey — the
+            // same rule every field on a form row follows (Keksdose dev#477).
+            !value.length && "text-slate-400 dark:text-slate-500",
           )}
         >
           {summary}
@@ -122,8 +138,12 @@ export function MultiEntityCombobox<V extends string | number>({
       <ComboboxPanel
         core={core}
         multi
+        // On a phone the panel becomes a full-screen sheet, which needs the field's
+        // own label to say what it is asking for (live #200).
+        sheetTitle={label ?? placeholder}
         searchPlaceholder={searchPlaceholder}
         emptyLabel={emptyLabel}
+        closeLabel={closeLabel}
         isSelected={(v) => valueSet.has(v)}
         onChoose={toggle}
         showCreate={showCreate}

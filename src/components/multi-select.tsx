@@ -86,7 +86,9 @@ export function MultiSelect({
         onClick={() => setOpen((v) => !v)}
         className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD)}
       >
-        <span className="truncate text-slate-700 dark:text-slate-200">{selectedSummary}</span>
+        {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
+            than restating a lighter one (Keksdose dev#477). */}
+        <span className="truncate">{selectedSummary}</span>
         <FieldChevron />
       </button>
       {open && (

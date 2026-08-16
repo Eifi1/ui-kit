@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { Button, Card, Input } from "./ui";
+import { Button, Card, FIELD_WRITABLE_LOOK, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
 
 /**
@@ -165,7 +165,10 @@ export function TwoFactorSetting({
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   // Browsers autofill one-time-code fields with the saved username; keep the
-  // field readOnly until focus to block that.
+  // field readOnly until focus to block that. It therefore has to keep the LOOK of
+  // an editable field (FIELD_WRITABLE_LOOK): this is the one place where readOnly
+  // does not mean "you may not type here", and without the opt-out the field would
+  // sit there greyed until the moment it is focused.
   const [otpReadonly, setOtpReadonly] = useState(true);
   const onOtpFocus = () => setOtpReadonly(false);
 
@@ -192,6 +195,7 @@ export function TwoFactorSetting({
             inputMode="numeric"
             autoComplete="one-time-code"
             readOnly={otpReadonly}
+            inputClassName={FIELD_WRITABLE_LOOK}
             onFocus={onOtpFocus}
             maxLength={8}
             label={labels.codeLabel}
@@ -218,6 +222,7 @@ export function TwoFactorSetting({
             inputMode="numeric"
             autoComplete="one-time-code"
             readOnly={otpReadonly}
+            inputClassName={FIELD_WRITABLE_LOOK}
             onFocus={onOtpFocus}
             maxLength={8}
             label={labels.codeLabel}

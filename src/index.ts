@@ -43,6 +43,7 @@ export * from "./components/number-input";
 export * from "./components/currency-select";
 export * from "./components/amount-input";
 export * from "./components/combobox";
+export * from "./components/picker-sheet";
 export * from "./components/entity-combobox";
 export * from "./components/multi-entity-combobox";
 export * from "./components/multi-select";

@@ -26,6 +26,11 @@ export interface EntityComboboxProps<V extends string | number> {
   emptyLabel?: string;
   clearable?: boolean;
   clearLabel?: string;
+  /** The phone sheet's close button. Its own prop rather than a reuse of
+   *  `clearLabel`: "clear the selection" and "close this screen" are different
+   *  actions, and on a full-screen sheet the close button is the only way out —
+   *  so it is the one control here that MUST be in the reader's language. */
+  closeLabel?: string;
   disabled?: boolean;
   /** When set, a "create" row appears for a non-empty query with no exact match. */
   onCreate?: (query: string) => void;
@@ -52,6 +57,7 @@ export function EntityCombobox<V extends string | number>({
   emptyLabel = "No results",
   clearable,
   clearLabel,
+  closeLabel,
   disabled,
   onCreate,
   createLabel,
@@ -65,6 +71,8 @@ export function EntityCombobox<V extends string | number>({
   const showCreate =
     Boolean(onCreate) && q.length > 0 && !results.some((o) => o.label.toLowerCase() === q.toLowerCase());
   const showClear = Boolean(clearable && value != null && !disabled);
+  /** What the closed control is showing — the second half of its accessible name. */
+  const triggerText = selectedOption?.label ?? placeholder ?? "";
 
   const choose = (o: ComboOption<V>) => {
     core.cacheRef.current.set(o.value, o);
@@ -78,6 +86,14 @@ export function EntityCombobox<V extends string | number>({
       <button
         ref={core.triggerRef}
         type="button"
+        // The label is a floating <span>, not a <label for>, so without this the
+        // trigger's accessible name is whatever value happens to be selected —
+        // "Checking" with nothing saying it is the account. The label AND the
+        // value, because `aria-label` replaces the content rather than adding to
+        // it, and a control that announces only its name has lost the answer.
+        aria-label={
+          typeof label === "string" ? `${label}: ${triggerText}` : undefined
+        }
         disabled={disabled}
         onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
@@ -92,7 +108,13 @@ export function EntityCombobox<V extends string | number>({
           <span
             className={cn(
               "truncate",
-              selectedOption ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500",
+              // A chosen value is the field's VALUE, so it is set in the same ink an
+              // <input>'s value is — FIELD_BASE's own text colour, inherited rather
+              // than restated (Keksdose dev#477). It used to be one notch lighter
+              // than the typeahead fields beside it, which is visible when a picker
+              // and a text field share a form row. Nothing selected keeps the
+              // placeholder grey, which every field here agrees on.
+              !selectedOption && "text-slate-400 dark:text-slate-500",
             )}
           >
             {selectedOption?.label ?? placeholder ?? ""}
@@ -117,8 +139,12 @@ export function EntityCombobox<V extends string | number>({
       </button>
       <ComboboxPanel
         core={core}
+        // On a phone the panel becomes a full-screen sheet, which needs the field's
+        // own label to say what it is asking for (live #200).
+        sheetTitle={label ?? placeholder}
         searchPlaceholder={searchPlaceholder}
         emptyLabel={emptyLabel}
+        closeLabel={closeLabel}
         isSelected={(v) => v === value}
         onChoose={choose}
         showCreate={showCreate}

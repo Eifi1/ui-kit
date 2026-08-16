@@ -1,0 +1,112 @@
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+import type { ReactNode, RefObject } from "react";
+import { cn } from "../lib/cn";
+import { DropdownSearchHeader } from "./dropdown";
+import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
+
+/**
+ * The PHONE presentation of a picker: a full-screen dialog with a search box at
+ * the top and the list filling everything below it (Keksdose live #200).
+ *
+ * *"Paid as full screen dialog with input. Similar to the account select that
+ * already appears as full screen."* The account field is a native `<select>`, and
+ * a phone browser renders that as a full-screen list — so the app's own pickers,
+ * which are anchored dropdown panels, were the odd ones out: a 320px-tall panel
+ * squeezed between the field and the keyboard, showing three or four rows of a
+ * list that might have two hundred entries.
+ *
+ * What this fixes beyond size: the panel had to be *placed* (above/below, tracking
+ * the visual viewport as the keyboard opened — see `useAnchoredPanel`), and every
+ * one of those decisions is a chance to be wrong on a screen this small. A sheet
+ * has no placement. It also gives the search input somewhere unambiguous to live,
+ * which is the other half of the request: *"add filler possibility to the account
+ * select or even better right to the hoc the account select is derived from"* —
+ * so this lives in the shared picker, not in one form's copy of it.
+ *
+ * Rows are `min-h-11` (44px): the touch target the rest of the app uses. The list
+ * scrolls, the header does not, and the body behind it is scroll-locked so a drag
+ * that overshoots the list does not move the page underneath.
+ */
+export function PickerSheet({
+  open,
+  onClose,
+  title,
+  query,
+  onQueryChange,
+  searchPlaceholder,
+  inputRef,
+  closeLabel = "Close",
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** The field's own label — a sheet that fills the screen has to say what it is
+   *  asking for, which the anchored panel got for free by sitting under it. */
+  title?: ReactNode;
+  query: string;
+  onQueryChange: (value: string) => void;
+  searchPlaceholder?: string;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  closeLabel?: string;
+  children: ReactNode;
+}) {
+  useBodyScrollLock(open);
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={typeof title === "string" ? title : undefined}
+      // The sheet is PORTALLED to <body>, so it is not inside the field's own
+      // wrapper — and `useDropdown` closes on any document mousedown landing
+      // outside that wrapper. Tapping a row therefore unmounted the row (open →
+      // false) before its CLICK could fire, so the tap selected nothing at all and
+      // the sheet just vanished (Keksdose dev#477).
+      //
+      // It bit whichever sheet commits on `onClick` — the payee field's, since live
+      // #200, where it hid behind the free-text value the search box was already
+      // setting; and the account field's the moment dev#477 moved it onto the inline
+      // picker. `ComboboxPanel`'s rows happen to commit on `onMouseDown`, so they
+      // beat the document listener and were never affected — which is luck, not a
+      // design, and exactly why the fix belongs to the sheet.
+      //
+      // Stopping the mousedown here rather than teaching every caller about the
+      // portal: the sheet is modal and full-screen, so "a click in here is not an
+      // outside click" is a property of the sheet, not of whoever opened it.
+      onMouseDown={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-slate-900"
+    >
+      <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </span>
+        <button
+          type="button"
+          aria-label={closeLabel}
+          onClick={onClose}
+          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
+      <DropdownSearchHeader
+        query={query}
+        onQueryChange={onQueryChange}
+        inputRef={inputRef ?? { current: null }}
+        placeholder={searchPlaceholder}
+      />
+      {/* min-h-0 so the LIST scrolls rather than the dialog growing past the
+          viewport — a flex child defaults to min-height:auto. */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+    </div>,
+    document.body,
+  );
+}
+
+/** A row inside a {@link PickerSheet} — the phone-sized version of a dropdown row,
+ *  so a list is comfortable to hit with a thumb rather than merely legible. */
+export const SHEET_ROW_CLASS = cn(
+  "flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-base",
+  "text-slate-900 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800",
+);

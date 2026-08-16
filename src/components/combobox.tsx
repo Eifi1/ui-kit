@@ -1,8 +1,10 @@
-import { Fragment, useId, useMemo, useState } from "react";
+import { Fragment, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD } from "./ui";
+import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
+import { useMediaQuery } from "../hooks/use-media-query";
+import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import type { ComboOption } from "./combobox-core";
 
 // One look for both combobox flavors below — the suggestion list and its rows
@@ -34,6 +36,9 @@ export function Combobox({
   placeholder,
   className,
   groupBy,
+  maxSuggestions,
+  searchPlaceholder,
+  closeLabel,
   "aria-label": ariaLabel,
 }: {
   value: string;
@@ -51,26 +56,38 @@ export function Combobox({
    *  Omit for a plain list. */
   groupBy?: (option: string) => string;
   "aria-label"?: string;
+  /** Rows to offer when the field is empty. 8 on a dropdown, where that is all
+   *  that fits; the phone sheet asks for more because it has a screen. */
+  maxSuggestions?: number;
+  searchPlaceholder?: string;
+  closeLabel?: string;
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
   const { open, setOpen, wrapperRef } = useDropdown();
   const [active, setActive] = useState(-1);
+  // A phone opens the list as a full-screen sheet with its own input, the way a
+  // native <select> does — live #200: "Paid as full screen dialog with input.
+  // Similar to the account select that already appears as full screen." The
+  // anchored list stays for pointer devices, where it is the better shape.
+  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const sheetInputRef = useRef<HTMLInputElement | null>(null);
 
   const query = value.trim().toLowerCase();
   const matches = useMemo(() => {
     const seen = new Set<string>();
     const uniq = options.filter((o) => o && !seen.has(o) && seen.add(o));
     let ranked: string[];
+    const cap = maxSuggestions ?? (isPhone ? 50 : 8);
     if (!query) {
-      ranked = uniq.slice(0, 8);
+      ranked = uniq.slice(0, cap);
     } else {
       // Prefix matches first, then substring matches — most relevant on top.
       const starts = uniq.filter((o) => o.toLowerCase().startsWith(query));
       const contains = uniq.filter(
         (o) => !o.toLowerCase().startsWith(query) && o.toLowerCase().includes(query),
       );
-      ranked = [...starts, ...contains].slice(0, 8);
+      ranked = [...starts, ...contains].slice(0, cap);
     }
     if (!groupBy) return ranked;
     // Keep each group contiguous so a heading appears once instead of every time
@@ -84,7 +101,7 @@ export function Combobox({
       byGroup.get(key)!.push(o);
     }
     return [...byGroup.values()].flat();
-  }, [options, query, groupBy]);
+  }, [options, query, groupBy, maxSuggestions, isPhone]);
 
   const commit = (v: string) => {
     onChange(v);
@@ -105,12 +122,26 @@ export function Combobox({
           id={fieldId}
           value={value}
           placeholder={placeholder}
-          aria-label={ariaLabel}
+          // The visual label is a floating <span>, not a <label for>, so fall back to
+          // it for the accessible name — otherwise the field announces only what is
+          // typed in it (dev#477, applied to all three entity fields of a transaction
+          // form at once).
+          aria-label={ariaLabel ?? label}
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
           autoComplete="off"
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            // The sheet carries its own input, so the field behind it must not also
+            // pull up the keyboard and scroll the page under the dialog.
+            if (isPhone) sheetInputRef.current?.focus();
+          }}
+          // `inputMode="none"` rather than readOnly: the field must not look
+          // uneditable (FIELD_BASE greys a read-only field since dev#468) and must
+          // still take focus — it just has no keyboard of its own, the same trick
+          // the amount field uses for the numpad.
+          inputMode={isPhone ? "none" : undefined}
           onChange={(e) => {
             onChange(e.target.value);
             setOpen(true);
@@ -148,7 +179,47 @@ export function Combobox({
           className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-slate-500"
         />
       </div>
-      {open && matches.length > 0 && (
+      {isPhone && (
+        <PickerSheet
+          open={open}
+          onClose={() => setOpen(false)}
+          title={label}
+          // The sheet's input IS the field: this is a free-text control, so what is
+          // typed here is the value (a brand-new payee is just a name nothing
+          // matches), and the list below narrows as it changes.
+          query={value}
+          onQueryChange={onChange}
+          searchPlaceholder={searchPlaceholder ?? placeholder}
+          inputRef={sheetInputRef}
+          closeLabel={closeLabel}
+        >
+          <ul role="listbox">
+            {matches.map((o) => {
+              const group = groupBy?.(o);
+              const startsGroup =
+                group != null && group !== (matches[matches.indexOf(o) - 1] && groupBy?.(matches[matches.indexOf(o) - 1]));
+              return (
+                <Fragment key={o}>
+                  {startsGroup && (
+                    <li
+                      role="presentation"
+                      className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    >
+                      {group}
+                    </li>
+                  )}
+                  <li role="option" aria-selected={o === value}>
+                    <button type="button" onClick={() => commit(o)} className={SHEET_ROW_CLASS}>
+                      {o}
+                    </button>
+                  </li>
+                </Fragment>
+              );
+            })}
+          </ul>
+        </PickerSheet>
+      )}
+      {!isPhone && open && matches.length > 0 && (
         <ul role="listbox" className={LIST_CLASS}>
           {matches.map((o, i) => {
             const group = groupBy?.(o);
@@ -199,6 +270,13 @@ export function Combobox({
  * Text-vs-value reconciliation: the input's text is transient. Picking a row or
  * typing an exact (unique) label commits that option; emptying the text commits
  * a clear; anything else reverts to the selected option's label on blur/Escape.
+ *
+ * **On a phone the list opens as a full-screen sheet**, exactly like {@link Combobox}
+ * beside it (Keksdose live #200, extended by dev#477 — the account picker moved onto
+ * this component and must not lose its sheet). The sheet carries its OWN query state
+ * rather than reusing `text`: `text` is what {@link reconcile} judges on blur, so a
+ * sheet that emptied it to show the full list would read as "the user cleared the
+ * field" the moment it closed.
  */
 export function InlineEntityCombobox<V extends string | number>({
   value,
@@ -208,6 +286,10 @@ export function InlineEntityCombobox<V extends string | number>({
   id,
   placeholder,
   className,
+  disabled,
+  searchPlaceholder,
+  emptyLabel,
+  closeLabel,
   "aria-label": ariaLabel,
 }: {
   /** Selected option id, or null when nothing is selected. */
@@ -219,6 +301,13 @@ export function InlineEntityCombobox<V extends string | number>({
   id?: string;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
+  /** Phone sheet only — the anchored list has the field itself to type in. */
+  searchPlaceholder?: string;
+  /** Phone sheet only: a full screen showing nothing has to say why. The anchored
+   *  list simply does not open. */
+  emptyLabel?: string;
+  closeLabel?: string;
   "aria-label"?: string;
 }) {
   const generated = useId();
@@ -227,6 +316,12 @@ export function InlineEntityCombobox<V extends string | number>({
   const [active, setActive] = useState(-1);
   // null = not editing → the input shows the selected option's label.
   const [text, setText] = useState<string | null>(null);
+  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const sheetInputRef = useRef<HTMLInputElement | null>(null);
+  // The sheet's search box. Starts empty on every open, so a field that already
+  // holds a value still offers the whole list — the shape a native <select> has
+  // on a phone, and what the anchored panel gets from `query` below.
+  const [sheetQuery, setSheetQuery] = useState("");
 
   const selected = useMemo(
     () => (value == null ? null : (options.find((o) => o.value === value) ?? null)),
@@ -237,7 +332,9 @@ export function InlineEntityCombobox<V extends string | number>({
   // Focusing select-alls the current label; filtering only kicks in once the
   // text actually differs from it, so an already-filled field still opens on
   // the FULL list instead of a single-row "filter" of its own value.
-  const query = text !== null && text !== (selected?.label ?? "") ? text.trim().toLowerCase() : "";
+  const typedQuery =
+    text !== null && text !== (selected?.label ?? "") ? text.trim().toLowerCase() : "";
+  const query = isPhone ? sheetQuery.trim().toLowerCase() : typedQuery;
   const matches = useMemo(() => {
     let ranked = options;
     if (query) {
@@ -267,6 +364,7 @@ export function InlineEntityCombobox<V extends string | number>({
   const close = () => {
     setOpen(false);
     setActive(-1);
+    setSheetQuery("");
   };
   const commit = (o: ComboOption<V>) => {
     if (o.value !== value) onChange(o.value);
@@ -298,17 +396,33 @@ export function InlineEntityCombobox<V extends string | number>({
           id={fieldId}
           value={shown}
           placeholder={placeholder}
-          aria-label={ariaLabel}
+          // The visual label is a floating <span>, not a <label for>, so without this
+          // the field has NO accessible name — it announces its value and nothing
+          // else. Just the label, never "label: value" the way a trigger button has
+          // to compose it: an input already exposes its value separately.
+          aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
           autoComplete="off"
+          disabled={disabled}
+          // `inputMode="none"` rather than readOnly, for the same reason Combobox
+          // above gives: the sheet carries the keyboard, and a readOnly field would
+          // take FIELD_BASE's settled look on a field that is perfectly editable.
+          inputMode={isPhone ? "none" : undefined}
           onFocus={(e) => {
             setText(shown);
             e.currentTarget.select();
             setOpen(true);
+            // The sheet has its own input; the field behind it must not also pull up
+            // the keyboard and scroll the page under the dialog.
+            if (isPhone) sheetInputRef.current?.focus();
           }}
-          onBlur={reconcile}
+          onBlur={() => {
+            // On a phone the blur is the SHEET taking focus, not the user leaving the
+            // field — reconciling there would close the sheet the instant it opened.
+            if (!isPhone) reconcile();
+          }}
           onChange={(e) => {
             setText(e.target.value);
             setOpen(true);
@@ -343,10 +457,57 @@ export function InlineEntityCombobox<V extends string | number>({
             e.preventDefault();
             setOpen((o) => !o);
           }}
-          className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-slate-500"
+          className={cn(
+            "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
+            disabled ? "opacity-50" : "cursor-pointer",
+          )}
         />
       </div>
-      {open && matches.length > 0 && (
+      {isPhone && (
+        <PickerSheet
+          open={open}
+          // Closing without choosing keeps the value: `text` was never emptied, so
+          // reconcile has nothing to undo — it just puts the label back.
+          onClose={reconcile}
+          title={label}
+          query={sheetQuery}
+          onQueryChange={(v) => {
+            setSheetQuery(v);
+            setActive(-1);
+          }}
+          searchPlaceholder={searchPlaceholder ?? placeholder}
+          inputRef={sheetInputRef}
+          closeLabel={closeLabel}
+        >
+          <ul role="listbox">
+            {matches.map((o, i) => (
+              <Fragment key={String(o.value)}>
+                {o.group && o.group !== matches[i - 1]?.group && (
+                  <li
+                    role="presentation"
+                    className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                  >
+                    {o.group}
+                  </li>
+                )}
+                <li role="option" aria-selected={o.value === value}>
+                  <button
+                    type="button"
+                    onClick={() => commit(o)}
+                    className={cn(SHEET_ROW_CLASS, o.value === value && "font-medium")}
+                  >
+                    {o.label}
+                  </button>
+                </li>
+              </Fragment>
+            ))}
+            {matches.length === 0 && emptyLabel && (
+              <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{emptyLabel}</li>
+            )}
+          </ul>
+        </PickerSheet>
+      )}
+      {!isPhone && open && matches.length > 0 && (
         <ul role="listbox" className={LIST_CLASS}>
           {matches.map((o, i) => (
             // A group heading is emitted at each group boundary rather than repeating
