@@ -1,8 +1,9 @@
 import { forwardRef, useId, useState } from "react";
-import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, HelpCircle } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
+import { Tooltip } from "./tooltip";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
 
@@ -62,7 +63,35 @@ export function Button({
 }
 
 export const FIELD_BASE =
-  "block w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[var(--brand)] focus:ring-[var(--brand)] dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "block w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[var(--brand)] focus:ring-[var(--brand)] dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 " +
+  // A field the user cannot change has to LOOK settled. Without this, `disabled`
+  // dimmed the floating label and nothing else — FIELD_BASE's own `text-slate-900`
+  // overrides the browser's grey — so a read-only value sat there in full-strength
+  // black, indistinguishable from one you could retype (Keksdose dev#455/#474).
+  "disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-400 " +
+  // Same for a field that takes focus but refuses keys: `readOnly` is not
+  // `disabled`, and a value that cannot be edited should not claim it can be. Opt
+  // OUT with {@link FIELD_WRITABLE_LOOK} in the one case where `readOnly` does not
+  // mean that — see the two-factor code field, which uses it to block an autofill
+  // and drops it the moment you focus the field.
+  //
+  // ⚠️ The ATTRIBUTE, never the `:read-only` pseudo-class (Keksdose dev#477).
+  // `:read-only` does not mean "was marked readonly" — per Selectors 4 it matches
+  // everything that is not `:read-write`, and only editable inputs/textareas and
+  // contenteditable elements are `:read-write`. So `read-only:` matched every
+  // `<select>` in the app and every field-styled `<button>` built on this base —
+  // the native selects, the date trigger, the entity/currency/multi pickers — and
+  // painted them all in the "you may not edit this" grey. On one transaction form
+  // that made three different-looking families out of one field style: white
+  // inputs, grey selects, grey trigger buttons.
+  "[&[readonly]]:bg-slate-50 [&[readonly]]:text-slate-500 dark:[&[readonly]]:bg-slate-800/60 dark:[&[readonly]]:text-slate-400";
+
+/** Cancels FIELD_BASE's read-only treatment for a field that is `readOnly` for a
+ *  reason other than "you may not edit this". Attribute-scoped for the same reason
+ *  FIELD_BASE is — the two have to cancel on the identical selector or twMerge
+ *  cannot make the later one win. */
+export const FIELD_WRITABLE_LOOK =
+  "[&[readonly]]:bg-white [&[readonly]]:text-slate-900 dark:[&[readonly]]:bg-slate-900 dark:[&[readonly]]:text-slate-100";
 
 // Extra top padding leaves room for a label that floats INSIDE the field (the
 // "filled" pattern) — the label sits in the top strip, the value below it. Used by
@@ -152,10 +181,19 @@ export const FLOATING_LABEL_CLASS = cn(
   "peer-disabled:opacity-50",
 );
 
+// The TYPE of the small static label, without any placement. Split out so the
+// label and anything sharing its line (see `hint` on {@link FloatingField}) are
+// laid out by one flex row instead of by two absolute offsets guessing at the
+// same baseline — which is what put dev#468's "?" three pixels above the word it
+// belongs to.
+const STATIC_LABEL_TYPE =
+  "text-[11px] leading-tight text-slate-500 dark:text-slate-400 peer-disabled:opacity-50";
+
 // A field that always has a value (select / dropdown trigger) keeps the label
 // permanently in the floated position — small, in the top strip, value below.
 export const FLOATING_LABEL_STATIC = cn(
-  "pointer-events-none absolute left-3 top-1 text-[11px] leading-tight text-slate-500 dark:text-slate-400 peer-disabled:opacity-50",
+  "pointer-events-none absolute left-3 top-1",
+  STATIC_LABEL_TYPE,
   "max-w-[calc(100%-1.5rem)] truncate",
 );
 
@@ -173,6 +211,7 @@ export function FloatingField({
   label,
   staticLabel,
   srOnlyLabel,
+  hint,
   children,
 }: {
   className?: string;
@@ -183,22 +222,81 @@ export function FloatingField({
    *  {@link FIELD_DISPLAY} needs, since a floating label inside a field with no
    *  field left would have nothing to float in. */
   srOnlyLabel?: boolean;
+  /** Something interactive that belongs to the LABEL rather than to the value —
+   *  in practice a {@link FieldHint} "?" (dev#468). It is rendered in a flex row
+   *  with the label, so it is centred on the label's line by the layout instead
+   *  of by a hand-tuned `top-…`, and it can never drift when the type changes.
+   *  Only for the static-label case; a floating label MOVES, so there is no one
+   *  line to share. */
+  hint?: ReactNode;
   children: ReactNode;
 }) {
+  const withHint = hint !== undefined && staticLabel && !srOnlyLabel;
+  const labelEl = label !== undefined && (
+    <label
+      htmlFor={htmlFor}
+      className={
+        srOnlyLabel
+          ? "sr-only"
+          : withHint
+            ? cn("pointer-events-none min-w-0 truncate", STATIC_LABEL_TYPE)
+            : staticLabel
+              ? FLOATING_LABEL_STATIC
+              : FLOATING_LABEL_CLASS
+      }
+    >
+      {label}
+    </label>
+  );
   return (
     <div className={cn("relative", className)}>
       {children}
-      {label !== undefined && (
-        <label
-          htmlFor={htmlFor}
-          className={
-            srOnlyLabel ? "sr-only" : staticLabel ? FLOATING_LABEL_STATIC : FLOATING_LABEL_CLASS
-          }
-        >
-          {label}
-        </label>
+      {withHint ? (
+        // `inset-x-3` rather than `left-3`, so a long label truncates at the
+        // field's own right padding instead of running under the chevron; the
+        // hint keeps its width (`shrink-0`) and the label gives way.
+        <div className="pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1">
+          {labelEl}
+          <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
+        </div>
+      ) : (
+        labelEl
       )}
     </div>
+  );
+}
+
+/**
+ * The "?" that explains a field, on the field's own label line (dev#468).
+ *
+ * Pass it to a labelled {@link Select} / {@link Input} as `hint`. It exists as a
+ * component rather than as a snippet each form repeats because the previous
+ * version was exactly that snippet — an absolutely-positioned button whose
+ * `top-1.5` was one guess at where an 11px label sits — and the reporter's
+ * follow-up was *"question mark is not centered. Is it part of the hoc?
+ * positioning problems seem quite frequently."* It was not part of the HOC. Now
+ * it is, and there is one place left where the answer can be wrong.
+ *
+ * A `<button>` rather than a bare icon: hover alone puts the explanation out of
+ * reach of a keyboard and of every touch device, and the tooltip shows on focus
+ * too. The text is also its accessible name, so a screen reader gets it without
+ * the bubble ever opening.
+ */
+export function FieldHint({ label, side = "left" }: { label: string; side?: "left" | "right" | "top" | "bottom" }) {
+  return (
+    <Tooltip label={label} side={side} portal>
+      <button
+        type="button"
+        aria-label={label}
+        // Nothing to activate: the tooltip opens on hover and on focus, and a
+        // click that did something as well would be a second, undiscoverable
+        // behaviour on the same target.
+        onClick={(e) => e.preventDefault()}
+        className="flex text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
+      >
+        <HelpCircle className="size-3.5" />
+      </button>
+    </Tooltip>
   );
 }
 
@@ -327,13 +425,21 @@ Input.displayName = "Input";
 
 export const Select = forwardRef<
   HTMLSelectElement,
-  SelectHTMLAttributes<HTMLSelectElement> & { label?: ReactNode; invalid?: boolean }
->(function Select({ className, label, id, children, invalid, ...rest }, ref) {
+  SelectHTMLAttributes<HTMLSelectElement> & {
+    label?: ReactNode;
+    invalid?: boolean;
+    /** A {@link FieldHint} for the label line — see {@link FloatingField}. */
+    hint?: ReactNode;
+  }
+>(function Select({ className, label, id, children, invalid, hint, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
-  // in from the right border and matches both themes — feedback #223.
-  const chevron = <FieldChevron />;
+  // in from the right border and matches both themes — feedback #223. A DISABLED
+  // select has no menu to drop, so it drops the chevron too: the arrow is the one
+  // thing on the control that promises a choice (Keksdose dev#474, where the
+  // account type became read-only and still looked exactly like a picker).
+  const chevron = rest.disabled ? null : <FieldChevron />;
   if (label === undefined) {
     return (
       <div className={cn("relative", className)}>
@@ -350,13 +456,18 @@ export const Select = forwardRef<
     );
   }
   return (
-    <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel>
+    <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={hint}>
       <select
         ref={ref}
         id={fieldId}
         {...rest}
         aria-invalid={invalid || undefined}
-        className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer appearance-none pr-9", invalid && FIELD_INVALID)}
+        className={cn(
+          FIELD_BASE,
+          FIELD_FLOATING_PAD,
+          "peer appearance-none pr-9",
+          invalid && FIELD_INVALID,
+        )}
       >
         {children}
       </select>

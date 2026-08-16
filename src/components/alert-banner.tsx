@@ -4,19 +4,38 @@ import { cn } from "../lib/cn";
 
 export type AlertTone = "danger" | "warning" | "neutral";
 
-/** Single source for the warning-callout frame (feedback #277): colored tones
- * use a 2px border with compensating padding because a 1px colored border
- * anti-aliases asymmetrically when the card centers on a half-pixel offset
- * (feedback #264) — and the padding keeps toggling tones from shifting layout. */
+/** Border + surface per tone, WITHOUT a radius or padding, so a caller that owns
+ * its own box (a Card, say) can take the tone alone. Single source for both
+ * {@link alertFrameClass} and {@link toneFrameClass}.
+ *
+ * The colored tones are 2px, not 1px, and that is load-bearing rather than
+ * decorative. A 1px border is 1.25 device pixels on a 125%-scaled display — the
+ * usual Windows setting — so whether it renders as a solid line or as two
+ * half-lit pixels depends on where the box happens to land in device-pixel space.
+ * The same card then shows a heavy left edge and a right edge that fades out,
+ * which is what feedback #264, #277, #491 and #498 all reported. A 2px border is
+ * 2.5 device pixels: it always covers at least two pixels fully, on both edges,
+ * at any offset. Callers compensate the extra pixel in their own padding so
+ * switching tones never shifts the layout. */
+const TONE_FRAME: Record<AlertTone, string> = {
+  danger: "border-2 border-rose-400 bg-rose-50 dark:border-rose-600 dark:bg-rose-900/20",
+  warning: "border-2 border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20",
+  neutral: "border border-slate-200 dark:border-slate-700",
+};
+
+/** The tone's border + surface on their own — for a caller that already has a box
+ * with its own radius and padding (e.g. a Card). Remember to shave 1px off that
+ * padding for the colored tones, whose border is 2px wide. */
+export function toneFrameClass(tone: AlertTone): string {
+  return TONE_FRAME[tone];
+}
+
+/** Single source for the warning-callout frame (feedback #277): the tone's border
+ * and surface plus this component's own radius and padding, the latter
+ * compensating the 2px colored border so toggling tones never shifts layout. */
 export function alertFrameClass(tone: AlertTone): string {
-  switch (tone) {
-    case "danger":
-      return "rounded-md border-2 p-[11px] border-rose-400 bg-rose-50 dark:border-rose-600 dark:bg-rose-900/20";
-    case "warning":
-      return "rounded-md border-2 p-[11px] border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20";
-    case "neutral":
-      return "rounded-md border p-3 border-slate-200 dark:border-slate-700";
-  }
+  const box = tone === "neutral" ? "rounded-md p-3" : "rounded-md p-[11px]";
+  return `${box} ${TONE_FRAME[tone]}`;
 }
 
 const TONE_TEXT: Record<Exclude<AlertTone, "neutral">, string> = {
