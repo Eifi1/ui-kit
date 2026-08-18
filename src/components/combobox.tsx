@@ -371,8 +371,16 @@ export function InlineEntityCombobox<V extends string | number>({
     setText(null);
     close();
   };
-  /** Turn loose text into a decision: empty clears, a unique exact label match
-   *  commits, anything else reverts to the selected label. */
+  /** Turn loose text into a decision: empty clears, an exact label match that names
+   *  ONE entity commits, anything else reverts to the selected label.
+   *
+   *  Unique by VALUE, not by row. An option may deliberately appear twice — Keksdose
+   *  repeats recently-used categories in a "Recent" group at the top (live #203) — and
+   *  counting rows made every such option uncommittable: two hits, so nothing fired and
+   *  the field reverted to whatever was selected before. Typing a category you had just
+   *  used, then tabbing away, silently discarded it, and the more categories you used
+   *  the more of them stopped working. Two rows naming the same id are not an ambiguity;
+   *  two ids sharing a label are. */
   const reconcile = () => {
     if (text !== null) {
       const q = text.trim();
@@ -380,7 +388,8 @@ export function InlineEntityCombobox<V extends string | number>({
         if (value != null) onChange(null);
       } else {
         const hits = options.filter((o) => o.label.toLowerCase() === q.toLowerCase());
-        if (hits.length === 1 && hits[0].value !== value) onChange(hits[0].value);
+        const ids = new Set(hits.map((h) => h.value));
+        if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
       }
       setText(null);
     }
@@ -481,7 +490,10 @@ export function InlineEntityCombobox<V extends string | number>({
         >
           <ul role="listbox">
             {matches.map((o, i) => (
-              <Fragment key={String(o.value)}>
+              // Keyed by group AND value, like combobox-core.tsx: an option may
+              // deliberately appear twice (see `reconcile`), and a bare value key
+              // would collide.
+              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
                 {o.group && o.group !== matches[i - 1]?.group && (
                   <li
                     role="presentation"
@@ -513,8 +525,10 @@ export function InlineEntityCombobox<V extends string | number>({
             // A group heading is emitted at each group boundary rather than repeating
             // the group on every row (feedback #136). `matches` is group-contiguous,
             // so comparing with the previous row is enough. Fragment key sits here;
-            // the heading and the option carry their own list semantics.
-            <Fragment key={String(o.value)}>
+            // the heading and the option carry their own list semantics — keyed by
+            // group AND value, because an option may deliberately appear twice (see
+            // `reconcile`).
+            <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
               {o.group && o.group !== matches[i - 1]?.group && (
                 <li
                   role="presentation"
