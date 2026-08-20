@@ -20,6 +20,16 @@ export interface AppShellSubItem {
 export interface AppShellNavItem {
   to: string;
   label: string;
+  /** Optional shorter label for the MOBILE BOTTOM BAR only (the sidebar, its
+   *  tooltips and any palette built on this list keep `label`).
+   *
+   *  The bar divides the viewport into `nav.length` equal cells, so a label's room
+   *  shrinks with every entry added — at six entries on a 406 px phone that is ~67 px,
+   *  and "Import & Export" wrapped to two lines and pushed the row taller than its
+   *  neighbours (keksdose feedback live #210). A per-item override is better than
+   *  shortening the real label, which the sidebar has ample room for and which is the
+   *  name the rest of the product uses. */
+  shortLabel?: string;
   icon: LucideIcon;
   /** Passed to NavLink's `end` (exact match). Defaults to true. */
   end?: boolean;
@@ -189,7 +199,13 @@ export function AppShell({
             <span className="relative">
               <item.icon className="size-5" />
             </span>
-            {item.label}
+            {/* One line, always. `truncate` is the backstop for the case a
+                `shortLabel` was not supplied (or a translation is longer than its
+                author expected): an ellipsis in one cell is a far smaller problem
+                than a bar whose rows are different heights. */}
+            <span className="max-w-full truncate px-0.5">
+              {item.shortLabel ?? item.label}
+            </span>
           </NavLink>
         ))}
       </nav>
