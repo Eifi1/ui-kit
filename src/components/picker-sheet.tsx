@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
@@ -52,6 +53,23 @@ export function PickerSheet({
   children: ReactNode;
 }) {
   useBodyScrollLock(open);
+  // The sheet focuses its OWN search box when it opens (Keksdose live #212: *"make
+  // the text input filter active on select click"*).
+  //
+  // The callers tried: `Combobox`'s field does `setOpen(true); sheetInputRef.current
+  // ?.focus()` in one `onFocus`, so the focus call runs while the sheet is still
+  // unmounted and the ref is null — and the chevron's `onMouseDown` preventDefaults
+  // to keep focus on the field, so opening that way never even attempted it. Neither
+  // is fixable from outside: only the sheet knows when its input exists.
+  //
+  // A fallback ref means a caller that does not need the handle still gets the
+  // focus, rather than the behaviour depending on whether a prop was passed.
+  const ownRef = useRef<HTMLInputElement | null>(null);
+  const searchRef = inputRef ?? ownRef;
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+  }, [open, searchRef]);
+
   if (!open || typeof document === "undefined") return null;
   return createPortal(
     <div
@@ -93,7 +111,7 @@ export function PickerSheet({
       <DropdownSearchHeader
         query={query}
         onQueryChange={onQueryChange}
-        inputRef={inputRef ?? { current: null }}
+        inputRef={searchRef}
         placeholder={searchPlaceholder}
       />
       {/* min-h-0 so the LIST scrolls rather than the dialog growing past the
