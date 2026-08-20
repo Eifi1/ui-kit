@@ -39,6 +39,7 @@ export function Combobox({
   maxSuggestions,
   searchPlaceholder,
   closeLabel,
+  createLabel,
   "aria-label": ariaLabel,
 }: {
   value: string;
@@ -61,6 +62,22 @@ export function Combobox({
   maxSuggestions?: number;
   searchPlaceholder?: string;
   closeLabel?: string;
+  /**
+   * Label for the row that COMMITS a value the list does not contain — e.g.
+   * `(v) => \`Add "${v}" as payee\``. Supplying it turns the free text into
+   * something you confirm rather than something you leave behind.
+   *
+   * Keksdose live #212: *"For the payee input have an apply button, when input is
+   * placed like 'add xxx as payee' to confirm. Now it can be put in and closed with
+   * the right top X, which seems not intuitive."* On the phone sheet the search box
+   * IS the value, so typing a brand-new name and dismissing the sheet did commit it —
+   * but the only control on offer was the close X, which reads as "discard". A named
+   * affordance says what the typing did.
+   *
+   * Omit and the row is not rendered, which is the right default for a list whose
+   * values are all supposed to already exist.
+   */
+  createLabel?: (value: string) => string;
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
@@ -108,6 +125,17 @@ export function Combobox({
     setOpen(false);
     setActive(-1);
   };
+
+  // Offered only when the typed text is genuinely NOT in the pool: an exact
+  // (case-insensitive) match is an existing entry the list is already showing, and a
+  // second way to pick it would be noise. Compared against `options`, not `matches` —
+  // `matches` is capped, so a pool of 300 payees would otherwise offer to "add" one
+  // that exists but fell off the end of the list.
+  const typed = value.trim();
+  const createRow =
+    createLabel && typed.length > 0 && !options.some((o) => o.toLowerCase() === typed.toLowerCase())
+      ? createLabel(typed)
+      : null;
 
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
@@ -194,6 +222,17 @@ export function Combobox({
           closeLabel={closeLabel}
         >
           <ul role="listbox">
+            {createRow && (
+              <li role="option" aria-selected={false}>
+                <button
+                  type="button"
+                  onClick={() => commit(typed)}
+                  className={cn(SHEET_ROW_CLASS, "font-medium text-teal-700 dark:text-teal-300")}
+                >
+                  {createRow}
+                </button>
+              </li>
+            )}
             {matches.map((o) => {
               const group = groupBy?.(o);
               const startsGroup =
@@ -219,8 +258,24 @@ export function Combobox({
           </ul>
         </PickerSheet>
       )}
-      {!isPhone && open && matches.length > 0 && (
+      {!isPhone && open && (matches.length > 0 || createRow) && (
         <ul role="listbox" className={LIST_CLASS}>
+          {createRow && (
+            <li role="option" aria-selected={false}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  // mousedown, like the rows below: the input's blur would otherwise
+                  // close the list before the click landed.
+                  e.preventDefault();
+                  commit(typed);
+                }}
+                className={cn(rowClass(false), "font-medium text-teal-700 dark:text-teal-300")}
+              >
+                {createRow}
+              </button>
+            </li>
+          )}
           {matches.map((o, i) => {
             const group = groupBy?.(o);
             // Heading at each group boundary only — `matches` is group-contiguous,
