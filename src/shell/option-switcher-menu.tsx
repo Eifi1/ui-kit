@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { HoverMenu } from "../components/hover-menu";
 import { TOPBAR_MENU_ITEM_CLASS, TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
+import { Tooltip } from "../components/tooltip";
 
 export interface OptionSwitcherOption<T extends string> {
   value: T;
@@ -35,9 +36,11 @@ export function OptionSwitcherMenu<T extends string>({
     <HoverMenu
       ariaLabel={ariaLabel}
       trigger={({ toggle }) => (
-        <button type="button" onClick={toggle} aria-label={ariaLabel} title={title} className={TOPBAR_TRIGGER_CLASS}>
-          {icon}
-        </button>
+        <Tooltip label={title} portal>
+          <button type="button" onClick={toggle} aria-label={ariaLabel} className={TOPBAR_TRIGGER_CLASS}>
+            {icon}
+          </button>
+        </Tooltip>
       )}
     >
       {(close) => (

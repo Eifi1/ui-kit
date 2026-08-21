@@ -5,6 +5,7 @@ import { addDaysIso, formatIsoDate } from "../lib/dates";
 import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
 import { MiniCalendar } from "./mini-calendar";
 import { Popover } from "./popover";
+import { Tooltip } from "./tooltip";
 
 interface DatePickerBaseProps {
   locale: string;
@@ -111,23 +112,24 @@ function StepButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        FIELD_BASE,
-        // FIELD_BASE is `block w-full` for text inputs; a step button is neither, and
-        // px-3 would make it wider than it needs to be. twMerge lets these win.
-        "flex w-10 shrink-0 items-center justify-center px-0 text-slate-500 dark:text-slate-400",
-        "hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200",
-        "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-900",
-      )}
-    >
-      <Icon className="size-4" />
-    </button>
+    <Tooltip label={label} portal>
+      <button
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+        className={cn(
+          FIELD_BASE,
+          // FIELD_BASE is `block w-full` for text inputs; a step button is neither, and
+          // px-3 would make it wider than it needs to be. twMerge lets these win.
+          "flex w-10 shrink-0 items-center justify-center px-0 text-slate-500 dark:text-slate-400",
+          "hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200",
+          "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-900",
+        )}
+      >
+        <Icon className="size-4" />
+      </button>
+    </Tooltip>
   );
 }
 

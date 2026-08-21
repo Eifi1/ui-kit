@@ -3,6 +3,7 @@ import { cn } from "../lib/cn";
 import { HoverMenu } from "../components/hover-menu";
 import type { PalettePreset } from "../theme/palette-presets";
 import type { ThemeMode } from "../theme/theme-store";
+import { Tooltip } from "../components/tooltip";
 
 /** Shared square icon-button styling for top-bar triggers, so app-owned controls
  *  (account/feedback menus) line up with the shared ones. */
@@ -29,15 +30,16 @@ export function ThemeToggle({
 }) {
   const Icon = mode === "dark" ? Moon : Sun;
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-label={ariaLabel}
-      title={title}
-      className={cn(TOPBAR_TRIGGER_CLASS, className)}
-    >
-      <Icon className="size-5" />
-    </button>
+    <Tooltip label={title} portal>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={ariaLabel}
+        className={cn(TOPBAR_TRIGGER_CLASS, className)}
+      >
+        <Icon className="size-5" />
+      </button>
+    </Tooltip>
   );
 }
 
@@ -64,15 +66,16 @@ export function PaletteMenu({
     <HoverMenu
       ariaLabel={ariaLabel}
       trigger={({ toggle }) => (
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={ariaLabel}
-          title={activeName}
-          className={TOPBAR_TRIGGER_CLASS}
-        >
-          <Palette className="size-5 text-violet-500" />
-        </button>
+        <Tooltip label={activeName} portal>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={ariaLabel}
+            className={TOPBAR_TRIGGER_CLASS}
+          >
+            <Palette className="size-5 text-violet-500" />
+          </button>
+        </Tooltip>
       )}
     >
       {(close) => (
@@ -157,22 +160,23 @@ export function LanguageMenu({
     <HoverMenu
       ariaLabel={ariaLabel}
       trigger={({ toggle }) => (
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={ariaLabel}
-          title={active?.label ?? ariaLabel}
-          className={TOPBAR_TRIGGER_CLASS}
-        >
-          {active ? (
-            <span
-              aria-hidden
-              className={`fi fi-${active.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
-            />
-          ) : (
-            <Globe className="size-5" />
-          )}
-        </button>
+        <Tooltip label={active?.label ?? ariaLabel} portal>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={ariaLabel}
+            className={TOPBAR_TRIGGER_CLASS}
+          >
+            {active ? (
+              <span
+                aria-hidden
+                className={`fi fi-${active.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+              />
+            ) : (
+              <Globe className="size-5" />
+            )}
+          </button>
+        </Tooltip>
       )}
     >
       {(close) => (

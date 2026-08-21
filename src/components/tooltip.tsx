@@ -35,6 +35,20 @@ const sidePositionClass: Record<TooltipSide, string> = {
  * variant mounts the bubble in `document.body` only while hovered, positioned by
  * measurement.
  *
+ * ⚠️ **A bubble that repeats a value has to be redactable.** The consuming app blurs
+ * `[data-private]` under a `demo-mode` class on `<html>` — and the portalled bubble is
+ * mounted on `document.body`, which is INSIDE that class, so the rule reaches it as
+ * long as the bubble is tagged. It is not tagged by default, because most labels are
+ * UI strings; pass `redact` on the ones that repeat the user's own data (a truncated
+ * payee, an account name, a memo). Getting this wrong is silent: the trigger blurs,
+ * the bubble spells the value out on hover.
+ *
+ * ⚠️ **An empty label renders nothing at all.** `title={payee ?? ""}` is an ordinary
+ * shape at a call site that reveals truncated text, and the native attribute answers
+ * it by showing no tooltip. A component that faithfully rendered an empty bubble
+ * would be a worse `title`, so the emptiness check is here rather than at every call
+ * site that could forget it.
+ *
  * ⚠️ **Inside a scroll container, use `portal`.** An always-mounted bubble is
  * absolutely positioned, but an absolutely positioned descendant still counts
  * towards its scroll-container ancestor's scrollable overflow — so an invisible
@@ -50,17 +64,28 @@ export function Tooltip({
   side = "top",
   className,
   portal = false,
+  redact = false,
   children,
 }: {
   label: ReactNode;
   side?: TooltipSide;
   className?: string;
   portal?: boolean;
+  /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
+  redact?: boolean;
   children: ReactNode;
 }) {
+  // No label, no bubble — and no wrapper either, so a conditional tooltip costs the
+  // layout nothing on the branch where it does not apply.
+  if (isEmptyLabel(label)) return <>{children}</>;
   if (portal) {
     return (
-      <PortalTooltip label={label} side={side} className={className}>
+      <PortalTooltip
+        label={label}
+        side={side}
+        className={className}
+        redact={redact}
+      >
         {children}
       </PortalTooltip>
     );
@@ -70,6 +95,7 @@ export function Tooltip({
       {children}
       <span
         role="tooltip"
+        data-private={redact ? "" : undefined}
         className={cn(
           TOOLTIP_SURFACE,
           "pointer-events-none absolute z-50 opacity-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
@@ -79,6 +105,17 @@ export function Tooltip({
         {label}
       </span>
     </span>
+  );
+}
+
+/** "Would this bubble be blank." Only the values a call site actually produces when
+ *  it has nothing to say — `""`, `null`, `undefined`, `false` from a `&&` guard. A
+ *  numeric `0` is a real label and stays one. */
+function isEmptyLabel(label: ReactNode): boolean {
+  return (
+    label == null ||
+    label === false ||
+    (typeof label === "string" && label.trim() === "")
   );
 }
 
@@ -93,7 +130,10 @@ const portalTransformBySide: Record<TooltipSide, string> = {
 
 /** Anchor point (viewport px) for the tooltip on the given side of `r`. Paired
  *  with {@link portalTransformBySide}, which shifts the box onto that point. */
-function tooltipAnchor(r: AnchorRect, side: TooltipSide): { left: number; top: number } {
+function tooltipAnchor(
+  r: AnchorRect,
+  side: TooltipSide,
+): { left: number; top: number } {
   switch (side) {
     case "right":
       return { left: r.right + TOOLTIP_GAP, top: r.top + r.height / 2 };
@@ -110,11 +150,13 @@ function PortalTooltip({
   label,
   side,
   className,
+  redact,
   children,
 }: {
   label: ReactNode;
   side: TooltipSide;
   className?: string;
+  redact?: boolean;
   children: ReactNode;
 }) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
@@ -142,6 +184,7 @@ function PortalTooltip({
         createPortal(
           <span
             role="tooltip"
+            data-private={redact ? "" : undefined}
             style={{
               position: "fixed",
               left: pos.left,

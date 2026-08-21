@@ -38,6 +38,7 @@ import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { Popover } from "./popover";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import { Tooltip } from "./tooltip";
 
 // ---------- Types ----------
 
@@ -1117,27 +1118,28 @@ export function DataTable<T>({
                         isRightAligned && "flex-row-reverse",
                       )}
                     >
-                      <button
-                        type="button"
-                        onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
-                        disabled={!sortable}
-                        title={sortable ? labels.sortHint : undefined}
-                        className={cn(
-                          "flex items-center gap-1 text-left",
-                          sortable && "hover:text-slate-900 dark:hover:text-slate-200",
-                        )}
-                      >
-                        <span>{col.header}</span>
-                        {sortable && (
-                          <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
-                        )}
-                        {/* Priority badge, only meaningful with 2+ sort keys */}
-                        {active && sorts.length > 1 && (
-                          <span className="text-[9px] font-semibold leading-none text-brand">
-                            {sortIdx + 1}
-                          </span>
-                        )}
-                      </button>
+                      <Tooltip label={sortable ? labels.sortHint : undefined} portal>
+                        <button
+                          type="button"
+                          onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
+                          disabled={!sortable}
+                          className={cn(
+                            "flex items-center gap-1 text-left",
+                            sortable && "hover:text-slate-900 dark:hover:text-slate-200",
+                          )}
+                        >
+                          <span>{col.header}</span>
+                          {sortable && (
+                            <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
+                          )}
+                          {/* Priority badge, only meaningful with 2+ sort keys */}
+                          {active && sorts.length > 1 && (
+                            <span className="text-[9px] font-semibold leading-none text-brand">
+                              {sortIdx + 1}
+                            </span>
+                          )}
+                        </button>
+                      </Tooltip>
                       {filter && (
                         <Popover
                           width={filter.type === "date" ? 420 : undefined}
@@ -1347,27 +1349,28 @@ export function DataTable<T>({
             />
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setShowSettings(true)}
-          aria-label={columnsCountLabel}
-          title={columnsCountLabel}
-          aria-hidden={showSettings}
-          tabIndex={showSettings ? -1 : 0}
-          className={cn(
-            "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
-            "border-l border-slate-100 dark:border-slate-800",
-            "hover:bg-slate-50 dark:hover:bg-slate-800/40",
-            showSettings ? "w-0 border-l-0" : "w-8 cursor-pointer",
-          )}
-        >
-          <span
-            className="whitespace-nowrap text-xs font-medium tracking-wide text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200"
-            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+        <Tooltip label={columnsCountLabel} portal>
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            aria-label={columnsCountLabel}
+            aria-hidden={showSettings}
+            tabIndex={showSettings ? -1 : 0}
+            className={cn(
+              "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
+              "border-l border-slate-100 dark:border-slate-800",
+              "hover:bg-slate-50 dark:hover:bg-slate-800/40",
+              showSettings ? "w-0 border-l-0" : "w-8 cursor-pointer",
+            )}
           >
-            {columnsCountLabel}
-          </span>
-        </button>
+            <span
+              className="whitespace-nowrap text-xs font-medium tracking-wide text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200"
+              style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            >
+              {columnsCountLabel}
+            </span>
+          </button>
+        </Tooltip>
         <div
           className={cn(
             "shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
@@ -1379,15 +1382,16 @@ export function DataTable<T>({
               <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {columnsCountLabel}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSettings(false)}
-                aria-label={labels.close}
-                title={labels.close}
-                className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              >
-                <X className="size-4" />
-              </button>
+              <Tooltip label={labels.close} portal>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(false)}
+                  aria-label={labels.close}
+                  className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <X className="size-4" />
+                </button>
+              </Tooltip>
             </div>
             <button
               type="button"

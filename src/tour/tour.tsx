@@ -100,6 +100,30 @@ export function useTour(): TourContextValue {
 }
 
 /**
+ * The tour engine if it is there, `null` if it is not — for a control that is a
+ * DECORATION rather than a participant.
+ *
+ * {@link useTour}'s throw is correct and stays: a component that runs a tour cannot do
+ * its job without the provider, and failing loudly is how that gets fixed. But the
+ * throw's blast radius is whatever error boundary is above it, and for a launcher in
+ * the app shell that is the whole app.
+ *
+ * Keksdose feedback dev#524 is what that costs: an `@hb/ui` module was edited while a
+ * dev server was running, vite re-evaluated it, and the module's freshly created
+ * context object was no longer the one the mounted provider was providing. React's
+ * `useContext` then answers `null` for a provider that is, structurally, right there —
+ * and the top bar's tour menu took the entire shell down with it. **Build-time module
+ * graphs cannot produce that**, so it is a development-only failure; a menu that
+ * disappears for a second is the proportionate response to it either way.
+ *
+ * Only for controls that can honestly render nothing. If a component would show a
+ * broken half of itself without the tour, it wants {@link useTour}.
+ */
+export function useTourOptional(): TourContextValue | null {
+  return useContext(TourContext);
+}
+
+/**
  * Provides the guided-tour engine: a dimmed spotlight overlay + step card driven
  * by a list of {@link TourStep}s. Domain-free — the app supplies the steps (copy,
  * selectors, per-step navigation, placement) and the translated {@link TourLabels}.
