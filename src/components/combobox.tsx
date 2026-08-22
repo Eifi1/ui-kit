@@ -342,6 +342,7 @@ export function InlineEntityCombobox<V extends string | number>({
   placeholder,
   className,
   disabled,
+  autoFocus,
   searchPlaceholder,
   emptyLabel,
   closeLabel,
@@ -357,6 +358,12 @@ export function InlineEntityCombobox<V extends string | number>({
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Focus on mount, the way `<input autoFocus>` does — and, through `onFocus`
+   *  below, open the list with it. A click-the-value editor needs it: the cell
+   *  the user clicked names the field the editor should land the caret in, and
+   *  without a passthrough this component's fixed prop list puts the `<input>`
+   *  out of a caller's reach entirely (Keksdose feedback live #218). */
+  autoFocus?: boolean;
   /** Phone sheet only — the anchored list has the field itself to type in. */
   searchPlaceholder?: string;
   /** Phone sheet only: a full screen showing nothing has to say why. The anchored
@@ -470,6 +477,7 @@ export function InlineEntityCombobox<V extends string | number>({
           aria-autocomplete="list"
           autoComplete="off"
           disabled={disabled}
+          autoFocus={autoFocus}
           // `inputMode="none"` rather than readOnly, for the same reason Combobox
           // above gives: the sheet carries the keyboard, and a readOnly field would
           // take FIELD_BASE's settled look on a field that is perfectly editable.
