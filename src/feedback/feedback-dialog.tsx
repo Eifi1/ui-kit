@@ -19,6 +19,9 @@ export interface FeedbackDialogLabels {
   attachmentAdd: string;
   /** Label for the "capture screenshot" button. Optional — falls back to an English default. */
   attachmentCapture?: string;
+  /** The line under the attachment buttons saying a screenshot can be pasted
+   *  straight in. Optional — falls back to an English default. */
+  attachmentPaste?: string;
   attachmentRemove: string;
   submitHint: string;
   cancel: string;
@@ -40,6 +43,15 @@ const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
  * attachment, with Ctrl/Cmd+Enter to submit. Domain-free — the app supplies the
  * category options, labels and an `onSubmit` that talks to its own backend, plus
  * an optional `contextSlot` for app-specific context (user, current URL, …).
+ *
+ * **A screenshot can be pasted straight in.** Ctrl/Cmd+V anywhere in the dialog
+ * takes an image off the clipboard and makes it the attachment, through the same
+ * validation and the same preview as the file picker. It is the gesture the two
+ * ways in did not cover: `onCaptureScreenshot` snapshots the *whole* app view,
+ * and the file picker needs a file — so somebody who wanted to show one panel,
+ * or one region of one, had to save a crop to disk first and then find it again
+ * (Steering Design feedback #39). The clipboard is where a region snip already
+ * is on every platform.
  */
 export function FeedbackDialog({
   open,
@@ -117,6 +129,38 @@ export function FeedbackDialog({
     setAttachment(file);
   };
 
+  // The paste handler is registered once per opening rather than per render, so
+  // it reads `pickAttachment` — which closes over props that change identity on
+  // every render — out of a ref rather than out of its own dependency list.
+  const pick = useRef(pickAttachment);
+  useEffect(() => {
+    pick.current = pickAttachment;
+  });
+
+  // On `document`, not on the panel: the Modal focuses its own panel on open and
+  // traps Tab inside it, so while this dialog is up every paste in the page is
+  // meant for it — including the one made with nothing in particular focused,
+  // which never reaches a React `onPaste` on a child.
+  useEffect(() => {
+    if (!open) return;
+    const onPaste = (event: ClipboardEvent) => {
+      const items = Array.from(event.clipboardData?.items ?? []);
+      const image = items.find((item) => item.kind === "file" && item.type.startsWith("image/"));
+      const file = image?.getAsFile();
+      if (!file) return;
+      // Only once there IS an image: a paste of text into the body must stay a
+      // paste of text, and a clipboard holding both is a copy whose text half is
+      // what the field was focused for.
+      event.preventDefault();
+      // Clipboard images arrive named "image.png" at best and unnamed at worst,
+      // and the name is what the inbox shows beside the thumbnail. A name that
+      // says where it came from is more use than the browser's.
+      pick.current(new File([file], pastedName(file.type), { type: file.type }));
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [open]);
+
   const captureScreenshot = async () => {
     if (!onCaptureScreenshot || capturing) return;
     setCapturing(true);
@@ -187,15 +231,22 @@ export function FeedbackDialog({
           </button>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="size-4" /> {labels.attachmentAdd}
-          </Button>
-          {onCaptureScreenshot && (
-            <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
-              <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="size-4" /> {labels.attachmentAdd}
             </Button>
-          )}
+            {onCaptureScreenshot && (
+              <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
+                <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
+              </Button>
+            )}
+          </div>
+          {/* Said out loud, because a gesture with no affordance is a gesture
+              nobody finds. */}
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {labels.attachmentPaste ?? "…or paste a screenshot from the clipboard."}
+          </p>
         </div>
       )}
       <input
@@ -267,4 +318,16 @@ export function FeedbackDialog({
       </div>
     </Modal>
   );
+}
+
+/** What a pasted image is called once it is an attachment.
+ *
+ *  The extension is read off the mime type rather than assumed to be `.png`:
+ *  Safari puts TIFF on the clipboard and a file called `pasted.png` that is not
+ *  a PNG is one the receiving end opens wrong. */
+function pastedName(type: string): string {
+  const subtype = type.split("/")[1] ?? "png";
+  // `image/svg+xml` and friends carry a suffix that is not part of the
+  // extension, and none of them are in the accepted list anyway.
+  return `pasted.${subtype.split("+")[0]}`;
 }
