@@ -6,7 +6,7 @@
 // ── lib ────────────────────────────────────────────────────────────────────
 export * from "./lib/calc";
 export { cn } from "./lib/cn";
-export { logger } from "./lib/logger";
+export { logger, setStoreLog } from "./lib/logger";
 // Date helpers are also available via the "@hb/ui/dates" subpath.
 
 // ── hooks ────────────────────────────────────────────────────────────────────

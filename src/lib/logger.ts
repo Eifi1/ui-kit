@@ -1,5 +1,7 @@
 import type { StateCreator, StoreMutatorIdentifier } from "zustand";
 
+import { readStored } from "./safe-storage";
+
 /**
  * zustand logging middleware.
  *
@@ -20,22 +22,36 @@ type Logger = <
 
 type LoggerImpl = <T>(f: StateCreator<T, [], []>, name?: string) => StateCreator<T, [], []>;
 
-function storeLogEnabled(): boolean {
-  try {
-    const override = localStorage.getItem("store_log");
-    if (override === "0") return false;
-    if (override === "1") return true;
-  } catch {
-    // ignore (private mode, etc.)
-  }
+/**
+ * Read ONCE, at module scope, not on every `set`.
+ *
+ * This used to run inside the wrapped `set`, which means a synchronous
+ * `localStorage.getItem` on every state transition of every logged store — in
+ * production builds too, because the override has to stay readable there by design.
+ * The stores this middleware wraps include ones that transition per pointer event.
+ *
+ * The override cannot change without someone opening devtools and reloading, so
+ * once per session is the same behaviour at a fraction of the cost. {@link setStoreLog}
+ * keeps the ability to flip it live from a console, which is the only thing the
+ * per-call read was actually buying.
+ */
+let storeLog: boolean = (() => {
+  const override = readStored("store_log");
+  if (override === "0") return false;
+  if (override === "1") return true;
   return Boolean(import.meta.env.DEV);
+})();
+
+/** Turn store logging on or off for the rest of the session (devtools escape hatch). */
+export function setStoreLog(enabled: boolean): void {
+  storeLog = enabled;
 }
 
 const loggerImpl: LoggerImpl = (f, name) => (set, get, store) => {
   const loggedSet = ((...args: unknown[]) => {
     const prev = get();
     (set as (...a: unknown[]) => void)(...args);
-    if (storeLogEnabled()) {
+    if (storeLog) {
       console.debug(
         `%c[store${name ? `:${name}` : ""}]`,
         "color:#0d9488",

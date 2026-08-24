@@ -12,6 +12,8 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    // vitest's `globals: true` (see vitest.config.ts) — describe/it/expect without imports.
+    "types": ["vitest/globals"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

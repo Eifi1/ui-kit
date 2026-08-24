@@ -63,29 +63,64 @@ export const HEATMAP_HEX = {
 
 /** Linear interpolate two #rrggbb hexes; `t` in [0,1]. Returns #rrggbb. */
 export function lerpHex(a: string, b: string, t: number): string {
-  const pa = parseHex(a);
-  const pb = parseHex(b);
+  const pa = parseHex(a) ?? UNREADABLE;
+  const pb = parseHex(b) ?? UNREADABLE;
   const c = (i: number) => Math.round(pa[i] + (pb[i] - pa[i]) * clamp01(t));
   return `#${[c(0), c(1), c(2)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** Pick a legible text colour (near-black / near-white) for a solid hex fill,
-    flipping by perceived luminance so cell/treemap labels keep contrast. */
+    flipping by perceived luminance so cell/treemap labels keep contrast.
+
+    A fill this cannot read gets `currentColor` — inherit, i.e. whatever the
+    surrounding text already uses. That is the only answer that is right on both
+    themes, because an unreadable fill is usually a translucent one (`HEATMAP_HEX.*
+    .empty` is an `rgba()` string, and the variance heatmap does pass it here for any
+    category with zero assigned and positive activity — a refund). Picking a constant
+    instead is what produced the bug: `NaN > 0.6` is false, so the label came back
+    near-white on a near-white cell and the figure was invisible. */
 export function textOn(hex: string): string {
-  const [r, g, b] = parseHex(hex);
+  const rgb = parseHex(hex);
+  if (!rgb) return "currentColor";
+  const [r, g, b] = rgb;
   // Rec.601 luma; >0.6 → dark text, else light text.
   const luma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luma > 0.6 ? "#1a1a1a" : "#f8fafc";
 }
 
-function parseHex(hex: string): [number, number, number] {
-  let h = hex.replace("#", "");
-  if (h.length === 3)
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+/** Mid-grey, for a stop {@link lerpHex} has to interpolate but cannot read. It has
+ *  to return SOME valid colour, and a grey is the one that misleads least. */
+const UNREADABLE: [number, number, number] = [0x80, 0x80, 0x80];
+
+/**
+ * `#rgb` or `#rrggbb` to components, or **null** when it is neither.
+ *
+ * This used to `parseInt` whatever it was given and hand the NaNs on, and both
+ * callers propagated them silently: {@link lerpHex} produced the literal string
+ * `"#nannannan"`, and {@link textOn} computed `NaN > 0.6 === false` and returned the
+ * LIGHT label colour.
+ *
+ * That is not hypothetical — a non-hex value ships in this very module.
+ * `HEATMAP_HEX.*.empty` is an `rgba(…)` string, and the variance heatmap paints a
+ * figure on an `empty` cell whenever a category has zero assigned and positive
+ * activity (a refund). On the light theme the cell is near-white and the label came
+ * back near-white: the number was there, and unreadable.
+ */
+function parseHex(hex: string): [number, number, number] | null {
+  const h = hex.startsWith("#") ? hex.slice(1) : hex;
+  const full =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
 }
 
 function clamp01(t: number): number {

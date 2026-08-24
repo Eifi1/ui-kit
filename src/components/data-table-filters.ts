@@ -85,13 +85,39 @@ export function defaultFilterState<T>(filter: ColumnFilter<T>): FilterValue {
   }
 }
 
+/**
+ * Escape the ONE character the select codec uses as its separator, plus the escape
+ * marker itself so the transform is reversible.
+ *
+ * A minimal escape rather than `encodeURIComponent`, deliberately: these strings sit
+ * inside a query-parameter value that `URLSearchParams` already encodes, so a full
+ * percent-encode would double-encode every space into `%2520` and make shared links
+ * unreadable for no gain. Only `,` can be misread here.
+ *
+ * Backwards compatible with every link written before this existed: a value with
+ * neither `,` nor `%` passes through both directions untouched, and `%` on its own
+ * never matched `%25` either.
+ */
+function escapeSelectValue(v: string): string {
+  return v.replace(/%/g, "%25").replace(/,/g, "%2C");
+}
+
+/** Inverse of {@link escapeSelectValue}. The order matters and is the reverse of the
+ *  escape: undoing `%2C` first cannot see the `2C` inside an escaped `%252C`. */
+function unescapeSelectValue(v: string): string {
+  return v.replace(/%2C/g, ",").replace(/%25/g, "%");
+}
+
 /** URL-safe encoding of a filter value (`f.<column>` param), null when empty. */
 export function encodeFilterValue(v: FilterValue): string | null {
   switch (v.type) {
     case "text":
       return v.q.trim() ? v.q : null;
     case "select":
-      return v.values.length ? v.values.join(",") : null;
+      // Escaped before joining: an option value may legitimately contain the
+      // separator (a free-text title, a payee or category name), and without this it
+      // came back as two values and the filter silently matched nothing.
+      return v.values.length ? v.values.map(escapeSelectValue).join(",") : null;
     case "date":
       return v.from || v.to ? `${v.from}..${v.to}` : null;
     case "number": {
@@ -109,7 +135,13 @@ export function decodeFilterValueOfType(type: FilterValue["type"], raw: string):
     case "text":
       return { type: "text", q: raw };
     case "select":
-      return { type: "select", values: raw.split(",").filter((v) => v.length > 0) };
+      return {
+        type: "select",
+        values: raw
+          .split(",")
+          .filter((v) => v.length > 0)
+          .map(unescapeSelectValue),
+      };
     case "date": {
       const [from = "", to = ""] = raw.split("..");
       return { type: "date", from, to };

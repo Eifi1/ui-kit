@@ -101,13 +101,26 @@ export function endOfYearIso(offsetYears = 0): string {
   return toLocalIso(d);
 }
 
-/** Parse a "YYYY-MM-DD" string to a local-midnight Date, or null if malformed. */
+/** Parse a "YYYY-MM-DD" string to a local-midnight Date, or null if malformed —
+ *  where "malformed" includes a date that does not exist.
+ *
+ *  The falsy check alone was not enough. `new Date(y, m - 1, d)` ROLLS OVER out-of-range
+ *  components rather than refusing them, so "2026-13-45" came back as 2027-02-14 and
+ *  "2026-02-30" as 2026-03-02: a valid-looking Date for a day that never happened. No
+ *  caller could tell — {@link formatIsoDate} blanks only on `null`, so the invented
+ *  date formatted and displayed exactly like a real one.
+ *
+ *  The round-trip is the check: build the Date, then read the components back off it.
+ *  A value that rolled over cannot answer with the numbers it was given. That is the
+ *  same shape {@link sameYmd} already expresses, applied to a Date and its source. */
 export function parseIsoDate(s: string): Date | null {
   if (!s) return null;
   const [y, m, d] = s.split("-").map(Number);
   if (!y || !m || !d) return null;
+  if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return null;
   const dt = new Date(y, m - 1, d);
   if (Number.isNaN(dt.getTime())) return null;
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
   return dt;
 }
 
@@ -152,8 +165,9 @@ export interface DateRangePreset {
 }
 
 /**
- * The named ranges offered by the data-table date filter (UTC-based, like
- * {@link todayIso}). `key` maps to the consumer's `table.preset_*` labels.
+ * The named ranges offered by the data-table date filter (local-calendar, like
+ * {@link todayIso} — see the module note). `key` maps to the consumer's
+ * `table.preset_*` labels.
  */
 export function dateRangePresets(): DateRangePreset[] {
   const mondayOffset = (new Date().getDay() + 6) % 7; // monday = 0

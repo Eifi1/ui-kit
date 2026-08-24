@@ -7,6 +7,7 @@ import type {
   ReactNode,
 } from "react";
 import { cn } from "../lib/cn";
+import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 
 /**
@@ -144,16 +145,19 @@ export function Modal({
   // Mounted only while open, hence the constant `true`.
   useOverlayHistory(true, onClose);
 
+  // Mounted only while open, hence the constant `true`. Through the shared hook and
+  // not by hand: this component's own save/restore copy was one half of the pair that
+  // left the page permanently unscrollable when a dialog containing an open sheet was
+  // closed — see the note in use-body-scroll-lock.ts.
+  useBodyScrollLock(true);
+
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     // Focus the panel itself (not the first field) so opening doesn't pop the
     // mobile keyboard, while still moving focus into the dialog for keyboard and
     // screen-reader users.
     panelRef.current?.focus();
     return () => {
-      document.body.style.overflow = prevOverflow;
       previouslyFocused?.focus?.();
     };
   }, []);

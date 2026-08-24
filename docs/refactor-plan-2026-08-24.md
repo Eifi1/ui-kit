@@ -1,8 +1,33 @@
 # @hb/ui refactor plan — 2026-08-24
 
-## Status — RAISED, none executed
+## Status — **ALL 14 EXECUTED**, 2026-08-24
 
 14 findings. This is the **first audit this package has ever had.**
+
+Everything below is fixed and merged. The package went from **zero tests to 79** across
+8 files; `npm run typecheck` and `npm test` are both green. Every fix that could carry a
+regression test does, and each of those was run against the OLD code first and observed
+to fail there — the transcripts are in the per-item notes below.
+
+Three findings changed status on contact with the evidence:
+
+* **U-5 is REACHABLE, not plausible.** `steering-design` filters its sessions table on
+  `gear_title`, a free-text field, so a comma in an option value is one shop name away.
+  Fixed.
+* **U-13 is REACHABLE, not plausible, and it is a live rendering bug.** `variance-heatmap`
+  passes `HEATMAP_HEX.*.empty` — an `rgba()` string — to `textOn` whenever a category
+  has zero assigned and POSITIVE activity (an ordinary refund): `ratio()` returns null
+  there while `hasVal` is still true. `parseHex` produced NaNs, `NaN > 0.6` is false, and
+  the label came back near-white **on a near-white cell**. Fixed, and the fallback is
+  `currentColor` rather than a constant, because an unreadable fill is usually a
+  translucent one and no constant is right on both themes.
+* **U-11 was decided rather than deferred.** It cannot be settled by a code read and
+  there was no device to check it on, so the deliberate choice recorded here is
+  `pointerdown` — a superset of `mousedown` in every browser, so nothing that dismissed
+  before stops dismissing. The one behaviour it adds: a touch-drag starting outside an
+  open panel now dismisses it at touch-down. Blast radius measured rather than guessed:
+  **1 of Keksdose's 2,698 frontend tests** needed updating, and neither sibling app has a
+  dismissal test at all.
 
 ## Why it had never been audited
 
@@ -50,9 +75,15 @@ A comma cannot reach the app's `Number(amount.replace(",", "."))` from this cont
 
 ## Wave 0 — a place to put a test
 
+**DONE.** `vitest.config.ts` + `src/test/setup.ts`, deliberately a copy of the lead
+consumer's config rather than a new dialect, so a test can move between the two
+repositories unchanged. The timezone pin (`Europe/Berlin`) came with it and is
+load-bearing for `dates.ts`: on a UTC runner the old broken implementation and the
+current one agree, so a dev#471 regression test would pass against the bug.
+
 Everything else is blocked on this, because the house rule is that a fix ships with a regression test that was **run against the old code and failed there**, and right now there is nowhere to put one.
 
-- [ ] **U-1** · sev 4 · test-gap · L · touches: `package.json`, `vitest.config.ts`, new `**/__tests__/*`
+- [x] **U-1** · sev 4 · test-gap · L · touches: `package.json`, `vitest.config.ts`, new `**/__tests__/*`
 
   **The package has no tests at all.** `find src -name '*.test.*'` returns nothing; the only npm script is `typecheck: tsc --noEmit`. 62 modules and 12,641 lines, depended on by three applications, defended by the type checker alone.
 
@@ -64,17 +95,23 @@ Everything else is blocked on this, because the house rule is that a fix ships w
 
   Do NOT start with the components. The pure modules are five files, they hold four of the findings below, and they need no jsdom.
 
+  **DONE — 79 tests across 8 files.** All five pure modules are covered, plus the two hooks and the shell component whose findings needed a DOM. The advice above was followed and was right: the pure modules cost almost nothing and hold most of the value. What it did NOT anticipate is that two of the component findings (U-3, U-12) are only reachable through a real React commit ordering, so jsdom was needed after all — and those two are the highest-severity items in the document.
+
 ## Wave 1 — characterise before changing
 
 New files only, so every item is file-disjoint from every other and from wave 2.
 
-- [ ] **U-1b** · pin the CURRENT behaviour of `calc.ts`, `dates.ts`, `data-table-filters.ts` and `chart-palette.ts`, including the wrong behaviour U-2/U-5/U-8/U-13 describe. The point is that wave 2's diffs then show exactly what changed, and a fix that alters something nobody meant to alter cannot pass quietly.
+- [x] **U-1b** · pin the CURRENT behaviour of `calc.ts`, `dates.ts`, `data-table-filters.ts` and `chart-palette.ts`, including the wrong behaviour U-2/U-5/U-8/U-13 describe. The point is that wave 2's diffs then show exactly what changed, and a fix that alters something nobody meant to alter cannot pass quietly.
+
+  **DONE, and it paid for itself twice.** Writing the characterisation first caught two assertions of my OWN that were wrong about the current behaviour — `commitExpression("4-2x")` is `"42"`, not `"2"` (the digits-only fallback drops non-leading minuses), and the plan's U-3 repro does not fire when both lockers mount in one commit. Both are now pinned as the behaviour they actually are, with the reason. A characterisation suite written after the fix would have recorded the fix's opinion of the past instead.
 
 ## Wave 2 — the fixes
 
 Scheduled by `touches`: **no two items below edit the same file**, so the whole wave can go in parallel.
 
 ### U-2 · sev 3 · bug · S · PROVEN · touches: `src/lib/calc.ts`
+
+**DONE.** `formatResult` renders fixed notation always: `toFixed(10)` trimmed of trailing zeros below 1e21, `BigInt` above it (every double that large is an integer). The test asserts the PROPERTY, not examples — `commitExpression(formatResult(n)) === formatResult(n)` over the whole trigger range — and it failed on the old tree. Verified end to end through the real module: `"1/10000000"` now commits `"0.0000001"` and `"999999999999*999999999999"` commits `"999999999998000004857856"`.
 
 **A number the field itself produced is re-read as arithmetic on the next blur, and comes back wrong.**
 
@@ -100,6 +137,8 @@ Both controls commit on blur **and** on Enter, so Enter-then-click-away is two c
 **Fix.** Make `formatResult` total with respect to its own consumers: render in fixed notation and trim trailing zeros, or refuse — return the text unchanged, or `null` — when the magnitude falls outside what the grammar can express. Whichever is chosen, the invariant to write down and then test is: **`commitExpression(formatResult(n))` must equal `formatResult(n)` for every finite `n`.** That single property is the whole finding.
 
 ### U-3 · sev 4 · bug · M · PROVEN · touches: `src/hooks/use-body-scroll-lock.ts`, `src/components/modal.tsx`, `src/components/picker-sheet.tsx`, `src/components/numpad-sheet.tsx`, `src/components/data-table.tsx`
+
+**DONE.** One module-level counter in `use-body-scroll-lock.ts`; `Modal`'s hand-rolled copy moved onto the hook. 8 tests, 4 of which fail against the old hook — including the exact gesture (dialog opens, sheet opens in a LATER commit, both unmount together). Worth recording: mounting both in ONE commit does **not** reproduce it, because effects run child-first there and the two errors cancel. The second commit is the whole bug, and a repro without it would have been green.
 
 **Closing a dialog that contains an open sheet leaves the page permanently unscrollable.**
 
@@ -132,6 +171,8 @@ The first case is an ordinary mobile gesture: open the transaction dialog, tap t
 
 ### U-4 · sev 3 · bug · S · CONFIRMED · touches: `src/shell/app-shell.tsx`
 
+**DONE.** New `lib/safe-storage.ts` (`readStored`/`writeStored`), used by `app-shell`, `logger` and the DataTable's persistence — so the next storage-backed preference cannot forget the guard. The test replaces `window.localStorage` with one that throws `SecurityError` on access and asserts the shell still mounts; it fails on the old read with that exception.
+
 `AppShell` reads `localStorage` inside a `useState` initialiser and writes it in an effect, both unguarded:
 
 ```ts
@@ -149,6 +190,8 @@ This package already knows: `logger.ts` wraps the identical call in `try { … }
 
 ### U-5 · sev 3 · bug · S · PLAUSIBLE · touches: `src/components/data-table-filters.ts`
 
+**DONE, and REACHABLE** — see the status note. Minimal escape (`%` then `,`) rather than `encodeURIComponent`: these strings sit inside a query-param value `URLSearchParams` already encodes, so a full percent-encode would double-encode every space into `%2520` for no gain. Backwards compatible with every existing link — a value with neither `,` nor `%` passes through both directions untouched.
+
 Select filters encode to a comma-joined string and decode by splitting on commas:
 
 ```ts
@@ -164,6 +207,8 @@ An option value containing a comma therefore becomes two values on the way back,
 
 ### U-6 · sev 2 · efficiency · S · CONFIRMED · touches: `src/hooks/use-anchored-rect.ts`
 
+**DONE.** `sameRect` guard taken into the hook, matching `tour.tsx:311`.
+
 `useAnchoredRect` re-measures on `scroll` (capture phase, so every ancestor scroll container) and `resize`, and every measurement calls `setRect` with a **freshly allocated object**. React compares by identity, so each event re-renders the anchored panel whether or not the anchor moved. There is no rAF coalescing either, so a momentum scroll re-renders per frame-ish event.
 
 The guard already exists in this package, one file away. `tour.tsx:311` does exactly the right thing on the same problem:
@@ -176,6 +221,8 @@ setRect((prev) => (sameRect(prev, next) ? prev : next));
 
 ### U-7 · sev 2 · consistency · XS · CONFIRMED · touches: `src/lib/dates.ts`
 
+**DONE.** Now reads "local-calendar, like `todayIso` — see the module note".
+
 `dateRangePresets()` is documented as *"The named ranges offered by the data-table date filter (**UTC-based**, like `todayIso`)."*
 
 Both halves are false, and the module note 100 lines above is a 25-line account of why. Every helper here was moved off UTC onto the local calendar after dev#471 (*"Just entered a tx now from scheduled. But it still shows as upcoming… It is currently 1 o clock middle european summer time."*), and `todayIso` is `toLocalIso(new Date())`.
@@ -185,6 +232,8 @@ A stale comment is usually cosmetic. This one **states the exact bug the module 
 **Fix.** Delete the parenthetical, or replace it with "local-calendar, like `todayIso`".
 
 ### U-8 · sev 2 · bug · S · CONFIRMED · touches: `src/lib/dates.ts` *(same file as U-7 — take them together)*
+
+**DONE.** Range-checked by round-trip: build the Date, read the components back off it, refuse if they differ. Two tests fail on the old tree with exactly the plan's transcript — `"2026-13-45"` returned 2027-02-14 and `"2026-02-30"` formatted as `02/03/2026`.
 
 `parseIsoDate` rejects only falsy components:
 
@@ -200,6 +249,8 @@ return new Date(y, m - 1, d);
 
 ### U-9 · sev 2 · efficiency · XS · CONFIRMED · touches: `src/lib/logger.ts`
 
+**DONE.** Read once at module scope; `setStoreLog` exported (and re-exported from the barrel) so the live flip survives.
+
 The zustand logging middleware wraps every `set`, and every wrapped `set` calls `storeLogEnabled()`, which does a synchronous `localStorage.getItem` inside a try/catch — **in production builds as well as dev**, because the override has to be readable in production by design.
 
 The override cannot change without someone opening devtools, so reading it once per session is the same behaviour at a fraction of the cost. It matters because the stores this wraps include ones that transition per pointer event.
@@ -207,6 +258,8 @@ The override cannot change without someone opening devtools, so reading it once 
 **Fix.** Read the override once at module scope; keep a tiny exported setter if the ability to flip it live is worth keeping.
 
 ### U-10 · sev 2 · bug · S · CONFIRMED · touches: `src/hooks/use-dismiss.ts`
+
+**DONE.** Both hooks assign their refs in an effect, with the note `use-row-swipe.ts` already carries.
 
 Both hooks assign to refs **during render**:
 
@@ -221,6 +274,8 @@ React documents this as unsafe. A render that is started and then discarded — 
 
 ### U-11 · sev 2 · bug · S · PLAUSIBLE · touches: `src/hooks/use-dismiss.ts` *(same file as U-10)*
 
+**DECIDED — now `pointerdown`.** See the status note for the reasoning and the measured blast radius.
+
 `useOutsideClick` subscribes to `mousedown` only. Touch platforms synthesise a `mousedown` for most taps, which is why this has not obviously broken, but the synthesis is not guaranteed — a tap that begins a scroll, or lands on an element that calls `preventDefault` on the touch sequence, may never produce one. On a phone-first PWA whose pickers and menus all dismiss through this hook, that is worth deciding deliberately rather than inheriting.
 
 **PLAUSIBLE:** needs a real device check, not a code read. If it is fine, write down that it is fine.
@@ -228,6 +283,8 @@ React documents this as unsafe. A render that is started and then discarded — 
 **Fix if real.** Listen for `pointerdown` instead — one event covering mouse, touch and pen.
 
 ### U-12 · sev 2 · bug · M · CONFIRMED · touches: `src/hooks/use-overlay-history.ts`
+
+**DONE.** The debt approach rather than the shared sentinel: a refcounted single entry cannot work, because N overlays need N history entries for Back to close them one at a time. A cleanup that finds its sentinel BURIED records it as owed; whichever overlay does get to unwind pays it with one `history.go(-n)`. Two guards keep that safe — entries a real Back press already consumed are tracked so they are never counted as owed, and only dead entries pushed at the CURRENT address are unwound, so a router navigation between two sentinels is never reversed on the user's behalf. 6 tests; the two U-12 ones fail on the old tree.
 
 Nested overlays that close together leak a history entry.
 
@@ -240,6 +297,8 @@ The hook's own doc-comment reasons carefully about this class of problem for the
 **Fix.** On cleanup, when our sentinel is buried rather than current, record the debt so the overlay above us unwinds both entries — or push a single shared sentinel refcounted across the stack, which is the same shape as U-3's fix and probably the better one.
 
 ### U-13 · sev 2 · robustness · S · PLAUSIBLE · touches: `src/theme/chart-palette.ts`
+
+**DONE, and REACHABLE** — see the status note.
 
 `parseHex` does no validation:
 
@@ -255,6 +314,8 @@ There is a non-hex value sitting in the same module's exported data: `HEATMAP_HE
 **PLAUSIBLE:** check whether any consumer calls `textOn`/`lerpHex` with a stop drawn from `empty`. **Fix regardless** — the two-line guard (return a mid-grey on a malformed input) costs nothing and turns a silently-unreadable label into a visible default.
 
 ### U-14 · sev 1 · consistency · XS · CONFIRMED · touches: `src/lib/calc.ts` *(same file as U-2 — take them together)*
+
+**DONE.** Both halves now say `/,/g`.
 
 `commitExpression` normalises decimal commas with a **non-global** replace, `s.replace(",", ".")`, while `sanitizeLive` uses `/,/g`. Verified by execution that the difference is harmless — the `[^0-9.-]` strip on the next line deletes whatever commas the first replace missed, so both paths agree — but the two functions are the two halves of one rule and should not appear to state it differently. The next reader has to run it to find out, which is what this note saves them.
 

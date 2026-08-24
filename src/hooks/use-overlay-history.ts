@@ -46,11 +46,56 @@ interface OverlayEntry {
 }
 
 const stack: OverlayEntry[] = [];
-/** Pops WE caused (a cleanup unwinding its own entry) — their `popstate` is
- *  bookkeeping, not a user gesture, and must not close a second overlay. */
+
+/**
+ * The sentinels we have PUSHED and not yet unwound, oldest first.
+ *
+ * The stack above tracks live overlays; this tracks live history entries, and the
+ * two come apart in exactly one case — which is the bug this list exists for.
+ * Nested overlays that close in the same commit unwind parent-first, so the dialog's
+ * cleanup runs while the sheet's entry is still on top of its own. It cannot call
+ * `history.back()` there (that would consume the SHEET's entry, and the sheet is
+ * about to consume it itself), so its entry was simply abandoned: a husk with no
+ * live owner sitting between the user and the page.
+ *
+ * The user paid for it on the next Back press. It popped the husk, `handlePop` found
+ * an empty stack and returned, and nothing visible happened — Back had to be pressed
+ * twice to leave the page.
+ *
+ * So an abandoned entry is recorded as `dead` instead, and whichever overlay DOES
+ * get to unwind pays the debt with a single `history.go(-n)`. `href` is what keeps
+ * that safe: only dead entries pushed at the address we are still sitting at are
+ * unwound, so a router navigation that landed between two sentinels is never
+ * reversed on the user's behalf.
+ */
+interface PushedEntry {
+  id: string;
+  href: string;
+  /** Its overlay is gone but the entry is not — someone above owes this pop. */
+  dead: boolean;
+}
+const pushed: PushedEntry[] = [];
+
+/** Entries a real Back press already consumed. Their overlay's cleanup still has to
+ *  run, and it must not mistake "my entry is not current" for "my entry is buried"
+ *  — it has no entry left at all. */
+const consumed = new Set<string>();
+
+/** Pops WE caused (a cleanup unwinding its own entries) — their `popstate` is
+ *  bookkeeping, not a user gesture, and must not close a second overlay. A
+ *  `history.go(-n)` traversal fires exactly ONE popstate however far it travels. */
 let pendingProgrammatic = 0;
 let listening = false;
 let nextId = 0;
+
+function currentHref(): string {
+  return typeof window === "undefined" ? "" : window.location.href;
+}
+
+function forgetPushed(id: string): void {
+  const at = pushed.findIndex((p) => p.id === id);
+  if (at >= 0) pushed.splice(at, 1);
+}
 
 function currentSentinel(): string | null {
   const state = typeof window !== "undefined" ? window.history.state : null;
@@ -77,6 +122,10 @@ function handlePop() {
   // the plain page entry (none at all).
   if (currentSentinel() === top.id) return;
   stack.pop();
+  // The browser consumed this entry, so the overlay's own cleanup has nothing left
+  // to unwind and nothing to record as owed.
+  consumed.add(top.id);
+  forgetPushed(top.id);
   top.close();
 }
 
@@ -114,15 +163,34 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id },
       "",
     );
+    pushed.push({ id, href: currentHref(), dead: false });
     return () => {
       const at = stack.indexOf(entry);
       if (at >= 0) stack.splice(at, 1);
+
+      // A Back press already took this entry; there is nothing to unwind or to owe.
+      if (consumed.delete(id)) return;
+
+      const mine = pushed.findIndex((p) => p.id === id);
       // Only unwind an entry that is still THE current one. If a router push landed
-      // on top of it, going back would undo the user's navigation instead.
-      if (currentSentinel() === id) {
-        pendingProgrammatic += 1;
-        window.history.back();
+      // on top of it, going back would undo the user's navigation instead — and if
+      // a SIBLING overlay's sentinel landed on top, that overlay is about to unwind
+      // and is the one that can take ours with it.
+      if (currentSentinel() !== id) {
+        if (mine >= 0) pushed[mine].dead = true;
+        return;
       }
+
+      // Ours plus every abandoned entry lying directly beneath it at this address.
+      // One traversal, so one popstate, so one programmatic pop to absorb.
+      const here = currentHref();
+      let steps = 1;
+      while (steps <= mine && pushed[mine - steps].dead && pushed[mine - steps].href === here) {
+        steps += 1;
+      }
+      pushed.splice(mine - (steps - 1), steps);
+      pendingProgrammatic += 1;
+      window.history.go(-steps);
     };
   }, [open]);
 }

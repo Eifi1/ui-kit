@@ -5,6 +5,7 @@ import { NavLink } from "react-router";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
@@ -79,14 +80,14 @@ export function AppShell({
   collapseLabel = "Collapse sidebar",
   expandLabel = "Expand sidebar",
 }: AppShellProps) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(collapseStorageKey) === "1";
-  });
+  // Through the guarded helpers, not `window.localStorage` directly. The read runs
+  // inside a `useState` initialiser — i.e. during render of the top-level shell — and
+  // `localStorage` THROWS where site data is blocked (Safari private browsing, a
+  // partitioned webview). Unguarded, that was not a lost sidebar preference: nothing
+  // in the application mounted at all.
+  const [collapsed, setCollapsed] = useState(() => readStored(collapseStorageKey) === "1");
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(collapseStorageKey, collapsed ? "1" : "0");
-    }
+    writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
 
   return (

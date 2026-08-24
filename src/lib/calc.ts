@@ -169,10 +169,42 @@ export function looksLikeExpression(s: string): boolean {
 }
 
 /** Render an evaluated number back to a field-friendly string, trimming binary
- * float noise (so 0.1 + 0.2 reads "0.3", not "0.30000000000000004"). */
+ * float noise (so 0.1 + 0.2 reads "0.3", not "0.30000000000000004").
+ *
+ * FIXED notation, always, and that is the whole point of the function rather than a
+ * detail of it. This used to end in `parseFloat(n.toFixed(10)).toString()`, and
+ * `Number.prototype.toString` switches to EXPONENT notation below 1e-6 and at or
+ * above 1e21 — an alphabet containing `e`, `+` and `-`. Neither function that reads a
+ * field's text back accepts it: {@link tokenize} rejects `e` as an unknown character
+ * and {@link sanitizeLive} deletes it. So {@link commitExpression} fell through to
+ * its digits-only cleanup, which stripped the `e` and CONCATENATED the mantissa to
+ * the exponent. A field committed its own output as a different number:
+ *
+ *     "1/10000000"                -> "1e-7"               -> "17"   (AmountInput: "6")
+ *     "999999999999*999999999999" -> "9.99999999998e+23"  -> "9.9999999999823"
+ *
+ * Both controls commit on blur AND on Enter, so Enter-then-click-away was enough on
+ * its own, it was silent, and it was in a money field.
+ *
+ * The invariant, which the test asserts directly rather than by example:
+ * **`commitExpression(formatResult(n))` equals `formatResult(n)` for every finite
+ * `n`.** Anything rendered here has to survive being read back. */
 export function formatResult(n: number): string {
   if (!Number.isFinite(n)) return "";
-  return parseFloat(n.toFixed(10)).toString();
+  // At or above 1e21 `toFixed` gives up and hands back `toString`'s exponent form —
+  // but every double that large is an integer, so BigInt renders it exactly.
+  if (Math.abs(n) >= 1e21) return BigInt(n).toString();
+  return trimTrailingZeros(n.toFixed(10));
+}
+
+/** "15.7000000000" -> "15.7", "0.0000000000" -> "0". The ten decimals are where the
+ *  binary float noise gets rounded off; this is only about not showing the padding. */
+function trimTrailingZeros(fixed: string): string {
+  if (!fixed.includes(".")) return fixed;
+  const trimmed = fixed.replace(/0+$/, "").replace(/\.$/, "");
+  // `toFixed` keeps the sign on a magnitude that rounded away to nothing
+  // ("-0.0000000000"); `toString` did not, and "-0" in an amount field is noise.
+  return trimmed === "-0" || trimmed === "" ? "0" : trimmed;
 }
 
 /** The single "on blur / Enter" transform a numeric field applies: evaluate the
@@ -195,7 +227,11 @@ export function commitExpression(raw: string): string {
     if (n !== null) return formatResult(n);
     // Unparseable (e.g. a half-typed "12+"): fall through to a digits-only clean.
   }
-  const cleaned = s.replace(",", ".").replace(/[^0-9.-]/g, "").replace(/(?!^)-/g, "");
+  // Global, like sanitizeLive's: these two are the two halves of one rule and must
+  // not appear to state it differently. (The `[^0-9.-]` strip on the same line
+  // already ate whatever commas a non-global replace missed, so this changes no
+  // behaviour — it removes the need for the next reader to run it to find that out.)
+  const cleaned = s.replace(/,/g, ".").replace(/[^0-9.-]/g, "").replace(/(?!^)-/g, "");
   return cleaned.replace(/^(-?\d*\.?\d*).*$/, "$1");
 }
 

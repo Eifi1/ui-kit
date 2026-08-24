@@ -60,6 +60,25 @@ Call `useApplyTheme()` + `useApplyPalette()` once near the root. For a no-flash
 first paint, apply the persisted theme class + token set before hydration (see
 Keksdose's `main.tsx` for the pattern, using `applyTokenSet`/`presetById`).
 
+## Tests
+
+```bash
+npm test          # vitest run
+npm run test:watch
+npm run typecheck
+```
+
+Vitest + jsdom, configured as a copy of the lead consumer's setup rather than a new
+dialect — so a test can move between this package and an app unchanged. The suite pins
+`TZ=Europe/Berlin`, which is load-bearing for `lib/dates.ts`: those helpers answer with
+the LOCAL calendar day, and on a UTC runner a broken UTC implementation and a correct
+local one agree.
+
+Start where the return on a line of test is highest and no DOM is needed — `lib/`,
+`theme/`, and the data-table's pure helpers. The house rule for a fix is that its
+regression test is **run against the old code first and observed to fail there**;
+a test written after the fix proves only that the fix is self-consistent.
+
 ## What's exported
 
 - **Primitives / fields:** `cn`, `Button`, `Input`, `Select`, `Textarea`,

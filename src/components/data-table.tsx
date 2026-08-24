@@ -13,6 +13,7 @@ import {
 import { useSearchParams } from "react-router";
 import { Card } from "./ui";
 import { cn } from "../lib/cn";
+import { readStored, writeStored } from "../lib/safe-storage";
 import {
   decodeFilterValue,
   defaultFilterState,
@@ -337,24 +338,20 @@ interface PersistedState {
 const DEFAULT_PERSIST_PREFIX = "hbui-table:";
 
 function loadPersisted(storageKey: string | undefined, prefix: string): Partial<PersistedState> {
-  if (!storageKey || typeof window === "undefined") return {};
+  if (!storageKey) return {};
+  const raw = readStored(prefix + storageKey);
+  if (!raw) return {};
   try {
-    const raw = window.localStorage.getItem(prefix + storageKey);
-    if (!raw) return {};
     const parsed = JSON.parse(raw) as Partial<PersistedState>;
     return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
-    return {};
+    return {}; // corrupt JSON — the storage access itself is guarded by readStored
   }
 }
 
 function savePersisted(storageKey: string | undefined, state: PersistedState, prefix: string): void {
-  if (!storageKey || typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(prefix + storageKey, JSON.stringify(state));
-  } catch {
-    // ignore quota / privacy-mode errors
-  }
+  if (!storageKey) return;
+  writeStored(prefix + storageKey, JSON.stringify(state));
 }
 
 // ---------- URL sync helpers ----------
