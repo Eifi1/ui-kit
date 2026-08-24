@@ -79,6 +79,14 @@ Keksdose's `main.tsx` for the pattern, using `applyTokenSet`/`presetById`).
   `PALETTE_HEX`, chart-colour helpers, and the store factories.
 - **Shell:** `TopBar`, `AppShell` (+ `AppShellNavItem`), `ThemeToggle`,
   `PaletteMenu`, `LanguageMenu`, `TOPBAR_TRIGGER_CLASS`, `TOPBAR_MENU_ITEM_CLASS`.
+- **Feedback:** `FeedbackDialog` (the compose form) and the inbox parts —
+  `FeedbackStatus`/`FeedbackCategory` and their `*_META`/`*_ORDER` tables,
+  `nextFeedbackStatus`, `visibleFeedbackStatuses`, `selectableFeedbackStatuses`,
+  `feedbackCategoryRank`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`,
+  `FeedbackCategoryBadge`, `FeedbackNoteEditor`, `FeedbackDetail`,
+  `FeedbackDetailSection`, `FeedbackProse`. The vocabulary, the transition policy
+  and the look; each app still wires its own API, columns, strings and
+  permissions — see the note at the top of `src/feedback/feedback-inbox.tsx`.
 - **Subpath:** date helpers at `@hb/ui/dates`; stylesheet at `@hb/ui/tokens.css`.
 
 ## Forms / refs

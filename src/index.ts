@@ -81,8 +81,15 @@ export * from "./shell/option-switcher-menu";
 export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
 
-// ── feedback (generic form shell; app wires its own API/inbox) ───────────────
+// ── feedback ─────────────────────────────────────────────────────────────────
+// The form somebody files a report with, and the parts an inbox is built from:
+// the status vocabulary both apps share value for value, the policy about what a
+// row may move to from where it stands, and the look of a status control, a
+// category badge and an opened report. The app still wires its own API, columns
+// and strings — see the note at the top of `feedback-inbox.tsx` for what is
+// deliberately left to it.
 export * from "./feedback/feedback-dialog";
+export * from "./feedback/feedback-inbox";
 
 // ── guided tours ─────────────────────────────────────────────────────────────
 export * from "./tour/tour";
