@@ -1049,7 +1049,18 @@ export function DataTable<T>({
       {isMdUp && (
       <div className={cn("flex", fillHeight && "min-h-0 flex-1")}>
         <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col min-h-0")}>
-          <div className={cn("overflow-auto", fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]")}>
+          {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
+              front. Expanding a row adds height, which can bring the scrollbar
+              in, which narrows the content box — and in an `auto` table layout
+              that re-computes every column width. Reserving the gutter is the
+              other half of the `w-0 min-w-full` fix on the expansion cell below
+              (feedback #104: "expanding an item resizes the columns"). */}
+          <div
+            className={cn(
+              "overflow-auto [scrollbar-gutter:stable]",
+              fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]",
+            )}
+          >
         <table className="w-full text-sm">
           {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the

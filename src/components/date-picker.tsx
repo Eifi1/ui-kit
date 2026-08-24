@@ -73,7 +73,11 @@ function DateField({
             )}
           >
             <span className={cn("truncate", !hasValue && "text-slate-400 dark:text-slate-500")}>
-              {triggerText}
+              {/* `|| " "` — triggerText is "" when there is no value and no
+                  placeholder was passed. An empty span has no line box, so the
+                  trigger collapsed to its padding and sat shorter than every
+                  other field beside it. A space keeps the line height. */}
+              {triggerText || " "}
             </span>
           </button>
         )}

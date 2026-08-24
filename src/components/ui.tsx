@@ -62,6 +62,41 @@ export function Button({
   );
 }
 
+// Canonical square icon-only button. <Button> carries TEXT geometry — px-3 py-2
+// gap-2 — so rendering a bare glyph through it gives a small icon in a wide,
+// text-shaped box. This fixes a square box instead and, crucially, forces the
+// child icon to 20px via `[&_svg]:size-5` so a caller cannot under-size it. Use
+// it wherever an action is a bare icon (edit/delete/tools) so they all match the
+// top-bar icon buttons and can never drift apart again.
+//
+// Draws its colours from the same `buttonVariantClasses` map as <Button>, so the
+// two re-skin together with the palette.
+const ICON_BUTTON_BASE =
+  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-5";
+
+export const IconButton = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: ButtonVariant;
+    /** Box size: md = 36px (matches the top bar), sm = 32px. The icon stays 20px. */
+    size?: "sm" | "md";
+  }
+>(function IconButton({ variant = "ghost", size = "md", className, ...rest }, ref) {
+  return (
+    <button
+      ref={ref}
+      {...rest}
+      className={cn(
+        ICON_BUTTON_BASE,
+        size === "sm" ? "size-8" : "size-9",
+        buttonVariantClasses[variant],
+        className,
+      )}
+    />
+  );
+});
+IconButton.displayName = "IconButton";
+
 export const FIELD_BASE =
   "block w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[var(--brand)] focus:ring-[var(--brand)] dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 " +
   // A field the user cannot change has to LOOK settled. Without this, `disabled`
@@ -578,7 +613,12 @@ export function CardAction({ className, ...props }: ComponentPropsWithoutRef<"di
 }
 
 export function CardContent({ className, ...props }: ComponentPropsWithoutRef<"div">) {
-  return <div data-slot="card-content" className={cn("px-6", className)} {...props} />;
+  // `last:pb-6`, not a plain `pb-6`: CardHeader owns the top padding and CardFooter
+  // owns the bottom one, so a card WITHOUT a footer had nothing closing it off and
+  // its last field sat flush against the card edge (kastlan feedback: the language
+  // input touching the card bottom on /profile). Scoping to `:last-child` fixes that
+  // case and leaves a footered card's rhythm exactly as it was.
+  return <div data-slot="card-content" className={cn("px-6 last:pb-6", className)} {...props} />;
 }
 
 export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {
