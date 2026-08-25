@@ -89,8 +89,9 @@ a test written after the fix proves only that the fix is self-consistent.
   primitives (`useDropdown`, `useDropdownSearch`, `DropdownPanel`,
   `DropdownSearchHeader`), `CalculatorButton`, the calc engine.
 - **Overlays / misc:** `Modal` (+ `useBackdropClose`), `Popover`, `HoverMenu`,
-  `Tooltip`, `AlertBanner`, `ToggleGroup`, `WizardStepper`, `FileDropzone`,
-  `GroupedPicker`, `MiniCalendar`, the `chart` kit.
+  `Tooltip`, `AlertBanner`, `ToggleGroup`, `FileDropzone`, `GroupedPicker`,
+  `MiniCalendar`, `WizardStepper` (a bare two-step indicator — not the wizard
+  engine below), the `chart` kit.
 - **Data table:** `DataTable` (+ `DataTableColumn`, `FilterState`, `SortState`,
   `ServerPagination`), `Pagination`, filter/sort helpers, `DataTableLabels`.
 - **Theme:** `TokenSet`, `PalettePreset`, `DEFAULT_PRESET`, `ALTERNATIVE_PRESETS`,
@@ -106,6 +107,15 @@ a test written after the fix proves only that the fix is self-consistent.
   `FeedbackDetailSection`, `FeedbackProse`. The vocabulary, the transition policy
   and the look; each app still wires its own API, columns, strings and
   permissions — see the note at the top of `src/feedback/feedback-inbox.tsx`.
+- **Wizard:** the multi-step engine (`useWizard`, `WizardContextProvider`,
+  `useWizardContext`, `useRhfWizardStep`, `useWizardStepValidate`,
+  `useWizardNextGate`, `requiredFieldsValidator`), the chrome around it
+  (`StepperNav`, `WizardSummary`) and the parts its steps are built from
+  (`WizardStep`, `WizardField`, `WizardSelectField`) — plus the types
+  (`WizardStepConfig`, `UseWizardOptions`, `UseWizardReturn`, `StepStatus`,
+  `ValidateResult`, `FieldErrors`, `SummarySection`, `SummaryItem`,
+  `RequiredFieldSpec`) and the label table (`WizardLabels`,
+  `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`). See [Wizard](#wizard) below.
 - **Subpath:** date helpers at `@hb/ui/dates`; stylesheet at `@hb/ui/tokens.css`.
 
 ## Forms / refs
@@ -124,6 +134,52 @@ The package carries no translation catalog. Components with user-facing text tak
 <MultiSelect allLabel={t("all")} searchLabel={t("search")} … />
 <DataTable labels={{ columns: t("table.columns"), presets: { today: t("today") }, … }} … />
 ```
+
+## Wizard
+
+A multi-step form engine: a step machine with per-step validation gates, collected
+data, `?step=` URL sync, and skip/cancel handling — with the chrome (step
+indicator, nav bar, cancel confirmation) and a summary/review step on top.
+
+```tsx
+const wizard = useWizard<LeaseDraft>({
+  steps: [
+    { id: "unit", label: "Unit" },
+    { id: "tenants", label: "Tenants", validate: () => draft.tenants.length > 0 },
+    { id: "review", label: "Review" },
+  ],
+  onComplete: (data) => createLease(data),
+  onCancel: () => navigate(".."),
+});
+
+<WizardContextProvider
+  value={{
+    registerStepValidate: wizard.registerStepValidate,
+    setNextBlocked: wizard.setNextBlocked,
+  }}
+>
+  <StepperNav wizard={wizard} title="New lease">
+    <WizardStep>{/* the active step's fields */}</WizardStep>
+  </StepperNav>
+</WizardContextProvider>
+```
+
+A step gates forward navigation three ways, and `goNext` runs all of them:
+its `validate` in the config above, `useWizardStepValidate(fn)` for a step that
+checks by hand, and `useRhfWizardStep(form, onValid)` for a react-hook-form step
+(which also reports its own inline messages). `useWizardNextGate(blocked)`
+disables Next/Skip outright.
+
+Like the rest of the package it resolves **no strings**: a step carries a `label`
+node, and the chrome takes a `labels` object (`WizardLabels`, every key optional
+over an English default) — the same split `DataTable` and `TourProvider` use. An
+app with i18n wraps `useWizard`/`StepperNav`/`WizardSummary` once and maps its
+own keys; see Kastlan's `shared/components/wizard/app-wizard.tsx`.
+
+**Optional peers.** `react-hook-form` is needed only by `useRhfWizardStep`, and
+only as a type. `react-router` backs the `?step=` sync in `useWizard`. `sonner`
+carries the "fill in the required fields" toast and is imported dynamically, on
+that failure path only — pass `onValidationFailed` to route it elsewhere.
 
 ## Shell
 
