@@ -37,6 +37,14 @@ import { useEffect, useRef } from "react";
  * first checks that our marker is still the CURRENT entry: if the user followed a
  * link while the overlay was open, the router has pushed on top of us, and a blind
  * `history.back()` there would undo their navigation.
+ *
+ * ## The traversal is deferred
+ *
+ * And it is *scheduled* rather than issued, because `history.go()` lands a task
+ * later while everything this module knows is written synchronously. See
+ * {@link Unwind}: an overlay opening inside that window adopts the entry instead
+ * of stacking a second one on it, which is what makes the hook survive React
+ * StrictMode's mount → clean up → mount (steering-design feedback #49).
  */
 const SENTINEL_KEY = "__hbUiOverlayHistory";
 
@@ -87,6 +95,55 @@ const consumed = new Set<string>();
 let pendingProgrammatic = 0;
 let listening = false;
 let nextId = 0;
+
+/**
+ * The unwind a cleanup has asked for and not yet issued.
+ *
+ * **`history.go()` is asynchronous and everything above is written
+ * synchronously**, which is the seam the whole of this block exists to close.
+ * The traversal lands a task later, so an overlay that opens in the *same* tick
+ * as one that closed used to push its sentinel on top of the entry that was
+ * about to be popped — and the pop then took the NEW entry. The overlay left on
+ * screen had no entry of its own (so Back no longer closed it) and the old one
+ * stayed behind as a husk between the user and their page.
+ *
+ * That is not an exotic race. **React StrictMode remounts every effect** — mount,
+ * clean up, mount again, all in one commit — so in development *every* dialog
+ * anyone opened left a husk behind, the position drifted one entry further from
+ * the page on each open, and the Back press that was meant to leave the page was
+ * spent on something invisible instead (steering-design feedback #49).
+ *
+ * So the traversal is deferred by a task, and an overlay mounting inside that
+ * window **adopts** the entry instead of pushing a second one (see the effect).
+ * Adoption is `replaceState` on an entry that is already there: no traversal, no
+ * window in which the count can be wrong, and the StrictMode remount costs
+ * exactly nothing.
+ */
+interface Unwind {
+  timer: ReturnType<typeof setTimeout>;
+  /** The sentinel on the entry to leave — the top of `entries`. */
+  id: string;
+  href: string;
+  /** That entry plus the abandoned ones directly beneath it, oldest first. */
+  entries: PushedEntry[];
+}
+let unwind: Unwind | null = null;
+
+/** Issue the deferred traversal, if the ground has not moved under it.
+ *
+ *  A real Back press or a router navigation during the deferred task leaves us
+ *  somewhere that is not the entry we meant to leave, and going back from there
+ *  would take something that is not ours. The entries are then simply forgotten
+ *  rather than handed back as `dead`: a forgotten entry costs one dead Back
+ *  press, while an over-counted one costs the user a navigation they did make. */
+function runUnwind(): void {
+  const job = unwind;
+  unwind = null;
+  if (!job) return;
+  if (currentSentinel() !== job.id || currentHref() !== job.href) return;
+  pendingProgrammatic += 1;
+  window.history.go(-job.entries.length);
+}
 
 function currentHref(): string {
   return typeof window === "undefined" ? "" : window.location.href;
@@ -157,13 +214,36 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
     const entry: OverlayEntry = { id, close: () => closeRef.current() };
     stack.push(entry);
     const prev = window.history.state;
-    // Preserve react-router's own `{usr,key,idx}` — we only tack a marker on, and
-    // the URL is unchanged, so the router treats popping this as a no-op re-render.
-    window.history.pushState(
-      { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id },
-      "",
-    );
-    pushed.push({ id, href: currentHref(), dead: false });
+    const marked = { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id };
+    // An entry that is on its way out and that we are still standing on is ours
+    // to take over: same URL, same slot, only the marker changes. Pushing a
+    // second one on top of it is what used to leave a husk on every StrictMode
+    // remount — see {@link Unwind}.
+    const adopting = unwind && unwind.id === currentSentinel() && unwind.href === currentHref();
+    if (adopting && unwind) {
+      clearTimeout(unwind.timer);
+      const inherited = unwind.entries;
+      unwind = null;
+      // Preserve react-router's own `{usr,key,idx}` — we only swap the marker,
+      // and the entry we are swapping it on is the one the router is already on.
+      window.history.replaceState(marked, "");
+      // The abandoned ones beneath come back owed; ours takes the top slot.
+      for (const owed of inherited.slice(0, -1)) pushed.push({ ...owed, dead: true });
+      pushed.push({ id, href: currentHref(), dead: false });
+    } else {
+      // A push DESTROYS every entry ahead of the one we are on, so anything we
+      // still had recorded above our own position is gone. Kept, those would be
+      // counted into a later `history.go(-n)` and the overshoot would come out
+      // of a navigation the user actually made. Where we cannot tell which of
+      // ours are beneath us — we are standing on a plain page entry, or on a
+      // husk nobody tracks — none of them can be proven to be, so none survive.
+      const under = pushed.findIndex((p) => p.id === currentSentinel());
+      pushed.splice(under + 1);
+      // Preserve react-router's own `{usr,key,idx}` — we only tack a marker on, and
+      // the URL is unchanged, so the router treats popping this as a no-op re-render.
+      window.history.pushState(marked, "");
+      pushed.push({ id, href: currentHref(), dead: false });
+    }
     return () => {
       const at = stack.indexOf(entry);
       if (at >= 0) stack.splice(at, 1);
@@ -188,9 +268,15 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       while (steps <= mine && pushed[mine - steps].dead && pushed[mine - steps].href === here) {
         steps += 1;
       }
-      pushed.splice(mine - (steps - 1), steps);
-      pendingProgrammatic += 1;
-      window.history.go(-steps);
+      const leaving = pushed.splice(mine - (steps - 1), steps);
+      // Scheduled, not issued: an overlay opening in this same tick takes the
+      // entry over instead, which is what makes the hook survive a StrictMode
+      // remount. An unwind already waiting is dropped rather than merged — it
+      // was the entry ABOVE ours and something has since moved off it, so its
+      // count can no longer be proven, and an over-counted traversal costs a
+      // navigation the user made while an under-counted one costs one dead Back.
+      if (unwind) clearTimeout(unwind.timer);
+      unwind = { timer: setTimeout(runUnwind, 0), id, href: here, entries: leaving };
     };
   }, [open]);
 }

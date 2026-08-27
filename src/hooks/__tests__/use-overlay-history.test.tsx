@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { StrictMode, useState } from "react";
 import { act, render } from "@testing-library/react";
 import { useOverlayHistory } from "../use-overlay-history";
 
@@ -135,6 +135,90 @@ describe("useOverlayHistory", () => {
     expect(liveSentinel()).not.toBeNull();
     view.unmount();
     await settle();
+  });
+
+  // ── a StrictMode remount (steering-design feedback #49) ────────────────────
+  //
+  // React remounts every effect in development: mount, clean up, mount again, in
+  // one commit. `history.go()` lands a task later, so the cleanup's traversal used
+  // to eat the entry the SECOND mount had just pushed — leaving the live overlay
+  // with no entry of its own and the first one behind as a husk. Every dialog
+  // anyone opened cost the user one dead Back press, and the position drifted a
+  // further entry from the page on each open.
+  function StrictHost({ open }: { open: boolean }) {
+    return <StrictMode>{open ? <Overlay /> : null}</StrictMode>;
+  }
+
+  it("leaves nothing behind when a dialog is opened and dismissed under StrictMode", async () => {
+    // A page of our own, so the depth below counts this test's entries and not
+    // whatever an earlier one left forward of the cursor.
+    window.history.pushState(null, "", "/strict");
+    await settle();
+    const view = render(<StrictHost open={false} />);
+    const depth = window.history.length;
+
+    view.rerender(<StrictHost open />);
+    await settle();
+    // One entry for the overlay, however many times its effect was remounted.
+    expect(window.history.length).toBe(depth + 1);
+    expect(liveSentinel()).not.toBeNull();
+
+    view.rerender(<StrictHost open={false} />);
+    await settle();
+    // ...and back on the page's own entry, which is what Back has to be able to
+    // leave from.
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.pathname).toBe("/strict");
+    view.unmount();
+    await settle();
+  });
+
+  it("still closes on Back after a StrictMode remount", async () => {
+    // The other half: the overlay that survives the remount must own the entry it
+    // is standing on, or Back stops dismissing it and navigates the page instead.
+    const onClose = vi.fn();
+    function Host() {
+      return (
+        <StrictMode>
+          <Overlay onClose={onClose} />
+        </StrictMode>
+      );
+    }
+    const view = render(<Host />);
+    await settle();
+    await act(async () => {
+      window.history.back();
+      await new Promise((r) => setTimeout(r, 25));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(liveSentinel()).toBeNull();
+    view.unmount();
+    await settle();
+  });
+
+  it("never unwinds further than the entries it pushed", async () => {
+    // The expensive way this failed: a dead entry that a later push had already
+    // destroyed was still counted into `history.go(-n)`, and the overshoot came
+    // out of a real navigation. Stand one route deep and open and dismiss a
+    // dialog several times over — the route beneath must still be there.
+    window.history.pushState(null, "", "/second");
+    await settle();
+    const view = render(<StrictHost open={false} />);
+    for (let round = 0; round < 4; round += 1) {
+      view.rerender(<StrictHost open />);
+      await settle();
+      view.rerender(<StrictHost open={false} />);
+      await settle();
+      expect(window.location.pathname).toBe("/second");
+    }
+    view.unmount();
+    await settle();
+    // And one Back press still leaves the page, rather than being spent on a husk.
+    await act(async () => {
+      window.history.back();
+      await new Promise((r) => setTimeout(r, 25));
+    });
+    expect(window.location.pathname).not.toBe("/second");
   });
 
   it("cleans up an overlay whose entry a Back press already consumed", async () => {
