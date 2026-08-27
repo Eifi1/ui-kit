@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, CalendarClock, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { addDaysIso, formatIsoDate } from "../lib/dates";
 import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
@@ -153,6 +153,19 @@ export interface DatePickerProps extends DatePickerBaseProps {
   /** Accessible names for the step buttons. Required with `step` — this package
    *  ships no strings of its own, so every label is passed in by the consumer. */
   stepLabels?: { prev: string; next: string };
+  /**
+   * Today's date as ISO "YYYY-MM-DD". Adds a jump-to-today button beside the field,
+   * disabled once the value already is that day.
+   *
+   * Passed in rather than read from a clock here: a component that decides what "today"
+   * is cannot be tested at a fixed date, and the consumer already has one definition of
+   * it. The button is always RENDERED — going flat instead of disappearing — because a
+   * control that comes and goes with the value reflows whatever sits beside it, which
+   * is the report this exists to answer.
+   */
+  today?: string;
+  /** Accessible name for the today button. Required with `today`. */
+  todayLabel?: string;
 }
 
 /** Single-date picker: a field showing the formatted date, opening a calendar. */
@@ -166,6 +179,8 @@ export function DatePicker({
   formatOptions,
   step,
   stepLabels,
+  today,
+  todayLabel,
   className,
   ...rest
 }: DatePickerProps) {
@@ -193,33 +208,46 @@ export function DatePicker({
       )}
     </DateField>
   );
-  if (!step) return field;
+  if (!step && !today) return field;
 
   // An empty field has nothing to step from, so both buttons are dead until a date
   // is picked. Bounds are compared as strings: "YYYY-MM-DD" sorts chronologically.
   const target = (days: number) => (value ? addDaysIso(value, days) : "");
+  const outOfBounds = (iso: string) => Boolean((min && iso < min) || (max && iso > max));
   const blocked = (days: number) => {
     const next = target(days);
     if (!next || rest.disabled) return true;
-    return Boolean((min && next < min) || (max && next > max));
+    return outOfBounds(next);
   };
   return (
     // items-stretch, not items-center: the buttons match the field's height, which
     // varies with whether it carries a floating label.
     <div className={cn("flex items-stretch gap-1", className)}>
-      <StepButton
-        icon={ChevronLeft}
-        label={stepLabels?.prev ?? "Previous day"}
-        disabled={blocked(-1)}
-        onClick={() => onChange(target(-1))}
-      />
+      {step && (
+        <StepButton
+          icon={ChevronLeft}
+          label={stepLabels?.prev ?? "Previous day"}
+          disabled={blocked(-1)}
+          onClick={() => onChange(target(-1))}
+        />
+      )}
       {field}
-      <StepButton
-        icon={ChevronRight}
-        label={stepLabels?.next ?? "Next day"}
-        disabled={blocked(1)}
-        onClick={() => onChange(target(1))}
-      />
+      {step && (
+        <StepButton
+          icon={ChevronRight}
+          label={stepLabels?.next ?? "Next day"}
+          disabled={blocked(1)}
+          onClick={() => onChange(target(1))}
+        />
+      )}
+      {today && (
+        <StepButton
+          icon={CalendarClock}
+          label={todayLabel ?? "Today"}
+          disabled={Boolean(rest.disabled) || value === today || outOfBounds(today)}
+          onClick={() => onChange(today)}
+        />
+      )}
     </div>
   );
 }
