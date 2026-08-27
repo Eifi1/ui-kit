@@ -1,5 +1,5 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
@@ -346,6 +346,8 @@ export function InlineEntityCombobox<V extends string | number>({
   searchPlaceholder,
   emptyLabel,
   closeLabel,
+  clearable,
+  clearLabel,
   "aria-label": ariaLabel,
 }: {
   /** Selected option id, or null when nothing is selected. */
@@ -370,6 +372,16 @@ export function InlineEntityCombobox<V extends string | number>({
    *  list simply does not open. */
   emptyLabel?: string;
   closeLabel?: string;
+  /** Offer a clear "×" in place of the chevron whenever something is selected.
+   *
+   *  Emptying the text already clears (see {@link reconcile}), and on a desktop that
+   *  is the fast way. It is not a way at all on a PHONE: touching the field opens the
+   *  full-screen sheet, which covers the very input the text would have been deleted
+   *  from — so a field that had been answered could not be UNanswered by any gesture
+   *  the screen offered (Keksdose live #236, filed from a phone). The "×" is the one
+   *  affordance both shells share, and it clears without opening anything. */
+  clearable?: boolean;
+  clearLabel?: string;
   "aria-label"?: string;
 }) {
   const generated = useId();
@@ -390,6 +402,9 @@ export function InlineEntityCombobox<V extends string | number>({
     [options, value],
   );
   const shown = text ?? selected?.label ?? "";
+  // Nothing selected has nothing to clear, and the chevron comes back — the field
+  // keeps exactly one trailing control, so the "×" never crowds the value it sits on.
+  const showClear = Boolean(clearable && value != null && !disabled);
 
   // Focusing select-alls the current label; filtering only kicks in once the
   // text actually differs from it, so an already-filled field still opens on
@@ -522,18 +537,45 @@ export function InlineEntityCombobox<V extends string | number>({
           }}
           className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9")}
         />
-        <ChevronDown
-          aria-hidden
-          onMouseDown={(e) => {
-            // Toggle on the chevron without stealing focus from the input.
-            e.preventDefault();
-            setOpen((o) => !o);
-          }}
-          className={cn(
-            "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
-            disabled ? "opacity-50" : "cursor-pointer",
-          )}
-        />
+        {showClear ? (
+          <button
+            type="button"
+            // Out of the tab order, like the clear on `EntityCombobox`: the keyboard
+            // already clears this field by selecting its text and deleting, and a
+            // second stop between every picker and the next field is a worse trade
+            // than the one gesture it saves.
+            tabIndex={-1}
+            aria-label={clearLabel ?? "Clear"}
+            // preventDefault, exactly as the chevron does: without it the press
+            // focuses the input, which on a phone opens the sheet over the field the
+            // press was clearing.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setText(null);
+              close();
+              onChange(null);
+            }}
+            className={cn(
+              "absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400",
+              "hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
+            )}
+          >
+            <X aria-hidden className="size-4" />
+          </button>
+        ) : (
+          <ChevronDown
+            aria-hidden
+            onMouseDown={(e) => {
+              // Toggle on the chevron without stealing focus from the input.
+              e.preventDefault();
+              setOpen((o) => !o);
+            }}
+            className={cn(
+              "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
+              disabled ? "opacity-50" : "cursor-pointer",
+            )}
+          />
+        )}
       </div>
       {isPhone && (
         <PickerSheet
