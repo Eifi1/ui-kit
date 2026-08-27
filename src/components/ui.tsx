@@ -216,6 +216,26 @@ export const FLOATING_LABEL_CLASS = cn(
   "peer-disabled:opacity-50",
 );
 
+// The animated label again, as a ROW that the label and its "?" share — same
+// placement, same float, same type, but with the type on the row so the label
+// INHERITS it. It has to be that way round: `peer-focus:` compiles to a sibling
+// selector, so the classes have to sit on the element that is actually a sibling
+// of the input, and a label nested inside a wrapper is not one.
+//
+// Wider right clearance than the label alone takes (`3rem` rather than `1.5rem`),
+// because the controls that carry an animated label are the ones with something
+// at the right edge of the field — NumberInput's calculator is the case this was
+// written for. The label truncates a little sooner; the alternative was the "?"
+// sitting on top of a button (steering-design feedback #48).
+const FLOATING_ROW_CLASS = cn(
+  "pointer-events-none absolute left-3 top-2.5 flex items-center gap-1 transition-all",
+  "max-w-[calc(100%-3rem)] text-sm text-slate-400",
+  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-slate-600",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-slate-600",
+  "dark:text-slate-500 dark:peer-focus:text-slate-300 dark:peer-[:not(:placeholder-shown)]:text-slate-300",
+  "peer-disabled:opacity-50",
+);
+
 // The TYPE of the small static label, without any placement. Split out so the
 // label and anything sharing its line (see `hint` on {@link FloatingField}) are
 // laid out by one flex row instead of by two absolute offsets guessing at the
@@ -261,23 +281,31 @@ export function FloatingField({
    *  in practice a {@link FieldHint} "?" (dev#468). It is rendered in a flex row
    *  with the label, so it is centred on the label's line by the layout instead
    *  of by a hand-tuned `top-…`, and it can never drift when the type changes.
-   *  Only for the static-label case; a floating label MOVES, so there is no one
-   *  line to share. */
+   *
+   *  It rides an ANIMATED label too, and the two cases place it differently on
+   *  purpose. A static label has a field-wide strip to itself, so the hint sits
+   *  at the far end of it and a long label truncates into the gap. An animated
+   *  one belongs to a control with something at the right edge of the field — a
+   *  calculator, a stepper — so the hint follows the label instead, and it is
+   *  the label that gives way (steering-design feedback #48). */
   hint?: ReactNode;
   children: ReactNode;
 }) {
-  const withHint = hint !== undefined && staticLabel && !srOnlyLabel;
+  const withHint = hint !== undefined && !srOnlyLabel;
+  const atEnd = withHint && staticLabel;
   const labelEl = label !== undefined && (
     <label
       htmlFor={htmlFor}
       className={
         srOnlyLabel
           ? "sr-only"
-          : withHint
+          : atEnd
             ? cn("pointer-events-none min-w-0 truncate", STATIC_LABEL_TYPE)
-            : staticLabel
-              ? FLOATING_LABEL_STATIC
-              : FLOATING_LABEL_CLASS
+            : withHint
+              ? "pointer-events-none min-w-0 truncate"
+              : staticLabel
+                ? FLOATING_LABEL_STATIC
+                : FLOATING_LABEL_CLASS
       }
     >
       {label}
@@ -287,10 +315,18 @@ export function FloatingField({
     <div className={cn("relative", className)}>
       {children}
       {withHint ? (
-        // `inset-x-3` rather than `left-3`, so a long label truncates at the
-        // field's own right padding instead of running under the chevron; the
-        // hint keeps its width (`shrink-0`) and the label gives way.
-        <div className="pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1">
+        // Static: `inset-x-3` rather than `left-3`, so a long label truncates at
+        // the field's own right padding instead of running under the chevron.
+        // Animated: the row floats with the label and is only as wide as it needs
+        // to be. Either way the hint keeps its width (`shrink-0`) and the label
+        // is the one that gives way.
+        <div
+          className={
+            atEnd
+              ? "pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1"
+              : FLOATING_ROW_CLASS
+          }
+        >
           {labelEl}
           <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
         </div>

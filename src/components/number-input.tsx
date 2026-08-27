@@ -36,6 +36,11 @@ interface NumberInputProps {
    *  target); not for a field among many, and never for the compact inline
    *  editors this control also serves. */
   variant?: "field" | "display";
+  /** A {@link FieldHint} "?" on the label's own line, beside the label rather
+   *  than at the far end of the strip — the far end is where the calculator
+   *  lives, and a hint placed there landed on top of it (steering-design
+   *  feedback #48). */
+  hint?: ReactNode;
 }
 
 /**
@@ -59,6 +64,7 @@ export function NumberInput({
   id,
   calculator = true,
   variant = "field",
+  hint,
 }: NumberInputProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
@@ -90,6 +96,7 @@ export function NumberInput({
       htmlFor={fieldId}
       label={label}
       srOnlyLabel={asDisplay}
+      hint={hint}
     >
       <input
         ref={inputRef}
