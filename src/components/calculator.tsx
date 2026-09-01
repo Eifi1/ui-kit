@@ -4,6 +4,13 @@ import { Popover } from "./popover";
 import { cn } from "../lib/cn";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 
+/** Screen-reader names for the calculator panel's own controls. */
+export interface CalculatorButtonLabels {
+  calculation?: string;
+  backspace?: string;
+  equals?: string;
+}
+
 interface CalculatorButtonProps {
   /** Current field text — seeds the keypad so the user can keep calculating
    * from what's already entered. */
@@ -24,6 +31,10 @@ interface CalculatorButtonProps {
   onChange: (value: string, expression?: string) => void;
   className?: string;
   ariaLabel?: string;
+  /** Screen-reader names for the panel's own controls. `ariaLabel` above already
+   *  covers the trigger; these three were hardcoded English inside the popover,
+   *  which a translating host had no way to reach. */
+  labels?: CalculatorButtonLabels;
 }
 
 /** Keypad layout (4 columns). The final C/= row is rendered separately. */
@@ -65,9 +76,11 @@ function seed(initial: string): string {
 function CalculatorPanel({
   initial,
   onChange,
+  labels,
 }: {
   initial: string;
   onChange: (value: string, expression?: string) => void;
+  labels?: CalculatorButtonLabels;
 }) {
   const [expr, setExpr] = useState(() => seed(initial));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +125,7 @@ function CalculatorPanel({
     <div className="space-y-2">
       <input
         ref={inputRef}
-        aria-label="Calculation"
+        aria-label={labels?.calculation ?? "Calculation"}
         value={text}
         inputMode="decimal"
         onChange={(e) => apply(e.target.value)}
@@ -133,7 +146,7 @@ function CalculatorPanel({
             <button
               key="back"
               type="button"
-              aria-label="Backspace"
+              aria-label={labels?.backspace ?? "Backspace"}
               onClick={() => apply(text.slice(0, -1))}
               className={cn(KEY_BASE, KEY_ACCENT)}
             >
@@ -159,7 +172,7 @@ function CalculatorPanel({
         </button>
         <button
           type="button"
-          aria-label="Equals"
+          aria-label={labels?.equals ?? "Equals"}
           onClick={equals}
           className={cn(
             KEY_BASE,
@@ -179,7 +192,13 @@ function CalculatorPanel({
  * `relative` wrapper, positioned absolutely. The keypad seeds from the current
  * field value and writes evaluated results straight back through `onChange`.
  */
-export function CalculatorButton({ value, onChange, className, ariaLabel = "Open calculator" }: CalculatorButtonProps) {
+export function CalculatorButton({
+  value,
+  onChange,
+  className,
+  ariaLabel = "Open calculator",
+  labels,
+}: CalculatorButtonProps) {
   return (
     <Popover
       width={224}
@@ -200,7 +219,7 @@ export function CalculatorButton({ value, onChange, className, ariaLabel = "Open
         </button>
       )}
     >
-      {() => <CalculatorPanel initial={value} onChange={onChange} />}
+      {() => <CalculatorPanel initial={value} onChange={onChange} labels={labels} />}
     </Popover>
   );
 }

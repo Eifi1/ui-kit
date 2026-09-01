@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { CalculatorButton } from "./calculator";
+import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
@@ -17,6 +17,10 @@ interface NumberInputProps {
   onCommit?: (value: string) => void;
   label?: ReactNode;
   ariaLabel?: string;
+  /** Names for the calculator this field renders — its trigger, and the controls
+   *  inside the popover. English defaults, so a host that does not translate is
+   *  unaffected. */
+  labels?: { calculatorTrigger?: string; calculator?: CalculatorButtonLabels };
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -56,6 +60,7 @@ export function NumberInput({
   onCommit,
   label,
   ariaLabel,
+  labels,
   placeholder,
   disabled,
   autoFocus,
@@ -134,7 +139,13 @@ export function NumberInput({
         )}
       />
       {showCalc && (
-        <CalculatorButton value={value} onChange={onChange} className="absolute inset-y-0 right-0 px-2.5" />
+        <CalculatorButton
+          value={value}
+          onChange={onChange}
+          className="absolute inset-y-0 right-0 px-2.5"
+          ariaLabel={labels?.calculatorTrigger}
+          labels={labels?.calculator}
+        />
       )}
       {showNumpad && (
         <NumberPadSheet value={value} onChange={onChange} onDone={() => inputRef.current?.blur()} label={label} />
