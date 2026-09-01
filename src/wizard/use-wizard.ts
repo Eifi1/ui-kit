@@ -194,8 +194,20 @@ export function useWizard<TData extends Record<string, unknown>>(
           }
         }
       }
-    } catch {
-      return false;
+    } catch (err) {
+      // FALL THROUGH, do not return. A bare `return false` here blocked Next while
+      // skipping the `if (!ok)` block below — the only thing that shows a message,
+      // and whose own comment is "say something anyway, so the user is not left with
+      // a Next button that silently does nothing". So a validator that threw (an
+      // async one whose request rejected, a null dereference in a field rule)
+      // produced exactly the outcome that block was written to prevent: no field
+      // errors, no toast, `onValidationFailed` never called, nothing in the console.
+      //
+      // The step still must not advance; `ok = false` is what says so. Whatever
+      // partial `errors` the loop had collected before the throw are kept — they are
+      // real, and an empty set is what routes this to the generic message.
+      console.error("[wizard] a step validator threw", err);
+      ok = false;
     }
     if (!ok) {
       dispatch({ type: "SET_FIELD_ERRORS", errors });
