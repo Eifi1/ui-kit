@@ -3,7 +3,7 @@ import { Calendar, CalendarClock, ChevronLeft, ChevronRight, X } from "lucide-re
 import { cn } from "../lib/cn";
 import { addDaysIso, formatIsoDate } from "../lib/dates";
 import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
-import { MiniCalendar } from "./mini-calendar";
+import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
 
@@ -22,6 +22,10 @@ interface DatePickerBaseProps {
   className?: string;
   /** Intl options for the trigger's formatted date (default: locale short date). */
   formatOptions?: Intl.DateTimeFormatOptions;
+  /** Passed through to the {@link MiniCalendar} this opens. Its month arrows are
+   *  icon-only, so their `aria-label` is the only name they have — and the package
+   *  ships English defaults, which a translating host has to be able to replace. */
+  calendarLabels?: MiniCalendarProps["labels"];
 }
 
 /** A field-styled trigger that opens a portalled MiniCalendar. Shared by the
@@ -182,6 +186,7 @@ export function DatePicker({
   today,
   todayLabel,
   className,
+  calendarLabels,
   ...rest
 }: DatePickerProps) {
   const field = (
@@ -200,6 +205,7 @@ export function DatePicker({
           locale={locale}
           min={min}
           max={max}
+          labels={calendarLabels}
           onSelect={(iso) => {
             onChange(iso);
             close();
@@ -281,6 +287,7 @@ export function DateRangePicker({
   formatOptions,
   separator = " – ",
   presets,
+  calendarLabels,
   ...rest
 }: DateRangePickerProps) {
   const a = formatIsoDate(from, locale, formatOptions);
@@ -298,6 +305,7 @@ export function DateRangePicker({
       locale={locale}
       min={min}
       max={max}
+      labels={calendarLabels}
       onSelect={(f, t) => {
         onChange(f, t);
         // Two-click range: only dismiss once both ends are chosen.

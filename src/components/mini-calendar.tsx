@@ -14,6 +14,12 @@ export interface MiniCalendarProps {
   /** Optional inclusive ISO bounds; days outside `[min, max]` are disabled. */
   min?: string;
   max?: string;
+  /** Screen-reader names for the two month arrows. The package carries no
+   *  translation catalog (see the README), so every user-facing string is a prop
+   *  with an English default — these two were the exception, and a German app
+   *  reached this component through a bare re-export and announced them in
+   *  English on a page whose `<html lang>` says `de`. */
+  labels?: { previousMonth?: string; nextMonth?: string };
 }
 
 /**
@@ -23,7 +29,16 @@ export interface MiniCalendarProps {
  * In `single` mode each click selects one day. Days outside `min`/`max` (when
  * given) are disabled.
  */
-export function MiniCalendar({ from, to, locale, onSelect, mode = "range", min, max }: MiniCalendarProps) {
+export function MiniCalendar({
+  from,
+  to,
+  locale,
+  onSelect,
+  mode = "range",
+  min,
+  max,
+  labels,
+}: MiniCalendarProps) {
   const fromDate = parseIsoDate(from);
   const toDate = parseIsoDate(to);
   const minDate = min ? parseIsoDate(min) : null;
@@ -105,7 +120,7 @@ export function MiniCalendar({ from, to, locale, onSelect, mode = "range", min, 
         <button
           type="button"
           onClick={() => move(-1)}
-          aria-label="Previous month"
+          aria-label={labels?.previousMonth ?? "Previous month"}
           className="rounded p-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
         >
           <ChevronLeft className="size-4" />
@@ -114,7 +129,7 @@ export function MiniCalendar({ from, to, locale, onSelect, mode = "range", min, 
         <button
           type="button"
           onClick={() => move(1)}
-          aria-label="Next month"
+          aria-label={labels?.nextMonth ?? "Next month"}
           className="rounded p-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
         >
           <ChevronRight className="size-4" />

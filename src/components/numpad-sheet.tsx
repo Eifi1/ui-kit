@@ -23,6 +23,14 @@ import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
  * the root keeps the host input focused (caret stays, keyboard stays hidden) as
  * the user taps keys; the buttons' `onClick` still fires.
  */
+/** Screen-reader names for the pad itself and its three non-digit keys. */
+export interface NumberPadSheetLabels {
+  pad?: string;
+  backspace?: string;
+  clear?: string;
+  equals?: string;
+}
+
 type PadKey =
   | { kind: "ins"; label: string; ins: string; accent?: boolean }
   | { kind: "back" };
@@ -59,6 +67,7 @@ export function NumberPadSheet({
   onChange,
   onDone,
   label,
+  labels,
 }: {
   value: string;
   /** Fired with the raw (sanitised) field text on every key — same contract as
@@ -70,6 +79,9 @@ export function NumberPadSheet({
   /** Optional field label, echoed in the sheet header so the user still knows
    * which field they're editing when the sheet covers it. */
   label?: ReactNode;
+  /** Screen-reader names for the pad itself and its three non-digit keys. The
+   * digits and operators need none — their visible glyph IS the name. */
+  labels?: NumberPadSheetLabels;
 }) {
   useBodyScrollLock(true);
 
@@ -86,7 +98,7 @@ export function NumberPadSheet({
   const sheet = (
     <div
       role="group"
-      aria-label="Number pad"
+      aria-label={labels?.pad ?? "Number pad"}
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}
@@ -111,7 +123,7 @@ export function NumberPadSheet({
             <button
               key="back"
               type="button"
-              aria-label="Backspace"
+              aria-label={labels?.backspace ?? "Backspace"}
               onClick={backspace}
               className={cn(PAD_BTN, PAD_ACCENT)}
             >
@@ -132,10 +144,10 @@ export function NumberPadSheet({
       </div>
 
       <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-        <button type="button" aria-label="Clear" onClick={clearAll} className={cn(PAD_BTN, PAD_ACCENT)}>
+        <button type="button" aria-label={labels?.clear ?? "Clear"} onClick={clearAll} className={cn(PAD_BTN, PAD_ACCENT)}>
           C
         </button>
-        <button type="button" aria-label="Equals" onClick={equals} className={cn(PAD_BTN, PAD_ACCENT)}>
+        <button type="button" aria-label={labels?.equals ?? "Equals"} onClick={equals} className={cn(PAD_BTN, PAD_ACCENT)}>
           =
         </button>
         <button

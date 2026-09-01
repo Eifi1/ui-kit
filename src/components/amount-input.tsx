@@ -5,8 +5,8 @@ import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
 import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { CalculatorButton } from "./calculator";
-import { NumberPadSheet } from "./numpad-sheet";
+import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
+import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import {
   commitExpression,
@@ -29,6 +29,20 @@ interface AmountInputProps {
   className?: string;
   id?: string;
   ariaLabel?: string;
+  /** Every user-facing string this component and the two it composes own, so a
+   *  translating host can supply its own. The package carries no translation
+   *  catalog (see the README) — English defaults, each key optional, so the other
+   *  consumer apps are unaffected. `currency` names the picker chip and is
+   *  suffixed with the selected code; the rest are pass-through. */
+  labels?: {
+    currency?: string;
+    currencySearch?: string;
+    /** Names the calculator TRIGGER this component renders. `calculator` below
+     *  names the controls inside the popover it opens. */
+    calculatorTrigger?: string;
+    pad?: NumberPadSheetLabels;
+    calculator?: CalculatorButtonLabels;
+  };
   /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
    *  new-transaction form can jump straight to amount entry (feedback #70). */
   autoFocus?: boolean;
@@ -152,7 +166,7 @@ function isResultOf(previous: string, text: string): boolean {
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start" }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
@@ -318,7 +332,15 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             asDisplay ? "bottom-1 right-0" : "inset-y-1 right-1",
           )}
         >
-          {showCalc && <CalculatorButton value={shown} onChange={handleText} className="px-1.5" />}
+          {showCalc && (
+            <CalculatorButton
+              value={shown}
+              onChange={handleText}
+              className="px-1.5"
+              ariaLabel={labels?.calculatorTrigger}
+              labels={labels?.calculator}
+            />
+          )}
           {currency && !editable && (
             <span
               aria-hidden
@@ -335,7 +357,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              aria-label={selected ? `Currency: ${selected.code}` : "Currency"}
+              aria-label={
+                selected ? `${labels?.currency ?? "Currency"}: ${selected.code}` : (labels?.currency ?? "Currency")
+              }
               className={cn(
                 "flex items-center gap-1 rounded px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
                 asDisplay ? "text-sm" : "text-xs",
@@ -355,7 +379,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                 query={query}
                 onQueryChange={setQuery}
                 inputRef={inputRef}
-                placeholder="Search currency"
+                placeholder={labels?.currencySearch ?? "Search currency"}
               />
             }
           >
@@ -388,7 +412,13 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         )}
         </div>
         {showNumpad && (
-          <NumberPadSheet value={shown} onChange={handleText} onDone={() => innerRef.current?.blur()} label={label} />
+          <NumberPadSheet
+            value={shown}
+            onChange={handleText}
+            onDone={() => innerRef.current?.blur()}
+            label={label}
+            labels={labels?.pad}
+          />
         )}
       </div>
     );
