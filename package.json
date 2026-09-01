@@ -26,15 +26,11 @@
   "peerDependencies": {
     "react": ">=19",
     "react-dom": ">=19",
-    "react-hook-form": ">=7",
     "react-router": "^8.3.0",
     "recharts": ">=3",
     "sonner": ">=2"
   },
   "peerDependenciesMeta": {
-    "react-hook-form": {
-      "optional": true
-    },
     "react-router": {
       "optional": true
     },
@@ -59,7 +55,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
     "jsdom": "^26.1.0",
-    "react-hook-form": "^7.71.2",
     "react-router": "^8.3.0",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",

@@ -93,21 +93,25 @@ export * from "./feedback/feedback-inbox";
 
 // ── multi-step wizard ────────────────────────────────────────────────────────
 // The engine (step machine, validators, collected data), the chrome around it
-// (indicator + nav bar + cancel confirm) and the field group its steps are built
-// from. `components/wizard-stepper` next door is a different, much smaller
-// thing: a bare step indicator for a two-step import flow, with no engine.
+// (indicator + nav bar + cancel confirm) and the review step it ends on.
+// `components/wizard-stepper` next door is a different, much smaller thing: a bare
+// step indicator for a two-step import flow, with no engine.
 //
-// react-hook-form is an OPTIONAL peer — only `useRhfWizardStep` needs it, and
-// only as a type. A wizard whose steps validate by hand pulls in nothing.
+// Two modules were removed here rather than kept as stock. `wizard-field` held a
+// `WizardField`/`WizardSelectField` pair that had never been rendered in any app —
+// a field group nothing was built from, which this comment used to advertise. And
+// `use-rhf-wizard-step` was the only thing in the package that touched
+// react-hook-form, for a hook neither consumer called: keeping it meant an optional
+// peer, a dev dependency and a type import in every consumer's typecheck, bought
+// for nobody. A design system may carry stock; untested stock nothing has ever
+// rendered is not stock, it is a liability with an export.
 export * from "./wizard/types";
 export * from "./wizard/use-wizard";
 export * from "./wizard/wizard-context";
 export * from "./wizard/validation";
 export * from "./wizard/wizard-step";
-export * from "./wizard/wizard-field";
 export * from "./wizard/wizard-summary";
 export * from "./wizard/stepper-nav";
-export * from "./wizard/use-rhf-wizard-step";
 
 // ── guided tours ─────────────────────────────────────────────────────────────
 export * from "./tour/tour";
