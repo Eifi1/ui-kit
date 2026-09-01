@@ -46,9 +46,28 @@ interface CommandPaletteProps {
   /**
    * Returns results for a query (called debounced as the user types; an empty
    * query is allowed — return defaults like pages/recent). Sync or async; stale
-   * async responses are ignored. Wrap in useCallback to avoid needless re-runs.
+   * async responses are ignored.
+   *
+   * Its IDENTITY is not a re-run signal — it is read through a ref, so the palette
+   * never re-searches merely because the caller rebuilt the callback. That is
+   * deliberate: a provider closing over a list rendered from a query allocates a new
+   * function on most renders, and re-running the search on each would make typing
+   * stutter. Use {@link CommandPaletteProps.revision} when the DATA behind the
+   * provider changes.
    */
   search: (query: string) => CommandItem[] | Promise<CommandItem[]>;
+  /**
+   * Anything whose change means the current results are out of date — typically the
+   * arrays the provider searches over. Compared by identity (as an effect dependency
+   * would be), so pass stable references: a `data = []` default allocates a fresh
+   * array on every render while a query is pending and would re-search forever.
+   *
+   * Without it, a provider whose data arrives AFTER the palette opened never gets
+   * asked again: the user's last keystroke settles the debounce, the queries resolve a
+   * moment later, and the groups they would have contributed are simply absent until
+   * another keystroke. That is the ordinary first open on a cold cache.
+   */
+  revision?: unknown;
   labels?: Partial<CommandPaletteLabels>;
 }
 
@@ -72,7 +91,13 @@ export function useCommandKey(onOpen: () => void): void {
  * results via the `search` provider (pages, actions, records, …); each result
  * carries its own `onSelect`.
  */
-export function CommandPalette({ open, onClose, search, labels }: CommandPaletteProps) {
+export function CommandPalette({
+  open,
+  onClose,
+  search,
+  revision,
+  labels,
+}: CommandPaletteProps) {
   const l = { ...DEFAULT_LABELS, ...labels };
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CommandItem[]>([]);
@@ -117,7 +142,10 @@ export function CommandPalette({ open, onClose, search, labels }: CommandPalette
     };
     const t = setTimeout(run, query ? 150 : 0);
     return () => clearTimeout(t);
-  }, [query, open]);
+    // `revision`, not `search`: see the prop's docstring. The debounce is re-armed on a
+    // revision change, which is right — data arriving is not a keystroke and there is
+    // nothing to feel laggy about.
+  }, [query, open, revision]);
 
   // Group results, preserving first-seen group order; keep a flat list for nav.
   const { groups, flat } = useMemo(() => {
