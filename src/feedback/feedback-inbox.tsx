@@ -18,6 +18,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Button, Textarea } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
+import { FeedbackAttachmentField } from "./feedback-attachment";
+import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
 /**
  * The feedback **inbox**, as the parts two apps were each writing separately.
@@ -425,10 +427,11 @@ export function FeedbackNoteEditor({
   cancelLabel,
   placeholder,
   rows = 3,
+  attachment,
 }: {
   initial: string;
   pending: boolean;
-  onSave: (value: string) => void;
+  onSave: (value: string, attachment?: File | null) => void;
   onCancel: () => void;
   saveLabel: ReactNode;
   cancelLabel: ReactNode;
@@ -437,34 +440,68 @@ export function FeedbackNoteEditor({
    *  gone exactly when it is being followed. */
   placeholder?: ReactNode;
   rows?: number;
+  /** Offer a picture with the note (Steering Design feedback #128). Omitted,
+   *  the editor is exactly the text box it always was — which is what the
+   *  *outcome* editor beside it wants, since an outcome is the answer rather
+   *  than the evidence. */
+  attachment?: FeedbackNoteAttachment;
 }) {
   const [draft, setDraft] = useState(initial);
+  const [file, setFile] = useState<File | null>(null);
   useEffect(() => {
     // Re-seed when the editor is reopened with different content.
     setDraft(initial);
+    setFile(null);
   }, [initial]);
+  const submit = () => onSave(draft, file);
   return (
     <div
       className="space-y-2"
       onKeyDown={(event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !pending) {
           event.preventDefault();
-          onSave(draft);
+          submit();
         }
       }}
     >
       {placeholder && <p className="text-xs text-slate-500 dark:text-slate-400">{placeholder}</p>}
       <Textarea rows={rows} value={draft} onChange={(event) => setDraft(event.target.value)} />
+      {attachment && (
+        <FeedbackAttachmentField
+          value={file}
+          onChange={setFile}
+          labels={attachment.labels}
+          accept={attachment.accept}
+          maxBytes={attachment.maxBytes}
+          onError={attachment.onError}
+          onCaptureScreenshot={attachment.onCaptureScreenshot}
+          // Within its own subtree, not on `document`: this editor sits inline
+          // on a page that has other fields, so a paste made in one of them is
+          // meant for that one. The textarea above is where the caret already
+          // is, and the event bubbles here from it.
+        />
+      )}
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onCancel}>
           {cancelLabel}
         </Button>
-        <Button variant="brand" disabled={pending} onClick={() => onSave(draft)}>
+        <Button variant="brand" disabled={pending} onClick={submit}>
           {saveLabel}
         </Button>
       </div>
     </div>
   );
+}
+
+/** What {@link FeedbackNoteEditor} needs in order to offer a picture with the
+ *  note: the same four things {@link FeedbackAttachmentField} takes, so the
+ *  reply path is held to the app's own limits rather than to the defaults. */
+export interface FeedbackNoteAttachment {
+  labels: FeedbackAttachmentLabels;
+  accept?: string[];
+  maxBytes?: number;
+  onError?: (kind: "type" | "size") => void;
+  onCaptureScreenshot?: () => Promise<File | null>;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { forwardRef, useId, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle } from "lucide-react";
-import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip } from "./tooltip";
@@ -711,16 +711,97 @@ export interface TabsProps<T extends string> {
   active: T;
   onChange: (id: T) => void;
   className?: string;
+  /** Let the strip WRAP onto as many rows as it needs below `md`, instead of
+   *  scrolling sideways — for a strip carrying more tabs than fit on a phone row.
+   *  Keksdose live #262: ten reports on a 406px screen showed about three, and the
+   *  round-2 answer (a <select> below `md`) cost a tap to open and a tap to choose.
+   *  *"I would rather keep the tabs but have multirow tabs depending on the screen
+   *  size, I will not loose the function to see all reports at once and navigate by
+   *  single click rather by double click."*
+   *
+   *  The active MARKER has to change with the layout, which is why this cannot be
+   *  done from a call site with a `className`: the default marker is a `border-b-2`
+   *  underline riding the container's own bottom rule, and a tab sitting in a row
+   *  that does not touch that rule cannot wear it — every row but the last would
+   *  show a stray line floating mid-strip, and `-mb-px` would pull each chip a
+   *  pixel into the row beneath it. A wrapped strip marks the active tab with a
+   *  filled brand chip instead, which is also the only thing findable at a glance
+   *  among ten same-weight labels on three rows.
+   *
+   *  From `md` up NOTHING changes: same single-line underline strip, same paddings,
+   *  same colours as every other strip in the app.
+   *
+   *  Opt-in on purpose. The three-tab strips (invoices, statements, bank imports)
+   *  already fit a phone row, and turning those into chips would be an unrequested
+   *  redesign of three other pages. */
+  wrap?: boolean;
+  /** Accessible name for the `role="tablist"` container. Every tab carries its own
+   *  text, so this names the GROUP, not the tabs; leave it unset where a visible
+   *  heading immediately above already does that job. */
+  label?: string;
 }
 
-export function Tabs<T extends string>({ tabs, active, onChange, className }: TabsProps<T>) {
+// The two shapes are written out as whole strings rather than as one base plus a
+// pile of `md:` overrides. The unwrapped pair is character-for-character what this
+// component has always emitted, so the strips that do not opt in cannot drift; the
+// wrapped pair is authored from scratch, so no unprefixed utility has to be beaten
+// by its own `md:` twin through tailwind-merge. The only ordering this relies on is
+// Tailwind's own: unprefixed utilities are emitted first, then `md:`, then
+// `md:dark:` — so from 768px up the wrapped strip resolves to exactly the paint of
+// the default one, in both themes.
+const TABLIST_CLASSES =
+  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-800";
+const TABLIST_WRAP_CLASSES =
+  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-slate-200 md:dark:border-slate-800";
+
+const TAB_CLASSES =
+  "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-slate-300";
+const TAB_ACTIVE_CLASSES = "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100";
+const TAB_INACTIVE_CLASSES =
+  "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200";
+
+// Below `md`, a chip: `py-2` on `text-xs` is exactly 32px tall, and ten German
+// report labels then land in three rows on a 406px screen (four at `text-sm`). The
+// active fill is the app's own selected pair, `--brand` / `--brand-contrast`: the
+// palette store writes both halves of it together for every preset and both themes,
+// so the contrast holds everywhere (5.1:1 at its worst preset) without a hard-coded
+// colour. Inactive chips take the raised card surface with full-strength body text —
+// all ten have to stay readable; it is the FILL, not the text weight, that says
+// which one is open.
+const TAB_WRAP_CLASSES =
+  "whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
+const TAB_WRAP_ACTIVE_CLASSES =
+  "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-slate-900 md:text-slate-900 md:dark:border-slate-100 md:dark:text-slate-100";
+const TAB_WRAP_INACTIVE_CLASSES =
+  "bg-[var(--bg-surface)] text-[var(--text-primary)] md:border-transparent md:text-slate-500 md:hover:border-slate-300 md:hover:text-slate-700 md:dark:text-slate-400 md:dark:hover:text-slate-200";
+
+export function Tabs<T extends string>({ tabs, active, onChange, className, wrap = false, label }: TabsProps<T>) {
+  // Arrow keys walk the strip in DOM order (ARIA tabs pattern), which is what keeps
+  // a WRAPPED strip navigable: the rows flow in DOM order too, so Right off the end
+  // of row one lands on the first chip of row two rather than nowhere. Home/End jump
+  // to the ends. Focus only — activation stays on click/Enter/Space, because a tab
+  // here can be a real route and moving focus must not navigate.
+  const onListKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (step === 0 && e.key !== "Home" && e.key !== "End") return;
+    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const from = items.indexOf(document.activeElement as HTMLElement);
+    if (from === -1) return;
+    e.preventDefault();
+    const to =
+      e.key === "Home"
+        ? 0
+        : e.key === "End"
+          ? items.length - 1
+          : (from + step + items.length) % items.length;
+    items[to]?.focus();
+  };
   return (
     <div
       role="tablist"
-      className={cn(
-        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-800",
-        className,
-      )}
+      aria-label={label}
+      onKeyDown={onListKeyDown}
+      className={cn(wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES, className)}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
@@ -730,10 +811,14 @@ export function Tabs<T extends string>({ tabs, active, onChange, className }: Ta
           role: "tab" as const,
           "aria-selected": isActive,
           className: cn(
-            "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-slate-300",
-            isActive
-              ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
-              : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200",
+            wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
+            wrap
+              ? isActive
+                ? TAB_WRAP_ACTIVE_CLASSES
+                : TAB_WRAP_INACTIVE_CLASSES
+              : isActive
+                ? TAB_ACTIVE_CLASSES
+                : TAB_INACTIVE_CLASSES,
           ),
         };
         const inner = (

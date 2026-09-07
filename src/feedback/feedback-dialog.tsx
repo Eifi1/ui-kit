@@ -1,21 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
 import { useMediaQuery } from "../hooks/use-media-query";
+import {
+  DEFAULT_ATTACHMENT_ACCEPT,
+  DEFAULT_MAX_ATTACHMENT_BYTES,
+  FeedbackAttachmentField,
+} from "./feedback-attachment";
 
 export interface FeedbackCategoryOption {
   value: string;
   label: string;
 }
 
-export interface FeedbackDialogLabels {
-  title: string;
-  category: string;
-  subject: string;
-  body: string;
-  attachment: string;
+export interface FeedbackAttachmentLabels {
+  /** The heading over the field. Optional: a note editor puts the buttons
+   *  straight under its textarea, where a second heading is noise. */
+  attachment?: string;
   attachmentAdd: string;
   /** Label for the "capture screenshot" button. Optional — falls back to an English default. */
   attachmentCapture?: string;
@@ -23,6 +25,14 @@ export interface FeedbackDialogLabels {
    *  straight in. Optional — falls back to an English default. */
   attachmentPaste?: string;
   attachmentRemove: string;
+}
+
+export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
+  title: string;
+  category: string;
+  subject: string;
+  body: string;
+  attachment: string;
   submitHint: string;
   cancel: string;
   save: string;
@@ -34,9 +44,6 @@ export interface FeedbackSubmission {
   category: string;
   attachment: File | null;
 }
-
-const DEFAULT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
 
 /**
  * The generic feedback form dialog: category + subject + body + an optional image
@@ -63,8 +70,8 @@ export function FeedbackDialog({
   onSubmit,
   submitting = false,
   contextSlot,
-  attachmentAccept = DEFAULT_ACCEPT,
-  maxAttachmentBytes = DEFAULT_MAX_BYTES,
+  attachmentAccept = DEFAULT_ATTACHMENT_ACCEPT,
+  maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
   onAttachmentError,
   onCaptureScreenshot,
 }: {
@@ -90,9 +97,6 @@ export function FeedbackDialog({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
-  const [capturing, setCapturing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useMediaQuery(PHONE_QUERY, false);
 
   // Reset the form whenever the dialog is (re)opened.
@@ -101,76 +105,8 @@ export function FeedbackDialog({
       setTitle("");
       setBody("");
       setAttachment(null);
-      setCapturing(false);
     }
   }, [open]);
-
-  // Object-URL preview lifecycle (create on change, revoke on cleanup).
-  useEffect(() => {
-    if (!attachment) {
-      setAttachmentPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(attachment);
-    setAttachmentPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [attachment]);
-
-  const pickAttachment = (file: File | undefined | null) => {
-    if (!file) return;
-    if (!attachmentAccept.includes(file.type)) {
-      onAttachmentError?.("type");
-      return;
-    }
-    if (file.size > maxAttachmentBytes) {
-      onAttachmentError?.("size");
-      return;
-    }
-    setAttachment(file);
-  };
-
-  // The paste handler is registered once per opening rather than per render, so
-  // it reads `pickAttachment` — which closes over props that change identity on
-  // every render — out of a ref rather than out of its own dependency list.
-  const pick = useRef(pickAttachment);
-  useEffect(() => {
-    pick.current = pickAttachment;
-  });
-
-  // On `document`, not on the panel: the Modal focuses its own panel on open and
-  // traps Tab inside it, so while this dialog is up every paste in the page is
-  // meant for it — including the one made with nothing in particular focused,
-  // which never reaches a React `onPaste` on a child.
-  useEffect(() => {
-    if (!open) return;
-    const onPaste = (event: ClipboardEvent) => {
-      const items = Array.from(event.clipboardData?.items ?? []);
-      const image = items.find((item) => item.kind === "file" && item.type.startsWith("image/"));
-      const file = image?.getAsFile();
-      if (!file) return;
-      // Only once there IS an image: a paste of text into the body must stay a
-      // paste of text, and a clipboard holding both is a copy whose text half is
-      // what the field was focused for.
-      event.preventDefault();
-      // Clipboard images arrive named "image.png" at best and unnamed at worst,
-      // and the name is what the inbox shows beside the thumbnail. A name that
-      // says where it came from is more use than the browser's.
-      pick.current(new File([file], pastedName(file.type), { type: file.type }));
-    };
-    document.addEventListener("paste", onPaste);
-    return () => document.removeEventListener("paste", onPaste);
-  }, [open]);
-
-  const captureScreenshot = async () => {
-    if (!onCaptureScreenshot || capturing) return;
-    setCapturing(true);
-    try {
-      const file = await onCaptureScreenshot();
-      if (file) pickAttachment(file);
-    } finally {
-      setCapturing(false);
-    }
-  };
 
   const canSubmit = !!title && !!body && !submitting;
   const trySubmit = () => {
@@ -198,68 +134,20 @@ export function FeedbackDialog({
     <Textarea rows={5} label={labels.body} value={body} onChange={(e) => setBody(e.target.value)} />
   );
   const attachmentField = (
-    <div>
-      <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {labels.attachment}
-      </div>
-      {attachment ? (
-        <div className="flex items-start gap-2">
-          {attachment.type.startsWith("image/") && attachmentPreview ? (
-            <img
-              src={attachmentPreview}
-              alt={attachment.name}
-              className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
-            />
-          ) : (
-            // Non-image attachments (PDF, text) can't preview as an <img>, so
-            // show a neutral file tile with the name/size beside it instead.
-            <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500">
-              <FileText className="size-8" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm text-slate-700 dark:text-slate-200">{attachment.name}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">{Math.round(attachment.size / 1024)} KB</div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAttachment(null)}
-            aria-label={labels.attachmentRemove}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-              <Paperclip className="size-4" /> {labels.attachmentAdd}
-            </Button>
-            {onCaptureScreenshot && (
-              <Button type="button" variant="secondary" onClick={() => void captureScreenshot()} disabled={capturing}>
-                <Camera className="size-4" /> {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
-              </Button>
-            )}
-          </div>
-          {/* Said out loud, because a gesture with no affordance is a gesture
-              nobody finds. */}
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {labels.attachmentPaste ?? "…or paste a screenshot from the clipboard."}
-          </p>
-        </div>
-      )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={attachmentAccept.join(",")}
-        className="sr-only"
-        onChange={(e) => {
-          pickAttachment(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-    </div>
+    <FeedbackAttachmentField
+      value={attachment}
+      onChange={setAttachment}
+      labels={labels}
+      accept={attachmentAccept}
+      maxBytes={maxAttachmentBytes}
+      onError={onAttachmentError}
+      onCaptureScreenshot={onCaptureScreenshot}
+      // On `document`, not on the panel: the Modal focuses its own panel on open
+      // and traps Tab inside it, so while this dialog is up every paste in the
+      // page is meant for it — including the one made with nothing in
+      // particular focused, which never reaches a React `onPaste` on a child.
+      documentPaste={open}
+    />
   );
 
   return (
@@ -318,16 +206,4 @@ export function FeedbackDialog({
       </div>
     </Modal>
   );
-}
-
-/** What a pasted image is called once it is an attachment.
- *
- *  The extension is read off the mime type rather than assumed to be `.png`:
- *  Safari puts TIFF on the clipboard and a file called `pasted.png` that is not
- *  a PNG is one the receiving end opens wrong. */
-function pastedName(type: string): string {
-  const subtype = type.split("/")[1] ?? "png";
-  // `image/svg+xml` and friends carry a suffix that is not part of the
-  // extension, and none of them are in the accepted list anyway.
-  return `pasted.${subtype.split("+")[0]}`;
 }

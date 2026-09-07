@@ -22,6 +22,11 @@ interface DatePickerBaseProps {
   className?: string;
   /** Intl options for the trigger's formatted date (default: locale short date). */
   formatOptions?: Intl.DateTimeFormatOptions;
+  /** Render the trigger's text for an ISO date yourself; wins over `formatOptions`.
+   *  For a host whose date rendering is more than one `Intl` call can say — Keksdose
+   *  puts the weekday's name in the UI language beside digits ordered by a separate
+   *  format preference, two locales in one string. `locale` still drives the calendar. */
+  formatValue?: (iso: string) => string;
   /** Passed through to the {@link MiniCalendar} this opens. Its month arrows are
    *  icon-only, so their `aria-label` is the only name they have — and the package
    *  ships English defaults, which a translating host has to be able to replace. */
@@ -181,6 +186,7 @@ export function DatePicker({
   min,
   max,
   formatOptions,
+  formatValue,
   step,
   stepLabels,
   today,
@@ -189,12 +195,13 @@ export function DatePicker({
   calendarLabels,
   ...rest
 }: DatePickerProps) {
+  const render = formatValue ?? ((iso: string) => formatIsoDate(iso, locale, formatOptions));
   const field = (
     <DateField
       {...rest}
       className={step ? "min-w-0 flex-1" : className}
       hasValue={Boolean(value)}
-      triggerText={value ? formatIsoDate(value, locale, formatOptions) : (placeholder ?? "")}
+      triggerText={value ? render(value) : (placeholder ?? "")}
       onClear={() => onChange("")}
     >
       {(close) => (
@@ -285,13 +292,15 @@ export function DateRangePicker({
   min,
   max,
   formatOptions,
+  formatValue,
   separator = " – ",
   presets,
   calendarLabels,
   ...rest
 }: DateRangePickerProps) {
-  const a = formatIsoDate(from, locale, formatOptions);
-  const b = formatIsoDate(to, locale, formatOptions);
+  const render = formatValue ?? ((iso: string) => formatIsoDate(iso, locale, formatOptions));
+  const a = from ? render(from) : "";
+  const b = to ? render(to) : "";
   const triggerText = from
     ? to
       ? `${a}${separator}${b}`

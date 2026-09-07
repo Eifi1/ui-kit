@@ -88,6 +88,7 @@ export * from "./shell/topbar-action-menu";
 // category badge and an opened report. The app still wires its own API, columns
 // and strings — see the note at the top of `feedback-inbox.tsx` for what is
 // deliberately left to it.
+export * from "./feedback/feedback-attachment";
 export * from "./feedback/feedback-dialog";
 export * from "./feedback/feedback-inbox";
 

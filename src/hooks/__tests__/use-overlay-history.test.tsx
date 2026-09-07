@@ -26,10 +26,52 @@ function liveSentinel(): string | null {
   return typeof id === "string" ? id : null;
 }
 
-/** jsdom fires popstate in a task, so every history traversal needs a flush. */
+/** jsdom fires popstate in a task, so every history traversal needs a flush.
+ *
+ * DRAINS the task queue rather than sleeping on the clock. This was
+ * `setTimeout(r, 25)`, which is a bet that 25ms is long enough for whatever jsdom has
+ * queued — true on an idle box and false when fifteen test files run at once, which is
+ * how two different tests in this file failed intermittently during feedback-loop run
+ * 37. Ten yields cost microseconds when there is nothing to do and take as long as they
+ * need when there is, because each one lets the queue run to completion before the next.
+ */
 async function settle() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 25));
+    for (let turn = 0; turn < 10; turn += 1) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  });
+}
+
+/**
+ * Press Back and wait for the navigation to ACTUALLY land.
+ *
+ * Every call site used to be `history.back()` followed by `setTimeout(25)`, which is a
+ * bet that the machine is idle when the task queue drains — and on a loaded box it
+ * loses. "never unwinds further than the entries it pushed" failed about one run in
+ * three during feedback-loop run 37, always at its closing assertion, because the Back
+ * had not been processed yet when the pathname was read. Nothing was wrong with the
+ * hook.
+ *
+ * Awaiting `popstate` makes the wait exactly as long as it needs to be. The timeout is
+ * only a backstop so a navigation that genuinely never happens fails as the caller's
+ * own assertion a line later, rather than hanging the suite for its full timeout.
+ */
+async function back() {
+  await act(async () => {
+    const landed = new Promise<void>((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        window.removeEventListener("popstate", done);
+        resolve();
+      }, 2000);
+      window.addEventListener("popstate", done, { once: true });
+    });
+    window.history.back();
+    await landed;
   });
 }
 
@@ -73,10 +115,7 @@ describe("useOverlayHistory", () => {
   it("closes the overlay when Back pops its entry", async () => {
     const onClose = vi.fn();
     render(<Nested outer inner={false} onCloseOuter={onClose} />);
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 25));
-    });
+    await back();
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(liveSentinel()).toBeNull();
   });
@@ -110,10 +149,7 @@ describe("useOverlayHistory", () => {
       await settle();
 
       const again = render(<Nested outer inner={false} />);
-      await act(async () => {
-        window.history.back();
-        await new Promise((r) => setTimeout(r, 25));
-      });
+      await back();
       expect(liveSentinel()).toBeNull();
       again.unmount();
       await settle();
@@ -125,10 +161,7 @@ describe("useOverlayHistory", () => {
     const onInner = vi.fn();
     const view = render(<Nested outer inner={false} onCloseOuter={onOuter} onCloseInner={onInner} />);
     view.rerender(<Nested outer inner onCloseOuter={onOuter} onCloseInner={onInner} />);
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 25));
-    });
+    await back();
     expect(onInner).toHaveBeenCalledTimes(1);
     expect(onOuter).not.toHaveBeenCalled();
     // ...and we are back on the dialog's own sentinel, which it still owns.
@@ -186,10 +219,7 @@ describe("useOverlayHistory", () => {
     }
     const view = render(<Host />);
     await settle();
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 25));
-    });
+    await back();
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(liveSentinel()).toBeNull();
     view.unmount();
@@ -214,10 +244,7 @@ describe("useOverlayHistory", () => {
     view.unmount();
     await settle();
     // And one Back press still leaves the page, rather than being spent on a husk.
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 25));
-    });
+    await back();
     expect(window.location.pathname).not.toBe("/second");
   });
 
@@ -234,10 +261,7 @@ describe("useOverlayHistory", () => {
       );
     }
     const view = render(<Host />);
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 25));
-    });
+    await back();
     view.unmount();
     await settle();
     expect(liveSentinel()).toBeNull();

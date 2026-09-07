@@ -217,6 +217,20 @@ export function Modal({
         className={cn(
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
           size === "lg" ? "max-w-lg" : "max-w-md",
+          // A panel taller than the screen has to scroll ITSELF. The backdrop is
+          // `fixed inset-0` and the body is scroll-locked while a dialog is open, so
+          // without this the overflow simply had nowhere to go: on a phone the panel
+          // is bottom-anchored, so it grew UPWARD past the top edge and the part that
+          // went past it could not be reached by any gesture (Keksdose live #254, on
+          // the price-merge dialog — but it was every dialog with more than a screen
+          // of content). `max-h-full` resolves against the backdrop's content box,
+          // which is the viewport minus its own padding, so the panel stops exactly
+          // where the screen does; `overscroll-contain` keeps the fling inside it.
+          //
+          // Three callers had already patched themselves with `max-h-[90vh]` +
+          // an inner scroller. Those still win — `cn` is tailwind-merge — and this is
+          // the default they should not have needed.
+          "max-h-full overflow-y-auto overscroll-contain",
           "p-4",
           // The grab affordance sits on the panel's own top strip: a drag handle of
           // its own would be one more control in a dialog that is mostly one field.

@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
@@ -14,8 +14,10 @@ type TooltipSide = "top" | "bottom" | "left" | "right";
  *  wider than the space beside its trigger gets clipped by whatever overflow
  *  container it sits in. So cap it and let long text wrap instead. The cap tracks
  *  the viewport as well, for narrow screens where 20rem is already most of it.
- *  Placement is still the caller's job: a capped bubble can only wrap, not move,
- *  so a trigger hard against the right edge wants `side="left"`. */
+ *  `side` is a preference rather than an instruction for the PORTALLED variant,
+ *  which measures the bubble and turns it round when it would not fit
+ *  (Steering Design feedback #126). The CSS-only one never learns its own size,
+ *  so there `side` is still the whole of the placement. */
 const TOOLTIP_SURFACE =
   "w-max max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
 
@@ -121,6 +123,10 @@ function isEmptyLabel(label: ReactNode): boolean {
 
 const TOOLTIP_GAP = 4;
 
+/** How close to the viewport edge a bubble may sit. Not zero: a label flush
+ *  against the glass reads as clipped even when every character is on screen. */
+const TOOLTIP_MARGIN = 4;
+
 const portalTransformBySide: Record<TooltipSide, string> = {
   right: "translate(0, -50%)",
   left: "translate(-100%, -50%)",
@@ -146,6 +152,116 @@ function tooltipAnchor(
   }
 }
 
+export interface TooltipSize {
+  width: number;
+  height: number;
+}
+
+export interface TooltipViewport {
+  width: number;
+  height: number;
+}
+
+export interface TooltipPlacement {
+  left: number;
+  top: number;
+  /** Which side it ended up on, which need not be the one that was asked for. */
+  side: TooltipSide;
+}
+
+const opposite: Record<TooltipSide, TooltipSide> = {
+  left: "right",
+  right: "left",
+  top: "bottom",
+  bottom: "top",
+};
+
+/** Whether the bubble clears the viewport edge on `side` of the trigger. */
+function roomOn(
+  r: AnchorRect,
+  side: TooltipSide,
+  size: TooltipSize,
+  viewport: TooltipViewport,
+): boolean {
+  switch (side) {
+    case "left":
+      return r.left - TOOLTIP_GAP - size.width >= TOOLTIP_MARGIN;
+    case "right":
+      return r.right + TOOLTIP_GAP + size.width <= viewport.width - TOOLTIP_MARGIN;
+    case "top":
+      return r.top - TOOLTIP_GAP - size.height >= TOOLTIP_MARGIN;
+    case "bottom":
+      return r.bottom + TOOLTIP_GAP + size.height <= viewport.height - TOOLTIP_MARGIN;
+  }
+}
+
+function sameRoom(
+  a: { size: TooltipSize; viewport: TooltipViewport },
+  b: { size: TooltipSize; viewport: TooltipViewport },
+): boolean {
+  return (
+    a.size.width === b.size.width &&
+    a.size.height === b.size.height &&
+    a.viewport.width === b.viewport.width &&
+    a.viewport.height === b.viewport.height
+  );
+}
+
+function clamp(value: number, low: number, high: number): number {
+  // `high` first, so a bubble taller or wider than the viewport is pinned to the
+  // top-left corner rather than to the bottom-right one — the start of a label
+  // is the half worth keeping.
+  return Math.max(low, Math.min(value, high));
+}
+
+/**
+ * Where the bubble actually goes, given how big it turned out to be.
+ *
+ * Two rules, and they are separate because they fix separate failures.
+ *
+ * **Turn round when the preferred side has no room.** `side` says which side of
+ * the trigger the label reads best on, and on a form near the left edge of the
+ * window that side is off the screen — the capped bubble can only wrap, not
+ * move, so what the reader gets is a sentence with its first half outside the
+ * glass. Flipped only when the *other* side is genuinely better: a trigger in a
+ * viewport too narrow for the bubble either way keeps the side it asked for, and
+ * the clamp below does what it can.
+ *
+ * **Then clamp both axes.** The cross axis is the one that needs it — a `top`
+ * bubble is centred on the trigger, so a trigger near the left edge pushes half
+ * the label off even though the side it is on is right — and clamping the main
+ * axis too costs nothing and covers the flip having nowhere to land.
+ *
+ * Pure, and measured in viewport pixels throughout, so it can be tested without
+ * a layout: the caller supplies the trigger's rect, the bubble's own size and
+ * the window.
+ */
+export function placeTooltip(
+  r: AnchorRect,
+  side: TooltipSide,
+  size: TooltipSize,
+  viewport: TooltipViewport,
+): TooltipPlacement {
+  const chosen =
+    roomOn(r, side, size, viewport) || !roomOn(r, opposite[side], size, viewport)
+      ? side
+      : opposite[side];
+  const point = tooltipAnchor(r, chosen);
+  const box =
+    chosen === "left"
+      ? { left: point.left - size.width, top: point.top - size.height / 2 }
+      : chosen === "right"
+        ? { left: point.left, top: point.top - size.height / 2 }
+        : chosen === "top"
+          ? { left: point.left - size.width / 2, top: point.top - size.height }
+          : { left: point.left - size.width / 2, top: point.top };
+  return {
+    left: clamp(box.left, TOOLTIP_MARGIN, viewport.width - size.width - TOOLTIP_MARGIN),
+    top: clamp(box.top, TOOLTIP_MARGIN, viewport.height - size.height - TOOLTIP_MARGIN),
+    side: chosen,
+  };
+}
+
 function PortalTooltip({
   label,
   side,
@@ -160,11 +276,38 @@ function PortalTooltip({
   children: ReactNode;
 }) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const bubbleRef = useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = useState(false);
   // The measure + scroll/resize-tracking lifecycle is owned by useAnchoredRect;
   // here we only map the rect to a side-specific anchor point.
   const rect = useAnchoredRect(triggerRef, visible);
-  const pos = rect ? tooltipAnchor(rect, side) : null;
+  // The bubble's own size and the window it has to fit in — neither of which is
+  // knowable in render: the width is whatever the label wrapped to inside the
+  // cap, and reading `window` while rendering is not a pure thing to do. Both
+  // are taken in a LAYOUT effect, so the correction lands before the browser
+  // paints and there is no frame in which the label sits off the screen.
+  const [room, setRoom] = useState<{ size: TooltipSize; viewport: TooltipViewport } | null>(null);
+  useLayoutEffect(() => {
+    const measured = visible ? bubbleRef.current?.getBoundingClientRect() : undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a measurement is the one thing a layout effect is for
+    setRoom((previous) => {
+      if (!measured) return null;
+      const next = {
+        size: { width: measured.width, height: measured.height },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      };
+      // Only publish what actually CHANGED: every re-measure allocates a fresh
+      // object, and a new object on every scroll event would re-render the
+      // bubble forever.
+      return previous && sameRoom(previous, next) ? previous : next;
+    });
+  }, [visible, rect, label]);
+
+  const point = rect ? tooltipAnchor(rect, side) : null;
+  // Unmeasured on the very first pass, where the anchor point plus the side's
+  // own transform is exactly what this always did. One layout effect later the
+  // size is known and the placement is decided properly.
+  const placed = rect && room ? placeTooltip(rect, side, room.size, room.viewport) : null;
 
   return (
     <>
@@ -179,18 +322,23 @@ function PortalTooltip({
         {children}
       </span>
       {visible &&
-        pos &&
+        point &&
         typeof document !== "undefined" &&
         createPortal(
           <span
+            ref={bubbleRef}
             role="tooltip"
             data-private={redact ? "" : undefined}
-            style={{
-              position: "fixed",
-              left: pos.left,
-              top: pos.top,
-              transform: portalTransformBySide[side],
-            }}
+            style={
+              placed
+                ? { position: "fixed", left: placed.left, top: placed.top }
+                : {
+                    position: "fixed",
+                    left: point.left,
+                    top: point.top,
+                    transform: portalTransformBySide[side],
+                  }
+            }
             className={cn(TOOLTIP_SURFACE, "pointer-events-none z-50")}
           >
             {label}
