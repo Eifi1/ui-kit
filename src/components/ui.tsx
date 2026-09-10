@@ -137,8 +137,23 @@ export const FIELD_FLOATING_PAD = "pt-4 pb-1";
 // Error/required highlight for a field that is missing a value — a rose border
 // and matching focus ring so the control itself shows what's wrong, not just a
 // note beside it (feedback #235). Layered after FIELD_BASE so twMerge wins.
+//
+// The `ring-1` is not decoration; it is what makes the highlight SURVIVE display
+// scaling (Keksdose live #295 — *"Account select boundary. It is not highlighted on
+// the sides."*). At 125%, the browser's usual setting on a 2560px screen, a 1px CSS
+// border is 1.25 device pixels: the horizontal edges land on whole rows and paint
+// solid, while one of the two VERTICAL edges lands across a pixel boundary and is
+// spread over two columns at partial coverage. Measured on the receipt's required
+// account field, dark theme, full rose = rgb(208,30,78): left/top/bottom all 208,
+// right 160 then 115 — the side that is supposed to shout, at 55–77% of the others.
+// A border plus a ring is 2 CSS px, so whatever the fraction there is always one
+// fully covered device pixel on every side (re-measured: worst side 241).
+//
+// A ring rather than `border-2`: a box-shadow adds no layout, so an invalid field
+// stays exactly the size of a valid one and nothing beside it moves when the value
+// arrives.
 export const FIELD_INVALID =
-  "border-rose-400 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-500/80 dark:focus:border-rose-400";
+  "border-rose-400 ring-1 ring-rose-400 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-500/80 dark:ring-rose-500/80 dark:focus:border-rose-400";
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 

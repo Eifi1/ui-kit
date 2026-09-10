@@ -38,4 +38,28 @@ describe("Modal", () => {
     expect(panel().className).toContain("max-h-[90vh]");
     expect(panel().className).not.toContain("max-h-full");
   });
+
+  /**
+   * Keksdose live #254, the 2026-09-07 rework: *"Enlarge the dialog in width for the
+   * desktop users."* Two callers had already reached past the `lg` cap with a
+   * hand-written `max-w-3xl` className, which is the signal that the size was
+   * missing rather than that those callers were unusual.
+   */
+  it.each([
+    ["md", "max-w-md"],
+    ["lg", "max-w-lg"],
+    ["xl", "max-w-3xl"],
+  ] as const)("caps the panel at the %s width", (size, expected) => {
+    render(
+      <Modal onClose={vi.fn()} size={size}>
+        <p>wide</p>
+      </Modal>,
+    );
+    expect(panel().className).toContain(expected);
+    // Still the full-width bottom sheet on a phone — the cap is a MAX and there is
+    // no floor under it. A `min-w-*` here is what would turn a wider dialog into a
+    // horizontally scrolling one at 406px.
+    expect(panel().className).toContain("w-full");
+    expect(panel().className).not.toMatch(/(^|\s)min-w-/);
+  });
 });

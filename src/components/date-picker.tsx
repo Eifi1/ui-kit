@@ -82,11 +82,20 @@ function DateField({
             )}
           >
             <span className={cn("truncate", !hasValue && "text-slate-400 dark:text-slate-500")}>
-              {/* `|| " "` — triggerText is "" when there is no value and no
+              {/* `|| " "` (a NON-BREAKING space) — triggerText is "" when there is no value and no
                   placeholder was passed. An empty span has no line box, so the
-                  trigger collapsed to its padding and sat shorter than every
-                  other field beside it. A space keeps the line height. */}
-              {triggerText || " "}
+                  trigger collapses to its padding and sits shorter than every
+                  other field beside it.
+
+                  It has to be a NON-BREAKING space. This read `|| " "` first, and
+                  that fix did nothing at all: an ordinary space is collapsible
+                  white space, and white space at the start and end of a line is
+                  removed — so the span rendered with height 0 and the trigger
+                  stayed 22px against the 42px of the fields either side of it
+                  (Keksdose live #294, measured in the browser: `span.textContent`
+                  WAS `" "` and `getBoundingClientRect().height` was 0). U+00A0 is
+                  not collapsible, so it holds the line. */}
+              {triggerText || " "}
             </span>
           </button>
         )}

@@ -59,3 +59,54 @@ describe("InlineEntityCombobox clearable", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
+
+/**
+ * The suggestion list is PORTALLED (Keksdose live #295: *"Category select inside the
+ * list is not readable. Some sort of z indexes issue?"*).
+ *
+ * It was not z-index. The list was an `absolute` `<ul>` inside the field's own
+ * wrapper, and the receipt's line table sits in a card carrying `overflow-clip` — so a
+ * list opened from a row near the bottom was cut off at the card's edge (measured in
+ * the browser: a 256px panel with 150px of it painted). A stacking context can be
+ * out-ranked; `overflow` cannot be argued with, and the only fix is to leave the
+ * subtree.
+ *
+ * jsdom has no layout, so what is asserted here is the structural property that made
+ * the clip impossible — the list is a child of `document.body` and not of the field —
+ * plus the thing portalling is most likely to break: an outside-click handler that
+ * measures "inside" against the wrapper now answers no for the list itself, so the
+ * first option a user picks would close the dropdown having picked nothing.
+ */
+describe("the desktop suggestion list", () => {
+  it("renders outside the field's own subtree, so no ancestor can clip it", () => {
+    const { container } = render(
+      <InlineEntityCombobox<string>
+        label="Category"
+        value={null}
+        onChange={vi.fn()}
+        options={options}
+      />,
+    );
+    fireEvent.focus(screen.getByRole("combobox"));
+
+    const list = screen.getByRole("listbox");
+    expect(container.contains(list)).toBe(false);
+    expect(document.body.contains(list)).toBe(true);
+  });
+
+  it("still commits the option that is clicked in it", () => {
+    const onChange = vi.fn();
+    render(
+      <InlineEntityCombobox<string>
+        label="Category"
+        value={null}
+        onChange={onChange}
+        options={options}
+      />,
+    );
+    fireEvent.focus(screen.getByRole("combobox"));
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Fuel" }));
+
+    expect(onChange).toHaveBeenCalledWith("c2");
+  });
+});

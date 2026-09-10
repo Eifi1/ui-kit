@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button } from "../components/ui";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
@@ -22,13 +22,18 @@ export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
  * platform (Steering Design feedback #39). Somebody who wanted to show one panel
  * had to save a crop and then find it again.
  *
- * `documentPaste` decides where the paste is listened for, and it is a real
- * choice rather than a flag with a default. A modal traps focus, so while it is
- * up every paste in the page is meant for it — including one made with nothing
- * in particular focused, which never reaches a React `onPaste` on a child. An
- * editor **inline on a page** is not that: the page around it has its own
- * fields, so it listens within its own subtree and a paste elsewhere stays where
- * it was aimed.
+ * `documentPaste` and `pasteFrom` decide where the paste is listened for, and
+ * it is a real choice rather than a flag with a default. A modal traps focus,
+ * so while it is up every paste in the page is meant for it — including one
+ * made with nothing in particular focused, which never reaches a React
+ * `onPaste` on a child: that is `documentPaste`. An editor **inline on a
+ * page** is not that: the page around it has its own fields, so it listens
+ * within its own subtree and a paste elsewhere stays where it was aimed. But
+ * "its own subtree" has to include the text box the paste is actually made in,
+ * and that box is this field's *sibling*, not its child — a paste in it bubbles
+ * to their common parent and never through here. `pasteFrom` is that parent
+ * (Steering Design feedback #140): the element whose subtree is listened to,
+ * handed in by whoever renders both the box and this field side by side.
  */
 export function FeedbackAttachmentField({
   value,
@@ -39,6 +44,7 @@ export function FeedbackAttachmentField({
   onError,
   onCaptureScreenshot,
   documentPaste = false,
+  pasteFrom,
   className,
 }: {
   value: File | null;
@@ -53,6 +59,11 @@ export function FeedbackAttachmentField({
   /** Listen for the paste on `document` rather than on this field's own
    *  subtree. For a modal, which owns the whole page while it is up. */
   documentPaste?: boolean;
+  /** Listen for the paste within this element's subtree rather than this
+   *  field's own — for a field standing *beside* the text box a paste is made
+   *  in, whose common parent is where the event bubbles to. Ignored when
+   *  `documentPaste` is set. */
+  pasteFrom?: RefObject<HTMLElement | null>;
   className?: string;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
@@ -106,20 +117,28 @@ export function FeedbackAttachmentField({
     latest.current(new File([file], pastedName(file.type), { type: file.type }));
   };
 
+  // The element listened on, where it is not this field's own subtree: the
+  // document for a modal, the given parent for an inline editor. Read inside
+  // the effect rather than in render, because a ref's `current` is only set
+  // once the parent has mounted — which it has by the time effects run.
   useEffect(() => {
-    if (!documentPaste) return;
-    const onPaste = (event: ClipboardEvent) =>
-      takeImage(event.clipboardData, () => event.preventDefault());
-    document.addEventListener("paste", onPaste);
-    return () => document.removeEventListener("paste", onPaste);
+    const target: EventTarget | null = documentPaste ? document : (pasteFrom?.current ?? null);
+    if (!target) return;
+    const onPaste = (event: Event) => {
+      const clipboard = (event as ClipboardEvent).clipboardData;
+      takeImage(clipboard, () => event.preventDefault());
+    };
+    target.addEventListener("paste", onPaste);
+    return () => target.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- takeImage reads `latest`, which is a ref
-  }, [documentPaste]);
+  }, [documentPaste, pasteFrom]);
+  const listensElsewhere = documentPaste || pasteFrom !== undefined;
 
   return (
     <div
       className={className}
       onPaste={
-        documentPaste
+        listensElsewhere
           ? undefined
           : (event) => takeImage(event.clipboardData, () => event.preventDefault())
       }

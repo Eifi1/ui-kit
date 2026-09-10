@@ -15,6 +15,20 @@ interface ToggleGroupProps<T extends string> {
    *  adjacent fields). Per-option `className` still wins over this. */
   optionClassName?: string;
   ariaLabel?: string;
+  /**
+   * Show, refuse the change (Keksdose live #288: a payment dated in the future has no
+   * state to set).
+   *
+   * Whatever `value` says stays pressed and keeps its own fill rather than going grey
+   * with the rest — a reader who cannot see WHICH option is chosen has been told less
+   * than before it was disabled. A caller with nothing to show passes no value, and
+   * the group renders dimmed with nothing pressed, which is the shape Keksdose's
+   * status picker uses for a row whose status does not exist yet.
+   *
+   * On the whole GROUP, not per option: a segmented control where some segments are
+   * live and others are not is a menu with holes in it, and no caller here wants one.
+   */
+  disabled?: boolean;
 }
 
 export function ToggleGroup<T extends string>({
@@ -24,11 +38,16 @@ export function ToggleGroup<T extends string>({
   className,
   optionClassName,
   ariaLabel,
+  disabled = false,
 }: ToggleGroupProps<T>) {
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
+      // `aria-disabled` on the group as well as `disabled` on each button: a radio
+      // group is what the user is being refused, and a screen reader announcing
+      // three separately-disabled radios does not say that.
+      aria-disabled={disabled || undefined}
       className={cn(
         // `gap-0.5` — the same 2px as the container's own padding, so EVERY segment
         // sits in a uniform 2px moat and no two fills ever touch. Flush segments were
@@ -43,6 +62,10 @@ export function ToggleGroup<T extends string>({
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
         "inline-flex w-full gap-0.5 rounded-md border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900",
+        // The whole group fades, the way every other disabled control in this
+        // package does; `cursor-not-allowed` is on the buttons, which is what a
+        // pointer is actually over.
+        disabled && "opacity-60",
         className,
       )}
     >
@@ -54,6 +77,7 @@ export function ToggleGroup<T extends string>({
             type="button"
             role="radio"
             aria-checked={active}
+            disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
               // `truncate` (which carries whitespace-nowrap) rather than letting a
@@ -82,6 +106,9 @@ export function ToggleGroup<T extends string>({
               active
                 ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                 : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+              // No hover fill on a group that cannot be changed — a segment that
+              // lights up under the pointer is an offer, and there is none here.
+              disabled && "cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent",
               optionClassName,
               opt.className,
             )}

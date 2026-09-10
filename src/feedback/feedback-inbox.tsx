@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Ban,
@@ -448,6 +448,11 @@ export function FeedbackNoteEditor({
 }) {
   const [draft, setDraft] = useState(initial);
   const [file, setFile] = useState<File | null>(null);
+  // The editor's own root, which is where a paste made in the text box bubbles
+  // to: the attachment field below is the box's sibling, so a paste in the box
+  // never passes through the field's own subtree. It listens here instead
+  // (Steering Design feedback #140).
+  const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Re-seed when the editor is reopened with different content.
     setDraft(initial);
@@ -456,6 +461,7 @@ export function FeedbackNoteEditor({
   const submit = () => onSave(draft, file);
   return (
     <div
+      ref={root}
       className="space-y-2"
       onKeyDown={(event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !pending) {
@@ -475,10 +481,12 @@ export function FeedbackNoteEditor({
           maxBytes={attachment.maxBytes}
           onError={attachment.onError}
           onCaptureScreenshot={attachment.onCaptureScreenshot}
-          // Within its own subtree, not on `document`: this editor sits inline
-          // on a page that has other fields, so a paste made in one of them is
-          // meant for that one. The textarea above is where the caret already
-          // is, and the event bubbles here from it.
+          // Within THIS editor's subtree, not on `document`: the editor sits
+          // inline on a page that has other fields, so a paste made in one of
+          // them is meant for that one. The textarea above is where the caret
+          // already is, and it is the field's sibling — so the field is told
+          // to listen on their common parent, where the paste bubbles to.
+          pasteFrom={root}
         />
       )}
       <div className="flex justify-end gap-2">

@@ -82,8 +82,20 @@ export interface ModalProps {
   /** Invoked on backdrop click and on Escape. */
   onClose: () => void;
   children: ReactNode;
-  /** Panel max-width. */
-  size?: "md" | "lg";
+  /**
+   * Panel max-width: `md` (28rem), `lg` (32rem), `xl` (48rem).
+   *
+   * `xl` exists because two callers had already written `className="max-w-3xl"` to
+   * reach it — the payee backfill's preview table and the price-merge dialog, both
+   * of which hold a list and several fields rather than one question. A caller
+   * patching a missing size IS the signal that the size is missing, and a
+   * hand-written width in a `className` is a width nothing else can line up with.
+   *
+   * The panel is `w-full` under every one of them, so the cap only bites once the
+   * viewport is wider than it: on a phone all three are the same full-width bottom
+   * sheet. Nothing here may introduce a `min-w-*`, which is what would break that.
+   */
+  size?: "md" | "lg" | "xl";
   /** Extra classes for the panel (e.g. `space-y-3` for form content spacing). */
   className?: string;
   /** id of the heading element, wired to `aria-labelledby`. */
@@ -216,7 +228,7 @@ export function Modal({
         style={drag.style}
         className={cn(
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
-          size === "lg" ? "max-w-lg" : "max-w-md",
+          { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is
           // `fixed inset-0` and the body is scroll-locked while a dialog is open, so
           // without this the overflow simply had nowhere to go: on a phone the panel

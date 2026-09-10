@@ -45,3 +45,35 @@ describe("DatePicker formatValue", () => {
     expect(screen.getByText("host:2026-09-01 – …")).toBeTruthy();
   });
 });
+
+/**
+ * The empty trigger holds a line (Keksdose live #294, *"Date field malformed"*).
+ *
+ * A `<button>` styled with the field padding and NOTHING in it collapses to that
+ * padding: 22px against the 42px of every field beside it, with the calendar glyph —
+ * absolutely positioned against the button — then hanging out of its own box. That is
+ * what a receipt whose scan found no date looked like, sitting between two 42px
+ * fields.
+ *
+ * The trap this pins is that the obvious fix does not work. The code read
+ * `triggerText || " "` for months: an ordinary space is collapsible white space, and
+ * white space at the start and end of a line is removed, so the span rendered with
+ * height 0 and nothing changed. It has to be U+00A0. Asserted on the CHARACTER rather
+ * than on a height, because jsdom has no layout — the height was measured in a real
+ * browser (22 → 42) and this is the property that produced it.
+ */
+describe("an empty DatePicker trigger", () => {
+  const trigger = () => screen.getByRole("button", { name: "When" });
+
+  it("holds its line with a non-breaking space when there is no value and no placeholder", () => {
+    render(<DatePicker value="" onChange={() => {}} locale="en" label="When" />);
+    expect(trigger().textContent).toBe(" ");
+    // …and specifically NOT a plain space, which is the version that did nothing.
+    expect(trigger().textContent).not.toBe(" ");
+  });
+
+  it("shows the placeholder instead when the caller gives one", () => {
+    render(<DatePicker value="" onChange={() => {}} locale="en" label="When" placeholder="varies" />);
+    expect(trigger().textContent).toBe("varies");
+  });
+});

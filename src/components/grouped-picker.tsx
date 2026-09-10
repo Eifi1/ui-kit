@@ -7,7 +7,11 @@ import { DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 export interface PickerGroup {
   key: string;
   label: string;
-  items: { key: string; label: string }[];
+  /** `icon` is an optional leading glyph, drawn before the label — the same slot
+   *  `ComboOption` has always had, so the two pickers can present one option set
+   *  the same way. Omitted, a row is exactly what it was: label only, with no
+   *  reserved space, so a list where nothing has an icon does not indent. */
+  items: { key: string; label: string; icon?: ReactNode }[];
 }
 
 /** Panel picker for large grouped option sets: instead of one long flat
@@ -103,13 +107,14 @@ export function GroupedPicker({
                                 setOpen(false);
                               }}
                               className={cn(
-                                "w-full rounded px-1.5 py-0.5 text-left text-sm",
+                                "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-left text-sm",
                                 isSelected
                                   ? "bg-sky-100 font-medium text-sky-900 dark:bg-sky-900/40 dark:text-sky-200"
                                   : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800",
                               )}
                             >
-                              {item.label}
+                              {item.icon && <span className="shrink-0">{item.icon}</span>}
+                              <span className="min-w-0 truncate">{item.label}</span>
                             </button>
                           </li>
                         );

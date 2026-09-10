@@ -1,8 +1,11 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
+import type { ReactNode, RefObject } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
+import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import type { ComboOption } from "./combobox-core";
@@ -10,7 +13,57 @@ import type { ComboOption } from "./combobox-core";
 // One look for both combobox flavors below — the suggestion list and its rows
 // must stay pixel-identical between the free-text and the id-keyed variant.
 const LIST_CLASS =
-  "absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+  "max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+
+/**
+ * The desktop suggestion list, PORTALLED and anchored to the field.
+ *
+ * It used to be an `absolute` `<ul>` inside the field's own wrapper, and that is
+ * Keksdose live #295: *"Category select inside the list is not readable. Some sort
+ * of z indexes issue?"*. It was not z-index — a stacking context can be out-ranked,
+ * but `overflow` cannot be argued with. The receipt's line table sits in a card
+ * carrying `overflow-clip`, so a list opened from the last visible row was cut off
+ * at the card's edge: measured at 256px tall with 150px of it painted.
+ *
+ * Every other panel in this package already learned this — `DropdownPanel`'s
+ * `anchorRef` form, the calculator popover, the tooltip — so this reuses the same
+ * hook rather than inventing a second placement. What that buys beyond the clip:
+ * the list flips above the field when there is no room below, and it caps its own
+ * height against the VISIBLE viewport, which on a phone means the on-screen
+ * keyboard (see {@link useAnchoredPanel}).
+ *
+ * `panelRef` is not optional plumbing. Portalled, the list is no longer a
+ * descendant of the wrapper, so {@link useDropdown}'s outside-click test answers
+ * "outside" for a click on the list itself — the first option a user picked would
+ * close the dropdown having picked nothing.
+ */
+function SuggestionList({
+  anchorRef,
+  panelRef,
+  children,
+}: {
+  anchorRef: RefObject<HTMLElement | null>;
+  panelRef: RefObject<HTMLDivElement | null>;
+  children: ReactNode;
+}) {
+  const { rect, top, maxHeight } = useAnchoredPanel(anchorRef, true, { preferredHeight: 256 });
+  if (!rect) return null;
+  return createPortal(
+    <div
+      ref={panelRef}
+      // z-50, not the old z-30: the list is a child of <body> now, so it is
+      // competing with the app's own overlays rather than with its own siblings.
+      className="fixed z-50"
+      style={{ top, left: rect.left, width: rect.width }}
+    >
+      <ul role="listbox" className={LIST_CLASS} style={{ maxHeight }}>
+        {children}
+      </ul>
+    </div>,
+    document.body,
+  );
+}
+
 const rowClass = (isActive: boolean) =>
   cn(
     "block w-full truncate px-3 py-1.5 text-left text-sm text-slate-900 dark:text-slate-100",
@@ -81,7 +134,7 @@ export function Combobox({
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
-  const { open, setOpen, wrapperRef } = useDropdown();
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown();
   const [active, setActive] = useState(-1);
   // A phone opens the list as a full-screen sheet with its own input, the way a
   // native <select> does — live #200: "Paid as full screen dialog with input.
@@ -89,6 +142,9 @@ export function Combobox({
   // anchored list stays for pointer devices, where it is the better shape.
   const isPhone = useMediaQuery(PHONE_QUERY, false);
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
+  // The box the portalled list hangs off — the inner wrapper, which hugs the input,
+  // not the outer one (a grid item that can be taller than the field).
+  const fieldRef = useRef<HTMLDivElement>(null);
 
   const query = value.trim().toLowerCase();
   const matches = useMemo(() => {
@@ -145,7 +201,7 @@ export function Combobox({
           stretches to the row height, e.g. next to the editor's category cell
           with its split button), which used to drag a top-1/2 chevron down to
           the input's bottom edge (feedback #248). */}
-      <div className="relative">
+      <div ref={fieldRef} className="relative">
         <input
           id={fieldId}
           value={value}
@@ -259,7 +315,7 @@ export function Combobox({
         </PickerSheet>
       )}
       {!isPhone && open && (matches.length > 0 || createRow) && (
-        <ul role="listbox" className={LIST_CLASS}>
+        <SuggestionList anchorRef={fieldRef} panelRef={panelRef}>
           {createRow && (
             <li role="option" aria-selected={false}>
               <button
@@ -309,7 +365,7 @@ export function Combobox({
               </Fragment>
             );
           })}
-        </ul>
+        </SuggestionList>
       )}
     </div>
   );
@@ -386,12 +442,14 @@ export function InlineEntityCombobox<V extends string | number>({
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
-  const { open, setOpen, wrapperRef } = useDropdown();
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown();
   const [active, setActive] = useState(-1);
   // null = not editing → the input shows the selected option's label.
   const [text, setText] = useState<string | null>(null);
   const isPhone = useMediaQuery(PHONE_QUERY, false);
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
+  // The box the portalled list hangs off — see {@link SuggestionList}.
+  const fieldRef = useRef<HTMLDivElement>(null);
   // The sheet's search box. Starts empty on every open, so a field that already
   // holds a value still offers the whole list — the shape a native <select> has
   // on a phone, and what the anchored panel gets from `query` below.
@@ -476,8 +534,9 @@ export function InlineEntityCombobox<V extends string | number>({
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
-      {/* Inner wrapper for chevron centering — same reasoning as Combobox above. */}
-      <div className="relative">
+      {/* Inner wrapper for chevron centering — same reasoning as Combobox above.
+          It is also what the portalled list anchors to. */}
+      <div ref={fieldRef} className="relative">
         <input
           id={fieldId}
           value={shown}
@@ -625,7 +684,7 @@ export function InlineEntityCombobox<V extends string | number>({
         </PickerSheet>
       )}
       {!isPhone && open && matches.length > 0 && (
-        <ul role="listbox" className={LIST_CLASS}>
+        <SuggestionList anchorRef={fieldRef} panelRef={panelRef}>
           {matches.map((o, i) => (
             // A group heading is emitted at each group boundary rather than repeating
             // the group on every row (feedback #136). `matches` is group-contiguous,
@@ -670,7 +729,7 @@ export function InlineEntityCombobox<V extends string | number>({
               </li>
             </Fragment>
           ))}
-        </ul>
+        </SuggestionList>
       )}
     </div>
   );

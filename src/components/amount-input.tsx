@@ -236,7 +236,11 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       onChange(sign ? rest : text);
     };
     const commit = () => handleText(commitExpression(shown));
-    const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
+    const { open, setOpen, wrapperRef, panelRef, query, setQuery, inputRef } = useDropdownSearch();
+    // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
+    // the panel needs a real trigger rect rather than a relative parent — see
+    // `DropdownPanel`'s note for what an `overflow` ancestor did to it before.
+    const chipRef = useRef<HTMLButtonElement>(null);
 
     const selected = getCurrency(currency);
     const filtered = useMemo(() => {
@@ -355,6 +359,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           )}
           {currency && editable && (
             <button
+              ref={chipRef}
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-label={
@@ -372,7 +377,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         </div>
         {editable && open && (
           <DropdownPanel
-            className="right-0 top-full w-64"
+            anchorRef={chipRef}
+            panelRef={panelRef}
             empty={filtered.length === 0}
             header={
               <DropdownSearchHeader
