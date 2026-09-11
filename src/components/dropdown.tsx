@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 
 /**
@@ -10,8 +11,27 @@ import { cn } from "../lib/cn";
  * CurrencySelect, AmountInput's currency picker, Combobox). Attach `wrapperRef`
  * to the relatively-positioned container; the popover lives inside it so a click
  * anywhere else closes it.
+ *
+ * ## Back closes the list, not the page behind it
+ *
+ * Keksdose live #309 rework: *"It shall only close it if it is prior open, and not
+ * when I am seeing the dialog."* Round one wired {@link PickerSheet} — the shape
+ * these lists take on a PHONE — into {@link useOverlayHistory}, and left the pointer
+ * shape out. So on a desktop one Back press over an open list still went past it to
+ * the dialog underneath: measured on his own budget, the transfer form's account list
+ * was showing and Back took the entire add card, amount and all. That is the same
+ * loss round one called *"discarding an edit in progress in order to dismiss a
+ * list"*, in the other shell.
+ *
+ * Every dropdown built on this hook is dismissible and is the topmost thing on screen
+ * while it is up, so the rule is the hook's rather than each caller's. `backCloses`
+ * is for the ONE case where a second entry would be wrong: a caller whose panel is
+ * itself a `PickerSheet`, which already registers one — both comboboxes swap shape at
+ * {@link PHONE_QUERY}, and two entries would cost two Back presses to close one sheet.
  */
-export function useDropdown<T extends HTMLElement = HTMLDivElement>() {
+export function useDropdown<T extends HTMLElement = HTMLDivElement>({
+  backCloses = true,
+}: { backCloses?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<T>(null);
   // The panel, once it is PORTALLED (see {@link DropdownPanel}'s `anchorRef`): it is
@@ -31,6 +51,9 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+  // Same close path Escape and an outside click take, so a list dismissed by Back
+  // cannot end up in a different state from one dismissed any other way.
+  useOverlayHistory(open && backCloses, useCallback(() => setOpen(false), []));
   return { open, setOpen, wrapperRef, panelRef };
 }
 

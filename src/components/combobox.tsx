@@ -16,6 +16,43 @@ const LIST_CLASS =
   "max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900";
 
 /**
+ * "This focus came from a mouse button that is not the left one" — for the two
+ * fields below, which open their list ON FOCUS.
+ *
+ * Keksdose live #309 rework: *"When clicking the mouse back button now while hovering
+ * one of the selects it opens the select as long as I am holding the button down and
+ * closes select after releasing."* A mouse's BACK button focuses whatever it is
+ * pressed over, exactly as the left one does — the browser only reserves the
+ * NAVIGATION for itself — so a field that opens on focus opened a list for a gesture
+ * that means "go back", and the release then navigated out from under it. Measured on
+ * his own budget: `mousePressed button=back` over the transfer form's account field
+ * left `aria-expanded=true`, and the release took the whole add card with it.
+ *
+ * The press is recorded and read by the focus that the SAME press causes: focus is
+ * mousedown's default action, dispatched inside the same task, so the flag is always
+ * read before the `setTimeout` below can drop it. And it is always dropped — a press
+ * that focuses nothing (the pointer was over a disabled field, the button was
+ * released elsewhere) must not leave a latch that swallows the next Tab.
+ *
+ * Only the OPEN is suppressed, never the navigation: Back still goes back, which is
+ * the whole of what the button was pressed for.
+ */
+function usePrimaryPressOnly() {
+  const auxPress = useRef(false);
+  return {
+    onMouseDown: (e: { button: number }) => {
+      if (e.button === 0) return;
+      auxPress.current = true;
+      setTimeout(() => {
+        auxPress.current = false;
+      }, 0);
+    },
+    /** True while handling the focus a non-primary press just caused. */
+    fromAuxButton: () => auxPress.current,
+  };
+}
+
+/**
  * The desktop suggestion list, PORTALLED and anchored to the field.
  *
  * It used to be an `absolute` `<ul>` inside the field's own wrapper, and that is
@@ -134,13 +171,17 @@ export function Combobox({
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
-  const { open, setOpen, wrapperRef, panelRef } = useDropdown();
+  // `backCloses` is the desktop half of live #309: the phone's list IS a
+  // {@link PickerSheet}, which registers its own history entry, so registering a
+  // second one here would cost two Back presses to dismiss one sheet.
+  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
+  const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
   // A phone opens the list as a full-screen sheet with its own input, the way a
   // native <select> does — live #200: "Paid as full screen dialog with input.
   // Similar to the account select that already appears as full screen." The
   // anchored list stays for pointer devices, where it is the better shape.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
   // The box the portalled list hangs off — the inner wrapper, which hugs the input,
   // not the outer one (a grid item that can be taller than the field).
@@ -215,7 +256,11 @@ export function Combobox({
           aria-expanded={open}
           aria-autocomplete="list"
           autoComplete="off"
+          onMouseDown={primaryOnly.onMouseDown}
           onFocus={() => {
+            // A back/forward mouse button focuses this field on its way to
+            // navigating; it is not a request to open anything (live #309 rework).
+            if (primaryOnly.fromAuxButton()) return;
             setOpen(true);
             // The sheet carries its own input, so the field behind it must not also
             // pull up the keyboard and scroll the page under the dialog.
@@ -442,11 +487,13 @@ export function InlineEntityCombobox<V extends string | number>({
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
-  const { open, setOpen, wrapperRef, panelRef } = useDropdown();
+  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  // See the twin above: the phone sheet owns its own Back entry (live #309).
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
+  const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
   // null = not editing → the input shows the selected option's label.
   const [text, setText] = useState<string | null>(null);
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
   // The box the portalled list hangs off — see {@link SuggestionList}.
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -556,7 +603,12 @@ export function InlineEntityCombobox<V extends string | number>({
           // above gives: the sheet carries the keyboard, and a readOnly field would
           // take FIELD_BASE's settled look on a field that is perfectly editable.
           inputMode={isPhone ? "none" : undefined}
+          onMouseDown={primaryOnly.onMouseDown}
           onFocus={(e) => {
+            // See {@link usePrimaryPressOnly}: a back/forward button lands here on
+            // its way to navigating, and neither the list nor the select-all is
+            // anything it asked for (live #309 rework).
+            if (primaryOnly.fromAuxButton()) return;
             setText(shown);
             e.currentTarget.select();
             setOpen(true);

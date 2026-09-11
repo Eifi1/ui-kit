@@ -5,6 +5,7 @@ import type { ReactNode, RefObject } from "react";
 import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
 
 /**
  * The PHONE presentation of a picker: a full-screen dialog with a search box at
@@ -53,6 +54,26 @@ export function PickerSheet({
   children: ReactNode;
 }) {
   useBodyScrollLock(open);
+  /**
+   * Back closes THE SHEET, not the dialog it was opened from (Keksdose live #309:
+   * *"Mouse Back does not only close the select but also the whole edit or create
+   * dialog which is cumbersome."*).
+   *
+   * The sheet is a full-screen overlay over whatever opened it, and on a phone that
+   * is almost always the row editor — which DOES push a history entry
+   * (`data-table.tsx`). So the sheet was invisible to Back: one press popped the
+   * editor's entry and took the whole dialog with it, discarding an edit in progress
+   * in order to dismiss a list.
+   *
+   * `useOverlayHistory` was built for exactly this nesting — its stack unwinds
+   * last-in-first-out, and the U-12 regression test in its own suite is written
+   * around "a Modal and a PickerSheet inside it". The sheet simply never called it.
+   *
+   * Nothing else has to change: the hook is a no-op while `open` is false, and it
+   * pops its own entry when the sheet closes some other way (the X, a row, the
+   * backdrop) so history does not accumulate husks.
+   */
+  useOverlayHistory(open, onClose);
   // The sheet focuses its OWN search box when it opens (Keksdose live #212: *"make
   // the text input filter active on select click"*).
   //
