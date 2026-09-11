@@ -93,6 +93,26 @@ html, body, #root {
   height: 100%;
 }
 
+/* NOT a `scrollbar-gutter` on the DOCUMENT — measured, and it is the wrong instrument.
+ *
+ * Below `AppShell`'s md breakpoint the viewport is the scroll container (main is only
+ * `md:overflow-y-auto`), so nothing reserves a gutter down there and a classic
+ * scrollbar takes ~15px out of the content box the moment a page outgrows the window:
+ * Keksdose live #307's follow-up, reported as "resizes slightly horizontally".
+ *
+ * Reserving it on `html` fixes that and breaks something worse. `scrollbar-gutter` on
+ * the root shrinks the INITIAL CONTAINING BLOCK, which is what `position: fixed` is
+ * laid out against — so every full-bleed overlay in the app stops 15px short on each
+ * edge. Measured at a 406px viewport: the row editor's dialog went from x=0/w=406 to
+ * x=15/w=376, with live page showing through both strips and tappable. That is
+ * Keksdose feedback #32's failure, worse: #32's strip at least belonged to the
+ * backdrop, and a tap on this one reaches the register behind the form.
+ *
+ * The only fix without that side effect is to give the viewport's job to an ELEMENT —
+ * dropping the `md:` gate on main's own `overflow-y-auto` — which changes how a phone
+ * scrolls (the URL bar stops collapsing) for a bug phones do not have, since overlay
+ * scrollbars take no layout space. Left as a decision rather than a silent trade. */
+
 /* Checkboxes/radios default to a visible brand accent. The native dark fill
    blended into the dark UI, so a checked box was almost indistinguishable from
    an unchecked one (feedback #219). Must live in the base layer: unlayered

@@ -36,6 +36,7 @@ import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
@@ -780,19 +781,15 @@ export function DataTable<T>({
   // modal instead of unfolding inline. Only one row is ever expanded at a time.
   const mobileDialogRow = mobileExpandAsDialog && !isMdUp ? mobileSlice.find((r) => isExpanded?.(r)) : undefined;
   const mobileDialogContent = mobileDialogRow ? expandedRow?.(mobileDialogRow) : null;
-  // Lock background scrolling while the full-screen row dialog is open so the
-  // table behind it can't scroll/jump under the overlay (feedback #204).
+  // The full-screen row dialog. Its panel, header, scroll lock and Back handling all
+  // live in {@link FullBleedDialog} now — this was the only copy of that shell until
+  // the transactions create card needed the same one (Keksdose live #307's follow-up),
+  // and two copies of a dialog is how the row editor and the create form come to look
+  // like two different products.
   const dialogOpen = !!(mobileDialogRow && mobileDialogContent);
-  const dialogBackdropClose = useBackdropClose(() => {
+  const closeDialog = () => {
     if (mobileDialogRow) onRowClick?.(mobileDialogRow);
-  });
-  useBodyScrollLock(dialogOpen);
-  // ...and Back closes it, like any other dialog (Keksdose feedback #172). This one
-  // is the phone's row EDITOR, so the alternative was the worst case of the bug: the
-  // gesture people use to back out of a form navigated the page away instead.
-  useOverlayHistory(dialogOpen, () => {
-    if (mobileDialogRow) onRowClick?.(mobileDialogRow);
-  });
+  };
 
   // One mobile card. Extracted so the flat list and the grouped list (below)
   // share identical row markup.
@@ -1003,44 +1000,16 @@ export function DataTable<T>({
             labels={labels}
           />
         )}
-        {mobileDialogRow &&
-          mobileDialogContent &&
-          createPortal(
-            // Full-bleed mobile dialog: the panel covers the viewport edge to edge
-            // (feedback #32 — the inset panel of #204 left a strip of page showing
-            // beside it on a phone, and tapping that strip dismissed the form
-            // mid-edit). With no backdrop exposed there is nothing to mis-tap, so
-            // the X button is the way out; `dialogBackdropClose` stays wired for
-            // any layout that does leave a backdrop visible. Body scroll is locked
-            // while open (see effect above), so the table behind stays put; the
-            // panel body scrolls on its own.
-            <div
-              className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40"
-              role="dialog"
-              aria-modal="true"
-              {...dialogBackdropClose}
-            >
-              <div className="flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900">
-                <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-3 dark:border-slate-800">
-                  <div className="min-w-0 font-medium">{mobilePrimaryCol?.cell(mobileDialogRow)}</div>
-                  <button
-                    type="button"
-                    onClick={() => onRowClick?.(mobileDialogRow)}
-                    aria-label={labels.close}
-                    className="-mr-1 shrink-0 rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                  >
-                    <X className="size-5" />
-                  </button>
-                </div>
-                {/* px-3, not px-4: every pixel of chrome here is width the form
-                    fields lose on a phone (feedback #32). */}
-                <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-                  {mobileDialogContent}
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )}
+        {/* The row's own first column is this dialog's title — the same cell the card
+            behind it shows, so the panel names the row it opened from. */}
+        <FullBleedDialog
+          open={dialogOpen}
+          onClose={closeDialog}
+          closeLabel={labels.close}
+          header={mobileDialogRow ? mobilePrimaryCol?.cell(mobileDialogRow) : null}
+        >
+          {mobileDialogContent}
+        </FullBleedDialog>
       </div>
       )}
       {isMdUp && (

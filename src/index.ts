@@ -56,6 +56,7 @@ export * from "./components/toggle-group";
 export * from "./components/wizard-stepper";
 export * from "./components/hover-menu";
 export * from "./components/modal";
+export * from "./components/full-bleed-dialog";
 export * from "./components/grouped-picker";
 export * from "./components/file-dropzone";
 export * from "./components/mini-calendar";
