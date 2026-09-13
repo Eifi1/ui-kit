@@ -3,7 +3,6 @@ import { Delete } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
-import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 
 /**
  * A full calculator keypad rendered as a bottom sheet — the mobile counterpart to
@@ -83,7 +82,27 @@ export function NumberPadSheet({
    * digits and operators need none — their visible glyph IS the name. */
   labels?: NumberPadSheetLabels;
 }) {
-  useBodyScrollLock(true);
+  // NO `useBodyScrollLock`, and that is the point of the control (Keksdose live
+  // #317: *"Background not scrollable when the amount input calculator field is
+  // open"*).
+  //
+  // This sheet is a KEYBOARD, not a dialog. It is opened by focusing a field and
+  // exists only because a PWA cannot swap the system keyboard for its own — so it
+  // suppresses the OS keyboard with `inputMode="none"` and paints itself in the
+  // freed space. An OS keyboard does not freeze the page behind it; it takes the
+  // bottom of the screen and leaves you free to scroll what is left, which is how
+  // you reach the field you are typing into when the keys cover it.
+  //
+  // Locking here made the page unreachable at exactly the moment it matters most:
+  // correcting a receipt total against the running line sum, where the figure you
+  // are comparing against sits below the keypad. The other four holders of that
+  // hook are all modal — `Modal`, `PickerSheet`, `FullBleedDialog`, the DataTable
+  // row dialog — and they stay locked, because for them the page behind is not
+  // part of the task.
+  //
+  // The pad still does not scroll ITSELF away under a stray drag: the root's
+  // `onPointerDown` preventDefault (below) keeps the host input focused and eats
+  // the gesture on the sheet, so a touch that starts on a key is not a page scroll.
 
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";
