@@ -1,0 +1,105 @@
+import { forwardRef, useRef } from "react";
+import type { InputHTMLAttributes } from "react";
+import { Search, X } from "lucide-react";
+import { cn } from "../lib/cn";
+import { FIELD_BASE } from "./ui";
+
+export interface SearchFieldProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
+  value: string;
+  /** The typed text. Emitted as a plain string, not an event: every caller of the
+   *  four this replaced wanted the string, and one of them held it in a URL param
+   *  rather than in state. */
+  onChange: (value: string) => void;
+  /** The field's accessible name. Required, and deliberately not defaulted to the
+   *  placeholder: a placeholder disappears the moment someone types, so a field
+   *  named only by one is unnamed exactly when a screen-reader user is working in
+   *  it. Two of the boxes this replaced had no name but the placeholder. */
+  label: string;
+  /** Names the clear button. Omit it and no clear button is rendered — which is a
+   *  decision, not a default: a filter you can type into and not untype is the
+   *  complaint that produced the button on three of these four screens. */
+  clearLabel?: string;
+  className?: string;
+}
+
+/**
+ * The page-level filter box: a search icon, a `type="search"` input, and a clear
+ * "×" that appears once there is something to clear.
+ *
+ * ## Why it is a component
+ *
+ * Keksdose had four of these and no two agreed. Two were character-identical
+ * twenty-line copies (the settings catalogue filter and the tour list filter) —
+ * the same absolute icon at `left-3`, the same `pl-9 pr-9`, the same
+ * `[&::-webkit-search-cancel-button]:appearance-none`, the same conditional clear
+ * button at `right-2` — differing only in which state setter they called. The
+ * third (the admin support queue) was the same idea at `left-2`/`size-3.5`/`pl-7`
+ * with no clear button and no `type="search"`, so it had neither the `searchbox`
+ * role nor a way to empty itself. The fourth (the bank picker) was a bare `<Input
+ * placeholder="Search">`: no icon, no clear, and no accessible name at all once
+ * the placeholder went away.
+ *
+ * None of that is a design decision anyone made; it is four people solving the
+ * same problem on four days. A shared component is how the fourth screen gets the
+ * clear button the first one earned.
+ *
+ * ## The two X's
+ *
+ * `type="search"` is what gives the field its `searchbox` role — and, in Chrome, a
+ * NATIVE clear cross that paints right next to ours, so a non-empty box shows two
+ * X's an inch apart. Ours is the one that survives: it carries an accessible name
+ * and matches the app's other icon buttons, and it returns focus to the input so
+ * the next query can be typed straight away.
+ */
+export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
+  { value, onChange, label, clearLabel, className, placeholder, ...rest },
+  ref,
+) {
+  const innerRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className={cn("relative", className)}>
+      <Search
+        aria-hidden
+        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+      />
+      <input
+        ref={(node) => {
+          innerRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        placeholder={placeholder ?? label}
+        {...rest}
+        className={cn(
+          FIELD_BASE,
+          "pl-9",
+          // Room for our own "×" only when there is one; a field that can't be
+          // cleared has no reason to reserve the space.
+          clearLabel === undefined ? "pr-3" : "pr-9",
+          "[&::-webkit-search-cancel-button]:appearance-none",
+        )}
+      />
+      {clearLabel !== undefined && value !== "" && (
+        <button
+          type="button"
+          onClick={() => {
+            onChange("");
+            // Clearing is the start of the next query far more often than it is the
+            // end of this one, so the caret stays where it can be typed into.
+            innerRef.current?.focus();
+          }}
+          aria-label={clearLabel}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+        >
+          <X className="size-4" />
+        </button>
+      )}
+    </div>
+  );
+});
+SearchField.displayName = "SearchField";

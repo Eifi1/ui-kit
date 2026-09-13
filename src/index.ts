@@ -33,6 +33,7 @@ export * from "./theme/palette-store";
 
 // ── components ───────────────────────────────────────────────────────────────
 export * from "./components/ui";
+export * from "./components/search-field";
 export * from "./components/dropdown";
 export * from "./components/popover";
 export { SwipeableRow } from "./components/swipeable-row";
