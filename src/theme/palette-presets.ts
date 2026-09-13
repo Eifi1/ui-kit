@@ -23,6 +23,13 @@ export interface TokenSet {
   bgSurface2: string;
   border: string;
   textPrimary: string;
+  // The two quieter text roles. Derived per preset by blending `textPrimary` toward
+  // that preset's own surfaces until the contrast against the WORST of bgPage /
+  // bgSurface / bgSurface2 hits 7:1 and 4.8:1 — so both clear WCAG AA for normal text
+  // (4.5:1) on every surface they can land on, and both inherit the preset's warmth
+  // instead of importing a cool grey from Tailwind's palette.
+  textSecondary: string;
+  textMuted: string;
   // Interactive brand accent
   brand: string;
   brandHover: string;
@@ -65,6 +72,8 @@ export const DEFAULT_PRESET: PalettePreset = {
     bgSurface2: "#f3ead6",
     border: "#e2d6bd",
     textPrimary: "#463f33",
+    textSecondary: "#50493c",
+    textMuted: "#696153",
     brand: "#4f46e5",
     brandHover: "#4338ca",
     brandContrast: "#ffffff",
@@ -89,6 +98,8 @@ export const DEFAULT_PRESET: PalettePreset = {
     bgSurface2: "#21243a",
     border: "#2e3252",
     textPrimary: "#e6e8f4",
+    textSecondary: "#adafbe",
+    textMuted: "#8d90a0",
     brand: "#8b93f8",
     brandHover: "#aab1fb",
     brandContrast: "#16182b",
@@ -125,6 +136,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#efe9dc",
       border: "#e2dcce",
       textPrimary: "#2b2622",
+      textSecondary: "#4f4a44",
+      textMuted: "#68625b",
       brand: "#9a5b34",
       brandHover: "#824827",
       brandContrast: "#fdf8f2",
@@ -148,6 +161,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#322d27",
       border: "#3d372f",
       textPrimary: "#e8e2d6",
+      textSecondary: "#bfb9af",
+      textMuted: "#9e998f",
       brand: "#e0986a",
       brandHover: "#ecae85",
       brandContrast: "#2a1c10",
@@ -176,6 +191,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#e1e6ee",
       border: "#d3dae6",
       textPrimary: "#2e3440",
+      textSecondary: "#454b56",
+      textMuted: "#5e636e",
       brand: "#3b6ea5",
       brandHover: "#305a86",
       brandContrast: "#ffffff",
@@ -199,6 +216,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#3b4252",
       border: "#434c5e",
       textPrimary: "#eceff4",
+      textSecondary: "#d4d7de",
+      textMuted: "#afb3bc",
       brand: "#88c0d0",
       brandHover: "#a3d4e0",
       brandContrast: "#1c2027",
@@ -227,6 +246,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#eef1f8",
       border: "#dadfeb",
       textPrimary: "#1b1f2e",
+      textSecondary: "#494d5a",
+      textMuted: "#626572",
       brand: "#4338ca",
       brandHover: "#3730a3",
       brandContrast: "#ffffff",
@@ -250,6 +271,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#21243a",
       border: "#2e3252",
       textPrimary: "#e6e8f4",
+      textSecondary: "#adafbe",
+      textMuted: "#8d90a0",
       brand: "#8b93f8",
       brandHover: "#aab1fb",
       brandContrast: "#16182b",
@@ -279,6 +302,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#f3ead6",
       border: "#e2d6bd",
       textPrimary: "#463f33",
+      textSecondary: "#50493c",
+      textMuted: "#696153",
       brand: "#2c6979",
       brandHover: "#1f515f",
       brandContrast: "#ffffff",
@@ -302,6 +327,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#1d333c",
       border: "#2a4750",
       textPrimary: "#d6cdb8",
+      textSecondary: "#c2bdab",
+      textMuted: "#9c9d91",
       brand: "#5fb8cc",
       brandHover: "#82cfe0",
       brandContrast: "#0a161a",
@@ -330,6 +357,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#f4f4f5",
       border: "#e4e4e7",
       textPrimary: "#18181b",
+      textSecondary: "#4e4e50",
+      textMuted: "#676769",
       brand: "#1d4ed8",
       brandHover: "#1e40af",
       brandContrast: "#ffffff",
@@ -353,6 +382,8 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       bgSurface2: "#27272a",
       border: "#3f3f46",
       textPrimary: "#f4f4f5",
+      textSecondary: "#b2b2b3",
+      textMuted: "#929294",
       brand: "#60a5fa",
       brandHover: "#93c5fd",
       brandContrast: "#0b1220",
@@ -450,6 +481,8 @@ export const TOKEN_VARS = [
   "--bg-surface-2",
   "--border",
   "--text-primary",
+  "--text-secondary",
+  "--text-muted",
   "--brand",
   "--brand-hover",
   "--brand-contrast",
@@ -475,6 +508,8 @@ export function applyTokenSet(el: HTMLElement, t: TokenSet): void {
   el.style.setProperty("--bg-surface-2", t.bgSurface2);
   el.style.setProperty("--border", t.border);
   el.style.setProperty("--text-primary", t.textPrimary);
+  el.style.setProperty("--text-secondary", t.textSecondary);
+  el.style.setProperty("--text-muted", t.textMuted);
   el.style.setProperty("--brand", t.brand);
   el.style.setProperty("--brand-hover", t.brandHover);
   el.style.setProperty("--brand-contrast", t.brandContrast);

@@ -9,20 +9,33 @@
  * and add the package to Tailwind's source scan so its class names are kept:
  *   @source "../node_modules/@hb/ui/src";
  *
- * NOTE: these :root/.dark values are the canonical DEFAULT and are mirrored by
- * DEFAULT_PRESET in the palette theme module, which is what actually paints them
- * — the palette layer writes the active preset tokens inline on <html> at runtime
- * (Tailwind v4 strips a root block that holds only custom properties, so this
- * block is a documentation mirror, not the live source). */
+ * NOTE: these :root/.dark values MIRROR DEFAULT_PRESET in the palette theme module,
+ * which is what actually paints them — the palette layer writes the active preset
+ * tokens inline on <html> at runtime (Tailwind v4 strips a root block that holds only
+ * custom properties, so this block is a documentation mirror, not the live source).
+ *
+ * Because it is inert, it drifts silently, and it had: the surfaces and text colour
+ * below still held the pre-#328 palette while DEFAULT_PRESET had moved to Solar Dusk.
+ * They were resynced when --text-secondary/--text-muted were added (the new tones are
+ * derived from these surfaces, so a stale mirror would have documented a contrast ratio
+ * that was not the shipped one). The MONEY TRIO and the nine chart hues below are still
+ * the older values and have not been touched — nothing reads them, but do not cite them
+ * as the default without checking DEFAULT_PRESET first. */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg-page: #e9e2d2;          /* warm dim sand — low-glare light page */
-  --bg-surface: #f4efe3;       /* warm off-white card/panel (not pure white) */
-  --bg-surface-2: #e2dac7;     /* inset/well surface */
-  --border: #d9cfba;           /* warm hairline border */
-  --text-primary: #3a352b;     /* warm dark grey — not pure black */
+  --bg-page: #ede3cf;          /* warm dim sand — low-glare light page */
+  --bg-surface: #f6ecd9;       /* warm off-white card/panel (not pure white) */
+  --bg-surface-2: #f3ead6;     /* inset/well surface */
+  --border: #e2d6bd;           /* warm hairline border */
+  --text-primary: #463f33;     /* warm dark grey — not pure black */
+  /* The two quieter text roles. Contrast against the WORST of the three surfaces
+     above: 7.0:1 and 4.8:1, so both clear WCAG AA for normal text on all of them —
+     which is the reason they are tokens and not `text-slate-500`, a cool grey that
+     ignores the palette and sat at 4.4:1 on this ground. */
+  --text-secondary: #50493c;
+  --text-muted: #696153;
   --brand: #4f46e5;            /* indigo-600 */
   --brand-hover: #4338ca;      /* indigo-700 */
   --brand-contrast: #ffffff;
@@ -42,11 +55,14 @@
 }
 
 .dark {
-  --bg-page: #0a0a0c;          /* zinc near-black */
-  --bg-surface: #18181b;       /* zinc-900 */
-  --bg-surface-2: #27272a;     /* zinc-800 */
-  --border: #34343a;           /* zinc-700-ish */
-  --text-primary: #e8e8ea;     /* zinc-100 */
+  --bg-page: #0e0f1c;          /* indigo near-black */
+  --bg-surface: #181a2c;
+  --bg-surface-2: #21243a;     /* inset/well surface */
+  --border: #2e3252;
+  --text-primary: #e6e8f4;
+  /* As in `:root` — 7.0:1 and 4.8:1 against the worst of the three dark surfaces. */
+  --text-secondary: #adafbe;
+  --text-muted: #8d90a0;
   --brand: #818cf8;            /* indigo-400 */
   --brand-hover: #a5b4fc;      /* indigo-300 */
   --brand-contrast: #1e1b4b;   /* indigo-950 */
