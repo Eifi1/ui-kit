@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
-import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
@@ -26,6 +26,8 @@ interface AmountInputProps {
   placeholder?: string;
   label?: ReactNode;
   disabled?: boolean;
+  /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
+  invalid?: boolean;
   className?: string;
   id?: string;
   ariaLabel?: string;
@@ -166,7 +168,7 @@ function isResultOf(previous: string, text: string): boolean {
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
@@ -314,7 +316,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             asDisplay && align === "center" && "text-center",
             // Last, so it wins over the base class's own text colour.
             TONE_CLASS[tone],
+            invalid && FIELD_INVALID,
           )}
+          aria-invalid={invalid || undefined}
         />
         {label !== undefined && (
           // The display shape drops the label VISUALLY, not from the accessibility

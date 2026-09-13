@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
 
 export interface MultiEntityComboboxProps<V extends string | number> {
@@ -34,6 +34,8 @@ export interface MultiEntityComboboxProps<V extends string | number> {
   onCreate?: (query: string) => void;
   createLabel?: (query: string) => string;
   className?: string;
+  /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
+  invalid?: boolean;
 }
 
 /**
@@ -59,6 +61,7 @@ export function MultiEntityCombobox<V extends string | number>({
   onCreate,
   createLabel,
   className,
+  invalid,
 }: MultiEntityComboboxProps<V>) {
   const core = useComboboxCore<V>({ options, loadOptions, loading });
   const { results, resolve, setOpen } = core;
@@ -100,12 +103,14 @@ export function MultiEntityCombobox<V extends string | number>({
           typeof label === "string" ? `${label}: ${summary}` : undefined
         }
         disabled={disabled}
+        aria-invalid={invalid || undefined}
         onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
           FIELD_TRIGGER,
           "pr-9",
           label !== undefined && FIELD_FLOATING_PAD,
           disabled && "cursor-not-allowed opacity-50",
+          invalid && FIELD_INVALID,
         )}
       >
         <span

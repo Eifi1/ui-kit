@@ -2,7 +2,7 @@ import { Fragment, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
-import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, PHONE_QUERY } from "./ui";
+import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
@@ -130,6 +130,11 @@ export function Combobox({
   searchPlaceholder,
   closeLabel,
   createLabel,
+  invalid,
+  optionAdornment,
+  autoFocus,
+  onBlur,
+  onSubmit,
   "aria-label": ariaLabel,
 }: {
   value: string;
@@ -140,12 +145,42 @@ export function Combobox({
   id?: string;
   placeholder?: string;
   className?: string;
+  /** Required and unanswered — see {@link Input}'s `invalid`. Set on the `<input>`
+   *  itself rather than on the wrapper, which is what let Keksdose's account picker
+   *  delete the `[&_input]:…` copy of {@link FIELD_INVALID} it had been carrying
+   *  because this component had no `invalid` of its own. */
+  invalid?: boolean;
   /** Heading an option belongs under. Supplying it makes this list read exactly
    *  like {@link InlineEntityCombobox}'s — one heading per group with its rows
    *  indented beneath — instead of a flat list (feedback #136 rework: the payee
    *  field sat next to the newly-grouped category field and no longer matched).
    *  Omit for a plain list. */
   groupBy?: (option: string) => string;
+  /**
+   * Something to show at the far end of an option's row — a badge saying what the
+   * option IS, as distinct from what it is called.
+   *
+   * Keksdose's category-name field is the case: its proposals carry per-locale
+   * names, so picking one stores a category that follows the UI language, and
+   * picking a look-alike custom name does not. That difference is invisible in the
+   * label and decides what the row DOES, so the row has to show it. Returning
+   * `null` for an option renders nothing and costs no layout.
+   *
+   * Not rendered in the create row, which by definition names nothing in the pool.
+   */
+  optionAdornment?: (option: string) => ReactNode;
+  /** Focus on mount, the way `<input autoFocus>` does — and, through `onFocus`, open
+   *  the list with it. A click-the-value inline editor needs it: the cell the user
+   *  clicked names the field the caret should land in. {@link InlineEntityCombobox}
+   *  has had it since live #218. */
+  autoFocus?: boolean;
+  /** Focus genuinely LEFT the field. Not fired by picking a row — the rows suppress
+   *  `mousedown`, so the input never blurs — which is what makes it usable as a
+   *  "close the inline editor" signal. */
+  onBlur?: () => void;
+  /** Enter pressed with no row highlighted, i.e. "I mean what I typed". The list
+   *  closes either way; this is for a caller whose Enter also submits a row editor. */
+  onSubmit?: () => void;
   "aria-label"?: string;
   /** Rows to offer when the field is empty. 8 on a dropdown, where that is all
    *  that fits; the phone sheet asks for more because it has a screen. */
@@ -187,7 +222,30 @@ export function Combobox({
   // not the outer one (a grid item that can be taller than the field).
   const fieldRef = useRef<HTMLDivElement>(null);
 
-  const query = value.trim().toLowerCase();
+  /**
+   * Is the text in the field a QUERY, or just what was picked last time?
+   *
+   * Keksdose dev#549, filed against the category-name field: *"Currently it acts kind
+   * of a filter and clicking again does not open anything since the previous text is
+   * still there likely filtering all other options out."* A combobox whose filter is
+   * its own value can only ever re-offer the answer it already has — after picking
+   * "REWE" the list reopens holding one row, the one you are looking at, and changing
+   * your mind means clearing the field by hand first.
+   *
+   * So the text filters only while it is being TYPED; opening the list, by focus or
+   * by clicking the field again, puts the whole pool back. {@link InlineEntityCombobox}
+   * below has had this since it was written (see its `typedQuery`) and the app's
+   * category-name field grew its own copy to get it — this one, the payee field, was
+   * the one left with the bug.
+   *
+   * Not derived from "does the text exactly match an option": a custom value that
+   * happens to collide with one would then behave differently from every other, and
+   * what is being tracked is what the user just did, which is not a property of the
+   * string.
+   */
+  const [typing, setTyping] = useState(false);
+
+  const query = typing ? value.trim().toLowerCase() : "";
   const matches = useMemo(() => {
     const seen = new Set<string>();
     const uniq = options.filter((o) => o && !seen.has(o) && seen.add(o));
@@ -221,6 +279,9 @@ export function Combobox({
     onChange(v);
     setOpen(false);
     setActive(-1);
+    // What is in the field is now an ANSWER, not a query — so reopening offers the
+    // whole pool again rather than a one-row filter of the value just chosen.
+    setTyping(false);
   };
 
   // Offered only when the typed text is genuinely NOT in the pool: an exact
@@ -255,16 +316,29 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
+          aria-invalid={invalid || undefined}
           autoComplete="off"
+          autoFocus={autoFocus}
+          onBlur={onBlur}
           onMouseDown={primaryOnly.onMouseDown}
           onFocus={() => {
             // A back/forward mouse button focuses this field on its way to
             // navigating; it is not a request to open anything (live #309 rework).
             if (primaryOnly.fromAuxButton()) return;
             setOpen(true);
+            setTyping(false);
             // The sheet carries its own input, so the field behind it must not also
             // pull up the keyboard and scroll the page under the dialog.
             if (isPhone) sheetInputRef.current?.focus();
+          }}
+          // A CLICK as well as focus — the other half of dev#549. Picking a suggestion
+          // closes the list without moving focus (the rows suppress `mousedown` on
+          // purpose, so the input never blurred), which means clicking the field again
+          // fires no `focus` event at all and the list stayed shut. "Does not open
+          // anything" was literally true.
+          onClick={() => {
+            setOpen(true);
+            setTyping(false);
           }}
           // `inputMode="none"` rather than readOnly: the field must not look
           // uneditable (FIELD_BASE greys a read-only field since dev#468) and must
@@ -275,6 +349,7 @@ export function Combobox({
             onChange(e.target.value);
             setOpen(true);
             setActive(-1);
+            setTyping(true);
           }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
@@ -289,14 +364,19 @@ export function Combobox({
                 e.preventDefault();
                 commit(matches[active]);
               } else {
+                // No row highlighted: the typed text is the answer. `preventDefault`
+                // only when a caller is taking Enter, so a plain form submit is
+                // otherwise left alone.
+                if (onSubmit) e.preventDefault();
                 setOpen(false);
+                onSubmit?.();
               }
             } else if (e.key === "Escape") {
               setOpen(false);
               setActive(-1);
             }
           }}
-          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9")}
+          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
         />
         <ChevronDown
           aria-hidden
@@ -317,7 +397,10 @@ export function Combobox({
           // typed here is the value (a brand-new payee is just a name nothing
           // matches), and the list below narrows as it changes.
           query={value}
-          onQueryChange={onChange}
+          onQueryChange={(v) => {
+            onChange(v);
+            setTyping(true);
+          }}
           searchPlaceholder={searchPlaceholder ?? placeholder}
           inputRef={sheetInputRef}
           closeLabel={closeLabel}
@@ -349,8 +432,16 @@ export function Combobox({
                     </li>
                   )}
                   <li role="option" aria-selected={o === value}>
-                    <button type="button" onClick={() => commit(o)} className={SHEET_ROW_CLASS}>
-                      {o}
+                    <button
+                      type="button"
+                      onClick={() => commit(o)}
+                      className={cn(
+                        SHEET_ROW_CLASS,
+                        optionAdornment && "flex items-center justify-between gap-2",
+                      )}
+                    >
+                      {optionAdornment ? <span className="truncate">{o}</span> : o}
+                      {optionAdornment?.(o)}
                     </button>
                   </li>
                 </Fragment>
@@ -402,9 +493,17 @@ export function Combobox({
                       commit(o);
                     }}
                     onMouseEnter={() => setActive(i)}
-                    className={cn(rowClass(i === active), group != null && "pl-6")}
+                    className={cn(
+                      rowClass(i === active),
+                      group != null && "pl-6",
+                      // A row with a badge is a flex row so the label truncates and the
+                      // badge keeps its width; without one it stays the plain block the
+                      // other lists render, so nothing shifts for callers that pass none.
+                      optionAdornment && "flex items-center justify-between gap-2",
+                    )}
                   >
-                    {o}
+                    {optionAdornment ? <span className="truncate">{o}</span> : o}
+                    {optionAdornment?.(o)}
                   </button>
                 </li>
               </Fragment>
@@ -449,10 +548,13 @@ export function InlineEntityCombobox<V extends string | number>({
   closeLabel,
   clearable,
   clearLabel,
+  invalid,
   "aria-label": ariaLabel,
 }: {
   /** Selected option id, or null when nothing is selected. */
   value: V | null;
+  /** Required and unanswered — see {@link Combobox}'s `invalid`. */
+  invalid?: boolean;
   /** A picked/typed option emits its id; emptying the field emits `null`. */
   onChange: (v: V | null) => void;
   options: ComboOption<V>[];
@@ -596,6 +698,7 @@ export function InlineEntityCombobox<V extends string | number>({
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
+          aria-invalid={invalid || undefined}
           autoComplete="off"
           disabled={disabled}
           autoFocus={autoFocus}
@@ -646,7 +749,7 @@ export function InlineEntityCombobox<V extends string | number>({
               close();
             }
           }}
-          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9")}
+          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
         />
         {showClear ? (
           <button

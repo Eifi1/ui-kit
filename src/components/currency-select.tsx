@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 
@@ -70,9 +70,14 @@ interface CurrencySelectProps {
    * the full {@link CURRENCIES} list.
    */
   options?: string[];
+  /** Required and unanswered — {@link FIELD_INVALID}, the same rose border the
+   *  native `Select` has worn since feedback #235. Every field-styled control in
+   *  this package carries it now, so a form can mark any of its fields rather than
+   *  only the one that happened to have it first. */
+  invalid?: boolean;
 }
 
-export function CurrencySelect({ value, onChange, placeholder, className, label, options }: CurrencySelectProps) {
+export function CurrencySelect({ value, onChange, placeholder, className, label, options, invalid }: CurrencySelectProps) {
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
   const selected = getCurrency(value);
@@ -98,7 +103,8 @@ export function CurrencySelect({ value, onChange, placeholder, className, label,
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD)}
+        aria-invalid={invalid || undefined}
+        className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD, invalid && FIELD_INVALID)}
       >
         {/* The trigger stays COMPACT — flag + code only — so it never clips in a
             narrow field; the full names live in the (wider) popup (feedback

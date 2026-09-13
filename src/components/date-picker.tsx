@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import { Calendar, CalendarClock, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { addDaysIso, formatIsoDate } from "../lib/dates";
-import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD } from "./ui";
+import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
@@ -19,6 +19,8 @@ interface DatePickerBaseProps {
   clearable?: boolean;
   clearLabel?: string;
   disabled?: boolean;
+  /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
+  invalid?: boolean;
   className?: string;
   /** Intl options for the trigger's formatted date (default: locale short date). */
   formatOptions?: Intl.DateTimeFormatOptions;
@@ -45,6 +47,7 @@ function DateField({
   className,
   width,
   onClear,
+  invalid,
   children,
 }: {
   triggerText: string;
@@ -53,6 +56,7 @@ function DateField({
   disabled?: boolean;
   clearable?: boolean;
   clearLabel?: string;
+  invalid?: boolean;
   className?: string;
   /** Popover panel width; omit for the default (a bare calendar). */
   width?: number;
@@ -74,11 +78,13 @@ function DateField({
             // The visual FieldLabel is a plain span (not a <label htmlFor>), so give
             // the trigger an accessible name from a string label — a11y + testable.
             aria-label={typeof label === "string" ? label : undefined}
+            aria-invalid={invalid || undefined}
             className={cn(
               FIELD_TRIGGER,
               "pr-9",
               label !== undefined && FIELD_FLOATING_PAD,
               disabled && "cursor-not-allowed opacity-50",
+              invalid && FIELD_INVALID,
             )}
           >
             <span className={cn("truncate", !hasValue && "text-slate-400 dark:text-slate-500")}>

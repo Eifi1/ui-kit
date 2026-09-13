@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet } from "./numpad-sheet";
-import { FIELD_BASE, FIELD_DISPLAY, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { commitExpression, sanitizeLive } from "../lib/calc";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -45,6 +45,24 @@ interface NumberInputProps {
    *  lives, and a hint placed there landed on top of it (steering-design
    *  feedback #48). */
   hint?: ReactNode;
+  /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
+  invalid?: boolean;
+  /**
+   * A static unit shown at the field's right edge — "%", "kg", "km/h".
+   *
+   * The read-out half of {@link AmountInput}'s currency chip, and it exists for the
+   * same reason that one does: a unit belongs to the FIELD, not to the text, so
+   * typing it is a way to get it into the value. Keksdose had a percentage spelled
+   * three different ways across three screens — `<Input type="number" step="0.01">`
+   * for a loan rate, `step="0.1"` for a tax rate, `inputMode="decimal"` for a VAT
+   * rate — and none of the three showed a "%" anywhere near the box, so what the
+   * digits meant was a question the label alone had to answer.
+   *
+   * `aria-hidden`, like the currency read-out: it is a property of the field that
+   * the label already names ("Interest rate (%)"), and announcing it again after
+   * every value reads as part of the number.
+   */
+  suffix?: ReactNode;
 }
 
 /**
@@ -70,6 +88,8 @@ export function NumberInput({
   calculator = true,
   variant = "field",
   hint,
+  invalid,
+  suffix,
 }: NumberInputProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
@@ -126,8 +146,12 @@ export function NumberInput({
           setFocused(false);
         }}
         onKeyDown={onKeyDown}
-        // `pr-9` sits last so it always wins the right-padding that makes room
-        // for the calculator icon, even when inputClassName sets its own px.
+        aria-invalid={invalid || undefined}
+        // The right-padding sits last so it always wins over an inputClassName that
+        // sets its own px. Both trailing controls can be on at once, so the room
+        // they need is reserved together rather than by whichever happens to render:
+        // the calculator is ~36px and a short unit ~24px, and a field that reserved
+        // only one of them would let the digits run under the other.
         className={cn(
           asDisplay
             ? cn(FIELD_DISPLAY, "text-4xl font-semibold leading-tight tracking-tight tabular-nums")
@@ -135,17 +159,33 @@ export function NumberInput({
               ? FLOATING_INPUT_CLASS
               : FIELD_BASE,
           inputClassName,
-          showCalc && "pr-9",
+          showCalc && suffix !== undefined ? "pr-16" : showCalc ? "pr-9" : suffix !== undefined ? "pr-8" : undefined,
+          invalid && FIELD_INVALID,
         )}
       />
-      {showCalc && (
-        <CalculatorButton
-          value={value}
-          onChange={onChange}
-          className="absolute inset-y-0 right-0 px-2.5"
-          ariaLabel={labels?.calculatorTrigger}
-          labels={labels?.calculator}
-        />
+      {(showCalc || suffix !== undefined) && (
+        // One flex track for both, so the unit and the calculator sit side by side
+        // instead of stacking on the same corner — AmountInput's arrangement, which
+        // has carried a chip and a calculator together since #430.
+        <div className="absolute inset-y-0 right-0 flex items-center">
+          {showCalc && (
+            <CalculatorButton
+              value={value}
+              onChange={onChange}
+              className="self-stretch px-2.5"
+              ariaLabel={labels?.calculatorTrigger}
+              labels={labels?.calculator}
+            />
+          )}
+          {suffix !== undefined && (
+            <span
+              aria-hidden
+              className="pointer-events-none pr-3 text-xs font-medium text-slate-500 dark:text-slate-400"
+            >
+              {suffix}
+            </span>
+          )}
+        </div>
       )}
       {showNumpad && (
         <NumberPadSheet value={value} onChange={onChange} onDone={() => inputRef.current?.blur()} label={label} />

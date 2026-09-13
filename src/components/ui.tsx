@@ -418,9 +418,20 @@ export const Input = forwardRef<
      *  name), never for a stack of them. Labelled fields only: the label is what
      *  the placeholder falls back to once it goes `sr-only`. */
     variant?: "field" | "display";
+    /** The field is required and unanswered, or holds something that cannot be
+     *  saved — {@link FIELD_INVALID}, the same rose border/ring `Select` has worn
+     *  since feedback #235.
+     *
+     *  It exists here because writing `aria-invalid` by hand did NOT do this. The
+     *  attribute spreads onto the element and nothing styles it — there is no
+     *  `[aria-invalid]` rule in this package or in either consumer's stylesheet —
+     *  so three Keksdose dialogs flagged a mismatched passphrase to a screen reader
+     *  and painted the field exactly as if it were fine. Setting the prop sets the
+     *  attribute too, so the two can no longer be spelled separately. */
+    invalid?: boolean;
   }
 >(function Input(
-  { className, inputClassName, label, id, placeholder, type, variant = "field", ...rest },
+  { className, inputClassName, label, id, placeholder, type, variant = "field", invalid, ...rest },
   ref,
 ) {
   const generated = useId();
@@ -463,8 +474,13 @@ export const Input = forwardRef<
           type={type}
           placeholder={placeholder}
           {...rest}
+          // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
+          // carried, or setting `invalid` would have quietly deleted a caller's own
+          // `aria-invalid`. The prop is the one that also paints; a bare attribute
+          // still announces, which is all it ever did.
+          aria-invalid={invalid || rest["aria-invalid"] || undefined}
           onClick={handleClick}
-          className={cn(FIELD_BASE, className, inputClassName)}
+          className={cn(FIELD_BASE, className, inputClassName, invalid && FIELD_INVALID)}
         />
       );
     }
@@ -476,7 +492,8 @@ export const Input = forwardRef<
           type={effectiveType}
           placeholder={placeholder}
           {...rest}
-          className={cn(FIELD_BASE, "pr-9", inputClassName)}
+          aria-invalid={invalid || rest["aria-invalid"] || undefined}
+          className={cn(FIELD_BASE, "pr-9", inputClassName, invalid && FIELD_INVALID)}
         />
         {revealToggle}
       </div>
@@ -494,6 +511,7 @@ export const Input = forwardRef<
         // nothing at all — so the label text becomes the placeholder.
         placeholder={asDisplay ? (placeholder ?? (typeof label === "string" ? label : " ")) : " "}
         {...rest}
+        aria-invalid={invalid || rest["aria-invalid"] || undefined}
         onClick={handleClick}
         className={cn(
           asDisplay
@@ -501,6 +519,7 @@ export const Input = forwardRef<
             : FLOATING_INPUT_CLASS,
           isPassword && "pr-9",
           inputClassName,
+          invalid && FIELD_INVALID,
         )}
       />
       {revealToggle}
@@ -565,18 +584,36 @@ Select.displayName = "Select";
 
 export const Textarea = forwardRef<
   HTMLTextAreaElement,
-  TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: ReactNode }
->(function Textarea({ className, label, id, placeholder, ...rest }, ref) {
+  TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    label?: ReactNode;
+    /** See {@link Input}'s `invalid`. */
+    invalid?: boolean;
+  }
+>(function Textarea({ className, label, id, placeholder, invalid, ...rest }, ref) {
   const generated = useId();
   const fieldId = id ?? generated;
   if (label === undefined) {
     return (
-      <textarea ref={ref} id={id} placeholder={placeholder} {...rest} className={cn(FIELD_BASE, className)} />
+      <textarea
+        ref={ref}
+        id={id}
+        placeholder={placeholder}
+        {...rest}
+        aria-invalid={invalid || rest["aria-invalid"] || undefined}
+        className={cn(FIELD_BASE, className, invalid && FIELD_INVALID)}
+      />
     );
   }
   return (
     <FloatingField className={className} htmlFor={fieldId} label={label}>
-      <textarea ref={ref} id={fieldId} placeholder=" " {...rest} className={FLOATING_INPUT_CLASS} />
+      <textarea
+        ref={ref}
+        id={fieldId}
+        placeholder=" "
+        {...rest}
+        aria-invalid={invalid || rest["aria-invalid"] || undefined}
+        className={cn(FLOATING_INPUT_CLASS, invalid && FIELD_INVALID)}
+      />
     </FloatingField>
   );
 });
