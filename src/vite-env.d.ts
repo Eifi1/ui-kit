@@ -2,6 +2,10 @@
 // type-checks standalone (consumers provide the real values at build time).
 interface ImportMetaEnv {
   readonly DEV: boolean;
+  /** Set by vitest, and by nothing else. `DEV` cannot answer "am I under test" —
+   *  a test run is neither a dev build nor a production one, and vitest reports
+   *  `DEV=true` — so anything that should be quiet in a suite has to ask this. */
+  readonly VITEST?: boolean;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;

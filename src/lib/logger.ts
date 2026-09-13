@@ -39,7 +39,12 @@ let storeLog: boolean = (() => {
   const override = readStored("store_log");
   if (override === "0") return false;
   if (override === "1") return true;
-  return Boolean(import.meta.env.DEV);
+  // NOT under vitest. `DEV` distinguishes a dev build from a production one; a test
+  // run is neither, and vitest sets `DEV=true` — so every transition of every logged
+  // store printed a prev/next object into the suite output. Measured on the consumer's
+  // suite: 822 blocks, several thousand lines, in a log whose whole job is to make one
+  // real `console.error` findable. `store_log=1` still forces it on.
+  return Boolean(import.meta.env.DEV) && !import.meta.env.VITEST;
 })();
 
 /** Turn store logging on or off for the rest of the session (devtools escape hatch). */
