@@ -9,6 +9,7 @@ import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
+import { useMediaQuery } from "../hooks/use-media-query";
 
 export interface AppShellSubItem {
   to: string;
@@ -64,6 +65,73 @@ interface AppShellProps {
 }
 
 /**
+ * The bottom nav's own height, published as `--app-nav-h` so anything that has to sit
+ * ON it can stop guessing.
+ *
+ * Keksdose live #314 is what this is for. Its rework — *"Stick it to the bottom
+ * touching the bottom icon bar with budget, accounts, … Currently there is a small gap
+ * which confuses"* — was a receipt footer pinned at `bottom-20`, because `<main>`
+ * reserves `pb-20` for this nav and 20 looked like the nav's height. It is not: the
+ * padding is generous CLEARANCE, and the nav is content-sized (icon + label + `py-2`,
+ * about 56px), so the footer floated ~24px above the bar.
+ *
+ * Measured rather than named, because the height is not a constant anyone owns: it is
+ * an icon, a translated label that can wrap or truncate, and whatever the platform does
+ * with the safe-area inset. A hard-coded `bottom-14` would be the same guess one number
+ * lower, and it would be wrong again the first time a label needed two lines.
+ *
+ * `0px` when the nav is not rendered — above `md` it is `display:none`, which observes
+ * as a zero box — so a consumer can write `bottom-[var(--app-nav-h,0px)]` once and get
+ * the right answer at both widths without a breakpoint of its own.
+ */
+function useNavHeightVar(ref: React.RefObject<HTMLElement | null>): void {
+  // Re-run when the breakpoint flips. A ResizeObserver SKIPS an element that is not
+  // being rendered, so the nav going `display:none` above `md` fires no callback and
+  // would leave the last phone height published — a desktop footer would then sit 56px
+  // off the bottom after a live resize. The query is the one the nav's own `md:hidden`
+  // compiles to, so the two cannot disagree about where the boundary is.
+  const isMdUp = useMediaQuery("(min-width: 768px)", false);
+  useEffect(() => {
+    const node = ref.current;
+    const root = document.documentElement;
+    // `getBoundingClientRect().height`, rounded DOWN — not `offsetHeight`, and not
+    // ceil. Measured on the running app at 406x816: the bar is **55.5px** tall, and
+    // both `offsetHeight` and `Math.ceil` answer 56. That is why live #314 round four
+    // was *"No change. Still a pixel inbetween"* — the previous fix was arithmetically
+    // a no-op on the very value it was meant to correct.
+    //
+    // 56 is the wrong side. A sticky element with `bottom: X` puts its bottom edge X
+    // above the viewport bottom, and the bar's TOP edge is at its own height: so
+    // X = 56 lands the footer at y=760.0 against a bar starting at y=760.5, i.e. half
+    // a CSS pixel of page showing through — about 1.4 device pixels on his phone,
+    // which is exactly the hairline in the screenshot.
+    //
+    // The two errors are not symmetric, and I had them backwards the first time.
+    // Too SMALL tucks the sticky element under a bar that is opaque and painted above
+    // it (`z-30` against `z-10`): invisible. Too LARGE opens the seam. So floor, and
+    // consumers subtract a further pixel (see `invoice-line-totals.tsx`) for the case
+    // where the height lands on a whole pixel and floor leaves no overlap at all.
+    const publish = () =>
+      root.style.setProperty(
+        "--app-nav-h",
+        `${node ? Math.floor(node.getBoundingClientRect().height) : 0}px`,
+      );
+    publish();
+    // The observer is the refinement, not the mechanism: `publish()` above is already
+    // right for a static nav, and jsdom has no ResizeObserver unless a test stubs one.
+    // ONE cleanup for every branch, though — an early `return` on the no-observer path
+    // left the variable behind on unmount, which a stale `bottom:` offset on whatever
+    // rendered next would have inherited.
+    const ro = node && typeof ResizeObserver !== "undefined" ? new ResizeObserver(publish) : null;
+    if (ro && node) ro.observe(node);
+    return () => {
+      ro?.disconnect();
+      root.style.removeProperty("--app-nav-h");
+    };
+  }, [ref, isMdUp]);
+}
+
+/**
  * The responsive application shell: a top bar, a collapsible desktop sidebar
  * (icon-only when collapsed, with tooltips), a mobile bottom nav bar, the main
  * content area, and an optional desktop footer. Router-aware via react-router
@@ -86,6 +154,9 @@ export function AppShell({
   // partitioned webview). Unguarded, that was not a lost sidebar preference: nothing
   // in the application mounted at all.
   const [collapsed, setCollapsed] = useState(() => readStored(collapseStorageKey) === "1");
+  // Publishes `--app-nav-h` for anything that has to sit on the bottom bar.
+  const navRef = useRef<HTMLElement>(null);
+  useNavHeightVar(navRef);
   useEffect(() => {
     writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
@@ -174,6 +245,7 @@ export function AppShell({
       </div>
 
       <nav
+        ref={navRef}
         data-tour="nav"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[var(--bg-surface)] border-t border-[var(--border)] grid"
         style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
