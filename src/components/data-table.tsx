@@ -678,7 +678,15 @@ export function DataTable<T>({
     const href = mobileCardLinkable ? rowHref?.(row) : undefined;
     const cardClass = cn(
       "w-full px-4 py-3 text-left flex items-center gap-3",
-      interactive && "active:bg-slate-50 dark:active:bg-slate-800/40 cursor-pointer",
+      // Live #320's other half: the card acknowledges the touch before the sheet
+      // arrives. On a cold route the data can take a beat, and an unacknowledged tap
+      // reads as "did that register?" — which is most of what "abrupt" means here.
+      // `origin-center` + a 0.5% squeeze is deliberately almost subliminal: this fires
+      // on every row of a long list, so anything larger becomes the list's personality
+      // rather than feedback. `transition-transform` alone, so the existing background
+      // flip stays instant.
+      interactive &&
+        "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-slate-50 dark:active:bg-slate-800/40 motion-reduce:transition-none motion-reduce:active:scale-100",
     );
     // The card's content is written once and worn by either tag below. Note that
     // the primary cell is rendered RAW here, never through `linkColumn` — the card

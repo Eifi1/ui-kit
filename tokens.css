@@ -156,6 +156,41 @@ body {
   animation: indeterminate-sweep 1.4s ease-in-out infinite;
 }
 
+/* Overlay motion (Keksdose live #320: *"Evaluate how much work it would be to have
+   nicer transitions for the mobile users when clicking on a row … for all hoc derived
+   tables"*).
+ *
+ * Two keyframes rather than a library. Every overlay in this package is bottom-anchored
+ * on a phone and centred from md up, so one pair covers the row sheet, the modal, the
+ * picker and the numpad — and every table in every consuming app gets it by getting
+ * them, which is what the row asked for.
+ *
+ * ENTER only, deliberately. An exit animation needs the element to stay mounted past
+ * the state change, which means a state machine in every overlay; the abruptness being
+ * reported is the OPEN, and half the feature for none of the machinery is the right
+ * first move. If the close ever reads as abrupt too, that is the moment to pay for it.
+ *
+ * 180ms and an ease-out curve: long enough to read as movement, short enough that it
+ * never delays a screen whose data is already in memory — which most of these are.
+ */
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-rise-in {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+.animate-overlay { animation: overlay-fade-in 0.18s ease-out; }
+.animate-sheet { animation: sheet-rise-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* Motion is the first thing to drop here, not the last. The overlay still fades — a
+   backdrop appearing instantly is a flash, not a transition — but nothing travels. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet { animation: none; }
+  .animate-overlay { animation-duration: 0.01ms; }
+}
+
 /* Chart drilldown fan-out/-in (feedback #260 rework): the remounted chart eases
    in instead of snapping. */
 @keyframes drill-in {

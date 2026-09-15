@@ -76,14 +76,17 @@ export function FullBleedDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40"
+      // `animate-overlay` on the backdrop and `animate-sheet` on the panel (live #320):
+      // the backdrop fades, the panel rises from the bottom edge it is anchored to.
+      // Both are no-ops under prefers-reduced-motion — see tokens.css.
+      className="animate-overlay fixed inset-0 z-50 flex items-stretch justify-center bg-black/40"
       role="dialog"
       aria-modal="true"
       {...backdropClose}
     >
       <div
         className={cn(
-          "flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900",
+          "animate-sheet flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900",
           className,
         )}
       >

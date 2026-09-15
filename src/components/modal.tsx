@@ -212,7 +212,10 @@ export function Modal({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
+        // Live #320. The panel below rises only where it is bottom-anchored: from md up
+        // it is centred, and a centred box sliding up from off-screen reads as a
+        // different component arriving rather than as the same one settling.
+        "animate-overlay fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
         fullBleed ? "p-0 md:p-4" : "p-4",
       )}
       {...backdropClose}
@@ -227,6 +230,7 @@ export function Modal({
         onPointerDown={drag.onPointerDown}
         style={drag.style}
         className={cn(
+          "animate-sheet md:animate-none",
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
           { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is
