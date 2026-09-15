@@ -142,6 +142,18 @@ export interface DataTableProps<T> {
    * column inside the viewport-locked app shell). See feedback #207.
    */
   fillHeight?: boolean;
+  /** How tall the scrolling body may get before it scrolls, as a CSS length.
+   *
+   *  Default `calc(100dvh - 12rem)`, which is what every caller had before this
+   *  existed: a bound is what makes the sticky header work, because a header
+   *  can only stick to a wrapper that actually scrolls. The cap assumes the
+   *  table has page chrome above and below it, and a table that is the last
+   *  thing on its page can afford more — ASPICE Atlas report #12, "for the 25
+   *  elements there should in best case be no scrolling necessary".
+   *
+   *  Ignored under `fillHeight`, which bounds the body by its flex parent
+   *  instead and is the stronger statement of the same intent. */
+  maxBodyHeight?: string;
   /**
    * When provided, the table renders the supplied rows as-is (no client-side
    * filtering/sorting/slicing) and the pagination footer is driven by these
@@ -339,6 +351,7 @@ export function DataTable<T>({
   storageKey,
   urlSync = false,
   fillHeight = false,
+  maxBodyHeight = "calc(100dvh - 12rem)",
   serverPagination,
   filters: filtersProp,
   onFiltersChange,
@@ -872,10 +885,8 @@ export function DataTable<T>({
               other half of the `w-0 min-w-full` fix on the expansion cell below
               (feedback #104: "expanding an item resizes the columns"). */}
           <div
-            className={cn(
-              "overflow-auto [scrollbar-gutter:stable]",
-              fillHeight ? "flex-1 min-h-0" : "max-h-[calc(100dvh-12rem)]",
-            )}
+            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "flex-1 min-h-0")}
+            style={fillHeight ? undefined : { maxHeight: maxBodyHeight }}
           >
         <table className="w-full text-sm">
           {/* Sticky header. position:sticky pins to the nearest scroll-container
