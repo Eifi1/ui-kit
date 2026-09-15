@@ -137,3 +137,78 @@ describe("Modal composed with a sheet (the reachable gesture, U-3)", () => {
     expect(document.body.style.overflow).toBe("");
   });
 });
+
+/**
+ * Keksdose dev #561, from a 500px-wide DESKTOP window: *"remove the scroll bar to stop
+ * horizontal resizing when opening edit tx and closing"*.
+ *
+ * Below `AppShell`'s md breakpoint the viewport is the scroll container, so hiding the
+ * document's overflow removes its scrollbar — and where that scrollbar occupied layout
+ * space, the page widens by its width for as long as the dialog is open, then snaps
+ * back. Replacing exactly that width while locked is the fix.
+ *
+ * ⚠️ Invisible in a real browser here: headless Chromium uses OVERLAY scrollbars, so
+ * `innerWidth - clientWidth` is 0 and nothing shifts — the bug only exists on classic
+ * scrollbars (Windows, which is where it was reported from). jsdom cannot lay out
+ * either, but the decision IS arithmetic on those two numbers, so it is testable by
+ * stating them.
+ */
+describe("the scrollbar the lock takes away (dev #561)", () => {
+  const withScrollbar = (px: number) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 500 });
+    Object.defineProperty(document.documentElement, "clientWidth", {
+      configurable: true,
+      value: 500 - px,
+    });
+  };
+
+  afterEach(() => {
+    Reflect.deleteProperty(document.documentElement, "clientWidth");
+    document.body.style.paddingRight = "";
+  });
+
+  it("replaces a classic scrollbar's width while locked, and gives it back", () => {
+    withScrollbar(15);
+    const { rerender } = render(<Both outer inner={false} />);
+    expect(document.body.style.overflow).toBe("hidden");
+    // The whole bug: without this the page is 15px wider for as long as the dialog is up.
+    expect(document.body.style.paddingRight).toBe("15px");
+
+    rerender(<Both outer={false} inner={false} />);
+    expect(document.body.style.overflow).toBe("");
+    expect(document.body.style.paddingRight).toBe("");
+  });
+
+  it("adds nothing where the scrollbar takes no space", () => {
+    // Overlay scrollbars — macOS, most Linux, every phone — and any page that does not
+    // scroll. Padding there would CREATE the gap this exists to prevent.
+    withScrollbar(0);
+    const { rerender } = render(<Both outer inner={false} />);
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.paddingRight).toBe("");
+    rerender(<Both outer={false} inner={false} />);
+    expect(document.body.style.paddingRight).toBe("");
+  });
+
+  it("keeps padding the consumer had already set", () => {
+    document.body.style.paddingRight = "8px";
+    withScrollbar(15);
+    const { rerender } = render(<Both outer inner={false} />);
+    expect(document.body.style.paddingRight).toBe("23px");
+    rerender(<Both outer={false} inner={false} />);
+    // Restored to the consumer's value, not blanked.
+    expect(document.body.style.paddingRight).toBe("8px");
+  });
+
+  it("compensates once for nested locks, not once per lock", () => {
+    // The numpad-inside-the-dialog gesture the counter above exists for. Two locks must
+    // not stack two scrollbars' worth of padding.
+    withScrollbar(15);
+    const { rerender } = render(<Both outer inner />);
+    expect(document.body.style.paddingRight).toBe("15px");
+    rerender(<Both outer inner={false} />);
+    expect(document.body.style.paddingRight).toBe("15px");
+    rerender(<Both outer={false} inner={false} />);
+    expect(document.body.style.paddingRight).toBe("");
+  });
+});

@@ -23,11 +23,47 @@ import { useEffect } from "react";
  */
 let lockCount = 0;
 let previousOverflow = "";
+let previousPaddingRight = "";
+
+/**
+ * How much width the scrollbar of the DOCUMENT is currently taking.
+ *
+ * Zero on every platform with overlay scrollbars (macOS, most Linux, every phone) and
+ * zero whenever the page does not scroll; ~15px on Windows with classic ones. Read
+ * BEFORE `overflow: hidden` is applied, because applying it is what makes it vanish.
+ */
+function scrollbarWidth(): number {
+  return Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+}
 
 function acquire(): void {
   if (lockCount === 0) {
+    // ⚠️ Hiding the document's overflow REMOVES its scrollbar, and on a platform where
+    // that scrollbar occupied layout space the page gets ~15px wider for as long as the
+    // dialog is open — then snaps back on close. Keksdose dev #561 from a 500px-wide
+    // desktop window: *"remove the scroll bar to stop horizontal resizing when opening
+    // edit tx and closing"*.
+    //
+    // Replacing the width we are about to take away is the standard fix and the narrow
+    // one. The alternatives both cost more than the bug: `scrollbar-gutter` on `html`
+    // shrinks the initial containing block, so every `position: fixed` overlay stops
+    // 15px short on each edge (measured, and documented in tokens.css), and moving the
+    // scroll container to `main` below `md` stops a phone's URL bar collapsing. This
+    // touches neither — only the element already being modified, only while locked.
+    //
+    // Note this fixes the DIALOG jump specifically. The separate page-to-page width
+    // change, where one route scrolls and the next does not, is the open decision
+    // recorded in tokens.css and is untouched here.
+    const gap = scrollbarWidth();
     previousOverflow = document.body.style.overflow;
+    previousPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
+    if (gap > 0) {
+      // Added to whatever the body already had rather than assigned, so a consumer
+      // that sets its own padding keeps it.
+      const existing = parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+      document.body.style.paddingRight = `${existing + gap}px`;
+    }
   }
   lockCount += 1;
 }
@@ -37,7 +73,9 @@ function release(): void {
   lockCount -= 1;
   if (lockCount === 0) {
     document.body.style.overflow = previousOverflow;
+    document.body.style.paddingRight = previousPaddingRight;
     previousOverflow = "";
+    previousPaddingRight = "";
   }
 }
 
