@@ -93,6 +93,49 @@ export function anchoredPanelPlacement(
  * Callers own horizontal placement — the pickers align to the trigger's left edge, the
  * popovers to its right — and must apply `maxHeight` with an internal `overflow-y`.
  */
+/**
+ * The region actually on screen, tracked while `active` (Keksdose live #328).
+ *
+ * The same measurement {@link useAnchoredPanel} caps a dropdown with, for the callers
+ * that need the box itself rather than a placement: a FULL-SCREEN sheet cannot use
+ * `inset-0`, because on Android the on-screen keyboard shrinks only the VISUAL
+ * viewport — `inset-0` still spans the whole screen, so the bottom of the sheet, and
+ * the end of whatever list is scrolling inside it, live behind the keyboard where no
+ * gesture reaches them.
+ *
+ * Returns `null` where there is nothing to correct: no `visualViewport` (jsdom, SSR,
+ * older browsers) or no keyboard taking a bite out of it. A caller then keeps its
+ * static layout, which is right at every width where this does not apply — and is why
+ * the desktop and the test suite see exactly the markup they saw before.
+ */
+export function useVisualViewport(active: boolean): ViewportBox | null {
+  const [box, setBox] = useState<ViewportBox | null>(null);
+
+  useLayoutEffect(() => {
+    if (!active) return;
+    const update = () => {
+      const vv = typeof window === "undefined" ? undefined : window.visualViewport;
+      // The 1px slack is not superstition: `visualViewport.height` is fractional on a
+      // device-pixel-ratio that is not an integer (his phone reports 1.25), so a
+      // strict comparison would report a "keyboard" of 0.4px on every phone and pin
+      // a height where none was needed.
+      setBox(vv && vv.height < window.innerHeight - 1 ? { top: vv.offsetTop, height: vv.height } : null);
+    };
+    update();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [active]);
+
+  return box;
+}
+
 export function useAnchoredPanel<T extends HTMLElement>(
   ref: RefObject<T | null>,
   open: boolean,

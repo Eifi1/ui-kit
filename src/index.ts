@@ -14,7 +14,7 @@ export { useMediaQuery } from "./hooks/use-media-query";
 export { useBodyScrollLock } from "./hooks/use-body-scroll-lock";
 export { useAnchoredRect } from "./hooks/use-anchored-rect";
 export type { AnchorRect } from "./hooks/use-anchored-rect";
-export { useAnchoredPanel, anchoredPanelPlacement } from "./hooks/use-anchored-panel";
+export { useAnchoredPanel, anchoredPanelPlacement, useVisualViewport } from "./hooks/use-anchored-panel";
 export type {
   AnchoredPanel,
   AnchoredPanelOptions,

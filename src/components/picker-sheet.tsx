@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useVisualViewport } from "../hooks/use-anchored-panel";
 
 /**
  * The PHONE presentation of a picker: a full-screen dialog with a search box at
@@ -74,6 +75,9 @@ export function PickerSheet({
    * backdrop) so history does not accumulate husks.
    */
   useOverlayHistory(open, onClose);
+  // The visible region, while the sheet is up — see the `style` below for why a
+  // full-screen sheet cannot simply be `inset-0` on a phone (live #328).
+  const vv = useVisualViewport(open);
   // The sheet focuses its OWN search box when it opens (Keksdose live #212: *"make
   // the text input filter active on select click"*).
   //
@@ -114,6 +118,26 @@ export function PickerSheet({
       // portal: the sheet is modal and full-screen, so "a click in here is not an
       // outside click" is a property of the sheet, not of whoever opened it.
       onMouseDown={(e) => e.stopPropagation()}
+      // ⚠️ `inset-0` was the whole of Keksdose live #328: *"When the keyboard overlays
+      // the entries I cannot scroll past them … to see also the last entries. Happens
+      // when browsing the account select."*
+      //
+      // This sheet FOCUSES ITS OWN SEARCH BOX on open (see above), so the keyboard is
+      // up every single time it is used on a phone. On Android that shrinks the visual
+      // viewport and leaves the LAYOUT viewport alone — `inset-0` is the layout
+      // viewport — so the sheet kept its full height with its bottom third behind the
+      // keyboard. The list below is `flex-1 overflow-y-auto`, so it sized itself to
+      // that hidden height too: it scrolled to ITS end while the last rows were still
+      // under the keys, and no gesture could bring them out. Nothing was clipped and
+      // nothing looked broken, which is why it reads as "I cannot scroll past them".
+      //
+      // `visualViewport` is the API that answers rather than hints (the live #292
+      // lesson): it reports the region actually on screen, keyboard and pinch-pan
+      // included, and it fires on the keyboard opening and closing. Pinned to that box,
+      // the sheet ends where the keys begin and the list's own scroll covers the rest.
+      // `useVisualViewport` returns null when there is nothing to correct, and then
+      // this is character-for-character the sheet that was here before.
+      style={vv ? { top: vv.top, height: vv.height, bottom: "auto" } : undefined}
       className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-slate-900"
     >
       <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
