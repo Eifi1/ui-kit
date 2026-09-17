@@ -89,3 +89,34 @@ describe("SearchField", () => {
     expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Find a bank");
   });
 });
+
+/**
+ * Keksdose live #333 — *"Entering the search here. Is that set as password? Entered
+ * here and I got prompted for remembering my name or mail address"*, from the settings
+ * filter on a 406px phone.
+ *
+ * Nothing about this field was a password; what it was, was ANONYMOUS. Chrome's autofill
+ * classifies an input from its name, its autocomplete attribute and the fields around
+ * it, and this one had neither of the first two on a page that also carries an email
+ * and a password. The fix is to say what the field is rather than to hope: a `name` of
+ * "search" and an explicit `autocomplete="off"`.
+ */
+describe("the filter box is not part of anyone's autofill profile (live #333)", () => {
+  it("names itself and opts out of autofill", () => {
+    render(<SearchField value="" onChange={() => {}} label="Filter" />);
+    const input = screen.getByRole("searchbox");
+    expect(input).toHaveAttribute("name", "search");
+    expect(input).toHaveAttribute("autocomplete", "off");
+    // Same keyboard, other half: a filter is not prose.
+    expect(input).toHaveAttribute("autocapitalize", "none");
+    expect(input).toHaveAttribute("autocorrect", "off");
+    expect(input).toHaveAttribute("spellcheck", "false");
+  });
+
+  it("still lets a caller override the defaults", () => {
+    // They are declared before the prop spread on purpose — a search box inside a
+    // real search FORM may well want its own name.
+    render(<SearchField value="" onChange={() => {}} label="Filter" name="q" />);
+    expect(screen.getByRole("searchbox")).toHaveAttribute("name", "q");
+  });
+});

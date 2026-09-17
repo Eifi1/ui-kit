@@ -74,6 +74,26 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         placeholder={placeholder ?? label}
+        // Keksdose live #333: *"Entering the search here — is that set as password?
+        // … I got prompted for remembering my name or mail address"*, typed into the
+        // settings filter on a phone.
+        //
+        // A `type="search"` input with no `name` and no `autocomplete` is a field
+        // Chrome's autofill classifies by GUESSWORK, from the labels around it and
+        // the other fields on the page — and a settings page has an email and a
+        // password on it. Naming the field and declaring the intent is what takes it
+        // out of that guess: `autocomplete="off"` says it is not part of any profile,
+        // and a `name` of "search" is the strongest hint the heuristics take.
+        //
+        // The three that follow are not about autofill but about the same keyboard:
+        // a filter box that capitalises the first letter and autocorrects "2fa" to
+        // "2FA" is fighting the person typing into it. Declared BEFORE `{...rest}` so
+        // a caller with a reason can still override any of them.
+        name="search"
+        autoComplete="off"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         {...rest}
         className={cn(
           FIELD_BASE,
