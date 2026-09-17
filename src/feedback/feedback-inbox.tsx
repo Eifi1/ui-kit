@@ -398,8 +398,19 @@ export function FeedbackStatusTransitions({
         );
         // The icon row has no visible label, so it needs the tooltip; the pills
         // carry theirs inline.
+        //
+        // ⚠️ ABOVE, and portalled (Keksdose live #339). `side="bottom"` put the bubble
+        // straight over the NEXT ROW's icons — in a queue you triage by running down it
+        // with the pointer, that is the row you are about to reach, and it was covered
+        // every time you paused on one. Above covers the row you have just left instead.
+        //
+        // `portal` is not cosmetic here. An absolutely-positioned bubble is clipped by
+        // any ancestor that scrolls — this cell lives inside the DataTable's own
+        // scroller — and it cannot flip: `placeTooltip` is what moves the bubble below
+        // the icon for the FIRST row, where there is no room above it, instead of
+        // painting it off the top of the list.
         return variant === "icon" ? (
-          <Tooltip key={value} label={name} side="bottom">
+          <Tooltip key={value} label={name} side="top" portal>
             {button}
           </Tooltip>
         ) : (
