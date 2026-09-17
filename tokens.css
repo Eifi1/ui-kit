@@ -165,13 +165,21 @@ body {
  * picker and the numpad — and every table in every consuming app gets it by getting
  * them, which is what the row asked for.
  *
- * ENTER only, deliberately. An exit animation needs the element to stay mounted past
- * the state change, which means a state machine in every overlay; the abruptness being
- * reported is the OPEN, and half the feature for none of the machinery is the right
- * first move. If the close ever reads as abrupt too, that is the moment to pay for it.
+ * Enter AND exit since the #320 rework — *"Recognized the opening transition. Choose
+ * transition should be the same, only backwards"*. The first round shipped the enter
+ * alone on the argument that an exit needs the element to stay mounted past the state
+ * change; that is still true, and `useCloseTransition` is where that state machine now
+ * lives, once, for every overlay in this package.
+ *
+ * The exit is the same two moves read backwards, at the same durations, on the mirrored
+ * curve (`ease-in` against `ease-out`, and the sheet's cubic reversed): a close that
+ * eases OUT of the screen at the speed it eased in reads as the same object leaving.
  *
  * 180ms and an ease-out curve: long enough to read as movement, short enough that it
- * never delays a screen whose data is already in memory — which most of these are.
+ * never delays a screen whose data is already in memory — which most of these are. The
+ * exit is what that budget is really spent on: every millisecond here is a millisecond
+ * between a tap on "Close" and the list being usable again, which is why it does not
+ * get the slower, more cinematic curve a first attempt reaches for.
  */
 @keyframes overlay-fade-in {
   from { opacity: 0; }
@@ -181,11 +189,26 @@ body {
   from { transform: translateY(100%); }
   to { transform: none; }
 }
+@keyframes overlay-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes sheet-lower-out {
+  from { transform: none; }
+  to { transform: translateY(100%); }
+}
 .animate-overlay { animation: overlay-fade-in 0.18s ease-out; }
 .animate-sheet { animation: sheet-rise-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+/* `forwards` on both: the element is unmounted by a timer, and without a retained end
+   state the last painted frame before that timer fires is the panel back at full
+   opacity in its opening position — a flash of the thing you just dismissed. */
+.animate-overlay-out { animation: overlay-fade-out 0.18s ease-in forwards; }
+.animate-sheet-out { animation: sheet-lower-out 0.22s cubic-bezier(1, 0, 0.68, 0.28) forwards; }
 
 /* Motion is the first thing to drop here, not the last. The overlay still fades — a
-   backdrop appearing instantly is a flash, not a transition — but nothing travels. */
+   backdrop appearing instantly is a flash, not a transition — but nothing travels.
+   The EXIT pair is not listed: `useCloseTransition` reads the same media query and
+   closes immediately under it, so these classes are never applied at all. */
 @media (prefers-reduced-motion: reduce) {
   .animate-sheet { animation: none; }
   .animate-overlay { animation-duration: 0.01ms; }

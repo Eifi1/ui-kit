@@ -9,6 +9,7 @@ import type {
 import { cn } from "../lib/cn";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useCloseTransition } from "../hooks/use-close-transition";
 
 /**
  * Drag the panel by its top strip, in pointer space (dev#460).
@@ -150,12 +151,17 @@ export function Modal({
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const drag = useDragOffset(Boolean(draggable));
-  const backdropClose = useBackdropClose(onClose);
+  // The panel lowers itself before the caller unmounts it (live #320 rework). Every
+  // dismissal below goes through `requestClose`; `onClose` still does the closing, one
+  // animation later. A caller that closes the dialog ITSELF — after a save, say —
+  // unmounts with no exit, which is the documented limit of this.
+  const { closing, requestClose } = useCloseTransition(onClose);
+  const backdropClose = useBackdropClose(requestClose);
   // Back means the same as Escape here. On a phone Escape doesn't exist, so without
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
   // Mounted only while open, hence the constant `true`.
-  useOverlayHistory(true, onClose);
+  useOverlayHistory(true, requestClose);
 
   // Mounted only while open, hence the constant `true`. Through the shared hook and
   // not by hand: this component's own save/restore copy was one half of the pair that
@@ -179,7 +185,7 @@ export function Modal({
     if (e.defaultPrevented) return;
     if (e.key === "Escape") {
       e.stopPropagation();
-      onClose();
+      requestClose();
       return;
     }
     if (e.key !== "Tab") return;
@@ -215,7 +221,8 @@ export function Modal({
         // Live #320. The panel below rises only where it is bottom-anchored: from md up
         // it is centred, and a centred box sliding up from off-screen reads as a
         // different component arriving rather than as the same one settling.
-        "animate-overlay fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
+        closing ? "animate-overlay-out" : "animate-overlay",
+        "fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
         fullBleed ? "p-0 md:p-4" : "p-4",
       )}
       {...backdropClose}
@@ -230,7 +237,7 @@ export function Modal({
         onPointerDown={drag.onPointerDown}
         style={drag.style}
         className={cn(
-          "animate-sheet md:animate-none",
+          closing ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
           "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
           { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is

@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useCloseTransition } from "../hooks/use-close-transition";
 
 /**
  * The phone's full-screen dialog: a panel that covers the viewport edge to edge.
@@ -67,10 +68,14 @@ export function FullBleedDialog({
   /** Extra classes for the PANEL (not the backdrop). */
   className?: string;
 }) {
-  const backdropClose = useBackdropClose(onClose);
+  // Every way OUT goes through `requestClose`, so the panel lowers itself before the
+  // caller unmounts it (live #320 rework). `onClose` is still what finally runs — this
+  // only delays it by the length of the animation.
+  const { closing, requestClose } = useCloseTransition(onClose);
+  const backdropClose = useBackdropClose(requestClose);
   // The page behind must not scroll or jump under the overlay (feedback #204).
   useBodyScrollLock(open);
-  useOverlayHistory(open && backCloses, onClose);
+  useOverlayHistory(open && backCloses, requestClose);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -79,14 +84,23 @@ export function FullBleedDialog({
       // `animate-overlay` on the backdrop and `animate-sheet` on the panel (live #320):
       // the backdrop fades, the panel rises from the bottom edge it is anchored to.
       // Both are no-ops under prefers-reduced-motion — see tokens.css.
-      className="animate-overlay fixed inset-0 z-50 flex items-stretch justify-center bg-black/40"
+      //
+      // …and the same two backwards while `closing`, which is the #320 rework. The
+      // backdrop keeps taking pointer events on the way out: a tap during those 220ms
+      // is a tap on a dialog that is leaving, and letting it through to the row
+      // underneath would open a second one.
+      className={cn(
+        "fixed inset-0 z-50 flex items-stretch justify-center bg-black/40",
+        closing ? "animate-overlay-out" : "animate-overlay",
+      )}
       role="dialog"
       aria-modal="true"
       {...backdropClose}
     >
       <div
         className={cn(
-          "animate-sheet flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900",
+          "flex h-full w-full flex-col overflow-hidden bg-white shadow-xl dark:bg-slate-900",
+          closing ? "animate-sheet-out" : "animate-sheet",
           className,
         )}
       >
@@ -94,7 +108,7 @@ export function FullBleedDialog({
           <div className="min-w-0 font-medium">{header}</div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label={closeLabel}
             className="-mr-1 shrink-0 rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >

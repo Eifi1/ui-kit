@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { FullBleedDialog } from "../full-bleed-dialog";
@@ -81,7 +81,7 @@ describe("FullBleedDialog", () => {
     expect(screen.getByLabelText("amount")).toBeInTheDocument();
   });
 
-  it("closes on the X", () => {
+  it("closes on the X", async () => {
     const onClose = vi.fn();
     render(
       <FullBleedDialog open onClose={onClose} closeLabel="Close">
@@ -89,7 +89,9 @@ describe("FullBleedDialog", () => {
       </FullBleedDialog>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
+    // Once, and only once — the count is the assertion that matters here, so it waits
+    // for the exit animation rather than for the same frame (live #320 rework).
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it("locks the page behind it and gives the scroll back on close", async () => {
@@ -106,7 +108,11 @@ describe("FullBleedDialog", () => {
     render(<Harness />);
     await settle();
     await back();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // `waitFor`, not a bare assertion: since the live #320 rework every dismissal runs
+    // an exit animation first and `onClose` fires when it finishes, so "the dialog is
+    // gone" is reached a frame later wherever motion is not suppressed. What this pins
+    // is that Back closes it — not how many milliseconds that takes.
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("leaves Back alone when the caller already owns it", async () => {
@@ -122,7 +128,7 @@ describe("FullBleedDialog", () => {
     expect(liveSentinel()).toBeNull();
     // …and the dialog is still perfectly closable, just not by this route.
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("does push one when it does own it — the other side of the same rule", async () => {
