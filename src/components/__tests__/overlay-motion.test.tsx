@@ -104,6 +104,44 @@ describe("overlay exit (live #320 rework)", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("opens visible again after it has closed once", () => {
+    // The regression that took every table on every phone down within an hour of the
+    // 0.4.52 deploy: *"When trying to open a feedback entry on mobile it opens and
+    // closes right away. Happens for all tables. First click succeeds."*
+    //
+    // DataTable renders ONE FullBleedDialog and flips `open` — and the component
+    // early-returns `null` after its hooks, so it is never unmounted and its state
+    // survives the close. `closing` was left true forever, so the second open painted
+    // `animate-*-out` (fill-mode: forwards) over a sheet that had only just arrived:
+    // gone in 220ms, invisible, and still holding the backdrop's pointer events.
+    //
+    // ⚠️ The existing cases could not see this — each one renders, closes, and ends.
+    // A state machine needs the SECOND cycle to be exercised, which for a panel that
+    // outlives its own visibility means re-rendering the same instance with `open`
+    // false and then true again.
+    const onClose = vi.fn();
+    const panel = (open: boolean) => (
+      <FullBleedDialog open={open} onClose={onClose} closeLabel="Close" header={<span>Row</span>}>
+        <div>body</div>
+      </FullBleedDialog>
+    );
+    const view = render(panel(true));
+    fireEvent.click(screen.getByLabelText("Close"));
+    act(() => void vi.advanceTimersByTime(OVERLAY_EXIT_MS));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    view.rerender(panel(false));
+    view.rerender(panel(true));
+
+    const backdrop = screen.getByRole("dialog");
+    const sheet = backdrop.firstElementChild as HTMLElement;
+    expect(backdrop.className).not.toContain("animate-overlay-out");
+    expect(sheet.className).not.toContain("animate-sheet-out");
+    // …and it is arriving, not merely "not leaving".
+    expect(backdrop.className.split(" ")).toContain("animate-overlay");
+    expect(sheet.className.split(" ")).toContain("animate-sheet");
+  });
+
   it("closes once, however many times it is dismissed", () => {
     // Two Escapes while the panel is leaving used to be two timers. `onClose` run
     // twice is the caller's close logic run twice — which is how a dismissal ends up

@@ -77,6 +77,20 @@ export function useCloseTransition(
     setClosing(true);
     timer.current = setTimeout(() => {
       timer.current = null;
+      // ⚠️ Reset BEFORE handing control back — reported from a phone within the hour
+      // of the 0.4.52 deploy that first shipped this hook, against every table at once.
+      // A panel that returns `null` while closed is still MOUNTED — `FullBleedDialog`
+      // early-returns after its hooks, and DataTable renders it once and flips `open`
+      // — so this state outlives the panel it describes. Left true, the NEXT open
+      // rendered `animate-*-out` with `animation-fill-mode: forwards` on a sheet that
+      // had only just arrived: it lowered itself off the screen in 220ms and stayed
+      // there, invisible but still holding the backdrop's pointer events. Every table
+      // on every phone, first open fine and every one after it not, until a route
+      // change remounted the component.
+      //
+      // Batched with the `onClose` below, so a caller that unmounts on close still
+      // renders exactly once and nothing flashes.
+      setClosing(false);
       latest.current();
     }, ms);
   }, [ms]);
