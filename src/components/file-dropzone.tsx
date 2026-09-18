@@ -1,18 +1,19 @@
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Button } from "./ui";
 import { cn } from "../lib/cn";
 
 /** Drag-and-drop file picker shared by the import wizards (YNAB zip, CAMT xml).
- * Validation failures toast `invalidMessage`; the chosen file is echoed with
- * its size, otherwise `emptyLabel` + `hint` describe what to drop. */
+ * Validation failures surface `invalidMessage` (a `sonner` toast by default, see
+ * `onInvalid`); the chosen file is echoed with its size, otherwise `emptyLabel` +
+ * `hint` describe what to drop. */
 export function FileDropzone({
   file,
   onFileSelected,
   accept,
   isValid,
   invalidMessage,
+  onInvalid,
   dropLabel,
   browseLabel,
   emptyLabel,
@@ -23,6 +24,23 @@ export function FileDropzone({
   accept: string;
   isValid: (file: File) => boolean;
   invalidMessage: string;
+  /**
+   * How to surface {@link invalidMessage}. Defaults to a `sonner` toast — an
+   * optional peer, imported only when a file is actually rejected. Pass your own to
+   * route it somewhere else, or a no-op to silence it. The same escape hatch, for
+   * the same reason, as `useWizard`'s `onValidationFailed`.
+   *
+   * It exists so this module does not import `sonner` STATICALLY. `package.json`
+   * declares that peer `optional`, and the barrel re-exports this file — so a
+   * top-level `import { toast } from "sonner"` made the claim false for everybody:
+   * in an app that installed `@hb/ui` without sonner, `import { Button } from
+   * "@hb/ui"` failed to resolve and `tsc --noEmit` failed on the missing types,
+   * without a FileDropzone anywhere in it. Both current consumers happen to depend
+   * on sonner, which is why nothing broke and why the contradiction survived:
+   * `use-wizard.ts` had already answered the identical question the other way, in
+   * writing, two modules over.
+   */
+  onInvalid?: (file: File) => void;
   dropLabel: string;
   browseLabel: string;
   emptyLabel: string;
@@ -34,7 +52,15 @@ export function FileDropzone({
   const acceptFile = (f: File | undefined | null) => {
     if (!f) return;
     if (!isValid(f)) {
-      toast.error(invalidMessage);
+      if (onInvalid) {
+        onInvalid(f);
+      } else {
+        // sonner is an optional peer: imported here, on the failure path only, so an
+        // app that never trips this never has to install it. Not awaited — nothing
+        // downstream depends on the toast having appeared, and the handlers that
+        // reach this are DOM events.
+        void import("sonner").then(({ toast }) => toast.error(invalidMessage));
+      }
       return;
     }
     onFileSelected(f);

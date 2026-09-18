@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 
@@ -28,10 +29,31 @@ import { cn } from "../lib/cn";
  * is for the ONE case where a second entry would be wrong: a caller whose panel is
  * itself a `PickerSheet`, which already registers one — both comboboxes swap shape at
  * {@link PHONE_QUERY}, and two entries would cost two Back presses to close one sheet.
+ *
+ * ## One outside-click rule for the whole package
+ *
+ * This hand-rolled a second document listener, on `mousedown`, months after
+ * {@link useOutsideClick} — the hook the entity pickers dismiss through — was moved to
+ * `pointerdown` for a reason that applies here word for word: on a touch platform
+ * `mousedown` is SYNTHESISED, the browser emits it for most taps but is not obliged
+ * to, and MultiSelect, CurrencySelect, GroupedPicker, AmountInput's currency picker
+ * and both comboboxes all dismiss through this. Two copies of one rule is one copy
+ * too many; this now delegates, so the package has a single answer to "what is an
+ * outside press".
+ *
+ * `panelIsSheet` is what that delegation needs. A {@link PickerSheet} is modal and
+ * fills the screen, so it has no outside — and being portalled to `<body>`, it is
+ * inside neither `wrapperRef` nor `panelRef`, so a listener left running would read
+ * every tap in it as a press outside and close it at finger-down. The sheet's own
+ * `onMouseDown` stopPropagation guard used to hide that from this hook; it cannot
+ * stop a `pointerdown`. It defaults to `!backCloses` because the two ask the same
+ * question — "is this caller's panel a sheet?" — and the one caller that answers yes
+ * already says so; they are separate props so a future caller can answer them apart.
  */
 export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   backCloses = true,
-}: { backCloses?: boolean } = {}) {
+  panelIsSheet = !backCloses,
+}: { backCloses?: boolean; panelIsSheet?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<T>(null);
   // The panel, once it is PORTALLED (see {@link DropdownPanel}'s `anchorRef`): it is
@@ -39,21 +61,11 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   // the wrapper" answers no for every click on the list itself and the first option a
   // user picked closed the dropdown without picking anything.
   const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const inside =
-        (wrapperRef.current?.contains(target) ?? false) ||
-        (panelRef.current?.contains(target) ?? false);
-      if (!inside) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useOutsideClick([wrapperRef, panelRef], close, open && !panelIsSheet);
   // Same close path Escape and an outside click take, so a list dismissed by Back
   // cannot end up in a different state from one dismissed any other way.
-  useOverlayHistory(open && backCloses, useCallback(() => setOpen(false), []));
+  useOverlayHistory(open && backCloses, close);
   return { open, setOpen, wrapperRef, panelRef };
 }
 

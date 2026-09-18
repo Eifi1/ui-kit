@@ -22,12 +22,18 @@ import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
  * the root keeps the host input focused (caret stays, keyboard stays hidden) as
  * the user taps keys; the buttons' `onClick` still fires.
  */
-/** Screen-reader names for the pad itself and its three non-digit keys. */
+/** Names for the pad itself and its four non-digit keys. The first four are
+ *  screen-reader names; `done` is the one string here that is READ OFF THE SCREEN —
+ *  the brand-filled primary button — and it was a hardcoded English literal while
+ *  its three neighbours each took an override, so a German phone showed "Done"
+ *  among German labels with no prop able to change it. */
 export interface NumberPadSheetLabels {
   pad?: string;
   backspace?: string;
   clear?: string;
   equals?: string;
+  /** Visible text on the primary key, not an `aria-label`. */
+  done?: string;
 }
 
 type PadKey =
@@ -78,8 +84,9 @@ export function NumberPadSheet({
   /** Optional field label, echoed in the sheet header so the user still knows
    * which field they're editing when the sheet covers it. */
   label?: ReactNode;
-  /** Screen-reader names for the pad itself and its three non-digit keys. The
-   * digits and operators need none — their visible glyph IS the name. */
+  /** Names for the pad itself and its four non-digit keys — screen-reader names,
+   * except `done`, which is the visible text on the primary key. The digits and
+   * operators need none: their visible glyph IS the name. */
   labels?: NumberPadSheetLabels;
 }) {
   // NO `useBodyScrollLock`, and that is the point of the control (Keksdose live
@@ -174,7 +181,7 @@ export function NumberPadSheet({
           onClick={onDone}
           className={cn(PAD_BTN, "col-span-2 bg-[var(--brand)] text-[var(--brand-contrast)] active:bg-[var(--brand-hover)]")}
         >
-          Done
+          {labels?.done ?? "Done"}
         </button>
       </div>
     </div>

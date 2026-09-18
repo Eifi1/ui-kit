@@ -92,7 +92,22 @@ export function useComboboxCore<V extends string | number>({
   // keyboard its own search box summons (feedback #135).
   const placement = useAnchoredPanel(triggerRef, open);
   const rect = placement.rect;
-  useOutsideClick([triggerRef, panelRef], close, open);
+  // Outside-click dismissal belongs to the ANCHORED panel, and only to it. On a
+  // phone `ComboboxPanel` renders a full-screen `PickerSheet` instead (live #200),
+  // portalled to <body> and carrying its own ways out — the close X, Escape, and
+  // Back through `useOverlayHistory` — so there is no outside left to press.
+  //
+  // Leaving the listener on there was not merely redundant, it was the bug:
+  // `panelRef` is attached to the desktop panel alone, so with the sheet up every
+  // press inside it answered "outside". While `useOutsideClick` listened for
+  // `mousedown` the rows survived by accident — they commit on `onMouseDown` too,
+  // and won the race — but `pointerdown` PRECEDES `mousedown`, so the sheet closed
+  // at finger-down and the commit landed on an unmounted tree: a tapped row kept the
+  // old value, and tapping the search box or the X was equally fatal. `PickerSheet`
+  // stops `mousedown` for exactly this reason, but that guard was written for
+  // `useDropdown`'s listener and never covered this hook.
+  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
   useEscapeKey(close, open);
 
   // Reset the query + focus the search box each time the panel opens.

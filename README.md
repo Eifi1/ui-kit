@@ -113,7 +113,7 @@ a test written after the fix proves only that the fix is self-consistent.
 - **Data table:** `DataTable` (+ `DataTableColumn`, `FilterState`, `SortState`,
   `ServerPagination`), `Pagination`, filter/sort helpers, `DataTableLabels`.
 - **Theme:** `TokenSet`, `PalettePreset`, `DEFAULT_PRESET`, `ALTERNATIVE_PRESETS`,
-  `PALETTES`, `presetById`, `applyTokenSet`, `clearTokenSet`, `TOKEN_VARS`,
+  `PALETTES`, `presetById`, `applyTokenSet`,
   `PALETTE_HEX`, chart-colour helpers, and the store factories.
 - **Shell:** `TopBar`, `AppShell` (+ `AppShellNavItem`), `ThemeToggle`,
   `PaletteMenu`, `LanguageMenu`, `TOPBAR_TRIGGER_CLASS`, `TOPBAR_MENU_ITEM_CLASS`.
