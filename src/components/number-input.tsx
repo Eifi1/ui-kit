@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
-import { NumberPadSheet } from "./numpad-sheet";
+import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { commitExpression, sanitizeLive } from "../lib/calc";
@@ -18,9 +18,18 @@ interface NumberInputProps {
   label?: ReactNode;
   ariaLabel?: string;
   /** Names for the calculator this field renders — its trigger, and the controls
-   *  inside the popover. English defaults, so a host that does not translate is
-   *  unaffected. */
-  labels?: { calculatorTrigger?: string; calculator?: CalculatorButtonLabels };
+   *  inside the popover — and for the numpad sheet it opens on a phone. English
+   *  defaults, so a host that does not translate is unaffected.
+   *
+   *  `pad` is not optional plumbing: this field renders a {@link NumberPadSheet}
+   *  exactly as {@link AmountInput} does, but had no way to pass it anything, so
+   *  the SAME keypad announced itself in German when a money field opened it and in
+   *  English when a goal target did. */
+  labels?: {
+    calculatorTrigger?: string;
+    calculator?: CalculatorButtonLabels;
+    pad?: NumberPadSheetLabels;
+  };
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -188,7 +197,13 @@ export function NumberInput({
         </div>
       )}
       {showNumpad && (
-        <NumberPadSheet value={value} onChange={onChange} onDone={() => inputRef.current?.blur()} label={label} />
+        <NumberPadSheet
+          value={value}
+          onChange={onChange}
+          onDone={() => inputRef.current?.blur()}
+          label={label}
+          labels={labels?.pad}
+        />
       )}
     </FloatingField>
   );

@@ -71,19 +71,24 @@ describe("DropdownPanel", () => {
     expect(panel.style.position).toBe("fixed");
   });
 
-  it("still counts a click on the portalled panel as inside", () => {
-    // The half of the fix that is easy to miss: `useDropdown` closes on any click
+  it("still counts a press on the portalled panel as inside", () => {
+    // The half of the fix that is easy to miss: `useDropdown` closes on any press
     // outside its wrapper, and a portalled panel is outside it by construction — so
     // without `panelRef` the first option a user pressed closed the list instead of
     // choosing from it, which is a worse bug than the clipping.
     render(<Harness anchored />);
     fireEvent.click(screen.getByRole("button", { name: "open" }));
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: "CHF" }));
+    // `pointerdown`, because `useDropdown` now dismisses through `useOutsideClick`
+    // rather than through a second document listener of its own — one event covering
+    // mouse, touch and pen, instead of the `mousedown` a touch platform only
+    // SYNTHESISES. It is also the first event of a real press, so it is what the
+    // hook has to get right.
+    fireEvent.pointerDown(screen.getByRole("button", { name: "CHF" }));
     expect(screen.queryByRole("button", { name: "CHF" })).toBeInTheDocument();
 
-    // …while a click anywhere else still closes it.
-    fireEvent.mouseDown(document.body);
+    // …while a press anywhere else still closes it.
+    fireEvent.pointerDown(document.body);
     expect(screen.queryByRole("button", { name: "CHF" })).toBeNull();
   });
 });

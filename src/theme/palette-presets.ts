@@ -473,35 +473,19 @@ export function presetById(id: string): PalettePreset {
   return PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;
 }
 
-// The CSS custom properties a preset writes onto <html>. Also used to clear the
-// overrides when returning to the default.
-export const TOKEN_VARS = [
-  "--bg-page",
-  "--bg-surface",
-  "--bg-surface-2",
-  "--border",
-  "--text-primary",
-  "--text-secondary",
-  "--text-muted",
-  "--brand",
-  "--brand-hover",
-  "--brand-contrast",
-  "--money-income",
-  "--money-expense",
-  "--money-net",
-  "--money-neutral",
-  "--chart-1",
-  "--chart-2",
-  "--chart-3",
-  "--chart-4",
-  "--chart-5",
-  "--chart-6",
-  "--chart-7",
-  "--chart-8",
-  "--chart-9",
-] as const;
-
-/** Write a token set onto an element's inline style as CSS custom properties. */
+/**
+ * Write a token set onto an element's inline style as CSS custom properties.
+ *
+ * This is the only writer, and there is no un-writer: `presetById` falls back to
+ * `DEFAULT_PRESET` and this then writes the full set, so returning to the default
+ * APPLIES it rather than clearing anything. A `clearTokenSet` and the hand-kept
+ * 24-name `TOKEN_VARS` list it looped over used to live here, both exported, both
+ * called by nobody in either consumer — a second copy of these property names with
+ * nothing comparing the two, so adding a token here and forgetting it there would
+ * have been silent and only a dead function would have noticed. The list is gone;
+ * the test beside this asserts instead that every field of a `TokenSet` reaches the
+ * element, which is what that list was standing in for.
+ */
 export function applyTokenSet(el: HTMLElement, t: TokenSet): void {
   el.style.setProperty("--bg-page", t.bgPage);
   el.style.setProperty("--bg-surface", t.bgSurface);
@@ -518,9 +502,4 @@ export function applyTokenSet(el: HTMLElement, t: TokenSet): void {
   el.style.setProperty("--money-net", t.moneyNet);
   el.style.setProperty("--money-neutral", t.moneyNeutral);
   t.chart.forEach((c, i) => el.style.setProperty(`--chart-${i + 1}`, c));
-}
-
-/** Remove all preset overrides so the tokens.css :root/.dark defaults take over. */
-export function clearTokenSet(el: HTMLElement): void {
-  for (const v of TOKEN_VARS) el.style.removeProperty(v);
 }
