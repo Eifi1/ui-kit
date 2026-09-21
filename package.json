@@ -28,6 +28,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsup && node scripts/fix-esm-extensions.mjs",
+    "dev": "tsup --watch",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
