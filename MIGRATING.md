@@ -27,12 +27,20 @@ Each repo starts somewhere different. Find yours.
 
 | repo | dependency | submodule | CI obtains the package by |
 |---|---|---|---|
-| **kastlan** | `file:../packages/ui` | yes | `git submodule update --init` (PAT) |
+| ~~kastlan~~ | ~~`file:../packages/ui`~~ | ~~yes~~ | **migrated** — use it as the worked example |
 | **keksdose** | `"*"` (npm workspace) | yes | `git submodule update --init` (PAT) |
 | **lenkbank** | `file:../../keksdose/packages/ui` | **no** | shallow clone into a fake sibling path (PAT) |
-| **aspice-atlas** | `file:../../keksdose/packages/ui` | **no** | shallow clone into a fake sibling path (PAT) |
+| ~~aspice-atlas~~ | — | — | **not migrating** (see below) |
 
 `steering-design` is a symlink to `lenkbank` and needs nothing of its own.
+
+**aspice-atlas is deliberately out of scope.** It stays on
+`file:../../keksdose/packages/ui` and keeps its `HB_UI_SUBMODULE_TOKEN`. Note
+what that means in practice: its CI shallow-clones whatever `main` of this
+repository points at, so it builds against an unpinned, moving design system —
+the reproducibility problem this migration exists to fix. It also means a
+breaking change published here can break its build with no commit in its own
+history. Keep that in mind when releasing a major, or migrate it.
 
 ---
 
