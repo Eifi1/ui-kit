@@ -18,9 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Node 24, not 20, and not by preference: jsdom 30 pulls undici, which calls
+      # `webidl.util.markAsUncloneable` — added to Node in 20.18. On plain 20 every
+      # test file dies before it runs with "Failed to start forks worker" and a
+      # TypeError from inside CacheStorage, which names neither jsdom nor the Node
+      # version. It is also what all four consumers build this package with (their
+      # .nvmrc is 24.19.0), so testing it on anything else tests something nobody
+      # ships.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run typecheck
