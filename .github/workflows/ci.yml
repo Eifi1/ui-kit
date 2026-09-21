@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck · tests · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      # The build is only correct if it preserves the module graph. A bundling
+      # build would fuse the barrel with components/chart and drag recharts into
+      # every consumer's entry chunk — the regression package.json's sideEffects
+      # note exists to prevent — so assert it here rather than trusting config.
+      - name: Assert the barrel does not pull recharts
+        run: |
+          set -euo pipefail
+          if grep -q "recharts" dist/index.js; then
+            echo "::error::dist/index.js references recharts — bundling regression."
+            exit 1
+          fi
+          test -f dist/components/chart.js
+          grep -q 'from "recharts"' dist/components/chart.js
+          echo "OK: chart keeps its own recharts import, the barrel does not."
+
+      # Published ESM must carry explicit extensions; a bundler hides this but
+      # Node and moduleResolution:node16 do not.
+      - name: Assert the package loads under plain Node ESM
+        run: node -e "import('./dist/index.js').then(m => console.log('exports:', Object.keys(m).length))"

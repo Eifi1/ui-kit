@@ -1,27 +1,34 @@
 {
-  "name": "@hb/ui",
+  "name": "@eifi1/ui-kit",
   "version": "0.3.0",
-  "private": true,
   "type": "module",
-  "description": "App-agnostic shared design system (single live source). Lead app: Keksdose.",
-  "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@hb/ui' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives.",
+  "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
+  "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives.",
   "sideEffects": [
     "**/*.css"
   ],
   "exports": {
-    ".": "./src/index.ts",
-    "./dates": "./src/lib/dates.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./dates": {
+      "types": "./dist/lib/dates.d.ts",
+      "import": "./dist/lib/dates.js"
+    },
     "./tokens.css": "./tokens.css",
     "./package.json": "./package.json"
   },
   "files": [
-    "src",
+    "dist",
     "tokens.css"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build": "tsup && node scripts/fix-esm-extensions.mjs",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=19",
@@ -58,7 +65,23 @@
     "react-router": "^8.3.0",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
+    "tsup": "^8.5.0",
     "typescript": "~5.9.3",
     "vitest": "^4.1.11"
-  }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eifi1/ui-kit.git"
+  },
+  "homepage": "https://github.com/Eifi1/ui-kit#readme",
+  "bugs": {
+    "url": "https://github.com/Eifi1/ui-kit/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts"
 }

@@ -1,13 +1,13 @@
-// @hb/ui — shared design-system barrel.
+// @eifi1/ui-kit — shared design-system barrel.
 //
 // Domain-free UI + theme surface shared across apps (lead app: Keksdose). Consumers import
-// components/theme from "@hb/ui" and the token stylesheet from "@hb/ui/tokens.css".
+// components/theme from "@eifi1/ui-kit" and the token stylesheet from "@eifi1/ui-kit/tokens.css".
 
 // ── lib ────────────────────────────────────────────────────────────────────
 export * from "./lib/calc";
 export { cn } from "./lib/cn";
 export { logger, setStoreLog } from "./lib/logger";
-// Date helpers are also available via the "@hb/ui/dates" subpath.
+// Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
 
 // ── hooks ────────────────────────────────────────────────────────────────────
 export { useMediaQuery } from "./hooks/use-media-query";

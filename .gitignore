@@ -1,3 +1,4 @@
 # npm creates this in the package directory even under a hoisting workspace root —
 # vitest's transform cache lands here the first time the suite runs.
 node_modules/
+dist/

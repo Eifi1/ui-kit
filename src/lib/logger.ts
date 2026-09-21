@@ -44,7 +44,10 @@ let storeLog: boolean = (() => {
   // store printed a prev/next object into the suite output. Measured on the consumer's
   // suite: 822 blocks, several thousand lines, in a log whose whole job is to make one
   // real `console.error` findable. `store_log=1` still forces it on.
-  return Boolean(import.meta.env.DEV) && !import.meta.env.VITEST;
+  // Optional-chained because `import.meta.env` is a Vite injection: it is
+  // undefined under plain Node ESM, and this package is published publicly,
+  // so a non-Vite consumer must be able to import it without throwing.
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
 })();
 
 /** Turn store logging on or off for the rest of the session (devtools escape hatch). */

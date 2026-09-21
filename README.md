@@ -1,23 +1,41 @@
-# @hb/ui
+# @eifi1/ui-kit
 
-The shared, app-agnostic design system for all sibling apps (lead app: **Keksdose**). It is
-the single live source: HB consumes it directly, so design changes here flow into
-every consumer. Domain-free — no app data models, currency/formatting, auth,
-budgets, or i18n catalog.
+[![npm](https://img.shields.io/npm/v/@eifi1/ui-kit)](https://www.npmjs.com/package/@eifi1/ui-kit)
 
-Ships **raw TypeScript/TSX** (no build step); each consuming app compiles it with
-its own Vite + Tailwind. Changes are picked up live.
+The shared, app-agnostic design system for the sibling apps. Published to npm, so
+consumers install it like any other dependency — no submodule, no token, no
+`file:` path pointing into a neighbouring checkout.
 
-## Install (sibling repo)
-
-```jsonc
-// package.json
-"dependencies": {
-  "@hb/ui": "file:../../keksdose/packages/ui"
-}
+```bash
+npm install @eifi1/ui-kit
 ```
 
-`@hb/ui` needs these installed in the consuming app: `react`, `react-dom` (required
+```ts
+import { Button, DataTable } from "@eifi1/ui-kit";
+import "@eifi1/ui-kit/tokens.css";
+```
+
+> Formerly `@hb/ui` in the `hb-ui` repository — `hb` was short for Household
+> Books, a name none of the current consumers share. GitHub redirects the old
+> repository URL, but the old package name is not published; update imports.
+
+Ships compiled ESM plus type declarations, built one output file per source
+module so consumers can still tree-shake it (see the `sideEffects` note in
+`package.json` — a bundling build would pull recharts into every consumer's
+entry chunk). Tailwind classes are emitted as-is; each app still compiles them
+with its own Tailwind config.
+
+## Install
+
+```bash
+npm install @eifi1/ui-kit
+```
+
+Versions are pinned in your lockfile like any dependency, so each app upgrades
+when it chooses. To work on the design system and an app together, use
+`npm link` or a workspace override rather than a `file:` path.
+
+`@eifi1/ui-kit` needs these installed in the consuming app: `react`, `react-dom` (required
 peers) and — only if you use the pieces that need them — `recharts` (the `chart`
 kit), `sonner` (`FileDropzone`), `react-router` (`DataTable` URL-sync + `AppShell`).
 It also pulls `clsx`, `tailwind-merge`, `lucide-react`, `zustand`, `flag-icons`.
@@ -41,8 +59,8 @@ resolve: {
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "@hb/ui/tokens.css";          /* design tokens, semantic utilities, chrome */
-@source "../../node_modules/@hb/ui/src"; /* keep the class names @hb/ui uses */
+@import "@eifi1/ui-kit/tokens.css";          /* design tokens, semantic utilities, chrome */
+@source "../../node_modules/@eifi1/ui-kit/src"; /* keep the class names @eifi1/ui-kit uses */
 ```
 
 ### 3. Theme + palette stores (own persistence keys)
@@ -50,7 +68,7 @@ resolve: {
 The stores are factories so each app namespaces its own `localStorage`:
 
 ```ts
-import { createThemeStore, createPaletteStore } from "@hb/ui";
+import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
 export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
   createPaletteStore("myapp-palette", useTheme);
@@ -116,7 +134,7 @@ a test written after the fix proves only that the fix is self-consistent.
   `ValidateResult`, `FieldErrors`, `SummarySection`, `SummaryItem`,
   `RequiredFieldSpec`) and the label table (`WizardLabels`,
   `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`). See [Wizard](#wizard) below.
-- **Subpath:** date helpers at `@hb/ui/dates`; stylesheet at `@hb/ui/tokens.css`.
+- **Subpath:** date helpers at `@eifi1/ui-kit/dates`; stylesheet at `@eifi1/ui-kit/tokens.css`.
 
 ## Forms / refs
 
