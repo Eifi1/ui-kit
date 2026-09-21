@@ -1,6 +1,6 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
   "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives.",
@@ -33,7 +33,7 @@
   "peerDependencies": {
     "react": ">=19",
     "react-dom": ">=19",
-    "react-router": "^8.3.0",
+    "react-router": ">=7",
     "recharts": ">=3",
     "sonner": ">=2"
   },
