@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DropdownSearchHeader, useDropdownSearch } from "./dropdown";
+import { useKitLocale } from "../i18n/kit-labels";
 
 export interface PickerGroup {
   key: string;
@@ -12,6 +13,28 @@ export interface PickerGroup {
    *  the same way. Omitted, a row is exactly what it was: label only, with no
    *  reserved space, so a list where nothing has an icon does not indent. */
   items: { key: string; label: string; icon?: ReactNode }[];
+}
+
+/**
+ * `onSelect` is omitted from the div's own attributes because this component's
+ * means "an item was chosen", not the DOM's "text was selected inside me" — two
+ * different signatures under one name, and the kit's meaning is the one three apps
+ * are written against.
+ */
+export interface GroupedPickerProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
+  groups: PickerGroup[];
+  /** Face of the closed picker button. */
+  buttonLabel: ReactNode;
+  /** Keys of the current selection, if any. */
+  selected: { group: string; item: string } | null;
+  onSelect: (groupKey: string, itemKey: string) => void;
+  /**
+   * @deprecated Use `aria-label`, the DOM spelling every control in the kit now
+   * takes. Kept working — three apps pass it — and it applies only when
+   * `aria-label` is absent; it goes in a later minor.
+   */
+  ariaLabel?: string;
+  filterPlaceholder?: string;
 }
 
 /** Panel picker for large grouped option sets: instead of one long flat
@@ -25,19 +48,11 @@ export function GroupedPicker({
   selected,
   onSelect,
   ariaLabel,
+  "aria-label": ariaLabelAttr,
   filterPlaceholder,
   className,
-}: {
-  groups: PickerGroup[];
-  /** Face of the closed picker button. */
-  buttonLabel: ReactNode;
-  /** Keys of the current selection, if any. */
-  selected: { group: string; item: string } | null;
-  onSelect: (groupKey: string, itemKey: string) => void;
-  ariaLabel?: string;
-  filterPlaceholder?: string;
-  className?: string;
-}) {
+  ...rest
+}: GroupedPickerProps) {
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
 
   useEffect(() => {
@@ -49,33 +64,43 @@ export function GroupedPicker({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, setOpen]);
 
+  // Case folding in the provider's locale — see `rowMatches` for the Turkish "İ"
+  // that plain `toLowerCase` gets wrong.
+  const locale = useKitLocale();
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const fold = (s: string) => s.toLocaleLowerCase(locale);
+    const q = fold(query.trim());
     if (!q) return groups;
     return groups
       .map((g) =>
-        g.label.toLowerCase().includes(q)
+        fold(g.label).includes(q)
           ? g
-          : { ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q)) },
+          : { ...g, items: g.items.filter((i) => fold(i.label).includes(q)) },
       )
       .filter((g) => g.items.length > 0);
-  }, [groups, query]);
+  }, [groups, query, locale]);
 
   return (
-    <div ref={wrapperRef} className={cn("relative", className)}>
+    // `rest` goes on the wrapper, but the accessible NAME does not: this div is a
+    // positioning box with no role, so a label parked on it would be announced by
+    // nothing. It belongs to the control — the same split every picker in this wave
+    // makes, and the reason `aria-label` is destructured out rather than left in
+    // `rest`. Spread FIRST so the attributes below, each of them a fix with an
+    // incident behind it, cannot be clobbered from outside.
+    <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       <button
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={ariaLabel}
+        aria-label={ariaLabelAttr ?? ariaLabel}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
       >
         <span className="truncate">{buttonLabel}</span>
-        <ChevronDown className="size-4 shrink-0 text-slate-400" />
+        <ChevronDown className="size-4 shrink-0 text-[var(--text-placeholder)]" />
       </button>
       {open && (
-        <div className="absolute left-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute left-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg">
           <DropdownSearchHeader
             query={query}
             onQueryChange={setQuery}
@@ -84,12 +109,12 @@ export function GroupedPicker({
           />
           <div className="overflow-y-auto p-3">
             {filtered.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">—</p>
+              <p className="text-sm text-[var(--text-muted)]">—</p>
             ) : (
               <div className="columns-2 gap-4 md:columns-3 xl:columns-4">
                 {filtered.map((g) => (
                   <div key={g.key} className="mb-3 break-inside-avoid">
-                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                       {g.label}
                     </div>
                     <ul className="space-y-0.5">
@@ -109,8 +134,8 @@ export function GroupedPicker({
                               className={cn(
                                 "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-left text-sm",
                                 isSelected
-                                  ? "bg-sky-100 font-medium text-sky-900 dark:bg-sky-900/40 dark:text-sky-200"
-                                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800",
+                                  ? "bg-[var(--brand-bg)] font-medium text-[var(--brand-muted)]"
+                                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
                               )}
                             >
                               {item.icon && <span className="shrink-0">{item.icon}</span>}

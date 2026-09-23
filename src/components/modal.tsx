@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
+  ComponentPropsWithoutRef,
   KeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from "react";
 import { cn } from "../lib/cn";
+import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useCloseTransition } from "../hooks/use-close-transition";
@@ -19,35 +21,60 @@ import { useCloseTransition } from "../hooks/use-close-transition";
  * chrome — never on a field, a button or a link, which is what keeps "drag to select
  * text in the textarea" working. Above `md` only: below it the panel is a
  * full-width bottom sheet with nothing beside it to uncover.
+ *
+ * The whole gesture stays on the PANEL — captured pointer, React handlers — rather than
+ * on `window`. The first shape of this added `pointermove`/`pointerup` to `window` from
+ * inside the `pointerdown` handler and took them off again from the `pointerup` handler,
+ * so the teardown ran only if the gesture ended: React never sees a listener added from
+ * an event handler, and an unmount mid-drag left a live `pointermove` on `window` for
+ * the life of the page, pinning this hook's state with it. The one caller that enables
+ * dragging is the feedback composer, which closes ITSELF on submit — a Ctrl+Enter sent
+ * with the pointer still down is exactly that order of events, once per drag.
  */
 function useDragOffset(enabled: boolean) {
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   const from = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 
-  const onPointerMove = (e: PointerEvent) => {
-    const start = from.current;
-    if (!start) return;
-    setOffset({ x: start.ox + e.clientX - start.x, y: start.oy + e.clientY - start.y });
-  };
-  const onPointerUp = () => {
+  const endDrag = () => {
     from.current = null;
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", onPointerUp);
   };
 
   return {
     style: offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined,
-    onPointerDown: !enabled
+    handlers: !enabled
       ? undefined
-      : (e: ReactPointerEvent<HTMLDivElement>) => {
-          if (e.button !== 0 || window.innerWidth < 768) return;
-          const target = e.target as HTMLElement;
-          // Only the panel itself and its non-interactive chrome start a drag; a
-          // press inside any control belongs to that control.
-          if (target.closest("input,textarea,select,button,a,[role='button']")) return;
-          from.current = { x: e.clientX, y: e.clientY, ox: offset?.x ?? 0, oy: offset?.y ?? 0 };
-          window.addEventListener("pointermove", onPointerMove);
-          window.addEventListener("pointerup", onPointerUp);
+      : {
+          onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => {
+            if (e.button !== 0 || window.innerWidth < 768) return;
+            const target = e.target as HTMLElement;
+            // Only the panel itself and its non-interactive chrome start a drag; a
+            // press inside any control belongs to that control.
+            if (target.closest("input,textarea,select,button,a,[role='button']")) return;
+            from.current = { x: e.clientX, y: e.clientY, ox: offset?.x ?? 0, oy: offset?.y ?? 0 };
+            try {
+              // Capture is what lets the handlers live on the panel: every later
+              // pointer event for this pointer retargets here, so the drag keeps
+              // working once the pointer outruns the panel's own box — which it always
+              // does, since the panel moves out from under it.
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              // jsdom implements no pointer capture, and a browser throws
+              // NotFoundError for a pointerId that is already gone. Neither is worth
+              // refusing the drag: uncaptured, the panel still gets the moves that
+              // land on it.
+            }
+          },
+          onPointerMove: (e: ReactPointerEvent<HTMLDivElement>) => {
+            const start = from.current;
+            if (!start) return;
+            setOffset({ x: start.ox + e.clientX - start.x, y: start.oy + e.clientY - start.y });
+          },
+          onPointerUp: endDrag,
+          // A cancel (the browser taking the pointer for a scroll or a gesture) and a
+          // lost capture both mean no `pointerup` is coming. Without them the drag would
+          // stay "live" and the next move over the panel would jump it.
+          onPointerCancel: endDrag,
+          onLostPointerCapture: endDrag,
         },
   };
 }
@@ -76,10 +103,13 @@ export function useBackdropClose(onClose: () => void) {
 // Tab-cycle target set: the interactive descendants the focus trap rotates
 // through. Querying live (per keystroke) means dynamically rendered fields are
 // included automatically.
-const FOCUSABLE =
-  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
-export interface ModalProps {
+/**
+ * `extends ComponentPropsWithoutRef<"div">` so anything a `<div>` takes reaches the
+ * PANEL — the element with `role="dialog"`, which is the one a consumer means. That is
+ * where a `data-tour` anchor, a test id, an `aria-describedby` or an `aria-label` has
+ * to land; before this, a closed prop list dropped all four silently (audit §api-design).
+ */
+export interface ModalProps extends ComponentPropsWithoutRef<"div"> {
   /** Invoked on backdrop click and on Escape. */
   onClose: () => void;
   children: ReactNode;
@@ -148,6 +178,8 @@ export function Modal({
   onKeyDown,
   fullBleed,
   draggable,
+  style,
+  ...rest
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const drag = useDragOffset(Boolean(draggable));
@@ -169,16 +201,12 @@ export function Modal({
   // closed — see the note in use-body-scroll-lock.ts.
   useBodyScrollLock(true);
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    // Focus the panel itself (not the first field) so opening doesn't pop the
-    // mobile keyboard, while still moving focus into the dialog for keyboard and
-    // screen-reader users.
-    panelRef.current?.focus();
-    return () => {
-      previouslyFocused?.focus?.();
-    };
-  }, []);
+  // Focus the panel itself (not the first field) so opening doesn't pop the mobile
+  // keyboard, while still moving focus into the dialog for keyboard and screen-reader
+  // users. Through the shared hook since this component is where it came from — the
+  // hook adds per-keystroke recomputation, a guard on restoring to a detached node,
+  // and nesting, none of which this copy had.
+  useFocusTrap(panelRef, { active: true, initialFocus: "container" });
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e);
@@ -188,26 +216,7 @@ export function Modal({
       requestClose();
       return;
     }
-    if (e.key !== "Tab") return;
-    // Keep Tab within the dialog. Elements inside a portal'd panel (e.g. an open
-    // dropdown) live outside this subtree, so this handler never fires for them
-    // — they manage their own focus.
-    const focusables = panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
-    if (!focusables || focusables.length === 0) {
-      e.preventDefault();
-      panelRef.current?.focus();
-      return;
-    }
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    if (e.shiftKey && (active === first || active === panelRef.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    // Tab containment lives in useFocusTrap, which listens on the panel itself.
   };
 
   // Portal to <body> so the `fixed inset-0 z-50` overlay escapes whatever stacking
@@ -228,17 +237,26 @@ export function Modal({
       {...backdropClose}
     >
       <div
+        // `...rest` FIRST, everything the dialog needs to be a dialog after it. A
+        // wrapper that spreads its own props through to this one cannot then take away
+        // the role, the modality or the `tabIndex={-1}` that `useFocusTrap` needs —
+        // losing any of the three is silent, and the symptom (a dialog a screen reader
+        // walks straight out of) shows up nowhere near the call site that caused it.
+        {...rest}
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        onPointerDown={drag.onPointerDown}
-        style={drag.style}
+        {...drag.handlers}
+        // MERGED, not replaced: `drag.style` is undefined until a drag starts, so
+        // assigning it outright would drop a caller's own `style` on every render but
+        // the ones where the panel is being dragged.
+        style={{ ...style, ...drag.style }}
         className={cn(
           closing ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
-          "w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900",
+          "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm outline-none",
           { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is
           // `fixed inset-0` and the body is scroll-locked while a dialog is open, so

@@ -34,7 +34,8 @@ export interface UseWizardOptions<TData extends Record<string, unknown>> {
   /**
    * Shown when a step blocks with no per-field detail — an RHF step surfacing
    * its own inline messages, say — so the user learns why the wizard did not
-   * advance. Falls back to an English default.
+   * advance. Falls back to `wizard.missingRequired` from the {@link UiKitProvider},
+   * then to English.
    */
   missingRequiredMessage?: string;
   /**
@@ -135,9 +136,25 @@ export interface WizardLabels {
   reviewTitle: string;
   /** `aria-label` on a summary section's edit button. */
   edit: string;
+  /**
+   * Toasted (or handed to `onValidationFailed`) when a step blocks Next without
+   * saying which field is at fault. `useWizard`'s `missingRequiredMessage` wins.
+   *
+   * This and `genericError` are OPTIONAL, unlike every key above, for the reason
+   * `TwoFactorSettingLabels.qrAlt` is: apps annotate a full translation as
+   * `const DE: WizardLabels = {…}`, and a new required key would be a compile error
+   * in each of them on the next update. The defaults below always carry both.
+   */
+  missingRequired?: string;
+  /** `wizard.error` when `onComplete` rejects with nothing readable — a thrown
+   *  non-Error, or an Error whose message is empty. Optional: see above. */
+  genericError?: string;
 }
 
-export const DEFAULT_WIZARD_LABELS: WizardLabels = {
+/** Typed with the two optional keys made required, so code reading the defaults
+ *  directly (the fallback in `useWizard`) needs no `!`. */
+export const DEFAULT_WIZARD_LABELS: WizardLabels &
+  Required<Pick<WizardLabels, "missingRequired" | "genericError">> = {
   cancel: "Cancel",
   back: "Back",
   next: "Next",
@@ -152,6 +169,8 @@ export const DEFAULT_WIZARD_LABELS: WizardLabels = {
   cancelDismissLabel: "Keep editing",
   reviewTitle: "Review",
   edit: "Edit",
+  missingRequired: "Please fill in all required fields.",
+  genericError: "An error occurred",
 };
 
 export function resolveWizardLabels(labels?: Partial<WizardLabels>): WizardLabels {

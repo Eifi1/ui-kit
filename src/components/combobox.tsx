@@ -1,5 +1,5 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
-import type { ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
@@ -8,12 +8,13 @@ import { useDropdown } from "./dropdown";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import type { ComboOption } from "./combobox-core";
+import { useActiveOptionScroll, type ComboOption } from "./combobox-core";
+import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 // One look for both combobox flavors below — the suggestion list and its rows
 // must stay pixel-identical between the free-text and the id-keyed variant.
 const LIST_CLASS =
-  "max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+  "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
 
 /**
  * "This focus came from a mouse button that is not the left one" — for the two
@@ -75,10 +76,13 @@ function usePrimaryPressOnly() {
  * close the dropdown having picked nothing.
  */
 function SuggestionList({
+  id,
   anchorRef,
   panelRef,
   children,
 }: {
+  /** What the field's `aria-controls` names. */
+  id: string;
   anchorRef: RefObject<HTMLElement | null>;
   panelRef: RefObject<HTMLDivElement | null>;
   children: ReactNode;
@@ -93,7 +97,7 @@ function SuggestionList({
       className="fixed z-50"
       style={{ top, left: rect.left, width: rect.width }}
     >
-      <ul role="listbox" className={LIST_CLASS} style={{ maxHeight }}>
+      <ul id={id} role="listbox" className={LIST_CLASS} style={{ maxHeight }}>
         {children}
       </ul>
     </div>,
@@ -103,40 +107,19 @@ function SuggestionList({
 
 const rowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate px-3 py-1.5 text-left text-sm text-slate-900 dark:text-slate-100",
-    isActive ? "bg-slate-100 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-800",
+    "block w-full truncate px-3 py-1.5 text-left text-sm text-[var(--text-primary)]",
+    isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
   );
 
 /**
- * Free-text combobox that looks like the shared {@link Select} (same FIELD_BASE
- * styling, chevron and static floating label) but lets the user type a value
- * that isn't in the list — e.g. naming a brand-new payee. Picking from the
- * filtered suggestion list fills the value; typing keeps whatever was entered.
- *
- * Use this instead of an `<Input list="…">` + `<datalist>` so the control is
- * visually and behaviourally consistent with the other dropdowns (feedback
- * #230 — the payee field looked/behaved differently from every other select).
+ * Four of the div's own attributes are omitted because this component already owns
+ * the name, with a different meaning: `id` is the INPUT's (a caller labels or
+ * automates the field, not the box around it), and `onChange`/`onBlur`/`onSubmit`
+ * are the field's — a value, a departure, and "I mean what I typed" — rather than
+ * the DOM events of the wrapper. Everything else a wrapper needs reaches the root.
  */
-export function Combobox({
-  value,
-  onChange,
-  options,
-  label,
-  id,
-  placeholder,
-  className,
-  groupBy,
-  maxSuggestions,
-  searchPlaceholder,
-  closeLabel,
-  createLabel,
-  invalid,
-  optionAdornment,
-  autoFocus,
-  onBlur,
-  onSubmit,
-  "aria-label": ariaLabel,
-}: {
+export interface ComboboxProps
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange" | "onBlur" | "onSubmit"> {
   value: string;
   onChange: (v: string) => void;
   /** Suggestion pool (e.g. existing payee names). */
@@ -181,7 +164,6 @@ export function Combobox({
   /** Enter pressed with no row highlighted, i.e. "I mean what I typed". The list
    *  closes either way; this is for a caller whose Enter also submits a row editor. */
   onSubmit?: () => void;
-  "aria-label"?: string;
   /** Rows to offer when the field is empty. 8 on a dropdown, where that is all
    *  that fits; the phone sheet asks for more because it has a screen. */
   maxSuggestions?: number;
@@ -203,9 +185,45 @@ export function Combobox({
    * values are all supposed to already exist.
    */
   createLabel?: (value: string) => string;
-}) {
+}
+
+/**
+ * Free-text combobox that looks like the shared {@link Select} (same FIELD_BASE
+ * styling, chevron and static floating label) but lets the user type a value
+ * that isn't in the list — e.g. naming a brand-new payee. Picking from the
+ * filtered suggestion list fills the value; typing keeps whatever was entered.
+ *
+ * Use this instead of an `<Input list="…">` + `<datalist>` so the control is
+ * visually and behaviourally consistent with the other dropdowns (feedback
+ * #230 — the payee field looked/behaved differently from every other select).
+ */
+export function Combobox({
+  value,
+  onChange,
+  options,
+  label,
+  id,
+  placeholder,
+  className,
+  groupBy,
+  maxSuggestions,
+  searchPlaceholder,
+  closeLabel,
+  createLabel,
+  invalid,
+  optionAdornment,
+  autoFocus,
+  onBlur,
+  onSubmit,
+  "aria-label": ariaLabel,
+  ...rest
+}: ComboboxProps) {
   const generated = useId();
   const fieldId = id ?? generated;
+  // Derived from the GENERATED id, never from `id`: a caller's id is theirs to
+  // collide with, and `aria-controls` has to resolve.
+  const listboxId = `${generated}-listbox`;
+  const optionId = (index: number) => `${generated}-option-${index}`;
   // `backCloses` is the desktop half of live #309: the phone's list IS a
   // {@link PickerSheet}, which registers its own history entry, so registering a
   // second one here would cost two Back presses to dismiss one sheet.
@@ -275,6 +293,29 @@ export function Combobox({
     return [...byGroup.values()].flat();
   }, [options, query, groupBy, maxSuggestions, isPhone]);
 
+  /**
+   * Which rows OPEN a group, and with what heading — computed once for both lists.
+   *
+   * The desktop list had this as `matches[i - 1]`, which is free; the sheet had it as
+   * `matches[matches.indexOf(o) - 1]`, which is a scan of the list per row and another
+   * per heading test. That is quadratic in the sheet's own cap of 50, on the branch
+   * that runs on the slowest hardware we ship to — and it answers the wrong question
+   * besides: `indexOf` finds the FIRST row with that string, so a duplicated option
+   * would have compared against a neighbour it is not next to. (`matches` de-duplicates
+   * today; that is a property of the memo above, not of the row being rendered.)
+   */
+  const groupHeadings = useMemo(() => {
+    if (!groupBy) return null;
+    const heads = new Map<number, string>();
+    let prev: string | undefined;
+    matches.forEach((o, i) => {
+      const group = groupBy(o);
+      if (group != null && group !== prev) heads.set(i, group);
+      prev = group;
+    });
+    return heads;
+  }, [matches, groupBy]);
+
   const commit = (v: string) => {
     onChange(v);
     setOpen(false);
@@ -289,6 +330,12 @@ export function Combobox({
   // second way to pick it would be noise. Compared against `options`, not `matches` —
   // `matches` is capped, so a pool of 300 payees would otherwise offer to "add" one
   // that exists but fell off the end of the list.
+  // What the field claims the keyboard is on. Only on a pointer device: the phone
+  // renders its rows in a {@link PickerSheet} whose own search box owns focus, and a
+  // field pointing at an id that is not there is worse than one pointing nowhere.
+  const activeId = !isPhone && active >= 0 && active < matches.length ? optionId(active) : undefined;
+  useActiveOptionScroll(activeId);
+
   const typed = value.trim();
   const createRow =
     createLabel && typed.length > 0 && !options.some((o) => o.toLowerCase() === typed.toLowerCase())
@@ -296,7 +343,11 @@ export function Combobox({
       : null;
 
   return (
-    <div ref={wrapperRef} className={cn("relative", className)}>
+    // `rest` dresses the outer box — a `data-tour` anchor, a test id, a form-level
+    // `aria-describedby`. Not the NAME: that belongs on the <input> below, which is
+    // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
+    // handlers carrying live #309 and dev#549 cannot be replaced from outside.
+    <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* The chevron centers against this inner wrapper, which hugs the input.
           The outer div can be taller than the input (as a grid item it
@@ -315,6 +366,12 @@ export function Combobox({
           aria-label={ariaLabel ?? label}
           role="combobox"
           aria-expanded={open}
+          // The list this field is the mouth of. Required by the role, and the half
+          // that was missing: the field said it was expanded and never said what it
+          // had expanded, so a reader had no way from the box to the options
+          // (ESLint's `role-has-required-aria-props`, the audit's §a11y).
+          aria-controls={listboxId}
+          aria-activedescendant={activeId}
           aria-autocomplete="list"
           aria-invalid={invalid || undefined}
           autoComplete="off"
@@ -374,7 +431,18 @@ export function Combobox({
             } else if (e.key === "Escape") {
               setOpen(false);
               setActive(-1);
+            } else if (e.key === "Tab") {
+              // Closes, and lets the browser take the Tab: focus is in THIS input,
+              // which is staying, so there is nothing to catch — unlike the pickers
+              // whose focus sits inside a portalled panel.
+              setOpen(false);
+              setActive(-1);
             }
+            // Home/End are deliberately absent. The APG gives them to the list only
+            // where the combobox is not editable; here the text IS the value, a
+            // payee name is long enough to want the caret moved to its start, and
+            // the desktop list is capped at 8 rows — so jumping it would be worth
+            // almost nothing and would cost the one gesture that field is used with.
           }}
           className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
         />
@@ -385,7 +453,7 @@ export function Combobox({
             e.preventDefault();
             setOpen((o) => !o);
           }}
-          className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-slate-500"
+          className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 cursor-pointer text-[var(--text-placeholder)]"
         />
       </div>
       {isPhone && (
@@ -405,35 +473,40 @@ export function Combobox({
           inputRef={sheetInputRef}
           closeLabel={closeLabel}
         >
-          <ul role="listbox">
+          <ul id={listboxId} role="listbox">
             {createRow && (
-              <li role="option" aria-selected={false}>
+              // `role="option"` rides the BUTTON, not the <li> around it: an option
+              // may not contain a separately focusable control, and the button is
+              // what a pointer presses. Same shape `CommandPalette` has always had.
+              <li role="presentation">
                 <button
                   type="button"
+                  role="option"
+                  aria-selected={false}
                   onClick={() => commit(typed)}
-                  className={cn(SHEET_ROW_CLASS, "font-medium text-teal-700 dark:text-teal-300")}
+                  className={cn(SHEET_ROW_CLASS, "font-medium text-[var(--brand)]")}
                 >
                   {createRow}
                 </button>
               </li>
             )}
-            {matches.map((o) => {
-              const group = groupBy?.(o);
-              const startsGroup =
-                group != null && group !== (matches[matches.indexOf(o) - 1] && groupBy?.(matches[matches.indexOf(o) - 1]));
+            {matches.map((o, i) => {
+              const group = groupHeadings?.get(i);
               return (
                 <Fragment key={o}>
-                  {startsGroup && (
+                  {group !== undefined && (
                     <li
                       role="presentation"
-                      className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                      className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                     >
                       {group}
                     </li>
                   )}
-                  <li role="option" aria-selected={o === value}>
+                  <li role="presentation">
                     <button
                       type="button"
+                      role="option"
+                      aria-selected={o === value}
                       onClick={() => commit(o)}
                       className={cn(
                         SHEET_ROW_CLASS,
@@ -451,41 +524,54 @@ export function Combobox({
         </PickerSheet>
       )}
       {!isPhone && open && (matches.length > 0 || createRow) && (
-        <SuggestionList anchorRef={fieldRef} panelRef={panelRef}>
+        <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {createRow && (
-            <li role="option" aria-selected={false}>
+            <li role="presentation">
               <button
                 type="button"
+                role="option"
+                aria-selected={false}
+                tabIndex={-1}
                 onMouseDown={(e) => {
                   // mousedown, like the rows below: the input's blur would otherwise
                   // close the list before the click landed.
                   e.preventDefault();
                   commit(typed);
                 }}
-                className={cn(rowClass(false), "font-medium text-teal-700 dark:text-teal-300")}
+                className={cn(rowClass(false), "font-medium text-[var(--brand)]")}
               >
                 {createRow}
               </button>
             </li>
           )}
           {matches.map((o, i) => {
-            const group = groupBy?.(o);
-            // Heading at each group boundary only — `matches` is group-contiguous,
-            // so comparing against the previous row is enough.
-            const startsGroup = group != null && group !== (matches[i - 1] && groupBy?.(matches[i - 1]));
+            // Heading at each group boundary only — `matches` is group-contiguous, so
+            // the boundaries are a property of the list rather than of the branch
+            // drawing it. See `groupHeadings`.
+            const group = groupHeadings?.get(i);
             return (
               <Fragment key={o}>
-                {startsGroup && (
+                {group !== undefined && (
                   <li
                     role="presentation"
-                    className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 first:pt-1 dark:text-slate-400"
+                    className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
                   >
                     {group}
                   </li>
                 )}
-                <li role="option" aria-selected={i === active}>
+                <li role="presentation">
                   <button
                     type="button"
+                    id={optionId(i)}
+                    role="option"
+                    // CHOSEN, not highlighted. The row the arrows are on is named by
+                    // the field's `aria-activedescendant`; saying "selected" for it
+                    // would tell a reader that the row they are passing over is
+                    // already the answer.
+                    aria-selected={o === value}
+                    // Focus stays in the field — that is what
+                    // `aria-activedescendant` is for — so the rows are not tab stops.
+                    tabIndex={-1}
                     onMouseDown={(e) => {
                       // mousedown (not click) so the blur from the input firing first
                       // doesn't close the list before the selection registers.
@@ -513,6 +599,47 @@ export function Combobox({
       )}
     </div>
   );
+}
+
+/** `id` is the INPUT's and `onChange` is the field's — see {@link ComboboxProps}
+ *  for why the div's spellings of them are omitted. */
+export interface InlineEntityComboboxProps<V extends string | number>
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange"> {
+  /** Selected option id, or null when nothing is selected. */
+  value: V | null;
+  /** Required and unanswered — see {@link Combobox}'s `invalid`. */
+  invalid?: boolean;
+  /** A picked/typed option emits its id; emptying the field emits `null`. */
+  onChange: (v: V | null) => void;
+  options: ComboOption<V>[];
+  label?: string;
+  id?: string;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  /** Focus on mount, the way `<input autoFocus>` does — and, through `onFocus`
+   *  below, open the list with it. A click-the-value editor needs it: the cell
+   *  the user clicked names the field the editor should land the caret in, and
+   *  without a passthrough this component's fixed prop list puts the `<input>`
+   *  out of a caller's reach entirely (Keksdose feedback live #218). */
+  autoFocus?: boolean;
+  /** Phone sheet only — the anchored list has the field itself to type in. Falls
+   *  back to `placeholder`, then to `combobox.search` from the {@link UiKitProvider}. */
+  searchPlaceholder?: string;
+  /** Phone sheet only: a full screen showing nothing has to say why. The anchored
+   *  list simply does not open. Default: `combobox.noResults` from the provider. */
+  emptyLabel?: string;
+  closeLabel?: string;
+  /** Offer a clear "×" in place of the chevron whenever something is selected.
+   *
+   *  Emptying the text already clears (see {@link reconcile}), and on a desktop that
+   *  is the fast way. It is not a way at all on a PHONE: touching the field opens the
+   *  full-screen sheet, which covers the very input the text would have been deleted
+   *  from — so a field that had been answered could not be UNanswered by any gesture
+   *  the screen offered (Keksdose live #236, filed from a phone). The "×" is the one
+   *  affordance both shells share, and it clears without opening anything. */
+  clearable?: boolean;
+  clearLabel?: string;
 }
 
 /**
@@ -550,45 +677,13 @@ export function InlineEntityCombobox<V extends string | number>({
   clearLabel,
   invalid,
   "aria-label": ariaLabel,
-}: {
-  /** Selected option id, or null when nothing is selected. */
-  value: V | null;
-  /** Required and unanswered — see {@link Combobox}'s `invalid`. */
-  invalid?: boolean;
-  /** A picked/typed option emits its id; emptying the field emits `null`. */
-  onChange: (v: V | null) => void;
-  options: ComboOption<V>[];
-  label?: string;
-  id?: string;
-  placeholder?: string;
-  className?: string;
-  disabled?: boolean;
-  /** Focus on mount, the way `<input autoFocus>` does — and, through `onFocus`
-   *  below, open the list with it. A click-the-value editor needs it: the cell
-   *  the user clicked names the field the editor should land the caret in, and
-   *  without a passthrough this component's fixed prop list puts the `<input>`
-   *  out of a caller's reach entirely (Keksdose feedback live #218). */
-  autoFocus?: boolean;
-  /** Phone sheet only — the anchored list has the field itself to type in. */
-  searchPlaceholder?: string;
-  /** Phone sheet only: a full screen showing nothing has to say why. The anchored
-   *  list simply does not open. */
-  emptyLabel?: string;
-  closeLabel?: string;
-  /** Offer a clear "×" in place of the chevron whenever something is selected.
-   *
-   *  Emptying the text already clears (see {@link reconcile}), and on a desktop that
-   *  is the fast way. It is not a way at all on a PHONE: touching the field opens the
-   *  full-screen sheet, which covers the very input the text would have been deleted
-   *  from — so a field that had been answered could not be UNanswered by any gesture
-   *  the screen offered (Keksdose live #236, filed from a phone). The "×" is the one
-   *  affordance both shells share, and it clears without opening anything. */
-  clearable?: boolean;
-  clearLabel?: string;
-  "aria-label"?: string;
-}) {
+  ...rest
+}: InlineEntityComboboxProps<V>) {
   const generated = useId();
   const fieldId = id ?? generated;
+  // See the twin above on why these hang off the generated id.
+  const listboxId = `${generated}-listbox`;
+  const optionId = (index: number) => `${generated}-option-${index}`;
   const isPhone = useMediaQuery(PHONE_QUERY, false);
   // See the twin above: the phone sheet owns its own Back entry (live #309).
   const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
@@ -603,6 +698,14 @@ export function InlineEntityCombobox<V extends string | number>({
   // holds a value still offers the whole list — the shape a native <select> has
   // on a phone, and what the anchored panel gets from `query` below.
   const [sheetQuery, setSheetQuery] = useState("");
+  // Props first, provider second — see `EntityCombobox`. `emptyLabel` used to render
+  // nothing when omitted, which left a phone user staring at a blank full-screen
+  // sheet; now an omitted one says "No results" in the provider's language.
+  const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, {
+    search: searchPlaceholder,
+    noResults: emptyLabel,
+    clear: clearLabel,
+  });
 
   const selected = useMemo(
     () => (value == null ? null : (options.find((o) => o.value === value) ?? null)),
@@ -645,6 +748,12 @@ export function InlineEntityCombobox<V extends string | number>({
     return [...blocks.values()].flat();
   }, [options, query]);
 
+  // Pointer-device only: the phone's rows live in a {@link PickerSheet} whose own
+  // search box holds focus, so the field behind it must not claim to be pointing at
+  // one of them.
+  const activeId = !isPhone && active >= 0 && active < matches.length ? optionId(active) : undefined;
+  useActiveOptionScroll(activeId);
+
   const close = () => {
     setOpen(false);
     setActive(-1);
@@ -681,7 +790,11 @@ export function InlineEntityCombobox<V extends string | number>({
   };
 
   return (
-    <div ref={wrapperRef} className={cn("relative", className)}>
+    // `rest` dresses the outer box — a `data-tour` anchor, a test id, a form-level
+    // `aria-describedby`. Not the NAME: that belongs on the <input> below, which is
+    // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
+    // handlers carrying live #309 and dev#549 cannot be replaced from outside.
+    <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* Inner wrapper for chevron centering — same reasoning as Combobox above.
           It is also what the portalled list anchors to. */}
@@ -697,6 +810,11 @@ export function InlineEntityCombobox<V extends string | number>({
           aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
           role="combobox"
           aria-expanded={open}
+          // Required by the role, and the half that was missing: the field said it
+          // was expanded and never said what it had expanded (ESLint's
+          // `role-has-required-aria-props`, the audit's §a11y).
+          aria-controls={listboxId}
+          aria-activedescendant={activeId}
           aria-autocomplete="list"
           aria-invalid={invalid || undefined}
           autoComplete="off"
@@ -747,7 +865,15 @@ export function InlineEntityCombobox<V extends string | number>({
             } else if (e.key === "Escape") {
               setText(null);
               close();
+            } else if (e.key === "Tab") {
+              // Focus is in THIS input and stays there, so the browser's own Tab is
+              // left alone; all that is needed is that the list stop covering what
+              // the user is tabbing to. `reconcile` rather than `close`, because
+              // leaving the field is exactly when loose text has to be judged.
+              reconcile();
             }
+            // Home/End stay with the caret — see the note in {@link Combobox}: this
+            // field is editable, and its text is what `reconcile` judges.
           }}
           className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
         />
@@ -759,7 +885,7 @@ export function InlineEntityCombobox<V extends string | number>({
             // second stop between every picker and the next field is a worse trade
             // than the one gesture it saves.
             tabIndex={-1}
-            aria-label={clearLabel ?? "Clear"}
+            aria-label={labels.clear}
             // preventDefault, exactly as the chevron does: without it the press
             // focuses the input, which on a phone opens the sheet over the field the
             // press was clearing.
@@ -770,8 +896,8 @@ export function InlineEntityCombobox<V extends string | number>({
               onChange(null);
             }}
             className={cn(
-              "absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400",
-              "hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
+              "absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
+              "hover:text-[var(--text-secondary)]",
             )}
           >
             <X aria-hidden className="size-4" />
@@ -785,7 +911,7 @@ export function InlineEntityCombobox<V extends string | number>({
               setOpen((o) => !o);
             }}
             className={cn(
-              "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
+              "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
               disabled ? "opacity-50" : "cursor-pointer",
             )}
           />
@@ -803,11 +929,11 @@ export function InlineEntityCombobox<V extends string | number>({
             setSheetQuery(v);
             setActive(-1);
           }}
-          searchPlaceholder={searchPlaceholder ?? placeholder}
+          searchPlaceholder={searchPlaceholder ?? placeholder ?? labels.search}
           inputRef={sheetInputRef}
           closeLabel={closeLabel}
         >
-          <ul role="listbox">
+          <ul id={listboxId} role="listbox">
             {matches.map((o, i) => (
               // Keyed by group AND value, like combobox-core.tsx: an option may
               // deliberately appear twice (see `reconcile`), and a bare value key
@@ -816,14 +942,16 @@ export function InlineEntityCombobox<V extends string | number>({
                 {o.group && o.group !== matches[i - 1]?.group && (
                   <li
                     role="presentation"
-                    className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                   >
                     {o.group}
                   </li>
                 )}
-                <li role="option" aria-selected={o.value === value}>
+                <li role="presentation">
                   <button
                     type="button"
+                    role="option"
+                    aria-selected={o.value === value}
                     onClick={() => commit(o)}
                     className={cn(SHEET_ROW_CLASS, o.value === value && "font-medium")}
                   >
@@ -832,14 +960,14 @@ export function InlineEntityCombobox<V extends string | number>({
                 </li>
               </Fragment>
             ))}
-            {matches.length === 0 && emptyLabel && (
-              <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{emptyLabel}</li>
+            {matches.length === 0 && (
+              <li className="px-4 py-3 text-sm text-[var(--text-muted)]">{labels.noResults}</li>
             )}
           </ul>
         </PickerSheet>
       )}
       {!isPhone && open && matches.length > 0 && (
-        <SuggestionList anchorRef={fieldRef} panelRef={panelRef}>
+        <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {matches.map((o, i) => (
             // A group heading is emitted at each group boundary rather than repeating
             // the group on every row (feedback #136). `matches` is group-contiguous,
@@ -851,14 +979,21 @@ export function InlineEntityCombobox<V extends string | number>({
               {o.group && o.group !== matches[i - 1]?.group && (
                 <li
                   role="presentation"
-                  className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 first:pt-1 dark:text-slate-400"
+                  className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
                 >
                   {o.group}
                 </li>
               )}
-              <li role="option" aria-selected={o.value === value}>
+              <li role="presentation">
                 <button
                   type="button"
+                  id={optionId(i)}
+                  // See {@link Combobox}: the role rides the button, `aria-selected`
+                  // is the CHOSEN row, and the keyboard's row is the field's
+                  // `aria-activedescendant`.
+                  role="option"
+                  aria-selected={o.value === value}
+                  tabIndex={-1}
                   onMouseDown={(e) => {
                     // mousedown (not click) so the input's blur can't close the
                     // list before the selection registers.
@@ -876,7 +1011,7 @@ export function InlineEntityCombobox<V extends string | number>({
                 >
                   {o.label}
                   {o.sublabel && (
-                    <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">
+                    <span className="ml-2 text-xs text-[var(--text-placeholder)]">
                       {o.sublabel}
                     </span>
                   )}

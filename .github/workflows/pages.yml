@@ -1,0 +1,52 @@
+name: Showcase
+
+# Publishes the component showcase to GitHub Pages on every push to main.
+#
+# A design system that three apps derive from should be readable without a
+# checkout: ADOPTING.md is handed to a new consumer's agent, and "see the
+# components" currently means "clone the repo and run a dev server".
+#
+# ONE MANUAL STEP this workflow cannot do for you:
+#   repo Settings → Pages → Source: "GitHub Actions"
+# Until that is set, the deploy step fails with a 404 from the Pages API.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel an in-flight deploy — a cancelled one can leave the site half
+# published. Separate from ci.yml's concurrency group, which DOES cancel.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy the showcase
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Node 24 for the same reason ci.yml pins it — see the note there.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # A project site is served from /<repo>/, so every asset must be requested
+      # from there. Passed on the CLI rather than baked into showcase/vite.config.ts,
+      # which stays base-less so `npm run dev:showcase` serves from / locally.
+      - run: npx vite build --config showcase/vite.config.ts --base=/ui-kit/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: showcase/dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

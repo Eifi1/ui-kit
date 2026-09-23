@@ -1,9 +1,11 @@
 # Brief: adopt the `@eifi1/ui-kit` design system
 
-Hand this to the consuming repo's agent (e.g. `property-management`). It assumes
-`keksdose` is checked out as a sibling, so this package is readable at
-`../keksdose/packages/ui` and its full contract is in
-`../keksdose/packages/ui/README.md`.
+Hand this to the consuming repo's agent (e.g. `property-management`). The package
+is on npm and its full contract is in its own README — canonically at
+<https://github.com/Eifi1/ui-kit#readme>, and on disk at
+`node_modules/@eifi1/ui-kit/README.md` after `npm install`. **No sibling checkout is
+needed for any step below**, which is the whole point of the move off the `file:`
+submodule.
 
 **Goal.** Consume the shared design system (`@eifi1/ui-kit`) so future design-system
 design changes flow in automatically, and replace this app's own generic UI
@@ -29,10 +31,16 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `@import "tailwindcss";`):
    ```css
    @import "@eifi1/ui-kit/tokens.css";
-   @source "../../node_modules/@eifi1/ui-kit/src";
+   @source "../../node_modules/@eifi1/ui-kit/dist";
    ```
    `@source` is required — Tailwind ignores `node_modules`, so without it the class
-   names `@eifi1/ui-kit`'s components use won't be generated.
+   names `@eifi1/ui-kit`'s components use won't be generated and every component
+   renders unstyled with no error anywhere. **The path is relative to the CSS file
+   it is written in**, and a path that points at nothing fails silently: two of the
+   three existing consumers are in exactly that state, still pointing at
+   `../../packages/ui/src` from before the npm migration. Verify with
+   `npm run build && grep -c 'pointer-events-auto' dist/assets/*.css` — `0` means
+   the scan missed.
 
 4. **Theme + palette stores** — the factories let you use your own persistence
    keys:
@@ -43,9 +51,12 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
      createPaletteStore("<app>-palette", useTheme);
    ```
    Call `useApplyTheme()` + `useApplyPalette()` once at the root. For no flash on
-   load, apply the persisted `.dark` class + token set before hydration — copy the
-   pattern in `../keksdose/frontend/src/main.tsx` (uses `applyTokenSet` /
-   `presetById` / `DEFAULT_PRESET`).
+   load, apply the persisted `.dark` class + token set before hydration:
+   ```ts
+   // main.tsx, at module scope, before createRoot
+   const mode = applyPersistedTheme("<app>-theme");
+   applyPersistedPalette("<app>-palette", mode);
+   ```
 
 5. **Replace local primitives.** Swap your own `Button`/`Input`/`Select`/`Card`/
    `Modal`/dropdowns/etc. for the `@eifi1/ui-kit` exports and delete the local copies.
@@ -61,8 +72,14 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
 
 ## Reference
 
-`../keksdose/packages/ui/README.md` — full wiring detail + the complete list
-of exported components/theme/shell.
+| | |
+|---|---|
+| <https://github.com/Eifi1/ui-kit#readme> | Full wiring detail, the colour and i18n contracts, and the complete generated export inventory. Also at `node_modules/@eifi1/ui-kit/README.md` once installed. |
+| <https://eifi1.github.io/ui-kit/> | Every component rendered on one page, with the theme, palette and language switchers live. Equivalently `npm run dev:showcase` from a checkout. |
+| <https://github.com/Eifi1/ui-kit/blob/main/CHANGELOG.md> | What changed, and the semver contract the package keeps below 1.0. |
+| <https://github.com/Eifi1/ui-kit/issues> | Anything this brief does not cover, and anything that turns out to be wrong in it. |
+
+Only the README ships inside the npm tarball, so the rest are URLs rather than paths.
 
 ## Definition of done
 

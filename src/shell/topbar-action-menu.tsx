@@ -48,13 +48,13 @@ export function TopBarActionMenu({
       {(close) => (
         <ul className={cn("py-1", panelClassName)}>
           {heading && (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
               {heading}
             </li>
           )}
           {entries.map((entry) => {
             if (entry.kind === "divider") {
-              return <li key={entry.key} className="my-1 border-t border-slate-100 dark:border-slate-800" />;
+              return <li key={entry.key} className="my-1 border-t border-[var(--border)]" />;
             }
             const content = (
               <span className="flex w-full items-center gap-2">

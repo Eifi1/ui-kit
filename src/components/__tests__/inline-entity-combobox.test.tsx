@@ -105,7 +105,7 @@ describe("the desktop suggestion list", () => {
       />,
     );
     fireEvent.focus(screen.getByRole("combobox"));
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Fuel" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Fuel" }));
 
     expect(onChange).toHaveBeenCalledWith("c2");
   });

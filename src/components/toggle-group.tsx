@@ -1,12 +1,23 @@
+import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../lib/cn";
 
-interface ToggleOption<T extends string> {
+export interface ToggleOption<T extends string> {
   value: T;
   label: string;
   className?: string;
 }
 
-interface ToggleGroupProps<T extends string> {
+/**
+ * `onChange` is the group's own — the chosen VALUE, not a DOM event — so the div's
+ * `onChange` is omitted rather than shadowed: leaving both in scope would give the
+ * prop two incompatible meanings depending on which overload TypeScript picked.
+ *
+ * `children` is omitted too: this renders its `options` and nothing else, so a `children` the type
+ * accepted and the component ignored would be a prop that silently does nothing —
+ * worse than one that does not compile.
+ */
+export interface ToggleGroupProps<T extends string>
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
   value: T;
   onChange: (value: T) => void;
   options: ToggleOption<T>[];
@@ -14,6 +25,11 @@ interface ToggleGroupProps<T extends string> {
   /** Applied to every option button (e.g. to tune height/rounding to match
    *  adjacent fields). Per-option `className` still wins over this. */
   optionClassName?: string;
+  /**
+   * @deprecated Pass `aria-label` instead — the DOM spelling, which every other
+   * control in this kit now answers to. Kept working because three applications ship
+   * this one today; it names the group only when `aria-label` is absent.
+   */
   ariaLabel?: string;
   /**
    * Show, refuse the change (Keksdose live #288: a payment dated in the future has no
@@ -39,11 +55,26 @@ export function ToggleGroup<T extends string>({
   optionClassName,
   ariaLabel,
   disabled = false,
+  "aria-label": ariaLabelAttr,
+  ...rest
 }: ToggleGroupProps<T>) {
   return (
     <div
+      // The audit's named example of a closed prop list (§"Public API design"): the
+      // tour locates a step by CSS SELECTOR, so a component that drops every attribute
+      // it was not expecting cannot be spotlighted at all — and Keksdose's rule editor
+      // carries a comment explaining that it wraps this group in a bare <div> for
+      // exactly that reason.
+      //
+      // `...rest` first, then the attributes the group cannot do without: a caller
+      // hanging an anchor or a test id on the group must not be able to overwrite the
+      // radiogroup role or the disabled state by accident. `className` is destructured
+      // out entirely and merged through `cn`, so it is never in here.
+      {...rest}
       role="radiogroup"
-      aria-label={ariaLabel}
+      // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
+      // have not moved yet.
+      aria-label={ariaLabelAttr ?? ariaLabel}
       // `aria-disabled` on the group as well as `disabled` on each button: a radio
       // group is what the user is being refused, and a screen reader announcing
       // three separately-disabled radios does not say that.
@@ -61,7 +92,7 @@ export function ToggleGroup<T extends string>({
         // (The hover fill is the DESKTOP half of that report: Tailwind v4 wraps every
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
-        "inline-flex w-full gap-0.5 rounded-md border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900",
+        "inline-flex w-full gap-0.5 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5 shadow-sm",
         // The whole group fades, the way every other disabled control in this
         // package does; `cursor-not-allowed` is on the buttons, which is what a
         // pointer is actually over.
@@ -96,16 +127,16 @@ export function ToggleGroup<T extends string>({
               //
               // `focus-visible` + `ring-inset`, not `focus` + an outset ring. A ring
               // is a box-shadow that spreads OUTWARD, so on a flush group it painted
-              // 2px of slate over both neighbours and over the container's own border
+              // 2px of ring over both neighbours and over the container's own border
               // — and on a phone it appeared on every TAP, because a tap focuses the
               // button. That is the other half of what live #268's rework saw
               // overlaying the selected segment's boundary. Inset keeps the ring
               // inside the segment it belongs to; focus-visible keeps it for the
               // keyboard, which is the only input that needs it.
-              "min-w-0 flex-1 basis-auto truncate rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400",
+              "min-w-0 flex-1 basis-auto truncate rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
               active
-                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+                : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
               // No hover fill on a group that cannot be changed — a segment that
               // lights up under the pointer is an offer, and there is none here.
               disabled && "cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent",

@@ -1,7 +1,8 @@
 import { Pencil } from "lucide-react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle, IconButton } from "../components/ui";
 import type { SummarySection, WizardLabels } from "./types";
-import { resolveWizardLabels } from "./types";
+import { DEFAULT_WIZARD_LABELS } from "./types";
+import { useKitLabels } from "../i18n/kit-labels";
 
 /**
  * The review step: one card per section, each row a label/value pair, each card
@@ -20,7 +21,7 @@ export function WizardSummary({
   onEditStep: (stepIndex: number) => void;
   labels?: Partial<WizardLabels>;
 }) {
-  const l = resolveWizardLabels(labels);
+  const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
 
   return (
     <div className="space-y-4">
@@ -52,7 +53,7 @@ export function WizardSummary({
                     <div className="mb-2 border-t border-[var(--border)]" role="presentation" />
                   )}
                   <div className="flex items-start justify-between gap-4">
-                    <dt className="text-slate-500 dark:text-slate-400">{item.label}</dt>
+                    <dt className="text-[var(--text-muted)]">{item.label}</dt>
                     <dd className="text-right font-medium text-[var(--text-primary)]">
                       {item.value}
                     </dd>

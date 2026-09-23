@@ -1,24 +1,19 @@
 import { useRef, useState } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "./ui";
 import { cn } from "../lib/cn";
+import { useKitFileLabels } from "../i18n/kit-labels";
 
-/** Drag-and-drop file picker shared by the import wizards (YNAB zip, CAMT xml).
- * Validation failures surface `invalidMessage` (a `sonner` toast by default, see
- * `onInvalid`); the chosen file is echoed with its size, otherwise `emptyLabel` +
- * `hint` describe what to drop. */
-export function FileDropzone({
-  file,
-  onFileSelected,
-  accept,
-  isValid,
-  invalidMessage,
-  onInvalid,
-  dropLabel,
-  browseLabel,
-  emptyLabel,
-  hint,
-}: {
+/**
+ * `onInvalid` is omitted from the `<div>` attributes and kept as this component's own.
+ * The DOM event of that name belongs to form validation and takes a `FormEvent`; this
+ * one takes the rejected `File`, and the kit's meaning is the one every caller already
+ * writes. Everything else a `<div>` takes reaches the root — which carries
+ * `role="button"`, so that is also where an `aria-label` or an `aria-describedby`
+ * belongs.
+ */
+export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">, "onInvalid"> {
   file: File | null;
   onFileSelected: (file: File) => void;
   accept: string;
@@ -41,13 +36,41 @@ export function FileDropzone({
    * writing, two modules over.
    */
   onInvalid?: (file: File) => void;
+  /** The dropzone's accessible name, and the instruction shown on it. A caller's own
+   *  `aria-label` wins over it — see the root element below. */
   dropLabel: string;
   browseLabel: string;
   emptyLabel: string;
   hint: string;
-}) {
+  /** Extra classes for the dropzone's root. */
+  className?: string;
+}
+
+/** Drag-and-drop file picker shared by the import wizards (YNAB zip, CAMT xml).
+ * Validation failures surface `invalidMessage` (a `sonner` toast by default, see
+ * `onInvalid`); the chosen file is echoed with its size, otherwise `emptyLabel` +
+ * `hint` describe what to drop. */
+export function FileDropzone({
+  file,
+  onFileSelected,
+  accept,
+  isValid,
+  invalidMessage,
+  onInvalid,
+  dropLabel,
+  browseLabel,
+  emptyLabel,
+  hint,
+  className,
+  "aria-label": ariaLabel,
+  ...rest
+}: FileDropzoneProps) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // The size through the kit's `file.size` label (the provider's locale by default).
+  // This was `${n / 1024} KB`: ASCII digits, an English unit, and a binary kilobyte
+  // mislabelled as a decimal one, all in one template literal.
+  const fileText = useKitFileLabels();
 
   const acceptFile = (f: File | undefined | null) => {
     if (!f) return;
@@ -68,6 +91,9 @@ export function FileDropzone({
 
   return (
     <div
+      // `...rest` first: every handler below is the drop gesture itself, and the
+      // `role`/`tabIndex` pair is what makes this div operable by keyboard at all.
+      {...rest}
       onDragEnter={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -100,20 +126,38 @@ export function FileDropzone({
       }}
       role="button"
       tabIndex={0}
-      aria-label={dropLabel}
+      // The DOM spelling wins over `dropLabel`, which stays the name for every caller
+      // that passes no `aria-label` — i.e. all of them today. Standardising on
+      // `aria-label` (audit §api-design) does not get to silently rename an existing
+      // required prop.
+      aria-label={ariaLabel ?? dropLabel}
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors",
+        // `relative` is load-bearing, not cosmetic. The file input below is `sr-only`,
+        // which Tailwind implements as `position: absolute` — so without a positioned
+        // ancestor its containing block is the INITIAL one, and it is laid out at its
+        // own offset from the top of the document. Nothing looks wrong, because the
+        // input is 1x1 and clipped; what breaks is the page height. On a long page
+        // every escaped sr-only element extends `documentElement.scrollHeight` to its
+        // own offset, which produces a second, whole-document scrollbar alongside the
+        // app shell's own — one that scrolls past the end of the content into nothing.
+        // Measured on the showcase: body 900px, document 47,919px.
+        "relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors",
+        // Three states out of two border tokens: the target rests on the plain
+        // hairline, hover pulls it to `--border-strong`, and a live drag keeps that
+        // border and adds the `--bg-active` wash on top — so "let go here" still reads
+        // one step louder than "you are over it".
         dragOver
-          ? "border-slate-500 bg-slate-100 dark:border-slate-300 dark:bg-slate-800"
-          : "border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500",
+          ? "border-[var(--border-strong)] bg-[var(--bg-active)]"
+          : "border-[var(--border)] hover:border-[var(--border-strong)]",
+        className,
       )}
     >
-      <Upload className="size-5 text-slate-500 dark:text-slate-400" />
-      <div className="text-sm text-slate-700 dark:text-slate-200">
+      <Upload className="size-5 text-[var(--text-muted)]" />
+      <div className="text-sm text-[var(--text-secondary)]">
         {file ? <span className="font-medium">{file.name}</span> : emptyLabel}
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400">
-        {file ? `${Math.round(file.size / 1024)} KB` : hint}
+      <div className="text-xs text-[var(--text-muted)]">
+        {file ? fileText.size(file.size) : hint}
       </div>
       <Button
         type="button"

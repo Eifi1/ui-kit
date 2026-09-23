@@ -1,15 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
+import {
+  DEFAULT_CALCULATOR_LABELS,
+  useKitLabels,
+  type CalculatorLabels,
+} from "../i18n/kit-labels";
 
-/** Screen-reader names for the calculator panel's own controls. */
-export interface CalculatorButtonLabels {
-  calculation?: string;
-  backspace?: string;
-  equals?: string;
-}
+/** Screen-reader names for the calculator panel's own controls — any part of the
+ *  kit's `calculator` namespace. Once three optional keys of its own; widened, not
+ *  replaced, so every object that type-checked before still does. */
+export type CalculatorButtonLabels = Partial<CalculatorLabels>;
 
 interface CalculatorButtonProps {
   /** Current field text — seeds the keypad so the user can keep calculating
@@ -30,6 +33,7 @@ interface CalculatorButtonProps {
    */
   onChange: (value: string, expression?: string) => void;
   className?: string;
+  /** The trigger's accessible name; wins over `calculator.open` from the provider. */
   ariaLabel?: string;
   /** Screen-reader names for the panel's own controls. `ariaLabel` above already
    *  covers the trigger; these three were hardcoded English inside the popover,
@@ -37,36 +41,44 @@ interface CalculatorButtonProps {
   labels?: CalculatorButtonLabels;
 }
 
-/** Keypad layout (4 columns). The final C/= row is rendered separately. */
+/** Keypad layout (4 columns). The final C/= row is rendered separately. `name` is
+ *  the key of the {@link CalculatorLabels} entry that names a non-digit key; a digit
+ *  is named by its own glyph. */
 type Key =
-  | { kind: "ins"; label: string; ins: string; accent?: boolean }
+  | { kind: "ins"; label: string; ins: string; accent?: boolean; name?: KeyName }
   | { kind: "back" };
+
+type KeyName = "plus" | "minus" | "times" | "divide" | "decimal";
 
 const KEYS: Key[] = [
   { kind: "ins", label: "7", ins: "7" },
   { kind: "ins", label: "8", ins: "8" },
   { kind: "ins", label: "9", ins: "9" },
-  { kind: "ins", label: "÷", ins: "÷", accent: true },
+  { kind: "ins", label: "÷", ins: "÷", accent: true, name: "divide" },
   { kind: "ins", label: "4", ins: "4" },
   { kind: "ins", label: "5", ins: "5" },
   { kind: "ins", label: "6", ins: "6" },
-  { kind: "ins", label: "×", ins: "×", accent: true },
+  { kind: "ins", label: "×", ins: "×", accent: true, name: "times" },
   { kind: "ins", label: "1", ins: "1" },
   { kind: "ins", label: "2", ins: "2" },
   { kind: "ins", label: "3", ins: "3" },
-  { kind: "ins", label: "−", ins: "−", accent: true },
+  { kind: "ins", label: "−", ins: "−", accent: true, name: "minus" },
   { kind: "ins", label: "0", ins: "0" },
-  { kind: "ins", label: ".", ins: "." },
+  { kind: "ins", label: ".", ins: ".", name: "decimal" },
   { kind: "back" },
-  { kind: "ins", label: "+", ins: "+", accent: true },
+  { kind: "ins", label: "+", ins: "+", accent: true, name: "plus" },
 ];
 
 const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400";
+  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+// Two key families, two fills: digits sit on the inset surface and darken on
+// hover, operators sit a step down on `--border` and lift toward that surface —
+// the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
+// flip with the theme, so neither needs a `dark:` twin.
 const KEY_DIGIT =
-  "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700";
+  "bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
 const KEY_ACCENT =
-  "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600";
+  "bg-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]";
 
 function seed(initial: string): string {
   const t = initial.trim();
@@ -80,7 +92,7 @@ function CalculatorPanel({
 }: {
   initial: string;
   onChange: (value: string, expression?: string) => void;
-  labels?: CalculatorButtonLabels;
+  labels: CalculatorLabels;
 }) {
   const [expr, setExpr] = useState(() => seed(initial));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +137,7 @@ function CalculatorPanel({
     <div className="space-y-2">
       <input
         ref={inputRef}
-        aria-label={labels?.calculation ?? "Calculation"}
+        aria-label={labels.calculation}
         value={text}
         inputMode="decimal"
         onChange={(e) => apply(e.target.value)}
@@ -135,9 +147,9 @@ function CalculatorPanel({
             equals();
           }
         }}
-        className="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-right font-mono text-sm text-slate-900 focus:border-slate-500 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+        className="block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]"
       />
-      <div className="h-4 pr-1 text-right font-mono text-xs text-slate-400 dark:text-slate-500">
+      <div className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
       </div>
       <div className="grid grid-cols-4 gap-1.5">
@@ -146,7 +158,7 @@ function CalculatorPanel({
             <button
               key="back"
               type="button"
-              aria-label={labels?.backspace ?? "Backspace"}
+              aria-label={labels.backspace}
               onClick={() => apply(text.slice(0, -1))}
               className={cn(KEY_BASE, KEY_ACCENT)}
             >
@@ -156,6 +168,7 @@ function CalculatorPanel({
             <button
               key={`${key.ins}-${i}`}
               type="button"
+              aria-label={key.name ? labels[key.name] : undefined}
               onClick={() => apply(text + key.ins)}
               className={cn(KEY_BASE, key.accent ? KEY_ACCENT : KEY_DIGIT)}
             >
@@ -165,18 +178,24 @@ function CalculatorPanel({
         )}
         <button
           type="button"
+          // "C" is a convention, not a name: read aloud it is the letter.
+          aria-label={labels.clear}
           onClick={clearAll}
-          className={cn(KEY_BASE, "col-span-2 bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600")}
+          className={cn(KEY_BASE, "col-span-2 bg-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]")}
         >
           C
         </button>
         <button
           type="button"
-          aria-label={labels?.equals ?? "Equals"}
+          aria-label={labels.equals}
           onClick={equals}
           className={cn(
             KEY_BASE,
-            "col-span-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
+            // The one chip that inverts against the page. There is no hover token for
+            // an inverted fill, so the hover is the chip mixed back toward the
+            // surface — a step quieter in either theme, and still a colour, so
+            // KEY_BASE's `transition-colors` carries it.
+            "col-span-2 bg-[var(--bg-inverse)] text-[var(--text-inverse)] hover:bg-[color-mix(in_oklab,var(--bg-inverse)_88%,var(--bg-surface))]",
           )}
         >
           =
@@ -196,22 +215,30 @@ export function CalculatorButton({
   value,
   onChange,
   className,
-  ariaLabel = "Open calculator",
-  labels,
+  ariaLabel,
+  labels: labelsProp,
 }: CalculatorButtonProps) {
+  // prop > provider > English, with the older `ariaLabel` prop folded in as the
+  // `open` key it has always been.
+  const fromProps = useMemo(
+    () => (ariaLabel === undefined ? labelsProp : { ...labelsProp, open: ariaLabel }),
+    [ariaLabel, labelsProp],
+  );
+  const labels = useKitLabels("calculator", DEFAULT_CALCULATOR_LABELS, fromProps);
   return (
     <Popover
       width={224}
+      labels={{ panel: labels.panel }}
       trigger={({ open, toggle, ref }) => (
         <button
           ref={ref}
           type="button"
           tabIndex={-1}
           onClick={toggle}
-          aria-label={ariaLabel}
+          aria-label={labels.open}
           aria-expanded={open}
           className={cn(
-            "flex items-center justify-center text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
+            "flex items-center justify-center text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
             className,
           )}
         >

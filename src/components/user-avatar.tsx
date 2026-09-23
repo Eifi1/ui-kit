@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../lib/cn";
 
 /** Initials from a display name (first + last) or, failing that, an email —
@@ -24,23 +25,32 @@ const AVATAR_SIZES = {
   lg: "size-12 text-base",
 } as const;
 
-export interface UserAvatarProps {
+/** A `<span>`'s props, minus `children`: the content is the initials this computes
+ *  from `name`/`email`, so there is nothing for a caller to put inside. */
+export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   name?: string | null;
   email?: string | null;
   size?: keyof typeof AVATAR_SIZES;
-  className?: string;
 }
 
 /**
  * A round initials avatar — the common user chip shared across apps (feedback
  * #333). Purely presentational; wrap it in a button for the account menu trigger.
  */
-export function UserAvatar({ name, email, size = "md", className }: UserAvatarProps) {
+export function UserAvatar({ name, email, size = "md", className, ...rest }: UserAvatarProps) {
   return (
     <span
+      // `aria-hidden` sits BEFORE the spread, unlike the structural attributes on the
+      // other components here, because it is a DEFAULT rather than an invariant. The
+      // avatar is decorative next to the name it belongs to — which is where all three
+      // apps render it — so hiding it stops a screen reader saying "ME" after the word
+      // "Marcel Eifert". A caller who renders one ALONE (an assignee column, a
+      // presence dot) needs the opposite, and now has it: `aria-hidden={false}` plus an
+      // `aria-label` arrives through `...rest` and wins.
       aria-hidden
+      {...rest}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-slate-900 font-semibold text-white dark:bg-slate-100 dark:text-slate-900",
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] font-semibold text-[var(--text-inverse)]",
         AVATAR_SIZES[size],
         className,
       )}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { useSearchParams } from "react-router";
 import { readStored, writeStored } from "../lib/safe-storage";
 import {
@@ -39,9 +39,10 @@ function loadPersisted(storageKey: string | undefined, prefix: string): Partial<
   }
 }
 
-function savePersisted(storageKey: string | undefined, state: PersistedState, prefix: string): void {
-  if (!storageKey) return;
-  writeStored(prefix + storageKey, JSON.stringify(state));
+/** The blob that would be stored — also the value the effect below compares by, so
+ *  the comparison and the write can never disagree about what "unchanged" means. */
+function serializePersisted(state: PersistedState): string {
+  return JSON.stringify(state);
 }
 
 // ---------- URL sync helpers ----------
@@ -87,6 +88,40 @@ function readUrlState<T>(columns: DataTableColumn<T>[]): UrlState {
   if (pRaw && Number(pRaw) >= 1) out.page = Number(pRaw) - 1;
 
   return out;
+}
+
+/**
+ * The managed part of the query string, as a string, for comparing by VALUE.
+ *
+ * Everything the table puts in the address and nothing else, in a fixed order.
+ * `columns` is walked for its keys only, which is why it can be left out of the
+ * effect's dependencies without lying: a new column ARRAY carrying the same keys
+ * produces the same signature, and a genuinely different set of filterable columns
+ * produces a different one.
+ */
+function urlSignature<T>(
+  columns: DataTableColumn<T>[],
+  sorts: SortState[],
+  filters: FilterState,
+  pageSize: number,
+  page: number,
+  defaultPageSize: number,
+): string {
+  const parts: string[] = [];
+  for (const col of columns) {
+    const state = filters[col.key];
+    if (!state || !isFilterActive(state)) continue;
+    const enc = encodeFilterValue(state);
+    if (enc != null) parts.push(`${URL_FILTER_PREFIX}${col.key}=${enc}`);
+  }
+  parts.push(`${URL_SORT_KEY}=${encodeSorts(sorts)}`);
+  parts.push(
+    `${URL_PAGE_SIZE_KEY}=${
+      pageSize === Infinity ? "all" : pageSize === defaultPageSize ? "" : String(pageSize)
+    }`,
+  );
+  parts.push(`${URL_PAGE_KEY}=${page > 0 ? String(page + 1) : ""}`);
+  return parts.join("&");
 }
 
 function writeUrlState<T>(
@@ -193,28 +228,52 @@ export function useTableState<T>({
   const [showSettings, setShowSettings] = useState(false);
   const headRefs = useMemo(() => new Map<string, HTMLTableCellElement>(), []);
 
-  useEffect(() => {
-    if (!storageKey) return;
-    savePersisted(
-      storageKey,
-      {
+  // ---- Writing out: both of these compare by VALUE ----
+  //
+  // A CONTROLLED table (`sorts`/`filters` props plus callbacks — every server-driven
+  // one) receives a freshly-built object on every render of the page around it, and
+  // `{}` is never `===` the `{}` before it. Keyed on identity, both effects below
+  // therefore fired on every unrelated parent render: persistence wrote the same JSON
+  // into `localStorage` each time — a synchronous main-thread write, on a page whose
+  // other half may be a form being typed into — and the URL one handed react-router a
+  // `replace` it answers with a render, which is the loop the audit records. A `ref`
+  // holding what was last written is what makes "changed" mean changed.
+  const lastPersisted = useRef<string | null>(null);
+  const persisted = !storageKey
+    ? ""
+    : serializePersisted({
         sort: sorts,
         filters,
         pageSize: pageSize === Infinity ? "all" : pageSize,
         widths,
         hidden: Array.from(hiddenCols),
-      },
-      storageKeyPrefix,
-    );
-  }, [storageKey, storageKeyPrefix, sorts, filters, pageSize, widths, hiddenCols]);
+      });
+  useEffect(() => {
+    if (!storageKey) return;
+    // The destination is part of the signature: two tables can hold identical state,
+    // and a table that swaps `storageKey` has to write under the new one even though
+    // nothing about the view changed.
+    const target = storageKeyPrefix + storageKey;
+    const sig = `${target}\u0000${persisted}`;
+    if (lastPersisted.current === sig) return;
+    lastPersisted.current = sig;
+    writeStored(target, persisted);
+  }, [storageKey, storageKeyPrefix, persisted]);
 
+  const lastUrl = useRef<string | null>(null);
+  const urlSig = urlSync
+    ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize)
+    : "";
   useEffect(() => {
     if (!urlSync) return;
+    if (lastUrl.current === urlSig) return;
+    lastUrl.current = urlSig;
+    // `columns` is deliberately not a dependency and does not need to be: the
+    // signature above is computed from it, so a column set that would produce a
+    // different address produces a different signature first.
     writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize);
-    // columns identity changes per render but URL output only depends on column keys;
-    // including columns would re-run on every render. We rely on data state only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlSync, sorts, filters, pageSize, page, defaultPageSize]);
+  }, [urlSync, urlSig]);
 
   return {
     sorts,

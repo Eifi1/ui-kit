@@ -18,8 +18,9 @@ interface NumberInputProps {
   label?: ReactNode;
   ariaLabel?: string;
   /** Names for the calculator this field renders — its trigger, and the controls
-   *  inside the popover — and for the numpad sheet it opens on a phone. English
-   *  defaults, so a host that does not translate is unaffected.
+   *  inside the popover — and for the numpad sheet it opens on a phone. Overrides
+   *  for THIS field only: both resolve the `calculator` namespace of
+   *  `<UiKitProvider labels>` themselves, then fall back to English.
    *
    *  `pad` is not optional plumbing: this field renders a {@link NumberPadSheet}
    *  exactly as {@link AmountInput} does, but had no way to pass it anything, so
@@ -189,7 +190,7 @@ export function NumberInput({
           {suffix !== undefined && (
             <span
               aria-hidden
-              className="pointer-events-none pr-3 text-xs font-medium text-slate-500 dark:text-slate-400"
+              className="pointer-events-none pr-3 text-xs font-medium text-[var(--text-muted)]"
             >
               {suffix}
             </span>

@@ -4,6 +4,7 @@ import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttribute
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip } from "./tooltip";
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
 
@@ -15,8 +16,10 @@ const BUTTON_BASE =
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
 // Actions default to a warm bordered look (primary = filled warm chip, secondary =
-// outline); `brand` stays the solid accent for the rare strong CTA; danger stays red
-// (destructive semantics). All focus rings use the brand accent.
+// outline); `brand` stays the solid accent for the rare strong CTA; `danger` takes the
+// semantic `--danger` family (destructive semantics), so a consumer can re-point the
+// destructive hue instead of inheriting a hard-coded red. Focus rings follow each
+// variant's own accent: brand for the four neutral ones, danger for `danger`.
 const buttonVariantClasses: Record<ButtonVariant, string> = {
   primary:
     "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--border)] focus:ring-[var(--brand)]",
@@ -24,7 +27,8 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
     "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus:ring-[var(--brand)]",
   ghost:
     "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus:ring-[var(--brand)]",
-  danger: "bg-red-600 text-white hover:bg-red-500 focus:ring-red-300",
+  danger:
+    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus:ring-[var(--danger-border)]",
   brand:
     "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus:ring-[var(--brand)]",
 };
@@ -40,12 +44,14 @@ export function buttonClasses(variant: ButtonVariant = "primary", className?: st
   return cn(BUTTON_BASE, buttonVariantClasses[variant], className);
 }
 
-export function Button({
-  variant = "primary",
-  stretch,
-  className,
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; stretch?: boolean }) {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  /** In a flex row next to a taller labelled field, fill the field's height so the
+   *  two line up. No effect outside a flex row. */
+  stretch?: boolean;
+}
+
+export function Button({ variant = "primary", stretch, className, ...rest }: ButtonProps) {
   return (
     <button
       {...rest}
@@ -74,14 +80,16 @@ export function Button({
 const ICON_BUTTON_BASE =
   "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-5";
 
-export const IconButton = forwardRef<
-  HTMLButtonElement,
-  ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: ButtonVariant;
-    /** Box size: md = 36px (matches the top bar), sm = 32px. The icon stays 20px. */
-    size?: "sm" | "md";
-  }
->(function IconButton({ variant = "ghost", size = "md", className, ...rest }, ref) {
+export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  /** Box size: md = 36px (matches the top bar), sm = 32px. The icon stays 20px. */
+  size?: "sm" | "md";
+}
+
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { variant = "ghost", size = "md", className, ...rest },
+  ref,
+) {
   return (
     <button
       ref={ref}
@@ -98,12 +106,13 @@ export const IconButton = forwardRef<
 IconButton.displayName = "IconButton";
 
 export const FIELD_BASE =
-  "block w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[var(--brand)] focus:ring-[var(--brand)] dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 " +
+  "block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:ring-[var(--brand)] " +
   // A field the user cannot change has to LOOK settled. Without this, `disabled`
-  // dimmed the floating label and nothing else — FIELD_BASE's own `text-slate-900`
-  // overrides the browser's grey — so a read-only value sat there in full-strength
-  // black, indistinguishable from one you could retype (Keksdose dev#455/#474).
-  "disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-400 " +
+  // dimmed the floating label and nothing else — FIELD_BASE's own
+  // `text-[var(--text-primary)]` overrides the browser's grey — so a read-only value
+  // sat there at full body-text strength, indistinguishable from one you could retype
+  // (Keksdose dev#455/#474).
+  "disabled:cursor-default disabled:bg-[var(--bg-surface-2)] disabled:text-[var(--text-muted)] " +
   // Same for a field that takes focus but refuses keys: `readOnly` is not
   // `disabled`, and a value that cannot be edited should not claim it can be. Opt
   // OUT with {@link FIELD_WRITABLE_LOOK} in the one case where `readOnly` does not
@@ -117,16 +126,16 @@ export const FIELD_BASE =
   // `<select>` in the app and every field-styled `<button>` built on this base —
   // the native selects, the date trigger, the entity/currency/multi pickers — and
   // painted them all in the "you may not edit this" grey. On one transaction form
-  // that made three different-looking families out of one field style: white
+  // that made three different-looking families out of one field style: plain
   // inputs, grey selects, grey trigger buttons.
-  "[&[readonly]]:bg-slate-50 [&[readonly]]:text-slate-500 dark:[&[readonly]]:bg-slate-800/60 dark:[&[readonly]]:text-slate-400";
+  "[&[readonly]]:bg-[var(--bg-surface-2)] [&[readonly]]:text-[var(--text-muted)]";
 
 /** Cancels FIELD_BASE's read-only treatment for a field that is `readOnly` for a
  *  reason other than "you may not edit this". Attribute-scoped for the same reason
  *  FIELD_BASE is — the two have to cancel on the identical selector or twMerge
  *  cannot make the later one win. */
 export const FIELD_WRITABLE_LOOK =
-  "[&[readonly]]:bg-white [&[readonly]]:text-slate-900 dark:[&[readonly]]:bg-slate-900 dark:[&[readonly]]:text-slate-100";
+  "[&[readonly]]:bg-[var(--bg-surface)] [&[readonly]]:text-[var(--text-primary)]";
 
 // Extra top padding leaves room for a label that floats INSIDE the field (the
 // "filled" pattern) — the label sits in the top strip, the value below it. Used by
@@ -134,9 +143,9 @@ export const FIELD_WRITABLE_LOOK =
 // over FIELD_BASE's py-2.
 export const FIELD_FLOATING_PAD = "pt-4 pb-1";
 
-// Error/required highlight for a field that is missing a value — a rose border
-// and matching focus ring so the control itself shows what's wrong, not just a
-// note beside it (feedback #235). Layered after FIELD_BASE so twMerge wins.
+// Error/required highlight for a field that is missing a value — a `--danger`
+// border and matching focus ring so the control itself shows what's wrong, not just
+// a note beside it (feedback #235). Layered after FIELD_BASE so twMerge wins.
 //
 // The `ring-1` is not decoration; it is what makes the highlight SURVIVE display
 // scaling (Keksdose live #295 — *"Account select boundary. It is not highlighted on
@@ -144,16 +153,18 @@ export const FIELD_FLOATING_PAD = "pt-4 pb-1";
 // border is 1.25 device pixels: the horizontal edges land on whole rows and paint
 // solid, while one of the two VERTICAL edges lands across a pixel boundary and is
 // spread over two columns at partial coverage. Measured on the receipt's required
-// account field, dark theme, full rose = rgb(208,30,78): left/top/bottom all 208,
-// right 160 then 115 — the side that is supposed to shout, at 55–77% of the others.
-// A border plus a ring is 2 CSS px, so whatever the fraction there is always one
-// fully covered device pixel on every side (re-measured: worst side 241).
+// account field, dark theme, back when this was a hard-coded rose (full =
+// rgb(208,30,78)): left/top/bottom all 208, right 160 then 115 — the side that is
+// supposed to shout, at 55–77% of the others. A border plus a ring is 2 CSS px, so
+// whatever the fraction there is always one fully covered device pixel on every side
+// (re-measured: worst side 241). It is the GEOMETRY that carries that, not the hue,
+// so the fix survives a consumer re-pointing `--danger-border`.
 //
 // A ring rather than `border-2`: a box-shadow adds no layout, so an invalid field
 // stays exactly the size of a valid one and nothing beside it moves when the value
 // arrives.
 export const FIELD_INVALID =
-  "border-rose-400 ring-1 ring-rose-400 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-500/80 dark:ring-rose-500/80 dark:focus:border-rose-400";
+  "border-[var(--danger-border)] ring-1 ring-[var(--danger-border)] focus:border-[var(--danger)] focus:ring-[var(--danger)]";
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
@@ -185,7 +196,7 @@ export const PHONE_QUERY = "(max-width: 767px)";
  * wants a heading — so each control adds its own on top.
  */
 export const FIELD_DISPLAY =
-  "block w-full border-x-0 border-t-0 border-b border-[var(--border)] bg-transparent px-0 pt-0 pb-1 text-[var(--text-primary)] shadow-none placeholder:text-slate-400 focus:border-[var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60 dark:placeholder:text-slate-500";
+  "block w-full border-x-0 border-t-0 border-b border-[var(--border)] bg-transparent px-0 pt-0 pb-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60";
 
 // A field-styled button trigger for the custom dropdown controls (MultiSelect,
 // CurrencySelect) — the field look (border/bg) as a flex row for the value + chevron,
@@ -196,8 +207,13 @@ export const FIELD_DISPLAY =
 // button the way the native Select does.
 export const FIELD_TRIGGER = cn(
   FIELD_BASE,
-  "relative flex items-center justify-between gap-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800",
+  "relative flex items-center justify-between gap-2 text-left hover:bg-[var(--bg-hover)]",
 );
+
+/** An alias rather than an interface: the chevron adds nothing of its own to an
+ *  `<svg>`'s props, and an interface declaring no members is the same type wearing a
+ *  name that suggests otherwise. */
+export type FieldChevronProps = Omit<ComponentPropsWithoutRef<"svg">, "children">;
 
 /** The dropdown chevron, shared by the native {@link Select} and every custom
  * {@link FIELD_TRIGGER} control.
@@ -207,12 +223,16 @@ export const FIELD_TRIGGER = cn(
  * pushes that box's midline down — so a labelled currency/multi-select chevron
  * sat visibly lower than the native select's right beside it (feedback #400).
  * Pair it with `pr-9` on the trigger so the value can't run underneath. */
-export function FieldChevron({ className }: { className?: string }) {
+export function FieldChevron({ className, ...rest }: FieldChevronProps) {
   return (
     <ChevronDown
+      {...rest}
+      // After the spread: the chevron is decoration beside a control that already has
+      // a name, and an `aria-hidden` a caller could switch off by accident is a second
+      // announcement of the same field.
       aria-hidden
       className={cn(
-        "pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500",
+        "pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
         className,
       )}
     />
@@ -221,13 +241,12 @@ export function FieldChevron({ className }: { className?: string }) {
 
 // Animated label that starts centred (as a placeholder) in an empty field and
 // floats up INSIDE the top strip on focus or once the field has a value. Sits on
-// the white field, so no background chip and nothing to mismatch the card.
+// the field's own surface, so no background chip and nothing to mismatch the card.
 export const FLOATING_LABEL_CLASS = cn(
-  "pointer-events-none absolute left-3 top-2.5 text-sm text-slate-400 transition-all",
+  "pointer-events-none absolute left-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
   "max-w-[calc(100%-1.5rem)] truncate",
-  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-slate-600",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-slate-600",
-  "dark:text-slate-500 dark:peer-focus:text-slate-300 dark:peer-[:not(:placeholder-shown)]:text-slate-300",
+  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
 );
 
@@ -244,10 +263,9 @@ export const FLOATING_LABEL_CLASS = cn(
 // sitting on top of a button (steering-design feedback #48).
 const FLOATING_ROW_CLASS = cn(
   "pointer-events-none absolute left-3 top-2.5 flex items-center gap-1 transition-all",
-  "max-w-[calc(100%-3rem)] text-sm text-slate-400",
-  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-slate-600",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-slate-600",
-  "dark:text-slate-500 dark:peer-focus:text-slate-300 dark:peer-[:not(:placeholder-shown)]:text-slate-300",
+  "max-w-[calc(100%-3rem)] text-sm text-[var(--text-placeholder)]",
+  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
 );
 
@@ -257,7 +275,7 @@ const FLOATING_ROW_CLASS = cn(
 // same baseline — which is what put dev#468's "?" three pixels above the word it
 // belongs to.
 const STATIC_LABEL_TYPE =
-  "text-[11px] leading-tight text-slate-500 dark:text-slate-400 peer-disabled:opacity-50";
+  "text-[11px] leading-tight text-[var(--text-muted)] peer-disabled:opacity-50";
 
 // A field that always has a value (select / dropdown trigger) keeps the label
 // permanently in the floated position — small, in the top strip, value below.
@@ -275,16 +293,7 @@ export const FLOATING_LABEL_STATIC = cn(
  * dropdown controls that need a ref + menu keep their own wrapper but the same label
  * (via {@link FieldLabel}) and trigger ({@link FIELD_TRIGGER}) styles.
  */
-export function FloatingField({
-  className,
-  htmlFor,
-  label,
-  staticLabel,
-  srOnlyLabel,
-  hint,
-  children,
-}: {
-  className?: string;
+export interface FloatingFieldProps extends ComponentPropsWithoutRef<"div"> {
   htmlFor?: string;
   label?: ReactNode;
   staticLabel?: boolean;
@@ -305,7 +314,18 @@ export function FloatingField({
    *  the label that gives way (steering-design feedback #48). */
   hint?: ReactNode;
   children: ReactNode;
-}) {
+}
+
+export function FloatingField({
+  className,
+  htmlFor,
+  label,
+  staticLabel,
+  srOnlyLabel,
+  hint,
+  children,
+  ...rest
+}: FloatingFieldProps) {
   const withHint = hint !== undefined && !srOnlyLabel;
   const atEnd = withHint && staticLabel;
   const labelEl = label !== undefined && (
@@ -327,7 +347,11 @@ export function FloatingField({
     </label>
   );
   return (
-    <div className={cn("relative", className)}>
+    // `relative` is the whole contract of this wrapper — the floating label and every
+    // control that hangs off it (a reveal toggle, a chevron) are positioned against
+    // this box — so it is merged through `cn` after the spread rather than left where
+    // a caller's stray `className` or `style` could unset it.
+    <div {...rest} className={cn("relative", className)}>
       {children}
       {withHint ? (
         // Static: `inset-x-3` rather than `left-3`, so a long label truncates at
@@ -368,17 +392,41 @@ export function FloatingField({
  * too. The text is also its accessible name, so a screen reader gets it without
  * the bubble ever opening.
  */
-export function FieldHint({ label, side = "left" }: { label: string; side?: "left" | "right" | "top" | "bottom" }) {
+export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {
+  /** The explanation. It is both the tooltip's text and, by default, the button's
+   *  accessible name, so a screen reader gets it without the bubble ever opening. */
+  label: string;
+  side?: "left" | "right" | "top" | "bottom";
+}
+
+export function FieldHint({
+  label,
+  side = "left",
+  className,
+  "aria-label": ariaLabel,
+  ...rest
+}: FieldHintProps) {
   return (
     <Tooltip label={label} side={side} portal>
       <button
+        {...rest}
+        // `type` after the spread, not before. These render inside forms — that is the
+        // only place a field has a label line — and a hint that defaulted to `submit`
+        // because a caller spread a props object at it would save the form on a click
+        // meant to explain a field.
         type="button"
-        aria-label={label}
+        // The explanation names the button unless the caller says otherwise; passing
+        // `aria-label` is how you shorten it for a screen reader without shortening
+        // what the bubble shows.
+        aria-label={ariaLabel ?? label}
         // Nothing to activate: the tooltip opens on hover and on focus, and a
         // click that did something as well would be a second, undiscoverable
         // behaviour on the same target.
         onClick={(e) => e.preventDefault()}
-        className="flex text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
+        className={cn(
+          "flex text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
+          className,
+        )}
       >
         <HelpCircle className="size-3.5" />
       </button>
@@ -391,51 +439,178 @@ export function FieldHint({ label, side = "left" }: { label: string; side?: "lef
  * button not a labelable input). Same placement as {@link FloatingField}'s static label,
  * so every labelled field lines up. Render inside a `relative` wrapper, before the trigger.
  */
-export function FieldLabel({ children, className }: { children: ReactNode; className?: string }) {
+export interface FieldLabelProps extends ComponentPropsWithoutRef<"span"> {
+  children: ReactNode;
+}
+
+export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
   return (
-    <span className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
+    <span {...rest} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
       {children}
     </span>
   );
+}
+
+/**
+ * The message under a field that is wrong, and the wiring that attaches it.
+ *
+ * `invalid` paints the field ({@link FIELD_INVALID}) and sets `aria-invalid`, and
+ * there it stopped: a field that announces "invalid" and nothing else has told a
+ * screen-reader user only that they are stuck. The message was always on screen —
+ * a sibling `<p>` beside the field — and never in the accessibility tree, because
+ * attaching it needs an id on the message and an `aria-describedby` on the control,
+ * and no caller was going to mint one by hand for every field on a form.
+ *
+ * Two rules the wiring has to keep:
+ *
+ *  - **Merge, never replace.** A field may already point at a hint ("at least twelve
+ *    characters"). Overwriting that reference to say the field is wrong trades one
+ *    half of the answer for the other — and it keeps the half the user has already
+ *    read. The hint stays first: it is the standing advice, the error is the news.
+ *  - **`invalid` keeps working alone**, for the forms whose message lives somewhere
+ *    else entirely (a summary at the top of a dialog). There is nothing to point at
+ *    then, and a dangling id describes the field as nothing at all.
+ *
+ * Deliberately NOT `role="alert"`. `aria-describedby` is read when focus reaches the
+ * control, which is where a field's own error is wanted; an alert would also interrupt
+ * whatever is being read at the time, on every keystroke of a form that re-validates
+ * as you type.
+ */
+const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+
+function useFieldError(
+  error: ReactNode,
+  invalid: boolean | undefined,
+  describedBy: string | undefined,
+) {
+  const errorId = useId();
+  // `null`, `false` and `""` are what a caller's `touched && errors.iban` evaluates to
+  // on the happy path. None of them is a message, and pointing the control at one
+  // would describe it with an empty node.
+  const hasError = error !== undefined && error !== null && error !== false && error !== "";
+  return {
+    /** A field carrying a message that says what is wrong with it IS wrong. */
+    isInvalid: Boolean(invalid) || hasError,
+    describedBy: hasError ? (describedBy ? `${describedBy} ${errorId}` : errorId) : describedBy,
+    errorEl: hasError ? (
+      <p id={errorId} className={FIELD_ERROR_CLASS}>
+        {error}
+      </p>
+    ) : null,
+  };
+}
+
+/**
+ * A field and its message as one box.
+ *
+ * The message cannot go INSIDE the field's own `relative` box. The password reveal
+ * toggle is `inset-y-0` and the select chevron is `top-1/2`, so both centre on
+ * whatever that box contains — put two lines of message in it and the chevron drifts
+ * down out of the field, between the value and the text. So the field keeps its box
+ * and this wraps the pair.
+ *
+ * It renders nothing of its own when there is no message, which is what keeps `error`
+ * additive: a field without one is exactly the DOM it was before the prop existed,
+ * down to the bare `<input>` an unlabelled {@link Input} drops straight into a
+ * caller's flex row. For the same reason `className` is NOT moved out here — it goes
+ * on the field, as it always has, so adding a message cannot silently change what
+ * that prop styles.
+ */
+function FieldGroup({ errorEl, children }: { errorEl: ReactNode; children: ReactNode }) {
+  if (errorEl === null) return <>{children}</>;
+  return (
+    <div>
+      {children}
+      {errorEl}
+    </div>
+  );
+}
+
+/** The two names the password reveal toggle can wear. See {@link Input}. */
+export interface PasswordRevealLabels {
+  /** While the value is hidden — activating the toggle will show it. */
+  show: string;
+  /** While the value is shown. */
+  hide: string;
+}
+
+export const DEFAULT_PASSWORD_REVEAL_LABELS: PasswordRevealLabels = {
+  show: "Show password",
+  hide: "Hide password",
+};
+
+/** Caller's labels over the English defaults — the same shape as
+ *  `resolveDataTableLabels`, so a consumer translates every kit string one way. */
+export function resolvePasswordRevealLabels(
+  partial?: Partial<PasswordRevealLabels>,
+): PasswordRevealLabels {
+  if (!partial) return DEFAULT_PASSWORD_REVEAL_LABELS;
+  return { ...DEFAULT_PASSWORD_REVEAL_LABELS, ...partial };
 }
 
 // Native date/time inputs only reveal the calendar via the tiny trailing icon;
 // open the picker on a click anywhere in the field instead (feedback #224).
 const PICKER_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
 
-export const Input = forwardRef<
-  HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement> & {
-    label?: ReactNode;
-    /** Classes for the `<input>` itself, as distinct from `className`, which
-     *  styles the field WRAPPER once a `label` turns this into a FloatingField.
-     *  Without it a labelled Input had no way to reach its own element — so
-     *  `tabular-nums` on a numeric text field, which NumberInput has supported
-     *  all along through the identically named prop, was simply unavailable. */
-    inputClassName?: string;
-    /** {@link FIELD_DISPLAY} — on a phone, drop the chrome and set the value as a
-     *  heading. For the one field a form is about (a feedback subject, an account
-     *  name), never for a stack of them. Labelled fields only: the label is what
-     *  the placeholder falls back to once it goes `sr-only`. */
-    variant?: "field" | "display";
-    /** The field is required and unanswered, or holds something that cannot be
-     *  saved — {@link FIELD_INVALID}, the same rose border/ring `Select` has worn
-     *  since feedback #235.
-     *
-     *  It exists here because writing `aria-invalid` by hand did NOT do this. The
-     *  attribute spreads onto the element and nothing styles it — there is no
-     *  `[aria-invalid]` rule in this package or in either consumer's stylesheet —
-     *  so three Keksdose dialogs flagged a mismatched passphrase to a screen reader
-     *  and painted the field exactly as if it were fine. Setting the prop sets the
-     *  attribute too, so the two can no longer be spelled separately. */
-    invalid?: boolean;
-  }
->(function Input(
-  { className, inputClassName, label, id, placeholder, type, variant = "field", invalid, ...rest },
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: ReactNode;
+  /** Classes for the `<input>` itself, as distinct from `className`, which
+   *  styles the field WRAPPER once a `label` turns this into a FloatingField.
+   *  Without it a labelled Input had no way to reach its own element — so
+   *  `tabular-nums` on a numeric text field, which NumberInput has supported
+   *  all along through the identically named prop, was simply unavailable. */
+  inputClassName?: string;
+  /** {@link FIELD_DISPLAY} — on a phone, drop the chrome and set the value as a
+   *  heading. For the one field a form is about (a feedback subject, an account
+   *  name), never for a stack of them. Labelled fields only: the label is what
+   *  the placeholder falls back to once it goes `sr-only`. */
+  variant?: "field" | "display";
+  /** The field is required and unanswered, or holds something that cannot be
+   *  saved — {@link FIELD_INVALID}, the same rose border/ring `Select` has worn
+   *  since feedback #235.
+   *
+   *  It exists here because writing `aria-invalid` by hand did NOT do this. The
+   *  attribute spreads onto the element and nothing styles it — there is no
+   *  `[aria-invalid]` rule in this package or in either consumer's stylesheet —
+   *  so three Keksdose dialogs flagged a mismatched passphrase to a screen reader
+   *  and painted the field exactly as if it were fine. Setting the prop sets the
+   *  attribute too, so the two can no longer be spelled separately. */
+  invalid?: boolean;
+  /** What is wrong with the value, in the caller's own words ("That IBAN has 21
+   *  digits"). Rendered under the field, pointed at by the control's
+   *  `aria-describedby` — MERGED with any the caller already passed — and implies
+   *  `invalid`, so the field paints as well as announces. `invalid` alone still
+   *  covers the case where the message lives elsewhere. See {@link useFieldError}. */
+  error?: ReactNode;
+  /** Names for the password reveal toggle, English by default — it is the one
+   *  string this component renders on its own behalf, and a German form was
+   *  reading it out in English. See {@link PasswordRevealLabels}. */
+  passwordLabels?: Partial<PasswordRevealLabels>;
+}
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    className,
+    inputClassName,
+    label,
+    id,
+    placeholder,
+    type,
+    variant = "field",
+    invalid,
+    error,
+    passwordLabels,
+    ...rest
+  },
   ref,
 ) {
   const generated = useId();
   const fieldId = id ?? generated;
+  const { isInvalid, describedBy, errorEl } = useFieldError(
+    error,
+    invalid,
+    rest["aria-describedby"],
+  );
   const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
@@ -453,14 +628,23 @@ export const Input = forwardRef<
         }
       }
     : rest.onClick;
+  const passwordText = useKitLabels("passwordReveal", DEFAULT_PASSWORD_REVEAL_LABELS, passwordLabels);
   const revealToggle = isPassword ? (
     <button
       type="button"
-      tabIndex={-1}
+      // `tabIndex={-1}` sat here, which made this a painted, clickable control that
+      // Tab stepped straight over — on the one field whose value cannot be checked by
+      // looking at it. There is no mouse-only case for a reveal toggle; the people who
+      // cannot see what they typed are exactly who it is for. It is a tab stop now,
+      // and it needs a focus ring of its own, because FIELD_BASE's ring belongs to the
+      // input underneath and stays put while focus moves onto the button on top of it.
       onClick={() => setRevealed((v) => !v)}
-      aria-label={revealed ? "Hide password" : "Show password"}
+      // …and since it is a tab stop, a field the user may not edit must not hand the
+      // keyboard a control that shows what is in it.
+      disabled={rest.disabled}
+      aria-label={revealed ? passwordText.hide : passwordText.show}
       aria-pressed={revealed}
-      className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+      className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:cursor-default disabled:opacity-50"
     >
       {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
     </button>
@@ -468,77 +652,97 @@ export const Input = forwardRef<
   if (label === undefined) {
     if (!isPassword) {
       return (
-        <input
-          ref={ref}
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          {...rest}
-          // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
-          // carried, or setting `invalid` would have quietly deleted a caller's own
-          // `aria-invalid`. The prop is the one that also paints; a bare attribute
-          // still announces, which is all it ever did.
-          aria-invalid={invalid || rest["aria-invalid"] || undefined}
-          onClick={handleClick}
-          className={cn(FIELD_BASE, className, inputClassName, invalid && FIELD_INVALID)}
-        />
+        <FieldGroup errorEl={errorEl}>
+          <input
+            ref={ref}
+            id={id}
+            type={type}
+            placeholder={placeholder}
+            {...rest}
+            // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
+            // carried, or setting `invalid` would have quietly deleted a caller's own
+            // `aria-invalid`. The prop is the one that also paints; a bare attribute
+            // still announces, which is all it ever did.
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            // Likewise merged rather than replaced — see {@link useFieldError}.
+            aria-describedby={describedBy}
+            onClick={handleClick}
+            className={cn(FIELD_BASE, className, inputClassName, isInvalid && FIELD_INVALID)}
+          />
+        </FieldGroup>
       );
     }
     return (
-      <div className={cn("relative", className)}>
-        <input
-          ref={ref}
-          id={id}
-          type={effectiveType}
-          placeholder={placeholder}
-          {...rest}
-          aria-invalid={invalid || rest["aria-invalid"] || undefined}
-          className={cn(FIELD_BASE, "pr-9", inputClassName, invalid && FIELD_INVALID)}
-        />
-        {revealToggle}
-      </div>
+      <FieldGroup errorEl={errorEl}>
+        <div className={cn("relative", className)}>
+          <input
+            ref={ref}
+            id={id}
+            type={effectiveType}
+            placeholder={placeholder}
+            {...rest}
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={describedBy}
+            className={cn(FIELD_BASE, "pr-9", inputClassName, isInvalid && FIELD_INVALID)}
+          />
+          {revealToggle}
+        </div>
+      </FieldGroup>
     );
   }
   return (
-    <FloatingField className={className} htmlFor={fieldId} label={label} srOnlyLabel={asDisplay}>
-      <input
-        ref={ref}
-        id={fieldId}
-        type={effectiveType}
-        // A labelled field's placeholder is normally a single space, feeding the
-        // floating label's peer-placeholder-shown trick. With the label sr-only
-        // there is no float left to drive, and an empty borderless line would say
-        // nothing at all — so the label text becomes the placeholder.
-        placeholder={asDisplay ? (placeholder ?? (typeof label === "string" ? label : " ")) : " "}
-        {...rest}
-        aria-invalid={invalid || rest["aria-invalid"] || undefined}
-        onClick={handleClick}
-        className={cn(
-          asDisplay
-            ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
-            : FLOATING_INPUT_CLASS,
-          isPassword && "pr-9",
-          inputClassName,
-          invalid && FIELD_INVALID,
-        )}
-      />
-      {revealToggle}
-    </FloatingField>
+    <FieldGroup errorEl={errorEl}>
+      <FloatingField className={className} htmlFor={fieldId} label={label} srOnlyLabel={asDisplay}>
+        <input
+          ref={ref}
+          id={fieldId}
+          type={effectiveType}
+          // A labelled field's placeholder is normally a single space, feeding the
+          // floating label's peer-placeholder-shown trick. With the label sr-only
+          // there is no float left to drive, and an empty borderless line would say
+          // nothing at all — so the label text becomes the placeholder.
+          placeholder={asDisplay ? (placeholder ?? (typeof label === "string" ? label : " ")) : " "}
+          {...rest}
+          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+          aria-describedby={describedBy}
+          onClick={handleClick}
+          className={cn(
+            asDisplay
+              ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
+              : FLOATING_INPUT_CLASS,
+            isPassword && "pr-9",
+            inputClassName,
+            isInvalid && FIELD_INVALID,
+          )}
+        />
+        {revealToggle}
+      </FloatingField>
+    </FieldGroup>
   );
 });
 Input.displayName = "Input";
 
-export const Select = forwardRef<
-  HTMLSelectElement,
-  SelectHTMLAttributes<HTMLSelectElement> & {
-    label?: ReactNode;
-    invalid?: boolean;
-    /** A {@link FieldHint} for the label line — see {@link FloatingField}. */
-    hint?: ReactNode;
-  }
->(function Select({ className, label, id, children, invalid, hint, ...rest }, ref) {
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: ReactNode;
+  /** See {@link Input}'s `invalid`. */
+  invalid?: boolean;
+  /** See {@link Input}'s `error`. */
+  error?: ReactNode;
+  /** A {@link FieldHint} for the label line — see {@link FloatingField}. */
+  hint?: ReactNode;
+}
+
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { className, label, id, children, invalid, error, hint, ...rest },
+  ref,
+) {
   const generated = useId();
   const fieldId = id ?? generated;
+  const { isInvalid, describedBy, errorEl } = useFieldError(
+    error,
+    invalid,
+    rest["aria-describedby"],
+  );
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
   // in from the right border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
@@ -547,84 +751,112 @@ export const Select = forwardRef<
   const chevron = rest.disabled ? null : <FieldChevron />;
   if (label === undefined) {
     return (
-      <div className={cn("relative", className)}>
+      <FieldGroup errorEl={errorEl}>
+        <div className={cn("relative", className)}>
+          <select
+            ref={ref}
+            // `id` is destructured out of the props to feed `fieldId`, and this branch
+            // never put it back — so an UNLABELLED Select swallowed it and the
+            // consumer's own `<label for="…">` pointed at nothing. The control stayed
+            // in the tab order with no accessible name at all: reachable, and silent
+            // when it was reached. Input and Textarea both forward it here; this is
+            // the third one doing the same thing.
+            id={id}
+            {...rest}
+            // OR-ed with the spread for the reason spelled out on Input's copy: this
+            // branch wrote `invalid || undefined`, so passing `aria-invalid` by hand
+            // to a Select — which is what a caller does when the validity is
+            // `"grammar"` or `"spelling"`, or when the paint is not wanted — had the
+            // attribute silently dropped. Input has never done that.
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={describedBy}
+            className={cn(FIELD_BASE, "appearance-none pr-9", isInvalid && FIELD_INVALID)}
+          >
+            {children}
+          </select>
+          {chevron}
+        </div>
+      </FieldGroup>
+    );
+  }
+  return (
+    <FieldGroup errorEl={errorEl}>
+      <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={hint}>
         <select
           ref={ref}
+          id={fieldId}
           {...rest}
-          aria-invalid={invalid || undefined}
-          className={cn(FIELD_BASE, "appearance-none pr-9", invalid && FIELD_INVALID)}
+          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+          aria-describedby={describedBy}
+          className={cn(
+            FIELD_BASE,
+            FIELD_FLOATING_PAD,
+            "peer appearance-none pr-9",
+            isInvalid && FIELD_INVALID,
+          )}
         >
           {children}
         </select>
         {chevron}
-      </div>
-    );
-  }
-  return (
-    <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={hint}>
-      <select
-        ref={ref}
-        id={fieldId}
-        {...rest}
-        aria-invalid={invalid || undefined}
-        className={cn(
-          FIELD_BASE,
-          FIELD_FLOATING_PAD,
-          "peer appearance-none pr-9",
-          invalid && FIELD_INVALID,
-        )}
-      >
-        {children}
-      </select>
-      {chevron}
-    </FloatingField>
+      </FloatingField>
+    </FieldGroup>
   );
 });
 Select.displayName = "Select";
 
-export const Textarea = forwardRef<
-  HTMLTextAreaElement,
-  TextareaHTMLAttributes<HTMLTextAreaElement> & {
-    label?: ReactNode;
-    /** See {@link Input}'s `invalid`. */
-    invalid?: boolean;
-  }
->(function Textarea({ className, label, id, placeholder, invalid, ...rest }, ref) {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: ReactNode;
+  /** See {@link Input}'s `invalid`. */
+  invalid?: boolean;
+  /** See {@link Input}'s `error`. */
+  error?: ReactNode;
+}
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
+  { className, label, id, placeholder, invalid, error, ...rest },
+  ref,
+) {
   const generated = useId();
   const fieldId = id ?? generated;
+  const { isInvalid, describedBy, errorEl } = useFieldError(
+    error,
+    invalid,
+    rest["aria-describedby"],
+  );
   if (label === undefined) {
     return (
-      <textarea
-        ref={ref}
-        id={id}
-        placeholder={placeholder}
-        {...rest}
-        aria-invalid={invalid || rest["aria-invalid"] || undefined}
-        className={cn(FIELD_BASE, className, invalid && FIELD_INVALID)}
-      />
+      <FieldGroup errorEl={errorEl}>
+        <textarea
+          ref={ref}
+          id={id}
+          placeholder={placeholder}
+          {...rest}
+          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+          aria-describedby={describedBy}
+          className={cn(FIELD_BASE, className, isInvalid && FIELD_INVALID)}
+        />
+      </FieldGroup>
     );
   }
   return (
-    <FloatingField className={className} htmlFor={fieldId} label={label}>
-      <textarea
-        ref={ref}
-        id={fieldId}
-        placeholder=" "
-        {...rest}
-        aria-invalid={invalid || rest["aria-invalid"] || undefined}
-        className={cn(FLOATING_INPUT_CLASS, invalid && FIELD_INVALID)}
-      />
-    </FloatingField>
+    <FieldGroup errorEl={errorEl}>
+      <FloatingField className={className} htmlFor={fieldId} label={label}>
+        <textarea
+          ref={ref}
+          id={fieldId}
+          placeholder=" "
+          {...rest}
+          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+          aria-describedby={describedBy}
+          className={cn(FLOATING_INPUT_CLASS, isInvalid && FIELD_INVALID)}
+        />
+      </FloatingField>
+    </FieldGroup>
   );
 });
 Textarea.displayName = "Textarea";
 
-export function Card({
-  className,
-  children,
-  flush,
-}: {
-  className?: string;
+export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   children: ReactNode;
   /**
    * When true, drop the card chrome (border, rounded corners, shadow) on mobile so the
@@ -632,9 +864,12 @@ export function Card({
    * content cards on data pages; leave off for centered dialog/panel cards.
    */
   flush?: boolean;
-}) {
+}
+
+export function Card({ className, children, flush, ...rest }: CardProps) {
   return (
     <div
+      {...rest}
       className={cn(
         // Surface + border are theme tokens so the palette switcher (feedback
         // #307) can re-skin every card; a caller's own bg-*/border-* override
@@ -655,7 +890,18 @@ export function Card({
 // their own padding via className), so these own the padding/rhythm. Token-driven
 // so they re-skin with the palette. Use CardHeader → CardTitle/CardDescription
 // (+ optional CardAction, top-right) → CardContent → CardFooter.
-export function CardHeader({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+/** The sub-parts add nothing to a `<div>`'s props — they are the SAME element with a
+ *  `data-slot` and a padding rhythm — so each name is an alias rather than an empty
+ *  interface pretending to be more. They exist so a consumer's own wrapper can say
+ *  `CardHeaderProps` instead of `ComponentProps<typeof CardHeader>`. */
+export type CardHeaderProps = ComponentPropsWithoutRef<"div">;
+export type CardTitleProps = ComponentPropsWithoutRef<"div">;
+export type CardDescriptionProps = ComponentPropsWithoutRef<"div">;
+export type CardActionProps = ComponentPropsWithoutRef<"div">;
+export type CardContentProps = ComponentPropsWithoutRef<"div">;
+export type CardFooterProps = ComponentPropsWithoutRef<"div">;
+
+export function CardHeader({ className, ...props }: CardHeaderProps) {
   return (
     <div
       data-slot="card-header"
@@ -670,7 +916,7 @@ export function CardHeader({ className, ...props }: ComponentPropsWithoutRef<"di
   );
 }
 
-export function CardTitle({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function CardTitle({ className, ...props }: CardTitleProps) {
   return (
     <div
       data-slot="card-title"
@@ -680,7 +926,7 @@ export function CardTitle({ className, ...props }: ComponentPropsWithoutRef<"div
   );
 }
 
-export function CardDescription({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function CardDescription({ className, ...props }: CardDescriptionProps) {
   return (
     <div
       data-slot="card-description"
@@ -690,7 +936,7 @@ export function CardDescription({ className, ...props }: ComponentPropsWithoutRe
   );
 }
 
-export function CardAction({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function CardAction({ className, ...props }: CardActionProps) {
   return (
     <div
       data-slot="card-action"
@@ -700,7 +946,7 @@ export function CardAction({ className, ...props }: ComponentPropsWithoutRef<"di
   );
 }
 
-export function CardContent({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function CardContent({ className, ...props }: CardContentProps) {
   // `last:pb-6`, not a plain `pb-6`: CardHeader owns the top padding and CardFooter
   // owns the bottom one, so a card WITHOUT a footer had nothing closing it off and
   // its last field sat flush against the card edge (kastlan feedback: the language
@@ -709,7 +955,7 @@ export function CardContent({ className, ...props }: ComponentPropsWithoutRef<"d
   return <div data-slot="card-content" className={cn("px-6 last:pb-6", className)} {...props} />;
 }
 
-export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function CardFooter({ className, ...props }: CardFooterProps) {
   return (
     <div
       data-slot="card-footer"
@@ -719,40 +965,78 @@ export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<"di
   );
 }
 
-export function Spinner({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-700 dark:border-t-slate-200",
-        className,
-      )}
-    />
-  );
+/** A `<span>`'s props plus the words a reader hears — see {@link CardHeaderProps}.
+ *  The ring is drawn with a border, so there is nothing inside it to put children in. */
+export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+  /** What the spinner means, for a screen reader. Default: `common.loading` from the
+   *  {@link UiKitProvider}, else "Loading…". */
+  label?: string;
 }
 
-export function EmptyState({
-  title,
-  hint,
-  className,
-}: {
-  title: string;
-  hint?: string;
-  className?: string;
-}) {
+/**
+ * A spinning ring that also SAYS it is loading.
+ *
+ * It used to be a bordered span and nothing else, so a reader met no element at all
+ * where a sighted user saw the page working — or, beside an emptied list, met the
+ * empty list and concluded there was nothing there. `role="status"` makes it a polite
+ * live region, and the text inside is what that region announces. Text rather than
+ * `aria-label`: a live region's announcement is its CONTENT, and several readers
+ * ignore a name on one.
+ *
+ * `relative` so the `sr-only` text has a local containing block (see
+ * sr-only-containment.test). The role goes BEFORE the spread: a caller showing the
+ * spinner next to text that already says "Loading" can pass `aria-hidden` or its own
+ * `role` and have it win.
+ */
+export function Spinner({ className, label, ...rest }: SpinnerProps) {
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { loading: label });
   return (
-    <div
+    <span
+      role="status"
+      {...rest}
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/50 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400",
+        "relative inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--text-primary)]",
         className,
       )}
     >
-      <div className="font-medium text-slate-700 dark:text-slate-200">{title}</div>
+      <span className="sr-only">{common.loading}</span>
+    </span>
+  );
+}
+
+export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /** The box renders `title` and `hint` in its own two-line rhythm, which is what makes
+   *  every empty state in three apps look like the same thing — so there is no
+   *  `children` slot to put arbitrary content in. */
+  title: string;
+  hint?: string;
+}
+
+export function EmptyState({ title, hint, className, ...rest }: EmptyStateProps) {
+  return (
+    <div
+      {...rest}
+      className={cn(
+        "flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface-2)] px-4 py-10 text-center text-sm text-[var(--text-muted)]",
+        className,
+      )}
+    >
+      <div className="font-medium text-[var(--text-secondary)]">{title}</div>
       {hint && <div className="mt-1 text-xs">{hint}</div>}
     </div>
   );
 }
 
-export interface TabsProps<T extends string> {
+/**
+ * The strip's own props sit on a `<div>`: the tablist IS the root element, so anything
+ * a caller hangs on it — a `data-tour` anchor for the kit's guided tour, a test id, an
+ * `aria-describedby` — lands there. `onChange` is omitted from the div's props because
+ * this component's `onChange` hands over the chosen TAB ID, not a DOM event, and
+ * `children` because the strip renders `tabs` — a caller who wants a PANEL wires it up
+ * through `panelId`, which is the whole point of that prop.
+ */
+export interface TabsProps<T extends string>
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
   /** `label` is a ReactNode so tabs can pair an icon with text; `badge` is an
    *  optional trailing node (e.g. a count pill). `href` marks a tab that IS a route:
    *  it renders as an anchor so it can be middle-/⌘-clicked into a new tab (Keksdose
@@ -787,30 +1071,64 @@ export interface TabsProps<T extends string> {
    *  already fit a phone row, and turning those into chips would be an unrequested
    *  redesign of three other pages. */
   wrap?: boolean;
-  /** Accessible name for the `role="tablist"` container. Every tab carries its own
-   *  text, so this names the GROUP, not the tabs; leave it unset where a visible
-   *  heading immediately above already does that job. */
+  /**
+   * Accessible name for the `role="tablist"` container. Every tab carries its own
+   * text, so this names the GROUP, not the tabs; leave it unset where a visible
+   * heading immediately above already does that job.
+   *
+   * @deprecated Pass `aria-label` instead. This kit had three spellings for one idea
+   * — `ariaLabel`, `aria-label` and this `label` — and settled on the DOM one, which
+   * is also the one that arrives for free now that the strip spreads its rest props.
+   * `label` still works and is unchanged; it names the strip only when `aria-label`
+   * is absent.
+   */
   label?: string;
+  /**
+   * `id` of the element the caller renders the open tab's content into — the missing
+   * half of `role="tab"`. A tab that controls nothing is a tab in name only: a screen
+   * reader announces "tab, 2 of 5" and then has no way to take the user to what it
+   * opened, and no way back.
+   *
+   * **This component does not render the panel, on purpose.** `Tabs` is the STRIP; the
+   * content lives wherever the caller put it — three Keksdose pages render it in a
+   * sibling `<Card>`, one renders it through a router outlet, and a tab can BE a route
+   * (`href`), in which case the panel is a whole page this component never sees.
+   * Wrapping `children` here would mean either moving that content into the strip's
+   * subtree — a layout change on every page that uses tabs — or shipping a wrapper
+   * that only some callers could use. So the two halves are joined by an id instead.
+   *
+   * Wire the other end yourself:
+   *
+   * ```tsx
+   * <Tabs tabs={tabs} active={active} onChange={setActive} panelId="report-panel" />
+   * <div id="report-panel" role="tabpanel" aria-labelledby="report-panel-tab" tabIndex={-1}>
+   * ```
+   *
+   * `aria-controls` goes on the OPEN tab only, and `${panelId}-tab` is its id — the
+   * closed tabs' panels are not in the document, and a dangling `aria-controls`
+   * describes a tab as opening something that is not there.
+   */
+  panelId?: string;
 }
 
 // The two shapes are written out as whole strings rather than as one base plus a
-// pile of `md:` overrides. The unwrapped pair is character-for-character what this
-// component has always emitted, so the strips that do not opt in cannot drift; the
-// wrapped pair is authored from scratch, so no unprefixed utility has to be beaten
-// by its own `md:` twin through tailwind-merge. The only ordering this relies on is
-// Tailwind's own: unprefixed utilities are emitted first, then `md:`, then
-// `md:dark:` — so from 768px up the wrapped strip resolves to exactly the paint of
-// the default one, in both themes.
+// pile of `md:` overrides. The unwrapped pair is character-for-character what the
+// three strips that do not opt in get, so those cannot drift; the wrapped pair is
+// authored from scratch, so no unprefixed utility has to be beaten by its own `md:`
+// twin through tailwind-merge. The only ordering this relies on is Tailwind's own:
+// unprefixed utilities are emitted first, then `md:` — so from 768px up the wrapped
+// strip resolves to exactly the paint of the default one. Both themes come free now
+// that the colours are tokens: there is no `md:dark:` tier left to keep in step.
 const TABLIST_CLASSES =
-  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-800";
+  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]";
 const TABLIST_WRAP_CLASSES =
-  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-slate-200 md:dark:border-slate-800";
+  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-[var(--border)]";
 
 const TAB_CLASSES =
-  "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-slate-300";
-const TAB_ACTIVE_CLASSES = "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100";
+  "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-[var(--text-primary)]";
 const TAB_INACTIVE_CLASSES =
-  "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200";
+  "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--border-strong)]";
 
 // Below `md`, a chip: `py-2` on `text-xs` is exactly 32px tall, and ten German
 // report labels then land in three rows on a 406px screen (four at `text-sm`). The
@@ -821,23 +1139,43 @@ const TAB_INACTIVE_CLASSES =
 // all ten have to stay readable; it is the FILL, not the text weight, that says
 // which one is open.
 const TAB_WRAP_CLASSES =
-  "whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
+  "whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
 const TAB_WRAP_ACTIVE_CLASSES =
-  "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-slate-900 md:text-slate-900 md:dark:border-slate-100 md:dark:text-slate-100";
+  "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-[var(--text-primary)] md:text-[var(--text-primary)]";
 const TAB_WRAP_INACTIVE_CLASSES =
-  "bg-[var(--bg-surface)] text-[var(--text-primary)] md:border-transparent md:text-slate-500 md:hover:border-slate-300 md:hover:text-slate-700 md:dark:text-slate-400 md:dark:hover:text-slate-200";
+  "bg-[var(--bg-surface)] text-[var(--text-primary)] md:border-transparent md:text-[var(--text-muted)] md:hover:border-[var(--border-strong)] md:hover:text-[var(--text-secondary)]";
 
-export function Tabs<T extends string>({ tabs, active, onChange, className, wrap = false, label }: TabsProps<T>) {
+export function Tabs<T extends string>({
+  tabs,
+  active,
+  onChange,
+  className,
+  wrap = false,
+  label,
+  panelId,
+  "aria-label": ariaLabel,
+  ...rest
+}: TabsProps<T>) {
   // Arrow keys walk the strip in DOM order (ARIA tabs pattern), which is what keeps
   // a WRAPPED strip navigable: the rows flow in DOM order too, so Right off the end
   // of row one lands on the first chip of row two rather than nowhere. Home/End jump
   // to the ends. Focus only — activation stays on click/Enter/Space, because a tab
   // here can be a real route and moving focus must not navigate.
-  const onListKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  //
+  // On the TABS, not on the tablist. The container carried it, which left a `<div>`
+  // wearing an interactive role and a key handler while being unfocusable —
+  // `jsx-a11y/interactive-supports-focus`, and the only instance of it left in `src/`.
+  // The fix that rule wants is `tabIndex` on the div; the fix the pattern wants is
+  // the handler on the elements that are natively focusable and actually receive the
+  // keystroke. Those are the tabs, so the warning goes away by being right rather
+  // than by being satisfied.
+  const onTabKeyDown = (e: KeyboardEvent<HTMLElement>) => {
     const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     if (step === 0 && e.key !== "Home" && e.key !== "End") return;
-    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
-    const from = items.indexOf(document.activeElement as HTMLElement);
+    const strip = e.currentTarget.closest('[role="tablist"]');
+    if (!strip) return;
+    const items = Array.from(strip.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const from = items.indexOf(e.currentTarget);
     if (from === -1) return;
     e.preventDefault();
     const to =
@@ -850,9 +1188,13 @@ export function Tabs<T extends string>({ tabs, active, onChange, className, wrap
   };
   return (
     <div
+      // Before the role and the name: a caller's arbitrary attribute is welcome on the
+      // strip, but a `role` or an `aria-label` arriving through a spread props object
+      // must not be able to unmake the tablist the tabs below are registered against.
+      {...rest}
       role="tablist"
-      aria-label={label}
-      onKeyDown={onListKeyDown}
+      // The DOM spelling wins over the deprecated `label`; see {@link TabsProps}.
+      aria-label={ariaLabel ?? label}
       className={cn(wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES, className)}
     >
       {tabs.map((tab) => {
@@ -862,6 +1204,23 @@ export function Tabs<T extends string>({ tabs, active, onChange, className, wrap
         const shared = {
           role: "tab" as const,
           "aria-selected": isActive,
+          // Roving tabindex: the whole strip is ONE stop in the page's tab order, and
+          // it is the open tab. Ten report tabs otherwise cost ten Tab presses to step
+          // over on the way to the table below them (live #262's strip is the extreme
+          // case, but every strip in the app paid it).
+          //
+          // The stop follows the SELECTION, not the focus. Arrowing is a look around —
+          // activation here is manual, because a tab can be a real route — so re-
+          // pointing the stop at a report the user only arrowed past would hand the
+          // strip back on the next visit in a state they never chose. The cost is that
+          // Tab out and back returns to the open tab rather than to the last one
+          // looked at; the ARIA pattern allows either, and this one needs no second
+          // piece of state shadowing `active`.
+          tabIndex: isActive ? 0 : -1,
+          // Only the open tab: see `panelId`.
+          "aria-controls": isActive ? panelId : undefined,
+          id: isActive && panelId ? `${panelId}-tab` : undefined,
+          onKeyDown: onTabKeyDown,
           className: cn(
             wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
             wrap
@@ -901,8 +1260,13 @@ export function Tabs<T extends string>({ tabs, active, onChange, className, wrap
             // lines the mobile row card carries, for the same reason; the rejected
             // alternative — keeping a button and faking the middle click with
             // window.open — is what the whole item is moving away from.
+            //
+            // Composed with the strip's arrow-key walk rather than replacing it: this
+            // prop overrides the one in `shared`, and an anchor tab that lost the
+            // arrows would be a strip that is navigable only where it is not a link.
             onKeyDown={(e) => {
-              if (e.key !== " ") return;
+              onTabKeyDown(e);
+              if (e.defaultPrevented || e.key !== " ") return;
               e.preventDefault();
               onChange(tab.id);
             }}

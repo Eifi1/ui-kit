@@ -1,6 +1,17 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
+import { useEscapeKey } from "../hooks/use-dismiss";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 
 type TooltipSide = "top" | "bottom" | "left" | "right";
@@ -29,6 +40,29 @@ const sidePositionClass: Record<TooltipSide, string> = {
 };
 
 /**
+ * `extends ComponentPropsWithoutRef<"span">` because the wrapper this renders IS a span,
+ * and a tooltip is the component a caller most often needs to reach past: it sits
+ * between the layout and the control, so a `data-tour` anchor, a test id or an
+ * `aria-label` aimed at the trigger used to be swallowed by it.
+ *
+ * ⚠️ On the empty-label branch there is no wrapper at all, and therefore nothing for
+ * those attributes to land on — see the note in the body.
+ */
+export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
+  label: ReactNode;
+  side?: TooltipSide;
+  className?: string;
+  portal?: boolean;
+  /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
+  redact?: boolean;
+  children: ReactNode;
+}
+
+/** What each variant below takes: the resolved `side`, and every span attribute the
+ *  caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
+type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: TooltipSide };
+
+/**
  * Hover/focus label for a control.
  *
  * Two implementations, and the choice matters more than it looks. The default is
@@ -51,6 +85,25 @@ const sidePositionClass: Record<TooltipSide, string> = {
  * would be a worse `title`, so the emptiness check is here rather than at every call
  * site that could forget it.
  *
+ * ⚠️ **The bubble describes its trigger, which means cloning it.** `role="tooltip"` is
+ * a name for a box, not a relationship — so for as long as nothing referenced the
+ * bubble, the label reached the pointer and nobody else. That is worst on the call
+ * sites that need it most: the kit's icon-only buttons, where the tooltip IS the
+ * label. `aria-describedby` has to sit on the focusable element, which is the
+ * caller's child and not this component's wrapper, so the child is CLONED to carry
+ * it. A description the caller already set is appended to, never replaced — a field's
+ * error text and its hint bubble both describe it. Children that cannot take props (a
+ * fragment, a bare string, several elements) are left exactly as they were.
+ *
+ * ⚠️ **Escape dismisses it (WCAG 1.4.13).** Anything that appears on hover or focus has
+ * to be dismissible without moving the pointer, and a bubble is opaque: it lands over
+ * the row, field or figure you were reading, and the only way out of it used to be to
+ * point somewhere else — which is precisely what you cannot do when what you need to
+ * read is underneath it. The listener is the document's rather than the wrapper's
+ * because the pointer opens this with the keyboard focus somewhere else entirely, and
+ * it is subscribed only while a bubble is actually up: the CSS variant is always
+ * mounted, and a table of forty tooltips must not mean forty keydown listeners.
+ *
  * ⚠️ **Inside a scroll container, use `portal`.** An always-mounted bubble is
  * absolutely positioned, but an absolutely positioned descendant still counts
  * towards its scroll-container ancestor's scrollable overflow — so an invisible
@@ -68,17 +121,12 @@ export function Tooltip({
   portal = false,
   redact = false,
   children,
-}: {
-  label: ReactNode;
-  side?: TooltipSide;
-  className?: string;
-  portal?: boolean;
-  /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
-  redact?: boolean;
-  children: ReactNode;
-}) {
+  ...rest
+}: TooltipProps) {
   // No label, no bubble — and no wrapper either, so a conditional tooltip costs the
-  // layout nothing on the branch where it does not apply.
+  // layout nothing on the branch where it does not apply. `...rest` goes with the
+  // wrapper on this branch, which is the documented limit of the pass-through: there is
+  // no element left to put an attribute on.
   if (isEmptyLabel(label)) return <>{children}</>;
   if (portal) {
     return (
@@ -87,16 +135,76 @@ export function Tooltip({
         side={side}
         className={className}
         redact={redact}
+        {...rest}
       >
         {children}
       </PortalTooltip>
     );
   }
+  // Both variants are separate components so that `Tooltip` itself can keep calling NO
+  // hooks: the empty-label branch above returns before either of them, and a hook after
+  // a conditional return is a hooks-order bug rather than a style violation.
   return (
-    <span className={cn("relative inline-flex group/tooltip", className)}>
+    <CssTooltip label={label} side={side} className={className} redact={redact} {...rest}>
       {children}
+    </CssTooltip>
+  );
+}
+
+/** The always-mounted variant: the bubble sits next to the trigger and CSS fades it in.
+ *
+ *  It holds the little state it does for the two things CSS cannot express — which
+ *  element to point `aria-describedby` at, and Escape — and not for the fade, which is
+ *  still `group-hover`/`group-focus-within` and still costs a render nothing. */
+function CssTooltip({
+  label,
+  side,
+  className,
+  redact,
+  children,
+  ...rest
+}: TooltipVariantProps) {
+  const id = useId();
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  useEscapeKey(() => setDismissed(true), (hovered || focused) && !dismissed);
+  return (
+    <span
+      // `...rest` first: the four handlers below are what decides whether a bubble is
+      // up, and a caller passing an `onFocus` of its own must not replace them.
+      {...rest}
+      className={cn("relative inline-flex group/tooltip", className)}
+      // These four track WHETHER A BUBBLE IS UP. They activate nothing — the only thing
+      // here that can be activated is the caller's child, which keeps every handler it
+      // arrived with — so this wrapper needs no role and no key handling of its own.
+      // `jsx-a11y/no-static-element-interactions` warns about it all the same, as it
+      // already does about the portal variant's identical trigger below; both are left
+      // visible rather than silenced, because a rule this package ratchets should be
+      // argued with in the backlog and not in a disable comment.
+      //
+      // Re-armed by the next hover or focus rather than by an effect watching those
+      // flags: coming back to a trigger is a fresh request for its label, and an effect
+      // would also re-show the bubble under a pointer that never left.
+      onMouseEnter={() => {
+        setHovered(true);
+        setDismissed(false);
+      }}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => {
+        setFocused(true);
+        setDismissed(false);
+      }}
+      onBlur={() => setFocused(false)}
+    >
+      {describedBy(children, dismissed ? undefined : id)}
       <span
+        id={id}
         role="tooltip"
+        // The `hidden` ATTRIBUTE, not an opacity class: dismissing has to take the
+        // bubble out of the accessibility tree as well as off the screen, or a screen
+        // reader still reads out the description of a bubble the user just closed.
+        hidden={dismissed || undefined}
         data-private={redact ? "" : undefined}
         className={cn(
           TOOLTIP_SURFACE,
@@ -108,6 +216,19 @@ export function Tooltip({
       </span>
     </span>
   );
+}
+
+/** Hand `children` the bubble's id as an `aria-describedby`, if it is an element that
+ *  can hold one. `id` is undefined while there is no bubble to point at — a dangling
+ *  reference describes the trigger as nothing at all, which is worse than silence. */
+function describedBy(children: ReactNode, id: string | undefined): ReactNode {
+  if (id === undefined || !isValidElement(children)) return children;
+  const child = children as ReactElement<{ "aria-describedby"?: string }>;
+  // Fragments, Suspense and friends are symbol-typed and take no DOM props; cloning one
+  // with an aria attribute warns in development and drops it in production.
+  if (typeof child.type === "symbol") return children;
+  const own = child.props["aria-describedby"];
+  return cloneElement(child, { "aria-describedby": own ? `${own} ${id}` : id });
 }
 
 /** "Would this bubble be blank." Only the values a call site actually produces when
@@ -268,16 +389,16 @@ function PortalTooltip({
   className,
   redact,
   children,
-}: {
-  label: ReactNode;
-  side: TooltipSide;
-  className?: string;
-  redact?: boolean;
-  children: ReactNode;
-}) {
+  ...rest
+}: TooltipVariantProps) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const bubbleRef = useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const id = useId();
+  // Escape closes it outright, since this variant's bubble only exists while it is
+  // shown. The next mouseenter/focus brings it back, which is the behaviour WCAG
+  // 1.4.13 asks for: dismissible now, still available when you ask again.
+  useEscapeKey(() => setVisible(false), visible);
   // The measure + scroll/resize-tracking lifecycle is owned by useAnchoredRect;
   // here we only map the rect to a side-specific anchor point.
   const rect = useAnchoredRect(triggerRef, visible);
@@ -312,6 +433,11 @@ function PortalTooltip({
   return (
     <>
       <span
+        // As in `CssTooltip`: the caller's attributes first, the four handlers that run
+        // this component after them. The BUBBLE is deliberately not given them — it is
+        // portalled to `<body>`, and an id or a tour anchor duplicated onto a node that
+        // only exists while hovered would match twice or match nothing.
+        {...rest}
         ref={triggerRef}
         className={cn("relative inline-flex", className)}
         onMouseEnter={() => setVisible(true)}
@@ -319,7 +445,7 @@ function PortalTooltip({
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
       >
-        {children}
+        {describedBy(children, visible ? id : undefined)}
       </span>
       {visible &&
         point &&
@@ -327,6 +453,7 @@ function PortalTooltip({
         createPortal(
           <span
             ref={bubbleRef}
+            id={id}
             role="tooltip"
             data-private={redact ? "" : undefined}
             style={

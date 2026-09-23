@@ -78,7 +78,7 @@ export const DEFAULT_PRESET: PalettePreset = {
     brandHover: "#4338ca",
     brandContrast: "#ffffff",
     moneyIncome: "#0b6650",
-    moneyExpense: "#9c6418",
+    moneyExpense: "#905902",
     moneyNet: "#7a4fa3",
     moneyNeutral: "#6b6453",
     chart: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
@@ -308,7 +308,7 @@ export const ALTERNATIVE_PRESETS: PalettePreset[] = [
       brandHover: "#1f515f",
       brandContrast: "#ffffff",
       moneyIncome: "#0b6650",
-      moneyExpense: "#9c6418",
+      moneyExpense: "#905902",
       moneyNet: "#7a4fa3",
       moneyNeutral: "#6b6453",
       chart: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
@@ -467,7 +467,262 @@ export const IMPRINT_PRESET: PalettePreset = {
 // ALTERNATIVE_PRESETS above remains a reference bank only. What IS selectable is
 // the categorical chart ramp (feedback #119), so these two presets are the live
 // set; presetById falls back to the default for any stale persisted id.
-export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, IMPRINT_PRESET];
+/**
+ * The categorical chart ramp, shared by every derived preset below.
+ *
+ * Paul Tol's "Muted" set, unchanged, and deliberately NOT re-derived per preset. A
+ * categorical ramp solves a different problem from a UI palette — separability among
+ * nine unknown siblings, rather than contrast against one known surface — and a set
+ * optimised against real dichromat confusion lines beats one spaced evenly by formula.
+ * `auditChartRamp` in palette-derive.ts measures it: 0.059 minimum separation in the
+ * light variant, which is the number MIN_SEPARATION was calibrated under.
+ *
+ * It pays for that in contrast: four of the nine light hues sit below the 3:1 WCAG
+ * 1.4.11 asks of a filled shape. That is not fixable by darkening them — see
+ * SINGLE_LIGHTNESS_MAX_SERIES — so a chart with more than four series must carry a
+ * second channel (a direct label, a pattern, a legend adjacent to the mark).
+ */
+const PAUL_TOL = {
+  light: DEFAULT_PRESET.light.chart,
+  dark: DEFAULT_PRESET.dark.chart,
+} as const;
+
+/**
+ * Presets DERIVED rather than picked, by `derivePalette` from one brand colour each.
+ *
+ * Every text role here was solved to a contrast target against the worst of the three
+ * surfaces it can land on, every semantic colour against both the page and its own badge
+ * tint, and the whole set is re-checked by `derived-presets.test.ts` — which re-runs the
+ * deriver and fails if these committed values drift from what it now produces.
+ *
+ * They are committed rather than derived at import because deriving eight token sets
+ * costs ~34ms, and charging every consumer that at startup for palettes most of them
+ * will never select is the wrong trade. The test is what keeps the two in agreement.
+ */
+export const DERIVED_PRESETS: PalettePreset[] = [
+  {
+    id: "ink",
+    name: "Ink",
+    blurb: "Cool blue-grey ground · solved for AAA body text",
+    light: {
+      bgPage: "#dce2ef",
+      bgSurface: "#e6edfa",
+      bgSurface2: "#e1e8f5",
+      border: "#b0bace",
+      textPrimary: "#2e3139",
+      textSecondary: "#454950",
+      textMuted: "#5f646c",
+      brand: "#2f5fd0",
+      brandHover: "#1f4cbc",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00735f",
+      moneyExpense: "#8e5900",
+      moneyNet: "#7356a2",
+      moneyNeutral: "#656970",
+      chart: PAUL_TOL.light,
+      heat: {
+        neutral: "#e1e8f5",
+        under: "#00735f",
+        over: "#8e5900",
+        seqLow: "#fee3c5",
+        seqHigh: "#8e5900",
+        empty: "rgba(120,110,95,0.14)",
+      },
+    },
+    dark: {
+      bgPage: "#090d15",
+      bgSurface: "#131720",
+      bgSurface2: "#1d212b",
+      border: "#363e4e",
+      textPrimary: "#c7ccd5",
+      textSecondary: "#a7abb4",
+      textMuted: "#858992",
+      brand: "#3364d5",
+      brandHover: "#4477ea",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00997f",
+      moneyExpense: "#b77b29",
+      moneyNet: "#9679c9",
+      moneyNeutral: "#a1a5ac",
+      chart: PAUL_TOL.dark,
+      heat: {
+        neutral: "#1d212b",
+        under: "#00997f",
+        over: "#b77b29",
+        seqLow: "#331f05",
+        seqHigh: "#b77b29",
+        empty: "rgba(160,170,190,0.10)",
+      },
+    },
+  },
+  {
+    id: "moss",
+    name: "Moss",
+    blurb: "Green ground · solved for AAA body text",
+    light: {
+      bgPage: "#d8e6dd",
+      bgSurface: "#e3f1e8",
+      bgSurface2: "#deece3",
+      border: "#abbfb2",
+      textPrimary: "#2c342e",
+      textSecondary: "#434b45",
+      textMuted: "#5d6660",
+      brand: "#2f7a52",
+      brandHover: "#196842",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00735f",
+      moneyExpense: "#8f5a00",
+      moneyNet: "#7457a3",
+      moneyNeutral: "#646b66",
+      chart: PAUL_TOL.light,
+      heat: {
+        neutral: "#deece3",
+        under: "#00735f",
+        over: "#8f5a00",
+        seqLow: "#fee3c4",
+        seqHigh: "#8f5a00",
+        empty: "rgba(120,110,95,0.14)",
+      },
+    },
+    dark: {
+      bgPage: "#060f0a",
+      bgSurface: "#101a14",
+      bgSurface2: "#1a241e",
+      border: "#314237",
+      textPrimary: "#c5cfc9",
+      textSecondary: "#a4aea8",
+      textMuted: "#838c86",
+      brand: "#2f7a52",
+      brandHover: "#428c63",
+      brandContrast: "#ffffff",
+      moneyIncome: "#009a80",
+      moneyExpense: "#b87b2a",
+      moneyNet: "#9779c9",
+      moneyNeutral: "#9fa7a2",
+      chart: PAUL_TOL.dark,
+      heat: {
+        neutral: "#1a241e",
+        under: "#009a80",
+        over: "#b87b2a",
+        seqLow: "#331f05",
+        seqHigh: "#b87b2a",
+        empty: "rgba(160,170,190,0.10)",
+      },
+    },
+  },
+  {
+    id: "plum",
+    name: "Plum",
+    blurb: "Violet ground · solved for AAA body text",
+    light: {
+      bgPage: "#e7dfea",
+      bgSurface: "#f2e9f5",
+      bgSurface2: "#ece4ef",
+      border: "#c2b6c6",
+      textPrimary: "#342f36",
+      textSecondary: "#4c474e",
+      textMuted: "#676169",
+      brand: "#7b3f8f",
+      brandHover: "#692d7d",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00725e",
+      moneyExpense: "#8e5900",
+      moneyNet: "#7356a2",
+      moneyNeutral: "#6c676e",
+      chart: PAUL_TOL.light,
+      heat: {
+        neutral: "#ece4ef",
+        under: "#00725e",
+        over: "#8e5900",
+        seqLow: "#fee3c5",
+        seqHigh: "#8e5900",
+        empty: "rgba(120,110,95,0.14)",
+      },
+    },
+    dark: {
+      bgPage: "#100b12",
+      bgSurface: "#1b151d",
+      bgSurface2: "#251f27",
+      border: "#453a48",
+      textPrimary: "#d0cad3",
+      textSecondary: "#afa9b1",
+      textMuted: "#8d878f",
+      brand: "#8f52a4",
+      brandHover: "#a264b7",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00997f",
+      moneyExpense: "#b77b29",
+      moneyNet: "#9679c8",
+      moneyNeutral: "#a8a2aa",
+      chart: PAUL_TOL.dark,
+      heat: {
+        neutral: "#251f27",
+        under: "#00997f",
+        over: "#b77b29",
+        seqLow: "#331f05",
+        seqHigh: "#b77b29",
+        empty: "rgba(160,170,190,0.10)",
+      },
+    },
+  },
+  {
+    id: "contrast",
+    name: "High contrast",
+    blurb: "Near-neutral ground · text solved to 13:1 / 8.5:1 / 5.5:1",
+    light: {
+      bgPage: "#e0e2e5",
+      bgSurface: "#ebedef",
+      bgSurface2: "#e6e8ea",
+      border: "#b7babe",
+      textPrimary: "#191d24",
+      textSecondary: "#373c44",
+      textMuted: "#535860",
+      brand: "#1f2937",
+      brandHover: "#111b28",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00735f",
+      moneyExpense: "#8e5900",
+      moneyNet: "#7456a2",
+      moneyNeutral: "#656970",
+      chart: PAUL_TOL.light,
+      heat: {
+        neutral: "#e6e8ea",
+        under: "#00735f",
+        over: "#8e5900",
+        seqLow: "#fee3c5",
+        seqHigh: "#8e5900",
+        empty: "rgba(120,110,95,0.14)",
+      },
+    },
+    dark: {
+      bgPage: "#0c0d0f",
+      bgSurface: "#161719",
+      bgSurface2: "#202123",
+      border: "#3c3e41",
+      textPrimary: "#e1e7f0",
+      textSecondary: "#b7bdc5",
+      textMuted: "#9197a0",
+      brand: "#546c8d",
+      brandHover: "#657e9f",
+      brandContrast: "#ffffff",
+      moneyIncome: "#00997f",
+      moneyExpense: "#b77b29",
+      moneyNet: "#9679c8",
+      moneyNeutral: "#a0a5ac",
+      chart: PAUL_TOL.dark,
+      heat: {
+        neutral: "#202123",
+        under: "#00997f",
+        over: "#b77b29",
+        seqLow: "#331f05",
+        seqHigh: "#b77b29",
+        empty: "rgba(160,170,190,0.10)",
+      },
+    },
+  },
+];
+
+export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, IMPRINT_PRESET, ...DERIVED_PRESETS];
 
 export function presetById(id: string): PalettePreset {
   return PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;

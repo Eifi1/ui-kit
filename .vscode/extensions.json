@@ -1,0 +1,15 @@
+{
+  "//": [
+    "The extensions this repo's tooling assumes. ESLint here is the same one",
+    "`npm run check` runs, so the editor and CI agree on what is wrong. The Tailwind",
+    "extension matters more than usual in THIS repository: every class name the",
+    "package ships is a Tailwind class that the consuming app has to regenerate, and",
+    "an unrecognised one is how a component ends up unstyled in three apps at once."
+  ],
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "vitest.explorer"
+  ]
+}

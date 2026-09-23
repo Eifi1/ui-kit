@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Select } from "./ui";
+import type { SelectProps } from "./ui";
 import type { ThemePreference } from "../theme/theme-store";
 
 /**
@@ -10,7 +11,15 @@ import type { ThemePreference } from "../theme/theme-store";
  * fields around them.
  */
 
-export interface ThemeSettingProps {
+/**
+ * Everything a {@link Select} takes, minus the two this component owns: the value is a
+ * {@link ThemePreference} rather than a string, and `onChange` hands over the preference
+ * itself because no caller of this wants the event. The rest — `disabled`, `required`,
+ * `invalid`, `error`, a `data-tour` anchor — passes straight through, which is what makes
+ * this a settings FIELD rather than a fixed widget.
+ */
+export interface ThemeSettingProps
+  extends Omit<SelectProps, "value" | "onChange" | "children"> {
   value: ThemePreference;
   onChange: (value: ThemePreference) => void;
   label: ReactNode;
@@ -19,9 +28,15 @@ export interface ThemeSettingProps {
   id?: string;
 }
 
-export function ThemeSetting({ value, onChange, label, optionLabels, id }: ThemeSettingProps) {
+export function ThemeSetting({ value, onChange, label, optionLabels, id, ...rest }: ThemeSettingProps) {
   return (
-    <Select id={id} label={label} value={value} onChange={(e) => onChange(e.target.value as ThemePreference)}>
+    <Select
+      {...rest}
+      id={id}
+      label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value as ThemePreference)}
+    >
       <option value="system">{optionLabels.system}</option>
       <option value="light">{optionLabels.light}</option>
       <option value="dark">{optionLabels.dark}</option>
@@ -29,7 +44,10 @@ export function ThemeSetting({ value, onChange, label, optionLabels, id }: Theme
   );
 }
 
-export interface LanguageSettingProps {
+/** See {@link ThemeSettingProps}: a `Select`'s props with the value and the change
+ *  handler re-typed to the language CODE the caller stores. */
+export interface LanguageSettingProps
+  extends Omit<SelectProps, "value" | "onChange" | "children"> {
   value: string;
   onChange: (code: string) => void;
   label: ReactNode;
@@ -37,9 +55,9 @@ export interface LanguageSettingProps {
   id?: string;
 }
 
-export function LanguageSetting({ value, onChange, label, options, id }: LanguageSettingProps) {
+export function LanguageSetting({ value, onChange, label, options, id, ...rest }: LanguageSettingProps) {
   return (
-    <Select id={id} label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+    <Select {...rest} id={id} label={label} value={value} onChange={(e) => onChange(e.target.value)}>
       {options.map((o) => (
         <option key={o.code} value={o.code}>
           {o.label}

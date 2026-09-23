@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { SHOWCASE_ALIAS } from "./showcase/alias";
 
 /**
  * The first test harness this package has ever had (refactor plan 2026-08-24, U-1).
@@ -16,6 +17,11 @@ import react from "@vitejs/plugin-react";
  */
 export default defineConfig({
   plugins: [react()],
+  // Vitest does NOT read showcase/vite.config.ts, so the alias has to be repeated
+  // here from the one shared definition. Without it the showcase render test would
+  // resolve `@eifi1/ui-kit` to the published package in node_modules — i.e. test a
+  // different build of the kit than the page it is testing.
+  resolve: { alias: SHOWCASE_ALIAS },
   test: {
     globals: true,
     environment: "jsdom",
@@ -26,8 +32,45 @@ export default defineConfig({
     // against the bug.
     env: { TZ: "Europe/Berlin" },
     clearMocks: true,
+    // Vitest stubs every stylesheet with an EMPTY STRING by default, and it does so
+    // by file extension — `tokens.css?raw` is stubbed too, so a test that reads the
+    // token sheet as text gets "" and happily reports no drift. Narrowed to the one
+    // file rather than `css: true`: the showcase's stylesheet pulls in Tailwind, and
+    // processing it in every test run would cost seconds per file to produce CSS no
+    // assertion reads. See theme/__tests__/tokens-css-mirror.test.ts.
+    css: { include: [/tokens\.css/] },
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "showcase/src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", "dist"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "lcov"],
+      // What a coverage number here is FOR: this package is consumed as source by
+      // three applications, so an untested module is not "untested code" — it is a
+      // module three products depend on that nothing in this repository renders.
+      // Only the shipped modules count. Tests measuring themselves is circular, the
+      // showcase is a demo harness rather than product code, and `src/test` is the
+      // harness itself.
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/test/**", "**/__tests__/**", "showcase/**"],
+      /**
+       * A RATCHET, not a target. Measured 2026-09-22 against the whole suite:
+       * lines 77.16%, statements 74.53%, functions 68.90%, branches 67.98%. Each
+       * floor sits ~1pp under what was actually achieved, which is enough room for
+       * an ordinary refactor and not enough to lose a suite.
+       *
+       * Deliberately not a round 80: a threshold the suite fails on the day it lands
+       * is deleted the week after, and the number is then worse than none — it
+       * taught everyone that this check is noise. Raise these when the real figure
+       * rises, in the same commit that earns it, exactly like
+       * `scripts/check-token-discipline.mjs`'s BUDGET.
+       *
+       * Functions and branches are the low pair on purpose: the untested remainder
+       * is mostly event handlers on components nothing renders here (the audit's
+       * list), so the honest way up is rendering those components, not asserting
+       * harder on the ones already covered.
+       */
+      thresholds: { lines: 76, statements: 73, functions: 67, branches: 66 },
+    },
   },
 });

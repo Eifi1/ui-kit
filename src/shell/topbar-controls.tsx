@@ -4,15 +4,16 @@ import { HoverMenu } from "../components/hover-menu";
 import type { PalettePreset } from "../theme/palette-presets";
 import type { ThemeMode } from "../theme/theme-store";
 import { Tooltip } from "../components/tooltip";
+import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /** Shared square icon-button styling for top-bar triggers, so app-owned controls
  *  (account/feedback menus) line up with the shared ones. */
 export const TOPBAR_TRIGGER_CLASS =
-  "size-9 rounded-md flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800";
+  "size-9 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
 
 /** Shared row styling for the top-bar hover-menu items. */
 export const TOPBAR_MENU_ITEM_CLASS =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-left text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
 
 /** Sun/Moon toggle for the light/dark theme. Controlled: the app owns the mode. */
 export function ThemeToggle({
@@ -24,17 +25,21 @@ export function ThemeToggle({
 }: {
   mode: ThemeMode;
   onToggle: () => void;
+  /** Default: `topBar.theme` from the {@link UiKitProvider}, else English. */
   ariaLabel?: string;
   title?: string;
   className?: string;
 }) {
+  // This had no default at all, so a toggle rendered without `ariaLabel` was an
+  // icon button with no name — a reader heard "button" and nothing else.
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabel });
   const Icon = mode === "dark" ? Moon : Sun;
   return (
     <Tooltip label={title} portal>
       <button
         type="button"
         onClick={onToggle}
-        aria-label={ariaLabel}
+        aria-label={labels.theme}
         className={cn(TOPBAR_TRIGGER_CLASS, className)}
       >
         <Icon className="size-5" />
@@ -50,30 +55,37 @@ export function PaletteMenu({
   activeId,
   mode,
   onSelect,
-  ariaLabel = "Appearance preset",
+  ariaLabel,
   heading,
 }: {
   palettes: PalettePreset[];
   activeId: string;
   mode: ThemeMode;
   onSelect: (id: string) => void;
+  /** Default: `topBar.palette` from the {@link UiKitProvider}, else English. */
   ariaLabel?: string;
   /** Optional small heading row above the list. */
   heading?: string;
 }) {
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabel });
   const activeName = palettes.find((p) => p.id === activeId)?.name ?? activeId;
   return (
     <HoverMenu
-      ariaLabel={ariaLabel}
+      ariaLabel={labels.palette}
       trigger={({ toggle }) => (
         <Tooltip label={activeName} portal>
           <button
             type="button"
             onClick={toggle}
-            aria-label={ariaLabel}
+            aria-label={labels.palette}
             className={TOPBAR_TRIGGER_CLASS}
           >
-            <Palette className="size-5 text-violet-500" />
+            {/* A DATA colour, not a semantic one: the palette mark is the
+                "colour" control, so it carries a colour, and which hue is
+                arbitrary. `--chart-1` is the violet end of the CVD-safe
+                categorical ramp and flips per theme — a fixed `violet-500` did
+                not, and stayed a cool violet island on a warm page. */}
+            <Palette className="size-5 text-[var(--chart-1)]" />
           </button>
         </Tooltip>
       )}
@@ -81,7 +93,7 @@ export function PaletteMenu({
       {(close) => (
         <ul className="w-60 py-1">
           {heading && (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
               {heading}
             </li>
           )}
@@ -100,6 +112,9 @@ export function PaletteMenu({
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="flex shrink-0 gap-0.5">
+                      {/* Deliberately a neutral at 10% and not a token: this hairline
+                          sits on an ARBITRARY preset colour, so it has to read against
+                          whatever that preset paints, which no themed border does. */}
                       {swatches.map((c, i) => (
                         <span
                           key={i}
@@ -110,13 +125,13 @@ export function PaletteMenu({
                     </span>
                     <span className="flex min-w-0 flex-col text-left">
                       <span className="truncate">{p.name}</span>
-                      <span className="truncate text-[11px] text-slate-400 dark:text-slate-500">
+                      <span className="truncate text-[11px] text-[var(--text-placeholder)]">
                         {p.blurb}
                       </span>
                     </span>
                   </span>
                   {activeId === p.id && (
-                    <Check className="size-4 shrink-0 text-slate-700 dark:text-slate-200" />
+                    <Check className="size-4 shrink-0 text-[var(--text-secondary)]" />
                   )}
                 </button>
               </li>
@@ -148,23 +163,25 @@ export function LanguageMenu({
   options,
   current,
   onChange,
-  ariaLabel = "Language",
+  ariaLabel,
 }: {
   options: LanguageOption[];
   current: string | undefined;
   onChange: (code: string) => void;
+  /** Default: `topBar.language` from the {@link UiKitProvider}, else English. */
   ariaLabel?: string;
 }) {
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabel });
   const active = options.find((o) => o.code === current);
   return (
     <HoverMenu
-      ariaLabel={ariaLabel}
+      ariaLabel={labels.language}
       trigger={({ toggle }) => (
-        <Tooltip label={active?.label ?? ariaLabel} portal>
+        <Tooltip label={active?.label ?? labels.language} portal>
           <button
             type="button"
             onClick={toggle}
-            aria-label={ariaLabel}
+            aria-label={labels.language}
             className={TOPBAR_TRIGGER_CLASS}
           >
             {active ? (
@@ -200,7 +217,7 @@ export function LanguageMenu({
                     />
                     {lang.label}
                   </span>
-                  {isActive && <Check className="size-4 text-slate-700 dark:text-slate-200" />}
+                  {isActive && <Check className="size-4 text-[var(--text-secondary)]" />}
                 </button>
               </li>
             );

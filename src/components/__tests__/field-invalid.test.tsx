@@ -164,16 +164,35 @@ describe("the required-and-empty highlight, on every field control", () => {
   }
 
   /**
-   * Every component module's SOURCE, keyed by path. `import.meta.glob` rather than
-   * `readFileSync`: this package has no `@types/node` on purpose (it ships browser
-   * code), so the filesystem guards the consumer app writes cannot be spelled that
-   * way here. Vite inlines these at build time, so the sweep costs nothing at run.
+   * Every module's SOURCE in the package, keyed by path. `import.meta.glob` rather
+   * than `readFileSync`: this package has no `@types/node` on purpose (it ships
+   * browser code), so the filesystem guards the consumer app writes cannot be spelled
+   * that way here. Vite inlines these at build time, so the sweep costs nothing at
+   * run.
+   *
+   * `src/**` rather than `src/components/*`, which is what it scanned first. The
+   * directory a file sits in is not what makes it a field — `feedback/`, `wizard/`,
+   * `shell/` and `search/` all render their own inputs, and any of them could paint
+   * `FIELD_BASE` tomorrow without this noticing. The narrower glob made the sweep
+   * agree with the hand-written list above by construction, which is the one thing a
+   * sweep is supposed to stop doing.
    */
-  const SOURCES = import.meta.glob<string>("../*.tsx", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  });
+  const SOURCES = Object.fromEntries(
+    Object.entries(
+      import.meta.glob<string>("../../**/*.tsx", { query: "?raw", import: "default", eager: true }),
+    )
+      // Vite keys a glob RELATIVE to the importing file, so the sweep's own
+      // neighbours — every test in this directory — come back as `./x.test.tsx`,
+      // with the `__tests__` segment nowhere in the string. Excluding on the
+      // directory name alone therefore excludes nothing, and the sweep starts
+      // reading test files as components: this one names `FIELD_BASE` in a comment
+      // and the word "invalid" on every other line, so it would have vouched for
+      // itself.
+      .filter(([path]) => !path.startsWith("./") && !/__tests__|\.(test|spec)\.tsx$/.test(path))
+      // `../ui.tsx` → `components/ui.tsx`, `../../shell/x.tsx` → `shell/x.tsx`, so a
+      // failure names a file the way the repository does.
+      .map(([path, src]) => [path.replace(/^\.\.\/\.\.\//, "").replace(/^\.\.\//, "components/"), src]),
+  );
 
   /** A module that paints the field look is a field, whatever it is called. */
   const isField = (src: string) => /\bFIELD_BASE\b|\bFIELD_TRIGGER\b/.test(src);
@@ -191,7 +210,7 @@ describe("the required-and-empty highlight, on every field control", () => {
     const offenders = Object.entries(SOURCES)
       .filter(([path]) => !EXEMPT.some((name) => path.endsWith(name)))
       .filter(([, src]) => isField(src) && !/\binvalid\b/.test(src))
-      .map(([path]) => path.split("/").pop());
+      .map(([path]) => path);
     expect(offenders).toEqual([]);
   });
 
@@ -200,6 +219,19 @@ describe("the required-and-empty highlight, on every field control", () => {
     // while every control had quietly lost the highlight.
     const fields = Object.values(SOURCES).filter(isField);
     expect(fields.length).toBeGreaterThan(6);
+  });
+
+  it("is not vacuous: the sweep reaches past src/components", () => {
+    // The point of the widened glob, asserted rather than assumed — a pattern that
+    // silently stopped matching the other directories would leave the sweep passing
+    // for the same reason the narrow one did.
+    const dirs = new Set(Object.keys(SOURCES).map((p) => p.split("/")[0]));
+    expect(dirs.has("components")).toBe(true);
+    // feedback/, shell/, search/, tour/, wizard/ — the directories the old glob
+    // could not see, and the ones a future field is as likely to appear in.
+    expect([...dirs].filter((d) => d !== "components").length).toBeGreaterThan(2);
+    // And no test file crept back in: they would each be scanned as a component.
+    expect(Object.keys(SOURCES).filter((p) => p.includes(".test."))).toEqual([]);
   });
 });
 

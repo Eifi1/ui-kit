@@ -193,7 +193,7 @@ export function FeedbackDialog({
           </>
         )}
         <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-slate-400 dark:text-slate-500">{labels.submitHint}</div>
+          <div className="text-xs text-[var(--text-placeholder)]">{labels.submitHint}</div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>
               {labels.cancel}

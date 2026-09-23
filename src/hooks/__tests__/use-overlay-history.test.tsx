@@ -248,6 +248,72 @@ describe("useOverlayHistory", () => {
     expect(window.location.pathname).not.toBe("/second");
   });
 
+  // ── the router owns `history.state` (audit 2026-09-22, §react-correctness) ──
+  //
+  // A `DataTable` with `urlSync` calls `setSearchParams(…, { replace: true })` on
+  // mount and on every filter change, and react-router's replace writes its own
+  // `{usr, key, idx}` over the WHOLE state object — taking our tag with it. Every
+  // overlay opened from such a table was then standing on an entry this module
+  // could no longer recognise as its own.
+
+  /** What `setSearchParams(next, { replace: true })` does to the current entry. */
+  function routerReplace(search: string) {
+    window.history.replaceState({ usr: undefined, key: "rk" + search, idx: 1 }, "", search);
+  }
+
+  it("still unwinds its own entry after the router replaced the state on it", async () => {
+    window.history.pushState(null, "", "/table");
+    await settle();
+    const view = render(<Nested outer inner={false} />);
+    // The table writes its view into the address while the overlay is up.
+    routerReplace("?f.status=open");
+    expect(liveSentinel()).toBeNull(); // the tag is gone — that is the defect
+
+    view.unmount();
+    await settle();
+
+    // The overlay's own entry must still be unwound: we are back on the table's
+    // entry, at the address it had before the overlay opened. Before the fix the
+    // cleanup read "not my entry", abandoned the entry as a husk, and the user was
+    // left one dead Back press from the page.
+    expect(window.location.search).toBe("");
+    expect(window.location.pathname).toBe("/table");
+  });
+
+  it("keeps dismissing overlays opened from a urlSync table, round after round", async () => {
+    // The compounding half. Once the push path cannot find itself in its own
+    // records it discards all of them, so nothing is ever unwound again and the
+    // user drifts one entry further from the page on every open.
+    window.history.pushState(null, "", "/drift");
+    await settle();
+    const view = render(<Nested outer={false} inner={false} />);
+    for (let round = 0; round < 3; round += 1) {
+      view.rerender(<Nested outer inner={false} />);
+      routerReplace(`?f.status=r${round}`);
+      view.rerender(<Nested outer={false} inner={false} />);
+      await settle();
+      expect(window.location.search).toBe("");
+      expect(window.location.pathname).toBe("/drift");
+    }
+    view.unmount();
+    await settle();
+    // One Back press still leaves the page rather than being spent on a husk.
+    await back();
+    expect(window.location.pathname).not.toBe("/drift");
+  });
+
+  it("still closes on Back after the router replaced the state on its entry", async () => {
+    const onClose = vi.fn();
+    window.history.pushState(null, "", "/close");
+    await settle();
+    const view = render(<Nested outer inner={false} onCloseOuter={onClose} />);
+    routerReplace("?f.q=x");
+    await back();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    view.unmount();
+    await settle();
+  });
+
   it("cleans up an overlay whose entry a Back press already consumed", async () => {
     // The inner overlay is closed BY Back, so its entry is gone before its cleanup
     // runs. Nothing must be marked as owed for it.

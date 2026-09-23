@@ -73,12 +73,12 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
         closeLabel="Close"
       />,
     );
-    tap(screen.getByRole("button", { name: /Account/ }));
+    tap(screen.getByRole("combobox", { name: /Account/ }));
     const sheet = screen.getByRole("dialog");
     // The sheet has to still be there after the finger goes down on a row.
-    fireEvent.pointerDown(within(sheet).getByRole("button", { name: "Checking" }));
+    fireEvent.pointerDown(within(sheet).getByRole("option", { name: "Checking" }));
     expect(screen.queryByRole("dialog")).toBeInTheDocument();
-    tap(within(screen.getByRole("dialog")).getByRole("button", { name: "Checking" }));
+    tap(within(screen.getByRole("dialog")).getByRole("option", { name: "Checking" }));
     expect(onChange).toHaveBeenCalledWith("a");
   });
 
@@ -94,9 +94,9 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
         closeLabel="Close"
       />,
     );
-    tap(screen.getByRole("button", { name: /Payees/ }));
+    tap(screen.getByRole("combobox", { name: /Payees/ }));
     const sheet = screen.getByRole("dialog");
-    tap(within(sheet).getByRole("button", { name: "Savings" }));
+    tap(within(sheet).getByRole("option", { name: "Savings" }));
     expect(onChange).toHaveBeenCalledWith(["b"]);
     // Multi-select keeps the sheet up so a second row can be added.
     expect(screen.queryByRole("dialog")).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
     );
     fireEvent.focus(screen.getByRole("combobox", { name: "Account" }));
     const sheet = screen.getByRole("dialog");
-    tap(within(sheet).getByRole("button", { name: "Savings" }));
+    tap(within(sheet).getByRole("option", { name: "Savings" }));
     expect(onChange).toHaveBeenCalledWith("b");
   });
 
@@ -134,7 +134,7 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
     );
     fireEvent.focus(screen.getByRole("combobox", { name: "Payee" }));
     const sheet = screen.getByRole("dialog");
-    tap(within(sheet).getByRole("button", { name: "Migros" }));
+    tap(within(sheet).getByRole("option", { name: "Migros" }));
     expect(onChange).toHaveBeenCalledWith("Migros");
   });
 
@@ -151,7 +151,7 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
         closeLabel="Close"
       />,
     );
-    tap(screen.getByRole("button", { name: /Account/ }));
+    tap(screen.getByRole("combobox", { name: /Account/ }));
     const sheet = screen.getByRole("dialog");
     fireEvent.pointerDown(within(sheet).getByPlaceholderText("Search"));
     expect(screen.queryByRole("dialog")).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Ban,
@@ -66,11 +66,12 @@ export type FeedbackCategory = "CRASH" | "BUG" | "IDEA" | "QUESTION" | "OTHER";
 /**
  * A glyph and a tone per status.
  *
- * Colour alone is not a label — two of these are a violet and an indigo apart —
- * so every status carries its own shape as well. Declaration order is chain
- * order, and {@link FEEDBACK_STATUS_ORDER} is derived from it rather than
- * restated, because a restated list cannot be checked for exhaustiveness: an
- * eighth status would break the build here and leave a literal seven long.
+ * Colour alone is not a label — two of these sit a hue apart, and a consumer who
+ * moves `--brand` can park it beside any of the others — so every status carries
+ * its own shape as well. Declaration order is chain order, and
+ * {@link FEEDBACK_STATUS_ORDER} is derived from it rather than restated, because
+ * a restated list cannot be checked for exhaustiveness: an eighth status would
+ * break the build here and leave a literal seven long.
  */
 export const FEEDBACK_STATUS_META: Record<
   FeedbackStatus,
@@ -78,44 +79,52 @@ export const FEEDBACK_STATUS_META: Record<
 > = {
   OPEN: {
     icon: Inbox,
-    activeBg: "bg-slate-200 dark:bg-slate-700",
-    activeText: "text-slate-900 dark:text-white",
+    activeBg: "bg-[var(--bg-active)]",
+    activeText: "text-[var(--text-primary)]",
   },
   IN_PROGRESS: {
     icon: Wrench,
-    activeBg: "bg-amber-100 dark:bg-amber-500/20",
-    activeText: "text-amber-700 dark:text-amber-300",
+    activeBg: "bg-[var(--warning-bg)]",
+    activeText: "text-[var(--warning)]",
   },
   // Where solved work is parked, waiting on the person who reported it. Its own
   // colour, because "somebody has to check this" is a state you want to find by
   // scanning rather than by reading.
   IN_EVALUATION: {
     icon: Eye,
-    activeBg: "bg-sky-100 dark:bg-sky-500/20",
-    activeText: "text-sky-700 dark:text-sky-300",
+    activeBg: "bg-[var(--info-bg)]",
+    activeText: "text-[var(--info)]",
   },
-  // Resolved but only checkable on a deployed build — indigo, so it reads as
-  // "waiting on something" rather than as a done or a refusal.
+  // Resolved but only checkable on a deployed build — the SOFT brand tint, so it
+  // reads as "waiting on something" rather than as a done or a refusal, and it
+  // follows whatever the consumer's brand is instead of pinning an indigo island
+  // beside it.
   NEEDS_LIVE_TEST: {
     icon: CloudUpload,
-    activeBg: "bg-indigo-100 dark:bg-indigo-500/20",
-    activeText: "text-indigo-700 dark:text-indigo-300",
+    activeBg: "bg-[var(--brand-bg)]",
+    activeText: "text-[var(--brand-muted)]",
   },
-  // Parked on purpose. Muted, not red: it is not a refusal.
+  // Parked on purpose. Muted, not `--danger`: it is not a refusal.
   POSTPONED: {
     icon: PauseCircle,
-    activeBg: "bg-slate-200 dark:bg-slate-700",
-    activeText: "text-slate-600 dark:text-slate-300",
+    activeBg: "bg-[var(--bg-active)]",
+    activeText: "text-[var(--text-secondary)]",
   },
+  // The one status with nowhere to move to: the vocabulary has a brand, an info, a
+  // warning and a danger, and nothing that means "succeeded". Deliberately NOT
+  // borrowed from a family that means something else — `--status-synced` is a
+  // FIELD's trip to the database rather than an outcome, and tokens.css says so in
+  // as many words. Green beside WONT_DO's red is the classic CVD-unsafe pair, which
+  // is why both carry a glyph and neither leans on colour alone.
   DONE: {
     icon: CheckCircle2,
-    activeBg: "bg-emerald-100 dark:bg-emerald-500/20",
-    activeText: "text-emerald-700 dark:text-emerald-300",
+    activeBg: "bg-[var(--success-bg)]",
+    activeText: "text-[var(--success)]",
   },
   WONT_DO: {
     icon: Ban,
-    activeBg: "bg-rose-100 dark:bg-rose-500/20",
-    activeText: "text-rose-700 dark:text-rose-300",
+    activeBg: "bg-[var(--danger-bg)]",
+    activeText: "text-[var(--danger)]",
   },
 };
 
@@ -198,7 +207,7 @@ export function selectableFeedbackStatuses(_current: FeedbackStatus): FeedbackSt
  *
  * A category cell that is one grey pill holding the raw enum makes a CRASH —
  * filed automatically, by somebody staring at a broken page right now — read
- * exactly like a QUESTION, and sit unnoticed in the queue. Red plus its own
+ * exactly like a QUESTION, and sit unnoticed in the queue. `--danger` plus its own
  * glyph is what makes that impossible; the hand-filed categories stay
  * deliberately quiet so that the loud one means something.
  *
@@ -210,28 +219,28 @@ export const FEEDBACK_CATEGORY_META: Record<
 > = {
   CRASH: {
     icon: OctagonAlert,
-    badgeBg: "bg-red-100 dark:bg-red-500/20",
-    badgeText: "text-red-700 dark:text-red-300",
+    badgeBg: "bg-[var(--danger-bg)]",
+    badgeText: "text-[var(--danger)]",
   },
   BUG: {
     icon: Bug,
-    badgeBg: "bg-amber-100 dark:bg-amber-500/20",
-    badgeText: "text-amber-700 dark:text-amber-300",
+    badgeBg: "bg-[var(--warning-bg)]",
+    badgeText: "text-[var(--warning)]",
   },
   IDEA: {
     icon: Lightbulb,
-    badgeBg: "bg-slate-100 dark:bg-slate-800",
-    badgeText: "text-slate-700 dark:text-slate-300",
+    badgeBg: "bg-[var(--bg-surface-2)]",
+    badgeText: "text-[var(--text-secondary)]",
   },
   QUESTION: {
     icon: HelpCircle,
-    badgeBg: "bg-slate-100 dark:bg-slate-800",
-    badgeText: "text-slate-700 dark:text-slate-300",
+    badgeBg: "bg-[var(--bg-surface-2)]",
+    badgeText: "text-[var(--text-secondary)]",
   },
   OTHER: {
     icon: MoreHorizontal,
-    badgeBg: "bg-slate-100 dark:bg-slate-800",
-    badgeText: "text-slate-700 dark:text-slate-300",
+    badgeBg: "bg-[var(--bg-surface-2)]",
+    badgeText: "text-[var(--text-secondary)]",
   },
 };
 
@@ -376,7 +385,7 @@ export function FeedbackStatusTransitions({
                     "flex size-7 items-center justify-center rounded",
                     active
                       ? cn(meta.activeBg, meta.activeText)
-                      : "text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200",
+                      : "text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]",
                   )
                 : cn(
                     "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
@@ -428,6 +437,26 @@ export function FeedbackStatusTransitions({
  * One component because all three are the same gesture: a draft that is not
  * committed until it is saved. Ctrl/⌘+Enter submits, which is the same shortcut
  * the compose dialog next door uses, so the habit carries across the feature.
+ *
+ * ## `initial` seeds the draft; it does not own it (changed 2026-09-22)
+ *
+ * This used to re-seed from `initial` in an effect, and that effect threw away
+ * whatever was in the box — **and the picture attached to it** — every time the
+ * prop arrived with a different value. `initial` is normally the saved note, so
+ * the list refreshing under the editor, or the owner re-deriving the same string,
+ * was enough: a triager halfway through a reply, with a screenshot picked out,
+ * lost both and got the saved text back with no way to undo it.
+ *
+ * A draft belongs to the thing being edited, so switching to a different note is a
+ * different editor — say so with a `key`:
+ *
+ * ```tsx
+ * <FeedbackNoteEditor key={note.id} initial={note.body} … />
+ * ```
+ *
+ * Where the id is not in hand at the call site, pass {@link resetKey} instead and
+ * the editor re-seeds when THAT changes. Either way the decision is the caller's,
+ * which is the point: the editor cannot tell a new subject from a new render.
  */
 export function FeedbackNoteEditor({
   initial,
@@ -439,6 +468,7 @@ export function FeedbackNoteEditor({
   placeholder,
   rows = 3,
   attachment,
+  resetKey,
 }: {
   initial: string;
   pending: boolean;
@@ -456,19 +486,29 @@ export function FeedbackNoteEditor({
    *  *outcome* editor beside it wants, since an outcome is the answer rather
    *  than the evidence. */
   attachment?: FeedbackNoteAttachment;
+  /** Change this to say "the editor is now editing something ELSE", and the draft
+   *  and its attachment are dropped and re-seeded from `initial`. For call sites
+   *  that cannot put a `key` on the editor (see the note above). Leave it out and
+   *  the draft is never thrown away behind the user's back. */
+  resetKey?: string | number;
 }) {
   const [draft, setDraft] = useState(initial);
   const [file, setFile] = useState<File | null>(null);
+  // Adjusted during render rather than in an effect: an effect would paint the old
+  // draft first and then replace it, and — far worse — it is a second definition of
+  // when a draft dies that the caller cannot see. React re-runs this component
+  // immediately, before anything is committed to the screen.
+  const [seededFor, setSeededFor] = useState(resetKey);
+  if (resetKey !== seededFor) {
+    setSeededFor(resetKey);
+    setDraft(initial);
+    setFile(null);
+  }
   // The editor's own root, which is where a paste made in the text box bubbles
   // to: the attachment field below is the box's sibling, so a paste in the box
   // never passes through the field's own subtree. It listens here instead
   // (Steering Design feedback #140).
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    // Re-seed when the editor is reopened with different content.
-    setDraft(initial);
-    setFile(null);
-  }, [initial]);
   const submit = () => onSave(draft, file);
   return (
     <div
@@ -481,7 +521,7 @@ export function FeedbackNoteEditor({
         }
       }}
     >
-      {placeholder && <p className="text-xs text-slate-500 dark:text-slate-400">{placeholder}</p>}
+      {placeholder && <p className="text-xs text-[var(--text-muted)]">{placeholder}</p>}
       <Textarea rows={rows} value={draft} onChange={(event) => setDraft(event.target.value)} />
       {attachment && (
         <FeedbackAttachmentField
@@ -546,7 +586,7 @@ export function FeedbackDetailSection({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <div className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
           {title}
         </div>
         {action}
@@ -568,8 +608,8 @@ export function FeedbackDetail({ children }: { children: ReactNode }) {
  *  paragraphs, and a note appended to it later is separated by blank lines that
  *  carry the entire "this arrived after the answer" reading. */
 export function FeedbackProse({ children, empty }: { children?: string; empty?: ReactNode }) {
-  if (!children) return <p className="text-slate-400 dark:text-slate-600">{empty ?? "—"}</p>;
+  if (!children) return <p className="text-[var(--text-placeholder)]">{empty ?? "—"}</p>;
   return (
-    <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">{children}</p>
+    <p className="whitespace-pre-wrap text-[var(--text-secondary)]">{children}</p>
   );
 }

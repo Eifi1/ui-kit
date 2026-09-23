@@ -18,6 +18,9 @@ import { Tabs } from "../ui";
  * class string — which is exactly what these tests can read. The `md:` half is
  * asserted as literal tokens rather than by rendering, because it is the half that
  * has to keep three OTHER pages (invoices, statements, bank imports) unchanged.
+ *
+ * The colours are design-system variables, not palette literals, so there is no
+ * `dark:` half to assert: one class covers both themes because the token flips.
  */
 
 const TABS = [
@@ -37,7 +40,7 @@ describe("Tabs", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
       // The scroller and its bottom rule.
       expect(classes(list())).toEqual(
-        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-800".split(
+        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]".split(
           " ",
         ),
       );
@@ -45,7 +48,7 @@ describe("Tabs", () => {
       const active = screen.getByRole("tab", { name: "Two" });
       expect(classes(active)).toContain("border-b-2");
       expect(classes(active)).toContain("-mb-px");
-      expect(classes(active)).toContain("border-slate-900");
+      expect(classes(active)).toContain("border-[var(--text-primary)]");
       expect(active.className).not.toContain("bg-[var(--brand)]");
       // …and nothing wraps.
       expect(classes(list())).not.toContain("flex-wrap");
@@ -71,8 +74,7 @@ describe("Tabs", () => {
       expect(cls).toContain("md:flex-nowrap");
       expect(cls).toContain("md:overflow-x-auto");
       expect(cls).toContain("md:border-b");
-      expect(cls).toContain("md:border-slate-200");
-      expect(cls).toContain("md:dark:border-slate-800");
+      expect(cls).toContain("md:border-[var(--border)]");
     });
 
     it("marks the active tab with a filled brand chip, not a floating underline", () => {
@@ -89,9 +91,8 @@ describe("Tabs", () => {
       // Above the breakpoint the underline is exactly the default one again.
       expect(active).toContain("md:border-b-2");
       expect(active).toContain("md:-mb-px");
-      expect(active).toContain("md:border-slate-900");
+      expect(active).toContain("md:border-[var(--text-primary)]");
       expect(active).toContain("md:bg-transparent");
-      expect(active).toContain("md:dark:border-slate-100");
     });
 
     it("keeps every inactive tab readable, on the raised surface", () => {
@@ -173,6 +174,33 @@ describe("Tabs", () => {
       expect(document.activeElement).toBe(one);
     });
 
+    // jsdom implements no Tab traversal, so the tab ORDER cannot be walked here. The
+    // attribute that decides it can: exactly one tab may carry `tabindex="0"`, and it
+    // has to be the open one. Ten reports otherwise cost ten Tab presses to step over.
+    it("keeps exactly one tab in the page's tab order", () => {
+      render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
+      const [one, two, three] = screen.getAllByRole("tab");
+      expect(one).toHaveAttribute("tabindex", "-1");
+      expect(two).toHaveAttribute("tabindex", "0");
+      expect(three).toHaveAttribute("tabindex", "-1");
+    });
+
+    it("moves that one stop with the selection, not with the arrow keys", () => {
+      const { rerender } = render(<Tabs tabs={LINKED} active="one" onChange={vi.fn()} />);
+      const [one, , three] = screen.getAllByRole("tab");
+      one.focus();
+      // Arrowing is a look around, not a choice: it must not re-point the tab stop at
+      // a report the user has not opened.
+      fireEvent.keyDown(document.activeElement!, { key: "End" });
+      expect(three).toHaveFocus();
+      expect(one).toHaveAttribute("tabindex", "0");
+      expect(three).toHaveAttribute("tabindex", "-1");
+      // Choosing one does.
+      rerender(<Tabs tabs={LINKED} active="three" onChange={vi.fn()} />);
+      expect(one).toHaveAttribute("tabindex", "-1");
+      expect(three).toHaveAttribute("tabindex", "0");
+    });
+
     it("leaves every other key to the browser", () => {
       render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} />);
       const [one, two] = screen.getAllByRole("tab");
@@ -182,6 +210,38 @@ describe("Tabs", () => {
       arrow("Tab");
       expect(document.activeElement).toBe(two);
       expect(one).not.toHaveFocus();
+    });
+  });
+
+  describe("the panel it does not render", () => {
+    // `Tabs` is the STRIP; the caller renders the content, often in another part of
+    // the tree. `panelId` is how the two halves find each other.
+    it("wires the open tab to the caller's panel, and names the panel back", () => {
+      render(
+        <div>
+          <Tabs tabs={TABS} active="two" onChange={vi.fn()} panelId="report-panel" />
+          <div id="report-panel" role="tabpanel" aria-labelledby="report-panel-tab">
+            Two's content
+          </div>
+        </div>,
+      );
+      const [one, two, three] = screen.getAllByRole("tab");
+      expect(two).toHaveAttribute("aria-controls", "report-panel");
+      // The panel takes its accessible name from whichever tab is open, so the id the
+      // caller points `aria-labelledby` at has to be on the open one.
+      expect(two).toHaveAttribute("id", "report-panel-tab");
+      expect(screen.getByRole("tabpanel", { name: "Two" })).toBeInTheDocument();
+      // A closed tab controls nothing: its panel is not in the document, and a
+      // dangling aria-controls describes the tab as opening something that is gone.
+      expect(one).not.toHaveAttribute("aria-controls");
+      expect(three).not.toHaveAttribute("aria-controls");
+    });
+
+    it("stays silent about panels when the caller wires none", () => {
+      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} />);
+      for (const tab of screen.getAllByRole("tab")) {
+        expect(tab).not.toHaveAttribute("aria-controls");
+      }
     });
   });
 });

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useRowSwipe, type SwipeStage } from "../hooks/use-row-swipe";
+import { DEFAULT_SWIPEABLE_ROW_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /**
  * One armed swipe action: what it does, and how the reveal panel presents it.
@@ -28,8 +29,14 @@ export interface SwipeableRowProps {
   right?: SwipeAction[];
   /** Actions committed by dragging LEFT, nearest threshold first. */
   left?: SwipeAction[];
-  /** Turn the gesture off — an open editor, a pending mutation, a locked row. */
+  /** Turn the gesture off — an open editor, a pending mutation, a locked row. This
+   *  also withdraws the keyboard buttons below: a row that must not be acted on must
+   *  not be actionable by ANY input. */
   enabled?: boolean;
+  /** Names the revealed action buttons as a set ("Row actions"), for a reader that
+   *  reaches the group before it reaches any one button. Default:
+   *  `swipeableRow.actions` from the {@link UiKitProvider}, else English. */
+  actionsLabel?: string;
   className?: string;
   children: ReactNode;
 }
@@ -63,14 +70,35 @@ const PEEK_PX = 40;
  * Clicks that follow a drag are swallowed in the capture phase: without that, a swipe
  * would also fire whatever click handler the row content carries (expanding it, opening
  * a dialog) on top of the action it just committed.
+ *
+ * ## The keyboard path is buttons, and deliberately not a typed gesture
+ *
+ * Every action here used to live exclusively inside a pointer drag — `onCommit` had no
+ * other caller — so with a keyboard, with a screen reader, or on any input that cannot
+ * express 120px of horizontal travel, the row's actions did not exist at all. That is
+ * not a rough edge on a phone control: {@link DataTable} mounts this for every row of
+ * its mobile layout, and the actions an app puts here are its destructive ones.
+ *
+ * The rejected fix was to map the gesture onto keys — arrows nudging `dx`, a chord that
+ * "swipes". That invents a private idiom with nothing to discover it by, and it makes
+ * the keyboard imitate a touchscreen instead of doing the job the touchscreen is doing.
+ * So each action is ALSO a real button, `sr-only` until it takes focus and then shown at
+ * the row's trailing edge, firing the identical `onCommit`: one definition of what an
+ * action is, two ways to reach it, and nothing to drift apart. `sr-only` hides from
+ * the eye and not from the accessibility tree, so the row also ANNOUNCES what can be
+ * done to it rather than keeping it behind a gesture nobody can hear.
  */
 export function SwipeableRow({
   right,
   left,
   enabled = true,
+  actionsLabel,
   className,
   children,
 }: SwipeableRowProps) {
+  const labels = useKitLabels("swipeableRow", DEFAULT_SWIPEABLE_ROW_LABELS, {
+    actions: actionsLabel,
+  });
   const rowRef = useRef<HTMLDivElement>(null);
   const [rowWidth, setRowWidth] = useState(0);
   useEffect(() => {
@@ -198,6 +226,46 @@ export function SwipeableRow({
       >
         {children}
       </div>
+      {active && (
+        <div
+          role="group"
+          aria-label={labels.actions}
+          // OUTSIDE the sliding div on purpose: an action that travels with the row it
+          // acts on is a moving target, and the drag transform would carry it off the
+          // screen mid-gesture.
+          //
+          // `pointer-events-none` here, restored on a button only once it HAS focus: a
+          // sr-only button is clipped to nothing but is still a hit target, and this
+          // strip sits at the row's right edge — exactly where a leftward drag begins.
+          // A gesture that silently failed to start because it landed on an invisible
+          // button is not a bug anyone would find by looking at the screen.
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center gap-1 pr-2"
+        >
+          {/* Both sides, each still nearest-threshold first, so the tab order reads in
+              the order the gesture arms them. */}
+          {[...rightActions, ...leftActions].map((action, i) => (
+            <button
+              key={`${action.label}-${i}`}
+              type="button"
+              onClick={action.onCommit}
+              className={cn(
+                "sr-only whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-sm",
+                "focus:not-sr-only focus:pointer-events-auto focus:inline-flex focus:items-center focus:gap-1.5",
+                "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+              )}
+            >
+              {/* The label is the button's accessible name, so the caller's icon is
+                  decoration on top of it rather than a second reading of it. */}
+              {action.icon && (
+                <span aria-hidden="true" className="[&_svg]:size-4">
+                  {action.icon}
+                </span>
+              )}
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

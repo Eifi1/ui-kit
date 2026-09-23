@@ -32,9 +32,12 @@ function Harness() {
 }
 
 const box = () => screen.getByRole("combobox", { name: "Payee" });
+// The rows are `role="option"` now, not bare buttons: the suggestion list grew the
+// listbox semantics `CommandPalette` always had, and an option may not contain a
+// separately focusable control, so the role rides the button itself.
 const rows = () =>
   within(screen.getByRole("listbox"))
-    .getAllByRole("button")
+    .getAllByRole("option")
     .map((b) => b.textContent);
 
 describe("reopening a free-text combobox (dev#549)", () => {
@@ -56,7 +59,7 @@ describe("reopening a free-text combobox (dev#549)", () => {
     fireEvent.focus(box());
     // mousedown, not click: the rows commit on mousedown so the input's blur cannot
     // close the list before the selection registers.
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Migros" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Migros" }));
     expect(screen.queryByRole("listbox")).toBeNull();
 
     // The click that reopens — and the whole pool, not a one-row filter of "Migros".
@@ -69,7 +72,7 @@ describe("reopening a free-text combobox (dev#549)", () => {
     // that is then typed into has to narrow the list like any other query.
     render(<Harness />);
     fireEvent.focus(box());
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Migros" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Migros" }));
     fireEvent.click(box());
     fireEvent.change(box(), { target: { value: "Den" } });
     expect(rows()).toEqual(["Denner"]);

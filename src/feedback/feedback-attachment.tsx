@@ -1,6 +1,8 @@
+import { cn } from "../lib/cn";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button } from "../components/ui";
+import { useKitFileLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
 export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -69,6 +71,8 @@ export function FeedbackAttachmentField({
   const [preview, setPreview] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // `file.size` from `<UiKitProvider labels>`, formatted in its locale — see FileDropzone.
+  const fileText = useKitFileLabels();
 
   // Object-URL preview lifecycle (create on change, revoke on cleanup).
   useEffect(() => {
@@ -136,7 +140,11 @@ export function FeedbackAttachmentField({
 
   return (
     <div
-      className={className}
+      // `relative` for the same reason as FileDropzone: the `sr-only` file input below
+      // is `position: absolute`, and without a positioned ancestor it is laid out
+      // against the initial containing block — extending the DOCUMENT height to its own
+      // offset and producing a phantom second scrollbar on any long page.
+      className={cn("relative", className)}
       onPaste={
         listensElsewhere
           ? undefined
@@ -144,7 +152,7 @@ export function FeedbackAttachmentField({
       }
     >
       {labels.attachment && (
-        <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <div className="mb-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
           {labels.attachment}
         </div>
       )}
@@ -154,26 +162,26 @@ export function FeedbackAttachmentField({
             <img
               src={preview}
               alt={value.name}
-              className="h-20 w-20 rounded border border-slate-200 object-cover dark:border-slate-700"
+              className="h-20 w-20 rounded border border-[var(--border)] object-cover"
             />
           ) : (
             // Non-image attachments (PDF, text) can't preview as an <img>, so
             // show a neutral file tile with the name/size beside it instead.
-            <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500">
+            <div className="flex h-20 w-20 items-center justify-center rounded border border-[var(--border)] text-[var(--text-placeholder)]">
               <FileText className="size-8" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm text-slate-700 dark:text-slate-200">{value.name}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {Math.round(value.size / 1024)} KB
+            <div className="truncate text-sm text-[var(--text-secondary)]">{value.name}</div>
+            <div className="text-xs text-[var(--text-muted)]">
+              {fileText.size(value.size)}
             </div>
           </div>
           <button
             type="button"
             onClick={() => onChange(null)}
             aria-label={labels.attachmentRemove}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded p-1.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
           >
             <X className="size-4" />
           </button>
@@ -206,7 +214,7 @@ export function FeedbackAttachmentField({
           </div>
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-[var(--text-muted)]">
             {labels.attachmentPaste ?? "…or paste a screenshot from the clipboard."}
           </p>
         </div>

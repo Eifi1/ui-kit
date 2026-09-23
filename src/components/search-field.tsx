@@ -4,24 +4,41 @@ import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FIELD_BASE } from "./ui";
 
-export interface SearchFieldProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
+interface SearchFieldOwnProps
+  extends Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange" | "type" | "aria-label"
+  > {
   value: string;
   /** The typed text. Emitted as a plain string, not an event: every caller of the
    *  four this replaced wanted the string, and one of them held it in a URL param
    *  rather than in state. */
   onChange: (value: string) => void;
-  /** The field's accessible name. Required, and deliberately not defaulted to the
-   *  placeholder: a placeholder disappears the moment someone types, so a field
-   *  named only by one is unnamed exactly when a screen-reader user is working in
-   *  it. Two of the boxes this replaced had no name but the placeholder. */
-  label: string;
+  /**
+   * The field's accessible name.
+   *
+   * @deprecated Pass `aria-label` instead — the DOM spelling this kit standardised on
+   * when it found three names for one idea (`ariaLabel`, `aria-label`, and this).
+   * Unchanged and still supported; it names the field only when `aria-label` is
+   * absent, so a consumer can migrate one call site at a time.
+   */
+  label?: string;
   /** Names the clear button. Omit it and no clear button is rendered — which is a
    *  decision, not a default: a filter you can type into and not untype is the
    *  complaint that produced the button on three of these four screens. */
   clearLabel?: string;
-  className?: string;
 }
+
+/**
+ * One of the two spellings is REQUIRED, and the union is how that survives the
+ * deprecation. Making `label` merely optional would have been the easy change and the
+ * wrong one: the whole reason this component exists is that two of the four boxes it
+ * replaced were named by nothing but their placeholder — which disappears the moment
+ * someone types, i.e. exactly when a screen-reader user is working in the field. A
+ * caller now has a choice of spelling; it still has no option to pass neither.
+ */
+export type SearchFieldProps = SearchFieldOwnProps &
+  ({ "aria-label": string; label?: string } | { label: string; "aria-label"?: string });
 
 /**
  * The page-level filter box: a search icon, a `type="search"` input, and a clear
@@ -53,15 +70,19 @@ export interface SearchFieldProps
  * the next query can be typed straight away.
  */
 export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
-  { value, onChange, label, clearLabel, className, placeholder, ...rest },
+  { value, onChange, label, clearLabel, className, placeholder, "aria-label": ariaLabel, ...rest },
   ref,
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
+  // Whichever spelling the caller used. It is the accessible name AND the placeholder
+  // fallback, so a box named only by `aria-label` still says what it is before anyone
+  // has typed in it — the same deal `label` has always had.
+  const name = ariaLabel ?? label;
   return (
     <div className={cn("relative", className)}>
       <Search
         aria-hidden
-        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
       />
       <input
         ref={(node) => {
@@ -72,8 +93,8 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        aria-label={label}
-        placeholder={placeholder ?? label}
+        aria-label={name}
+        placeholder={placeholder ?? name}
         // Keksdose live #333: *"Entering the search here — is that set as password?
         // … I got prompted for remembering my name or mail address"*, typed into the
         // settings filter on a phone.
@@ -114,7 +135,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
             innerRef.current?.focus();
           }}
           aria-label={clearLabel}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
         >
           <X className="size-4" />
         </button>
