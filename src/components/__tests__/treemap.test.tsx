@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { cloneElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, within } from "@testing-library/react";
 import { ChartContainer } from "../chart";
 import { PALETTE_HEX } from "../../theme/chart-palette";
 
@@ -39,6 +39,11 @@ beforeEach(() => {
   captured.props = null;
 });
 afterEach(() => {
+  // Unmount FIRST. This hook runs before the global `cleanup()` in src/test/setup.ts
+  // (after-hooks run in reverse registration order), so resetting <html> with the
+  // Treemap still mounted fired its MutationObserver — a state update after the test,
+  // outside act(), and a warning whenever the scheduler let it land in time.
+  cleanup();
   document.documentElement.removeAttribute("style");
   document.documentElement.classList.remove("dark");
 });

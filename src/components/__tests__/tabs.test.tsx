@@ -129,9 +129,24 @@ describe("Tabs", () => {
       // Plain click: cancelled, so the switch stays client-side.
       expect(fireEvent.click(two, { button: 0 })).toBe(false);
       expect(onChange).toHaveBeenCalledWith("two");
-      // ⌘-click belongs to the browser (feedback #451) — untouched.
+      // ⌘-click belongs to the browser (feedback #451) — untouched. "Untouched" is read
+      // by a listener on `window`, which runs after the component's own handler: it
+      // records whether the component cancelled the click, and THEN cancels it itself —
+      // left alone, jsdom would try to follow `/x/two` and log "Not implemented:
+      // navigation to another Document" into every test run.
       onChange.mockClear();
-      expect(fireEvent.click(two, { button: 0, metaKey: true })).toBe(true);
+      let cancelledByComponent: boolean | null = null;
+      const record = (e: MouseEvent) => {
+        cancelledByComponent = e.defaultPrevented;
+        e.preventDefault();
+      };
+      window.addEventListener("click", record);
+      try {
+        fireEvent.click(two, { button: 0, metaKey: true });
+      } finally {
+        window.removeEventListener("click", record);
+      }
+      expect(cancelledByComponent).toBe(false);
       expect(onChange).not.toHaveBeenCalled();
       // Space is what an anchor does not do on its own.
       fireEvent.keyDown(two, { key: " " });
