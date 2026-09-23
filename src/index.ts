@@ -21,6 +21,13 @@ export type {
   ViewportBox,
 } from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
+// Focus containment for an overlay, and a live region for a change that moves no focus.
+// Both were extracted from the two components that already did them correctly (Modal and
+// CommandPalette) so the rest of the kit stops being the exception.
+export { useFocusTrap } from "./hooks/use-focus-trap";
+export type { FocusTrapOptions } from "./hooks/use-focus-trap";
+export { useAnnounce } from "./hooks/use-announce";
+export type { UseAnnounceReturn, UseAnnounceOptions, AnnounceRegionProps } from "./hooks/use-announce";
 export { useOverlayHistory } from "./hooks/use-overlay-history";
 export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transition";
 export { useRowSwipe } from "./hooks/use-row-swipe";
@@ -28,6 +35,12 @@ export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-ro
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
 export * from "./theme/chart-palette";
+// Colour maths (sRGB ↔ OKLCH, WCAG contrast, CVD simulation) and the palette deriver
+// that builds a whole, contrast-solved palette from one brand colour plus any colours
+// pinned by hand. `auditPalette` / `auditChartRamp` measure a palette rather than
+// trusting a comment about it.
+export * from "./theme/color";
+export * from "./theme/palette-derive";
 export * from "./theme/palette-presets";
 export * from "./theme/theme-store";
 export * from "./theme/palette-store";
@@ -52,9 +65,34 @@ export * from "./components/multi-select";
 export * from "./components/tooltip";
 export * from "./components/user-avatar";
 export * from "./components/settings-fields";
+// Sync state for a database-backed field: the engine (`useFieldSync`) and the
+// affordance (`FieldSyncIndicator`), kept separate because the state is useful
+// without the dot — a form can gate its submit on any field being `pending`.
+export * from "./components/field-sync";
+export * from "./components/month-picker";
+export * from "./components/checkbox";
+export * from "./components/switch";
+export * from "./components/slider";
+export * from "./components/time-input";
+export * from "./components/number-field";
+export * from "./components/sparkline";
+export * from "./components/stat-tile";
+export * from "./components/signature-pad";
+export * from "./components/password-strength";
+export * from "./components/page-contents";
+export * from "./components/treemap";
+export * from "./components/series-chart";
+export * from "./components/chart-zoom";
+export * from "./components/toggle-legend";
+export * from "./components/facing-pair";
+export * from "./components/series-chart-labels";
 export * from "./components/account-settings";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
+// A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
+// given — and the list field built from it. Distinct from Button on purpose: a row of
+// buttons reads as "choose an action", a row of chips as "here are the things".
+export * from "./components/chip";
 export * from "./components/wizard-stepper";
 export * from "./components/hover-menu";
 export * from "./components/modal";
@@ -122,3 +160,10 @@ export * from "./tour/tour";
 
 // ── command palette / global search ──────────────────────────────────────────
 export * from "./search/command-palette";
+
+// ── i18n: one label tree, one optional provider ──────────────────────────────
+// `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`
+// hands a translation to every component below it. Precedence: a component's own
+// prop > the provider > the English default. See src/i18n/kit-labels.tsx.
+export * from "./i18n/kit-labels";
+export * from "./i18n/defaults";

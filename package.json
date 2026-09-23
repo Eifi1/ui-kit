@@ -1,9 +1,9 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
-  "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives.",
+  "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives. Re-checked when `flag-icons` left `dependencies` and tsup started emitting a `\"use client\"` banner: neither touches this. The flag stylesheet was never imported from JS in the first place (that was the finding), and a directive prologue is a string literal every bundler lifts out before it decides whether a module is inert.",
   "sideEffects": [
     "**/*.css"
   ],
@@ -11,6 +11,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
+    },
+    "./shell": {
+      "types": "./dist/shell.d.ts",
+      "import": "./dist/shell.js"
+    },
+    "./data-table": {
+      "types": "./dist/data-table.d.ts",
+      "import": "./dist/data-table.js"
+    },
+    "./wizard": {
+      "types": "./dist/wizard.d.ts",
+      "import": "./dist/wizard.js"
+    },
+    "./tour": {
+      "types": "./dist/tour.d.ts",
+      "import": "./dist/tour.js"
+    },
+    "./feedback": {
+      "types": "./dist/feedback.d.ts",
+      "import": "./dist/feedback.js"
+    },
+    "./search": {
+      "types": "./dist/search.d.ts",
+      "import": "./dist/search.js"
     },
     "./dates": {
       "types": "./dist/lib/dates.d.ts",
@@ -21,53 +49,74 @@
   },
   "files": [
     "dist",
-    "tokens.css"
+    "src",
+    "!src/**/__tests__",
+    "!src/test",
+    "tokens.css",
+    "LICENSE"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "check:tokens": "node scripts/check-token-discipline.mjs",
+    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm test && npm run build && node scripts/verify-package.mjs && npm run build:showcase",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsup && node scripts/fix-esm-extensions.mjs",
+    "verify:package": "npm run build && node scripts/verify-package.mjs",
     "dev": "tsup --watch",
+    "dev:showcase": "vite --config showcase/vite.config.ts",
+    "build:showcase": "vite build --config showcase/vite.config.ts",
+    "preview:showcase": "vite preview --config showcase/vite.config.ts",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "lucide-react": ">=0.400.0 <2",
     "react": ">=19",
     "react-dom": ">=19",
     "react-router": ">=7",
-    "recharts": ">=3",
+    "recharts": ">=3.8",
     "sonner": ">=2"
   },
   "peerDependenciesMeta": {
-    "react-router": {
-      "optional": true
-    },
-    "recharts": {
-      "optional": true
-    },
     "sonner": {
       "optional": true
     }
   },
+  "_dependencies": "Only what the package imports AND owns the version of. `lucide-react` is a PEER: every consumer already declares `lucide-react: ^0.511.0` itself, so a hard dependency here bought each of them a second copy of the icon set in node_modules — and pinned to 0.511.x it held all three behind a release line that is now at 1.x. The range is deliberately wide (`>=0.400.0 <2`): the kit imports named icon components and nothing else, which has been stable across that whole span, so the app picks the version. `flag-icons` was never imported at all — 5.6 MB of stylesheet and SVG installed into every consumer to support class NAMES (`fi fi-xx`) that CurrencyFlag, CurrencySelect and LanguageMenu render as strings. The host supplies that stylesheet; see the dependency section of README.md. It stays a devDependency because the showcase imports it.",
   "dependencies": {
     "clsx": "^2.1.1",
-    "flag-icons": "^7.5.0",
-    "lucide-react": "^0.511.0",
     "tailwind-merge": "^3.3.0",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24.13.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.5",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "flag-icons": "^7.5.0",
+    "globals": "^17.12.0",
     "jsdom": "^30.0.1",
+    "lucide-react": "^0.511.0",
     "react-router": "^8.3.0",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
+    "tailwindcss": "^4.3.3",
     "tsup": "^8.5.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vite": "^7.3.6",
     "vitest": "^4.1.11"
   },
   "license": "MIT",
@@ -84,5 +133,8 @@
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=20.18"
+  }
 }

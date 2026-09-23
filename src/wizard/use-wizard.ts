@@ -10,6 +10,8 @@
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
+import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_WIZARD_LABELS } from "./types";
 import type {
   FieldErrors,
   StepStatus,
@@ -100,6 +102,17 @@ export function useWizard<TData extends Record<string, unknown>>(
     options;
   const stepsRef = useRef<WizardStepConfig[]>(steps);
   stepsRef.current = steps;
+  // A hook, not a component, but it produces two sentences of its own — the
+  // "fill in the required fields" toast and the fallback submit error — and both
+  // reach the user. So it reads the provider like any component does; only the two
+  // strings are depended on below, so the callbacks stay stable across renders.
+  // The `??` is for the type only: both keys are optional on `WizardLabels` (see
+  // there), and the merge never replaces a default with `undefined`.
+  const wizardLabels = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, {
+    missingRequired: missingRequiredMessage,
+  });
+  const missingRequired = wizardLabels.missingRequired ?? DEFAULT_WIZARD_LABELS.missingRequired;
+  const genericError = wizardLabels.genericError ?? DEFAULT_WIZARD_LABELS.genericError;
 
   // Validators registered by the CURRENT step's mounted components (RHF steps
   // register via `useRhfWizardStep` through the wizard context). Only the active
@@ -215,7 +228,7 @@ export function useWizard<TData extends Record<string, unknown>>(
         // No per-field detail (e.g. an RHF step surfacing its own inline
         // message) — say something anyway, so the user is not left with a Next
         // button that silently does nothing.
-        const message = missingRequiredMessage ?? "Please fill in all required fields.";
+        const message = missingRequired;
         if (onValidationFailed) {
           onValidationFailed(message);
         } else {
@@ -228,7 +241,7 @@ export function useWizard<TData extends Record<string, unknown>>(
       return false;
     }
     return true;
-  }, [state.currentStepIndex, missingRequiredMessage, onValidationFailed]);
+  }, [state.currentStepIndex, missingRequired, onValidationFailed]);
 
   const goNext = useCallback(async () => {
     if (await runStepValidators()) {
@@ -283,12 +296,12 @@ export function useWizard<TData extends Record<string, unknown>>(
     try {
       await onComplete(state.data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
+      const message = err instanceof Error && err.message ? err.message : genericError;
       dispatch({ type: "SET_ERROR", error: message });
     } finally {
       dispatch({ type: "SET_SUBMITTING", value: false });
     }
-  }, [onComplete, canFinish, state.data, runStepValidators]);
+  }, [onComplete, canFinish, state.data, runStepValidators, genericError]);
 
   const stepStatus = useCallback(
     (index: number): StepStatus => {

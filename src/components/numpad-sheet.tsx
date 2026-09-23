@@ -1,8 +1,15 @@
 import { createPortal } from "react-dom";
 import { Delete } from "lucide-react";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useEscapeKey } from "../hooks/use-dismiss";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
+import {
+  DEFAULT_CALCULATOR_LABELS,
+  useKitLabels,
+  type CalculatorLabels,
+} from "../i18n/kit-labels";
 
 /**
  * A full calculator keypad rendered as a bottom sheet — the mobile counterpart to
@@ -27,7 +34,8 @@ import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
  *  the brand-filled primary button — and it was a hardcoded English literal while
  *  its three neighbours each took an override, so a German phone showed "Done"
  *  among German labels with no prop able to change it. */
-export interface NumberPadSheetLabels {
+export interface NumberPadSheetLabels extends Partial<CalculatorLabels> {
+  /** The pad's own name — the `calculator.panel` key under its older name here. */
   pad?: string;
   backspace?: string;
   clear?: string;
@@ -37,8 +45,11 @@ export interface NumberPadSheetLabels {
 }
 
 type PadKey =
-  | { kind: "ins"; label: string; ins: string; accent?: boolean }
+  | { kind: "ins"; label: string; ins: string; accent?: boolean; name?: PadKeyName }
   | { kind: "back" };
+
+/** The {@link CalculatorLabels} key naming a non-digit key; digits are their glyph. */
+type PadKeyName = "plus" | "minus" | "times" | "divide" | "decimal";
 
 // Insert chars that survive `sanitizeLive` (it keeps `× ÷` and ASCII `+ - * /`
 // but strips the unicode minus `−`, so minus inserts an ASCII "-" while showing
@@ -47,23 +58,38 @@ const PAD_KEYS: PadKey[] = [
   { kind: "ins", label: "7", ins: "7" },
   { kind: "ins", label: "8", ins: "8" },
   { kind: "ins", label: "9", ins: "9" },
-  { kind: "ins", label: "÷", ins: "÷", accent: true },
+  { kind: "ins", label: "÷", ins: "÷", accent: true, name: "divide" },
   { kind: "ins", label: "4", ins: "4" },
   { kind: "ins", label: "5", ins: "5" },
   { kind: "ins", label: "6", ins: "6" },
-  { kind: "ins", label: "×", ins: "×", accent: true },
+  { kind: "ins", label: "×", ins: "×", accent: true, name: "times" },
   { kind: "ins", label: "1", ins: "1" },
   { kind: "ins", label: "2", ins: "2" },
   { kind: "ins", label: "3", ins: "3" },
-  { kind: "ins", label: "−", ins: "-", accent: true },
-  { kind: "ins", label: ".", ins: "." },
+  { kind: "ins", label: "−", ins: "-", accent: true, name: "minus" },
+  { kind: "ins", label: ".", ins: ".", name: "decimal" },
   { kind: "ins", label: "0", ins: "0" },
   { kind: "back" },
-  { kind: "ins", label: "+", ins: "+", accent: true },
+  { kind: "ins", label: "+", ins: "+", accent: true, name: "plus" },
 ];
 
+/** Every key's shape — including the thing this pad used to delete without replacing.
+ *
+ *  `focus:outline-none` alone is not a style choice, it is the removal of the only
+ *  signal a keyboard user has; on a 4×4 grid of identical tiles it leaves no way at all
+ *  to tell which key Enter is about to press (the audit's §a11y, and the same defect as
+ *  the dropdown search box).
+ *
+ *  `focus-visible` and `ring-inset`, for the two reasons {@link ToggleGroup} already
+ *  writes down. This is a touch control first, and a plain `focus:` ring paints itself
+ *  on every TAP, because a tap focuses the button. And the keys sit 6px apart, which is
+ *  thinner than an outward ring plus the neighbour it would spill onto — inset keeps the
+ *  ring inside the key it describes.
+ *
+ *  --brand rather than --border-strong: the operator keys are filled with --border, and
+ *  a ring in the colour of the thing it surrounds is not an indicator. */
 const PAD_BTN =
-  "flex h-14 items-center justify-center rounded-lg text-lg font-medium transition-transform select-none focus:outline-none active:scale-[0.97]";
+  "flex h-14 items-center justify-center rounded-lg text-lg font-medium transition-transform select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] active:scale-[0.97]";
 const PAD_DIGIT = "bg-[var(--bg-surface-2)] text-[var(--text-primary)] active:bg-[var(--border)]";
 const PAD_ACCENT = "bg-[var(--border)] text-[var(--text-primary)] active:bg-[var(--bg-surface-2)]";
 
@@ -84,11 +110,21 @@ export function NumberPadSheet({
   /** Optional field label, echoed in the sheet header so the user still knows
    * which field they're editing when the sheet covers it. */
   label?: ReactNode;
-  /** Names for the pad itself and its four non-digit keys — screen-reader names,
-   * except `done`, which is the visible text on the primary key. The digits and
-   * operators need none: their visible glyph IS the name. */
+  /** Names for the pad itself and its non-digit keys — screen-reader names, except
+   * `done`, which is the visible text on the primary key. Merged over `calculator`
+   * from `<UiKitProvider labels>`: this is the same keypad as `CalculatorButton`'s,
+   * on a phone, and one translation covers both. Digits need no name — their glyph
+   * IS the name; the operators do (see {@link CalculatorLabels.plus}). */
   labels?: NumberPadSheetLabels;
 }) {
+  // `pad` is this sheet's older spelling of `panel`, so it is folded in as that.
+  const fromProps = useMemo(() => {
+    if (!labels) return undefined;
+    const { pad, ...rest } = labels;
+    return pad === undefined ? rest : { ...rest, panel: pad };
+  }, [labels]);
+  const text = useKitLabels("calculator", DEFAULT_CALCULATOR_LABELS, fromProps);
+
   // NO `useBodyScrollLock`, and that is the point of the control (Keksdose live
   // #317: *"Background not scrollable when the amount input calculator field is
   // open"*).
@@ -111,6 +147,36 @@ export function NumberPadSheet({
   // `onPointerDown` preventDefault (below) keeps the host input focused and eats
   // the gesture on the sheet, so a touch that starts on a key is not a page scroll.
 
+  // ── NO focus trap either, and for a harder reason than the scroll lock ────────
+  //
+  // Wave 3 put `useFocusTrap` on every overlay in this package. This one is the
+  // exception, and it is not an oversight to be tidied up later: a trap here would
+  // DELETE THE COMPONENT IT WAS PROTECTING. Both hosts render the pad with
+  // `showNumpad = isMobile && !disabled && focused`, where `focused` is the host
+  // input's own focus state. Moving focus into the pad blurs that input, the host
+  // sets `focused` false, and the pad unmounts — on mount, before a single key can be
+  // pressed. The blur also COMMITS, so the trap would evaluate a half-typed
+  // expression on the way out.
+  //
+  // That is the contract, not an accident of it. This sheet exists because a PWA
+  // cannot swap the system keyboard for its own: the host keeps real focus, caret and
+  // selection while `inputMode="none"` suppresses the OS keys, and the root's
+  // `onPointerDown` preventDefault below is there for the same reason. The pad is
+  // `role="group"`, not a dialog. A keyboard does not trap focus; it is what you type
+  // WITH.
+  //
+  // What was genuinely missing is a way OUT that is not a tap. `useEscapeKey` and not
+  // a handler on the sheet, because the sheet never has the focus a keydown would
+  // bubble from — the host does, and the host is not this component. Escape does what
+  // the Done key does rather than cancelling, because committing on blur is the
+  // host's contract and a cancel would have to be the host's to offer.
+  //
+  // The limit, since it is better written down than discovered: inside a `Modal` the
+  // dialog's own Escape handler sits on the focus path and stops the event before a
+  // document listener sees it, so there the press closes the dialog — which it did
+  // before this line existed too, and which takes the pad with it either way.
+  useEscapeKey(onDone);
+
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";
 
@@ -124,7 +190,7 @@ export function NumberPadSheet({
   const sheet = (
     <div
       role="group"
-      aria-label={labels?.pad ?? "Number pad"}
+      aria-label={text.panel}
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}
@@ -149,7 +215,7 @@ export function NumberPadSheet({
             <button
               key="back"
               type="button"
-              aria-label={labels?.backspace ?? "Backspace"}
+              aria-label={text.backspace}
               onClick={backspace}
               className={cn(PAD_BTN, PAD_ACCENT)}
             >
@@ -159,7 +225,7 @@ export function NumberPadSheet({
             <button
               key={`${key.ins}-${i}`}
               type="button"
-              aria-label={key.label}
+              aria-label={key.name ? text[key.name] : key.label}
               onClick={() => insert(key.ins)}
               className={cn(PAD_BTN, key.accent ? PAD_ACCENT : PAD_DIGIT)}
             >
@@ -170,18 +236,25 @@ export function NumberPadSheet({
       </div>
 
       <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-        <button type="button" aria-label={labels?.clear ?? "Clear"} onClick={clearAll} className={cn(PAD_BTN, PAD_ACCENT)}>
+        <button type="button" aria-label={text.clear} onClick={clearAll} className={cn(PAD_BTN, PAD_ACCENT)}>
           C
         </button>
-        <button type="button" aria-label={labels?.equals ?? "Equals"} onClick={equals} className={cn(PAD_BTN, PAD_ACCENT)}>
+        <button type="button" aria-label={text.equals} onClick={equals} className={cn(PAD_BTN, PAD_ACCENT)}>
           =
         </button>
         <button
           type="button"
           onClick={onDone}
-          className={cn(PAD_BTN, "col-span-2 bg-[var(--brand)] text-[var(--brand-contrast)] active:bg-[var(--brand-hover)]")}
+          // The one key whose own fill is --brand, so it rings in the colour that fill
+          // was chosen to be legible against instead (tailwind-merge keeps the later
+          // ring colour). A --brand ring here would be present in the DOM and invisible
+          // on screen, which is the defect this change exists to fix.
+          className={cn(
+            PAD_BTN,
+            "col-span-2 bg-[var(--brand)] text-[var(--brand-contrast)] focus-visible:ring-[var(--brand-contrast)] active:bg-[var(--brand-hover)]",
+          )}
         >
-          {labels?.done ?? "Done"}
+          {text.done}
         </button>
       </div>
     </div>

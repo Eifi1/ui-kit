@@ -5,7 +5,8 @@ import { dateRangePresets } from "../lib/dates";
 import { resolveFilter } from "./data-table-filters";
 import type { FilterValue } from "./data-table-filters";
 import type { DataTableColumn } from "./data-table";
-import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
+import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
 
 interface FilterPopoverProps<T> {
   column: DataTableColumn<T>;
@@ -13,9 +14,21 @@ interface FilterPopoverProps<T> {
   onChange: (next: FilterValue) => void;
   onClear: () => void;
   selectOptions: { value: string; label: string }[];
-  /** BCP-47 locale for the date picker / labels. */
+  /** BCP-47 locale for the date picker / labels. Falls back to the provider's. */
   locale?: string;
+  /** Already resolved by {@link DataTable}. Standalone (it is exported), omit it and
+   *  the `dataTable` namespace of `<UiKitProvider labels>` is used. */
   labels?: DataTableLabels;
+  /**
+   * Focus the text filter's input on mount. True, because that is right for the one
+   * place this component normally lives: a Popover opened by an explicit press on
+   * "Filter", which exists in order to be typed into and which the user has just asked
+   * for. It was hard-coded, which made it right there and wrong everywhere else — a
+   * browser scrolls whatever takes focus into view, so embedding this control in an
+   * ordinary page (the showcase documents it on one) landed the reader 25,000px down a
+   * page they had not scrolled. An embedder that is not a popover passes `false`.
+   */
+  autoFocus?: boolean;
 }
 
 /**
@@ -30,16 +43,27 @@ export function FilterPopover<T>({
   onChange,
   onClear,
   selectOptions,
-  locale,
-  labels = DEFAULT_DATA_TABLE_LABELS,
+  locale: localeProp,
+  labels: labelsProp,
+  autoFocus = true,
 }: FilterPopoverProps<T>) {
+  // Both hooks run before the early return below, unconditionally.
+  const overrides = useKitLabelOverrides("dataTable");
+  const labels = labelsProp ?? resolveDataTableLabels(overrides);
+  // No `"en"` fallback any more: that pinned the calendar to English in a table that
+  // was never handed a locale, under a provider that had one.
+  const locale = useKitLocale(localeProp);
   const filter = resolveFilter(column);
   if (!filter) return null;
 
+  // `focus:outline-none` with only a 1px border tint to replace it is the same finding
+  // the audit records against the numpad's keys: on a panel of four identical fields a
+  // border going from --border to --border-strong is not a location. The ring is, and it
+  // is the package's brand focus colour, as on every field in ui.tsx.
   const inputBase =
-    "block w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500";
+    "block w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]";
   const buttonBase =
-    "rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+    "rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
 
   const clearRow = (
     <div className="flex justify-end pt-1">
@@ -55,7 +79,12 @@ export function FilterPopover<T>({
       <div className="space-y-2">
         <input
           type="text"
-          autoFocus
+          // A prop now, defaulting to what the popover needs; see `autoFocus` on the
+          // props above. Deliberately NOT an eslint-disable: `jsx-a11y/no-autofocus` is
+          // one of the config's ratcheted warnings and this is still one of the four it
+          // counts, because the default here is still to take focus. Silencing it would
+          // shrink the backlog without emptying it.
+          autoFocus={autoFocus}
           value={v.q}
           onChange={(e) => onChange({ type: "text", q: e.target.value })}
           placeholder={labels.filterPlaceholder}
@@ -76,7 +105,7 @@ export function FilterPopover<T>({
     };
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
           <span>{labels.selectFilter}</span>
           <div className="flex gap-1">
             <button
@@ -95,12 +124,12 @@ export function FilterPopover<T>({
             </button>
           </div>
         </div>
-        <ul className="max-h-56 overflow-y-auto rounded border border-slate-100 dark:border-slate-800">
+        <ul className="max-h-56 overflow-y-auto rounded border border-[var(--border)]">
           {selectOptions.map((o) => {
             const checked = v.values.includes(o.value);
             return (
               <li key={o.value}>
-                <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+                <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm hover:bg-[var(--bg-hover)]">
                   <input
                     type="checkbox"
                     checked={checked}
@@ -113,7 +142,7 @@ export function FilterPopover<T>({
             );
           })}
           {selectOptions.length === 0 && (
-            <li className="px-2 py-2 text-sm text-slate-500 dark:text-slate-400">—</li>
+            <li className="px-2 py-2 text-sm text-[var(--text-muted)]">—</li>
           )}
         </ul>
         {clearRow}
@@ -139,8 +168,8 @@ export function FilterPopover<T>({
                   className={cn(
                     "block w-full rounded px-2 py-1 text-left transition-colors",
                     active
-                      ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200"
-                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                      ? "bg-[var(--brand-bg)] text-[var(--brand-muted)]"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
                   )}
                 >
                   {labels.presets[p.key] ?? p.key}
@@ -150,9 +179,12 @@ export function FilterPopover<T>({
           })}
         </ul>
         <div className="min-w-0 flex-1 space-y-2">
-          <MiniCalendar from={v.from} to={v.to} locale={locale ?? "en"} onSelect={set} />
+          {/* No `labels` here: the calendar reads `miniCalendar` from the provider
+              itself, which is the only way a calendar nested this deep was ever going
+              to be translated — the table has no prop to forward them through. */}
+          <MiniCalendar from={v.from} to={v.to} locale={locale} onSelect={set} />
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-slate-500 dark:text-slate-400">
+            <label className="text-xs text-[var(--text-muted)]">
               {labels.dateFrom}
               <input
                 type="date"
@@ -161,7 +193,7 @@ export function FilterPopover<T>({
                 className={cn("mt-0.5", inputBase)}
               />
             </label>
-            <label className="text-xs text-slate-500 dark:text-slate-400">
+            <label className="text-xs text-[var(--text-muted)]">
               {labels.dateTo}
               <input
                 type="date"
@@ -182,7 +214,7 @@ export function FilterPopover<T>({
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-slate-500 dark:text-slate-400">
+        <label className="text-xs text-[var(--text-muted)]">
           {labels.numberMin} (≥)
           <input
             type="number"
@@ -193,7 +225,7 @@ export function FilterPopover<T>({
             className={cn("mt-0.5", inputBase)}
           />
         </label>
-        <label className="text-xs text-slate-500 dark:text-slate-400">
+        <label className="text-xs text-[var(--text-muted)]">
           {labels.numberMax} (≤)
           <input
             type="number"
@@ -205,7 +237,7 @@ export function FilterPopover<T>({
           />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+      <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
         <input
           type="checkbox"
           checked={v.abs}

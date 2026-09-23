@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Button, Card, FIELD_WRITABLE_LOOK, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /**
  * App-agnostic account-settings SECTIONS (feedback #333). The presentation lives
@@ -47,13 +48,13 @@ export function ProfileSetting({
         <UserAvatar name={name} email={email} size="lg" />
         <div className="min-w-0">
           <div className="text-sm font-medium">{labels.title}</div>
-          <div className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">{email ?? "—"}</div>
+          <div className="truncate font-mono text-xs text-[var(--text-muted)]">{email ?? "—"}</div>
         </div>
       </div>
       <div className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
-        <span className="text-slate-500">{labels.role}</span>
+        <span className="text-[var(--text-muted)]">{labels.role}</span>
         <span>{role ?? "—"}</span>
-        <span className="text-slate-500">{labels.memberSince}</span>
+        <span className="text-[var(--text-muted)]">{labels.memberSince}</span>
         <span>{memberSince ?? "—"}</span>
       </div>
       <Input
@@ -123,7 +124,7 @@ export function PasswordSetting({
       <Input type="password" autoComplete="current-password" label={labels.current} value={current} onChange={(e) => setCurrent(e.target.value)} />
       <Input type="password" autoComplete="new-password" label={labels.next} value={next} onChange={(e) => setNext(e.target.value)} />
       <Input type="password" autoComplete="new-password" label={labels.confirm} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-      {error && <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
       <Button onClick={() => void submit()} disabled={!current || !next || !confirm || pending}>
         {labels.submit}
       </Button>
@@ -142,7 +143,23 @@ export interface TwoFactorSettingLabels {
   disableSection: string;
   password: string;
   disable: string;
+  /**
+   * Alt text for the setup QR image, which shipped as a hardcoded `alt="QR"`.
+   *
+   * OPTIONAL, alone among these keys, and not because it matters less: this
+   * interface is annotated at consumer call sites (`const LABELS:
+   * TwoFactorSettingLabels = {…}`), so a new REQUIRED key is a compile error in
+   * every app on the next `npm update` — the additive-API rule in the README. It
+   * falls back to English here the way `AmountInput`'s label keys do. Make it
+   * required in the next major, when the three apps can be updated with it.
+   */
+  qrAlt?: string;
 }
+
+/** `qrAlt`'s English fallback, kept beside the interface rather than inline so the
+ *  one English word in this section is findable by the same `DEFAULT_*` grep as
+ *  every other one. Module-private: the key goes required in the next major. */
+const DEFAULT_QR_ALT = "QR code";
 
 export function TwoFactorSetting({
   enabled,
@@ -171,11 +188,14 @@ export function TwoFactorSetting({
   // sit there greyed until the moment it is focused.
   const [otpReadonly, setOtpReadonly] = useState(true);
   const onOtpFocus = () => setOtpReadonly(false);
+  // Only for the "Status: Enabled" composition — the punctuation between a field's
+  // name and its value is the language's (see `CommonLabels.fieldValue`).
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
 
   return (
     <Card className="p-4 space-y-3">
       <div className="text-sm">
-        {labels.status}: {enabled ? labels.enabledText : labels.disabledText}
+        {common.fieldValue(labels.status, enabled ? labels.enabledText : labels.disabledText)}
       </div>
 
       {!enabled && !setup && (
@@ -186,9 +206,19 @@ export function TwoFactorSetting({
 
       {setup && (
         <div className="space-y-2">
-          <div className="text-xs text-slate-600 dark:text-slate-400">{labels.scanHint}</div>
+          <div className="text-xs text-[var(--text-secondary)]">{labels.scanHint}</div>
+          {/* `bg-white`, NOT `--bg-surface`, and it must stay that way: a QR code is
+              read by a camera looking for maximum contrast between the modules and
+              their quiet zone. On the dark theme a surface-coloured backing makes it
+              slow to acquire, and on a warm light preset it lowers the contrast ratio
+              the spec is written against. This is the one place in the kit where a
+              literal colour is the correct answer. */}
           <div className="inline-block rounded-md bg-white p-2">
-            <img alt="QR" src={`data:image/svg+xml;base64,${setup.qrSvg}`} className="h-48 w-48" />
+            <img
+              alt={labels.qrAlt ?? DEFAULT_QR_ALT}
+              src={`data:image/svg+xml;base64,${setup.qrSvg}`}
+              className="h-48 w-48"
+            />
           </div>
           <div className="break-all font-mono text-xs">{setup.secret}</div>
           <Input
@@ -215,7 +245,7 @@ export function TwoFactorSetting({
       )}
 
       {enabled && (
-        <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <div className="space-y-3 border-t border-[var(--border)] pt-3">
           <div className="text-sm font-medium">{labels.disableSection}</div>
           <Input type="password" autoComplete="current-password" label={labels.password} value={password} onChange={(e) => setPassword(e.target.value)} />
           <Input

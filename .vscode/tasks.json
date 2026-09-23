@@ -1,0 +1,116 @@
+{
+  "version": "2.0.0",
+  "//": [
+    "Matches the task vocabulary of the consuming repos (keksdose, lenkbank, kastlan)",
+    "so the same two keystrokes do the same two things in every checkout:",
+    "  Ctrl+Shift+B          -> start the thing you look at",
+    "  Run Test Task         -> run what CI runs",
+    "The difference here is what 'the thing you look at' IS. This repository ships no",
+    "application: its runnable artefact is the showcase, which renders every component",
+    "from src/ so an edit is on screen on save."
+  ],
+  "tasks": [
+    {
+      "//": [
+        "`npm ci`, not `npm install`. This is a dependsOn of the Ctrl+Shift+B chain, so",
+        "`npm install` here would be free to move any ^-ranged dependency and rewrite the",
+        "lockfile every time somebody started the showcase — a change nobody asked for,",
+        "turning up in `git status` and getting swept into an unrelated commit. CI installs",
+        "with `npm ci` for the same reason. The guard makes it a no-op when the lockfile",
+        "has not moved, so starting the showcase stays instant.",
+        "Use 'Install dependencies (may update the lockfile)' when you actually mean to",
+        "add or bump something."
+      ],
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "if [ ! -e node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then echo 'lockfile changed — running npm ci'; npm ci; else echo 'dependencies up to date'; fi",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install dependencies (may update the lockfile)",
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start the showcase (:4170)",
+      "type": "shell",
+      "command": "npm run dev:showcase",
+      "dependsOn": ["Install dependencies"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "group": { "kind": "build", "isDefault": true },
+      "detail": "Every component on one page, with the theme and palette switchers live, at http://localhost:4170. Renders src/ rather than dist/, so no build step is needed and an edit is on screen on save. Port 4170 is the base of the 417x band the sibling apps use (keksdose 4173, lenkbank 4175) and strictPort is on, so a collision fails loudly instead of silently moving.",
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [{ "regexp": "^$", "file": 1, "location": 2, "message": 3 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*Local:.*"
+        }
+      }
+    },
+    {
+      "label": "Preview the BUILT showcase (:4171)",
+      "type": "shell",
+      "command": "npm run build:showcase && npm run preview:showcase",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "The production build of the showcase, on a separate port so it can run beside the dev server. Worth it when you suspect a difference between dev and build — a Tailwind class that only the @source scan generates, or a token that only resolves once the CSS is emitted."
+    },
+    {
+      "label": "Check everything (what CI runs)",
+      "type": "shell",
+      "command": "npm run check",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": [],
+      "detail": "typecheck -> lint -> token discipline -> tests -> build -> verify the publish artefact -> build the showcase. The same steps in the same order as .github/workflows/ci.yml, so a green run here means a green run there."
+    },
+    {
+      "label": "Test: vitest (watch)",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify the publish artefact",
+      "type": "shell",
+      "command": "npm run verify:package",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Packs the tarball, installs it into a scratch project with ONLY the declared required peers, and imports every entry point by package name. The check both 0.4.x consumer-facing defects escaped, because everything else ran against src/ or against dist/ by relative path."
+    },
+    {
+      "label": "Token discipline (hardcoded colours)",
+      "type": "shell",
+      "command": "npm run check:tokens",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Counts Tailwind palette colours used instead of a design token, and fails if the number goes up. A ratchet: when you remove some, lower TOKEN_BUDGET in the same commit."
+    },
+    {
+      "label": "Build the package",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": ["$tsc"],
+      "detail": "tsup, one output file per source module (bundle: false), then the ESM extension fixup."
+    }
+  ]
+}

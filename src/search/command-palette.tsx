@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useKitLabels } from "../i18n/kit-labels";
 
 export interface CommandItem {
   id: string;
@@ -32,13 +33,27 @@ export interface CommandPaletteLabels {
   loading: string;
   /** Hint shown in the footer, e.g. "↑↓ to navigate · ↵ to select · esc to close". */
   hint?: string;
+  /**
+   * Accessible name of the dialog itself. It used to borrow `placeholder`, which is
+   * written to sit greyed-out in an empty box ("Search…", "Type a command"), not to
+   * name a window — and a reader heard the ellipsis read out as part of the name.
+   *
+   * Optional, unlike `placeholder`, so a translation annotated as
+   * `CommandPaletteLabels` keeps compiling; the default always carries it.
+   */
+  dialog?: string;
 }
 
-const DEFAULT_LABELS: CommandPaletteLabels = {
+export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
   placeholder: "Search…",
   empty: "No results",
   loading: "Searching…",
+  dialog: "Search",
 };
+
+/** The defaults minus `dialog`, so a resolved `dialog` means someone SUPPLIED one —
+ *  see the dialog's `aria-label` for why that distinction matters. */
+const { dialog: DEFAULT_DIALOG_NAME, ...DEFAULTS_WITHOUT_DIALOG } = DEFAULT_COMMAND_PALETTE_LABELS;
 
 interface CommandPaletteProps {
   open: boolean;
@@ -98,7 +113,14 @@ export function CommandPalette({
   revision,
   labels,
 }: CommandPaletteProps) {
-  const l = { ...DEFAULT_LABELS, ...labels };
+  const l = useKitLabels("commandPalette", DEFAULTS_WITHOUT_DIALOG, labels);
+  // `dialog` is new, and until it existed the dialog was named by `placeholder`. An
+  // app that translated `placeholder` and has not heard of `dialog` would otherwise
+  // go from a German name to an English "Search" on update — so a translated
+  // placeholder keeps doing the job until a `dialog` is supplied.
+  const dialogName =
+    l.dialog ??
+    (l.placeholder !== DEFAULT_COMMAND_PALETTE_LABELS.placeholder ? l.placeholder : DEFAULT_DIALOG_NAME);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CommandItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -205,11 +227,11 @@ export function CommandPalette({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={l.placeholder}
-        className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        aria-label={dialogName}
+        className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl"
       >
-        <div className="flex items-center gap-2 border-b border-slate-100 px-3 dark:border-slate-800">
-          <Search className="size-4 shrink-0 text-slate-400 dark:text-slate-500" />
+        <div className="flex items-center gap-2 border-b border-[var(--border)] px-3">
+          <Search className="size-4 shrink-0 text-[var(--text-placeholder)]" />
           <input
             ref={inputRef}
             role="combobox"
@@ -220,18 +242,18 @@ export function CommandPalette({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={l.placeholder}
-            className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]"
           />
-          {loading && <span className="shrink-0 text-[11px] text-slate-400 dark:text-slate-500">{l.loading}</span>}
+          {loading && <span className="shrink-0 text-[11px] text-[var(--text-placeholder)]">{l.loading}</span>}
         </div>
 
         <ul id="command-palette-list" ref={listRef} role="listbox" className="min-h-0 flex-1 overflow-y-auto py-1">
           {flat.length === 0 && !loading && (
-            <li className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">{l.empty}</li>
+            <li className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">{l.empty}</li>
           )}
           {groups.map(({ group, items }) => (
             <li key={group}>
-              <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
                 {group}
               </div>
               <ul>
@@ -252,20 +274,20 @@ export function CommandPalette({
                     className: cn(
                       "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm",
                       isActive
-                        ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-                        : "text-slate-700 dark:text-slate-300",
+                        ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
+                        : "text-[var(--text-secondary)]",
                     ),
                   };
                   const inner = (
                     <>
                       {item.icon && (
-                        <span className="flex size-4 shrink-0 items-center justify-center text-slate-400 dark:text-slate-500">
+                        <span className="flex size-4 shrink-0 items-center justify-center text-[var(--text-placeholder)]">
                           {item.icon}
                         </span>
                       )}
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
                       {item.hint && (
-                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{item.hint}</span>
+                        <span className="shrink-0 text-xs text-[var(--text-placeholder)]">{item.hint}</span>
                       )}
                     </>
                   );
@@ -309,7 +331,7 @@ export function CommandPalette({
         </ul>
 
         {l.hint && (
-          <div className="border-t border-slate-100 px-3 py-1.5 text-[11px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
+          <div className="border-t border-[var(--border)] px-3 py-1.5 text-[11px] text-[var(--text-placeholder)]">
             {l.hint}
           </div>
         )}

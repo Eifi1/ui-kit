@@ -37,14 +37,28 @@ export function isFilterActive(v: FilterValue | undefined): boolean {
   }
 }
 
-/** Whether `row` passes column `col`'s filter given the user's `state`. */
-export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValue): boolean {
+/**
+ * Whether `row` passes column `col`'s filter given the user's `state`.
+ *
+ * `locale` is for the text filter's case folding. Plain `toLowerCase` folds by the
+ * root rules, under which a Turkish user typing "istanbul" does not find "İSTANBUL";
+ * `toLocaleLowerCase(locale)` does. Optional, and `undefined` is the runtime's default.
+ */
+export function rowMatches<T>(
+  col: DataTableColumn<T>,
+  row: T,
+  state: FilterValue,
+  locale?: string,
+): boolean {
   const filter = resolveFilter(col);
   if (!filter) return true;
   switch (filter.type) {
     case "text": {
       if (state.type !== "text" || !state.q.trim()) return true;
-      return filter.getValue(row).toLowerCase().includes(state.q.trim().toLowerCase());
+      return filter
+        .getValue(row)
+        .toLocaleLowerCase(locale)
+        .includes(state.q.trim().toLocaleLowerCase(locale));
     }
     case "select": {
       if (state.type !== "select" || state.values.length === 0) return true;

@@ -6,7 +6,8 @@ import { Button } from "../components/ui";
 import { Modal } from "../components/modal";
 import { alertFrameClass } from "../components/alert-banner";
 import { WizardContextProvider } from "./wizard-context";
-import { resolveWizardLabels } from "./types";
+import { DEFAULT_WIZARD_LABELS } from "./types";
+import { useKitLabels } from "../i18n/kit-labels";
 import type { UseWizardReturn, WizardLabels } from "./types";
 
 /**
@@ -40,7 +41,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
   className?: string;
   labels?: Partial<WizardLabels>;
 }) {
-  const l = resolveWizardLabels(labels);
+  const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
   const cancelTitleId = useId();
 
   const contextValue = useMemo(
@@ -66,7 +67,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
             </h1>
           )}
           {description && (
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
           )}
         </div>
       )}
@@ -99,9 +100,9 @@ export function StepperNav<TData extends Record<string, unknown>>({
                       status === "active" &&
                         "border-[var(--brand)] bg-[var(--bg-surface)] text-[var(--brand)]",
                       status === "upcoming" &&
-                        "border-slate-300 bg-[var(--bg-surface)] text-slate-400 dark:border-slate-600 dark:text-slate-500",
+                        "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-placeholder)]",
                       status === "skipped" &&
-                        "border-slate-300 bg-[var(--bg-surface-2)] text-slate-500 dark:border-slate-600 dark:text-slate-400",
+                        "border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-muted)]",
                     )}
                   >
                     {status === "completed" ? <Check className="size-4" /> : index + 1}
@@ -112,7 +113,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
                       "hidden text-xs font-medium md:block",
                       status === "active" || status === "completed"
                         ? "text-[var(--text-primary)]"
-                        : "text-slate-500 dark:text-slate-400",
+                        : "text-[var(--text-muted)]",
                     )}
                   >
                     {step.label}
@@ -150,7 +151,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
         <div
           role="alert"
           className={cn(
-            "text-sm text-rose-900 dark:text-rose-100",
+            "text-sm text-[var(--danger)]",
             alertFrameClass("danger"),
           )}
         >
@@ -203,7 +204,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
             <h2 id={cancelTitleId} className="text-lg font-semibold text-[var(--text-primary)]">
               {l.cancelTitle}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{l.confirmCancel}</p>
+            <p className="text-sm text-[var(--text-muted)]">{l.confirmCancel}</p>
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="secondary" onClick={wizard.dismissCancel}>

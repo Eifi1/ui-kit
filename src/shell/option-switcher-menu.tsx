@@ -46,7 +46,7 @@ export function OptionSwitcherMenu<T extends string>({
       {(close) => (
         <ul className="py-1">
           {heading && (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
               {heading}
             </li>
           )}
@@ -61,7 +61,7 @@ export function OptionSwitcherMenu<T extends string>({
                 className={TOPBAR_MENU_ITEM_CLASS}
               >
                 <span>{opt.label}</span>
-                {value === opt.value && <Check className="size-4 text-slate-700 dark:text-slate-200" />}
+                {value === opt.value && <Check className="size-4 text-[var(--text-secondary)]" />}
               </button>
             </li>
           ))}

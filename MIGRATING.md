@@ -77,6 +77,37 @@ Covers `from "@hb/ui"`, the `@hb/ui/dates` subpath, and
 string also appears in prose comments, where replacing it is correct but worth
 eyeballing.
 
+### 2b. Repoint the Tailwind `@source` scan — the step the `sed` cannot do
+
+**Do not skip this. Both apps that have already migrated skipped it, and both are
+currently rendering the kit unstyled.**
+
+The `sed` above rewrites every `@hb/ui` specifier, but the `@source` line in your
+main CSS does not contain that string — it points at a *path*, and under `file:`
+that path was the submodule working tree:
+
+```diff
+  @import "@eifi1/ui-kit/tokens.css";
+- @source "../../packages/ui/src";
++ @source "../../node_modules/@eifi1/ui-kit/dist";
+```
+
+After the migration `packages/ui` is gone, so the scan matches nothing. Tailwind
+does not warn about an `@source` that resolves to no files, and the app still
+builds, still runs and is still fully interactive — it is simply unpainted
+wherever a class came from the kit rather than from your own code. That reads as
+"the design system is broken", which is why it has survived two migrations.
+
+The path is relative to **the CSS file it is written in**. Confirm it landed:
+
+```bash
+npm run build && grep -c 'pointer-events-auto' dist/assets/*.css   # 0 = still missing
+```
+
+`pointer-events-auto` is emitted by the kit's overlays and by little else, so a
+zero here means the scan is not reaching the package. `dist` is the path to use:
+it is published by every version of the package.
+
 ### 3. Delete the workarounds that existed only because of `file:`
 
 This is the part that is easy to miss, because everything still *works* if you

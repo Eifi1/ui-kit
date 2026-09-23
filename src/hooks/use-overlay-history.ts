@@ -154,14 +154,75 @@ function forgetPushed(id: string): void {
   if (at >= 0) pushed.splice(at, 1);
 }
 
-function currentSentinel(): string | null {
+/**
+ * The sentinel this module believes is on the entry we are standing on.
+ *
+ * `history.state` is where the tag physically sits, because it is the only
+ * per-entry storage a browser has — but it is not this module's storage, so
+ * since the 2026-09-22 audit it is no longer read as the last word.
+ * The ROUTER owns that object and writes it WHOLE: every
+ * `setSearchParams(…, { replace: true })` stamps `{usr, key, idx}` over
+ * whatever was there. A `DataTable` with `urlSync` does exactly that, on mount
+ * and on every filter change — so an overlay opened from such a table had its
+ * tag wiped off the entry it was standing on, and then:
+ *
+ *  * its cleanup read "not my entry" and abandoned a live entry as a husk;
+ *  * the push path below could not find itself in `pushed`, so it discarded
+ *    every record it had (`splice(0)`) and nothing was ever unwound again;
+ *  * the StrictMode adoption never matched, so in development every dialog
+ *    pushed a second entry and the deferred `go(-1)` ate the live one — which
+ *    is Back no longer closing the overlay at all.
+ *
+ * So `standing` answers when the tag is gone: a MISSING tag on an entry we have
+ * not left is a wipe to repair rather than a verdict. The tag is still read
+ * FIRST wherever it is there, because it is the one thing that can see a FOREIGN
+ * same-URL entry stacked above ours (feedback #424/#426, below) — module-level
+ * bookkeeping cannot, since nobody tells us about someone else's `pushState`.
+ */
+let standing: string | null = null;
+
+/** The tag actually on the current entry, with no repair and no belief. */
+function taggedSentinel(): string | null {
   const state = typeof window !== "undefined" ? window.history.state : null;
   if (!state || typeof state !== "object") return null;
   const id = (state as Record<string, unknown>)[SENTINEL_KEY];
   return typeof id === "string" ? id : null;
 }
 
+/** Put our tag back on the current entry, keeping whatever the router has since
+ *  written there — we are a passenger in that object, not its owner. */
+function retag(id: string): void {
+  const prev = window.history.state;
+  window.history.replaceState(
+    { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id },
+    "",
+  );
+}
+
+function currentSentinel(): string | null {
+  const tag = taggedSentinel();
+  if (tag !== null) {
+    standing = tag;
+    return tag;
+  }
+  if (standing === null || typeof window === "undefined") return null;
+  // Only ever re-stamp an entry we still hold a record for. Without that guard a
+  // belief left over from an overlay that is long gone — a tab that has since
+  // navigated, a test file that ran another case — would be stamped onto a
+  // stranger's entry, and the next cleanup would traverse off it.
+  if (!pushed.some((p) => p.id === standing)) {
+    standing = null;
+    return null;
+  }
+  retag(standing);
+  return standing;
+}
+
 function handlePop() {
+  // A pop MOVES us, so the belief is stale by definition: re-read it from the
+  // entry we have landed on before anything below consults it, or the repair in
+  // `currentSentinel` would stamp the entry we just left onto the one we are on.
+  standing = taggedSentinel();
   if (pendingProgrammatic > 0) {
     pendingProgrammatic -= 1;
     return;
@@ -230,6 +291,7 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // The abandoned ones beneath come back owed; ours takes the top slot.
       for (const owed of inherited.slice(0, -1)) pushed.push({ ...owed, dead: true });
       pushed.push({ id, href: currentHref(), dead: false });
+      standing = id;
     } else {
       // A push DESTROYS every entry ahead of the one we are on, so anything we
       // still had recorded above our own position is gone. Kept, those would be
@@ -243,6 +305,7 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // the URL is unchanged, so the router treats popping this as a no-op re-render.
       window.history.pushState(marked, "");
       pushed.push({ id, href: currentHref(), dead: false });
+      standing = id;
     }
     return () => {
       const at = stack.indexOf(entry);

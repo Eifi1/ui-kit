@@ -1,13 +1,20 @@
 import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
-import { CURRENCIES, CurrencyFlag, getCurrency } from "./currency-select";
+import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-select";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
+import {
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  useKitLabels,
+  useKitLocale,
+  type CurrencyLabels,
+} from "../i18n/kit-labels";
 import {
   commitExpression,
   evaluateExpression,
@@ -32,10 +39,11 @@ interface AmountInputProps {
   id?: string;
   ariaLabel?: string;
   /** Every user-facing string this component and the two it composes own, so a
-   *  translating host can supply its own. The package carries no translation
-   *  catalog (see the README) — English defaults, each key optional, so the other
-   *  consumer apps are unaffected. `currency` names the picker chip and is
-   *  suffixed with the selected code; the rest are pass-through. */
+   *  translating host can supply its own. Each key optional, and each a per-field
+   *  override of the kit-wide translation in `<UiKitProvider labels>`: `currency`
+   *  and `currencySearch` of its `currency` namespace, the rest of `calculator`.
+   *  `currency` names the picker chip, composed with the selected code through
+   *  `common.fieldValue`; the rest are pass-through. */
   labels?: {
     currency?: string;
     currencySearch?: string;
@@ -45,6 +53,13 @@ interface AmountInputProps {
     pad?: NumberPadSheetLabels;
     calculator?: CalculatorButtonLabels;
   };
+  /** Translated currency names for the chip's picker, keyed by ISO code. The same
+   *  sparse override `CurrencySelect` takes, and for the same reason: the names in
+   *  `CURRENCIES` are shipped data, so without this they are the one English word
+   *  left in a translated row. Not part of `labels` because it is keyed by DATA
+   *  rather than by a fixed set of slots, and an app passes the same map to both
+   *  pickers. */
+  currencyNames?: Record<string, string>;
   /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
    *  new-transaction form can jump straight to amount entry (feedback #70). */
   autoFocus?: boolean;
@@ -168,7 +183,7 @@ function isResultOf(previous: string, text: string): boolean {
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const editable = !!onCurrencyChange;
@@ -244,17 +259,33 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // `DropdownPanel`'s note for what an `overflow` ancestor did to it before.
     const chipRef = useRef<HTMLButtonElement>(null);
 
+    // The currency chip's strings are the `currency` namespace — the same two
+    // `CurrencySelect` resolves, under this component's older key names. The
+    // calculator and the numpad resolve `calculator` themselves; `labels.calculator`
+    // and `labels.pad` are handed straight through to them as overrides.
+    const currencyOverrides = useMemo(() => {
+      const out: Partial<CurrencyLabels> = {};
+      if (labels?.currency !== undefined) out.currency = labels.currency;
+      if (labels?.currencySearch !== undefined) out.search = labels.currencySearch;
+      return out;
+    }, [labels?.currency, labels?.currencySearch]);
+    const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
+    const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+    const locale = useKitLocale();
+
     const selected = getCurrency(currency);
     const filtered = useMemo(() => {
-      const q = query.trim().toLowerCase();
+      const q = query.trim().toLocaleLowerCase(locale);
       if (!q) return CURRENCIES;
       return CURRENCIES.filter(
         (c) =>
           c.code.toLowerCase().includes(q) ||
-          c.name.toLowerCase().includes(q) ||
+          // The name the row SHOWS, so a translated list is searchable in the
+          // language it is written in.
+          currencyName(c, currencyNames, locale).toLocaleLowerCase(locale).includes(q) ||
           c.symbol.toLowerCase().includes(q),
       );
-    }, [query]);
+    }, [query, currencyNames, locale]);
 
     return (
       <div ref={wrapperRef} className={cn("w-full", className)}>
@@ -353,7 +384,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             <span
               aria-hidden
               className={cn(
-                "pointer-events-none px-1 font-medium text-slate-500 dark:text-slate-400",
+                "pointer-events-none px-1 font-medium text-[var(--text-muted)]",
                 // A text-xs chip next to a 36px figure reads as a stray footnote.
                 asDisplay ? "text-sm" : "text-xs",
               )}
@@ -367,10 +398,12 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-label={
-                selected ? `${labels?.currency ?? "Currency"}: ${selected.code}` : (labels?.currency ?? "Currency")
+                // "Currency: EUR" through `common.fieldValue`, not a template literal:
+                // the colon-and-space is punctuation a translation has to own.
+                selected ? common.fieldValue(currencyText.currency, selected.code) : currencyText.currency
               }
               className={cn(
-                "flex items-center gap-1 rounded px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                "flex items-center gap-1 rounded px-2 py-1 font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
                 asDisplay ? "text-sm" : "text-xs",
               )}
             >
@@ -389,7 +422,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                 query={query}
                 onQueryChange={setQuery}
                 inputRef={inputRef}
-                placeholder={labels?.currencySearch ?? "Search currency"}
+                placeholder={currencyText.search}
               />
             }
           >
@@ -404,16 +437,16 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                         setOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800",
-                        active && "bg-slate-100 dark:bg-slate-800",
+                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-[var(--bg-hover)]",
+                        active && "bg-[var(--bg-active)]",
                       )}
                     >
                       <CurrencyFlag country={c.country} />
-                      <span className="font-mono text-slate-500 dark:text-slate-400 w-8 shrink-0 text-xs">
+                      <span className="font-mono text-[var(--text-muted)] w-8 shrink-0 text-xs">
                         {c.symbol}
                       </span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">{c.code}</span>
-                      <span className="text-slate-500 dark:text-slate-400 truncate text-xs">{c.name}</span>
+                      <span className="font-medium text-[var(--text-primary)]">{c.code}</span>
+                      <span className="text-[var(--text-muted)] truncate text-xs">{currencyName(c, currencyNames, locale)}</span>
                     </button>
                   </li>
                 );

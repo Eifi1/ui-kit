@@ -63,7 +63,12 @@ describe("DatePicker formatValue", () => {
  * browser (22 → 42) and this is the property that produced it.
  */
 describe("an empty DatePicker trigger", () => {
-  const trigger = () => screen.getByRole("button", { name: "When" });
+  // `/^When/`, not `"When"`: the trigger's accessible name is the label AND the value
+  // now (audit §a11y — a date field named only "When" never says what it says), so
+  // the placeholder case below is called "When varies". The assertions underneath are
+  // on `textContent`, which is what live #294 was actually about, and they are
+  // unchanged.
+  const trigger = () => screen.getByRole("combobox", { name: /^When/ });
 
   it("holds its line with a non-breaking space when there is no value and no placeholder", () => {
     render(<DatePicker value="" onChange={() => {}} locale="en" label="When" />);

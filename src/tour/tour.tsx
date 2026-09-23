@@ -10,7 +10,9 @@ import {
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
+import { useKitLabels } from "../i18n/kit-labels";
 import { Button } from "../components/ui";
+import { useFocusTrap } from "../hooks/use-focus-trap";
 
 export type TourPlacement = "top" | "right" | "bottom" | "left" | "center";
 
@@ -50,7 +52,7 @@ export interface TourLabels {
   step: (current: number, total: number) => string;
 }
 
-const DEFAULT_LABELS: TourLabels = {
+export const DEFAULT_TOUR_LABELS: TourLabels = {
   next: "Next",
   back: "Back",
   skip: "Skip",
@@ -138,7 +140,10 @@ export function TourProvider({
   children: ReactNode;
   labels?: Partial<TourLabels>;
 }) {
-  const merged: TourLabels = { ...DEFAULT_LABELS, ...labels };
+  // `labels` over the provider's `tour` over English. Resolved once here and handed
+  // down: the step card is portalled, but context crosses portals anyway — this is
+  // simply the one place that already owned the merge.
+  const merged = useKitLabels("tour", DEFAULT_TOUR_LABELS, labels);
   const [steps, setSteps] = useState<TourStep[] | null>(null);
   const [index, setIndex] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -395,7 +400,7 @@ function TourOverlay({
           }}
         />
       ) : (
-        <div className="pointer-events-auto fixed inset-0 bg-slate-900/70" />
+        <div className="pointer-events-auto fixed inset-0 bg-black/70" />
       )}
       <TourCard
         step={step}
@@ -488,6 +493,33 @@ function TourCard({
   const ref = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({ opacity: 0 });
 
+  /**
+   * The card holds the focus, because the card is what the tour IS.
+   *
+   * The overlay above declares `role="dialog" aria-modal="true"` — it always has — and
+   * then left focus wherever the page had put it. For a tour that is the most pointed
+   * version of the audit's *"Only Modal manages focus"*: the whole component exists to
+   * say "look here", and for a keyboard user "here" is the focus ring. They were told
+   * the page was hidden, given no way to reach the Next button without Tabbing through
+   * it, and left on a control the screen reader would no longer describe.
+   *
+   * It re-engages on every step, without any bookkeeping here, because `TourOverlay`
+   * returns null while it re-locates the next target: the card genuinely unmounts and
+   * remounts between steps. That is what keeps focus honest when the BUTTONS change —
+   * "Back" does not exist on the first step, so stepping back onto it destroys the
+   * control the press came from, and focus would otherwise fall to `<body>`, outside
+   * this trap's own listener, where Tab walks straight into the page the overlay claims
+   * to have hidden.
+   *
+   * **The cost, written down:** on an `awaitClick` step the user is asked to click the
+   * spotlighted element, and they can no longer Tab to it. ArrowRight still advances
+   * (the key handler in `TourOverlay` is on the document and does not care where focus
+   * is), which is the escape hatch that step already documents for the case where the
+   * target cannot be found. Containment is worth that: an `awaitClick` step is a
+   * minority of steps, while focus stranded behind `aria-modal` is every step.
+   */
+  useFocusTrap(ref, { active: true });
+
   useLayoutEffect(() => {
     const card = ref.current;
     if (!card) return;
@@ -499,23 +531,28 @@ function TourCard({
   return (
     <div
       ref={ref}
+      // Focusable but not tabbable: the trap above focuses the card itself rather than
+      // its first button, so a screen reader reads the step's title and body before it
+      // reads "Next" — and without this the container cannot take focus at all and the
+      // trap silently does nothing.
+      tabIndex={-1}
       style={style}
-      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-slate-200 bg-white p-4 shadow-xl transition-all duration-200 ease-out dark:border-slate-700 dark:bg-slate-900"
+      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-xl outline-none transition-all duration-200 ease-out"
     >
-      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{step.title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{step.body}</div>
+      <div className="text-sm font-semibold text-[var(--text-primary)]">{step.title}</div>
+      <div className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{step.body}</div>
       {step.action && <div className="mt-3">{step.action}</div>}
       <div className="mt-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={onSkip}
-            className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            className="text-xs text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
           >
             {labels.skip}
           </button>
           <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap text-xs tabular-nums text-slate-400 dark:text-slate-500">
+            <span className="whitespace-nowrap text-xs tabular-nums text-[var(--text-placeholder)]">
               {labels.step(index + 1, total)}
             </span>
             {!isFirst && (
@@ -539,7 +576,7 @@ function TourCard({
           </div>
         </div>
         {step.awaitClick && step.target && rect && (
-          <div className="text-center text-xs italic text-slate-400 dark:text-slate-500">
+          <div className="text-center text-xs italic text-[var(--text-placeholder)]">
             {labels.awaitClickHint}
           </div>
         )}

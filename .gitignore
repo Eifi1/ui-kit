@@ -2,3 +2,22 @@
 # vitest's transform cache lands here the first time the suite runs.
 node_modules/
 dist/
+# `npm run test:coverage` writes here; it is a report, not a source artefact.
+coverage/
+
+# Editor / OS
+# Editor settings are personal, EXCEPT the ones that are really project wiring:
+# what Ctrl+Shift+B starts, what Run Test Task runs, where the Tailwind extension
+# finds a stylesheet in a package that ships no tailwind.config. Those belong to
+# everyone who checks this out — the same policy lenkbank uses, with the same
+# four exceptions. keksdose runs the policy with three (no settings.json, because
+# it has no extension to point at a stylesheet); kastlan ignores .vscode/ whole and
+# shares none of it, which is why a fresh kastlan clone has no Ctrl+Shift+B.
+.vscode/*
+!.vscode/tasks.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+*.swp

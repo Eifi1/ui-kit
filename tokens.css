@@ -1,26 +1,32 @@
-/* @hb/ui design tokens + semantic utilities.
+/* @eifi1/ui-kit design tokens + semantic utilities.
  *
  * The single source of truth for the shared appearance layer: brand + data
  * colours (theme-aware via `.dark`), the semantic money utilities, the brand
  * accent for checkboxes/radios, and the global keyframes/scrollbar chrome.
  *
  * Consumers import this ONCE (after their own `@import "tailwindcss"`):
- *   @import "@hb/ui/tokens.css";
+ *   @import "@eifi1/ui-kit/tokens.css";
  * and add the package to Tailwind's source scan so its class names are kept:
- *   @source "../node_modules/@hb/ui/src";
+ *   @source "../node_modules/@eifi1/ui-kit/dist";
+ * (relative to the importing CSS file — see README §2. An @source that resolves to
+ * nothing is silent, and the app renders unstyled rather than erroring.)
  *
  * NOTE: these :root/.dark values MIRROR DEFAULT_PRESET in the palette theme module,
  * which is what actually paints them — the palette layer writes the active preset
  * tokens inline on <html> at runtime (Tailwind v4 strips a root block that holds only
  * custom properties, so this block is a documentation mirror, not the live source).
  *
- * Because it is inert, it drifts silently, and it had: the surfaces and text colour
- * below still held the pre-#328 palette while DEFAULT_PRESET had moved to Solar Dusk.
- * They were resynced when --text-secondary/--text-muted were added (the new tones are
- * derived from these surfaces, so a stale mirror would have documented a contrast ratio
- * that was not the shipped one). The MONEY TRIO and the nine chart hues below are still
- * the older values and have not been touched — nothing reads them, but do not cite them
- * as the default without checking DEFAULT_PRESET first. */
+ * Because it is inert, it drifts silently, and it did — twice. The surfaces and text
+ * colour below still held the pre-#328 palette while DEFAULT_PRESET had moved to Solar
+ * Dusk; they were resynced when --text-secondary/--text-muted were added. The money
+ * trio and the dark brand accent were left behind that time and written off in this
+ * note as "nothing reads them" — nine values, including the accent a consumer copies
+ * when they want to know what the brand IS.
+ *
+ * They are resynced now, and theme/__tests__/tokens-css-mirror.test.ts compares every
+ * one of these 46 values against DEFAULT_PRESET on each run, so the next drift fails a
+ * test instead of earning a paragraph. The direction is one-way: the presets are the
+ * source, this file follows. */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -39,10 +45,37 @@
   --brand: #4f46e5;            /* indigo-600 */
   --brand-hover: #4338ca;      /* indigo-700 */
   --brand-contrast: #ffffff;
-  --money-income: #0f766e;     /* teal-700 */
-  --money-expense: #b45309;    /* amber-700 */
-  --money-net: #6d28d9;        /* violet-700 */
-  --money-neutral: #6b6253;    /* warm slate */
+  --money-income: #0b6650;     /* deep teal — the preset's own, darker than
+                                  teal-700 so it clears AA as TEXT on --bg-page */
+  --money-expense: #905902;    /* solved: amber-700 (#b45309) reached only 3.88:1 as
+                                  TEXT on --bg-page, below WCAG AA. See the preset
+                                  audit in theme/__tests__/palette-audit.test.ts. */
+  --money-net: #7a4fa3;        /* muted violet, warmed to this palette */
+  --money-neutral: #6b6453;    /* warm slate */
+
+  /* ── Field sync status ─────────────────────────────────────────────────────
+     The four states a database-backed field can be in. Deliberately NOT part of
+     `TokenSet` and NOT per-preset: these are functional signals, like a traffic
+     light, and a field that means "saved" must not change meaning because somebody
+     picked a different appearance preset. They do flip light/dark, because contrast
+     is not optional.
+
+     They mark a field's FRAME and an ICON at its end — non-text graphics, for which
+     WCAG 1.4.11 asks 3:1 against the surface — and all four clear it on the worst of
+     the three light surfaces. `--status-edited` is amber rather than the orange-800 it
+     was: beside red-700 that orange read as a second error colour, and "unsaved" has
+     to look like a caution, not an alarm. Amber is below 4.5:1, so it is not a TEXT
+     colour: `FieldSyncIndicator` prints its words in `--text-secondary` beside it.
+
+     GREEN AND RED ARE THE CLASSIC CVD-UNSAFE PAIR, and the rest of this file goes out
+     of its way to avoid it — the money trio is teal/amber/violet for exactly this
+     reason. They are used here because the states were specified in these colours, so
+     `FieldSyncIndicator` gives every state its own ICON as well and colour is never
+     the only signal. Do not drop the icons.  */
+  --status-synced: #166534;    /* green-800  — persisted */
+  --status-pending: #1d4ed8;   /* blue-700   — in flight */
+  --status-edited: #d97706;    /* amber-600  — dirty, not yet saved */
+  --status-error: #b91c1c;     /* red-700    — the save failed */
   --chart-1: #332288;
   --chart-2: #88ccee;
   --chart-3: #44aa99;
@@ -63,10 +96,12 @@
   /* As in `:root` — 7.0:1 and 4.8:1 against the worst of the three dark surfaces. */
   --text-secondary: #adafbe;
   --text-muted: #8d90a0;
-  --brand: #818cf8;            /* indigo-400 */
-  --brand-hover: #a5b4fc;      /* indigo-300 */
-  --brand-contrast: #1e1b4b;   /* indigo-950 */
-  --money-income: #2dd4bf;     /* teal-400 */
+  --brand: #8b93f8;            /* indigo, lifted off the Tailwind scale to sit at
+                                  the same OKLab lightness as the other dark tokens */
+  --brand-hover: #aab1fb;
+  --brand-contrast: #16182b;   /* the dark page, not indigo-950: a filled brand
+                                  button reads as a hole in the surface it sits on */
+  --money-income: #22c3b6;     /* teal, pulled down to the dark set's lightness */
   /* Deliberately NOT amber-400 (#fbbf24). Every other colour on a dark surface
      sits around OKLab L 0.68–0.74 (brand 0.68, net 0.70, neutral 0.71, income
      0.74); amber-400 lands at 0.84, so outflows — most rows in a register — shouted
@@ -74,8 +109,15 @@
      meaning. Same hue (84°) and chroma, pulled to L 0.785: still 8.9:1 on the card
      surface, still far from income in CVD space (Keksdose dev#434). */
   --money-expense: #e4b035;
-  --money-net: #a98fd6;
-  --money-neutral: #a1a1aa;    /* zinc-400 */
+  --money-net: #b39aef;
+  --money-neutral: #9aa1bd;    /* the palette's own cool grey, not zinc-400 */
+
+  /* Field sync status — see the note in `:root`. Against the worst of the three dark
+     surfaces these run 8.7 / 9.1 / 6.7 / 8.0:1. */
+  --status-synced: #4ade80;    /* green-400 */
+  --status-pending: #7dd3fc;   /* sky-300 */
+  --status-edited: #fbbf24;    /* amber-400 */
+  --status-error: #fca5a5;     /* red-300 */
   --chart-1: #7e72d6;
   --chart-2: #9fd8f2;
   --chart-3: #5fc4b0;
@@ -85,6 +127,110 @@
   --chart-7: #e08c9a;
   --chart-8: #c25a78;
   --chart-9: #cc78be;
+}
+
+/* ── Derived surface / text roles ───────────────────────────────────────────
+   Everything here is computed FROM the tokens `applyTokenSet` writes inline on
+   <html>, so each one follows the active palette preset without being part of
+   `TokenSet` and without every preset having to spell it out. That is also why
+   they are `color-mix` rather than literals: one formula is correct in both
+   themes, because the inputs flip.
+
+   These exist because the components did not have them and reached for Tailwind's
+   slate scale instead — 815 hardcoded colour utilities against 85 token
+   references, which is the reason a consumer could not re-skin this kit without
+   forking it. See docs/module-audit-2026-09-22.md §theming. */
+:root,
+.dark {
+  /* Dimmer than `--text-muted`: placeholders, disabled text, the empty half of a
+     value. Mixing TOWARD the surface fades it in light and in dark alike. */
+  --text-placeholder: color-mix(in oklab, var(--text-muted) 65%, var(--bg-surface));
+
+  /* The wash under a hovered row, menu item or icon button. Mixing the TEXT colour
+     into the surface darkens it on a light theme and lightens it on a dark one,
+     which is the behaviour a fixed `slate-100`/`slate-800` pair was faking. */
+  --bg-hover: color-mix(in oklab, var(--text-primary) 7%, var(--bg-surface));
+  --bg-active: color-mix(in oklab, var(--text-primary) 12%, var(--bg-surface));
+
+  /* A chip that inverts against the page — a selected day, a keyboard hint. These
+     are literally the text and surface colours swapped, which is what
+     `bg-slate-900 dark:bg-slate-100` was approximating. */
+  --bg-inverse: var(--text-primary);
+  --text-inverse: var(--bg-surface);
+
+  /* A border that has to be seen rather than merely felt: a focused field, a
+     selected card. `--border` pulled toward the text colour. */
+  --border-strong: color-mix(in oklab, var(--border) 55%, var(--text-primary));
+
+  /* The SOFT brand: a tinted chip rather than a filled one — an active filter, a
+     selected day, a resize handle under the cursor. The kit had `--brand`,
+     `--brand-hover` and `--brand-contrast` but nothing for "brand, quietly", so
+     components reached for `bg-indigo-100 dark:bg-indigo-500/20` and a consumer
+     who changed `--brand` was left with an indigo island. Derived, so it follows
+     whatever the brand becomes. */
+  --brand-bg: color-mix(in oklab, var(--brand) 14%, var(--bg-surface));
+  --brand-bg-hover: color-mix(in oklab, var(--brand) 24%, var(--bg-surface));
+  /* Brand text ON `--brand-bg` — pulled away from the surface so it keeps contrast
+     against its own tint in both themes. */
+  --brand-muted: color-mix(in oklab, var(--brand) 70%, var(--text-primary));
+}
+
+/* ── Semantic status ────────────────────────────────────────────────────────
+   Destructive and cautionary UI. These are the values the components already
+   painted, lifted out of the class names so a consumer can change them — the kit
+   previously shipped two different destructive hues with no way to override
+   either. Not derived, because a warning is a specific colour, not a tint of the
+   page.
+
+   Distinct from the `--status-*` family above: those describe a FIELD's journey
+   to the database, these describe an ACTION's consequence. A row can be
+   `--status-error` (its last save failed) inside a form whose delete button is
+   `--danger` (it will destroy something), and they should not look identical. */
+:root {
+  --danger: #be123c;              /* rose-700 */
+  --danger-hover: #9f1239;        /* rose-800 */
+  --danger-contrast: #ffffff;
+  --danger-border: #fb7185;       /* rose-400 */
+  --danger-bg: #fff1f2;           /* rose-50 */
+
+  --warning: #b45309;             /* amber-700 */
+  --warning-border: #fcd34d;      /* amber-300 */
+  --warning-bg: #fffbeb;          /* amber-50 */
+
+  /* Informational, and deliberately NOT the brand: a count of active filters is
+     not a call to action, and painting it `--brand` would make every table look
+     like it had a primary button in the toolbar. */
+  --info: #0369a1;                /* sky-700 */
+  --info-border: #7dd3fc;         /* sky-300 */
+  --info-bg: #e0f2fe;             /* sky-100 */
+
+  /* Done, resolved, accepted. Distinct from `--status-synced` for the same reason
+     `--danger` is distinct from `--status-error`: that family describes a FIELD's
+     journey to the database, this one an ACTION's outcome. Emerald rather than the
+     money teal, so a "resolved" chip cannot be misread as an inflow. */
+  --success: #047857;             /* emerald-700 */
+  --success-border: #6ee7b7;      /* emerald-300 */
+  --success-bg: #d1fae5;          /* emerald-100 */
+}
+
+.dark {
+  --danger: #fda4af;              /* rose-300 */
+  --danger-hover: #fecdd3;        /* rose-200 */
+  --danger-contrast: #4c0519;     /* rose-950 */
+  --danger-border: #e11d48;       /* rose-600 */
+  --danger-bg: rgba(136, 19, 55, 0.2);
+
+  --warning: #fcd34d;             /* amber-300 */
+  --warning-border: rgba(180, 83, 9, 0.6);
+  --warning-bg: rgba(120, 53, 15, 0.2);
+
+  --info: #7dd3fc;                /* sky-300 */
+  --info-border: rgba(3, 105, 161, 0.6);
+  --info-bg: rgba(12, 74, 110, 0.25);
+
+  --success: #6ee7b7;             /* emerald-300 */
+  --success-border: rgba(4, 120, 87, 0.6);
+  --success-bg: rgba(6, 78, 59, 0.25);
 }
 
 /* Semantic colour utilities backed by the tokens above. Unlayered so they win
@@ -104,6 +250,33 @@
    two mean settled, and a future row wearing one of them reads as done. */
 .bg-money-neutral { background-color: var(--money-neutral); }
 .border-brand { border-color: var(--brand); }
+
+/* Visually hidden, like Tailwind's `sr-only`, but POSITION: FIXED rather than absolute.
+ *
+ * `sr-only` is `position: absolute`, so an element wearing it with no positioned
+ * ancestor resolves its containing block to the INITIAL one and is laid out at its own
+ * offset from the top of the document. Nothing looks wrong — it is 1x1 and clipped —
+ * but `documentElement.scrollHeight` grows to reach it, which on a long page produces a
+ * second, whole-document scrollbar beside the app shell's own, scrolling past the end of
+ * the content into nothing. Measured on the showcase: body 900px, document 47,919px,
+ * with the deepest escaped `input.sr-only` sitting at offsetTop 47,918.
+ *
+ * A fixed element is out of flow AND out of the document's scroll height, so this one
+ * can be dropped anywhere — a live region inside a table, a hidden input inside a
+ * dropzone — without its container having to remember to be `relative`. Prefer it for
+ * anything the kit renders on a consumer's behalf, where there is no wrapper to fix.
+ */
+.sr-only-fixed {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
 
 html, body, #root {
   height: 100%;
@@ -214,6 +387,30 @@ body {
   .animate-overlay { animation-duration: 0.01ms; }
 }
 
+/* The sidebar's flyout panel: a short fade and a 4px slide out of the sidebar, so it
+   reads as coming FROM the entry it belongs to rather than appearing beside it. The
+   slide uses the inline axis, so it runs the right way under `dir="rtl"` too. Under
+   reduced motion it only fades — nothing travels. */
+@keyframes flyout-in {
+  from { opacity: 0; translate: var(--flyout-from, -4px) 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+[dir="rtl"] .animate-flyout { --flyout-from: 4px; }
+.animate-flyout { animation: flyout-in 0.14s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-flyout { animation-name: overlay-fade-in; }
+}
+
+/* The phone's page row (AppShell `mobileSubNav`) rising out of the bottom bar. */
+@keyframes subnav-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-subnav { animation: subnav-in 0.2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-subnav { animation-name: overlay-fade-in; }
+}
+
 /* Chart drilldown fan-out/-in (feedback #260 rework): the remounted chart eases
    in instead of snapping. */
 @keyframes drill-in {
@@ -222,6 +419,11 @@ body {
 }
 .animate-drill {
   animation: drill-in 0.25s ease-out;
+}
+/* A drilldown still has to SAY the level changed, so under reduced motion the chart
+   fades in rather than appearing in one frame — but it no longer scales. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-drill { animation-name: overlay-fade-in; }
 }
 
 /* Scrollbars: keep light defaults; theme to slate when dark mode is active. */

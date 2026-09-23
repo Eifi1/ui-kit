@@ -4,6 +4,8 @@
 // Returning CSS vars here makes every Recharts series theme-aware for free — the
 // SVG fill/stroke resolves --chart-N against the current light/dark token set.
 
+import { contrast, parseHex as parseRgbHex } from "./color";
+
 const PALETTE_SIZE = 9;
 
 /** CVD-safe categorical colour for series `index`, as a theme-aware CSS var. */
@@ -23,7 +25,16 @@ export const CHART_COLORS = {
 
 // ── Raw hex stops, by theme ────────────────────────────────────────────────
 // The heatmaps interpolate colours in JS (CSS vars can't be lerped), so they
-// need concrete hex per theme. Keep these in sync with the tokens.
+// need concrete hex per theme — i.e. the same colours DEFAULT_PRESET already
+// holds, written down a second time.
+//
+// They are duplicated rather than imported because these two objects are the whole
+// of the `@eifi1/ui-kit/chart` subpath's colour layer, and importing the preset bank
+// would pull every preset's full token set into that chunk to read two of them. What
+// keeps the copies together is `chart-palette.test.ts` — "has not drifted from
+// DEFAULT_PRESET" — which is not optional: they HAD drifted, five of the six light
+// heat stops, and the light `neutral` was still Tailwind's slate-100, a cool grey on
+// the warm cream page this theme has used since #328.
 export const PALETTE_HEX = {
   light: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
   dark: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],
@@ -44,19 +55,21 @@ export interface HeatStops {
     heatmap stops, per theme. Teal = under/good, amber = over/spend = bad. */
 export const HEATMAP_HEX = {
   light: {
-    neutral: "#f1f5f9", // slate-100
-    under: "#0f766e", // teal-700
-    over: "#b45309", // amber-700
-    seqLow: "#fef3c7", // amber-100
-    seqHigh: "#b45309", // amber-700
+    neutral: "#f1e7d2", // the cream surface itself, not a cool grey
+    under: "#0b6650", // DEFAULT_PRESET.light.moneyIncome
+    over: "#9c6418", // DEFAULT_PRESET.light.moneyExpense, warmed to the page
+    seqLow: "#f6ecd0",
+    seqHigh: "#9c6418",
     empty: "rgba(148,163,184,0.14)",
   },
   dark: {
-    neutral: "#334155", // slate-700
-    under: "#2dd4bf", // teal-400
-    over: "#fbbf24", // amber-400
-    seqLow: "#3f2d10", // dim amber, sits just above slate-950
-    seqHigh: "#fbbf24", // amber-400
+    neutral: "#363a5a", // one step above --border on the indigo-noir surface
+    under: "#22c3b6", // DEFAULT_PRESET.dark.moneyIncome
+    // Brighter than dark.moneyExpense (#e4b035) on purpose: a gradient endpoint is
+    // meant to be the loudest thing in its scale, and it is a fill, not a figure.
+    over: "#fbbf24",
+    seqLow: "#3a2c14", // dim amber, sits just above the page
+    seqHigh: "#fbbf24",
     empty: "rgba(148,163,184,0.10)",
   },
 } as const;
@@ -69,23 +82,35 @@ export function lerpHex(a: string, b: string, t: number): string {
   return `#${[c(0), c(1), c(2)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** Pick a legible text colour (near-black / near-white) for a solid hex fill,
-    flipping by perceived luminance so cell/treemap labels keep contrast.
+/** The two inks a cell/treemap label can be set in. Near-black and near-white rather
+    than #000/#fff: at full black-on-full-white the label stops looking like part of the
+    same type system as the rest of the page. */
+const INK_DARK = "#1a1a1a";
+const INK_LIGHT = "#f8fafc";
+
+/** Pick a legible text colour (near-black / near-white) for a solid hex fill, by
+    MEASURING both against it and keeping the one that wins.
+
+    This used to flip on Rec.601 luma > 0.6, which is a brightness heuristic and not a
+    contrast measure — the two disagree on six of the eighteen default chart hues, a
+    third of the ramp, and on each of those the label got the worse of the two inks.
+    `#44aa99` is the plainest case: luma calls it dark, so it took white, which measures
+    2.69:1 on it; near-black measures 6.18:1. keksdose measured this too and forked the
+    function locally for its treemap, leaving its other two call sites on this one.
 
     A fill this cannot read gets `currentColor` — inherit, i.e. whatever the
     surrounding text already uses. That is the only answer that is right on both
     themes, because an unreadable fill is usually a translucent one (`HEATMAP_HEX.*
     .empty` is an `rgba()` string, and the variance heatmap does pass it here for any
     category with zero assigned and positive activity — a refund). Picking a constant
-    instead is what produced the bug: `NaN > 0.6` is false, so the label came back
-    near-white on a near-white cell and the figure was invisible. */
+    instead is what produced the earlier bug: the unparsed fill fell through to the
+    light ink, near-white on a near-white cell, and the figure was invisible. */
 export function textOn(hex: string): string {
-  const rgb = parseHex(hex);
+  const rgb = parseRgbHex(hex);
   if (!rgb) return "currentColor";
-  const [r, g, b] = rgb;
-  // Rec.601 luma; >0.6 → dark text, else light text.
-  const luma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luma > 0.6 ? "#1a1a1a" : "#f8fafc";
+  // Ties go to the dark ink: at equal measured contrast it is the one that keeps a
+  // small label looking like type rather than like a glow.
+  return contrast(rgb, INK_DARK) >= contrast(rgb, INK_LIGHT) ? INK_DARK : INK_LIGHT;
 }
 
 /** Mid-grey, for a stop {@link lerpHex} has to interpolate but cannot read. It has
@@ -95,9 +120,13 @@ const UNREADABLE: [number, number, number] = [0x80, 0x80, 0x80];
 /**
  * `#rgb` or `#rrggbb` to components, or **null** when it is neither.
  *
- * This used to `parseInt` whatever it was given and hand the NaNs on, and both
- * callers propagated them silently: {@link lerpHex} produced the literal string
- * `"#nannannan"`, and {@link textOn} computed `NaN > 0.6 === false` and returned the
+ * A tuple-shaped shim over `color.ts`'s parser, which is the same function and is
+ * already the one `contrast` validates with — so {@link lerpHex} and {@link textOn}
+ * cannot disagree about what counts as a colour.
+ *
+ * The **null** is the whole point of it. This used to `parseInt` whatever it was given
+ * and hand the NaNs on, and both callers propagated them silently: {@link lerpHex}
+ * produced the literal string `"#nannannan"`, and {@link textOn} fell through to the
  * LIGHT label colour.
  *
  * That is not hypothetical — a non-hex value ships in this very module.
@@ -107,20 +136,8 @@ const UNREADABLE: [number, number, number] = [0x80, 0x80, 0x80];
  * back near-white: the number was there, and unreadable.
  */
 function parseHex(hex: string): [number, number, number] | null {
-  const h = hex.startsWith("#") ? hex.slice(1) : hex;
-  const full =
-    h.length === 3
-      ? h
-          .split("")
-          .map((c) => c + c)
-          .join("")
-      : h;
-  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
-  return [
-    parseInt(full.slice(0, 2), 16),
-    parseInt(full.slice(2, 4), 16),
-    parseInt(full.slice(4, 6), 16),
-  ];
+  const rgb = parseRgbHex(hex);
+  return rgb ? [rgb.r, rgb.g, rgb.b] : null;
 }
 
 function clamp01(t: number): number {

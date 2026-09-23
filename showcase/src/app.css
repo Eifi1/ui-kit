@@ -1,0 +1,18 @@
+@import "tailwindcss";
+/* The kit's tokens, semantic utilities and global chrome. Imported from CSS, after
+   Tailwind — NOT from JS. Importing it from a module works but makes Tailwind's
+   `@custom-variant dark` arrive after the utilities that need it. */
+@import "../../tokens.css";
+
+/* Tailwind never scans node_modules, and here it must scan the kit's SOURCE rather
+   than dist/: dist is gitignored, so a fresh clone has none, and the point of an
+   in-repo showcase is that it paints the working tree. Relative to THIS file.
+   (A CONSUMER writes a different path — see README; getting this line wrong is why
+   two of the three consuming apps currently render the kit unstyled.) */
+@source "../../src";
+
+/* sonner computes its z-index at runtime and can land under the kit's modal (z-50)
+   and tour (z-60). Pinned, exactly as lenkbank's app.css does. */
+[data-sonner-toaster] {
+  z-index: 2147483647 !important;
+}

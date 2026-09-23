@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "../lib/cn";
 
@@ -18,9 +18,9 @@ export type AlertTone = "danger" | "warning" | "neutral";
  * at any offset. Callers compensate the extra pixel in their own padding so
  * switching tones never shifts the layout. */
 const TONE_FRAME: Record<AlertTone, string> = {
-  danger: "border-2 border-rose-400 bg-rose-50 dark:border-rose-600 dark:bg-rose-900/20",
-  warning: "border-2 border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20",
-  neutral: "border border-slate-200 dark:border-slate-700",
+  danger: "border-2 border-[var(--danger-border)] bg-[var(--danger-bg)]",
+  warning: "border-2 border-[var(--warning-border)] bg-[var(--warning-bg)]",
+  neutral: "border border-[var(--border)]",
 };
 
 /** The tone's border + surface on their own — for a caller that already has a box
@@ -39,27 +39,35 @@ export function alertFrameClass(tone: AlertTone): string {
 }
 
 const TONE_TEXT: Record<Exclude<AlertTone, "neutral">, string> = {
-  danger: "text-rose-900 dark:text-rose-100",
-  warning: "text-amber-900 dark:text-amber-200",
+  danger: "text-[var(--danger)]",
+  warning: "text-[var(--warning)]",
 };
 
 const TONE_ICON: Record<Exclude<AlertTone, "neutral">, string> = {
-  danger: "text-rose-600 dark:text-rose-400",
-  warning: "text-amber-600 dark:text-amber-400",
+  danger: "text-[var(--danger)]",
+  warning: "text-[var(--warning)]",
 };
 
-/** Static warning/danger callout box with the shared frame and an icon. */
-export function AlertBanner({
-  tone = "danger",
-  className,
-  children,
-}: {
+export interface AlertBannerProps extends ComponentPropsWithoutRef<"div"> {
+  /** `neutral` is deliberately not offered: a callout with a warning triangle in it
+   *  and no colour is a warning that looks like a note, which is the one thing this
+   *  box must never be. The neutral frame is still available on its own through
+   *  {@link toneFrameClass}. */
   tone?: Exclude<AlertTone, "neutral">;
-  className?: string;
   children: ReactNode;
-}) {
+}
+
+/** Static warning/danger callout box with the shared frame and an icon. */
+export function AlertBanner({ tone = "danger", className, children, ...rest }: AlertBannerProps) {
   return (
-    <div className={cn("flex items-start gap-2 text-sm", alertFrameClass(tone), TONE_TEXT[tone], className)}>
+    <div
+      // Arbitrary attributes first — a `data-tour` anchor, a test id, an
+      // `aria-describedby` — then the layout and tone classes, which are merged
+      // through `cn` rather than spread so a caller's `className` refines the box
+      // instead of replacing it.
+      {...rest}
+      className={cn("flex items-start gap-2 text-sm", alertFrameClass(tone), TONE_TEXT[tone], className)}
+    >
       <AlertTriangle className={cn("mt-0.5 size-4 shrink-0", TONE_ICON[tone])} />
       <span className="flex-1">{children}</span>
     </div>

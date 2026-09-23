@@ -1,13 +1,29 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useOutsideClick } from "../hooks/use-dismiss";
 
-interface HoverMenuProps {
+/**
+ * Exported and `<div>`-shaped: the top bar composes several of these side by side, and
+ * telling them apart — in a test, in a guided tour, in an accessibility tree — needs an
+ * attribute the kit does not know about. A closed prop list dropped every one of them.
+ *
+ * `children` is omitted from the div attributes because here it is a render prop taking
+ * the panel's `close`, not a `ReactNode`.
+ */
+export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   trigger: (state: { open: boolean; toggle: () => void }) => ReactNode;
   children: (close: () => void) => ReactNode;
   align?: "left" | "right";
   panelClassName?: string;
+  /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
+  className?: string;
+  /**
+   * @deprecated Use the DOM spelling `aria-label`, which now reaches the wrapper like
+   * any other attribute. Kept working because keksdose, kastlan and lenkbank all pass
+   * this today and a rename to save one line of resolution is not a patch release; it
+   * loses to `aria-label` wherever both are given. Removal is a later minor.
+   */
   ariaLabel?: string;
 }
 
@@ -24,7 +40,16 @@ type Phase = "closed" | "opening" | "open" | "closing";
 // (feedback #251). Module-level is fine: there is one cursor per document.
 let activeClose: (() => void) | null = null;
 
-export function HoverMenu({ trigger, children, align = "right", panelClassName, ariaLabel }: HoverMenuProps) {
+export function HoverMenu({
+  trigger,
+  children,
+  align = "right",
+  panelClassName,
+  className,
+  ariaLabel,
+  "aria-label": ariaLabelAttr,
+  ...rest
+}: HoverMenuProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("closed");
   const open = phase === "open" || phase === "closing";
@@ -121,11 +146,16 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
 
   return (
     <div
+      // `...rest` first: the hover handlers below are the whole component, and a caller
+      // passing one of its own must not silently replace them.
+      {...rest}
       ref={wrapperRef}
-      className="relative"
+      className={cn("relative", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      aria-label={ariaLabel}
+      // The DOM spelling wins; {@link HoverMenuProps.ariaLabel} is the deprecated alias
+      // three apps still pass, so it stays as the fallback rather than as the answer.
+      aria-label={ariaLabelAttr ?? ariaLabel}
     >
       {trigger({ open, toggle })}
       {open && (
@@ -140,7 +170,7 @@ export function HoverMenu({ trigger, children, align = "right", panelClassName, 
           <div
             role="menu"
             className={cn(
-              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900",
+              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
               panelClassName,
             )}
           >

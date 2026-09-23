@@ -1,0 +1,29 @@
+{
+  // The Tailwind extension has no config file to find — this package has no
+  // tailwind.config.js, because it emits class names for the CONSUMER to compile.
+  // Pointing it at the showcase's stylesheet is what gives autocomplete the token
+  // utilities (bg-[var(--bg-surface)], text-[var(--text-muted)], …) that the
+  // components are supposed to use instead of the palette scale.
+  "tailwindCSS.experimental.configFile": "showcase/src/app.css",
+  // `cn(...)` is this package's class-merging helper; without these the extension
+  // stops offering completions the moment a class moves inside one.
+  "tailwindCSS.classFunctions": ["cn", "cva"],
+  "tailwindCSS.includeLanguages": { "typescript": "javascript", "typescriptreact": "javascript" },
+
+  // Flag a raw palette colour AS YOU TYPE, rather than at `npm run check:tokens`.
+  // These are the families the token ratchet counts; see scripts/check-token-discipline.mjs.
+  "editor.quickSuggestions": { "strings": "on" },
+
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["typescript", "typescriptreact"],
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+
+  // The published package is ESM-only with an exports map; this keeps Go to
+  // Definition and auto-import honest about which specifier a consumer can write.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  "search.exclude": { "**/dist": true, "**/node_modules": true, "showcase/dist": true },
+  "files.associations": { "tokens.css": "tailwindcss" }
+}

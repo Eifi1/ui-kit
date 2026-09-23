@@ -25,6 +25,25 @@ module so consumers can still tree-shake it (see the `sideEffects` note in
 entry chunk). Tailwind classes are emitted as-is; each app still compiles them
 with its own Tailwind config.
 
+## Documentation
+
+| | |
+|---|---|
+| [ADOPTING.md](https://github.com/Eifi1/ui-kit/blob/main/ADOPTING.md) | The brief for a new consuming app — hand it to that repo's agent |
+| [MIGRATING.md](https://github.com/Eifi1/ui-kit/blob/main/MIGRATING.md) | Moving an app off the old `@hb/ui` submodule onto the npm package |
+| [CHANGELOG.md](https://github.com/Eifi1/ui-kit/blob/main/CHANGELOG.md) | Every release, and the semver contract this package keeps below 1.0 |
+| [CONTRIBUTING.md](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md) | Repo layout, the house rules, the gates, how to cut a release |
+| [Issues](https://github.com/Eifi1/ui-kit/issues) | Bugs and requests |
+
+The links are absolute because only this README is in the npm tarball — `files` ships
+`dist`, `src`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none
+of the others on disk and a relative link would be a 404.
+
+A rendered catalogue of every component, with the theme, palette and language switchers
+live, deploys to <https://eifi1.github.io/ui-kit/> on every push to `main`. It needs one
+manual repo setting to go live, named at the top of `.github/workflows/pages.yml`; until
+then, `npm run dev:showcase` from a checkout is the same page.
+
 ## Install
 
 ```bash
@@ -35,10 +54,43 @@ Versions are pinned in your lockfile like any dependency, so each app upgrades
 when it chooses. To work on the design system and an app together, use
 `npm link` or a workspace override rather than a `file:` path.
 
-`@eifi1/ui-kit` needs these installed in the consuming app: `react`, `react-dom` (required
-peers) and — only if you use the pieces that need them — `recharts` (the `chart`
-kit), `sonner` (`FileDropzone`), `react-router` (`DataTable` URL-sync + `AppShell`).
-It also pulls `clsx`, `tailwind-merge`, `lucide-react`, `zustand`, `flag-icons`.
+### What you install alongside it
+
+| Package | Declared as | Why |
+|---|---|---|
+| `react`, `react-dom` | peer, `>=19` | The kit is components and hooks; two copies of React break hooks and context. |
+| `react-router` | peer, `>=7` | Imported unconditionally by `DataTable`, `useTableState`, `AppShell` and `useWizard`. A Router has to be mounted even with `urlSync` off. |
+| `recharts` | peer, `>=3` | `@eifi1/ui-kit/chart` imports it statically. Only that subpath needs it — the main barrel no longer reaches it. |
+| `lucide-react` | peer, `>=0.400.0 <2` | Icons, in 33 modules. **Yours to version.** |
+| `sonner` | peer, `>=2`, **optional** | `FileDropzone` and the wizard's "fill in the required fields" toast, reached only through `await import()`. Pass `onValidationFailed` to route it elsewhere. |
+| `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the theme and palette stores are singletons. |
+| `flag-icons` | **nothing — you supply the stylesheet** | See below. |
+
+**`lucide-react` is a peer from 0.5.0, not a dependency.** All three consumers already
+declared it themselves, so a hard dependency here bought each of them a second copy of the
+icon set — and `^0.511.0` on a 0.x package is a *patch* pin, which held them on 0.511.x
+while the line moved to 1.x. The range is wide on purpose: the kit imports named icon
+components and nothing else, and that has been stable across the whole span. *Migration:*
+none if you already depend on it; otherwise `npm install lucide-react`.
+
+**`flag-icons` is a host contract, not a dependency.** `CurrencyFlag`, `CurrencySelect`
+(and `AmountInput`'s currency picker, which uses it) and `LanguageMenu` render flags as
+class names — `<span class="fi fi-ch">` — and nothing in the package imports a stylesheet.
+The app provides it:
+
+```bash
+npm install flag-icons
+```
+
+```ts
+// main.tsx, once, next to your other global CSS
+import "flag-icons/css/flag-icons.min.css";
+```
+
+Without it those flags are empty boxes: no error, no warning, just missing glyphs in the
+currency picker and the language menu. It was a 5.6 MB hard dependency through 0.4.x —
+installed into every consumer and imported by nothing — so it may still be in your tree
+transitively after upgrading. Depend on it explicitly if you render any of the three.
 
 ## Wiring
 
@@ -59,9 +111,27 @@ resolve: {
 ```css
 /* app.css */
 @import "tailwindcss";
-@import "@eifi1/ui-kit/tokens.css";          /* design tokens, semantic utilities, chrome */
-@source "../../node_modules/@eifi1/ui-kit/src"; /* keep the class names @eifi1/ui-kit uses */
+@import "@eifi1/ui-kit/tokens.css";           /* design tokens, semantic utilities, chrome */
+@source "../../node_modules/@eifi1/ui-kit/dist"; /* keep the class names @eifi1/ui-kit uses */
 ```
+
+**Get this path right, and check it.** Tailwind never scans `node_modules`, so without
+`@source` none of the kit's class names are generated and the components render
+*unstyled* — laid out, interactive, and completely unpainted. Nothing errors, so it
+looks like a broken design system rather than a missing line. The path is relative to
+**the CSS file it is written in**, not to the project root; count the `../` from there.
+
+To verify in ten seconds: build, then grep the emitted CSS for a class only this
+package uses.
+
+```bash
+npm run build && grep -c 'pointer-events-auto' dist/assets/*.css   # 0 means the scan missed
+```
+
+Scanning `dist` is the recommended path: it is published by every version. From
+v0.5.0 the tarball also ships `src`, so `@source ".../@eifi1/ui-kit/src"` works too and
+scans the original TSX rather than transpiled output — but it is not present in
+v0.4.x, and an `@source` pointing at a directory that does not exist fails silently.
 
 ### 3. Theme + palette stores (own persistence keys)
 
@@ -75,8 +145,201 @@ export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useH
 ```
 
 Call `useApplyTheme()` + `useApplyPalette()` once near the root. For a no-flash
-first paint, apply the persisted theme class + token set before hydration (see
-Keksdose's `main.tsx` for the pattern, using `applyTokenSet`/`presetById`).
+first paint, apply the persisted theme class + token set **before** hydration —
+`applyPersistedTheme(key)` resolves the stored preference, toggles `.dark` and
+returns the mode, which `applyPersistedPalette(key, mode)` then uses:
+
+```ts
+// main.tsx, at module scope, before createRoot
+const mode = applyPersistedTheme("myapp-theme");
+applyPersistedPalette("myapp-palette", mode);
+```
+
+Worked example: [`showcase/src/main.tsx`](showcase/src/main.tsx).
+
+## Tokens
+
+Everything the components paint with comes from `tokens.css`, so a consuming app
+re-skins the kit by changing values rather than by forking components. Three layers:
+
+| Layer | Tokens | Set by |
+|---|---|---|
+| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` |
+| **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted` | `color-mix()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
+| **Semantic** | `--danger*` `--warning*` `--info*`, and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+
+The semantic layer is deliberately **not** part of `TokenSet`: a destructive action and a
+failed save are fixed meanings, and they should not change because somebody picked a
+different appearance preset. Everything else does follow the preset.
+
+To re-skin, override the tokens after importing the stylesheet:
+
+```css
+@import "@eifi1/ui-kit/tokens.css";
+
+:root  { --brand: #0f766e; --brand-hover: #115e59; --brand-contrast: #fff; }
+.dark  { --brand: #5eead4; --brand-hover: #99f6e4; --brand-contrast: #042f2e; }
+```
+
+`--brand-bg`, `--brand-bg-hover` and `--brand-muted` are derived from `--brand`, so the
+soft brand chips (an active filter, a selected day) follow that override automatically.
+
+`npm run check:tokens` fails if a component reaches for a raw Tailwind palette colour
+instead of a token. It is a ratchet: when the count drops, lower the budget in the same
+commit.
+
+## Colour
+
+### Three systems, deliberately separate
+
+A colour in this kit belongs to exactly one of three systems, and they are kept apart
+because they answer different questions.
+
+| System | Tokens | The question it answers |
+|---|---|---|
+| **Semantic UI** | `--danger*` `--warning*` `--info*` `--success*`, `--status-*` | *What does this mean?* Danger is red because every other interface the reader has used made it red. Fixed meanings, so they live in `tokens.css` and are **not** part of `TokenSet` — a destructive action must not change colour because somebody picked a different preset. |
+| **Semantic data** | `--money-income` `--money-expense` `--money-net` `--money-neutral` | *Which direction is this number?* Never red/green: that pair is exactly the axis dichromacy collapses. Always paired with a `+`/`−` or an arrow at the call site, so colour is never the only signal. |
+| **Categorical chart** | `--chart-1` … `--chart-9` | *Which series is this?* No meaning and no order — nine hues that must stay separable from each other. Paul Tol's "Muted" set, CVD-safe across protan/deutan/tritan. `paletteFor(i)` returns the CSS var, so a Recharts series is theme-aware for free. |
+
+Optimising a set for one of these makes it worse at the others. A UI colour needs contrast
+against one known surface and carries a fixed meaning; a chart colour needs to stay
+separable from eight unknown siblings at roughly equal salience with no implied order.
+That is why `derivePalette` leaves the chart ramp alone unless you ask for
+`deriveChartRamp` explicitly.
+
+One consequence to know about: the `chart` array it returns is **empty, not absent**. A
+caller who hands the result straight to `applyTokenSet` keeps whatever `--chart-1…9` were
+already on the element — deliberate, because clearing them would leave charts unpainted,
+but it means a derived palette applied over another preset is a *mix* until you supply a
+ramp of your own.
+
+### Deriving a palette
+
+```ts
+import { derivePalette, auditPalette, auditChartRamp } from "@eifi1/ui-kit";
+
+const { tokens, semantic, audit, warnings } = derivePalette({
+  anchors: { brand: "#4f46e5", danger: "#b91c1c" },  // brand required; the rest optional
+  mode: "light",
+});
+```
+
+`brand` is required and `accent`, `danger`, `warning`, `success` and `info` are optional
+hard points. Pinned hues are honoured exactly; the rest are placed away from the brand and
+from each other, each within its own narrow licence to move — enough to get out of the
+brand's way, not enough to stop meaning what it means. If a role cannot get far enough,
+that is a `warnings` entry, not a silent compromise.
+
+Everything is **solved to a target and then measured**. Text is solved against the *worst*
+of the three surfaces (`--bg-page`, `--bg-surface`, `--bg-surface-2`) — 10:1 primary, 7:1
+secondary, 4.6:1 muted by default — because solving against `--bg-surface` alone is the
+mistake that makes a muted label fail on the page background it also sits on. The brand
+keeps the hue and chroma you asked for and moves only in lightness, and only as far as the
+3:1 that WCAG 1.4.11 asks of a control boundary.
+
+It exists because the presets this package shipped were assembled by eye and annotated with
+the ratios they were *believed* to hold — `tokens.css` recorded "7.0:1 and 4.8:1",
+`palette-presets.ts` recorded "2.67:1 … lifted they clear it at 3.30:1" — and nothing
+computed any of them. A comment is not a test. The audit found four of the nine default
+light chart hues below 3:1.
+
+`auditPalette(tokens, semantic)` and `auditChartRamp(colors, surfaces)` measure a palette
+instead of trusting it, and run in CI over everything the package ships. The ramp report
+gives pairwise collisions under normal vision *and* each of the three dichromacies, every
+series below 3:1 against a surface it may be drawn on, and the worst of each.
+
+The colour maths (`src/theme/color.ts`: sRGB ↔ OKLab ↔ OKLCH, WCAG contrast, gamut
+clipping, dichromat simulation, OKLab ΔE) is dependency-free, and OKLCH rather than HSL
+because HSL's "lightness" is not lightness — `hsl(60 100% 50%)` and `hsl(240 100% 50%)`
+claim the same 50% and differ about twelvefold in apparent brightness.
+
+### The categorical trade-off, measured
+
+**At a single lightness, the most categorical series that can satisfy both the 3:1 fill
+contrast of WCAG 1.4.11 and the dichromat separation floor is four.** Searched exhaustively
+over starting hue and lightness:
+
+| Series | Best separation | Both satisfiable |
+|---|---|---|
+| 4 | 0.065 | yes |
+| 5 | 0.041 | no |
+| 9 | 0.015 | no |
+
+The floor is 0.05 in OKLab, calibrated rather than chosen: Paul Tol's "Muted" set — known
+to work — bottoms out at 0.059 light and 0.032 in the lightened dark variant, and a
+threshold above that would fail a palette that is known good, which is worse than no check
+at all.
+
+The reason is structural. Dichromacy collapses the red-green axis, so hue alone stops
+distinguishing colours past a handful, and the only channel left is **lightness** — the
+very thing a uniform-contrast ramp holds constant. Tol's set varies lightness deliberately
+and pays for it in contrast; that is not an oversight in their palette, it is the only
+currency left. Above four series `deriveChartRamp` varies lightness too, in a three-step
+cycle so adjacent series differ in lightness as well as hue, and reports what it gave up.
+
+Two honest caveats. That bound describes the **problem**, not a guarantee about
+`deriveChartRamp`: it fixes lightness and starts the hue wheel at the brand's own hue
+rather than searching for the best start, so it reaches the bound only where the brand
+happens to sit well — sweeping 72 brand hues against the default light surfaces, **7 of 72
+produced a passing 4-series ramp** (12 of 72 on dark), and none passed at 5 or 9. Read the
+report it returns; do not assume a pass. And `deriveChartRamp` is offered, not used by
+default: evenly spaced hues at one lightness are a reasonable generic answer, and Tol's set
+is a better specific one, because it was optimised against real confusion lines rather than
+derived from a formula.
+
+## Showcase
+
+Every component in the package, rendered on one page, with the theme and palette
+switchers live:
+
+```bash
+npm run dev:showcase
+```
+
+and open **http://localhost:4170**.
+
+The port is harmonised with the sibling apps rather than left on Vite's default, so the
+showcase can run next to whatever you are testing it against:
+
+| Port | What |
+|---|---|
+| **4170** | **this showcase** (`dev:showcase`) |
+| **4171** | this showcase, built (`preview:showcase`) |
+| 4173 | keksdose frontend (backend 8000) |
+| 4175 | lenkbank frontend (backend 8001) |
+| 5173 | kastlan frontend (Vite's default) |
+
+`strictPort` is on: a collision fails loudly instead of silently moving to another port
+and printing a URL that is not the one documented here. For a throwaway instance that
+must not take the port your editor's build task wants:
+
+```bash
+SHOWCASE_PORT=4199 npm run dev:showcase
+```
+
+It renders **`src/`, not `dist/`** — no build step first, and an edit to a component
+is on screen on save. It is also the package's broadest test: `npm test` mounts the
+whole page under jsdom, so a component that throws on mount fails CI, and `tsc`
+covers it, so an export renamed out of the barrel is a compile error rather than a
+demo that quietly disappears.
+
+```
+showcase/
+  index.html
+  vite.config.ts        # root; aliases @eifi1/ui-kit → ../src
+  alias.ts              # that alias, shared with the root vitest.config.ts
+  src/
+    main.tsx            # the pre-hydration no-flash boot, as a worked example
+    app.css             # tailwind + tokens.css + the @source scan
+    stores.ts           # createThemeStore / createPaletteStore, showcase keys
+    showcase.tsx        # the AppShell frame + the SECTIONS registry
+    sections/*.tsx      # one file per section
+```
+
+Adding a component to the kit means adding it to a section — that is how the page
+stays true. `npm run build:showcase` produces a static site; CI builds it on every
+push and asserts the emitted CSS actually contains the kit's utility classes, which
+is the only automated check that the documented Tailwind `@source` step works.
 
 ## Tests
 
@@ -99,42 +362,159 @@ a test written after the fix proves only that the fix is self-consistent.
 
 ## What's exported
 
-- **Primitives / fields:** `cn`, `Button`, `Input`, `Select`, `Textarea`,
-  `FloatingField`, `FieldLabel`, `Card`, `Spinner`, `EmptyState`, `Tabs`, plus the
-  field-class constants (`FIELD_BASE`, `FIELD_TRIGGER`, `FLOATING_*`, …).
-- **Inputs / dropdowns:** `NumberInput`, `AmountInput`, `Combobox`, `MultiSelect`,
-  `CurrencySelect` (+ `CURRENCIES`, `getCurrency`, `CurrencyFlag`), dropdown
-  primitives (`useDropdown`, `useDropdownSearch`, `DropdownPanel`,
-  `DropdownSearchHeader`), `CalculatorButton`, the calc engine.
-- **Overlays / misc:** `Modal` (+ `useBackdropClose`), `Popover`, `HoverMenu`,
-  `Tooltip`, `AlertBanner`, `ToggleGroup`, `FileDropzone`, `GroupedPicker`,
-  `MiniCalendar`, `WizardStepper` (a bare two-step indicator — not the wizard
-  engine below), the `chart` kit.
-- **Data table:** `DataTable` (+ `DataTableColumn`, `FilterState`, `SortState`,
-  `ServerPagination`), `Pagination`, filter/sort helpers, `DataTableLabels`.
-- **Theme:** `TokenSet`, `PalettePreset`, `DEFAULT_PRESET`, `ALTERNATIVE_PRESETS`,
-  `PALETTES`, `presetById`, `applyTokenSet`,
-  `PALETTE_HEX`, chart-colour helpers, and the store factories.
-- **Shell:** `TopBar`, `AppShell` (+ `AppShellNavItem`), `ThemeToggle`,
-  `PaletteMenu`, `LanguageMenu`, `TOPBAR_TRIGGER_CLASS`, `TOPBAR_MENU_ITEM_CLASS`.
-- **Feedback:** `FeedbackDialog` (the compose form) and the inbox parts —
-  `FeedbackStatus`/`FeedbackCategory` and their `*_META`/`*_ORDER` tables,
-  `nextFeedbackStatus`, `visibleFeedbackStatuses`, `selectableFeedbackStatuses`,
-  `feedbackCategoryRank`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`,
-  `FeedbackCategoryBadge`, `FeedbackNoteEditor`, `FeedbackDetail`,
-  `FeedbackDetailSection`, `FeedbackProse`. The vocabulary, the transition policy
-  and the look; each app still wires its own API, columns, strings and
-  permissions — see the note at the top of `src/feedback/feedback-inbox.tsx`.
-- **Wizard:** the multi-step engine (`useWizard`, `WizardContextProvider`,
-  `useWizardContext`, `useRhfWizardStep`, `useWizardStepValidate`,
-  `useWizardNextGate`, `requiredFieldsValidator`), the chrome around it
-  (`StepperNav`, `WizardSummary`) and the parts its steps are built from
-  (`WizardStep`, `WizardField`, `WizardSelectField`) — plus the types
-  (`WizardStepConfig`, `UseWizardOptions`, `UseWizardReturn`, `StepStatus`,
-  `ValidateResult`, `FieldErrors`, `SummarySection`, `SummaryItem`,
-  `RequiredFieldSpec`) and the label table (`WizardLabels`,
-  `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`). See [Wizard](#wizard) below.
-- **Subpath:** date helpers at `@eifi1/ui-kit/dates`; stylesheet at `@eifi1/ui-kit/tokens.css`.
+The full inventory, generated from the build rather than maintained by hand — the
+hand-written version named 93 of 263 and had been advertising five deleted wizard exports
+since 0.4.0. Regenerate it with `node scripts/gen-export-inventory.mjs` after a build.
+
+Two names that read as something they are not: `WizardStepper` is a bare two-step
+indicator and has nothing to do with the wizard engine below, and the feedback exports are
+the vocabulary, the transition policy and the look only — each app still wires its own API,
+columns, strings and permissions (see the note at the top of `src/feedback/feedback-inbox.tsx`).
+
+<!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
+
+**324 names from 76 modules** — 212 values and 112 types. _Italic_ is a type-only export.
+
+Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
+is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
+
+| Entry point | Names |
+|---|---|
+| `@eifi1/ui-kit` | 324 |
+| `@eifi1/ui-kit/chart` | 15 |
+| `@eifi1/ui-kit/shell` | 16 |
+| `@eifi1/ui-kit/data-table` | 27 |
+| `@eifi1/ui-kit/wizard` | 20 |
+| `@eifi1/ui-kit/tour` | 6 |
+| `@eifi1/ui-kit/feedback` | 27 |
+| `@eifi1/ui-kit/search` | 4 |
+| `@eifi1/ui-kit/dates` | 16 |
+
+Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
+re-slicing of it, never a second API.
+
+### lib — pure helpers
+
+| Module | Exports |
+|---|---|
+| `lib/calc` | `commitExpression`, `evaluateExpression`, `formatResult`, `isBareAmount`, `looksLikeExpression`, `sanitizeLive`, `splitLeadingSign` |
+| `lib/cn` | `cn` |
+| `lib/logger` | `logger`, `setStoreLog` |
+
+### hooks
+
+| Module | Exports |
+|---|---|
+| `hooks/use-media-query` | `useMediaQuery` |
+| `hooks/use-body-scroll-lock` | `useBodyScrollLock` |
+| `hooks/use-anchored-rect` | `useAnchoredRect`, _`AnchorRect`_ |
+| `hooks/use-anchored-panel` | `anchoredPanelPlacement`, `useAnchoredPanel`, `useVisualViewport`, _`AnchoredPanel`_, _`AnchoredPanelOptions`_, _`ViewportBox`_ |
+| `hooks/use-dismiss` | `useEscapeKey`, `useOutsideClick` |
+| `hooks/use-focus-trap` | `useFocusTrap`, _`FocusTrapOptions`_ |
+| `hooks/use-announce` | `useAnnounce`, _`AnnounceRegionProps`_, _`UseAnnounceOptions`_, _`UseAnnounceReturn`_ |
+| `hooks/use-overlay-history` | `useOverlayHistory` |
+| `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
+| `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
+
+### theme, palettes, colour
+
+| Module | Exports |
+|---|---|
+| `theme/chart-palette` | `CHART_COLORS`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `paletteFor`, `textOn`, _`HeatStops`_ |
+| `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
+| `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
+| `theme/palette-presets` | `ALTERNATIVE_PRESETS`, `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
+| `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
+| `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+
+### components
+
+| Module | Exports |
+|---|---|
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonVariant`_, _`PasswordRevealLabels`_, _`TabsProps`_ |
+| `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
+| `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch` |
+| `components/popover` | `Popover`, _`PopoverLabels`_ |
+| `components/swipeable-row` | `SwipeableRow`, _`SwipeableRowProps`_, _`SwipeAction`_ |
+| `components/calculator` | `CalculatorButton`, _`CalculatorButtonLabels`_ |
+| `components/numpad-sheet` | `NumberPadSheet`, _`NumberPadSheetLabels`_ |
+| `components/number-input` | `NumberInput` |
+| `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyOption`_ |
+| `components/amount-input` | `AmountInput` |
+| `components/combobox` | `Combobox`, `InlineEntityCombobox` |
+| `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS` |
+| `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
+| `components/multi-entity-combobox` | `MultiEntityCombobox`, _`MultiEntityComboboxProps`_ |
+| `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_ |
+| `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipSize`_, _`TooltipViewport`_ |
+| `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarProps`_ |
+| `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_ |
+| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
+| `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
+| `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertTone`_ |
+| `components/toggle-group` | `ToggleGroup` |
+| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipProps`_, _`ChipSize`_, _`ChipTone`_ |
+| `components/wizard-stepper` | `WizardStepper` |
+| `components/hover-menu` | `HoverMenu` |
+| `components/modal` | `Modal`, `useBackdropClose`, _`ModalProps`_ |
+| `components/full-bleed-dialog` | `FullBleedDialog` |
+| `components/grouped-picker` | `GroupedPicker`, _`PickerGroup`_ |
+| `components/file-dropzone` | `FileDropzone` |
+| `components/mini-calendar` | `MiniCalendar`, _`MiniCalendarLabels`_, _`MiniCalendarProps`_ |
+| `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_ |
+| `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
+| `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
+| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortDir`_, _`SortState`_ |
+| `components/data-table-filters` | `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `isFilterActive`, `resolveFilter`, `rowMatches`, _`ColumnFilter`_, _`FilterValue`_ |
+| `components/data-table` | `DataTable`, _`DataTableColumn`_, _`DataTableProps`_, _`FilterState`_, _`ServerPagination`_ |
+| `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
+| `components/data-table-filter-popover` | `FilterPopover` |
+| `components/combobox-core` | _`ComboOption`_ |
+
+### shell
+
+| Module | Exports |
+|---|---|
+| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
+| `shell/top-bar` | `TopBar` |
+| `shell/app-shell` | `AppShell`, _`AppShellNavItem`_, _`AppShellSubItem`_ |
+| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
+| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
+| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_ |
+
+### feedback
+
+| Module | Exports |
+|---|---|
+| `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `FeedbackAttachmentField`, `pastedName` |
+| `feedback/feedback-dialog` | `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackSubmission`_ |
+| `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
+
+### wizard
+
+| Module | Exports |
+|---|---|
+| `wizard/types` | `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_ |
+| `wizard/use-wizard` | `useWizard` |
+| `wizard/wizard-context` | `useWizardContext`, `WizardContextProvider`, _`WizardContextValue`_ |
+| `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
+| `wizard/wizard-step` | `WizardStep` |
+| `wizard/wizard-summary` | `WizardSummary` |
+| `wizard/stepper-nav` | `StepperNav` |
+
+### tour
+
+| Module | Exports |
+|---|---|
+| `tour/tour` | `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+
+### search
+
+| Module | Exports |
+|---|---|
+| `search/command-palette` | `CommandPalette`, `useCommandKey`, _`CommandItem`_, _`CommandPaletteLabels`_ |
+
+<!-- END GENERATED: exports -->
 
 ## Forms / refs
 
@@ -145,13 +525,75 @@ focus-and-scroll-to-error for free.
 
 ## i18n
 
-The package carries no translation catalog. Components with user-facing text take
-**label props with English defaults** — pass your own translated strings:
+**The kit resolves no strings.** It carries no translation catalogue, no locale detection
+and no `t()`. Every string it renders is a key in one typed tree, `UiKitLabels`, with an
+English default — and the app hands its translation to every component at once:
 
 ```tsx
-<MultiSelect allLabel={t("all")} searchLabel={t("search")} … />
-<DataTable labels={{ columns: t("table.columns"), presets: { today: t("today") }, … }} … />
+import { UiKitProvider } from "@eifi1/ui-kit";
+
+<UiKitProvider labels={de} locale="de-DE">   {/* de: UiKitLabels, or any part of it */}
+  <App />
+</UiKitProvider>
 ```
+
+Precedence is fixed: **a component's own prop > the provider > the English default.** So
+one table can still say `labels={{ table: "Transactions" }}` inside a German app, and a
+component outside any provider behaves exactly as it always did.
+
+The tree is namespaced by component and addressed by dot path — `dataTable.pageSize`,
+`miniCalendar.previousMonth`, `datePicker.today`, `appShell.collapse`,
+`common.fieldValue` — and `DEFAULT_UI_KIT_LABELS` is the whole English reference in one
+object. Write the translation against its type and `tsc` refuses a missing key; for a
+translation built at runtime, assert in the app's own test:
+
+```ts
+expect(missingKitLabels(de, DEFAULT_UI_KIT_LABELS)).toEqual([]);
+```
+
+The provider's `locale` reaches every `Intl` formatter in the kit that is not handed a
+`locale` prop of its own: calendar month and weekday names, day numbers, the data table's
+counts, file sizes.
+
+**Why a provider, when every component already took a `labels` prop.** Because a prop has
+to be passed at every call site, under a different name per component (`labels`,
+`calendarLabels`, `passwordLabels`, `clearLabel`, `ariaLabel` …), and one forgotten prop is
+one English word in a German UI that nothing reports. Worse, a component NESTED inside
+another — the calendar inside the data table's date filter, the popover inside the date
+picker — could not be reached from the outer call site at all. The per-component props
+still work and still win; they are now the exception rather than the mechanism.
+
+**A label that interpolates a value is a function of that value, never a template.** Word
+order, pluralisation and where the number goes are the translator's business, and a string
+with a `{count}` hole in it decides all three on their behalf:
+
+```ts
+// UiKitLabels["dataTable"]
+pageChanged: (page: number, totalPages: number) => string;
+// UiKitLabels["common"] — even "Label: value" is not universal punctuation
+fieldValue: (field: string, value: string) => string;
+```
+
+### The worked example
+
+`showcase/src/i18n/` runs the whole showcase in seven locales — English, German, French,
+Italian, Spanish, Hungarian and Chinese — and it is deliberately **not** an i18n library: a
+dictionary in context, a hook to read it, and ONE `<UiKitProvider labels={dict.kit}
+locale={dict.tag}>` at the root. Each dictionary's `kit` is typed as the full
+`UiKitLabels`, so a translation with a hole does not compile; the Localisation page shows
+the tree and the per-language completeness live. The long explanatory prose on each page is
+*not* translated: it is developer documentation about the kit's internals. The chrome, the
+navigation and every component label are.
+
+### Right-to-left is partial
+
+Newer components (the sidebar's inline groups, the date range band, the month picker, the
+checkbox, switch and slider) use logical properties (`ms-*`, `pe-*`, `text-start`) and
+flip correctly under `dir="rtl"`. The older ones still carry roughly 130 physical-direction
+utilities plus pointer maths (column resize, row swipe) that assume left-to-right —
+`docs/module-audit-2026-09-22.md` §10 has the site-by-site detail. None of the showcase's
+seven locales is right-to-left, so nothing exercises it today; plan around that before
+shipping Arabic or Hebrew.
 
 ## Wizard
 
@@ -182,11 +624,9 @@ const wizard = useWizard<LeaseDraft>({
 </WizardContextProvider>
 ```
 
-A step gates forward navigation three ways, and `goNext` runs all of them:
-its `validate` in the config above, `useWizardStepValidate(fn)` for a step that
-checks by hand, and `useRhfWizardStep(form, onValid)` for a react-hook-form step
-(which also reports its own inline messages). `useWizardNextGate(blocked)`
-disables Next/Skip outright.
+A step gates forward navigation two ways, and `goNext` runs both: its `validate`
+in the config above, and `useWizardStepValidate(fn)` for a step that checks by
+hand. `useWizardNextGate(blocked)` disables Next/Skip outright.
 
 Like the rest of the package it resolves **no strings**: a step carries a `label`
 node, and the chrome takes a `labels` object (`WizardLabels`, every key optional
@@ -194,10 +634,11 @@ over an English default) — the same split `DataTable` and `TourProvider` use. 
 app with i18n wraps `useWizard`/`StepperNav`/`WizardSummary` once and maps its
 own keys; see Kastlan's `shared/components/wizard/app-wizard.tsx`.
 
-**Optional peers.** `react-hook-form` is needed only by `useRhfWizardStep`, and
-only as a type. `react-router` backs the `?step=` sync in `useWizard`. `sonner`
-carries the "fill in the required fields" toast and is imported dynamically, on
-that failure path only — pass `onValidationFailed` to route it elsewhere.
+**Peers.** `react-router` backs the `?step=` sync in `useWizard` — and is imported
+unconditionally, so a wizard needs a Router mounted even if you never read the
+step from the URL. `sonner` carries the "fill in the required fields" toast and is
+imported dynamically, on that failure path only — pass `onValidationFailed` to
+route it elsewhere.
 
 ## Shell
 

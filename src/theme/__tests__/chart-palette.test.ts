@@ -1,4 +1,6 @@
 import { CHART_COLORS, HEATMAP_HEX, PALETTE_HEX, lerpHex, paletteFor, textOn } from "../chart-palette";
+import { contrast } from "../color";
+import { DEFAULT_PRESET } from "../palette-presets";
 
 /**
  * Characterisation suite for the chart colour system (refactor plan 2026-08-24,
@@ -66,6 +68,26 @@ describe("textOn", () => {
       expect(textOn(bad)).toBe("currentColor");
     }
   });
+
+  it("picks the ink that MEASURES better on every chart hue (audit 2026-09-22 §7)", () => {
+    // Rec.601 luma > 0.6 is a brightness heuristic, not a contrast measure, and on this
+    // palette it disagrees with the measurement on six of the eighteen hues — a third of
+    // the ramp got the worse of the two inks. #44aa99 is the plainest: luma says "dark
+    // enough for white text", while white measures 2.69:1 on it and near-black 6.18:1.
+    // keksdose measured the same thing and forked textOn locally for its treemap.
+    const INKS = ["#1a1a1a", "#f8fafc"];
+    for (const theme of ["light", "dark"] as const) {
+      PALETTE_HEX[theme].forEach((fill, i) => {
+        const chosen = textOn(fill);
+        const best = INKS.reduce((a, b) => (contrast(fill, a) >= contrast(fill, b) ? a : b));
+        expect(
+          contrast(fill, chosen),
+          `${theme} chart-${i + 1} (${fill}): chose ${chosen} at ${contrast(fill, chosen).toFixed(2)}:1, ` +
+            `${best} measures ${contrast(fill, best).toFixed(2)}:1`,
+        ).toBeCloseTo(contrast(fill, best), 10);
+      });
+    }
+  });
 });
 
 describe("the exported stop data", () => {
@@ -75,5 +97,26 @@ describe("the exported stop data", () => {
     for (const hex of [...PALETTE_HEX.light, ...PALETTE_HEX.dark]) {
       expect(hex).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+
+  /**
+   * These constants are the JS-side copy of what `DEFAULT_PRESET` writes as CSS custom
+   * properties: the heatmaps and the treemap interpolate in JS, and CSS vars cannot be
+   * lerped, so the same colours have to exist twice. Nothing kept the two copies
+   * together, and they drifted — five of the six light heat stops, including a
+   * `neutral` still on Tailwind's slate-100, a cool grey sitting on the warm cream page
+   * the default light theme has used since #328. A chart painted the drifted stop next
+   * to a surface painted the token, in the same view.
+   *
+   * Resynced by hand rather than derived, because `chart-palette.ts` is the whole of the
+   * `@eifi1/ui-kit/chart` subpath's colour layer and importing the preset bank into it
+   * would pull every preset's token set into that chunk for two objects' worth of data.
+   * This test is what replaces the import.
+   */
+  it("has not drifted from DEFAULT_PRESET", () => {
+    expect(HEATMAP_HEX.light).toEqual(DEFAULT_PRESET.light.heat);
+    expect(HEATMAP_HEX.dark).toEqual(DEFAULT_PRESET.dark.heat);
+    expect(PALETTE_HEX.light).toEqual(DEFAULT_PRESET.light.chart);
+    expect(PALETTE_HEX.dark).toEqual(DEFAULT_PRESET.dark.chart);
   });
 });

@@ -19,10 +19,18 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    // The showcase imports `@eifi1/ui-kit` exactly as a consumer does, so the code
+    // beside each specimen is copy-pasteable. These must mirror showcase/alias.ts —
+    // Vite resolves the page, tsc resolves the typecheck, and a path in only one of
+    // them makes CI disagree with the dev server.
     "paths": {
-      "@hb/ui": ["./src/index.ts"],
-      "@hb/ui/*": ["./src/*"]
+      "@eifi1/ui-kit": ["./src/index.ts"],
+      "@eifi1/ui-kit/dates": ["./src/lib/dates.ts"]
     }
   },
-  "include": ["src"]
+  // The showcase is typechecked with the package, on purpose: an export deleted from
+  // the barrel then becomes a compile error instead of a silently missing demo.
+  // It never ships — tsup's entry is an explicit src/** glob and `files` lists only
+  // dist + tokens.css.
+  "include": ["src", "showcase/src", "showcase/vite.config.ts", "showcase/alias.ts"]
 }
