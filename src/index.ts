@@ -87,6 +87,9 @@ export * from "./components/swatch-picker";
 export * from "./components/icon-picker";
 export * from "./components/choice-card";
 export * from "./components/autocomplete";
+export * from "./components/measured-grid";
+export { useWindowedRows } from "./hooks/use-windowed-rows";
+export type { WindowedRows } from "./hooks/use-windowed-rows";
 // Named, not `export *`: file-button.tsx also holds the screening helpers the
 // dropzone shares, which are internal.
 export { FileButton, useFilePicker, matchesAccept, DEFAULT_FILE_PICKER_LABELS } from "./components/file-button";

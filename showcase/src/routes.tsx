@@ -1,5 +1,6 @@
 import {
   Blocks,
+  Grid3x3,
   FileUp,
   PanelTopClose,
   FunctionSquare,
@@ -44,6 +45,7 @@ import { AutocompleteDemo } from "./sections/autocomplete-demo";
 import { ControlsDemo, FieldAnatomyDemo } from "./sections/field-anatomy-demo";
 import { SelectionDemo } from "./sections/selection-demo";
 import { LayoutDemo } from "./sections/layout-demo";
+import { MeasuredGridDemo } from "./sections/measured-grid-demo";
 import {
   DangerConfirmDemo,
   NumberStepsDemo,
@@ -253,6 +255,15 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: FileUp,
         components: ["FileButton", "useFilePicker", "FileDropzone"],
         Body: FileInputs,
+      },
+      {
+        slug: "measured-grid",
+        title: "Table entry",
+        blurb:
+          "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
+        icon: Grid3x3,
+        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows"],
+        Body: MeasuredGridDemo,
       },
       {
         slug: "dates",

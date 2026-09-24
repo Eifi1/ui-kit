@@ -123,6 +123,11 @@ export const en: Dictionary = {
       blurb:
         "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
     },
+    "measured-grid": {
+      title: "Table entry",
+      blurb:
+        "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
+    },
     dates: {
       title: "Dates & time",
       blurb:

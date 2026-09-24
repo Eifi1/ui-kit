@@ -124,6 +124,11 @@ export const de: Dictionary = {
       blurb:
         "Dateien auswählen: eine Schaltfläche, die den Dateidialog oder die Kamera öffnet, die Ablagefläche und Ablehnungen, die dort gemeldet werden, wo der Nutzer gerade hinschaut — nie als Toast.",
     },
+    "measured-grid": {
+      title: "Tabelleneingabe",
+      blurb:
+        "Eine Messtabelle eingeben: ein Zellenraster für die Tastatur, ein aus einer Tabellenkalkulation eingefügter Block und dieselbe Tabelle als Text — Tausende Zeilen, nur die sichtbaren gerendert.",
+    },
     dates: {
       title: "Datum & Uhrzeit",
       blurb:
@@ -229,6 +234,24 @@ export const de: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "Tabellenansicht",
+      cellsView: "Zellen",
+      textView: "Text",
+      addRow: "Zeile hinzufügen",
+      removeRow: (row) => `Zeile ${row} entfernen`,
+      clear: "Tabelle leeren",
+      pasteHint: "Einen Block aus einer Tabellenkalkulation in eine beliebige Zelle einfügen",
+      cell: (column, row) => `${column}, Zeile ${row}`,
+      rowNumber: "Zeile",
+      rowActions: "Zeilenaktionen",
+      keyboardHint:
+        "Pfeiltasten wechseln zwischen Zellen. Tippen ersetzt eine Zelle, F2 bearbeitet sie, Escape macht die Bearbeitung rückgängig. Enter geht nach unten und fügt am Ende eine Zeile hinzu.",
+      lineError: (line) => `Zeile ${line} konnte nicht gelesen werden`,
+      points: (count) => (count === 1 ? "1 Punkt" : `${count} Punkte`),
+      problems: (count) =>
+        count === 1 ? "1 Zelle ist keine Zahl" : `${count} Zellen sind keine Zahlen`,
+    },
     pageContents: { title: "Auf dieser Seite" },
     common: {
       close: "Schließen",

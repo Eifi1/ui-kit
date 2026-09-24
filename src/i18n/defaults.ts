@@ -19,6 +19,7 @@ import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker";
 import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame";
 import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button";
+import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -76,4 +77,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   iconPicker: DEFAULT_ICON_PICKER_LABELS,
   dialogFrame: DEFAULT_DIALOG_FRAME_LABELS,
   filePicker: DEFAULT_FILE_PICKER_LABELS,
+  measuredGrid: DEFAULT_MEASURED_GRID_LABELS,
 };

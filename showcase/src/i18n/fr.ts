@@ -120,6 +120,11 @@ export const fr: Dictionary = {
       blurb:
         "Choisir des fichiers\u00a0: un bouton qui ouvre le sélecteur ou l’appareil photo, la zone de dépôt, et des refus signalés là où l’utilisateur regarde, jamais dans une notification éphémère.",
     },
+    "measured-grid": {
+      title: "Saisie de tableau",
+      blurb:
+        "Saisir un tableau de mesures : une grille de cellules au clavier, un bloc collé depuis un tableur et le même tableau en texte — des milliers de lignes, seules les visibles sont rendues.",
+    },
     dates: {
       title: "Dates et heure",
       blurb:
@@ -225,6 +230,24 @@ export const fr: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "Vue du tableau",
+      cellsView: "Cellules",
+      textView: "Texte",
+      addRow: "Ajouter une ligne",
+      removeRow: (row) => `Supprimer la ligne ${row}`,
+      clear: "Vider le tableau",
+      pasteHint: "Collez un bloc copié d\u2019un tableur dans n\u2019importe quelle cellule",
+      cell: (column, row) => `${column}, ligne ${row}`,
+      rowNumber: "Ligne",
+      rowActions: "Actions de ligne",
+      keyboardHint:
+        "Les flèches passent d\u2019une cellule à l\u2019autre. Tapez pour remplacer une cellule, F2 pour la modifier, Échap pour annuler la modification. Entrée descend et ajoute une ligne à la fin.",
+      lineError: (line) => `La ligne ${line} n\u2019a pas pu être lue`,
+      points: (count) => (count < 2 ? `${count} point` : `${count} points`),
+      problems: (count) =>
+        count < 2 ? `${count} cellule n\u2019est pas un nombre` : `${count} cellules ne sont pas des nombres`,
+    },
     pageContents: { title: "Sur cette page" },
     common: {
       close: "Fermer",

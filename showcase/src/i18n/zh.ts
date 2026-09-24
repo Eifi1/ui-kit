@@ -115,6 +115,11 @@ export const zh: Dictionary = {
       blurb:
         "选择文件：可打开文件选择器或相机的按钮、拖放区域，以及显示在用户视线所在之处的拒绝提示——绝不使用 toast。",
     },
+    "measured-grid": {
+      title: "表格录入",
+      blurb:
+        "录入测量数据表：可用键盘操作的单元格网格、从电子表格粘贴的数据块，以及同一表格的文本形式——数千行，仅渲染可见行。",
+    },
     dates: {
       title: "日期与时间",
       blurb:
@@ -208,6 +213,23 @@ export const zh: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "表格视图",
+      cellsView: "单元格",
+      textView: "文本",
+      addRow: "添加行",
+      removeRow: (row) => `删除第 ${row} 行`,
+      clear: "清空表格",
+      pasteHint: "可将电子表格中的一块数据粘贴到任意单元格",
+      cell: (column, row) => `${column}，第 ${row} 行`,
+      rowNumber: "行",
+      rowActions: "行操作",
+      keyboardHint:
+        "方向键在单元格之间移动。直接输入替换单元格内容，F2 编辑，Esc 撤销编辑。回车向下移动，并在末尾添加一行。",
+      lineError: (line) => `无法读取第 ${line} 行`,
+      points: (count) => `${count} 个点`,
+      problems: (count) => `${count} 个单元格不是数字`,
+    },
     pageContents: { title: "本页目录" },
     common: {
       close: "关闭",

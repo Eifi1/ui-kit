@@ -122,6 +122,11 @@ export const hu: Dictionary = {
       blurb:
         "Fájlok kiválasztása: egy gomb, amely a fájlválasztót vagy a kamerát nyitja meg, a fájlok behúzására szolgáló terület, és az elutasítások, amelyek ott jelennek meg, ahová a felhasználó éppen néz — soha nem felugró értesítésként.",
     },
+    "measured-grid": {
+      title: "Táblázatbevitel",
+      blurb:
+        "Mérési táblázat bevitele: billentyűzettel kezelhető cellarács, táblázatkezelőből beillesztett blokk és ugyanaz a táblázat szövegként — több ezer sor, csak a láthatók jelennek meg.",
+    },
     dates: {
       title: "Dátum és idő",
       blurb:
@@ -227,6 +232,23 @@ export const hu: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "Táblázatnézet",
+      cellsView: "Cellák",
+      textView: "Szöveg",
+      addRow: "Sor hozzáadása",
+      removeRow: (row) => `Sor törlése: ${row}.`,
+      clear: "Táblázat ürítése",
+      pasteHint: "Illesszen be egy táblázatkezelőből másolt blokkot bármelyik cellába",
+      cell: (column, row) => `${column}, ${row}. sor`,
+      rowNumber: "Sor",
+      rowActions: "Sorműveletek",
+      keyboardHint:
+        "A nyílbillentyűk a cellák között mozognak. Gépeléssel felülírja a cellát, F2-vel szerkeszti, Escape-pel visszavonja a szerkesztést. Az Enter lefelé lép, és a végén új sort ad hozzá.",
+      lineError: (line) => `A(z) ${line}. sor nem olvasható`,
+      points: (count) => `${count} pont`,
+      problems: (count) => `${count} cella nem szám`,
+    },
     pageContents: { title: "Ezen az oldalon" },
     common: {
       close: "Bezárás",

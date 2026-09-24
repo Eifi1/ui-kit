@@ -21,6 +21,7 @@ import type { SwatchPickerLabels } from "../components/swatch-picker";
 import type { IconPickerLabels } from "../components/icon-picker";
 import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
+import type { MeasuredGridLabels } from "../components/measured-grid";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -208,6 +209,7 @@ export interface UiKitLabels {
   iconPicker: IconPickerLabels;
   dialogFrame: DialogFrameLabels;
   filePicker: FilePickerLabels;
+  measuredGrid: MeasuredGridLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a

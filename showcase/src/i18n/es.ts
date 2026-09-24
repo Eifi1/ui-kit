@@ -117,6 +117,11 @@ export const es: Dictionary = {
       blurb:
         "Elegir archivos: un botón que abre el selector o la cámara, la zona para soltar y los rechazos comunicados donde el usuario está mirando, nunca como notificación emergente.",
     },
+    "measured-grid": {
+      title: "Entrada de tablas",
+      blurb:
+        "Escribir una tabla de medidas: una cuadrícula de celdas por teclado, un bloque pegado desde una hoja de cálculo y la misma tabla como texto — miles de filas, solo las visibles montadas.",
+    },
     dates: {
       title: "Fechas y hora",
       blurb:
@@ -222,6 +227,24 @@ export const es: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "Vista de tabla",
+      cellsView: "Celdas",
+      textView: "Texto",
+      addRow: "Añadir fila",
+      removeRow: (row) => `Quitar la fila ${row}`,
+      clear: "Vaciar tabla",
+      pasteHint: "Pega un bloque de una hoja de cálculo en cualquier celda",
+      cell: (column, row) => `${column}, fila ${row}`,
+      rowNumber: "Fila",
+      rowActions: "Acciones de fila",
+      keyboardHint:
+        "Las flechas mueven entre celdas. Escribe para reemplazar una celda, F2 para editarla, Escape para deshacer la edición. Intro baja y añade una fila al final.",
+      lineError: (line) => `No se pudo leer la línea ${line}`,
+      points: (count) => (count === 1 ? "1 punto" : `${count} puntos`),
+      problems: (count) =>
+        count === 1 ? "1 celda no es un número" : `${count} celdas no son números`,
+    },
     pageContents: { title: "En esta página" },
     common: {
       close: "Cerrar",

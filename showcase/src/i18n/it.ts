@@ -116,6 +116,11 @@ export const it: Dictionary = {
       blurb:
         "Scegliere file: un pulsante che apre il selettore o la fotocamera, l’area di rilascio e i rifiuti segnalati dove l’utente sta guardando, mai come toast.",
     },
+    "measured-grid": {
+      title: "Inserimento tabella",
+      blurb:
+        "Inserire una tabella di misure: una griglia di celle da tastiera, un blocco incollato da un foglio di calcolo e la stessa tabella come testo — migliaia di righe, solo quelle visibili montate.",
+    },
     dates: {
       title: "Date e ora",
       blurb:
@@ -221,6 +226,24 @@ export const it: Dictionary = {
   },
 
   kit: {
+    measuredGrid: {
+      view: "Vista tabella",
+      cellsView: "Celle",
+      textView: "Testo",
+      addRow: "Aggiungi riga",
+      removeRow: (row) => `Rimuovi riga ${row}`,
+      clear: "Svuota tabella",
+      pasteHint: "Incolla un blocco da un foglio di calcolo in qualsiasi cella",
+      cell: (column, row) => `${column}, riga ${row}`,
+      rowNumber: "Riga",
+      rowActions: "Azioni riga",
+      keyboardHint:
+        "I tasti freccia spostano tra le celle. Digita per sostituire una cella, F2 per modificarla, Esc per annullare la modifica. Invio scende e aggiunge una riga alla fine.",
+      lineError: (line) => `Impossibile leggere la riga ${line}`,
+      points: (count) => (count === 1 ? "1 punto" : `${count} punti`),
+      problems: (count) =>
+        count === 1 ? "1 cella non è un numero" : `${count} celle non sono numeri`,
+    },
     pageContents: { title: "In questa pagina" },
     common: {
       close: "Chiudi",

@@ -60,10 +60,13 @@ import * as tableText from "../table-text";
  * `stepNumber`, `useKitWeekStart`, and a `DEFAULT_*_LABELS` per new namespace. Two new
  * entries: `/rhf` (the optional react-hook-form adapter — the only module that may
  * import it, see packaging-contract) and `/table-text` (pure, imports nothing).
+ *
+ * 326 -> 330 (0.7.0): `MeasuredGrid`, `useMeasuredRows`, `DEFAULT_MEASURED_GRID_LABELS`
+ * and `useWindowedRows` — lenkbank's measured grid, stages 2–3 of its proposal.
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 326],
+  ["@eifi1/ui-kit", barrel, 330],
   ["@eifi1/ui-kit/chart", chart, 50],
   ["@eifi1/ui-kit/data-table", dataTable, 18],
   ["@eifi1/ui-kit/feedback", feedback, 20],
