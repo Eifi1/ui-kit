@@ -105,8 +105,9 @@ export const de: Dictionary = {
         "Eingabefelder und die Klassenkonstanten, aus denen eine Anwendung ihre eigenen Felder zusammensetzt.",
     },
     choices: {
-      title: "Checkbox, Schalter & Schieberegler",
-      blurb: "Auswählen statt tippen: an/aus, eins aus wenigen und ein Wert auf einer Skala.",
+      title: "Auswahl",
+      blurb:
+        "An oder aus, eins aus wenigen, ein Wert auf einer Skala — und die Wahl einer Farbe, eines Symbols oder einer Karte.",
     },
     numbers: {
       title: "Zahlen & Geld",
@@ -117,6 +118,11 @@ export const de: Dictionary = {
       title: "Dropdowns & Picker",
       blurb:
         "Comboboxen, Mehrfachauswahl, gruppierte Picker und Sheet-Picker sowie die Dropdown-Primitiven darunter.",
+    },
+    files: {
+      title: "Dateien",
+      blurb:
+        "Dateien auswählen: eine Schaltfläche, die den Dateidialog oder die Kamera öffnet, die Ablagefläche und Ablehnungen, die dort gemeldet werden, wo der Nutzer gerade hinschaut — nie als Toast.",
     },
     dates: {
       title: "Datum & Uhrzeit",
@@ -129,9 +135,9 @@ export const de: Dictionary = {
         "Sync-Status eines datenbankgestützten Felds, gespeichert beim Verlassen: Rahmenfarbe und ein Symbol am Feldende zeigen geändert, speichert, gespeichert oder fehlgeschlagen — der Fehlergrund erscheint beim Überfahren des Fehlersymbols.",
     },
     "signature-password": {
-      title: "Unterschrift & Passwortstärke",
+      title: "Unterschrift, Passwort & Bestätigung",
       blurb:
-        "Eine Unterschrift per Stift, Finger oder Maus erfassen — mit dem getippten Namen als Ausweichlösung — und zeigen, wie stark das gewählte Passwort ist.",
+        "Eine Unterschrift erfassen — und eine gespeicherte anzeigen —, zeigen, wie stark ein Passwort ist, und eine unwiderrufliche Aktion bestätigen lassen.",
     },
     "data-display": {
       title: "Datenanzeige",
@@ -157,6 +163,11 @@ export const de: Dictionary = {
       title: "Kennzahlen & Sparklines",
       blurb:
         "Die KPI-Kachel, die jedes Dashboard wiederholt — Wert, Veränderung, Trend — und die winzige Linie, die in eine Tabellenzelle passt.",
+    },
+    layout: {
+      title: "Aufklappbereich & Dialograhmen",
+      blurb:
+        "Ein Abschnitt, der sich einklappen lässt, und der Rahmen aus Kopf, Inhalt und Aktionen, den jeder Dialog wiederholt.",
     },
     overlays: {
       title: "Overlays",
@@ -320,6 +331,10 @@ export const de: Dictionary = {
       loading: "Wird geladen…",
       create: (query) => `„${query}“ anlegen`,
       selectedCount: (count) => `${n(count)} ausgewählt`,
+      loadError: "Ergebnisse konnten nicht geladen werden",
+      resultCount: (count) => `${n(count)} ${count === 1 ? "Ergebnis" : "Ergebnisse"}`,
+      // "Zeichen" is the same in singular and plural.
+      minChars: (count) => `Mindestens ${n(count)} Zeichen eingeben`,
     },
     multiSelect: {
       search: "Suchen",
@@ -357,6 +372,17 @@ export const de: Dictionary = {
       atLimit: (max) => `Grenze von ${n(max)} ${max === 1 ? "Eintrag" : "Einträgen"} erreicht`,
       duplicate: (value) => `„${value}“ steht bereits in der Liste`,
     },
+    swatchPicker: {
+      none: "Keine Farbe",
+      mixed: "Gemischt: Die ausgewählten Elemente haben unterschiedliche Farben",
+    },
+    iconPicker: {
+      none: "Kein Symbol",
+      mixed: "Gemischt: Die ausgewählten Elemente haben unterschiedliche Symbole",
+      search: "Symbole suchen",
+      noResults: "Keine passenden Symbole",
+      resultCount: (count) => `${n(count)} ${count === 1 ? "Symbol" : "Symbole"}`,
+    },
     fieldSync: {
       synced: "Gespeichert",
       edited: "Nicht gespeicherte Änderungen",
@@ -367,6 +393,19 @@ export const de: Dictionary = {
     passwordReveal: {
       show: "Passwort anzeigen",
       hide: "Passwort verbergen",
+    },
+    dangerConfirm: {
+      arm: "Löschen…",
+      confirm: "Löschen",
+      cancel: "Abbrechen",
+      prompt: "Dies kann nicht rückgängig gemacht werden.",
+      password: "Passwort",
+      phrase: (phrase) => `Geben Sie zur Bestätigung „${phrase}“ ein`,
+    },
+    tabs: {
+      // "Tab" is what German UIs say; "Registerkarte" reads like a 1990s manual.
+      add: "Tab hinzufügen",
+      remove: (tab) => `${tab} entfernen`,
     },
     appShell: {
       collapse: "Seitenleiste einklappen",
@@ -383,12 +422,30 @@ export const de: Dictionary = {
     pickerSheet: {
       close: "Schließen",
     },
+    dialogFrame: {
+      close: "Schließen",
+    },
     swipeableRow: {
       actions: "Zeilenaktionen",
     },
     file: {
       // The kit's own `Intl` unit formatting, pinned to this locale ("3,4 MB").
       size: (bytes) => formatFileSize(bytes, "de-DE"),
+    },
+    filePicker: {
+      rejectedType: (name) => `„${name}“ hat einen nicht unterstützten Dateityp`,
+      rejectedSize: (name, maxSize) => `„${name}“ ist größer als ${maxSize}`,
+      rejectedCount: (name, maxFiles) =>
+        `„${name}“ wurde nicht hinzugefügt: höchstens ${n(maxFiles)} ${maxFiles === 1 ? "Datei" : "Dateien"}`,
+      rejectedInvalid: (name) => `„${name}“ kann hier nicht verwendet werden`,
+      rejectedMany: (count) =>
+        count === 1 ? "1 Datei wurde nicht hinzugefügt" : `${n(count)} Dateien wurden nicht hinzugefügt`,
+      selected: (count, firstName) =>
+        count === 1 ? `„${firstName}“ ausgewählt` : `${n(count)} Dateien ausgewählt`,
+      remove: (name) => `„${name}“ entfernen`,
+      clearAll: "Alle Dateien entfernen",
+      removed: (name) => `„${name}“ entfernt`,
+      cleared: "Alle Dateien entfernt",
     },
     wizard: {
       cancel: "Abbrechen",
@@ -454,6 +511,9 @@ export const de: Dictionary = {
       typedName: "Vollständiger Name",
       cleared: "Unterschrift gelöscht",
       undone: "Letzter Strich entfernt",
+      viewEmpty: "Nicht unterschrieben",
+      viewDrawn: "Handschriftliche Unterschrift",
+      viewTyped: (name) => `Unterschrieben mit dem eingegebenen Namen ${name}`,
     },
     passwordStrength: {
       tooShort: "Zu kurz",

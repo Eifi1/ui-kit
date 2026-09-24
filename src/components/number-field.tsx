@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { NumberInput } from "./number-input";
-import { formatResult } from "../lib/calc";
+import { evaluateExpression, formatResult } from "../lib/calc";
 import { useKitLocale } from "../i18n/kit-labels";
 
 type NumberInputProps = ComponentProps<typeof NumberInput>;
@@ -16,6 +16,25 @@ export interface NumberFieldProps
    * into `[min, max]`. `null` only when `nullable` and the field was emptied.
    */
   onCommit: (value: number | null) => void;
+  /**
+   * LIVE MODE: the number the text reads as, on every keystroke (and every step
+   * key) — for a calculator that recomputes as the user types, while `onCommit`
+   * stays the one to save on.
+   *
+   * What it is NOT, until the commit: rounded to `digits` or clamped into
+   * `[min, max]` — a half-typed "1" on the way to "150" must not read as the
+   * minimum of 100. A calculation reads as its result ("12+5" → 17); an empty field
+   * as `null` (whether or not `nullable`); a draft that is no number yet ("-", "12+")
+   * fires nothing, so the last number stands. On blur/Enter it fires once more with
+   * the committed value if that differs from the last one it reported — the rounded,
+   * clamped or snapped-back number — so a live consumer always ends where `onCommit`
+   * does.
+   *
+   * Feeding it back into `value` is safe: a `value` equal to the number this field
+   * last reported does not re-render the text, so "1," stays "1," while the rest of
+   * the form already shows 1. Not called when `value` changes from outside.
+   */
+  onValueChange?: (value: number | null) => void;
   /** Round to this many decimals on commit, and show at most this many (trailing
    *  zeros are trimmed: `digits={2}` shows 12.5, not 12.50). Omit for no rounding. */
   digits?: number;
@@ -59,6 +78,20 @@ function decimalMark(locale: string | undefined): "," | "." {
   }
 }
 
+/** What the draft reads as while it is being typed — see `onValueChange`. `undefined`
+ *  is "not a number yet", distinct from `null` (empty). */
+function parseLive(text: string): number | null | undefined {
+  const t = text.trim().replace(/,/g, ".");
+  if (t === "") return null;
+  if (/^-?\d*\.?\d*$/.test(t)) {
+    // "-", "." and "-." pass the pattern and are no number yet.
+    if (!/\d/.test(t)) return undefined;
+    const n = Number(t);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return evaluateExpression(t) ?? undefined;
+}
+
 /** `toFixed` rounding rather than `Math.round(n * 10^d)`, which turns 1.005 into
  *  1.00 by way of 100.49999999999999 — the same choice the lenkbank field made. */
 function roundTo(n: number, digits: number | undefined): number {
@@ -92,6 +125,20 @@ const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
  * The draft follows `value` when it changes from outside (a reset, a loaded record);
  * a change that came from here arrives back identical and is a no-op.
  *
+ * LIVE MODE. A calculator that recomputes per keystroke used to have to pick: this
+ * field (limits, rounding, but a number only on blur) or a bare NumberInput (every
+ * keystroke, but a string and no limits). `onValueChange` is the per-keystroke
+ * channel here, next to the commit rather than instead of it: live numbers for the
+ * read-out, `onCommit` for the save. It lives on this field rather than as
+ * `min`/`max`/`digits` on NumberInput because parsing, the locale's mark and the
+ * limits are what this field already is — a second copy on the string field would be
+ * a second, subtly different NumberField.
+ *
+ * STEPS. `step` (with `min`/`max` as bounds) turns on ArrowUp/ArrowDown and PageUp/
+ * PageDown (×10) — see NumberInput's `step`. A step is a draft change like a
+ * keystroke: `onValueChange` hears it at once, `onCommit` on blur/Enter. Pick a
+ * `step` that `digits` can show (0.25 needs `digits={2}`), or the commit rounds it.
+ *
  * LOCALE. The decimal mark is the locale's: a German user sees and types "1,5".
  * NumberInput normalises every keystroke to a dot (so its evaluator reads one
  * alphabet); this field maps the dot back before the draft is shown, which also
@@ -102,6 +149,7 @@ const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
 export function NumberField({
   value,
   onCommit,
+  onValueChange,
   digits,
   min,
   max,
@@ -128,34 +176,59 @@ export function NumberField({
   const [draft, setDraft] = useState(() => format(value));
   // Everything the displayed text depends on, not just `value`: switching the
   // provider's language or a field's `digits` has to re-render the draft too.
-  const shownFor = `${value}|${mark}|${digits}`;
-  const [seen, setSeen] = useState(shownFor);
+  const [seen, setSeen] = useState({ value, mark, digits });
   // The last number handed to `onCommit`, so Enter-then-blur (both commit) and a
   // parent that does not echo the value back cannot commit the same number twice.
   // State rather than a ref because the external-change branch below resets it
   // during render, and a ref may not be written there.
   const [committed, setCommitted] = useState(value);
+  // The last number handed to `onValueChange` — state for the same reason.
+  const [reported, setReported] = useState(value);
 
   // Adjust state during render rather than in an effect: React re-renders at once
   // with the new draft, before anything is painted, so there is no frame showing
   // the old text.
-  if (shownFor !== seen) {
-    setSeen(shownFor);
-    setDraft(format(value));
-    setCommitted(value);
+  if (seen.value !== value || seen.mark !== mark || seen.digits !== digits) {
+    setSeen({ value, mark, digits });
+    // Live mode echoing back what it was just told: the draft already says it, in
+    // the typist's own spelling ("1," or "12+5"), and reformatting would fight them.
+    // Only a changed `value` qualifies — a new mark or `digits` still re-renders.
+    const echo =
+      onValueChange !== undefined && value === reported && seen.mark === mark && seen.digits === digits;
+    if (!echo) {
+      setDraft(format(value));
+      setCommitted(value);
+      setReported(value);
+    }
   }
+
+  const report = (next: number | null) => {
+    if (next === reported) return;
+    setReported(next);
+    onValueChange?.(next);
+  };
+
+  const onText = (text: string) => {
+    setDraft(localize(text));
+    const live = parseLive(text);
+    if (live !== undefined) report(live);
+  };
 
   const commit = (text: string) => {
     const trimmed = text.trim();
     let next: number | null;
+    const snapBack = () => {
+      setDraft(format(committed));
+      report(committed);
+    };
     if (trimmed === "") {
-      if (!nullable) return setDraft(format(committed));
+      if (!nullable) return snapBack();
       next = null;
     } else {
       // `text` is NumberInput's committed form: an evaluated calculation, dot-decimal.
       // What survives its digits-only fallback can still be "-" or "." alone.
       const parsed = Number(trimmed.replace(/,/g, "."));
-      if (!Number.isFinite(parsed)) return setDraft(format(committed));
+      if (!Number.isFinite(parsed)) return snapBack();
       next = roundTo(parsed, digits);
       if (min !== undefined) next = Math.max(min, next);
       if (max !== undefined) next = Math.min(max, next);
@@ -163,6 +236,7 @@ export function NumberField({
     // Always re-render the draft from the result — "007" becomes "7", a clamped 500
     // shows the 100 it was clamped to — even when there is nothing new to commit.
     setDraft(format(next));
+    report(next);
     if (next !== committed) {
       setCommitted(next);
       onCommit(next);
@@ -205,8 +279,10 @@ export function NumberField({
       id={fieldId}
       label={labelWithUnit}
       value={draft}
-      onChange={(text) => setDraft(localize(text))}
+      onChange={onText}
       onCommit={commit}
+      min={min}
+      max={max}
       suffix={unitPlacement === "suffix" ? unit : undefined}
       invalid={invalid || hasError || ariaInvalid === true || ariaInvalid === "true"}
     />

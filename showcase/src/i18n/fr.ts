@@ -101,9 +101,9 @@ export const fr: Dictionary = {
         "Les champs de saisie, et les constantes de classes avec lesquelles une application compose ses propres champs.",
     },
     choices: {
-      title: "Case à cocher, interrupteur et curseur",
+      title: "Choix",
       blurb:
-        "Choisir plutôt que taper\u00a0: activé ou désactivé, une option parmi quelques-unes, une valeur sur une échelle.",
+        "Activé ou désactivé, une option parmi quelques-unes, une valeur sur une échelle — et le choix d’une couleur, d’une icône ou d’une carte.",
     },
     numbers: {
       title: "Nombres et montants",
@@ -114,6 +114,11 @@ export const fr: Dictionary = {
       title: "Listes déroulantes et sélecteurs",
       blurb:
         "Combobox, sélection multiple, sélecteurs groupés et en feuille, et les primitives de liste déroulante sur lesquelles ils reposent.",
+    },
+    files: {
+      title: "Fichiers",
+      blurb:
+        "Choisir des fichiers\u00a0: un bouton qui ouvre le sélecteur ou l’appareil photo, la zone de dépôt, et des refus signalés là où l’utilisateur regarde, jamais dans une notification éphémère.",
     },
     dates: {
       title: "Dates et heure",
@@ -126,9 +131,9 @@ export const fr: Dictionary = {
         "État de synchronisation d\u2019un champ lié à une base de données, enregistré à la sortie du champ : la couleur du cadre et une icône en fin de champ indiquent modifié, enregistrement, enregistré ou échec — survolez le symbole d\u2019erreur pour en voir la raison.",
     },
     "signature-password": {
-      title: "Signature et robustesse du mot de passe",
+      title: "Signature, mot de passe et confirmation",
       blurb:
-        "Recueillir une signature au stylet, au doigt ou à la souris — avec la saisie du nom en solution de repli — et indiquer à l’utilisateur la robustesse du mot de passe qu’il choisit.",
+        "Recueillir une signature — et afficher une signature enregistrée —, indiquer à l’utilisateur la robustesse de son mot de passe, et faire confirmer une action destructrice.",
     },
     "data-display": {
       title: "Affichage des données",
@@ -154,6 +159,11 @@ export const fr: Dictionary = {
       title: "Indicateurs et sparklines",
       blurb:
         "La tuile d’indicateur (KPI) que répète chaque tableau de bord — valeur, variation, tendance — et la minuscule courbe qui tient dans une cellule de tableau.",
+    },
+    layout: {
+      title: "Section repliable et cadre de dialogue",
+      blurb:
+        "Une section qui se replie, et le cadre en-tête, corps, actions que répète chaque boîte de dialogue.",
     },
     overlays: {
       title: "Superpositions",
@@ -320,6 +330,10 @@ export const fr: Dictionary = {
       create: (query) => `Créer «\u202f${query}\u202f»`,
       selectedCount: (count) =>
         `${n(count)} ${plural(count, "sélectionné", "sélectionnés")}`,
+      loadError: "Impossible de charger les résultats",
+      resultCount: (count) => `${n(count)} ${plural(count, "résultat", "résultats")}`,
+      minChars: (count) =>
+        `Saisissez au moins ${n(count)} ${plural(count, "caractère", "caractères")}`,
     },
     multiSelect: {
       search: "Rechercher",
@@ -357,6 +371,17 @@ export const fr: Dictionary = {
         `Limite de ${n(max)} ${plural(max, "élément", "éléments")} atteinte`,
       duplicate: (value) => `«\u202f${value}\u202f» figure déjà dans la liste`,
     },
+    swatchPicker: {
+      none: "Aucune couleur",
+      mixed: "Mixte\u00a0: les éléments sélectionnés ont des couleurs différentes",
+    },
+    iconPicker: {
+      none: "Aucune icône",
+      mixed: "Mixte\u00a0: les éléments sélectionnés ont des icônes différentes",
+      search: "Rechercher des icônes",
+      noResults: "Aucune icône ne correspond",
+      resultCount: (count) => `${n(count)} ${plural(count, "icône", "icônes")}`,
+    },
     fieldSync: {
       synced: "Enregistré",
       edited: "Modifications non enregistrées",
@@ -367,6 +392,18 @@ export const fr: Dictionary = {
     passwordReveal: {
       show: "Afficher le mot de passe",
       hide: "Masquer le mot de passe",
+    },
+    dangerConfirm: {
+      arm: "Supprimer…",
+      confirm: "Supprimer",
+      cancel: "Annuler",
+      prompt: "Cette action est irréversible.",
+      password: "Mot de passe",
+      phrase: (phrase) => `Saisissez «\u202f${phrase}\u202f» pour confirmer`,
+    },
+    tabs: {
+      add: "Ajouter un onglet",
+      remove: (tab) => `Supprimer ${tab}`,
     },
     appShell: {
       collapse: "Réduire la barre latérale",
@@ -383,12 +420,35 @@ export const fr: Dictionary = {
     pickerSheet: {
       close: "Fermer",
     },
+    dialogFrame: {
+      close: "Fermer",
+    },
     swipeableRow: {
       actions: "Actions de la ligne",
     },
     file: {
       // The kit's own `Intl` unit formatting, pinned to this locale ("3,4 Mo").
       size: (bytes) => formatFileSize(bytes, "fr-FR"),
+    },
+    filePicker: {
+      rejectedType: (name) => `Le type du fichier «\u202f${name}\u202f» n’est pas pris en charge`,
+      rejectedSize: (name, maxSize) => `«\u202f${name}\u202f» dépasse ${maxSize}`,
+      rejectedCount: (name, maxFiles) =>
+        `«\u202f${name}\u202f» n’a pas été ajouté\u00a0: ${n(maxFiles)} ${plural(maxFiles, "fichier", "fichiers")} au maximum`,
+      rejectedInvalid: (name) => `«\u202f${name}\u202f» ne peut pas être utilisé ici`,
+      rejectedMany: (count) =>
+        count < 2
+          ? `${n(count)} fichier n’a pas été ajouté`
+          : `${n(count)} fichiers n’ont pas été ajoutés`,
+      // The name branch is for exactly one file, as in English; 0 falls to the count.
+      selected: (count, firstName) =>
+        count === 1
+          ? `«\u202f${firstName}\u202f» sélectionné`
+          : `${n(count)} ${plural(count, "fichier sélectionné", "fichiers sélectionnés")}`,
+      remove: (name) => `Supprimer «\u202f${name}\u202f»`,
+      clearAll: "Supprimer tous les fichiers",
+      removed: (name) => `«\u202f${name}\u202f» supprimé`,
+      cleared: "Tous les fichiers ont été supprimés",
     },
     wizard: {
       cancel: "Annuler",
@@ -454,6 +514,9 @@ export const fr: Dictionary = {
       typedName: "Nom complet",
       cleared: "Signature effacée",
       undone: "Dernier trait supprimé",
+      viewEmpty: "Non signé",
+      viewDrawn: "Signature manuscrite",
+      viewTyped: (name) => `Signé avec le nom saisi ${name}`,
     },
     passwordStrength: {
       // Agrees with "mot de passe" (masculine).

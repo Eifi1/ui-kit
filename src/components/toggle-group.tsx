@@ -16,10 +16,8 @@ export interface ToggleOption<T extends string> {
  * accepted and the component ignored would be a prop that silently does nothing —
  * worse than one that does not compile.
  */
-export interface ToggleGroupProps<T extends string>
+export interface ToggleGroupBaseProps<T extends string>
   extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
-  value: T;
-  onChange: (value: T) => void;
   options: ToggleOption<T>[];
   className?: string;
   /** Applied to every option button (e.g. to tune height/rounding to match
@@ -47,17 +45,54 @@ export interface ToggleGroupProps<T extends string>
   disabled?: boolean;
 }
 
-export function ToggleGroup<T extends string>({
-  value,
-  onChange,
-  options,
-  className,
-  optionClassName,
-  ariaLabel,
-  disabled = false,
-  "aria-label": ariaLabelAttr,
-  ...rest
-}: ToggleGroupProps<T>) {
+/** The group as it has always been: one option is always the answer. */
+export interface ToggleGroupRequiredProps<T extends string> extends ToggleGroupBaseProps<T> {
+  allowEmpty?: false;
+  value: T;
+  onChange: (value: T) => void;
+}
+
+/**
+ * A group that can be emptied: clicking the active option clears it, and `onChange`
+ * receives `null` (Keksdose's support-panel filters, where "no filter" is reached by
+ * clicking the filter that is on).
+ *
+ * The options become TOGGLE BUTTONS (`aria-pressed`, in a `role="group"`) rather than
+ * radios. A radio cannot be unchecked by activating it — no screen reader user expects
+ * a second press on "Open, radio, checked" to leave nothing checked, and nothing would
+ * tell them it had. "Open, toggle button, pressed" says exactly what a press will do.
+ */
+export interface ToggleGroupClearableProps<T extends string> extends ToggleGroupBaseProps<T> {
+  allowEmpty: true;
+  value: T | null;
+  onChange: (value: T | null) => void;
+}
+
+/** `allowEmpty` picks the shape, so `onChange` is typed `(T) => void` unless the group
+ *  can actually emit `null` — no existing caller has a `null` to handle. */
+export type ToggleGroupProps<T extends string> =
+  | ToggleGroupRequiredProps<T>
+  | ToggleGroupClearableProps<T>;
+
+export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>) {
+  const {
+    value,
+    options,
+    className,
+    optionClassName,
+    ariaLabel,
+    disabled = false,
+    "aria-label": ariaLabelAttr,
+    ...restWithMode
+  } = props;
+  // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
+  // what lets the `onChange` below be called with `null` only in the mode that allows it.
+  const { allowEmpty: _allowEmpty, onChange: _onChange, ...rest } = restWithMode;
+  const choose = (next: T) => {
+    if (props.allowEmpty) props.onChange(next === value ? null : next);
+    else props.onChange(next);
+  };
+  const clearable = props.allowEmpty === true;
   return (
     <div
       // The audit's named example of a closed prop list (§"Public API design"): the
@@ -71,7 +106,7 @@ export function ToggleGroup<T extends string>({
       // radiogroup role or the disabled state by accident. `className` is destructured
       // out entirely and merged through `cn`, so it is never in here.
       {...rest}
-      role="radiogroup"
+      role={clearable ? "group" : "radiogroup"}
       // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
       // have not moved yet.
       aria-label={ariaLabelAttr ?? ariaLabel}
@@ -106,10 +141,11 @@ export function ToggleGroup<T extends string>({
           <button
             key={opt.value}
             type="button"
-            role="radio"
-            aria-checked={active}
+            role={clearable ? undefined : "radio"}
+            aria-checked={clearable ? undefined : active}
+            aria-pressed={clearable ? active : undefined}
             disabled={disabled}
-            onClick={() => onChange(opt.value)}
+            onClick={() => choose(opt.value)}
             className={cn(
               // `truncate` (which carries whitespace-nowrap) rather than letting a
               // label wrap: a segmented control sizes its whole row to the tallest

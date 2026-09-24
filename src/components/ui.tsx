@@ -1,5 +1,5 @@
-import { forwardRef, useId, useState } from "react";
-import { ChevronDown, Eye, EyeOff, HelpCircle } from "lucide-react";
+import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
+import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -71,33 +71,101 @@ export function Button({ variant = "primary", stretch, className, ...rest }: But
 // Canonical square icon-only button. <Button> carries TEXT geometry — px-3 py-2
 // gap-2 — so rendering a bare glyph through it gives a small icon in a wide,
 // text-shaped box. This fixes a square box instead and, crucially, forces the
-// child icon to 20px via `[&_svg]:size-5` so a caller cannot under-size it. Use
-// it wherever an action is a bare icon (edit/delete/tools) so they all match the
-// top-bar icon buttons and can never drift apart again.
+// child icon to a size set by the BOX (20px at md/sm) via `[&_svg]:size-*` so a
+// caller cannot under-size it. Use it wherever an action is a bare icon
+// (edit/delete/tools) so they all match the top-bar icon buttons and can never
+// drift apart again.
 //
 // Draws its colours from the same `buttonVariantClasses` map as <Button>, so the
 // two re-skin together with the palette.
 const ICON_BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-5";
+  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+
+export type IconButtonSize = "md" | "sm" | "xs" | "2xs";
+
+// Box and glyph together, so a 24px chip action cannot end up holding a 20px icon
+// that touches its edges. The two small steps are lenkbank's list-row (28px) and
+// chip (24px) actions, which it had hand-rolled beside the kit's 32/36px ones.
+const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
+  md: "size-9 [&_svg]:size-5",
+  sm: "size-8 [&_svg]:size-5",
+  xs: "size-7 rounded [&_svg]:size-4",
+  "2xs": "size-6 rounded [&_svg]:size-3.5",
+};
+
+// A tone re-colours the glyph without changing what the variant draws around it.
+// `muted` and `danger` both sit quiet at rest — an action in every row of a list
+// must not shout from every row — and `danger` answers the pointer in the
+// destructive family, so the red arrives only on the one row you are about to
+// act on.
+const ICON_BUTTON_TONES = {
+  default: "",
+  muted:
+    "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]",
+  danger:
+    "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)]",
+} as const;
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
-  /** Box size: md = 36px (matches the top bar), sm = 32px. The icon stays 20px. */
-  size?: "sm" | "md";
+  /** Box size: md = 36px (matches the top bar), sm = 32px — both with a 20px icon;
+   *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
+   *  icon (an action on a chip or a tab). */
+  size?: IconButtonSize;
+  /** Glyph colour over the variant. `muted`: placeholder grey, full text colour on
+   *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
+   *  remove/delete that repeats down a list. Default: the variant's own colours. */
+  tone?: keyof typeof ICON_BUTTON_TONES;
+  /** Keep the click (and the Enter/Space that produces it) from reaching an
+   *  ancestor's handler — for an action inside a clickable table row or card.
+   *
+   *  **Not a licence to put this inside another `<button>`.** HTML forbids any
+   *  interactive content, and any element with a `tabindex`, inside a button — so
+   *  the `<span role="button" tabIndex={0}>` workaround is invalid too — and ARIA
+   *  makes a button's children presentational, so a screen reader flattens the
+   *  inner one into the outer one's name and it cannot be reached at all. Make the
+   *  row's main action a button that fills the row and put this one BESIDE it, on
+   *  top:
+   *
+   *  ```tsx
+   *  <div className="relative">
+   *    <button className="w-full pe-16 …" onClick={open}>…row…</button>
+   *    <div className="absolute inset-y-0 end-2 flex items-center gap-0.5">
+   *      <IconButton size="xs" tone="danger" aria-label="Delete" onClick={remove}>
+   *        <Trash2 />
+   *      </IconButton>
+   *    </div>
+   *  </div>
+   *  ```
+   *
+   *  The pair look exactly like the nested version, click exactly like it, and
+   *  are two tab stops a screen reader can tell apart. */
+  stopPropagation?: boolean;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { variant = "ghost", size = "md", className, ...rest },
+  { variant = "ghost", size = "md", tone = "default", stopPropagation, className, onClick, onKeyDown, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
       {...rest}
+      onClick={(e) => {
+        if (stopPropagation) e.stopPropagation();
+        onClick?.(e);
+      }}
+      onKeyDown={(e) => {
+        // A button turns Enter/Space into a click of its own, but the KEY still
+        // bubbles — and a clickable row listening for Enter would act on it too.
+        if (stopPropagation && (e.key === "Enter" || e.key === " ")) e.stopPropagation();
+        onKeyDown?.(e);
+      }}
       className={cn(
         ICON_BUTTON_BASE,
-        size === "sm" ? "size-8" : "size-9",
+        ICON_BUTTON_SIZES[size],
         buttonVariantClasses[variant],
+        ICON_BUTTON_TONES[tone],
         className,
       )}
     />
@@ -451,6 +519,54 @@ export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
   );
 }
 
+export interface LabelProps extends ComponentPropsWithoutRef<"label"> {
+  /** Draw the required mark after the text. The mark is `aria-hidden`: what a
+   *  screen reader hears is the control's own `required` / `aria-required`, which
+   *  the caller still sets — a "star" read out as the last word of every name is
+   *  noise, and a control that is not marked required is not required however its
+   *  label looks. */
+  required?: boolean;
+  /** `sm` for a toolbar or a dense filter row (12px), `md` otherwise (14px). */
+  size?: "sm" | "md";
+  /** Dim the label with its control. A label ABOVE its field is not the field's
+   *  `peer`, so `peer-disabled:` cannot reach it the way it reaches a floating one. */
+  disabled?: boolean;
+}
+
+/**
+ * The label ABOVE a field, for the places a floating label does not fit: a control
+ * the kit did not render (a third-party picker, a range slider, a group of radios),
+ * a filter bar whose fields are unlabelled {@link Select}s, a form that sets labels
+ * above its fields throughout.
+ *
+ * A new component rather than a mode of {@link FieldLabel}, because the two share
+ * nothing but the word. `FieldLabel` is an absolutely positioned `<span>` inside a
+ * trigger's `relative` box and has to stay exactly that for every dropdown that
+ * already lines up with it; this is a real `<label>` in normal flow, with `htmlFor`,
+ * that a click focuses the control through. Spacing below it belongs to the caller's
+ * layout (`space-y-1.5` on the pair, typically), as it would for any block.
+ */
+export function Label({ required, size = "md", disabled, className, children, ...rest }: LabelProps) {
+  return (
+    <label
+      {...rest}
+      className={cn(
+        "inline-flex items-center gap-0.5 font-medium leading-none text-[var(--text-primary)]",
+        size === "sm" ? "text-xs" : "text-sm",
+        disabled && "cursor-default opacity-50",
+        className,
+      )}
+    >
+      {children}
+      {required && (
+        <span aria-hidden className="text-[var(--danger)]">
+          *
+        </span>
+      )}
+    </label>
+  );
+}
+
 /**
  * The message under a field that is wrong, and the wiring that attaches it.
  *
@@ -482,6 +598,10 @@ function useFieldError(
   error: ReactNode,
   invalid: boolean | undefined,
   describedBy: string | undefined,
+  /** The caller's own `aria-invalid`. A form library sets THIS (see `@eifi1/ui-kit/rhf`
+   *  `FormControl`), not our `invalid` prop — and a field that announces invalid should
+   *  look it too, as NumberField and the pickers already did. */
+  ariaInvalid?: unknown,
 ) {
   const errorId = useId();
   // `null`, `false` and `""` are what a caller's `touched && errors.iban` evaluates to
@@ -490,7 +610,7 @@ function useFieldError(
   const hasError = error !== undefined && error !== null && error !== false && error !== "";
   return {
     /** A field carrying a message that says what is wrong with it IS wrong. */
-    isInvalid: Boolean(invalid) || hasError,
+    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
     describedBy: hasError ? (describedBy ? `${describedBy} ${errorId}` : errorId) : describedBy,
     errorEl: hasError ? (
       <p id={errorId} className={FIELD_ERROR_CLASS}>
@@ -610,6 +730,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     error,
     invalid,
     rest["aria-describedby"],
+    rest["aria-invalid"],
   );
   const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
@@ -722,7 +843,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 });
 Input.displayName = "Input";
 
-export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   label?: ReactNode;
   /** See {@link Input}'s `invalid`. */
   invalid?: boolean;
@@ -730,25 +851,50 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   error?: ReactNode;
   /** A {@link FieldHint} for the label line — see {@link FloatingField}. */
   hint?: ReactNode;
+  /**
+   * `"sm"`: a 28px, 12px-type select for a toolbar or a table header, where the
+   * 36px field stands a head taller than the buttons beside it. `"md"` (default)
+   * is the field every form uses. Unlabelled selects only — a floating label needs
+   * the tall box to float in, so a labelled Select ignores `"sm"`.
+   *
+   * A NUMBER is still the native attribute (the rows of a list box) and is passed
+   * straight through, so the one HTML meaning of `size` keeps working.
+   */
+  size?: "sm" | "md" | number;
+  /** Classes for the `<select>` itself. `className` styles the WRAPPER — the box
+   *  the chevron is positioned against — so it could set a width and nothing
+   *  else; this is the way to the element. See {@link Input}'s `inputClassName`. */
+  selectClassName?: string;
 }
 
+// The compact select: the field's colours, a toolbar button's height. `py-0` and a
+// fixed height rather than a smaller padding, so the box is 28px whatever line
+// height the caller's type brings with it.
+const SELECT_SM = "h-7 py-0 pl-2 pr-7 text-xs";
+
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { className, label, id, children, invalid, error, hint, ...rest },
+  { className, label, id, children, invalid, error, hint, size, selectClassName, ...rest },
   ref,
 ) {
   const generated = useId();
+  // Only a number reaches the DOM; the two words are this component's own.
+  const nativeSize = typeof size === "number" ? size : undefined;
+  const small = size === "sm" && label === undefined;
   const fieldId = id ?? generated;
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
     rest["aria-describedby"],
+    rest["aria-invalid"],
   );
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
   // in from the right border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
   // thing on the control that promises a choice (Keksdose dev#474, where the
   // account type became read-only and still looked exactly like a picker).
-  const chevron = rest.disabled ? null : <FieldChevron />;
+  const chevron = rest.disabled ? null : (
+    <FieldChevron className={small ? "right-1.5 size-3.5" : undefined} />
+  );
   if (label === undefined) {
     return (
       <FieldGroup errorEl={errorEl}>
@@ -762,6 +908,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             // when it was reached. Input and Textarea both forward it here; this is
             // the third one doing the same thing.
             id={id}
+            size={nativeSize}
             {...rest}
             // OR-ed with the spread for the reason spelled out on Input's copy: this
             // branch wrote `invalid || undefined`, so passing `aria-invalid` by hand
@@ -770,7 +917,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             // attribute silently dropped. Input has never done that.
             aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
             aria-describedby={describedBy}
-            className={cn(FIELD_BASE, "appearance-none pr-9", isInvalid && FIELD_INVALID)}
+            className={cn(
+              FIELD_BASE,
+              "appearance-none pr-9",
+              small && SELECT_SM,
+              selectClassName,
+              isInvalid && FIELD_INVALID,
+            )}
           >
             {children}
           </select>
@@ -785,6 +938,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         <select
           ref={ref}
           id={fieldId}
+          size={nativeSize}
           {...rest}
           aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
           aria-describedby={describedBy}
@@ -792,6 +946,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             FIELD_BASE,
             FIELD_FLOATING_PAD,
             "peer appearance-none pr-9",
+            selectClassName,
             isInvalid && FIELD_INVALID,
           )}
         >
@@ -822,6 +977,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     error,
     invalid,
     rest["aria-describedby"],
+    rest["aria-invalid"],
   );
   if (label === undefined) {
     return (
@@ -1038,6 +1194,49 @@ export function EmptyState({ title, hint, className, ...rest }: EmptyStateProps)
   );
 }
 
+/** One tab of a {@link Tabs} strip. */
+export interface TabItem<T extends string> {
+  id: T;
+  /** A ReactNode so a tab can pair an icon with text. */
+  label: ReactNode;
+  /** Optional trailing node (e.g. a count pill). */
+  badge?: ReactNode;
+  /** Marks a tab that IS a route — see {@link TabsProps}. */
+  href?: string;
+  /** Leading decoration: an icon, or the colour swatches of the lines this tab
+   *  draws in a chart above the strip. Hidden from assistive tech — it repeats
+   *  what the label says, or it says something the label must say instead. */
+  icon?: ReactNode;
+  /** A second, smaller line under the label — the one fact that tells two tabs
+   *  with similar labels apart ("80 km/h", "Level 3"). Part of the tab's name. */
+  detail?: ReactNode;
+  /** A tab that exists as a slot with nothing in it yet, drawn with a dashed
+   *  outline so a gap in a sequence looks like a gap. Visual only: say "empty" in
+   *  the label or `detail` if a screen reader needs to know. */
+  empty?: boolean;
+  /** `false` keeps this one tab when the strip has `onRemove` — the one sheet a
+   *  workbook cannot be without. Default: removable. */
+  removable?: boolean;
+  /** Plain-text name for the labels the strip composes about this tab ("Remove
+   *  …"), for when `label` is not a string. Default: `label` if it is a string,
+   *  else the id. */
+  name?: string;
+}
+
+/** The strings the strip renders on its own behalf — only when it can add or
+ *  remove tabs. */
+export interface TabsLabels {
+  /** The "add" button's visible text when the caller gives no `addLabel`. */
+  add: string;
+  /** Accessible name of a tab's × — "Remove <tab>". */
+  remove: (tab: string) => string;
+}
+
+export const DEFAULT_TABS_LABELS: TabsLabels = {
+  add: "Add tab",
+  remove: (tab) => `Remove ${tab}`,
+};
+
 /**
  * The strip's own props sit on a `<div>`: the tablist IS the root element, so anything
  * a caller hangs on it — a `data-tour` anchor for the kit's guided tour, a test id, an
@@ -1054,7 +1253,7 @@ export interface TabsProps<T extends string>
    *  feedback #451), while a plain click still goes through `onChange` and stays
    *  client-side. Tabs that only flip local state leave it unset — a link to a URL
    *  that does not select the tab would be worse than no link. */
-  tabs: { id: T; label: ReactNode; badge?: ReactNode; href?: string }[];
+  tabs: TabItem<T>[];
   active: T;
   onChange: (id: T) => void;
   className?: string;
@@ -1120,6 +1319,34 @@ export interface TabsProps<T extends string>
    * describes a tab as opening something that is not there.
    */
   panelId?: string;
+  /**
+   * Makes the tabs removable: an × on the OPEN tab, and Delete on a focused tab.
+   *
+   * The × is on the open tab only — a row of tabs each carrying one is a row of
+   * things to hit by accident, and the tab you can remove should be the one you
+   * are looking at — but its room is reserved on every removable tab, so opening a
+   * tab never widens it and never pushes the rest of the strip along (lenkbank
+   * feedback #72). It is named "Remove <tab>" and is not a tab stop of its own: the
+   * strip stays one stop, and the keyboard path is Delete (announced through
+   * `aria-keyshortcuts`), which removes whichever tab has focus.
+   *
+   * The strip only ASKS: it calls this, and the tab goes when the caller drops it
+   * from `tabs` — after a confirmation, a request, whatever it needs. When it does,
+   * focus that was on the removed tab (or its ×) moves to the open tab if the
+   * removed one was open, else to its neighbour, instead of falling to the page.
+   */
+  onRemove?: (id: T) => void;
+  /** Renders an "add" button after the last tab, outside the tablist — it is an
+   *  action, not a tab, and a tablist may own only tabs. */
+  onAdd?: () => void;
+  /** The add button's text. Say what is added — "Add loop", "Add report" says
+   *  more than "Add". Default: `tabs.add` from the {@link UiKitProvider}. */
+  addLabel?: string;
+  /** Overrides for this strip's strings. See {@link TabsLabels}. */
+  labels?: Partial<TabsLabels>;
+  /** An add or a remove is in flight: the × and the add button are disabled and
+   *  Delete is ignored, so a double click cannot remove two tabs. Nothing moves. */
+  busy?: boolean;
 }
 
 // The two shapes are written out as whole strings rather than as one base plus a
@@ -1156,6 +1383,15 @@ const TAB_WRAP_ACTIVE_CLASSES =
 const TAB_WRAP_INACTIVE_CLASSES =
   "bg-[var(--bg-surface)] text-[var(--text-primary)] md:border-transparent md:text-[var(--text-muted)] md:hover:border-[var(--border-strong)] md:hover:text-[var(--text-secondary)]";
 
+// The add/remove chrome. The × reserves its gutter on every removable tab (see
+// `onRemove`); `md:pe-8` is spelled out because the wrapped chip's `md:px-3` would
+// otherwise hand the gutter back from 768px up.
+const TAB_REMOVABLE_CLASSES = "pe-8 md:pe-8";
+const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-[var(--border-strong)] px-1.5";
+const TAB_ADD_CLASSES =
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
+const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
+
 export function Tabs<T extends string>({
   tabs,
   active,
@@ -1164,9 +1400,53 @@ export function Tabs<T extends string>({
   wrap = false,
   label,
   panelId,
+  onRemove,
+  onAdd,
+  addLabel,
+  labels,
+  busy = false,
   "aria-label": ariaLabel,
   ...rest
 }: TabsProps<T>) {
+  const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
+  const nameOf = (tab: TabItem<T>) =>
+    tab.name ?? (typeof tab.label === "string" ? tab.label : tab.id);
+
+  // Where focus goes once a removal the strip asked for has happened. The caller
+  // owns `tabs` and may take its time (a confirmation, a request), so this waits
+  // for the id to actually leave the list rather than guessing at the moment.
+  const pendingFocus = useRef<{ removed: T; wasActive: boolean; neighbour?: T } | null>(null);
+  const requestRemove = (id: T) => {
+    const index = tabs.findIndex((t) => t.id === id);
+    pendingFocus.current = {
+      removed: id,
+      wasActive: id === active,
+      neighbour: (tabs[index + 1] ?? tabs[index - 1])?.id,
+    };
+    onRemove?.(id);
+  };
+  useLayoutEffect(() => {
+    const pending = pendingFocus.current;
+    if (!pending || tabs.some((t) => t.id === pending.removed)) return;
+    pendingFocus.current = null;
+    const strip = stripRef.current;
+    if (!strip) return;
+    // Only focus that fell out of the strip with the removed tab is ours to place.
+    // If the user has moved on — into the panel, into a dialog — leave it there.
+    const focused = document.activeElement;
+    if (focused && focused !== document.body && !strip.contains(focused)) return;
+    // The removed tab was open: focus follows the caller's new selection, which is
+    // also the strip's tab stop. It was not: its neighbour, as the ARIA pattern has it.
+    const target =
+      !pending.wasActive && tabs.some((t) => t.id === pending.neighbour)
+        ? pending.neighbour
+        : active;
+    const index = tabs.findIndex((t) => t.id === target);
+    strip.querySelectorAll<HTMLElement>('[role="tab"]')[index]?.focus();
+  }, [tabs, active]);
+
   // Arrow keys walk the strip in DOM order (ARIA tabs pattern), which is what keeps
   // a WRAPPED strip navigable: the rows flow in DOM order too, so Right off the end
   // of row one lands on the first chip of row two rather than nowhere. Home/End jump
@@ -1180,7 +1460,15 @@ export function Tabs<T extends string>({
   // the handler on the elements that are natively focusable and actually receive the
   // keystroke. Those are the tabs, so the warning goes away by being right rather
   // than by being satisfied.
-  const onTabKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+  const onTabKeyDown = (e: KeyboardEvent<HTMLElement>, tab: TabItem<T>) => {
+    // Delete removes the FOCUSED tab (the ARIA pattern's optional key for deletable
+    // tabs) — the keyboard's way to the × that is not a tab stop. `busy` swallows it
+    // rather than letting it fall through to the page.
+    if (e.key === "Delete" && isRemovable(tab)) {
+      e.preventDefault();
+      if (!busy) requestRemove(tab.id);
+      return;
+    }
     const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     if (step === 0 && e.key !== "Home" && e.key !== "End") return;
     const strip = e.currentTarget.closest('[role="tablist"]');
@@ -1197,19 +1485,26 @@ export function Tabs<T extends string>({
           : (from + step + items.length) % items.length;
     items[to]?.focus();
   };
-  return (
+  const tablist = (
     <div
       // Before the role and the name: a caller's arbitrary attribute is welcome on the
       // strip, but a `role` or an `aria-label` arriving through a spread props object
       // must not be able to unmake the tablist the tabs below are registered against.
       {...rest}
+      ref={stripRef}
       role="tablist"
       // The DOM spelling wins over the deprecated `label`; see {@link TabsProps}.
       aria-label={ariaLabel ?? label}
-      className={cn(wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES, className)}
+      // With an add button the strip gains an outer box, and `className` goes there
+      // — it is the box a caller's margin or width is meant for.
+      className={cn(
+        wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES,
+        onAdd ? "min-w-0" : className,
+      )}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
+        const removable = isRemovable(tab);
         // Written once and worn by either tag below, so a routed tab and a
         // state-only tab stay indistinguishable to the eye and to a screen reader.
         const shared = {
@@ -1231,7 +1526,8 @@ export function Tabs<T extends string>({
           // Only the open tab: see `panelId`.
           "aria-controls": isActive ? panelId : undefined,
           id: isActive && panelId ? `${panelId}-tab` : undefined,
-          onKeyDown: onTabKeyDown,
+          "aria-keyshortcuts": removable ? "Delete" : undefined,
+          onKeyDown: (e: KeyboardEvent<HTMLElement>) => onTabKeyDown(e, tab),
           className: cn(
             wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
             wrap
@@ -1241,15 +1537,33 @@ export function Tabs<T extends string>({
               : isActive
                 ? TAB_ACTIVE_CLASSES
                 : TAB_INACTIVE_CLASSES,
+            removable && TAB_REMOVABLE_CLASSES,
           ),
         };
         const inner = (
-          <span className="inline-flex items-center gap-1.5">
-            {tab.label}
+          <span className={cn("inline-flex items-center gap-1.5", tab.empty && TAB_EMPTY_CLASSES)}>
+            {tab.icon != null && (
+              <span aria-hidden className="inline-flex shrink-0 items-center gap-0.5">
+                {tab.icon}
+              </span>
+            )}
+            {tab.detail != null ? (
+              <span className="flex flex-col items-start text-start">
+                <span>{tab.label}</span>
+                {/* A separator for the NAME only — whitespace between flex items is
+                    not drawn, and without it the two lines ran together into one
+                    word for a screen reader ("80 km/hloop 2"). */}{" "}
+                <span className="text-[11px] font-normal leading-tight text-[var(--text-muted)]">
+                  {tab.detail}
+                </span>
+              </span>
+            ) : (
+              tab.label
+            )}
             {tab.badge != null ? tab.badge : null}
           </span>
         );
-        return tab.href ? (
+        const element = tab.href ? (
           <a
             key={tab.id}
             {...shared}
@@ -1276,7 +1590,7 @@ export function Tabs<T extends string>({
             // prop overrides the one in `shared`, and an anchor tab that lost the
             // arrows would be a strip that is navigable only where it is not a link.
             onKeyDown={(e) => {
-              onTabKeyDown(e);
+              onTabKeyDown(e, tab);
               if (e.defaultPrevented || e.key !== " ") return;
               e.preventDefault();
               onChange(tab.id);
@@ -1289,7 +1603,69 @@ export function Tabs<T extends string>({
             {inner}
           </button>
         );
+        if (!removable) return element;
+        return (
+          // The × cannot go INSIDE the tab: a button in a button is invalid HTML, and
+          // a tab's children are presentational, so a reader would flatten it into the
+          // tab's name. It sits beside the tab, over the gutter the tab reserves.
+          <div key={tab.id} className="relative flex shrink-0">
+            {element}
+            {isActive && (
+              <IconButton
+                size="2xs"
+                tone="danger"
+                // Not a tab stop: the strip is one, and Delete is the keyboard's path.
+                // Still a named button, so a screen reader's cursor and a touch
+                // reader's swipe both reach it.
+                tabIndex={-1}
+                type="button"
+                aria-label={text.remove(nameOf(tab))}
+                disabled={busy}
+                onClick={() => requestRemove(tab.id)}
+                className={cn(
+                  "absolute inset-y-0 end-1 my-auto",
+                  // On a wrapped strip's filled chip the quiet grey would vanish into
+                  // the brand fill below `md`.
+                  wrap && "text-[var(--brand-contrast)] md:text-[var(--text-placeholder)]",
+                )}
+              >
+                <X />
+              </IconButton>
+            )}
+          </div>
+        );
       })}
+    </div>
+  );
+  if (!onAdd) return tablist;
+  return (
+    <div
+      className={cn(
+        wrap ? "flex flex-wrap items-end gap-1.5 md:flex-nowrap md:gap-0" : "flex items-end",
+        className,
+      )}
+    >
+      {tablist}
+      {/* Outside the tablist: an action, not a tab — and a tablist may own only
+          tabs. The rule under the strip carries on beneath it. */}
+      <div
+        className={cn(
+          "flex flex-1 items-center",
+          wrap
+            ? "md:self-stretch md:border-b md:border-[var(--border)]"
+            : "self-stretch border-b border-[var(--border)]",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={busy}
+          className={cn(TAB_ADD_CLASSES, wrap && TAB_ADD_WRAP_CLASSES)}
+        >
+          <Plus aria-hidden />
+          {addLabel ?? text.add}
+        </button>
+      </div>
     </div>
   );
 }

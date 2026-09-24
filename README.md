@@ -521,7 +521,56 @@ re-slicing of it, never a second API.
 `Input`, `Select`, `Textarea` and `AmountInput` forward their `ref` to the
 underlying DOM element, so they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
-focus-and-scroll-to-error for free.
+focus-and-scroll-to-error for free. For the full `FormField`/`FormControl` scaffolding,
+see `@eifi1/ui-kit/rhf` below.
+
+### react-hook-form — `@eifi1/ui-kit/rhf` (optional)
+
+A thin adapter in shadcn's `form.tsx` shape, and the only entry that needs
+`react-hook-form` (an **optional** peer, `^7.55.0`). The main barrel does not import it,
+so apps without a form library install nothing.
+
+```tsx
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@eifi1/ui-kit/rhf";
+
+<Form {...form}>
+  <FormField control={form.control} name="amount" render={({ field }) => (
+    <FormItem>
+      <FormLabel required>Amount</FormLabel>
+      <FormControl>
+        <NumberField value={field.value} onCommit={field.onChange} />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</Form>
+```
+
+`FormControl` gives its one child `id`, `aria-describedby` (only the description and
+message actually rendered, merged after the child's own) and `aria-invalid` — which every
+kit field now also PAINTS from, so no extra `invalid` prop is needed. `FormMessage` shows
+the form's own message; the kit adds no text. `useFormField()` exposes the ids and field
+state for custom parts.
+
+### Pasted and imported tables — `@eifi1/ui-kit/table-text`
+
+Pure functions over strings (no React, nothing to install): one lexer for a table pasted
+out of a spreadsheet or read from a CSV, with the comma decided by a named rule rather
+than a guess.
+
+- `parseTable(text, { decimal, columns?, headerLines? })` → `{ rows, header, decimalComma, skipped }`
+  - `decimal: "whole-text"` — a **file**: separator and decimal mark decided once for the
+    whole text, and reported back as `decimalComma`.
+  - `decimal: "per-line"` — a **paste**: each line read on its own evidence.
+  - `columns` slices extra columns off and reports shorter lines; `skipped` holds 1-based
+    line numbers as they stand in the text.
+- `parseRows(text, width)` — the paste door: `{ rows }`, or `{ error: line }` naming the
+  first unreadable line (never a silent empty table).
+- `splitRow(line)`, `cellNumber(cell)`, `isCellNumber(cell)` — a single cell's comma is
+  always a decimal mark.
+
+Not handled, on purpose: thousands separators (reported, not guessed), quoted fields,
+empty cells held open as holes.
 
 ## i18n
 

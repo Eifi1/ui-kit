@@ -1,5 +1,7 @@
 import {
   Blocks,
+  FileUp,
+  PanelTopClose,
   FunctionSquare,
   Gauge,
   PenLine,
@@ -37,6 +39,17 @@ import { Primitives } from "./sections/primitives";
 import { Fields } from "./sections/fields";
 import { Choices } from "./sections/choices";
 import { TimeInputDemo } from "./sections/number-time-demo";
+import { FileInputs } from "./sections/file-inputs";
+import { AutocompleteDemo } from "./sections/autocomplete-demo";
+import { ControlsDemo, FieldAnatomyDemo } from "./sections/field-anatomy-demo";
+import { SelectionDemo } from "./sections/selection-demo";
+import { LayoutDemo } from "./sections/layout-demo";
+import {
+  DangerConfirmDemo,
+  NumberStepsDemo,
+  SignatureViewDemo,
+  WeekStartDemo,
+} from "./sections/numbers-more-demo";
 import { SignaturePasswordDemo } from "./sections/signature-password-demo";
 import { StatsDemo } from "./sections/stats-demo";
 import { SeriesChartDemo } from "./sections/series-chart-demo";
@@ -175,16 +188,26 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Text fields",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "SearchField", "FloatingField", "FieldHint"],
-        Body: Fields,
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint"],
+        Body: () => (
+          <>
+            <Fields />
+            <FieldAnatomyDemo />
+          </>
+        ),
       },
       {
         slug: "choices",
-        title: "Checkbox, switch & slider",
-        blurb: "Choosing rather than typing: on/off, one of a few, and a value on a scale.",
+        title: "Choices",
+        blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
-        components: ["Checkbox", "Switch", "Slider"],
-        Body: Choices,
+        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard"],
+        Body: () => (
+          <>
+            <Choices />
+            <SelectionDemo />
+          </>
+        ),
       },
       {
         slug: "numbers",
@@ -193,7 +216,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The numeric stack: a calculator-backed number field, a field whose value is a number, the money field and its tones, and the currency picker.",
         icon: Sigma,
         components: ["NumberInput", "NumberField", "AmountInput", "CurrencySelect", "NumberPadSheet"],
-        Body: Numbers,
+        Body: () => (
+          <>
+            <Numbers />
+            <NumberStepsDemo />
+          </>
+        ),
       },
       {
         slug: "dropdowns",
@@ -203,13 +231,28 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: ListFilter,
         components: [
           "Combobox",
+          "Autocomplete",
           "EntityCombobox",
           "MultiEntityCombobox",
           "MultiSelect",
           "GroupedPicker",
           "PickerSheet",
         ],
-        Body: Dropdowns,
+        Body: () => (
+          <>
+            <Dropdowns />
+            <AutocompleteDemo />
+          </>
+        ),
+      },
+      {
+        slug: "files",
+        title: "Files",
+        blurb:
+          "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
+        icon: FileUp,
+        components: ["FileButton", "useFilePicker", "FileDropzone"],
+        Body: FileInputs,
       },
       {
         slug: "dates",
@@ -223,6 +266,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Dates />
             <MonthPickerDemo />
             <TimeInputDemo />
+            <WeekStartDemo />
           </>
         ),
       },
@@ -237,12 +281,18 @@ export const GROUPS: ShowcaseGroup[] = [
       },
       {
         slug: "signature-password",
-        title: "Signature & password strength",
+        title: "Signature, password & confirmation",
         blurb:
-          "Capturing a signature by pen, finger or mouse — with a typed fallback — and telling a user how strong the password they are choosing is.",
+          "Capturing a signature — and showing a saved one — telling a user how strong their password is, and confirming a destructive action.",
         icon: PenLine,
-        components: ["SignaturePad", "PasswordStrengthMeter", "scorePassword"],
-        Body: SignaturePasswordDemo,
+        components: ["SignaturePad", "SignatureView", "PasswordStrengthMeter", "DangerConfirm"],
+        Body: () => (
+          <>
+            <SignaturePasswordDemo />
+            <SignatureViewDemo />
+            <DangerConfirmDemo />
+          </>
+        ),
       },
     ],
   },
@@ -259,8 +309,13 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Primitives",
         blurb: "Buttons, cards, tabs, banners, avatars — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "Card", "Tabs", "AlertBanner", "Chip", "ChipInput", "UserAvatar"],
-        Body: Primitives,
+        components: ["Button", "IconButton", "Card", "Tabs", "AlertBanner", "Chip", "ChipInput"],
+        Body: () => (
+          <>
+            <Primitives />
+            <ControlsDemo />
+          </>
+        ),
       },
       {
         slug: "data-table",
@@ -295,6 +350,14 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Gauge,
         components: ["StatTile", "StatTileGrid", "Sparkline"],
         Body: StatsDemo,
+      },
+      {
+        slug: "layout",
+        title: "Disclosure & dialog frame",
+        blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
+        icon: PanelTopClose,
+        components: ["Disclosure", "Collapse", "DialogFrame"],
+        Body: LayoutDemo,
       },
     ],
   },

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { createContext, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -78,6 +78,14 @@ function useDragOffset(enabled: boolean) {
         },
   };
 }
+
+/**
+ * The panel's own ANIMATED dismissal, for chrome rendered inside it. `DialogFrame`'s X
+ * and its `actions(close)` read this, so a Cancel or an X lowers the panel exactly the
+ * way Escape does — calling `onClose` from inside unmounts with no exit, which is the
+ * documented limit of {@link useCloseTransition}. `null` outside a `Modal`.
+ */
+export const ModalCloseContext = createContext<(() => void) | null>(null);
 
 /**
  * Backdrop handlers that close only when a press starts AND ends on the
@@ -279,7 +287,7 @@ export function Modal({
           className,
         )}
       >
-        {children}
+        <ModalCloseContext.Provider value={requestClose}>{children}</ModalCloseContext.Provider>
       </div>
     </div>,
     document.body,

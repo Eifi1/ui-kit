@@ -1,0 +1,179 @@
+import { useContext, useId } from "react";
+import type { ReactNode } from "react";
+import { X } from "lucide-react";
+
+import { cn } from "../lib/cn";
+import { Modal, ModalCloseContext } from "./modal";
+import type { ModalProps } from "./modal";
+import { useKitLabels } from "../i18n/kit-labels";
+
+export interface DialogFrameLabels {
+  /** Accessible name of the header's X, when {@link DialogFrameProps.closeButton} shows it. */
+  close: string;
+}
+
+export const DEFAULT_DIALOG_FRAME_LABELS: DialogFrameLabels = { close: "Close" };
+
+/**
+ * `ModalProps` minus the three this component owns: the NAME (`labelledBy` — the
+ * heading's id is generated inside and never reaches the caller), the content
+ * (`children` is the body here, not the whole panel) and `title`, which is the dialog's
+ * HEADING and a ReactNode rather than the browser's tooltip string — the collision
+ * `PickerSheet` met first. Everything else, `size`, `draggable`, `fullBleed`,
+ * `onKeyDown`, a `data-tour` anchor, still reaches the `Modal`.
+ */
+export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "children" | "title"> {
+  /** The heading, and therefore the dialog's accessible name (`aria-labelledby`). */
+  title: ReactNode;
+  /** The smaller line under the heading; wired to `aria-describedby`. */
+  description?: ReactNode;
+  /**
+   * The heading's level. `h2` by default, which is what every dialog in both apps
+   * writes; a prop for a page that nests its demos under a real heading.
+   */
+  headingAs?: "h1" | "h2" | "h3" | "h4";
+  /**
+   * The row under the body — buttons, in the caller's own order and variants (the two
+   * apps disagree about the cancel button's variant, so the frame has no opinion on
+   * it). Stays put while the body scrolls.
+   *
+   * A FUNCTION receives the panel's animated close: `(close) => <Button
+   * onClick={close}>Cancel</Button>` lowers the panel the way Escape does, where
+   * calling `onClose` directly unmounts it at once.
+   */
+  actions?: ReactNode | ((close: () => void) => ReactNode);
+  /**
+   * Show an X in the header. Off by default: a centred dialog has a backdrop and
+   * Escape, and a form dialog has a Cancel. On for a dialog that commits as it goes
+   * and has no actions row, where the X is the only visible way out.
+   */
+  closeButton?: boolean;
+  /** Default: `dialogFrame.close` from the {@link UiKitProvider}, else "Close". */
+  closeLabel?: string;
+  /** Extra classes for the scrolling body (default spacing `space-y-3`). */
+  bodyClassName?: string;
+  /** The body. */
+  children: ReactNode;
+}
+
+/**
+ * A {@link Modal} with the frame every caller was writing by hand: a heading, an
+ * optional description, an optional X, a body that scrolls, and an actions row that
+ * does not.
+ *
+ * 34 dialogs across the two apps framed themselves — a heading with an id invented per
+ * file (and spelt three ways), four visible type sizes for one thing, ten spellings of
+ * one right-aligned button row — and the package's own feedback dialog shipped with no
+ * accessible name at all. This makes the name unforgettable: the heading's id comes
+ * from `useId()` and goes straight to `Modal`'s `labelledBy`, so a framed dialog cannot
+ * announce as just "dialog", and two open instances cannot share an id.
+ *
+ * ## It wraps, it does not change `Modal`
+ *
+ * `Modal` keeps `labelledBy` and every existing caller compiles untouched. What the
+ * frame changes is inside the panel: the panel becomes a flex column with no padding
+ * of its own, and only the BODY scrolls. The panel's `max-h-full` is still the outer
+ * bound, so a tall form keeps its heading and its Save button on screen instead of
+ * scrolling them away with the fields. A caller's own `className` still wins (it is
+ * tailwind-merged last), which is how a full-screen phone sheet is spelt:
+ * `fullBleed className="h-[100dvh] max-w-full rounded-none md:h-auto md:rounded-lg"`.
+ *
+ * ## What it is not
+ *
+ * Not `FullBleedDialog`: that is the phone's full-screen editor with its own `open`,
+ * Back handling and a required X, and it already draws a frame of its own. And not a
+ * form: submit handling, a pending label and close-on-success stay the caller's.
+ * Focus lands on the panel, as `Modal` decides — not on the first field, so opening
+ * does not pop a phone's keyboard; an `autoFocus` in the body overrides that from the
+ * caller's side, and should be a decision rather than a habit.
+ */
+export function DialogFrame({
+  title,
+  description,
+  headingAs: Heading = "h2",
+  actions,
+  closeButton = false,
+  closeLabel,
+  bodyClassName,
+  className,
+  children,
+  "aria-describedby": describedBy,
+  ...modal
+}: DialogFrameProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const hasDescription = description !== undefined && description !== null;
+
+  return (
+    <Modal
+      {...modal}
+      labelledBy={titleId}
+      // The caller's own description (a warning inside the body, say) is ADDED to the
+      // frame's, not traded for it: both are the dialog's.
+      aria-describedby={[hasDescription ? descriptionId : undefined, describedBy].filter(Boolean).join(" ") || undefined}
+      // `overflow-hidden` replaces the panel's own `overflow-y-auto` (tailwind-merge
+      // treats them as one group), `p-0` its `p-4`: the scroller and the padding move
+      // to the body, which is the only part that should move.
+      className={cn("flex flex-col overflow-hidden p-0", className)}
+    >
+      <div className="flex shrink-0 items-start justify-between gap-2 px-4 pt-4 pb-3">
+        <div className="min-w-0">
+          <Heading id={titleId} className="text-lg font-semibold leading-snug text-[var(--text-primary)]">
+            {title}
+          </Heading>
+          {hasDescription && (
+            <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
+              {description}
+            </p>
+          )}
+        </div>
+        {closeButton && <FrameClose label={closeLabel} onClose={modal.onClose} />}
+      </div>
+      <div
+        className={cn(
+          // `min-h-0` is what lets a flex child shrink below its content and scroll;
+          // `last:pb-4` closes a frame that has no actions row under it.
+          "min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-3 last:pb-4",
+          bodyClassName,
+        )}
+      >
+        {children}
+      </div>
+      {actions !== undefined && actions !== null && <FrameActions actions={actions} onClose={modal.onClose} />}
+    </Modal>
+  );
+}
+
+/** The X. A component of its own so it can read the panel's animated close, which
+ *  only exists INSIDE the `Modal` (the frame's own body runs outside it). */
+function FrameClose({ label, onClose }: { label?: string; onClose: () => void }) {
+  const close = useContext(ModalCloseContext) ?? onClose;
+  const labels = useKitLabels("dialogFrame", DEFAULT_DIALOG_FRAME_LABELS, label === undefined ? undefined : { close: label });
+  return (
+    <button
+      type="button"
+      onClick={close}
+      aria-label={labels.close}
+      className="-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+    >
+      <X aria-hidden className="size-5" />
+    </button>
+  );
+}
+
+function FrameActions({
+  actions,
+  onClose,
+}: {
+  actions: NonNullable<DialogFrameProps["actions"]>;
+  onClose: () => void;
+}) {
+  const close = useContext(ModalCloseContext) ?? onClose;
+  return (
+    // The border marks where the scrolling stops; `flex-wrap` keeps three long
+    // translated labels on a phone from pushing the row wider than the sheet.
+    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-4 py-3">
+      {typeof actions === "function" ? actions(close) : actions}
+    </div>
+  );
+}

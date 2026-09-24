@@ -6,6 +6,8 @@ import * as search from "../search";
 import * as shell from "../shell";
 import * as tour from "../tour";
 import * as wizard from "../wizard";
+import * as rhf from "../rhf";
+import * as tableText from "../table-text";
 
 /**
  * The public surface, pinned.
@@ -50,10 +52,18 @@ import * as wizard from "../wizard";
  *
  * 298 -> 302: `PageContents`, `PageContentsLayout`, `useScrollSpy` and
  * `DEFAULT_PAGE_CONTENTS_LABELS` — the "On this page" rail, as a kit component.
+ *
+ * 303 -> 326 (0.6.0), all additive — the inputs the three apps still hand-rolled after
+ * adopting 0.5: `FileButton` / `useFilePicker` / `matchesAccept`, `Autocomplete`,
+ * `Label`, `SwatchPicker`, `IconPicker`, `ChoiceCard` / `ChoiceCardGroup`,
+ * `DangerConfirm`, `SignatureView`, `Disclosure` / `Collapse` / `DialogFrame`,
+ * `stepNumber`, `useKitWeekStart`, and a `DEFAULT_*_LABELS` per new namespace. Two new
+ * entries: `/rhf` (the optional react-hook-form adapter — the only module that may
+ * import it, see packaging-contract) and `/table-text` (pure, imports nothing).
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 303],
+  ["@eifi1/ui-kit", barrel, 326],
   ["@eifi1/ui-kit/chart", chart, 50],
   ["@eifi1/ui-kit/data-table", dataTable, 18],
   ["@eifi1/ui-kit/feedback", feedback, 20],
@@ -61,7 +71,17 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/shell", shell, 10],
   ["@eifi1/ui-kit/tour", tour, 4],
   ["@eifi1/ui-kit/wizard", wizard, 9],
+  ["@eifi1/ui-kit/rhf", rhf, 8],
+  ["@eifi1/ui-kit/table-text", tableText, 5],
 ];
+
+/**
+ * Entries that are deliberately NOT slices of the barrel. `/rhf` must stay out of it —
+ * the barrel may not import react-hook-form (packaging-contract enforces that), or
+ * every app would need it installed. `/table-text` is pure string handling with no
+ * component to sit beside, standalone the way `/dates` is.
+ */
+const STANDALONE = new Set(["@eifi1/ui-kit/rhf", "@eifi1/ui-kit/table-text"]);
 
 describe("public surface", () => {
   it.each(ENTRIES)("%s exports exactly %#", (name, mod, count) => {
@@ -82,11 +102,21 @@ describe("public surface", () => {
     // The subpaths are a re-slicing of the main barrel, not a second API. If one grows a
     // name the barrel does not have, there are now two public surfaces to maintain.
     const inBarrel = new Set(Object.keys(barrel));
-    for (const [name, mod] of ENTRIES.slice(1)) {
+    for (const [name, mod] of ENTRIES.slice(1).filter(([n]) => !STANDALONE.has(n))) {
       const extra = Object.keys(mod).filter((k) => !inBarrel.has(k));
       expect(extra, `${name} exports names the barrel does not: ${extra.join(", ")}`).toEqual(
         [],
       );
+    }
+  });
+});
+
+describe("standalone entries", () => {
+  it("share no names with the barrel, so an import can never mean two things", () => {
+    const inBarrel = new Set(Object.keys(barrel));
+    for (const [name, mod] of ENTRIES.filter(([n]) => STANDALONE.has(n))) {
+      const both = Object.keys(mod).filter((k) => inBarrel.has(k));
+      expect(both, `${name} re-uses barrel names: ${both.join(", ")}`).toEqual([]);
     }
   });
 });

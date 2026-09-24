@@ -600,7 +600,9 @@ function SidebarGroup({
               aria-hidden
               className={cn(
                 "size-3.5 transition-transform duration-200 ease-out motion-reduce:transition-none rtl:-scale-x-100",
-                open && "rotate-90 rtl:rotate-90",
+                // Under dir="rtl" the chevron is MIRRORED first (scale applies before rotate), so
+                // it starts pointing left and a +90° turn would point it UP — hence −90° there.
+                open && "rotate-90 rtl:-rotate-90",
               )}
             />
           </button>

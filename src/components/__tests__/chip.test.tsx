@@ -243,3 +243,32 @@ describe("Chip — what a caller can hand it (0.5.1)", () => {
     expect(row).not.toHaveBeenCalled();
   });
 });
+
+describe("Chip — touch size and money tones (0.6.0)", () => {
+  it("has a 44px size", () => {
+    render(
+      <Chip size="lg" onClick={() => {}}>
+        This month
+      </Chip>,
+    );
+    expect(screen.getByRole("button", { name: "This month" }).className).toContain("min-h-11");
+  });
+
+  it("tints only text and border for income/expense, on the neutral surface", () => {
+    render(
+      <>
+        <Chip tone="income">In</Chip>
+        <Chip tone="expense" selected onClick={() => {}}>
+          Out
+        </Chip>
+      </>,
+    );
+    const income = screen.getByText("In").parentElement!;
+    expect(income.className).toContain("text-[var(--money-income)]");
+    expect(income.className).toContain("bg-[var(--bg-surface-2)]");
+    const expense = screen.getByRole("button", { name: "Out" });
+    expect(expense.className).toContain("text-[var(--money-expense)]");
+    expect(expense.className).toContain("bg-[var(--bg-active)]");
+    expect(expense).toHaveAttribute("aria-pressed", "true");
+  });
+});

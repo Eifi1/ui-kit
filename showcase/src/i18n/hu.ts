@@ -103,8 +103,9 @@ export const hu: Dictionary = {
         "Beviteli mezők, és azok az osztálykonstansok, amelyekből egy alkalmazás a saját mezőit összeállítja.",
     },
     choices: {
-      title: "Jelölőnégyzet, kapcsoló és csúszka",
-      blurb: "Választás gépelés helyett: be vagy ki, egy a néhány közül, és egy érték egy skálán.",
+      title: "Választás",
+      blurb:
+        "Be vagy ki, egy a néhány közül, egy érték egy skálán — valamint szín, ikon vagy kártya kiválasztása.",
     },
     numbers: {
       title: "Számok és összegek",
@@ -115,6 +116,11 @@ export const hu: Dictionary = {
       title: "Legördülő listák és választók",
       blurb:
         "Comboboxok, többszörös kijelölés, csoportosított és lap alapú választók, valamint az alattuk lévő legördülő primitívek.",
+    },
+    files: {
+      title: "Fájlok",
+      blurb:
+        "Fájlok kiválasztása: egy gomb, amely a fájlválasztót vagy a kamerát nyitja meg, a fájlok behúzására szolgáló terület, és az elutasítások, amelyek ott jelennek meg, ahová a felhasználó éppen néz — soha nem felugró értesítésként.",
     },
     dates: {
       title: "Dátum és idő",
@@ -127,9 +133,9 @@ export const hu: Dictionary = {
         "Adatbázishoz kötött mező szinkronizálási állapota, a mező elhagyásakor mentve: a keret színe és egy ikon a mező végén mutatja, hogy módosítva, mentés folyamatban, mentve vagy hiba — a hibajelre mutatva látszik az ok.",
     },
     "signature-password": {
-      title: "Aláírás és jelszóerősség",
+      title: "Aláírás, jelszó és megerősítés",
       blurb:
-        "Aláírás rögzítése tollal, ujjal vagy egérrel — tartalékként begépelt névvel —, és visszajelzés arról, mennyire erős a választott jelszó.",
+        "Aláírás rögzítése — és egy mentett aláírás megjelenítése —, visszajelzés a jelszó erősségéről, valamint egy visszavonhatatlan művelet megerősítése.",
     },
     "data-display": {
       title: "Adatmegjelenítés",
@@ -155,6 +161,11 @@ export const hu: Dictionary = {
       title: "Mutatók és sparkline-ok",
       blurb:
         "A KPI-csempe, amelyet minden irányítópult megismétel — érték, változás, trend —, és az apró vonal, amely elfér egy táblázatcellában.",
+    },
+    layout: {
+      title: "Lenyíló szakasz és párbeszédkeret",
+      blurb:
+        "Egy összecsukható szakasz, és a fejléc–tartalom–műveletek keret, amelyet minden párbeszédablak megismétel.",
     },
     overlays: {
       title: "Felugró elemek",
@@ -316,6 +327,10 @@ export const hu: Dictionary = {
       loading: "Betöltés…",
       create: (query) => `„${query}” létrehozása`,
       selectedCount: (count) => `${n(count)} kiválasztva`,
+      loadError: "Az eredmények betöltése nem sikerült",
+      // No plural after a numeral (convention 2).
+      resultCount: (count) => `${n(count)} találat`,
+      minChars: (count) => `Írjon be legalább ${n(count)} karaktert`,
     },
     multiSelect: {
       search: "Keresés",
@@ -351,6 +366,17 @@ export const hu: Dictionary = {
       atLimit: (max) => `Elérte a korlátot: legfeljebb ${n(max)} elem adható meg`,
       duplicate: (value) => `„${value}” már szerepel a listában`,
     },
+    swatchPicker: {
+      none: "Nincs szín",
+      mixed: "Vegyes: a kiválasztott elemek színe eltérő",
+    },
+    iconPicker: {
+      none: "Nincs ikon",
+      mixed: "Vegyes: a kiválasztott elemek ikonja eltérő",
+      search: "Ikonok keresése",
+      noResults: "Nincs megfelelő ikon",
+      resultCount: (count) => `${n(count)} ikon`,
+    },
     fieldSync: {
       synced: "Mentve",
       edited: "Nem mentett módosítások",
@@ -361,6 +387,19 @@ export const hu: Dictionary = {
     passwordReveal: {
       show: "Jelszó megjelenítése",
       hide: "Jelszó elrejtése",
+    },
+    dangerConfirm: {
+      arm: "Törlés…",
+      confirm: "Törlés",
+      cancel: "Mégse",
+      prompt: "Ez a művelet nem vonható vissza.",
+      password: "Jelszó",
+      // Phrase after a colon, so no article has to agree with it.
+      phrase: (phrase) => `A megerősítéshez írja be: „${phrase}”`,
+    },
+    tabs: {
+      add: "Lap hozzáadása",
+      remove: (tab) => `${tab} eltávolítása`,
     },
     appShell: {
       collapse: "Oldalsáv összecsukása",
@@ -377,12 +416,31 @@ export const hu: Dictionary = {
     pickerSheet: {
       close: "Bezárás",
     },
+    dialogFrame: {
+      close: "Bezárás",
+    },
     swipeableRow: {
       actions: "Sorműveletek",
     },
     file: {
       // The kit's own `Intl` unit formatting, pinned to this locale ("3,4 MB").
       size: (bytes) => formatFileSize(bytes, "hu-HU"),
+    },
+    filePicker: {
+      // Each message opens with the quoted name, so no a/az has to agree with it, and
+      // keeps numerals and the formatted size bare (convention 3).
+      rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,
+      rejectedSize: (name, maxSize) => `„${name}”: a fájl mérete legfeljebb ${maxSize} lehet`,
+      rejectedCount: (name, maxFiles) =>
+        `„${name}” nem lett hozzáadva: legfeljebb ${n(maxFiles)} fájl adható meg`,
+      rejectedInvalid: (name) => `„${name}” itt nem használható`,
+      rejectedMany: (count) => `${n(count)} fájl nem lett hozzáadva`,
+      selected: (count, firstName) =>
+        count === 1 ? `„${firstName}” kiválasztva` : `${n(count)} fájl kiválasztva`,
+      remove: (name) => `„${name}” eltávolítása`,
+      clearAll: "Összes fájl eltávolítása",
+      removed: (name) => `„${name}” eltávolítva`,
+      cleared: "Minden fájl eltávolítva",
     },
     wizard: {
       cancel: "Mégse",
@@ -449,6 +507,9 @@ export const hu: Dictionary = {
       typedName: "Teljes név",
       cleared: "Aláírás törölve",
       undone: "Utolsó vonás eltávolítva",
+      viewEmpty: "Nincs aláírva",
+      viewDrawn: "Kézzel írt aláírás",
+      viewTyped: (name) => `Aláírva a begépelt névvel: ${name}`,
     },
     passwordStrength: {
       tooShort: "Túl rövid",

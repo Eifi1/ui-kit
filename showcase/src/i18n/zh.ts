@@ -98,8 +98,8 @@ export const zh: Dictionary = {
       blurb: "输入框，以及应用用来组合自有字段的类名常量。",
     },
     choices: {
-      title: "复选框、开关与滑块",
-      blurb: "选择而非输入：开或关、几项中选一项，以及刻度上的一个值。",
+      title: "选择",
+      blurb: "开或关、几项中选一项、刻度上的一个值——以及选择颜色、图标或卡片。",
     },
     numbers: {
       title: "数字与金额",
@@ -109,6 +109,11 @@ export const zh: Dictionary = {
     dropdowns: {
       title: "下拉框与选择器",
       blurb: "Combobox、多选、分组选择器与底部面板选择器，以及它们底层的下拉基础组件。",
+    },
+    files: {
+      title: "文件",
+      blurb:
+        "选择文件：可打开文件选择器或相机的按钮、拖放区域，以及显示在用户视线所在之处的拒绝提示——绝不使用 toast。",
     },
     dates: {
       title: "日期与时间",
@@ -121,9 +126,8 @@ export const zh: Dictionary = {
         "数据库字段的同步状态，在离开字段时保存：边框颜色和字段末尾的图标表示已编辑、保存中、已保存或失败——将鼠标悬停在错误标记上可查看原因。",
     },
     "signature-password": {
-      title: "签名与密码强度",
-      blurb:
-        "用笔、手指或鼠标采集签名（也可改为输入姓名），并告诉用户所选密码的强度。",
+      title: "签名、密码与确认",
+      blurb: "采集签名（以及显示已保存的签名）、告诉用户密码的强度，并确认破坏性操作。",
     },
     "data-display": {
       title: "数据展示",
@@ -146,6 +150,10 @@ export const zh: Dictionary = {
       title: "统计卡片与迷你图",
       blurb:
         "每个仪表盘都会重复出现的 KPI 卡片——数值、变化、趋势——以及能放进表格单元格的迷你折线图。",
+    },
+    layout: {
+      title: "折叠区域与对话框框架",
+      blurb: "可以收起的区块，以及每个对话框都会重复的“标题—内容—操作”框架。",
     },
     overlays: {
       title: "浮层",
@@ -299,6 +307,9 @@ export const zh: Dictionary = {
       loading: "加载中…",
       create: (query) => `创建“${query}”`,
       selectedCount: (count) => `已选 ${n(count)} 项`,
+      loadError: "无法加载结果",
+      resultCount: (count) => `${n(count)} 个结果`,
+      minChars: (count) => `请至少输入 ${n(count)} 个字符`,
     },
     multiSelect: {
       search: "搜索",
@@ -333,6 +344,17 @@ export const zh: Dictionary = {
       atLimit: (max) => `已达上限（${n(max)} 项）`,
       duplicate: (value) => `“${value}”已在列表中`,
     },
+    swatchPicker: {
+      none: "无颜色",
+      mixed: "混合：所选项目的颜色各不相同",
+    },
+    iconPicker: {
+      none: "无图标",
+      mixed: "混合：所选项目的图标各不相同",
+      search: "搜索图标",
+      noResults: "没有匹配的图标",
+      resultCount: (count) => `${n(count)} 个图标`,
+    },
     fieldSync: {
       synced: "已保存",
       edited: "有未保存的更改",
@@ -343,6 +365,19 @@ export const zh: Dictionary = {
     passwordReveal: {
       show: "显示密码",
       hide: "隐藏密码",
+    },
+    dangerConfirm: {
+      arm: "删除…",
+      confirm: "删除",
+      cancel: "取消",
+      prompt: "此操作无法撤销。",
+      password: "密码",
+      phrase: (phrase) => `输入“${phrase}”以确认`,
+    },
+    tabs: {
+      add: "添加标签页",
+      // Quoted, so the spacing rule holds whether the tab's name is Han or Latin.
+      remove: (tab) => `移除“${tab}”`,
     },
     appShell: {
       collapse: "收起侧边栏",
@@ -359,12 +394,28 @@ export const zh: Dictionary = {
     pickerSheet: {
       close: "关闭",
     },
+    dialogFrame: {
+      close: "关闭",
+    },
     swipeableRow: {
       actions: "行操作",
     },
     file: {
       // The kit's own `Intl` unit formatting, pinned to this locale.
       size: (bytes) => formatFileSize(bytes, "zh-CN"),
+    },
+    filePicker: {
+      rejectedType: (name) => `“${name}”的文件类型不受支持`,
+      rejectedSize: (name, maxSize) => `“${name}”超过 ${maxSize}`,
+      rejectedCount: (name, maxFiles) => `未添加“${name}”：最多 ${n(maxFiles)} 个文件`,
+      rejectedInvalid: (name) => `“${name}”无法在此使用`,
+      rejectedMany: (count) => `${n(count)} 个文件未添加`,
+      selected: (count, firstName) =>
+        count === 1 ? `已选择“${firstName}”` : `已选择 ${n(count)} 个文件`,
+      remove: (name) => `移除“${name}”`,
+      clearAll: "移除所有文件",
+      removed: (name) => `已移除“${name}”`,
+      cleared: "已移除所有文件",
     },
     wizard: {
       cancel: "取消",
@@ -429,6 +480,10 @@ export const zh: Dictionary = {
       typedName: "姓名",
       cleared: "签名已清除",
       undone: "已撤销上一笔",
+      viewEmpty: "未签名",
+      viewDrawn: "手写签名",
+      // Quoted, so the spacing rule holds whether the name is Han or Latin.
+      viewTyped: (name) => `以输入的姓名“${name}”签名`,
     },
     passwordStrength: {
       tooShort: "太短",
