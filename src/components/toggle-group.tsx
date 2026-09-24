@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactElement } from "react";
 import { cn } from "../lib/cn";
 
 export interface ToggleOption<T extends string> {
@@ -74,7 +74,19 @@ export type ToggleGroupProps<T extends string> =
   | ToggleGroupRequiredProps<T>
   | ToggleGroupClearableProps<T>;
 
-export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>) {
+/**
+ * Overloaded rather than typed by the union alone (keksdose, "Gaps found adopting
+ * 0.6.0" #7). Inferring `T` through a union of prop shapes let TypeScript settle on
+ * `string`, so `<ToggleGroup allowEmpty value={filter} onChange={setFilter} />` over a
+ * `useState<Status | null>` did not compile unless the caller spelled
+ * `<ToggleGroup<Status>>`. One signature per mode lets each infer `T` from its own
+ * `value`/`onChange`/`options`; the third keeps a caller that forwards a
+ * {@link ToggleGroupProps} union (a wrapper component) compiling.
+ */
+export function ToggleGroup<T extends string>(props: ToggleGroupClearableProps<T>): ReactElement;
+export function ToggleGroup<T extends string>(props: ToggleGroupRequiredProps<T>): ReactElement;
+export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): ReactElement;
+export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): ReactElement {
   const {
     value,
     options,

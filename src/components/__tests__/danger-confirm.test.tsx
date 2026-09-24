@@ -141,4 +141,42 @@ describe("DangerConfirm", () => {
     expect(screen.getByLabelText("„weg“ eintippen")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
   });
+
+  it("phraseMatch=\"exact\" refuses surrounding spaces", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm phrase="DELETE" phraseMatch="exact" onConfirm={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    const field = screen.getByLabelText("Type “DELETE” to confirm");
+    await user.type(field, " DELETE ");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    await user.clear(field);
+    await user.type(field, "DELETE");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+  });
+
+  it("takes a finished string as the phrase label, and a placeholder (string or function)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <DangerConfirm
+        phrase="DELETE"
+        armed
+        onConfirm={() => {}}
+        labels={{ phrase: "Type DELETE to confirm", phrasePlaceholder: "DELETE" }}
+      />,
+    );
+    expect(screen.getByLabelText("Type DELETE to confirm")).toHaveAttribute("placeholder", "DELETE");
+    rerender(
+      <DangerConfirm phrase="wipe" armed onConfirm={() => {}} labels={{ phrasePlaceholder: (p) => `e.g. ${p}` }} />,
+    );
+    expect(screen.getByLabelText("Type “wipe” to confirm")).toHaveAttribute("placeholder", "e.g. wipe");
+    await user.type(screen.getByLabelText("Type “wipe” to confirm"), "wipe");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+  });
+
+  it("keeps the floating label, and no placeholder text, unless one is given", () => {
+    render(<DangerConfirm phrase="wipe" armed onConfirm={() => {}} />);
+    const field = screen.getByLabelText("Type “wipe” to confirm");
+    // The floating field's own single space, which drives its label — not text.
+    expect(field.getAttribute("placeholder")?.trim() ?? "").toBe("");
+  });
 });

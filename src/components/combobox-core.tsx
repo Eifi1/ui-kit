@@ -13,7 +13,7 @@ import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { PHONE_QUERY } from "./ui";
+import { FLOATING_LABEL_STATIC, PHONE_QUERY } from "./ui";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
@@ -33,6 +33,76 @@ export interface ComboOption<V extends string | number> {
    * Searchable like `sublabel`.
    */
   group?: string;
+  /**
+   * Shown but not takeable: rendered dimmed with `aria-disabled`, passed over by the
+   * arrow keys, and a click or Enter on it does nothing. For a row whose existence is
+   * the information — a write-locked result, an account that is closed — where
+   * leaving it out would read as "there is no such thing". Say WHY in `sublabel`: a
+   * hover tooltip is the one explanation a phone cannot show.
+   *
+   * Honoured by {@link Autocomplete}, {@link InlineEntityCombobox} and the panel
+   * pickers ({@link EntityCombobox}, {@link MultiEntityCombobox}); on those an already
+   * chosen disabled option stays chosen — the row only refuses to be toggled.
+   */
+  disabled?: boolean;
+}
+
+/** A row the user may take — present and not {@link ComboOption.disabled}. */
+export const isOptionEnabled = (o: { disabled?: boolean } | undefined): boolean =>
+  o !== undefined && !o.disabled;
+
+/**
+ * The next takeable row from `from`, stepping `dir` — what the arrow keys use so a
+ * disabled row is passed over, as the APG allows. Stays on `from` at the end of the
+ * list (the family's arrows clamp rather than wrap) and answers `-1` when `from` is
+ * not a row and there is nothing to step to.
+ */
+export function stepEnabled(
+  rows: readonly { disabled?: boolean }[],
+  from: number,
+  dir: 1 | -1,
+): number {
+  for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
+    if (!rows[i].disabled) return i;
+  }
+  return from >= 0 && from < rows.length ? from : -1;
+}
+
+/** `i` when that row is takeable, else the nearest takeable one after it, else
+ *  before it, else `-1`. For a highlight that starts on a fixed index (the panel
+ *  pickers open on row 0) and must never rest on a disabled row. */
+export function settleEnabled(rows: readonly { disabled?: boolean }[], i: number): number {
+  if (i < 0 || i >= rows.length) return -1;
+  if (!rows[i].disabled) return i;
+  const after = stepEnabled(rows, i, 1);
+  if (after !== i) return after;
+  const before = stepEnabled(rows, i, -1);
+  return before !== i ? before : -1;
+}
+
+/** Classes a disabled row adds over its normal ones — dimmed, no hover, the
+ *  kit's soft-disabled look (`DangerConfirm`, `SignaturePad`). */
+export const DISABLED_ROW_CLASS = "cursor-not-allowed opacity-50 hover:bg-transparent";
+
+/**
+ * The family's floating label, as a real `<label for>` (lenkbank): the input is then
+ * named the way {@link Input}'s is, so `getByLabelText` and any helper that walks
+ * `<label htmlFor>` finds it. Same placement and type as {@link FieldLabel}, which
+ * stays a `<span>` for the TRIGGER pickers — a `<button>` is labelable, but those
+ * compose their own "label: value" name. `pointer-events-none` (from the class)
+ * keeps a press on it landing on the field under it, as before.
+ */
+export function ComboboxFieldLabel({
+  htmlFor,
+  className,
+  children,
+  ...rest
+}: ComponentPropsWithoutRef<"label"> & { htmlFor: string }) {
+  return (
+    <label {...rest} htmlFor={htmlFor} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
+      {children}
+    </label>
+  );
 }
 
 /**
@@ -434,9 +504,15 @@ export function ComboboxPanel<V extends string | number>({
   // Same core, same results, same handlers — only the container differs, so the
   // two presentations cannot drift in what they offer.
   const isPhone = useMediaQuery(PHONE_QUERY, false);
-  const rowCount = results.length + (showCreate ? 1 : 0);
+  // Every row the keyboard can land on, the create row included (never disabled).
+  const rows: readonly { disabled?: boolean }[] = showCreate ? [...results, {}] : results;
+  const rowCount = rows.length;
   const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const activeId = active >= 0 && active < rowCount ? optionId(active) : undefined;
+  // The core opens on row 0 and knows nothing of `disabled`; the highlight is settled
+  // HERE, derived, so it can never rest on a row that cannot be taken — whatever the
+  // async list turned out to hold.
+  const current = settleEnabled(rows, active);
+  const activeId = current >= 0 ? optionId(current) : undefined;
   useActiveOptionScroll(activeId);
   // The consumers resolve their own props against the provider already; this is
   // for the loading row, which no consumer names, and for a caller that renders the
@@ -447,21 +523,25 @@ export function ComboboxPanel<V extends string | number>({
   // commits, Tab leaves. Escape is the one key handled elsewhere — `useComboboxCore`
   // registers it on the document, so it answers wherever focus has ended up.
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    // Disabled rows are passed over (`stepEnabled`), and each step starts from the
+    // SETTLED highlight, not the raw index, so the first Down from a disabled row 0
+    // goes to the row after the one already shown as highlighted.
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, rowCount - 1));
+      setActive(stepEnabled(rows, current, 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
+      setActive(current < 0 ? -1 : stepEnabled(rows, current, -1));
     } else if (e.key === "Home") {
       e.preventDefault();
-      setActive(0);
+      setActive(stepEnabled(rows, -1, 1));
     } else if (e.key === "End") {
       e.preventDefault();
-      setActive(rowCount - 1);
+      setActive(stepEnabled(rows, rowCount, -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (active < results.length) onChoose(results[active]);
+      if (current < 0) return;
+      if (current < results.length) onChoose(results[current]);
       else if (showCreate) onCreate();
     } else if (e.key === "Tab") {
       // The panel is PORTALLED to <body>, so the browser's own Tab would move from
@@ -556,19 +636,26 @@ export function ComboboxPanel<V extends string | number>({
               id={optionId(i)}
               role="option"
               aria-selected={selected}
+              aria-disabled={o.disabled || undefined}
               tabIndex={-1}
               onMouseDown={(e) => {
                 e.preventDefault();
-                onChoose(o);
+                if (!o.disabled) onChoose(o);
               }}
-              onMouseEnter={() => setActive(i)}
+              onMouseEnter={() => {
+                if (!o.disabled) setActive(i);
+              }}
               className={cn(
                 isPhone
                   ? SHEET_ROW_CLASS
-                  : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
-                i === active && !isPhone
-                  ? "bg-[var(--bg-active)]"
-                  : !isPhone && "hover:bg-[var(--bg-hover)]",
+                  : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+                o.disabled
+                  ? DISABLED_ROW_CLASS
+                  : i === current && !isPhone
+                    ? "bg-[var(--bg-active)]"
+                    : !isPhone && "hover:bg-[var(--bg-hover)]",
+                // After SHEET_ROW_CLASS, so its hover is the one cancelled.
+                o.disabled && isPhone && DISABLED_ROW_CLASS,
               )}
             >
               {multi && (
@@ -620,9 +707,9 @@ export function ComboboxPanel<V extends string | number>({
             className={cn(
               isPhone
                 ? SHEET_ROW_CLASS
-                : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
+                : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
               "text-[var(--text-secondary)]",
-              active === results.length && !isPhone
+              current === results.length && !isPhone
                 ? "bg-[var(--bg-active)]"
                 : !isPhone && "hover:bg-[var(--bg-hover)]",
             )}

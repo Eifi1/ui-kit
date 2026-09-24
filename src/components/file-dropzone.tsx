@@ -5,8 +5,8 @@ import { Button, IconButton } from "./ui";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
-import { DEFAULT_FILE_PICKER_LABELS, screenFiles, summariseRejections } from "./file-button";
-import type { FilePickerLabels, FileRejection } from "./file-button";
+import { DEFAULT_FILE_PICKER_LABELS, judgePick, screenFiles, summariseRejections } from "./file-button";
+import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
 
 /**
  * Where a refused file's message goes.
@@ -81,6 +81,10 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
   onInvalid?: (file: File) => void;
   /** Every refused file of one pick, with its reason and message. */
   onReject?: (rejections: FileRejection[]) => void;
+  /** The whole pick at once, before any of the above — return `false` to refuse all
+   *  of it (see {@link FilePickHandler}). A refused pick selects nothing; its one
+   *  message (`labels.rejectedPick`) goes where `rejectionFeedback` says. */
+  onPick?: FilePickHandler;
   /** See {@link FileDropzoneRejectionFeedback}. Defaults to `"toast"` when neither
    *  `onInvalid` nor `onReject` is given, `"none"` when one is. */
   rejectionFeedback?: FileDropzoneRejectionFeedback;
@@ -116,6 +120,7 @@ export function FileDropzone({
   maxFiles,
   onInvalid,
   onReject,
+  onPick,
   rejectionFeedback,
   labels: labelsProp,
   dropLabel,
@@ -149,8 +154,9 @@ export function FileDropzone({
   const acceptFiles = (list: ArrayLike<File> | null | undefined) => {
     if (!list || list.length === 0) return;
     const all = Array.from(list);
+    const picked = multiple ? all : all.slice(0, 1);
     const { accepted, rejected } = screenFiles(
-      multiple ? all : all.slice(0, 1),
+      picked,
       {
         accept: isValid ? undefined : accept,
         maxSize,
@@ -161,7 +167,8 @@ export function FileDropzone({
       labels,
       fileText.size,
     );
-    if (accepted.length > 0) {
+    const stands = judgePick(onPick, accepted, rejected);
+    if (stands && accepted.length > 0) {
       setError(null);
       if (multiple) {
         onFilesSelected?.(accepted);
@@ -171,10 +178,12 @@ export function FileDropzone({
       }
       status.announce(labels.selected(accepted.length, accepted[0].name));
     }
-    if (rejected.length > 0) {
+    if (!stands || rejected.length > 0) {
       for (const r of rejected) onInvalid?.(r.file);
-      onReject?.(rejected);
-      const message = summariseRejections(rejected, labels);
+      if (rejected.length > 0) onReject?.(rejected);
+      const message = stands
+        ? summariseRejections(rejected, labels)
+        : labels.rejectedPick(picked.length);
       if (feedback === "toast") {
         // sonner is an optional peer: imported here, on the failure path only, so an
         // app that never trips this never has to install it. Not awaited — nothing

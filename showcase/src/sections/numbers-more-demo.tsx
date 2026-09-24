@@ -142,6 +142,17 @@ function DangerSpecimens() {
           onConfirm={() => setLog("demo data loaded")}
         />
         <DangerConfirm
+          armLabel="Delete account…"
+          confirmLabel="Delete my account"
+          prompt="Your account and every budget in it are removed for good."
+          phrase="DELETE"
+          phraseMatch="exact"
+          // A finished label from the app's own catalogue, and a placeholder: the label
+          // then sits above the field, which the placeholder has to itself.
+          labels={{ phrase: "Type DELETE, in capitals, to confirm", phrasePlaceholder: (p) => p }}
+          onConfirm={() => setLog("account deleted (exact match, spaces count)")}
+        />
+        <DangerConfirm
           armLabel="Reset budget…"
           lockedReason="The demo is read-only — nothing here can be deleted."
           onConfirm={() => {}}
@@ -152,6 +163,9 @@ function DangerSpecimens() {
         A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and
         leaves it armed (fields kept) when it rejects. <code>lockedReason</code> replaces an
         app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off.
+        The phrase ignores surrounding spaces unless <code>phraseMatch=&quot;exact&quot;</code>;{" "}
+        <code>labels.phrase</code> takes a function of the phrase or a finished string, and{" "}
+        <code>labels.phrasePlaceholder</code> moves the label above the field.
       </Note>
     </Example>
   );

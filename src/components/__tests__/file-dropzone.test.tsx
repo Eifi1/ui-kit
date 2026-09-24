@@ -154,3 +154,33 @@ describe("FileDropzone 0.6", () => {
     await screen.findByText("“lease.pdf” selected");
   });
 });
+
+describe("FileDropzone onPick", () => {
+  it("refuses the whole pick when onPick returns false, and shows one message", async () => {
+    const onFilesSelected = vi.fn();
+    const onReject = vi.fn();
+    const { container } = zone({
+      multiple: true,
+      onFilesSelected,
+      onReject,
+      rejectionFeedback: "inline",
+      onPick: (_ok, bad) => bad.length === 0 || false,
+    });
+    pick(input(container), pdf("a.pdf"), png());
+    expect(onFilesSelected).not.toHaveBeenCalled();
+    expect(onReject).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(screen.getAllByText("None of the 2 files were added").length).toBeGreaterThan(0),
+    );
+  });
+
+  it("delivers as usual when onPick has no objection", () => {
+    const onFilesSelected = vi.fn();
+    const onPick = vi.fn();
+    const { container } = zone({ multiple: true, onFilesSelected, onPick });
+    const a = pdf("a.pdf");
+    pick(input(container), a);
+    expect(onPick).toHaveBeenCalledWith([a], []);
+    expect(onFilesSelected).toHaveBeenCalledWith([a]);
+  });
+});

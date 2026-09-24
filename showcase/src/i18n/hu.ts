@@ -52,6 +52,12 @@ export const hu: Dictionary = {
     contentsPosition: "A tartalomjegyzék helye",
     positionStart: "Balra",
     positionEnd: "Jobbra",
+    devicePreview: "Előnézet képernyőméretekben",
+    previewHint:
+      "Az oldal a három leggyakoribb képernyőméretben, élőben: mindegyik keretben görgethet és kattinthat. A téma, a paletta és a nyelv a felső sávot követi.",
+    phone: "Telefon",
+    tablet: "Táblagép",
+    desktop: "Asztali gép",
   },
 
   groups: {
@@ -449,6 +455,7 @@ export const hu: Dictionary = {
       size: (bytes) => formatFileSize(bytes, "hu-HU"),
     },
     filePicker: {
+      rejectedPick: (count) => (count === 1 ? "A fájl nem lett hozzáadva" : `A(z) ${count} fájl közül egy sem lett hozzáadva`),
       // Each message opens with the quoted name, so no a/az has to agree with it, and
       // keeps numerals and the formatted size bare (convention 3).
       rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,

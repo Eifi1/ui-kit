@@ -1320,7 +1320,8 @@ export interface TabsProps<T extends string>
    */
   panelId?: string;
   /**
-   * Makes the tabs removable: an × on the OPEN tab, and Delete on a focused tab.
+   * Makes the tabs removable: an × on the OPEN tab, and Delete on a focused tab
+   * (only on the open one with `removeOn="active"`).
    *
    * The × is on the open tab only — a row of tabs each carrying one is a row of
    * things to hit by accident, and the tab you can remove should be the one you
@@ -1328,7 +1329,7 @@ export interface TabsProps<T extends string>
    * tab never widens it and never pushes the rest of the strip along (lenkbank
    * feedback #72). It is named "Remove <tab>" and is not a tab stop of its own: the
    * strip stays one stop, and the keyboard path is Delete (announced through
-   * `aria-keyshortcuts`), which removes whichever tab has focus.
+   * `aria-keyshortcuts`), which removes whichever tab has focus (see `removeOn`).
    *
    * The strip only ASKS: it calls this, and the tab goes when the caller drops it
    * from `tabs` — after a confirmation, a request, whatever it needs. When it does,
@@ -1336,6 +1337,20 @@ export interface TabsProps<T extends string>
    * removed one was open, else to its neighbour, instead of falling to the page.
    */
   onRemove?: (id: T) => void;
+  /**
+   * Which tabs the Delete key removes.
+   *
+   * - `"every"` (default): any focused removable tab — the ARIA pattern's reading.
+   * - `"active"`: only the OPEN tab, the same one that wears the ×. For a strip whose
+   *   remove is immediate and unconfirmed (lenkbank's sheet tabs delete a measurement
+   *   sheet at once), so arrowing across the strip and pressing Delete cannot take
+   *   out a sheet the user is not looking at. Delete on a closed tab does nothing,
+   *   and only the open tab announces the shortcut (`aria-keyshortcuts`).
+   *
+   * Either way the × is drawn on the open tab only and its room stays reserved on
+   * every removable tab, so the strip never relayouts when the selection moves.
+   */
+  removeOn?: "every" | "active";
   /** Renders an "add" button after the last tab, outside the tablist — it is an
    *  action, not a tab, and a tablist may own only tabs. */
   onAdd?: () => void;
@@ -1401,6 +1416,7 @@ export function Tabs<T extends string>({
   label,
   panelId,
   onRemove,
+  removeOn = "every",
   onAdd,
   addLabel,
   labels,
@@ -1411,6 +1427,9 @@ export function Tabs<T extends string>({
   const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
   const stripRef = useRef<HTMLDivElement>(null);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
+  // Whether Delete reaches this tab: every removable tab, or only the open one.
+  const deletesOnKey = (tab: TabItem<T>) =>
+    isRemovable(tab) && (removeOn === "every" || tab.id === active);
   const nameOf = (tab: TabItem<T>) =>
     tab.name ?? (typeof tab.label === "string" ? tab.label : tab.id);
 
@@ -1463,8 +1482,9 @@ export function Tabs<T extends string>({
   const onTabKeyDown = (e: KeyboardEvent<HTMLElement>, tab: TabItem<T>) => {
     // Delete removes the FOCUSED tab (the ARIA pattern's optional key for deletable
     // tabs) — the keyboard's way to the × that is not a tab stop. `busy` swallows it
-    // rather than letting it fall through to the page.
-    if (e.key === "Delete" && isRemovable(tab)) {
+    // rather than letting it fall through to the page. With `removeOn="active"` only
+    // the open tab answers; a closed one lets the key pass untouched.
+    if (e.key === "Delete" && deletesOnKey(tab)) {
       e.preventDefault();
       if (!busy) requestRemove(tab.id);
       return;
@@ -1526,7 +1546,7 @@ export function Tabs<T extends string>({
           // Only the open tab: see `panelId`.
           "aria-controls": isActive ? panelId : undefined,
           id: isActive && panelId ? `${panelId}-tab` : undefined,
-          "aria-keyshortcuts": removable ? "Delete" : undefined,
+          "aria-keyshortcuts": deletesOnKey(tab) ? "Delete" : undefined,
           onKeyDown: (e: KeyboardEvent<HTMLElement>) => onTabKeyDown(e, tab),
           className: cn(
             wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,

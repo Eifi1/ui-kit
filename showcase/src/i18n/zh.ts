@@ -51,6 +51,12 @@ export const zh: Dictionary = {
     contentsPosition: "目录位置",
     positionStart: "左侧",
     positionEnd: "右侧",
+    devicePreview: "屏幕尺寸预览",
+    previewHint:
+      "以三种最常见的屏幕尺寸实时显示本页：可在每个框内滚动和点击。主题、配色和语言跟随顶部栏。",
+    phone: "手机",
+    tablet: "平板",
+    desktop: "桌面",
   },
 
   groups: {
@@ -427,6 +433,7 @@ export const zh: Dictionary = {
       size: (bytes) => formatFileSize(bytes, "zh-CN"),
     },
     filePicker: {
+      rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${count} 个文件均未添加`),
       rejectedType: (name) => `“${name}”的文件类型不受支持`,
       rejectedSize: (name, maxSize) => `“${name}”超过 ${maxSize}`,
       rejectedCount: (name, maxFiles) => `未添加“${name}”：最多 ${n(maxFiles)} 个文件`,

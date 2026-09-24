@@ -37,13 +37,15 @@ const INITIAL_SHEETS: TabItem<string>[] = [
   { id: "120", label: "120 km/h", detail: "not measured", empty: true },
 ];
 
-function SheetStrip() {
+function SheetStrip({ removeOn, wrap }: { removeOn?: "every" | "active"; wrap?: boolean }) {
   const [sheets, setSheets] = useState(INITIAL_SHEETS);
   const [active, setActive] = useState("80");
   return (
     <div data-stage="wide" className="space-y-3">
       <Tabs
         aria-label="Loops"
+        wrap={wrap}
+        removeOn={removeOn}
         tabs={sheets}
         active={active}
         onChange={setActive}
@@ -240,6 +242,22 @@ export function ControlsDemo() {
           <SheetStrip />
         </Stage>
       </Example>
+
+      <Example
+        label="Delete on the open tab only"
+        hint='removeOn="active" · wrap · Delete on a closed tab does nothing'
+      >
+        <Stage>
+          <SheetStrip removeOn="active" wrap />
+        </Stage>
+      </Example>
+
+      <Note>
+        For a remove that happens at once, with nothing to confirm it (lenkbank deletes a
+        measurement sheet), <code>removeOn=&quot;active&quot;</code> narrows the Delete key to the
+        tab you are looking at — the same one that wears the ×. Arrow onto a closed tab and press
+        Delete: nothing goes. The ×&apos;s room stays reserved on every tab either way.
+      </Note>
     </>
   );
 }

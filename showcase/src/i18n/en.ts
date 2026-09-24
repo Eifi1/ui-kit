@@ -53,6 +53,12 @@ export const en: Dictionary = {
     contentsPosition: "Contents position",
     positionStart: "Left",
     positionEnd: "Right",
+    devicePreview: "Screen-size preview",
+    previewHint:
+      "The page at the three most common screen sizes, live: scroll and click inside each frame. Theme, palette and language follow the top bar.",
+    phone: "Phone",
+    tablet: "Tablet",
+    desktop: "Desktop",
   },
 
   // Keyed by the English label in routes.tsx — the key is the identity of the group, the

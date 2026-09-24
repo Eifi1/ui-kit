@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { Button, Input, Spinner } from "./ui";
+import { Button, Input, Label, Spinner } from "./ui";
 
 /**
  * Every string the tile renders — the `dangerConfirm` namespace of
@@ -20,20 +20,30 @@ export interface DangerConfirmLabels {
   prompt: string;
   /** Label of the password field (`requirePassword`). */
   password: string;
-  /** Label of the type-to-confirm field, given the phrase to type. A FUNCTION, like
+  /** Label of the type-to-confirm field. A FUNCTION of the phrase by default, like
    *  every message that carries a value: where the phrase sits in the sentence moves
-   *  with the language. */
-  phrase: (phrase: string) => string;
+   *  with the language. A plain STRING is taken as the finished label — for an app
+   *  whose catalogue already words it ("Type DELETE to confirm") and would otherwise
+   *  wrap it as `() => label`. */
+  phrase: string | ((phrase: string) => string);
+  /** Placeholder of the type-to-confirm field — a string, or a function of the
+   *  phrase (`(p) => p` echoes it). Optional and unset by default: the field keeps its
+   *  floating label, as before. Given, the label moves ABOVE the field (a floating
+   *  label occupies the empty field, which is exactly where a placeholder shows) and
+   *  the placeholder fills the field. An empty string means none. */
+  phrasePlaceholder?: string | ((phrase: string) => string);
 }
 
-export const DEFAULT_DANGER_CONFIRM_LABELS: DangerConfirmLabels = {
+/** `satisfies` rather than a type annotation, so `DEFAULT_DANGER_CONFIRM_LABELS.phrase`
+ *  stays callable for a caller that composes its own label from it. */
+export const DEFAULT_DANGER_CONFIRM_LABELS = {
   arm: "Delete…",
   confirm: "Delete",
   cancel: "Cancel",
   prompt: "This cannot be undone.",
   password: "Password",
-  phrase: (phrase) => `Type “${phrase}” to confirm`,
-};
+  phrase: (phrase: string) => `Type “${phrase}” to confirm`,
+} satisfies DangerConfirmLabels;
 
 export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
   /**
@@ -48,8 +58,15 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
   /** Show a password field; confirm stays disabled until it is filled. */
   requirePassword?: boolean;
   /** Show a "type <phrase> to confirm" field; confirm stays disabled until the field
-   *  matches exactly (case-sensitive, surrounding spaces ignored). */
+   *  matches (case-sensitive; surrounding spaces ignored unless `phraseMatch="exact"`). */
   phrase?: string;
+  /**
+   * How the typed text is compared with `phrase`. `"trim"` (default) ignores spaces
+   * around it — a phone keyboard's autocomplete likes to add one. `"exact"` compares
+   * character for character, spaces included, for an app whose contract is "type
+   * exactly this".
+   */
+  phraseMatch?: "trim" | "exact";
   /** The warning above the fields. Defaults to `labels.prompt`. */
   prompt?: ReactNode;
   /** `"danger"` (default) for what cannot be undone; `"warning"` for what can, at a
@@ -103,6 +120,7 @@ export function DangerConfirm({
   onConfirm,
   requirePassword,
   phrase,
+  phraseMatch = "trim",
   prompt,
   tone = "danger",
   armLabel,
@@ -127,6 +145,7 @@ export function DangerConfirm({
   // that has focus (Enter was pressed in it) drops focus to <body>.
   const promptId = useId();
   const reasonId = useId();
+  const phraseFieldId = useId();
 
   // The kit's Button takes no ref, so the two buttons focus is moved to are found by id.
   const armId = useId();
@@ -180,7 +199,7 @@ export function DangerConfirm({
 
   const locked = lockedReason !== undefined && lockedReason !== null && lockedReason !== false && lockedReason !== "";
   const passwordOk = !requirePassword || password !== "";
-  const phraseOk = phrase === undefined || typed.trim() === phrase;
+  const phraseOk = phrase === undefined || (phraseMatch === "exact" ? typed : typed.trim()) === phrase;
   const canConfirm = passwordOk && phraseOk && !busy;
 
   const submit = (e: FormEvent) => {
@@ -200,6 +219,25 @@ export function DangerConfirm({
         if (mounted.current) setPending(false);
       },
     );
+  };
+
+  const phrasePlaceholder =
+    phrase === undefined || labels.phrasePlaceholder === undefined
+      ? undefined
+      : typeof labels.phrasePlaceholder === "function"
+        ? labels.phrasePlaceholder(phrase)
+        : labels.phrasePlaceholder;
+
+  const phraseLabel =
+    phrase === undefined ? "" : typeof labels.phrase === "function" ? labels.phrase(phrase) : labels.phrase;
+  const phraseFieldProps = {
+    ref: firstFieldRef,
+    value: typed,
+    autoComplete: "off",
+    autoCapitalize: "off",
+    spellCheck: false,
+    readOnly: busy,
+    onChange: (e: ChangeEvent<HTMLInputElement>) => setTyped(e.target.value),
   };
 
   const toneText = tone === "warning" ? "text-[var(--warning)]" : "text-[var(--danger)]";
@@ -242,18 +280,16 @@ export function DangerConfirm({
         <p id={promptId} className={cn("text-xs font-medium", toneText)}>
           {prompt ?? labels.prompt}
         </p>
-        {phrase !== undefined && (
-          <Input
-            ref={firstFieldRef}
-            label={labels.phrase(phrase)}
-            value={typed}
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            readOnly={busy}
-            onChange={(e) => setTyped(e.target.value)}
-          />
-        )}
+        {phrase !== undefined &&
+          (phrasePlaceholder ? (
+            // A static label above, so the placeholder has the empty field to itself.
+            <div className="space-y-1.5">
+              <Label htmlFor={phraseFieldId}>{phraseLabel}</Label>
+              <Input id={phraseFieldId} placeholder={phrasePlaceholder} {...phraseFieldProps} />
+            </div>
+          ) : (
+            <Input label={phraseLabel} {...phraseFieldProps} />
+          ))}
         {requirePassword && (
           <Input
             // The phrase field takes the ref when both are there — it comes first.

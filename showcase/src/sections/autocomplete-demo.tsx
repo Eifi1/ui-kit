@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
-import { Autocomplete, Checkbox, Combobox, type ComboOption } from "@eifi1/ui-kit";
+import { Autocomplete, Button, Checkbox, Combobox, type ComboOption } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 
 /**
@@ -21,6 +21,11 @@ const ADDRESSES = [
   "Marktgasse 20, 3011 Bern",
   "Freie Strasse 35, 4001 Basel",
 ];
+
+/** The search-then-act specimen's lock: a row in Bern is listed but `disabled` —
+ *  keksdose's write-locked result, which must be seen and must not be taken. */
+const lockedRow = (o: ComboOption<string>): ComboOption<string> =>
+  o.label.includes("Bern") ? { ...o, disabled: true, sublabel: "Read-only in this demo" } : o;
 
 /** A pretend geocoder: 450 ms away, and down whenever `outage` is set. */
 function fakeGeocode(query: string, outage: boolean): Promise<ComboOption<string>[]> {
@@ -49,6 +54,8 @@ export function AutocompleteDemo() {
 
   const [search, setSearch] = useState("8001 Zürich");
   const [pinned, setPinned] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [lastOpen, setLastOpen] = useState<boolean | null>(null);
 
   const [required, setRequired] = useState("");
   const [customer, setCustomer] = useState("");
@@ -56,7 +63,8 @@ export function AutocompleteDemo() {
   return (
     <>
       <Note>
-        <strong>Keyboard:</strong> focus stays in the field. ↓/↑ walk the suggestions (named by
+        <strong>Keyboard:</strong> focus stays in the field. ↓/↑ walk the suggestions, passing over a
+        disabled one (named by
         <code> aria-activedescendant</code>), Enter takes the highlighted one — with none
         highlighted, Enter is left to the form — Escape closes the list, Tab closes it and moves on.
         A polite live region says what the list now holds: loading, how many results, none, or a
@@ -90,30 +98,73 @@ export function AutocompleteDemo() {
 
       <Example
         label="Autocomplete — search, then act"
-        hint="fillOnSelect={false}: taking a row is an action and nothing is held (keksdose's address search)"
+        hint={
+          <>
+            <code>fillOnSelect={"{false}"}</code>, <code>size=&quot;sm&quot;</code>,{" "}
+            <code>disabled</code> rows and <code>open</code> held shut while a pick is confirmed
+            (keksdose&apos;s address search)
+          </>
+        }
       >
         <Stage>
-          <Autocomplete
-            aria-label="Find the shop's address"
-            placeholder="Street, postcode or town"
-            icon={<Search />}
-            value={search}
-            onChange={setSearch}
-            loadOptions={(q) => fakeGeocode(q, false)}
-            minChars={3}
-            debounceMs={400}
-            fillOnSelect={false}
-            onSelect={(o) => setPinned(o.label)}
-            inputClassName="py-1.5 text-xs"
-            status={
-              search.trim().length < 3 ? "Type at least 3 characters to search." : undefined
-            }
-          />
+          <div className="w-full max-w-sm space-y-2">
+            <Autocomplete
+              aria-label="Find the shop's address"
+              placeholder="Street, postcode or town"
+              // The compact field — Select size="sm"'s 28px box — and the icon
+              // follows it down to 14px.
+              size="sm"
+              icon={<Search />}
+              value={search}
+              onChange={(text) => {
+                setSearch(text);
+                setConfirming(null);
+              }}
+              loadOptions={(q) => fakeGeocode(q, false).then((rows) => rows.map(lockedRow))}
+              minChars={3}
+              debounceMs={400}
+              fillOnSelect={false}
+              onSelect={(o) => setConfirming(o.label)}
+              // Shut while the confirm step is up, whatever focus does; `undefined`
+              // hands it back to the field. No lookup runs while it is held shut.
+              open={confirming ? false : undefined}
+              onOpenChange={setLastOpen}
+              status={
+                search.trim().length < 3 ? "Type at least 3 characters to search." : undefined
+              }
+            />
+            {confirming && (
+              <div className="space-y-2 rounded-md border border-[var(--border)] p-2 text-xs">
+                <p className="text-[var(--text-secondary)]">{confirming}</p>
+                <div className="flex gap-2">
+                  <Button
+                    className="px-2.5 py-1.5 text-xs"
+                    onClick={() => {
+                      setPinned(confirming);
+                      setConfirming(null);
+                    }}
+                  >
+                    Use this address
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="px-2.5 py-1.5 text-xs"
+                    onClick={() => setConfirming(null)}
+                  >
+                    Back to the list
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </Stage>
-        <StateLine>{`query = "${search}"   pinned → ${pinned ?? "—"}`}</StateLine>
+        <StateLine>{`query = "${search}"   onOpenChange → ${lastOpen ?? "—"}   pinned → ${pinned ?? "—"}`}</StateLine>
         <p className="text-xs text-[var(--text-muted)]">
           Seeded with a query: focusing the field looks it up (no request on mount, none below
-          <code> minChars</code>, one per pause in typing), and the text is never reset.
+          <code> minChars</code>, one per pause in typing), and the text is never reset. Rows in
+          Bern are <code>disabled</code>: listed with their reason, skipped by ↑/↓, and a click
+          takes nothing. Taking a row opens a confirm step, and <code>open={"{false}"}</code> keeps
+          the list shut under it even while the field has focus.
         </p>
       </Example>
 

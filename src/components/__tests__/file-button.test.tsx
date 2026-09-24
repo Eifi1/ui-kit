@@ -274,3 +274,77 @@ describe("matchesAccept with no MIME type (0.6.1 regression fix)", () => {
     expect(matchesAccept(untyped("data.csv"), ".csv,.txt")).toBe(true);
   });
 });
+
+/**
+ * keksdose, "Gaps found adopting 0.6.0" #2: "refuse the pick if any file is bad" had
+ * to rebuild the batch from `onFiles` + `onReject` in a microtask. `onPick` sees the
+ * whole pick at once and can refuse all of it.
+ */
+describe("onPick — judging the whole pick", () => {
+  it("is called once with both halves, before onFiles and onReject", () => {
+    const calls: string[] = [];
+    const onPick = vi.fn(() => {
+      calls.push("pick");
+    });
+    const { container } = render(
+      <FileButton
+        multiple
+        accept=".pdf"
+        onPick={onPick}
+        onFiles={() => calls.push("files")}
+        onReject={() => calls.push("reject")}
+      >
+        Upload
+      </FileButton>,
+    );
+    const good = pdf();
+    const bad = png();
+    pick(fileInput(container), good, bad);
+    expect(onPick).toHaveBeenCalledTimes(1);
+    const [accepted, rejected] = onPick.mock.calls[0] as unknown as [File[], FileRejection[]];
+    expect(accepted).toEqual([good]);
+    expect(rejected.map((r) => r.file)).toEqual([bad]);
+    expect(calls).toEqual(["pick", "files", "reject"]);
+  });
+
+  it("refuses the whole pick when it returns false, and says so once", async () => {
+    const onFiles = vi.fn();
+    const onReject = vi.fn();
+    const { container } = render(
+      <FileButton
+        multiple
+        accept=".pdf"
+        onPick={(_ok, bad) => bad.length === 0 || false}
+        onFiles={onFiles}
+        onReject={onReject}
+      >
+        Upload
+      </FileButton>,
+    );
+    pick(fileInput(container), pdf("a.pdf"), pdf("b.pdf"), png());
+    expect(onFiles).not.toHaveBeenCalled();
+    expect(onReject).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("None of the 3 files were added"));
+  });
+
+  it("lets a clean pick through, and needs no onFiles when onPick takes it", () => {
+    const onPick = vi.fn();
+    const { container } = render(
+      <FileButton multiple accept=".pdf" onPick={onPick}>
+        Upload
+      </FileButton>,
+    );
+    pick(fileInput(container), pdf("a.pdf"), pdf("b.pdf"));
+    expect(onPick).toHaveBeenCalledWith([expect.any(File), expect.any(File)], []);
+  });
+
+  it("keeps the per-file message when nothing was accepted anyway", async () => {
+    const { container } = render(
+      <FileButton accept=".pdf" onPick={() => false}>
+        Upload
+      </FileButton>,
+    );
+    pick(fileInput(container), png());
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("“plan.png” is not a supported file type"));
+  });
+});

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
 import { Toaster } from "sonner";
-import { ArrowLeft, ArrowRight, ListTree, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
+import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
 import {
   AppShell,
   EmptyState,
@@ -21,6 +21,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
+import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
 import { GROUPS, HOME_SLUG, NAV, PAGES, groupOf, hasOverview } from "./routes";
 import type { ShowcasePage } from "./routes";
@@ -88,6 +89,9 @@ export function Showcase() {
   const nav = useTranslatedNav();
   const [sidebarStyle, setSidebarStyle] = useSidebarStyle();
   const [contentsPosition, setContentsPosition] = useContentsPosition();
+  // Not persisted: a reader who reloads is reading, not comparing screen sizes.
+  const [preview, setPreview] = useState(false);
+  const embedded = useMemo(() => isEmbedded(), []);
 
   // `AppShell` scrolls an inner <main>, so the browser has no document scroll to
   // restore on Back. See use-scroll-restoration for what that costs and why.
@@ -169,6 +173,19 @@ export function Showcase() {
                 ariaLabel={t.chrome.language}
               />
               <SidebarStyleToggle style={sidebarStyle} onChange={setSidebarStyle} />
+              {/* Never inside a preview frame (it would nest), and only from `lg`: three
+                  frames side by side need the room. */}
+              {!embedded && (
+                <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden lg:block">
+                  <IconButton
+                    aria-label={t.chrome.devicePreview}
+                    aria-pressed={preview}
+                    onClick={() => setPreview((v) => !v)}
+                  >
+                    <MonitorSmartphone className="size-4" />
+                  </IconButton>
+                </Tooltip>
+              )}
               {/* Desktop-wide only, like the rail it moves. */}
               <span className="hidden xl:contents">
                 <OptionSwitcherMenu
@@ -191,7 +208,10 @@ export function Showcase() {
     >
       <Routes>
         <Route path="/" element={<Navigate to={`/${HOME_SLUG}`} replace />} />
-        <Route path="/:slug" element={<PageRoute contentsPosition={contentsPosition} />} />
+        <Route
+          path="/:slug"
+          element={preview ? <PreviewRoute /> : <PageRoute contentsPosition={contentsPosition} />}
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {/* Inside the tree, not in main.tsx, so it follows the LIVE theme — the mode
@@ -233,6 +253,18 @@ function SidebarStyleToggle({
         {inline ? <PanelRightOpen className="size-4" /> : <ListTree className="size-4" />}
       </IconButton>
     </Tooltip>
+  );
+}
+
+/** The preview replaces the page: the frames ARE the page, three times over. */
+function PreviewRoute() {
+  const { slug } = useParams();
+  const { title } = usePageText(slug ?? "");
+  return (
+    <div className="w-full px-4 py-6 md:px-6">
+      <h1 className="mb-2 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
+      <DevicePreview />
+    </div>
   );
 }
 

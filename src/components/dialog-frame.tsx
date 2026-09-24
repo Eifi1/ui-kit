@@ -52,8 +52,24 @@ export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "child
   closeLabel?: string;
   /** Extra classes for the scrolling body (default spacing `space-y-3`). */
   bodyClassName?: string;
-  /** The body. */
-  children: ReactNode;
+  /**
+   * Extra classes for the header row (default padding `px-4 pt-4 pb-3`), merged last —
+   * `px-3` for a phone sheet whose body runs at `px-3`, so heading and fields share
+   * one gutter.
+   */
+  headerClassName?: string;
+  /**
+   * A rule under the header, the twin of the one over the actions row — for a tall or
+   * full-screen body that scrolls under a header which stays. The body then starts a
+   * step below the rule instead of flush against it.
+   */
+  headerDivider?: boolean;
+  /**
+   * The body. Optional: a dialog whose title, description and actions are the whole
+   * of it (a "you have unsynced changes" question) leaves it out, and the frame then
+   * renders no body at all rather than an empty padded one.
+   */
+  children?: ReactNode;
 }
 
 /**
@@ -95,6 +111,8 @@ export function DialogFrame({
   closeButton = false,
   closeLabel,
   bodyClassName,
+  headerClassName,
+  headerDivider = false,
   className,
   children,
   "aria-describedby": describedBy,
@@ -103,6 +121,8 @@ export function DialogFrame({
   const titleId = useId();
   const descriptionId = useId();
   const hasDescription = description !== undefined && description !== null;
+  // `false` too, so `{cond && <Body/>}` with a false `cond` means "no body".
+  const hasBody = children !== undefined && children !== null && children !== false;
 
   return (
     <Modal
@@ -116,7 +136,14 @@ export function DialogFrame({
       // to the body, which is the only part that should move.
       className={cn("flex flex-col overflow-hidden p-0", className)}
     >
-      <div className="flex shrink-0 items-start justify-between gap-2 px-4 pt-4 pb-3">
+      <div
+        className={cn(
+          // `last:pb-4`: a frame with neither body nor actions closes on its header.
+          "flex shrink-0 items-start justify-between gap-2 px-4 pt-4 pb-3 last:pb-4",
+          headerDivider && "border-b border-[var(--border)]",
+          headerClassName,
+        )}
+      >
         <div className="min-w-0">
           <Heading id={titleId} className="text-lg font-semibold leading-snug text-[var(--text-primary)]">
             {title}
@@ -129,17 +156,22 @@ export function DialogFrame({
         </div>
         {closeButton && <FrameClose label={closeLabel} onClose={modal.onClose} />}
       </div>
-      <div
-        className={cn(
-          // `min-h-0` is what lets a flex child shrink below its content and scroll;
-          // `last:pb-4` closes a frame that has no actions row under it.
-          "min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-3 last:pb-4",
-          bodyClassName,
-        )}
-      >
-        {children}
-      </div>
-      {actions !== undefined && actions !== null && <FrameActions actions={actions} onClose={modal.onClose} />}
+      {hasBody && (
+        <div
+          className={cn(
+            // `min-h-0` is what lets a flex child shrink below its content and scroll;
+            // `last:pb-4` closes a frame that has no actions row under it.
+            "min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-3 last:pb-4",
+            headerDivider && "pt-3",
+            bodyClassName,
+          )}
+        >
+          {children}
+        </div>
+      )}
+      {actions !== undefined && actions !== null && (
+        <FrameActions actions={actions} onClose={modal.onClose} divider={hasBody} />
+      )}
     </Modal>
   );
 }
@@ -164,15 +196,24 @@ function FrameClose({ label, onClose }: { label?: string; onClose: () => void })
 function FrameActions({
   actions,
   onClose,
+  divider,
 }: {
   actions: NonNullable<DialogFrameProps["actions"]>;
   onClose: () => void;
+  /** Off when there is no body: nothing scrolls, so there is no edge to mark, and a
+   *  rule straight under the description would cut the question from its answers. */
+  divider: boolean;
 }) {
   const close = useContext(ModalCloseContext) ?? onClose;
   return (
     // The border marks where the scrolling stops; `flex-wrap` keeps three long
     // translated labels on a phone from pushing the row wider than the sheet.
-    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-4 py-3">
+    <div
+      className={cn(
+        "flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 py-3",
+        divider && "border-t border-[var(--border)]",
+      )}
+    >
       {typeof actions === "function" ? actions(close) : actions}
     </div>
   );

@@ -49,6 +49,29 @@ export function LayoutDemo() {
         </Stage>
       </Example>
 
+      <Example label="Disclosure — trailing" hint="A count, a date or an action beside the title">
+        <Stage>
+          <TrailingSpecimens />
+        </Stage>
+        <Note>
+          <code className="font-mono">trailing</code> is a sibling of the header button, never
+          inside it: a button cannot hold another button, and a count inside it would be read as
+          part of its name. The header button is stretched under the whole row, so the empty
+          space and the chevron still toggle.
+        </Note>
+      </Example>
+
+      <Example label="Disclosure — trigger-only" hint="The header governs rows rendered elsewhere">
+        <Stage>
+          <TriggerOnlySpecimen />
+        </Stage>
+        <Note>
+          <code className="font-mono">controls</code> takes the id of the caller&apos;s own
+          element; the header&apos;s <code className="font-mono">aria-controls</code> points
+          there and the disclosure renders no body.
+        </Note>
+      </Example>
+
       <Example label="Collapse" hint="The fold alone, for a trigger of your own">
         <Stage>
           <CollapseSpecimen />
@@ -123,6 +146,86 @@ function BareSpecimen() {
   );
 }
 
+function TrailingSpecimens() {
+  const [edits, setEdits] = useState(0);
+  const threads = [
+    { subject: "Import stops at row 400", when: "09:14" },
+    { subject: "Totals differ on the phone", when: "Yesterday" },
+  ];
+  return (
+    <div data-stage="wide" className="mx-auto w-full max-w-xl space-y-3">
+      <Disclosure
+        title="Scheduled payments"
+        hint="Rules that book on their own"
+        headingAs="h4"
+        trailing={
+          <>
+            <span className="rounded-full bg-[var(--bg-surface-2)] px-2 text-xs tabular-nums text-[var(--text-secondary)]">
+              4
+            </span>
+            <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEdits((n) => n + 1)}>
+              Edit
+            </Button>
+          </>
+        }
+      >
+        <MountStamp />
+        <p className="font-mono text-xs text-[var(--text-muted)]">edit clicks = {edits} (the fold did not move)</p>
+      </Disclosure>
+      <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]">
+        {threads.map((t, i) => (
+          <Disclosure
+            key={t.subject}
+            variant="bare"
+            title={t.subject}
+            className={cn("px-3 py-2.5", i > 0 && "border-t border-[var(--border)]")}
+            headerClassName="text-[var(--text-primary)]"
+            trailing={<span className="text-xs tabular-nums text-[var(--text-muted)]">{t.when}</span>}
+          >
+            <p className="text-sm text-[var(--text-secondary)]">The thread&apos;s messages.</p>
+          </Disclosure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TriggerOnlySpecimen() {
+  const [open, setOpen] = useState(false);
+  const rowsId = useId();
+  const visible = ["Checking", "Savings"];
+  const hidden = ["Old savings", "Closed card", "Travel wallet"];
+  return (
+    <div data-stage="wide" className="mx-auto w-full max-w-xl space-y-2">
+      <Disclosure
+        variant="bare"
+        title={`${open ? "Hide" : "Show"} ${hidden.length} hidden accounts`}
+        controls={rowsId}
+        open={open}
+        onOpenChange={setOpen}
+        trailing={<span className="text-xs text-[var(--text-muted)]">aria-controls → the table&apos;s rows</span>}
+      />
+      <table className="w-full overflow-hidden rounded-lg border border-[var(--border)] text-sm">
+        <tbody className="divide-y divide-[var(--border)]">
+          {visible.map((a) => (
+            <tr key={a}>
+              <td className="px-3 py-2 text-[var(--text-primary)]">{a}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tbody id={rowsId} className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+          {open &&
+            hidden.map((a) => (
+              <tr key={a}>
+                <td className="px-3 py-2 text-[var(--text-muted)]">{a}</td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function CollapseSpecimen() {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -142,7 +245,7 @@ function CollapseSpecimen() {
   );
 }
 
-type DialogKind = "form" | "commit" | "tall" | "sheet";
+type DialogKind = "form" | "commit" | "tall" | "sheet" | "question";
 
 function DialogSpecimens() {
   const [kind, setKind] = useState<DialogKind | null>(null);
@@ -163,7 +266,32 @@ function DialogSpecimens() {
         <Button variant="secondary" onClick={() => setKind("sheet")}>
           Full-screen on a phone
         </Button>
+        <Button variant="secondary" onClick={() => setKind("question")}>
+          Question only (no body)
+        </Button>
       </Row>
+
+      {kind === "question" && (
+        // No children: title, description and actions are the whole dialog, and the
+        // frame renders no empty body (and no rule over the actions) for it.
+        <DialogFrame
+          onClose={close}
+          title="Log out with 3 unsynced changes?"
+          description="They exist only on this device until the next sync."
+          headingAs="h4"
+          closeButton
+          actions={(animatedClose) => (
+            <>
+              <Button variant="secondary" onClick={animatedClose}>
+                Cancel
+              </Button>
+              <Button variant="brand" onClick={close}>
+                Sync now
+              </Button>
+            </>
+          )}
+        />
+      )}
 
       {kind === "form" && (
         <DialogFrame
@@ -206,6 +334,11 @@ function DialogSpecimens() {
           size="lg"
           closeButton={kind === "sheet"}
           fullBleed={kind === "sheet"}
+          // The phone sheet: a rule under the header that stays, and one gutter
+          // (px-3) for header and body alike.
+          headerDivider={kind === "sheet"}
+          headerClassName={cn(kind === "sheet" && "px-3")}
+          bodyClassName={cn(kind === "sheet" && "px-3")}
           className={cn(kind === "sheet" && "h-[100dvh] max-w-full rounded-none md:h-auto md:max-w-lg md:rounded-lg")}
           actions={(animatedClose) => (
             <>

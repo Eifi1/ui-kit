@@ -149,7 +149,15 @@ const SHEETS: TabItem<Sheet>[] = [
   { id: "c", label: "120 km/h", empty: true, icon: <span data-testid="swatch" /> },
 ];
 
-function Workbook({ onRemove: spy, busy }: { onRemove?: (id: Sheet) => void; busy?: boolean }) {
+function Workbook({
+  onRemove: spy,
+  busy,
+  removeOn,
+}: {
+  onRemove?: (id: Sheet) => void;
+  busy?: boolean;
+  removeOn?: "every" | "active";
+}) {
   const [tabs, setTabs] = useState(SHEETS);
   const [active, setActive] = useState<Sheet>("b");
   return (
@@ -160,6 +168,7 @@ function Workbook({ onRemove: spy, busy }: { onRemove?: (id: Sheet) => void; bus
         active={active}
         onChange={setActive}
         busy={busy}
+        removeOn={removeOn}
         onRemove={(id) => {
           spy?.(id);
           const index = tabs.findIndex((t) => t.id === id);
@@ -215,6 +224,41 @@ describe("Tabs — add, remove, adornments", () => {
       "aria-keyshortcuts",
       "Delete",
     );
+  });
+
+  describe('removeOn="active" (lenkbank: a remove deletes a sheet at once)', () => {
+    it("ignores Delete on a focused tab that is not open", async () => {
+      const user = userEvent.setup();
+      const spy = vi.fn();
+      render(<Workbook onRemove={spy} removeOn="active" />);
+      screen.getByRole("tab", { name: /80 km\/h/ }).focus();
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveFocus();
+      await user.keyboard("{Delete}");
+      expect(spy).not.toHaveBeenCalled();
+      expect(screen.getByRole("tab", { name: "40 km/h" })).toBeInTheDocument();
+    });
+
+    it("still removes the open tab on Delete", async () => {
+      const user = userEvent.setup();
+      const spy = vi.fn();
+      render(<Workbook onRemove={spy} removeOn="active" />);
+      screen.getByRole("tab", { name: /80 km\/h/ }).focus();
+      await user.keyboard("{Delete}");
+      expect(spy).toHaveBeenCalledWith("b");
+      expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveFocus();
+    });
+
+    it("announces the shortcut on the open tab only, and keeps every tab's gutter", () => {
+      render(<Workbook removeOn="active" />);
+      expect(screen.getByRole("tab", { name: /80 km\/h/ })).toHaveAttribute(
+        "aria-keyshortcuts",
+        "Delete",
+      );
+      expect(screen.getByRole("tab", { name: "40 km/h" })).not.toHaveAttribute("aria-keyshortcuts");
+      for (const t of screen.getAllByRole("tab")) expect(classes(t)).toContain("pe-8");
+      expect(screen.getAllByRole("button", { name: /^Remove / })).toHaveLength(1);
+    });
   });
 
   it("does not remove anything while busy", async () => {

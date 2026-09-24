@@ -179,3 +179,24 @@ describe("IconPicker", () => {
     expect(onChange).toHaveBeenLastCalledWith("game");
   });
 });
+
+describe("tileClassName (keksdose: tiles that follow a container query)", () => {
+  it("lands on every swatch tile after the size's own class, so it wins", () => {
+    render(
+      <SwatchPicker aria-label="Flag" options={FLAGS} value="red" onChange={vi.fn()} allowNone tileClassName="size-10" />,
+    );
+    for (const tile of screen.getAllByRole("radio")) {
+      expect(tile.className.split(/\s+/)).toContain("size-10");
+      expect(tile.className.split(/\s+/)).not.toContain("size-8");
+    }
+  });
+
+  it("lands on every icon tile and keeps the selected tile's colour", () => {
+    render(
+      <IconPicker aria-label="Symbol" options={ICONS} value="car" onChange={vi.fn()} tileClassName="@max-md:size-10" />,
+    );
+    const car = screen.getByRole("radio", { name: "Car" });
+    expect(car.className.split(/\s+/)).toEqual(expect.arrayContaining(["@max-md:size-10", "size-8", "text-[var(--text-primary)]"]));
+    expect(screen.getByRole("radio", { name: "Game controller" }).className).toContain("@max-md:size-10");
+  });
+});

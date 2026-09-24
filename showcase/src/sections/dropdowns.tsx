@@ -59,6 +59,21 @@ const ACCOUNTS: ComboOption<string>[] = [
   { value: "buf", label: "Buffer", sublabel: "for the annual bills", group: "Reserves" },
 ];
 
+/** The InlineEntityCombobox specimen's list: {@link ACCOUNTS} plus a CLOSED account,
+ *  `disabled` — listed so the user sees it exists, dimmed, passed over by the arrows,
+ *  and never taken (not even by typing its name in full). The reason rides in
+ *  `sublabel`, the one place a phone can show it. */
+const INLINE_ACCOUNTS: ComboOption<string>[] = [
+  ...ACCOUNTS,
+  {
+    value: "old",
+    label: "Old savings",
+    sublabel: "closed — read-only",
+    group: "Reserves",
+    disabled: true,
+  },
+];
+
 /** Options for the panel pickers ({@link EntityCombobox} and friends), which are
  *  the only ones that draw `ComboOption.icon` — see the note on that specimen. */
 const CATEGORIES: ComboOption<string>[] = [
@@ -73,6 +88,15 @@ const CATEGORIES: ComboOption<string>[] = [
   { value: "transit", label: "Public transport", icon: <Train className="size-4" /> },
   { value: "savings", label: "Savings transfer", icon: <PiggyBank className="size-4" /> },
   { value: "cashout", label: "Cash withdrawal", icon: <Banknote className="size-4" /> },
+  // `disabled`: shown, announced (`aria-disabled`), skipped by ↑/↓/Home/End, and a
+  // press on it chooses nothing.
+  {
+    value: "fees",
+    label: "Bank fees",
+    sublabel: "managed by the bank — not selectable",
+    icon: <Banknote className="size-4" />,
+    disabled: true,
+  },
 ];
 
 const CUSTOMERS: ComboOption<string>[] = [
@@ -296,7 +320,7 @@ export function Dropdowns() {
             label="Account"
             value={account}
             onChange={setAccount}
-            options={ACCOUNTS}
+            options={INLINE_ACCOUNTS}
             placeholder="Pick an account"
             // The "×" is not a convenience. Emptying the text clears the field on a
             // desktop; on a phone the sheet covers the very input you would have
@@ -312,7 +336,14 @@ export function Dropdowns() {
         <p className="mt-2 text-xs text-[var(--text-secondary)]">
           The text is transient: picking a row commits it, typing an exact label that names exactly
           one account commits it, emptying the field commits <code className="font-mono">null</code>
-          , and anything else reverts to the selected label on blur or Escape.
+          , and anything else reverts to the selected label on blur or Escape. “Old savings” is a{" "}
+          <code className="font-mono">disabled</code> option: listed and dimmed, skipped by the
+          arrows, and typing its name in full reverts rather than commits.
+        </p>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The floating label — here and on <code className="font-mono">Combobox</code> above — is a
+          real <code className="font-mono">{"<label for>"}</code>, so{" "}
+          <code className="font-mono">getByLabelText(&quot;Account&quot;)</code> finds the input.
         </p>
       </Example>
 
@@ -349,7 +380,9 @@ export function Dropdowns() {
         <p className="mt-2 text-xs text-[var(--text-secondary)]">
           This is the one family that draws <code className="font-mono">ComboOption.icon</code> —{" "}
           <code className="font-mono">InlineEntityCombobox</code> above carries the same option type
-          but renders label and sublabel only.
+          but renders label and sublabel only. “Bank fees” is{" "}
+          <code className="font-mono">disabled</code>: listed, never chosen, and Home/End and the
+          arrows pass it over.
         </p>
       </Example>
 

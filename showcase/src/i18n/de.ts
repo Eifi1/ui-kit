@@ -54,6 +54,12 @@ export const de: Dictionary = {
     contentsPosition: "Position des Inhaltsverzeichnisses",
     positionStart: "Links",
     positionEnd: "Rechts",
+    devicePreview: "Vorschau in Bildschirmgrößen",
+    previewHint:
+      "Die Seite in den drei häufigsten Bildschirmgrößen, live: In jedem Rahmen kann gescrollt und geklickt werden. Design, Palette und Sprache folgen der oberen Leiste.",
+    phone: "Smartphone",
+    tablet: "Tablet",
+    desktop: "Desktop",
   },
 
   groups: {
@@ -456,6 +462,8 @@ export const de: Dictionary = {
       size: (bytes) => formatFileSize(bytes, "de-DE"),
     },
     filePicker: {
+      rejectedPick: (count) =>
+        count === 1 ? "Die Datei wurde nicht hinzugefügt" : `Keine der ${count} Dateien wurde hinzugefügt`,
       rejectedType: (name) => `„${name}“ hat einen nicht unterstützten Dateityp`,
       rejectedSize: (name, maxSize) => `„${name}“ ist größer als ${maxSize}`,
       rejectedCount: (name, maxFiles) =>

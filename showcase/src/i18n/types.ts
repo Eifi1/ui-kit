@@ -52,6 +52,12 @@ export interface Dictionary {
     contentsPosition: string;
     positionStart: string;
     positionEnd: string;
+    /** The top-bar control that shows the page at three screen sizes side by side. */
+    devicePreview: string;
+    previewHint: string;
+    phone: string;
+    tablet: string;
+    desktop: string;
   };
   /** Sidebar group names, keyed by the English label in routes.tsx. */
   groups: Record<string, string>;

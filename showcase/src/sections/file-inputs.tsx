@@ -71,6 +71,18 @@ export function FileInputs() {
           </div>
         </Stage>
       </Example>
+
+      <Example
+        label="All or nothing — onPick"
+        hint="PDF or images, 1 MB each. One bad file refuses the whole pick, and it is said once."
+      >
+        <Stage>
+          <WholePickButton />
+          <div data-stage="wide">
+            <WholePickDropzone />
+          </div>
+        </Stage>
+      </Example>
     </>
   );
 }
@@ -227,6 +239,63 @@ function DropzoneMultiple() {
         <code className="font-mono">onInvalid</code> always did. A caller that passes neither still
         gets the 0.5 toast; <code className="font-mono">rejectionFeedback</code> picks{" "}
         <code className="font-mono">"inline"</code> or <code className="font-mono">"none"</code> explicitly.
+      </Note>
+    </div>
+  );
+}
+
+/** The whole pick judged at once: `onPick` sees both halves and returns `false` to
+ *  refuse all of it. The button takes the pick through `onPick` alone — no `onFiles`. */
+function WholePickButton() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [refused, setRefused] = useState<FileRejection[]>([]);
+  return (
+    <div className="space-y-2">
+      <FileButton
+        multiple
+        droppable
+        variant="secondary"
+        accept="application/pdf,image/*"
+        maxSize={1_000_000}
+        onPick={(accepted, rejected) => {
+          setRefused(rejected);
+          if (rejected.length > 0) return false;
+          setFiles(accepted);
+        }}
+      >
+        <Paperclip aria-hidden className="size-4" />
+        Attach a set
+      </FileButton>
+      <p className={READOUT}>set: {names(files)}</p>
+      <Refusal rejections={refused} />
+    </div>
+  );
+}
+
+function WholePickDropzone() {
+  const [files, setFiles] = useState<File[]>([]);
+  return (
+    <div className="space-y-2">
+      <FileDropzone
+        multiple
+        files={files}
+        onFilesSelected={setFiles}
+        onClear={() => setFiles([])}
+        onPick={(_accepted, rejected) => rejected.length === 0 || false}
+        rejectionFeedback="inline"
+        accept="application/pdf,image/*"
+        maxSize={1_000_000}
+        dropLabel="Drop a set of documents"
+        browseLabel="Choose files…"
+        emptyLabel="Drop the whole set"
+        hint="PDF or images, 1 MB each — all or nothing"
+      />
+      <Note>
+        Returning <code className="font-mono">false</code> from{" "}
+        <code className="font-mono">onPick</code> delivers nothing, still hands the screening&apos;s
+        refusals to <code className="font-mono">onReject</code>, and replaces the per-file message
+        with one sentence for the pick (<code className="font-mono">labels.rejectedPick</code>) —
+        spoken, and shown inline here.
       </Note>
     </div>
   );

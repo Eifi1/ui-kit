@@ -151,4 +151,43 @@ describe("DialogFrame", () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("renders no body without children, and no rule over the actions then", () => {
+    render(
+      <DialogFrame
+        onClose={vi.fn()}
+        title="Unsynced changes"
+        description="Three edits have not reached the server."
+        actions={<button type="button">Sync now</button>}
+      />,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Unsynced changes" });
+    expect(dialog.querySelector(".overflow-y-auto")).toBeNull();
+    const row = screen.getByRole("button", { name: "Sync now" }).parentElement!;
+    expect(row.className).not.toContain("border-t");
+    // Only header and actions under the panel.
+    expect(row.previousElementSibling).toContainElement(screen.getByRole("heading", { name: "Unsynced changes" }));
+  });
+
+  it("treats a false body (a `cond && …` that did not hold) as no body", () => {
+    render(
+      <DialogFrame onClose={vi.fn()} title="Nothing">
+        {false}
+      </DialogFrame>,
+    );
+    expect(screen.getByRole("dialog").querySelector(".overflow-y-auto")).toBeNull();
+  });
+
+  it("takes header classes and draws a divider under the header when asked", () => {
+    render(
+      <DialogFrame onClose={vi.fn()} title="Edit row" headerClassName="px-3" headerDivider bodyClassName="px-3">
+        <p>Fields</p>
+      </DialogFrame>,
+    );
+    const headerRow = screen.getByRole("heading", { name: "Edit row" }).parentElement!.parentElement!;
+    expect(headerRow.className).toContain("border-b");
+    expect(headerRow.className).toContain("px-3");
+    expect(headerRow.className).not.toContain("px-4");
+    expect(screen.getByText("Fields").parentElement!.className).toContain("pt-3");
+  });
 });

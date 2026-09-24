@@ -51,6 +51,12 @@ export const fr: Dictionary = {
     contentsPosition: "Position du sommaire",
     positionStart: "À gauche",
     positionEnd: "À droite",
+    devicePreview: "Aperçu par taille d\u2019écran",
+    previewHint:
+      "La page aux trois tailles d\u2019écran les plus courantes, en direct : faites défiler et cliquez dans chaque cadre. Thème, palette et langue suivent la barre du haut.",
+    phone: "Téléphone",
+    tablet: "Tablette",
+    desktop: "Ordinateur",
   },
 
   groups: {
@@ -454,6 +460,8 @@ export const fr: Dictionary = {
       size: (bytes) => formatFileSize(bytes, "fr-FR"),
     },
     filePicker: {
+      rejectedPick: (count) =>
+        count < 2 ? "Le fichier n\u2019a pas été ajouté" : `Aucun des ${count} fichiers n\u2019a été ajouté`,
       rejectedType: (name) => `Le type du fichier «\u202f${name}\u202f» n’est pas pris en charge`,
       rejectedSize: (name, maxSize) => `«\u202f${name}\u202f» dépasse ${maxSize}`,
       rejectedCount: (name, maxFiles) =>

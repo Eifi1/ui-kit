@@ -47,6 +47,12 @@ export const it: Dictionary = {
     contentsPosition: "Posizione dell'indice",
     positionStart: "A sinistra",
     positionEnd: "A destra",
+    devicePreview: "Anteprima per dimensioni dello schermo",
+    previewHint:
+      "La pagina nelle tre dimensioni di schermo più comuni, dal vivo: scorri e fai clic in ogni riquadro. Tema, tavolozza e lingua seguono la barra in alto.",
+    phone: "Telefono",
+    tablet: "Tablet",
+    desktop: "Desktop",
   },
 
   groups: {
@@ -445,6 +451,7 @@ export const it: Dictionary = {
       size: (bytes) => formatFileSize(bytes, "it-IT"),
     },
     filePicker: {
+      rejectedPick: (count) => (count === 1 ? "Il file non è stato aggiunto" : `Nessuno dei ${count} file è stato aggiunto`),
       // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
       rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,

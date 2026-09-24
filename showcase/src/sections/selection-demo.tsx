@@ -149,6 +149,44 @@ export function SelectionDemo() {
       </Example>
 
       <Example
+        label="Tiles that follow their container"
+        hint='tileClassName="@max-md:size-11" · size="sm" · allowNone'
+      >
+        <Stage>
+          {/* `@container` on the caller's own box: the query is the caller's, and the
+              kit's markup is never reached into. Narrower than 28rem, the tiles grow
+              to the 44px touch target; wider, they are the compact 28px. */}
+          <div data-stage="wide" className="@container space-y-3">
+            <SwatchPicker
+              aria-label="Category colour (container-sized tiles)"
+              options={COLOURS}
+              value={colour}
+              onChange={setColour}
+              allowNone
+              size="sm"
+              tileClassName="@max-md:size-11"
+            />
+            <IconPicker
+              aria-label="Category symbol (container-sized tiles)"
+              options={SYMBOLS}
+              value={symbol}
+              onChange={setSymbol}
+              allowNone
+              size="sm"
+              tileClassName="@max-md:size-11"
+            />
+          </div>
+        </Stage>
+        <Note>
+          <code className="font-mono">tileClassName</code> is merged after the kit&apos;s own
+          classes, so a <code className="font-mono">size-*</code> in it beats{" "}
+          <code className="font-mono">size</code>&apos;s. The dot or glyph inside keeps{" "}
+          <code className="font-mono">size</code>&apos;s dimensions; only the tile grows. Narrow
+          the window below about 500px to see it switch.
+        </Note>
+      </Example>
+
+      <Example
         label="ChoiceCard"
         hint="a native checkbox or radio; the whole card is the hit area"
       >
@@ -206,7 +244,7 @@ export function SelectionDemo() {
       <Example label="ToggleGroup — allowEmpty" hint="click the active option to clear it">
         <Stage>
           <div className="space-y-2">
-            <ToggleGroup<Status>
+            <ToggleGroup
               allowEmpty
               aria-label="Status filter"
               value={status}
@@ -225,7 +263,10 @@ export function SelectionDemo() {
           (<code className="font-mono">aria-pressed</code>) rather than radios, and{" "}
           <code className="font-mono">onChange</code> is typed to receive{" "}
           <code className="font-mono">null</code> — without it, nothing changes for existing
-          callers.
+          callers. Since 0.7 the value type is inferred from{" "}
+          <code className="font-mono">value</code> and <code className="font-mono">onChange</code>{" "}
+          in both modes, so a <code className="font-mono">useState&lt;Status | null&gt;</code>{" "}
+          setter goes straight in — no <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>.
         </Note>
       </Example>
 
