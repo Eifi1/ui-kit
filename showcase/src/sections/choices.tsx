@@ -85,8 +85,8 @@ export function Choices() {
       </Example>
 
       <Example
-        label="Checkbox — description and error"
-        hint="the description and the error are aria-describedby, never part of the name"
+        label="Checkbox — description, required and error"
+        hint="the description and the error are aria-describedby; the required star is not part of the name"
       >
         <Stage>
           <div className="space-y-4">
@@ -96,7 +96,11 @@ export function Choices() {
               checked={isDefault}
               onCheckedChange={setIsDefault}
             />
+            {/* `required`: the kit's star after the label (hidden from the name — the
+                control itself announces "required"), and the native attribute, so a
+                <form> refuses to submit it unticked. The label has no literal "*". */}
             <Checkbox
+              required
               label="I accept the terms"
               checked={terms}
               onCheckedChange={setTerms}

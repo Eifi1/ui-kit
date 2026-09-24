@@ -15,6 +15,29 @@ This package is pre-1.0 and three applications depend on it. The contract until 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
 with the replacement named, listed here, then removed in the next minor.
 
+## [0.6.1] — 2026-09-24
+
+### Added
+
+- **`Checkbox required` and `Switch required`** — for a box that must be ticked (a
+  consent, an acceptance before paying). The native `required` reaches the input, so a
+  `<form>` refuses to submit it unticked and a screen reader announces "required"; the
+  kit's `aria-hidden` star follows the label text, as `Label required` draws it. Write
+  the label without a literal "*". No mark without a label.
+
+### Fixed
+
+- **Untyped files were refused (regression in 0.6.0).** `matchesAccept` read an EMPTY
+  MIME type as a wrong one, so HEIC photos on Windows without the codec — which arrive
+  with `type === ""` — were refused by `accept="image/*"` on Browse and camera picks.
+  A missing type is now inferred from the extension where unambiguous (HEIC/HEIF,
+  JPEG, PNG, WebP, AVIF, PDF, CSV, text), and a type that cannot be known is not
+  refused on MIME grounds. Extension-only accept lists still judge by name (keksdose).
+- **`Autocomplete`: an Escape that closes the open list reached the caller's
+  `onKeyDown`.** A caller whose Escape closes its panel closed the whole panel when the
+  user meant to dismiss the suggestions. That Escape is now consumed; with the list
+  closed, Escape reaches the caller as documented (keksdose).
+
 ## [0.6.0] — 2026-09-24
 
 The inputs keksdose, kastlan and lenkbank still hand-rolled after adopting 0.5 — proposed

@@ -234,6 +234,16 @@ function AutocompleteInner<V extends string | number = string>(
             setActive(-1);
           }}
           onKeyDown={(e) => {
+            // An Escape that closes the OPEN list is the list's, and is consumed before
+            // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
+            // address search) otherwise closed the whole panel when the user only meant
+            // to dismiss the suggestions — the opposite of what the docs promised.
+            if (e.key === "Escape" && expanded) {
+              e.preventDefault();
+              e.stopPropagation();
+              close();
+              return;
+            }
             onKeyDown?.(e);
             if (e.defaultPrevented) return;
             const last = results.length - 1;
@@ -252,14 +262,6 @@ function AutocompleteInner<V extends string | number = string>(
               if (expanded && activeId) {
                 e.preventDefault();
                 take(results[active]);
-              }
-            } else if (e.key === "Escape") {
-              // Only when there is a list to close — otherwise the Escape belongs to
-              // whatever this field sits in (a dialog), and must reach it.
-              if (expanded) {
-                e.preventDefault();
-                e.stopPropagation();
-                close();
               }
             } else if (e.key === "Tab") {
               close();
@@ -411,7 +413,9 @@ AutocompleteBase.displayName = "Autocomplete";
  * row, `aria-controls` the list, and a polite live region says what the list now
  * holds. Keyboard: ↓/↑ move (↓ opens), Enter takes the highlighted row (with none,
  * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
- * with the caret. A caller's `onKeyDown` runs first and may `preventDefault()` to
+ * with the caret. An Escape that closes an open list is consumed and never reaches the
+ * caller; with the list closed it does. For every other key a caller's `onKeyDown`
+ * runs first and may `preventDefault()` to
  * keep a key for itself.
  *
  * The list is portalled and anchored under the field on every screen size: the

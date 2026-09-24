@@ -100,13 +100,40 @@ export function matchesAccept(file: File, accept: string | undefined): boolean {
     .filter(Boolean);
   if (tokens.length === 0) return true;
   const name = file.name.toLowerCase();
-  const type = (file.type || "").toLowerCase();
+  // An EMPTY type is the browser saying "I don't know", not "it's something else": HEIC
+  // photos on Windows without the codec arrive with `type === ""`. Refusing them
+  // (0.6.0) refused iPhone photos the picker itself had just offered (keksdose). So a
+  // missing type is inferred from the extension where that is unambiguous, and a file
+  // whose type cannot be known at all is given the benefit of the doubt — nothing here
+  // proves it does not match, and the server validates what it receives anyway.
+  const type = (file.type || typeFromExtension(name) || "").toLowerCase();
+  if (!type && !tokens.every((t) => t.startsWith("."))) return true;
   return tokens.some((token) => {
     if (token.startsWith(".")) return name.endsWith(token);
     if (!type) return false;
     if (token.endsWith("/*")) return type.startsWith(token.slice(0, -1));
     return type === token;
   });
+}
+
+/** MIME types for the extensions a browser most often leaves untyped. */
+const EXTENSION_TYPES: Record<string, string> = {
+  heic: "image/heic",
+  heif: "image/heif",
+  avif: "image/avif",
+  webp: "image/webp",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  pdf: "application/pdf",
+  csv: "text/csv",
+  txt: "text/plain",
+};
+
+function typeFromExtension(name: string): string | undefined {
+  const dot = name.lastIndexOf(".");
+  return dot === -1 ? undefined : EXTENSION_TYPES[name.slice(dot + 1)];
 }
 
 /** What the pickers screen a pick with. All optional; nothing set accepts everything. */

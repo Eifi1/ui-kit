@@ -78,6 +78,15 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
    *  the row when there is a label, the box's own wrapper when there is not — which
    *  is where layout (`self-end pb-2` to sit on a field's baseline) belongs. */
   inputClassName?: string;
+  /**
+   * Must be ticked to submit — a consent, an acceptance before paying. Reaches the
+   * `<input>` as the native `required` (so a `<form>` refuses to submit without it and a
+   * screen reader announces "required"), and draws the kit's required mark after the
+   * label, the same `aria-hidden` star as {@link Label}'s: the word is announced from
+   * the control, so a star inside the name would only be read out as noise. Write the
+   * label WITHOUT a literal "*". No mark without a label.
+   */
+  required?: boolean;
 }
 
 /**
@@ -103,6 +112,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     inputClassName,
     id,
     disabled,
+    required,
     ...rest
   },
   ref,
@@ -138,6 +148,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         ref={setRef}
         id={bare ? id : inputId}
         disabled={disabled}
+        required={required}
         {...rest}
         // After the spread, like Switch: a props object spread at a checkbox must not
         // be able to turn it into something else.
@@ -203,6 +214,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             )}
           >
             {label}
+            {required && (
+              <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+                *
+              </span>
+            )}
           </label>
         )}
         {showDescription && (

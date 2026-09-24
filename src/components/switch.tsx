@@ -70,6 +70,15 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
   /** Classes for the `<input>` (the track). `className` styles the outermost element:
    *  the row when there is a label, the switch's own wrapper when there is not. */
   inputClassName?: string;
+  /**
+   * Must be ticked to submit — a consent, an acceptance before paying. Reaches the
+   * `<input>` as the native `required` (so a `<form>` refuses to submit without it and a
+   * screen reader announces "required"), and draws the kit's required mark after the
+   * label, the same `aria-hidden` star as {@link Label}'s: the word is announced from
+   * the control, so a star inside the name would only be read out as noise. Write the
+   * label WITHOUT a literal "*". No mark without a label.
+   */
+  required?: boolean;
 }
 
 /**
@@ -91,6 +100,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     inputClassName,
     id,
     disabled,
+    required,
     ...rest
   },
   ref,
@@ -108,6 +118,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         ref={ref}
         id={bare ? id : inputId}
         disabled={disabled}
+        required={required}
         {...rest}
         // After the spread: a caller's props object must not be able to turn this
         // back into a plain checkbox, or into a text field.
@@ -141,6 +152,11 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           )}
         >
           {label}
+          {required && (
+            <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+              *
+            </span>
+          )}
         </label>
       )}
       {showDescription && (
