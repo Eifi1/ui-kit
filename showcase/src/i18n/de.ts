@@ -311,7 +311,7 @@ export const de: Dictionary = {
       month: (monthYear) => monthYear,
     },
     popover: {
-      panel: "Popover",
+      panel: "Aufklappfenster",
     },
     combobox: {
       search: "Suchen",

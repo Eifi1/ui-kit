@@ -9,6 +9,8 @@ import {
   useKitLocale,
   type DatePickerLabels,
 } from "../i18n/kit-labels";
+import { splitTriggerAria } from "./trigger-aria";
+import type { TriggerAria } from "./trigger-aria";
 import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { Popover } from "./popover";
@@ -82,7 +84,10 @@ function DateFieldTrigger({
   disabled,
   invalid,
   panelId,
+  aria,
 }: {
+  /** The caller's naming/description attributes, routed here from the field. */
+  aria: TriggerAria;
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -133,7 +138,10 @@ function DateFieldTrigger({
       // is a sentence, and a name reference is spoken as the two texts in order with
       // no punctuation to translate at all. The hidden twin of the FieldLabel lives
       // in DateField, next to the label it copies.
-      aria-labelledby={labelledBy}
+      id={aria.id}
+      aria-labelledby={aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy}
+      aria-label={aria["aria-label"]}
+      aria-describedby={aria["aria-describedby"]}
       // `role="combobox"` on a button that opens a calendar is the APG date-picker
       // shape, and it is what makes the next two lines legal: `button` supports
       // neither `aria-expanded` nor `aria-invalid`, so the previous markup set an
@@ -146,7 +154,7 @@ function DateFieldTrigger({
       aria-haspopup="dialog"
       aria-controls={panelId}
       aria-expanded={open}
-      aria-invalid={invalid || undefined}
+      aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
       className={cn(
         FIELD_TRIGGER,
         "pr-9",
@@ -209,6 +217,7 @@ function DateField({
   children: (close: () => void) => ReactNode;
 }) {
   const showClear = Boolean(clearable && hasValue && !disabled);
+  const [aria, wrapperRest] = splitTriggerAria(rest);
   const id = useId();
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
@@ -220,7 +229,7 @@ function DateField({
   return (
     // The caller's attributes land here, on the field's own box — the trigger inside is
     // named by `aria-labelledby` and must keep the id pair it is given.
-    <div {...rest} className={cn("relative", className)}>
+    <div {...wrapperRest} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* The visible FieldLabel is a plain span, not a `<label htmlFor>`, so it names
           nothing on its own — this hidden twin is what the trigger is named by.
@@ -254,7 +263,20 @@ function DateField({
             // this undefined made an unlabelled date field announce nothing at all.
             // Named: "label, value". Unnamed: the value alone, which is what the
             // button was saying before.
-            labelledBy={named ? `${labelId} ${valueId}` : valueId}
+            //
+            // A caller's own reference comes first. And when the caller gives the field
+            // an `id` (so an external `<label htmlFor>` can point at it), the trigger
+            // lists ITSELF first: a self-reference in `aria-labelledby` is resolved
+            // from the element's native label (accname 2B → 2D), so "Due date" from
+            // that <label> is spoken before the value, instead of being overridden.
+            labelledBy={[
+              aria["aria-labelledby"],
+              named ? labelId : !aria["aria-labelledby"] && aria.id ? aria.id : undefined,
+              valueId,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria={aria}
             panelId={panelId}
             valueId={valueId}
             padded={label !== undefined}
@@ -415,9 +437,12 @@ export function DatePicker({
   // whichever of the two is actually the root. Naming the shared props rather than
   // letting `...rest` carry them is what makes that choice possible.
   const wrapped = Boolean(step || today);
+  const [triggerAria, wrapperRest] = splitTriggerAria(rest);
   const field = (
     <DateField
-      {...(wrapped ? {} : rest)}
+      // With step/today buttons the flex row is the root and takes the caller's props —
+      // except the ones that name the field, which still belong on its trigger.
+      {...(wrapped ? triggerAria : rest)}
       label={label}
       clearable={clearable}
       clearLabel={text.clear}
@@ -469,7 +494,7 @@ export function DatePicker({
     // varies with whether it carries a floating label. The field's trigger is nested
     // inside DateField, so its inner corners are squared from here.
     <div
-      {...rest}
+      {...wrapperRest}
       className={cn(
         "flex items-stretch [&>*:not(:first-child)]:-ms-px",
         step && "[&_[role=combobox]]:rounded-s-none",

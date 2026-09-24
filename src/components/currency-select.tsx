@@ -4,7 +4,12 @@ import { Check } from "lucide-react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
-import { DEFAULT_CURRENCY_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import {
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  useKitLabels,
+  useKitLocale,
+} from "../i18n/kit-labels";
 
 export interface CurrencyOption {
   code: string;
@@ -159,6 +164,7 @@ export function CurrencySelect({
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
   // `labels` > `currency` from the provider > English.
   const text = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, labels);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale();
 
   const selected = getCurrency(value);
@@ -180,6 +186,14 @@ export function CurrencySelect({
 
   const listboxId = `${useId()}-listbox`;
 
+  // The trigger's NAME. A combobox does not take its name from its content, and the
+  // floating label is a <span>, not a <label for> — so without `aria-label` from the
+  // caller this trigger had no name at all (keksdose's test suite, 0.5.0). Composed the
+  // way MultiSelect and the entity comboboxes compose theirs, "label: value", with the
+  // `currency` word standing in for a missing label so it is never nameless.
+  const fieldName = typeof label === "string" ? label : text.currency;
+  const name = ariaLabel ?? common.fieldValue(fieldName, selected ? selected.code : (placeholder ?? text.currency));
+
   return (
     // The wrapper takes `rest`; the trigger takes the name. This field's label is a
     // floating <span> rather than a <label for>, so a caller who wants the control to
@@ -188,7 +202,7 @@ export function CurrencySelect({
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <button
         type="button"
-        aria-label={ariaLabel}
+        aria-label={name}
         onClick={() => setOpen((v) => !v)}
         // The implicit `button` role supports neither `aria-expanded` nor
         // `aria-invalid`, so this trigger previously wore a red border and announced

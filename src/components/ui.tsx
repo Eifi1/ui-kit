@@ -968,9 +968,17 @@ export function CardFooter({ className, ...props }: CardFooterProps) {
 /** A `<span>`'s props plus the words a reader hears — see {@link CardHeaderProps}.
  *  The ring is drawn with a border, so there is nothing inside it to put children in. */
 export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
-  /** What the spinner means, for a screen reader. Default: `common.loading` from the
-   *  {@link UiKitProvider}, else "Loading…". */
-  label?: string;
+  /**
+   * What the spinner means, for a screen reader. Default: `common.loading` from the
+   * {@link UiKitProvider}, else "Loading…".
+   *
+   * `null` makes it DECORATIVE — no role, no text, hidden from assistive tech. Use it
+   * whenever words are already there: beside visible "Loading…" text (otherwise it is
+   * announced twice), inside a labelled button (otherwise its text joins the button's
+   * name), or inside a live region of the app's own (otherwise that region and this
+   * one both announce).
+   */
+  label?: string | null;
 }
 
 /**
@@ -984,22 +992,25 @@ export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "ch
  * ignore a name on one.
  *
  * `relative` so the `sr-only` text has a local containing block (see
- * sr-only-containment.test). The role goes BEFORE the spread: a caller showing the
- * spinner next to text that already says "Loading" can pass `aria-hidden` or its own
- * `role` and have it win.
+ * sr-only-containment.test). Where the words are already on screen, pass
+ * `label={null}`: announcing is right for a spinner standing alone and wrong for one
+ * beside text, inside a button, or inside the app's own live region.
  */
 export function Spinner({ className, label, ...rest }: SpinnerProps) {
-  const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { loading: label });
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS, {
+    loading: label ?? undefined,
+  });
+  const ring = cn(
+    "relative inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--text-primary)]",
+    className,
+  );
+  if (label === null) return <span aria-hidden {...rest} className={ring} />;
   return (
-    <span
-      role="status"
-      {...rest}
-      className={cn(
-        "relative inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--text-primary)]",
-        className,
-      )}
-    >
-      <span className="sr-only">{common.loading}</span>
+    <span role="status" {...rest} className={ring}>
+      {/* The trailing space is a separator for the case the caller forgot `label={null}`
+          inside a button: a name is the concatenation of its text, and without it the
+          spinner's word ran straight into the button's — "Loadingconfirm". */}
+      <span className="sr-only">{common.loading} </span>
     </span>
   );
 }
