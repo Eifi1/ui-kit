@@ -5,7 +5,7 @@ import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents";
 import { DEFAULT_POPOVER_LABELS } from "../components/popover";
 import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip";
 import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync";
-import { DEFAULT_PASSWORD_REVEAL_LABELS } from "../components/ui";
+import { DEFAULT_PASSWORD_REVEAL_LABELS, DEFAULT_TABS_LABELS } from "../components/ui";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/types";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette";
@@ -14,6 +14,11 @@ import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline";
 import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad";
 import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "../components/password-strength";
+import { DEFAULT_DANGER_CONFIRM_LABELS } from "../components/danger-confirm";
+import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker";
+import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker";
+import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame";
+import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -51,6 +56,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   chipInput: DEFAULT_CHIP_INPUT_LABELS,
   fieldSync: DEFAULT_FIELD_SYNC_LABELS,
   passwordReveal: DEFAULT_PASSWORD_REVEAL_LABELS,
+  tabs: DEFAULT_TABS_LABELS,
   appShell: DEFAULT_APP_SHELL_LABELS,
   pageContents: DEFAULT_PAGE_CONTENTS_LABELS,
   topBar: DEFAULT_TOP_BAR_LABELS,
@@ -65,4 +71,9 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   statTile: DEFAULT_STAT_TILE_LABELS,
   signaturePad: DEFAULT_SIGNATURE_PAD_LABELS,
   passwordStrength: DEFAULT_PASSWORD_STRENGTH_LABELS,
+  dangerConfirm: DEFAULT_DANGER_CONFIRM_LABELS,
+  swatchPicker: DEFAULT_SWATCH_PICKER_LABELS,
+  iconPicker: DEFAULT_ICON_PICKER_LABELS,
+  dialogFrame: DEFAULT_DIALOG_FRAME_LABELS,
+  filePicker: DEFAULT_FILE_PICKER_LABELS,
 };

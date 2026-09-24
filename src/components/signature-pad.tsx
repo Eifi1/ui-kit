@@ -72,6 +72,12 @@ export interface SignaturePadLabels {
   /** Live-region messages after the matching button. */
   cleared: string;
   undone: string;
+  /** {@link SignatureView}: what it says when there is no signature to show. */
+  viewEmpty: string;
+  /** {@link SignatureView}: the saved PNG's alternative text. */
+  viewDrawn: string;
+  /** {@link SignatureView}: the accessible name of a typed-name signature. */
+  viewTyped: (name: string) => string;
 }
 
 export const DEFAULT_SIGNATURE_PAD_LABELS: SignaturePadLabels = {
@@ -88,6 +94,9 @@ export const DEFAULT_SIGNATURE_PAD_LABELS: SignaturePadLabels = {
   typedName: "Full name",
   cleared: "Signature cleared",
   undone: "Last stroke removed",
+  viewEmpty: "Not signed",
+  viewDrawn: "Handwritten signature",
+  viewTyped: (name) => `Signed with the typed name ${name}`,
 };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -628,3 +637,106 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
   );
 });
 SignaturePad.displayName = "SignaturePad";
+
+/* ── Read-only ───────────────────────────────────────────────────────────── */
+
+export interface SignatureViewProps extends ComponentPropsWithoutRef<"figure"> {
+  /** The saved PNG — what `SignaturePad` handed to `onChange`/`onSave`, as stored. */
+  value?: string | null;
+  /**
+   * A signature given as a typed name (`detail.typedName`), for a host that stores the
+   * text rather than its PNG. Rendered in the same script face the pad draws it in.
+   * Ignored while `value` is set.
+   */
+  typedName?: string | null;
+  /** Visible caption above the signature; defaults to `labels.label`. `null` hides it
+   *  (the image keeps its alternative text) — for a signature block whose own heading
+   *  already says whose signature it is. */
+  label?: ReactNode;
+  /**
+   * The exported PNG is dark ink on a transparent ground (`exportInk`), which is
+   * invisible on the dark theme's surface. By default the image is colour-inverted
+   * under `.dark`, so the ink reads light; `false` keeps the pixels as stored — for a
+   * PNG exported with its own `exportBackground`, which inverting would turn black.
+   */
+  adaptInk?: boolean;
+  /** Classes for the frame — its height, chiefly (default `h-40`, the pad's). */
+  frameClassName?: string;
+  /** User-facing strings; see {@link SignaturePadLabels} (`view*`). */
+  labels?: Partial<SignaturePadLabels>;
+}
+
+/**
+ * A saved signature, shown — the read side of {@link SignaturePad}: the same frame and
+ * signing line, none of the drawing chrome (no canvas, buttons, instructions or live
+ * region). A separate component rather than a `readOnly` pad because there is nothing
+ * of the pad to reuse: the pad's scene is STROKES, and a stored signature is a PNG
+ * (or a name) that cannot be turned back into them.
+ *
+ * Kastlan's handover protocol, reopened after signing, is the case: two signatures
+ * that must be visible, and must not look editable.
+ */
+export function SignatureView({
+  value,
+  typedName,
+  label,
+  adaptInk = true,
+  frameClassName,
+  labels: labelsProp,
+  className,
+  ...rest
+}: SignatureViewProps) {
+  const labels = useKitLabels("signaturePad", DEFAULT_SIGNATURE_PAD_LABELS, labelsProp);
+  const name = typedName?.trim() ?? "";
+  const kind = value ? "drawn" : name ? "typed" : "empty";
+  const caption = label === undefined ? labels.label : label;
+  const captionId = useId();
+  const captioned = caption !== null && caption !== false;
+  return (
+    <figure
+      // Named explicitly: the figcaption-to-figure name is not computed everywhere.
+      aria-labelledby={captioned ? captionId : undefined}
+      {...rest}
+      className={cn("m-0 space-y-1.5", className)}
+      data-empty={kind === "empty" || undefined}
+    >
+      {captioned && (
+        <figcaption id={captionId} className="block text-sm font-medium text-[var(--text-primary)]">{caption}</figcaption>
+      )}
+      <div
+        className={cn(
+          "relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          frameClassName,
+        )}
+      >
+        {kind === "drawn" && (
+          <img
+            src={value as string}
+            alt={labels.viewDrawn}
+            className={cn("relative max-h-full max-w-full object-contain", adaptInk && "dark:invert")}
+          />
+        )}
+        {kind === "typed" && (
+          // One name for the whole thing: the visible text alone would be read as a bare
+          // name, with nothing saying it IS the signature.
+          <span
+            role="img"
+            aria-label={labels.viewTyped(name)}
+            className="relative max-w-[85%] truncate px-2 text-4xl italic text-[var(--text-primary)]"
+            style={{ fontFamily: SCRIPT_FONT }}
+          >
+            {name}
+          </span>
+        )}
+        {kind === "empty" && (
+          <span className="relative text-xs text-[var(--text-muted)]">{labels.viewEmpty}</span>
+        )}
+        {/* The signing line, as on the pad. Decoration only. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-[var(--border-strong)]"
+        />
+      </div>
+    </figure>
+  );
+}

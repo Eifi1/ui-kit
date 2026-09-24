@@ -2,7 +2,12 @@ import { useId, useMemo, type ComponentPropsWithoutRef, type ReactNode } from "r
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
-import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
+import {
+  ComboboxPanel,
+  useComboboxCore,
+  useComboboxFieldError,
+  type ComboOption,
+} from "./combobox-core";
 import {
   DEFAULT_COMBOBOX_LABELS,
   DEFAULT_COMMON_LABELS,
@@ -19,8 +24,8 @@ export interface MultiEntityComboboxProps<V extends string | number>
   onChange: (value: V[]) => void;
   /** Already-loaded options (client-side filtered); also resolves selected labels. */
   options?: ComboOption<V>[];
-  /** Async option source, debounced + race-safe. When set, `options` resolves
-   *  labels only. */
+  /** Async option source, debounced + race-safe; a rejection shows
+   *  `loadErrorLabel`. When set, `options` resolves labels only. */
   loadOptions?: (query: string) => Promise<ComboOption<V>[]>;
   loading?: boolean;
   label?: ReactNode;
@@ -44,6 +49,19 @@ export interface MultiEntityComboboxProps<V extends string | number>
   createLabel?: (query: string) => string;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
+  /** What is wrong with the value, as {@link Input}'s `error`: rendered under the
+   *  field, on the trigger's `aria-describedby`, and implies `invalid`. */
+  error?: ReactNode;
+  /** Narrow `options` client-side by the query. Default `true`; `false` shows them
+   *  as given (a server-ranked list). */
+  filter?: boolean;
+  /** Offer nothing, and call no `loadOptions`, below this many characters. Default
+   *  `0`, i.e. the list loads as the panel opens. */
+  minChars?: number;
+  /** `loadOptions` debounce. Default 150 ms. */
+  debounceMs?: number;
+  /** Shown when `loadOptions` rejects. Default: `combobox.loadError`. */
+  loadErrorLabel?: string;
 }
 
 /**
@@ -70,10 +88,23 @@ export function MultiEntityCombobox<V extends string | number>({
   createLabel,
   className,
   invalid,
+  error,
+  filter,
+  minChars,
+  debounceMs,
+  loadErrorLabel,
   "aria-label": ariaLabel,
   ...rest
 }: MultiEntityComboboxProps<V>) {
-  const core = useComboboxCore<V>({ options, loadOptions, loading });
+  const core = useComboboxCore<V>({
+    options,
+    loadOptions,
+    loading,
+    filter,
+    minChars,
+    debounceMs,
+  });
+  const field = useComboboxFieldError(error, invalid);
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, {
@@ -155,7 +186,8 @@ export function MultiEntityCombobox<V extends string | number>({
           (typeof label === "string" ? common.fieldValue(label, summary) : undefined)
         }
         disabled={disabled}
-        aria-invalid={invalid || undefined}
+        aria-invalid={field.isInvalid || undefined}
+        aria-describedby={field.describedBy}
         onClick={() => !disabled && setOpen((o) => !o)}
         // Down/Up opens the list from the closed trigger, per the APG. Enter and
         // Space already do it through the button's own click.
@@ -171,7 +203,7 @@ export function MultiEntityCombobox<V extends string | number>({
           "pr-9",
           label !== undefined && FIELD_FLOATING_PAD,
           disabled && "cursor-not-allowed opacity-50",
-          invalid && FIELD_INVALID,
+          field.isInvalid && FIELD_INVALID,
         )}
       >
         <span
@@ -212,6 +244,7 @@ export function MultiEntityCombobox<V extends string | number>({
         searchPlaceholder={labels.search}
         emptyLabel={labels.noResults}
         closeLabel={closeLabel}
+        loadErrorLabel={loadErrorLabel}
         isSelected={(v) => valueSet.has(v)}
         onChoose={toggle}
         showCreate={showCreate}
@@ -221,6 +254,7 @@ export function MultiEntityCombobox<V extends string | number>({
         }}
         createContent={labels.create(q)}
       />
+      {field.errorEl}
     </div>
   );
 }

@@ -63,3 +63,37 @@ describe("ToggleGroup", () => {
     );
   });
 });
+
+describe("ToggleGroup — allowEmpty (0.6.0)", () => {
+  it("clears when the active option is clicked, and becomes toggle buttons", () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup allowEmpty value="a" onChange={onChange} options={OPTIONS} aria-label="Filter" />,
+    );
+    // Not a radiogroup: a radio cannot be unchecked by pressing it again, and a
+    // screen reader would not say that it had been.
+    expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Filter" })).toBeInTheDocument();
+    const a = screen.getByRole("button", { name: "A" });
+    expect(a).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "B" })).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(a);
+    expect(onChange).toHaveBeenLastCalledWith(null);
+    fireEvent.click(screen.getByRole("button", { name: "B" }));
+    expect(onChange).toHaveBeenLastCalledWith("b");
+  });
+
+  it("shows nothing pressed for a null value", () => {
+    render(<ToggleGroup allowEmpty value={null} onChange={vi.fn()} options={OPTIONS} />);
+    for (const b of screen.getAllByRole("button")) {
+      expect(b).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
+  it("keeps sending the same value again without allowEmpty", () => {
+    const onChange = vi.fn();
+    render(<ToggleGroup value="a" onChange={onChange} options={OPTIONS} />);
+    fireEvent.click(screen.getByRole("radio", { name: "A" }));
+    expect(onChange).toHaveBeenCalledWith("a");
+  });
+});

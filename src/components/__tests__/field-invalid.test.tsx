@@ -244,3 +244,22 @@ describe("an unset invalid leaves the attribute off entirely", () => {
     expect(screen.getByLabelText("Memo").hasAttribute("aria-invalid")).toBe(false);
   });
 });
+
+describe("aria-invalid from a form library paints the field (0.6.0)", () => {
+  it("Input, Select and Textarea turn invalid from aria-invalid alone", async () => {
+    const { render, screen } = await import("@testing-library/react");
+    const { Input, Select, Textarea } = await import("../ui");
+    render(
+      <>
+        <Input aria-label="a" aria-invalid="true" />
+        <Select aria-label="b" aria-invalid>
+          <option>x</option>
+        </Select>
+        <Textarea aria-label="c" aria-invalid="true" />
+      </>,
+    );
+    for (const name of ["a", "b", "c"]) {
+      expect(screen.getByLabelText(name).className).toContain("border-[var(--danger-border)]");
+    }
+  });
+});

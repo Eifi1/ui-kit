@@ -97,9 +97,9 @@ export const it: Dictionary = {
         "I campi di input e le costanti di classe con cui un’app compone i propri campi.",
     },
     choices: {
-      title: "Casella di controllo, interruttore e cursore",
+      title: "Scelte",
       blurb:
-        "Scegliere invece di digitare: acceso o spento, uno fra pochi, un valore su una scala.",
+        "Acceso o spento, uno fra pochi, un valore su una scala — e la scelta di un colore, di un’icona o di una scheda.",
     },
     numbers: {
       title: "Numeri e importi",
@@ -110,6 +110,11 @@ export const it: Dictionary = {
       title: "Menu a tendina e selettori",
       blurb:
         "Combobox, selezione multipla, selettori raggruppati e a foglio, e le primitive dei menu a tendina su cui si basano.",
+    },
+    files: {
+      title: "File",
+      blurb:
+        "Scegliere file: un pulsante che apre il selettore o la fotocamera, l’area di rilascio e i rifiuti segnalati dove l’utente sta guardando, mai come toast.",
     },
     dates: {
       title: "Date e ora",
@@ -122,9 +127,9 @@ export const it: Dictionary = {
         "Stato di sincronizzazione di un campo legato a un database, salvato all'uscita dal campo: il colore del bordo e un'icona alla fine del campo indicano modificato, salvataggio, salvato o errore — passa sopra il simbolo d'errore per vederne il motivo.",
     },
     "signature-password": {
-      title: "Firma e sicurezza della password",
+      title: "Firma, password e conferma",
       blurb:
-        "Acquisire una firma con penna, dito o mouse — con il nome digitato come alternativa — e mostrare all’utente quanto è sicura la password che sta scegliendo.",
+        "Acquisire una firma — e mostrarne una salvata —, indicare all’utente quanto è sicura la sua password e confermare un’azione distruttiva.",
     },
     "data-display": {
       title: "Visualizzazione dati",
@@ -150,6 +155,11 @@ export const it: Dictionary = {
       title: "Statistiche e sparkline",
       blurb:
         "Il riquadro KPI che ogni dashboard ripete — valore, variazione, tendenza — e la minuscola linea che sta in una cella di tabella.",
+    },
+    layout: {
+      title: "Sezione espandibile e cornice dei dialoghi",
+      blurb:
+        "Una sezione che si richiude e la cornice intestazione-corpo-azioni che ogni finestra di dialogo ripete.",
     },
     overlays: {
       title: "Overlay",
@@ -313,6 +323,9 @@ export const it: Dictionary = {
       loading: "Caricamento…",
       create: (query) => `Crea «${query}»`,
       selectedCount: (count) => `${n(count)} ${plural(count, "selezionato", "selezionati")}`,
+      loadError: "Impossibile caricare i risultati",
+      resultCount: (count) => `${n(count)} ${plural(count, "risultato", "risultati")}`,
+      minChars: (count) => `Digita almeno ${n(count)} ${plural(count, "carattere", "caratteri")}`,
     },
     multiSelect: {
       search: "Cerca",
@@ -349,6 +362,17 @@ export const it: Dictionary = {
       atLimit: (max) => `Limite di ${n(max)} ${plural(max, "elemento", "elementi")} raggiunto`,
       duplicate: (value) => `«${value}» è già nell’elenco`,
     },
+    swatchPicker: {
+      none: "Nessun colore",
+      mixed: "Misto: gli elementi selezionati hanno colori diversi",
+    },
+    iconPicker: {
+      none: "Nessuna icona",
+      mixed: "Misto: gli elementi selezionati hanno icone diverse",
+      search: "Cerca icone",
+      noResults: "Nessuna icona corrispondente",
+      resultCount: (count) => `${n(count)} ${plural(count, "icona", "icone")}`,
+    },
     fieldSync: {
       synced: "Salvato",
       edited: "Modifiche non salvate",
@@ -359,6 +383,18 @@ export const it: Dictionary = {
     passwordReveal: {
       show: "Mostra password",
       hide: "Nascondi password",
+    },
+    dangerConfirm: {
+      arm: "Elimina…",
+      confirm: "Elimina",
+      cancel: "Annulla",
+      prompt: "Questa operazione non può essere annullata.",
+      password: "Password",
+      phrase: (phrase) => `Digita «${phrase}» per confermare`,
+    },
+    tabs: {
+      add: "Aggiungi scheda",
+      remove: (tab) => `Rimuovi ${tab}`,
     },
     appShell: {
       collapse: "Comprimi barra laterale",
@@ -375,12 +411,30 @@ export const it: Dictionary = {
     pickerSheet: {
       close: "Chiudi",
     },
+    dialogFrame: {
+      close: "Chiudi",
+    },
     swipeableRow: {
       actions: "Azioni della riga",
     },
     file: {
       // The kit's own `Intl` unit formatting, pinned to this locale ("3,4 MB").
       size: (bytes) => formatFileSize(bytes, "it-IT"),
+    },
+    filePicker: {
+      // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
+      rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
+      rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
+      rejectedCount: (name, maxFiles) => `«${name}» non è stato aggiunto: al massimo ${n(maxFiles)} file`,
+      rejectedInvalid: (name) => `«${name}» non può essere usato qui`,
+      rejectedMany: (count) =>
+        count === 1 ? "1 file non è stato aggiunto" : `${n(count)} file non sono stati aggiunti`,
+      selected: (count, firstName) =>
+        count === 1 ? `«${firstName}» selezionato` : `${n(count)} file selezionati`,
+      remove: (name) => `Rimuovi «${name}»`,
+      clearAll: "Rimuovi tutti i file",
+      removed: (name) => `«${name}» rimosso`,
+      cleared: "Tutti i file rimossi",
     },
     wizard: {
       cancel: "Annulla",
@@ -445,6 +499,9 @@ export const it: Dictionary = {
       typedName: "Nome e cognome",
       cleared: "Firma cancellata",
       undone: "Ultimo tratto rimosso",
+      viewEmpty: "Non firmato",
+      viewDrawn: "Firma autografa",
+      viewTyped: (name) => `Firmato con il nome digitato ${name}`,
     },
     passwordStrength: {
       // Agrees with "password" (feminine in Italian).

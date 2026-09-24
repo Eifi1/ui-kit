@@ -80,6 +80,25 @@ export * from "./components/stat-tile";
 export * from "./components/signature-pad";
 export * from "./components/password-strength";
 export * from "./components/page-contents";
+export * from "./components/disclosure";
+export * from "./components/dialog-frame";
+export * from "./components/danger-confirm";
+export * from "./components/swatch-picker";
+export * from "./components/icon-picker";
+export * from "./components/choice-card";
+export * from "./components/autocomplete";
+// Named, not `export *`: file-button.tsx also holds the screening helpers the
+// dropzone shares, which are internal.
+export { FileButton, useFilePicker, matchesAccept, DEFAULT_FILE_PICKER_LABELS } from "./components/file-button";
+export type {
+  FileButtonProps,
+  UseFilePickerOptions,
+  UseFilePickerReturn,
+  FilePickerLabels,
+  FileRejection,
+  FileRejectionReason,
+  FileScreenOptions,
+} from "./components/file-button";
 export * from "./components/treemap";
 export * from "./components/series-chart";
 export * from "./components/chart-zoom";

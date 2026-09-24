@@ -8,13 +8,19 @@ import { useDropdown } from "./dropdown";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { useActiveOptionScroll, type ComboOption } from "./combobox-core";
+import {
+  SUGGESTION_LIST_CLASS,
+  suggestionRowClass,
+  useActiveOptionScroll,
+  useComboboxFieldError,
+  type ComboOption,
+} from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 // One look for both combobox flavors below — the suggestion list and its rows
-// must stay pixel-identical between the free-text and the id-keyed variant.
-const LIST_CLASS =
-  "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
+// must stay pixel-identical between the free-text and the id-keyed variant (and
+// `Autocomplete`, which shares them from the core).
+const LIST_CLASS = SUGGESTION_LIST_CLASS;
 
 /**
  * "This focus came from a mouse button that is not the left one" — for the two
@@ -105,11 +111,7 @@ function SuggestionList({
   );
 }
 
-const rowClass = (isActive: boolean) =>
-  cn(
-    "block w-full truncate px-3 py-1.5 text-left text-sm text-[var(--text-primary)]",
-    isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
-  );
+const rowClass = suggestionRowClass;
 
 /**
  * Four of the div's own attributes are omitted because this component already owns
@@ -133,6 +135,14 @@ export interface ComboboxProps
    *  delete the `[&_input]:…` copy of {@link FIELD_INVALID} it had been carrying
    *  because this component had no `invalid` of its own. */
   invalid?: boolean;
+  /** What is wrong with the value, as {@link Input}'s `error`: rendered under the
+   *  field, on the `<input>`'s `aria-describedby`, and implies `invalid` (lenkbank's
+   *  scope fields, which moved here off `<Input list>` + `<datalist>`). */
+  error?: ReactNode;
+  /** As `<input disabled>`: no focus, no list, the field's settled look. The chevron
+   *  stops toggling with it — it is a mouse target the input's own `disabled` does
+   *  not reach. */
+  disabled?: boolean;
   /** Heading an option belongs under. Supplying it makes this list read exactly
    *  like {@link InlineEntityCombobox}'s — one heading per group with its rows
    *  indented beneath — instead of a flat list (feedback #136 rework: the payee
@@ -211,6 +221,8 @@ export function Combobox({
   closeLabel,
   createLabel,
   invalid,
+  error,
+  disabled,
   optionAdornment,
   autoFocus,
   onBlur,
@@ -218,6 +230,7 @@ export function Combobox({
   "aria-label": ariaLabel,
   ...rest
 }: ComboboxProps) {
+  const field = useComboboxFieldError(error, invalid);
   const generated = useId();
   const fieldId = id ?? generated;
   // Derived from the GENERATED id, never from `id`: a caller's id is theirs to
@@ -373,8 +386,10 @@ export function Combobox({
           aria-controls={listboxId}
           aria-activedescendant={activeId}
           aria-autocomplete="list"
-          aria-invalid={invalid || undefined}
+          aria-invalid={field.isInvalid || undefined}
+          aria-describedby={field.describedBy}
           autoComplete="off"
+          disabled={disabled}
           autoFocus={autoFocus}
           onBlur={onBlur}
           onMouseDown={primaryOnly.onMouseDown}
@@ -444,21 +459,30 @@ export function Combobox({
             // the desktop list is capped at 8 rows — so jumping it would be worth
             // almost nothing and would cost the one gesture that field is used with.
           }}
-          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
+          className={cn(
+            FIELD_BASE,
+            label !== undefined && FIELD_FLOATING_PAD,
+            "pr-9",
+            field.isInvalid && FIELD_INVALID,
+          )}
         />
         <ChevronDown
           aria-hidden
           onMouseDown={(e) => {
             // Toggle on the chevron without stealing focus from the input.
             e.preventDefault();
-            setOpen((o) => !o);
+            if (!disabled) setOpen((o) => !o);
           }}
-          className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 cursor-pointer text-[var(--text-placeholder)]"
+          className={cn(
+            "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+            disabled ? "opacity-50" : "cursor-pointer",
+          )}
         />
       </div>
+      {field.errorEl}
       {isPhone && (
         <PickerSheet
-          open={open}
+          open={open && !disabled}
           onClose={() => setOpen(false)}
           title={label}
           // The sheet's input IS the field: this is a free-text control, so what is
@@ -523,7 +547,7 @@ export function Combobox({
           </ul>
         </PickerSheet>
       )}
-      {!isPhone && open && (matches.length > 0 || createRow) && (
+      {!isPhone && open && !disabled && (matches.length > 0 || createRow) && (
         <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {createRow && (
             <li role="presentation">
@@ -609,6 +633,8 @@ export interface InlineEntityComboboxProps<V extends string | number>
   value: V | null;
   /** Required and unanswered — see {@link Combobox}'s `invalid`. */
   invalid?: boolean;
+  /** What is wrong with the value — see {@link Combobox}'s `error`. */
+  error?: ReactNode;
   /** A picked/typed option emits its id; emptying the field emits `null`. */
   onChange: (v: V | null) => void;
   options: ComboOption<V>[];
@@ -676,9 +702,11 @@ export function InlineEntityCombobox<V extends string | number>({
   clearable,
   clearLabel,
   invalid,
+  error,
   "aria-label": ariaLabel,
   ...rest
 }: InlineEntityComboboxProps<V>) {
+  const field = useComboboxFieldError(error, invalid);
   const generated = useId();
   const fieldId = id ?? generated;
   // See the twin above on why these hang off the generated id.
@@ -816,7 +844,8 @@ export function InlineEntityCombobox<V extends string | number>({
           aria-controls={listboxId}
           aria-activedescendant={activeId}
           aria-autocomplete="list"
-          aria-invalid={invalid || undefined}
+          aria-invalid={field.isInvalid || undefined}
+          aria-describedby={field.describedBy}
           autoComplete="off"
           disabled={disabled}
           autoFocus={autoFocus}
@@ -875,7 +904,12 @@ export function InlineEntityCombobox<V extends string | number>({
             // Home/End stay with the caret — see the note in {@link Combobox}: this
             // field is editable, and its text is what `reconcile` judges.
           }}
-          className={cn(FIELD_BASE, label !== undefined && FIELD_FLOATING_PAD, "pr-9", invalid && FIELD_INVALID)}
+          className={cn(
+            FIELD_BASE,
+            label !== undefined && FIELD_FLOATING_PAD,
+            "pr-9",
+            field.isInvalid && FIELD_INVALID,
+          )}
         />
         {showClear ? (
           <button
@@ -906,9 +940,11 @@ export function InlineEntityCombobox<V extends string | number>({
           <ChevronDown
             aria-hidden
             onMouseDown={(e) => {
-              // Toggle on the chevron without stealing focus from the input.
+              // Toggle on the chevron without stealing focus from the input — and
+              // not at all on a disabled field, which the input's own `disabled`
+              // does not stop from here.
               e.preventDefault();
-              setOpen((o) => !o);
+              if (!disabled) setOpen((o) => !o);
             }}
             className={cn(
               "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
@@ -917,9 +953,10 @@ export function InlineEntityCombobox<V extends string | number>({
           />
         )}
       </div>
+      {field.errorEl}
       {isPhone && (
         <PickerSheet
-          open={open}
+          open={open && !disabled}
           // Closing without choosing keeps the value: `text` was never emptied, so
           // reconcile has nothing to undo — it just puts the label back.
           onClose={reconcile}
@@ -966,7 +1003,7 @@ export function InlineEntityCombobox<V extends string | number>({
           </ul>
         </PickerSheet>
       )}
-      {!isPhone && open && matches.length > 0 && (
+      {!isPhone && open && !disabled && matches.length > 0 && (
         <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {matches.map((o, i) => (
             // A group heading is emitted at each group boundary rather than repeating

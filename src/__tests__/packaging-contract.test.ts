@@ -5,7 +5,7 @@
  * pulls in esbuild, which refuses to start under jsdom ("new TextEncoder().encode(\"\")
  * instanceof Uint8Array" is false there). Nothing here renders.
  */
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -31,7 +31,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
   dependencies: Record<string, string>;
   peerDependencies: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   devDependencies: Record<string, string>;
+  exports: Record<string, unknown>;
 };
 
 /** Sources that ship, i.e. everything under `src/` that tsup turns into a module. */
@@ -65,19 +67,59 @@ const packageOf = (specifier: string) =>
     ? specifier.split("/").slice(0, 2).join("/")
     : specifier.split("/")[0];
 
+/** Every import specifier in one module, relative ones included. */
+function specifiersOf(file: string): string[] {
+  const source = stripComments(readFileSync(file, "utf8"));
+  return [STATIC, BARE, DYNAMIC].flatMap((pattern) =>
+    [...source.matchAll(pattern)].map(([, specifier]) => specifier),
+  );
+}
+
+const isRelative = (specifier: string) => specifier.startsWith(".") || specifier.startsWith("/");
+
 function importedPackages(): Map<string, string[]> {
   const found = new Map<string, string[]>();
   for (const file of shippedSources(join(ROOT, "src"))) {
-    const source = stripComments(readFileSync(file, "utf8"));
-    for (const pattern of [STATIC, BARE, DYNAMIC]) {
-      for (const [, specifier] of source.matchAll(pattern)) {
-        if (specifier.startsWith(".") || specifier.startsWith("/")) continue;
-        const name = packageOf(specifier);
-        found.set(name, [...(found.get(name) ?? []), file.slice(ROOT.length + 1)]);
-      }
+    for (const specifier of specifiersOf(file)) {
+      if (isRelative(specifier)) continue;
+      const name = packageOf(specifier);
+      found.set(name, [...(found.get(name) ?? []), file.slice(ROOT.length + 1)]);
     }
   }
   return found;
+}
+
+/** `./foo` from a module, as tsc resolves it: extensionless, or a directory index. */
+function resolveRelative(from: string, specifier: string): string | null {
+  const base = resolve(dirname(from), specifier);
+  for (const candidate of [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx")]) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  }
+  return null;
+}
+
+/**
+ * The packages an ENTRY POINT reaches, following its relative imports to the end —
+ * what a consumer's bundler and typecheck actually load for `import … from` it. A file
+ * scan cannot answer this: a module that imports react-hook-form is harmless until the
+ * barrel re-exports it, and then it is every consumer's install.
+ */
+function packagesReachedFrom(entry: string): Set<string> {
+  const seen = new Set<string>();
+  const packages = new Set<string>();
+  const walk = (file: string) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    for (const specifier of specifiersOf(file)) {
+      if (!isRelative(specifier)) packages.add(packageOf(specifier));
+      else {
+        const next = resolveRelative(file, specifier);
+        if (next) walk(next);
+      }
+    }
+  };
+  walk(join(ROOT, entry));
+  return packages;
 }
 
 describe("packaging contract", () => {
@@ -123,6 +165,55 @@ describe("packaging contract", () => {
     expect(pkg.dependencies["flag-icons"]).toBeUndefined();
     expect(pkg.peerDependencies["flag-icons"]).toBeUndefined();
     expect(pkg.devDependencies["flag-icons"]).toBeDefined();
+  });
+});
+
+/**
+ * react-hook-form is an OPTIONAL peer, and the promise that makes is "install the kit
+ * without it and nothing you import breaks". The main barrel shipped a react-hook-form
+ * hook once and removed it for exactly that (see the wizard section of src/index.ts);
+ * `@eifi1/ui-kit/rhf` is the isolated answer, and these hold the isolation.
+ */
+describe("react-hook-form stays behind @eifi1/ui-kit/rhf", () => {
+  it("is imported by the rhf entry's modules and nowhere else", () => {
+    const importers = importedPackages().get("react-hook-form") ?? [];
+    // Not vacuous: the adapter itself must be seen importing it.
+    expect(importers.length).toBeGreaterThan(0);
+    const outside = importers.filter((file) => !/^src\/rhf(\.ts|\/)/.test(file));
+    expect(outside, "react-hook-form imported outside src/rhf*").toEqual([]);
+  });
+
+  it("is an optional peer, and a devDependency for this repo's own tests", () => {
+    expect(pkg.peerDependencies["react-hook-form"]).toBeDefined();
+    expect(pkg.peerDependenciesMeta?.["react-hook-form"]?.optional).toBe(true);
+    expect(pkg.devDependencies["react-hook-form"]).toBeDefined();
+    expect(pkg.dependencies["react-hook-form"]).toBeUndefined();
+  });
+
+  it("is not reached from the main barrel, however deep the re-export", () => {
+    const fromBarrel = packagesReachedFrom("src/index.ts");
+    // The walk is real: the barrel reaches react and (through components/chart) recharts.
+    expect(fromBarrel).toContain("react");
+    expect(fromBarrel).toContain("recharts");
+    expect(fromBarrel).not.toContain("react-hook-form");
+    expect(packagesReachedFrom("src/rhf.ts")).toContain("react-hook-form");
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./rhf"]).toEqual({ types: "./dist/rhf.d.ts", import: "./dist/rhf.js" });
+  });
+});
+
+describe("@eifi1/ui-kit/table-text is pure", () => {
+  it("reaches no package at all — no React, nothing for a script or a worker to install", () => {
+    expect([...packagesReachedFrom("src/table-text.ts")]).toEqual([]);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./table-text"]).toEqual({
+      types: "./dist/table-text.d.ts",
+      import: "./dist/table-text.js",
+    });
   });
 });
 

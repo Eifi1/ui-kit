@@ -325,8 +325,9 @@ function DropzoneDefault() {
 
   return (
     <div className="space-y-3">
-      {/* The marker sits on a wrapper because FileDropzone's props are a closed object
-          — it spreads no `...rest` onto its root, so a `data-tour` cannot be passed in. */}
+      {/* The tour marker sits on a wrapper so the spotlight takes in the readout below as
+          well; FileDropzone itself passes `data-*` through to its root. The Files page
+          (Inputs) has the full set: FileButton, multiple files, inline refusals. */}
       <div data-tour="showcase-dropzone">
         <FileDropzone
           file={file}
@@ -344,8 +345,8 @@ function DropzoneDefault() {
         <span className={READOUT}>
           file: {file ? `${file.name} (${Math.round(file.size / 1024)} KB)` : "null"}
         </span>
-        {/* `file` is controlled and the component ships no clear affordance of its own,
-            so re-choosing or clearing is the caller's job. */}
+        {/* `file` is controlled, so the caller can always clear it; since 0.6 the zone can
+            also offer its own remove button (`onClear`) — see the Files page. */}
         <Button variant="secondary" disabled={!file} onClick={() => setFile(null)}>
           Clear
         </Button>

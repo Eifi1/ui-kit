@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -18,6 +18,7 @@ import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { hasMessage, mergeDescribedBy } from "./choice-parts";
 
 export interface ComboOption<V extends string | number> {
   value: V;
@@ -34,14 +35,125 @@ export interface ComboOption<V extends string | number> {
   group?: string;
 }
 
-export interface ComboboxCoreOptions<V extends string | number> {
-  /** Already-loaded options (client-side filtered), also used to resolve labels. */
+/**
+ * Where a combobox's rows come from, and how a query narrows them. Shared by the
+ * trigger pickers ({@link useComboboxCore}) and the inline {@link Autocomplete}, so
+ * the two cannot drift in what a failed lookup or a too-short query does.
+ */
+export interface OptionSourceOptions<V extends string | number> {
+  /** Already-loaded options (client-side filtered unless `filter` is false), also
+   *  used to resolve labels. */
   options?: ComboOption<V>[];
-  /** Async option source, debounced and race-safe; stale responses are ignored. */
+  /** Async option source, debounced and race-safe; stale responses are ignored,
+   *  and a rejection is caught and reported as `failed`. */
   loadOptions?: (query: string) => Promise<ComboOption<V>[]>;
   /** External loading flag, OR-ed with the internal async state. */
   loading?: boolean;
+  /**
+   * Narrow `options` by the query (label/sublabel substring). Default `true`.
+   *
+   * `false` shows `options` exactly as given, in the given order — for a list the
+   * caller has already searched and ranked on a server (Keksdose's geocoder), which a
+   * second, client-side substring filter could only get wrong: a provider that
+   * matches "Bahnhofstr." to "Bahnhofstrasse" is right, and a label filter would
+   * throw that row away.
+   */
+  filter?: boolean;
+  /**
+   * Below this many (trimmed) characters nothing is offered and `loadOptions` is not
+   * called. Default `0` — the pickers list everything on open. Set it for a source
+   * that is costly or rate-limited: one letter against a geocoder matches half a
+   * continent, and a request per opened panel is a request nobody asked for.
+   */
+  minChars?: number;
+  /** Quiet time after the last keystroke before `loadOptions` runs. Default 150 ms. */
+  debounceMs?: number;
 }
+
+export interface OptionSource<V extends string | number> {
+  results: ComboOption<V>[];
+  busy: boolean;
+  /** The last lookup for this query REJECTED. The rows are emptied with it: results
+   *  from an earlier query under a failed one would read as the answer to it. */
+  failed: boolean;
+  /** The query is shorter than `minChars`, so nothing was asked. */
+  tooShort: boolean;
+}
+
+/**
+ * The rows half of a combobox: client-side filtering, or a debounced, race-safe
+ * `loadOptions` with its loading and failure states.
+ *
+ * `active` gates the async side — a closed list asks nothing. Loading is DERIVED
+ * ("the settled answer is for a different query") rather than flagged on in the
+ * effect, so there is no render between a keystroke and the debounce in which an
+ * empty list could claim "No results" for a question still being asked.
+ */
+export function useOptionSource<V extends string | number>({
+  options,
+  loadOptions,
+  loading,
+  filter = true,
+  minChars = 0,
+  debounceMs = 150,
+  query,
+  active,
+}: OptionSourceOptions<V> & { query: string; active: boolean }): OptionSource<V> {
+  const isAsync = typeof loadOptions === "function";
+  const tooShort = query.trim().length < minChars;
+  const [settled, setSettled] = useState<{
+    query: string | null;
+    results: ComboOption<V>[];
+    failed: boolean;
+  }>({ query: null, results: [], failed: false });
+  const loadRef = useRef(loadOptions);
+  useEffect(() => {
+    loadRef.current = loadOptions;
+  });
+  const reqId = useRef(0);
+
+  useEffect(() => {
+    // Bumped even when nothing is asked, so a request still in flight from a longer
+    // query cannot land after the user has deleted back below `minChars`.
+    const id = ++reqId.current;
+    if (!active || !isAsync || tooShort) return;
+    const t = setTimeout(
+      async () => {
+        try {
+          const r = await loadRef.current!(query);
+          if (reqId.current === id) setSettled({ query, results: r, failed: false });
+        } catch {
+          // The one path the old `try/finally` had no answer for: the list kept the
+          // previous query's rows and said nothing (Keksdose proposal §2).
+          if (reqId.current === id) setSettled({ query, results: [], failed: true });
+        }
+      },
+      query ? debounceMs : 0,
+    );
+    return () => clearTimeout(t);
+  }, [query, active, isAsync, tooShort, debounceMs]);
+
+  const clientResults = useMemo(() => {
+    if (isAsync) return [];
+    const src = options ?? [];
+    const q = query.trim().toLowerCase();
+    if (!filter || !q) return src;
+    return src.filter(
+      (o) => o.label.toLowerCase().includes(q) || (o.sublabel ?? "").toLowerCase().includes(q),
+    );
+  }, [isAsync, options, query, filter]);
+
+  const pending = isAsync && active && !tooShort && settled.query !== query;
+  const failed = isAsync && !tooShort && settled.failed;
+  return {
+    results: tooShort ? [] : isAsync ? (failed ? [] : settled.results) : clientResults,
+    busy: Boolean(loading) || pending,
+    failed: failed && !pending,
+    tooShort,
+  };
+}
+
+export type ComboboxCoreOptions<V extends string | number> = OptionSourceOptions<V>;
 
 export interface ComboboxCore<V extends string | number> {
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -55,6 +167,10 @@ export interface ComboboxCore<V extends string | number> {
   setActive: Dispatch<SetStateAction<number>>;
   results: ComboOption<V>[];
   busy: boolean;
+  /** See {@link OptionSource}. */
+  failed: boolean;
+  tooShort: boolean;
+  minChars: number;
   rect: AnchorRect | null;
   /** Where the dropdown goes, clamped to the visible viewport (feedback #135). */
   placement: AnchoredPanel;
@@ -75,8 +191,8 @@ export interface ComboboxCore<V extends string | number> {
  */
 export function useComboboxCore<V extends string | number>({
   options,
-  loadOptions,
-  loading,
+  minChars = 0,
+  ...source
 }: ComboboxCoreOptions<V>): ComboboxCore<V> {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -84,13 +200,6 @@ export function useComboboxCore<V extends string | number>({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
-
-  const isAsync = typeof loadOptions === "function";
-  const [asyncResults, setAsyncResults] = useState<ComboOption<V>[]>([]);
-  const [asyncLoading, setAsyncLoading] = useState(false);
-  const loadRef = useRef(loadOptions);
-  loadRef.current = loadOptions;
-  const reqId = useRef(0);
 
   const close = () => setOpen(false);
   // Escape unmounts the panel the user is typing in; without this the browser drops
@@ -131,35 +240,15 @@ export function useComboboxCore<V extends string | number>({
     return () => cancelAnimationFrame(id);
   }, [open]);
 
-  // Debounced, race-safe async search (only when loadOptions is provided).
-  useEffect(() => {
-    if (!open || !isAsync) return;
-    const id = ++reqId.current;
-    setAsyncLoading(true);
-    const run = async () => {
-      try {
-        const r = await loadRef.current!(query);
-        if (reqId.current === id) setAsyncResults(r);
-      } finally {
-        if (reqId.current === id) setAsyncLoading(false);
-      }
-    };
-    const t = setTimeout(run, query ? 150 : 0);
-    return () => clearTimeout(t);
-  }, [query, open, isAsync]);
-
-  const clientResults = useMemo(() => {
-    if (isAsync) return [];
-    const src = options ?? [];
-    const q = query.trim().toLowerCase();
-    if (!q) return src;
-    return src.filter(
-      (o) => o.label.toLowerCase().includes(q) || (o.sublabel ?? "").toLowerCase().includes(q),
-    );
-  }, [isAsync, options, query]);
-
-  const results = isAsync ? asyncResults : clientResults;
-  const busy = Boolean(loading) || (isAsync && asyncLoading);
+  // Debounced, race-safe async search (only when loadOptions is provided) or the
+  // client-side filter — see {@link useOptionSource}.
+  const { results, busy, failed, tooShort } = useOptionSource<V>({
+    ...source,
+    options,
+    minChars,
+    query,
+    active: open,
+  });
 
   // Accumulate every option we've seen so a selected value can render its label
   // even after the async list has moved on to other query results.
@@ -188,6 +277,9 @@ export function useComboboxCore<V extends string | number>({
     setActive,
     results,
     busy,
+    failed,
+    tooShort,
+    minChars,
     rect,
     placement,
     cacheRef,
@@ -195,6 +287,45 @@ export function useComboboxCore<V extends string | number>({
     closeToTrigger,
   };
 }
+
+/** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
+ *  so a combobox's message is indistinguishable from an Input's. */
+const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+
+/**
+ * {@link Input}'s `error` for the combobox family: the message under the field, its
+ * id on the control's `aria-describedby` (merged, never replacing — the hint the
+ * caller pointed at stays first), and `invalid` implied. ui.tsx's `useFieldError` is
+ * module-private, so this restates it on the same rules `choice-parts.ts` does.
+ */
+export function useComboboxFieldError(
+  error: ReactNode,
+  invalid: boolean | undefined,
+  describedBy?: string,
+) {
+  const errorId = useId();
+  const has = hasMessage(error);
+  return {
+    isInvalid: Boolean(invalid) || has,
+    describedBy: mergeDescribedBy(describedBy, has && errorId),
+    errorEl: has ? (
+      <p id={errorId} className={FIELD_ERROR_CLASS}>
+        {error}
+      </p>
+    ) : null,
+  };
+}
+
+/** The anchored suggestion list's box and rows — one look for {@link Combobox},
+ *  {@link InlineEntityCombobox} and {@link Autocomplete}. */
+export const SUGGESTION_LIST_CLASS =
+  "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
+
+export const suggestionRowClass = (isActive: boolean) =>
+  cn(
+    "block w-full truncate px-3 py-1.5 text-left text-sm text-[var(--text-primary)]",
+    isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
+  );
 
 /**
  * Keep the option the keyboard is on inside the visible part of the list.
@@ -236,6 +367,8 @@ export interface ComboboxPanelProps<V extends string | number>
    *  desktop, where the panel sits under the field that already says it. */
   sheetTitle?: ReactNode;
   closeLabel?: string;
+  /** Default: `combobox.loadError` from the {@link UiKitProvider}, else English. */
+  loadErrorLabel?: string;
 }
 
 /**
@@ -277,6 +410,7 @@ export function ComboboxPanel<V extends string | number>({
   createContent,
   sheetTitle,
   closeLabel,
+  loadErrorLabel,
   className,
   style,
   ...rest
@@ -290,6 +424,8 @@ export function ComboboxPanel<V extends string | number>({
     setQuery,
     results,
     busy,
+    failed,
+    tooShort,
     active,
     setActive,
     closeToTrigger,
@@ -337,6 +473,51 @@ export function ComboboxPanel<V extends string | number>({
     }
   };
 
+  // What the list holds, said in ONE place that is both on screen and a polite
+  // live region. Focus stays in the search box, so the list changing under it was
+  // silent — a reader typed and heard nothing back, and a failed lookup was the same
+  // silence as a slow one. Outside the listbox, which may own only options.
+  //
+  // Three different empties, and only one of them is "nothing matched": a lookup
+  // that failed must not claim there is nothing to find, and a query under
+  // `minChars` was never asked. With rows showing, the count is for the reader only.
+  const message: ReactNode =
+    busy && results.length === 0 ? (
+      // The ellipsis is the picture; the words are for a reader, who otherwise met
+      // an empty-looking list with a lone "…" in it — or, in most readers, nothing
+      // at all, since punctuation alone is skipped.
+      <>
+        <span aria-hidden>…</span>
+        <span className="sr-only">{labels.loading}</span>
+      </>
+    ) : !busy && results.length === 0 && !showCreate ? (
+      failed ? (
+        (loadErrorLabel ?? labels.loadError)
+      ) : tooShort ? (
+        labels.minChars(core.minChars)
+      ) : (
+        (emptyLabel ?? labels.noResults)
+      )
+    ) : null;
+  // `relative` so the sr-only text has a local containing block (see
+  // sr-only-containment.test).
+  const announcement = (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "relative",
+        message !== null && cn("py-2 text-sm", isPhone ? "px-4" : "px-3"),
+        failed ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
+      )}
+    >
+      {message ??
+        (results.length > 0 && (
+          <span className="sr-only">{labels.resultCount(results.length)}</span>
+        ))}
+    </div>
+  );
+
   if (!core.open || typeof document === "undefined") return null;
 
   const list = (
@@ -346,21 +527,6 @@ export function ComboboxPanel<V extends string | number>({
       aria-multiselectable={multi}
       className={cn("min-h-0 flex-1 overflow-y-auto py-1", isPhone && "flex-none")}
     >
-      {busy && results.length === 0 && (
-        // The ellipsis is the picture; the words are for a reader, who otherwise met
-        // an empty-looking list with a lone "…" in it — or, in most readers, nothing
-        // at all, since punctuation alone is skipped. `relative` so the sr-only text
-        // has a local containing block (see sr-only-containment.test).
-        <li className="relative px-3 py-2 text-sm text-[var(--text-muted)]">
-          <span aria-hidden>…</span>
-          <span className="sr-only">{labels.loading}</span>
-        </li>
-      )}
-      {!busy && results.length === 0 && !showCreate && (
-        <li className="px-3 py-2 text-sm text-[var(--text-muted)]">
-          {emptyLabel ?? labels.noResults}
-        </li>
-      )}
       {results.map((o, i) => {
         const selected = isSelected(o.value);
         // One heading per group rather than a grey suffix on every row (#136), and
@@ -488,7 +654,10 @@ export function ComboboxPanel<V extends string | number>({
         inputRef={inputRef}
         closeLabel={closeLabel}
       >
-        <div onKeyDown={onKeyDown}>{list}</div>
+        <div onKeyDown={onKeyDown} className="relative">
+          {list}
+          {announcement}
+        </div>
       </PickerSheet>
     );
   }
@@ -534,6 +703,7 @@ export function ComboboxPanel<V extends string | number>({
       {/* One list, two containers: the desktop panel and the phone sheet render
           the same rows through the same handlers (live #200). */}
       {list}
+      {announcement}
     </div>,
     document.body,
   );

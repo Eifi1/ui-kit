@@ -27,7 +27,29 @@ interface SearchFieldOwnProps
    *  decision, not a default: a filter you can type into and not untype is the
    *  complaint that produced the button on three of these four screens. */
   clearLabel?: string;
+  /**
+   * `"field"` (default): the bordered filter box that sits on a page.
+   *
+   * `"inline"`: no box at all — no border, no fill, no padding of its own — and no
+   * type size of its own either, so it takes the size of the header it sits in.
+   * For a search that IS the header: a command-palette sheet, a picker's top line
+   * (Keksdose's transaction search, which lost its `text-base` headline to a
+   * bordered `text-sm` box when it moved onto this component). The container is
+   * what frames it, so give the container the focus cue if it needs one
+   * (`focus-within:`); the caret is the field's own.
+   */
+  variant?: "field" | "inline";
+  /** Classes for the `<input>` itself. `className` styles the wrapper — the box the
+   *  icon and the clear button are positioned against — so it could set a width
+   *  and nothing else. See {@link Input}'s `inputClassName`. */
+  inputClassName?: string;
 }
+
+// The inline look: FIELD_DISPLAY's idea (the chrome gone, the value the thing
+// itself) without even its baseline, because the header it sits in already draws
+// the line. No `text-*` size, on purpose — the input inherits the caller's.
+const SEARCH_INLINE =
+  "block w-full min-w-0 border-0 bg-transparent py-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:outline-none focus:ring-0";
 
 /**
  * One of the two spellings is REQUIRED, and the union is how that survives the
@@ -70,7 +92,18 @@ export type SearchFieldProps = SearchFieldOwnProps &
  * the next query can be typed straight away.
  */
 export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
-  { value, onChange, label, clearLabel, className, placeholder, "aria-label": ariaLabel, ...rest },
+  {
+    value,
+    onChange,
+    label,
+    clearLabel,
+    className,
+    inputClassName,
+    placeholder,
+    variant = "field",
+    "aria-label": ariaLabel,
+    ...rest
+  },
   ref,
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
@@ -78,11 +111,17 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
   // fallback, so a box named only by `aria-label` still says what it is before anyone
   // has typed in it — the same deal `label` has always had.
   const name = ariaLabel ?? label;
+  const inline = variant === "inline";
   return (
     <div className={cn("relative", className)}>
       <Search
         aria-hidden
-        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
+        className={cn(
+          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+          // Logical sides throughout, so a right-to-left page gets the icon at the
+          // start of the line and the clear button at its end.
+          inline ? "start-0" : "start-3",
+        )}
       />
       <input
         ref={(node) => {
@@ -117,12 +156,13 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
         spellCheck={false}
         {...rest}
         className={cn(
-          FIELD_BASE,
-          "pl-9",
+          inline ? SEARCH_INLINE : FIELD_BASE,
+          inline ? "ps-7" : "ps-9",
           // Room for our own "×" only when there is one; a field that can't be
           // cleared has no reason to reserve the space.
-          clearLabel === undefined ? "pr-3" : "pr-9",
+          clearLabel === undefined ? (inline ? "pe-0" : "pe-3") : inline ? "pe-8" : "pe-9",
           "[&::-webkit-search-cancel-button]:appearance-none",
+          inputClassName,
         )}
       />
       {clearLabel !== undefined && value !== "" && (
@@ -135,7 +175,10 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
             innerRef.current?.focus();
           }}
           aria-label={clearLabel}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]",
+            inline ? "end-0" : "end-2",
+          )}
         >
           <X className="size-4" />
         </button>

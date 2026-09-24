@@ -105,8 +105,8 @@ export const en: Dictionary = {
       blurb: "Inputs, and the class constants an app composes its own fields from.",
     },
     choices: {
-      title: "Checkbox, switch & slider",
-      blurb: "Choosing rather than typing: on/off, one of a few, and a value on a scale.",
+      title: "Choices",
+      blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
     },
     numbers: {
       title: "Numbers & money",
@@ -117,6 +117,11 @@ export const en: Dictionary = {
       title: "Dropdowns & pickers",
       blurb:
         "Comboboxes, multi-select, grouped and sheet pickers, and the dropdown primitives underneath them.",
+    },
+    files: {
+      title: "Files",
+      blurb:
+        "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
     },
     dates: {
       title: "Dates & time",
@@ -129,9 +134,9 @@ export const en: Dictionary = {
         "Sync state for a database-backed field, saved on blur: the frame's colour and an icon at the field's end say edited, saving, saved or failed — hover the error mark for the reason.",
     },
     "signature-password": {
-      title: "Signature & password strength",
+      title: "Signature, password & confirmation",
       blurb:
-        "Capturing a signature by pen, finger or mouse — with a typed fallback — and telling a user how strong the password they are choosing is.",
+        "Capturing a signature — and showing a saved one — telling a user how strong their password is, and confirming a destructive action.",
     },
     "data-display": {
       title: "Data display",
@@ -156,6 +161,10 @@ export const en: Dictionary = {
       title: "Stats & sparklines",
       blurb:
         "The KPI tile every dashboard repeats — value, change, trend — and the tiny line that fits in a table cell.",
+    },
+    layout: {
+      title: "Disclosure & dialog frame",
+      blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
     },
     overlays: {
       title: "Overlays",

@@ -1,11 +1,11 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
-import type { MiniCalendarLabels } from "../components/mini-calendar";
+import type { MiniCalendarLabels, WeekDay } from "../components/mini-calendar";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
 import type { FieldSyncLabels } from "../components/field-sync";
-import type { PasswordRevealLabels } from "../components/ui";
+import type { PasswordRevealLabels, TabsLabels } from "../components/ui";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { CommandPaletteLabels } from "../search/command-palette";
@@ -16,6 +16,11 @@ import type { SparklineLabels } from "../components/sparkline";
 import type { StatTileLabels } from "../components/stat-tile";
 import type { SignaturePadLabels } from "../components/signature-pad";
 import type { PasswordStrengthLabels } from "../components/password-strength";
+import type { DangerConfirmLabels } from "../components/danger-confirm";
+import type { SwatchPickerLabels } from "../components/swatch-picker";
+import type { IconPickerLabels } from "../components/icon-picker";
+import type { DialogFrameLabels } from "../components/dialog-frame";
+import type { FilePickerLabels } from "../components/file-button";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -81,7 +86,7 @@ export interface DatePickerLabels {
 }
 
 /** The whole combobox family: `Combobox`, `EntityCombobox`,
- *  `MultiEntityCombobox`, `InlineEntityCombobox`. */
+ *  `MultiEntityCombobox`, `InlineEntityCombobox`, `Autocomplete`. */
 export interface ComboboxLabels {
   search: string;
   noResults: string;
@@ -91,6 +96,12 @@ export interface ComboboxLabels {
   create: (query: string) => string;
   /** Trigger summary once more than one value is picked. */
   selectedCount: (count: number) => string;
+  /** An async lookup (`loadOptions`) failed. */
+  loadError: string;
+  /** Announced (live region) when the list settles on `count` > 0 rows. */
+  resultCount: (count: number) => string;
+  /** The query is shorter than the `minChars` a lookup needs. */
+  minChars: (count: number) => string;
 }
 
 export interface MultiSelectLabels {
@@ -177,6 +188,7 @@ export interface UiKitLabels {
   chipInput: ChipInputLabels;
   fieldSync: FieldSyncLabels;
   passwordReveal: PasswordRevealLabels;
+  tabs: TabsLabels;
   appShell: AppShellLabels;
   pageContents: PageContentsLabels;
   topBar: TopBarLabels;
@@ -191,6 +203,11 @@ export interface UiKitLabels {
   statTile: StatTileLabels;
   signaturePad: SignaturePadLabels;
   passwordStrength: PasswordStrengthLabels;
+  dangerConfirm: DangerConfirmLabels;
+  swatchPicker: SwatchPickerLabels;
+  iconPicker: IconPickerLabels;
+  dialogFrame: DialogFrameLabels;
+  filePicker: FilePickerLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a
@@ -230,6 +247,10 @@ export const DEFAULT_COMBOBOX_LABELS: ComboboxLabels = {
   loading: "Loading…",
   create: (query) => `Create “${query}”`,
   selectedCount: (count) => `${count} selected`,
+  loadError: "Couldn’t load results",
+  resultCount: (count) => (count === 1 ? "1 result" : `${count} results`),
+  minChars: (count) =>
+    count === 1 ? "Type at least 1 character" : `Type at least ${count} characters`,
 };
 
 export const DEFAULT_MULTI_SELECT_LABELS: MultiSelectLabels = {
@@ -307,6 +328,7 @@ export function formatFileSize(bytes: number, locale?: string): string {
 interface KitI18n {
   labels?: UiKitLabelOverrides;
   locale?: string;
+  weekStartsOn?: WeekDay;
 }
 
 const KitI18nContext = createContext<KitI18n>({});
@@ -320,6 +342,16 @@ export interface UiKitProviderProps {
    * its own. Without a provider, and without a prop, those use the runtime default.
    */
   locale?: string;
+  /**
+   * The first day of the week (0 = Sunday, 1 = Monday …) for every calendar below —
+   * `MiniCalendar` and the pickers built on it — that is not handed a `weekStartsOn`
+   * of its own. Without it the week start follows `locale`'s week info.
+   *
+   * Separate from `locale` because the two are separate decisions: a German-built
+   * app running in English (`locale="en"`) would otherwise start its weeks on Sunday,
+   * and switching it to `en-GB` to get Monday changes every date and number format.
+   */
+  weekStartsOn?: WeekDay;
   children: ReactNode;
 }
 
@@ -331,14 +363,15 @@ export interface UiKitProviderProps {
  * it names, so a page can re-label one table's `dataTable.table` without restating
  * the language.
  */
-export function UiKitProvider({ labels, locale, children }: UiKitProviderProps) {
+export function UiKitProvider({ labels, locale, weekStartsOn, children }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
   const value = useMemo<KitI18n>(
     () => ({
       locale: locale ?? outer.locale,
+      weekStartsOn: weekStartsOn ?? outer.weekStartsOn,
       labels: mergeOverrides(outer.labels, labels),
     }),
-    [outer, labels, locale],
+    [outer, labels, locale, weekStartsOn],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -402,6 +435,13 @@ export function useKitLabels<K extends keyof UiKitLabels>(
 export function useKitLocale(prop?: string): string | undefined {
   const fromProvider = useContext(KitI18nContext).locale;
   return prop ?? fromProvider;
+}
+
+/** The week start the nearest `<UiKitProvider weekStartsOn>` pins, else `undefined`
+ *  (the caller then asks the locale). A component's own prop goes first:
+ *  `prop ?? useKitWeekStart()`. */
+export function useKitWeekStart(): WeekDay | undefined {
+  return useContext(KitI18nContext).weekStartsOn;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

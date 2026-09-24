@@ -15,6 +15,71 @@ This package is pre-1.0 and three applications depend on it. The contract until 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
 with the replacement named, listed here, then removed in the next minor.
 
+## [0.6.0] — 2026-09-24
+
+The inputs keksdose, kastlan and lenkbank still hand-rolled after adopting 0.5 — proposed
+by each app from its own code, merged into one API each. Per-repository adoption:
+`docs/adopt-0.6.md`.
+
+### Added
+
+- **Files:** `FileButton` and `useFilePicker` (accept, multiple, camera `capture`,
+  `maxFiles`/`maxSize`, refusals through `onReject` and spoken — never a toast; the input
+  resets after every pick). `FileDropzone`: resets after a pick, `multiple` + `files`,
+  `onClear` / per-file remove, optional `isValid`, `rejectionFeedback`
+  (`"toast"` default, `"inline"`, `"none"`).
+- **`Autocomplete`:** an inline input with a suggestion list — free text that keeps what
+  is typed (an address) or search-then-act (`onSelect`, `fillOnSelect={false}`);
+  `loadOptions` with `debounceMs` / `minChars`, caller-ranked `options` with
+  `filter={false}`, error and status lines, APG combobox semantics.
+- **Combobox family:** `error` on all of them, `disabled` on `Combobox`; `filter`,
+  `minChars`, `debounceMs`, `loadErrorLabel` on the entity comboboxes.
+- **Field anatomy:** `Label` (above-the-field, `required` star); `Select size="sm"` and
+  `selectClassName`; `IconButton size="xs"|"2xs"`, `tone="danger"|"muted"`,
+  `stopPropagation`; `Tabs` with `onRemove`, `onAdd`, per-tab `icon` / `detail` / `empty`;
+  `SearchField variant="inline"` and `inputClassName`.
+- **Selection:** `SwatchPicker` and `IconPicker` (radio groups with roving focus, optional
+  "none", a mixed state, search on the icon grid); `ChoiceCard` / `ChoiceCardGroup`;
+  `Chip size="lg"` (44px) and `income` / `expense` tones; `ToggleGroup allowEmpty`.
+- **Numbers:** `NumberField onValueChange` (live, every keystroke); `step` with
+  ArrowUp/Down and PageUp/Down on `NumberField` and `NumberInput`, decimal-exact;
+  `stepNumber`.
+- **`DangerConfirm`:** arm, then confirm with a password and/or a typed phrase.
+- **`SignatureView`:** a saved signature (PNG or typed name) read-only.
+- **`Disclosure` / `Collapse`:** a folding section, the sidebar's animation as a component.
+- **`DialogFrame`:** the title-body-actions frame around `Modal`, with the heading and
+  description wired to the dialog.
+- **`<UiKitProvider weekStartsOn>`** and `useKitWeekStart`.
+- **`@eifi1/ui-kit/rhf`** — an optional react-hook-form adapter (`Form`, `FormField`,
+  `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`,
+  `useFormField`). `react-hook-form` is an optional peer; nothing else imports it.
+- **`@eifi1/ui-kit/table-text`** — pure table parsing (`parseTable`, `parseRows`,
+  `splitRow`, `cellNumber`, `isCellNumber`) with named decimal-comma rules.
+- Label namespaces: `filePicker`, `dialogFrame`, `tabs`, `dangerConfirm`, `swatchPicker`,
+  `iconPicker`; new keys in `combobox` and `signaturePad`. The showcase translates all.
+
+### Fixed
+
+- `Input`, `Select`, `Textarea` paint invalid from a caller's `aria-invalid`, as
+  `NumberField` and the pickers did — so a form library's control slot is enough.
+- Entity comboboxes: a failed `loadOptions` no longer leaves stale rows and an unhandled
+  rejection; a disabled `InlineEntityCombobox`'s chevron no longer opens the list.
+- The sidebar's open-group chevron pointed up under `dir="rtl"`.
+
+### Changed — review before upgrading
+
+- **New required keys in existing namespaces** (`combobox.loadError`,
+  `combobox.resultCount`, `combobox.minChars`; `signaturePad.viewEmpty` / `viewDrawn` /
+  `viewTyped`): an app that types a COMPLETE translation as `UiKitLabels` must add them.
+  Partial overrides are unaffected.
+- `ToggleGroupProps` is a union type now (for `allowEmpty`); `interface … extends
+  ToggleGroupProps` no longer compiles. No app does this.
+- Entity comboboxes render their loading / empty / error line in a status region after
+  the listbox instead of inside it.
+- `FileDropzone` returns a fragment (the zone plus two live regions); `file` and
+  `onFileSelected` are optional.
+- Public surface 303 -> 326 exports, plus the two new entries (8 and 5).
+
 ## [0.5.1] — 2026-09-24
 
 Fixes found by the three apps while adopting 0.5.0 — two accessibility regressions of

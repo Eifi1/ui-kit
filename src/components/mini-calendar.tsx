@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
 
 /**
  * Every string this calendar can speak — the `miniCalendar` namespace of
@@ -95,6 +95,9 @@ export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">,
    * Saturday in much of the Arab world — which is what the user's own wall calendar
    * does. It was hard-wired to Monday before, which is wrong for most of the people
    * who use a Sunday-first calendar and invisible to the people who wrote this one.
+   *
+   * Resolved as: this prop, else `<UiKitProvider weekStartsOn>`, else the locale's
+   * week info, else Monday.
    */
   weekStartsOn?: WeekDay;
   onSelect: (from: string, to: string) => void;
@@ -198,9 +201,10 @@ export function MiniCalendar({
 }: MiniCalendarProps) {
   const labels = useKitLabels("miniCalendar", DEFAULT_MINI_CALENDAR_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
+  const providerWeekStart = useKitWeekStart();
   const weekStart = useMemo(
-    () => weekStartsOn ?? localeWeekStart(locale),
-    [weekStartsOn, locale],
+    () => weekStartsOn ?? providerWeekStart ?? localeWeekStart(locale),
+    [weekStartsOn, providerWeekStart, locale],
   );
   // Day numbers through `Intl` too: `getDate()` is always ASCII digits, and a locale
   // that writes its own (Arabic, Persian, Bengali …) would get a grid of foreign

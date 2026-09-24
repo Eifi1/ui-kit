@@ -21,8 +21,17 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-l
  * things". Using `Button` for both is the mistake this exists to prevent.
  */
 
-export type ChipTone = "neutral" | "brand" | "danger" | "warning" | "success" | "info";
-export type ChipSize = "sm" | "md";
+export type ChipTone =
+  | "neutral"
+  | "brand"
+  | "danger"
+  | "warning"
+  | "success"
+  | "info"
+  | "income"
+  | "expense";
+/** `lg` is the 44px touch target (`min-h-11`) a phone surface wants; `md` is ~28px. */
+export type ChipSize = "sm" | "md" | "lg";
 
 const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   neutral: {
@@ -49,11 +58,24 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
     idle: "border-[var(--info-border)] bg-[var(--info-bg)] text-[var(--info)]",
     selected: "border-[var(--info)] bg-[var(--info-bg)] text-[var(--info)]",
   },
+  // The money pair (Keksdose's direction toggle). Only the TEXT and the BORDER carry
+  // the tint, on the neutral chip's own surfaces: the money tokens are chosen for text
+  // contrast, and a filled amber pill beside an amber figure reads as one smear.
+  // `border-current` takes its hue from the text, so the two cannot drift apart.
+  income: {
+    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-income)]",
+    selected: "border-current bg-[var(--bg-active)] text-[var(--money-income)]",
+  },
+  expense: {
+    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-expense)]",
+    selected: "border-current bg-[var(--bg-active)] text-[var(--money-expense)]",
+  },
 };
 
 const SIZE: Record<ChipSize, { body: string; icon: string; remove: string }> = {
   sm: { body: "gap-1 px-2 py-0.5 text-xs", icon: "size-3", remove: "size-3" },
   md: { body: "gap-1.5 px-2.5 py-1 text-sm", icon: "size-3.5", remove: "size-3.5" },
+  lg: { body: "min-h-11 gap-2 px-4 py-2 text-sm", icon: "size-4", remove: "size-4" },
 };
 
 const CHIP_BASE =
