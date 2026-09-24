@@ -1,8 +1,17 @@
 name: Release
 
-# Publishes @eifi1/ui-kit to npmjs.com when a v* tag is pushed.
+# STAGES @eifi1/ui-kit on npmjs.com when a v* tag is pushed; a maintainer then
+# approves the staged version with their 2FA before it goes live:
 #
 #   npm version patch|minor|major && git push --follow-tags
+#   → this workflow stages it →  npm stage list @eifi1/ui-kit
+#                                npm stage approve <stage-id>   (or on npmjs.com)
+#
+# Authentication is npm TRUSTED PUBLISHING (OIDC), configured on npmjs.com for
+# Eifi1/ui-kit + release.yml with direct publishing NOT allowed — so no npm token
+# lives in this repository, and nothing that can push a tag can release a version
+# without the maintainer's second factor. It replaced an NPM_TOKEN secret when npm
+# stopped letting tokens bypass 2FA for publishing (the 0.5.0 run failed EOTP).
 #
 # The package is public, so npm's free tier covers it and consumers need no
 # auth at all — which is the point of moving off the `file:` submodule.
@@ -12,7 +21,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # trusted publishing (OIDC) and provenance
 
 jobs:
   publish:
@@ -50,6 +59,10 @@ jobs:
           fi
           echo "publishing $PKG"
 
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing needs npm >= 11.5.1 and `npm stage` a later 11.x; pinned to
+      # the line this was verified with rather than whatever the runner's Node ships.
+      - run: npm install -g npm@11.17.0
+
+      # No NODE_AUTH_TOKEN, on purpose: with a token in the environment npm
+      # authenticated with it instead of OIDC, and a token cannot satisfy 2FA.
+      - run: npm stage publish . --provenance --access public
