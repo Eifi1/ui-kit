@@ -223,3 +223,20 @@ describe("Checkbox", () => {
     }
   });
 });
+
+describe("Checkbox required (0.6.1)", () => {
+  it("draws the required mark outside the accessible name, and requires the input", () => {
+    const { container } = render(<Checkbox required label="I accept the terms" />);
+    const input = screen.getByRole("checkbox", { name: "I accept the terms" });
+    expect(input).toBeRequired();
+    // Unticked, the browser refuses the form — the mandatory-checkbox contract.
+    expect((input as HTMLInputElement).validity.valueMissing).toBe(true);
+    const mark = container.querySelector("label [aria-hidden]");
+    expect(mark).toHaveTextContent("*");
+  });
+
+  it("draws no mark without a label", () => {
+    const { container } = render(<Checkbox required aria-label="Consent" />);
+    expect(container.querySelector("[aria-hidden]")?.textContent ?? "").not.toContain("*");
+  });
+});

@@ -31,10 +31,12 @@ describe("matchesAccept", () => {
     expect(matchesAccept(png(), "")).toBe(true);
   });
 
-  it("matches a file the OS gave no type only by its extension", () => {
+  it("matches a file the OS gave no type by its extension, and does not refuse it on MIME alone", () => {
     const step = new File(["x"], "part.STEP", { type: "" });
     expect(matchesAccept(step, ".stp,.step,model/step")).toBe(true);
-    expect(matchesAccept(step, "model/step")).toBe(false);
+    // Was `false` in 0.6.0: an unknown type was read as a WRONG type, which refused
+    // untyped HEIC photos on Windows (keksdose). Nothing proves a mismatch here.
+    expect(matchesAccept(step, "model/step")).toBe(true);
   });
 });
 
@@ -250,5 +252,25 @@ describe("useFilePicker", () => {
     const file = pdf();
     act(() => pick(input, file));
     expect(onFiles).toHaveBeenCalledWith([file]);
+  });
+});
+
+describe("matchesAccept with no MIME type (0.6.1 regression fix)", () => {
+  // Windows without the HEIC codec hands an iPhone photo over with type "".
+  const untyped = (name: string) => new File(["x"], name, { type: "" });
+
+  it("infers the type from a known extension", () => {
+    expect(matchesAccept(untyped("IMG_0042.HEIC"), "image/*")).toBe(true);
+    expect(matchesAccept(untyped("scan.pdf"), "application/pdf")).toBe(true);
+    expect(matchesAccept(untyped("scan.pdf"), "image/*")).toBe(false);
+  });
+
+  it("gives an unknowable type the benefit of the doubt for MIME tokens", () => {
+    expect(matchesAccept(untyped("blob.xyz"), "image/*")).toBe(true);
+  });
+
+  it("still judges extension-only accept lists by the name", () => {
+    expect(matchesAccept(untyped("blob.xyz"), ".csv,.txt")).toBe(false);
+    expect(matchesAccept(untyped("data.csv"), ".csv,.txt")).toBe(true);
   });
 });

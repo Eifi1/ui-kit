@@ -233,3 +233,32 @@ describe("Autocomplete", () => {
     expect(field().getAttribute("aria-describedby")).toMatch(/^hint /);
   });
 });
+
+describe("Autocomplete Escape (0.6.1)", () => {
+  it("an Escape that closes the open list never reaches the caller; a later one does", async () => {
+    const { render, screen, fireEvent, act } = await import("@testing-library/react");
+    const { Autocomplete } = await import("../autocomplete");
+    const onKeyDown = vi.fn();
+    render(
+      <Autocomplete
+        aria-label="Address"
+        value="Ba"
+        onChange={() => {}}
+        options={[{ value: "a", label: "Bahnhofstrasse" }]}
+        minChars={1}
+        onKeyDown={onKeyDown}
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: "Address" });
+    await act(async () => {
+      input.focus();
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+    });
+    expect(input).toHaveAttribute("aria-expanded", "true");
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(onKeyDown).not.toHaveBeenCalledWith(expect.objectContaining({ key: "Escape" }));
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(onKeyDown).toHaveBeenCalledWith(expect.objectContaining({ key: "Escape" }));
+  });
+});

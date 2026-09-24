@@ -120,3 +120,20 @@ describe("Switch", () => {
     expect(cls).not.toMatch(/(^|\s|:)(-?translate-x|left|right)-/);
   });
 });
+
+describe("Switch required (0.6.1)", () => {
+  it("draws the required mark outside the accessible name, and requires the input", () => {
+    const { container } = render(<Switch required label="I accept the terms" />);
+    const input = screen.getByRole("switch", { name: "I accept the terms" });
+    expect(input).toBeRequired();
+    // Unticked, the browser refuses the form — the mandatory-checkbox contract.
+    expect((input as HTMLInputElement).validity.valueMissing).toBe(true);
+    const mark = container.querySelector("label [aria-hidden]");
+    expect(mark).toHaveTextContent("*");
+  });
+
+  it("draws no mark without a label", () => {
+    const { container } = render(<Switch required aria-label="Consent" />);
+    expect(container.querySelector("[aria-hidden]")?.textContent ?? "").not.toContain("*");
+  });
+});
