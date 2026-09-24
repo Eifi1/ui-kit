@@ -18,6 +18,9 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Re-run a release without re-tagging: "Run workflow", then pick the TAG (not a
+  # branch) — the version check below compares the ref name with package.json.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -65,4 +68,8 @@ jobs:
 
       # No NODE_AUTH_TOKEN, on purpose: with a token in the environment npm
       # authenticated with it instead of OIDC, and a token cannot satisfy 2FA.
-      - run: npm stage publish . --provenance --access public
+      # `--loglevel verbose` is what makes the OIDC exchange explain itself: npm reports
+      # why trusted publishing failed (no id-token, a rejected exchange, …) ONLY at
+      # verbose, and at the default level falls back to a token silently and fails with
+      # an unrelated "token seems to be invalid".
+      - run: npm stage publish . --provenance --access public --loglevel verbose
