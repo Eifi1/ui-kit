@@ -30,17 +30,19 @@ Each repo starts somewhere different. Find yours.
 | ~~kastlan~~ | ~~`file:../packages/ui`~~ | ~~yes~~ | **migrated** — use it as the worked example |
 | **keksdose** | `"*"` (npm workspace) | yes | `git submodule update --init` (PAT) |
 | **lenkbank** | `file:../../keksdose/packages/ui` | **no** | shallow clone into a fake sibling path (PAT) |
-| ~~aspice-atlas~~ | — | — | **not migrating** (see below) |
+| ~~aspice-atlas~~ | — | — | **legacy, unmaintained** (see below) |
 
 `steering-design` is a symlink to `lenkbank` and needs nothing of its own.
 
-**aspice-atlas is deliberately out of scope.** It stays on
-`file:../../keksdose/packages/ui` and keeps its `HB_UI_SUBMODULE_TOKEN`. Note
-what that means in practice: its CI shallow-clones whatever `main` of this
-repository points at, so it builds against an unpinned, moving design system —
-the reproducibility problem this migration exists to fix. It also means a
-breaking change published here can break its build with no commit in its own
-history. Keep that in mind when releasing a major, or migrate it.
+**aspice-atlas is legacy and no longer maintained** (decided 2026-09-24). It was never
+migrated: it still declares `file:../../keksdose/packages/ui`, and its CI used to
+shallow-clone the private `hb-ui` repository with `HB_UI_SUBMODULE_TOKEN`. That secret has
+been deleted from the repository and the token behind it revoked, so its CI can no longer
+fetch the design system at all — expected, and not something to repair.
+
+If it is ever revived, it is migrated like the others (the steps below) onto the published
+`@eifi1/ui-kit`, which needs no token — not reconnected to `hb-ui`. Releases here do not
+have to consider it.
 
 ---
 
