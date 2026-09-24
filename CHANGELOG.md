@@ -15,6 +15,19 @@ This package is pre-1.0 and three applications depend on it. The contract until 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
 with the replacement named, listed here, then removed in the next minor.
 
+## [Unreleased]
+
+### Changed
+
+- **A `Chip` with `onClick` reports a pressed state only when `selected` is passed.**
+  Without `selected` it is an ACTION button (it switches between two named states, like
+  keksdose's outflow ⇄ inflow) and announcing "not pressed" claimed a state it does not
+  have — keksdose had to override `aria-pressed` by prop-spread order. Pass
+  `selected={false}` explicitly for an on/off toggle that is off.
+- `Chip`'s `selected` doc: the fixed-label rule is for on/off toggles; a control between
+  two named states keeps a label that follows the state. `docs/adopt-0.6.md`'s
+  direction-toggle row corrected to that pattern (Marcel's decision in keksdose, #417).
+
 ## [0.6.1] — 2026-09-24
 
 ### Added

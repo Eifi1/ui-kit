@@ -94,9 +94,17 @@ export interface ChipProps {
    * Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a
    * toggle.
    *
-   * On a toggle, keep the LABEL the same in both states and let `selected` carry the
-   * state. A label that flips with it ("Skip this month" / "Ask again this month") is
-   * announced together with "pressed", and then says the opposite of what it does.
+   * On an ON/OFF toggle, keep the LABEL the same in both states and let `selected`
+   * carry the state. A label that flips with it ("Skip this month" / "Ask again this
+   * month") is announced together with "pressed", and then says the opposite of what
+   * it does.
+   *
+   * A control that switches between two NAMED states (outflow ⇄ inflow) is not a
+   * toggle but an ACTION button: leave `selected` out, let the visible label and the
+   * tone follow the state ("− Outflow" / "+ Inflow"), and name the action in
+   * `aria-label` ("Direction: outflow — tap for inflow"). Without `selected` the chip
+   * reports no pressed state at all. A fixed label there contradicts the figure beside
+   * it — "+ Outflow" in green next to an inflow (keksdose #417).
    */
   selected?: boolean;
   /** Renders the chip as a link. Mutually exclusive with `onClick`. */
@@ -145,7 +153,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     tone = "neutral",
     size = "md",
     icon: Icon,
-    selected = false,
+    selected,
     href,
     onClick,
     onRemove,
@@ -242,6 +250,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         type="button"
         onClick={onClick}
         disabled={disabled}
+        // Only when `selected` is PASSED: a chip with `onClick` and no `selected` is an
+        // action button (it does something), not a toggle (it is on or off), and
+        // announcing it "not pressed" would claim a state it does not have.
         aria-pressed={selected}
         className={cn(look, remove && "pr-1.5")}
         {...rest}

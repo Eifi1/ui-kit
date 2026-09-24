@@ -31,7 +31,7 @@ dialog frame; Primitives).
 | category-editor colour tiles | `<SwatchPicker options={… swatchClassName} value onChange allowNone labels={{ none }} />` | drops the hand-made Tooltip and tile classes |
 | category-editor icon grid | `<IconPicker options={… note: inUse ? … : undefined} allowNone searchable? />` | `note` gives the dot and the bubble |
 | `FlagPicker` | `<SwatchPicker … mixed={value === undefined} allowNone activation="manual" />` | clicking the active flag no longer clears it — "None" does |
-| `direction-toggle.tsx` | `<Chip size="lg" tone={outflow ? "expense" : "income"} selected onClick>` | give it ONE fixed label; `selected` carries the state |
+| `direction-toggle.tsx` | `<Chip size="lg" tone={outflow ? "expense" : "income"} onClick aria-label={…}>` with a label that FOLLOWS the state ("− Ausgang" / "+ Eingang") | an action button between two named states, not an on/off toggle: no `selected` (so no `aria-pressed`, from 0.6.2), and `aria-label` names current and next ("Richtung: Ausgang — tippen für Eingang"). A fixed label contradicts the figure (#417). |
 | support-panel filter pills | `<ToggleGroup allowEmpty value={f ?? null} onChange={setF}>` | |
 | `transaction-search.tsx` field | `<SearchField variant="inline" className="min-w-0 flex-1 text-base" />` | |
 | `shared/components/danger-confirm.tsx` | `DangerConfirm` | `requireText.expected` → `phrase`; password → `requirePassword`; `pending` → `busy`; `lock` → `lockedReason`; `tone="amber"` → `"warning"` |

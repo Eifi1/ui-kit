@@ -21,9 +21,15 @@ describe("Chip", () => {
     expect(link).toHaveAttribute("aria-current", "true");
   });
 
-  it("becomes a toggle when given onClick, and reports its pressed state", () => {
+  it("becomes a toggle when given onClick and selected, and reports its pressed state", () => {
     const onClick = vi.fn();
-    const { rerender } = render(<Chip onClick={onClick}>Unpaid</Chip>);
+    // `selected={false}`, not omitted: since 0.6.2 a chip with no `selected` is an action
+    // button and reports no pressed state (see "Chip as an action button" below).
+    const { rerender } = render(
+      <Chip onClick={onClick} selected={false}>
+        Unpaid
+      </Chip>,
+    );
     const button = screen.getByRole("button", { name: "Unpaid" });
     expect(button).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(button);
@@ -270,5 +276,24 @@ describe("Chip — touch size and money tones (0.6.0)", () => {
     expect(expense.className).toContain("text-[var(--money-expense)]");
     expect(expense.className).toContain("bg-[var(--bg-active)]");
     expect(expense).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+describe("Chip as an action button (0.6.2)", () => {
+  it("reports no pressed state unless `selected` is passed", () => {
+    render(
+      <>
+        <Chip onClick={() => {}} aria-label="Direction: outflow — tap for inflow">
+          − Outflow
+        </Chip>
+        <Chip onClick={() => {}} selected={false}>
+          Snoozed
+        </Chip>
+      </>,
+    );
+    // An action between two named states: no aria-pressed at all.
+    expect(screen.getByRole("button", { name: /Direction/ })).not.toHaveAttribute("aria-pressed");
+    // An on/off toggle still says it is off.
+    expect(screen.getByRole("button", { name: "Snoozed" })).toHaveAttribute("aria-pressed", "false");
   });
 });
