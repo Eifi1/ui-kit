@@ -15,6 +15,38 @@ This package is pre-1.0 and three applications depend on it. The contract until 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
 with the replacement named, listed here, then removed in the next minor.
 
+## [0.5.1] — 2026-09-24
+
+Fixes found by the three apps while adopting 0.5.0 — two accessibility regressions of
+0.5.0 among them. No breaking changes.
+
+### Fixed
+
+- **`Spinner` announced twice, and ran into button names.** 0.5.0 made it a status
+  region with a hidden "Loading…" in every use. Beside visible text that read "Loading…
+  Loading…" (lenkbank); inside a button it became part of the button's name,
+  "Loadingconfirm" (keksdose). `label={null}` now makes it decorative — no role, no
+  text, hidden — and the hidden text carries a separator for the case it is forgotten.
+- **`CurrencySelect` had no accessible name** unless the caller passed `aria-label`: the
+  floating label is a span, and a combobox takes no name from its content. It is now
+  named "label: code" like `MultiSelect`, falling back to the `currency` word.
+- **`DatePicker`, `DateRangePicker` and `MonthPicker` could not be named from outside.**
+  `id` and `aria-label` / `-labelledby` / `-describedby` / `-invalid` landed on the
+  wrapper; they now reach the `role="combobox"` trigger, so `<label htmlFor>` and a form
+  library's control slot work. An external label is spoken before the value.
+- **`Chip`'s types** rejected `aria-describedby`, `aria-expanded`, `aria-controls`, `id`
+  and `title` (spread at runtime all along), and `onClick` received no event, so a chip
+  in a clickable row could not stop propagation. Both fixed; the comment that called
+  `data-*` the escape hatch for ARIA is gone.
+
+### Changed
+
+- `popover.panel`'s English default is "Pop-up" (was "Popover", a developer's word read
+  to users). The showcase's German and Italian dictionaries translate it.
+- `Chip`'s `selected` doc: a toggle's label must not change with its state.
+- `docs/adopt-0.5.md`: the notes the three apps found while adopting (Spinner, MultiSelect
+  rows as options, toggle-chip labels, the translating wrappers, naming the pickers).
+
 ## [0.5.0] — 2026-09-23
 
 The first release since 0.4.1, in two parts that were prepared separately and ship

@@ -29,6 +29,25 @@ Optional, for any long page (settings, reports): `PageContentsLayout` with a
 `PageContents` rail and `useScrollSpy`, plus `variant="disclosure"` below `xl` — the
 showcase's own pages are the worked example (`showcase/src/showcase.tsx`).
 
+**Found while the three apps adopted 0.5.0 — check each in your app:**
+
+- **`Spinner` announces itself now** (`role="status"` with a hidden "Loading…"). Where
+  words are already there — `<Spinner /> Loading…`, a spinner inside a labelled button,
+  or a spinner inside the app's own live region — pass `label={null}` (0.5.1), or it is
+  announced twice and its word joins the button's name.
+- **`MultiSelect` rows are `role="option"`**, not buttons (the trigger is a combobox). A
+  test that queried rows with `getByRole("button")` has to query `option`.
+- **A toggle `Chip` keeps ONE label.** `selected` carries the state; a label that flips
+  with it ("Skip" / "Ask again") is announced with "pressed" and says the opposite.
+- **The translating wrappers collapse into the provider.** A local wrapper whose only
+  job was to pass translated labels to a kit component (`amount-input`, `number-input`,
+  `multi-select`, `mini-calendar`, the data-table labels, a `DateField` passing
+  `calendarLabels` / `stepLabels` / `todayLabel`) can be deleted once `UiKitProvider`
+  is mounted — and any `t` prop it took for that is dead.
+- **Name the pickers from outside** (0.5.1): `DatePicker`, `DateRangePicker` and
+  `MonthPicker` now put `id` and `aria-*` on their trigger, so `<label htmlFor>` and a
+  form library's control slot work — drop any `aria-label` workaround.
+
 Behaviour that changes without a code change: en-US calendars start on Sunday; file
 sizes read "2 kB"; phone pickers show "No results"; `SeriesChart` shows "No data" when
 empty.

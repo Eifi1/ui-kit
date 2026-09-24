@@ -304,7 +304,7 @@ export const it: Dictionary = {
       today: "Oggi",
     },
     popover: {
-      panel: "Popover",
+      panel: "Finestra a comparsa",
     },
     combobox: {
       search: "Cerca",

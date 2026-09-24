@@ -1,5 +1,5 @@
 import { forwardRef, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -68,12 +68,20 @@ export interface ChipProps {
   tone?: ChipTone;
   size?: ChipSize;
   icon?: LucideIcon;
-  /** Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a toggle. */
+  /**
+   * Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a
+   * toggle.
+   *
+   * On a toggle, keep the LABEL the same in both states and let `selected` carry the
+   * state. A label that flips with it ("Skip this month" / "Ask again this month") is
+   * announced together with "pressed", and then says the opposite of what it does.
+   */
   selected?: boolean;
   /** Renders the chip as a link. Mutually exclusive with `onClick`. */
   href?: string;
-  /** Renders the chip as a toggle button. Mutually exclusive with `href`. */
-  onClick?: () => void;
+  /** Renders the chip as a toggle button. Mutually exclusive with `href`. Receives the
+   *  click, so a chip inside a clickable row can `stopPropagation()`. */
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   /** Renders a dismiss affordance. Works alongside `href`/`onClick` — see the note below. */
   onRemove?: () => void;
   /** Accessible name for the dismiss button. Default: `common.remove` from the
@@ -92,8 +100,14 @@ export interface ChipProps {
   onFocus?: () => void;
   /** Accessible name, when the visible text is not the whole story. */
   "aria-label"?: string;
-  /** Escape hatch for a test id, a `data-tour` anchor, or an `aria-describedby`. */
+  /** Any other ARIA attribute — `aria-describedby`, `aria-expanded`, `aria-controls`,
+   *  `aria-haspopup` — reaches the chip's interactive element. */
+  [key: `aria-${string}`]: string | boolean | number | undefined;
+  /** A test id, a `data-tour` anchor, or any other data attribute. */
   [key: `data-${string}`]: unknown;
+  id?: string;
+  /** A native tooltip. For anything a user must read, prefer the kit's `Tooltip`. */
+  title?: string;
 }
 
 /**

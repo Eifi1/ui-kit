@@ -206,3 +206,40 @@ describe("ChipInput", () => {
     expect(within(list).queryByRole("button", { name: /Remove/ })).not.toBeInTheDocument();
   });
 });
+
+describe("Chip — what a caller can hand it (0.5.1)", () => {
+  it("passes aria-*, title and id to the interactive element", () => {
+    render(
+      <>
+        <p id="why">Hides snoozed categories</p>
+        <Chip
+          onClick={() => {}}
+          id="snooze"
+          title="Snooze"
+          aria-describedby="why"
+          aria-expanded={false}
+          aria-controls="panel"
+        >
+          Snoozed
+        </Chip>
+      </>,
+    );
+    const chip = screen.getByRole("button", { name: "Snoozed" });
+    expect(chip).toHaveAttribute("id", "snooze");
+    expect(chip).toHaveAttribute("title", "Snooze");
+    expect(chip).toHaveAccessibleDescription("Hides snoozed categories");
+    expect(chip).toHaveAttribute("aria-expanded", "false");
+    expect(chip).toHaveAttribute("aria-controls", "panel");
+  });
+
+  it("hands onClick the event, so a chip in a clickable row can stop it", () => {
+    const row = vi.fn();
+    render(
+      <div onClick={row}>
+        <Chip onClick={(e) => e.stopPropagation()}>Filter</Chip>
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    expect(row).not.toHaveBeenCalled();
+  });
+});

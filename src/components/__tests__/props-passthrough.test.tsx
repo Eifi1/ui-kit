@@ -173,9 +173,17 @@ describe.each(CASES)("%s", (_name, mount) => {
     expect(anchored()).toBeInTheDocument();
   });
 
-  it("lets the caller's aria-label reach the same element", () => {
+  it("lets the caller's aria-label reach the element that is named", (ctx) => {
     mount();
-    expect(anchored()).toHaveAttribute("aria-label", NAME);
+    // The pickers are the exception to "the same element": their root is a wrapper
+    // with no role, and a name on it was never read — the `role="combobox"` trigger
+    // inside is what a screen reader meets, so that is where the name goes (0.5.1,
+    // reported by kastlan). The data-* anchor stays on the root, where a tour or a
+    // test id expects the whole field.
+    const named = /Picker$/.test(ctx.task.suite?.name ?? "")
+      ? screen.getByRole("combobox")
+      : anchored();
+    expect(named).toHaveAttribute("aria-label", NAME);
   });
 });
 

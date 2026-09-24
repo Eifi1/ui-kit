@@ -5,6 +5,8 @@ import { cn } from "../lib/cn";
 import { monthKey, pad } from "../lib/dates";
 import { FieldLabel, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./ui";
 import { Popover } from "./popover";
+import { splitTriggerAria } from "./trigger-aria";
+import type { TriggerAria } from "./trigger-aria";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
 /**
@@ -156,6 +158,7 @@ function MonthFieldTrigger({
   disabled,
   invalid,
   className,
+  aria,
 }: {
   open: boolean;
   toggle: () => void;
@@ -163,6 +166,8 @@ function MonthFieldTrigger({
   triggerText: string;
   hasValue: boolean;
   labelledBy: string;
+  /** The caller's naming attributes — see `trigger-aria.ts`. */
+  aria: TriggerAria;
   valueId: string;
   panelId: string;
   padded: boolean;
@@ -191,8 +196,11 @@ function MonthFieldTrigger({
       aria-haspopup="dialog"
       aria-controls={panelId}
       aria-expanded={open}
-      aria-invalid={invalid || undefined}
-      aria-labelledby={labelledBy}
+      id={aria.id}
+      aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
+      aria-labelledby={aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy}
+      aria-label={aria["aria-label"]}
+      aria-describedby={aria["aria-describedby"]}
       className={cn(
         FIELD_TRIGGER,
         "pe-9",
@@ -488,6 +496,7 @@ export function MonthPicker({
     : (placeholder ?? "");
 
   const id = useId();
+  const [aria, wrapperRest] = splitTriggerAria(rest);
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
   const panelId = `${id}-panel`;
@@ -495,7 +504,7 @@ export function MonthPicker({
   const named = typeof label === "string";
 
   return (
-    <div {...rest} className={cn("relative", className)}>
+    <div {...wrapperRest} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* The hidden twin the trigger is named by — see DateField. `sr-only-fixed`,
           and inside this `relative` root either way. */}
@@ -515,7 +524,16 @@ export function MonthPicker({
             triggerRef={ref}
             triggerText={triggerText}
             hasValue={selected != null}
-            labelledBy={named ? `${labelId} ${valueId}` : valueId}
+            // As DatePicker: a caller's reference first; an `id` without a label of our
+            // own references the trigger itself, so an external <label htmlFor> names it.
+            labelledBy={[
+              aria["aria-labelledby"],
+              named ? labelId : !aria["aria-labelledby"] && aria.id ? aria.id : undefined,
+              valueId,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria={aria}
             valueId={valueId}
             panelId={panelId}
             padded={label !== undefined}
