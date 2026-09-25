@@ -20,7 +20,7 @@ the showcase has every component live.
    A second call waits in a queue. Labels come from the `confirmDialog` namespace.
 3. **New label keys** (only if you type a complete `UiKitLabels`; `tsc` lists them):
    `common.dismiss`, `datePicker.apply` / `cancel` / `presets`, and `filePicker.dropzone`
-   / `browse` / `empty` / `emptyMultiple` / `hint` / `busy`. New namespaces:
+   / `browse` / `empty` / `emptyMultiple` / `hint` / `busy`, `wizard.done`. New namespaces:
    `confirmDialog`, `floatingPanel` and `copyButton`. Every `@eifi1/ui-kit/i18n/<code>`
    catalogue has all of them.
 4. **Density naming:** the new `Table`, `DescriptionList` and `DataTable` all use
