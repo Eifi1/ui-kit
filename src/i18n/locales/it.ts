@@ -270,6 +270,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       cleared: "Tutti i file rimossi",
     },
     wizard: {
+      done: "Fine",
       cancel: "Annulla",
       back: "Indietro",
       next: "Avanti",

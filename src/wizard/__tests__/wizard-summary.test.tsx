@@ -69,3 +69,33 @@ describe("WizardSummary", () => {
     expect(screen.queryAllByRole("button")).toEqual([]);
   });
 });
+
+describe("WizardSummary (0.8.0)", () => {
+  it("disables every edit button while `disabled`", () => {
+    const onEditStep = vi.fn();
+    render(<WizardSummary sections={SECTIONS} onEditStep={onEditStep} disabled />);
+    const buttons = screen.getAllByRole("button", { name: "Edit" });
+    expect(buttons).toHaveLength(2);
+    for (const b of buttons) expect(b).toBeDisabled();
+    fireEvent.click(buttons[0]);
+    expect(onEditStep).not.toHaveBeenCalled();
+  });
+
+  it("renders a section with no stepIndex without an edit button", () => {
+    // File-level counts belong to no step; they used to be parked under one just to
+    // have an index to jump to.
+    render(
+      <WizardSummary
+        sections={[...SECTIONS, { label: "File", items: [{ label: "Transactions", value: 812 }] }]}
+        onEditStep={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Transactions")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Edit" })).toHaveLength(2);
+  });
+
+  it("needs no onEditStep when no section names a step", () => {
+    render(<WizardSummary sections={[{ label: "File", items: [{ label: "Rows", value: 3 }] }]} />);
+    expect(screen.queryAllByRole("button")).toEqual([]);
+  });
+});

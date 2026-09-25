@@ -268,6 +268,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       cleared: "Se han quitado todos los archivos",
     },
     wizard: {
+      done: "Listo",
       cancel: "Cancelar",
       back: "Atrás",
       next: "Siguiente",

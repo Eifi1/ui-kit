@@ -275,6 +275,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       cleared: "Alle Dateien entfernt",
     },
     wizard: {
+      done: "Fertig",
       cancel: "Abbrechen",
       back: "Zurück",
       next: "Weiter",

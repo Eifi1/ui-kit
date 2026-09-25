@@ -280,6 +280,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       cleared: "Tous les fichiers ont été supprimés",
     },
     wizard: {
+      done: "Terminé",
       cancel: "Annuler",
       back: "Retour",
       next: "Suivant",

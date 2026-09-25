@@ -1,8 +1,9 @@
 import { useId, useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
+import { Button, Spinner } from "../components/ui";
+import type { ButtonVariant } from "../components/ui";
 import { Modal } from "../components/modal";
 import { alertFrameClass } from "../components/alert-banner";
 import { WizardContextProvider } from "./wizard-context";
@@ -25,6 +26,12 @@ import type { UseWizardReturn, WizardLabels } from "./types";
  * The `<StepperNav>` is also what publishes {@link WizardContextProvider}, which
  * is how a mounted step registers its own validator. A step's
  * `useRhfWizardStep` / `useWizardStepValidate` therefore only works inside one.
+ *
+ * Which buttons show is read off `wizard` (`canCancel`, `canGoBack`, `canDone`,
+ * `isCommitStep`), so the policy options — `cancellable`, `onExit`, `commits`,
+ * `onDone` — are all set on `useWizard`. What is set HERE is how the Finish button
+ * looks and what wraps it, because that is presentation and usually depends on
+ * state the app holds (a "replace everything" toggle, a write lock).
  */
 export function StepperNav<TData extends Record<string, unknown>>({
   wizard,
@@ -33,6 +40,9 @@ export function StepperNav<TData extends Record<string, unknown>>({
   description,
   className,
   labels,
+  finishVariant = "brand",
+  finishDisabled = false,
+  renderFinish,
 }: {
   wizard: UseWizardReturn<TData>;
   children: ReactNode;
@@ -40,6 +50,30 @@ export function StepperNav<TData extends Record<string, unknown>>({
   description?: ReactNode;
   className?: string;
   labels?: Partial<WizardLabels>;
+  /** The Finish button's variant — `"danger"` for a destructive commit (an import
+   *  that replaces what is there). Default `"brand"`. Next keeps `"brand"`. */
+  finishVariant?: ButtonVariant;
+  /** Disable Finish for a reason of the app's own, on top of the kit's gates
+   *  (`canFinish`, submitting, validating). */
+  finishDisabled?: boolean;
+  /**
+   * Wrap the Finish button: receives the kit's button element — already labelled,
+   * gated and wired to `wizard.finish` — and returns what to render in its place.
+   *
+   * ```tsx
+   * renderFinish={(button) => <SaveGuard lock={lock}>{button}</SaveGuard>}
+   * ```
+   *
+   * A wrapper and not a replacement (`finishButton: (props) => …`) or a hook
+   * (`onBeforeFinish`): the app's need is to put something AROUND the commit — a
+   * write-lock tooltip, which has to sit on a wrapping element because a disabled
+   * button receives no pointer events — while the kit keeps owning what the button
+   * says and when it is enabled. A replacement would hand every app the gating to
+   * re-derive (the problem this component exists to end); `onBeforeFinish` can veto
+   * a click but cannot explain a disabled button. The element is a plain `<Button>`,
+   * so a wrapper that clones it with `disabled` works as expected.
+   */
+  renderFinish?: (button: ReactElement) => ReactNode;
 }) {
   const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
   const cancelTitleId = useId();
@@ -56,6 +90,51 @@ export function StepperNav<TData extends Record<string, unknown>>({
   // skipped (derived once in useWizard). Prevents a restored last-step index
   // (empty data after a reload) from firing an empty submit.
   const canFinish = wizard.canFinish;
+
+  // Pending while the step's validators run (an async server check): a spinner and
+  // `aria-busy`, and disabled — the hook's own re-entry guard still refuses a second
+  // press, this just stops it looking like the first one did nothing.
+  const pending = wizard.isValidating;
+  const stepNextLabel = wizard.currentStep.nextLabel;
+
+  let forwardButton: ReactNode = null;
+  if (wizard.isCommitStep) {
+    const finishButton = (
+      <Button
+        variant={finishVariant}
+        data-tour="wizard-finish"
+        onClick={wizard.finish}
+        disabled={wizard.isSubmitting || pending || !canFinish || finishDisabled}
+        aria-busy={wizard.isSubmitting || pending || undefined}
+      >
+        {/* Decorative: the button's text is what a reader hears. */}
+        {pending && <Spinner label={null} className="size-4" />}
+        {wizard.isSubmitting ? l.submitting : (stepNextLabel ?? l.finish)}
+      </Button>
+    );
+    forwardButton = renderFinish ? renderFinish(finishButton) : finishButton;
+  } else if (wizard.isLastStep) {
+    // The last step after a commit. Nothing to finish; Done only when the app gave
+    // an `onDone` — otherwise the step carries its own way out.
+    forwardButton = wizard.canDone ? (
+      <Button variant="brand" data-tour="wizard-done" onClick={wizard.done}>
+        {stepNextLabel ?? l.done ?? DEFAULT_WIZARD_LABELS.done}
+      </Button>
+    ) : null;
+  } else {
+    forwardButton = (
+      <Button
+        variant="brand"
+        data-tour="wizard-next"
+        onClick={wizard.goNext}
+        disabled={wizard.nextBlocked || pending}
+        aria-busy={pending || undefined}
+      >
+        {pending && <Spinner label={null} className="size-4" />}
+        {stepNextLabel ?? l.next}
+      </Button>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
@@ -84,7 +163,9 @@ export function StepperNav<TData extends Record<string, unknown>>({
                 <button
                   type="button"
                   onClick={() => wizard.goToStep(index)}
-                  disabled={status === "upcoming"}
+                  // `canGoToStep` adds the commit lock: once past a committing step,
+                  // the steps up to it are done with and cannot be reopened.
+                  disabled={status === "upcoming" || !wizard.canGoToStep(index)}
                   aria-current={status === "active" ? "step" : undefined}
                   className={cn(
                     "group flex flex-col items-center gap-1.5",
@@ -161,39 +242,32 @@ export function StepperNav<TData extends Record<string, unknown>>({
 
       {/* Navigation bar */}
       <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
-        <Button variant="secondary" onClick={wizard.cancel}>
-          {l.cancel}
-        </Button>
+        {/* The empty span keeps the right-hand group on the right when Cancel is off. */}
+        {wizard.canCancel ? (
+          <Button variant="secondary" onClick={wizard.cancel}>
+            {l.cancel}
+          </Button>
+        ) : (
+          <span />
+        )}
         <div className="flex items-center gap-2">
-          {!wizard.isFirstStep && (
-            <Button variant="secondary" onClick={wizard.goBack}>
+          {wizard.canGoBack && (
+            // Disabled, not hidden, while the commit runs: it comes back if the commit
+            // fails, and a button that vanishes mid-click is its own kind of surprise.
+            <Button variant="secondary" onClick={wizard.goBack} disabled={wizard.isSubmitting}>
               {l.back}
             </Button>
           )}
-          {wizard.currentStep.optional && !wizard.isLastStep && (
-            <Button variant="ghost" onClick={wizard.skip} disabled={wizard.nextBlocked}>
+          {wizard.currentStep.optional && !wizard.isLastStep && !wizard.isCommitStep && (
+            <Button
+              variant="ghost"
+              onClick={wizard.skip}
+              disabled={wizard.nextBlocked || wizard.isValidating}
+            >
               {l.skip}
             </Button>
           )}
-          {wizard.isLastStep ? (
-            <Button
-              variant="brand"
-              data-tour="wizard-finish"
-              onClick={wizard.finish}
-              disabled={wizard.isSubmitting || !canFinish}
-            >
-              {wizard.isSubmitting ? l.submitting : l.finish}
-            </Button>
-          ) : (
-            <Button
-              variant="brand"
-              data-tour="wizard-next"
-              onClick={wizard.goNext}
-              disabled={wizard.nextBlocked}
-            >
-              {l.next}
-            </Button>
-          )}
+          {forwardButton}
         </div>
       </div>
 

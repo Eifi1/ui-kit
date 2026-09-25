@@ -269,6 +269,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       cleared: "Minden fájl eltávolítva",
     },
     wizard: {
+      done: "Kész",
       cancel: "Mégse",
       back: "Vissza",
       next: "Tovább",

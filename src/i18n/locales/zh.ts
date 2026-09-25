@@ -260,6 +260,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       cleared: "已移除所有文件",
     },
     wizard: {
+      done: "完成",
       cancel: "取消",
       back: "上一步",
       next: "下一步",
