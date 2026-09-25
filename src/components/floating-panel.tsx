@@ -65,6 +65,30 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
    * clears the transactions page's own action group this way (`calc(1rem + 4rem)`).
    */
   offset?: string;
+  /**
+   * Whether the button carries the browser's own tooltip (`title`, the `label` unless a
+   * `title` is passed). Default `true`, so an icon-only button keeps a hover hint for a
+   * mouse user with no other way to learn what it is. `false` renders no `title` at all:
+   * keksdose has ONE tooltip, the kit's `Tooltip` (dev#523), and its source scan fails a
+   * native `title=` anywhere — so a flag, not `title=""`, which the scan would still
+   * see. An empty `title` renders no attribute either, for the caller who has no scan.
+   *
+   * Not flipped to off by default: a FAB wrapped in nothing would lose the only hover
+   * hint it has, silently, in every app already on it. And the kit cannot wrap itself
+   * in its `Tooltip` — the bubble's anchor is a `relative inline-flex` span, and the
+   * button is `fixed` and portalled — so the one-tooltip caller wraps it.
+   */
+  nativeTitle?: boolean;
+  /**
+   * Make it a toggle. `true`/`false` set `aria-pressed` and swap the solid brand disc for
+   * a surface disc — the glyph in brand on the quiet brand fill when on, the secondary
+   * text colour when off — the "on" look of `IconButton`'s `pressed` and of a selected
+   * Chip. Left out, it is the ordinary action FAB. For keksdose's corner filter toggles
+   * (feedback-page's "awaiting only", the /transactions pending and upcoming toggles),
+   * which paint `text-[var(--brand)]` on a surface button by hand. Keep `label` the same
+   * in both states; `aria-pressed` already says which one it is in.
+   */
+  pressed?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -90,12 +114,18 @@ export function FloatingActionButton({
   icon,
   corner = "bottom-end",
   offset = "1rem",
+  nativeTitle = true,
+  pressed,
   className,
   style,
   type = "button",
+  title,
   ...rest
 }: FloatingActionButtonProps) {
   const [marker, dir] = usePortalDir();
+  const toggle = pressed !== undefined;
+  // An empty title is "no tooltip", not an attribute with nothing in it.
+  const nativeTip = nativeTitle && title !== "" ? (title ?? label) : undefined;
   return (
     <>
       <span ref={marker} hidden />
@@ -106,11 +136,20 @@ export function FloatingActionButton({
             type={type}
             dir={dir}
             aria-label={label}
-            title={rest.title ?? label}
+            aria-pressed={pressed ?? rest["aria-pressed"]}
+            title={nativeTip}
             style={{ ...cornerStyle(corner, offset), ...style }}
             className={cn(
               "fixed z-40 inline-flex size-12 items-center justify-center rounded-full",
-              "bg-[var(--brand)] text-[var(--brand-contrast)] shadow-lg transition-colors hover:bg-[var(--brand-hover)]",
+              "shadow-lg transition-colors",
+              !toggle && "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]",
+              // A toggle sits on the page's surface — a solid brand disc would read as
+              // "on" in both states — and says "on" in the brand family.
+              toggle && "border border-[var(--border)]",
+              pressed === false &&
+                "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+              pressed === true &&
+                "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]",
               "outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2",
               "[&_svg]:size-6",
               className,
@@ -141,6 +180,9 @@ export interface FloatingPanelProps {
   /** The FAB's distance above the nav — see {@link FloatingActionButtonProps.offset}.
    *  From `md` up the card sits above the FAB, so it moves with it. */
   offset?: string;
+  /** The FAB's native `title` — see {@link FloatingActionButtonProps.nativeTitle}.
+   *  `false` for keksdose's assistant launcher, under its one-tooltip rule (dev#523). */
+  fabNativeTitle?: boolean;
   /** Default: `floatingPanel.close` from the {@link UiKitProvider}, else "Close". */
   closeLabel?: string;
   /**
@@ -196,6 +238,7 @@ export function FloatingPanel({
   onOpenChange,
   corner = "bottom-end",
   offset = "1rem",
+  fabNativeTitle,
   closeLabel,
   initialFocus,
   className,
@@ -264,6 +307,7 @@ export function FloatingPanel({
         icon={fabIcon}
         corner={corner}
         offset={offset}
+        nativeTitle={fabNativeTitle}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => {

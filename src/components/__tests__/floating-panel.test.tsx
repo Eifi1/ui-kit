@@ -194,3 +194,51 @@ describe("FloatingActionButton", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("FloatingActionButton — native title and toggle", () => {
+  it("keeps the label as the native title by default, and a caller's title over it", () => {
+    const { rerender } = render(<FloatingActionButton label="Assistant" icon="?" />);
+    expect(screen.getByRole("button", { name: "Assistant" })).toHaveAttribute("title", "Assistant");
+    rerender(<FloatingActionButton label="Assistant" icon="?" title="Ask anything" />);
+    expect(screen.getByRole("button", { name: "Assistant" })).toHaveAttribute("title", "Ask anything");
+  });
+
+  it("renders no title at all with nativeTitle={false} or an empty title (dev#523)", () => {
+    const { rerender } = render(<FloatingActionButton label="Assistant" icon="?" nativeTitle={false} />);
+    expect(screen.getByRole("button", { name: "Assistant" })).not.toHaveAttribute("title");
+    rerender(<FloatingActionButton label="Assistant" icon="?" nativeTitle={false} title="Ignored" />);
+    expect(screen.getByRole("button", { name: "Assistant" })).not.toHaveAttribute("title");
+    rerender(<FloatingActionButton label="Assistant" icon="?" title="" />);
+    expect(screen.getByRole("button", { name: "Assistant" })).not.toHaveAttribute("title");
+  });
+
+  it("passes fabNativeTitle through FloatingPanel", () => {
+    render(
+      <FloatingPanel title="Panel" fabLabel="Assistant" fabIcon="?" fabNativeTitle={false}>
+        body
+      </FloatingPanel>,
+    );
+    expect(screen.getByRole("button", { name: "Assistant" })).not.toHaveAttribute("title");
+  });
+
+  it("is a toggle with pressed: aria-pressed and the brand-on-surface look", () => {
+    const { rerender } = render(<FloatingActionButton label="Awaiting only" icon="?" pressed={false} />);
+    const off = screen.getByRole("button", { name: "Awaiting only" });
+    expect(off).toHaveAttribute("aria-pressed", "false");
+    expect(off.className).toContain("bg-[var(--bg-surface)]");
+    expect(off.className).not.toContain("bg-[var(--brand)]");
+
+    rerender(<FloatingActionButton label="Awaiting only" icon="?" pressed />);
+    const on = screen.getByRole("button", { name: "Awaiting only" });
+    expect(on).toHaveAttribute("aria-pressed", "true");
+    expect(on.className).toContain("bg-[var(--brand-bg)]");
+    expect(on.className).toContain("text-[var(--brand)]");
+  });
+
+  it("stays an action button, with no aria-pressed, when pressed is left out", () => {
+    render(<FloatingActionButton label="New" icon="+" />);
+    const button = screen.getByRole("button", { name: "New" });
+    expect(button).not.toHaveAttribute("aria-pressed");
+    expect(button.className).toContain("bg-[var(--brand)]");
+  });
+});

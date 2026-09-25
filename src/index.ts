@@ -163,6 +163,8 @@ export { FilterPopover } from "./components/data-table-filter-popover";
 export { DataTable } from "./components/data-table";
 export type {
   DataTableColumn,
+  DataTableCellProps,
+  DataTableHeadProps,
   DataTableProps,
   ServerPagination,
   FilterState,
@@ -217,6 +219,8 @@ export * from "./tour/tour";
 
 // ── command palette / global search ──────────────────────────────────────────
 export * from "./search/command-palette";
+export * from "./search/search-index";
+export * from "./search/global-search";
 
 // ── i18n: one label tree, one optional provider ──────────────────────────────
 // `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`

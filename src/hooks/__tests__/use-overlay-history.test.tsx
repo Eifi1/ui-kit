@@ -1,5 +1,6 @@
 import { StrictMode, useState } from "react";
-import { act, render } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router";
 import { useOverlayHistory } from "../use-overlay-history";
 
 /**
@@ -331,5 +332,188 @@ describe("useOverlayHistory", () => {
     view.unmount();
     await settle();
     expect(liveSentinel()).toBeNull();
+  });
+});
+
+// ── a navigation made from inside an open overlay ─────────────────────────────
+//
+// A palette result or a dialog's link has the ROUTER push (or replace) the new page,
+// and the overlay closes in the same commit. The new page's entry carries no marker,
+// and the repair for a router-wiped marker used to take it for our own wiped entry:
+// it re-stamped the new page as the overlay's and the deferred unwind went back from
+// it — the page changed and changed straight back.
+//
+// A real BrowserRouter, not a memory router: the bug lives in the relation between
+// the router's `{usr, key, idx}` and `window.history`, which a memory router never
+// touches.
+describe("useOverlayHistory under a router, navigating from inside the overlay", () => {
+  function Page() {
+    const location = useLocation();
+    return <p data-testid="where">{location.pathname}</p>;
+  }
+
+  /** The home page with a dialog (and optionally a sheet inside it) whose row navigates. */
+  function Home({ nested }: { nested: boolean }) {
+    const [open, setOpen] = useState(false);
+    const [inner, setInner] = useState(false);
+    const navigate = useNavigate();
+    const go = (replace: boolean) => {
+      navigate("/budget", { replace });
+      setInner(false);
+      setOpen(false);
+    };
+    return (
+      <div>
+        <button onClick={() => setOpen(true)}>open</button>
+        {open ? (
+          <div>
+            <Overlay onClose={() => setOpen(false)} />
+            <button onClick={() => setInner(true)}>open inner</button>
+            {inner && nested ? <Overlay onClose={() => setInner(false)} /> : null}
+            <button onClick={() => go(false)}>push</button>
+            <button onClick={() => go(true)}>replace</button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function App({ nested = false }: { nested?: boolean }) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home nested={nested} />} />
+          <Route path="/budget" element={<p>budget</p>} />
+        </Routes>
+        <Page />
+      </BrowserRouter>
+    );
+  }
+
+  async function forward() {
+    await act(async () => {
+      const landed = new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 2000);
+        window.addEventListener("popstate", () => (clearTimeout(timer), resolve()), { once: true });
+      });
+      window.history.forward();
+      await landed;
+    });
+  }
+
+  /** Start on a page of our own ("/before"), then the app at "/". */
+  async function start(nested = false) {
+    window.history.replaceState(null, "", "/before");
+    window.history.pushState(null, "", "/");
+    const view = render(<App nested={nested} />);
+    await settle();
+    return view;
+  }
+
+  async function expectSettledOnBudget() {
+    await settle();
+    // The router's view and the address agree, and it STAYS there once every
+    // deferred traversal has run.
+    expect(window.location.pathname).toBe("/budget");
+    expect(screen.getByTestId("where")).toHaveTextContent("/budget");
+    await new Promise((r) => setTimeout(r, 50));
+    await settle();
+    expect(window.location.pathname).toBe("/budget");
+    expect(screen.getByTestId("where")).toHaveTextContent("/budget");
+    expect(liveSentinel()).toBeNull();
+  }
+
+  /** One Back press from the new page reaches the plain page the overlay was opened
+   *  from — not an entry of the overlay's — and one more leaves it. */
+  async function expectBackReachesHome() {
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/");
+    expect(screen.getByTestId("where")).toHaveTextContent(/^\/$/);
+    expect(liveSentinel()).toBeNull();
+    expect(screen.queryByText("push")).toBeNull();
+  }
+
+  it("lands on the page a row pushed, and stays there", async () => {
+    const view = await start();
+    fireEvent.click(screen.getByText("open"));
+    fireEvent.click(screen.getByText("push"));
+    await expectSettledOnBudget();
+    await expectBackReachesHome();
+    // Forward is carried over the overlay's old entry just the same.
+    await forward();
+    await settle();
+    expect(window.location.pathname).toBe("/budget");
+    await back();
+    await settle();
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/before");
+    view.unmount();
+    await settle();
+  });
+
+  it("lands on the page a row replaced to, and stays there", async () => {
+    const view = await start();
+    fireEvent.click(screen.getByText("open"));
+    fireEvent.click(screen.getByText("replace"));
+    await expectSettledOnBudget();
+    await expectBackReachesHome();
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/before");
+    view.unmount();
+    await settle();
+  });
+
+  it("lands on the new page from a sheet over a dialog, and stays there", async () => {
+    const view = await start(true);
+    fireEvent.click(screen.getByText("open"));
+    fireEvent.click(screen.getByText("open inner"));
+    fireEvent.click(screen.getByText("push"));
+    await expectSettledOnBudget();
+    await expectBackReachesHome();
+    await forward();
+    await settle();
+    expect(window.location.pathname).toBe("/budget");
+    await back();
+    await settle();
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/before");
+    view.unmount();
+    await settle();
+  });
+
+  it("replaces from a sheet over a dialog, and stays there", async () => {
+    const view = await start(true);
+    fireEvent.click(screen.getByText("open"));
+    fireEvent.click(screen.getByText("open inner"));
+    fireEvent.click(screen.getByText("replace"));
+    await expectSettledOnBudget();
+    await expectBackReachesHome();
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/before");
+    view.unmount();
+    await settle();
+  });
+
+  it("under StrictMode too", async () => {
+    window.history.replaceState(null, "", "/before");
+    window.history.pushState(null, "", "/");
+    const view = render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    await settle();
+    fireEvent.click(screen.getByText("open"));
+    await settle();
+    fireEvent.click(screen.getByText("push"));
+    await expectSettledOnBudget();
+    await expectBackReachesHome();
+    view.unmount();
+    await settle();
   });
 });

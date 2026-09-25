@@ -297,11 +297,21 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Keresés törlése",
+      submit: "Keresés",
+      close: "Bezárás",
       placeholder: "Keresés…",
       empty: "Nincs találat",
       loading: "Keresés folyamatban…",
       dialog: "Keresés",
       error: "A keresés nem sikerült. Próbálja újra.",
+    },
+    globalSearch: {
+      trigger: "Keresés",
+      placeholder: "Keresés vagy ugrás…",
+      shortcut: (keys) => `Keresés (${keys})`,
+      suggestions: "Próbálja ki",
+      results: "Találatok",
     },
     sparkline: {
       // Numerals stay bare (see 3. above): "12-ről 40-re" would need vowel harmony.

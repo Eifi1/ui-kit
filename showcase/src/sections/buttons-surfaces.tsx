@@ -10,6 +10,7 @@ import {
   Ellipsis,
   Expand,
   Heart,
+  Flag,
   Info,
   Link2,
   Minus,
@@ -732,11 +733,100 @@ function ButtonSizes() {
   );
 }
 
+const QUIET_ROWS = ["Rewe · −42.10", "Shell · −61.00", "Salary · +3,120.00"];
+
+function IconButtonQuiet() {
+  const [selected, setSelected] = useState(2);
+  const [deleted, setDeleted] = useState(0);
+  const [flags, setFlags] = useState<string[]>([]);
+  return (
+    <Example
+      label="IconButton — quiet"
+      hint="each coloured tone has two resting looks: quiet (grey until hover/focus) or toned (its colour at rest)"
+    >
+      {/* A phone bulk bar: ONE destructive action, on a screen that never hovers. */}
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
+        <span className="me-auto text-sm font-medium text-[var(--text-primary)]">{selected} selected</span>
+        <IconButton
+          aria-label="Delete the selected rows"
+          tone="danger"
+          quiet={false}
+          disabled={selected === 0}
+          onClick={() => {
+            setDeleted((n) => n + selected);
+            setSelected(0);
+          }}
+        >
+          <Trash2 />
+        </IconButton>
+        <IconButton aria-label="Clear the selection" tone="muted" onClick={() => setSelected(0)}>
+          <X />
+        </IconButton>
+        <Button size="sm" variant="ghost" onClick={() => setSelected(2)}>
+          Select two
+        </Button>
+      </div>
+      <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">
+        danger quiet=&#123;false&#125; · deleted {deleted} row{deleted === 1 ? "" : "s"}
+      </p>
+      {/* A flag repeated down a list: `quiet` on warning/info so every row does not shout. */}
+      <ul className="mt-4 divide-y divide-[var(--border)] rounded-md border border-[var(--border)]">
+        {QUIET_ROWS.map((row) => (
+          <li key={row} className="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-secondary)]">
+            <span className="me-auto">{row}</span>
+            <IconButton
+              aria-label={`Flag ${row} for review`}
+              tone="warning"
+              quiet={!flags.includes(row)}
+              size="sm"
+              onClick={() => setFlags((f) => (f.includes(row) ? f.filter((x) => x !== row) : [...f, row]))}
+            >
+              <Flag />
+            </IconButton>
+            <IconButton aria-label={`Details of ${row}`} tone="info" quiet size="sm">
+              <Info />
+            </IconButton>
+            <IconButton aria-label={`Delete ${row}`} tone="danger" size="sm">
+              <Trash2 />
+            </IconButton>
+          </li>
+        ))}
+      </ul>
+      <Row className="mt-3">
+        <span className="text-xs text-[var(--text-muted)]">defaults, for comparison:</span>
+        <IconButton aria-label="warning, default (toned)" tone="warning">
+          <Flag />
+        </IconButton>
+        <IconButton aria-label="info, default (toned)" tone="info">
+          <Info />
+        </IconButton>
+        <IconButton aria-label="danger, default (quiet)" tone="danger">
+          <Trash2 />
+        </IconButton>
+      </Row>
+      <div className="mt-3">
+        <Note>
+          The bulk bar&apos;s delete is <code className="font-mono">tone=&quot;danger&quot; quiet=&#123;false&#125;</code>:
+          red at rest, because it stands alone and a touch screen never hovers to reveal it. In the list,
+          the flag is <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
+          <code className="font-mono">quiet</code> until you flag the row (then toned amber), the info button
+          is <code className="font-mono">tone=&quot;info&quot; quiet</code>, and delete keeps danger&apos;s quiet
+          default — hover or Tab onto a grey one and its tone arrives. Left out,{" "}
+          <code className="font-mono">quiet</code> keeps each tone&apos;s old default (last row): danger quiet,
+          warning and info toned. It is ignored for <code className="font-mono">muted</code> and{" "}
+          <code className="font-mono">default</code>.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 export function ButtonsSurfaces() {
   return (
     <>
       <ButtonVariants />
       <ButtonSizes />
+      <IconButtonQuiet />
       <ButtonStretch />
       <ButtonDisabled />
       <ButtonRef />

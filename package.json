@@ -1,6 +1,6 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
   "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives. Re-checked when `flag-icons` left `dependencies` and tsup started emitting a `\"use client\"` banner: neither touches this. The flag stylesheet was never imported from JS in the first place (that was the finding), and a directive prologue is a string literal every bundler lifts out before it decides whether a module is inert.",
@@ -71,7 +71,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "check:tokens": "node scripts/check-token-discipline.mjs",
-    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm test && npm run build && node scripts/verify-package.mjs && npm run build:showcase",
+    "test:coverage": "vitest run --coverage",
+    "check:graph": "node scripts/check-module-graph.mjs",
+    "check:package": "node scripts/verify-package.mjs",
+    "check:tailwind": "node scripts/check-tailwind-scan.mjs",
+    "check:security": "npm audit --audit-level=high",
+    "check:commits": "node scripts/check-commit-range.cjs",
+    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm run test:coverage && npm run build && npm run check:graph && npm run check:package && npm run build:showcase && npm run check:tailwind && npm run check:security && npm run check:commits",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsup && node scripts/fix-esm-extensions.mjs",
@@ -83,7 +89,6 @@
     "prepublishOnly": "npm run build",
     "release": "commit-and-tag-version",
     "release:dry": "commit-and-tag-version --dry-run",
-    "commitlint": "node scripts/check-commit-range.cjs",
     "prepare": "husky || true"
   },
   "peerDependencies": {
@@ -159,5 +164,9 @@
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=20.18"
+  },
+  "_overrides": "esbuild is forced to ^0.28.2 for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows, fixed in 0.28.1). vite already allows ^0.28; tsup 8.5.1 still pins ^0.27, and `npm run check` (build + package verification) proves it works on 0.28. Drop this once tsup allows 0.28 itself.",
+  "overrides": {
+    "esbuild": "^0.28.2"
   }
 }

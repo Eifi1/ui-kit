@@ -13,11 +13,13 @@ in this document.
 ```bash
 nvm use            # 24.19.0 — see .nvmrc
 npm ci
-npm run check      # typecheck · lint · tokens · tests · build · package · showcase
+npm run check      # everything CI runs — see "The gates"
 ```
 
-`npm run check` is the whole of CI in one command. Run it before you push and you will not
-be surprised.
+**Local first.** `npm run check` is the whole of CI in one command, and it runs on your
+machine BEFORE anything leaves it: the husky `pre-push` hook calls it, and a failure blocks
+the push. CI calls the same script and only confirms. Work stays local until it is done and
+goes out in one batch — every push, PR update and tag starts paid GitHub Actions minutes.
 
 **Node 24, not 20**, and not by preference. jsdom 30 pulls undici, which calls
 `webidl.util.markAsUncloneable` — added to Node in 20.18. On plain 20 every test file dies
@@ -264,20 +266,25 @@ one maintainer. Revisit it if a second maintainer appears.
 
 ## The gates
 
-CI runs on every push to `main` and every pull request:
+`npm run check` runs these in order, and every one blocks. The husky `pre-push` hook runs it
+locally; CI (`.github/workflows/ci.yml`) runs the SAME script on every pull request and push
+to `main`, with nothing inline and nothing `continue-on-error`, so the two cannot drift.
 
-| Gate | What it is actually defending |
+| Script | What it is actually defending |
 |---|---|
-| `npm run typecheck` | — |
-| `npm test` | — |
-| `npm run build` | — |
-| module-graph assertion | That the build stayed unbundled. A bundling build fuses the modules into one chunk and `sideEffects` can no longer let a consumer drop what it does not use — the regression that dragged ~433 KB of recharts into a consumer's entry chunk. It asserts the graph, not a string. |
-| `scripts/verify-package.mjs` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. |
-| `npm run build:showcase` | The only place the kit is *rendered* in CI. |
-| emitted-CSS grep | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
+| `typecheck` | — |
+| `lint` | The ratchet policy above: warnings are allowed to exist, not to grow. |
+| `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
+| `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. |
+| `build` | — |
+| `check:graph` | That the build stayed unbundled. A bundling build fuses the modules into one chunk and `sideEffects` can no longer let a consumer drop what it does not use — the regression that dragged ~433 KB of recharts into a consumer's entry chunk. It asserts the graph, not a string. |
+| `check:package` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. |
+| `build:showcase` | The only place the kit is *rendered* outside jsdom. |
+| `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
+| `check:security` | `npm audit --audit-level=high`. |
+| `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
 
-`npm run check:tokens` and `npm run lint` are in `npm run check` and should be added to the
-CI job when the ratchets are stable.
+No dead-code check: `ts-prune` reports every public export of a library as unused.
 
 ## Releasing
 
@@ -312,7 +319,8 @@ just the symptom, because a reader upgrading needs to know whether it could have
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
    `npm run release -- --release-as minor` when the commits under-state it.
-4. Open the PR, and merge it once CI is green.
+4. Push (the pre-push hook runs `npm run check`), open the PR, and merge it once CI
+   confirms. Pushes wait until the work is done and go out in one batch.
 5. Tag the MERGE commit on main:
    `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
 

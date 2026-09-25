@@ -297,11 +297,21 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Cancella ricerca",
+      submit: "Cerca",
+      close: "Chiudi",
       placeholder: "Cerca…",
       empty: "Nessun risultato",
       loading: "Ricerca in corso…",
       dialog: "Ricerca",
       error: "Ricerca non riuscita. Riprova.",
+    },
+    globalSearch: {
+      trigger: "Cerca",
+      placeholder: "Cerca o vai a…",
+      shortcut: (keys) => `Cerca (${keys})`,
+      suggestions: "Prova",
+      results: "Risultati",
     },
     sparkline: {
       rising: (first, last) => `In aumento da ${first} a ${last}`,

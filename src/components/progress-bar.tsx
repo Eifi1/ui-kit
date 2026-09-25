@@ -3,8 +3,30 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
-export type ProgressBarTone = "brand" | "neutral" | "success" | "warning" | "danger" | "info";
-export type ProgressBarSize = "sm" | "md" | "lg";
+/**
+ * `income` / `expense` are the money pair (`--money-income` / `--money-expense`), the
+ * names `Chip`, `StatTile` and `Sparkline` already use for them: a share bar of what
+ * came in or went out is money, and painting it `success` / `warning` said "good" and
+ * "careful" about a figure that is neither. keksdose's report meters (food-group-card,
+ * drilldown-modal) sit beside amounts that are already in the money colours.
+ */
+export type ProgressBarTone =
+  | "brand"
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "income"
+  | "expense";
+/**
+ * Track heights: `sm` 4px, `slim` 6px, `md` 8px, `lg` 12px. `slim` is a word and not a
+ * letter because the letters are taken in order — an `xs` at 6px would be THICKER than
+ * `sm` — and renaming `sm` would move every bar already on it. 6px is the Slider's
+ * track and keksdose's hand-drawn meters (`h-1.5`, landing-visuals), for a bar under a
+ * line of text where 8px outweighs the text.
+ */
+export type ProgressBarSize = "sm" | "slim" | "md" | "lg";
 
 const FILL: Record<ProgressBarTone, string> = {
   brand: "bg-[var(--brand)]",
@@ -13,9 +35,11 @@ const FILL: Record<ProgressBarTone, string> = {
   warning: "bg-[var(--warning)]",
   danger: "bg-[var(--danger)]",
   info: "bg-[var(--info)]",
+  income: "bg-[var(--money-income)]",
+  expense: "bg-[var(--money-expense)]",
 };
 
-const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", md: "h-2", lg: "h-3" };
+const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5", md: "h-2", lg: "h-3" };
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
   /** Where it stands. Leave it undefined for an INDETERMINATE bar — work is under way

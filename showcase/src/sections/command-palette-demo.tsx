@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { ReactNode } from "react";
-import { Command, FileText, Layers, Palette, Receipt, Table2 } from "lucide-react";
-import { Button, CommandPalette, Input, useCommandKey } from "@eifi1/ui-kit";
-import type { CommandItem } from "@eifi1/ui-kit";
+import { Command, FileText, Layers, Moon, Palette, Plus, Receipt, Table2, User } from "lucide-react";
+import { Button, CommandPalette, GlobalSearch, Input, useCommandKey } from "@eifi1/ui-kit";
+import type { CommandItem, GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -50,10 +50,31 @@ export function CommandPaletteDemo() {
       </Example>
 
       <Example
+        label='CommandPalette — searchOn="submit"'
+        hint="typing edits a draft; ↵ or the submit button commits it — the search runs only then"
+      >
+        <SubmitPaletteDemo />
+      </Example>
+
+      <Example
+        label="CommandPalette — redactLabels and item redact"
+        hint="rows that are the user's own data carry data-private, for replay and screenshot masking"
+      >
+        <RedactPaletteDemo />
+      </Example>
+
+      <Example
         label="CommandPalette — a controlled query"
         hint="query + onQueryChange: the text lives outside the palette, here in the address bar's ?q="
       >
         <ControlledQueryDemo />
+      </Example>
+
+      <Example
+        label="GlobalSearch — ranked index, async source and suggestions"
+        hint="the whole ⌘K search an app puts in its top bar; the one in THIS top bar is the same component"
+      >
+        <GlobalSearchDemo />
       </Example>
     </>
   );
@@ -152,8 +173,14 @@ function PaletteDemo() {
       </Note>
       <Note>
         Type something with no match (&ldquo;zzz&rdquo;) for the <code className="font-mono">empty</code>{" "}
-        label. The panel is top-centred on every screen size — on a phone it is the full width
-        less a 16px margin, not a bottom sheet.
+        label, then the <strong>×</strong> at the field&apos;s end: the clear button (
+        <code className="font-mono">commandPalette.clear</code>) empties the field, commits the empty
+        query and puts the caret back. From 768px up the panel is a top-centred card; below it (
+        <code className="font-mono">fullScreenOnPhone</code>, on by default) it fills the screen — no inset,
+        no rounded panel, the field pinned at the top inside the safe areas, a 16px field so iOS does
+        not zoom, and a Close button (<code className="font-mono">commandPalette.close</code>) because
+        there is no backdrop to tap. Try the screen-size preview in the top bar; the next specimen
+        has the <code className="font-mono">={"{false}"}</code> form.
       </Note>
     </div>
   );
@@ -295,6 +322,126 @@ function FailingPaletteDemo() {
   );
 }
 
+/* ── submit mode ───────────────────────────────────────────────────────────── */
+
+function SubmitPaletteDemo() {
+  const [open, setOpen] = useState(false);
+  const [fullScreen, setFullScreen] = useState(true);
+  const [calls, setCalls] = useState<string[]>([]);
+  const [changes, setChanges] = useState(0);
+  const search = (query: string): CommandItem[] => {
+    setCalls((c) => [`"${query}"`, ...c].slice(0, 6));
+    const needle = query.trim().toLowerCase();
+    return [...PALETTE_INDEX, ...RECORDS]
+      .filter((e) => !needle || e.label.toLowerCase().includes(needle))
+      .map((e) => ({ ...e, href: undefined, onSelect: () => setOpen(false) }));
+  };
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the submit-mode palette
+        </Button>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={fullScreen} onChange={(e) => setFullScreen(e.target.checked)} />
+          <code className="font-mono">fullScreenOnPhone</code>
+        </label>
+      </Row>
+      <OutTable
+        rows={[
+          ["search calls", String(calls.length ? calls.length : 0)],
+          ["queries searched, newest first", calls.length ? calls.join(" · ") : "—"],
+          ["onQueryChange calls", String(changes)],
+        ]}
+      />
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={PALETTE_INDEX}
+        searchOn="submit"
+        fullScreenOnPhone={fullScreen}
+        onQueryChange={() => setChanges((n) => n + 1)}
+        labels={{ dialog: "Search (on submit)", placeholder: "Type, then press ↵…" }}
+      />
+      <Note>
+        Type &ldquo;rent&rdquo;: the counter does not move and the list stays on the last committed query,
+        while a submit button (<code className="font-mono">commandPalette.submit</code>, ↵ glyph) appears
+        beside the field. Press ↵ or that button and the draft becomes THE query — one search call, one{" "}
+        <code className="font-mono">onQueryChange</code>. ↵ again with nothing new typed chooses the
+        highlighted row, as in <code className="font-mono">&quot;input&quot;</code> mode. The × commits the empty
+        query straight away in both modes, and an uncommitted draft is dropped when the palette closes. The
+        phone keyboard&apos;s key reads &ldquo;search&rdquo; (<code className="font-mono">enterKeyHint</code>).
+      </Note>
+      <Note>
+        Untick <code className="font-mono">fullScreenOnPhone</code> and, at a phone width (or in the
+        screen-size preview), this palette keeps the desktop card — inset, rounded, 70vh — instead of
+        filling the screen, and has no Close button: the backdrop and Escape close it.
+      </Note>
+    </div>
+  );
+}
+
+/* ── redaction ─────────────────────────────────────────────────────────────── */
+
+const PRIVATE_ENTRIES: PaletteEntry[] = [
+  ...RECORDS,
+  { id: "acct-1", label: "Joint checking ·· 0130", group: "Accounts", hint: "2,418.55 €", icon: <Table2 className="size-4" /> },
+];
+
+function RedactPaletteDemo() {
+  const [open, setOpen] = useState(false);
+  const [redact, setRedact] = useState(true);
+  const [demo, setDemo] = useState(true);
+  const search = (query: string): CommandItem[] => {
+    const needle = query.trim().toLowerCase();
+    const rows: CommandItem[] = [
+      ...PRIVATE_ENTRIES.map((e) => ({ ...e, onSelect: () => setOpen(false) })),
+      // An app's own page, not the user's data: un-masked in a palette that masks by default.
+      { id: "settings", label: "Settings", group: "Pages", hint: "redact: false", redact: false, onSelect: () => setOpen(false) },
+    ];
+    return rows.filter((e) => !needle || e.label.toLowerCase().includes(needle));
+  };
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the redacting palette
+        </Button>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={redact} onChange={(e) => setRedact(e.target.checked)} />
+          <code className="font-mono">redactLabels</code>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
+          demo mode (blur <code className="font-mono">[data-private]</code>)
+        </label>
+      </Row>
+      {/* The host's own rule — the kit only sets the attribute. Scoped to the open
+          palette's dialog, which is portalled to <body>. */}
+      {demo && open && <style>{'[role="dialog"] [data-private] { filter: blur(5px); }'}</style>}
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={PRIVATE_ENTRIES}
+        redactLabels={redact}
+        labels={{ dialog: "Search (redacted)" }}
+      />
+      <Note>
+        <code className="font-mono">redactLabels</code> marks every row&apos;s label and hint{" "}
+        <code className="font-mono">data-private</code> — payees, amounts, an account name — so session
+        replay and screenshot tooling mask them; here the page&apos;s own demo-mode rule blurs them. The
+        &ldquo;Settings&rdquo; row passes <code className="font-mono">redact: false</code> and stays readable:
+        an item&apos;s <code className="font-mono">redact</code> overrides the palette either way, so with{" "}
+        <code className="font-mono">redactLabels</code> off a single row could opt IN with{" "}
+        <code className="font-mono">redact: true</code> instead. Group headings are the app&apos;s words and
+        are never marked.
+      </Note>
+    </div>
+  );
+}
+
 /* ── controlled query ──────────────────────────────────────────────────────── */
 
 function ControlledQueryDemo() {
@@ -361,6 +508,98 @@ function ControlledQueryDemo() {
         still there — a controlled palette is never reset on open, because the owner decides what an
         open shows. <code className="font-mono">onQueryChange</code> fires in both modes; uncontrolled,
         it only observes.
+      </Note>
+    </div>
+  );
+}
+
+/* ── global search ─────────────────────────────────────────────────────────── */
+
+/** A small app's static index: pages, actions and settings, with keywords in the words
+ *  a user types rather than the ones on the page. */
+const APP_ENTRIES: SearchEntry[] = [
+  { id: "budget", title: "Budget", group: "Pages", href: "/budget", icon: <Table2 className="size-4" />, keywords: ["envelopes", "plan"] },
+  { id: "accounts", title: "Accounts", group: "Pages", href: "/accounts", icon: <Layers className="size-4" />, keywords: ["bank", "wallet"] },
+  { id: "reports", title: "Reports", group: "Pages", href: "/reports", icon: <FileText className="size-4" />, keywords: ["charts", "spending"] },
+  { id: "new-transaction", title: "New transaction", group: "Actions", href: "/transactions?action=new", icon: <Plus className="size-4" />, keywords: ["add", "expense", "income"] },
+  { id: "new-account", title: "New account", group: "Actions", href: "/accounts?action=new", icon: <Plus className="size-4" /> },
+  { id: "dark-mode", title: "Dark mode", group: "Settings", href: "/settings#theme", icon: <Moon className="size-4" />, keywords: ["theme", "appearance"] },
+  { id: "two-factor", title: "Two-factor authentication", group: "Settings", href: "/settings#2fa", icon: <User className="size-4" />, keywords: ["2fa", "security", "otp"] },
+];
+
+/** What a server would hold — searched by the async source, never by the index. */
+const TRANSACTIONS = [
+  { id: "t1", payee: "Bäckerei Müller", amount: "€ 4.80" },
+  { id: "t2", payee: "Rent — Hausverwaltung", amount: "€ 950.00" },
+  { id: "t3", payee: "Budget airline", amount: "€ 129.99" },
+  { id: "t4", payee: "Café Central", amount: "€ 7.40" },
+];
+
+function GlobalSearchDemo() {
+  const [went, setWent] = useState<string | null>(null);
+  const [fail, setFail] = useState(false);
+  const [calls, setCalls] = useState(0);
+
+  // A fake server: 600ms away, abortable, optionally broken. Its answer is shown as
+  // given — the source ranks, the index does not re-filter.
+  const transactions: GlobalSearchSource = {
+    id: "transactions",
+    group: "Transactions",
+    redact: true,
+    search: (query, signal) =>
+      new Promise<SearchEntry[]>((resolve, reject) => {
+        setCalls((n) => n + 1);
+        const timer = setTimeout(() => {
+          if (fail) return reject(new Error("offline"));
+          const needle = query.toLowerCase();
+          resolve(
+            TRANSACTIONS.filter((t) => t.payee.toLowerCase().includes(needle)).map((t) => ({
+              id: t.id,
+              title: t.payee,
+              hint: t.amount,
+              icon: <Receipt className="size-4" />,
+              href: `/transactions?payee=${encodeURIComponent(t.payee)}`,
+            })),
+          );
+        }, 600);
+        signal.addEventListener("abort", () => clearTimeout(timer));
+      }),
+  };
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        {/* `shortcut={false}`: this page's first specimen and the top bar already own ⌘K. */}
+        <GlobalSearch
+          entries={APP_ENTRIES}
+          sources={[transactions]}
+          suggestions={["new-transaction", "budget", { query: "theme" }]}
+          navigate={setWent}
+          hrefFor={(href) => href}
+          shortcut={false}
+          triggerClassName="border border-[var(--border)]"
+        />
+        <span className="text-xs text-[var(--text-secondary)]">← the trigger (tooltip names the shortcut)</span>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={fail} onChange={(e) => setFail(e.target.checked)} />
+          the server is down
+        </label>
+      </Row>
+      <OutTable
+        rows={[
+          ["navigate(href)", <span className={READOUT}>{went ?? "—"}</span>],
+          ["source calls", <span className={READOUT}>{calls}</span>],
+        ]}
+      />
+      <Note>
+        Try <code className="font-mono">accnt</code> (a typo), <code className="font-mono">2fa</code> (a keyword),{" "}
+        <code className="font-mono">mode dark</code> (either order), or <code className="font-mono">bu</code> —
+        the static rows show at once, and the Transactions group streams in 600ms later with its own
+        &ldquo;Searching…&rdquo; line; with the server down that group alone shows the error. Its rows are{" "}
+        <code className="font-mono">redact: true</code>, hints (amounts) included. A request whose query has moved
+        on is aborted. <code className="font-mono">navigate</code> is passed here so choosing a row only reports
+        it; inside a router the default is the router&apos;s own, and every row is still a real link for a
+        middle-click.
       </Note>
     </div>
   );

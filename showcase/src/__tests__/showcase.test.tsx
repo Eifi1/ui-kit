@@ -172,7 +172,9 @@ describe("on-this-page contents", () => {
     // Built from the DOM after paint, so wait for it rather than asserting immediately.
     // Two copies: the rail (xl and up) and the disclosure under the title (below xl).
     // jsdom applies no CSS, so both are present here; in a browser one is display:none.
-    const navs = await screen.findAllByRole("navigation", { name: "On this page" });
+    // A generous wait: the Buttons page is one of the largest, and under the coverage
+    // run of `npm run check` its contents rail took longer than findBy's 1s default.
+    const navs = await screen.findAllByRole("navigation", { name: "On this page" }, { timeout: 15_000 });
     expect(navs).toHaveLength(2);
     const hrefs = navs
       .flatMap((nav) => within(nav).getAllByRole("link"))

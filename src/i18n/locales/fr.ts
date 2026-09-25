@@ -307,11 +307,21 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Effacer la recherche",
+      submit: "Rechercher",
+      close: "Fermer",
       placeholder: "Rechercher…",
       empty: "Aucun résultat",
       loading: "Recherche…",
       dialog: "Recherche",
       error: "La recherche a échoué. Réessayez.",
+    },
+    globalSearch: {
+      trigger: "Rechercher",
+      placeholder: "Rechercher ou aller à…",
+      shortcut: (keys) => `Rechercher (${keys})`,
+      suggestions: "Essayez",
+      results: "Résultats",
     },
     sparkline: {
       // "En hausse de 12 à 40" would read as "up BY 12", hence the colon.

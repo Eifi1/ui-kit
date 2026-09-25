@@ -76,3 +76,22 @@ describe("ProgressBar", () => {
     expect(bar.querySelector('[data-part="fill"]')!.className).toMatch(/bg-\[var\(--danger\)\]/);
   });
 });
+
+describe("ProgressBar money tones and the slim size", () => {
+  it("fills in the money tokens for income and expense", () => {
+    const { rerender } = render(<ProgressBar variant="meter" value={40} tone="income" aria-label="In" />);
+    const fill = () => screen.getByRole("meter").querySelector("[data-part=fill]")!;
+    expect(fill().className).toContain("bg-[var(--money-income)]");
+    rerender(<ProgressBar variant="meter" value={40} tone="expense" aria-label="In" />);
+    expect(fill().className).toContain("bg-[var(--money-expense)]");
+  });
+
+  it("draws a 6px track at size slim, between sm and md", () => {
+    const { rerender } = render(<ProgressBar value={10} size="slim" aria-label="p" />);
+    expect(screen.getByRole("progressbar").className).toContain("h-1.5");
+    rerender(<ProgressBar value={10} size="sm" aria-label="p" />);
+    expect(screen.getByRole("progressbar").className).toMatch(/(^|\s)h-1(\s|$)/);
+    rerender(<ProgressBar value={10} aria-label="p" />);
+    expect(screen.getByRole("progressbar").className).toMatch(/(^|\s)h-2(\s|$)/);
+  });
+});

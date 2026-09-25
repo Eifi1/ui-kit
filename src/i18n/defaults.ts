@@ -9,6 +9,7 @@ import { DEFAULT_PASSWORD_REVEAL_LABELS, DEFAULT_TABS_LABELS } from "../componen
 import { DEFAULT_WIZARD_LABELS } from "../wizard/types";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette";
+import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
 import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline";
 import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile";
@@ -71,6 +72,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   wizard: DEFAULT_WIZARD_LABELS,
   tour: DEFAULT_TOUR_LABELS,
   commandPalette: DEFAULT_COMMAND_PALETTE_LABELS,
+  globalSearch: DEFAULT_GLOBAL_SEARCH_LABELS,
   seriesChart: DEFAULT_SERIES_CHART_LABELS,
   sparkline: DEFAULT_SPARKLINE_LABELS,
   statTile: DEFAULT_STAT_TILE_LABELS,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, DataTable, Pagination, ToggleGroup } from "@eifi1/ui-kit";
 import type { DataTableChrome, DataTableColumn, DataTableDensity, FilterState, SortCycle, SortState } from "@eifi1/ui-kit";
@@ -46,6 +46,7 @@ export function DataTableSection() {
       <ShortTable />
       <DensityTable />
       <ReportTable />
+      <PrivateCellsTable />
       <FillHeightTable />
       <RtlTable />
     </>
@@ -690,6 +691,106 @@ function ReportTable() {
           the body is one roving tab stop: Tab into it, ↑/↓ and Home/End move between rows, Enter or
           Space opens one — and the rows keep their <code className="font-mono">row</code> role. A click on a
           control inside a row no longer opens the row as well.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── cellProps / headProps: a data-private marker on the cell itself ────────── */
+
+interface AccountRow {
+  name: string;
+  iban: string;
+  kind: string;
+  balance: number;
+}
+
+const ACCOUNTS: AccountRow[] = [
+  { name: "Joint checking", iban: "DE89 3704 0044 0532 0130 00", kind: "Checking", balance: 2418.55 },
+  { name: "Rainy day", iban: "DE12 5001 0517 0648 4898 90", kind: "Savings", balance: 9100 },
+  { name: "Travel card", iban: "DE44 1001 1001 2620 1234 56", kind: "Credit", balance: -312.4 },
+];
+
+const ACCOUNT_COLUMNS: DataTableColumn<AccountRow>[] = [
+  {
+    key: "name",
+    header: "Account",
+    cell: (r) => r.name,
+    mobilePrimary: true,
+    // On the <td> itself, not an inner span: the whole cell is the private thing.
+    cellProps: () => ({ "data-private": "" }),
+  },
+  {
+    key: "iban",
+    header: "IBAN",
+    cell: (r) => <span className="font-mono text-xs">{r.iban}</span>,
+    cellProps: (r) => ({ "data-private": "", title: `IBAN of ${r.name}` }),
+    headProps: { title: "Masked in demo mode", "data-col-kind": "private" },
+  },
+  { key: "kind", header: "Type", cell: (r) => r.kind },
+  {
+    key: "balance",
+    header: "Balance",
+    cell: (r) => AMOUNT_FMT.format(r.balance),
+    className: "text-end tabular-nums whitespace-nowrap",
+    headClassName: "text-end",
+    // Per row: only the negative balances are marked, and the class joins under the
+    // column's own (its text-end still wins).
+    cellProps: (r) => (r.balance < 0 ? { "data-private": "", className: "font-medium" } : undefined),
+    headProps: { "aria-description": "Negative balances are masked in demo mode" },
+  },
+];
+
+function PrivateCellsTable() {
+  const [demo, setDemo] = useState(true);
+  const box = useRef<HTMLDivElement>(null);
+  const [counts, setCounts] = useState({ cells: 0, heads: 0 });
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    setCounts({
+      cells: el.querySelectorAll("[data-private]").length,
+      heads: el.querySelectorAll("th[data-col-kind]").length,
+    });
+  }, [demo]);
+  return (
+    <Example
+      label="Column cellProps and headProps"
+      hint="attributes for a column's <td> per row, and for its <th> once — here data-private for a demo mode"
+    >
+      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
+        demo mode (the page&apos;s own <code className="font-mono">[data-private]</code> blur rule)
+      </label>
+      <div ref={box} className={demo ? "[&_[data-private]]:blur-[5px]" : undefined}>
+        <DataTable
+          rows={ACCOUNTS}
+          columns={ACCOUNT_COLUMNS}
+          rowKey={(r) => r.iban}
+          paginated={false}
+          chrome="minimal"
+          density="compact"
+          labels={{ table: "Accounts" }}
+        />
+      </div>
+      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">
+        [data-private] elements = {counts.cells} · th[data-col-kind] = {counts.heads}
+      </p>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">{"cellProps: (row) => ({ \"data-private\": \"\" })"}</code> puts the marker on
+          the <code className="font-mono">&lt;td&gt;</code>, so the blur covers the cell rather than a span
+          inside it, and no <code className="font-mono">cell</code> renderer has to remember it. The IBAN
+          cells also get a per-row <code className="font-mono">title</code> (hover one); the balance column
+          marks only the negative row and adds a class, merged under the column&apos;s own{" "}
+          <code className="font-mono">text-end</code>. <code className="font-mono">headProps</code> gives the IBAN
+          header a <code className="font-mono">title</code> and a <code className="font-mono">data-col-kind</code>{" "}
+          hook, and the balance header an <code className="font-mono">aria-description</code>. The table keeps{" "}
+          <code className="font-mono">data-col</code>, <code className="font-mono">role</code>,{" "}
+          <code className="font-mono">scope</code> and <code className="font-mono">aria-sort</code> for itself. On a
+          phone the card fields get the <code className="font-mono">data-*</code> half only — narrow the window
+          and the names and IBANs are still blurred.
         </Note>
       </div>
     </Example>

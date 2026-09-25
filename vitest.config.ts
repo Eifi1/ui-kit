@@ -23,6 +23,11 @@ export default defineConfig({
   // different build of the kit than the page it is testing.
   resolve: { alias: SHOWCASE_ALIAS },
   test: {
+    // 20s, not vitest's 5s. `npm run check` is a BLOCKING pre-push gate and runs the
+    // suite with coverage instrumentation, every file in parallel: there the keyboard
+    // walks (data-table sorting, measured-grid, mini-calendar) took just over 5s on a
+    // developer machine and failed a push that was fine. A real hang still fails.
+    testTimeout: 20_000,
     globals: true,
     environment: "jsdom",
     // Pin the suite's timezone, for the same reason Keksdose does: since dev#471

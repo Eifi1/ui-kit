@@ -144,8 +144,17 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * settings or analysis page. `bare` draws nothing: a leading chevron that turns
    * down, for an inline "Show 3 hidden accounts" inside something that already has
    * its own surface.
+   *
+   * `menu` is a row of a `HoverMenu`: the top bar's menu-item look
+   * (`TOPBAR_MENU_ITEM_CLASS` — full-width, `px-3 py-2`, regular weight, square, the
+   * hover wash with the text colour left alone), an INSET focus ring so the menu's
+   * clipping edge cannot cut it off, the chevron at the end (`chevronPosition`
+   * defaults to `end` here) and a body with no padding of its own, so the sub-list's
+   * rows sit flush like the rows around them. keksdose's account menu opens its
+   * language sub-list this way, and on `bare` it took four header overrides and a
+   * body one to get there (account-menu.tsx).
    */
-  variant?: "card" | "bare";
+  variant?: "card" | "bare" | "menu";
   /**
    * Where a `bare` disclosure draws its chevron. `start` (default) is the leading
    * chevron that turns from the reading direction to down. `end` puts it at the far
@@ -153,7 +162,7 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * account menu, whose language sub-list reads "Language 🇩🇪 ⌄" with the chevron
    * after the flag, like every other menu row with a sub-list. With `trailing`, the
    * chevron follows it, as on a card. A `card` always has it at the end, so this is
-   * ignored there.
+   * ignored there. A `menu` defaults to `end`, like the menu rows around it.
    */
   chevronPosition?: "start" | "end";
   /**
@@ -230,7 +239,7 @@ export function Disclosure({
   defaultOpen = false,
   onOpenChange,
   variant = "card",
-  chevronPosition = "start",
+  chevronPosition,
   headingAs: Heading,
   keepMounted,
   disabled,
@@ -247,8 +256,10 @@ export function Disclosure({
   const open = controlled ?? own;
   const bodyId = useId();
   const card = variant === "card";
-  // The card's chevron trails always; a bare one only when asked to.
-  const chevronAtEnd = card || chevronPosition === "end";
+  const menu = variant === "menu";
+  // The card's chevron trails always; a menu row's unless asked otherwise; a bare
+  // one only when asked to.
+  const chevronAtEnd = card || (chevronPosition ?? (menu ? "end" : "start")) === "end";
   const triggerOnly = controls !== undefined;
   // The card's header squares its lower corners only when a body opens under it.
   const joined = open && !triggerOnly;
@@ -280,7 +291,7 @@ export function Disclosure({
             cn(
               "min-w-0 flex-1 after:absolute after:inset-0 after:content-['']",
               "focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
-              card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : "after:rounded-sm",
+              card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : !menu && "after:rounded-sm",
             )
           : "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
         card
@@ -289,7 +300,12 @@ export function Disclosure({
               hasTrailing ? "pe-0" : "hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
               joined && "rounded-b-none",
             )
-          : "items-center rounded-sm text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+          : menu
+            ? // TOPBAR_MENU_ITEM_CLASS's row, spelled out rather than imported: a
+              // component does not reach up into the shell. A test holds the two to
+              // the same classes.
+              "items-center justify-between gap-3 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] focus-visible:ring-inset"
+            : "items-center rounded-sm text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
         headerClassName,
       )}
     >
@@ -337,7 +353,7 @@ export function Disclosure({
       )}
       {!triggerOnly && (
         <Collapse id={bodyId} open={open} keepMounted={keepMounted}>
-          <div className={cn(card ? "space-y-3 px-4 pb-4" : "space-y-2 pt-2", bodyClassName)}>{children}</div>
+          <div className={cn(card ? "space-y-3 px-4 pb-4" : !menu && "space-y-2 pt-2", bodyClassName)}>{children}</div>
         </Collapse>
       )}
     </div>

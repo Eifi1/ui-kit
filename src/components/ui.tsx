@@ -154,27 +154,50 @@ const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
 };
 
 // A tone re-colours the glyph without changing what the variant draws around it.
-// `muted` and `danger` both sit quiet at rest — an action in every row of a list
-// must not shout from every row — and `danger` answers the pointer in the
-// destructive family, so the red arrives only on the one row you are about to
-// act on.
-const ICON_BUTTON_TONES = {
-  default: "",
-  muted:
-    "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]",
-  danger:
-    "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)]",
-  // Amber AT REST, unlike `danger`: a warning icon button is the one on the row that
-  // needs attention (keksdose's "needs review" flag on a transaction, the stale-rate
-  // marker), not an action repeated down a list — quiet grey would hide the very
-  // thing it is there to point out.
-  warning:
-    "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus:ring-[var(--warning-border)]",
-  // Sky at rest, for the same reason as `warning`: keksdose's reconcile action on an
-  // account row (accounts-page:867) is the one on the row to notice, and it is
-  // informational rather than a problem, so it takes the `--info` family.
-  info: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
-} as const;
+// Each coloured tone comes in two resting looks, picked by `quiet` (see the prop):
+// QUIET is placeholder grey until the pointer or focus arrives, then the tone's
+// family; TONED wears the tone's colour at rest. The defaults are the looks each tone
+// had before `quiet` existed: `danger` is quiet — an action in every row of a list
+// must not shout from every row, so the red arrives only on the one row you are about
+// to act on — while `warning` and `info` are toned, because they mark the ONE thing
+// on the row to notice (keksdose's "needs review" flag, its reconcile action at
+// accounts-page:867), and quiet grey would hide the very thing they point out.
+// `muted` is quiet by definition and has no toned look; `default` has no tone.
+export type IconButtonTone = "default" | "muted" | "danger" | "warning" | "info";
+
+type ColouredTone = "danger" | "warning" | "info";
+
+const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
+  danger: {
+    quiet:
+      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)]",
+    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border)]",
+  },
+  warning: {
+    quiet:
+      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus:ring-[var(--warning-border)]",
+    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus:ring-[var(--warning-border)]",
+  },
+  info: {
+    quiet:
+      "text-[var(--text-placeholder)] hover:bg-[var(--info-bg)] hover:text-[var(--info)] focus:ring-[var(--info-border)]",
+    toned: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
+  },
+};
+
+const ICON_BUTTON_MUTED =
+  "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]";
+
+/** Which tones sit quiet at rest when `quiet` is left out. */
+const QUIET_BY_DEFAULT: Record<ColouredTone, boolean> = { danger: true, warning: false, info: false };
+
+function iconButtonToneClass(tone: IconButtonTone, quiet: boolean | undefined): string {
+  if (tone === "default") return "";
+  if (tone === "muted") return cn(ICON_BUTTON_MUTED, ICON_BUTTON_QUIET_DISABLED_REST);
+  const isQuiet = quiet ?? QUIET_BY_DEFAULT[tone];
+  const look = ICON_BUTTON_TONES[tone];
+  return isQuiet ? cn(look.quiet, ICON_BUTTON_QUIET_DISABLED_REST) : look.toned;
+}
 
 // A disabled button must not answer the pointer. The hover classes above are plain
 // `hover:` (so a caller's `className="hover:…"` still replaces them through
@@ -194,11 +217,9 @@ const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay", string> = {
   overlay: "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
 };
 
-// The tones that change the glyph on hover pin their resting glyph the same way.
-const ICON_BUTTON_TONES_DISABLED_REST: Partial<Record<keyof typeof ICON_BUTTON_TONES, string>> = {
-  muted: "disabled:hover:text-[var(--text-placeholder)]",
-  danger: "disabled:hover:text-[var(--text-placeholder)]",
-};
+// The quiet looks change the glyph on hover, so they pin their resting glyph the
+// same way. A toned look keeps its glyph on hover and needs no pin.
+const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-[var(--text-placeholder)]";
 
 // `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
 // "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
@@ -229,8 +250,26 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
    *  remove/delete that repeats down a list. `warning`: amber at rest — a flag that
    *  wants attention. `info`: sky at rest — a notice-worthy but harmless action
-   *  (keksdose's reconcile). Default: the variant's own colours. */
-  tone?: keyof typeof ICON_BUTTON_TONES;
+   *  (keksdose's reconcile). Default: the variant's own colours. See `quiet` for
+   *  turning a coloured tone's resting look the other way. */
+  tone?: IconButtonTone;
+  /**
+   * Whether a coloured tone (`danger`, `warning`, `info`) waits for the pointer:
+   * `true` is placeholder grey at rest and the tone's colour on hover and focus;
+   * `false` wears the tone's colour at rest. Left out, each tone keeps its own
+   * default — `danger` quiet, `warning` and `info` not. Ignored for `muted` (quiet by
+   * definition) and `default` (no tone).
+   *
+   * `quiet={false}` on `danger` is for a destructive action that stands ALONE, where
+   * hover-to-reveal hides it: keksdose's phone bulk bar (mobile-bulk-bar.tsx) has one
+   * "delete all" and a touch screen that never hovers, so it painted rose by hand.
+   * `quiet` on `warning`/`info` is the same switch the other way, for a flag repeated
+   * down a list. A boolean over the tone rather than a new tone (`danger-solid`) or an
+   * `emphasis` scale: there are exactly two resting looks, every coloured tone has
+   * both, and which one fits is a question about the SITE (alone or repeated, touch or
+   * pointer), not about the tone — so it is one switch the family shares.
+   */
+  quiet?: boolean;
   /**
    * Make it a toggle button. `true` sets `aria-pressed="true"` and draws the "on" look
    * (brand glyph on the quiet brand fill); `false` sets `aria-pressed="false"` with the
@@ -269,7 +308,7 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { variant = "ghost", size = "md", tone = "default", pressed, stopPropagation, className, onClick, onKeyDown, ...rest },
+  { variant = "ghost", size = "md", tone = "default", quiet, pressed, stopPropagation, className, onClick, onKeyDown, ...rest },
   ref,
 ) {
   return (
@@ -293,8 +332,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
         variant === "overlay" ? ICON_BUTTON_OVERLAY : buttonVariantClasses[variant],
         ICON_BUTTON_DISABLED_REST[variant],
-        ICON_BUTTON_TONES[tone],
-        ICON_BUTTON_TONES_DISABLED_REST[tone],
+        iconButtonToneClass(tone, quiet),
         pressed && ICON_BUTTON_PRESSED,
         className,
       )}
@@ -1334,13 +1372,24 @@ export function Spinner({ className, label, ...rest }: SpinnerProps) {
   );
 }
 
-export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
   /** The box renders `title` and `hint` in its own two-line rhythm, which is what makes
    *  every empty state in three apps look like the same thing — so there is no
    *  `children` slot to put arbitrary content in. The two slots below are the only
    *  other things an empty state has turned out to need, and each has a fixed place. */
-  title: string;
-  hint?: string;
+  /** Nodes rather than strings, so a title can carry a code, a link or an emphasised
+   *  word — keksdose's error boundary shows the error's name in `<code>` — while the
+   *  box still sets the type. */
+  title: ReactNode;
+  hint?: ReactNode;
+  /**
+   * Render the title as a heading of this level. Left out it is a `<div>`, as before:
+   * most empty states are a message inside a section that already has its heading.
+   * keksdose's error boundary IS the page when it trips, and its `<h2>` went missing
+   * when it moved onto EmptyState — so the page's heading outline lost the one line
+   * that says what happened. Only the element changes; the look is the box's.
+   */
+  headingAs?: "h2" | "h3" | "h4" | "h5" | "h6";
   /** A glyph ABOVE the title — kastlan's InboxEmptyState (an inbox), keksdose's
    *  offline card (a cloud with a slash). Sized by the box (`[&_svg]:size-8`) and
    *  muted, so five call sites cannot pick five sizes; hidden from assistive tech,
@@ -1353,7 +1402,8 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "
   action?: ReactNode;
 }
 
-export function EmptyState({ title, hint, icon, action, className, ...rest }: EmptyStateProps) {
+export function EmptyState({ title, hint, icon, action, headingAs, className, ...rest }: EmptyStateProps) {
+  const Title = headingAs ?? "div";
   return (
     <div
       {...rest}
@@ -1367,8 +1417,9 @@ export function EmptyState({ title, hint, icon, action, className, ...rest }: Em
           {icon}
         </div>
       )}
-      <div className="font-medium text-[var(--text-secondary)]">{title}</div>
-      {hint && <div className="mt-1 text-xs">{hint}</div>}
+      {/* `text-sm`: a heading keeps the box's size, not whatever a stylesheet gives h2. */}
+      <Title className="text-sm font-medium text-[var(--text-secondary)]">{title}</Title>
+      {hint != null && hint !== false && hint !== "" && <div className="mt-1 text-xs">{hint}</div>}
       {action != null && (
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>
       )}

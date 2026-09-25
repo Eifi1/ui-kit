@@ -302,11 +302,21 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Suche löschen",
+      submit: "Suchen",
+      close: "Schließen",
       placeholder: "Suchen…",
       empty: "Keine Ergebnisse",
       loading: "Wird gesucht…",
       dialog: "Suche",
       error: "Die Suche ist fehlgeschlagen. Bitte erneut versuchen.",
+    },
+    globalSearch: {
+      trigger: "Suche",
+      placeholder: "Suchen oder springen zu…",
+      shortcut: (keys) => `Suche (${keys})`,
+      suggestions: "Vorschläge",
+      results: "Ergebnisse",
     },
     sparkline: {
       rising: (first, last) => `Steigend von ${first} auf ${last}`,

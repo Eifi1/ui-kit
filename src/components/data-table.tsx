@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowDown,
@@ -76,6 +76,65 @@ export interface DataTableColumn<T> {
    * Default `"asc"`.
    */
   firstSort?: SortDir;
+  /**
+   * Extra attributes for this column's `<td>` in a given row — a `data-*` hook, a
+   * `title`, an `aria-describedby`, a class. keksdose's accounts page
+   * (accounts-page.tsx, the name and IBAN columns) is why it exists: its demo mode
+   * blurs everything marked `data-private`, and with nowhere to put the marker on the
+   * cell it wrapped every value in an inner `<span data-private>` — which blurs the
+   * text but not the cell, and has to be remembered in every `cell` renderer.
+   *
+   * MERGED under the kit's own, which win: `className` is joined before the column's
+   * `className` (so the column's alignment is still the alignment), `style` is laid
+   * under a resized column's pinned width, and `data-col` and a `role` stay the
+   * table's — `data-col` is how a resize finds the column's cells, and a `<td>` that
+   * claims another role leaves its row's cell count wrong for a screen reader.
+   *
+   * On a phone the card field (`<dd>`, or the primary line) gets the `data-*`
+   * attributes only: the rest — padding classes, `colSpan`, a width — describe a
+   * table cell and would mean something else, or nothing, on a card.
+   */
+  cellProps?: (row: T) => DataTableCellProps | undefined;
+  /** The same for the column's `<th>`, once. `scope`, `aria-sort`, `data-col` and the
+   *  width a resize pins stay the table's, and the class list goes before
+   *  `headClassName` for the same reason as in {@link cellProps}. */
+  headProps?: DataTableHeadProps;
+}
+
+/** A `data-*` attribute, typed so `{ "data-private": "" }` needs no cast. */
+type DataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined };
+
+/** What {@link DataTableColumn.cellProps} may return. */
+export type DataTableCellProps = TdHTMLAttributes<HTMLTableCellElement> & DataAttributes;
+
+/** What {@link DataTableColumn.headProps} takes. */
+export type DataTableHeadProps = ThHTMLAttributes<HTMLTableCellElement> & DataAttributes;
+
+/**
+ * Split a caller's cell attributes into what may reach the element and what the kit
+ * owns. `role` and `data-col` are dropped outright (see `cellProps`); `className` and
+ * `style` come back separately so the kit can merge rather than replace them.
+ */
+function splitCellProps(
+  props: DataTableCellProps | DataTableHeadProps | undefined,
+): { attrs: Record<string, unknown>; className?: string; style?: CSSProperties } {
+  if (!props) return { attrs: {} };
+  const {
+    className,
+    style,
+    role: _role,
+    "data-col": _col,
+    ...attrs
+  } = props as DataTableCellProps & { "data-col"?: unknown };
+  return { attrs, className, style };
+}
+
+/** Only the `data-*` attributes of a cell's props — what a phone card field takes. */
+function dataAttrsOf(props: DataTableCellProps | undefined): Record<string, unknown> | undefined {
+  if (!props) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(props)) if (k.startsWith("data-") && k !== "data-col") out[k] = v;
+  return out;
 }
 
 /** A column resize in flight. Held in a ref rather than in state: the live width is
@@ -1226,7 +1285,12 @@ export function DataTable<T>({
             mobileCard(row)
           ) : (
             <>
-              {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
+              {/* Only the `data-*` half of `cellProps` — see its note. */}
+              {mobilePrimaryCol && (
+                <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="font-medium">
+                  {mobilePrimaryCol.cell(row)}
+                </div>
+              )}
               {mobileSecondaryColumns.length > 0 && (
                 <dl
                   className={cn(
@@ -1239,7 +1303,10 @@ export function DataTable<T>({
                       <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)] self-center">
                         {col.header}
                       </dt>
-                      <dd className="min-w-0 text-[var(--text-secondary)] self-center">
+                      <dd
+                        {...dataAttrsOf(col.cellProps?.(row))}
+                        className="min-w-0 text-[var(--text-secondary)] self-center"
+                      >
                         {col.cell(row)}
                       </dd>
                     </Fragment>
@@ -1526,8 +1593,11 @@ export function DataTable<T>({
                 const headClass = logicalAlign(col.headClassName);
                 const isEndAligned = !!headClass && END_ALIGN.test(headClass);
                 const width = widths[col.key];
+                const ownHead = splitCellProps(col.headProps);
+                const pinnedHead = width ? { width, minWidth: width, maxWidth: width } : undefined;
                 return (
                   <th
+                    {...ownHead.attrs}
                     key={col.key}
                     ref={(el) => {
                       if (el) headRefs.set(col.key, el);
@@ -1554,7 +1624,7 @@ export function DataTable<T>({
                           : "none"
                         : undefined
                     }
-                    style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+                    style={ownHead.style || pinnedHead ? { ...ownHead.style, ...pinnedHead } : undefined}
                     className={cn(
                       "relative font-medium align-middle whitespace-nowrap",
                       compact ? "px-2 py-1" : "px-3 py-2",
@@ -1562,6 +1632,7 @@ export function DataTable<T>({
                       // Each <th> carries its own bg so the row doesn't render
                       // transparent over the data rows underneath.
                       "sticky top-0 z-10 bg-[var(--bg-surface-2)] backdrop-blur-sm",
+                      logicalAlign(ownHead.className),
                       headClass,
                     )}
                   >
@@ -1795,15 +1866,20 @@ export function DataTable<T>({
                     )}
                     {visibleColumns.map((col) => {
                       const width = widths[col.key];
+                      // The caller's first, the table's over it — see `cellProps`.
+                      const own = splitCellProps(col.cellProps?.(row));
+                      const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
                       return (
                         <td
+                          {...own.attrs}
                           key={col.key}
                           data-col={col.key}
-                          style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+                          style={own.style || pinned ? { ...own.style, ...pinned } : undefined}
                           className={cn(
                             "align-top",
                             compact ? "px-2 py-1" : "px-3 py-2",
                             width && "overflow-hidden text-ellipsis",
+                            logicalAlign(own.className),
                             logicalAlign(col.className),
                           )}
                         >

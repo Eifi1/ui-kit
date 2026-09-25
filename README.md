@@ -347,7 +347,11 @@ is the only automated check that the documented Tailwind `@source` step works.
 npm test          # vitest run
 npm run test:watch
 npm run typecheck
+npm run check     # everything CI runs; the pre-push hook runs it and blocks on failure
 ```
+
+Local first: `npm run check` is the full gate, on your machine, before anything is pushed;
+CI calls the same script and only confirms. See CONTRIBUTING.md → "The gates".
 
 Vitest + jsdom, configured as a copy of the lead consumer's setup rather than a new
 dialect — so a test can move between this package and an app unchanged. The suite pins

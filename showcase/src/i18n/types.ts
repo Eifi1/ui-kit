@@ -20,6 +20,67 @@
 
 import type { UiKitLabels } from "@eifi1/ui-kit";
 
+/**
+ * Every page slug in routes.tsx — overview pages (a group's own slug) included. Spelled
+ * out because the registry types its slugs as `string`; the dictionary test fails when
+ * this list and `PAGES` disagree, so a page added there shows up here as a test failure
+ * and then, through `needs`, as a compile error in all seven dictionaries.
+ */
+export type PageSlug =
+  | "overview"
+  | "foundations"
+  | "tokens"
+  | "palette"
+  | "localisation"
+  | "inputs"
+  | "fields"
+  | "forms"
+  | "choices"
+  | "numbers"
+  | "calendars"
+  | "month-time"
+  | "files"
+  | "pickers"
+  | "comboboxes"
+  | "entity-pickers"
+  | "dropdown-parts"
+  | "measured-grid"
+  | "field-sync"
+  | "signature-password"
+  | "data-display"
+  | "buttons"
+  | "chips-toggles"
+  | "feedback"
+  | "description-list"
+  | "tree-view"
+  | "data-table"
+  | "data-table-server"
+  | "data-table-parts"
+  | "layout"
+  | "charts"
+  | "chart-shell"
+  | "tile-chart"
+  | "series-chart"
+  | "series-chart-marks"
+  | "stats"
+  | "overlays"
+  | "dialogs"
+  | "confirm-floating"
+  | "popovers"
+  | "tour"
+  | "command-palette"
+  | "swipeable-row"
+  | "app-chrome"
+  | "shell"
+  | "settings"
+  | "wizard"
+  | "feedback-compose"
+  | "feedback-inbox"
+  | "api"
+  | "hooks-lib"
+  | "clipboard-timing"
+  | "helpers";
+
 export interface Dictionary {
   /** BCP-47 tag, used for `lang` and for every `Intl` formatter on the page. */
   tag: string;
@@ -58,6 +119,14 @@ export interface Dictionary {
     phone: string;
     tablet: string;
     desktop: string;
+    /** The top-bar search's placeholder: what can be found, in a few words. */
+    searchPlaceholder: string;
+    /** The search's result groups. `searchNeeds` is a question — the group lists plain
+     *  descriptions of a task ("ask before deleting") and the page that does it. */
+    searchComponents: string;
+    searchExamples: string;
+    searchNeeds: string;
+    searchPages: string;
   };
   /** Sidebar group names, keyed by the English label in routes.tsx. */
   groups: Record<string, string>;
@@ -74,6 +143,17 @@ export interface Dictionary {
    * that no page is missing it.
    */
   pages: Record<string, { title: string; short?: string; blurb: string }>;
+  /**
+   * What a reader might NEED, in their own words, per page — "ask before deleting",
+   * "pick a date range" — for the top-bar search, which otherwise only finds a page by
+   * the names of its components. Keyed by {@link PageSlug}, so a dictionary that leaves
+   * a page out does not compile; the dictionary test ties the union to routes.tsx.
+   *
+   * Written as a reader would type them: short, lower case, the task rather than the
+   * component ("show a loading placeholder", not "Skeleton"). Each language phrases them
+   * natively — a German reader types "Datumsbereich", not a word-for-word "Datum Bereich".
+   */
+  needs: Record<PageSlug, readonly string[]>;
   /** Every string the kit renders — handed to `<UiKitProvider>` whole. */
   kit: UiKitLabels;
 }

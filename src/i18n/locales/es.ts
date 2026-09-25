@@ -295,11 +295,21 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Borrar búsqueda",
+      submit: "Buscar",
+      close: "Cerrar",
       placeholder: "Buscar…",
       empty: "Sin resultados",
       loading: "Buscando…",
       dialog: "Búsqueda",
       error: "La búsqueda ha fallado. Inténtelo de nuevo.",
+    },
+    globalSearch: {
+      trigger: "Buscar",
+      placeholder: "Buscar o ir a…",
+      shortcut: (keys) => `Buscar (${keys})`,
+      suggestions: "Pruebe",
+      results: "Resultados",
     },
     sparkline: {
       rising: (first, last) => `Sube de ${first} a ${last}`,

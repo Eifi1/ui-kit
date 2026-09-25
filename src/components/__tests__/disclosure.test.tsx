@@ -2,6 +2,7 @@ import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Collapse, Disclosure } from "../disclosure";
+import { TOPBAR_MENU_ITEM_CLASS } from "../../shell/topbar-controls";
 
 /**
  * The disclosure both apps had hand-written (Lenkbank's `CollapsibleCard`, ten
@@ -282,5 +283,46 @@ describe("Disclosure triggerProps", () => {
     expect(button).toHaveAttribute("type", "button");
     fireEvent.click(button);
     expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+});
+
+describe("Disclosure variant=menu", () => {
+  it("wears the top-bar menu row's classes, with an inset ring and nothing of bare's", () => {
+    render(
+      <Disclosure variant="menu" title="Language">
+        <p>body</p>
+      </Disclosure>,
+    );
+    const button = screen.getByRole("button", { name: "Language" });
+    const classes = button.className.split(/\s+/);
+    for (const cls of TOPBAR_MENU_ITEM_CLASS.split(/\s+/)) expect(classes).toContain(cls);
+    expect(classes).toContain("focus-visible:ring-inset");
+    expect(classes).not.toContain("font-medium");
+    expect(classes).not.toContain("rounded-sm");
+    expect(classes).not.toContain("hover:text-[var(--text-primary)]");
+    expect(classes).not.toContain("gap-2");
+  });
+
+  it("puts the chevron at the end by default, and still honours chevronPosition", () => {
+    const { rerender } = render(<Disclosure variant="menu" title="Language" />);
+    const button = screen.getByRole("button", { name: "Language" });
+    expect(button.lastElementChild?.tagName.toLowerCase()).toBe("svg");
+    rerender(<Disclosure variant="menu" chevronPosition="start" title="Language" />);
+    expect(screen.getByRole("button", { name: "Language" }).firstElementChild?.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("gives the body no padding or spacing of its own", () => {
+    render(
+      <Disclosure variant="menu" title="Language" defaultOpen>
+        <p>Deutsch</p>
+      </Disclosure>,
+    );
+    const body = screen.getByText("Deutsch").parentElement!;
+    expect(body.className).not.toMatch(/\bpt-2\b|\bspace-y-2\b/);
+  });
+
+  it("leaves bare's chevron at the start by default", () => {
+    render(<Disclosure variant="bare" title="More" />);
+    expect(screen.getByRole("button", { name: "More" }).firstElementChild?.tagName.toLowerCase()).toBe("svg");
   });
 });

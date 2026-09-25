@@ -81,8 +81,47 @@ interface PushedEntry {
   href: string;
   /** Its overlay is gone but the entry is not — someone above owes this pop. */
   dead: boolean;
+  /** The router's `idx` on this entry when the marker went on — see {@link locate}. */
+  idx: number | undefined;
+  /** The router's `key` copied from the page entry beneath ours. */
+  key: string | undefined;
+  /** {@link routeOf} the address the marker was placed at. */
+  route: string;
 }
 const pushed: PushedEntry[] = [];
+
+/**
+ * Entries of ours that a ROUTER NAVIGATION made from inside the overlay has left
+ * behind — ours, still in the history, but no longer on top and no longer anyone's.
+ *
+ * Nothing can take an entry out from under a newer one, so they cannot be unwound;
+ * what can be done is to not let the user land on one. A traversal that comes to
+ * rest on a buried entry is carried straight on over the whole run of them, in the
+ * direction it was going (see `skipBuried`): Back from the new page lands on the page
+ * the overlay was opened from, Forward from there lands on the new page, and no press
+ * is spent on an entry with nothing on screen for it.
+ *
+ * `below` / `above` count the buried entries of the same run on either side. The
+ * router's `idx` tells the direction apart — except after a REPLACE navigation, when
+ * the page above the run shares the run's `idx`; the two keys decide there.
+ */
+interface BuriedEntry {
+  idx: number;
+  /** The `idx` of the router entry that buried the run: higher after a push, the
+   *  same after a replace. */
+  aboveIdx: number;
+  /** The key of the page entry directly beneath the run. */
+  belowKey: string | undefined;
+  /** The key of the router entry that buried the run, when it did. */
+  aboveKey: string | undefined;
+  below: number;
+  above: number;
+}
+const buried = new Map<string, BuriedEntry>();
+
+/** The router `{idx, key}` of the entry the last traversal (or burial) left us on —
+ *  what `skipBuried` compares against to know which way the user was going. */
+let lastSeen: { idx: number | undefined; key: string | undefined } | null = null;
 
 /** Entries a real Back press already consumed. Their overlay's cleanup still has to
  *  run, and it must not mistake "my entry is not current" for "my entry is buried"
@@ -140,13 +179,132 @@ function runUnwind(): void {
   const job = unwind;
   unwind = null;
   if (!job) return;
-  if (currentSentinel() !== job.id || currentHref() !== job.href) return;
+  if (currentSentinel() !== job.id || currentHref() !== job.href) {
+    // A router navigation landed between the cleanup and this task: the entries
+    // are under it (or were replaced by it) rather than simply forgotten.
+    if (taggedSentinel() === null) buryUnder(job.entries);
+    return;
+  }
   pendingProgrammatic += 1;
   window.history.go(-job.entries.length);
 }
 
 function currentHref(): string {
   return typeof window === "undefined" ? "" : window.location.href;
+}
+
+/** The router's own `{idx, key}` on the current entry, where a router has put them. */
+function routerMark(): { idx: number | undefined; key: string | undefined } {
+  const state = typeof window !== "undefined" ? (window.history.state as unknown) : null;
+  if (!state || typeof state !== "object") return { idx: undefined, key: undefined };
+  const { idx, key } = state as Record<string, unknown>;
+  return { idx: typeof idx === "number" ? idx : undefined, key: typeof key === "string" ? key : undefined };
+}
+
+/**
+ * The part of an address that names the PAGE — the query string left out.
+ *
+ * A `setSearchParams(…, { replace: true })` rewrites the query on the entry the
+ * overlay is standing on; that is a wipe to repair, not a move. Anything else changing
+ * is a navigation. Under a hash router the page lives in the hash (`#/table?f.q=x`), so
+ * a hash that starts with `#/` counts up to its own `?`; an ordinary `#fragment` does
+ * not name a page and is left out.
+ */
+function routeOf(href: string): string {
+  try {
+    const url = new URL(href);
+    const hashRoute = url.hash.startsWith("#/") ? url.hash.split("?")[0] : "";
+    return url.origin + url.pathname + hashRoute;
+  } catch {
+    return href;
+  }
+}
+
+/**
+ * Is the untagged entry we are standing on still `p`'s — merely wiped by the router —
+ * or an entry the router NAVIGATED to from inside the overlay?
+ *
+ * The router's `idx` is the one per-entry fact that separates the two, because it is
+ * the one the router itself keeps straight: a replace leaves it as it was, a push adds
+ * one. Our own push copies the page's state, so our entry carries the page's `idx` and
+ * a router push on top of it carries one more. The key would not do — every replace
+ * mints a new one, so the wipe this repair exists for would already fail it. Neither
+ * would the address alone: a push to the address we are already at is still a push.
+ *
+ * `idx` does not see one move, the router REPLACING our entry with a different page
+ * (same `idx`), so the page named by the address must also be unchanged. Where there is
+ * no `idx` to compare (no router, or one that keeps none) the address is all there is.
+ */
+function isStillOn(p: PushedEntry): boolean {
+  if (routeOf(currentHref()) !== p.route) return false;
+  const { idx } = routerMark();
+  return idx === undefined || p.idx === undefined || idx === p.idx;
+}
+
+/**
+ * The router has navigated while our entries were on top: record which of `records`
+ * (ours, oldest first, ending with the top one) it buried and which it replaced, and
+ * drop them from `pushed` — none of them can be unwound any more. Returns whether it
+ * recognised a navigation at all; when it cannot tell (no router `idx` to go by), it
+ * leaves everything as it was and the caller falls back to marking the entry dead.
+ */
+function buryUnder(records: PushedEntry[]): boolean {
+  const top = records[records.length - 1];
+  const here = routerMark();
+  if (!top || top.idx === undefined || here.idx === undefined) return false;
+  let run: PushedEntry[];
+  if (here.idx > top.idx) {
+    run = [];
+    for (let i = records.length - 1; i >= 0 && records[i].idx === top.idx; i -= 1) run.unshift(records[i]);
+  } else if (here.idx === top.idx && !isStillOn(top)) {
+    // Replaced: the top entry IS the new page now, and gone as ours. Those beneath it
+    // are buried under it.
+    run = [];
+    for (let i = records.length - 2; i >= 0 && records[i].idx === top.idx; i -= 1) run.unshift(records[i]);
+  } else {
+    return false;
+  }
+  run.forEach((r, i) => {
+    buried.set(r.id, {
+      idx: top.idx as number,
+      aboveIdx: here.idx as number,
+      belowKey: run[0].key,
+      aboveKey: here.key,
+      below: i,
+      above: run.length - 1 - i,
+    });
+  });
+  for (const r of records) forgetPushed(r.id);
+  lastSeen = here;
+  return true;
+}
+
+/**
+ * A traversal came to rest on one of our buried entries: carry it on over the run, the
+ * way it was going. Back from above (a higher `idx`, or the very entry that buried us)
+ * continues down to the page beneath; Forward from that page continues up. A landing
+ * from anywhere this cannot place is left alone — one idle press is the price of not
+ * guessing, and a wrong guess would move the user somewhere they did not ask to go.
+ */
+function skipBuried(from: typeof lastSeen): void {
+  const tag = taggedSentinel();
+  const rec = tag !== null ? buried.get(tag) : undefined;
+  if (!rec || !from || stack.some((e) => e.id === tag)) return;
+  let steps = 0;
+  if ((from.idx !== undefined && from.idx > rec.idx) || (from.key !== undefined && from.key === rec.aboveKey)) {
+    steps = -(rec.below + 1);
+  } else if (
+    from.idx !== undefined &&
+    // Below the run, or level with it when nothing above it is (a push buried it),
+    // or level with it and provably the page beneath (a replace buried it). The
+    // router's first entry has no key at all, so an absent key is a key here.
+    (from.idx < rec.idx || (from.idx === rec.idx && (rec.aboveIdx > rec.idx || from.key === rec.belowKey)))
+  ) {
+    steps = rec.above + 1;
+  }
+  if (steps === 0) return;
+  pendingProgrammatic += 1;
+  window.history.go(steps);
 }
 
 function forgetPushed(id: string): void {
@@ -210,7 +368,14 @@ function currentSentinel(): string | null {
   // belief left over from an overlay that is long gone — a tab that has since
   // navigated, a test file that ran another case — would be stamped onto a
   // stranger's entry, and the next cleanup would traverse off it.
-  if (!pushed.some((p) => p.id === standing)) {
+  //
+  // And only an entry that is still the one the marker was placed on. A row that
+  // NAVIGATES (a palette result, a dialog's link) has the router push the new page
+  // before the overlay's cleanup runs; that entry carries no tag either, and
+  // re-stamping it made the cleanup "unwind" the navigation itself — the page
+  // changed and changed straight back. See `isStillOn` for how the two are told apart.
+  const record = pushed.find((p) => p.id === standing);
+  if (!record || !isStillOn(record)) {
     standing = null;
     return null;
   }
@@ -223,10 +388,17 @@ function handlePop() {
   // entry we have landed on before anything below consults it, or the repair in
   // `currentSentinel` would stamp the entry we just left onto the one we are on.
   standing = taggedSentinel();
+  const from = lastSeen;
+  lastSeen = routerMark();
   if (pendingProgrammatic > 0) {
     pendingProgrammatic -= 1;
     return;
   }
+  closeOnPop();
+  skipBuried(from);
+}
+
+function closeOnPop() {
   // Nothing open → an ordinary navigation, which is none of our business.
   const top = stack[stack.length - 1];
   if (!top) return;
@@ -290,7 +462,8 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       window.history.replaceState(marked, "");
       // The abandoned ones beneath come back owed; ours takes the top slot.
       for (const owed of inherited.slice(0, -1)) pushed.push({ ...owed, dead: true });
-      pushed.push({ id, href: currentHref(), dead: false });
+      const was = inherited[inherited.length - 1];
+      pushed.push({ id, href: currentHref(), dead: false, idx: was.idx, key: was.key, route: was.route });
       standing = id;
     } else {
       // A push DESTROYS every entry ahead of the one we are on, so anything we
@@ -304,7 +477,8 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // Preserve react-router's own `{usr,key,idx}` — we only tack a marker on, and
       // the URL is unchanged, so the router treats popping this as a no-op re-render.
       window.history.pushState(marked, "");
-      pushed.push({ id, href: currentHref(), dead: false });
+      const page = routerMark();
+      pushed.push({ id, href: currentHref(), dead: false, idx: page.idx, key: page.key, route: routeOf(currentHref()) });
       standing = id;
     }
     return () => {
@@ -320,6 +494,9 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // a SIBLING overlay's sentinel landed on top, that overlay is about to unwind
       // and is the one that can take ours with it.
       if (currentSentinel() !== id) {
+        // A router navigation from inside the overlay: nothing to unwind — the
+        // entries it left beneath the new page are skipped over instead.
+        if (mine >= 0 && taggedSentinel() === null && buryUnder(pushed.slice(0, pushed.length))) return;
         if (mine >= 0) pushed[mine].dead = true;
         return;
       }
