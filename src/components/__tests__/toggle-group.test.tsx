@@ -154,3 +154,47 @@ describe("ToggleGroup type inference", () => {
     expect(Wrong).toBeTypeOf("function");
   });
 });
+
+describe("ToggleGroup keyboard (radio mode)", () => {
+  const OPTS = [
+    { value: "a", label: "A" },
+    { value: "b", label: "B" },
+    { value: "c", label: "C" },
+  ];
+
+  it("is one tab stop on the checked radio, and arrows move the choice with wrap-around", () => {
+    const onChange = vi.fn();
+    render(<ToggleGroup options={OPTS} value="b" onChange={onChange} aria-label="Pick" />);
+    const [a, b, c] = screen.getAllByRole("radio");
+    expect([a, b, c].map((r) => r.tabIndex)).toEqual([-1, 0, -1]);
+    b.focus();
+    fireEvent.keyDown(b, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("c");
+    expect(c).toHaveFocus();
+    fireEvent.keyDown(c, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("a");
+    fireEvent.keyDown(a, { key: "End" });
+    expect(onChange).toHaveBeenLastCalledWith("c");
+  });
+
+  it("follows the reading direction in RTL", () => {
+    const onChange = vi.fn();
+    render(
+      <div dir="rtl">
+        <ToggleGroup options={OPTS} value="b" onChange={onChange} aria-label="Pick" />
+      </div>,
+    );
+    const b = screen.getAllByRole("radio")[1];
+    fireEvent.keyDown(b, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("a");
+  });
+
+  it("keeps separate tab stops and no arrow handling in the clearable (toggle-button) mode", () => {
+    const onChange = vi.fn();
+    render(<ToggleGroup allowEmpty options={OPTS} value={null} onChange={onChange} aria-label="Pick" />);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((x) => x.tabIndex)).toEqual([0, 0, 0]);
+    fireEvent.keyDown(buttons[0], { key: "ArrowRight" });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

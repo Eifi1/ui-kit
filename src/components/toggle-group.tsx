@@ -1,5 +1,6 @@
-import type { ComponentPropsWithoutRef, ReactElement } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement } from "react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 
 export interface ToggleOption<T extends string> {
   value: T;
@@ -105,6 +106,27 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     else props.onChange(next);
   };
   const clearable = props.allowEmpty === true;
+  // A radio group is ONE tab stop (the checked radio, else the first) and arrows move
+  // the choice — the pattern `role="radiogroup"` promises a screen-reader user. Before
+  // 0.7.0 each segment was its own tab stop with no arrow keys. The clearable mode is a
+  // row of toggle buttons, where separate tab stops are the pattern.
+  const tabStop = options.some((o) => o.value === value) ? value : options[0]?.value;
+  const onRadioKey = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = options.length - 1;
+    let next: number | null = null;
+    const step = horizontalStep(e.key, e.currentTarget);
+    if (step !== 0) next = index + step;
+    else if (e.key === "ArrowDown") next = index + 1;
+    else if (e.key === "ArrowUp") next = index - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = last;
+    if (next === null) return;
+    e.preventDefault();
+    next = next < 0 ? last : next > last ? 0 : next;
+    const buttons = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(":scope > button");
+    buttons?.[next]?.focus();
+    choose(options[next].value);
+  };
   return (
     <div
       // The audit's named example of a closed prop list (§"Public API design"): the
@@ -147,7 +169,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         className,
       )}
     >
-      {options.map((opt) => {
+      {options.map((opt, index) => {
         const active = opt.value === value;
         return (
           <button
@@ -157,6 +179,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
             aria-checked={clearable ? undefined : active}
             aria-pressed={clearable ? active : undefined}
             disabled={disabled}
+            tabIndex={clearable ? undefined : opt.value === tabStop ? 0 : -1}
+            onKeyDown={clearable ? undefined : (e) => onRadioKey(e, index)}
             onClick={() => choose(opt.value)}
             className={cn(
               // `truncate` (which carries whitespace-nowrap) rather than letting a
