@@ -18,4 +18,5 @@ export type {
   FilterState,
   MobileSwipeActions,
   DataTableDensity,
+  DataTableChrome,
 } from "./components/data-table";
