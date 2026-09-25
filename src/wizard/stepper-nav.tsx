@@ -42,6 +42,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
   labels,
   finishVariant = "brand",
   finishDisabled = false,
+  doneDisabled = false,
   renderFinish,
 }: {
   wizard: UseWizardReturn<TData>;
@@ -56,6 +57,15 @@ export function StepperNav<TData extends Record<string, unknown>>({
   /** Disable Finish for a reason of the app's own, on top of the kit's gates
    *  (`canFinish`, submitting, validating). */
   finishDisabled?: boolean;
+  /**
+   * Disable Done — the button of the last step after a commit — while the step still
+   * has work of its own running. keksdose's YNAB import ends on a recurring step whose
+   * convert loop writes one rule at a time (ynab-import-panel.tsx): leaving mid-loop
+   * abandons the rest. Until now the panel dropped `onDone` for the duration, which
+   * takes the button away instead of saying "not yet": disabled, it stays where the
+   * eye left it and comes back to life when the loop ends.
+   */
+  doneDisabled?: boolean;
   /**
    * Wrap the Finish button: receives the kit's button element — already labelled,
    * gated and wired to `wizard.finish` — and returns what to render in its place.
@@ -117,7 +127,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
     // The last step after a commit. Nothing to finish; Done only when the app gave
     // an `onDone` — otherwise the step carries its own way out.
     forwardButton = wizard.canDone ? (
-      <Button variant="brand" data-tour="wizard-done" onClick={wizard.done}>
+      <Button variant="brand" data-tour="wizard-done" onClick={wizard.done} disabled={doneDisabled}>
         {stepNextLabel ?? l.done ?? DEFAULT_WIZARD_LABELS.done}
       </Button>
     ) : null;

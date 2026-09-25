@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Chip, ChipInput } from "../chip";
 
@@ -340,9 +341,10 @@ describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
     expect(remove.className).not.toMatch(/\b-?m[lr]-/);
   });
 
-  it("refuses href together with onClick at the type level", () => {
-    // @ts-expect-error — a chip is a link OR a button; onClick used to be silently dropped.
-    const both = <Chip href="#x" onClick={() => {}}>x</Chip>;
+  it("types an href chip's onClick for the anchor, and refuses a button's handler there", () => {
+    const onButton = (e: MouseEvent<HTMLButtonElement>) => e;
+    // @ts-expect-error — a link chip's click is the anchor's, never a button's.
+    const both = <Chip href="#x" onClick={onButton}>x</Chip>;
     expect(both).toBeTruthy();
   });
 });
@@ -397,5 +399,86 @@ describe("ChipInput — visible rejections and RTL (0.7.0)", () => {
     expect(beta).toHaveFocus();
     fireEvent.keyDown(beta, { key: "ArrowLeft" });
     expect(screen.getByLabelText("Tags")).toHaveFocus();
+  });
+});
+
+describe("Chip link onClick (0.8.x)", () => {
+  it("runs a link chip's onClick on the <a>, and it stays a link", () => {
+    const onClick = vi.fn((e: MouseEvent<HTMLAnchorElement>) => e.preventDefault());
+    render(
+      <Chip href="/admin" onClick={onClick}>
+        Admin
+      </Chip>,
+    );
+    const link = screen.getByRole("link", { name: "Admin" });
+    expect(link).not.toHaveAttribute("aria-pressed");
+    fireEvent.click(link);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onClick.mock.calls[0][0].target).toBe(link);
+  });
+
+  it("hands the onClick to renderLink, so the admin pill can close its menu", () => {
+    const close = vi.fn();
+    render(
+      <Chip
+        href="/admin"
+        onClick={close}
+        renderLink={({ href, children, ...p }) => (
+          <a data-router="" href={`#${href}`} {...p}>
+            {children}
+          </a>
+        )}
+      >
+        Admin
+      </Chip>,
+    );
+    const link = screen.getByRole("link", { name: "Admin" });
+    expect(link).toHaveAttribute("data-router");
+    fireEvent.click(link);
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves renderLink's props without onClick when the chip has none", () => {
+    const seen = vi.fn();
+    render(
+      <Chip
+        href="/admin"
+        renderLink={(p) => {
+          seen("onClick" in p && p.onClick !== undefined);
+          return <a href={p.href} className={p.className}>{p.children}</a>;
+        }}
+      >
+        Admin
+      </Chip>,
+    );
+    expect(seen).toHaveBeenCalledWith(false);
+  });
+
+  it("keeps the onClick on the link body when the chip also has a ×", () => {
+    const onClick = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <Chip href="/f" onClick={onClick} onRemove={onRemove}>
+        filter
+      </Chip>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Remove: filter" }));
+    expect(onRemove).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("link", { name: "filter" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders a disabled link chip inert, not as a button, even with an onClick", () => {
+    const onClick = vi.fn();
+    render(
+      <Chip href="/admin" onClick={onClick} disabled>
+        Admin
+      </Chip>,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    fireEvent.click(screen.getByText("Admin"));
+    expect(onClick).not.toHaveBeenCalled();
   });
 });

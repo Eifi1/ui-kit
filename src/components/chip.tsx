@@ -148,6 +148,14 @@ export interface ChipLinkProps {
   /** The chip's forwarded ref. React 19 passes it to a function component as a prop. */
   ref?: Ref<HTMLAnchorElement>;
   "aria-current"?: "true";
+  /**
+   * The chip's `onClick`, when it was given one — spread it onto the link with the
+   * rest. Carried here so a caller need not close over it twice: keksdose's admin pill
+   * in the account menu closes the menu on the way to /admin (account-menu.tsx), and
+   * with `onClick` on the Chip its `renderLink` stays the one-liner
+   * `({ href, ...p }) => <Link to={href} {...p} />`.
+   */
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   id?: string;
   title?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
@@ -265,14 +273,16 @@ interface ChipBaseProps {
 
 /**
  * A chip is a link OR a button, never both — so the types say so. Before 0.7.0 both were
- * accepted and `onClick` was silently dropped whenever `href` was set; a link that must
- * also run code wants a router `Link`-style `onClick` on the anchor, which is a different
- * component's job.
+ * accepted and `onClick` was silently dropped whenever `href` was set. A LINK may still
+ * run code on its way (close the menu it sits in): that is an `onClick` typed for the
+ * anchor, on the link shape, and the pill stays a link — no `aria-pressed`, no button.
+ * That shape wants a definite `href` string, so a bare `onClick` is always the
+ * button's, with a button's event.
  */
 export type ChipProps = ChipBaseProps &
   (
     | {
-        /** Renders the chip as a link. Mutually exclusive with `onClick`. */
+        /** Renders the chip as a link. */
         href?: string;
         onClick?: never;
         /**
@@ -289,6 +299,19 @@ export type ChipProps = ChipBaseProps &
          * `onClick` exclusion below is typed on: the pill is a link because it has an
          * href, whichever element draws it.
          */
+        renderLink?: (props: ChipLinkProps) => ReactElement;
+      }
+    | {
+        /** The link shape again, with an `onClick`. `href` is a required string here,
+         *  which is what lets TypeScript tell this shape from the button's: a bare
+         *  `onClick` can only be the button's, and keeps its button event. */
+        href: string;
+        /** Runs on the link's click, before the navigation — keksdose's admin pill
+         *  closes the account menu with it. Reaches a `renderLink` link as
+         *  {@link ChipLinkProps.onClick}. Not called on a disabled chip, which renders
+         *  no link. */
+        onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+        /** See the link shape above. */
         renderLink?: (props: ChipLinkProps) => ReactElement;
       }
     | {
@@ -419,10 +442,13 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 
   // ── The three shapes.
   if (href && !disabled) {
+    // On this shape `onClick` is the link shape's, typed for the anchor.
+    const onLinkClick = onClick as ChipLinkProps["onClick"];
     const linkProps: ChipLinkProps = {
       ...rest,
       ref: ref as Ref<HTMLAnchorElement>,
       href,
+      onClick: onLinkClick,
       "aria-current": selected ? "true" : undefined,
       className: remove ? inner : look,
       children: body,
@@ -436,6 +462,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         ref={ref as React.Ref<HTMLAnchorElement>}
         href={href}
         aria-current={selected ? "true" : undefined}
+        onClick={onLinkClick}
         className={remove ? inner : look}
         {...rest}
       >
@@ -445,12 +472,15 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     return remove ? pill(link) : link;
   }
 
-  if (onClick) {
+  // `!href`: a DISABLED link renders no link, and its link-shaped `onClick` must not
+  // turn it into a button instead — it falls through to the inert span, as before.
+  if (onClick && !href) {
+    const onButtonClick = onClick as (event: MouseEvent<HTMLButtonElement>) => void;
     const button = (
       <button
         ref={ref as React.Ref<HTMLButtonElement>}
         type="button"
-        onClick={onClick}
+        onClick={onButtonClick}
         disabled={disabled}
         // Only when `selected` is PASSED: a chip with `onClick` and no `selected` is an
         // action button (it does something), not a toggle (it is on or off), and

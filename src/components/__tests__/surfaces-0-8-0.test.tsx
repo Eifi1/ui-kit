@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { forwardRef, useState } from "react";
-import type { AnchorHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, MouseEvent } from "react";
 import { Inbox } from "lucide-react";
 import { Button, Card, EmptyState, IconButton, Tabs, buttonClasses } from "../ui";
 import type { ButtonVariant } from "../ui";
@@ -280,8 +280,8 @@ describe("Chip 0.8.0", () => {
   });
 
   it("keeps href and onClick mutually exclusive in the types, renderLink included", () => {
-    // @ts-expect-error — a chip is a link or a button, never both.
-    const both = <Chip href="/a" onClick={() => {}}>x</Chip>;
+    // @ts-expect-error — a link chip's onClick is the anchor's (0.8.x), never a button's.
+    const both = <Chip href="/a" onClick={(e: MouseEvent<HTMLButtonElement>) => e}>x</Chip>;
     // @ts-expect-error — renderLink belongs to the link shape.
     const renderOnButton = <Chip onClick={() => {}} renderLink={() => <a href="/b">b</a>}>x</Chip>;
     expect(both).toBeTruthy();
