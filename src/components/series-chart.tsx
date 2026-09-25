@@ -51,7 +51,7 @@ import {
 } from "./chart-zoom";
 import { STEP_DASH, strokeDash, type LegendEntry } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
-import { categoryTicks, niceTicks, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
+import { categoryTicks, integerTicks, niceTicks, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
 // The tick module stays internal; the one type of it a public prop names is re-exported.
 export type { TimeTickUnit } from "./series-chart-ticks";
 import { paletteFor } from "../theme/chart-palette";
@@ -70,8 +70,14 @@ export interface SeriesChartSeries {
    *  reference against the measurement. Shorthand for `dash: 1`. */
   dashed?: boolean;
   /** Which of {@link STROKE_PATTERNS} this line takes, for charts where the stroke says
-   *  WHICH QUANTITY and the colour says WHICH MEASUREMENT. */
-  dash?: number;
+   *  WHICH QUANTITY and the colour says WHICH MEASUREMENT.
+   *
+   *  Or an SVG `stroke-dasharray` string of the caller's own, for a pattern the five do
+   *  not have: keksdose's `"4 3"`, a tighter dash than the ladder's `"5 4"` that its
+   *  hand-drawn recharts lines used before the kit. Prefer the index — a
+   *  {@link ToggleLegend} entry can only draw the ladder's patterns, so a custom string
+   *  shows there as the ladder's plain dash (index 1) rather than its own. */
+  dash?: number | string;
   /** `stepAfter`, for a whole-number channel that jumps rather than travels — a
    *  straight line between index 0 and index 1 draws an index of 0.5, which does not
    *  exist. Drawn in the {@link STEP_DASH} pattern, whatever `dash` says. */
@@ -284,6 +290,20 @@ export interface SeriesChartX {
    * 120 px, past which a label is clipped). Default 0.
    */
   tickAngle?: number;
+  /**
+   * On a `"number"` axis, tick only on whole numbers: a step of 1 at the least, so a
+   * five-point index series reads 0 1 2 3 4 rather than 0 0.5 1 … 4 — ticks at
+   * positions no row can have (keksdose's short step series). A zoom window that holds
+   * no whole number falls back to the ordinary ticks rather than to none.
+   *
+   * AUTOMATIC by default — on when every row's x is a whole number — because that is
+   * exactly the case the half ticks are wrong in, and it changes nothing elsewhere: a
+   * span wider than about eight already ticks on whole steps. `false` for a continuous
+   * quantity that merely happens to be sampled on whole numbers (1 Hz steps) and whose
+   * zoom should still be ruled in fractions; `true` to force it over rows that are not.
+   * Ignored on category (already one tick per slot) and time axes.
+   */
+  integerTicks?: boolean;
 }
 
 /** Room for the tooltip beyond the chart — see {@link SeriesChartProps.tooltip}. */
@@ -420,9 +440,13 @@ export interface SeriesChartProps {
   /** A value in the tooltip, where a number stands on its own and needs its unit.
    *  Default: `Intl.NumberFormat` in the kit's locale. */
   valueFormat?: (value: number) => string;
-  /** Tailwind height class. Default `h-72`. The empty state takes it too, so a chart
-   *  losing its last line does not relayout the page under it. */
-  height?: string;
+  /** Tailwind height class, or a height in pixels. Default `h-72`. The empty state
+   *  takes it too, so a chart losing its last line does not relayout the page under it.
+   *  A number is for a height the caller holds as a number — keksdose's report charts
+   *  take `height = 260` as a prop and wrap the chart in a `SizedSeriesChart` div
+   *  (reports/charts/networth-line.tsx) only to turn it into a style, since a class
+   *  cannot be built from a number Tailwind never saw. */
+  height?: string | number;
   /** Bridge holes left by sources sampled on different grids. See {@link mergeSeries}. */
   connectNulls?: boolean;
   /** Shown, centred at the chart's height, instead of an empty chart. Default: the
@@ -643,7 +667,10 @@ export function visibleSeries(
  */
 export function seriesLegendEntries(series: readonly SeriesChartSeries[]): LegendEntry[] {
   return series.map((entry, index) => {
-    const dash = entry.step ? STEP_DASH : (entry.dash ?? (entry.dashed ? 1 : 0));
+    // A custom dash array has no legend pattern of its own; the ladder's plain dash is
+    // the nearest promise (see `SeriesChartSeries.dash`).
+    const own = entry.dash ?? (entry.dashed ? 1 : 0);
+    const dash = entry.step ? STEP_DASH : typeof own === "string" ? 1 : own;
     const line = (entry.type ?? "line") === "line";
     return {
       key: entry.key,
@@ -826,12 +853,20 @@ function SeriesPlot({
   const locale = useKitLocale(localeProp);
   const number = useDefaultFormat(localeProp);
 
+  // A number is pixels, set inline; a string is a class. Either way the one value
+  // sizes both the chart and its empty state.
+  const heightClass = typeof height === "string" ? height : undefined;
+  const heightStyle = typeof height === "number" ? { height } : undefined;
+
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
   // the moment a legend entry was switched off.
   if (!model.source.length || !series.length) {
     return (
-      <div className={cn("flex w-full items-center justify-center px-2 text-center", height)}>
+      <div
+        className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)}
+        style={heightStyle}
+      >
         {empty !== undefined ? (
           empty
         ) : (
@@ -897,13 +932,24 @@ function SeriesPlot({
         ));
 
   const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX) : undefined;
+  // Whole-number ticks on a number line whose rows are all whole numbers — see
+  // `SeriesChartX.integerTicks`.
+  const integerX =
+    model.kind === "number" &&
+    (x.integerTicks ??
+      plotted.every((row) => {
+        const value = finite(row[xKey]);
+        return value === undefined || Number.isInteger(value);
+      }));
   const xTicks =
     resolveTicks(x.tickValues, fittedX, xPos) ??
     (model.kind === "category"
       ? categoryTicks(fittedX, rows.length)
       : model.kind === "time"
         ? timeUnit?.ticks
-        : niceTicks(fittedX));
+        : integerX
+          ? (integerTicks(fittedX) ?? niceTicks(fittedX))
+          : niceTicks(fittedX));
 
   // Ticks and the tooltip heading, back in the caller's terms.
   const timeFormat = new Intl.DateTimeFormat(locale, TIME_TICK_FORMAT[timeUnit?.unit ?? "day"]);
@@ -1026,7 +1072,8 @@ function SeriesPlot({
   return (
     <ChartContainer
       config={config}
-      className={cn("w-full", height, className, onPointClick && "cursor-pointer")}
+      className={cn("w-full", heightClass, className, onPointClick && "cursor-pointer")}
+      style={heightStyle}
     >
       <ComposedChart
         data={plotted as Record<string, unknown>[]}
@@ -1136,7 +1183,8 @@ function SeriesPlot({
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
           const color = `var(--color-${entry.key})`;
-          const dash = strokeDash(entry.step ? STEP_DASH : (entry.dash ?? (entry.dashed ? 1 : 0)));
+          const own = entry.dash ?? (entry.dashed ? 1 : 0);
+          const dash = entry.step ? strokeDash(STEP_DASH) : typeof own === "string" ? own : strokeDash(own);
           const curve = entry.step ? "stepAfter" : (entry.curve ?? "monotone");
           const width = entry.strokeWidth ?? (entry.step ? STEP_WIDTH : LINE_WIDTH);
           if (type === "bar") {

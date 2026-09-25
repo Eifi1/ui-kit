@@ -105,6 +105,17 @@ export function Collapse({ open, keepMounted = false, children, className, style
 }
 
 /**
+ * What {@link DisclosureProps.triggerProps} may put on the header button: its own
+ * attributes and handlers, and any `data-*`. Not the ones the disclosure owns —
+ * `aria-expanded`, `aria-controls`, `disabled`, `onClick`, `type` and the content — nor
+ * `className`, which is {@link DisclosureProps.headerClassName}.
+ */
+export type DisclosureTriggerProps = Omit<
+  ComponentPropsWithoutRef<"button">,
+  "type" | "aria-expanded" | "aria-controls" | "disabled" | "onClick" | "children" | "className"
+> & { [data: `data-${string}`]: string | number | boolean | undefined };
+
+/**
  * `title` is omitted from the div's own props because this component already owns the
  * name: here it is the header's content (and a ReactNode), not the browser's tooltip.
  * Everything else reaches the outer element.
@@ -157,6 +168,22 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
   disabled?: boolean;
   /** Extra classes for the header button. */
   headerClassName?: string;
+  /**
+   * Attributes for the header BUTTON — the outer props go to the wrapping div — such as
+   * an `aria-label`, an `id` or a `data-*` test hook. A function of the open state
+   * when they depend on it: keksdose's budget table names each group's toggle
+   * "Expand group Food" / "Collapse group Food", because the visible title is only the
+   * group's name:
+   *
+   * ```tsx
+   * triggerProps={(open) => ({ "aria-label": t(open ? "collapseGroup" : "expandGroup", { name }) })}
+   * ```
+   *
+   * An `aria-label` REPLACES the title as the button's name, so it must still contain
+   * the title's words (WCAG 2.5.3, label in name). See {@link DisclosureTriggerProps}
+   * for what the disclosure keeps for itself.
+   */
+  triggerProps?: DisclosureTriggerProps | ((open: boolean) => DisclosureTriggerProps);
   /** Extra classes for the body's wrapper — where its padding and spacing live. */
   bodyClassName?: string;
   /**
@@ -208,6 +235,7 @@ export function Disclosure({
   keepMounted,
   disabled,
   headerClassName,
+  triggerProps,
   bodyClassName,
   trailing,
   controls,
@@ -232,8 +260,11 @@ export function Disclosure({
     onOpenChange?.(next);
   };
 
+  const extraTriggerProps = typeof triggerProps === "function" ? triggerProps(open) : triggerProps;
+
   const button = (
     <button
+      {...extraTriggerProps}
       type="button"
       aria-expanded={open}
       aria-controls={triggerOnly ? controls : bodyId}

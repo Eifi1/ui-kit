@@ -13,7 +13,21 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "bran
 // <Button> component and the {@link buttonClasses} helper draw from one source and
 // can never drift apart.
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+
+export type ButtonSize = "sm" | "md";
+
+// Box geometry per size, split out of the base so the two cannot be merged into one
+// string that a size then has to fight. `md` is the pre-0.8.0 look, unchanged. `sm` is
+// the compact secondary action keksdose repeats by hand as `px-2 py-1 text-xs` (and
+// `px-2 py-0.5 text-xs`) on the buttons in a toolbar or a table header; one rung is
+// enough, so the two spellings meet at `py-1`. There is no `lg`: no app has asked for
+// a bigger text button (IconButton's `lg` is a touch target, not a text size). The
+// variant map comes AFTER the size, so `link`'s `p-0` still wins at either size.
+const BUTTON_SIZES: Record<ButtonSize, string> = {
+  md: "gap-2 px-3 py-2 text-sm",
+  sm: "gap-1.5 px-2 py-1 text-xs",
+};
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
 // Actions default to a warm bordered look (primary = filled warm chip, secondary =
@@ -43,19 +57,40 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
     "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus:ring-[var(--brand)]",
 };
 
+/** The second argument of {@link buttonClasses} in its options form. */
+export interface ButtonClassesOptions {
+  /** See {@link ButtonProps.size}. */
+  size?: ButtonSize;
+  className?: string;
+}
+
 /**
  * Button classes for the rare case where the styling must land on a non-`<button>`
  * element that {@link Button} can't render — e.g. a router `<Link>` or a Radix
  * AlertDialog Action/Cancel (which must stay the Radix element). Everywhere a real
- * button works, prefer `<Button>`. Draws from the same base + variant maps as
+ * button works, prefer `<Button>`. Draws from the same base, size and variant maps as
  * `<Button>`, so the two stay in lockstep.
+ *
+ * The second argument is either the extra classes (the pre-0.8.0 form) or
+ * `{ size, className }` — `buttonClasses("secondary", { size: "sm" })` for keksdose's
+ * compact toolbar links.
  */
-export function buttonClasses(variant: ButtonVariant = "primary", className?: string): string {
-  return cn(BUTTON_BASE, buttonVariantClasses[variant], className);
+export function buttonClasses(
+  variant: ButtonVariant = "primary",
+  classNameOrOptions?: string | ButtonClassesOptions,
+): string {
+  const { size = "md", className } =
+    typeof classNameOrOptions === "object" ? classNameOrOptions : { className: classNameOrOptions };
+  return cn(BUTTON_BASE, BUTTON_SIZES[size], buttonVariantClasses[variant], className);
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  /** `md` (default) is the page's action button. `sm` is the compact one — 12px text
+   *  and `px-2 py-1` — for the secondary actions in a toolbar, a card header or a
+   *  table's header row (keksdose writes `px-2 py-1 text-xs` over `secondary` by hand
+   *  there). Every variant takes either size. */
+  size?: ButtonSize;
   /** In a flex row next to a taller labelled field, fill the field's height so the
    *  two line up. No effect outside a flex row. */
   stretch?: boolean;
@@ -65,12 +100,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
 }
 
-export function Button({ variant = "primary", stretch, className, ...rest }: ButtonProps) {
+export function Button({ variant = "primary", size = "md", stretch, className, ...rest }: ButtonProps) {
   return (
     <button
       {...rest}
       className={cn(
         BUTTON_BASE,
+        BUTTON_SIZES[size],
         // In a flex row next to a taller labelled field, `stretch` makes the button
         // fill the field's height so the two line up (self-stretch overrides the row's
         // align-items). No effect outside a flex row / when it's already the tallest.
@@ -127,7 +163,41 @@ const ICON_BUTTON_TONES = {
   // thing it is there to point out.
   warning:
     "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus:ring-[var(--warning-border)]",
+  // Sky at rest, for the same reason as `warning`: keksdose's reconcile action on an
+  // account row (accounts-page:867) is the one on the row to notice, and it is
+  // informational rather than a problem, so it takes the `--info` family.
+  info: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
 } as const;
+
+// A disabled button must not answer the pointer. The hover classes above are plain
+// `hover:` (so a caller's `className="hover:…"` still replaces them through
+// tailwind-merge), which means they fire on a disabled button too — the old grey
+// icon lit up on hover while refusing the click. Rather than rewrite every hover as
+// `enabled:hover:` (which never matches the `<a>` that `buttonClasses` also styles,
+// and would out-rank a caller's plain `hover:` override), each variant pins its
+// RESTING look under `disabled:hover:`, which out-ranks any `hover:` by specificity
+// and only ever matches a disabled button.
+const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay", string> = {
+  primary: "disabled:hover:bg-[var(--bg-surface-2)]",
+  secondary: "disabled:hover:bg-transparent",
+  ghost: "disabled:hover:bg-transparent",
+  danger: "disabled:hover:bg-[var(--danger)]",
+  brand: "disabled:hover:bg-[var(--brand)]",
+  link: "disabled:hover:bg-transparent disabled:hover:no-underline",
+  overlay: "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
+};
+
+// The tones that change the glyph on hover pin their resting glyph the same way.
+const ICON_BUTTON_TONES_DISABLED_REST: Partial<Record<keyof typeof ICON_BUTTON_TONES, string>> = {
+  muted: "disabled:hover:text-[var(--text-placeholder)]",
+  danger: "disabled:hover:text-[var(--text-placeholder)]",
+};
+
+// `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
+// "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
+// beside them. After the tone, so a pressed `muted` button is brand, not grey.
+const ICON_BUTTON_PRESSED =
+  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-[var(--brand)] disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
 
 // `variant="overlay"`: a round, translucent disc for a control that sits ON a photo
 // (keksdose's receipt-scan preview: close, rotate, retake over the camera image).
@@ -151,8 +221,19 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   /** Glyph colour over the variant. `muted`: placeholder grey, full text colour on
    *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
    *  remove/delete that repeats down a list. `warning`: amber at rest — a flag that
-   *  wants attention. Default: the variant's own colours. */
+   *  wants attention. `info`: sky at rest — a notice-worthy but harmless action
+   *  (keksdose's reconcile). Default: the variant's own colours. */
   tone?: keyof typeof ICON_BUTTON_TONES;
+  /**
+   * Make it a toggle button. `true` sets `aria-pressed="true"` and draws the "on" look
+   * (brand glyph on the quiet brand fill); `false` sets `aria-pressed="false"` with the
+   * normal look, so a screen reader still hears a toggle that is off. Left out, it is
+   * an ordinary button with no `aria-pressed` — or whatever `aria-pressed` the caller
+   * passes. For keksdose's budget share toggle (budgets-page:291), which paints its own
+   * brand colour over a ghost button today. Keep the `aria-label` the same in both
+   * states ("Share budget"): the pressed state already says whether it is on.
+   */
+  pressed?: boolean;
   /** Keep the click (and the Enter/Space that produces it) from reaching an
    *  ancestor's handler — for an action inside a clickable table row or card.
    *
@@ -181,13 +262,14 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { variant = "ghost", size = "md", tone = "default", stopPropagation, className, onClick, onKeyDown, ...rest },
+  { variant = "ghost", size = "md", tone = "default", pressed, stopPropagation, className, onClick, onKeyDown, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
       {...rest}
+      aria-pressed={pressed ?? rest["aria-pressed"]}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
         onClick?.(e);
@@ -203,7 +285,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         ICON_BUTTON_SIZES[size],
         // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
         variant === "overlay" ? ICON_BUTTON_OVERLAY : buttonVariantClasses[variant],
+        ICON_BUTTON_DISABLED_REST[variant],
         ICON_BUTTON_TONES[tone],
+        ICON_BUTTON_TONES_DISABLED_REST[tone],
+        pressed && ICON_BUTTON_PRESSED,
         className,
       )}
     />

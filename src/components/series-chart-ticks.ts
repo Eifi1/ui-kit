@@ -52,6 +52,27 @@ export function niceTicks(
 }
 
 /**
+ * {@link niceTicks} on whole numbers only: the step never drops below 1, so a short
+ * index series (a domain of [-0.2, 4.2]) is ticked 0 1 2 3 4 instead of every half.
+ * `undefined` when the window holds no whole number at all, so the caller can fall
+ * back to the fractional ticks of a deep zoom rather than show none.
+ */
+export function integerTicks(
+  domain: readonly [number, number] | undefined,
+  target: number = TARGET_TICKS,
+): number[] | undefined {
+  if (!domain) return undefined;
+  const [low, high] = domain;
+  if (!Number.isFinite(low) || !Number.isFinite(high) || !(high >= low)) return undefined;
+  const step = high > low ? Math.max(1, niceStep(high - low, target)) : 1;
+  const ticks: number[] = [];
+  const first = Math.ceil(low / step - 1e-6);
+  const last = Math.floor(high / step + 1e-6);
+  for (let k = first; k <= last; k++) ticks.push(k * step + 0);
+  return ticks.length ? ticks : undefined;
+}
+
+/**
  * The slots of a CATEGORY axis that lie inside a window over their positions.
  *
  * `SeriesChart` draws a category axis on the slot INDEX (see `x.type: "category"`), so a

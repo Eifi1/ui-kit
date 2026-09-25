@@ -238,3 +238,49 @@ describe("Collapse, with motion", () => {
     expect(screen.getByText("Body")).toBeInTheDocument();
   });
 });
+
+describe("Disclosure triggerProps", () => {
+  it("puts aria-label, id and data-* on the header button, not the wrapper", () => {
+    const { container } = render(
+      <Disclosure
+        title="Food"
+        triggerProps={{ "aria-label": "Expand group Food", id: "g-food", "data-testid": "food-toggle" }}
+      >
+        <p>Body</p>
+      </Disclosure>,
+    );
+    const button = screen.getByRole("button", { name: "Expand group Food" });
+    expect(button).toHaveAttribute("id", "g-food");
+    expect(button).toBe(screen.getByTestId("food-toggle"));
+    expect(container.firstElementChild).not.toHaveAttribute("id");
+  });
+
+  it("as a function of open, renames the toggle when it turns", () => {
+    render(
+      <Disclosure title="Food" triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group Food` })}>
+        <p>Body</p>
+      </Disclosure>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Expand group Food" }));
+    expect(screen.getByRole("button", { name: "Collapse group Food" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("cannot take over what the disclosure owns", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Disclosure
+        title="Details"
+        controls="rows"
+        onOpenChange={onOpenChange}
+        // Not in the type; a caller casting past it still cannot break the wiring.
+        triggerProps={{ "aria-expanded": true, "aria-controls": "elsewhere", type: "submit" } as never}
+      />,
+    );
+    const button = header();
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveAttribute("aria-controls", "rows");
+    expect(button).toHaveAttribute("type", "button");
+    fireEvent.click(button);
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+});
