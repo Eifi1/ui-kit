@@ -1,12 +1,11 @@
 # Aligned with keksdose, kastlan and lenkbank (Eifi1/shared-workflows conventions).
 #
-# Monthly, grouped: one PR for every minor/patch bump, one per major. `build` / `ci`
+# Monthly, grouped: one PR for all minor/patch bumps. `build` / `ci`
 # prefixes are hidden changelog types, so a bump never cuts a release on its own, and
 # they pass the Conventional Commits check.
 #
-# Majors of react, react-dom and recharts are held back: this package's PEER ranges
-# define what the three apps may install, so moving past one is a deliberate release
-# with adoption notes, not a dependency bump.
+# Majors are never proposed (see the npm `ignore` below): this package's PEER ranges
+# define what the three apps may install, and every major has been a migration.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -21,20 +20,12 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    # No majors, for ANY package: a major is a migration (vite 8, eslint 10, TypeScript 7,
+    # vitest 5 all broke CI when Dependabot proposed them), done by hand on a branch
+    # with adoption notes where it touches the peer ranges. Every PR also costs a CI
+    # run, so proposing what we would close anyway is waste.
     ignore:
-      - dependency-name: react
-        update-types: [version-update:semver-major]
-      - dependency-name: react-dom
-        update-types: [version-update:semver-major]
-      - dependency-name: "@types/react"
-        update-types: [version-update:semver-major]
-      - dependency-name: "@types/react-dom"
-        update-types: [version-update:semver-major]
-      - dependency-name: recharts
-        update-types: [version-update:semver-major]
-      # Node's types follow the Node we run (.nvmrc, 24): a newer major describes APIs
-      # the runtime does not have. Bump it together with .nvmrc, by hand.
-      - dependency-name: "@types/node"
+      - dependency-name: "*"
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
