@@ -164,5 +164,9 @@
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=20.18"
+  },
+  "_overrides": "esbuild is forced to ^0.28.2 for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows, fixed in 0.28.1). vite already allows ^0.28; tsup 8.5.1 still pins ^0.27, and `npm run check` (build + package verification) proves it works on 0.28. Drop this once tsup allows 0.28 itself.",
+  "overrides": {
+    "esbuild": "^0.28.2"
   }
 }
