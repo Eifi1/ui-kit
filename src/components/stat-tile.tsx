@@ -1,10 +1,15 @@
-import { useId } from "react";
+import { useId, useLayoutEffect, useState } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { Card, FieldHint } from "./ui";
 import { Sparkline } from "./sparkline";
+import { Tooltip } from "./tooltip";
+// The kit's one placeholder look, so a loading tile and the Skeleton list beside it
+// shimmer as one surface — and both stop under `prefers-reduced-motion`, which this
+// tile's private copy of the string did not.
+import { SKELETON_CLASS } from "./skeleton";
 
 /**
  * The words a stat tile speaks. The delta's arrow is an icon, and an icon is not a
@@ -138,6 +143,19 @@ export interface StatTileProps
   goodDirection?: "up" | "down";
   /** The explanation behind a "?" beside the label (a {@link FieldHint}). */
   hint?: string;
+  /**
+   * Keep the label to ONE line, cut with an ellipsis, and show the whole of it in a
+   * {@link Tooltip} on hover and focus — but only while it is actually cut, so a
+   * label that fits shows no bubble repeating itself. keksdose's admin MetricTile
+   * wall: twenty tiles whose German labels ("Aktive Abonnements (30 Tage)") wrapped
+   * onto two or three lines and pushed each tile's figure to a different height.
+   *
+   * The label element keeps the FULL text — the ellipsis is paint — so it is still
+   * the tile's accessible name (and the stretched link's, on a link tile) exactly as
+   * without this. Off by default: a wrapping label is what every existing tile does,
+   * and a tile standing alone has room to.
+   */
+  truncateLabel?: boolean;
   /** A visible line under the value: "Last 12 months", "3 estates / 9 buildings". */
   description?: ReactNode;
   subValues?: StatTileSubValue[];
@@ -188,7 +206,6 @@ const VALUE_TEXT = {
   sm: "text-xs @[8.5rem]:text-sm @[13rem]:text-base",
 } as const;
 const PADDING = { md: "p-3 sm:p-4", sm: "px-2.5 py-2" } as const;
-const SKELETON = "animate-pulse rounded bg-[var(--bg-active)]";
 
 /**
  * The KPI card: a label, one number, and optionally how it moved, what it is made of
@@ -219,6 +236,7 @@ export function StatTile({
   delta,
   goodDirection,
   hint,
+  truncateLabel = false,
   description,
   subValues,
   trend,
@@ -236,6 +254,8 @@ export function StatTile({
   ...rest
 }: StatTileProps) {
   const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
+  const [labelEl, setLabelEl] = useState<HTMLElement | null>(null);
+  const labelCut = useIsTruncated(truncateLabel ? labelEl : null);
   const kitLocale = useKitLocale(locale);
   const id = useId();
   const valueId = `${id}-value`;
@@ -326,7 +346,7 @@ export function StatTile({
   );
   const headline = loading ? (
     <span id={valueId} className="relative block py-0.5">
-      <span aria-hidden className={cn(SKELETON, "block h-6 w-24 max-w-full")} />
+      <span aria-hidden className={cn(SKELETON_CLASS, "block h-6 w-24 max-w-full")} />
       <span className="sr-only">{text.loading}</span>
     </span>
   ) : hasValue ? (
@@ -374,7 +394,19 @@ export function StatTile({
     >
       <div className="flex items-start gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-1 break-words text-xs uppercase tracking-wide text-[var(--text-muted)]">
-          <span className="min-w-0">{labelNode}</span>
+          {truncateLabel && labelCut ? (
+            // Portalled: the tile is `overflow-hidden`, and a bubble inside it would be
+            // clipped by the very box whose edge cut the label.
+            <Tooltip label={label} side="top" portal className="flex min-w-0">
+              <span ref={setLabelEl} className="block min-w-0 truncate">
+                {labelNode}
+              </span>
+            </Tooltip>
+          ) : (
+            <span ref={setLabelEl} className={cn("min-w-0", truncateLabel && "block truncate")}>
+              {labelNode}
+            </span>
+          )}
           {/* Above the stretched link's overlay, so it stays hoverable and focusable. */}
           {hint && <FieldHint label={hint} side="top" className="relative z-10 shrink-0" />}
         </div>
@@ -425,6 +457,28 @@ export function StatTile({
       {footer != null && <div className="mt-2">{footer}</div>}
     </Card>
   );
+}
+
+/**
+ * Whether `el`'s text is wider than its box — i.e. whether `truncate` is cutting it.
+ * Re-measured whenever the box resizes (a grid reflowing, a translation loading), not
+ * only on mount. Keyed on the ELEMENT (a callback ref), because wrapping the label in
+ * its tooltip remounts it, and an observer on the old node would watch nothing.
+ */
+function useIsTruncated(el: HTMLElement | null): boolean {
+  const [cut, setCut] = useState(false);
+  useLayoutEffect(() => {
+    // No reset while there is no node: between the unwrapped label unmounting and the
+    // wrapped one mounting there is none, and a reset there would unwrap it again.
+    if (!el) return;
+    const measure = () => setCut(el.scrollWidth > el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [el]);
+  return cut;
 }
 
 export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {

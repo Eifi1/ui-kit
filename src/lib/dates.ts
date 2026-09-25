@@ -185,3 +185,51 @@ export function dateRangePresets(): DateRangePreset[] {
     { key: "last_year", from: startOfYearIso(-1), to: endOfYearIso(-1) },
   ];
 }
+
+/** The last `n` WHOLE calendar months before the current one, as an inclusive
+ *  `{ from, to }` — on 15 May, `n = 3` is 1 February … 30 April. Local-calendar, like
+ *  everything here; `now` is for tests and for a host with its own clock. */
+export function lastFullMonthsRange(n: number, now: Date = new Date()): { from: string; to: string } {
+  const from = new Date(now.getFullYear(), now.getMonth() - n, 1);
+  // Day 0 of the current month is the last day of the previous one.
+  const to = new Date(now.getFullYear(), now.getMonth(), 0);
+  return { from: toLocalIso(from), to: toLocalIso(to) };
+}
+
+/** The last `n` WHOLE calendar years before the current one — in 2026, `n = 2` is
+ *  1 January 2024 … 31 December 2025. */
+export function lastFullYearsRange(n: number, now: Date = new Date()): { from: string; to: string } {
+  const year = now.getFullYear();
+  return { from: `${year - n}-01-01`, to: `${year - 1}-12-31` };
+}
+
+export interface CalendarMonthPresetOptions {
+  /** How many whole months each month preset spans. Default `[3, 6]`. */
+  months?: readonly number[];
+  /** How many whole years each year preset spans. Default `[2]`. */
+  years?: readonly number[];
+  /** The day to count back from. Default: now, on the local calendar. */
+  now?: Date;
+}
+
+/**
+ * Month-ALIGNED presets, beside the rolling-day ones of {@link dateRangePresets}.
+ *
+ * kastlan's accounting reports are closed by the month: "the last three months" there
+ * means February, March and April, never "the 90 days up to this morning", which
+ * starts mid-month and ends with a day that is still being booked. `last_3_months`
+ * above is the rolling kind and stays that way for the data table's filter, so these
+ * are separate keys rather than a changed meaning under an old one.
+ *
+ * Keys are `last_<n>_full_months` and `last_<n>_full_years`; the host labels them (the
+ * same arrangement as `dateRangePresets`' keys and its `table.preset_*` strings). With
+ * `DateRangePicker`, pass the key as the preset's `id` so the choice keeps its
+ * identity while the dates are recomputed on every render.
+ */
+export function calendarMonthPresets(options: CalendarMonthPresetOptions = {}): DateRangePreset[] {
+  const { months = [3, 6], years = [2], now = new Date() } = options;
+  return [
+    ...months.map((n) => ({ key: `last_${n}_full_months`, ...lastFullMonthsRange(n, now) })),
+    ...years.map((n) => ({ key: `last_${n}_full_years`, ...lastFullYearsRange(n, now) })),
+  ];
+}

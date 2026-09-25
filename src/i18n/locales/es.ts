@@ -42,6 +42,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     pageContents: { title: "En esta página" },
     common: {
+      dismiss: "Cerrar",
       close: "Cerrar",
       clear: "Borrar",
       search: "Buscar",
@@ -125,6 +126,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       month: (monthYear) => monthYear,
     },
     datePicker: {
+      apply: "Aplicar",
+      cancel: "Cancelar",
+      presets: "Rangos rápidos",
       panel: "Elegir una fecha",
       rangePanel: "Elegir un intervalo de fechas",
       clear: "Borrar",
@@ -240,6 +244,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "Carga de archivos",
+      browse: "Examinar",
+      empty: "Suelte un archivo aquí",
+      emptyMultiple: "Suelte archivos aquí",
+      hint: (accept) => (accept ? `Aceptados: ${accept}` : "Cualquier tipo de archivo"),
+      busy: "Subiendo…",
       rejectedPick: (count) =>
         count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${count} archivos`,
       rejectedType: (name) => `El tipo de archivo de «${name}» no es compatible`,
@@ -351,6 +361,20 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "Arrastra para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. Haz doble clic para restablecer.",
       empty: "Sin datos",
       legend: "Series",
+    },
+    confirmDialog: {
+      confirm: "Confirmar",
+      cancel: "Cancelar",
+    },
+    floatingPanel: {
+      close: "Cerrar",
+    },
+    copyButton: {
+      copy: "Copiar",
+      copied: "Copiado",
+      failed: "No se pudo copiar",
+      copiedAnnouncement: "Copiado al portapapeles",
+      failedAnnouncement: "No se pudo copiar al portapapeles",
     },
   };
 }

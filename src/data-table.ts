@@ -17,4 +17,5 @@ export type {
   ServerPagination,
   FilterState,
   MobileSwipeActions,
+  DataTableDensity,
 } from "./components/data-table";

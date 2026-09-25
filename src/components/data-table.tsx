@@ -306,7 +306,21 @@ export interface DataTableProps<T> {
    * "hide upcoming/scheduled" toggle).
    */
   leadingRow?: ReactNode;
+  /**
+   * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
+   * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
+   * twice their height and pushed the card's own content below the fold — the whole
+   * reason they were still hand-rolled `<table>`s. It tightens the header, the cells,
+   * the selection checkboxes, the pager and the phone cards together, so a compact
+   * table is compact everywhere rather than a dense body under a roomy header.
+   *
+   * Defaults to `"comfortable"`, which is the table every caller has today.
+   */
+  density?: DataTableDensity;
 }
+
+/** See {@link DataTableProps.density}. */
+export type DataTableDensity = "comfortable" | "compact";
 
 export type FilterState = Record<string, FilterValue>;
 export type { SortState };
@@ -501,7 +515,9 @@ export function DataTable<T>({
   mobileCard,
   mobileSwipeActions,
   leadingRow,
+  density = "comfortable",
 }: DataTableProps<T>) {
+  const compact = density === "compact";
   const isServer = !!serverPagination;
   const isLoading = !!serverPagination?.isLoading;
   // prop > provider > English, through the table's own resolver rather than
@@ -1031,7 +1047,8 @@ export function DataTable<T>({
     const swipeEnabled = !!swipe && !expanded;
     const href = mobileCardLinkable ? rowHref?.(row) : undefined;
     const cardClass = cn(
-      "w-full px-4 py-3 text-start flex items-center gap-3",
+      "w-full text-start flex items-center",
+      compact ? "px-3 py-2 gap-2 text-sm" : "px-4 py-3 gap-3",
       // Live #320's other half: the card acknowledges the touch before the sheet
       // arrives. On a cold route the data can take a beat, and an unacknowledged tap
       // reads as "did that register?" — which is most of what "abrupt" means here.
@@ -1051,14 +1068,19 @@ export function DataTable<T>({
       <>
         {/* The card's own content keeps the column it always had; the chevron sits
             beside it rather than inside, so a caller's `mobileCard` is untouched. */}
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className={cn("flex min-w-0 flex-1 flex-col", compact ? "gap-1" : "gap-2")}>
           {mobileCard ? (
             mobileCard(row)
           ) : (
             <>
               {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
               {mobileSecondaryColumns.length > 0 && (
-                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                <dl
+                  className={cn(
+                    "grid grid-cols-[auto_1fr] gap-x-3",
+                    compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
+                  )}
+                >
                   {mobileSecondaryColumns.map((col) => (
                     <Fragment key={col.key}>
                       <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)] self-center">
@@ -1147,7 +1169,12 @@ export function DataTable<T>({
           body
         )}
         {expansion && !mobileExpandAsDialog && (
-          <div className="px-4 py-3 bg-[var(--bg-surface-2)] border-t border-[var(--border)]">
+          <div
+            className={cn(
+              "bg-[var(--bg-surface-2)] border-t border-[var(--border)]",
+              compact ? "px-3 py-2" : "px-4 py-3",
+            )}
+          >
             {expansion}
           </div>
         )}
@@ -1169,7 +1196,13 @@ export function DataTable<T>({
     : null;
 
   return (
-    <Card flush className={cn("overflow-clip", fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0")}>
+    <Card
+      flush
+      // A styling and testing hook: a host's own cell content can follow the table's
+      // density (`group-data-[density=compact]/table:…`) without being told twice.
+      data-density={density}
+      className={cn("group/table overflow-clip", fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0")}
+    >
       {/* Outside both viewport branches on purpose. A screen reader subscribes to a
           live region when it encounters it, so one that appears together with its
           first message is usually missed — and crossing the md breakpoint swaps the
@@ -1214,7 +1247,12 @@ export function DataTable<T>({
               ))
             : mobileSlice.map(renderMobileRow)}
           {mobileSlice.length === 0 && (
-            <li className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
+            <li
+              className={cn(
+                "text-center text-[var(--text-muted)]",
+                compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
+              )}
+            >
               {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
             </li>
           )}
@@ -1241,6 +1279,7 @@ export function DataTable<T>({
             onPageSize={serverPagination!.onPageSizeChange}
             labels={labels}
             locale={locale}
+            density={density}
           />
         )}
         {/* The row's own first column is this dialog's title — the same cell the card
@@ -1274,7 +1313,7 @@ export function DataTable<T>({
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
         <table
-          className="w-full text-sm"
+          className={cn("w-full", compact ? "text-xs" : "text-sm")}
           aria-label={labels.table}
           aria-busy={isLoading || undefined}
         >
@@ -1292,11 +1331,14 @@ export function DataTable<T>({
               {selection && (
                 <th
                   scope="col"
-                  className="sticky top-0 z-10 w-10 bg-[var(--bg-surface-2)] px-3 py-2 align-middle backdrop-blur-sm"
+                  className={cn(
+                    "sticky top-0 z-10 bg-[var(--bg-surface-2)] align-middle backdrop-blur-sm",
+                    compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
+                  )}
                 >
                   <input
                     type="checkbox"
-                    className="size-4 align-middle accent-indigo-600"
+                    className={cn("align-middle accent-indigo-600", compact ? "size-3.5" : "size-4")}
                     checked={selection.allSelected}
                     ref={(el) => {
                       if (el) el.indeterminate = selection.someSelected && !selection.allSelected;
@@ -1350,7 +1392,8 @@ export function DataTable<T>({
                     }
                     style={width ? { width, minWidth: width, maxWidth: width } : undefined}
                     className={cn(
-                      "relative px-3 py-2 font-medium align-middle whitespace-nowrap",
+                      "relative font-medium align-middle whitespace-nowrap",
+                      compact ? "px-2 py-1" : "px-3 py-2",
                       // Keep the header visible while the user scrolls the page.
                       // Each <th> carries its own bg so the row doesn't render
                       // transparent over the data rows underneath.
@@ -1507,7 +1550,7 @@ export function DataTable<T>({
                   >
                     {selection && (
                       <td
-                        className="w-10 px-3 py-2 align-top"
+                        className={cn("align-top", compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2")}
                         // Don't let selecting a row also trigger the row click
                         // (which expands/edits it).
                         onClick={(e) => e.stopPropagation()}
@@ -1515,7 +1558,7 @@ export function DataTable<T>({
                         {canSelect(row) && (
                           <input
                             type="checkbox"
-                            className="size-4 accent-indigo-600"
+                            className={cn("accent-indigo-600", compact ? "size-3.5" : "size-4")}
                             checked={selection.isSelected(row)}
                             // Shift+click selects the range from the last toggled
                             // row. `preventDefault` puts the box back, but it does NOT
@@ -1555,7 +1598,8 @@ export function DataTable<T>({
                           data-col={col.key}
                           style={width ? { width, minWidth: width, maxWidth: width } : undefined}
                           className={cn(
-                            "px-3 py-2 align-top",
+                            "align-top",
+                            compact ? "px-2 py-1" : "px-3 py-2",
                             width && "overflow-hidden text-ellipsis",
                             logicalAlign(col.className),
                           )}
@@ -1588,7 +1632,9 @@ export function DataTable<T>({
                           perturb the columns; the div then fills to the full row
                           width only at paint time, and long text wraps within it. */}
                       <td colSpan={totalColSpan} className="p-0">
-                        <div className="w-0 min-w-full px-3 py-3">{expansion}</div>
+                        <div className={cn("w-0 min-w-full", compact ? "px-2 py-2" : "px-3 py-3")}>
+                          {expansion}
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -1599,7 +1645,7 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={totalColSpan}
-                  className="px-3 py-4 text-center text-[var(--text-muted)]"
+                  className={cn("text-center text-[var(--text-muted)]", compact ? "px-2 py-2" : "px-3 py-4")}
                 >
                   {/* Nothing is not the same as not-yet: "no results" while the first
                       page is still in flight is a claim the table cannot make. */}
@@ -1627,6 +1673,7 @@ export function DataTable<T>({
               }
               labels={labels}
               locale={locale}
+              density={density}
             />
           )}
         </div>

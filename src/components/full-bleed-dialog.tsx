@@ -43,6 +43,17 @@ export interface FullBleedDialogProps extends ComponentPropsWithoutRef<"div"> {
   backCloses?: boolean;
   /** Extra classes for the PANEL (not the backdrop). */
   className?: string;
+  /**
+   * A row pinned under the scrolling body — an Apply, a Save. Keksdose's `RangeSheet`
+   * (reports/report-range-field.tsx) is a hand-rolled copy of this dialog for want of
+   * exactly this slot: a date range picked on a phone is committed by a sticky Apply,
+   * and a button at the end of the body scrolls away with the calendar.
+   *
+   * Outside the scroller, so it stays put without `position: sticky` (which would
+   * need the body to be the scroll container of its own child and paint over the
+   * last field); padded for the home indicator, since it is the panel's bottom edge.
+   */
+  footer?: ReactNode;
 }
 
 /**
@@ -81,6 +92,9 @@ export function FullBleedDialog({
   children,
   backCloses = true,
   className,
+  footer,
+  onMouseDown,
+  onMouseUp,
   ...rest
 }: FullBleedDialogProps) {
   // Every way OUT goes through `requestClose`, so the panel lowers itself before the
@@ -148,7 +162,21 @@ export function FullBleedDialog({
       tabIndex={-1}
       ref={dialogRef}
       onKeyDown={handleKeyDown}
-      {...backdropClose}
+      // COMPOSED with the backdrop's, not overridden by them. These two used to ride
+      // `...rest` and then lose to `{...backdropClose}` spread after it, silently —
+      // and the one caller about to pass one is keksdose's RangeSheet, whose
+      // `onMouseDown={(e) => e.stopPropagation()}` is its dev#477 fix: a press in a
+      // portalled sheet must not reach a document-level "outside click" listener,
+      // which would unmount the day cell before its `click`. The caller's runs first;
+      // the backdrop's still runs after it, since it is the same element.
+      onMouseDown={(e) => {
+        onMouseDown?.(e);
+        backdropClose.onMouseDown(e);
+      }}
+      onMouseUp={(e) => {
+        onMouseUp?.(e);
+        backdropClose.onMouseUp(e);
+      }}
     >
       <div
         className={cn(
@@ -163,7 +191,7 @@ export function FullBleedDialog({
             type="button"
             onClick={requestClose}
             aria-label={closeLabel}
-            className="-mr-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+            className="-me-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
           >
             <X className="size-5" />
           </button>
@@ -171,7 +199,18 @@ export function FullBleedDialog({
         {/* px-3, not px-4: every pixel of chrome here is width the form fields lose
             on a phone (feedback #32). The body is the only thing that scrolls, so the
             header stays put and the page underneath cannot move at all. */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">{children}</div>
+        {/* `min-h-0` so it is the BODY that gives way to a footer, not the footer that
+            is pushed off the bottom edge. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">{children}</div>
+        {footer !== undefined && footer !== null && footer !== false && (
+          <div
+            data-full-bleed-footer=""
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-3 pt-3"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>,
     document.body,

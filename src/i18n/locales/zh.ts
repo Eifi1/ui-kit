@@ -40,6 +40,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     pageContents: { title: "本页目录" },
     common: {
+      dismiss: "关闭",
       close: "关闭",
       clear: "清除",
       search: "搜索",
@@ -120,6 +121,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       month: (monthYear) => monthYear,
     },
     datePicker: {
+      apply: "应用",
+      cancel: "取消",
+      presets: "快捷范围",
       panel: "选择日期",
       rangePanel: "选择日期范围",
       clear: "清除",
@@ -235,6 +239,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "文件上传",
+      browse: "浏览",
+      empty: "将文件拖放到此处",
+      emptyMultiple: "将文件拖放到此处",
+      hint: (accept) => (accept ? `支持：${accept}` : "任意文件类型"),
+      busy: "正在上传…",
       rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${count} 个文件均未添加`),
       rejectedType: (name) => `“${name}”的文件类型不受支持`,
       rejectedTypeOnly: (accept) => `仅限 ${accept} 文件`,
@@ -341,6 +351,20 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
       empty: "无数据",
       legend: "数据系列",
+    },
+    confirmDialog: {
+      confirm: "确认",
+      cancel: "取消",
+    },
+    floatingPanel: {
+      close: "关闭",
+    },
+    copyButton: {
+      copy: "复制",
+      copied: "已复制",
+      failed: "复制失败",
+      copiedAnnouncement: "已复制到剪贴板",
+      failedAnnouncement: "无法复制到剪贴板",
     },
   };
 }

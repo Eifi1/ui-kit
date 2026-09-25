@@ -41,6 +41,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     },
     pageContents: { title: "Auf dieser Seite" },
     common: {
+      dismiss: "Schließen",
       close: "Schließen",
       clear: "Leeren",
       search: "Suchen",
@@ -118,6 +119,9 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
         `Zeitraum ${from} bis ${to} gewählt. Wählen Sie ein Startdatum, um neu zu beginnen.`,
     },
     datePicker: {
+      apply: "Übernehmen",
+      cancel: "Abbrechen",
+      presets: "Schnellauswahl",
       panel: "Datum wählen",
       rangePanel: "Zeitraum wählen",
       clear: "Leeren",
@@ -243,6 +247,12 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "Datei-Upload",
+      browse: "Durchsuchen",
+      empty: "Datei hier ablegen",
+      emptyMultiple: "Dateien hier ablegen",
+      hint: (accept) => (accept ? `Erlaubt: ${accept}` : "Beliebiger Dateityp"),
+      busy: "Wird hochgeladen…",
       rejectedPick: (count) =>
         count === 1
           ? "Die Datei wurde nicht hinzugefügt"
@@ -358,6 +368,20 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
         "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Doppelklick setzt zurück.",
       empty: "Keine Daten",
       legend: "Datenreihen",
+    },
+    confirmDialog: {
+      confirm: "Bestätigen",
+      cancel: "Abbrechen",
+    },
+    floatingPanel: {
+      close: "Schließen",
+    },
+    copyButton: {
+      copy: "Kopieren",
+      copied: "Kopiert",
+      failed: "Kopieren fehlgeschlagen",
+      copiedAnnouncement: "In die Zwischenablage kopiert",
+      failedAnnouncement: "Kopieren in die Zwischenablage fehlgeschlagen",
     },
   };
 }

@@ -117,9 +117,13 @@ export function useBackdropClose(onClose: () => void) {
  * where a `data-tour` anchor, a test id, an `aria-describedby` or an `aria-label` has
  * to land; before this, a closed prop list dropped all four silently (audit §api-design).
  */
-export interface ModalProps extends ComponentPropsWithoutRef<"div"> {
+export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
   /** Invoked on backdrop click and on Escape. */
   onClose: () => void;
+  /** `"alertdialog"` for a dialog that interrupts to ask a question the user must
+   *  answer (a confirmation) — screen readers announce it with more urgency. Only the
+   *  two dialog roles are allowed: the panel stays modal either way. */
+  role?: "dialog" | "alertdialog";
   children: ReactNode;
   /**
    * Panel max-width: `md` (28rem), `lg` (32rem), `xl` (48rem).
@@ -187,6 +191,7 @@ export function Modal({
   fullBleed,
   draggable,
   style,
+  role = "dialog",
   ...rest
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -252,7 +257,9 @@ export function Modal({
         // walks straight out of) shows up nowhere near the call site that caused it.
         {...rest}
         ref={panelRef}
-        role="dialog"
+        // Normalised at runtime too: an untyped caller's `role="presentation"` must not
+        // take the dialog role away (props-passthrough pins that).
+        role={role === "alertdialog" ? "alertdialog" : "dialog"}
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}

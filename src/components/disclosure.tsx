@@ -136,6 +136,16 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    */
   variant?: "card" | "bare";
   /**
+   * Where a `bare` disclosure draws its chevron. `start` (default) is the leading
+   * chevron that turns from the reading direction to down. `end` puts it at the far
+   * end of the row, pointing down and turning up as the card's does — keksdose's
+   * account menu, whose language sub-list reads "Language 🇩🇪 ⌄" with the chevron
+   * after the flag, like every other menu row with a sub-list. With `trailing`, the
+   * chevron follows it, as on a card. A `card` always has it at the end, so this is
+   * ignored there.
+   */
+  chevronPosition?: "start" | "end";
+  /**
    * Wrap the header button in a heading of this level. The WAI-ARIA disclosure pattern
    * puts the button INSIDE the heading when the disclosure titles a section, so the
    * page's heading outline still lists it. Off by default: an inline "show more" is
@@ -193,6 +203,7 @@ export function Disclosure({
   defaultOpen = false,
   onOpenChange,
   variant = "card",
+  chevronPosition = "start",
   headingAs: Heading,
   keepMounted,
   disabled,
@@ -208,6 +219,8 @@ export function Disclosure({
   const open = controlled ?? own;
   const bodyId = useId();
   const card = variant === "card";
+  // The card's chevron trails always; a bare one only when asked to.
+  const chevronAtEnd = card || chevronPosition === "end";
   const triggerOnly = controls !== undefined;
   // The card's header squares its lower corners only when a body opens under it.
   const joined = open && !triggerOnly;
@@ -249,7 +262,7 @@ export function Disclosure({
         headerClassName,
       )}
     >
-      {!card && <Chevron open={open} leading />}
+      {!chevronAtEnd && <Chevron open={open} leading />}
       {/* `flex-1`: the title takes the row, so whatever a caller puts at its end sits
           at the header's far edge. */}
       <span className="min-w-0 flex-1">
@@ -258,7 +271,7 @@ export function Disclosure({
           <span className="mt-0.5 block text-xs font-normal text-[var(--text-muted)]">{hint}</span>
         )}
       </span>
-      {card && !hasTrailing && <Chevron open={open} />}
+      {chevronAtEnd && !hasTrailing && <Chevron open={open} small={!card} />}
     </button>
   );
 
@@ -286,7 +299,7 @@ export function Disclosure({
           {/* Positioned, so it paints over the stretched button and takes its own
               clicks; the chevron is not, so a click on it lands on the button. */}
           <div className="relative flex shrink-0 items-center gap-2">{trailing}</div>
-          {card && <Chevron open={open} />}
+          {chevronAtEnd && <Chevron open={open} small={!card} />}
         </div>
       ) : (
         header
@@ -307,13 +320,22 @@ export function Disclosure({
  * header's convention. Rotation, not a mirrored glyph, so RTL needs one opposite angle
  * and no `scale` composing with the turn.
  */
-function Chevron({ open, leading = false }: { open: boolean; leading?: boolean }) {
+function Chevron({
+  open,
+  leading = false,
+  small = leading,
+}: {
+  open: boolean;
+  leading?: boolean;
+  /** The bare variant's size, which a bare chevron keeps at either end of its row. */
+  small?: boolean;
+}) {
   return (
     <ChevronDown
       aria-hidden
       className={cn(
         "shrink-0 text-[var(--text-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none",
-        leading ? "size-3.5" : "size-4",
+        small ? "size-3.5" : "size-4",
         leading ? !open && "-rotate-90 rtl:rotate-90" : open && "rotate-180",
       )}
     />

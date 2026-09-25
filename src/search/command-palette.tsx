@@ -91,6 +91,20 @@ interface CommandPaletteProps {
    * another keystroke. That is the ordinary first open on a cold cache.
    */
   revision?: unknown;
+  /**
+   * The search text, CONTROLLED. Keksdose binds it to the URL's `q`, so a search
+   * survives a reload, can be shared as a link, and Back walks through it — none of
+   * which state inside the palette can do.
+   *
+   * Leave it out and the palette keeps its own, as before, starting empty on every
+   * open. Given, it is never reset on open: the owner decides what an open shows, and
+   * a palette that blanked the URL's `q` each time would fight its own address bar.
+   * `onQueryChange` is then how a keystroke gets anywhere, since it is the only writer.
+   */
+  query?: string;
+  /** Every edit of the field's text. Fires in both modes — uncontrolled, it only
+   *  observes. */
+  onQueryChange?: (query: string) => void;
   labels?: Partial<CommandPaletteLabels>;
 }
 
@@ -119,6 +133,8 @@ export function CommandPalette({
   onClose,
   search,
   revision,
+  query: queryProp,
+  onQueryChange,
   labels,
 }: CommandPaletteProps) {
   const l = useKitLabels("commandPalette", DEFAULTS_WITHOUT_DIALOG, labels);
@@ -129,7 +145,13 @@ export function CommandPalette({
   const dialogName =
     l.dialog ??
     (l.placeholder !== DEFAULT_COMMAND_PALETTE_LABELS.placeholder ? l.placeholder : DEFAULT_DIALOG_NAME);
-  const [query, setQuery] = useState("");
+  const [ownQuery, setOwnQuery] = useState("");
+  const controlled = queryProp !== undefined;
+  const query = controlled ? queryProp : ownQuery;
+  const setQuery = (next: string) => {
+    if (!controlled) setOwnQuery(next);
+    onQueryChange?.(next);
+  };
   const [results, setResults] = useState<CommandItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -160,11 +182,15 @@ export function CommandPalette({
   useFocusTrap(dialogRef, { active: open, initialFocus: () => inputRef.current });
   useBodyScrollLock(open);
 
-  // Reset when opened.
+  // Reset when opened — the palette's OWN text only; a controlled query belongs to
+  // its owner (see the prop).
   useEffect(() => {
     if (!open) return;
-    setQuery("");
+    if (!controlled) setOwnQuery("");
     setActive(0);
+    // `controlled` is read at the open, not watched: a caller switching modes while
+    // the palette is open is not a reason to wipe what is typed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Debounced, race-safe search.

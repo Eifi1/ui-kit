@@ -19,6 +19,10 @@ interface PaginationProps {
   labels?: Partial<DataTableLabels>;
   /** For the page numbers and page-size options; falls back to the provider's. */
   locale?: string;
+  /** `"compact"` for a pager under a compact {@link DataTable} (lenkbank's in-card
+   *  tables): a slimmer footer and page buttons, so the pager is not the tallest row
+   *  of a table that was made compact on purpose. */
+  density?: "comfortable" | "compact";
 }
 
 /** Footer for {@link DataTable}: range summary, page-size select, and a
@@ -32,7 +36,9 @@ export function Pagination({
   onPageSize,
   labels: labelsProp,
   locale: localeProp,
+  density = "comfortable",
 }: PaginationProps) {
+  const compact = density === "compact";
   // prop > provider > English, like every other kit component. This defaulted straight
   // to the English object, so a standalone pager under a translated provider still
   // said "Rows per page" — only the pager INSIDE a DataTable was translated, because
@@ -61,7 +67,13 @@ export function Pagination({
   });
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+    <div
+      data-density={density}
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]",
+        compact ? "px-2 py-1" : "px-3 py-2",
+      )}
+    >
       <div className="flex items-center gap-2">
         <span>
           {pageSize === Infinity
@@ -92,11 +104,11 @@ export function Pagination({
             type="button"
             onClick={() => onPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="rounded p-1 hover:bg-[var(--bg-hover)] disabled:opacity-40"
+            className={cn("rounded hover:bg-[var(--bg-hover)] disabled:opacity-40", compact ? "p-0.5" : "p-1")}
             aria-label={labels.prevPage}
           >
             {/* "Previous" points back along the line — left in LTR, right in RTL. */}
-            <ChevronLeft className="size-4 rtl:-scale-x-100" />
+            <ChevronLeft className={cn("rtl:-scale-x-100", compact ? "size-3.5" : "size-4")} />
           </button>
           {items.map((it, i) =>
             it === "ellipsis" ? (
@@ -113,7 +125,8 @@ export function Pagination({
                 // else to tell them apart.
                 aria-current={it === page ? "page" : undefined}
                 className={cn(
-                  "min-w-7 rounded px-2 py-0.5",
+                  "rounded",
+                  compact ? "min-w-6 px-1.5 py-0" : "min-w-7 px-2 py-0.5",
                   it === page
                     ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
                     : "hover:bg-[var(--bg-hover)]",
@@ -127,10 +140,10 @@ export function Pagination({
             type="button"
             onClick={() => onPage(Math.min(totalPages - 1, page + 1))}
             disabled={page >= totalPages - 1}
-            className="rounded p-1 hover:bg-[var(--bg-hover)] disabled:opacity-40"
+            className={cn("rounded hover:bg-[var(--bg-hover)] disabled:opacity-40", compact ? "p-0.5" : "p-1")}
             aria-label={labels.nextPage}
           >
-            <ChevronRight className="size-4 rtl:-scale-x-100" />
+            <ChevronRight className={cn("rtl:-scale-x-100", compact ? "size-3.5" : "size-4")} />
           </button>
         </div>
       )}

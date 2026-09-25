@@ -64,6 +64,19 @@ export interface FilePickerLabels {
   /** Spoken after a remove / clear, since the button that was pressed is gone. */
   removed: (name: string) => string;
   cleared: string;
+  /** The dropzone's accessible name, when the host passes no `dropLabel`. */
+  dropzone: string;
+  /** The dropzone's Browse button, when the host passes no `browseLabel`. */
+  browse: string;
+  /** What an empty single-file dropzone says (no `emptyLabel` given). */
+  empty: string;
+  /** …and an empty `multiple` one. */
+  emptyMultiple: string;
+  /** The dropzone's second line (no `hint` given). Receives `accept` as a person
+   *  reads it (`".pdf, image/png"`), or `""` when anything goes. */
+  hint: (accept: string) => string;
+  /** What a `busy` dropzone says in place of its body ("Uploading…"). */
+  busy: string;
 }
 
 export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
@@ -81,6 +94,12 @@ export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
   clearAll: "Remove all files",
   removed: (name) => `“${name}” removed`,
   cleared: "All files removed",
+  dropzone: "File upload",
+  browse: "Browse",
+  empty: "Drop a file here",
+  emptyMultiple: "Drop files here",
+  hint: (accept) => (accept ? `Accepted: ${accept}` : "Any file type"),
+  busy: "Uploading…",
 };
 
 /* ── Screening ───────────────────────────────────────────────────────────── */
@@ -148,8 +167,9 @@ function typeFromExtension(name: string): string | undefined {
   return dot === -1 ? undefined : EXTENSION_TYPES[name.slice(dot + 1)];
 }
 
-/** `" .PDF, image/png ,"` => `".pdf, image/png"` — `accept` as a person reads it. */
-function formatAccept(accept: string): string {
+/** @internal `" .PDF, image/png ,"` => `".pdf, image/png"` — `accept` as a person reads
+ *  it. Also the dropzone's default hint. */
+export function formatAccept(accept: string): string {
   return accept
     .split(",")
     .map((t) => t.trim().toLowerCase())

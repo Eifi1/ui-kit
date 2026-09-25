@@ -44,6 +44,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     pageContents: { title: "Sur cette page" },
     common: {
+      dismiss: "Fermer",
       close: "Fermer",
       clear: "Effacer",
       search: "Rechercher",
@@ -122,6 +123,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         `Période du ${from} au ${to} sélectionnée. Choisissez une date de début pour recommencer.`,
     },
     datePicker: {
+      apply: "Appliquer",
+      cancel: "Annuler",
+      presets: "Plages rapides",
       panel: "Choisir une date",
       rangePanel: "Choisir une période",
       clear: "Effacer",
@@ -245,6 +249,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "Envoi de fichier",
+      browse: "Parcourir",
+      empty: "Déposez un fichier ici",
+      emptyMultiple: "Déposez des fichiers ici",
+      hint: (accept) => (accept ? `Acceptés\u00a0: ${accept}` : "Tout type de fichier"),
+      busy: "Envoi en cours…",
       rejectedPick: (count) =>
         count < 2
           ? "Le fichier n\u2019a pas été ajouté"
@@ -364,6 +374,20 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Double-cliquez pour réinitialiser.",
       empty: "Aucune donnée",
       legend: "Séries",
+    },
+    confirmDialog: {
+      confirm: "Confirmer",
+      cancel: "Annuler",
+    },
+    floatingPanel: {
+      close: "Fermer",
+    },
+    copyButton: {
+      copy: "Copier",
+      copied: "Copié",
+      failed: "Échec de la copie",
+      copiedAnnouncement: "Copié dans le presse-papiers",
+      failedAnnouncement: "Impossible de copier dans le presse-papiers",
     },
   };
 }

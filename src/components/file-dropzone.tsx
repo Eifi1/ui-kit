@@ -1,12 +1,19 @@
 import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
 import { Upload, X } from "lucide-react";
-import { Button, IconButton } from "./ui";
+import { Button, IconButton, Spinner } from "./ui";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
-import { DEFAULT_FILE_PICKER_LABELS, judgePick, screenFiles, summariseRejections } from "./file-button";
+import {
+  DEFAULT_FILE_PICKER_LABELS,
+  formatAccept,
+  judgePick,
+  screenFiles,
+  summariseRejections,
+} from "./file-button";
 import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
+import { useDragTarget } from "../hooks/use-file-drop";
 
 /**
  * Where a refused file's message goes.
@@ -20,6 +27,23 @@ import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-bu
  *    Still spoken, so a host rendering it should not ALSO make it `role="alert"`.
  */
 export type FileDropzoneRejectionFeedback = "toast" | "inline" | "none";
+
+/** What a custom {@link FileDropzoneProps.renderBody} is handed. */
+export interface FileDropzoneState {
+  /** A file drag is over the zone right now. */
+  dragOver: boolean;
+  disabled: boolean;
+  busy: boolean;
+  /** What is chosen: `files` in multiple mode, `[file]` or `[]` in single mode. */
+  files: readonly File[];
+  /** The inline refusal, when `rejectionFeedback="inline"` has one to show. */
+  error: string | null;
+  /** Open the system picker — for a body that brings its own trigger (a second
+   *  "Take photo" button). Does nothing while `disabled` or `busy`. */
+  open: () => void;
+  /** The resolved `filePicker` strings, so a custom body speaks the same language. */
+  labels: FilePickerLabels;
+}
 
 /**
  * `onInvalid` is omitted from the `<div>` attributes and kept as this component's own.
@@ -90,12 +114,41 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
   rejectionFeedback?: FileDropzoneRejectionFeedback;
   /** Per-instance overrides of the `filePicker` label namespace. */
   labels?: Partial<FilePickerLabels>;
-  /** The dropzone's accessible name, and the instruction shown on it. A caller's own
-   *  `aria-label` wins over it — see the root element below. */
-  dropLabel: string;
-  browseLabel: string;
-  emptyLabel: string;
-  hint: string;
+  /** The dropzone's accessible name. A caller's own `aria-label` wins over it — see
+   *  the root element below. Optional since 0.8, like the three below: each falls back
+   *  to its `filePicker` string from `<UiKitProvider labels>`, then to English. They
+   *  were required, so every call site passed four strings through `t()` by hand, and a
+   *  zone nested in a kit component (the feedback form) had no call site to pass them. */
+  dropLabel?: string;
+  /** Default `filePicker.browse`. */
+  browseLabel?: string;
+  /** What the zone says while nothing is chosen. Default `filePicker.empty` /
+   *  `emptyMultiple`. */
+  emptyLabel?: string;
+  /** The second line, e.g. what may be dropped. Default `filePicker.hint(accept)`. */
+  hint?: string;
+  /**
+   * Not taking files: no drop, no picker, no remove buttons; `aria-disabled` on the
+   * group. keksdose locks its invoice zone while another form holds unsaved changes,
+   * and hand-rolled the whole zone to be able to (invoice-upload.tsx, "Locked").
+   */
+  disabled?: boolean;
+  /**
+   * Working on what it was given — an upload, an OCR pass. Inert like `disabled`, plus
+   * `aria-busy`, a spinner in place of the upload icon, and `filePicker.busy` as the
+   * text. The other half of why keksdose's invoice zone was hand-rolled.
+   */
+  busy?: boolean;
+  /**
+   * Replace the zone's body — the icon, the text and the chosen-file list — with your
+   * own, given the zone's state: keksdose's spinner-plus-"uploading", its multi-shot
+   * hint ("several photos are possible"), a second trigger for the camera.
+   *
+   * The Browse button, the inline error and the live regions stay: Browse is the
+   * keyboard path, and a body that forgot it would leave the zone unreachable without
+   * a pointer. A click on a control inside the body does not also open the picker.
+   */
+  renderBody?: (state: FileDropzoneState) => ReactNode;
   /** Extra classes for the dropzone's root. */
   className?: string;
 }
@@ -123,18 +176,23 @@ export function FileDropzone({
   onPick,
   rejectionFeedback,
   labels: labelsProp,
-  dropLabel,
-  browseLabel,
-  emptyLabel,
-  hint,
+  dropLabel: dropLabelProp,
+  browseLabel: browseLabelProp,
+  emptyLabel: emptyLabelProp,
+  hint: hintProp,
+  disabled,
+  busy,
+  renderBody,
   className,
   "aria-label": ariaLabel,
   "aria-describedby": describedByProp,
   ...rest
 }: FileDropzoneProps) {
-  const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inert = Boolean(disabled || busy);
+  // State rather than a ref: `open` is handed to `renderBody` during render, and a
+  // function that reads a ref there is exactly what the refs rule cannot prove safe.
+  const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
   const browseRef = useRef<HTMLButtonElement>(null);
   const errorId = useId();
   // The size through the kit's `file.size` label (the provider's locale by default).
@@ -149,9 +207,13 @@ export function FileDropzone({
   const alert = useAnnounce({ politeness: "assertive" });
   const feedback: FileDropzoneRejectionFeedback =
     rejectionFeedback ?? (onInvalid || onReject ? "none" : "toast");
+  const dropLabel = dropLabelProp ?? labels.dropzone;
+  const browseLabel = browseLabelProp ?? labels.browse;
+  const emptyLabel = emptyLabelProp ?? (multiple ? labels.emptyMultiple : labels.empty);
+  const hint = hintProp ?? labels.hint(formatAccept(accept));
 
   const acceptFiles = (list: ArrayLike<File> | null | undefined) => {
-    if (!list || list.length === 0) return;
+    if (inert || !list || list.length === 0) return;
     const all = Array.from(list);
     const picked = multiple ? all : all.slice(0, 1);
     const { accepted, rejected } = screenFiles(
@@ -204,6 +266,17 @@ export function FileDropzone({
     status.announce(message);
   };
 
+  // The enter/leave counter lives in the shared hook: the boolean this was flickered
+  // across every child of the zone in Safari, whose drag events carry no
+  // `relatedTarget` to tell a move onto a child from a real leave.
+  const { dropProps, isOver: dragOver } = useDragTarget<HTMLDivElement>({
+    disabled: inert,
+    onDropFiles: acceptFiles,
+  });
+  const open = () => {
+    if (!inert) fileInput?.click();
+  };
+
   const chosen: readonly File[] = multiple ? (files ?? []) : file ? [file] : [];
   const showError = feedback === "inline" && error !== null;
   const describedBy = cn(describedByProp, showError && errorId) || undefined;
@@ -221,32 +294,14 @@ export function FileDropzone({
       <div
         // `...rest` first: every handler below is the drop gesture itself.
         {...rest}
-        onDragEnter={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (e.dataTransfer.types.includes("Files")) setDragOver(true);
+        {...dropProps}
+        // Pointer only; every control inside stops its own click from reaching here
+        // (and one in a custom body is skipped below). The keyboard equivalent is the
+        // Browse button, so no key handler belongs on a group.
+        onClick={(e) => {
+          if (fromControl(e)) return;
+          open();
         }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.dataTransfer.dropEffect = "copy";
-          if (!dragOver && e.dataTransfer.types.includes("Files")) setDragOver(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-          setDragOver(false);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setDragOver(false);
-          acceptFiles(e.dataTransfer.files);
-        }}
-        // Pointer only; every control inside stops its own click from reaching here. The
-        // keyboard equivalent is the Browse button, so no key handler belongs on a group.
-        onClick={() => fileInputRef.current?.click()}
         role="group"
         // The DOM spelling wins over `dropLabel`, which stays the name for every caller
         // that passes no `aria-label` — i.e. all of them today. Standardising on
@@ -257,6 +312,9 @@ export function FileDropzone({
         // reached through the description instead, and spoken when it appears.
         aria-describedby={describedBy}
         data-invalid={showError || undefined}
+        aria-disabled={disabled || undefined}
+        aria-busy={busy || undefined}
+        data-drag-over={dragOver || undefined}
         className={cn(
           // `relative` is load-bearing, not cosmetic. The file input below is `sr-only`,
           // which Tailwind implements as `position: absolute` — so without a positioned
@@ -267,73 +325,102 @@ export function FileDropzone({
           // own offset, which produces a second, whole-document scrollbar alongside the
           // app shell's own — one that scrolls past the end of the content into nothing.
           // Measured on the showcase: body 900px, document 47,919px.
-          "relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors",
+          "relative flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors",
           // Three states out of two border tokens: the target rests on the plain
           // hairline, hover pulls it to `--border-strong`, and a live drag keeps that
           // border and adds the `--bg-active` wash on top — so "let go here" still reads
           // one step louder than "you are over it". A refusal shown inline takes the
           // danger border until the next good pick.
-          dragOver
-            ? "border-[var(--border-strong)] bg-[var(--bg-active)]"
-            : showError
-              ? "border-[var(--danger-border)]"
-              : "border-[var(--border)] hover:border-[var(--border-strong)]",
+          // Inert zones keep the resting hairline and lose the hover pull: a border that
+          // answers the pointer promises a drop the zone will refuse.
+          disabled
+            ? "cursor-not-allowed border-[var(--border)] opacity-60"
+            : busy
+              ? "cursor-progress border-[var(--border)]"
+              : dragOver
+                ? "cursor-pointer border-[var(--border-strong)] bg-[var(--bg-active)]"
+                : showError
+                  ? "cursor-pointer border-[var(--danger-border)]"
+                  : "cursor-pointer border-[var(--border)] hover:border-[var(--border-strong)]",
           className,
         )}
       >
-        <Upload aria-hidden className="size-5 text-[var(--text-muted)]" />
-        {multiple && chosen.length > 0 ? (
-          <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
-            {chosen.map((f, i) => (
-              <li
-                // Name + size + position: two files may share a name, and the index
-                // alone would re-key every row below a removal.
-                key={`${f.name}-${f.size}-${i}`}
-                className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
-              >
-                <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
-                <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
-                {onRemove && (
-                  <IconButton
-                    type="button"
-                    size="sm"
-                    aria-label={labels.remove(f.name)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove(f, i);
-                      afterRemoval(labels.removed(f.name));
-                    }}
-                  >
-                    <X aria-hidden />
-                  </IconButton>
-                )}
-              </li>
-            ))}
-          </ul>
+        {renderBody ? (
+          renderBody({
+            dragOver,
+            disabled: Boolean(disabled),
+            busy: Boolean(busy),
+            files: chosen,
+            error: showError ? error : null,
+            open,
+            labels,
+          })
+        ) : busy ? (
+          <>
+            {/* `label={null}`: the zone is `aria-busy` and the line below says the
+                same in words; a spoken "Loading" would only run into it. */}
+            <Spinner label={null} className="size-5" />
+            <div className="text-sm text-[var(--text-secondary)]">{labels.busy}</div>
+          </>
         ) : (
           <>
-            <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
-              {/* `!multiple`: in multiple mode an empty `files` list is "nothing chosen",
-                  whatever a stray `file` prop says — it used to show that file's name. */}
-              {!multiple && file ? <span className="font-medium">{file.name}</span> : emptyLabel}
-              {!multiple && file && onClear && (
-                <IconButton
-                  type="button"
-                  size="sm"
-                  aria-label={labels.remove(file.name)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClear();
-                    afterRemoval(labels.removed(file.name));
-                  }}
-                >
-                  <X aria-hidden />
-                </IconButton>
-              )}
-            </div>
-            <div className="text-xs text-[var(--text-muted)]">
-              {file && !multiple ? fileText.size(file.size) : hint}
-            </div>
+            <Upload aria-hidden className="size-5 text-[var(--text-muted)]" />
+            {multiple && chosen.length > 0 ? (
+              <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
+                {chosen.map((f, i) => (
+                  <li
+                    // Name + size + position: two files may share a name, and the index
+                    // alone would re-key every row below a removal.
+                    key={`${f.name}-${f.size}-${i}`}
+                    className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
+                  >
+                    <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
+                    <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
+                    {onRemove && (
+                      <IconButton
+                        type="button"
+                        size="sm"
+                        disabled={inert}
+                        aria-label={labels.remove(f.name)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemove(f, i);
+                          afterRemoval(labels.removed(f.name));
+                        }}
+                      >
+                        <X aria-hidden />
+                      </IconButton>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <>
+                <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+                  {/* `!multiple`: in multiple mode an empty `files` list is "nothing chosen",
+                      whatever a stray `file` prop says — it used to show that file's name. */}
+                  {!multiple && file ? <span className="font-medium">{file.name}</span> : emptyLabel}
+                  {!multiple && file && onClear && (
+                    <IconButton
+                      type="button"
+                      size="sm"
+                      disabled={inert}
+                      aria-label={labels.remove(file.name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClear();
+                        afterRemoval(labels.removed(file.name));
+                      }}
+                    >
+                      <X aria-hidden />
+                    </IconButton>
+                  )}
+                </div>
+                <div className="text-xs text-[var(--text-muted)]">
+                  {file && !multiple ? fileText.size(file.size) : hint}
+                </div>
+              </>
+            )}
           </>
         )}
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -341,9 +428,10 @@ export function FileDropzone({
             ref={browseRef}
             type="button"
             variant="secondary"
+            disabled={inert}
             onClick={(e) => {
               e.stopPropagation();
-              fileInputRef.current?.click();
+              open();
             }}
           >
             {browseLabel}
@@ -352,6 +440,7 @@ export function FileDropzone({
             <Button
               type="button"
               variant="ghost"
+              disabled={inert}
               onClick={(e) => {
                 e.stopPropagation();
                 onClear();
@@ -368,10 +457,11 @@ export function FileDropzone({
           </p>
         )}
         <input
-          ref={fileInputRef}
+          ref={setFileInput}
           type="file"
           accept={accept}
           multiple={multiple}
+          disabled={inert}
           onChange={(e) => {
             // Copy, THEN reset: `files` is a live view of the value, and without the
             // reset picking the same file a second time fires no `change` at all —
@@ -393,4 +483,12 @@ export function FileDropzone({
       <span {...alert.regionProps} />
     </>
   );
+}
+
+/** A click that landed on a control inside the zone (a custom body's own button, a
+ *  link in the hint) is that control's, not a request to open the picker. */
+function fromControl(e: MouseEvent<HTMLElement>): boolean {
+  const target = e.target as Element | null;
+  const control = target?.closest?.("button, a[href], input, select, textarea, label, [role='button']");
+  return Boolean(control && control !== e.currentTarget && e.currentTarget.contains(control));
 }
