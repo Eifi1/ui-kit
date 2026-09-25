@@ -373,22 +373,22 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**594 names from 105 modules** — 331 values and 263 types. _Italic_ is a type-only export.
+**705 names from 120 modules** — 368 values and 337 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 594 |
-| `@eifi1/ui-kit/chart` | 73 |
+| `@eifi1/ui-kit` | 705 |
+| `@eifi1/ui-kit/chart` | 93 |
 | `@eifi1/ui-kit/shell` | 18 |
-| `@eifi1/ui-kit/data-table` | 28 |
-| `@eifi1/ui-kit/wizard` | 20 |
+| `@eifi1/ui-kit/data-table` | 32 |
+| `@eifi1/ui-kit/wizard` | 21 |
 | `@eifi1/ui-kit/tour` | 7 |
 | `@eifi1/ui-kit/feedback` | 29 |
 | `@eifi1/ui-kit/search` | 5 |
-| `@eifi1/ui-kit/dates` | 16 |
+| `@eifi1/ui-kit/dates` | 20 |
 | `@eifi1/ui-kit/table-text` | 8 |
 | `@eifi1/ui-kit/rhf` | 13 |
 
@@ -417,6 +417,9 @@ re-slicing of it, never a second API.
 | `hooks/use-overlay-history` | `useOverlayHistory` |
 | `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
 | `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
+| `hooks/use-file-drop` | `dragHasFiles`, `useFileDrop`, _`FileDropProps`_, _`UseFileDropOptions`_, _`UseFileDropReturn`_ |
+| `hooks/use-debounce` | `useDebounce`, `useDebouncedCallback`, _`DebouncedCallbackOptions`_, _`DebouncedFunction`_ |
+| `hooks/use-copy-to-clipboard` | `copyToClipboard`, `useCopyToClipboard`, _`CopyState`_, _`UseCopyToClipboardOptions`_, _`UseCopyToClipboardReturn`_ |
 | `hooks/use-windowed-rows` | `useWindowedRows`, _`WindowedRows`_ |
 
 ### theme, palettes, colour
@@ -434,7 +437,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonProps`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
 | `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
 | `components/popover` | `DEFAULT_POPOVER_LABELS`, `Popover`, _`PopoverLabels`_, _`PopoverProps`_ |
@@ -449,7 +452,7 @@ re-slicing of it, never a second API.
 | `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
 | `components/multi-entity-combobox` | `MultiEntityCombobox`, _`MultiEntityComboboxProps`_ |
 | `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_, _`MultiSelectProps`_ |
-| `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSize`_, _`TooltipViewport`_ |
+| `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarProps`_ |
 | `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_ |
 | `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
@@ -464,9 +467,11 @@ re-slicing of it, never a second API.
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
 | `components/password-strength` | `DEFAULT_PASSWORD_STRENGTH_LABELS`, `passwordByteLength`, `passwordRules`, `PasswordStrengthMeter`, `scorePassword`, _`PasswordRule`_, _`PasswordRuleId`_, _`PasswordScoreOptions`_, _`PasswordStrengthLabels`_, _`PasswordStrengthMeterProps`_, _`PasswordStrengthScore`_ |
 | `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
-| `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_ |
+| `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_, _`DisclosureTriggerProps`_ |
 | `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
 | `components/danger-confirm` | `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, _`DangerConfirmLabels`_, _`DangerConfirmProps`_ |
+| `components/confirm-dialog` | `ConfirmProvider`, `DEFAULT_CONFIRM_DIALOG_LABELS`, `useConfirm`, _`ConfirmDialogLabels`_, _`ConfirmFn`_, _`ConfirmOptions`_, _`ConfirmProviderProps`_, _`ConfirmTone`_ |
+| `components/floating-panel` | `DEFAULT_FLOATING_PANEL_LABELS`, `FloatingActionButton`, `FloatingPanel`, _`FloatingActionButtonProps`_, _`FloatingCorner`_, _`FloatingPanelLabels`_, _`FloatingPanelProps`_ |
 | `components/swatch-picker` | `DEFAULT_SWATCH_PICKER_LABELS`, `SwatchPicker`, _`SwatchOption`_, _`SwatchPickerLabels`_, _`SwatchPickerProps`_ |
 | `components/icon-picker` | `DEFAULT_ICON_PICKER_LABELS`, `IconPicker`, _`IconOption`_, _`IconPickerLabels`_, _`IconPickerProps`_ |
 | `components/choice-card` | `ChoiceCard`, `ChoiceCardGroup`, _`ChoiceCardGroupProps`_, _`ChoiceCardMultipleProps`_, _`ChoiceCardOption`_, _`ChoiceCardProps`_, _`ChoiceCardSingleProps`_, _`ChoiceCardType`_ |
@@ -474,31 +479,41 @@ re-slicing of it, never a second API.
 | `components/measured-grid` | `DEFAULT_MEASURED_GRID_LABELS`, `MeasuredGrid`, `useMeasuredRows`, _`MeasuredGridColumn`_, _`MeasuredGridLabels`_, _`MeasuredGridProps`_, _`MeasuredGridView`_, _`MeasuredRows`_, _`UseMeasuredRowsOptions`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapNode`_, _`TreemapProps`_ |
-| `components/series-chart` | `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `SeriesChart`, `seriesKey`, `soleSeriesColor`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartProps`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartX`_, _`SeriesSource`_ |
-| `components/chart-zoom` | `DEFAULT_Y_AXIS`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `SharedXZoom`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains`, _`ZoomAxes`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSource`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
+| `components/series-chart` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `SeriesChart`, `seriesKey`, `seriesLegendEntries`, `soleSeriesColor`, `StaticSeriesChart`, `visibleSeries`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesSource`_ |
+| `components/chart-zoom` | `axisExtent`, `DEFAULT_Y_AXIS`, `defaultZoomAxes`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `SharedXZoom`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
 | `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`ToggleLegendProps`_ |
 | `components/facing-pair` | `FACING_SIDES`, `facingAxes`, `facingBand`, `facingHeadingPad`, _`FacingSide`_ |
 | `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
-| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipProps`_, _`ChipSize`_, _`ChipTone`_ |
+| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
 | `components/full-bleed-dialog` | `FullBleedDialog`, _`FullBleedDialogProps`_ |
 | `components/grouped-picker` | `GroupedPicker`, _`GroupedPickerProps`_, _`PickerGroup`_ |
-| `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_ |
+| `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_, _`FileDropzoneState`_ |
 | `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
-| `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_ |
+| `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangeCommit`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_ |
+| `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
+| `components/description-list` | `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListDensity`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
+| `components/progress-bar` | `ProgressBar`, _`ProgressBarProps`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
+| `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
+| `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
+| `components/button-group` | `ButtonGroup`, _`ButtonGroupProps`_ |
+| `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeadProps`_, _`TableProps`_, _`TableRowProps`_ |
+| `components/separator` | `Separator`, _`SeparatorProps`_ |
+| `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
-| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortDir`_, _`SortState`_ |
+| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
 | `components/data-table-filters` | `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `isFilterActive`, `resolveFilter`, `rowMatches`, _`ColumnFilter`_, _`FilterValue`_ |
-| `components/data-table` | `DataTable`, _`DataTableColumn`_, _`DataTableProps`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
+| `components/data-table` | `DataTable`, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableProps`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
+| `components/series-chart-ticks` | _`TimeTickUnit`_ |
 
 ### shell
 
@@ -523,7 +538,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `wizard/types` | `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_ |
+| `wizard/types` | `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
 | `wizard/use-wizard` | `useWizard` |
 | `wizard/wizard-context` | `useWizardContext`, `WizardContextProvider`, _`WizardContextValue`_ |
 | `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
