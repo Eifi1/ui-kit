@@ -20,7 +20,11 @@ default change is marked below. `CHANGELOG.md` → `0.9.0` has the release notes
    query, `groupOrder`, redaction, and its own trigger (kit Tooltip, controlled `open`). It
    matches through `createSearchIndex`, which ignores accents and word order, tolerates
    typos, ranks the results and searches keywords. The showcase's own ⌘K search runs on it.
-6. **Dev tooling:** esbuild is forced to `^0.28.2` in this repo (npm audit,
+6. **Navigating from an open overlay works now.** A palette or dialog row that called
+   `navigate()` used to land on the new page and bounce straight back: the overlay's history
+   cleanup mistook the new page's entry for its own. The page now stays, and one Back returns
+   to where the overlay was opened. Drop any `setTimeout` / "navigate after close" workaround.
+7. **Dev tooling:** esbuild is forced to `^0.28.2` in this repo (npm audit,
    GHSA-g7r4-m6w7-qqqr). Nothing changes for consumers.
 
 ---
