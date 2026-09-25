@@ -13,6 +13,7 @@ import {
   DEFAULT_DIALOG_FRAME_LABELS,
   DEFAULT_FIELD_SYNC_LABELS,
   DEFAULT_FILE_LABELS,
+  DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
   DEFAULT_FILE_PICKER_LABELS,
   DEFAULT_ICON_PICKER_LABELS,
   DEFAULT_MEASURED_GRID_LABELS,
@@ -36,6 +37,8 @@ import {
   DEFAULT_UI_KIT_LABELS,
   DEFAULT_WIZARD_LABELS,
   MiniCalendar,
+  Pagination,
+  PasswordStrengthMeter,
   ToggleGroup,
   UiKitProvider,
   formatFileSize,
@@ -52,6 +55,13 @@ import {
   useKitWeekStart,
 } from "@eifi1/ui-kit";
 import type { UiKitLabels } from "@eifi1/ui-kit";
+import { UI_KIT_LABELS_DE, uiKitLabelsDe } from "@eifi1/ui-kit/i18n/de";
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+import { UI_KIT_LABELS_FR } from "@eifi1/ui-kit/i18n/fr";
+import { UI_KIT_LABELS_IT } from "@eifi1/ui-kit/i18n/it";
+import { UI_KIT_LABELS_ES } from "@eifi1/ui-kit/i18n/es";
+import { UI_KIT_LABELS_HU } from "@eifi1/ui-kit/i18n/hu";
+import { UI_KIT_LABELS_ZH } from "@eifi1/ui-kit/i18n/zh";
 import { Example, Note, OutTable } from "../lib/section";
 import { LOCALES, useLocale, useT } from "../i18n";
 
@@ -63,6 +73,7 @@ export function Localisation() {
   return (
     <>
       <ProviderExample />
+      <ShippedTranslationsExample />
       <NestingExample />
       <FileSizeExample />
       <CompletenessExample />
@@ -92,6 +103,95 @@ import { de } from "./i18n/kit-de"; // a UiKitLabels (or any part of one)
         reached at all. The showcase itself is the proof it now works: it mounts one provider with
         the active dictionary, and switching the language in the top bar re-labels every kit
         component on every page.
+      </Note>
+    </Example>
+  );
+}
+
+/** The shipped dictionaries, each checked against the English tree live. */
+const SHIPPED: [string, UiKitLabels][] = [
+  ["UI_KIT_LABELS_DE", UI_KIT_LABELS_DE],
+  ["UI_KIT_LABELS_DE_CH", UI_KIT_LABELS_DE_CH],
+  ["UI_KIT_LABELS_FR", UI_KIT_LABELS_FR],
+  ["UI_KIT_LABELS_IT", UI_KIT_LABELS_IT],
+  ["UI_KIT_LABELS_ES", UI_KIT_LABELS_ES],
+  ["UI_KIT_LABELS_HU", UI_KIT_LABELS_HU],
+  ["UI_KIT_LABELS_ZH", UI_KIT_LABELS_ZH],
+];
+
+/** German with Swiss digits but German spelling: what `uiKitLabelsDe("de-CH")` alone gives. */
+const DE_WITH_SWISS_DIGITS = uiKitLabelsDe("de-CH");
+
+const PAGER_TOTAL = 12345;
+const PAGER_SIZE = 25;
+
+function ShippedTranslationsExample() {
+  const [page, setPage] = useState(0);
+  const variants: { title: string; code: string; labels: UiKitLabels; locale: string }[] = [
+    { title: "de", code: "UI_KIT_LABELS_DE", labels: UI_KIT_LABELS_DE, locale: "de-DE" },
+    { title: "de, Swiss digits", code: 'uiKitLabelsDe("de-CH")', labels: DE_WITH_SWISS_DIGITS, locale: "de-CH" },
+    { title: "de-CH", code: "UI_KIT_LABELS_DE_CH", labels: UI_KIT_LABELS_DE_CH, locale: "de-CH" },
+  ];
+  return (
+    <Example
+      label="Shipped translations — de vs de-CH"
+      hint="the same pager and password meter under three providers; page through one and all three follow"
+    >
+      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        {`import { UI_KIT_LABELS_DE } from "@eifi1/ui-kit/i18n/de";
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+// also: /i18n/fr, /it, /es, /hu, /zh — UI_KIT_LABELS_FR … and uiKitLabelsFr(numberLocale) …
+
+<UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
+  <App />
+</UiKitProvider>`}
+      </pre>
+      <div className="mt-3 grid gap-4 lg:grid-cols-3">
+        {variants.map((v) => (
+          <div key={v.title} className="min-w-0 rounded-md border border-[var(--border)] p-3">
+            <p className="mb-2 font-mono text-[11px] text-[var(--text-muted)]">
+              {v.code} · locale=&quot;{v.locale}&quot;
+            </p>
+            <UiKitProvider labels={v.labels} locale={v.locale}>
+              <Pagination
+                page={page}
+                totalPages={Math.ceil(PAGER_TOTAL / PAGER_SIZE)}
+                pageSize={PAGER_SIZE}
+                total={PAGER_TOTAL}
+                onPage={setPage}
+              />
+              <div className="mt-3">
+                <PasswordStrengthMeter value="kurz" />
+              </div>
+              <p className="mt-2 font-mono text-[11px] text-[var(--text-muted)]">
+                dialogFrame.close: {v.labels.dialogFrame.close}
+                <br />
+                file.size(1234567): {v.labels.file.size(1234567)}
+              </p>
+            </UiKitProvider>
+          </div>
+        ))}
+      </div>
+      <OutTable
+        rows={SHIPPED.map(([name, labels]) => [
+          `missingKitLabels(${name})`,
+          `${missingKitLabels(labels, DEFAULT_UI_KIT_LABELS).length} missing`,
+        ])}
+      />
+      <Note>
+        The kit ships its own words in German, French, Italian, Spanish, Hungarian and Chinese, one
+        subpath each, so an app bundles only the language it imports. Each is a full{" "}
+        <code className="font-mono">UiKitLabels</code> (the table above is the live check), and each
+        comes with a factory — <code className="font-mono">uiKitLabelsDe(numberLocale)</code>,{" "}
+        <code className="font-mono">uiKitLabelsFr(…)</code> — that keeps the words and changes only
+        how counts and sizes are written. That is the middle column: German spelling with Swiss
+        digits, <code className="font-mono">12’345</code> instead of <code className="font-mono">12.345</code>.{" "}
+        <code className="font-mono">UI_KIT_LABELS_DE_CH</code> goes one step further and respells every
+        <code className="font-mono"> ß</code> as <code className="font-mono">ss</code> —{" "}
+        &ldquo;Gross- und Kleinbuchstaben&rdquo;, &ldquo;Schliessen&rdquo; — including the result of
+        every message function, so a name the app passes in is respelled too. The page-number strip
+        is formatted with the provider&apos;s <code className="font-mono">locale</code>; the range
+        summary by the labels themselves.
       </Note>
     </Example>
   );
@@ -352,6 +452,7 @@ const NAMESPACE_CONSTANTS: Array<[string, keyof UiKitLabels, unknown]> = [
   ["DEFAULT_DIALOG_FRAME_LABELS", "dialogFrame", DEFAULT_DIALOG_FRAME_LABELS],
   ["DEFAULT_FILE_PICKER_LABELS", "filePicker", DEFAULT_FILE_PICKER_LABELS],
   ["DEFAULT_MEASURED_GRID_LABELS", "measuredGrid", DEFAULT_MEASURED_GRID_LABELS],
+  ["DEFAULT_FEEDBACK_ATTACHMENT_LABELS", "feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS],
 ];
 
 function NamespaceConstantsExample() {

@@ -55,7 +55,8 @@ function TabStrip() {
       </div>
       <div className="mt-3">
         <Note>
-          Arrow keys, Home and End move <em>focus</em> along the strip; activation stays on
+          Arrow keys, Home and End move <em>focus</em> along the strip — ← → along the reading
+          direction, so in RTL ← reaches the next tab; activation stays on
           click, Enter and Space, because a tab can be a real route and arrowing across one
           must not navigate. <code className="font-mono">label</code> names the{" "}
           <code className="font-mono">role=&quot;tablist&quot;</code> group — leave it unset
@@ -157,7 +158,8 @@ function ToggleGroups() {
           a segmented control with some live segments and some dead ones is a menu with holes
           in it. Lock it and the pressed segment <em>keeps its fill</em> while everything fades:
           a reader who can no longer see which option is chosen has been told less than before
-          you disabled it. The 2px moat between segments is deliberate too — flush segments made
+          you disabled it. As a radio group it is ONE tab stop (the pressed segment) and the
+          arrows move the choice, mirrored in RTL — tab in and press →. The 2px moat between segments is deliberate too — flush segments made
           a hovered neighbour and the selected chip read as one smeared shape.
         </Note>
       </div>
@@ -316,7 +318,12 @@ function Chips() {
           already uses when it is given an <code className="font-mono">href</code>. Keeping
           them together is what stops an app growing three near-identical pills that drift.
           A chip is deliberately <em>not</em> a Button: a row of buttons reads as
-          &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.
+          &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.{" "}
+          <code className="font-mono">href</code> and <code className="font-mono">onClick</code>{" "}
+          are mutually exclusive in the types since 0.7.0 —{" "}
+          <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> no longer compiles
+          (it used to drop the <code className="font-mono">onClick</code> silently). A link that
+          must also run code wants a router link, not a chip.
         </Note>
       </Example>
 
@@ -374,7 +381,8 @@ function Chips() {
           &ldquo;Remove&rdquo;. A row of eight otherwise gives a screen-reader user eight
           buttons with the same name and no way to tell which one they are on. When a chip
           is also a link, the × is a SIBLING rather than a nested button — a button inside
-          an anchor is invalid HTML and browsers disagree about what it does.
+          an anchor is invalid HTML and browsers disagree about what it does — drawn inside the
+          same pill (see the combinations below).
         </Note>
       </Example>
     </>
@@ -469,7 +477,10 @@ function ChipStates() {
         and no <code className="font-mono">selected</code> it reports no pressed state at all,
         so its label may follow the state. The two links mark the current one with{" "}
         <code className="font-mono">aria-current</code>. A remove beside a link or a toggle is a
-        sibling button, not a nested one, and removing never follows the link. A chip whose
+        sibling button, not a nested one, and removing never follows the link — but both sit in
+        ONE pill: the wrapper carries the border, the tone and your{" "}
+        <code className="font-mono">className</code>, so &ldquo;Overdue ×&rdquo; reads as a single
+        chip, and the link or toggle part gets its own focus ring and a hover wash inside it. A chip whose
         content is not plain text has no value to name its × after, so it falls back to{" "}
         <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the
         provider&apos;s <code className="font-mono">common.remove</code>. A disabled link renders
@@ -589,8 +600,9 @@ function ChipInputOptions() {
         it and adds the text below, wired to the input with{" "}
         <code className="font-mono">aria-describedby</code>. A rejection from{" "}
         <code className="font-mono">validate</code>, <code className="font-mono">max</code> or a
-        duplicate is only <em>announced</em> — the draft stays in the field, but no visible
-        message appears unless the caller shows one through <code className="font-mono">error</code>.
+        duplicate is now <em>shown</em> as well as announced: type <code className="font-mono">de</code>{" "}
+        into the codes and press Enter — the draft stays, the frame turns invalid and the reason
+        appears under the field (described by it) until the next edit.
       </Note>
     </Example>
   );
@@ -614,12 +626,11 @@ function ChipsRtl() {
       </div>
       <Note>
         The icon leads and the × trails in the reading direction, because the chip is a flex
-        row. Two things are still physical and worth watching here: the × button&apos;s
-        margins and the body&apos;s reduced end padding beside it are{" "}
-        <code className="font-mono">mr</code>/<code className="font-mono">ml</code>/
-        <code className="font-mono">pr</code> rather than logical, so in RTL the × hugs the
-        wrong side by a couple of pixels; and in the field, ← still moves to the
-        <em> previous</em> chip in DOM order, which in RTL is the chip to the right.
+        row, and the ×&apos;s margins and the pill&apos;s end inset are logical (
+        <code className="font-mono">ms</code>/<code className="font-mono">me</code>/
+        <code className="font-mono">pe</code>), so the × sits snug at the left end here. In the
+        field the arrows follow the reading direction: focus a chip and press → to reach the
+        previous one (to its right), ← to move on towards the input.
       </Note>
     </Example>
   );

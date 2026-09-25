@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import type { ContextType, RefObject } from "react";
+import { useState } from "react";
+import type { ContextType } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
   ArrowLeftRight,
@@ -202,7 +202,7 @@ export function ShellSection() {
 
       <Example
         label="AppShell — every prop on a switch"
-        hint="A second, boxed shell with its own router. Below 768px it shows the phone bar instead of the sidebar."
+        hint="A second shell, nested in this page's — so embedded — with its own router. Below 768px it shows the phone bar, docked on the box."
       >
         <AppShellPlayground />
       </Example>
@@ -255,7 +255,7 @@ function TopBarSpecimen() {
             >
               <Bell className="size-5" />
               {unread > 0 && (
-                <span className="absolute right-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-[10px] font-semibold leading-4 text-[var(--brand-contrast)]">
+                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-[10px] font-semibold leading-4 text-[var(--brand-contrast)]">
                   {unread}
                 </span>
               )}
@@ -351,11 +351,19 @@ function Languages() {
   // restoring a locale it no longer ships lands here. Hence the reset button — the
   // menu itself can only ever produce a valid code.
   const [lang, setLang] = useState<string | undefined>("de");
+  const [withHeading, setWithHeading] = useState(true);
 
   return (
     <div className="space-y-3">
       <Row>
-        <LanguageMenu options={LANGUAGES} current={lang} onChange={setLang} ariaLabel="Language" />
+        <LanguageMenu
+          options={LANGUAGES}
+          current={lang}
+          onChange={setLang}
+          ariaLabel="Language"
+          heading={withHeading ? "Language" : undefined}
+        />
+        <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
         <button type="button" className={MINI_BUTTON} onClick={() => setLang(undefined)}>
           Clear the selection
         </button>
@@ -369,6 +377,15 @@ function Languages() {
         <code className="font-mono">br</code>. <code className="font-mono">flag-icons</code> is a
         dependency of the package that nothing inside the package imports, so a consumer that
         never imports the stylesheet gets empty boxes and no error.
+      </Note>
+      <Note>
+        <code className="font-mono">heading</code> (new in 0.7.0) is the same small uppercase
+        row <code className="font-mono">PaletteMenu</code>,{" "}
+        <code className="font-mono">OptionSwitcherMenu</code> and{" "}
+        <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus
+        reads alike. Like every top-bar menu this one is a{" "}
+        <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to
+        open it onto the first language, ↑/↓ to move, Escape to close back onto the flag.
       </Note>
     </div>
   );
@@ -498,7 +515,7 @@ function NavItemReference() {
             <item.icon className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
             <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
             <span className="font-mono text-[11px] text-[var(--text-muted)]">{item.to}</span>
-            <span className="ml-auto flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+            <span className="ms-auto flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-secondary)]">
               <span>
                 bar: <span className="font-mono">{item.shortLabel ?? item.label}</span>
               </span>
@@ -534,8 +551,9 @@ function AppShellNotes() {
   return (
     <div className="space-y-3">
       <Row>
-        {/* The inline style, not getComputedStyle: AppShell publishes the variable with
-            `documentElement.style.setProperty`, so this reads exactly what it wrote —
+        {/* The inline style, not getComputedStyle: the outermost AppShell publishes the
+            variable with `style.setProperty` on `<html>` (and on its own root), so this
+            reads exactly what it wrote —
             and jsdom does not resolve custom properties through computed style, so the
             mount test would see an empty string. Read on click rather than in an effect
             because AppShell is our PARENT: its effect runs after ours, so a mount-time
@@ -578,7 +596,8 @@ function AppShellNotes() {
         that read happens during render, and <code className="font-mono">localStorage</code>{" "}
         throws where site data is blocked, which would take the whole application down rather
         than lose a preference. The default key is a shared literal, so two apps on one origin
-        in development want their own.
+        in development want their own. An embedded (or nested) shell has no default key: it
+        would otherwise overwrite the outer app&apos;s preference with its own.
       </Note>
     </div>
   );
@@ -618,17 +637,18 @@ const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 /**
  * A second `AppShell`, in a box.
  *
- * Three things keep it from fighting the real one:
+ * Two things keep it from fighting the real one:
  *
  *  - Its own `MemoryRouter`, so clicking its nav moves IT and not the page. React
  *    Router refuses a router inside a router; resetting `LocationContext` to its
  *    outside-any-router value is the documented escape hatch for exactly this (a
  *    widget with its own history). Nothing inside reads the outer route.
- *  - `transform` on the frame, which makes the frame the containing block for the
- *    shell's `position: fixed` phone bar — so below 768px the bar docks on the card,
- *    not on the window.
- *  - `useKeepOuterNavHeight`: the shell publishes `--app-nav-h` on `<html>` and
- *    removes it on unmount. Two shells means two writers of one variable.
+ *  - Being INSIDE the real AppShell. A shell below another shell knows it is nested
+ *    (the same as passing `embedded`): it fills its parent's box instead of the
+ *    viewport, docks its phone bar on itself (`contain: layout` on its root), publishes
+ *    `--app-nav-h` on its own root instead of `<html>`, and persists its collapse state
+ *    only under a key it is given. Until 0.7.0 this card needed a `transform` on the
+ *    frame and a hook that re-published the outer shell's nav height behind it.
  */
 function AppShellPlayground() {
   const [subNav, setSubNav] = useState<"flyout" | "inline">("inline");
@@ -636,8 +656,9 @@ function AppShellPlayground() {
   const [withFooter, setWithFooter] = useState(true);
   const [withSidebarFooter, setWithSidebarFooter] = useState(true);
   const [customLabels, setCustomLabels] = useState(false);
-  const frame = useRef<HTMLDivElement>(null);
-  useKeepOuterNavHeight(frame);
+  const [embedded, setEmbedded] = useState(true);
+  const [persist, setPersist] = useState(true);
+  const [navVars, setNavVars] = useState<string | null>(null);
 
   return (
     <div className="space-y-4">
@@ -678,22 +699,33 @@ function AppShellPlayground() {
           checked={customLabels}
           onCheckedChange={setCustomLabels}
         />
+        <Switch
+          label="embedded"
+          description="Implied here — the box is inside the page's own AppShell, so off changes nothing"
+          checked={embedded}
+          onCheckedChange={setEmbedded}
+        />
+        <Switch
+          label="collapseStorageKey"
+          description="Off: an embedded shell does not persist its collapse state at all"
+          checked={persist}
+          onCheckedChange={setPersist}
+        />
       </div>
 
-      <div
-        ref={frame}
-        // `transform` is load-bearing — see the comment on the component.
-        style={{ transform: "translateZ(0)" }}
-        className="h-[26rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)] md:[&_aside]:h-auto md:[&_aside]:self-stretch [&_main]:overflow-y-auto"
-      >
+      {/* A plain box with a height: no transform, no class overrides reaching into the
+          shell. The nested shell fills it and docks its phone bar on it by itself. */}
+      <div className="h-[26rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/books/ledger"]}>
             <AppShell
               nav={DEMO_NAV}
               subNav={subNav}
               mobileSubNav={mobileSubNav}
-              // A key of its own: the default is shared by every app on the origin.
-              collapseStorageKey="uikit-showcase-demo-shell.collapsed"
+              embedded={embedded}
+              // A key of its own: the default is shared by every app on the origin. An
+              // embedded shell without one keeps its collapse state for this mount only.
+              collapseStorageKey={persist ? "uikit-showcase-demo-shell.collapsed" : undefined}
               collapseLabel={customLabels ? "Fold the sidebar" : undefined}
               expandLabel={customLabels ? "Unfold the sidebar" : undefined}
               toggleGroupLabel={customLabels ? (group) => `Pages of ${group}` : undefined}
@@ -701,7 +733,6 @@ function AppShellPlayground() {
               // label, a tour anchor. There is nothing above the shell to put them on.
               id="demo-shell"
               data-demo="app-shell"
-              className="h-full min-h-0 md:h-full"
               topBar={
                 <TopBar
                   brand={
@@ -737,6 +768,28 @@ function AppShellPlayground() {
         </UNSAFE_LocationContext.Provider>
       </div>
 
+      <Row>
+        <button
+          type="button"
+          className={MINI_BUTTON}
+          onClick={() => {
+            const inner = document.getElementById("demo-shell")?.style.getPropertyValue("--app-nav-h");
+            const outer = document.documentElement.style.getPropertyValue("--app-nav-h");
+            setNavVars(`#demo-shell: ${inner || "unset"} · <html>: ${outer || "unset"}`);
+          }}
+        >
+          Read --app-nav-h on both
+        </button>
+        <span className={READOUT}>{navVars ?? "press to read"}</span>
+      </Row>
+      <Note>
+        Narrow the window below 768px and read again: the box&apos;s own bar is measured onto{" "}
+        <code className="font-mono">#demo-shell</code>, while{" "}
+        <code className="font-mono">&lt;html&gt;</code> keeps the page shell&apos;s value — the
+        page&apos;s bottom bar does not move when this box mounts, and nothing is left behind when
+        it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves
+        to the nearest shell&apos;s bar.
+      </Note>
       <Note>
         Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with
         the button at its foot (the state persists under{" "}
@@ -763,39 +816,6 @@ function DemoShellPage() {
       </p>
     </div>
   );
-}
-
-/**
- * Keep `--app-nav-h` equal to the REAL shell's phone bar while the playground is
- * mounted, and put it back after the playground's cleanup has removed it.
- *
- * Measured the way AppShell measures (floored bounding box of the bar's wrapper), so
- * when the real shell republishes on a resize the two writers agree and the observer
- * does nothing.
- */
-function useKeepOuterNavHeight(frame: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const root = document.documentElement;
-    const fix = () => {
-      const bar = [...document.querySelectorAll<HTMLElement>("nav[data-tour='nav']")].find(
-        (nav) => !frame.current?.contains(nav),
-      )?.parentElement;
-      const want = `${bar ? Math.floor(bar.getBoundingClientRect().height) : 0}px`;
-      if (root.style.getPropertyValue("--app-nav-h") !== want) {
-        root.style.setProperty("--app-nav-h", want);
-      }
-    };
-    // Runs after the playground's own effect (parents run after children), so the
-    // first thing it corrects is the playground's first publish.
-    fix();
-    const observer = new MutationObserver(fix);
-    observer.observe(root, { attributes: true, attributeFilter: ["style"] });
-    return () => {
-      observer.disconnect();
-      // The playground removes the variable in ITS cleanup, which runs after this one.
-      setTimeout(fix, 0);
-    };
-  }, [frame]);
 }
 
 /* ── PageContents ──────────────────────────────────────────────────────── */

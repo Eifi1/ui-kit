@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Archive, Check } from "lucide-react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import {
   Button,
   DataTable,
@@ -10,7 +10,12 @@ import {
   isFilterActive,
   rowMatches,
 } from "@eifi1/ui-kit";
-import type { DataTableColumn, FilterState, SortState, SwipeAction } from "@eifi1/ui-kit";
+import type {
+  DataTableColumn,
+  FilterState,
+  MobileSwipeActions,
+  SortState,
+} from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import {
   Amount,
@@ -56,13 +61,37 @@ function UrlSyncTable() {
   // back, and urlSync mirrors that same array. One source, two readouts.
   const [sorts, setSorts] = useState<SortState[]>([{ key: "amount", dir: "desc" }]);
   const { search } = useLocation();
+  const navigate = useNavigate();
+  // Bumped to remount the table, which is the only moment it reads the address.
+  const [mount, setMount] = useState(0);
+  // What a shared link would carry: Status filtered to "open", page size 25. (Not a
+  // sort — sort is controlled here, so the page's `sorts` wins over the URL's.)
+  const sharedQuery = `?f.status=${encodeURIComponent(
+    encodeFilterValue({ type: "select", values: ["open"] }) ?? "",
+  )}&ps=25`;
 
   return (
     <Example
       label="urlSync — the view lives in the address"
       hint="sort, filter or page this table and watch the hash query below change"
     >
+      <Row className="mb-3">
+        <Button
+          variant="secondary"
+          className="px-2 py-1 text-xs"
+          onClick={() => {
+            navigate({ search: sharedQuery }, { replace: true });
+            setMount((m) => m + 1);
+          }}
+        >
+          Open a shared link (Status = Open, 25 per page)
+        </Button>
+        <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setMount((m) => m + 1)}>
+          Remount — read the address again
+        </Button>
+      </Row>
       <DataTable
+        key={mount}
         rows={SMALL_ROWS}
         columns={SMALL_COLUMNS}
         rowKey={(r) => r.id}
@@ -94,16 +123,18 @@ function UrlSyncTable() {
         <Note>
           The URL is read exactly <em>once</em>, on mount, and only ever written afterwards.
           That is what stops the browser's own history fighting the user's next click — but
-          it also means editing the address by hand does nothing until you reload.
+          it also means editing the address by hand does nothing until the table remounts
+          (a reload, or the <em>Remount</em> button above).
         </Note>
         <Note>
-          On this page even the reload does nothing. The showcase runs under{" "}
-          <code className="font-mono">HashRouter</code>, so the table <em>writes</em> into the
-          hash (<code className="font-mono">#/data-table-server?sort=…</code>, via{" "}
-          <code className="font-mono">useSearchParams</code>) but <em>reads</em> the initial
-          view from <code className="font-mono">window.location.search</code>, which is empty
-          here — a shared hash link opens on the default view and is then overwritten. Under a
-          BrowserRouter both sides are the same query string and the round trip works.
+          The showcase runs under <code className="font-mono">HashRouter</code>, where the
+          router&apos;s query lives after the <code className="font-mono">#</code> (
+          <code className="font-mono">#/data-table-server?f.status=…</code>) and{" "}
+          <code className="font-mono">window.location.search</code> is empty. The table reads{" "}
+          <em>and</em> writes through <code className="font-mono">useSearchParams</code>, so
+          the round trip works under every router: <em>Open a shared link</em> puts a filter
+          and a page size into the hash and remounts, and the table opens filtered on 25 rows
+          per page.
         </Note>
       </div>
     </Example>
@@ -176,6 +207,7 @@ function ServerTable() {
   const [result, setResult] = useState(() => runQuery(INITIAL_QUERY));
   const [loading, setLoading] = useState(false);
   const [takeOver, setTakeOver] = useState(true);
+  const [sizeIsOurs, setSizeIsOurs] = useState(true);
   const latest = useRef(0);
   const { log, record } = useCallbackLog(3);
 
@@ -192,6 +224,13 @@ function ServerTable() {
       setResult(runQuery(next));
       setLoading(false);
     }, 600);
+  };
+
+  // A first load: nothing on screen yet, so the table shows its loading row instead
+  // of the empty text ("no results" is a claim it cannot make while the page is out).
+  const coldStart = () => {
+    setResult({ rows: [], total: 0 });
+    request({ page: 0, filters: {}, sorts: [] }, "cold start (first page in flight)");
   };
 
   return (
@@ -211,11 +250,25 @@ function ServerTable() {
           />
           pass onFiltersChange / onSortsChange
         </label>
+        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={sizeIsOurs}
+            onChange={(e) => {
+              setSizeIsOurs(e.target.checked);
+              if (!e.target.checked) request({ pageSize: 10, page: 0 }, "server fixes pageSize = 10");
+            }}
+          />
+          pass onPageSizeChange
+        </label>
+        <Button variant="secondary" className="px-2 py-1 text-xs" onClick={coldStart}>
+          Cold start
+        </Button>
         <span
           role="status"
           className={cn("text-xs", loading ? "text-[var(--brand)]" : "text-[var(--text-muted)]")}
         >
-          {loading ? "Loading… (the page's own indicator)" : `${result.total} rows on the server`}
+          {loading ? "request in flight…" : `${result.total} rows on the server`}
         </span>
       </Row>
 
@@ -224,15 +277,17 @@ function ServerTable() {
         columns={SERVER_COLUMNS}
         rowKey={(r) => r.id}
         maxBodyHeight="18rem"
-        rowClassName={() => (loading ? "opacity-50" : undefined)}
         serverPagination={{
           page: query.page,
           pageSize: query.pageSize,
           total: result.total,
           isLoading: loading,
           onPageChange: (page) => request({ page }, `onPageChange(${page})`),
-          onPageSizeChange: (pageSize) =>
-            request({ pageSize, page: 0 }, `onPageSizeChange(${pageSize})`),
+          // Omitted, the pager renders no page-size select at all — the server's size
+          // is not the user's to change, and a select that changed nothing would lie.
+          onPageSizeChange: sizeIsOurs
+            ? (pageSize) => request({ pageSize, page: 0 }, `onPageSizeChange(${pageSize})`)
+            : undefined,
         }}
         {...(takeOver
           ? {
@@ -260,10 +315,15 @@ function ServerTable() {
           On a phone the pager stays (there is no endless scroll over rows that are not here).
         </Note>
         <Note>
-          <code className="font-mono">serverPagination.isLoading</code> is passed here, and
-          nothing in the table changes: the prop is declared but never read. The dimmed rows
-          and the status line above are this page&apos;s own doing, through{" "}
-          <code className="font-mono">rowClassName</code>.
+          <code className="font-mono">serverPagination.isLoading</code> is the only loading
+          signal this table gets — there is no <code className="font-mono">rowClassName</code>{" "}
+          here. While a page is in flight the table sets{" "}
+          <code className="font-mono">aria-busy</code> and dims the rows it still shows (they
+          are the previous page&apos;s, about to go); <em>Cold start</em> empties the table
+          first, and then it shows a spinner with “Loading…” instead of the{" "}
+          <code className="font-mono">empty</code> text. The pager stays usable during a
+          fetch, so focus never drops off the button just pressed. Uncheck{" "}
+          <em>pass onPageSizeChange</em> and the page-size select disappears.
         </Note>
       </div>
     </Example>
@@ -283,6 +343,7 @@ function PhoneTable() {
   const [statusById, setStatusById] = useState<Record<string, Status>>({});
   const [compact, setCompact] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [rtl, setRtl] = useState(false);
   const { log, record } = useCallbackLog(3);
 
   const rows = useMemo(() => {
@@ -299,11 +360,12 @@ function PhoneTable() {
     setStatusById((m) => ({ ...m, [r.id]: s }));
   };
 
-  const swipe = (r: TableRow): { left?: SwipeAction[]; right?: SwipeAction[] } | null => {
+  // Logical sides: `end` is a drag toward the reading end (right in LTR, left in RTL).
+  const swipe = (r: TableRow): MobileSwipeActions | null => {
     // A row that must not move returns null — here the archived ones.
     if (r.status === "archived") return null;
     return {
-      right: [
+      end: [
         {
           label: "Done",
           icon: <Check className="size-4" />,
@@ -312,7 +374,7 @@ function PhoneTable() {
           armedClassName: "bg-[var(--money-income)]",
         },
       ],
-      left: [
+      start: [
         {
           label: "Archive",
           icon: <Archive className="size-4" />,
@@ -334,6 +396,10 @@ function PhoneTable() {
           <input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} />
           custom <code className="font-mono">mobileCard</code>
         </label>
+        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={rtl} onChange={(e) => setRtl(e.target.checked)} />
+          right-to-left
+        </label>
         <Button
           variant="ghost"
           className="px-2 py-1 text-xs"
@@ -343,48 +409,50 @@ function PhoneTable() {
           Undo swipes
         </Button>
       </Row>
-      <DataTable
-        rows={rows}
-        columns={COLUMNS}
-        rowKey={(r) => r.id}
-        defaultPageSize={8}
-        maxBodyHeight="18rem"
-        onRowClick={(r) => setExpandedId((cur) => (cur === r.id ? null : r.id))}
-        isExpanded={(r) => r.id === expandedId}
-        // Inline on the phone this time (no mobileExpandAsDialog): the chevron points
-        // down and flips when the panel is open.
-        expandedRow={(r) => (
-          <span className="text-xs text-[var(--text-secondary)]">
-            {r.id} · opened {r.opened} · {AMOUNT_FMT.format(r.amount)}
-          </span>
-        )}
-        mobileGroupBy={(r) => r.status}
-        mobileGroupLabel={(key) => (
-          <span className="inline-flex items-center gap-2">
-            {STATUS_LABEL[key as Status]}
-            <span className="font-normal normal-case tracking-normal">
-              ({rows.filter((r) => r.status === key).length})
+      <div dir={rtl ? "rtl" : "ltr"}>
+        <DataTable
+          rows={rows}
+          columns={COLUMNS}
+          rowKey={(r) => r.id}
+          defaultPageSize={8}
+          maxBodyHeight="18rem"
+          onRowClick={(r) => setExpandedId((cur) => (cur === r.id ? null : r.id))}
+          isExpanded={(r) => r.id === expandedId}
+          // Inline on the phone this time (no mobileExpandAsDialog): the chevron points
+          // down and flips when the panel is open.
+          expandedRow={(r) => (
+            <span className="text-xs text-[var(--text-secondary)]">
+              {r.id} · opened {r.opened} · {AMOUNT_FMT.format(r.amount)}
             </span>
-          </span>
-        )}
-        mobileCard={
-          compact
-            ? (r) => (
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">{r.name}</span>
-                    <span className="block text-xs text-[var(--text-muted)]">{r.opened}</span>
-                  </span>
-                  <span className="tabular-nums">
-                    <Amount value={r.amount} />
-                  </span>
-                </div>
-              )
-            : undefined
-        }
-        mobileSwipeActions={swipe}
-        rowClassName={(r) => (r.status === "archived" ? "opacity-60" : undefined)}
-      />
+          )}
+          mobileGroupBy={(r) => r.status}
+          mobileGroupLabel={(key) => (
+            <span className="inline-flex items-center gap-2">
+              {STATUS_LABEL[key as Status]}
+              <span className="font-normal normal-case tracking-normal">
+                ({rows.filter((r) => r.status === key).length})
+              </span>
+            </span>
+          )}
+          mobileCard={
+            compact
+              ? (r) => (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{r.name}</span>
+                      <span className="block text-xs text-[var(--text-muted)]">{r.opened}</span>
+                    </span>
+                    <span className="tabular-nums">
+                      <Amount value={r.amount} />
+                    </span>
+                  </div>
+                )
+              : undefined
+          }
+          mobileSwipeActions={swipe}
+          rowClassName={(r) => (r.status === "archived" ? "opacity-60" : undefined)}
+        />
+      </div>
       <div className="mt-3 space-y-2">
         <CallbackLog log={log} />
         <Note>
@@ -392,8 +460,13 @@ function PhoneTable() {
           column rail and selection are not rendered at all. Filters move into a{" "}
           <em>Filters</em> bar that opens a bottom sheet; paging becomes endless scroll that
           reveals <code className="font-mono">defaultPageSize</code> more cards (8 here) as
-          the “Loading…” sentinel nears the viewport. Swipe a card right for <em>Done</em>,
-          left for <em>Archive</em>; archived and expanded cards do not move. With the custom
+          the “Loading…” sentinel nears the viewport. The actions are logical:{" "}
+          <em>Done</em> is <code className="font-mono">end</code> and <em>Archive</em> is{" "}
+          <code className="font-mono">start</code>, so a card swipes right for Done and left for
+          Archive — and with <em>right-to-left</em> ticked the same definition swipes left for
+          Done and right for Archive (<code className="font-mono">left</code> /{" "}
+          <code className="font-mono">right</code> still exist for a truly physical side).
+          Archived and expanded cards do not move. With the custom
           card unchecked you get the default body: the <code className="font-mono">mobilePrimary</code>{" "}
           column bold on top, the rest as labelled pairs, ID skipped by{" "}
           <code className="font-mono">mobileHidden</code>.

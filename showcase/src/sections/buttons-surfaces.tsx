@@ -125,6 +125,42 @@ function ButtonDisabled() {
   );
 }
 
+function ButtonRef() {
+  // `ref` reaches the <button> itself — React 19 passes it as an ordinary prop.
+  const saveRef = useRef<HTMLButtonElement>(null);
+  const [focused, setFocused] = useState(false);
+  return (
+    <Example label="Button — ref" hint="the <button> element, for focus and measuring from outside">
+      <Row>
+        <Button variant="ghost" onClick={() => saveRef.current?.focus()}>
+          Focus the Save button
+        </Button>
+        <Button
+          ref={saveRef}
+          variant="brand"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        >
+          Save
+        </Button>
+      </Row>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        Save is focused: <span className="font-mono text-[var(--text-secondary)]">{String(focused)}</span>{" "}
+        — the first button calls <code className="font-mono">saveRef.current.focus()</code>.
+      </p>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">ButtonProps</code> declares{" "}
+          <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a
+          function component its <code className="font-mono">ref</code> as a prop, so it rides onto
+          the element with no <code className="font-mono">forwardRef</code>; the declaration only
+          makes TypeScript accept it — before 0.7.0 this line did not compile.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 function ButtonClasses() {
   return (
     <Example
@@ -520,6 +556,7 @@ export function ButtonsSurfaces() {
       <ButtonVariants />
       <ButtonStretch />
       <ButtonDisabled />
+      <ButtonRef />
       <ButtonClasses />
       <IconButtons />
       <IconButtonControls />

@@ -44,6 +44,7 @@ export function MonthPickerDemo() {
   const [loc, setLoc] = useState<Loc>("de-DE");
   const [short, setShort] = useState(now);
   const [fiscal, setFiscal] = useState(now);
+  const [rtlMonth, setRtlMonth] = useState(now);
   // Two months back: a host whose books close late.
   const openBooks = shiftKey(now, -2);
 
@@ -55,7 +56,7 @@ export function MonthPickerDemo() {
   return (
     <>
       <Note>
-        <strong>Keyboard:</strong> the grid is one tab stop. Arrow keys walk the months (left/right
+        <strong>Keyboard:</strong> the grid is one tab stop. Arrow keys walk the months (left/right, in reading order,
         by one, up/down by a row of three) and walk straight into the neighbouring year at either
         end; Home/End go to the ends of the row; PageUp/PageDown step a whole year. Out-of-bounds
         months stay focusable and refuse the pick, so the roving tab stop never falls into a hole.
@@ -207,6 +208,30 @@ export function MonthPickerDemo() {
           </div>
         </Stage>
         <StateLine>{`"${localised}"`}</StateLine>
+      </Example>
+
+      <Example
+        label="MonthPicker — right-to-left"
+        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
+      >
+        <Stage>
+          <div dir="rtl" className="max-w-xs">
+            <MonthPicker
+              label="الشهر"
+              value={rtlMonth}
+              onChange={setRtlMonth}
+              locale="ar-EG"
+              labels={{ previousYear: "السنة السابقة", nextYear: "السنة التالية", panel: "اختر الشهر" }}
+            />
+          </div>
+        </Stage>
+        <StateLine>{`"${rtlMonth}"`}</StateLine>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The panel is portalled out of this <code className="font-mono">dir</code> but reads it off
+          the field when it opens and carries it: the months run from the right, the year chevrons
+          are mirrored, and ← moves to the NEXT month (the one to its left). Before 0.7.0 the panel
+          opened left-to-right and only the arrow keys were reversed.
+        </p>
       </Example>
     </>
   );

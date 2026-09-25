@@ -133,10 +133,10 @@ function MainTable() {
             type="button"
             onClick={() => setHideArchived((v) => !v)}
             aria-expanded={!hideArchived}
-            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
+            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-start text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
           >
             {hideArchived ? (
-              <ChevronRight aria-hidden className="size-3.5" />
+              <ChevronRight aria-hidden className="size-3.5 rtl:-scale-x-100" />
             ) : (
               <ChevronDown aria-hidden className="size-3.5" />
             )}
@@ -172,10 +172,12 @@ function MainTable() {
 
       <div className="mt-3 space-y-2">
         <Note>
-          The column panel is the vertical <em>Columns (n/m)</em> strip on the right edge:
+          The column panel is the vertical <em>Columns (n/m)</em> strip on the end edge (the
+          right in this left-to-right table):
           it hides columns, and <em>Auto-size columns</em> freezes every visible column to
           its measured width except the last, which is left elastic to absorb the slack.
-          Drag the hairline at a header's right edge to resize by hand; double-click it to
+          Drag the hairline at a header&apos;s trailing edge to resize by hand (in a
+          right-to-left table it sits on the left and a drag to the left widens); double-click it to
           give that one column its width back.
         </Note>
         <Note>
@@ -323,11 +325,23 @@ function ControlledTable() {
         />
         <CallbackLog log={log} />
         <Note>
+          Shift-click a second checkbox and the log shows exactly one line,{" "}
+          <code className="font-mono">onToggleMany([…], true)</code>, for the whole range — the
+          clicked row is not reported a second time through{" "}
+          <code className="font-mono">onToggle</code>.
+        </Note>
+        <Note>
           With <code className="font-mono">onFiltersChange</code> set the table stops owning
           the filters: it renders <code className="font-mono">filters</code> as given and
-          reports every edit. It also stops resetting the page on a filter change — that
-          becomes the owner&apos;s job, and the owner cannot reach the table&apos;s page, so
-          narrowing from page 3 only lands on page 1 because the page index is clamped.
+          reports every edit. The page still resets: whenever the <em>value</em> of{" "}
+          <code className="font-mono">filters</code> or <code className="font-mono">sorts</code>{" "}
+          changes — from the funnel, a header click, or a chip above the table — a client-side
+          table goes back to page 1. Tick every chip, move to page 2, then drop a chip: the
+          table lands on page 1 rather than being clamped to the last page. A fresh but equal
+          object on every render resets nothing, because the comparison is by value. (In{" "}
+          <code className="font-mono">serverPagination</code> mode the owner&apos;s{" "}
+          <code className="font-mono">page</code> is the page, and resetting it stays the
+          owner&apos;s job.)
         </Note>
       </div>
     </Example>
@@ -377,6 +391,7 @@ const LINE_COLUMNS: DataTableColumn<LineItem>[] = [
     header: "Qty",
     cell: (r) => r.qty,
     sortBy: (r) => r.qty,
+    // Deliberately the pre-0.7 physical class: the table rewrites it to `text-end`.
     className: "text-right tabular-nums",
     headClassName: "text-right",
   },
@@ -443,6 +458,16 @@ function ShortTable() {
           anchor, which a card with a linked cell cannot be, so it falls back to a
           role=&quot;button&quot; card and the spec link keeps working.
         </Note>
+        <Note>
+          <code className="font-mono">paginated=&#123;false&#125;</code> holds on a phone too:
+          every line is a card, with no endless-scroll chunking and no “Loading…” sentinel for
+          rows that are already in memory. Qty and Line total still say the pre-0.7{" "}
+          <code className="font-mono">text-right</code>; the table rewrites a bare{" "}
+          <code className="font-mono">text-right</code> / <code className="font-mono">text-left</code>{" "}
+          to <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>,
+          so old column definitions are right in both directions (write{" "}
+          <code className="font-mono">ltr:text-right rtl:text-right</code> for a truly physical side).
+        </Note>
       </div>
     </Example>
   );
@@ -497,14 +522,15 @@ function RtlTable() {
       </div>
       <div className="mt-3">
         <Note>
-          The text columns follow the direction, because each header is a flex row and a
-          flex row starts at the inline start. The right-aligned Amount column does not: its
-          cells use the physical <code className="font-mono">text-right</code> class and hug
-          the right edge of the column, while the header — flipped by the same{" "}
-          <code className="font-mono">text-right</code> sniff that is meant to keep the arrow
-          beside the numbers — lands on the left edge. The pager&apos;s previous / next
-          chevrons keep pointing left / right. The page numbers do follow{" "}
-          <code className="font-mono">locale</code>.
+          Everything follows the direction. The header row is{" "}
+          <code className="font-mono">text-start</code>, so Name and Status read from the
+          right. Amount is <code className="font-mono">text-end</code>: its cells and its
+          header hug the logical end — the left edge here — with the sort arrow and funnel
+          beside the numbers. The pager&apos;s previous / next chevrons flip to point back
+          and forward along the line, the column-resize hairline sits on each header&apos;s
+          left edge, the Columns strip is on the left, and the page numbers follow{" "}
+          <code className="font-mono">locale</code>. On a phone the filter sheet keeps{" "}
+          <code className="font-mono">dir</code> even though it is portalled.
         </Note>
       </div>
     </Example>

@@ -210,7 +210,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels"],
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDe"],
         Body: Localisation,
       },
     ],
@@ -478,7 +478,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click — and drilling down, through a bar chart as well as through tiles.",
         icon: LayoutPanelLeft,
-        components: ["Treemap", "fitLabel"],
+        components: ["Treemap", "TreemapCell", "fitLabel"],
         Body: () => (
           <>
             <TreemapDemo />

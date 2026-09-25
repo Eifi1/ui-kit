@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button, Input, NumberField, Select, Textarea } from "@eifi1/ui-kit";
+import { Button, EntityCombobox, Input, NumberField, Select, Textarea } from "@eifi1/ui-kit";
+import type { ComboOption } from "@eifi1/ui-kit";
 // The two subpath entries, imported from their source files: the showcase's alias
 // (showcase/alias.ts + tsconfig `paths`) maps only "@eifi1/ui-kit" and "/dates", and
 // a bare "@eifi1/ui-kit/rhf" would resolve INTO the barrel file. A consumer writes
@@ -29,10 +30,18 @@ export function FormsRhf() {
 
 const q = (v: unknown) => JSON.stringify(v);
 
+const PAYEES: ComboOption<string>[] = [
+  { value: "rail", label: "National Rail" },
+  { value: "hotel", label: "Hotel Adler" },
+  { value: "shop", label: "Office supplies Ltd" },
+];
+
 type ExpenseForm = {
   title: string;
   amount: number | null;
   category: string;
+  /** "" = no payee: the schema's spelling, so the picker is told `clearValue=""`. */
+  payee: string;
   note: string;
   agree: boolean;
 };
@@ -50,7 +59,7 @@ function FieldReadout() {
 
 function RhfExample() {
   const form = useForm<ExpenseForm>({
-    defaultValues: { title: "", amount: null, category: "", note: "", agree: false },
+    defaultValues: { title: "", amount: null, category: "", payee: "", note: "", agree: false },
     mode: "onTouched",
   });
   const [submitted, setSubmitted] = useState<ExpenseForm | null>(null);
@@ -130,6 +139,32 @@ function RhfExample() {
           />
           <FormField
             control={form.control}
+            name="payee"
+            rules={{ required: "Pick who was paid." }}
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel required>Payee</FormLabel>
+                <FormControl>
+                  {/* `clearValue=""`: the × hands field.onChange an empty string, the
+                      form's own "no choice", and "" reads back as empty — no mapping. */}
+                  <EntityCombobox
+                    value={field.value}
+                    onChange={field.onChange}
+                    clearValue=""
+                    clearable
+                    clearLabel="Clear payee"
+                    placeholder="Pick a payee"
+                    invalid={fieldState.invalid}
+                    options={PAYEES}
+                  />
+                </FormControl>
+                <FormDescription>value: {q(field.value)} — the × clears to &quot;&quot;, never null.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="note"
             rules={{ maxLength: { value: 40, message: "Keep it under 40 characters." } }}
             render={({ field, fieldState }) => (
@@ -189,7 +224,10 @@ function RhfExample() {
         The words come from the <code className="font-mono">rules</code> (or a schema); the kit
         ships none here. <code className="font-mono">FormMessage</code> is not{" "}
         <code className="font-mono">role=&quot;alert&quot;</code> on purpose — it is read when
-        focus reaches the control. The only entry in the package that needs{" "}
+        focus reaches the control. The adapter never coerces a value: an entity picker clears
+        to <code className="font-mono">null</code> unless it is given{" "}
+        <code className="font-mono">clearValue=&quot;&quot;</code>, as Payee is — the fix for a
+        zod <code className="font-mono">z.string()</code> field lives on the picker, not here. The only entry in the package that needs{" "}
         <code className="font-mono">react-hook-form</code>, an optional peer.
       </Note>
     </Example>

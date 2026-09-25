@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Button, Collapse, DialogFrame, Disclosure, Input, cn } from "@eifi1/ui-kit";
+import { Button, Collapse, DialogFrame, Disclosure, Input, buttonClasses, cn } from "@eifi1/ui-kit";
 import { Example, Note, Row, Stage } from "../lib/section";
 
 /**
@@ -303,7 +303,7 @@ function CollapseSpecimen() {
   );
 }
 
-type DialogKind = "form" | "commit" | "tall" | "sheet" | "question" | "wide";
+type DialogKind = "form" | "commit" | "tall" | "sheet" | "question" | "wide" | "header";
 
 function DialogSpecimens() {
   const [kind, setKind] = useState<DialogKind | null>(null);
@@ -330,6 +330,9 @@ function DialogSpecimens() {
         <Button variant="secondary" onClick={() => setKind("wide")}>
           Wide (xl), draggable, custom close label
         </Button>
+        <Button variant="secondary" onClick={() => setKind("header")}>
+          headerActions (node and function)
+        </Button>
       </Row>
       <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">open = {kind ?? "null"}</p>
 
@@ -355,6 +358,38 @@ function DialogSpecimens() {
             This paragraph is joined to the description through the caller&apos;s own{" "}
             <code className="font-mono">aria-describedby</code>; the X is named by{" "}
             <code className="font-mono">closeLabel</code>.
+          </p>
+        </DialogFrame>
+      )}
+
+      {kind === "header" && (
+        <DialogFrame
+          onClose={close}
+          title="Invoice INV-2026-0142"
+          description="Draft · last edited 2 minutes ago"
+          headingAs="h4"
+          closeButton
+          // The node form: a link that belongs to the header, not to the actions row.
+          headerActions={
+            <a
+              href="#/layout"
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClasses("ghost", "text-xs")}
+            >
+              Open in full page ↗
+            </a>
+          }
+          actions={(animatedClose) => (
+            <Button variant="secondary" onClick={animatedClose}>
+              Close
+            </Button>
+          )}
+        >
+          <p className="text-sm text-[var(--text-secondary)]">
+            <code className="font-mono">headerActions</code> render beside the title, before the X.
+            On a phone, where title and controls do not fit on one line, they wrap under the title
+            and the X keeps its corner — try the phone preview.
           </p>
         </DialogFrame>
       )}
@@ -405,10 +440,22 @@ function DialogSpecimens() {
       )}
 
       {kind === "commit" && (
-        <DialogFrame onClose={close} title="Group settings" headingAs="h4" closeButton>
+        <DialogFrame
+          onClose={close}
+          title="Group settings"
+          headingAs="h4"
+          closeButton
+          // The function form receives the animated close, as `actions` does.
+          headerActions={(animatedClose) => (
+            <Button variant="ghost" className="text-xs" onClick={animatedClose}>
+              Done
+            </Button>
+          )}
+        >
           <p className="text-sm text-[var(--text-secondary)]">
             Every change here saves as it is made, so there is no actions row — the X is the way
-            out.
+            out, and so is the header&apos;s own <strong>Done</strong>: a{" "}
+            <code className="font-mono">headerActions</code> function handed the animated close.
           </p>
         </DialogFrame>
       )}

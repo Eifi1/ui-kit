@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Button,
+  Checkbox,
   DropdownPanel,
   DropdownSearchHeader,
   FieldChevron,
@@ -51,6 +52,7 @@ export function DropdownParts() {
   // than the button (a grid item stretches), and the panel would then open a row
   // below where it looks like it should.
   const storeTrigger = useRef<HTMLButtonElement>(null);
+  const [storeRtl, setStoreRtl] = useState(false);
   const storeHits = useMemo(() => {
     const q = store.query.trim().toLowerCase();
     if (!q) return STORES;
@@ -111,7 +113,10 @@ export function DropdownParts() {
           The second one passes no strings but <code className="font-mono">placeholder</code>: its
           search box, its two actions and its count come from{" "}
           <code className="font-mono">multiSelect.*</code> in the provider — switch the showcase
-          language to see them follow. Ticking every market reads as &quot;all&quot; again.
+          language to see them follow. Ticking every market reads as &quot;all&quot; again. Its{" "}
+          <code className="font-mono">invalid</code>, <code className="font-mono">error</code> and{" "}
+          <code className="font-mono">disabled</code> are with the other pickers&apos; field states
+          on the Entity pickers page.
         </p>
       </Example>
 
@@ -214,7 +219,7 @@ export function DropdownParts() {
                 aria-haspopup="listbox"
                 aria-expanded={sort.open}
                 onClick={() => sort.setOpen((o) => !o)}
-                className={cn(FIELD_TRIGGER, "pr-9")}
+                className={cn(FIELD_TRIGGER, "pe-9")}
               >
                 <span className="truncate">{SORTS.find((s) => s.key === sortKey)?.label}</span>
                 <FieldChevron />
@@ -241,7 +246,7 @@ export function DropdownParts() {
                           sort.setOpen(false);
                         }}
                         className={cn(
-                          "block w-full px-3 py-1.5 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
                           s.key === sortKey && "font-medium",
                         )}
                       >
@@ -269,7 +274,7 @@ export function DropdownParts() {
       >
         <Stage>
           <Row>
-            <div ref={store.wrapperRef} className="relative w-64">
+            <div ref={store.wrapperRef} dir={storeRtl ? "rtl" : "ltr"} className="relative w-64">
               <FieldLabel>Store</FieldLabel>
               <button
                 ref={storeTrigger}
@@ -278,7 +283,7 @@ export function DropdownParts() {
                 aria-expanded={store.open}
                 aria-label={`Store: ${STORES.find((s) => s.key === storeKey)?.label ?? "none"}`}
                 onClick={() => store.setOpen((o) => !o)}
-                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pr-9")}
+                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
                 <span className={cn("truncate", !storeKey && "text-[var(--text-muted)]")}>
                   {STORES.find((s) => s.key === storeKey)?.label ?? "Pick a store"}
@@ -297,7 +302,10 @@ export function DropdownParts() {
                   // to clamp it against the viewport edge, and CSS cannot be measured
                   // before it is painted.
                   width={288}
-                  align="left"
+                  // Logical: the panel's START edge lines up with the trigger's — its
+                  // left here, its right under dir="rtl". `left`/`right` stay physical;
+                  // the default is `end`.
+                  align="start"
                   empty={storeHits.length === 0}
                   header={
                     <DropdownSearchHeader
@@ -317,7 +325,7 @@ export function DropdownParts() {
                           store.setOpen(false);
                         }}
                         className={cn(
-                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
                           s.key === storeKey && "font-medium",
                         )}
                       >
@@ -331,7 +339,19 @@ export function DropdownParts() {
             </div>
           </Row>
         </Stage>
+        <Checkbox
+          label='Put the field in dir="rtl"'
+          checked={storeRtl}
+          onChange={(e) => setStoreRtl(e.target.checked)}
+        />
         <Current label="store" value={storeKey === null ? "null" : `"${storeKey}"`} />
+        <Note>
+          Tick the box and open it again: the 288px panel now hangs from the trigger&apos;s right
+          edge and its rows read right to left. The panel is portalled to{" "}
+          <code className="font-mono">&lt;body&gt;</code>, outside the field&apos;s{" "}
+          <code className="font-mono">dir</code>, so it reads the direction off{" "}
+          <code className="font-mono">anchorRef</code> and carries it itself.
+        </Note>
         <Note>
           Anchored, the panel is <code className="font-mono">position: fixed</code> against the
           trigger's rect in a portal: it re-aligns on scroll and resize, flips above the trigger

@@ -72,6 +72,7 @@ const SYMBOLS: IconOption<Glyph>[] = [
 type Role = "owner" | "manager" | "viewer";
 type Plan = "basic" | "plus" | "pro";
 type Perm = "read" | "write" | "admin";
+type Channel = "mail" | "sms" | "push";
 
 /** Colours that live in CLASSES rather than values — `swatchClassName` paints the dot,
  *  and a light/dark pair is exactly what a class can hold and an inline colour cannot. */
@@ -107,6 +108,8 @@ export function SelectionDemo() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planTried, setPlanTried] = useState(false);
   const [perms, setPerms] = useState<Perm[]>(["read"]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelsSent, setChannelsSent] = useState<string | null>(null);
   const [autopay, setAutopay] = useState<"on" | "off">("on");
   const [ack, setAck] = useState(false);
   const [ackTried, setAckTried] = useState(false);
@@ -407,8 +410,9 @@ export function SelectionDemo() {
               />
             </div>
             {/* A group's `error` names the answer as a whole and is attached to the
-                fieldset; `required` marks the first radio, which is how a radio set is.
-                No `legend` here, so the group is named by `aria-label`. */}
+                fieldset; `required` reaches EVERY radio as the native attribute (any one
+                satisfies the set, each announces "required"). No `legend` here, so the
+                group is named by `aria-label` and there is nowhere to draw the star. */}
             <ChoiceCardGroup<Plan>
               aria-label="Plan"
               name="plan"
@@ -424,6 +428,43 @@ export function SelectionDemo() {
               className="sm:grid-cols-3"
               cardClassName="p-2"
             />
+            {/* Checkbox mode + `required` = "at least one": every box is `required`
+                while none is ticked, and none is once one is. The star goes on the
+                legend, once — the cards inside a group draw none of their own. */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setChannelsSent(channels.join(", "));
+              }}
+              className="space-y-2"
+            >
+              <ChoiceCardGroup<Channel>
+                multiple
+                required
+                legend="Notify me by"
+                name="channels"
+                options={[
+                  { value: "mail", title: "E-mail" },
+                  { value: "sms", title: "Text message" },
+                  { value: "push", title: "Push" },
+                ]}
+                value={channels}
+                onChange={(v) => {
+                  setChannels(v);
+                  setChannelsSent(null);
+                }}
+                className="sm:grid-cols-3"
+                cardClassName="p-2"
+              />
+              <Button type="submit" variant="secondary">
+                Submit (native form)
+              </Button>
+              <p className="text-xs text-[var(--text-muted)]">
+                {channelsSent === null
+                  ? "not submitted — with nothing ticked the browser refuses and points at the first box"
+                  : `submitted: ${channelsSent}`}
+              </p>
+            </form>
             <ChoiceCardGroup<Perm>
               multiple
               legend="Permissions (whole group disabled)"
@@ -458,7 +499,13 @@ export function SelectionDemo() {
           <code className="font-mono">cardClassName</code> reaches every card of a group (tighter
           padding on the plan cards), <code className="font-mono">className</code> the grid; a
           per-option <code className="font-mono">disabled</code> greys one card (Pro), the
-          group&apos;s own <code className="font-mono">disabled</code> is the fieldset&apos;s.
+          group&apos;s own <code className="font-mono">disabled</code> is the fieldset&apos;s.{" "}
+          <code className="font-mono">required</code> is the native attribute plus the kit&apos;s{" "}
+          <code className="font-mono">aria-hidden</code> star: after the title on a lone card (the
+          lease), after the <code className="font-mono">legend</code> on a group (&quot;Notify me
+          by&quot;). On a radio group every radio is required; on a checkbox group it means
+          &quot;at least one&quot; — every box is required while none is ticked, so an empty set
+          cannot be submitted and nothing demands a second box once one is ticked.
         </Note>
       </Example>
 
@@ -520,6 +567,10 @@ export function SelectionDemo() {
           <code className="font-mono">value</code> and <code className="font-mono">onChange</code>{" "}
           in both modes, so a <code className="font-mono">useState&lt;Status | null&gt;</code>{" "}
           setter goes straight in — no <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>.
+          In radio mode (the Period group) the group is ONE tab stop — the checked option, or the
+          first — and ← → (and ↑ ↓, Home, End) move and choose, following the reading direction in
+          RTL, as a native radio set does. The <code className="font-mono">allowEmpty</code> buttons
+          stay separate tab stops, each toggled with Space or Enter.
         </Note>
       </Example>
 

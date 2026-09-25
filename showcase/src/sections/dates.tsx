@@ -133,6 +133,9 @@ export function Dates() {
   const [sundayDay, setSundayDay] = useState(todayIso());
   const [focusDay, setFocusDay] = useState(todayIso());
   const [popped, setPopped] = useState(false);
+  const [rtlDay, setRtlDay] = useState(todayIso());
+  const [rtlFrom, setRtlFrom] = useState(startOfMonthIso(0));
+  const [rtlTo, setRtlTo] = useState(todayIso());
 
   // Bounds are computed from today rather than written out, so the specimen stays
   // operable whatever day you open this page (and in whatever timezone).
@@ -571,6 +574,53 @@ export function Dates() {
           has no other way to pass down. The provider&apos;s{" "}
           <code className="font-mono">miniCalendar.*</code> usually makes it unnecessary; the prop is
           for the one field that says it differently.
+        </p>
+      </Example>
+
+      <Example
+        label="Calendars and pickers — right-to-left"
+        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
+      >
+        <Stage>
+          <div dir="rtl" className="flex flex-wrap items-start gap-4">
+            <div className="w-60">
+              <DatePicker
+                value={rtlDay}
+                onChange={setRtlDay}
+                locale="ar-EG"
+                label="تاريخ الحجز"
+                step
+                stepLabels={{ prev: "اليوم السابق", next: "اليوم التالي" }}
+                calendarLabels={{ previousMonth: "الشهر السابق", nextMonth: "الشهر التالي" }}
+                clearable
+                clearLabel="مسح"
+              />
+            </div>
+            <MiniCalendar
+              locale="ar-EG"
+              mode="range"
+              from={rtlFrom}
+              to={rtlTo}
+              onSelect={(f, t) => {
+                setRtlFrom(f);
+                setRtlTo(t);
+              }}
+              labels={{ previousMonth: "الشهر السابق", nextMonth: "الشهر التالي" }}
+            />
+          </div>
+        </Stage>
+        <StateLine>
+          value={iso(rtlDay)} · from={iso(rtlFrom)} to={iso(rtlTo)}
+        </StateLine>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The weeks run from the right, and ← → follow the reading direction: focus a day and press
+          ← to reach the NEXT day, which sits to its left. The month chevrons and the picker&apos;s ‹ ›
+          day steps are mirrored so &ldquo;previous&rdquo; points to the reading start, and the
+          chevron and × sit at the field&apos;s logical end. The picker&apos;s calendar is portalled
+          to <code className="font-mono">&lt;body&gt;</code>, outside this{" "}
+          <code className="font-mono">dir</code>; it reads the direction off the field when it
+          opens and carries it, so the popover grid is right-to-left too (it opened left-to-right
+          before 0.7.0).
         </p>
       </Example>
 

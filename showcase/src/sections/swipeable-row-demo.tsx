@@ -97,7 +97,7 @@ function SwipeDemo() {
         <button
           type="button"
           onClick={() => record("row clicked (not a swipe)")}
-          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
         >
           <span className="min-w-0">
             <span className="block truncate text-sm text-[var(--text-primary)]">
@@ -242,10 +242,13 @@ function SwipeVariants() {
         buttons (default: the provider&apos;s <code className="font-mono">swipeableRow.actions</code>).
       </Note>
       <Note>
-        Right-to-left changes nothing: <code className="font-mono">left</code> and{" "}
-        <code className="font-mono">right</code> are physical drag directions, and the keyboard
-        buttons surface at the physical right edge — in RTL that is the row&apos;s start, over
-        the title, not its end.
+        Right-to-left: <code className="font-mono">left</code> and{" "}
+        <code className="font-mono">right</code> stay physical drag directions on purpose — a
+        swipe is a movement across the glass, and which way is destructive is the app&apos;s
+        call (swap the arrays for a mirrored RTL layout). What the row lays out does mirror
+        since 0.7.0: the revealed label hugs the edge being uncovered in either direction, and
+        the keyboard buttons (Tab into the Arabic row) surface at the row&apos;s logical END —
+        the left here — instead of over its title.
       </Note>
     </div>
   );

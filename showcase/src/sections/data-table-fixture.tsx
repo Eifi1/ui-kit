@@ -200,11 +200,14 @@ export const AMOUNT_COL: DataTableColumn<TableRow> = {
   cell: (r) => <Amount value={r.amount} />,
   sortBy: (r) => r.amount,
   filter: AMOUNT_FILTER,
-  className: "text-right tabular-nums whitespace-nowrap",
-  // `text-right` in `headClassName` is load-bearing, not decoration: the header
+  className: "text-end tabular-nums whitespace-nowrap",
+  // `text-end` in `headClassName` is load-bearing, not decoration: the header
   // sniffs it and flips its own flex row, so the sort arrow and filter funnel sit
-  // to the LEFT of the label and stay next to the numbers they belong to.
-  headClassName: "text-right",
+  // BEFORE the label and stay next to the numbers they belong to — on the left in
+  // LTR, on the right in RTL. A legacy `text-right` is rewritten to `text-end` by
+  // the table, so pre-0.7 columns (see the line items on the Data table page) behave
+  // the same.
+  headClassName: "text-end",
 };
 
 export const COLUMNS: DataTableColumn<TableRow>[] = [

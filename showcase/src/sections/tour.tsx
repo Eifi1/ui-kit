@@ -49,7 +49,7 @@ export function GuidedTour() {
               ["body: ReactNode", "Card copy — a node, not a string."],
               ["action?: ReactNode", "Extra footer row, e.g. a shortcut button."],
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
-              ["placement?", '"top" | "right" | "bottom" | "left" | "center"; omit for auto'],
+              ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center"; omit for auto. start/end follow the target\'s reading direction, left/right are physical'],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
               ["beforeStep?", "Sync or async; awaited before the target is located."],
             ]}
@@ -84,11 +84,25 @@ function TourLauncher() {
       // would do the same thing even with a target, which is the difference between
       // "there is nothing to point at" and "do not point at it".
       title: "This is the guided tour",
-      body: "Four steps over three targets planted in this section. Esc skips, → advances, ← goes back.",
+      body: "Four steps over three targets planted in this section. Esc skips, Enter or → advances, ← goes back (mirrored in a right-to-left document). Tab to Back or Skip and press Enter: only that button runs.",
       action: (
-        <Button variant="secondary" className="px-2.5 py-1 text-xs" onClick={() => goToStep(3)}>
-          Skip ahead to the step table
-        </Button>
+        <Row>
+          <Button variant="secondary" className="px-2.5 py-1 text-xs" onClick={() => goToStep(3)}>
+            Skip ahead to the step table
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-2.5 py-1 text-xs"
+            onClick={() => {
+              stop();
+              // `stop()` deliberately fires NO callbacks — neither onFinish nor onSkip —
+              // so an app that records completion has to record it here itself.
+              setOutcome("stopped");
+            }}
+          >
+            stop()
+          </Button>
+        </Row>
       ),
     },
     {
@@ -149,18 +163,6 @@ function TourLauncher() {
         >
           Resume at step 3 (startIndex: 2)
         </Button>
-        <Button
-          variant="secondary"
-          disabled={!active}
-          onClick={() => {
-            stop();
-            // `stop()` deliberately fires NO callbacks — neither onFinish nor onSkip —
-            // so an app that records completion has to record it here itself.
-            setOutcome("stopped");
-          }}
-        >
-          Stop
-        </Button>
         <Button data-tour="showcase-ping" onClick={() => setPings((n) => n + 1)}>
           Ping ({pings})
         </Button>
@@ -184,6 +186,13 @@ function TourLauncher() {
         its nav items. The step matches the first VISIBLE element for the selector, not the
         first in DOM order, so one selector can cover a desktop and a mobile copy of the same
         control.
+      </Note>
+      <Note>
+        <code className="font-mono">stop()</code> sits in the welcome step&apos;s{" "}
+        <code className="font-mono">action</code> rather than beside the launcher: while a tour
+        runs the page outside the card and the spotlit target takes no clicks (the tour is{" "}
+        <code className="font-mono">aria-modal</code>, and since 0.7.0 the pointer is held to that
+        too), so a Stop button out on the page could never be pressed.
       </Note>
     </div>
   );
@@ -223,6 +232,27 @@ function PlacementTour() {
       body: "And to the left. padding here is 20 — the spotlight's margin around the target.",
       placement: "left",
       padding: 20,
+    },
+    {
+      target: '[data-tour="showcase-place-a"]',
+      title: 'placement: "end"',
+      body: "The logical side: the card sits at the target's END — the right here, because Target A reads left to right. Compare the next step, in a right-to-left box.",
+      placement: "end",
+      padding: 4,
+    },
+    {
+      target: '[data-tour="showcase-place-rtl"]',
+      title: 'placement: "end" in dir="rtl"',
+      body: "The same placement on a target inside dir=\"rtl\": its end is the LEFT. The card takes the target's direction too — and so do the keys: ← advances here and → goes back.",
+      placement: "end",
+      padding: 4,
+    },
+    {
+      target: '[data-tour="showcase-place-rtl"]',
+      title: 'placement: "start" in dir="rtl"',
+      body: "And its start is the right. A translated app writes start/end once and gets the mirror for free; left/right stay for a step that really means a side of the screen.",
+      placement: "start",
+      padding: 4,
     },
     {
       target: '[data-tour="showcase-place-a"]',
@@ -291,6 +321,14 @@ function PlacementTour() {
           Target B
         </span>
       </div>
+      <div dir="rtl" className="flex justify-center">
+        <span
+          data-tour="showcase-place-rtl"
+          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+        >
+          الهدف د — Target D, dir=&quot;rtl&quot;
+        </span>
+      </div>
       <Row>
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           startIndex
@@ -340,10 +378,14 @@ function PlacementTour() {
         whatever the language menu says; this nested one sits below it.
       </Note>
       <Note>
-        The keys are physical: → and Enter advance, ← goes back, Esc skips — in a
-        right-to-left document too, where → points backwards. On a step with a spotlight the
-        overlay is click-through everywhere, not only on the target, so the page behind stays
-        clickable while the card holds the keyboard focus.
+        Keys follow the reading direction of the step&apos;s target (the document&apos;s for a
+        centred step): Enter and the forward arrow advance — → in LTR, ← in RTL, as on Target D
+        above — the other arrow goes back, Esc skips. Enter on a focused control belongs to that
+        control: Tab to <strong>Zurück</strong> or <strong>Überspringen</strong> and press Enter,
+        and only that button runs (it used to run AND step forward). The page is blocked outside
+        the card and the spotlit target — try clicking <strong>Start the labelled tour</strong>{" "}
+        mid-tour — while the target itself stays clickable for{" "}
+        <code className="font-mono">awaitClick</code>.
       </Note>
     </div>
   );

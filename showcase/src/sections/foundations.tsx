@@ -191,7 +191,9 @@ export function Foundations() {
         (In jsdom nothing applies them, so in the render test these chips are simply blank.) The
         index wraps at nine — <code className="font-mono">paletteFor(9)</code> is{" "}
         <code className="font-mono">var(--chart-1)</code> — so a tenth series silently reuses the
-        first one&rsquo;s colour.
+        first one&rsquo;s colour. It wraps backwards too: <code className="font-mono">paletteFor(-1)</code>{" "}
+        is <code className="font-mono">var(--chart-9)</code>, and a <code className="font-mono">NaN</code>{" "}
+        index takes the first colour rather than naming a token that does not exist.
       </Note>
 
       <Example label="CHART_COLORS" hint="semantic money roles, as theme-aware CSS vars">

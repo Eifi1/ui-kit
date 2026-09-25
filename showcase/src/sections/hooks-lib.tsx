@@ -157,9 +157,7 @@ function rectRows(rect: AnchorRect | null): Array<[string, ReactNode]> {
 }
 
 function AnchoredRectReadout() {
-  // A raw <button> rather than the kit's <Button>: `Button` takes
-  // `ButtonHTMLAttributes` and forwards no ref, so it cannot be an anchor. That is
-  // what `buttonClasses` exists for — see the note under this specimen.
+  // The kit's <Button> takes a `ref` since 0.7.0, so it can be the anchor itself.
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [tracking, setTracking] = useState(false);
   const rect = useAnchoredRect(anchorRef, tracking);
@@ -167,14 +165,9 @@ function AnchoredRectReadout() {
   return (
     <div className="space-y-3">
       <Row>
-        <button
-          type="button"
-          ref={anchorRef}
-          className={buttonClasses("secondary")}
-          onClick={() => setTracking((v) => !v)}
-        >
+        <Button ref={anchorRef} variant="secondary" onClick={() => setTracking((v) => !v)}>
           {tracking ? "Stop measuring" : "Measure this button"}
-        </button>
+        </Button>
       </Row>
       <OutTable rows={rectRows(rect)} />
     </div>
@@ -552,15 +545,10 @@ function FocusTrapSpecimen() {
             className="w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-sm"
           />
           <Row>
-            {/* A native button: the kit's Button takes no ref, and the thunk needs one. */}
-            <button
-              ref={save}
-              type="button"
-              className={buttonClasses("brand")}
-              onClick={() => setOpen(false)}
-            >
+            {/* The kit's Button takes a ref (0.7.0), which the thunk needs. */}
+            <Button ref={save} variant="brand" onClick={() => setOpen(false)}>
               Save
-            </button>
+            </Button>
             <Button variant="secondary" onClick={() => setNested(true)} disabled={nested}>
               Open a nested trap
             </Button>

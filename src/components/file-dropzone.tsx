@@ -49,7 +49,7 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * Show a remove button inside the zone once something is chosen (kastlan asked for
    * it: the only way to un-choose a file was to reload). Single mode: removes the file.
    * Multiple mode: a "remove all" button. The host clears its own state here — the
-   * zone is controlled. Focus returns to the zone, and the removal is announced.
+   * zone is controlled. Focus moves to the Browse button, and the removal is announced.
    */
   onClear?: () => void;
   /** Multiple mode: a remove button per listed file. */

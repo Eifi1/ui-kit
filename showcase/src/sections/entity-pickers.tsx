@@ -49,6 +49,10 @@ export function EntityPickers() {
   const [callerLoading, setCallerLoading] = useState(false);
   const [rankedRows, setRankedRows] = useState(RANKED);
   const [people, setPeople] = useState<string[]>([]);
+  // clearValue="" — the emitted value is "" (never null) once cleared.
+  const [emptyCategory, setEmptyCategory] = useState<string>("groceries");
+  const [emptyAccount, setEmptyAccount] = useState<string>("chk");
+  const [rtlCategory, setRtlCategory] = useState<string | null>("rent");
   const [newPeople, setNewPeople] = useState<ComboOption<string>[]>([]);
 
   return (
@@ -200,28 +204,44 @@ export function EntityPickers() {
             placeholder="Pick a match"
           />
         </Stage>
-        <Button
-          variant="secondary"
-          disabled={callerLoading}
-          onClick={() => {
-            // The caller's own fetch: rows gone, `loading` up, for two seconds.
-            setRankedRows([]);
-            setCallerLoading(true);
-            window.setTimeout(() => {
-              setRankedRows(RANKED);
-              setCallerLoading(false);
-            }, 2000);
-          }}
-        >
-          {callerLoading ? "Fetching…" : "Refetch the list (2 s)"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            disabled={callerLoading}
+            onClick={() => {
+              // The caller's own fetch: rows gone, `loading` up, for two seconds.
+              setRankedRows([]);
+              setCallerLoading(true);
+              window.setTimeout(() => {
+                setRankedRows(RANKED);
+                setCallerLoading(false);
+              }, 2000);
+            }}
+          >
+            {callerLoading ? "Fetching…" : "Refetch, rows cleared (2 s)"}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={callerLoading}
+            onClick={() => {
+              // A reload that keeps the old rows up while it runs.
+              setCallerLoading(true);
+              window.setTimeout(() => setCallerLoading(false), 2000);
+            }}
+          >
+            Refetch, rows kept (2 s)
+          </Button>
+        </div>
         <Current label="value" value={rankedPick === null ? "null" : `"${rankedPick}"`} />
         <p className="mt-2 text-xs text-[var(--text-secondary)]">
           Open it and type anything: with <code className="font-mono">filter={"{false}"}</code> the
-          three rows stay, in their order. Press Refetch and open it: while the caller&apos;s{" "}
-          <code className="font-mono">loading</code> is up and there are no rows, the panel says it
-          is loading instead of &quot;no results&quot; — the flag is OR-ed with the component&apos;s
-          own async state.
+          three rows stay, in their order. Press &quot;rows cleared&quot; and open it: while the
+          caller&apos;s <code className="font-mono">loading</code> is up and there are no rows, the
+          panel says it is loading instead of &quot;no results&quot; — the flag is OR-ed with the
+          component&apos;s own async state. Press &quot;rows kept&quot; and open it: the old rows
+          stay listed with a spinner and &quot;Loading…&quot; line under them, and the list is{" "}
+          <code className="font-mono">aria-busy</code> — a refetch no longer looks like a finished
+          list.
         </p>
       </Example>
 
@@ -261,7 +281,7 @@ export function EntityPickers() {
             values={stateMarkets}
             onChange={setStateMarkets}
             placeholder="None chosen"
-            invalid={stateMarkets.length === 0}
+            error={stateMarkets.length === 0 ? "Sell in at least one market" : undefined}
           />
           <InlineEntityCombobox
             label="Account (disabled)"
@@ -286,15 +306,90 @@ export function EntityPickers() {
             clearable
             disabled
           />
+          <MultiSelect
+            label="Markets (disabled)"
+            options={MARKETS}
+            values={[MARKETS[0].value]}
+            onChange={() => {}}
+            disabled
+          />
         </Stage>
         <p className="mt-2 text-xs text-[var(--text-secondary)]">
           Answer each field and its mark goes away. <code className="font-mono">error</code> is
           rendered under the field and tied to it with{" "}
           <code className="font-mono">aria-describedby</code>;{" "}
           <code className="font-mono">invalid</code> carries no text. A disabled picker drops its
-          clear button — a settled field offers no action. <code className="font-mono">MultiSelect</code>{" "}
-          has <code className="font-mono">invalid</code> but no <code className="font-mono">error</code>{" "}
-          or <code className="font-mono">disabled</code> of its own.
+          clear button — a settled field offers no action, and it is dimmed as a whole, label
+          included (the inline picker used to keep full contrast and look filled-in).{" "}
+          <code className="font-mono">MultiSelect</code> takes the same{" "}
+          <code className="font-mono">error</code> (implies <code className="font-mono">invalid</code>,
+          described on the trigger) and <code className="font-mono">disabled</code> (no chevron, no
+          panel, dimmed label).
+        </p>
+      </Example>
+
+      <Example
+        label='clearValue="" — a schema that spells "no choice" as an empty string'
+        hint="the × emits what clearValue says; onChange is typed V | &quot;&quot; instead of V | null"
+      >
+        <Stage>
+          <EntityCombobox
+            label="Category"
+            value={emptyCategory}
+            onChange={setEmptyCategory}
+            options={CATEGORIES}
+            clearValue=""
+            clearable
+            clearLabel="Clear category"
+            placeholder="No category"
+          />
+          <InlineEntityCombobox
+            label="Account"
+            value={emptyAccount}
+            onChange={setEmptyAccount}
+            options={INLINE_ACCOUNTS}
+            clearValue=""
+            clearable
+            clearLabel="Clear account"
+            placeholder="No account"
+          />
+        </Stage>
+        <Current label="category" value={JSON.stringify(emptyCategory)} />
+        <Current label="account" value={JSON.stringify(emptyAccount)} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Press × (or empty the inline field&apos;s text): the readout shows{" "}
+          <code className="font-mono">&quot;&quot;</code>, where the pickers above emit{" "}
+          <code className="font-mono">null</code>. The state here is a plain{" "}
+          <code className="font-mono">useState&lt;string&gt;</code> — no mapping in{" "}
+          <code className="font-mono">onChange</code>, and TypeScript would refuse it without{" "}
+          <code className="font-mono">clearValue</code>. <code className="font-mono">&quot;&quot;</code> is
+          also read back as empty: placeholder, no ×. It is a closed choice (
+          <code className="font-mono">null | &quot;&quot;</code>) because only those can never be a
+          real option id. For react-hook-form + zod, pass it on the picker inside{" "}
+          <code className="font-mono">FormField</code>; the adapter does not coerce.
+        </p>
+      </Example>
+
+      <Example label="EntityCombobox — right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
+        <Stage>
+          <div dir="rtl" className="w-64">
+            <EntityCombobox
+              label="الفئة"
+              value={rtlCategory}
+              onChange={setRtlCategory}
+              options={CATEGORIES}
+              clearable
+              clearLabel="مسح"
+              placeholder="اختر فئة"
+            />
+          </div>
+        </Stage>
+        <Current label="value" value={rtlCategory === null ? "null" : `"${rtlCategory}"`} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The × and the chevron sit at the logical end (the left), the text starts at the right,
+          and the panel — portalled to <code className="font-mono">&lt;body&gt;</code> — reads the
+          trigger&apos;s direction, carries it, and hangs from the trigger&apos;s start (right) edge
+          even when it is wider than the trigger.
         </p>
       </Example>
 

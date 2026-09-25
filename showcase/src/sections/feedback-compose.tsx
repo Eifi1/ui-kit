@@ -7,6 +7,7 @@ import {
   FeedbackDialog,
   Switch,
   Textarea,
+  UiKitProvider,
   pastedName,
 } from "@eifi1/ui-kit";
 import type {
@@ -32,7 +33,8 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * like props: `FeedbackDialogLabels` is ten REQUIRED strings, with no English
  * defaults, because both apps translate and a hardcoded "Cancel" would be a bug
  * in one of them. Only two are optional (`attachmentCapture`, `attachmentPaste`),
- * and on the standalone field the `attachment` heading is optional too.
+ * and they fall back to the provider's `feedbackAttachment` namespace. On the
+ * standalone field every key is optional since 0.7.0 (prop > provider > English).
  */
 
 const CATEGORIES: FeedbackCategoryOption[] = [
@@ -161,6 +163,18 @@ export function FeedbackCompose() {
         }
       >
         <Standalone />
+      </Example>
+
+      <Example
+        label="FeedbackAttachmentField — provider labels"
+        hint={
+          <>
+            No <code className="font-mono">labels</code> prop: the strings come from{" "}
+            <code className="font-mono">&lt;UiKitProvider labels=&#123;&#123; feedbackAttachment &#125;&#125;&gt;</code>.
+          </>
+        }
+      >
+        <ProviderLabels />
       </Example>
 
       <Example
@@ -342,6 +356,60 @@ function Standalone() {
         without removing first. A non-image would get a neutral file tile instead of the
         thumbnail — unreachable with the default accept list, and kept for a consumer that
         widens it.
+      </p>
+    </div>
+  );
+}
+
+/** German on purpose, so the nested provider is unmistakable on an English page. */
+const FEEDBACK_ATTACHMENT_DE = {
+  attachmentAdd: "Bild anhängen",
+  attachmentCapture: "Bildschirm aufnehmen",
+  attachmentPaste: "…oder ein Bild aus der Zwischenablage einfügen.",
+  attachmentRemove: "Anhang entfernen",
+};
+
+function ProviderLabels() {
+  const [plain, setPlain] = useState<File | null>(null);
+  const [nested, setNested] = useState<File | null>(null);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-[var(--text-secondary)]">
+          The page&apos;s provider (this page&apos;s language)
+        </p>
+        {/* No labels at all — legal since 0.7.0; the field reads `feedbackAttachment`. */}
+        <FeedbackAttachmentField
+          value={plain}
+          onChange={setPlain}
+          onCaptureScreenshot={fakeCapture}
+        />
+        <FileReadout file={plain} />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-[var(--text-secondary)]">
+          A nested provider, plus one key from the prop
+        </p>
+        <UiKitProvider labels={{ feedbackAttachment: FEEDBACK_ATTACHMENT_DE }}>
+          <FeedbackAttachmentField
+            value={nested}
+            onChange={setNested}
+            onCaptureScreenshot={fakeCapture}
+            // Prop > provider > English, key by key: the heading only ever comes from
+            // here, and `attachmentCapture` here beats the provider's.
+            labels={{ attachment: "Bildschirmfoto", attachmentCapture: "App-Ansicht aufnehmen" }}
+          />
+        </UiKitProvider>
+        <FileReadout file={nested} />
+      </div>
+      <p className="text-xs text-[var(--text-muted)] md:col-span-2">
+        Before 0.7.0 <code className="font-mono">labels</code> was required and the two optional
+        keys fell back to hard-coded English, so a German app relying on its provider got
+        &ldquo;Capture screenshot&rdquo; under a German form. Switch this page&apos;s language:
+        the left field follows; the right one keeps the nested provider&apos;s German. The
+        heading (<code className="font-mono">attachment</code>) is not in the namespace — a note
+        editor wants none — so it stays a prop.
       </p>
     </div>
   );

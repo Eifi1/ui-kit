@@ -113,6 +113,9 @@ export function Numbers() {
   const [fee, setFee] = useState("12.40");
   const [headline, setHeadline] = useState("1250");
   const [centred, setCentred] = useState("1250");
+  const [rtlAmount, setRtlAmount] = useState("49.90");
+  const [rtlCurrency, setRtlCurrency] = useState("EUR");
+  const [rtlUnits, setRtlUnits] = useState("12");
 
   // CurrencySelect
   const [pickerCode, setPickerCode] = useState("EUR");
@@ -582,6 +585,41 @@ export function Numbers() {
           the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
           last field is unlabelled: <code className="font-mono">ariaLabel</code> names it and{" "}
           <code className="font-mono">placeholder</code> fills it while empty.
+        </p>
+      </Example>
+
+      <Example
+        label="NumberInput and AmountInput — right-to-left"
+        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
+      >
+        <Stage>
+          <div dir="rtl" className="flex flex-wrap items-start gap-4">
+            <div className="w-56">
+              <AmountInput
+                label="المبلغ"
+                value={rtlAmount}
+                onChange={setRtlAmount}
+                currency={rtlCurrency}
+                onCurrencyChange={setRtlCurrency}
+              />
+            </div>
+            <NumberInput
+              className="w-56"
+              label="الكمية"
+              value={rtlUnits}
+              onChange={setRtlUnits}
+              suffix="kg"
+            />
+          </div>
+        </Stage>
+        <State rows={[["amount", rtlAmount], ["currency", rtlCurrency], ["units", rtlUnits]]} />
+        <p className="text-xs text-[var(--text-muted)]">
+          The currency chip, the calculator trigger and the unit suffix are the figure&apos;s
+          trailing controls, so they sit at the logical END — the left here — with the padding
+          reserved on that side; the currency list opens from the end edge too. The figures
+          themselves and the calculator stay left-to-right (<code className="font-mono">dir=&quot;ltr&quot;</code>{" "}
+          on its display and on the phone number pad&apos;s): arithmetic reads the same way in
+          every script.
         </p>
       </Example>
 

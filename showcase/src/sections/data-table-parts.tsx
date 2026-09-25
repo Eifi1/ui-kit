@@ -20,8 +20,15 @@ import {
   resolveDataTableLabels,
   resolveFilter,
   rowMatches,
+  UiKitProvider,
 } from "@eifi1/ui-kit";
-import type { ColumnFilter, DataTableColumn, FilterState, SortState } from "@eifi1/ui-kit";
+import type {
+  ColumnFilter,
+  DataTableColumn,
+  DataTableLabels,
+  FilterState,
+  SortState,
+} from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable } from "../lib/section";
 import {
   AMOUNT_FILTER,
@@ -106,17 +113,34 @@ function PaginationSpecimen() {
             labels={PAGER_LABELS}
           />
         </div>
+        <div className="rounded-md border border-[var(--border)]">
+          {/* No `labels`, no `locale`, no `onPageSize`: everything from the provider. */}
+          <UiKitProvider labels={{ dataTable: PROVIDER_PAGER_LABELS }} locale="de-DE">
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              total={total}
+              onPage={setPage}
+            />
+          </UiKitProvider>
+        </div>
         <Note>
-          The second pager is the same state with <code className="font-mono">locale=&quot;ar-EG&quot;</code>{" "}
-          (Arabic-Indic digits on the strip and in the select) and a complete{" "}
-          <code className="font-mono">labels</code> object whose{" "}
+          The first pager passes no <code className="font-mono">labels</code>, so it speaks
+          the showcase&apos;s language: a standalone <code className="font-mono">Pagination</code>{" "}
+          reads the provider&apos;s <code className="font-mono">dataTable</code> labels (prop
+          over provider over English), like <code className="font-mono">FilterPopover</code>.
+          The second is the same state with{" "}
+          <code className="font-mono">locale=&quot;ar-EG&quot;</code> (Arabic-Indic digits on
+          the strip and in the select) and a <em>partial</em>{" "}
+          <code className="font-mono">labels</code> object overriding{" "}
           <code className="font-mono">pageRange</code>, <code className="font-mono">rowCount</code>{" "}
-          and <code className="font-mono">pageSizeAll</code> are overridden — the range summary
-          is a function precisely so a translation can format its own numbers. Without{" "}
-          <code className="font-mono">labels</code>, a standalone{" "}
-          <code className="font-mono">Pagination</code> uses the English defaults and ignores
-          the provider&apos;s <code className="font-mono">dataTable</code> labels, unlike{" "}
-          <code className="font-mono">FilterPopover</code>.
+          and <code className="font-mono">pageSizeAll</code> — the range summary is a function
+          precisely so a translation can format its own numbers. The third sits under a nested{" "}
+          <code className="font-mono">&lt;UiKitProvider labels=&#123;&#123; dataTable &#125;&#125; locale=&quot;de-DE&quot;&gt;</code>{" "}
+          and passes no <code className="font-mono">onPageSize</code>: its text is the
+          provider&apos;s German and it has no page-size select at all, because a size the
+          user cannot change should not be offered.
         </Note>
         <Note>
           The page strip is windowed: up to seven pages are all shown, beyond that it is
@@ -138,12 +162,21 @@ function PaginationSpecimen() {
 
 const AR_NUM = new Intl.NumberFormat("ar-EG");
 
-const PAGER_LABELS = resolveDataTableLabels({
+// Partial: the pager merges it over the provider's labels and the English defaults.
+const PAGER_LABELS = {
   pageSizeAll: "Everything",
   pageRange: (from, to, total) =>
     `rows ${AR_NUM.format(from)} to ${AR_NUM.format(to)} of ${AR_NUM.format(total)}`,
   rowCount: (total) => `all ${AR_NUM.format(total)} rows`,
-});
+} satisfies Partial<DataTableLabels>;
+
+const DE_NUM = new Intl.NumberFormat("de-DE");
+const PROVIDER_PAGER_LABELS = {
+  pageRange: (from, to, total) =>
+    `${DE_NUM.format(from)}–${DE_NUM.format(to)} von ${DE_NUM.format(total)}`,
+  prevPage: "Vorherige Seite",
+  nextPage: "Nächste Seite",
+} satisfies Partial<DataTableLabels>;
 
 /* ── FilterPopover, standalone ───────────────────────────────────────────── */
 
@@ -250,12 +283,12 @@ function FilterPopoverSpecimen() {
           shares its state with the Name panel above.
         </Note>
         <Note>
-          <code className="font-mono">FilterPopover</code> and{" "}
-          <code className="font-mono">Pagination</code> take a <em>complete</em>{" "}
-          <code className="font-mono">DataTableLabels</code>, while{" "}
-          <code className="font-mono">DataTable</code> takes a{" "}
-          <code className="font-mono">Partial</code> and merges it for you. Rendering one of
-          these two directly means calling{" "}
+          <code className="font-mono">FilterPopover</code> takes a <em>complete</em>{" "}
+          <code className="font-mono">DataTableLabels</code> (or none, and then reads the
+          provider), while <code className="font-mono">DataTable</code> and{" "}
+          <code className="font-mono">Pagination</code> take a{" "}
+          <code className="font-mono">Partial</code> and merge it for you. Handing the popover
+          one changed string means calling{" "}
           <code className="font-mono">resolveDataTableLabels(yourOverrides)</code> first —
           which is what this specimen does to change the text placeholder.
         </Note>

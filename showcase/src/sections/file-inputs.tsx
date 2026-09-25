@@ -48,7 +48,7 @@ export function FileInputs() {
 
       <Example
         label="FileButton — own check, own words, opened through its ref"
-        hint="isValid + invalidMessage refuse an empty file; labels rewords the built-in refusals."
+        hint="isValid + invalidMessage refuse an empty file (a check accept cannot make); labels rewords the built-in refusals."
       >
         <Stage>
           <OwnWordsButton />
@@ -66,7 +66,7 @@ export function FileInputs() {
 
       <Example
         label="FileDropzone — remove inside the zone, inline refusal"
-        hint="No isValid: the zone checks accept (PDF) and maxSize (2 MB) itself."
+        hint="No isValid: the zone checks accept (PDF) and maxSize (2 MB) itself, and a wrong type is refused by naming what is accepted."
       >
         <Stage>
           <DropzoneSingle />
@@ -81,13 +81,28 @@ export function FileInputs() {
       </Example>
 
       <Example
-        label="FileDropzone — the default toast, and a check of its own"
-        hint="No onReject/onInvalid: refusals toast. With isValid, accept is not re-checked."
+        label="FileDropzone — the default toast, and the default type refusal"
+        hint="No onReject/onInvalid: refusals toast. No isValid: accept alone refuses a wrong type, in words that name it."
       >
         <Stage>
           <DropzoneToast />
-          <DropzoneOwnCheck />
+          <DropzoneAcceptOnly />
         </Stage>
+        <Note>
+          Drop a non-.zip on the second zone: the refusal reads{" "}
+          <em>&ldquo;Only .zip files&rdquo;</em> — the new{" "}
+          <code className="font-mono">filePicker.rejectedTypeOnly(accept, name)</code>, handed{" "}
+          <code className="font-mono">accept</code>&apos;s tokens lower-cased and joined with
+          &ldquo;, &rdquo;. Before 0.7.0 the default said only that the type was unsupported, so
+          apps kept an <code className="font-mono">isValid</code> +{" "}
+          <code className="font-mono">invalidMessage</code> per form just to say which type was
+          wanted; <code className="font-mono">accept</code> already knows. Keep{" "}
+          <code className="font-mono">isValid</code> for what <code className="font-mono">accept</code>{" "}
+          cannot see — the empty statement in &ldquo;own check, own words&rdquo; above. A host that
+          translated <code className="font-mono">rejectedType</code> but not yet{" "}
+          <code className="font-mono">rejectedTypeOnly</code> keeps its own sentence rather than
+          an English one (that button does exactly this). All seven shipped locales carry it.
+        </Note>
         <Note>
           With no <code className="font-mono">onInvalid</code>, a rejection does{" "}
           <code className="font-mono">await import("sonner")</code> and toasts. The static
@@ -338,9 +353,10 @@ function DropzoneToast() {
   );
 }
 
-/** The caller's own check. `accept` still filters the dialog but is NOT re-checked:
- *  `isValid` is taken to be the type check. `onInvalid` gets each refused file. */
-function DropzoneOwnCheck() {
+/** `accept` alone, no `isValid`: a wrong type is refused with the default
+ *  `rejectedTypeOnly`, which names the accepted types. `onInvalid` gets each refused
+ *  file, and (like `onReject`) switches the toast off. */
+function DropzoneAcceptOnly() {
   const [file, setFile] = useState<File | null>(null);
   const [refused, setRefused] = useState<string[]>([]);
   return (
@@ -350,8 +366,6 @@ function DropzoneOwnCheck() {
         onFileSelected={setFile}
         onClear={() => setFile(null)}
         accept=".zip"
-        isValid={(f) => /\.zip$/i.test(f.name) && f.size > 0}
-        invalidMessage="Only a non-empty .zip export can be imported"
         onInvalid={(f) => setRefused((r) => [...r, f.name].slice(-3))}
         rejectionFeedback="inline"
         labels={{ remove: (name) => `Discard ${name}` }}
@@ -359,7 +373,7 @@ function DropzoneOwnCheck() {
         dropLabel="Drop a budget export"
         browseLabel="Choose .zip…"
         emptyLabel="Drop the .zip here"
-        hint="Checked by isValid"
+        hint="Checked by accept alone"
       />
       <p className={READOUT}>onInvalid: {refused.length ? refused.join(" · ") : "—"}</p>
     </div>
@@ -469,6 +483,7 @@ const FEEDBACK_MODES: FileDropzoneRejectionFeedback[] = ["toast", "inline", "non
 /** Overridden in German, so it is plain which strings came from `labels`. */
 const DROPZONE_LABELS_DE: Partial<FilePickerLabels> = {
   rejectedType: (name) => `„${name}“ ist keine Textdatei`,
+  rejectedTypeOnly: (accept, name) => `Nur ${accept} — „${name}“ passt nicht`,
   rejectedSize: (name, max) => `„${name}“ ist größer als ${max}`,
   selected: (_count, name) => `„${name}“ ausgewählt`,
   remove: (name) => `„${name}“ entfernen`,
@@ -541,6 +556,11 @@ function DropzoneFeedback() {
         <code className="font-mono">"none"</code> shows nothing and leaves it to the caller — the
         payload above. Inline and none are also spoken through the zone&apos;s live region (a
         toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash.
+        The zone is a named <code className="font-mono">role=&quot;group&quot;</code>, not a
+        button: Tab reaches Browse (and the remove button) directly, and a click anywhere on the
+        zone is a pointer shortcut for Browse — the zone used to be a{" "}
+        <code className="font-mono">role=&quot;button&quot;</code> with real buttons nested in
+        it, which ARIA forbids.
       </Note>
     </div>
   );

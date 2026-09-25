@@ -112,10 +112,13 @@ export function Dialogs() {
         nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
         Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
         <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
-        <code className="font-mono">HoverMenu</code>'s panel is rendered inline, so Tab reaches
-        its items by DOM order — but it has no Escape handler (only an outside press), and its
-        panel says <code className="font-mono">role="menu"</code> while the items are whatever
-        the caller renders, with no arrow-key navigation.
+        <code className="font-mono">HoverMenu</code> is a real menu since 0.7.0: the caller&apos;s
+        plain buttons and links become <code className="font-mono">menuitem</code>s (list markup
+        in between goes <code className="font-mono">role="none"</code>), the trigger gets{" "}
+        <code className="font-mono">aria-haspopup</code>/<code className="font-mono">aria-expanded</code>,
+        ↓/Enter/Space on the trigger open onto the first item (↑ onto the last), ↑/↓/Home/End
+        move with wrap, Tab leaves and closes, and Escape closes from anywhere — returning focus
+        to the trigger only when it was inside the menu.
       </Note>
 
       <Note>
@@ -150,10 +153,21 @@ export function PopoversMenusTooltips() {
 
       <Example
         label="HoverMenu"
-        hint="Hover opens after 120ms; a click or Enter opens instantly."
+        hint="Hover opens after 120ms; a click opens instantly; Enter or ↓ from the keyboard opens onto the first item."
       >
         <HoverMenus />
       </Example>
+      <Note>
+        <code className="font-mono">align</code>: <code className="font-mono">start</code> and{" "}
+        <code className="font-mono">end</code> (the default) follow the reading direction —{" "}
+        <code className="font-mono">end</code> is the trigger&apos;s right edge here and its left
+        in RTL (see the right-to-left example below); <code className="font-mono">left</code>/
+        <code className="font-mono">right</code> are physical and kept for existing callers.
+        Keyboard: Tab to a trigger and press ↓ (or Enter/Space) — the menu opens with focus on
+        its first item, ↑ opens onto the last; ↑/↓ wrap, Home/End jump, Tab moves on and
+        closes, Escape closes and puts focus back on the trigger. A hover-opened menu does not
+        take focus, so Escape then leaves the caret where it was.
+      </Note>
 
       <Example
         label="HoverMenu — aria-label, className and the viewport clamp"
@@ -549,25 +563,18 @@ function Popovers() {
     <Row>
       <Popover
         trigger={({ open, toggle, ref }) => (
-          // A hand-written <button> with `buttonClasses`, not <Button>: Button is a plain
-          // function component whose props are ButtonHTMLAttributes, which has no `ref`,
-          // so it cannot take the ref the trigger is handed. Every Popover trigger inside
-          // the kit is a bare <button> for the same reason.
-          <button
-            ref={ref}
-            type="button"
-            onClick={toggle}
-            aria-expanded={open}
-            className={buttonClasses("secondary")}
-          >
+          // The kit's <Button> takes the trigger's ref since 0.7.0 (React 19 passes `ref`
+          // as a plain prop, and Button now declares it). Before that this had to be a
+          // hand-written <button> wearing `buttonClasses`, as the specimens below still are.
+          <Button ref={ref} variant="secondary" onClick={toggle} aria-expanded={open}>
             Default width (288px)
-          </button>
+          </Button>
         )}
       >
         {(close) => (
           <div className="space-y-2">
             <p className="text-xs text-[var(--text-secondary)]">
-              The panel's right edge is aligned to the trigger's and clamped 8px from the window;
+              The panel's END edge is aligned to the trigger's (right in LTR, left in RTL) and clamped 8px from the window;
               the vertical half is the anchored-panel hook's, which flips it above the trigger and
               caps its height when that is where the room is.
             </p>
@@ -728,14 +735,14 @@ function HoverMenus() {
 
   return (
     <Row>
-      {(["left", "right"] as const).map((align) => (
+      {(["start", "end", "left", "right"] as const).map((align) => (
         <HoverMenu
           key={align}
           align={align}
           ariaLabel={`Example actions, ${align}-aligned`}
           // Only one of the two, so the difference between the default width and a set
           // one is visible side by side rather than described.
-          panelClassName={align === "right" ? "w-56" : undefined}
+          panelClassName={align === "end" ? "w-56" : undefined}
           trigger={({ open, toggle }) => (
             <Button variant="secondary" onClick={toggle} aria-expanded={open}>
               align=&quot;{align}&quot;
@@ -798,7 +805,7 @@ function HoverMenuClamp() {
           aria-label="Sort options"
           className="rounded-md ring-1 ring-[var(--border)]"
           data-testid="showcase-sort-menu"
-          align="left"
+          align="start"
           trigger={({ open, toggle }) => (
             <Button variant="ghost" onClick={toggle} aria-expanded={open}>
               aria-label + className
@@ -808,14 +815,14 @@ function HoverMenuClamp() {
           {items}
         </HoverMenu>
         <HoverMenu
-          // Deliberately the WRONG alignment for a trigger at the right edge: the panel
+          // Deliberately the WRONG alignment for a trigger at the end edge: the panel
           // opens towards the edge and would spill off it, so the clamp has to move it.
-          align="left"
+          align="start"
           panelClassName="w-96"
           aria-label="Wide menu at the edge"
           trigger={({ open, toggle }) => (
             <Button variant="secondary" onClick={toggle} aria-expanded={open}>
-              w-96, align=&quot;left&quot;
+              w-96, align=&quot;start&quot;
             </Button>
           )}
         >
@@ -959,13 +966,41 @@ function OverlaysRtl() {
           aria-label="قائمة"
           trigger={({ open, toggle }) => (
             <Button variant="secondary" onClick={toggle} aria-expanded={open}>
-              HoverMenu (align=&quot;right&quot;)
+              HoverMenu (align=&quot;end&quot;, the default)
             </Button>
           )}
         >
           {(close) => (
             <ul className="py-1">
               {["نسخ", "تصدير", "أرشفة"].map((item) => (
+                <li key={item}>
+                  <button
+                    type="button"
+                    className={MENU_ITEM}
+                    onClick={() => {
+                      setPicked(item);
+                      close();
+                    }}
+                  >
+                    {item}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </HoverMenu>
+        <HoverMenu
+          aria-label="قائمة البداية"
+          align="start"
+          trigger={({ open, toggle }) => (
+            <Button variant="secondary" onClick={toggle} aria-expanded={open}>
+              HoverMenu (align=&quot;start&quot;)
+            </Button>
+          )}
+        >
+          {(close) => (
+            <ul className="py-1">
+              {["نسخ", "تصدير"].map((item) => (
                 <li key={item}>
                   <button
                     type="button"
@@ -1002,21 +1037,27 @@ function OverlaysRtl() {
         >
           {() => (
             <p className="text-xs text-[var(--text-secondary)]">
-              Portalled to &lt;body&gt;, so this panel does not inherit the local dir=&quot;rtl&quot;,
-              and it is aligned to the trigger&apos;s RIGHT edge whatever the direction.
+              هذه اللوحة تقرأ من اليمين — portalled to &lt;body&gt;, yet it carries the
+              trigger&apos;s dir=&quot;rtl&quot;, and its end (left) edge lines up with the
+              trigger&apos;s.
             </p>
           )}
         </Popover>
       </div>
       <span className="text-xs text-[var(--text-muted)]">Picked: {picked}</span>
       <Note>
-        Nothing here reads the writing direction. <code className="font-mono">HoverMenu</code>&apos;s{" "}
-        <code className="font-mono">align</code> and <code className="font-mono">Tooltip</code>&apos;s{" "}
-        <code className="font-mono">side</code> are physical, so an RTL caller has to swap them
-        itself; <code className="font-mono">Popover</code> always lines the panel up with the
-        trigger&apos;s right edge (the trailing edge in LTR, the leading one in RTL). The portalled
-        panels take the direction of <code className="font-mono">&lt;html&gt;</code>, not of the
-        subtree the trigger sits in.
+        Only <code className="font-mono">Tooltip</code> is still physical:{" "}
+        <code className="font-mono">side=&quot;left&quot;</code> is the screen&apos;s left in
+        either direction, so an RTL caller swaps it itself.{" "}
+        <code className="font-mono">HoverMenu</code>&apos;s <code className="font-mono">align</code>{" "}
+        takes <code className="font-mono">start</code>/<code className="font-mono">end</code>{" "}
+        (default <code className="font-mono">end</code>), which mirror here —{" "}
+        <code className="font-mono">left</code>/<code className="font-mono">right</code> stay
+        physical for existing callers. <code className="font-mono">Popover</code> reads the
+        trigger&apos;s direction when it opens: the portalled panel carries that{" "}
+        <code className="font-mono">dir</code> (so its text runs right to left although it lives
+        under <code className="font-mono">&lt;body&gt;</code>) and aligns to the trigger&apos;s END
+        edge — the right in LTR, the left here.
       </Note>
     </div>
   );

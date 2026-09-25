@@ -174,6 +174,17 @@ export function SeriesChartDemo() {
           hidden={hidden}
           onToggle={(key) => setHidden(toggleHidden(hidden, key))}
         />
+        <div className="mt-3">
+          <Note>
+            The ticks are round numbers — every multiple of a 1, 2 or 5 × 10<sup>n</sup> step that
+            falls inside the fitted domain — not the equal fractions of it recharts would print
+            (-11, 189, 389 …). The domain keeps its air, so the frame edge simply has no number of its
+            own; drag to zoom and the ticks stay round, just finer. Switch every channel off while
+            zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for when a line
+            comes back). A switched-off stroke in the legend dims with its button, once — it no
+            longer fades twice to near-invisible.
+          </Note>
+        </div>
       </Example>
 
       <Example

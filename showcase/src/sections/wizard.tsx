@@ -301,6 +301,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Draft | null>(null);
   const [outcome, setOutcome] = useState<"succeed" | "fail" | "opaque">("succeed");
+  const [sizeChecks, setSizeChecks] = useState(0);
 
   const steps: WizardStepConfig[] = [
     // No `validate` here: the mounted step registers its own through the context.
@@ -311,9 +312,10 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
       // A bare boolean, on purpose. It blocks, but it carries no per-field detail,
       // which is the branch that falls through to `missingRequiredMessage` below.
       // And async, the shape a server-side check has: `goNext` awaits it, so Next
-      // lands a beat after the click.
+      // lands a beat after the click — long enough here to double-click into.
       validate: async () => {
-        await new Promise<void>((resolve) => setTimeout(resolve, 250));
+        setSizeChecks((n) => n + 1);
+        await new Promise<void>((resolve) => setTimeout(resolve, 600));
         return dataRef.current.size !== "";
       },
     },
@@ -413,6 +415,18 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
         </StepperNav>
       </Example>
 
+      <Note>
+        <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code>{" "}
+        is async (a 600ms pretend server check). Pick a size and double-click Next: the counter
+        in the table below goes up by one, not two, and the wizard moves one step. Before 0.7.0
+        the second click validated the same step again and advanced twice — from step 1 that
+        walked straight past step 2&apos;s check. <code className="font-mono">goNext</code>,{" "}
+        <code className="font-mono">skip</code> and <code className="font-mono">finish</code> now
+        refuse to start while a move is in flight, and a move decided on a step that is no
+        longer current is dropped; a double-click on Finish calls{" "}
+        <code className="font-mono">onComplete</code> once.
+      </Note>
+
       <Example label="Engine state, live" hint="read off the same `wizard` object the chrome above is driven by">
         <OutTable
           rows={[
@@ -435,6 +449,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             ["wizard.canFinish", String(wizard.canFinish)],
             ["wizard.nextBlocked", String(wizard.nextBlocked)],
             ["wizard.isSubmitting", String(wizard.isSubmitting)],
+            ["step 2 async validate() calls", String(sizeChecks)],
             ["wizard.fieldErrors", JSON.stringify(wizard.fieldErrors)],
             ["wizard.error", JSON.stringify(wizard.error)],
             ["wizard.data", JSON.stringify(wizard.data)],

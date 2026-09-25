@@ -311,6 +311,13 @@ export function AutocompleteDemo() {
             invalid={costCentre.trim() === ""}
           />
         </Stage>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The disabled Project field is dimmed as a whole, label and chevron included, the way a
+          disabled <code className="font-mono">EntityCombobox</code> is — before 0.7.0 only the
+          grey fill changed, and a disabled combobox read like a filled-in one beside it. Its
+          suggestion list, like every portalled combobox list, carries the field&apos;s{" "}
+          <code className="font-mono">dir</code>.
+        </p>
       </Example>
     </>
   );

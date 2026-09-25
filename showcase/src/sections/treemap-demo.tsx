@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Treemap, fitLabel } from "@eifi1/ui-kit";
+import { Treemap as RechartsTreemap } from "recharts";
+import { ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
 import type { TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
@@ -94,6 +95,19 @@ const MIXED: TreemapNode[] = [
   { id: "m5", name: "Gifts", value: 0 },
   { id: "m6", name: "Unparsed", value: Number.NaN },
 ];
+// Arabic category names, long enough that the narrower tiles clip them — so the
+// ellipsis shows which end the label is read from.
+const SPEND_AR: TreemapNode[] = [
+  { id: "a1", name: "السكن والإيجار", value: 1450 },
+  { id: "a2", name: "البقالة والمواد الغذائية", value: 620 },
+  { id: "a3", name: "المواصلات", value: 410 },
+  { id: "a4", name: "الترفيه والمطاعم", value: 280 },
+  { id: "a5", name: "الاشتراكات الشهرية", value: 160 },
+];
+const AR_MONEY = new Intl.NumberFormat("ar-EG", { style: "currency", currency: "EGP", maximumFractionDigits: 0 });
+// The hand-built map below: recharts' own Treemap with the kit's cell as `content`.
+const HAND_BUILT = SPEND_AR.map((n, i) => ({ name: n.name, size: n.value, fill: paletteFor(i) }));
+
 const DROPPED = MIXED.filter((n) => !(Number.isFinite(n.value) && n.value > 0));
 
 export function TreemapDemo() {
@@ -252,6 +266,56 @@ export function TreemapDemo() {
           </Note>
         </div>
       </Example>
+
+      <Example
+        label="Treemap — right-to-left"
+        hint="left: Treemap under dir=rtl reads the direction itself; right: a hand-built recharts Treemap with <TreemapCell dir> — toggle it"
+      >
+        <RtlTreemaps />
+      </Example>
+    </>
+  );
+}
+
+function RtlTreemaps() {
+  const [cellDir, setCellDir] = useState<"ltr" | "rtl">("rtl");
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div dir="rtl" lang="ar" className="min-w-0">
+          <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">&lt;Treemap&gt; under dir=&quot;rtl&quot;</p>
+          <Treemap data={SPEND_AR} valueFormatter={(v) => AR_MONEY.format(v)} height={220} />
+        </div>
+        <div className="min-w-0">
+          <Row className="mb-1 text-xs">
+            <span className="font-mono text-[11px] text-[var(--text-muted)]">
+              &lt;TreemapCell dir=&quot;{cellDir}&quot; /&gt;
+            </span>
+            <button
+              type="button"
+              onClick={() => setCellDir((d) => (d === "rtl" ? "ltr" : "rtl"))}
+              className="rounded border border-[var(--border)] px-2 py-0.5 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+            >
+              Switch to {cellDir === "rtl" ? "ltr" : "rtl"}
+            </button>
+          </Row>
+          <ChartContainer config={{}} style={{ height: 220 }}>
+            <RechartsTreemap data={HAND_BUILT} dataKey="size" isAnimationActive={false} content={<TreemapCell dir={cellDir} />} />
+          </ChartContainer>
+        </div>
+      </div>
+      <div className="mt-3">
+        <Note>
+          The tiles are not mirrored — the plot keeps its physical layout, as every chart in the kit
+          does — but each label stands at the tile&apos;s <em>start</em> edge: the top right corner in
+          RTL, shaped right-to-left, so a clipped name ends in its ellipsis on the reading end.{" "}
+          <code className="font-mono">Treemap</code> reads the direction off its own root after mount;
+          a caller drawing its own recharts map passes <code className="font-mono">dir</code> to{" "}
+          <code className="font-mono">TreemapCell</code> (default <code className="font-mono">ltr</code>).
+          Switch the right-hand map to <code className="font-mono">ltr</code> and the Arabic labels jump
+          to the left corner and clip at the wrong end.
+        </Note>
+      </div>
     </>
   );
 }

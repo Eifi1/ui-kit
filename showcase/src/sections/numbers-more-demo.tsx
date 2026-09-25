@@ -162,7 +162,11 @@ function DangerSpecimens() {
       <Note>
         A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and
         leaves it armed (fields kept) when it rejects. <code>lockedReason</code> replaces an
-        app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off.
+        app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off — in
+        the line under it and, since 0.7.0, in a tooltip on the button itself (hover or focus
+        &ldquo;Reset budget…&rdquo;), where the pointer that tried it is. The bubble is visual
+        only: the button is already described by the line, so a screen reader hears the reason
+        once.
         The phrase ignores surrounding spaces unless <code>phraseMatch=&quot;exact&quot;</code>;{" "}
         <code>labels.phrase</code> takes a function of the phrase or a finished string, and{" "}
         <code>labels.phrasePlaceholder</code> moves the label above the field.

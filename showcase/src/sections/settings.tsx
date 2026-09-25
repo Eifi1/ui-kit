@@ -509,9 +509,10 @@ function ProfileLoadingRow() {
       </div>
       <div className="mt-3">
         <Note>
-          Known issue: the display-name field has a fixed <code className="font-mono">id</code>{" "}
-          (<code className="font-mono">display-name</code>), so with two cards on one page — as
-          here — both labels point at the first card&apos;s input.
+          Two cards on one page, as here: the display-name field&apos;s{" "}
+          <code className="font-mono">id</code> is generated per card (it was the literal{" "}
+          <code className="font-mono">display-name</code> before 0.7.0), so each label focuses its
+          own input — click this card&apos;s label and the caret lands here, not in the card above.
         </Note>
       </div>
     </Example>

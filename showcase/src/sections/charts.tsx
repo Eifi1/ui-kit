@@ -322,7 +322,9 @@ export function Charts() {
             (<code className="font-mono">aria-pressed</code> = shown). Hiding the series itself is
             the chart&apos;s job (<code className="font-mono">hide</code>), and{" "}
             <code className="font-mono">toggleHidden(set, key)</code> is the one-line state update.
-            The Y axis is pinned to every series, so a toggle never re-scales what remains. The
+            The Y axis is pinned to every series, so a toggle never re-scales what remains, and a
+            series drawn with <code className="font-mono">hide</code> leaves the tooltip too
+            (<code className="font-mono">ChartTooltipContent includeHidden</code> keeps it). The
             legend resolves a series by <code className="font-mono">dataKey</code> first and falls
             back to the payload <code className="font-mono">value</code>, which is what lets the
             same component serve a bar chart (keyed by dataKey) and a pie (keyed by name).
@@ -514,10 +516,6 @@ export function Charts() {
                     tickFormatter={(v: number) => COMPACT.format(v)}
                   />
                   <ChartTooltip
-                    // recharts DROPS an item with no value before the content sees it
-                    // (`filterNull`, on by default), so without this the absence never
-                    // reaches the tooltip and March shows no tooltip at all.
-                    filterNull={false}
                     content={
                       mode === "default" ? (
                         <ChartTooltipContent
@@ -561,10 +559,52 @@ export function Charts() {
             A series with no value at a point prints <code className="font-mono">—</code>, never a
             made-up <code className="font-mono">0</code>; <code className="font-mono">valueFormatter</code>{" "}
             is not called for it. <code className="font-mono">formatValue</code> is handed the{" "}
-            <code className="font-mono">undefined</code> and decides the wording itself. Both need{" "}
-            <code className="font-mono">&lt;ChartTooltip filterNull=&#123;false&#125;&gt;</code>: by
-            default recharts drops the empty item before the content ever sees it. Side by side from{" "}
-            <code className="font-mono">md</code> up, stacked on a phone.
+            <code className="font-mono">undefined</code> and decides the wording itself. The kit&apos;s{" "}
+            <code className="font-mono">ChartTooltip</code> defaults to{" "}
+            <code className="font-mono">filterNull=&#123;false&#125;</code>, so the empty item reaches
+            the content without any prop; series switched off with <code className="font-mono">hide</code>{" "}
+            are still dropped by the content (pass <code className="font-mono">includeHidden</code> to
+            keep them). Pass <code className="font-mono">filterNull</code> to get recharts&apos; old
+            behaviour back. Side by side from <code className="font-mono">md</code> up, stacked on a phone.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="Right-to-left — the plot stays, the chrome follows"
+        hint="the same bar chart under dir=rtl: axes and bars run left-to-right, legend and tooltip rows read from the right"
+      >
+        <div dir="rtl" lang="ar">
+          <ChartContainer config={BAR_CONFIG} className="h-56">
+            <BarChart data={BAR_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={44}
+                tickFormatter={(v: number) => COMPACT.format(v)}
+                domain={[0, BAR_MAX]}
+              />
+              <ChartTooltip
+                content={<ChartTooltipContent labelFormatter={longMonth} valueFormatter={(v) => MONEY.format(v)} />}
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+              {BAR_SERIES.map((s) => (
+                <Bar key={s.key} dataKey={s.key} fill={`var(--color-${s.key})`} radius={[3, 3, 0, 0]} />
+              ))}
+            </BarChart>
+          </ChartContainer>
+        </div>
+        <div className="mt-3">
+          <Note>
+            The plot is <em>not</em> mirrored: a time axis runs left-to-right in Arabic and Hebrew
+            charts too, and the SVG is pinned to <code className="font-mono">direction: ltr</code> so
+            the y-axis labels stay beside the axis instead of being drawn into the plot. The HTML
+            around it follows the page: the tooltip&apos;s value column sits at the logical end
+            (<code className="font-mono">ms-auto</code>) and the legend reads from the right. Its
+            edge-flip also measures an RTL scroller correctly. Want a mirrored category axis? Pass{" "}
+            <code className="font-mono">reversed</code> on your own <code className="font-mono">XAxis</code>.
           </Note>
         </div>
       </Example>
@@ -664,8 +704,8 @@ export function Charts() {
         <OutTable
           rows={[
             ['id="Q2 sales #2"', `data-chart="${refusedAttr ?? "…"}"`],
-            ['"bad key"', "skipped — no --color-bad key, bar unpainted"],
-            ['badColour: "url(#pattern)"', "skipped — no --color-badColour, bar unpainted"],
+            ['"bad key"', "skipped — no --color-bad key, bar and legend swatch unpainted"],
+            ['badColour: "url(#pattern)"', "skipped — no --color-badColour, bar and legend swatch unpainted"],
           ]}
         />
         <div className="mt-3">
@@ -674,7 +714,9 @@ export function Charts() {
             and a config can be built from user data, so each key must be a CSS identifier and each
             colour hex, <code className="font-mono">rgb/hsl()</code> or a bare{" "}
             <code className="font-mono">var(--token)</code>. A refused entry costs that one series its
-            colour and nothing else. The <code className="font-mono">id</code> (default:{" "}
+            colour and nothing else — and the legend and tooltip swatches go through the same gate, the
+            two refused entries show no colour in the key, exactly like their bars, instead of the
+            colour the config asked for and the series was never painted in. The <code className="font-mono">id</code> (default:{" "}
             <code className="font-mono">useId()</code>) is stripped to a CSS identifier for the same
             reason. Build keys out of data with <code className="font-mono">seriesKey()</code>.
           </Note>
@@ -703,7 +745,9 @@ export function Charts() {
               // Nine colours, then it starts again — a tenth series is indistinguishable
               // from the first, so split the data before you reach for a tenth key.
               ["paletteFor(9)", `${paletteFor(9)}  // wraps`],
-              ["paletteFor(-1)", `${paletteFor(-1)}  // negative index: no guard`],
+              ["paletteFor(-1)", `${paletteFor(-1)}  // wraps backwards`],
+              ["paletteFor(2.7)", `${paletteFor(2.7)}  // truncated`],
+              ["paletteFor(NaN)", `${paletteFor(NaN)}  // first colour, never --chart-NaN`],
               ["CHART_COLORS.income", CHART_COLORS.income],
               ["CHART_COLORS.assigned", CHART_COLORS.assigned],
             ]}

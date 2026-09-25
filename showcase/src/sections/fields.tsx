@@ -57,6 +57,7 @@ export function Fields() {
   const [query, setQuery] = useState("transfer");
   const [plainQuery, setPlainQuery] = useState("");
   const [inlineClassQuery, setInlineClassQuery] = useState("");
+  const [multiPick, setMultiPick] = useState<string[]>(["de", "ch"]);
   const [rtlQuery, setRtlQuery] = useState("بحث");
   const [iban, setIban] = useState("DE89 3704 0044");
   const [statesAccount, setStatesAccount] = useState("");
@@ -448,12 +449,31 @@ export function Fields() {
             <option value="chf">CHF — Swiss franc</option>
             <option value="jpy">JPY — Yen</option>
           </Select>
+          {/* `multiple`: a list box too, and labelled — the floated label takes the top
+              strip, so the first row starts under it. */}
+          <Select
+            label="Markets (multiple)"
+            multiple
+            size={4}
+            value={multiPick}
+            onChange={(e) => setMultiPick(Array.from(e.target.selectedOptions, (o) => o.value))}
+          >
+            <option value="de">Germany</option>
+            <option value="at">Austria</option>
+            <option value="ch">Switzerland</option>
+            <option value="fr">France</option>
+            <option value="it">Italy</option>
+          </Select>
         </Stage>
         <p className="text-xs text-[var(--text-muted)]">
           <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects
           only — a floating label needs the tall box to float in, so a labelled Select ignores it.{" "}
           <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML
           attribute (the rows of a list box; picked: <code className="font-mono">{listPick}</code>).
+          Above 1, or with <code className="font-mono">multiple</code>, the browser draws a list box
+          and the Select drops its chevron and the end padding reserved for it, so no row is
+          clipped and nothing sits on the text. Ctrl/⌘-click picks several in the last one:{" "}
+          <code className="font-mono">{JSON.stringify(multiPick)}</code>.
         </p>
       </Example>
 
@@ -587,7 +607,7 @@ export function Fields() {
             <div className="relative w-56">
               <select
                 id={handRolledPickId}
-                className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "appearance-none pr-9")}
+                className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "appearance-none pe-9")}
                 value={handRolledPick}
                 onChange={(e) => setHandRolledPick(e.target.value)}
               >
@@ -626,7 +646,7 @@ export function Fields() {
               <button
                 type="button"
                 onClick={() => setTriggerIdx((i) => (i + 1) % CURRENCIES.length)}
-                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pr-9")}
+                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
                 <span className="truncate">{CURRENCIES[triggerIdx]}</span>
                 <FieldChevron />
@@ -694,7 +714,7 @@ export function Fields() {
           other way round — a placeholder vanishes the moment someone types, so a field named only
           by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}
           <code className="font-mono">clearLabel</code> removes the clear button entirely, and the
-          right padding with it; that is a decision, not a default. Chrome paints its own native
+          end padding with it; that is a decision, not a default. Chrome paints its own native
           cross on <code className="font-mono">type=&quot;search&quot;</code>, so the kit suppresses
           it and keeps the named one that also returns focus to the input. The last field sits in{" "}
           <code className="font-mono">dir=&quot;rtl&quot;</code>: the icon and the clear button are

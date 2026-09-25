@@ -40,6 +40,13 @@ export function CommandPaletteDemo() {
       >
         <AsyncPaletteDemo />
       </Example>
+
+      <Example
+        label="CommandPalette — a search that fails"
+        hint="The provider rejects: the stale results are cleared and the error line shows in their place."
+      >
+        <FailingPaletteDemo />
+      </Example>
     </>
   );
 }
@@ -127,6 +134,15 @@ function PaletteDemo() {
         in a row is the reason the prop exists.
       </Note>
       <Note>
+        A modal like the others since 0.7.0: Tab stays inside the panel, the page behind does
+        not scroll, Escape closes from anywhere in it (not only the field), and focus goes back
+        to whatever opened it — press <strong>Open palette</strong>, Escape, and focus is on the
+        button again. Each group is a <code className="font-mono">role=&quot;group&quot;</code>{" "}
+        named by its heading, and the ids are per instance, so the two palettes on this page do
+        not point each other&apos;s <code className="font-mono">aria-activedescendant</code> at the
+        wrong list.
+      </Note>
+      <Note>
         Type something with no match (&ldquo;zzz&rdquo;) for the <code className="font-mono">empty</code>{" "}
         label. The panel is top-centred on every screen size — on a phone it is the full width
         less a 16px margin, not a bottom sheet.
@@ -206,3 +222,67 @@ function AsyncPaletteDemo() {
   );
 }
 
+
+/** The search provider is down while the switch is on; `labels.error` is optional, and
+ *  without it the provider's `commandPalette.error` (then English) is shown. */
+function FailingPaletteDemo() {
+  const [open, setOpen] = useState(false);
+  const [down, setDown] = useState(true);
+  const [customError, setCustomError] = useState(false);
+  const [failures, setFailures] = useState(0);
+
+  const search = async (query: string): Promise<CommandItem[]> => {
+    await new Promise((r) => setTimeout(r, 300));
+    // Fails for any query but the empty one, so opening shows results first and the
+    // first keystroke replaces them with the error line.
+    if (down && query.trim()) {
+      setFailures((n) => n + 1);
+      throw new Error("503 Service Unavailable");
+    }
+    const needle = query.trim().toLowerCase();
+    return PALETTE_INDEX.filter((e) => !needle || e.label.toLowerCase().includes(needle)).map(
+      (e) => ({ ...e, onSelect: () => setOpen(false) }),
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open, then type anything
+        </Button>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={down} onChange={(e) => setDown(e.target.checked)} />
+          search backend down
+        </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={customError}
+            onChange={(e) => setCustomError(e.target.checked)}
+          />
+          <code className="font-mono">labels.error</code>
+        </label>
+        <span className={READOUT}>rejections: {failures}</span>
+      </Row>
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        labels={{
+          dialog: "Search (flaky backend)",
+          error: customError ? "The search service is down — try again in a minute." : undefined,
+        }}
+      />
+      <Note>
+        Before 0.7.0 a rejected search was unhandled: the previous query&apos;s results stayed on
+        screen as if they answered the new one. Now the list is emptied and the{" "}
+        <code className="font-mono">error</code> line is announced (
+        <code className="font-mono">role=&quot;alert&quot;</code>); the next successful search
+        clears it. With <code className="font-mono">labels.error</code> off the line is the
+        provider&apos;s <code className="font-mono">commandPalette.error</code> — switch this
+        page&apos;s language to see it translated.
+      </Note>
+    </div>
+  );
+}
