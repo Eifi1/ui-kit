@@ -123,9 +123,14 @@ export function FullBleedDialog({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler first (keksdose's transaction-search keeps its list keys on
-    // the dialog); `preventDefault()` there claims the key, Escape included.
+    // the dialog); a `preventDefault()` IN THAT HANDLER claims the key, Escape included.
+    // Only there: a descendant's preventDefault does not count. A SearchField in the
+    // header prevents Escape to stop Chromium clearing a type=search input, and in
+    // 0.8.0 that silently stopped Escape from closing the dialog (keksdose).
+    const preventedBefore = e.defaultPrevented;
     onKeyDown?.(e);
-    if (e.defaultPrevented || e.key !== "Escape") return;
+    const claimedByCaller = !preventedBefore && e.defaultPrevented;
+    if (claimedByCaller || e.key !== "Escape") return;
     // On the panel, the way `Modal` does it, and NOT through `useEscapeKey`: this
     // dialog is the thing a `PickerSheet` opens on top of, and a document-level
     // listener cannot tell which of the two the user meant. One press would dismiss
