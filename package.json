@@ -119,7 +119,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.1",
     "commit-and-tag-version": "^13.2.1",
     "eslint": "^9.39.5",
     "eslint-import-resolver-typescript": "^4.4.5",
