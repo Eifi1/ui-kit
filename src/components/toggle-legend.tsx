@@ -73,8 +73,9 @@ export interface LegendEntry {
   marker?: "swatch" | "stroke";
   /** Which of {@link STROKE_PATTERNS}, when the marker is a stroke — the same index
    *  `SeriesChartSeries.dash` takes, so a legend cannot promise a dot-dash the plot
-   *  draws dashed. */
-  dash?: number;
+   *  draws dashed. Or the same custom `stroke-dasharray` string the series draws with
+   *  (keksdose's `"4 3"`). */
+  dash?: number | string;
 }
 
 export interface ToggleLegendProps {
@@ -214,7 +215,7 @@ function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
           y2={1}
           stroke={entry.color}
           strokeWidth={2}
-          strokeDasharray={strokeDash(entry.dash ?? 0)}
+          strokeDasharray={typeof entry.dash === "string" ? entry.dash : strokeDash(entry.dash ?? 0)}
         />
       </svg>
     );

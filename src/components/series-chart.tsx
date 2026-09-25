@@ -74,9 +74,9 @@ export interface SeriesChartSeries {
    *
    *  Or an SVG `stroke-dasharray` string of the caller's own, for a pattern the five do
    *  not have: keksdose's `"4 3"`, a tighter dash than the ladder's `"5 4"` that its
-   *  hand-drawn recharts lines used before the kit. Prefer the index — a
-   *  {@link ToggleLegend} entry can only draw the ladder's patterns, so a custom string
-   *  shows there as the ladder's plain dash (index 1) rather than its own. */
+   *  hand-drawn recharts lines used before the kit. The legend
+   *  entry ({@link seriesLegendEntries}) carries the same string, so it draws the same
+   *  pattern. */
   dash?: number | string;
   /** `stepAfter`, for a whole-number channel that jumps rather than travels — a
    *  straight line between index 0 and index 1 draws an index of 0.5, which does not
@@ -667,10 +667,9 @@ export function visibleSeries(
  */
 export function seriesLegendEntries(series: readonly SeriesChartSeries[]): LegendEntry[] {
   return series.map((entry, index) => {
-    // A custom dash array has no legend pattern of its own; the ladder's plain dash is
-    // the nearest promise (see `SeriesChartSeries.dash`).
+    // A custom dash array goes to the legend as it is, so the swatch draws what the plot does.
     const own = entry.dash ?? (entry.dashed ? 1 : 0);
-    const dash = entry.step ? STEP_DASH : typeof own === "string" ? 1 : own;
+    const dash = entry.step ? STEP_DASH : own;
     const line = (entry.type ?? "line") === "line";
     return {
       key: entry.key,

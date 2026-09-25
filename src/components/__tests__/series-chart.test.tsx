@@ -435,11 +435,11 @@ describe("SeriesChart 0.8.0 (keksdose B21)", () => {
     expect(xTicks(container).some((tick) => !Number.isInteger(tick))).toBe(true);
   });
 
-  it("dash takes a custom dash array, and its legend entry falls back to the plain dash", () => {
+  it("dash takes a custom dash array, and its legend entry draws the same one", () => {
     const series: SeriesChartSeries[] = [{ key: "a", label: "Projection", dash: "4 3" }];
     const { container } = draw({ series });
     expect(paths(container)[0].getAttribute("stroke-dasharray")).toBe("4 3");
-    expect(seriesLegendEntries(series)[0]).toMatchObject({ marker: "stroke", dash: 1 });
+    expect(seriesLegendEntries(series)[0]).toMatchObject({ marker: "stroke", dash: "4 3" });
   });
 });
 
