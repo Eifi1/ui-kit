@@ -299,7 +299,7 @@ export function AppShell({
             {sidebarFooter?.(collapsed)}
             <div className="border-t border-[var(--border)] p-2">
               {collapsed ? (
-                <Tooltip label={labels.expand} side="right" portal className="block">
+                <Tooltip label={labels.expand} side="end" portal className="block">
                   <button
                     type="button"
                     onClick={() => setCollapsed(false)}
@@ -569,7 +569,7 @@ function SidebarNavItem({
 
   if (hasSub) return <SidebarFlyout item={item}>{link}</SidebarFlyout>;
   return collapsed ? (
-    <Tooltip label={item.label} side="right" portal className="block">
+    <Tooltip label={item.label} side="end" portal className="block">
       {link}
     </Tooltip>
   ) : (
