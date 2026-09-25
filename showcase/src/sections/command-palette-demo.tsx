@@ -50,6 +50,20 @@ export function CommandPaletteDemo() {
       </Example>
 
       <Example
+        label='CommandPalette — searchOn="submit"'
+        hint="typing edits a draft; ↵ or the submit button commits it — the search runs only then"
+      >
+        <SubmitPaletteDemo />
+      </Example>
+
+      <Example
+        label="CommandPalette — redactLabels and item redact"
+        hint="rows that are the user's own data carry data-private, for replay and screenshot masking"
+      >
+        <RedactPaletteDemo />
+      </Example>
+
+      <Example
         label="CommandPalette — a controlled query"
         hint="query + onQueryChange: the text lives outside the palette, here in the address bar's ?q="
       >
@@ -152,8 +166,14 @@ function PaletteDemo() {
       </Note>
       <Note>
         Type something with no match (&ldquo;zzz&rdquo;) for the <code className="font-mono">empty</code>{" "}
-        label. The panel is top-centred on every screen size — on a phone it is the full width
-        less a 16px margin, not a bottom sheet.
+        label, then the <strong>×</strong> at the field&apos;s end: the clear button (
+        <code className="font-mono">commandPalette.clear</code>) empties the field, commits the empty
+        query and puts the caret back. From 768px up the panel is a top-centred card; below it (
+        <code className="font-mono">fullScreenOnPhone</code>, on by default) it fills the screen — no inset,
+        no rounded panel, the field pinned at the top inside the safe areas, a 16px field so iOS does
+        not zoom, and a Close button (<code className="font-mono">commandPalette.close</code>) because
+        there is no backdrop to tap. Try the screen-size preview in the top bar; the next specimen
+        has the <code className="font-mono">={"{false}"}</code> form.
       </Note>
     </div>
   );
@@ -290,6 +310,126 @@ function FailingPaletteDemo() {
         clears it. With <code className="font-mono">labels.error</code> off the line is the
         provider&apos;s <code className="font-mono">commandPalette.error</code> — switch this
         page&apos;s language to see it translated.
+      </Note>
+    </div>
+  );
+}
+
+/* ── submit mode ───────────────────────────────────────────────────────────── */
+
+function SubmitPaletteDemo() {
+  const [open, setOpen] = useState(false);
+  const [fullScreen, setFullScreen] = useState(true);
+  const [calls, setCalls] = useState<string[]>([]);
+  const [changes, setChanges] = useState(0);
+  const search = (query: string): CommandItem[] => {
+    setCalls((c) => [`"${query}"`, ...c].slice(0, 6));
+    const needle = query.trim().toLowerCase();
+    return [...PALETTE_INDEX, ...RECORDS]
+      .filter((e) => !needle || e.label.toLowerCase().includes(needle))
+      .map((e) => ({ ...e, href: undefined, onSelect: () => setOpen(false) }));
+  };
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the submit-mode palette
+        </Button>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={fullScreen} onChange={(e) => setFullScreen(e.target.checked)} />
+          <code className="font-mono">fullScreenOnPhone</code>
+        </label>
+      </Row>
+      <OutTable
+        rows={[
+          ["search calls", String(calls.length ? calls.length : 0)],
+          ["queries searched, newest first", calls.length ? calls.join(" · ") : "—"],
+          ["onQueryChange calls", String(changes)],
+        ]}
+      />
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={PALETTE_INDEX}
+        searchOn="submit"
+        fullScreenOnPhone={fullScreen}
+        onQueryChange={() => setChanges((n) => n + 1)}
+        labels={{ dialog: "Search (on submit)", placeholder: "Type, then press ↵…" }}
+      />
+      <Note>
+        Type &ldquo;rent&rdquo;: the counter does not move and the list stays on the last committed query,
+        while a submit button (<code className="font-mono">commandPalette.submit</code>, ↵ glyph) appears
+        beside the field. Press ↵ or that button and the draft becomes THE query — one search call, one{" "}
+        <code className="font-mono">onQueryChange</code>. ↵ again with nothing new typed chooses the
+        highlighted row, as in <code className="font-mono">&quot;input&quot;</code> mode. The × commits the empty
+        query straight away in both modes, and an uncommitted draft is dropped when the palette closes. The
+        phone keyboard&apos;s key reads &ldquo;search&rdquo; (<code className="font-mono">enterKeyHint</code>).
+      </Note>
+      <Note>
+        Untick <code className="font-mono">fullScreenOnPhone</code> and, at a phone width (or in the
+        screen-size preview), this palette keeps the desktop card — inset, rounded, 70vh — instead of
+        filling the screen, and has no Close button: the backdrop and Escape close it.
+      </Note>
+    </div>
+  );
+}
+
+/* ── redaction ─────────────────────────────────────────────────────────────── */
+
+const PRIVATE_ENTRIES: PaletteEntry[] = [
+  ...RECORDS,
+  { id: "acct-1", label: "Joint checking ·· 0130", group: "Accounts", hint: "2,418.55 €", icon: <Table2 className="size-4" /> },
+];
+
+function RedactPaletteDemo() {
+  const [open, setOpen] = useState(false);
+  const [redact, setRedact] = useState(true);
+  const [demo, setDemo] = useState(true);
+  const search = (query: string): CommandItem[] => {
+    const needle = query.trim().toLowerCase();
+    const rows: CommandItem[] = [
+      ...PRIVATE_ENTRIES.map((e) => ({ ...e, onSelect: () => setOpen(false) })),
+      // An app's own page, not the user's data: un-masked in a palette that masks by default.
+      { id: "settings", label: "Settings", group: "Pages", hint: "redact: false", redact: false, onSelect: () => setOpen(false) },
+    ];
+    return rows.filter((e) => !needle || e.label.toLowerCase().includes(needle));
+  };
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the redacting palette
+        </Button>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={redact} onChange={(e) => setRedact(e.target.checked)} />
+          <code className="font-mono">redactLabels</code>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
+          demo mode (blur <code className="font-mono">[data-private]</code>)
+        </label>
+      </Row>
+      {/* The host's own rule — the kit only sets the attribute. Scoped to the open
+          palette's dialog, which is portalled to <body>. */}
+      {demo && open && <style>{'[role="dialog"] [data-private] { filter: blur(5px); }'}</style>}
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={PRIVATE_ENTRIES}
+        redactLabels={redact}
+        labels={{ dialog: "Search (redacted)" }}
+      />
+      <Note>
+        <code className="font-mono">redactLabels</code> marks every row&apos;s label and hint{" "}
+        <code className="font-mono">data-private</code> — payees, amounts, an account name — so session
+        replay and screenshot tooling mask them; here the page&apos;s own demo-mode rule blurs them. The
+        &ldquo;Settings&rdquo; row passes <code className="font-mono">redact: false</code> and stays readable:
+        an item&apos;s <code className="font-mono">redact</code> overrides the palette either way, so with{" "}
+        <code className="font-mono">redactLabels</code> off a single row could opt IN with{" "}
+        <code className="font-mono">redact: true</code> instead. Group headings are the app&apos;s words and
+        are never marked.
       </Note>
     </div>
   );

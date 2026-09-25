@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Bell, CreditCard, Hash, Pin, Settings2, Star, Tag, User } from "lucide-react";
-import { Button, Chip, ChipInput, Tabs, ToggleGroup } from "@eifi1/ui-kit";
+import { Button, Chip, ChipInput, HoverMenu, TOPBAR_MENU_ITEM_CLASS, Tabs, ToggleGroup } from "@eifi1/ui-kit";
 import type { ChipLinkProps, ToggleOption } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
 import { useT } from "../i18n";
@@ -269,6 +269,7 @@ export function ChipsToggles() {
       <Chips />
       <ChipVariants />
       <ChipLinksAndRemove />
+      <ChipLinkOnClick />
       <ChipInputDemo />
       <ChipInputOptions />
       <ChipsRtl />
@@ -366,6 +367,65 @@ function ChipVariants() {
         <code className="font-mono">caps</code> is TYPE, not surface — a size step down, heavier and
         tracked — so it combines with any variant; write the text in normal case, as a reader reads it
         as written.
+      </Note>
+    </Example>
+  );
+}
+
+function ChipLinkOnClick() {
+  const [clicks, setClicks] = useState(0);
+  return (
+    <Example
+      label="Chip — a link with onClick"
+      hint="href + onClick + renderLink: the admin pill in an account menu closes the menu on its way"
+    >
+      <Row>
+        <HoverMenu
+          aria-label="Account"
+          align="start"
+          panelClassName="w-56"
+          trigger={({ open, toggle }) => (
+            <Button variant="secondary" onClick={toggle} aria-expanded={open}>
+              <User className="size-4" aria-hidden /> Account menu
+            </Button>
+          )}
+        >
+          {(close) => (
+            <ul className="py-1">
+              <li className="flex items-center justify-between gap-2 px-3 py-2">
+                <span className="text-sm text-[var(--text-primary)]">Marcel</span>
+                <Chip
+                  href="/chips-toggles"
+                  renderLink={routerLink}
+                  onClick={() => {
+                    setClicks((n) => n + 1);
+                    close();
+                  }}
+                  tone="brand"
+                  size="sm"
+                  caps
+                >
+                  Admin
+                </Chip>
+              </li>
+              <li>
+                <button type="button" className={TOPBAR_MENU_ITEM_CLASS} onClick={close}>
+                  Sign out
+                </button>
+              </li>
+            </ul>
+          )}
+        </HoverMenu>
+        <span className="font-mono text-xs text-[var(--text-muted)]">chip onClick ran {clicks}×</span>
+      </Row>
+      <Note>
+        Open the menu and press &ldquo;Admin&rdquo;: the chip is still a link (a router{" "}
+        <code className="font-mono">Link</code> to this page, so nothing reloads), and its{" "}
+        <code className="font-mono">onClick</code> runs first and closes the menu. The chip passes{" "}
+        <code className="font-mono">onClick</code> into <code className="font-mono">renderLink</code> with
+        the rest of its props, so the renderer stays the one-liner{" "}
+        <code className="font-mono">{"({ href, ...p }) => <Link to={href} {...p} />"}</code>. No{" "}
+        <code className="font-mono">aria-pressed</code>, no button — the handler rides on the anchor.
       </Note>
     </Example>
   );
@@ -518,10 +578,10 @@ function Chips() {
           A chip is deliberately <em>not</em> a Button: a row of buttons reads as
           &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.{" "}
           <code className="font-mono">href</code> and <code className="font-mono">onClick</code>{" "}
-          are mutually exclusive in the types since 0.7.0 —{" "}
-          <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> no longer compiles
-          (it used to drop the <code className="font-mono">onClick</code> silently). A link that
-          must also run code wants a router link, not a chip.
+          no longer collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
+          button, and <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> is a LINK that
+          runs code on its way (before 0.7.0 that <code className="font-mono">onClick</code> was dropped
+          silently) — see &ldquo;Chip — a link with onClick&rdquo; below.
         </Note>
       </Example>
 

@@ -306,7 +306,7 @@ function ImportWizardDemo() {
   return (
     <Example
       label="A committing step, a step after it, and the chrome's options"
-      hint="urlSync: false (no ?step= written) · commits · onDone · onExit · cancellable · confirmCancel · finishVariant · finishDisabled · renderFinish · nextLabel"
+      hint="urlSync: false (no ?step= written) · commits · onDone · onExit · cancellable · confirmCancel · finishVariant · finishDisabled · doneDisabled · renderFinish · nextLabel"
     >
       <Row className="mb-3 text-xs text-[var(--text-secondary)]">
         <label className="flex items-center gap-2">
@@ -351,7 +351,10 @@ function ImportWizardDemo() {
           Tick &ldquo;replace&rdquo; on step 2 and Finish becomes <code className="font-mono">finishVariant=&quot;danger&quot;</code>;
           tick the write lock and it is <code className="font-mono">finishDisabled</code>, wrapped by{" "}
           <code className="font-mono">renderFinish</code> in a tooltip that says why — on a wrapping span,
-          since a disabled button gets no pointer events. The review summary&apos;s first section has no{" "}
+          since a disabled button gets no pointer events. On step 3, &ldquo;Create 12 rules&rdquo; writes
+          one rule every 250 ms; while it runs, Done is <code className="font-mono">doneDisabled</code> —
+          still in place, just not yet — and it comes back when the loop ends. The review summary&apos;s
+          first section has no{" "}
           <code className="font-mono">stepIndex</code>, so it has no edit button, and{" "}
           <code className="font-mono">disabled</code> greys the others while the import runs.
         </Note>
@@ -386,6 +389,26 @@ function ImportWizard({
     { id: "review", label: "Review", commits: true, nextLabel: "Import 214 rows" },
     { id: "rules", label: "Rules" },
   ];
+  // Step 3's own work: a convert loop writing one rule at a time, which Done must not
+  // abandon half-way (`doneDisabled`).
+  const [rulesWritten, setRulesWritten] = useState(0);
+  const [converting, setConverting] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  useEffect(() => () => clearInterval(timer.current), []);
+  const convert = () => {
+    setConverting(true);
+    setRulesWritten(0);
+    let n = 0;
+    timer.current = setInterval(() => {
+      n += 1;
+      setRulesWritten(n);
+      if (n >= 12) {
+        clearInterval(timer.current);
+        setConverting(false);
+        onEvent("12 rules written");
+      }
+    }, 250);
+  };
   const wizard = useWizard<ImportDraft>({
     steps,
     initialData: { file: "ynab-export-2026-09.csv", replace: false, rules: true },
@@ -429,6 +452,7 @@ function ImportWizard({
       title="Import transactions"
       finishVariant={wizard.data.replace ? "danger" : "brand"}
       finishDisabled={locked}
+      doneDisabled={converting}
       renderFinish={(button) =>
         locked ? (
           <Tooltip label="Another tab is editing these accounts.">
@@ -474,6 +498,18 @@ function ImportWizard({
             />
             Suggest rules
           </label>
+          <Row className="mt-3">
+            <Button size="sm" variant="secondary" onClick={convert} disabled={converting || rulesWritten === 12}>
+              Create 12 rules
+            </Button>
+            <span className="text-xs text-[var(--text-secondary)]" aria-live="polite">
+              {converting
+                ? `Writing rule ${rulesWritten} of 12… Done waits (doneDisabled).`
+                : rulesWritten === 12
+                  ? "12 rules written."
+                  : "No rules written yet."}
+            </span>
+          </Row>
         </WizardStep>
       )}
       <p className="mt-3 font-mono text-[11px] text-[var(--text-muted)]">

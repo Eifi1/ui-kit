@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup } from "@eifi1/ui-kit";
+import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup, cn } from "@eifi1/ui-kit";
 import type { DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
@@ -508,6 +508,8 @@ export function Dates() {
       </Example>
 
       <ReportRangeExample />
+      <RangeSheetExample />
+      <RangeTriggerExample />
 
       <Example
         label="DateRangePicker — bounded, invalid, disabled"
@@ -706,6 +708,150 @@ function ReportRangeExample() {
         <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code>{" "}
         and the column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
       </p>
+    </Example>
+  );
+}
+
+/** The month-aligned presets with ids, recomputed per render from today. */
+function useMonthPresets(): DateRangePickerPreset[] {
+  return calendarMonthPresets({ months: [3, 6, 12], years: [2] }).map((p) => ({
+    id: p.key,
+    label: MONTH_PRESET_LABELS[p.key] ?? p.key,
+    from: p.from,
+    to: p.to,
+  }));
+}
+
+/** The phone presentation: a full-screen sheet, and whether Back closes it. */
+function RangeSheetExample() {
+  const monthPresets = useMonthPresets();
+  const initial = lastFullMonthsRange(3);
+  const [range, setRange] = useState({ from: initial.from, to: initial.to });
+  const [backCloses, setBackCloses] = useState(true);
+  return (
+    <Example
+      label="DateRangePicker — the phone sheet and sheetBackCloses"
+      hint="below 768px only: narrow the window to a phone width or open the screen-size preview in the top bar"
+    >
+      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <input type="checkbox" checked={backCloses} onChange={(e) => setBackCloses(e.target.checked)} />
+        <code className="font-mono">sheetBackCloses</code>
+      </label>
+      <Stage>
+        <DateRangePicker
+          from={range.from}
+          to={range.to}
+          locale={LOCALE}
+          label="Report period"
+          presets={monthPresets}
+          commit="apply"
+          sheetBackCloses={backCloses}
+          formatOptions={{ dateStyle: "medium" }}
+          onChange={(from, to) => setRange({ from, to })}
+        />
+      </Stage>
+      <StateLine>
+        from={iso(range.from)} to={iso(range.to)} · sheetBackCloses={String(backCloses)}
+      </StateLine>
+      <div className="mt-3">
+        <Note>
+          On a desktop this is the 440px popover. Below the phone breakpoint (
+          <code className="font-mono">PHONE_QUERY</code>, 767px) the same field opens a full-screen sheet
+          instead — use the screen-size preview in the top bar, or a phone-width window: the presets
+          become a two-column grid of 44px rows ABOVE the calendar, and Cancel / Apply sit pinned in the
+          sheet&apos;s footer as two thumb-wide halves. The sheet wears the popover&apos;s id, so the
+          trigger&apos;s <code className="font-mono">aria-controls</code> holds in both.{" "}
+          <code className="font-mono">sheetBackCloses</code> (default on) makes the phone&apos;s Back dismiss
+          the sheet; untick it for an app whose commit rewrites the URL with{" "}
+          <code className="font-mono">replaceState</code> in the same tick — then Back is the page&apos;s
+          Back again (here: it leaves this page), and the sheet closes by its × or its buttons.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+type Granularity = "week" | "month" | "quarter";
+const GRANULARITY_OPTIONS: { value: Granularity; label: string }[] = [
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+  { value: "quarter", label: "Quarter" },
+];
+
+/** keksdose's report range field: a trigger that NAMES the preset, joined flush to a
+ *  granularity control. */
+function RangeTriggerExample() {
+  const monthPresets = useMonthPresets();
+  const initial = lastFullMonthsRange(3);
+  const [range, setRange] = useState<{ from: string; to: string; preset: string | null }>({
+    from: initial.from,
+    to: initial.to,
+    preset: "last_3_full_months",
+  });
+  const [granularity, setGranularity] = useState<Granularity>("month");
+  return (
+    <Example
+      label="DateRangePicker — renderTrigger"
+      hint="your own trigger button, wearing the kit's attributes: here it names the active preset and joins a ToggleGroup flush"
+    >
+      <Stage>
+        <div data-stage="wide" className="mx-auto flex w-full max-w-lg items-stretch">
+          <DateRangePicker
+            className="min-w-0 flex-1"
+            from={range.from}
+            to={range.to}
+            locale={LOCALE}
+            label="Report period"
+            presets={monthPresets}
+            preset={range.preset}
+            commit="apply"
+            formatOptions={{ dateStyle: "medium" }}
+            onChange={(from, to, presetId) => setRange({ from, to, preset: presetId ?? null })}
+            renderTrigger={({ triggerProps, valueProps, preset, text }) => (
+              <button {...triggerProps} className={cn(triggerProps.className, "rounded-e-none")}>
+                <span {...valueProps} className="min-w-0 truncate">
+                  {preset ? (
+                    <>
+                      {preset.label}
+                      <span className="ms-2 text-xs text-[var(--text-muted)]">{text}</span>
+                    </>
+                  ) : (
+                    text
+                  )}
+                </span>
+              </button>
+            )}
+          />
+          <ToggleGroup<Granularity>
+            aria-label="Granularity"
+            value={granularity}
+            onChange={setGranularity}
+            options={GRANULARITY_OPTIONS}
+            className="w-auto shrink-0 rounded-s-none border-s-0"
+          />
+        </div>
+      </Stage>
+      <StateLine>
+        from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`} ·
+        granularity={granularity}
+      </StateLine>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">renderTrigger</code> gets{" "}
+          <code className="font-mono">{"{ triggerProps, valueProps, open, from, to, preset, text }"}</code>.
+          The button spreads <code className="font-mono">triggerProps</code> whole — the ref focus returns
+          to, the id pair and <code className="font-mono">aria-labelledby</code>,{" "}
+          <code className="font-mono">role=&quot;combobox&quot;</code>, <code className="font-mono">aria-haspopup</code>,{" "}
+          <code className="font-mono">aria-controls</code>, <code className="font-mono">aria-expanded</code> — and
+          merges its own class after the kit&apos;s: <code className="font-mono">rounded-e-none</code> squares the end
+          so the granularity group joins it flush. <code className="font-mono">valueProps</code> goes on the span
+          showing the value, so the trigger is still named &ldquo;Report period, Last 3 full months …&rdquo;.
+          It shows <code className="font-mono">preset.label</code> (the preset the column marks for the committed
+          range) with <code className="font-mono">text</code>, the kit&apos;s own formatted range, as a muted
+          suffix; pick days by hand and the preset is gone, so it falls back to the dates. The label, the
+          calendar glyph and the popover or phone sheet are the field&apos;s, unchanged.
+        </Note>
+      </div>
     </Example>
   );
 }

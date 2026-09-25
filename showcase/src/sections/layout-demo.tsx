@@ -1,5 +1,15 @@
 import { useId, useState } from "react";
-import { Button, Collapse, DialogFrame, Disclosure, Input, buttonClasses, cn } from "@eifi1/ui-kit";
+import {
+  Button,
+  Collapse,
+  DialogFrame,
+  Disclosure,
+  HoverMenu,
+  Input,
+  TOPBAR_MENU_ITEM_CLASS,
+  buttonClasses,
+  cn,
+} from "@eifi1/ui-kit";
 import { Example, Note, Row, Stage } from "../lib/section";
 
 /**
@@ -63,6 +73,25 @@ export function LayoutDemo() {
           default <code className="font-mono">start</code> is the leading chevron that turns from the
           reading direction to down. A <code className="font-mono">card</code> always has it at the end,
           so the prop is ignored there.
+        </Note>
+      </Example>
+
+      <Example
+        label="Disclosure — menu variant"
+        hint={'variant="menu": a sub-list row inside a HoverMenu, beside the top bar\u2019s menu items'}
+      >
+        <Stage>
+          <MenuVariantSpecimen />
+        </Stage>
+        <Note>
+          Open the menu: &ldquo;Profile&rdquo;, &ldquo;Settings&rdquo; and &ldquo;Sign out&rdquo; are plain
+          buttons wearing <code className="font-mono">TOPBAR_MENU_ITEM_CLASS</code>;
+          &ldquo;Language&rdquo; is a <code className="font-mono">Disclosure variant=&quot;menu&quot;</code>{" "}
+          and draws the same row — full width, <code className="font-mono">px-3 py-2</code>, regular
+          weight, square, the hover wash — with the chevron at the end (the menu&apos;s default{" "}
+          <code className="font-mono">chevronPosition</code>) after its <code className="font-mono">trailing</code>{" "}
+          value, an inset focus ring the panel&apos;s clipping cannot cut, and a body with no padding
+          of its own, so the language rows sit flush with the rows around them.
         </Note>
       </Example>
 
@@ -275,6 +304,74 @@ function ChevronEndSpecimen() {
         <p className="text-xs text-[var(--text-muted)]">chevronPosition=&quot;start&quot;.</p>
       </Disclosure>
     </div>
+  );
+}
+
+function MenuVariantSpecimen() {
+  const [lang, setLang] = useState("Deutsch");
+  const [last, setLast] = useState("—");
+  const item = (label: string, close: () => void) => (
+    <li>
+      <button
+        type="button"
+        className={TOPBAR_MENU_ITEM_CLASS}
+        onClick={() => {
+          setLast(label);
+          close();
+        }}
+      >
+        {label}
+      </button>
+    </li>
+  );
+  return (
+    <Row>
+      <HoverMenu
+        aria-label="Account"
+        align="start"
+        panelClassName="w-60"
+        trigger={({ open, toggle }) => (
+          <Button variant="secondary" onClick={toggle} aria-expanded={open}>
+            Account menu
+          </Button>
+        )}
+      >
+        {(close) => (
+          <ul className="py-1">
+            {item("Profile", close)}
+            {item("Settings", close)}
+            <li>
+              <Disclosure
+                variant="menu"
+                title="Language"
+                trailing={<span className="text-xs text-[var(--text-muted)]">{lang}</span>}
+              >
+                <ul>
+                  {["Deutsch", "English", "Français"].map((l) => (
+                    <li key={l}>
+                      <button
+                        type="button"
+                        aria-current={l === lang || undefined}
+                        className={cn(TOPBAR_MENU_ITEM_CLASS, "ps-6", l === lang && "font-medium text-[var(--text-primary)]")}
+                        onClick={() => {
+                          setLang(l);
+                          setLast(`Language → ${l}`);
+                          close();
+                        }}
+                      >
+                        {l}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure>
+            </li>
+            {item("Sign out", close)}
+          </ul>
+        )}
+      </HoverMenu>
+      <span className="text-xs text-[var(--text-muted)]">Chosen: {last}</span>
+    </Row>
   );
 }
 

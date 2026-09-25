@@ -24,8 +24,8 @@ import { ConstList, Example, Note, Row, Stage } from "../lib/section";
  * make the page it asserts on a different page each time.
  */
 
-const TONES: ProgressBarTone[] = ["brand", "neutral", "success", "warning", "danger", "info"];
-const SIZES: ProgressBarSize[] = ["sm", "md", "lg"];
+const TONES: ProgressBarTone[] = ["brand", "neutral", "success", "warning", "danger", "info", "income", "expense"];
+const SIZES: ProgressBarSize[] = ["sm", "slim", "md", "lg"];
 
 function ProgressDeterminate() {
   const [value, setValue] = useState(35);
@@ -160,7 +160,10 @@ function ProgressMeter() {
 
 function ProgressTonesSizes() {
   return (
-    <Example label="ProgressBar — tones and sizes" hint="six token tones; sm 4px, md 8px, lg 12px">
+    <Example
+      label="ProgressBar — tones and sizes"
+      hint="six token tones plus the money pair income / expense; sm 4px, slim 6px, md 8px, lg 12px"
+    >
       <div className="grid gap-3 sm:grid-cols-2">
         {TONES.map((tone, i) => (
           <ProgressBar key={tone} value={30 + i * 12} tone={tone} label={tone} showValue />
@@ -168,8 +171,42 @@ function ProgressTonesSizes() {
       </div>
       <div className="mt-4 space-y-3">
         {SIZES.map((size) => (
-          <ProgressBar key={size} value={60} size={size} aria-label={`size ${size}`} />
+          <div key={size} className="flex items-center gap-3">
+            <code className="w-10 shrink-0 font-mono text-[11px] text-[var(--text-muted)]">{size}</code>
+            <ProgressBar value={60} size={size} aria-label={`size ${size}`} className="flex-1" />
+          </div>
         ))}
+      </div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {/* The report-meter case: a share of what came in / went out, under a line of
+            text that already shows the amount in the money colours. */}
+        {[
+          { name: "Salary", share: 82, amount: "+3,120.00", tone: "income" as const },
+          { name: "Groceries", share: 34, amount: "−412.80", tone: "expense" as const },
+        ].map((r) => (
+          <div key={r.name} className="space-y-1.5">
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-[var(--text-primary)]">{r.name}</span>
+              <span
+                className="tabular-nums"
+                style={{ color: r.tone === "income" ? "var(--money-income)" : "var(--money-expense)" }}
+              >
+                {r.amount}
+              </span>
+            </div>
+            <ProgressBar value={r.share} tone={r.tone} size="slim" aria-label={`${r.name}, share of ${r.tone}`} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">tone=&quot;income&quot;</code> / <code className="font-mono">&quot;expense&quot;</code>{" "}
+          fill with <code className="font-mono">--money-income</code> / <code className="font-mono">--money-expense</code>,
+          the pair Chip, StatTile and Sparkline use — a share of money is neither &ldquo;good&rdquo; nor
+          &ldquo;careful&rdquo;. <code className="font-mono">size=&quot;slim&quot;</code> is the 6px track (the
+          Slider&apos;s) for a bar under a line of text, where <code className="font-mono">md</code>&apos;s 8px
+          outweighs it.
+        </Note>
       </div>
     </Example>
   );
@@ -291,6 +328,54 @@ function EmptyStateDemo() {
           The icon is sized and muted by the box (<code className="font-mono">[&amp;_svg]:size-8</code>)
           and hidden from assistive tech — the title already says what it shows. The action is
           yours: several buttons in a fragment wrap and centre as one row, as in the offline card.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+function EmptyStateRich() {
+  const [resets, setResets] = useState(0);
+  return (
+    <Example
+      label="EmptyState — headingAs and node title / hint"
+      hint="the title as a real heading; title and hint take nodes, the box still sets the type"
+    >
+      <EmptyState
+        headingAs="h4"
+        title={
+          <>
+            Something broke: <code className="font-mono">TypeError</code>
+          </>
+        }
+        hint={
+          <>
+            The page hit an error it could not recover from.{" "}
+            <a
+              href="#/feedback"
+              className="underline hover:text-[var(--text-primary)]"
+              onClick={(e) => {
+                e.preventDefault();
+                setResets((n) => n + 1);
+              }}
+            >
+              Reset this view
+            </a>{" "}
+            (resets: {resets}).
+          </>
+        }
+      />
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">headingAs=&quot;h4&quot;</code> renders the title as an{" "}
+          <code className="font-mono">&lt;h4&gt;</code> — under this page&apos;s h2 section and h3 example —
+          so an error boundary that IS the page keeps the line that says what happened in the heading
+          outline. Only the element changes: it is still <code className="font-mono">text-sm</code>, the
+          box&apos;s look. Left out, the title is a <code className="font-mono">&lt;div&gt;</code>, as in the
+          cards above. <code className="font-mono">title</code> carries a{" "}
+          <code className="font-mono">&lt;code&gt;</code> here and <code className="font-mono">hint</code> a
+          link; an empty hint (<code className="font-mono">&quot;&quot;</code>,{" "}
+          <code className="font-mono">false</code>, <code className="font-mono">null</code>) renders no line.
         </Note>
       </div>
     </Example>
@@ -476,6 +561,7 @@ export function FeedbackProgress() {
       <ProgressTonesSizes />
       <SkeletonDemo />
       <EmptyStateDemo />
+      <EmptyStateRich />
       <AlertTonesDemo />
       <AlertInteractiveDemo />
       <AlertInlineDemo />

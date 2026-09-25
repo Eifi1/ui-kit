@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Bot, MessageSquarePlus, Plus } from "lucide-react";
+import { Bot, Filter, MessageSquarePlus, Plus } from "lucide-react";
 import { Button, FloatingActionButton, FloatingPanel, ToggleGroup, useConfirm } from "@eifi1/ui-kit";
 import type { ConfirmTone, FloatingCorner } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
@@ -147,6 +147,8 @@ function FloatingPanels() {
   const [draft, setDraft] = useState("");
   const [fabPresses, setFabPresses] = useState(0);
   const [startOpen, setStartOpen] = useState(false);
+  const [nativeTitles, setNativeTitles] = useState(true);
+  const [awaitingOnly, setAwaitingOnly] = useState(false);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const other: FloatingCorner = corner === "bottom-end" ? "bottom-start" : "bottom-end";
   return (
@@ -163,6 +165,11 @@ function FloatingPanels() {
           <input type="checkbox" checked={startOpen} onChange={(e) => setStartOpen(e.target.checked)} />
           assistant <code className="font-mono">defaultOpen</code>
         </label>
+        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <input type="checkbox" checked={nativeTitles} onChange={(e) => setNativeTitles(e.target.checked)} />
+          native <code className="font-mono">title</code> (<code className="font-mono">nativeTitle</code> /{" "}
+          <code className="font-mono">fabNativeTitle</code>)
+        </label>
       </Row>
       <Row className="mt-3">
         <span className="text-xs text-[var(--text-muted)]">assistant corner</span>
@@ -176,6 +183,8 @@ function FloatingPanels() {
           ["feedback open (controlled)", String(controlledOpen)],
           ["onOpenChange", changes.length ? changes.join(", ") : "—"],
           ["standalone FAB presses", String(fabPresses)],
+          ["awaiting-only toggle FAB (pressed)", String(awaitingOnly)],
+          ["FAB title attributes", nativeTitles ? "the label (default)" : "none — nativeTitle={false}"],
         ]}
       />
       {enabled && (
@@ -192,6 +201,7 @@ function FloatingPanels() {
             // Raised to clear the standalone button below it — keksdose's assistant clears
             // the transactions page's own action group the same way.
             offset="calc(1rem + 4rem)"
+            fabNativeTitle={nativeTitles}
             initialFocus={() => fieldRef.current}
             bodyClassName="space-y-3"
           >
@@ -234,13 +244,25 @@ function FloatingPanels() {
             label="New transaction"
             icon={<Plus />}
             corner={corner}
+            nativeTitle={nativeTitles}
             onClick={() => setFabPresses((n) => n + 1)}
+          />
+          {/* A toggle FAB, stacked above the feedback panel's: `pressed` makes it a
+              surface disc with `aria-pressed`, brand-tinted when on. */}
+          <FloatingActionButton
+            label="Awaiting reply only"
+            icon={<Filter />}
+            corner={other}
+            offset="calc(1rem + 4rem)"
+            pressed={awaitingOnly}
+            nativeTitle={nativeTitles}
+            onClick={() => setAwaitingOnly((v) => !v)}
           />
         </>
       )}
       <div className="mt-3">
         <Note>
-          Three things float once the box is ticked: a standalone{" "}
+          Four things float once the box is ticked: a standalone{" "}
           <code className="font-mono">FloatingActionButton</code> at the default offset and, stacked
           above it with <code className="font-mono">offset=&quot;calc(1rem + 4rem)&quot;</code>, the
           assistant (uncontrolled) in one corner — its card rises with it — and
@@ -253,6 +275,16 @@ function FloatingPanels() {
           buttons sit above the bottom bar and the panel docks on it as a sheet. From{" "}
           <code className="font-mono">md</code> up the panel is a card above its FAB;{" "}
           <code className="font-mono">className=&quot;md:w-[20rem]&quot;</code> narrows the feedback one.
+        </Note>
+        <Note>
+          Above the feedback FAB sits a TOGGLE: <code className="font-mono">pressed</code> ({String(awaitingOnly)}{" "}
+          now) sets <code className="font-mono">aria-pressed</code> and swaps the solid brand disc for a
+          surface disc — secondary glyph when off, brand glyph on the brand wash when on. Untick
+          &ldquo;native title&rdquo; and the FABs render no <code className="font-mono">title</code> at
+          all (hover one: no browser tooltip) — <code className="font-mono">nativeTitle=&#123;false&#125;</code> on
+          the standalone and toggle buttons, <code className="font-mono">fabNativeTitle=&#123;false&#125;</code> on
+          the assistant&apos;s panel — for an app whose one tooltip is the kit&apos;s{" "}
+          <code className="font-mono">Tooltip</code>. The <code className="font-mono">aria-label</code> stays.
         </Note>
       </div>
     </Example>
