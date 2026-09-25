@@ -20,6 +20,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.9.0](https://github.com/Eifi1/ui-kit/compare/v0.8.1...v0.9.0) (2026-09-25)
+
+### Added
+
+* doneDisabled, FAB nativeTitle/pressed, EmptyState headingAs, quiet tones ([ee415d5](https://github.com/Eifi1/ui-kit/commit/ee415d5078cb41bd4f816d26327acaa3fba66152))
+* **i18n:** commandPalette clear/submit/close in every shipped language ([33591c5](https://github.com/Eifi1/ui-kit/commit/33591c5e03dc2d76ab8a955ac178ec221ebd46ed))
+* palette submit mode, DataTable cellProps, DateRangePicker sheet and trigger ([7eef176](https://github.com/Eifi1/ui-kit/commit/7eef1768a92871111bd12f21774d3aa9ac1cc742))
+* **search:** GlobalSearch and createSearchIndex; the showcase's ⌘K search ([81cd71f](https://github.com/Eifi1/ui-kit/commit/81cd71f7029d8e97ce96c1218000009873cca490))
+
+### Fixed
+
+* **overlay-history:** navigating from an open overlay no longer bounces back ([3d63c87](https://github.com/Eifi1/ui-kit/commit/3d63c8799f0570438eb2d2d23491e7bae72749b0))
+
 ## [0.8.1](https://github.com/Eifi1/ui-kit/compare/v0.8.0...v0.8.1) (2026-09-25)
 
 ### Fixed
