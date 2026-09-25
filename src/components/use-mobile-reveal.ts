@@ -11,6 +11,11 @@ import { useEffect, useRef, useState } from "react";
  * is why nothing resets it: narrowing a filter cannot leave the limit pointing past the
  * end, and widening one does not have to re-reveal what the user already scrolled past.
  *
+ * `paginated={false}` opts out entirely: a table that is short by construction (an
+ * invoice's line items) renders every row on a phone too. It used to be chunked here
+ * regardless, so a twelve-line invoice showed its first ten lines and a "Loading…"
+ * sentinel for rows that were already in memory.
+ *
  * Lifted out of `DataTable` with the rest of its state; the sentinel ref belongs to the
  * caller's `<li>`.
  */
@@ -19,6 +24,7 @@ export function useMobileReveal<T>({
   slice,
   isServer,
   isMdUp,
+  unpaged = false,
   defaultPageSize,
 }: {
   /** The whole sorted list — what there is to reveal. */
@@ -27,11 +33,13 @@ export function useMobileReveal<T>({
   slice: T[];
   isServer: boolean;
   isMdUp: boolean;
+  /** `paginated={false}` on a client-side table: show every row, reveal nothing. */
+  unpaged?: boolean;
   defaultPageSize: number;
 }) {
   const [mobileLimit, setMobileLimit] = useState(defaultPageSize);
-  const mobileSlice = isServer ? slice : rows.slice(0, mobileLimit);
-  const canRevealMoreMobile = !isServer && !isMdUp && mobileLimit < rows.length;
+  const mobileSlice = isServer ? slice : unpaged ? rows : rows.slice(0, mobileLimit);
+  const canRevealMoreMobile = !isServer && !unpaged && !isMdUp && mobileLimit < rows.length;
   const loadMoreRef = useRef<HTMLLIElement | null>(null);
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
-import { useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
 
@@ -12,8 +12,11 @@ interface PaginationProps {
   pageSize: number;
   total: number;
   onPage: (p: number) => void;
-  onPageSize: (n: number) => void;
-  labels?: DataTableLabels;
+  /** Omit when the page size is not the user's to change (a server that fixes it):
+   *  the select is then not rendered at all, rather than rendered and inert. */
+  onPageSize?: (n: number) => void;
+  /** Over `dataTable` from `<UiKitProvider labels>`, over the English defaults. */
+  labels?: Partial<DataTableLabels>;
   /** For the page numbers and page-size options; falls back to the provider's. */
   locale?: string;
 }
@@ -27,9 +30,14 @@ export function Pagination({
   total,
   onPage,
   onPageSize,
-  labels = DEFAULT_DATA_TABLE_LABELS,
+  labels: labelsProp,
   locale: localeProp,
 }: PaginationProps) {
+  // prop > provider > English, like every other kit component. This defaulted straight
+  // to the English object, so a standalone pager under a translated provider still
+  // said "Rows per page" — only the pager INSIDE a DataTable was translated, because
+  // the table resolved the provider's labels and handed them down.
+  const labels = useKitLabels("dataTable", DEFAULT_DATA_TABLE_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
   // The bare numbers on the strip and in the select are text too: `String(n)` is
   // always ASCII digits, which is wrong for a locale that writes its own. The range
@@ -60,19 +68,23 @@ export function Pagination({
             ? labels.rowCount(total)
             : labels.pageRange(page * pageSize + 1, Math.min(total, (page + 1) * pageSize), total)}
         </span>
-        <select
-          value={pageSize === Infinity ? "all" : pageSize}
-          onChange={(e) => onPageSize(e.target.value === "all" ? Infinity : Number(e.target.value))}
-          className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
-          aria-label={labels.pageSize}
-        >
-          {PAGE_SIZE_OPTIONS.map((n) => (
-            <option key={n} value={n}>
-              {num.format(n)}
-            </option>
-          ))}
-          <option value="all">{labels.pageSizeAll}</option>
-        </select>
+        {onPageSize && (
+          <select
+            value={pageSize === Infinity ? "all" : pageSize}
+            onChange={(e) =>
+              onPageSize(e.target.value === "all" ? Infinity : Number(e.target.value))
+            }
+            className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
+            aria-label={labels.pageSize}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {num.format(n)}
+              </option>
+            ))}
+            <option value="all">{labels.pageSizeAll}</option>
+          </select>
+        )}
       </div>
       {pageSize !== Infinity && totalPages > 1 && (
         <div className="flex items-center gap-1">
@@ -83,7 +95,8 @@ export function Pagination({
             className="rounded p-1 hover:bg-[var(--bg-hover)] disabled:opacity-40"
             aria-label={labels.prevPage}
           >
-            <ChevronLeft className="size-4" />
+            {/* "Previous" points back along the line — left in LTR, right in RTL. */}
+            <ChevronLeft className="size-4 rtl:-scale-x-100" />
           </button>
           {items.map((it, i) =>
             it === "ellipsis" ? (
@@ -117,7 +130,7 @@ export function Pagination({
             className="rounded p-1 hover:bg-[var(--bg-hover)] disabled:opacity-40"
             aria-label={labels.nextPage}
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-4 rtl:-scale-x-100" />
           </button>
         </div>
       )}

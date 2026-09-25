@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { readStored, writeStored } from "../lib/safe-storage";
 import {
   decodeFilterValue,
@@ -59,9 +59,17 @@ interface UrlState {
   page?: number; // 0-based
 }
 
-function readUrlState<T>(columns: DataTableColumn<T>[]): UrlState {
-  if (typeof window === "undefined") return {};
-  const sp = new URLSearchParams(window.location.search);
+/**
+ * The managed keys out of the ROUTER's query string — the one `setSearchParams` writes.
+ *
+ * This read `window.location.search` until 0.7.0, which is the same string only under a
+ * BrowserRouter. Under a HashRouter the router's query lives after the `#`
+ * (`/#/tx?f.payee=Rewe`) and `window.location.search` is empty: a shared link opened
+ * unfiltered, and the table's first write then replaced the link's filter with its own
+ * empty state. Reading and writing through `useSearchParams` is one source for both
+ * directions under every router, MemoryRouter included.
+ */
+function readUrlState<T>(sp: URLSearchParams, columns: DataTableColumn<T>[]): UrlState {
   const out: UrlState = {};
 
   const filters: FilterState = {};
@@ -179,13 +187,14 @@ function writeUrlState<T>(
  * * **Persistence writes on every change, the URL only when asked.** `storageKey` is the
  *   per-table identity; `urlSync` is opt-in because only some tables want their view in
  *   a shareable address.
+ * * **A controlled filter or sort that changes sends the table back to page 1.** See
+ *   the note at the reset below.
  */
 export function useTableState<T>({
   columns,
   storageKey,
   storageKeyPrefix,
   urlSync,
-  setSearchParams,
   defaultPageSize,
   sortsProp,
   filtersProp,
@@ -194,14 +203,18 @@ export function useTableState<T>({
   storageKey?: string;
   storageKeyPrefix: string;
   urlSync?: boolean;
-  setSearchParams: ReturnType<typeof useSearchParams>[1];
   defaultPageSize: number;
   sortsProp?: SortState[];
   filtersProp?: FilterState;
 }) {
+  // Called unconditionally (a Router is required either way — see src/data-table.ts),
+  // and the SAME pair is used to read and to write; see `readUrlState`.
+  const [searchParams, setSearchParams] = useSearchParams();
   // Read URL once on mount so URL-encoded views (e.g. shared links, deep links from
   // other pages) populate initial state. After mount, state is local.
-  const [urlInitial] = useState<UrlState>(() => (urlSync ? readUrlState(columns) : {}));
+  const [urlInitial] = useState<UrlState>(() =>
+    urlSync ? readUrlState(searchParams, columns) : {},
+  );
   const initial = useMemo(
     () => loadPersisted(storageKey, storageKeyPrefix),
     [storageKey, storageKeyPrefix],
@@ -217,6 +230,30 @@ export function useTableState<T>({
   const sorts = sortsProp ?? internalSorts;
   const filters = filtersProp ?? internalFilters;
   const [page, setPage] = useState(() => urlInitial.page ?? 0);
+
+  // ---- Controlled filters/sorts reset the page ----
+  //
+  // A self-owned table resets to page 1 in the filter handlers. A CONTROLLED one could
+  // not: the handlers hand the change to the owner and return, and `page` lives here,
+  // where the owner has no way to reach it — so narrowing a filter from outside (a
+  // saved view, a chip dismissed above the table) left a client-side table on page 4
+  // of what was now two pages, clamped to the last one instead of the first.
+  //
+  // So the table does it: whenever the controlled VALUE changes, back to the first
+  // page. Compared by value, because a controlled prop is a fresh object on every
+  // parent render. Adjusted during render rather than in an effect, so the stale page
+  // is never painted and never written to the URL. Not on mount: a deep link's `p=3`
+  // must survive the owner's first render. (In `serverPagination` mode this state is
+  // unused — the owner's `page` is the page, and resetting it stays the owner's job.)
+  const controlledSig =
+    sortsProp !== undefined || filtersProp !== undefined
+      ? JSON.stringify([sortsProp ?? null, filtersProp ?? null])
+      : null;
+  const [seenControlledSig, setSeenControlledSig] = useState(controlledSig);
+  if (seenControlledSig !== controlledSig) {
+    setSeenControlledSig(controlledSig);
+    setPage(0);
+  }
   const [pageSize, setPageSize] = useState<number>(() => {
     if (urlInitial.pageSize !== undefined) return urlInitial.pageSize;
     if (initial.pageSize === "all") return Infinity;

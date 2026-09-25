@@ -134,7 +134,13 @@ export { FilterPopover } from "./components/data-table-filter-popover";
 // data-table re-exports SortState internally; export the rest explicitly to
 // avoid a duplicate SortState star-export (it comes from data-table-sort).
 export { DataTable } from "./components/data-table";
-export type { DataTableColumn, DataTableProps, ServerPagination, FilterState } from "./components/data-table";
+export type {
+  DataTableColumn,
+  DataTableProps,
+  ServerPagination,
+  FilterState,
+  MobileSwipeActions,
+} from "./components/data-table";
 
 // ── shell (composable app chrome) ────────────────────────────────────────────
 export * from "./shell/topbar-controls";
