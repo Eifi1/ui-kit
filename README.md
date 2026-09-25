@@ -373,22 +373,24 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**324 names from 76 modules** — 212 values and 112 types. _Italic_ is a type-only export.
+**594 names from 105 modules** — 331 values and 263 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 324 |
-| `@eifi1/ui-kit/chart` | 15 |
-| `@eifi1/ui-kit/shell` | 16 |
-| `@eifi1/ui-kit/data-table` | 27 |
+| `@eifi1/ui-kit` | 594 |
+| `@eifi1/ui-kit/chart` | 73 |
+| `@eifi1/ui-kit/shell` | 18 |
+| `@eifi1/ui-kit/data-table` | 28 |
 | `@eifi1/ui-kit/wizard` | 20 |
-| `@eifi1/ui-kit/tour` | 6 |
-| `@eifi1/ui-kit/feedback` | 27 |
-| `@eifi1/ui-kit/search` | 4 |
+| `@eifi1/ui-kit/tour` | 7 |
+| `@eifi1/ui-kit/feedback` | 29 |
+| `@eifi1/ui-kit/search` | 5 |
 | `@eifi1/ui-kit/dates` | 16 |
+| `@eifi1/ui-kit/table-text` | 8 |
+| `@eifi1/ui-kit/rhf` | 13 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
 re-slicing of it, never a second API.
@@ -415,6 +417,7 @@ re-slicing of it, never a second API.
 | `hooks/use-overlay-history` | `useOverlayHistory` |
 | `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
 | `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
+| `hooks/use-windowed-rows` | `useWindowedRows`, _`WindowedRows`_ |
 
 ### theme, palettes, colour
 
@@ -431,53 +434,79 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonVariant`_, _`PasswordRevealLabels`_, _`TabsProps`_ |
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonProps`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
-| `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch` |
-| `components/popover` | `Popover`, _`PopoverLabels`_ |
+| `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
+| `components/popover` | `DEFAULT_POPOVER_LABELS`, `Popover`, _`PopoverLabels`_, _`PopoverProps`_ |
 | `components/swipeable-row` | `SwipeableRow`, _`SwipeableRowProps`_, _`SwipeAction`_ |
 | `components/calculator` | `CalculatorButton`, _`CalculatorButtonLabels`_ |
 | `components/numpad-sheet` | `NumberPadSheet`, _`NumberPadSheetLabels`_ |
-| `components/number-input` | `NumberInput` |
-| `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyOption`_ |
+| `components/number-input` | `NumberInput`, `stepNumber` |
+| `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyFlagProps`_, _`CurrencyOption`_, _`CurrencySelectProps`_ |
 | `components/amount-input` | `AmountInput` |
-| `components/combobox` | `Combobox`, `InlineEntityCombobox` |
-| `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS` |
+| `components/combobox` | `Combobox`, `InlineEntityCombobox`, _`ComboboxProps`_, _`InlineEntityComboboxProps`_ |
+| `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS`, _`PickerSheetProps`_ |
 | `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
 | `components/multi-entity-combobox` | `MultiEntityCombobox`, _`MultiEntityComboboxProps`_ |
-| `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_ |
-| `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipSize`_, _`TooltipViewport`_ |
+| `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_, _`MultiSelectProps`_ |
+| `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSize`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarProps`_ |
 | `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_ |
-| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
+| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
+| `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
+| `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
+| `components/switch` | `Switch`, _`SwitchProps`_, _`SwitchSize`_ |
+| `components/slider` | `fromLogPosition`, `Slider`, `toLogPosition`, _`SliderMark`_, _`SliderProps`_ |
+| `components/time-input` | `isTimeInRange`, `normalizeTime`, `TimeInput`, _`TimeInputProps`_ |
+| `components/number-field` | `NumberField`, _`NumberFieldProps`_ |
+| `components/sparkline` | `DEFAULT_SPARKLINE_LABELS`, `Sparkline`, `sparklineSummary`, _`SparklineLabels`_, _`SparklineProps`_, _`SparklineTone`_ |
+| `components/stat-tile` | `DEFAULT_STAT_TILE_LABELS`, `StatTile`, `StatTileGrid`, _`StatTileDelta`_, _`StatTileGridProps`_, _`StatTileLabels`_, _`StatTileLinkProps`_, _`StatTileProps`_, _`StatTileSubValue`_, _`StatTileTone`_ |
+| `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
+| `components/password-strength` | `DEFAULT_PASSWORD_STRENGTH_LABELS`, `passwordByteLength`, `passwordRules`, `PasswordStrengthMeter`, `scorePassword`, _`PasswordRule`_, _`PasswordRuleId`_, _`PasswordScoreOptions`_, _`PasswordStrengthLabels`_, _`PasswordStrengthMeterProps`_, _`PasswordStrengthScore`_ |
+| `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
+| `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_ |
+| `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
+| `components/danger-confirm` | `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, _`DangerConfirmLabels`_, _`DangerConfirmProps`_ |
+| `components/swatch-picker` | `DEFAULT_SWATCH_PICKER_LABELS`, `SwatchPicker`, _`SwatchOption`_, _`SwatchPickerLabels`_, _`SwatchPickerProps`_ |
+| `components/icon-picker` | `DEFAULT_ICON_PICKER_LABELS`, `IconPicker`, _`IconOption`_, _`IconPickerLabels`_, _`IconPickerProps`_ |
+| `components/choice-card` | `ChoiceCard`, `ChoiceCardGroup`, _`ChoiceCardGroupProps`_, _`ChoiceCardMultipleProps`_, _`ChoiceCardOption`_, _`ChoiceCardProps`_, _`ChoiceCardSingleProps`_, _`ChoiceCardType`_ |
+| `components/autocomplete` | `Autocomplete`, _`AutocompleteProps`_ |
+| `components/measured-grid` | `DEFAULT_MEASURED_GRID_LABELS`, `MeasuredGrid`, `useMeasuredRows`, _`MeasuredGridColumn`_, _`MeasuredGridLabels`_, _`MeasuredGridProps`_, _`MeasuredGridView`_, _`MeasuredRows`_, _`UseMeasuredRowsOptions`_ |
+| `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
+| `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapNode`_, _`TreemapProps`_ |
+| `components/series-chart` | `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `SeriesChart`, `seriesKey`, `soleSeriesColor`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartProps`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartX`_, _`SeriesSource`_ |
+| `components/chart-zoom` | `DEFAULT_Y_AXIS`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `SharedXZoom`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains`, _`ZoomAxes`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSource`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
+| `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`ToggleLegendProps`_ |
+| `components/facing-pair` | `FACING_SIDES`, `facingAxes`, `facingBand`, `facingHeadingPad`, _`FacingSide`_ |
+| `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
-| `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertTone`_ |
-| `components/toggle-group` | `ToggleGroup` |
+| `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertTone`_ |
+| `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipProps`_, _`ChipSize`_, _`ChipTone`_ |
 | `components/wizard-stepper` | `WizardStepper` |
-| `components/hover-menu` | `HoverMenu` |
-| `components/modal` | `Modal`, `useBackdropClose`, _`ModalProps`_ |
-| `components/full-bleed-dialog` | `FullBleedDialog` |
-| `components/grouped-picker` | `GroupedPicker`, _`PickerGroup`_ |
-| `components/file-dropzone` | `FileDropzone` |
-| `components/mini-calendar` | `MiniCalendar`, _`MiniCalendarLabels`_, _`MiniCalendarProps`_ |
+| `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
+| `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
+| `components/full-bleed-dialog` | `FullBleedDialog`, _`FullBleedDialogProps`_ |
+| `components/grouped-picker` | `GroupedPicker`, _`GroupedPickerProps`_, _`PickerGroup`_ |
+| `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_ |
+| `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
 | `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
 | `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortDir`_, _`SortState`_ |
 | `components/data-table-filters` | `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `isFilterActive`, `resolveFilter`, `rowMatches`, _`ColumnFilter`_, _`FilterValue`_ |
-| `components/data-table` | `DataTable`, _`DataTableColumn`_, _`DataTableProps`_, _`FilterState`_, _`ServerPagination`_ |
+| `components/data-table` | `DataTable`, _`DataTableColumn`_, _`DataTableProps`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
-| `components/combobox-core` | _`ComboOption`_ |
+| `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
 
 ### shell
 
 | Module | Exports |
 |---|---|
 | `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
-| `shell/top-bar` | `TopBar` |
-| `shell/app-shell` | `AppShell`, _`AppShellNavItem`_, _`AppShellSubItem`_ |
+| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
+| `shell/app-shell` | `AppShell`, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSubItem`_ |
 | `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
 | `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_ |
@@ -486,7 +515,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `FeedbackAttachmentField`, `pastedName` |
+| `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentFieldLabels`_ |
 | `feedback/feedback-dialog` | `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackSubmission`_ |
 | `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
 
@@ -506,13 +535,20 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `tour/tour` | `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
 
 ### search
 
 | Module | Exports |
 |---|---|
-| `search/command-palette` | `CommandPalette`, `useCommandKey`, _`CommandItem`_, _`CommandPaletteLabels`_ |
+| `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, `useCommandKey`, _`CommandItem`_, _`CommandPaletteLabels`_ |
+
+### i18n
+
+| Module | Exports |
+|---|---|
+| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
+| `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 
 <!-- END GENERATED: exports -->
 
