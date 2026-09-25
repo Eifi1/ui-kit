@@ -366,7 +366,9 @@ export function CommandPalette({
   // Keep the active row scrolled into view.
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`);
-    el?.scrollIntoView({ block: "nearest" });
+    // Optional-called, as in combobox-core: jsdom has no scrollIntoView, and every
+    // consumer's tests crashed on the first highlighted row (kastlan stubbed it).
+    el?.scrollIntoView?.({ block: "nearest" });
   }, [active]);
 
   if (!open) return null;
