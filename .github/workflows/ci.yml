@@ -87,3 +87,18 @@ jobs:
             grep -q "$cls" "$css" || { echo "::error::$cls missing from $css — the @source scan is not reaching src/"; exit 1; }
           done
           echo "OK: the showcase CSS carries the kit utilities."
+
+  commits:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the whole range, so every commit message in it can be read
+      # Dependency-free (no install): the release tool derives the version and the
+      # changelog from these messages, so one it cannot categorise is a gap in both.
+      - name: Commit messages — Conventional Commits
+        run: node scripts/check-commit-range.cjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

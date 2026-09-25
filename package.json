@@ -80,7 +80,11 @@
     "dev:showcase": "vite --config showcase/vite.config.ts",
     "build:showcase": "vite build --config showcase/vite.config.ts",
     "preview:showcase": "vite preview --config showcase/vite.config.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release": "commit-and-tag-version",
+    "release:dry": "commit-and-tag-version --dry-run",
+    "commitlint": "node scripts/check-commit-range.cjs",
+    "prepare": "husky || true"
   },
   "peerDependencies": {
     "lucide-react": ">=0.400.0 <2",
@@ -116,6 +120,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
     "@vitest/coverage-v8": "^4.1.11",
+    "commit-and-tag-version": "^13.2.1",
     "eslint": "^9.39.5",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.17.1",
@@ -123,6 +128,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "flag-icons": "^7.5.0",
     "globals": "^17.12.0",
+    "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "lucide-react": "^0.511.0",
     "react-hook-form": "^7.88.0",
