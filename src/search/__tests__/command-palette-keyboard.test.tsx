@@ -66,8 +66,9 @@ function activeRow(): HTMLElement | null {
 }
 
 /**
- * Open the palette and wait until the caret is in its field. The palette focuses in a
- * rAF after the portal mounts, so a key pressed before that lands on <body> — which
+ * Open the palette and wait until the caret is in its field. The palette focuses its
+ * field from the focus trap's effect, after the portal mounts (it used to be a rAF),
+ * so a key pressed before that lands on <body> — which
  * made every test below a race that a slow run lost ("Enter did nothing", "Escape
  * did not close"). Waiting for the rows alone was never the same thing.
  */
@@ -85,8 +86,8 @@ describe("the command palette's keyboard", () => {
 
     await user.keyboard("{Control>}k{/Control}");
     const field = await screen.findByRole("combobox");
-    // Focus lands a frame later (the palette focuses in a rAF, after the portal is
-    // in the document), which is the reason this is awaited rather than asserted.
+    // Focus lands after the portal is in the document (the focus trap's effect), which
+    // is the reason this is awaited rather than asserted.
     await waitFor(() => expect(field).toHaveFocus());
   });
 

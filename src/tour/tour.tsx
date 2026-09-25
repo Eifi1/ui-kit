@@ -13,8 +13,15 @@ import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button } from "../components/ui";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { dirOf, horizontalStep } from "../lib/direction";
+import type { Direction } from "../lib/direction";
 
-export type TourPlacement = "top" | "right" | "bottom" | "left" | "center";
+/**
+ * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
+ * left side in RTL) and are what a translated app wants. `left`/`right` stay physical
+ * for the steps that genuinely mean a screen side.
+ */
+export type TourPlacement = "top" | "right" | "bottom" | "left" | "start" | "end" | "center";
 
 export interface TourStep {
   /** CSS selector for the element to spotlight. Omit for a centered step
@@ -28,13 +35,14 @@ export interface TourStep {
   padding?: number;
   /** Where the card sits relative to the target. Omit for auto placement
    *  (below → above → centered). "center" ignores the target and centers on
-   *  screen. An explicit side flips to the opposite side if it would overflow,
-   *  then clamps into the viewport. */
+   *  screen. "start"/"end" are the logical sides and flip in RTL; "left"/"right"
+   *  are physical. An explicit side flips to the opposite side if it would
+   *  overflow, then clamps into the viewport. */
   placement?: TourPlacement;
   /** Advance only when the user clicks the spotlighted target itself (not the
    *  card's Next button). Requires `target`: the real control's own handler runs
-   *  first, then the tour steps forward on a microtask. The overlay stays
-   *  click-through to the target. */
+   *  first, then the tour steps forward on a microtask. The spotlight hole stays
+   *  click-through to the target; the rest of the page does not. */
   awaitClick?: boolean;
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
    *  May be async; the step waits for it, then locates the target. */
@@ -269,6 +277,11 @@ function TourOverlay({
   const isLast = index === steps.length - 1;
   const [rect, setRect] = useState<Rect | null>(null);
   const [ready, setReady] = useState(false);
+  // The overlay is portalled to <body>, out of whatever `dir` subtree the app set, so it
+  // takes the direction of the element it spotlights (the document's for a centered
+  // step). Arrow keys and start/end placement read it.
+  const [dir, setDir] = useState<Direction>(() => dirOf(null));
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Run beforeStep, then locate the target (retrying across route/render lag).
   useEffect(() => {
@@ -280,6 +293,7 @@ function TourOverlay({
       await step.beforeStep?.();
       if (cancelled) return;
       if (!step.target) {
+        setDir(dirOf(null));
         setReady(true);
         return;
       }
@@ -291,11 +305,15 @@ function TourOverlay({
           el.scrollIntoView({ block: "center", behavior: "smooth" });
           const r = el.getBoundingClientRect();
           setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+          setDir(dirOf(el));
           setReady(true);
           return;
         }
         if (tries++ < 45) raf = requestAnimationFrame(find);
-        else setReady(true); // give up → render centered
+        else {
+          setDir(dirOf(null));
+          setReady(true); // give up → render centered
+        }
       };
       find();
     })();
@@ -326,8 +344,8 @@ function TourOverlay({
     };
   }, [index, step]);
 
-  // awaitClick: advance when the *real* target is clicked. The overlay is
-  // click-through (pointer-events-none except the card) so the element's own
+  // awaitClick: advance when the *real* target is clicked. The spotlight hole is
+  // click-through (see the shields in the render below) so the element's own
   // handler runs first; we step forward on the next macrotask.
   useEffect(() => {
     if (!ready || !step.awaitClick || !step.target) return;
@@ -338,21 +356,34 @@ function TourOverlay({
     return () => el.removeEventListener("click", onClick);
   }, [ready, index, step, onNext]);
 
-  // Keyboard: Esc skips, →/Enter advance, ← goes back. On awaitClick steps Enter
-  // is ignored (it would fire the target's click AND advance) — → stays as an
-  // escape hatch.
+  // Keyboard: Esc skips, Enter and the reading-direction arrow advance (→ in LTR,
+  // ← in RTL), the other arrow goes back. On awaitClick steps Enter is ignored (it
+  // would fire the target's click AND advance) — the forward arrow stays as an escape
+  // hatch.
+  //
+  // Enter on a focused control belongs to that control. This used to advance from
+  // anywhere, so Enter on a focused Skip or Back ran the button's own click AND stepped
+  // forward: Back moved nowhere, Skip skipped and then called `next` on a dead tour.
+  // The same goes for arrows in a text field a step's `action` might contain.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onSkip();
-      } else if (e.key === "ArrowRight") {
+        return;
+      }
+      if (e.key === "Enter") {
+        if (step.awaitClick || ownsKey(e.target, "Enter")) return;
         e.preventDefault();
         onNext();
-      } else if (e.key === "Enter") {
-        if (step.awaitClick) return;
+        return;
+      }
+      if (ownsKey(e.target, e.key)) return;
+      // The overlay root carries `dir`; before it paints, the document's answers.
+      const delta = horizontalStep(e.key, rootRef.current);
+      if (delta === 1) {
         e.preventDefault();
         onNext();
-      } else if (e.key === "ArrowLeft") {
+      } else if (delta === -1) {
         if (!isFirst) onPrev();
       }
     };
@@ -367,8 +398,24 @@ function TourOverlay({
     ? { top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }
     : null;
 
+  // `aria-modal` promises the page behind is out of reach, and the card's focus trap
+  // keeps that promise for the keyboard. The pointer used to get no such treatment: the
+  // root is `pointer-events-none` so that the spotlight hole can stay live for
+  // `awaitClick`, and the scrim is a box-shadow, which takes no clicks — so every
+  // control on the dimmed page stayed clickable. Four shields now tile the viewport
+  // around the hole: the page is blocked, the card and the spotlighted target are not.
+  // Keeping `aria-modal` (rather than dropping it) is the coherent half: the tour
+  // really is modal — focus is trapped and Esc/Skip is the way out.
   return createPortal(
-    <div className="pointer-events-none fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={step.title}>
+    <div
+      ref={rootRef}
+      className="pointer-events-none fixed inset-0 z-[60]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={step.title}
+      dir={dir}
+    >
+      {spot && <SpotlightShields spot={spot} />}
       {spot ? (
         <div
           className="pointer-events-none fixed rounded-lg transition-all duration-200 ease-out"
@@ -410,12 +457,60 @@ function TourOverlay({
         isFirst={isFirst}
         isLast={isLast}
         rect={spot}
+        dir={dir}
         onBack={onPrev}
         onNext={onNext}
         onSkip={onSkip}
       />
     </div>,
     document.body,
+  );
+}
+
+/** Does the focused element handle `key` itself? Enter on a button or link, and any
+ *  editing key in a text field or select, is the control's — not the tour's. */
+function ownsKey(target: EventTarget | null, key: string): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  if (tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (tag === "INPUT") {
+    const type = (target as HTMLInputElement).type;
+    // Enter on a checkbox does nothing natively, but ←/→ on a radio moves it.
+    return key !== "Enter" || type !== "checkbox";
+  }
+  if (key !== "Enter") return false;
+  return (
+    tag === "BUTTON" ||
+    (tag === "A" && target.hasAttribute("href")) ||
+    target.getAttribute("role") === "button" ||
+    target.getAttribute("role") === "link"
+  );
+}
+
+/**
+ * Transparent pointer blockers tiling the viewport around the spotlight hole: one
+ * full-width band above and below, one on each side at the hole's own height. The hole
+ * itself stays uncovered, so the target keeps its clicks.
+ */
+function SpotlightShields({ spot }: { spot: Rect }) {
+  const shield = "pointer-events-auto fixed";
+  const bottom = spot.top + spot.height;
+  return (
+    <>
+      <div data-tour-shield="" className={shield} style={{ top: 0, left: 0, right: 0, height: Math.max(0, spot.top) }} />
+      <div data-tour-shield="" className={shield} style={{ top: bottom, left: 0, right: 0, bottom: 0 }} />
+      <div
+        data-tour-shield=""
+        className={shield}
+        style={{ top: spot.top, left: 0, width: Math.max(0, spot.left), height: spot.height }}
+      />
+      <div
+        data-tour-shield=""
+        className={shield}
+        style={{ top: spot.top, left: spot.left + spot.width, right: 0, height: spot.height }}
+      />
+    </>
   );
 }
 
@@ -434,7 +529,11 @@ function placeCard(
   vh: number,
   m: number,
   placement?: TourPlacement,
+  dir: Direction = "ltr",
 ): { top: number; left: number } {
+  // The logical sides resolve to a physical one here, and only here.
+  if (placement === "start") placement = dir === "rtl" ? "right" : "left";
+  else if (placement === "end") placement = dir === "rtl" ? "left" : "right";
   if (!rect || placement === "center") {
     return { top: Math.max(m, (vh - ch) / 2), left: Math.max(m, (vw - cw) / 2) };
   }
@@ -475,6 +574,7 @@ function TourCard({
   isFirst,
   isLast,
   rect,
+  dir,
   onBack,
   onNext,
   onSkip,
@@ -486,6 +586,7 @@ function TourCard({
   isFirst: boolean;
   isLast: boolean;
   rect: Rect | null;
+  dir: Direction;
   onBack: () => void;
   onNext: () => void;
   onSkip: () => void;
@@ -524,9 +625,9 @@ function TourCard({
     const card = ref.current;
     if (!card) return;
     setStyle(
-      placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement),
+      placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement, dir),
     );
-  }, [rect, index, step.placement]);
+  }, [rect, index, step.placement, dir]);
 
   return (
     <div

@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactNode } f
 import { X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID } from "./ui";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
@@ -72,20 +73,48 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   },
 };
 
-const SIZE: Record<ChipSize, { body: string; icon: string; remove: string }> = {
-  sm: { body: "gap-1 px-2 py-0.5 text-xs", icon: "size-3", remove: "size-3" },
-  md: { body: "gap-1.5 px-2.5 py-1 text-sm", icon: "size-3.5", remove: "size-3.5" },
-  lg: { body: "min-h-11 gap-2 px-4 py-2 text-sm", icon: "size-4", remove: "size-4" },
+/**
+ * `body` is the whole pill when the chip is ONE element. When a link or a button also has
+ * a dismiss control, the pill is a wrapper holding two siblings (see the note on
+ * {@link Chip}): `split` is then the interactive part's own padding — the full start
+ * inset, a short end one before the ×; `tail` is the wrapper's end inset after the ×.
+ */
+const SIZE: Record<
+  ChipSize,
+  { body: string; split: string; tail: string; icon: string; remove: string }
+> = {
+  sm: {
+    body: "gap-1 px-2 py-0.5 text-xs",
+    split: "gap-1 ps-2 pe-1 py-0.5 text-xs",
+    tail: "pe-1.5",
+    icon: "size-3",
+    remove: "size-3",
+  },
+  md: {
+    body: "gap-1.5 px-2.5 py-1 text-sm",
+    split: "gap-1.5 ps-2.5 pe-1.5 py-1 text-sm",
+    tail: "pe-2",
+    icon: "size-3.5",
+    remove: "size-3.5",
+  },
+  lg: {
+    body: "min-h-11 gap-2 px-4 py-2 text-sm",
+    split: "min-h-11 gap-2 ps-4 pe-2 py-2 text-sm",
+    tail: "min-h-11 pe-3.5",
+    icon: "size-4",
+    remove: "size-4",
+  },
 };
 
-const CHIP_BASE =
-  "inline-flex max-w-full items-center rounded-full border transition-colors " +
-  // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
-  // ChipInput moves focus onto one after a removal) and a ring that appears on a
-  // pointer click reads as a stuck selection.
+const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border transition-colors";
+// `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
+// ChipInput moves focus onto one after a removal) and a ring that appears on a
+// pointer click reads as a stuck selection.
+const CHIP_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]";
+const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
 
-export interface ChipProps {
+interface ChipBaseProps {
   children: ReactNode;
   tone?: ChipTone;
   size?: ChipSize;
@@ -94,16 +123,19 @@ export interface ChipProps {
    * Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a
    * toggle.
    *
-   * On a toggle, keep the LABEL the same in both states and let `selected` carry the
-   * state. A label that flips with it ("Skip this month" / "Ask again this month") is
-   * announced together with "pressed", and then says the opposite of what it does.
+   * On an ON/OFF toggle, keep the LABEL the same in both states and let `selected`
+   * carry the state. A label that flips with it ("Skip this month" / "Ask again this
+   * month") is announced together with "pressed", and then says the opposite of what
+   * it does.
+   *
+   * A control that switches between two NAMED states (outflow ⇄ inflow) is not a
+   * toggle but an ACTION button: leave `selected` out, let the visible label and the
+   * tone follow the state ("− Outflow" / "+ Inflow"), and name the action in
+   * `aria-label` ("Direction: outflow — tap for inflow"). Without `selected` the chip
+   * reports no pressed state at all. A fixed label there contradicts the figure beside
+   * it — "+ Outflow" in green next to an inflow (keksdose #417).
    */
   selected?: boolean;
-  /** Renders the chip as a link. Mutually exclusive with `onClick`. */
-  href?: string;
-  /** Renders the chip as a toggle button. Mutually exclusive with `href`. Receives the
-   *  click, so a chip inside a clickable row can `stopPropagation()`. */
-  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   /** Renders a dismiss affordance. Works alongside `href`/`onClick` — see the note below. */
   onRemove?: () => void;
   /** Accessible name for the dismiss button. Default: `common.remove` from the
@@ -133,11 +165,33 @@ export interface ChipProps {
 }
 
 /**
+ * A chip is a link OR a button, never both — so the types say so. Before 0.7.0 both were
+ * accepted and `onClick` was silently dropped whenever `href` was set; a link that must
+ * also run code wants a router `Link`-style `onClick` on the anchor, which is a different
+ * component's job.
+ */
+export type ChipProps = ChipBaseProps &
+  (
+    | {
+        /** Renders the chip as a link. Mutually exclusive with `onClick`. */
+        href?: string;
+        onClick?: never;
+      }
+    | {
+        href?: never;
+        /** Renders the chip as a toggle button. Mutually exclusive with `href`. Receives
+         *  the click, so a chip inside a clickable row can `stopPropagation()`. */
+        onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+      }
+  );
+
+/**
  * Note on `onRemove` with `href`/`onClick`: a button cannot be nested inside a button or
  * a link, so when both are present the chip renders a wrapper holding TWO siblings — the
- * interactive body and the dismiss control. That is why the outer element is not always
- * the interactive one, and why the focus ring is drawn on the body rather than the
- * wrapper.
+ * interactive body and the dismiss control. The WRAPPER is the visual pill (border, tone,
+ * `className`) and the two sit inside it, so the × reads as part of the chip; the body's
+ * focus ring is drawn on the body alone, and `ref`, `id` and the ARIA props still reach
+ * the body — the interactive element.
  */
 export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   {
@@ -145,7 +199,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     tone = "neutral",
     size = "md",
     icon: Icon,
-    selected = false,
+    selected,
     href,
     onClick,
     onRemove,
@@ -164,12 +218,15 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const s = SIZE[size];
   const palette = TONE[tone];
   const interactive = !!href || !!onClick;
+  const surface = cn(
+    selected ? palette.selected : palette.idle,
+    disabled && "cursor-default opacity-50",
+  );
   const look = cn(
     CHIP_BASE,
     s.body,
-    selected ? palette.selected : palette.idle,
+    surface,
     interactive && !disabled && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
-    disabled && "cursor-default opacity-50",
     className,
   );
 
@@ -202,7 +259,8 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       }}
       disabled={disabled}
       className={cn(
-        "-mr-0.5 ml-0.5 shrink-0 rounded-full p-0.5 transition-colors",
+        // Logical margins: the × sits at the END of the pill, which is the left in RTL.
+        "-me-0.5 ms-0.5 shrink-0 rounded-full p-0.5 transition-colors",
         "hover:bg-[var(--bg-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
         disabled && "pointer-events-none",
       )}
@@ -211,6 +269,23 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     </button>
   ) : null;
 
+  // ── The combined shape: one pill, two interactive siblings inside it.
+  const pill = (inner: ReactNode) => (
+    <span className={cn(CHIP_PILL, s.tail, surface, className)}>
+      {inner}
+      {remove}
+    </span>
+  );
+  // The body inside a pill: no border or surface of its own (the pill has them), a
+  // hover wash in the text's own hue so it works on every tone.
+  const inner = cn(
+    "inline-flex min-w-0 items-center self-stretch rounded-full transition-colors",
+    CHIP_RING,
+    s.split,
+    !disabled && "cursor-pointer hover:bg-current/10",
+    disabled && "cursor-default",
+  );
+
   // ── The three shapes.
   if (href && !disabled) {
     const link = (
@@ -218,21 +293,13 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         ref={ref as React.Ref<HTMLAnchorElement>}
         href={href}
         aria-current={selected ? "true" : undefined}
-        className={cn(look, remove && "pr-1.5")}
+        className={remove ? inner : look}
         {...rest}
       >
         {body}
-        {!remove && null}
       </a>
     );
-    return remove ? (
-      <span className="inline-flex items-center">
-        {link}
-        {remove}
-      </span>
-    ) : (
-      link
-    );
+    return remove ? pill(link) : link;
   }
 
   if (onClick) {
@@ -242,21 +309,17 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         type="button"
         onClick={onClick}
         disabled={disabled}
+        // Only when `selected` is PASSED: a chip with `onClick` and no `selected` is an
+        // action button (it does something), not a toggle (it is on or off), and
+        // announcing it "not pressed" would claim a state it does not have.
         aria-pressed={selected}
-        className={cn(look, remove && "pr-1.5")}
+        className={remove ? inner : look}
         {...rest}
       >
         {body}
       </button>
     );
-    return remove ? (
-      <span className="inline-flex items-center">
-        {button}
-        {remove}
-      </span>
-    ) : (
-      button
-    );
+    return remove ? pill(button) : button;
   }
 
   return (
@@ -344,7 +407,7 @@ export interface ChipInputProps
  *
  *   Enter, or any separator  commit the typed text
  *   Backspace on empty text  move focus to the last chip (does NOT delete it)
- *   ← →  while on a chip     move between chips
+ *   ← →  while on a chip     move between chips, in reading order (mirrored in RTL)
  *   Backspace / Delete       remove the focused chip, focus its neighbour
  *   Escape                   clear what is typed but keep the committed chips
  *   paste                    splits on the separators, so a pasted CSV becomes chips
@@ -384,13 +447,21 @@ export function ChipInput({
   const locale = useKitLocale();
   const [draft, setDraft] = useState("");
   const [message, setMessage] = useState("");
+  // The last refusal, shown under the field until the next edit. The live region alone
+  // told only a screen-reader user why Enter did nothing; everyone else saw the text
+  // simply stay put.
+  const [rejected, setRejected] = useState<string | null>(null);
   const [focusedChip, setFocusedChip] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chipRefs = useRef<Array<HTMLElement | null>>([]);
   const id = useId();
   const listId = `${id}-list`;
   const errorId = `${id}-error`;
+  const rejectedId = `${id}-rejected`;
   const isInvalid = invalid || !!error;
+  const describedBy = [error ? errorId : null, rejected ? rejectedId : null]
+    .filter(Boolean)
+    .join(" ");
 
   const focusChip = (index: number | null) => {
     setFocusedChip(index);
@@ -437,6 +508,7 @@ export function ChipInput({
     // chips appearing, whereas "already in the list" is the only sign of what did not.
     const addedList = new Intl.ListFormat(locale, { type: "conjunction", style: "long" });
     setMessage(rejection ?? (added.length ? text.added(addedList.format(added)) : ""));
+    setRejected(rejection);
     return { added, rejection };
   };
 
@@ -446,6 +518,7 @@ export function ChipInput({
     const removed = value[index];
     onChange(value.filter((_, i) => i !== index));
     setMessage(text.removed(removed));
+    setRejected(null);
     // Focus the neighbour that takes its place, or the input when the list empties —
     // dropping focus to <body> here is how a keyboard user loses the field entirely.
     const next = index >= value.length - 1 ? null : index;
@@ -483,12 +556,15 @@ export function ChipInput({
       removeAt(index);
       return;
     }
-    if (e.key === "ArrowLeft" && index > 0) {
+    // ←/→ follow the reading direction, not DOM order: in RTL the previous chip is to
+    // the RIGHT, and ArrowLeft moves on towards the input.
+    const step = horizontalStep(e.key, e.currentTarget);
+    if (step === -1 && index > 0) {
       e.preventDefault();
       focusChip(index - 1);
       return;
     }
-    if (e.key === "ArrowRight") {
+    if (step === 1) {
       e.preventDefault();
       focusChip(index === value.length - 1 ? null : index + 1);
       return;
@@ -564,6 +640,7 @@ export function ChipInput({
           onChange={(e) => {
             setDraft(e.target.value);
             setMessage("");
+            setRejected(null);
           }}
           onKeyDown={onInputKeyDown}
           onBlur={() => {
@@ -585,8 +662,8 @@ export function ChipInput({
           // here would give the field two. Failing that, the DOM spelling wins and
           // the deprecated `ariaLabel` is the fallback.
           aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
-          aria-describedby={error ? errorId : undefined}
-          aria-invalid={isInvalid || undefined}
+          aria-describedby={describedBy || undefined}
+          aria-invalid={isInvalid || !!rejected || undefined}
           className="min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default"
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
@@ -599,6 +676,11 @@ export function ChipInput({
       {error && (
         <p id={errorId} className="text-xs text-[var(--danger)]">
           {error}
+        </p>
+      )}
+      {rejected && (
+        <p id={rejectedId} className="text-xs text-[var(--danger)]" data-chip-input-rejected="">
+          {rejected}
         </p>
       )}
     </div>

@@ -194,9 +194,10 @@ describe("DataTable column resize", () => {
 
 describe("DataTable shift-range selection", () => {
   // Driven through the ROW, which is the gesture feedback #289 added: ⌘/Ctrl-click
-  // anchors, Shift-click draws the range. The checkbox runs the same `selectRange`,
-  // but jsdom re-fires React's synthesised `change` for a click whose default was
-  // prevented, which would add a phantom toggle to every assertion here.
+  // anchors, Shift-click draws the range. The checkbox runs the same `selectRange`;
+  // its own path is pinned in data-table-0-7-0.test.tsx. (This note used to call the
+  // extra `onChange` after a prevented click a jsdom quirk. It was not: browsers do
+  // the same, and the checkbox really did report the range AND a single toggle.)
   function rowOf(name: string) {
     return screen.getByText(name).closest("tr") as HTMLElement;
   }

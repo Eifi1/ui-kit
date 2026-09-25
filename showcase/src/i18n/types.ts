@@ -52,11 +52,28 @@ export interface Dictionary {
     contentsPosition: string;
     positionStart: string;
     positionEnd: string;
+    /** The top-bar control that shows the page at three screen sizes side by side. */
+    devicePreview: string;
+    previewHint: string;
+    phone: string;
+    tablet: string;
+    desktop: string;
   };
   /** Sidebar group names, keyed by the English label in routes.tsx. */
   groups: Record<string, string>;
-  /** Page titles and blurbs, keyed by slug. A missing key falls back to English. */
-  pages: Record<string, { title: string; blurb: string }>;
+  /** The phone bottom bar's shorter group names, keyed like `groups` — one entry for
+   *  each group that has a `shortLabel` in routes.tsx ("App chrome" → "Chrome"). */
+  groupShort: Record<string, string>;
+  /**
+   * Page titles and blurbs, keyed by slug. A missing key falls back to English.
+   *
+   * `short` is the title on the phone's row of page pills, which wraps and so grows a
+   * line for every long title in the group. Every page has one; a group's overview page
+   * (keyed by the group's slug) has none, because it is never a pill — the bottom bar
+   * links to it. Optional in the type for that reason only; the dictionary test checks
+   * that no page is missing it.
+   */
+  pages: Record<string, { title: string; short?: string; blurb: string }>;
   /** Every string the kit renders — handed to `<UiKitProvider>` whole. */
   kit: UiKitLabels;
 }

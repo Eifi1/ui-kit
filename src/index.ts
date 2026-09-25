@@ -87,6 +87,9 @@ export * from "./components/swatch-picker";
 export * from "./components/icon-picker";
 export * from "./components/choice-card";
 export * from "./components/autocomplete";
+export * from "./components/measured-grid";
+export { useWindowedRows } from "./hooks/use-windowed-rows";
+export type { WindowedRows } from "./hooks/use-windowed-rows";
 // Named, not `export *`: file-button.tsx also holds the screening helpers the
 // dropzone shares, which are internal.
 export { FileButton, useFilePicker, matchesAccept, DEFAULT_FILE_PICKER_LABELS } from "./components/file-button";
@@ -131,7 +134,13 @@ export { FilterPopover } from "./components/data-table-filter-popover";
 // data-table re-exports SortState internally; export the rest explicitly to
 // avoid a duplicate SortState star-export (it comes from data-table-sort).
 export { DataTable } from "./components/data-table";
-export type { DataTableColumn, DataTableProps, ServerPagination, FilterState } from "./components/data-table";
+export type {
+  DataTableColumn,
+  DataTableProps,
+  ServerPagination,
+  FilterState,
+  MobileSwipeActions,
+} from "./components/data-table";
 
 // ── shell (composable app chrome) ────────────────────────────────────────────
 export * from "./shell/topbar-controls";

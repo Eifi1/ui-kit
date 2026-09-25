@@ -183,4 +183,58 @@ describe("Collapse, with motion", () => {
     act(() => void vi.advanceTimersByTime(200));
     expect(screen.getByText("Body")).toBeInTheDocument();
   });
+
+  it("trigger-only: aria-controls points at the caller's element and no body is rendered", () => {
+    function TableWithHiddenRows() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Disclosure variant="bare" title="Details: 3 hidden" controls="hidden-rows" open={open} onOpenChange={setOpen} />
+          <table>
+            <tbody id="hidden-rows">{open && <tr><td>Old savings</td></tr>}</tbody>
+          </table>
+        </>
+      );
+    }
+    const { container } = render(<TableWithHiddenRows />);
+    expect(header()).toHaveAttribute("aria-controls", "hidden-rows");
+    expect(container.querySelector("[inert]")).toBeNull();
+    fireEvent.click(header());
+    expect(header()).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Old savings")).toBeInTheDocument();
+  });
+
+  it("trigger-only card keeps its lower corners round when open", () => {
+    render(<Disclosure title="Details" controls="elsewhere" open />);
+    expect(header().className).not.toContain("rounded-b-none");
+  });
+
+  it("puts `trailing` beside the header button, not inside it, and it takes its own clicks", () => {
+    const onAction = vi.fn();
+    render(
+      <Disclosure
+        title="Details"
+        headingAs="h3"
+        trailing={
+          <button type="button" onClick={onAction}>
+            Edit
+          </button>
+        }
+      >
+        <p>Body</p>
+      </Disclosure>,
+    );
+    const edit = screen.getByRole("button", { name: "Edit" });
+    expect(header()).not.toContainElement(edit);
+    expect(screen.getByRole("heading", { level: 3 })).not.toContainElement(edit);
+    expect(header()).toHaveAccessibleName("Details");
+    fireEvent.click(edit);
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(header()).toHaveAttribute("aria-expanded", "false");
+    // The header is stretched over the row, and the ring moves with it.
+    expect(header().className).toContain("after:absolute");
+    expect(header().className).toMatch(/focus-visible:after:ring-\[var\(--[a-z-]+\)\]/);
+    fireEvent.click(header());
+    expect(screen.getByText("Body")).toBeInTheDocument();
+  });
 });

@@ -285,24 +285,40 @@ Consumers pin `^0.x`, which npm treats as minor-locked below 1.0, so a minor doe
 an app until it asks for it. The contract until 1.0:
 
 - **minor** (`0.x.0`) may remove or rename an export, change a prop's type, change an
-  emitted class name, or change a token's value. Each one is listed in `CHANGELOG.md` under
-  **Breaking**, with the migration.
+  emitted class name, or change a token's value. Each one is a breaking commit and lands in
+  `CHANGELOG.md` under **⚠ BREAKING CHANGES**; the per-app migration goes in
+  `docs/adopt-0.x.md`.
 - **patch** (`0.x.y`) fixes behaviour without changing the public surface.
 
-To cut one:
+### Commits are the changelog
 
-1. `npm run check` — clean.
+Versioning follows kastlan and keksdose: **Conventional Commits** plus
+`commit-and-tag-version` (config in `.versionrc.cjs`). The husky `commit-msg` hook and the
+CI job reject a message that is not `<type>(<scope>)?!?: <subject>` with a type from
+`.versionrc.cjs`. `feat` → **Added**, `fix` → **Fixed**, `perf`/`refactor` → **Changed**;
+`docs`, `chore`, `test`, `style`, `ci` and `build` stay out of the changelog.
+
+Write the changelog entry IN the commit. A breaking change is `feat!:` / `fix!:` with a
+`BREAKING CHANGE: <what breaks, and the migration>` footer. Below 1.0 that bumps the
+**minor**, and a `feat` bumps the patch. A defect's commit body names the *mechanism*, not
+just the symptom, because a reader upgrading needs to know whether it could have hit them.
+
+### Cutting a release
+
+1. On the release branch: `npm run check` — clean.
 2. `npm run build && node scripts/gen-export-inventory.mjs` — the README inventory is
-   current. (Intended npm aliases: `docs:exports`, and `check:exports` for the `--check`
-   form.)
-3. Write the `CHANGELOG.md` entry. Every breaking change gets its migration, and a defect
-   gets the *mechanism*, not just the symptom — a reader upgrading needs to know whether it
-   could have been hitting them.
-4. `npm version patch|minor|major`
-5. `git push --follow-tags`
+   current.
+3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
+   `package.json` and the lockfile, writes `CHANGELOG.md` and commits
+   `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
+   `npm run release -- --release-as minor` when the commits under-state it.
+4. Open the PR, and merge it once CI is green.
+5. Tag the MERGE commit on main:
+   `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
 
-Pushing a `v*` tag triggers `.github/workflows/release.yml`, which publishes to npm with
-provenance. It refuses to publish a tag that disagrees with `package.json` — the easiest
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which STAGES the version on npm
+through trusted publishing (OIDC, no token) with provenance. A maintainer approves it with
+`npm stage approve <id>` (2FA). It refuses to publish a tag that disagrees with `package.json` — the easiest
 way to ship 0.4.0 under the `v0.4.1` tag and never notice.
 
 ## Documentation

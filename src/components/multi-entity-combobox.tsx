@@ -200,7 +200,7 @@ export function MultiEntityCombobox<V extends string | number>({
         }}
         className={cn(
           FIELD_TRIGGER,
-          "pr-9",
+          "pe-9",
           label !== undefined && FIELD_FLOATING_PAD,
           disabled && "cursor-not-allowed opacity-50",
           field.isInvalid && FIELD_INVALID,
@@ -226,7 +226,7 @@ export function MultiEntityCombobox<V extends string | number>({
               e.stopPropagation();
               onChange([]);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
           >
             <X className="size-4" />
           </span>

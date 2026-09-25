@@ -127,4 +127,12 @@ export default tseslint.config(
     files: ["scripts/**", "*.config.{ts,js,mjs}", "showcase/*.ts"],
     languageOptions: { globals: { ...globals.node } },
   },
+
+  // The CommonJS release files: `.versionrc.cjs` (this package is ESM) and the
+  // dependency-free commit checks shared with kastlan and keksdose.
+  {
+    files: ["**/*.cjs"],
+    languageOptions: { sourceType: "commonjs", globals: { ...globals.node } },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 );

@@ -2,17 +2,23 @@ import { Fragment, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
-import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { useAnchorDir } from "./use-anchor-dir";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
+  ComboboxFieldLabel,
+  DISABLED_ROW_CLASS,
+  isOptionEnabled,
+  stepEnabled,
   SUGGESTION_LIST_CLASS,
   suggestionRowClass,
   useActiveOptionScroll,
   useComboboxFieldError,
+  type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
@@ -94,6 +100,7 @@ function SuggestionList({
   children: ReactNode;
 }) {
   const { rect, top, maxHeight } = useAnchoredPanel(anchorRef, true, { preferredHeight: 256 });
+  const dir = useAnchorDir(anchorRef, true);
   if (!rect) return null;
   return createPortal(
     <div
@@ -101,6 +108,9 @@ function SuggestionList({
       // z-50, not the old z-30: the list is a child of <body> now, so it is
       // competing with the app's own overlays rather than with its own siblings.
       className="fixed z-50"
+      // Portalled out of the form's `dir`; the field's is put back. The list is
+      // exactly the field's width, so `left` places it in either direction.
+      dir={dir}
       style={{ top, left: rect.left, width: rect.width }}
     >
       <ul id={id} role="listbox" className={LIST_CLASS} style={{ maxHeight }}>
@@ -361,22 +371,31 @@ export function Combobox({
     // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
     // handlers carrying live #309 and dev#549 cannot be replaced from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
+      {/* A real <label for> since lenkbank's tests met a field `getByLabelText` could
+          not find: it used to be a <span>, with the text copied onto `aria-label`. The
+          name a reader hears is the same words either way. */}
+      {label !== undefined && (
+        <ComboboxFieldLabel htmlFor={fieldId} className={disabled ? "opacity-50" : undefined}>
+          {label}
+        </ComboboxFieldLabel>
+      )}
       {/* The chevron centers against this inner wrapper, which hugs the input.
           The outer div can be taller than the input (as a grid item it
           stretches to the row height, e.g. next to the editor's category cell
           with its split button), which used to drag a top-1/2 chevron down to
           the input's bottom edge (feedback #248). */}
-      <div ref={fieldRef} className="relative">
+      {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
+          FIELD_BASE's grey alone left a disabled picker looking like a filled-in
+          one beside the pickers that do dim (the label is not the input's `peer`,
+          so it is dimmed by hand above). */}
+      <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
         <input
           id={fieldId}
           value={value}
           placeholder={placeholder}
-          // The visual label is a floating <span>, not a <label for>, so fall back to
-          // it for the accessible name — otherwise the field announces only what is
-          // typed in it (dev#477, applied to all three entity fields of a transaction
-          // form at once).
-          aria-label={ariaLabel ?? label}
+          // The caller's name, over the <label for> above — which is what names the
+          // field otherwise (dev#477: a field with neither announces only its text).
+          aria-label={ariaLabel}
           role="combobox"
           aria-expanded={open}
           // The list this field is the mouth of. Required by the role, and the half
@@ -462,7 +481,7 @@ export function Combobox({
           className={cn(
             FIELD_BASE,
             label !== undefined && FIELD_FLOATING_PAD,
-            "pr-9",
+            "pe-9",
             field.isInvalid && FIELD_INVALID,
           )}
         />
@@ -474,8 +493,9 @@ export function Combobox({
             if (!disabled) setOpen((o) => !o);
           }}
           className={cn(
-            "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
-            disabled ? "opacity-50" : "cursor-pointer",
+            "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+            // The box above does the dimming; dimming here too would halve it again.
+            !disabled && "cursor-pointer",
           )}
         />
       </div>
@@ -605,7 +625,7 @@ export function Combobox({
                     onMouseEnter={() => setActive(i)}
                     className={cn(
                       rowClass(i === active),
-                      group != null && "pl-6",
+                      group != null && "ps-6",
                       // A row with a badge is a flex row so the label truncates and the
                       // badge keeps its width; without one it stays the plain block the
                       // other lists render, so nothing shifts for callers that pass none.
@@ -627,16 +647,20 @@ export function Combobox({
 
 /** `id` is the INPUT's and `onChange` is the field's — see {@link ComboboxProps}
  *  for why the div's spellings of them are omitted. */
-export interface InlineEntityComboboxProps<V extends string | number>
+export interface InlineEntityComboboxProps<V extends string | number, C extends ComboClearValue = null>
   extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange"> {
-  /** Selected option id, or null when nothing is selected. */
-  value: V | null;
+  /** Selected option id; `null` or `clearValue` when nothing is selected. */
+  value: V | C | null;
   /** Required and unanswered — see {@link Combobox}'s `invalid`. */
   invalid?: boolean;
   /** What is wrong with the value — see {@link Combobox}'s `error`. */
   error?: ReactNode;
-  /** A picked/typed option emits its id; emptying the field emits `null`. */
-  onChange: (v: V | null) => void;
+  /** A picked/typed option emits its id; emptying the field, or the "×", emits
+   *  `clearValue`. */
+  onChange: (v: V | C) => void;
+  /** What a clear emits — `null` by default, `""` for a schema that wants an empty
+   *  string. See {@link EntityCombobox}'s `clearValue`. */
+  clearValue?: C;
   options: ComboOption<V>[];
   label?: string;
   id?: string;
@@ -686,9 +710,10 @@ export interface InlineEntityComboboxProps<V extends string | number>
  * sheet that emptied it to show the full list would read as "the user cleared the
  * field" the moment it closed.
  */
-export function InlineEntityCombobox<V extends string | number>({
-  value,
+export function InlineEntityCombobox<V extends string | number, C extends ComboClearValue = null>({
+  value: rawValue,
   onChange,
+  clearValue = null as C,
   options,
   label,
   id,
@@ -705,7 +730,10 @@ export function InlineEntityCombobox<V extends string | number>({
   error,
   "aria-label": ariaLabel,
   ...rest
-}: InlineEntityComboboxProps<V>) {
+}: InlineEntityComboboxProps<V, C>) {
+  // The clear value reads as "nothing selected", whichever one the caller picked —
+  // so from here down `value` is the id or `null`, as it always was.
+  const value: V | null = rawValue == null || rawValue === clearValue ? null : (rawValue as V);
   const field = useComboboxFieldError(error, invalid);
   const generated = useId();
   const fieldId = id ?? generated;
@@ -779,7 +807,8 @@ export function InlineEntityCombobox<V extends string | number>({
   // Pointer-device only: the phone's rows live in a {@link PickerSheet} whose own
   // search box holds focus, so the field behind it must not claim to be pointing at
   // one of them.
-  const activeId = !isPhone && active >= 0 && active < matches.length ? optionId(active) : undefined;
+  // A disabled row is never the keyboard's, even if the list changed under it.
+  const activeId = !isPhone && isOptionEnabled(matches[active]) ? optionId(active) : undefined;
   useActiveOptionScroll(activeId);
 
   const close = () => {
@@ -788,6 +817,8 @@ export function InlineEntityCombobox<V extends string | number>({
     setSheetQuery("");
   };
   const commit = (o: ComboOption<V>) => {
+    // A `disabled` option is listed, never taken — by any path.
+    if (o.disabled) return;
     if (o.value !== value) onChange(o.value);
     setText(null);
     close();
@@ -806,9 +837,13 @@ export function InlineEntityCombobox<V extends string | number>({
     if (text !== null) {
       const q = text.trim();
       if (!q) {
-        if (value != null) onChange(null);
+        if (value != null) onChange(clearValue);
       } else {
-        const hits = options.filter((o) => o.label.toLowerCase() === q.toLowerCase());
+        // A disabled option's label typed out in full is not a way round `disabled`:
+        // it is not a hit, so the text reverts like any other non-answer.
+        const hits = options.filter(
+          (o) => !o.disabled && o.label.toLowerCase() === q.toLowerCase(),
+        );
         const ids = new Set(hits.map((h) => h.value));
         if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
       }
@@ -823,19 +858,27 @@ export function InlineEntityCombobox<V extends string | number>({
     // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
     // handlers carrying live #309 and dev#549 cannot be replaced from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
+      {/* A real <label for> — see {@link Combobox}. */}
+      {label !== undefined && (
+        <ComboboxFieldLabel htmlFor={fieldId} className={disabled ? "opacity-50" : undefined}>
+          {label}
+        </ComboboxFieldLabel>
+      )}
       {/* Inner wrapper for chevron centering — same reasoning as Combobox above.
           It is also what the portalled list anchors to. */}
-      <div ref={fieldRef} className="relative">
+      {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
+          FIELD_BASE's grey alone left a disabled picker looking like a filled-in
+          one beside the pickers that do dim (the label is not the input's `peer`,
+          so it is dimmed by hand above). */}
+      <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
         <input
           id={fieldId}
           value={shown}
           placeholder={placeholder}
-          // The visual label is a floating <span>, not a <label for>, so without this
-          // the field has NO accessible name — it announces its value and nothing
-          // else. Just the label, never "label: value" the way a trigger button has
-          // to compose it: an input already exposes its value separately.
-          aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+          // The caller's name, over the <label for> above. Just the label, never
+          // "label: value" the way a trigger button has to compose it: an input
+          // already exposes its value separately.
+          aria-label={ariaLabel}
           role="combobox"
           aria-expanded={open}
           // Required by the role, and the half that was missing: the field said it
@@ -877,15 +920,17 @@ export function InlineEntityCombobox<V extends string | number>({
             setActive(-1);
           }}
           onKeyDown={(e) => {
+            // Disabled rows are passed over; Up from "nothing highlighted" lands on
+            // the first takeable row, as it always landed on row 0.
             if (e.key === "ArrowDown") {
               e.preventDefault();
               setOpen(true);
-              setActive((i) => Math.min(i + 1, matches.length - 1));
+              setActive((i) => stepEnabled(matches, i, 1));
             } else if (e.key === "ArrowUp") {
               e.preventDefault();
-              setActive((i) => Math.max(i - 1, 0));
+              setActive((i) => (i < 0 ? stepEnabled(matches, -1, 1) : stepEnabled(matches, i, -1)));
             } else if (e.key === "Enter") {
-              if (open && active >= 0 && active < matches.length) {
+              if (open && isOptionEnabled(matches[active])) {
                 e.preventDefault();
                 commit(matches[active]);
               } else {
@@ -907,7 +952,7 @@ export function InlineEntityCombobox<V extends string | number>({
           className={cn(
             FIELD_BASE,
             label !== undefined && FIELD_FLOATING_PAD,
-            "pr-9",
+            "pe-9",
             field.isInvalid && FIELD_INVALID,
           )}
         />
@@ -927,10 +972,10 @@ export function InlineEntityCombobox<V extends string | number>({
             onClick={() => {
               setText(null);
               close();
-              onChange(null);
+              onChange(clearValue);
             }}
             className={cn(
-              "absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
+              "absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
               "hover:text-[var(--text-secondary)]",
             )}
           >
@@ -947,8 +992,9 @@ export function InlineEntityCombobox<V extends string | number>({
               if (!disabled) setOpen((o) => !o);
             }}
             className={cn(
-              "absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
-              disabled ? "opacity-50" : "cursor-pointer",
+              "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+              // The box above does the dimming; dimming here too would halve it again.
+              !disabled && "cursor-pointer",
             )}
           />
         )}
@@ -989,8 +1035,13 @@ export function InlineEntityCombobox<V extends string | number>({
                     type="button"
                     role="option"
                     aria-selected={o.value === value}
+                    aria-disabled={o.disabled || undefined}
                     onClick={() => commit(o)}
-                    className={cn(SHEET_ROW_CLASS, o.value === value && "font-medium")}
+                    className={cn(
+                      SHEET_ROW_CLASS,
+                      o.value === value && "font-medium",
+                      o.disabled && DISABLED_ROW_CLASS,
+                    )}
                   >
                     {o.label}
                   </button>
@@ -1030,25 +1081,30 @@ export function InlineEntityCombobox<V extends string | number>({
                   // `aria-activedescendant`.
                   role="option"
                   aria-selected={o.value === value}
+                  aria-disabled={o.disabled || undefined}
                   tabIndex={-1}
                   onMouseDown={(e) => {
                     // mousedown (not click) so the input's blur can't close the
-                    // list before the selection registers.
+                    // list before the selection registers. Prevented on a disabled
+                    // row too, so pressing one leaves the field focused and open.
                     e.preventDefault();
                     commit(o);
                   }}
-                  onMouseEnter={() => setActive(i)}
+                  onMouseEnter={() => {
+                    if (!o.disabled) setActive(i);
+                  }}
                   className={cn(
-                    rowClass(i === active),
+                    rowClass(i === active && !o.disabled),
+                    o.disabled && DISABLED_ROW_CLASS,
                     // Indented under its heading, so the hierarchy is readable at a
                     // glance instead of inferred from grey trailing text.
-                    o.group && "pl-6",
+                    o.group && "ps-6",
                     o.value === value && "font-medium",
                   )}
                 >
                   {o.label}
                   {o.sublabel && (
-                    <span className="ml-2 text-xs text-[var(--text-placeholder)]">
+                    <span className="ms-2 text-xs text-[var(--text-placeholder)]">
                       {o.sublabel}
                     </span>
                   )}

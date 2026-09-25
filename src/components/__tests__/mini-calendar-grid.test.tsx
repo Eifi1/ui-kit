@@ -266,3 +266,45 @@ describe("range mode says which end the next click sets", () => {
     expect(day("2026-10-02")).toHaveAttribute("tabindex", "0");
   });
 });
+
+describe("MiniCalendar in RTL (0.7.0)", () => {
+  const renderRtl = () =>
+    render(
+      <div dir="rtl">
+        <MiniCalendar mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} onSelect={noop} />
+      </div>,
+    );
+
+  it("walks the days along the reading direction: ArrowLeft is the NEXT day", async () => {
+    renderRtl();
+    day("2026-09-14").focus();
+    press("ArrowLeft");
+    await waitFor(() => expect(day("2026-09-15")).toHaveFocus());
+    press("ArrowRight");
+    await waitFor(() => expect(day("2026-09-14")).toHaveFocus());
+    press("ArrowRight");
+    await waitFor(() => expect(day("2026-09-13")).toHaveFocus());
+  });
+
+  it("keeps ↑/↓ as the week step", async () => {
+    renderRtl();
+    day("2026-09-14").focus();
+    press("ArrowDown");
+    await waitFor(() => expect(day("2026-09-21")).toHaveFocus());
+  });
+
+  it("still walks LTR the usual way", async () => {
+    render(<MiniCalendar mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} onSelect={noop} />);
+    day("2026-09-14").focus();
+    press("ArrowRight");
+    await waitFor(() => expect(day("2026-09-15")).toHaveFocus());
+  });
+
+  it("mirrors the month chevrons", () => {
+    renderRtl();
+    const prev = screen.getByRole("button", { name: "Previous month" });
+    const next = screen.getByRole("button", { name: "Next month" });
+    expect(prev.querySelector("svg")!.getAttribute("class")).toContain("rtl:-scale-x-100");
+    expect(next.querySelector("svg")!.getAttribute("class")).toContain("rtl:-scale-x-100");
+  });
+});

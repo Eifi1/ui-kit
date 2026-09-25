@@ -1,9 +1,12 @@
 import { useState } from "react";
+import type { ContextType } from "react";
+import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
   ArrowLeftRight,
   Bell,
   BookOpen,
   Building2,
+  LayoutDashboard,
   LifeBuoy,
   LogOut,
   MessageSquarePlus,
@@ -14,6 +17,7 @@ import {
   Wallet,
 } from "lucide-react";
 import {
+  AppShell,
   LanguageMenu,
   OptionSwitcherMenu,
   PALETTES,
@@ -32,20 +36,24 @@ import type {
   OptionSwitcherOption,
   TopBarMenuEntry,
 } from "@eifi1/ui-kit";
-import { PageContents, PageContentsLayout, ToggleGroup } from "@eifi1/ui-kit";
+import {
+  PageContents,
+  PageContentsLayout,
+  Switch,
+  ToggleGroup,
+  useScrollSpy,
+} from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
 import { usePalette, useTheme } from "../stores";
 
 /**
  * SHELL.
  *
- * The page frame around you IS the demo: `main.tsx` mounts one `AppShell`, and this
- * section deliberately does not nest a second one. An `AppShell` is `min-h-screen`
- * / `md:h-dvh`, owns the page's only scroll container above 768px, and publishes
- * `--app-nav-h` on `<html>` — a second instance inside a card would fight the first
- * for all three, and the copy you saw would be the wrong one. So the specimens here
- * are the parts: the bar, the controls that go in it, the class constants an app
- * matches its own menus to, and the nav-item shape both navs are built from.
+ * The page frame around you is the first demo: `main.tsx` mounts one `AppShell`. The
+ * second is a small `AppShell` in a card further down, with every prop on a switch —
+ * boxed in so it cannot fight the real one (see `AppShellPlayground` for how). The
+ * rest of the specimens are the parts: the bar, the controls that go in it, the class
+ * constants an app matches its own menus to, and the nav-item shape both navs read.
  *
  * The theme and palette controls below are wired to the REAL stores from
  * `../stores` — the same ones the page header uses. That is the point: operate one
@@ -164,12 +172,9 @@ export function ShellSection() {
         />
         <div className="mt-3">
           <Note>
-            Both are literal <code className="font-mono">slate-*</code> classes rather than{" "}
-            <code className="font-mono">var(--…)</code> tokens, so the top-bar chrome — every
-            trigger and menu row on this page, including the header's — is the one part of the
-            kit the palette switch does not reach. It tracks light/dark (via{" "}
-            <code className="font-mono">dark:</code>) but not the preset. Worth knowing before
-            you conclude a preset is broken.
+            Both paint in <code className="font-mono">var(--…)</code> tokens, so an app-owned
+            trigger built from them follows the palette switch exactly as the kit&apos;s own do —
+            the bell in the TopBar specimen above is one.
           </Note>
         </div>
       </Example>
@@ -196,8 +201,15 @@ export function ShellSection() {
       </Example>
 
       <Example
-        label="AppShell"
-        hint="Not rendered here — you are already inside one. These are its contracts."
+        label="AppShell — every prop on a switch"
+        hint="A second shell, nested in this page's — so embedded — with its own router. Below 768px it shows the phone bar, docked on the box."
+      >
+        <AppShellPlayground />
+      </Example>
+
+      <Example
+        label="AppShell — the contracts"
+        hint="The shell around this page, read live."
       >
         <AppShellNotes />
       </Example>
@@ -243,7 +255,7 @@ function TopBarSpecimen() {
             >
               <Bell className="size-5" />
               {unread > 0 && (
-                <span className="absolute right-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-[10px] font-semibold leading-4 text-[var(--brand-contrast)]">
+                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-[10px] font-semibold leading-4 text-[var(--brand-contrast)]">
                   {unread}
                 </span>
               )}
@@ -325,7 +337,7 @@ function ThemeAndPalette() {
         <code className="font-mono">PaletteMenu</code> indexes each preset by{" "}
         <code className="font-mono">mode</code> to draw its swatches, so the menu's own colours
         change when you flip the theme.{" "}
-        <code className="font-mono">PALETTES</code> is two presets;{" "}
+        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets;{" "}
         <code className="font-mono">ALTERNATIVE_PRESETS</code> is exported separately and is not
         in it, so passing <code className="font-mono">PALETTES</code> is a choice about which
         presets an app offers, not the whole catalogue.
@@ -339,11 +351,19 @@ function Languages() {
   // restoring a locale it no longer ships lands here. Hence the reset button — the
   // menu itself can only ever produce a valid code.
   const [lang, setLang] = useState<string | undefined>("de");
+  const [withHeading, setWithHeading] = useState(true);
 
   return (
     <div className="space-y-3">
       <Row>
-        <LanguageMenu options={LANGUAGES} current={lang} onChange={setLang} ariaLabel="Language" />
+        <LanguageMenu
+          options={LANGUAGES}
+          current={lang}
+          onChange={setLang}
+          ariaLabel="Language"
+          heading={withHeading ? "Language" : undefined}
+        />
+        <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
         <button type="button" className={MINI_BUTTON} onClick={() => setLang(undefined)}>
           Clear the selection
         </button>
@@ -357,6 +377,15 @@ function Languages() {
         <code className="font-mono">br</code>. <code className="font-mono">flag-icons</code> is a
         dependency of the package that nothing inside the package imports, so a consumer that
         never imports the stylesheet gets empty boxes and no error.
+      </Note>
+      <Note>
+        <code className="font-mono">heading</code> (new in 0.7.0) is the same small uppercase
+        row <code className="font-mono">PaletteMenu</code>,{" "}
+        <code className="font-mono">OptionSwitcherMenu</code> and{" "}
+        <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus
+        reads alike. Like every top-bar menu this one is a{" "}
+        <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to
+        open it onto the first language, ↑/↓ to move, Escape to close back onto the flag.
       </Note>
     </div>
   );
@@ -486,7 +515,7 @@ function NavItemReference() {
             <item.icon className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
             <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
             <span className="font-mono text-[11px] text-[var(--text-muted)]">{item.to}</span>
-            <span className="ml-auto flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+            <span className="ms-auto flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-secondary)]">
               <span>
                 bar: <span className="font-mono">{item.shortLabel ?? item.label}</span>
               </span>
@@ -522,8 +551,9 @@ function AppShellNotes() {
   return (
     <div className="space-y-3">
       <Row>
-        {/* The inline style, not getComputedStyle: AppShell publishes the variable with
-            `documentElement.style.setProperty`, so this reads exactly what it wrote —
+        {/* The inline style, not getComputedStyle: the outermost AppShell publishes the
+            variable with `style.setProperty` on `<html>` (and on its own root), so this
+            reads exactly what it wrote —
             and jsdom does not resolve custom properties through computed style, so the
             mount test would see an empty string. Read on click rather than in an effect
             because AppShell is our PARENT: its effect runs after ours, so a mount-time
@@ -566,68 +596,350 @@ function AppShellNotes() {
         that read happens during render, and <code className="font-mono">localStorage</code>{" "}
         throws where site data is blocked, which would take the whole application down rather
         than lose a preference. The default key is a shared literal, so two apps on one origin
-        in development want their own.
+        in development want their own. An embedded (or nested) shell has no default key: it
+        would otherwise overwrite the outer app&apos;s preference with its own.
       </Note>
     </div>
   );
 }
 
+/* ── AppShell, live ────────────────────────────────────────────────────── */
+
+/** The playground's own nav: a plain entry, a group with pages, an entry with a tour
+ *  anchor and one with a `shortLabel` — enough to exercise both navs. */
+const DEMO_NAV: AppShellNavItem[] = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  {
+    to: "/books",
+    label: "Books",
+    icon: BookOpen,
+    items: [
+      { to: "/books/ledger", label: "Ledger", icon: Wallet },
+      { to: "/books/receipts", label: "Receipts", icon: Receipt },
+    ],
+  },
+  { to: "/reports", label: "Reports", icon: PieChart, dataTour: "demo-reports" },
+  {
+    to: "/data",
+    label: "Import & Export",
+    shortLabel: "Data",
+    icon: Upload,
+    items: [
+      { to: "/data/import", label: "Import", icon: Upload },
+      { to: "/data/accounts", label: "Accounts", icon: Building2 },
+    ],
+  },
+];
+
+/** `null` is what a `LocationContext` holds outside any router. See the playground. */
+const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
+
+/**
+ * A second `AppShell`, in a box.
+ *
+ * Two things keep it from fighting the real one:
+ *
+ *  - Its own `MemoryRouter`, so clicking its nav moves IT and not the page. React
+ *    Router refuses a router inside a router; resetting `LocationContext` to its
+ *    outside-any-router value is the documented escape hatch for exactly this (a
+ *    widget with its own history). Nothing inside reads the outer route.
+ *  - Being INSIDE the real AppShell. A shell below another shell knows it is nested
+ *    (the same as passing `embedded`): it fills its parent's box instead of the
+ *    viewport, docks its phone bar on itself (`contain: layout` on its root), publishes
+ *    `--app-nav-h` on its own root instead of `<html>`, and persists its collapse state
+ *    only under a key it is given. Until 0.7.0 this card needed a `transform` on the
+ *    frame and a hook that re-published the outer shell's nav height behind it.
+ */
+function AppShellPlayground() {
+  const [subNav, setSubNav] = useState<"flyout" | "inline">("inline");
+  const [mobileSubNav, setMobileSubNav] = useState(true);
+  const [withFooter, setWithFooter] = useState(true);
+  const [withSidebarFooter, setWithSidebarFooter] = useState(true);
+  const [customLabels, setCustomLabels] = useState(false);
+  const [embedded, setEmbedded] = useState(true);
+  const [persist, setPersist] = useState(true);
+  const [navVars, setNavVars] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <span className="text-xs text-[var(--text-muted)]">subNav</span>
+          <ToggleGroup<"flyout" | "inline">
+            ariaLabel="subNav"
+            value={subNav}
+            onChange={setSubNav}
+            options={[
+              { value: "flyout", label: "flyout" },
+              { value: "inline", label: "inline" },
+            ]}
+          />
+        </div>
+        <Switch
+          label="mobileSubNav"
+          description="The group's pages as a row above the phone bar"
+          checked={mobileSubNav}
+          onCheckedChange={setMobileSubNav}
+        />
+        <Switch
+          label="footer"
+          description="Desktop only, under the content"
+          checked={withFooter}
+          onCheckedChange={setWithFooter}
+        />
+        <Switch
+          label="sidebarFooter"
+          description="A function of `collapsed`"
+          checked={withSidebarFooter}
+          onCheckedChange={setWithSidebarFooter}
+        />
+        <Switch
+          label="collapseLabel · expandLabel · toggleGroupLabel"
+          description="Off: the provider's words (this page's language)"
+          checked={customLabels}
+          onCheckedChange={setCustomLabels}
+        />
+        <Switch
+          label="embedded"
+          description="Implied here — the box is inside the page's own AppShell, so off changes nothing"
+          checked={embedded}
+          onCheckedChange={setEmbedded}
+        />
+        <Switch
+          label="collapseStorageKey"
+          description="Off: an embedded shell does not persist its collapse state at all"
+          checked={persist}
+          onCheckedChange={setPersist}
+        />
+      </div>
+
+      {/* A plain box with a height: no transform, no class overrides reaching into the
+          shell. The nested shell fills it and docks its phone bar on it by itself. */}
+      <div className="h-[26rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+        <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
+          <MemoryRouter initialEntries={["/books/ledger"]}>
+            <AppShell
+              nav={DEMO_NAV}
+              subNav={subNav}
+              mobileSubNav={mobileSubNav}
+              embedded={embedded}
+              // A key of its own: the default is shared by every app on the origin. An
+              // embedded shell without one keeps its collapse state for this mount only.
+              collapseStorageKey={persist ? "uikit-showcase-demo-shell.collapsed" : undefined}
+              collapseLabel={customLabels ? "Fold the sidebar" : undefined}
+              expandLabel={customLabels ? "Unfold the sidebar" : undefined}
+              toggleGroupLabel={customLabels ? (group) => `Pages of ${group}` : undefined}
+              // The rest of the props land on the root <div> — an id, a landmark
+              // label, a tour anchor. There is nothing above the shell to put them on.
+              id="demo-shell"
+              data-demo="app-shell"
+              topBar={
+                <TopBar
+                  brand={
+                    <>
+                      <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
+                      <span className="truncate font-semibold text-[var(--text-primary)]">
+                        Acme Books
+                      </span>
+                    </>
+                  }
+                />
+              }
+              footer={
+                withFooter ? (
+                  <footer className="border-t border-[var(--border)] px-4 py-2 text-xs text-[var(--text-muted)]">
+                    footer — v2.4.1 · © Acme
+                  </footer>
+                ) : undefined
+              }
+              sidebarFooter={
+                withSidebarFooter
+                  ? (collapsed) => (
+                      <div className="border-t border-[var(--border)] px-3 py-2 text-[11px] text-[var(--text-muted)]">
+                        {collapsed ? "v2" : "sidebarFooter(collapsed=false) · v2.4.1"}
+                      </div>
+                    )
+                  : undefined
+              }
+            >
+              <DemoShellPage />
+            </AppShell>
+          </MemoryRouter>
+        </UNSAFE_LocationContext.Provider>
+      </div>
+
+      <Row>
+        <button
+          type="button"
+          className={MINI_BUTTON}
+          onClick={() => {
+            const inner = document.getElementById("demo-shell")?.style.getPropertyValue("--app-nav-h");
+            const outer = document.documentElement.style.getPropertyValue("--app-nav-h");
+            setNavVars(`#demo-shell: ${inner || "unset"} · <html>: ${outer || "unset"}`);
+          }}
+        >
+          Read --app-nav-h on both
+        </button>
+        <span className={READOUT}>{navVars ?? "press to read"}</span>
+      </Row>
+      <Note>
+        Narrow the window below 768px and read again: the box&apos;s own bar is measured onto{" "}
+        <code className="font-mono">#demo-shell</code>, while{" "}
+        <code className="font-mono">&lt;html&gt;</code> keeps the page shell&apos;s value — the
+        page&apos;s bottom bar does not move when this box mounts, and nothing is left behind when
+        it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves
+        to the nearest shell&apos;s bar.
+      </Note>
+      <Note>
+        Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with
+        the button at its foot (the state persists under{" "}
+        <code className="font-mono">collapseStorageKey</code>), and open the screen-size preview
+        from the top bar to see the phone bar with its page row. The collapsed sidebar always
+        uses the flyout, whatever <code className="font-mono">subNav</code> says.
+      </Note>
+    </div>
+  );
+}
+
+/** What the playground's `<main>` shows: where its own router is. */
+function DemoShellPage() {
+  const { pathname } = useLocation();
+  return (
+    <div className="space-y-2 p-4">
+      <p className="text-sm text-[var(--text-primary)]">
+        children — the current route is{" "}
+        <code className="font-mono text-[var(--brand)]">{pathname}</code>
+      </p>
+      <p className="text-xs text-[var(--text-secondary)]">
+        A real app renders its <code className="font-mono">&lt;Outlet /&gt;</code> here. The
+        group holding this page stays marked in the sidebar while one of its pages is open.
+      </p>
+    </div>
+  );
+}
+
+/* ── PageContents ──────────────────────────────────────────────────────── */
+
 const CONTENTS_SAMPLE = [
-  { id: "demo-overview", label: "Overview" },
-  { id: "demo-install", label: "Install" },
-  { id: "demo-peers", label: "Peer dependencies", level: 2 as const },
-  { id: "demo-usage", label: "Usage" },
+  { id: "pc-demo-overview", label: "Overview" },
+  { id: "pc-demo-install", label: "Install" },
+  { id: "pc-demo-peers", label: "Peer dependencies", level: 2 as const },
+  { id: "pc-demo-usage", label: "Usage" },
+  { id: "pc-demo-faq", label: "Questions" },
 ];
 
 /**
- * `PageContents` on its own, with a fixed list — the live one is the "On this page"
- * rail beside every page of this showcase, which is the real specimen: it is fed from
- * the page's headings, follows the scroll, and moves sides from the top bar.
+ * `PageContents` + `PageContentsLayout` + `useScrollSpy` on a small scrolling box of
+ * their own. The live one is the "On this page" rail beside every page of this
+ * showcase: fed from the page's headings, following `<main>`, moved from the top bar.
  */
 function PageContentsExample() {
   const [position, setPosition] = useState<"start" | "end">("start");
-  const [active, setActive] = useState("demo-install");
+  const [variant, setVariant] = useState<"rail" | "disclosure">("rail");
+  const [line, setLine] = useState(0.15);
+  // State, not a ref: `useScrollSpy` re-subscribes when its `root` changes, and a ref
+  // filled after the first render would leave it listening to the window.
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const activeId = useScrollSpy(
+    CONTENTS_SAMPLE.map((item) => item.id),
+    { root: box, line },
+  );
+
+  const contents = (
+    <PageContents
+      items={CONTENTS_SAMPLE}
+      activeId={activeId}
+      variant={variant}
+      labels={{ title: "In this box" }}
+      // Scroll the box rather than follow the href: under this page's hash router a
+      // bare `#id` would be read as a route.
+      onClick={(e) => {
+        const id = (e.target as HTMLElement).closest("[data-entry]")?.getAttribute("data-entry");
+        if (!id) return;
+        e.preventDefault();
+        // The box only: `scrollIntoView` would scroll the page along with it.
+        const target = document.getElementById(id);
+        if (box && target) box.scrollTo({ top: target.offsetTop - 8, behavior: "smooth" });
+      }}
+    />
+  );
+
   return (
     <Example
-      label="PageContents — the page's own contents"
-      hint="the rail beside this page is one; position is a choice — start (next to the sidebar) or end"
+      label="PageContents · PageContentsLayout · useScrollSpy"
+      hint="the rail beside this page is one; here the box below is the scroller"
     >
-      <Row className="mb-4">
-        <ToggleGroup
-          options={[
-            { value: "start", label: "position=\"start\"" },
-            { value: "end", label: "position=\"end\"" },
-          ]}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <ToggleGroup<"start" | "end">
+          ariaLabel="position"
           value={position}
-          onChange={(v) => setPosition(v as "start" | "end")}
+          onChange={setPosition}
+          options={[
+            { value: "start", label: 'position="start"' },
+            { value: "end", label: 'position="end"' },
+          ]}
         />
-      </Row>
-      {/* The layout only shows the rail from xl up; forced visible here, in a card. */}
+        <ToggleGroup<"rail" | "disclosure">
+          ariaLabel="variant"
+          value={variant}
+          onChange={setVariant}
+          options={[
+            { value: "rail", label: 'variant="rail"' },
+            { value: "disclosure", label: 'variant="disclosure"' },
+          ]}
+        />
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          line
+          <input
+            type="range"
+            min={0}
+            max={0.9}
+            step={0.05}
+            value={line}
+            onChange={(e) => setLine(Number(e.target.value))}
+          />
+          <span className="font-mono">{line.toFixed(2)}</span>
+        </label>
+      </div>
+      {/* The layout only shows the rail from xl up; forced visible here, in a card. A
+          disclosure is not a rail, so it goes above the page instead. */}
       <PageContentsLayout
         position={position}
         className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-page)] p-4 [&_aside]:block"
-        contents={
-          <PageContents
-            items={CONTENTS_SAMPLE}
-            activeId={active}
-            hrefFor={() => "#"}
-            onClick={(e) => {
-              e.preventDefault();
-              const id = (e.target as HTMLElement).closest("[data-entry]")?.getAttribute("data-entry");
-              if (id) setActive(id);
-            }}
-          />
-        }
+        contents={variant === "rail" ? contents : null}
       >
-        <div className="flex h-40 items-center justify-center rounded border border-[var(--border)] text-sm text-[var(--text-muted)]">
-          the page
+        {variant === "disclosure" && <div className="mb-3">{contents}</div>}
+        <div
+          ref={setBox}
+          className="relative h-48 overflow-y-auto rounded border border-[var(--border)] px-3"
+        >
+          {/* The reading line, drawn where the spy puts it. */}
+          <div
+            aria-hidden
+            className="pointer-events-none sticky z-10 h-0 border-t border-dashed border-[var(--brand)]"
+            style={{ top: `${line * 12}rem` }}
+          />
+          {CONTENTS_SAMPLE.map((item) => (
+            <section key={item.id} className="py-3">
+              <h4 id={item.id} className="text-sm font-medium text-[var(--text-primary)]">
+                {item.label}
+              </h4>
+              <p className="mt-1 h-24 text-xs text-[var(--text-muted)]">
+                Scroll this box: the entry whose heading last crossed the dashed line is marked.
+              </p>
+            </section>
+          ))}
         </div>
       </PageContentsLayout>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
-        Below <code className="font-mono">xl</code> the rail has no room; the same entries go in{" "}
-        <code className="font-mono">{'<PageContents variant="disclosure">'}</code> under the title,
-        as on this page at a narrower window. <code className="font-mono">useScrollSpy(ids, {"{ root }"})</code>{" "}
-        supplies <code className="font-mono">activeId</code>.
+      <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">
+        useScrollSpy(ids, {"{"} root: box, line: {line.toFixed(2)} {"}"}) → {JSON.stringify(activeId)}
+      </p>
+      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same
+        entries go in <code className="font-mono">{'<PageContents variant="disclosure">'}</code>{" "}
+        under the title, as on this page at a narrower window.{" "}
+        <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
+        <code className="font-mono">pageContents.title</code> for one instance.
       </p>
     </Example>
   );

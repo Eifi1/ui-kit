@@ -234,7 +234,7 @@ export function NumberInput({
         }}
         onKeyDown={onKeyDown}
         aria-invalid={invalid || undefined}
-        // The right-padding sits last so it always wins over an inputClassName that
+        // The end padding sits last so it always wins over an inputClassName that
         // sets its own px. Both trailing controls can be on at once, so the room
         // they need is reserved together rather than by whichever happens to render:
         // the calculator is ~36px and a short unit ~24px, and a field that reserved
@@ -246,7 +246,7 @@ export function NumberInput({
               ? FLOATING_INPUT_CLASS
               : FIELD_BASE,
           inputClassName,
-          showCalc && suffix !== undefined ? "pr-16" : showCalc ? "pr-9" : suffix !== undefined ? "pr-8" : undefined,
+          showCalc && suffix !== undefined ? "pe-16" : showCalc ? "pe-9" : suffix !== undefined ? "pe-8" : undefined,
           invalid && FIELD_INVALID,
         )}
       />
@@ -254,7 +254,7 @@ export function NumberInput({
         // One flex track for both, so the unit and the calculator sit side by side
         // instead of stacking on the same corner — AmountInput's arrangement, which
         // has carried a chip and a calculator together since #430.
-        <div className="absolute inset-y-0 right-0 flex items-center">
+        <div className="absolute inset-y-0 end-0 flex items-center">
           {showCalc && (
             <CalculatorButton
               value={value}
@@ -267,7 +267,7 @@ export function NumberInput({
           {suffix !== undefined && (
             <span
               aria-hidden
-              className="pointer-events-none pr-3 text-xs font-medium text-[var(--text-muted)]"
+              className="pointer-events-none pe-3 text-xs font-medium text-[var(--text-muted)]"
             >
               {suffix}
             </span>

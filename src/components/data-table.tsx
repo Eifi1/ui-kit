@@ -10,8 +10,7 @@ import {
   Filter,
   X,
 } from "lucide-react";
-import { useSearchParams } from "react-router";
-import { Card } from "./ui";
+import { Card, Spinner } from "./ui";
 import { cn } from "../lib/cn";
 import {
   defaultFilterState,
@@ -35,6 +34,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
 import { Tooltip } from "./tooltip";
+import { dirOf, isRtl, type Direction } from "../lib/direction";
 
 // ---------- Types ----------
 
@@ -78,6 +78,9 @@ interface Resize {
   pointerId: number;
   startX: number;
   startWidth: number;
+  /** +1 when a drag to the right widens the column, -1 in a right-to-left table,
+   *  where the handle sits on the column's LEFT edge and widening is a drag left. */
+  sign: 1 | -1;
   /** What React last rendered this column at, so a CANCELLED drag can put the header
    *  back — React cannot, it never saw the inline width the drag wrote. */
   hadWidth: number | undefined;
@@ -97,7 +100,19 @@ export interface ServerPagination {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  /** Without it the page size is the server's to choose, and the pager shows no
+   *  page-size select at all — one that changed nothing was a control that lied. */
   onPageSizeChange?: (pageSize: number) => void;
+  /**
+   * A page is being fetched. The table marks itself `aria-busy`, dims the rows it is
+   * still showing (they are the PREVIOUS page's, and about to go), and replaces the
+   * empty state with a loading row when there is nothing to show yet — "no results"
+   * while the first page is still in flight is a claim the table cannot make.
+   *
+   * The pager stays usable. Disabling it would drop focus from the very button the
+   * user just pressed (a disabled button cannot hold focus), and a second click
+   * during a fetch is a request the owner already has to handle for a slow network.
+   */
   isLoading?: boolean;
 }
 
@@ -191,8 +206,14 @@ export interface DataTableProps<T> {
    * Controlled filter/sort state. When the `on*Change` callback is provided
    * the table stops owning that piece of state: it renders `filters`/`sorts`
    * as given and reports user interactions through the callback (including
-   * in serverPagination mode, where the UI is otherwise disabled). The owner
-   * is responsible for any page reset on change.
+   * in serverPagination mode, where the UI is otherwise disabled).
+   *
+   * Page reset: on a client-side table, a change in the VALUE of `filters` or
+   * `sorts` sends the table back to page 1 — whoever made the change, the user
+   * through the header or the owner from outside (a saved view, a chip). Compared
+   * by value, so passing a fresh but equal object on every render does not reset
+   * anything. In `serverPagination` mode the owner's `page` is the page, and
+   * resetting it on a filter change stays the owner's job.
    */
   filters?: FilterState;
   onFiltersChange?: (next: FilterState) => void;
@@ -263,12 +284,19 @@ export interface DataTableProps<T> {
    * `null` (or empty sides) for rows that should not move — a locked row, one whose
    * mutation is in flight, one the user has expanded.
    *
+   * Prefer `start`/`end`: actions committed by dragging the row toward the reading
+   * START or END of the line. In a left-to-right layout `end` is a drag to the
+   * right, and in a right-to-left one it is a drag to the left — so a "drag forward
+   * to archive" row stays forward in Arabic or Hebrew without a second definition.
+   * `left`/`right` are the physical directions and keep meaning exactly that; each
+   * is used only where the logical side for that direction is not given.
+   *
    * Mobile only, and deliberately so: the desktop table already has room for an
    * actions column, and a drag gesture on a pointer device is a worse version of a
    * button. Wraps only the row body, so an expansion panel below stays put while the
    * row above it slides.
    */
-  mobileSwipeActions?: (row: T) => { left?: SwipeAction[]; right?: SwipeAction[] } | null;
+  mobileSwipeActions?: (row: T) => MobileSwipeActions | null;
   /**
    * Renders as a full-width row above the data rows in the desktop table
    * (mobile has no equivalent list-row slot, so it's desktop-only). For a
@@ -282,6 +310,59 @@ export interface DataTableProps<T> {
 
 export type FilterState = Record<string, FilterValue>;
 export type { SortState };
+
+/** What {@link DataTableProps.mobileSwipeActions} returns for one row. */
+export interface MobileSwipeActions {
+  /** Committed by dragging toward the reading start (left in LTR, right in RTL). */
+  start?: SwipeAction[];
+  /** Committed by dragging toward the reading end (right in LTR, left in RTL). */
+  end?: SwipeAction[];
+  /** Committed by dragging physically LEFT, whatever the direction. */
+  left?: SwipeAction[];
+  /** Committed by dragging physically RIGHT, whatever the direction. */
+  right?: SwipeAction[];
+}
+
+/** The logical sides onto the physical drag directions {@link SwipeableRow} takes. */
+function physicalSwipe(
+  actions: MobileSwipeActions,
+  dir: Direction,
+): { left?: SwipeAction[]; right?: SwipeAction[] } {
+  const rtl = dir === "rtl";
+  return {
+    left: (rtl ? actions.end : actions.start) ?? actions.left,
+    right: (rtl ? actions.start : actions.end) ?? actions.right,
+  };
+}
+
+// A bare `text-right` / `text-left` token, with or without variant prefixes
+// (`md:text-right`). Deliberately NOT `text-right-…` or an arbitrary value.
+const PHYSICAL_ALIGN = /(^|\s)((?:[\w-]+:)*)text-(left|right)(?=\s|$)/g;
+
+/**
+ * A column's `className`/`headClassName` with physical text alignment rewritten to
+ * logical: `text-right` → `text-end`, `text-left` → `text-start`.
+ *
+ * Every numeric column written before 0.7.0 says `text-right`, and that is what it
+ * MEANT: the end of the line, where digits line up. Rendered as written, a
+ * right-to-left table puts those numbers on the far side from their own header's
+ * sort button. Rewriting keeps each existing call site correct in both directions
+ * with no change on its side; a caller who genuinely wants the physical side in RTL
+ * too can say `ltr:text-right rtl:text-right`, which this leaves alone.
+ */
+function logicalAlign(className: string | undefined): string | undefined {
+  return className?.replace(
+    PHYSICAL_ALIGN,
+    (token: string, lead: string, variants: string, side: string) =>
+      // Already scoped to one direction: that is a caller choosing the physical side.
+      /(^|:)(ltr|rtl):/.test(variants)
+        ? token
+        : `${lead}${variants}text-${side === "right" ? "end" : "start"}`,
+  );
+}
+
+/** Whether a column is end-aligned — the header then puts its filter button first. */
+const END_ALIGN = /(^|\s)text-end(?=\s|$)/;
 
 /** Drop the undefined entries of a {@link DataTableProps.rowAttributes} map, so a
  *  caller can write `{ "data-x": cond ? "y" : undefined }` and get no attribute
@@ -422,6 +503,7 @@ export function DataTable<T>({
   leadingRow,
 }: DataTableProps<T>) {
   const isServer = !!serverPagination;
+  const isLoading = !!serverPagination?.isLoading;
   // prop > provider > English, through the table's own resolver rather than
   // `useKitLabels`: that resolver derives `columnsCount` from a translated `columns`,
   // and a plain merge would skip it. `presets` is a record and is merged key by key,
@@ -443,7 +525,6 @@ export function DataTable<T>({
     [labelOverrides, labelsProp],
   );
   const locale = useKitLocale(localeProp);
-  const [, setSearchParams] = useSearchParams();
   // Sorting, filtering and paging all change WHICH rows are on screen without
   // moving focus — the header button the user pressed is still the header button
   // they are on — so there is no other channel to say it on. See use-announce.ts.
@@ -469,7 +550,6 @@ export function DataTable<T>({
     storageKey,
     storageKeyPrefix,
     urlSync,
-    setSearchParams,
     defaultPageSize,
     sortsProp,
     filtersProp,
@@ -608,7 +688,10 @@ export function DataTable<T>({
   const setFilterValue = (key: string, value: FilterValue) => {
     if (onFiltersChange) {
       onFiltersChange({ ...filters, [key]: value });
-      return; // page reset is the controlling owner's job
+      // No `setPage(0)` here: the page resets when the new value comes back in
+      // through the prop — see the controlled reset in useTableState. Resetting now
+      // would move to page 1 for a change the owner may yet refuse.
+      return;
     }
     setInternalFilters((s) => ({ ...s, [key]: value }));
     setPage(0);
@@ -767,6 +850,7 @@ export function DataTable<T>({
       pointerId: e.pointerId,
       startX: e.clientX,
       startWidth,
+      sign: isRtl(e.currentTarget) ? -1 : 1,
       hadWidth: widths[key],
       cells: columnCells(key),
       width: startWidth,
@@ -780,7 +864,7 @@ export function DataTable<T>({
   const moveResize = (e: React.PointerEvent<HTMLElement>) => {
     const drag = resizing.current;
     if (!drag || drag.pointerId !== e.pointerId) return;
-    drag.width = Math.max(40, Math.round(drag.startWidth + (e.clientX - drag.startX)));
+    drag.width = Math.max(40, Math.round(drag.startWidth + drag.sign * (e.clientX - drag.startX)));
     drag.moved = true;
     applyLiveWidth(drag.cells, drag.width);
   };
@@ -860,12 +944,24 @@ export function DataTable<T>({
   // renderer is opaque to us; a link inside one is the caller's to declare by
   // marking the column it comes from.
   const mobileCardLinkable = mobileColumns.every((c) => !c.noRowLink);
+  // The card list's reading direction, for the one thing on it CSS cannot flip: which
+  // physical drag a logical `start`/`end` swipe action means. Read off the DOM through
+  // a ref callback (it runs at commit, like a layout effect) because `dir` is an
+  // attribute of some ancestor the table does not own; LTR until the first commit,
+  // which is also before any finger can have touched a row.
+  const [mobileDir, setMobileDir] = useState<Direction>("ltr");
+  const mobileRootRef = (el: HTMLElement | null) => {
+    if (!el) return;
+    const d = dirOf(el);
+    if (d !== mobileDir) setMobileDir(d);
+  };
 
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
     rows: sorted,
     slice,
     isServer,
     isMdUp,
+    unpaged,
     defaultPageSize,
   });
   // The row whose selection was last toggled, so Shift+click can select the range up
@@ -874,6 +970,8 @@ export function DataTable<T>({
   // header was clicked addresses a different row afterwards — and the range then ran
   // from a row the user had never touched.
   const selectionAnchor = useRef<string | number | null>(null);
+  /** The checkbox click that drew a range, so its `onChange` can be told apart. */
+  const rangeClick = useRef<Event | null>(null);
   const canSelect = (row: T) => !!selection && (selection.isSelectable?.(row) ?? true);
   const selectRange = (toIndex: number) => {
     if (!selection || selectionAnchor.current === null) return false;
@@ -926,13 +1024,14 @@ export function DataTable<T>({
     // uses for exactly this, and it points the way the row actually opens: right into
     // a sheet, or down into an inline panel that flips it when expanded.
     const opensDetail = interactive && !!expandedRow;
-    const swipe = mobileSwipeActions?.(row);
+    const swipeActions = mobileSwipeActions?.(row);
+    const swipe = swipeActions ? physicalSwipe(swipeActions, mobileDir) : null;
     // An expanded row never swipes: the editor below it owns the horizontal space,
     // and dragging the header away from its own form reads as a glitch.
     const swipeEnabled = !!swipe && !expanded;
     const href = mobileCardLinkable ? rowHref?.(row) : undefined;
     const cardClass = cn(
-      "w-full px-4 py-3 text-left flex items-center gap-3",
+      "w-full px-4 py-3 text-start flex items-center gap-3",
       // Live #320's other half: the card acknowledges the touch before the sheet
       // arrives. On a cold route the data can take a beat, and an unacknowledged tap
       // reads as "did that register?" — which is most of what "abrupt" means here.
@@ -979,7 +1078,11 @@ export function DataTable<T>({
           // `aria-hidden`: the row already announces itself as a button with
           // `aria-expanded`, so the icon would only add a second, wordless stop.
           (mobileExpandAsDialog ? (
-            <ChevronRight aria-hidden className="size-4 shrink-0 text-[var(--text-placeholder)]" />
+            // Points INTO the sheet, which is the reading-forward direction.
+            <ChevronRight
+              aria-hidden
+              className="size-4 shrink-0 text-[var(--text-placeholder)] rtl:-scale-x-100"
+            />
           ) : (
             <ChevronDown
               aria-hidden
@@ -1074,7 +1177,7 @@ export function DataTable<T>({
           inside either one. */}
       <span {...regionProps} />
       {!isMdUp && (
-      <div>
+      <div ref={mobileRootRef}>
         {/* Mobile filter access (feedback #299): the per-column filter popovers
             live in the desktop header, which the card list doesn't render — so
             expose the same filters through a bottom sheet here. */}
@@ -1092,7 +1195,14 @@ export function DataTable<T>({
             locale={locale}
           />
         )}
-        <ul className="divide-y divide-[var(--border)]">
+        <ul
+          className={cn(
+            "divide-y divide-[var(--border)]",
+            // Same busy treatment as the desktop body; see `isLoading` below.
+            isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
+          )}
+          aria-busy={isLoading || undefined}
+        >
           {mobileGroups
             ? mobileGroups.map((g) => (
                 <Fragment key={`hb-group:${g.key}`}>
@@ -1105,7 +1215,7 @@ export function DataTable<T>({
             : mobileSlice.map(renderMobileRow)}
           {mobileSlice.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
-              {empty ?? "—"}
+              {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
             </li>
           )}
           {/* Endless-scroll sentinel: observed by IntersectionObserver to pull in
@@ -1128,7 +1238,7 @@ export function DataTable<T>({
             pageSize={paginationPageSize}
             total={paginationTotal}
             onPage={goToPage}
-            onPageSize={(n) => serverPagination!.onPageSizeChange?.(n)}
+            onPageSize={serverPagination!.onPageSizeChange}
             labels={labels}
             locale={locale}
           />
@@ -1160,7 +1270,14 @@ export function DataTable<T>({
           >
         {/* A table with no name is "table" in a screen reader's list of tables, and
             an app renders several. `labels.table` is how a call site says which. */}
-        <table className="w-full text-sm" aria-label={labels.table}>
+        {/* `aria-busy` while a server page is in flight: a reader holds off announcing
+            the rows that are about to be replaced, and the dimmed body says the same
+            to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
+        <table
+          className="w-full text-sm"
+          aria-label={labels.table}
+          aria-busy={isLoading || undefined}
+        >
           {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the
               page. For that to actually hold the header in place, the wrapper
@@ -1171,7 +1288,7 @@ export function DataTable<T>({
               <thead> isn't reliable across browsers, so we put it on each <th>
               (see headClassName below). */}
           <thead className="bg-[var(--bg-surface-2)] text-[var(--text-secondary)]">
-            <tr className="text-left">
+            <tr className="text-start">
               {selection && (
                 <th
                   scope="col"
@@ -1199,7 +1316,9 @@ export function DataTable<T>({
                 const active = sortIdx !== -1;
                 const Icon = active ? (sorts[sortIdx].dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
                 const filterActive = filterState && isFilterActive(filterState);
-                const isRightAligned = col.headClassName?.includes("text-right");
+                // Logical, and a legacy `text-right` still counts — see `logicalAlign`.
+                const headClass = logicalAlign(col.headClassName);
+                const isEndAligned = !!headClass && END_ALIGN.test(headClass);
                 const width = widths[col.key];
                 return (
                   <th
@@ -1236,13 +1355,13 @@ export function DataTable<T>({
                       // Each <th> carries its own bg so the row doesn't render
                       // transparent over the data rows underneath.
                       "sticky top-0 z-10 bg-[var(--bg-surface-2)] backdrop-blur-sm",
-                      col.headClassName,
+                      headClass,
                     )}
                   >
                     <div
                       className={cn(
                         "flex items-center gap-1",
-                        isRightAligned && "flex-row-reverse",
+                        isEndAligned && "flex-row-reverse",
                       )}
                     >
                       <Tooltip label={sortable ? labels.sortHint : undefined} portal>
@@ -1251,7 +1370,7 @@ export function DataTable<T>({
                           onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
                           disabled={!sortable}
                           className={cn(
-                            "flex items-center gap-1 text-left",
+                            "flex items-center gap-1 text-start",
                             sortable && "hover:text-[var(--text-primary)]",
                           )}
                         >
@@ -1321,14 +1440,18 @@ export function DataTable<T>({
                       }}
                       // `touch-none`: without it the browser claims a finger drag for
                       // scrolling before the first `pointermove` ever arrives.
-                      className="absolute right-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-[var(--brand-bg-hover)]"
+                      // `end-0` and a translate that flips with it: the handle sits on the column's
+                      // trailing edge, which is its left one in a right-to-left table.
+                      className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-[var(--brand-bg-hover)]"
                     />
                   </th>
                 );
               })}
             </tr>
           </thead>
-          <tbody>
+          <tbody
+            className={cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity")}
+          >
             {leadingRow && (
               <tr className="border-t border-[var(--border)]">
                 <td colSpan={totalColSpan} className="p-0">
@@ -1395,12 +1518,27 @@ export function DataTable<T>({
                             className="size-4 accent-indigo-600"
                             checked={selection.isSelected(row)}
                             // Shift+click selects the range from the last toggled
-                            // row; preventDefault stops the native toggle (and the
-                            // onChange that would double-handle it).
+                            // row. `preventDefault` puts the box back, but it does NOT
+                            // stop React's `onChange`: React derives a checkbox's
+                            // change from the `click` itself, after the browser has
+                            // already flipped `checked` and before the cancellation
+                            // reverts it — so the same click also reported itself as
+                            // a single toggle, and the owner got `onToggleMany` and
+                            // then `onToggle` for the clicked row. The click is
+                            // remembered by identity and its change is dropped; a
+                            // boolean flag would outlive a click whose change never
+                            // came and swallow the user's next real one.
                             onClick={(e) => {
-                              if (e.shiftKey && selectRange(rowIndex)) e.preventDefault();
+                              if (e.shiftKey && selectRange(rowIndex)) {
+                                e.preventDefault();
+                                rangeClick.current = e.nativeEvent;
+                              }
                             }}
                             onChange={(e) => {
+                              if (rangeClick.current && e.nativeEvent === rangeClick.current) {
+                                rangeClick.current = null;
+                                return;
+                              }
                               selectionAnchor.current = rowKey(row);
                               selection.onToggle(row, e.target.checked);
                             }}
@@ -1416,7 +1554,11 @@ export function DataTable<T>({
                           key={col.key}
                           data-col={col.key}
                           style={width ? { width, minWidth: width, maxWidth: width } : undefined}
-                          className={cn("px-3 py-2 align-top", width && "overflow-hidden text-ellipsis", col.className)}
+                          className={cn(
+                            "px-3 py-2 align-top",
+                            width && "overflow-hidden text-ellipsis",
+                            logicalAlign(col.className),
+                          )}
                         >
                           {col === linkColumn && href ? (
                             // No `onActivate`: the click is left to bubble to the
@@ -1459,7 +1601,9 @@ export function DataTable<T>({
                   colSpan={totalColSpan}
                   className="px-3 py-4 text-center text-[var(--text-muted)]"
                 >
-                  {empty ?? "—"}
+                  {/* Nothing is not the same as not-yet: "no results" while the first
+                      page is still in flight is a claim the table cannot make. */}
+                  {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
                 </td>
               </tr>
             )}
@@ -1475,7 +1619,7 @@ export function DataTable<T>({
               onPage={goToPage}
               onPageSize={
                 isServer
-                  ? (n) => serverPagination!.onPageSizeChange?.(n)
+                  ? serverPagination!.onPageSizeChange
                   : (n) => {
                       setPageSize(n);
                       setPage(0);
@@ -1495,9 +1639,9 @@ export function DataTable<T>({
             tabIndex={showSettings ? -1 : 0}
             className={cn(
               "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
-              "border-l border-[var(--border)]",
+              "border-s border-[var(--border)]",
               "hover:bg-[var(--bg-hover)]",
-              showSettings ? "w-0 border-l-0" : "w-8 cursor-pointer",
+              showSettings ? "w-0 border-s-0" : "w-8 cursor-pointer",
             )}
           >
             <span
@@ -1514,7 +1658,7 @@ export function DataTable<T>({
             showSettings ? "w-56" : "w-0",
           )}
         >
-          <div className="flex w-56 flex-col border-l border-[var(--border)] p-2">
+          <div className="flex w-56 flex-col border-s border-[var(--border)] p-2">
             <div className="mb-2 flex items-center justify-between gap-1">
               <div className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
                 {columnsCountLabel}
@@ -1572,6 +1716,16 @@ export function DataTable<T>({
   );
 }
 
+/** The loading row's content: a spinner beside the word, the word for everyone. */
+function LoadingText({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <Spinner label={null} className="size-4" />
+      {label}
+    </span>
+  );
+}
+
 // ---------- Mobile filter sheet ----------
 
 /**
@@ -1606,6 +1760,10 @@ function MobileFilters<T>({
   locale?: string;
 }) {
   const [open, setOpen] = useState(false);
+  // The sheet is portalled to <body>, out from under whatever `dir` the table sits
+  // in, so it carries the trigger's direction with it — read at the moment of opening,
+  // from the element the user actually pressed.
+  const [dir, setDir] = useState<Direction>("ltr");
   const [expanded, setExpanded] = useState<string | null>(null);
   const backdropClose = useBackdropClose(() => setOpen(false));
   useBodyScrollLock(open);
@@ -1633,7 +1791,10 @@ function MobileFilters<T>({
     <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-2">
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={(e) => {
+          setDir(dirOf(e.currentTarget));
+          setOpen(true);
+        }}
         className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
       >
         <Filter className="size-4" />
@@ -1659,6 +1820,7 @@ function MobileFilters<T>({
             className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
             role="dialog"
             aria-modal="true"
+            dir={dir}
             {...backdropClose}
           >
             <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-[var(--bg-surface)] shadow-xl">
@@ -1668,7 +1830,7 @@ function MobileFilters<T>({
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label={labels.close}
-                  className="-mr-1 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                  className="-me-1 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
                 >
                   <X className="size-5" />
                 </button>
@@ -1684,7 +1846,7 @@ function MobileFilters<T>({
                         type="button"
                         onClick={() => setExpanded(isItemOpen ? null : col.key)}
                         aria-expanded={isItemOpen}
-                        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+                        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
                       >
                         <span className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
                           {col.header}

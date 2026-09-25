@@ -5,8 +5,8 @@ import { Button, IconButton } from "./ui";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
-import { DEFAULT_FILE_PICKER_LABELS, screenFiles, summariseRejections } from "./file-button";
-import type { FilePickerLabels, FileRejection } from "./file-button";
+import { DEFAULT_FILE_PICKER_LABELS, judgePick, screenFiles, summariseRejections } from "./file-button";
+import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
 
 /**
  * Where a refused file's message goes.
@@ -26,8 +26,8 @@ export type FileDropzoneRejectionFeedback = "toast" | "inline" | "none";
  * The DOM event of that name belongs to form validation and takes a `FormEvent`; this
  * one takes the rejected `File`, and the kit's meaning is the one every caller already
  * writes. Everything else a `<div>` takes reaches the root — which carries
- * `role="button"`, so that is also where an `aria-label` or an `aria-describedby`
- * belongs.
+ * `role="group"` named by `dropLabel`, so that is also where an `aria-label` or an
+ * `aria-describedby` belongs.
  *
  * Two modes. SINGLE (the default, and all of 0.5): `file` + `onFileSelected`. MULTIPLE
  * (`multiple`): `files` + `onFilesSelected`. They are optional rather than a union so
@@ -49,7 +49,7 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * Show a remove button inside the zone once something is chosen (kastlan asked for
    * it: the only way to un-choose a file was to reload). Single mode: removes the file.
    * Multiple mode: a "remove all" button. The host clears its own state here — the
-   * zone is controlled. Focus returns to the zone, and the removal is announced.
+   * zone is controlled. Focus moves to the Browse button, and the removal is announced.
    */
   onClear?: () => void;
   /** Multiple mode: a remove button per listed file. */
@@ -81,6 +81,10 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
   onInvalid?: (file: File) => void;
   /** Every refused file of one pick, with its reason and message. */
   onReject?: (rejections: FileRejection[]) => void;
+  /** The whole pick at once, before any of the above — return `false` to refuse all
+   *  of it (see {@link FilePickHandler}). A refused pick selects nothing; its one
+   *  message (`labels.rejectedPick`) goes where `rejectionFeedback` says. */
+  onPick?: FilePickHandler;
   /** See {@link FileDropzoneRejectionFeedback}. Defaults to `"toast"` when neither
    *  `onInvalid` nor `onReject` is given, `"none"` when one is. */
   rejectionFeedback?: FileDropzoneRejectionFeedback;
@@ -116,6 +120,7 @@ export function FileDropzone({
   maxFiles,
   onInvalid,
   onReject,
+  onPick,
   rejectionFeedback,
   labels: labelsProp,
   dropLabel,
@@ -130,7 +135,7 @@ export function FileDropzone({
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const browseRef = useRef<HTMLButtonElement>(null);
   const errorId = useId();
   // The size through the kit's `file.size` label (the provider's locale by default).
   // This was `${n / 1024} KB`: ASCII digits, an English unit, and a binary kilobyte
@@ -138,9 +143,8 @@ export function FileDropzone({
   const fileText = useKitFileLabels();
   const labels = useKitLabels("filePicker", DEFAULT_FILE_PICKER_LABELS, labelsProp);
   // Two regions, two urgencies: a pick or a removal is news, a refusal is a failure.
-  // Both are needed because nothing inside a `role="button"` is read out — its
-  // children are presentational — so the echoed file name never reaches a screen
-  // reader on its own.
+  // The echoed file name is only text in the zone, and text changing somewhere on the
+  // page is not announced by itself.
   const status = useAnnounce();
   const alert = useAnnounce({ politeness: "assertive" });
   const feedback: FileDropzoneRejectionFeedback =
@@ -149,8 +153,9 @@ export function FileDropzone({
   const acceptFiles = (list: ArrayLike<File> | null | undefined) => {
     if (!list || list.length === 0) return;
     const all = Array.from(list);
+    const picked = multiple ? all : all.slice(0, 1);
     const { accepted, rejected } = screenFiles(
-      multiple ? all : all.slice(0, 1),
+      picked,
       {
         accept: isValid ? undefined : accept,
         maxSize,
@@ -161,7 +166,8 @@ export function FileDropzone({
       labels,
       fileText.size,
     );
-    if (accepted.length > 0) {
+    const stands = judgePick(onPick, accepted, rejected);
+    if (stands && accepted.length > 0) {
       setError(null);
       if (multiple) {
         onFilesSelected?.(accepted);
@@ -171,10 +177,12 @@ export function FileDropzone({
       }
       status.announce(labels.selected(accepted.length, accepted[0].name));
     }
-    if (rejected.length > 0) {
+    if (!stands || rejected.length > 0) {
       for (const r of rejected) onInvalid?.(r.file);
-      onReject?.(rejected);
-      const message = summariseRejections(rejected, labels);
+      if (rejected.length > 0) onReject?.(rejected);
+      const message = stands
+        ? summariseRejections(rejected, labels)
+        : labels.rejectedPick(picked.length);
       if (feedback === "toast") {
         // sonner is an optional peer: imported here, on the failure path only, so an
         // app that never trips this never has to install it. Not awaited — nothing
@@ -190,9 +198,9 @@ export function FileDropzone({
   };
 
   // The remove buttons unmount with the file they removed, and focus would fall to
-  // <body>. The zone is where the next action (pick again) starts.
+  // <body>. Browse is where the next action (pick again) starts.
   const afterRemoval = (message: string) => {
-    rootRef.current?.focus();
+    browseRef.current?.focus();
     status.announce(message);
   };
 
@@ -202,11 +210,17 @@ export function FileDropzone({
 
   return (
     <>
+      {/* A named group, NOT a `role="button"`. It was one, with real buttons (Browse,
+          the remove buttons) inside it: nested interactive controls, which ARIA forbids
+          because a button's children are presentational — a screen reader either read
+          the zone as one opaque button or skipped the inner ones, and the zone was an
+          extra Tab stop that did what Browse does. Now the keyboard path is Browse, a
+          real button; the zone keeps its drop target and its click-anywhere for a
+          pointer, which is a convenience on top of Browse rather than the only way in. */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- the click is a pointer shortcut for Browse, see above */}
       <div
-        // `...rest` first: every handler below is the drop gesture itself, and the
-        // `role`/`tabIndex` pair is what makes this div operable by keyboard at all.
+        // `...rest` first: every handler below is the drop gesture itself.
         {...rest}
-        ref={rootRef}
         onDragEnter={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -230,24 +244,16 @@ export function FileDropzone({
           setDragOver(false);
           acceptFiles(e.dataTransfer.files);
         }}
+        // Pointer only; every control inside stops its own click from reaching here. The
+        // keyboard equivalent is the Browse button, so no key handler belongs on a group.
         onClick={() => fileInputRef.current?.click()}
-        onKeyDown={(e) => {
-          // Only the zone's OWN keys. A remove button inside it is a real button, and
-          // Enter on it bubbling up here would open the picker instead of removing.
-          if (e.target !== e.currentTarget) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            fileInputRef.current?.click();
-          }
-        }}
-        role="button"
-        tabIndex={0}
+        role="group"
         // The DOM spelling wins over `dropLabel`, which stays the name for every caller
         // that passes no `aria-label` — i.e. all of them today. Standardising on
         // `aria-label` (audit §api-design) does not get to silently rename an existing
         // required prop.
         aria-label={ariaLabel ?? dropLabel}
-        // No `aria-invalid`: ARIA does not allow it on `role="button"`. The message is
+        // No `aria-invalid`: ARIA does not allow it on `role="group"`. The message is
         // reached through the description instead, and spoken when it appears.
         aria-describedby={describedBy}
         data-invalid={showError || undefined}
@@ -307,7 +313,9 @@ export function FileDropzone({
         ) : (
           <>
             <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
-              {file ? <span className="font-medium">{file.name}</span> : emptyLabel}
+              {/* `!multiple`: in multiple mode an empty `files` list is "nothing chosen",
+                  whatever a stray `file` prop says — it used to show that file's name. */}
+              {!multiple && file ? <span className="font-medium">{file.name}</span> : emptyLabel}
               {!multiple && file && onClear && (
                 <IconButton
                   type="button"
@@ -330,6 +338,7 @@ export function FileDropzone({
         )}
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button
+            ref={browseRef}
             type="button"
             variant="secondary"
             onClick={(e) => {
@@ -377,9 +386,9 @@ export function FileDropzone({
           className="sr-only"
         />
       </div>
-      {/* Outside the zone: a live region inside a `role="button"` is inside
-          presentational content, and screen readers are not consistent about
-          reading those. `sr-only-fixed`, so they need no positioned ancestor. */}
+      {/* Outside the zone, where they have always been (the zone used to be a
+          `role="button"`, whose content is presentational). `sr-only-fixed`, so they
+          need no positioned ancestor. */}
       <span {...status.regionProps} />
       <span {...alert.regionProps} />
     </>

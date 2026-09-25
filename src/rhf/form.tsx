@@ -51,6 +51,27 @@
  * `<Input {...field} invalid={fieldState.invalid} />`. `FormControl` does not inject
  * `invalid` itself because its child may be a native element, which would print it
  * into the DOM as an unknown attribute.
+ *
+ * ## Clearing a picker: `null`, unless the picker is told otherwise
+ *
+ * Nothing here touches a value. `FormField` is `Controller`, so what a control hands
+ * `field.onChange` is exactly what lands in the form — and what the entity pickers
+ * hand it on a clear is `null`: `EntityCombobox`'s "×", `InlineEntityCombobox`'s "×"
+ * and its emptied text. (`MultiEntityCombobox` and `MultiSelect` clear to `[]`.)
+ *
+ * A zod schema that spells "no choice" as `""` (`z.string()`, or `z.literal("")` in a
+ * union) then fails on the `null`. Say so on the PICKER, not here:
+ *
+ * ```tsx
+ * <EntityCombobox clearValue="" value={field.value} onChange={field.onChange} … />
+ * ```
+ *
+ * `clearValue` also types `onChange` (`(v: V | "") => void` rather than
+ * `V | null`) and reads `""` back as "nothing selected", so an initial `defaultValues`
+ * of `""` shows the placeholder rather than an unresolvable id. The adapter does not
+ * coerce because it cannot see the schema: mapping `null` to `""` for every field
+ * would break every schema that wants `null` (`z.string().nullable()`), which is the
+ * pickers' default for a reason — it is the one value no option can have.
  */
 import {
   Children,

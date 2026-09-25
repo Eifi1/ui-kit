@@ -11,9 +11,19 @@ import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
 export const TOPBAR_TRIGGER_CLASS =
   "size-9 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
 
-/** Shared row styling for the top-bar hover-menu items. */
+/** Shared row styling for the top-bar hover-menu items. `text-start`, so a label that
+ *  wraps aligns to the reading edge in RTL too. */
 export const TOPBAR_MENU_ITEM_CLASS =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+
+/** The small uppercase heading row the top-bar menus share (`heading`). */
+function MenuHeading({ children }: { children: string }) {
+  return (
+    <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+      {children}
+    </li>
+  );
+}
 
 /** Sun/Moon toggle for the light/dark theme. Controlled: the app owns the mode. */
 export function ThemeToggle({
@@ -92,11 +102,7 @@ export function PaletteMenu({
     >
       {(close) => (
         <ul className="w-60 py-1">
-          {heading && (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
-              {heading}
-            </li>
-          )}
+          {heading && <MenuHeading>{heading}</MenuHeading>}
           {palettes.map((p) => {
             const ts = p[mode];
             const swatches = [ts.bgPage, ts.brand, ts.moneyIncome, ts.moneyExpense, ts.moneyNet];
@@ -123,7 +129,7 @@ export function PaletteMenu({
                         />
                       ))}
                     </span>
-                    <span className="flex min-w-0 flex-col text-left">
+                    <span className="flex min-w-0 flex-col text-start">
                       <span className="truncate">{p.name}</span>
                       <span className="truncate text-[11px] text-[var(--text-placeholder)]">
                         {p.blurb}
@@ -164,12 +170,16 @@ export function LanguageMenu({
   current,
   onChange,
   ariaLabel,
+  heading,
 }: {
   options: LanguageOption[];
   current: string | undefined;
   onChange: (code: string) => void;
   /** Default: `topBar.language` from the {@link UiKitProvider}, else English. */
   ariaLabel?: string;
+  /** Optional small heading row above the list — as on `TopBarActionMenu`,
+   *  `OptionSwitcherMenu` and `PaletteMenu`. */
+  heading?: string;
 }) {
   const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabel });
   const active = options.find((o) => o.code === current);
@@ -198,6 +208,7 @@ export function LanguageMenu({
     >
       {(close) => (
         <ul className="py-1">
+          {heading && <MenuHeading>{heading}</MenuHeading>}
           {options.map((lang) => {
             const isActive = lang.code === current;
             return (

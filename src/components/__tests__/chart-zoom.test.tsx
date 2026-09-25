@@ -372,6 +372,23 @@ describe("withChartZoom", () => {
     expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
   });
 
+  it("hides the reset over the empty state, and brings it back with the data", () => {
+    // Every series toggled off while zoomed: the chart draws "No data", and a "Reset
+    // zoom" floating over that offers to undo something nobody can see. The zoom itself
+    // is kept, so the reset comes back with the first line switched on again.
+    const rows = [{ x: 0, a: 1 }];
+    const { rerender } = render(<Zoomable axes={[{ id: "y" }]} rows={rows} series={[{ key: "a" }]} />);
+    drag([160, 60], [610, 210]);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={rows} series={[]} />);
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={[]} series={[{ key: "a" }]} />);
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={rows} series={[{ key: "a" }]} />);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    expect(bindings()[0].x).toEqual([100, 550]);
+  });
+
   it("defaults to the single `y` axis when the chart names none", () => {
     render(<Zoomable />);
     drag([300, 60], [310, 260]);

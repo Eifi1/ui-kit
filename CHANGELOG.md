@@ -5,8 +5,9 @@ All notable changes to `@eifi1/ui-kit`.
 This package is pre-1.0 and three applications depend on it. The contract until 1.0:
 
 - **minor** (`0.x.0`) may remove or rename an export, change a prop's type, change an
-  emitted class name, or change a token's value. Each one is listed here under
-  **Breaking**, with the migration.
+  emitted class name, or change a token's value. Each one is a breaking commit
+  (`feat!:` / `fix!:`, or a `BREAKING CHANGE:` footer) and is listed under
+  **⚠ BREAKING CHANGES**; the per-app migration is in `docs/adopt-0.x.md`.
 - **patch** (`0.x.y`) fixes behaviour without changing the public surface. The surface is
   pinned by `src/__tests__/public-surface.test.ts`, so a name cannot leave it unnoticed.
 - Consumers pin `^0.x`, which npm treats as minor-locked below 1.0 — so a minor does not
@@ -14,6 +15,41 @@ This package is pre-1.0 and three applications depend on it. The contract until 
 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
 with the replacement named, listed here, then removed in the next minor.
+
+From 0.7.0 on, this file is generated from the Conventional Commits by `npm run release`
+(commit-and-tag-version); write the entry in the commit, not here.
+
+
+## [0.7.0](https://github.com/Eifi1/ui-kit/compare/v0.6.1...v0.7.0) (2026-09-25)
+
+### ⚠ BREAKING CHANGES
+
+* **adopt:** 0.7.0 changes behaviour and types an app can depend on — migration per app in docs/adopt-0.7.md.
+  - New required label keys `filePicker.rejectedTypeOnly` and the namespaces `measuredGrid` and `feedbackAttachment` for apps typing a complete `UiKitLabels` (or import `@eifi1/ui-kit/i18n/<code>`).
+  - With `accept` set, a refused type reads "Only .pdf files" instead of naming the file (a host that translated only `rejectedType` keeps its sentence).
+  - `HoverMenu` is a real menu: items are `role="menuitem"`, its `aria-label` is on `role="menu"`, default `align` is `"end"`.
+  - `FileDropzone` is a `role="group"`; the keyboard path is its Browse button.
+  - `Chip`: `href` and `onClick` are mutually exclusive; `onClick` without `selected` reports no `aria-pressed`.
+  - `ChartTooltip` defaults to `filterNull={false}`: a missing value shows "—".
+  - `DataTable`: controlled `filters`/`sorts` reset the page to 1; standalone `Pagination` shows the page-size select only with `onPageSize`.
+  - Field chrome, pickers, chips, table and shell emit logical classes (`pe-*`, `end-*`, `text-start`): a physical `pr-*`/`right-*` override now adds a side instead of replacing it.
+  - `ToggleGroup` radio mode is one tab stop with arrow keys; `Tour` blocks clicks outside its card and target.
+
+* **adopt:** per-app adoption notes for 0.7.0 ([a6f165e](https://github.com/Eifi1/ui-kit/commit/a6f165e80fa0df159da50f46b7b9bc8c387adc81))
+
+### Added
+
+* **0.7.0:** app follow-ups and the screen-size preview ([5b9632e](https://github.com/Eifi1/ui-kit/commit/5b9632e091a80f560adaec513cbbd1bc87e2cbd7))
+* **0.7.0:** MeasuredGrid, useMeasuredRows, useWindowedRows ([762403b](https://github.com/Eifi1/ui-kit/commit/762403b897c68686203a7bd285fa0e6b8f8e9c62))
+* **i18n:** ship the kit's translations as @eifi1/ui-kit/i18n/<code> ([bc8b615](https://github.com/Eifi1/ui-kit/commit/bc8b615362ba53c592869e83ac5ad3a3223c43f9))
+
+### Fixed
+
+* **0.7.0:** RTL across the kit, overlay/field/shell bug fixes, kastlan asks ([11bcf91](https://github.com/Eifi1/ui-kit/commit/11bcf9178be981c782716c76317143958ccbd960))
+* **chart:** swatches match paint, missing values show, nice ticks, RTL ([0080acd](https://github.com/Eifi1/ui-kit/commit/0080acdf234f8fa105532b2b79b714c8ec85516d))
+* **chip:** no aria-pressed unless `selected` is passed; action-button guidance ([22cf73a](https://github.com/Eifi1/ui-kit/commit/22cf73aa1b81370e7cee132fae4651a56a1aaee4))
+* **data-table:** loading state, range select, urlSync under any router, RTL ([8093d76](https://github.com/Eifi1/ui-kit/commit/8093d76d6e1e65c0cc8aba3f8914f4feb889a973))
+* **toggle-group:** radio mode is one tab stop with arrow keys (RTL-aware) ([6cf96ba](https://github.com/Eifi1/ui-kit/commit/6cf96ba2f353bdcb2d36ae229e57c3e40f1eeee7))
 
 ## [0.6.1] — 2026-09-24
 

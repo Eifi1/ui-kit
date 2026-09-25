@@ -11,6 +11,7 @@ import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
+import { useAnchorDir } from "./use-anchor-dir";
 
 /**
  * Open state + close-on-outside-click for the custom dropdowns (MultiSelect,
@@ -225,8 +226,12 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
   panelRef?: RefObject<HTMLDivElement | null>;
   /** Panel width in px, for the anchored form (the CSS `w-*` cannot be measured). */
   width?: number;
-  /** Which of the panel's edges lines up with the trigger's, room permitting. */
-  align?: "left" | "right";
+  /** Which of the panel's edges lines up with the trigger's, room permitting.
+   *  `start`/`end` follow the trigger's reading direction — `end` is the right edge
+   *  in a left-to-right form and the left one in a right-to-left form — and are what
+   *  the kit's own pickers pass; `left`/`right` stay physical. Default `end`, which
+   *  is the old `right` in a left-to-right page. */
+  align?: "left" | "right" | "start" | "end";
   children: ReactNode;
 }
 
@@ -239,7 +244,7 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
  *
  * Without `anchorRef` the panel is `position: absolute` inside whatever relative box
  * the caller put it in, and the caller places it with `className` (`w-64`,
- * `right-0 top-full`). That is fine in a page that does not scroll around it, and
+ * `end-0 top-full`). That is fine in a page that does not scroll around it, and
  * wrong the moment an ancestor has `overflow` — the panel is then CLIPPED by that
  * ancestor's box, with no error and no scrollbar, just a list with its side sliced
  * off. Keksdose dev#548 is what that looks like in practice: the app's own content
@@ -266,12 +271,13 @@ export function DropdownPanel({
   anchorRef,
   panelRef,
   width = 256,
-  align = "right",
+  align = "end",
   children,
   style,
   ...rest
 }: DropdownPanelProps) {
   const anchored = useAnchoredPanel(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
+  const dir = useAnchorDir(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
   const body = (
     <>
       {header}
@@ -313,12 +319,18 @@ export function DropdownPanel({
   if (!rect) return null;
   // Clamped exactly as `Popover` clamps: the panel may leave the trigger's edge to
   // stay on screen, because a list half off the viewport is the bug this exists for.
-  const wanted = align === "right" ? rect.right - width : rect.left;
+  // The portal leaves the subtree the trigger's `dir` came from, so it is read off
+  // the trigger — for the alignment here, and for the panel's own `dir` below,
+  // without which a right-to-left form got a left-to-right list.
+  const physical =
+    align === "start" ? (dir === "rtl" ? "right" : "left") : align === "end" ? (dir === "rtl" ? "left" : "right") : align;
+  const wanted = physical === "right" ? rect.right - width : rect.left;
   const left = Math.min(Math.max(8, wanted), window.innerWidth - width - 8);
   return createPortal(
     <div
       {...rest}
       ref={panelRef}
+      dir={dir}
       // The caller's `style` is kept underneath, but the placement is measured rather
       // than chosen (dev#548: an `overflow` ancestor clipped a third of this panel
       // away), so those five values are the panel's own.

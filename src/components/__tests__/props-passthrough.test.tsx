@@ -180,9 +180,17 @@ describe.each(CASES)("%s", (_name, mount) => {
     // inside is what a screen reader meets, so that is where the name goes (0.5.1,
     // reported by kastlan). The data-* anchor stays on the root, where a tour or a
     // test id expects the whole field.
-    const named = /Picker$/.test(ctx.task.suite?.name ?? "")
-      ? screen.getByRole("combobox")
-      : anchored();
+    //
+    // HoverMenu is the other: its wrapper has no role either, so the name goes on the
+    // `role="menu"` panel, which exists only while open. This test used to pin the
+    // name on the wrapper, where no screen reader reads it.
+    const suite = ctx.task.suite?.name ?? "";
+    if (suite === "HoverMenu") {
+      press(screen.getByRole("button", { name: "Menu" }));
+      expect(screen.getByRole("menu")).toHaveAttribute("aria-label", NAME);
+      return;
+    }
+    const named = /Picker$/.test(suite) ? screen.getByRole("combobox") : anchored();
     expect(named).toHaveAttribute("aria-label", NAME);
   });
 });
@@ -230,7 +238,9 @@ describe("the accessible name on a root that has a role", () => {
     expect(screen.getByRole("dialog", { name: NAME })).toBeInTheDocument();
   });
 
-  it("FileDropzone — button, over its own dropLabel", () => {
+  // `group`, not `button`: the zone was a `role="button"` holding real buttons (nested
+  // interactive controls), and these two tests pinned that role.
+  it("FileDropzone — group, over its own dropLabel", () => {
     render(
       <FileDropzone
         file={null}
@@ -245,7 +255,7 @@ describe("the accessible name on a root that has a role", () => {
         aria-label={NAME}
       />,
     );
-    expect(screen.getByRole("button", { name: NAME })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: NAME })).toBeInTheDocument();
   });
 
   it("FileDropzone still falls back to dropLabel, which is what every caller passes today", () => {
@@ -262,7 +272,7 @@ describe("the accessible name on a root that has a role", () => {
         hint=".zip only"
       />,
     );
-    expect(screen.getByRole("button", { name: "Drop a file" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Drop a file" })).toBeInTheDocument();
   });
 });
 
@@ -274,7 +284,9 @@ describe("the accessible name on a root that has a role", () => {
  * deprecation moves in.
  */
 describe("HoverMenu's deprecated ariaLabel", () => {
-  const menu = (props: { ariaLabel?: string; "aria-label"?: string }) =>
+  // Asserted on the open `role="menu"` panel: the name used to sit on the role-less
+  // wrapper, where it was never read (and these tests pinned that).
+  const menu = (props: { ariaLabel?: string; "aria-label"?: string }) => {
     render(
       <HoverMenu
         {...props}
@@ -286,7 +298,10 @@ describe("HoverMenu's deprecated ariaLabel", () => {
       >
         {() => <p>items</p>}
       </HoverMenu>,
-    ).container.firstElementChild as HTMLElement;
+    );
+    press(screen.getByRole("button", { name: "Menu" }));
+    return screen.getByRole("menu");
+  };
 
   it("still names the menu", () => {
     expect(menu({ ariaLabel: "Tours" })).toHaveAttribute("aria-label", "Tours");

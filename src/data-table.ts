@@ -16,4 +16,5 @@ export type {
   DataTableProps,
   ServerPagination,
   FilterState,
+  MobileSwipeActions,
 } from "./components/data-table";

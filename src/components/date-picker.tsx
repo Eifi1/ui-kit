@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useRef } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ComponentType, ReactNode, RefObject } from "react";
 import { Calendar, CalendarClock, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { dirOf, type Direction } from "../lib/direction";
 import { addDaysIso, parseIsoDate } from "../lib/dates";
 import {
   DEFAULT_DATE_PICKER_LABELS,
@@ -157,7 +158,7 @@ function DateFieldTrigger({
       aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
       className={cn(
         FIELD_TRIGGER,
-        "pr-9",
+        "pe-9",
         padded && FIELD_FLOATING_PAD,
         disabled && "cursor-not-allowed opacity-50",
         invalid && FIELD_INVALID,
@@ -218,6 +219,12 @@ function DateField({
 }) {
   const showClear = Boolean(clearable && hasValue && !disabled);
   const [aria, wrapperRest] = splitTriggerAria(rest);
+  // The panel is portalled to <body> and leaves the subtree whose `dir` it inherited,
+  // so a calendar in an RTL form opened LTR — the grid's columns, its arrow keys and
+  // its chevrons all the wrong way round. Read at the moment of opening (the only way
+  // the popover opens is through `toggle`) and put back on the panel.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [dir, setDir] = useState<Direction>("ltr");
   const id = useId();
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
@@ -229,7 +236,7 @@ function DateField({
   return (
     // The caller's attributes land here, on the field's own box — the trigger inside is
     // named by `aria-labelledby` and must keep the id pair it is given.
-    <div {...wrapperRest} className={cn("relative", className)}>
+    <div {...wrapperRest} ref={rootRef} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* The visible FieldLabel is a plain span, not a `<label htmlFor>`, so it names
           nothing on its own — this hidden twin is what the trigger is named by.
@@ -249,10 +256,14 @@ function DateField({
         // Named for what it is. Unnamed, it fell back to `popover.panel`, and a date
         // field announced its calendar as "Popover" — in English, in every language.
         labels={{ panel: panelLabel }}
+        dir={dir}
         trigger={({ open, toggle, ref }) => (
           <DateFieldTrigger
             open={open}
-            toggle={toggle}
+            toggle={() => {
+              setDir(dirOf(rootRef.current));
+              toggle();
+            }}
             triggerRef={ref}
             triggerText={triggerText}
             hasValue={hasValue}
@@ -292,14 +303,14 @@ function DateField({
           type="button"
           aria-label={clearLabel}
           onClick={onClear}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+          className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
         >
           <X className="size-4" />
         </button>
       ) : (
         <Calendar
           aria-hidden
-          className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
+          className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
         />
       )}
     </div>
@@ -312,12 +323,16 @@ function StepButton({
   label,
   disabled,
   onClick,
+  mirror,
   className,
 }: {
   icon: ComponentType<{ className?: string }>;
   label: string;
   disabled: boolean;
   onClick: () => void;
+  /** Flip the icon in RTL — for the ‹ › day steps, whose "previous" points to the
+   *  reading start. Not for the today icon, which has no direction. */
+  mirror?: boolean;
   /** The button's corners in the joined group (see DatePicker). */
   className?: string;
 }) {
@@ -343,7 +358,7 @@ function StepButton({
           className,
         )}
       >
-        <Icon className="size-4" />
+        <Icon className={cn("size-4", mirror && "rtl:-scale-x-100")} />
       </button>
     </Tooltip>
   );
@@ -506,6 +521,7 @@ export function DatePicker({
       {step && (
         <StepButton
           icon={ChevronLeft}
+          mirror
           label={text.previousDay}
           disabled={blocked(-1)}
           onClick={() => onChange(target(-1))}
@@ -516,6 +532,7 @@ export function DatePicker({
       {step && (
         <StepButton
           icon={ChevronRight}
+          mirror
           label={text.nextDay}
           disabled={blocked(1)}
           onClick={() => onChange(target(1))}

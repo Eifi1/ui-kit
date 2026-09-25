@@ -194,3 +194,51 @@ describe("AppShell — the inline sidebar is an accordion", () => {
     expect(display).toHaveAttribute("aria-expanded", "false");
   });
 });
+
+describe("AppShell in RTL (0.7.0)", () => {
+  const GROUPED = [
+    {
+      to: "/",
+      label: "Home",
+      icon: Home,
+      items: [{ to: "/fields", label: "Fields", icon: TextCursorInput }],
+    },
+  ];
+
+  it("draws the sidebar's rule on its logical END and mirrors the directional icons", () => {
+    render(
+      <MemoryRouter>
+        <AppShell nav={GROUPED} topBar={<div>bar</div>}>
+          <div>content</div>
+        </AppShell>
+      </MemoryRouter>,
+    );
+    const aside = document.querySelector("aside")!;
+    expect(aside.className).toContain("border-e");
+    expect(aside.className).not.toMatch(/\bborder-r\b/);
+    const collapseIcon = screen.getByRole("button", { name: "Collapse sidebar" }).querySelector("svg")!;
+    expect(collapseIcon.getAttribute("class")).toContain("rtl:-scale-x-100");
+    const icons = screen.getAllByRole("link", { name: "Home" })[0].querySelectorAll("svg");
+    const groupChevron = icons[icons.length - 1];
+    expect(groupChevron.getAttribute("class")).toContain("rtl:-scale-x-100");
+  });
+
+  it("carries the page's `dir` onto the portalled flyout and anchors it from the end", () => {
+    render(
+      <div dir="rtl">
+        <MemoryRouter>
+          <AppShell nav={GROUPED} topBar={<div>bar</div>} collapseStorageKey="rtl-test">
+            <div>content</div>
+          </AppShell>
+        </MemoryRouter>
+      </div>,
+    );
+    fireEvent.mouseEnter(screen.getAllByRole("link", { name: "Home" })[0].parentElement!);
+    const menu = screen.getByRole("menu", { name: "Home" });
+    const panel = menu.parentElement!;
+    expect(panel).toHaveAttribute("dir", "rtl");
+    expect(panel.style.right).not.toBe("");
+    expect(panel.style.left).toBe("");
+    expect(panel.className).toContain("ps-1");
+  });
+});

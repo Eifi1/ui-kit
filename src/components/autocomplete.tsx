@@ -8,9 +8,14 @@ import type {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { FieldLabel, FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { useAnchorDir } from "./use-anchor-dir";
 import {
+  ComboboxFieldLabel,
+  DISABLED_ROW_CLASS,
+  isOptionEnabled,
+  stepEnabled,
   useActiveOptionScroll,
   useComboboxFieldError,
   useOptionSource,
@@ -26,7 +31,7 @@ import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
 export interface AutocompleteProps<V extends string | number = string>
   extends Omit<
     ComponentPropsWithoutRef<"input">,
-    "value" | "defaultValue" | "onChange" | "onSelect" | "children" | "type"
+    "value" | "defaultValue" | "onChange" | "onSelect" | "children" | "type" | "size"
   > {
   /** What is in the field. Controlled, and never reset by the component: opening,
    *  closing and a failed lookup all leave it exactly as typed. */
@@ -34,7 +39,8 @@ export interface AutocompleteProps<V extends string | number = string>
   /** Every keystroke — and, with `fillOnSelect`, the label of a taken suggestion. */
   onChange: (text: string) => void;
   /** Suggestions the caller already has (e.g. from its own query hook). Narrowed by
-   *  the text unless `filter={false}`. */
+   *  the text unless `filter={false}`. An option with `disabled: true` is listed but
+   *  cannot be taken — see {@link ComboOption.disabled}. */
   options?: ComboOption<V>[];
   /** Or: fetch them. Debounced (`debounceMs`), race-safe, only at `minChars` and up,
    *  never while the field is idle; a rejection shows `loadErrorLabel` and empties
@@ -52,6 +58,30 @@ export interface AutocompleteProps<V extends string | number = string>
    *  inter-key interval is 150–250 ms, so the pickers' 150 fires on nearly every
    *  letter, which a rate-limited geocoder cannot afford. */
   debounceMs?: number;
+  /**
+   * Whether the list MAY show — controlled. Omit (or pass `undefined`) and the field
+   * decides: open while focused, until Escape, Tab or a taken row. `false` keeps it
+   * shut whatever the user does, and stops `loadOptions` asking — keksdose's address
+   * search, with its confirm map up, where it used to pass `minChars={Infinity}`.
+   * `true` shows it even unfocused.
+   *
+   * Even open, the list only APPEARS when it has something to show (rows, or a
+   * status line); `aria-expanded` follows what appears, not this flag.
+   */
+  open?: boolean;
+  /** The field wants the list open or shut — focus, typing, ↓/↑ open it; blur,
+   *  Escape, Tab and taking a row shut it. Called on every change, controlled or not. */
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * `"sm"`: the 28px, 12px-type field of {@link Select}'s `size="sm"`, with the icon,
+   * spinner and list rows scaled to match — for a card or toolbar whose buttons are
+   * small. `"md"` (default) is the form field. Unlabelled only, as on `Select`: a
+   * floating label needs the tall box, so a labelled field ignores `"sm"`.
+   *
+   * A NUMBER is still the native `size` attribute (the width in characters), passed
+   * straight through.
+   */
+  size?: "sm" | "md" | number;
   /** A suggestion was taken (click, or Enter on the highlighted row). */
   onSelect?: (option: ComboOption<V>) => void;
   /**
@@ -61,11 +91,12 @@ export interface AutocompleteProps<V extends string | number = string>
    * and the field is only the search that found it; the text then stays as typed.
    */
   fillOnSelect?: boolean;
-  /** A floating label, as on {@link Combobox}. Names the field (`aria-labelledby`)
-   *  unless an `aria-label` is given. */
+  /** A floating label, as on {@link Combobox} — a real `<label for>` on the input.
+   *  Names the field (`aria-labelledby`) unless an `aria-label` is given. */
   label?: ReactNode;
   /** Leading decoration inside the field (a pin, a magnifier). Decorative: the
-   *  label names the field. */
+   *  label names the field. An `<svg>` child is sized by the field — 16px, or 14px
+   *  at `size="sm"` — so a lucide icon needs no class of its own. */
   icon?: ReactNode;
   /** Required and unanswered — {@link FIELD_INVALID}. */
   invalid?: boolean;
@@ -107,6 +138,9 @@ function AutocompleteInner<V extends string | number = string>(
     status,
     emptyLabel,
     loadErrorLabel,
+    open: openProp,
+    onOpenChange,
+    size,
     className,
     inputClassName,
     id,
@@ -136,7 +170,15 @@ function AutocompleteInner<V extends string | number = string>(
 
   /** The user's intent: the field is focused and the list has not been dismissed.
    *  Whether anything SHOWS is decided below, from what there is to show. */
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  // Controlled when the caller passes a boolean. The own state is kept up to date
+  // either way, so a caller that controls only SOMETIMES (`open={confirming ? false :
+  // undefined}`) hands back a field that is exactly as open as focus says it is.
+  const open = openProp ?? ownOpen;
+  const setOpen = (next: boolean) => {
+    setOwnOpen(next);
+    if (next !== open) onOpenChange?.(next);
+  };
   const [active, setActive] = useState(-1);
   const live = open && !disabled;
   const { results, busy, failed, tooShort } = useOptionSource<V>({
@@ -165,22 +207,29 @@ function AutocompleteInner<V extends string | number = string>(
             ? labels.noResults
             : null;
   const expanded = live && (results.length > 0 || statusLine !== null);
-  const activeId =
-    expanded && active >= 0 && active < results.length ? optionId(active) : undefined;
+  // A disabled row is never the keyboard's — not even when a list that changed under
+  // the highlight put one there.
+  const activeId = expanded && isOptionEnabled(results[active]) ? optionId(active) : undefined;
   useActiveOptionScroll(activeId);
   const { rect, top, maxHeight } = useAnchoredPanel(fieldRef, expanded, { preferredHeight: 256 });
+  const dir = useAnchorDir(fieldRef, expanded);
 
   const close = () => {
     setOpen(false);
     setActive(-1);
   };
   const take = (o: ComboOption<V>) => {
+    if (o.disabled) return;
     if (fillOnSelect) onChange(o.label);
     onSelect?.(o);
     close();
   };
 
   const hasLabel = label !== undefined;
+  // `size="sm"` is for an UNLABELLED field, as on Select: the floating label needs the
+  // tall box. A number is the native attribute.
+  const small = size === "sm" && !hasLabel;
+  const nativeSize = typeof size === "number" ? size : undefined;
   // The caller's name wins; else the floating label, by reference so a non-string
   // label still names the field.
   const labelledBy =
@@ -190,12 +239,21 @@ function AutocompleteInner<V extends string | number = string>(
     // `relative`: the floating label and the live region's `sr-only` both need a
     // local containing block.
     <div className={cn("relative", className)}>
-      {hasLabel && <FieldLabel id={labelId}>{label}</FieldLabel>}
+      {/* A real <label for> (lenkbank), and still `aria-labelledby`'s target, so the
+          name — and the listbox's, which borrows it — is exactly what it was. */}
+      {hasLabel && (
+        <ComboboxFieldLabel id={labelId} htmlFor={fieldId}>
+          {label}
+        </ComboboxFieldLabel>
+      )}
       <div ref={fieldRef} className="relative">
         {icon && (
           <span
             aria-hidden
-            className="pointer-events-none absolute start-2.5 top-1/2 flex -translate-y-1/2 text-[var(--text-muted)] [&>svg]:size-4"
+            className={cn(
+              "pointer-events-none absolute top-1/2 flex -translate-y-1/2 text-[var(--text-muted)]",
+              small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
+            )}
           >
             {icon}
           </span>
@@ -204,6 +262,7 @@ function AutocompleteInner<V extends string | number = string>(
           {...rest}
           ref={ref}
           id={fieldId}
+          size={nativeSize}
           type="text"
           value={value}
           disabled={disabled}
@@ -246,16 +305,16 @@ function AutocompleteInner<V extends string | number = string>(
             }
             onKeyDown?.(e);
             if (e.defaultPrevented) return;
-            const last = results.length - 1;
+            // Disabled rows are passed over; at either end the highlight stays put.
             if (e.key === "ArrowDown") {
               e.preventDefault();
               if (!open) setOpen(true);
-              else setActive((i) => Math.min(i + 1, last));
+              else setActive((i) => stepEnabled(results, i, 1));
             } else if (e.key === "ArrowUp") {
               e.preventDefault();
               if (!open) setOpen(true);
               // From "nothing highlighted", Up goes to the bottom, as the APG has it.
-              else setActive((i) => (i < 0 ? last : Math.max(i - 1, 0)));
+              else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
             } else if (e.key === "Enter") {
               // No row highlighted: the text is the answer, and a form's own submit
               // is left alone.
@@ -270,16 +329,24 @@ function AutocompleteInner<V extends string | number = string>(
           className={cn(
             FIELD_BASE,
             hasLabel && FIELD_FLOATING_PAD,
-            icon ? "ps-8" : undefined,
-            busy && "pe-9",
+            // Select's `SELECT_SM` box: a fixed 28px, so the caller's line height
+            // cannot grow it.
+            small && "h-7 py-0 pe-2 ps-2 text-xs",
+            icon ? (small ? "ps-7" : "ps-8") : undefined,
+            busy && (small ? "pe-7" : "pe-9"),
             field.isInvalid && FIELD_INVALID,
             inputClassName,
           )}
         />
         {busy && live && (
           // Decorative: the live region below already says "Loading…".
-          <span className="pointer-events-none absolute end-2.5 top-1/2 flex -translate-y-1/2">
-            <Spinner label={null} className="h-4 w-4" />
+          <span
+            className={cn(
+              "pointer-events-none absolute top-1/2 flex -translate-y-1/2",
+              small ? "end-2" : "end-2.5",
+            )}
+          >
+            <Spinner label={null} className={small ? "h-3.5 w-3.5" : "h-4 w-4"} />
           </span>
         )}
       </div>
@@ -305,6 +372,9 @@ function AutocompleteInner<V extends string | number = string>(
             // Every press inside the list keeps focus in the field — rows, the status
             // line, the scrollbar — or the input's blur would close the list first.
             role="presentation"
+            // Portalled out of the form's `dir`; the field's is put back. The list is
+            // exactly the field's width, so `left` places it in either direction.
+            dir={dir}
             onMouseDown={(e) => e.preventDefault()}
             className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
             style={{ top, left: rect.left, width: rect.width, maxHeight }}
@@ -340,12 +410,22 @@ function AutocompleteInner<V extends string | number = string>(
                           // field holds no value, so the only row that can be chosen
                           // is the one whose label the text already is.
                           aria-selected={fillOnSelect && o.label === value}
+                          // Listed, announced as unavailable, never taken: `take`
+                          // refuses it and the arrows pass it over.
+                          aria-disabled={o.disabled || undefined}
                           tabIndex={-1}
                           onClick={() => take(o)}
-                          onMouseEnter={() => setActive(i)}
+                          onMouseEnter={() => {
+                            if (!o.disabled) setActive(i);
+                          }}
                           className={cn(
-                            "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
-                            i === active ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
+                            "flex w-full items-center gap-2 px-3 text-start",
+                            small ? "py-1 text-xs" : "py-1.5 text-sm",
+                            o.disabled
+                              ? DISABLED_ROW_CLASS
+                              : i === active
+                                ? "bg-[var(--bg-active)]"
+                                : "hover:bg-[var(--bg-hover)]",
                             o.group != null && "ps-6",
                           )}
                         >
@@ -359,7 +439,12 @@ function AutocompleteInner<V extends string | number = string>(
                               {o.label}
                             </span>
                             {o.sublabel && (
-                              <span className="block truncate text-xs text-[var(--text-placeholder)]">
+                              <span
+                                className={cn(
+                                  "block truncate text-[var(--text-placeholder)]",
+                                  small ? "text-[11px]" : "text-xs",
+                                )}
+                              >
                                 {o.sublabel}
                               </span>
                             )}
@@ -376,7 +461,7 @@ function AutocompleteInner<V extends string | number = string>(
               <div
                 aria-hidden
                 className={cn(
-                  "px-3 py-2 text-sm",
+                  small ? "px-3 py-1.5 text-xs" : "px-3 py-2 text-sm",
                   failed && !hasStatus ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
                   results.length > 0 && "border-t border-[var(--border)] text-xs",
                 )}
@@ -411,7 +496,8 @@ AutocompleteBase.displayName = "Autocomplete";
  *
  * Focus never leaves the `<input>`: `aria-activedescendant` names the highlighted
  * row, `aria-controls` the list, and a polite live region says what the list now
- * holds. Keyboard: ↓/↑ move (↓ opens), Enter takes the highlighted row (with none,
+ * holds. Keyboard: ↓/↑ move (↓ opens) over every row but a `disabled` one, Enter
+ * takes the highlighted row (with none,
  * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
  * with the caret. An Escape that closes an open list is consumed and never reaches the
  * caller; with the list closed it does. For every other key a caller's `onKeyDown`

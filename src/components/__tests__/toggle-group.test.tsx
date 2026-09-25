@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ToggleGroup } from "../toggle-group";
 
@@ -95,5 +96,105 @@ describe("ToggleGroup — allowEmpty (0.6.0)", () => {
     render(<ToggleGroup value="a" onChange={onChange} options={OPTIONS} />);
     fireEvent.click(screen.getByRole("radio", { name: "A" }));
     expect(onChange).toHaveBeenCalledWith("a");
+  });
+});
+
+/**
+ * keksdose, "Gaps found adopting 0.6.0" #7: with `allowEmpty` the value type widened
+ * to `string`, so a `useState<Status | null>` setter did not type-check as `onChange`
+ * unless the caller wrote `<ToggleGroup<Status>>`. This file is type-checked by `tsc`;
+ * the render is only there so the component is exercised at all.
+ */
+describe("ToggleGroup type inference", () => {
+  type Status = "OPEN" | "CLOSED";
+  function Clearable() {
+    const [status, setStatus] = useState<Status | null>(null);
+    return (
+      <ToggleGroup
+        allowEmpty
+        aria-label="Status"
+        value={status}
+        onChange={setStatus}
+        options={(["OPEN", "CLOSED"] as const).map((value) => ({ value, label: value }))}
+      />
+    );
+  }
+  function Required() {
+    const [status, setStatus] = useState<Status>("OPEN");
+    return (
+      <ToggleGroup
+        aria-label="Status"
+        value={status}
+        onChange={setStatus}
+        options={(["OPEN", "CLOSED"] as const).map((value) => ({ value, label: value }))}
+      />
+    );
+  }
+
+  it("infers the value type in both modes without an explicit generic", () => {
+    render(
+      <>
+        <Clearable />
+        <Required />
+      </>,
+    );
+    const open = screen.getAllByRole("button", { name: "OPEN" })[0];
+    fireEvent.click(open);
+    expect(open).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(open);
+    expect(open).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("still refuses a setter that cannot take null in the clearable mode", () => {
+    function Wrong() {
+      const [status, setStatus] = useState<Status>("OPEN");
+      // @ts-expect-error — `allowEmpty` can emit null, which this setter cannot hold.
+      return <ToggleGroup allowEmpty value={status} onChange={setStatus} options={[]} />;
+    }
+    expect(Wrong).toBeTypeOf("function");
+  });
+});
+
+describe("ToggleGroup keyboard (radio mode)", () => {
+  const OPTS = [
+    { value: "a", label: "A" },
+    { value: "b", label: "B" },
+    { value: "c", label: "C" },
+  ];
+
+  it("is one tab stop on the checked radio, and arrows move the choice with wrap-around", () => {
+    const onChange = vi.fn();
+    render(<ToggleGroup options={OPTS} value="b" onChange={onChange} aria-label="Pick" />);
+    const [a, b, c] = screen.getAllByRole("radio");
+    expect([a, b, c].map((r) => r.tabIndex)).toEqual([-1, 0, -1]);
+    b.focus();
+    fireEvent.keyDown(b, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("c");
+    expect(c).toHaveFocus();
+    fireEvent.keyDown(c, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("a");
+    fireEvent.keyDown(a, { key: "End" });
+    expect(onChange).toHaveBeenLastCalledWith("c");
+  });
+
+  it("follows the reading direction in RTL", () => {
+    const onChange = vi.fn();
+    render(
+      <div dir="rtl">
+        <ToggleGroup options={OPTS} value="b" onChange={onChange} aria-label="Pick" />
+      </div>,
+    );
+    const b = screen.getAllByRole("radio")[1];
+    fireEvent.keyDown(b, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("a");
+  });
+
+  it("keeps separate tab stops and no arrow handling in the clearable (toggle-button) mode", () => {
+    const onChange = vi.fn();
+    render(<ToggleGroup allowEmpty options={OPTS} value={null} onChange={onChange} aria-label="Pick" />);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((x) => x.tabIndex)).toEqual([0, 0, 0]);
+    fireEvent.keyDown(buttons[0], { key: "ArrowRight" });
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

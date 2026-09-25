@@ -1,49 +1,68 @@
 import {
+  AppWindow,
   Blocks,
-  FileUp,
-  PanelTopClose,
-  FunctionSquare,
-  Gauge,
-  PenLine,
-  ToggleRight,
-  Compass,
-  Languages,
-  LayoutGrid,
   BookOpen,
+  CalendarClock,
   CalendarDays,
   ChartColumn,
+  ChartLine,
+  ChevronsUpDown,
   CircleDot,
+  ClipboardCheck,
+  Command,
+  Compass,
   Component as ComponentIcon,
+  Contact,
   FileText,
+  FileUp,
+  Footprints,
+  FunctionSquare,
+  Gauge,
+  Grid3x3,
   Inbox,
+  Languages,
   Layers,
   Layout,
+  LayoutGrid,
+  LayoutPanelLeft,
   ListFilter,
   MessageSquarePlus,
   MousePointerClick,
+  MoveHorizontal,
   Palette,
+  PanelTopClose,
   PanelsTopLeft,
+  PenLine,
+  Puzzle,
+  Server,
   Settings as SettingsIcon,
   Sigma,
   SwatchBook,
   Table,
+  Tags,
   TextCursorInput,
+  ToggleRight,
   Wand2,
+  Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
 
 import { Foundations } from "./sections/foundations";
 import { PaletteGenerator } from "./sections/palette-generator";
-import { Primitives } from "./sections/primitives";
+import { ButtonsSurfaces } from "./sections/buttons-surfaces";
+import { ChipsToggles } from "./sections/chips-toggles";
 import { Fields } from "./sections/fields";
+import { FormsRhf } from "./sections/forms-rhf";
 import { Choices } from "./sections/choices";
 import { TimeInputDemo } from "./sections/number-time-demo";
 import { FileInputs } from "./sections/file-inputs";
 import { AutocompleteDemo } from "./sections/autocomplete-demo";
-import { ControlsDemo, FieldAnatomyDemo } from "./sections/field-anatomy-demo";
+import { FieldAnatomyDemo } from "./sections/field-anatomy-demo";
 import { SelectionDemo } from "./sections/selection-demo";
 import { LayoutDemo } from "./sections/layout-demo";
+import { MeasuredGridDemo } from "./sections/measured-grid-demo";
+import { TableTextDemo } from "./sections/table-text-demo";
 import {
   DangerConfirmDemo,
   NumberStepsDemo,
@@ -55,11 +74,15 @@ import { StatsDemo } from "./sections/stats-demo";
 import { SeriesChartDemo } from "./sections/series-chart-demo";
 import { FieldSync } from "./sections/field-sync";
 import { Numbers } from "./sections/numbers";
-import { Dropdowns } from "./sections/dropdowns";
-import { Overlays } from "./sections/overlays";
+import { Comboboxes } from "./sections/comboboxes";
+import { EntityPickers } from "./sections/entity-pickers";
+import { DropdownParts } from "./sections/dropdown-parts";
+import { Dialogs, PopoversMenusTooltips } from "./sections/overlays";
 import { Dates } from "./sections/dates";
 import { MonthPickerDemo } from "./sections/month-picker-demo";
 import { DataTableSection } from "./sections/data-table";
+import { DataTableServerSection } from "./sections/data-table-server";
+import { DataTablePartsSection } from "./sections/data-table-parts";
 import { Charts } from "./sections/charts";
 import { TreemapDemo } from "./sections/treemap-demo";
 import { ChartDrilldowns } from "./sections/chart-drilldowns";
@@ -68,7 +91,9 @@ import { Settings } from "./sections/settings";
 import { FeedbackCompose } from "./sections/feedback-compose";
 import { FeedbackInbox } from "./sections/feedback-inbox";
 import { Wizard } from "./sections/wizard";
-import { TourSearchFiles } from "./sections/tour-search-files";
+import { GuidedTour } from "./sections/tour";
+import { CommandPaletteDemo } from "./sections/command-palette-demo";
+import { SwipeableRowDemo } from "./sections/swipeable-row-demo";
 import { HooksLib } from "./sections/hooks-lib";
 import { Helpers } from "./sections/helpers";
 import { GettingStarted, GroupOverview } from "./sections/overview";
@@ -91,16 +116,26 @@ import { Localisation } from "./sections/localisation";
  * indexes do, and the pages below it answer "how does this one work".
  *
  * THE ORDER IS THE COMMON THREAD. Each group builds on the ones above it: tokens are
- * what everything paints with; inputs and displays are built from primitives in those
- * tokens; overlays float those over the page; the app chrome composes all of it into a
- * frame; the API group is what is left when you take the pixels away. The Getting
+ * what everything paints with; inputs, pickers and displays are built from primitives
+ * in those tokens; overlays float those over the page; the app chrome composes all of it
+ * into a frame; the API group is what is left when you take the pixels away. The Getting
  * started page says this in prose.
+ *
+ * SIZE. A page holds one component family — about a dozen specimens, not thirty — and a
+ * group holds at most about ten pages. The second limit is the phone's: below `md` the
+ * current group's pages are a row of pills above the bottom bar that WRAPS rather than
+ * scrolls, so every page added to a group is another line of pills over the content.
+ * Inputs outgrew it once the dropdown, date and table pages were split, which is why
+ * "Pickers & entry" exists. A split page leaves its old slug in `RETIRED_SLUGS`.
  */
 
 export interface ShowcasePage {
   /** Path segment, unique across the whole app. */
   slug: string;
   title: string;
+  /** The title for the phone's row of page pills, where a group's pages share one
+   *  screen width: "Chips" for "Chips & toggles". Often the title itself. */
+  short: string;
   blurb: string;
   icon: LucideIcon;
   /** The exported components a page demonstrates — the group overview lists them,
@@ -132,8 +167,9 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "overview",
         title: "Overview",
+        short: "Overview",
         blurb:
-          "What @eifi1/ui-kit is, the six layers it is built in, and how to read a page of this showcase.",
+          "What @eifi1/ui-kit is, the seven layers it is built in, and how to read a page of this showcase.",
         icon: Compass,
         Body: GettingStarted,
       },
@@ -150,6 +186,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "tokens",
         title: "Tokens",
+        short: "Tokens",
         blurb:
           "Every value in the active TokenSet, live. Flip the theme or the palette in the top bar and watch this page move — anything that does not move is hardcoded.",
         icon: Palette,
@@ -159,6 +196,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "palette",
         title: "Palette generator",
+        short: "Palette",
         blurb:
           "One brand colour in, both themes out — with every contrast ratio measured rather than asserted, and the compromises named.",
         icon: SwatchBook,
@@ -168,10 +206,11 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "localisation",
         title: "Localisation",
+        short: "Localisation",
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels"],
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDe"],
         Body: Localisation,
       },
     ],
@@ -181,11 +220,12 @@ export const GROUPS: ShowcaseGroup[] = [
     label: "Inputs",
     icon: TextCursorInput,
     blurb:
-      "Every way to capture a value. They share one anatomy — a floating label, the value, a helper line below — so a form reads as one thing.",
+      "Every way to type or set a value: text, choices, numbers, dates, files, and the form adapter around them. They share one anatomy — a floating label, the value, a helper line below — so a form reads as one thing.",
     pages: [
       {
         slug: "fields",
         title: "Text fields",
+        short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
         components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint"],
@@ -197,8 +237,19 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
+        slug: "forms",
+        title: "Forms (react-hook-form)",
+        short: "Forms",
+        blurb:
+          "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
+        icon: ClipboardCheck,
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField"],
+        Body: FormsRhf,
+      },
+      {
         slug: "choices",
         title: "Choices",
+        short: "Choices",
         blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
         components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard"],
@@ -212,6 +263,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "numbers",
         title: "Numbers & money",
+        short: "Numbers",
         blurb:
           "The numeric stack: a calculator-backed number field, a field whose value is a number, the money field and its tones, and the currency picker.",
         icon: Sigma,
@@ -224,55 +276,109 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
-        slug: "dropdowns",
-        title: "Dropdowns & pickers",
+        slug: "calendars",
+        title: "Calendars & date pickers",
+        short: "Calendars",
         blurb:
-          "Comboboxes, multi-select, grouped and sheet pickers, and the dropdown primitives underneath them.",
-        icon: ListFilter,
-        components: [
-          "Combobox",
-          "Autocomplete",
-          "EntityCombobox",
-          "MultiEntityCombobox",
-          "MultiSelect",
-          "GroupedPicker",
-          "PickerSheet",
-        ],
+          "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
+        icon: CalendarDays,
+        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "UiKitProvider"],
         Body: () => (
           <>
-            <Dropdowns />
-            <AutocompleteDemo />
+            <Dates />
+            <WeekStartDemo />
+          </>
+        ),
+      },
+      {
+        slug: "month-time",
+        title: "Month & time",
+        short: "Month & time",
+        blurb:
+          "The coarser and the finer grain: a month picked on its own, in a field or between step buttons, and a time of day.",
+        icon: CalendarClock,
+        components: ["MonthPicker", "TimeInput"],
+        Body: () => (
+          <>
+            <MonthPickerDemo />
+            <TimeInputDemo />
           </>
         ),
       },
       {
         slug: "files",
         title: "Files",
+        short: "Files",
         blurb:
           "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
         icon: FileUp,
         components: ["FileButton", "useFilePicker", "FileDropzone"],
         Body: FileInputs,
       },
+    ],
+  },
+  {
+    slug: "pickers",
+    label: "Pickers & entry",
+    shortLabel: "Pickers",
+    icon: ListFilter,
+    blurb:
+      "Choosing from a list rather than typing, and the heavier kinds of entry: a table of measurements, a field saved as you leave it, a signature, a password.",
+    pages: [
       {
-        slug: "dates",
-        title: "Dates & time",
+        slug: "comboboxes",
+        title: "Comboboxes",
+        short: "Comboboxes",
         blurb:
-          "Picking a point in time at every grain: a day, a range of days, a month, a time of day.",
-        icon: CalendarDays,
-        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "MonthPicker", "TimeInput"],
+          "Free text with suggestions: the combobox whose value is whatever was typed, and the autocomplete that searches as you type.",
+        icon: ChevronsUpDown,
+        components: ["Combobox", "Autocomplete"],
         Body: () => (
           <>
-            <Dates />
-            <MonthPickerDemo />
-            <TimeInputDemo />
-            <WeekStartDemo />
+            <Comboboxes />
+            <AutocompleteDemo />
+          </>
+        ),
+      },
+      {
+        slug: "entity-pickers",
+        title: "Entity pickers",
+        short: "Entities",
+        blurb:
+          "Picking a record by its id: inline and button-shaped pickers, static and loaded options, several at once, and the invalid, error and disabled states they share.",
+        icon: Contact,
+        components: ["InlineEntityCombobox", "EntityCombobox", "MultiEntityCombobox"],
+        Body: EntityPickers,
+      },
+      {
+        slug: "dropdown-parts",
+        title: "Dropdown parts",
+        short: "Parts",
+        blurb:
+          "Multi-select, the grouped picker and the phone sheet — and the hooks and panel every dropdown in the kit is built from.",
+        icon: Puzzle,
+        components: ["MultiSelect", "GroupedPicker", "PickerSheet", "useDropdown", "useDropdownSearch", "DropdownPanel"],
+        Body: DropdownParts,
+      },
+      {
+        slug: "measured-grid",
+        title: "Table entry",
+        short: "Table entry",
+        blurb:
+          "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
+        icon: Grid3x3,
+        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows"],
+        Body: () => (
+          <>
+            <MeasuredGridDemo />
+            <TableTextDemo />
           </>
         ),
       },
       {
         slug: "field-sync",
         title: "Field sync state",
+        short: "Sync state",
         blurb:
           "Sync state for a database-backed field, saved on blur: the frame's colour and an icon at the field's end say edited, saving, saved or failed — hover the error mark for the reason.",
         icon: CircleDot,
@@ -282,6 +388,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "signature-password",
         title: "Signature, password & confirmation",
+        short: "Signature",
         blurb:
           "Capturing a signature — and showing a saved one — telling a user how strong their password is, and confirming a destructive action.",
         icon: PenLine,
@@ -305,46 +412,94 @@ export const GROUPS: ShowcaseGroup[] = [
       "Showing values rather than taking them: the building blocks, the table, and the charts.",
     pages: [
       {
-        slug: "primitives",
-        title: "Primitives",
-        blurb: "Buttons, cards, tabs, banners, avatars — the pieces everything else is built from.",
+        slug: "buttons",
+        title: "Buttons & surfaces",
+        short: "Buttons",
+        blurb:
+          "Buttons, icon buttons, cards, spinners, empty states, avatars and banners — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "IconButton", "Card", "Tabs", "AlertBanner", "Chip", "ChipInput"],
-        Body: () => (
-          <>
-            <Primitives />
-            <ControlsDemo />
-          </>
-        ),
+        components: ["Button", "IconButton", "Card", "Spinner", "EmptyState", "UserAvatar", "AlertBanner"],
+        Body: ButtonsSurfaces,
+      },
+      {
+        slug: "chips-toggles",
+        title: "Chips & toggles",
+        short: "Chips",
+        blurb:
+          "Chips and the chip field, the toggle group, and tabs — the small controls that pick one of a few or hold a short list.",
+        icon: Tags,
+        components: ["Chip", "ChipInput", "ToggleGroup", "Tabs"],
+        Body: ChipsToggles,
       },
       {
         slug: "data-table",
         title: "Data table",
+        short: "Table",
         blurb:
-          "The largest component in the kit: sorting, filtering, selection, pagination, URL sync and its pure helpers.",
+          "The largest component in the kit, whole: sorting, filtering, selection and expansion, controlled from outside, short and unpaginated, filling a pane, and right-to-left.",
         icon: Table,
-        components: ["DataTable", "useTableState", "DataTableFilterPopover"],
+        components: ["DataTable"],
         Body: DataTableSection,
       },
       {
-        slug: "charts",
-        title: "Charts",
+        slug: "data-table-server",
+        title: "Data table: server, URL & phone",
+        short: "Server & phone",
         blurb:
-          "The themed chart shell over Recharts, its colour system, the tile chart (treemap) and the zoomable series chart the apps share.",
+          "The table when it does not own everything: the view kept in the address, the rows paged by a server, and the phone layout of cards, groups and swipe actions.",
+        icon: Server,
+        components: ["DataTable"],
+        Body: DataTableServerSection,
+      },
+      {
+        slug: "data-table-parts",
+        title: "Data table: parts & helpers",
+        short: "Table parts",
+        blurb:
+          "What the table is assembled from, usable on its own: the pager, the filter popover, the label tree, and the pure sort, filter and URL helpers.",
+        icon: Wrench,
+        components: ["Pagination", "FilterPopover", "DEFAULT_DATA_TABLE_LABELS", "resolveDataTableLabels", "nextSorts", "rowMatches"],
+        Body: DataTablePartsSection,
+      },
+      {
+        slug: "chart-shell",
+        title: "Chart shell",
+        short: "Charts",
+        blurb:
+          "The themed chart shell over Recharts — container, tooltip and legend — and the colour system every chart in the kit draws from.",
         icon: ChartColumn,
-        components: ["ChartContainer", "ChartLegend", "Treemap", "SeriesChart", "ToggleLegend"],
+        components: ["ChartContainer", "ChartTooltip", "ChartLegend", "useChart", "paletteFor"],
+        Body: Charts,
+      },
+      {
+        slug: "tile-chart",
+        title: "Tile chart",
+        short: "Tiles",
+        blurb:
+          "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click — and drilling down, through a bar chart as well as through tiles.",
+        icon: LayoutPanelLeft,
+        components: ["Treemap", "TreemapCell", "fitLabel"],
         Body: () => (
           <>
-            <Charts />
             <TreemapDemo />
             <ChartDrilldowns />
-            <SeriesChartDemo />
           </>
         ),
       },
       {
+        slug: "series-chart",
+        title: "Series chart",
+        short: "Series",
+        blurb:
+          "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
+        icon: ChartLine,
+        components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "facingAxes"],
+        Body: SeriesChartDemo,
+      },
+      {
         slug: "stats",
         title: "Stats & sparklines",
+        short: "Stats",
         blurb:
           "The KPI tile every dashboard repeats — value, change, trend — and the tiny line that fits in a table cell.",
         icon: Gauge,
@@ -354,6 +509,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "layout",
         title: "Disclosure & dialog frame",
+        short: "Disclosure",
         blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
         icon: PanelTopClose,
         components: ["Disclosure", "Collapse", "DialogFrame"],
@@ -370,20 +526,53 @@ export const GROUPS: ShowcaseGroup[] = [
     pages: [
       {
         slug: "dialogs",
-        title: "Dialogs & popovers",
+        title: "Dialogs",
+        short: "Dialogs",
         blurb:
-          "Modal, full-bleed dialog, popover, hover menu and tooltip — plus the shared close-transition timing.",
-        icon: MousePointerClick,
-        components: ["Modal", "FullBleedDialog", "Popover", "HoverMenu", "Tooltip"],
-        Body: Overlays,
+          "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
+        icon: AppWindow,
+        components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition"],
+        Body: Dialogs,
       },
       {
-        slug: "tour-search-files",
-        title: "Tour, palette & files",
-        blurb: "The guided tour, the command palette, the dropzone and the swipeable row.",
-        icon: Wand2,
-        components: ["TourProvider", "CommandPalette", "FileDropzone", "SwipeableRow"],
-        Body: TourSearchFiles,
+        slug: "popovers",
+        title: "Popovers, menus & tooltips",
+        short: "Popovers",
+        blurb:
+          "The overlays anchored to a trigger: popover, hover menu and tooltip — flipped and clamped against the window, mirrored right-to-left, and the pure placement behind them.",
+        icon: MousePointerClick,
+        components: ["Popover", "HoverMenu", "Tooltip", "placeTooltip"],
+        Body: PopoversMenusTooltips,
+      },
+      {
+        slug: "tour",
+        title: "Guided tour",
+        short: "Tour",
+        blurb:
+          "A spotlight tour over the real page: steps that point at any element by selector, wait for a click, run code first, and survive a missing target.",
+        icon: Footprints,
+        components: ["TourProvider", "useTour", "useTourOptional", "TourStep"],
+        Body: GuidedTour,
+      },
+      {
+        slug: "command-palette",
+        title: "Command palette",
+        short: "Commands",
+        blurb:
+          "The ⌘K palette: a searchable list of places and actions, opened by the shortcut anywhere on the page, with results that can arrive late.",
+        icon: Command,
+        components: ["CommandPalette", "useCommandKey"],
+        Body: CommandPaletteDemo,
+      },
+      {
+        slug: "swipeable-row",
+        title: "Swipeable row",
+        short: "Swipe",
+        blurb:
+          "A list row that reveals its actions when dragged sideways — by finger or mouse, in stages, right-to-left — with the same actions reachable by keyboard.",
+        icon: MoveHorizontal,
+        components: ["SwipeableRow", "useRowSwipe"],
+        Body: SwipeableRowDemo,
       },
     ],
   },
@@ -398,6 +587,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "shell",
         title: "Shell",
+        short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
         components: ["AppShell", "TopBar", "PageContents", "ThemeToggle", "LanguageMenu"],
@@ -406,6 +596,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "settings",
         title: "Settings fields",
+        short: "Settings",
         blurb: "The account-settings rows: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
         components: ["ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting"],
@@ -414,6 +605,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "wizard",
         title: "Wizard",
+        short: "Wizard",
         blurb: "The multi-step engine, its chrome and its review step.",
         icon: Wand2,
         components: ["useWizard", "StepperNav", "WizardSummary"],
@@ -422,6 +614,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "feedback-compose",
         title: "Feedback — compose",
+        short: "Compose",
         blurb: "The report form and its attachment field.",
         icon: MessageSquarePlus,
         components: ["FeedbackDialog", "FeedbackAttachmentField"],
@@ -430,6 +623,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "feedback-inbox",
         title: "Feedback — inbox",
+        short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
         components: ["FeedbackInbox", "FEEDBACK_STATUSES"],
@@ -447,6 +641,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "hooks-lib",
         title: "Hooks & lib",
+        short: "Hooks",
         blurb: "The non-visual exports: hooks read live, and the pure helpers as input → output.",
         icon: FileText,
         components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn"],
@@ -455,6 +650,7 @@ export const GROUPS: ShowcaseGroup[] = [
       {
         slug: "helpers",
         title: "Helpers & constants",
+        short: "Helpers",
         blurb:
           "The functions and data behind the inputs, shown as input → output: date arithmetic at @eifi1/ui-kit/dates, the calculator's evaluator, the currency table, and the class constants a custom field is composed from.",
         icon: FunctionSquare,
@@ -465,6 +661,22 @@ export const GROUPS: ShowcaseGroup[] = [
   },
 ];
 
+/**
+ * Slugs that no longer name a page, each mapped to the page that took over its FIRST
+ * specimens. Pages were split when they grew past what a reader scrolls through — the
+ * old Primitives page held 29 specimens — and a link written before the split (in a
+ * README, a commit message, an issue, another page of this showcase) has to keep
+ * landing somewhere sensible rather than on "No such page". The router redirects
+ * `/<old>` to `/<new>`, keeping the query and the `#anchor`.
+ */
+export const RETIRED_SLUGS: Record<string, string> = {
+  primitives: "buttons",
+  dropdowns: "comboboxes",
+  dates: "calendars",
+  charts: "chart-shell",
+  "tour-search-files": "tour",
+};
+
 /** A group whose sidebar entry opens an overview page rather than its only page. */
 export const hasOverview = (group: ShowcaseGroup) => group.pages.length > 1;
 
@@ -473,6 +685,7 @@ function overviewPage(group: ShowcaseGroup): ShowcasePage {
   return {
     slug: group.slug,
     title: group.label,
+    short: group.shortLabel ?? group.label,
     blurb: group.blurb,
     icon: LayoutGrid,
     Body: () => <GroupOverview group={group} />,

@@ -31,6 +31,10 @@ export function Choices() {
   const [browser, setBrowser] = useState(false);
   const [compact, setCompact] = useState(false);
   const [rowActive, setRowActive] = useState(true);
+  const [consent, setConsent] = useState(false);
+  const [threshold, setThreshold] = useState(40);
+  const [released, setReleased] = useState(40);
+  const [opacity, setOpacity] = useState(70);
 
   const [speed, setSpeed] = useState(50);
   const [volume, setVolume] = useState(40);
@@ -79,6 +83,10 @@ export function Choices() {
             />
             <Checkbox label="Disabled" disabled />
             <Checkbox label="Disabled, checked" disabled checked readOnly />
+            <Checkbox label="Disabled, mixed" disabled indeterminate readOnly />
+            {/* `invalid` alone: painted and announced, with the message living
+                elsewhere (a summary at the top of a form). */}
+            <Checkbox label="Invalid, no message" invalid />
             <Checkbox aria-label="Bare box, named by aria-label" defaultChecked />
           </div>
         </Stage>
@@ -153,6 +161,24 @@ export function Choices() {
               onCheckedChange={setBrowser}
             />
             <Switch className="py-3" label="Unavailable on this plan" disabled />
+            <Switch
+              className="py-3"
+              label="Included in every plan"
+              description="Disabled and on: the state is still shown, only dimmed."
+              disabled
+              checked
+              readOnly
+            />
+            {/* `required`: the native attribute (a <form> refuses to submit it off,
+                a screen reader says "required") plus the kit's aria-hidden star. */}
+            <Switch
+              className="py-3"
+              label="Share usage data with the bank"
+              description="Required by the account terms."
+              required
+              checked={consent}
+              onCheckedChange={setConsent}
+            />
           </div>
         </Stage>
       </Example>
@@ -215,6 +241,45 @@ export function Choices() {
               onChange={setVolume}
             />
             <Slider label="Disabled" value={60} min={0} max={100} disabled onChange={() => {}} />
+          </div>
+        </Stage>
+      </Example>
+
+      <Example
+        label="Slider — unlabelled, and commit on release"
+        hint="aria-label instead of label; onPointerUp passes through to the <input>"
+      >
+        <Stage>
+          <div className="space-y-2">
+            {/* No `label`: the slider needs an `aria-label`, and `formatValue` is what
+                a screen reader says for the value. */}
+            <Slider
+              aria-label="Layer opacity"
+              value={opacity}
+              min={0}
+              max={100}
+              formatValue={(v) => `${v} percent`}
+              onChange={setOpacity}
+            />
+            <p className="text-xs text-[var(--text-muted)]">opacity: {opacity}%</p>
+          </div>
+          <div className="space-y-2">
+            {/* `onChange` fires on every movement; a request that should run once per
+                drag hangs off `onPointerUp` (and `onKeyUp` for the keyboard). */}
+            <Slider
+              label="Budget alert threshold"
+              readout={`${threshold}%`}
+              value={threshold}
+              min={0}
+              max={100}
+              step={5}
+              onChange={setThreshold}
+              onPointerUp={() => setReleased(threshold)}
+              onKeyUp={() => setReleased(threshold)}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              live: {threshold}% · last released: {released}%
+            </p>
           </div>
         </Stage>
       </Example>

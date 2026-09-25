@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Bell, Copy, Ellipsis, Hash, Pencil, Star, Tag, Trash2 } from "lucide-react";
+import { Bell, Copy, Ellipsis, Pencil, Star, Trash2 } from "lucide-react";
 import {
   AlertBanner,
   Button,
@@ -10,13 +10,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Chip,
-  ChipInput,
   EmptyState,
   IconButton,
   Spinner,
-  Tabs,
-  ToggleGroup,
   UserAvatar,
   alertFrameClass,
   avatarInitials,
@@ -25,10 +21,13 @@ import {
 } from "@eifi1/ui-kit";
 import type { AlertTone, ButtonVariant } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
-import { useT } from "../i18n";
+import { IconButtonControls } from "./field-anatomy-demo";
 
 /**
- * PRIMITIVES — the pieces the rest of the kit is built from.
+ * BUTTONS & SURFACES — the pieces the rest of the kit is built from: the button family,
+ * the card, and the small surfaces that say "loading", "nothing here", "who" and "look".
+ * Chips, toggle groups and tabs — the controls that pick among a few — are on
+ * "Chips & toggles" (chips-toggles.tsx).
  *
  * Each specimen is its own small component rather than one function holding two
  * dozen `useState` calls: the state that makes a specimen operable then sits
@@ -37,17 +36,6 @@ import { useT } from "../i18n";
  */
 
 const VARIANTS: ButtonVariant[] = ["primary", "secondary", "ghost", "danger", "brand"];
-
-/** The count pill a real strip hangs off `TabsProps.badge`. Lives here rather than
- *  in the kit because `badge` is a bare ReactNode — the kit deliberately ships no
- *  opinion about what a badge looks like, so the showcase has to bring its own. */
-function CountPill({ children }: { children: number }) {
-  return (
-    <span className="rounded-full bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
-      {children}
-    </span>
-  );
-}
 
 function ButtonVariants() {
   const [last, setLast] = useState<ButtonVariant | null>(null);
@@ -78,8 +66,9 @@ function ButtonVariants() {
           saturated fill — <code className="font-mono">brand</code> is the solid accent, kept
           for the one strong call to action on a screen. Both draw from the palette tokens, so
           they move when you switch preset in the top bar. <code className="font-mono">danger</code>{" "}
-          is hard-coded red on purpose: destructive is a semantic, not a brand colour, and a
-          palette that made it green would be a bug.
+          paints from the semantic <code className="font-mono">--danger</code> family instead:
+          destructive is a meaning, not a brand colour, so a preset does not move it — but a
+          consumer can re-point that one family on purpose.
         </Note>
       </div>
     </Example>
@@ -136,6 +125,42 @@ function ButtonDisabled() {
   );
 }
 
+function ButtonRef() {
+  // `ref` reaches the <button> itself — React 19 passes it as an ordinary prop.
+  const saveRef = useRef<HTMLButtonElement>(null);
+  const [focused, setFocused] = useState(false);
+  return (
+    <Example label="Button — ref" hint="the <button> element, for focus and measuring from outside">
+      <Row>
+        <Button variant="ghost" onClick={() => saveRef.current?.focus()}>
+          Focus the Save button
+        </Button>
+        <Button
+          ref={saveRef}
+          variant="brand"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        >
+          Save
+        </Button>
+      </Row>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        Save is focused: <span className="font-mono text-[var(--text-secondary)]">{String(focused)}</span>{" "}
+        — the first button calls <code className="font-mono">saveRef.current.focus()</code>.
+      </p>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">ButtonProps</code> declares{" "}
+          <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a
+          function component its <code className="font-mono">ref</code> as a prop, so it rides onto
+          the element with no <code className="font-mono">forwardRef</code>; the declaration only
+          makes TypeScript accept it — before 0.7.0 this line did not compile.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 function ButtonClasses() {
   return (
     <Example
@@ -146,10 +171,10 @@ function ButtonClasses() {
           styling lands on an element that is genuinely not a <button>, and still
           has to be indistinguishable from one. */}
       <Row>
-        <a className={buttonClasses("secondary")} href="#primitives">
+        <a className={buttonClasses("secondary")} href="#/buttons#buttonclasses">
           an &lt;a&gt; wearing buttonClasses(&quot;secondary&quot;)
         </a>
-        <a className={buttonClasses("brand")} href="#foundations">
+        <a className={buttonClasses("brand")} href="#/tokens">
           …and buttonClasses(&quot;brand&quot;)
         </a>
       </Row>
@@ -310,13 +335,15 @@ function FlushCard() {
 function SpinnerDemo() {
   const [busy, setBusy] = useState(false);
   return (
-    <Example label="Spinner" hint="a bare ring — size and thickness come from className">
+    <Example label="Spinner" hint="role=status with spoken text; label={null} makes it decoration">
       <Row>
         <Spinner />
-        <Spinner className="size-4 border-2" />
+        <Spinner className="size-4 border-2" label="Refreshing the balances" />
         <Spinner className="size-8 border-4" />
+        {/* Inside a button whose text already says it: decorative, or the button's
+            name becomes "Loading… Saving…". */}
         <Button variant="primary" onClick={() => setBusy((v) => !v)} disabled={busy}>
-          {busy && <Spinner className="size-4 border-2" />}
+          {busy && <Spinner className="size-4 border-2" label={null} />}
           {busy ? "Saving…" : "Save"}
         </Button>
         {busy && (
@@ -329,10 +356,14 @@ function SpinnerDemo() {
         <Note>
           The busy state here is a plain toggle rather than a timer — nothing on this page
           should depend on a clock, because the render test mounts every section at once. In an
-          app, drive it from your request&apos;s pending flag. Note that{" "}
-          <code className="font-mono">Spinner</code> paints from Tailwind&apos;s slate scale
-          rather than the kit&apos;s tokens, so it is the one thing in this specimen that does{" "}
-          <em>not</em> move when you switch palette.
+          app, drive it from your request&apos;s pending flag. The first three spinners are
+          polite live regions: the first says the provider&apos;s{" "}
+          <code className="font-mono">common.loading</code> (it changes with the page
+          language), the second its own <code className="font-mono">label</code>. The one in
+          the button is <code className="font-mono">label={"{null}"}</code> — hidden from
+          assistive tech, because the button&apos;s text already says &ldquo;Saving…&rdquo;.
+          The ring paints from <code className="font-mono">--border</code> and{" "}
+          <code className="font-mono">--text-primary</code>, so it follows the palette.
         </Note>
       </div>
     </Example>
@@ -368,101 +399,7 @@ function EmptyStateDemo() {
         <Note>
           <code className="font-mono">EmptyState</code> takes strings, not nodes — there is no
           slot for a call-to-action button inside it, so put the action beside it as above.
-          Like <code className="font-mono">Spinner</code>, its dashed frame and text are
-          Tailwind slate rather than tokens, so it stays put across palettes.
-        </Note>
-      </div>
-    </Example>
-  );
-}
-
-type PlainTab = "overview" | "activity" | "settings" | "docs";
-
-function TabStrip() {
-  const [active, setActive] = useState<PlainTab>("overview");
-  return (
-    <Example
-      label="Tabs — controlled, with badges and a routed tab"
-      hint="underline strip; the last tab is a real <a> you can ⌘/middle-click"
-    >
-      <Tabs<PlainTab>
-        label="Workspace sections"
-        active={active}
-        onChange={setActive}
-        tabs={[
-          { id: "overview", label: "Overview" },
-          { id: "activity", label: "Activity", badge: <CountPill>{12}</CountPill> },
-          { id: "settings", label: "Settings", badge: <CountPill>{3}</CountPill> },
-          // `href` makes the tab an anchor so a modifier-click can open it in a new
-          // window; a plain left click is still cancelled and routed through
-          // `onChange`, so the switch stays client-side. Anchored at this page's own
-          // section so the specimen is harmless to actually open.
-          { id: "docs", label: "Docs", href: "#primitives" },
-        ]}
-      />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Panel for <span className="font-mono text-[var(--text-primary)]">{active}</span>.
-      </div>
-      <div className="mt-3">
-        <Note>
-          Arrow keys, Home and End move <em>focus</em> along the strip; activation stays on
-          click, Enter and Space, because a tab can be a real route and arrowing across one
-          must not navigate. <code className="font-mono">label</code> names the{" "}
-          <code className="font-mono">role=&quot;tablist&quot;</code> group — leave it unset
-          where a visible heading directly above already does that job. The kit renders no{" "}
-          <code className="font-mono">role=&quot;tabpanel&quot;</code>: the panel is yours, and
-          so is wiring <code className="font-mono">aria-controls</code> to it.
-        </Note>
-      </div>
-    </Example>
-  );
-}
-
-const REPORT_TABS = [
-  { id: "all", label: "All reports", count: 42 },
-  { id: "open", label: "Open", count: 12 },
-  { id: "triage", label: "Needs triage", count: 5 },
-  { id: "mine", label: "Assigned to me", count: 3 },
-  { id: "waiting", label: "Waiting on reporter", count: 7 },
-  { id: "blocked", label: "Blocked", count: 2 },
-  { id: "planned", label: "Planned", count: 9 },
-  { id: "shipped", label: "Shipped", count: 18 },
-  { id: "declined", label: "Declined", count: 4 },
-  { id: "archive", label: "Archive", count: 96 },
-] as const;
-
-type ReportTab = (typeof REPORT_TABS)[number]["id"];
-
-function WrappedTabStrip() {
-  const [active, setActive] = useState<ReportTab>("open");
-  return (
-    <Example
-      label="Tabs — wrap"
-      hint="ten tabs; narrow below 768px and the strip becomes wrapping chips"
-    >
-      <Tabs<ReportTab>
-        wrap
-        label="Report queues"
-        active={active}
-        onChange={setActive}
-        tabs={REPORT_TABS.map((tab) => ({
-          id: tab.id,
-          label: tab.label,
-          badge: <CountPill>{tab.count}</CountPill>,
-        }))}
-      />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Showing <span className="font-mono text-[var(--text-primary)]">{active}</span>.
-      </div>
-      <div className="mt-3">
-        <Note>
-          <code className="font-mono">wrap</code> cannot be done from a call site with a{" "}
-          <code className="font-mono">className</code>, which is why it is a prop: the active
-          marker has to change shape with the layout. The default marker is an underline riding
-          the container&apos;s bottom rule, and a tab in any row but the last has no rule to
-          wear — so a wrapped strip marks the active tab with a filled{" "}
-          <code className="font-mono">--brand</code> chip instead. From{" "}
-          <code className="font-mono">md</code> up the two strips are pixel-identical.
+          Its dashed frame and text are tokens, so it follows the palette.
         </Note>
       </div>
     </Example>
@@ -478,7 +415,7 @@ const PEOPLE: Array<{ name?: string | null; email?: string | null }> = [
 
 function Avatars() {
   return (
-    <Example label="UserAvatar" hint="aria-hidden — it is decoration, never the accessible name">
+    <Example label="UserAvatar" hint="three sizes; aria-hidden by default, opt out when it stands alone">
       <Row className="items-end">
         <UserAvatar size="sm" name="Marcel Eifert" />
         <UserAvatar size="md" name="Marcel Eifert" />
@@ -490,13 +427,27 @@ function Avatars() {
         <IconButton aria-label="Account menu — Marcel Eifert" title="Account menu" className="p-0">
           <UserAvatar size="sm" name="Marcel Eifert" />
         </IconButton>
+        {/* Standing ALONE (an assignee column): nothing beside it says who it is, so
+            the default aria-hidden is switched off and the avatar names itself. */}
+        <UserAvatar
+          size="sm"
+          name="Ada Lovelace"
+          aria-hidden={false}
+          role="img"
+          aria-label="Assigned to Ada Lovelace"
+          title="Assigned to Ada Lovelace"
+        />
       </Row>
       <div className="mt-3">
         <Note>
           The chip is <code className="font-mono">aria-hidden</code> on purpose — two letters
-          read aloud are noise — so whatever wraps it has to carry the name, as the last
-          specimen does. Its fill is Tailwind slate rather than a token, so it does not follow
-          the palette.
+          read aloud are noise — so whatever wraps it has to carry the name, as the account-menu
+          button does. That is a default, not an invariant: the last avatar stands alone, so it
+          passes <code className="font-mono">aria-hidden={"{false}"}</code> with its own{" "}
+          <code className="font-mono">aria-label</code>, which the spread lets win. Sizes are{" "}
+          <code className="font-mono">sm</code> 28px, <code className="font-mono">md</code> 32px
+          (the default), <code className="font-mono">lg</code> 48px; the fill is the inverse
+          token pair.
         </Note>
       </div>
     </Example>
@@ -545,9 +496,10 @@ function Alerts() {
           <code className="font-mono">AlertBanner</code>&apos;s prop is{" "}
           <code className="font-mono">Exclude&lt;AlertTone, &quot;neutral&quot;&gt;</code> — the
           neutral frame exists for callers that own their own box, not for a banner with a
-          warning triangle in it. Its rose/amber palette is deliberately not tokenised:
-          &quot;this is dangerous&quot; is a semantic, and a preset that recoloured it would be
-          lying.
+          warning triangle in it. Its colours come from the semantic{" "}
+          <code className="font-mono">--danger-*</code> / <code className="font-mono">--warning-*</code>{" "}
+          families, which a palette preset does not move: &quot;this is dangerous&quot; is a
+          meaning, not a brand colour.
         </Note>
       </div>
     </Example>
@@ -598,254 +550,24 @@ function ToneFrames() {
   );
 }
 
-type ViewMode = "list" | "board" | "calendar";
-
-function ToggleGroups() {
-  const [view, setView] = useState<ViewMode>("board");
-  const [locked, setLocked] = useState(false);
-  return (
-    <Example label="ToggleGroup — controlled" hint="role=radiogroup; value and onChange are required">
-      <div className="max-w-sm">
-        <ToggleGroup<ViewMode>
-          ariaLabel="View mode"
-          value={view}
-          onChange={setView}
-          disabled={locked}
-          // `optionClassName` tunes every segment; the per-option `className` is
-          // merged after it, so "Calendar" wins the text-transform fight below.
-          // That ordering is the whole contract between the two props.
-          optionClassName="uppercase tracking-wide"
-          options={[
-            { value: "list", label: "List" },
-            { value: "board", label: "Board" },
-            { value: "calendar", label: "Calendar", className: "normal-case tracking-normal" },
-          ]}
-        />
-      </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        showing: <span className="font-mono text-[var(--text-secondary)]">{view}</span>
-      </p>
-      <div className="mt-3">
-        <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
-          {locked ? "Unlock the group" : "Lock the group"}
-        </Button>
-      </div>
-      <div className="mt-3">
-        <Note>
-          <code className="font-mono">disabled</code> is on the whole group, never per option —
-          a segmented control with some live segments and some dead ones is a menu with holes
-          in it. Lock it and the pressed segment <em>keeps its fill</em> while everything fades:
-          a reader who can no longer see which option is chosen has been told less than before
-          you disabled it. The 2px moat between segments is deliberate too — flush segments made
-          a hovered neighbour and the selected chip read as one smeared shape.
-        </Note>
-      </div>
-    </Example>
-  );
-}
-
-type Settlement = "paid" | "pending";
-
-function ToggleGroupUnset() {
-  // The empty string is a real member of the value union, not a cast: the group's
-  // "nothing chosen yet" shape needs a value that matches no option, and widening
-  // the union is how you get one without lying to the type system.
-  const [status, setStatus] = useState<Settlement | "">("");
-  return (
-    <Example
-      label="ToggleGroup — nothing selected yet"
-      hint="a value matching no option renders the group with nothing pressed"
-    >
-      <div className="max-w-xs">
-        <ToggleGroup<Settlement | "">
-          ariaLabel="Settlement status"
-          value={status}
-          onChange={setStatus}
-          options={[
-            { value: "paid", label: "Paid" },
-            { value: "pending", label: "Pending" },
-          ]}
-        />
-      </div>
-      <div className="mt-3">
-        <Button variant="ghost" onClick={() => setStatus("")} disabled={status === ""}>
-          Clear the selection
-        </Button>
-      </div>
-      <div className="mt-3">
-        <Note>
-          <code className="font-mono">value</code> is required, so the unset state is expressed
-          by widening the union rather than by omitting the prop — a row whose status does not
-          exist yet is a real case, and this is the shape it takes. Neither{" "}
-          <code className="font-mono">ToggleGroupProps</code> nor its option type is exported,
-          so an app that wants to hold its options in a typed constant has to re-declare the
-          shape.
-        </Note>
-      </div>
-    </Example>
-  );
-}
-
-export function Primitives() {
+export function ButtonsSurfaces() {
   return (
     <>
       <ButtonVariants />
       <ButtonStretch />
       <ButtonDisabled />
+      <ButtonRef />
       <ButtonClasses />
       <IconButtons />
+      <IconButtonControls />
       <PlanCard />
       <FlushCard />
       <SpinnerDemo />
       <EmptyStateDemo />
-      <TabStrip />
-      <WrappedTabStrip />
       <Avatars />
       <AvatarInitials />
       <Alerts />
       <ToneFrames />
-      <ToggleGroups />
-      <ToggleGroupUnset />
-      <Chips />
-      <ChipInputDemo />
     </>
-  );
-}
-
-/* ── Chip ─────────────────────────────────────────────────────────────────── */
-
-const CHIP_TONES = ["neutral", "brand", "danger", "warning", "success", "info"] as const;
-
-function Chips() {
-  const [pressed, setPressed] = useState<string[]>(["Unpaid"]);
-  const [removable, setRemovable] = useState(["invoices", "2026", "draft"]);
-  const toggle = (v: string) =>
-    setPressed((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
-
-  return (
-    <>
-      <Example label="Chip — the three shapes" hint="inert, a link, or a toggle — decided by which prop you pass">
-        <Row>
-          <Chip icon={Tag}>inert</Chip>
-          <Chip href="#chip-the-three-shapes" icon={Hash}>
-            a link
-          </Chip>
-          {["Unpaid", "Overdue"].map((v) => (
-            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} tone="brand">
-              {v}
-            </Chip>
-          ))}
-        </Row>
-        <Note>
-          One component, not three. A chip that is inert, a link and a toggle are the same
-          object wearing different props — the shape <code className="font-mono">Button</code>{" "}
-          already uses when it is given an <code className="font-mono">href</code>. Keeping
-          them together is what stops an app growing three near-identical pills that drift.
-          A chip is deliberately <em>not</em> a Button: a row of buttons reads as
-          &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.
-        </Note>
-      </Example>
-
-      <Example label="Chip — tones and sizes" hint="every tone is a token pair, so a palette switch moves them">
-        <div className="space-y-2">
-          <Row>
-            {CHIP_TONES.map((t) => (
-              <Chip key={t} tone={t}>
-                {t}
-              </Chip>
-            ))}
-          </Row>
-          <Row>
-            {CHIP_TONES.map((t) => (
-              <Chip key={t} tone={t} selected>
-                {t} selected
-              </Chip>
-            ))}
-          </Row>
-          <Row>
-            <Chip size="sm">small</Chip>
-            <Chip size="md">medium</Chip>
-            <Chip size="sm" tone="brand" selected icon={Star}>
-              small, selected, with an icon
-            </Chip>
-          </Row>
-        </div>
-      </Example>
-
-      <Example label="Chip — removable" hint="the dismiss button is named after the value it removes">
-        <Row>
-          {removable.map((v) => (
-            <Chip key={v} tone="neutral" onRemove={() => setRemovable((r) => r.filter((x) => x !== v))}>
-              {v}
-            </Chip>
-          ))}
-          {removable.length === 0 && (
-            <Button variant="ghost" onClick={() => setRemovable(["invoices", "2026", "draft"])}>
-              Put them back
-            </Button>
-          )}
-        </Row>
-        <Note>
-          Each dismiss button is labelled <em>Remove: invoices</em>, not
-          &ldquo;Remove&rdquo;. A row of eight otherwise gives a screen-reader user eight
-          buttons with the same name and no way to tell which one they are on. When a chip
-          is also a link, the × is a SIBLING rather than a nested button — a button inside
-          an anchor is invalid HTML and browsers disagree about what it does.
-        </Note>
-      </Example>
-    </>
-  );
-}
-
-/* ── ChipInput ────────────────────────────────────────────────────────────── */
-
-function ChipInputDemo() {
-  // The translated label bundle, threaded into the component exactly as a consuming app
-  // has to do it. The page frame being French while the components stayed English was the
-  // gap this closes: the kit ships no catalogue, so the app owns every string it shows.
-  const t = useT();
-  const [tags, setTags] = useState(["invoices", "2026"]);
-  const [emails, setEmails] = useState<string[]>([]);
-  const [capped, setCapped] = useState(["one", "two"]);
-
-  return (
-    <Example label="ChipInput" hint="a field whose value is a list — the keyboard model is the component">
-      <div className="grid gap-4 md:grid-cols-2">
-        <ChipInput
-          label="Tags"
-          value={tags}
-          onChange={setTags}
-          placeholder="Type and press Enter"
-          tone="brand"
-          labels={t.kit.chipInput}
-        />
-        <ChipInput
-          label="Recipients"
-          value={emails}
-          onChange={setEmails}
-          placeholder="Paste a comma-separated list"
-          validate={(v) => (v.includes("@") ? null : "That is not an email address")}
-          labels={t.kit.chipInput}
-        />
-        <ChipInput
-          label="At most three"
-          value={capped}
-          onChange={setCapped}
-          max={3}
-          labels={t.kit.chipInput}
-        />
-        <ChipInput label="Disabled" value={["locked"]} onChange={() => {}} disabled />
-      </div>
-      <Note>
-        <strong>Backspace on an empty field moves to the last chip; it does not delete it.</strong>{" "}
-        Deleting straight away is the commoner choice and it is a trap: a destructive action
-        on a key people hit by reflex, with no feedback, on a value that may have taken a
-        while to type. Moving focus first makes the second Backspace a deliberate one — and
-        it is what lets a keyboard user reach a chip at all. Arrows move between chips,
-        Escape clears the draft without touching the committed values, blur commits (losing
-        what you typed because you clicked away is the usual complaint about this pattern),
-        and a pasted list splits on the separators as ONE change rather than one per item.
-      </Note>
-    </Example>
   );
 }

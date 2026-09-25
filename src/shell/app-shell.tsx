@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, matchPath, useLocation } from "react-router";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
@@ -92,7 +93,22 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    *  bottom bar — the phone's counterpart of the sidebar's second level. Default true;
    *  `false` keeps the single bar, where a group entry only links to its own `to`. */
   mobileSubNav?: boolean;
+  /**
+   * Lay the shell out inside its PARENT'S box instead of the viewport: `h-full` rather
+   * than `h-dvh`, its own scroll container at every width, a bottom bar pinned to the
+   * shell rather than the window, `--app-nav-h` published on the shell alone, and no
+   * persisted collapse state unless `collapseStorageKey` is passed. For an app preview,
+   * a device frame, a docs example.
+   *
+   * Implied for a shell rendered inside another AppShell, which is the case this
+   * exists for: the inner one used to publish its own nav height on `<html>`, fight
+   * the outer one over it, and remove it on unmount from under the outer app.
+   */
+  embedded?: boolean;
 }
+
+/** True below an AppShell — how a nested shell knows it is one. */
+const AppShellNesting = createContext(false);
 
 /**
  * The bottom nav's own height, published as `--app-nav-h` so anything that has to sit
@@ -114,7 +130,11 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
  * as a zero box — so a consumer can write `bottom-[var(--app-nav-h,0px)]` once and get
  * the right answer at both widths without a breakpoint of its own.
  */
-function useNavHeightVar(ref: React.RefObject<HTMLElement | null>): void {
+function useNavHeightVar(
+  ref: React.RefObject<HTMLElement | null>,
+  shellRef: React.RefObject<HTMLElement | null>,
+  embedded: boolean,
+): void {
   // Re-run when the breakpoint flips. A ResizeObserver SKIPS an element that is not
   // being rendered, so the nav going `display:none` above `md` fires no callback and
   // would leave the last phone height published — a desktop footer would then sit 56px
@@ -123,7 +143,15 @@ function useNavHeightVar(ref: React.RefObject<HTMLElement | null>): void {
   const isMdUp = useMediaQuery("(min-width: 768px)", false);
   useEffect(() => {
     const node = ref.current;
-    const root = document.documentElement;
+    const shell = shellRef.current;
+    // Always on the shell's own root, so everything inside it — a nested shell's
+    // content included — reads the nearest bar's height. On <html> as well only for
+    // the OUTERMOST shell, for what it portals to <body> (a sheet docking on the bar).
+    // The DOM check backs up the context for a shell mounted in a separate React root.
+    const global = !embedded && !shell?.parentElement?.closest("[data-app-shell]");
+    const targets = [shell, global ? document.documentElement : null].filter(
+      (el): el is HTMLElement => el !== null,
+    );
     // `getBoundingClientRect().height`, rounded DOWN — not `offsetHeight`, and not
     // ceil. Measured on the running app at 406x816: the bar is **55.5px** tall, and
     // both `offsetHeight` and `Math.ceil` answer 56. That is why live #314 round four
@@ -141,11 +169,10 @@ function useNavHeightVar(ref: React.RefObject<HTMLElement | null>): void {
     // it (`z-30` against `z-10`): invisible. Too LARGE opens the seam. So floor, and
     // consumers subtract a further pixel (see `invoice-line-totals.tsx`) for the case
     // where the height lands on a whole pixel and floor leaves no overlap at all.
-    const publish = () =>
-      root.style.setProperty(
-        "--app-nav-h",
-        `${node ? Math.floor(node.getBoundingClientRect().height) : 0}px`,
-      );
+    const publish = () => {
+      const value = `${node ? Math.floor(node.getBoundingClientRect().height) : 0}px`;
+      for (const el of targets) el.style.setProperty("--app-nav-h", value);
+    };
     publish();
     // The observer is the refinement, not the mechanism: `publish()` above is already
     // right for a static nav, and jsdom has no ResizeObserver unless a test stubs one.
@@ -156,9 +183,9 @@ function useNavHeightVar(ref: React.RefObject<HTMLElement | null>): void {
     if (ro && node) ro.observe(node);
     return () => {
       ro?.disconnect();
-      root.style.removeProperty("--app-nav-h");
+      for (const el of targets) el.style.removeProperty("--app-nav-h");
     };
-  }, [ref, isMdUp]);
+  }, [ref, shellRef, embedded, isMdUp]);
 }
 
 /**
@@ -174,15 +201,21 @@ export function AppShell({
   children,
   footer,
   sidebarFooter,
-  collapseStorageKey = "appLayout.sidebarCollapsed",
+  collapseStorageKey: collapseStorageKeyProp,
   collapseLabel,
   expandLabel,
   subNav = "flyout",
   mobileSubNav = true,
   toggleGroupLabel,
+  embedded: embeddedProp,
   className,
   ...rest
 }: AppShellProps) {
+  const embedded = useContext(AppShellNesting) || !!embeddedProp;
+  // An embedded shell sharing the default key would overwrite the outer app's sidebar
+  // preference with its own — so it persists only when given a key of its own.
+  const collapseStorageKey =
+    collapseStorageKeyProp ?? (embedded ? null : "appLayout.sidebarCollapsed");
   // The three props are per-shell overrides of the provider's `appShell`; one left
   // undefined falls through to the provider rather than to English.
   const labels = useKitLabels("appShell", DEFAULT_APP_SHELL_LABELS, {
@@ -195,16 +228,19 @@ export function AppShell({
   // `localStorage` THROWS where site data is blocked (Safari private browsing, a
   // partitioned webview). Unguarded, that was not a lost sidebar preference: nothing
   // in the application mounted at all.
-  const [collapsed, setCollapsed] = useState(() => readStored(collapseStorageKey) === "1");
+  const [collapsed, setCollapsed] = useState(
+    () => collapseStorageKey !== null && readStored(collapseStorageKey) === "1",
+  );
   // The inline sidebar is an ACCORDION: one group open at a time, keyed by its `to`.
   // Held here rather than per group so opening one can close the other — two lists
   // open at once pushed every entry below them off a laptop screen.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   // Publishes `--app-nav-h` for anything that has to sit on the bottom bar.
   const navRef = useRef<HTMLDivElement>(null);
-  useNavHeightVar(navRef);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useNavHeightVar(navRef, rootRef, embedded);
   useEffect(() => {
-    writeStored(collapseStorageKey, collapsed ? "1" : "0");
+    if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
 
   return (
@@ -212,126 +248,152 @@ export function AppShell({
     // wrappers below — those are the kit's anchors for its own guided tour (#313/#322),
     // and a second element answering to the same selector is a tour that highlights the
     // wrong thing or nothing at all.
-    <div {...rest} className={cn("relative flex flex-col min-h-screen md:h-dvh md:overflow-hidden", className)}>
-      {topBar}
-      <div className="flex flex-1 min-h-0">
-        <aside
-          className={`hidden md:flex md:flex-col md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)] border-r border-[var(--border)] bg-[var(--bg-surface)] transition-[width] duration-200 ease-out overflow-hidden ${
-            collapsed ? "md:w-14" : "md:w-60"
-          }`}
-        >
-          {/* The `<nav>` is flex-1 so it fills the sidebar's height (with empty
-              space below the items); the data-tour marker goes on the INNER,
-              fit-content wrapper so the guided-tour spotlight hugs the actual nav
-              items instead of the whole tall column (feedback #322). The marker
-              also tags the mobile bottom bar below; the tour targets
-              `[data-tour="nav"]` and resolves to whichever is visible (#313). */}
-          <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
-            <div data-tour="nav" className="space-y-1">
-              {nav.map((item) => (
-                <SidebarNavItem
-                  key={item.to}
-                  item={item}
-                  collapsed={collapsed}
-                  inline={subNav === "inline"}
-                  toggleGroupLabel={labels.toggleGroup}
-                  openGroup={openGroup}
-                  setOpenGroup={setOpenGroup}
-                />
-              ))}
-            </div>
-          </nav>
-          {sidebarFooter?.(collapsed)}
-          <div className="border-t border-[var(--border)] p-2">
-            {collapsed ? (
-              <Tooltip label={labels.expand} side="right" portal className="block">
+    <AppShellNesting.Provider value={true}>
+      <div
+        {...rest}
+        ref={rootRef}
+        data-app-shell=""
+        className={cn(
+          "relative flex flex-col",
+          embedded
+            ? // `contain: layout` makes this box the containing block for the `fixed`
+              // bottom bar below, so it pins to the shell rather than to the window.
+              "h-full min-h-0 overflow-hidden [contain:layout]"
+            : "min-h-screen md:h-dvh md:overflow-hidden",
+          className,
+        )}
+      >
+        {topBar}
+        <div className="flex flex-1 min-h-0">
+          <aside
+            className={cn(
+              // `border-e`: the sidebar sits at the START, which is the right in RTL.
+              "hidden md:flex md:flex-col border-e border-[var(--border)] bg-[var(--bg-surface)] transition-[width] duration-200 ease-out overflow-hidden",
+              // Embedded, the row it sits in is already the shell's height; the sticky
+              // offsets below are measured against the window's top bar.
+              embedded ? "md:self-stretch" : "md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)]",
+              collapsed ? "md:w-14" : "md:w-60",
+            )}
+          >
+            {/* The `<nav>` is flex-1 so it fills the sidebar's height (with empty
+                space below the items); the data-tour marker goes on the INNER,
+                fit-content wrapper so the guided-tour spotlight hugs the actual nav
+                items instead of the whole tall column (feedback #322). The marker
+                also tags the mobile bottom bar below; the tour targets
+                `[data-tour="nav"]` and resolves to whichever is visible (#313). */}
+            <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
+              <div data-tour="nav" className="space-y-1">
+                {nav.map((item) => (
+                  <SidebarNavItem
+                    key={item.to}
+                    item={item}
+                    collapsed={collapsed}
+                    inline={subNav === "inline"}
+                    toggleGroupLabel={labels.toggleGroup}
+                    openGroup={openGroup}
+                    setOpenGroup={setOpenGroup}
+                  />
+                ))}
+              </div>
+            </nav>
+            {sidebarFooter?.(collapsed)}
+            <div className="border-t border-[var(--border)] p-2">
+              {collapsed ? (
+                <Tooltip label={labels.expand} side="right" portal className="block">
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(false)}
+                    aria-label={labels.expand}
+                    className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                  >
+                    <PanelLeftOpen className="size-4 shrink-0 rtl:-scale-x-100" />
+                  </button>
+                </Tooltip>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => setCollapsed(false)}
-                  aria-label={labels.expand}
-                  className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                  onClick={() => setCollapsed(true)}
+                  aria-label={labels.collapse}
+                  className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
                 >
-                  <PanelLeftOpen className="size-4 shrink-0" />
+                  <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
+                  <span className="truncate">{labels.collapse}</span>
                 </button>
-              </Tooltip>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setCollapsed(true)}
-                aria-label={labels.collapse}
-                className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
-              >
-                <PanelLeftClose className="size-4 shrink-0" />
-                <span className="truncate">{labels.collapse}</span>
-              </button>
-            )}
+              )}
+            </div>
+          </aside>
+
+          {/* Content column beside the sidebar. main grows to fill so the footer
+              sits at the bottom — at the viewport edge when content is short,
+              beside the sidebar rather than under it. */}
+          <div className="flex flex-1 flex-col min-w-0 md:min-h-0">
+            {/* `scrollbar-gutter: stable` reserves the scrollbar's track whether or
+                not it is currently needed. Without it this element — the app's only
+                scroll container from md up — narrows its own client box by the
+                scrollbar width the moment a page's content outgrows it, and widens
+                it again when the next page fits. Every centred `mx-auto` container
+                inside then jumps sideways by half a scrollbar, and any fluid-width
+                content changes width outright. Keksdose feedback #403 caught it as
+                "slight width increase/decrease" when switching to the notifications
+                settings section and back: that section is the only one tall enough
+                to scroll. Platform-dependent, which is why it is easy to miss —
+                overlay scrollbars (macOS, most Linux builds) take no layout space,
+                classic ones (Windows) take ~15px.
+
+                `both-edges`, not the bare `stable`: a one-sided reservation keeps the
+                width stable but moves the middle. On a page short enough not to
+                scroll, nothing is painted into the reserved track, so every centred
+                `mx-auto` container sits half a scrollbar left of the optical centre
+                and every full-bleed child stops ~15px short on the right. Keksdose
+                feedback #491 (/settings#data) and #498 (/budgets) both reported it as
+                "the left boundary looks smaller / cut off compared to the right" on
+                the one element per page whose frame is a saturated colour — the rose
+                destructive-action cards. Reserving the track on both edges keeps the
+                content centred whether or not the scrollbar is showing. */}
+            {/* `relative` makes <main> the containing block for everything absolutely
+                positioned inside it. Tailwind's `sr-only` is `position:absolute`; with no
+                positioned ancestor it resolves against the INITIAL containing block, is
+                laid out at its offset from the top of the DOCUMENT, and grows
+                `<html>`'s scroll height past the viewport — a second scrollbar beside this
+                one that scrolls into empty space. Guarding it per component (see
+                sr-only-containment.test) could never be complete: any page's own
+                `sr-only` span re-opened it. Here it is closed for every child at once. */}
+            <main
+              className={cn(
+                "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+1.5rem)] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
+                // Embedded there is no document scroll to lean on below `md` either.
+                embedded && "min-h-0 overflow-y-auto",
+              )}
+            >
+              {children}
+            </main>
+            {footer}
           </div>
-        </aside>
+        </div>
 
-        {/* Content column beside the sidebar. main grows to fill so the footer
-            sits at the bottom — at the viewport edge when content is short,
-            beside the sidebar rather than under it. */}
-        <div className="flex flex-1 flex-col min-w-0 md:min-h-0">
-          {/* `scrollbar-gutter: stable` reserves the scrollbar's track whether or
-              not it is currently needed. Without it this element — the app's only
-              scroll container from md up — narrows its own client box by the
-              scrollbar width the moment a page's content outgrows it, and widens
-              it again when the next page fits. Every centred `mx-auto` container
-              inside then jumps sideways by half a scrollbar, and any fluid-width
-              content changes width outright. Keksdose feedback #403 caught it as
-              "slight width increase/decrease" when switching to the notifications
-              settings section and back: that section is the only one tall enough
-              to scroll. Platform-dependent, which is why it is easy to miss —
-              overlay scrollbars (macOS, most Linux builds) take no layout space,
-              classic ones (Windows) take ~15px.
-
-              `both-edges`, not the bare `stable`: a one-sided reservation keeps the
-              width stable but moves the middle. On a page short enough not to
-              scroll, nothing is painted into the reserved track, so every centred
-              `mx-auto` container sits half a scrollbar left of the optical centre
-              and every full-bleed child stops ~15px short on the right. Keksdose
-              feedback #491 (/settings#data) and #498 (/budgets) both reported it as
-              "the left boundary looks smaller / cut off compared to the right" on
-              the one element per page whose frame is a saturated colour — the rose
-              destructive-action cards. Reserving the track on both edges keeps the
-              content centred whether or not the scrollbar is showing. */}
-          {/* `relative` makes <main> the containing block for everything absolutely
-              positioned inside it. Tailwind's `sr-only` is `position:absolute`; with no
-              positioned ancestor it resolves against the INITIAL containing block, is
-              laid out at its offset from the top of the DOCUMENT, and grows
-              `<html>`'s scroll height past the viewport — a second scrollbar beside this
-              one that scrolls into empty space. Guarding it per component (see
-              sr-only-containment.test) could never be complete: any page's own
-              `sr-only` span re-opened it. Here it is closed for every child at once. */}
-          <main className="relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+1.5rem)] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]">
-            {children}
-          </main>
-          {footer}
+        {/* The phone navigation: the group bar, and above it — when the current page
+            belongs to a group with pages of its own — the row of those pages. The pair
+            is the phone's version of the sidebar's two levels; without the upper row a
+            group's `items` were simply unreachable below `md`. ONE measured box, so
+            `--app-nav-h` covers both rows and whatever docks on the bar sits on the
+            whole of it. */}
+        <div
+          ref={navRef}
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)]"
+        >
+          {mobileSubNav && <MobileSubNav nav={nav} />}
+          <nav
+            data-tour="nav"
+            className="grid"
+            style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+          >
+            {nav.map((item) => (
+              <MobileNavItem key={item.to} item={item} />
+            ))}
+          </nav>
         </div>
       </div>
-
-      {/* The phone navigation: the group bar, and above it — when the current page
-          belongs to a group with pages of its own — the row of those pages. The pair
-          is the phone's version of the sidebar's two levels; without the upper row a
-          group's `items` were simply unreachable below `md`. ONE measured box, so
-          `--app-nav-h` covers both rows and whatever docks on the bar sits on the
-          whole of it. */}
-      <div
-        ref={navRef}
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)]"
-      >
-        {mobileSubNav && <MobileSubNav nav={nav} />}
-        <nav
-          data-tour="nav"
-          className="grid"
-          style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
-        >
-          {nav.map((item) => (
-            <MobileNavItem key={item.to} item={item} />
-          ))}
-        </nav>
-      </div>
-    </div>
+    </AppShellNesting.Provider>
   );
 }
 
@@ -501,7 +563,7 @@ function SidebarNavItem({
           & sl…" hides the one word that tells two pages apart, and there is height
           to spare. (The phone bar keeps `truncate` — its cells must stay one row.) */}
       {!collapsed && <span className="min-w-0 flex-1 break-words leading-snug">{item.label}</span>}
-      {!collapsed && hasSub && <ChevronRight className="size-3.5 shrink-0 opacity-60" />}
+      {!collapsed && hasSub && <ChevronRight className="size-3.5 shrink-0 opacity-60 rtl:-scale-x-100" />}
     </NavLink>
   );
 
@@ -672,11 +734,18 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
   const wrapperRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
+  // The flyout is portalled out of the subtree whose `dir` it inherited; read on open.
+  const [dir, setDir] = useState<Direction>("ltr");
 
-  // Anchor the flyout to the item's right edge; the hook re-measures on
+  // Anchor the flyout to the item's END edge — its right, or its left in RTL, where
+  // the sidebar sits on the right of the window. The hook re-measures on
   // scroll/resize (the nav list can scroll).
   const rect = useAnchoredRect(wrapperRef, open);
-  const pos = rect ? { top: rect.top, left: rect.right } : null;
+  const pos = rect
+    ? dir === "rtl"
+      ? { top: rect.top, right: window.innerWidth - rect.left }
+      : { top: rect.top, left: rect.right }
+    : null;
 
   const cancelClose = useCallback(() => {
     if (closeTimer.current) {
@@ -694,6 +763,7 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
     cancelClose();
     if (activeFlyoutClose && activeFlyoutClose !== closeNow) activeFlyoutClose();
     activeFlyoutClose = closeNow;
+    setDir(dirOf(wrapperRef.current));
     setOpen(true);
   }, [cancelClose, closeNow]);
   const scheduleClose = useCallback(() => {
@@ -729,8 +799,9 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
         pos &&
         createPortal(
           <div
-            style={{ position: "fixed", top: pos.top, left: pos.left }}
-            className="z-40 pl-1"
+            dir={dir}
+            style={{ position: "fixed", ...pos }}
+            className="z-40 ps-1"
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
           >

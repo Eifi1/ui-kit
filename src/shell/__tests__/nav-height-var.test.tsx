@@ -67,3 +67,71 @@ describe("the bottom bar publishes its own height", () => {
     expect(navHeight()).toBe("");
   });
 });
+
+describe("a shell inside a shell (0.7.0)", () => {
+  function renderNested() {
+    return render(
+      <MemoryRouter>
+        <AppShell nav={NAV} topBar={<span>outer</span>} data-testid="outer">
+          <div data-testid="preview">
+            <AppShell nav={NAV} topBar={<span>inner</span>} data-testid="inner">
+              <div>page</div>
+            </AppShell>
+          </div>
+        </AppShell>
+      </MemoryRouter>,
+    );
+  }
+
+  it("scopes the variable to each shell's root, and only the OUTER one publishes on <html>", () => {
+    const { getByTestId } = renderNested();
+    expect(getByTestId("outer").style.getPropertyValue("--app-nav-h")).toBe("0px");
+    expect(getByTestId("inner").style.getPropertyValue("--app-nav-h")).toBe("0px");
+    expect(navHeight()).toBe("0px");
+  });
+
+  it("leaves the outer shell's variable alone when the inner one unmounts", () => {
+    // It used to remove the global property on unmount — from under the outer app.
+    const view = renderNested();
+    view.rerender(
+      <MemoryRouter>
+        <AppShell nav={NAV} topBar={<span>outer</span>} data-testid="outer">
+          <div>preview closed</div>
+        </AppShell>
+      </MemoryRouter>,
+    );
+    expect(navHeight()).toBe("0px");
+  });
+
+  it("lays the inner shell out in its parent's box, not the viewport's", () => {
+    const { getByTestId } = renderNested();
+    const inner = getByTestId("inner");
+    expect(inner.className).toContain("h-full");
+    expect(inner.className).not.toContain("min-h-screen");
+    expect(inner.className).not.toContain("md:h-dvh");
+    expect(getByTestId("outer").className).toContain("min-h-screen");
+  });
+
+  it("does not persist the inner shell's collapse state over the outer one's", () => {
+    localStorage.setItem("appLayout.sidebarCollapsed", "1");
+    const { getAllByRole } = renderNested();
+    // Outer: collapsed, from storage → "Expand". Inner: not reading the shared key.
+    const toggles = getAllByRole("button", { name: /collapse|expand/i });
+    expect(toggles[0]).toHaveAccessibleName(/expand/i);
+    expect(toggles[1]).toHaveAccessibleName(/collapse/i);
+    expect(localStorage.getItem("appLayout.sidebarCollapsed")).toBe("1");
+    localStorage.removeItem("appLayout.sidebarCollapsed");
+  });
+
+  it("takes `embedded` for a preview that is not inside another shell", () => {
+    render(
+      <MemoryRouter>
+        <AppShell nav={NAV} topBar={<span>K</span>} embedded data-testid="solo">
+          <div>page</div>
+        </AppShell>
+      </MemoryRouter>,
+    );
+    expect(navHeight()).toBe("");
+    expect(document.querySelector<HTMLElement>("[data-testid=solo]")!.style.getPropertyValue("--app-nav-h")).toBe("0px");
+  });
+});

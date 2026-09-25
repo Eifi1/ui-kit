@@ -69,15 +69,14 @@ const QR_SVG_BASE64 = [
 /** A dummy base32 TOTP seed, the shape an authenticator app expects. */
 const FAKE_SECRET = "JBSWY3DPEHPK3PXPKRUGKIDROVUWG2ZA";
 
-/** The fields these cards paint in Tailwind's own palette rather than in tokens. */
+/** Where these cards stand against the palette switch. */
 function PaletteBlindNote() {
   return (
     <Note>
-      The three <code className="font-mono">account-settings</code> cards paint some of their
-      own text in Tailwind's palette (<code className="font-mono">text-slate-500</code>, the
-      rose validation line, the slate rule above the disable form, the white QR mat) instead
-      of the kit's tokens. Switch the palette in the top bar: the card surface and border
-      move, those few pieces do not.
+      The cards paint in the kit&apos;s tokens throughout — switch the palette in the top bar and
+      all of it moves. The one literal colour is the white mat behind the QR code, on purpose: a
+      camera reads a code by the contrast between its modules and a light quiet zone, which a
+      dark-theme surface would lower.
     </Note>
   );
 }
@@ -340,6 +339,8 @@ const TWO_FACTOR_LABELS: TwoFactorSettingLabels = {
   disableSection: "Turn off two-factor",
   password: "Current password",
   disable: "Turn off",
+  // Optional, unlike every key above — it defaults to "QR code".
+  qrAlt: "Sample QR code for an authenticator app",
 };
 
 /**
@@ -441,12 +442,91 @@ function TwoFactorRow() {
   );
 }
 
+/**
+ * Both settings fields are a `Select` with two props re-typed, so everything else a
+ * `Select` takes — `hint`, `disabled`, `required`, `invalid`, `error`, `id` — passes
+ * straight through.
+ */
+function PassthroughRow() {
+  const [lang, setLang] = useState("");
+  return (
+    <Example
+      label="ThemeSetting · LanguageSetting — Select props pass through"
+      hint="hint, disabled, required, invalid, error, id"
+    >
+      <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+        <ThemeSetting
+          id="theme-managed"
+          value="dark"
+          onChange={() => {}}
+          label="Theme"
+          optionLabels={{ system: "Match system", light: "Light", dark: "Dark" }}
+          hint="Managed by your organisation"
+          disabled
+        />
+        <LanguageSetting
+          id="language-required"
+          value={lang}
+          onChange={setLang}
+          label="Language"
+          options={[
+            { code: "", label: "—" },
+            { code: "en", label: "English" },
+            { code: "de", label: "Deutsch" },
+          ]}
+          required
+          invalid={lang === ""}
+          error={lang === "" ? "Pick the language your reports are written in." : undefined}
+        />
+      </div>
+    </Example>
+  );
+}
+
+/** The card before the account has loaded, and with rich nodes where it takes them. */
+function ProfileLoadingRow() {
+  const [draft, setDraft] = useState("");
+  return (
+    <Example
+      label="ProfileSetting — before the account has loaded"
+      hint="name and email null → em dashes and a placeholder avatar; role and memberSince as nodes"
+    >
+      <div className="max-w-md">
+        <ProfileSetting
+          name={null}
+          email={null}
+          role={
+            <span className="rounded bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-xs font-medium">
+              Owner
+            </span>
+          }
+          memberSince={<time dateTime="2019-03-14">14.03.2019</time>}
+          value={draft}
+          onChange={setDraft}
+          onSave={() => setDraft("")}
+          labels={PROFILE_LABELS}
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          Two cards on one page, as here: the display-name field&apos;s{" "}
+          <code className="font-mono">id</code> is generated per card (it was the literal{" "}
+          <code className="font-mono">display-name</code> before 0.7.0), so each label focuses its
+          own input — click this card&apos;s label and the caret lands here, not in the card above.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 export function Settings() {
   return (
     <>
       <ThemeRow />
       <LanguageRow />
+      <PassthroughRow />
       <ProfileRow />
+      <ProfileLoadingRow />
       <PasswordRow />
       <TwoFactorRow />
     </>

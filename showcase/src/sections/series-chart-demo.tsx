@@ -4,17 +4,27 @@ import {
   LegendColumn,
   LegendGroup,
   SeriesChart,
+  STEP_DASH,
   SharedXZoom,
+  StaticSeriesChart,
   ToggleLegend,
+  axisBandWidth,
   facingAxes,
+  facingBand,
   facingHeadingPad,
   mergeSeries,
   oneAxis,
+  padBand,
+  paddedDomain,
   paletteFor,
+  seriesKey,
+  soleSeriesColor,
+  strokeDash,
   toggleHidden,
+  zoomAxesFor,
 } from "@eifi1/ui-kit";
 import type { LegendEntry, SeriesChartAxis, SeriesChartSeries } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, OutTable } from "../lib/section";
 
 /**
  * SeriesChart — the measurement plot, with drag-to-zoom and a legend of switches.
@@ -68,6 +78,31 @@ const LOOP = mergeSeries([
   },
 ]);
 
+/** A logger with two dropouts: the key is ABSENT in those rows, which is a hole. */
+const LOGGED = Array.from({ length: 61 }, (_, i) => {
+  const row: Record<string, number> = { x: i };
+  const dropout = (i >= 18 && i <= 25) || (i >= 41 && i <= 44);
+  if (!dropout) row.force = 400 + 260 * Math.sin(i / 7) + 40 * Math.sin(i / 1.3);
+  return row;
+});
+
+/** A temperature log whose abscissa is keyed `t`, not the default `x`. */
+const TEMPERATURE = Array.from({ length: 49 }, (_, i) => ({
+  t: i * 0.25,
+  temp: 20 + 3.5 * Math.sin(i / 6) + i * 0.05,
+}));
+
+/** Arabic strings for the chart family — every word the chart can say itself. */
+const AR_LABELS = {
+  resetZoom: "إعادة ضبط التكبير",
+  zoomHint: "اسحب للتكبير، وانقر نقرًا مزدوجًا لإعادة الضبط.",
+  empty: "لا توجد بيانات",
+  legend: "السلاسل",
+};
+
+const show = (value: unknown) =>
+  value === undefined ? "undefined" : typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+
 const SWEEP_X = {
   title: "Time (s)",
   format: (v: number) => TWO.format(v),
@@ -77,6 +112,8 @@ const SWEEP_X = {
 export function SeriesChartDemo() {
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [hiddenAngles, setHiddenAngles] = useState<ReadonlySet<string>>(new Set(["d"]));
+  const [hiddenTemp, setHiddenTemp] = useState<ReadonlySet<string>>(new Set());
+  const [bridged, setBridged] = useState(false);
 
   const channels: (SeriesChartSeries & { unit: string })[] = [
     { key: "position", label: "Position", axis: "mm", unit: "mm", color: paletteFor(0) },
@@ -137,11 +174,22 @@ export function SeriesChartDemo() {
           hidden={hidden}
           onToggle={(key) => setHidden(toggleHidden(hidden, key))}
         />
+        <div className="mt-3">
+          <Note>
+            The ticks are round numbers — every multiple of a 1, 2 or 5 × 10<sup>n</sup> step that
+            falls inside the fitted domain — not the equal fractions of it recharts would print
+            (-11, 189, 389 …). The domain keeps its air, so the frame edge simply has no number of its
+            own; drag to zoom and the ticks stay round, just finer. Switch every channel off while
+            zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for when a line
+            comes back). A switched-off stroke in the legend dims with its button, once — it no
+            longer fades twice to near-invisible.
+          </Note>
+        </div>
       </Example>
 
       <Example
         label="SeriesChart — five strokes for five channels"
-        hint="the colour says which measurement, the dash says which channel; the legend draws the same table"
+        hint="the colour says which measurement, the dash says which channel; the legend stands beside the chart from sm up and under it on a phone"
       >
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="min-w-0 flex-1">
@@ -224,7 +272,7 @@ export function SeriesChartDemo() {
 
       <Example
         label="facingAxes — a mirrored pair"
-        hint="ticks on the outside, the quantity named once, and both plots exactly the same width"
+        hint="ticks on the outside, the quantity named once, both plots the same width; side by side from md up, stacked on a phone"
       >
         <SharedXZoom>
           <div className="grid gap-4 md:grid-cols-2">
@@ -251,7 +299,132 @@ export function SeriesChartDemo() {
       </Example>
 
       <Example label="SeriesChart — nothing to draw" hint="the empty state keeps the chart's height, so nothing under it moves">
-        <SeriesChart rows={[]} series={[]} height="h-32" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">empty omitted: the label</p>
+            <div className="rounded border border-dashed border-[var(--border)]">
+              <SeriesChart rows={[]} series={[]} height="h-32" />
+            </div>
+          </div>
+          <div>
+            <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">empty=&#123;null&#125;: nothing, same height</p>
+            <div className="rounded border border-dashed border-[var(--border)]">
+              <SeriesChart rows={[]} series={[]} height="h-32" empty={null} />
+            </div>
+          </div>
+        </div>
+      </Example>
+
+      <Example
+        label="StaticSeriesChart — holes, coloured spans, no zoom"
+        hint="the same picture without the drag layer; toggle connectNulls to bridge the two dropouts"
+      >
+        <button
+          type="button"
+          aria-pressed={bridged}
+          onClick={() => setBridged((b) => !b)}
+          className="mb-2 rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+        >
+          connectNulls: {String(bridged)}
+        </button>
+        <StaticSeriesChart
+          rows={LOGGED}
+          series={[{ key: "force", label: "Clamp force", axis: "n", color: paletteFor(2) }]}
+          axes={[{ id: "n", title: "Force (N)", format: (v) => WHOLE.format(v), width: 44 }]}
+          x={{ title: "Sample", format: (v) => WHOLE.format(v) }}
+          valueFormat={(v) => `${WHOLE.format(v)} N`}
+          connectNulls={bridged}
+          spans={[
+            { key: "limit-a", axis: "n", x: 10, from: 150, to: 700, color: paletteFor(6) },
+            { key: "limit-b", axis: "n", x: 50, from: 150, to: 700, color: paletteFor(6) },
+          ]}
+          height="h-56"
+          className="[&_.recharts-cartesian-grid_line]:[stroke-dasharray:2_3]"
+        />
+        <div className="mt-3">
+          <Note>
+            A missing key is a hole: without <code className="font-mono">connectNulls</code> the line
+            stops and restarts, which is the honest picture of a logger that dropped out. The two
+            spans are drawn on the named axis <code className="font-mono">n</code> in their own{" "}
+            <code className="font-mono">color</code> (default: <code className="font-mono">--text-muted</code>).{" "}
+            <code className="font-mono">StaticSeriesChart</code> is for a thumbnail, a print view, or
+            a chart wrapped in the consumer&apos;s own interaction; <code className="font-mono">className</code>{" "}
+            reaches its <code className="font-mono">ChartContainer</code>.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="SeriesChart — labels, locale and right-to-left"
+        hint="locale ar-EG formats the default ticks; drag to zoom and the reset button sits at the logical end (top left here)"
+      >
+        <div dir="rtl" lang="ar">
+          <SeriesChart
+            rows={TEMPERATURE}
+            series={
+              hiddenTemp.has("temp")
+                ? []
+                : [{ key: "temp", label: "درجة الحرارة", color: paletteFor(3) }]
+            }
+            axes={oneAxis(undefined, "درجة الحرارة (°م)")}
+            x={{ key: "t", title: "الزمن (ث)" }}
+            locale="ar-EG"
+            labels={AR_LABELS}
+            height="h-56"
+          />
+          <ToggleLegend
+            entries={[{ key: "temp", label: "درجة الحرارة", color: paletteFor(3) }]}
+            hidden={hiddenTemp}
+            onToggle={(key) => setHiddenTemp(toggleHidden(hiddenTemp, key))}
+            showSingle
+            labels={AR_LABELS}
+          />
+        </div>
+        <div className="mt-3">
+          <Note>
+            <code className="font-mono">labels</code> overrides the{" "}
+            <code className="font-mono">seriesChart</code> namespace per chart:{" "}
+            <code className="font-mono">resetZoom</code> is the button,{" "}
+            <code className="font-mono">zoomHint</code> the drag surface&apos;s accessible name,{" "}
+            <code className="font-mono">empty</code> what shows when you switch the one series off, and{" "}
+            <code className="font-mono">legend</code> the legend group&apos;s accessible name. The plot
+            itself stays left-to-right — an abscissa is a number line, not text. The rows are keyed{" "}
+            <code className="font-mono">t</code> (<code className="font-mono">x.key</code>), and{" "}
+            <code className="font-mono">showSingle</code> keeps a one-entry legend, because it is the
+            only switch that brings the series back.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="Series chart helpers"
+        hint="the geometry, key and zoom arithmetic the charts above are built from — all exported"
+      >
+        <OutTable
+          rows={[
+            ['seriesKey("left side", 3)', show(seriesKey("left side", 3))],
+            ['seriesKey(3, "a")', show(seriesKey(3, "a"))],
+            ["paddedDomain([0, 10])", show(paddedDomain([0, 10]))],
+            ["paddedDomain([5, 5])", show(paddedDomain([5, 5]))],
+            ["padBand(1, 0)", show(padBand(1, 0))],
+            ["axisBandWidth(undefined, true)", show(axisBandWidth(undefined, true))],
+            ["facingBand(56)", show(facingBand(56))],
+            [
+              'soleSeriesColor({ id: "y", color }, [one series])',
+              show(soleSeriesColor({ id: "y", color: paletteFor(0) }, [{}])),
+            ],
+            [
+              'soleSeriesColor({ id: "y", color }, [two series])',
+              show(soleSeriesColor({ id: "y", color: paletteFor(0) }, [{}, {}])),
+            ],
+            ["strokeDash(3)", show(strokeDash(3))],
+            ["strokeDash(5)  // wraps", show(strokeDash(5))],
+            ["STEP_DASH", show(STEP_DASH)],
+            ["zoomAxesFor(150, 40, 300, 100)", show(zoomAxesFor(150, 40, 300, 100))],
+            ["zoomAxesFor(240, 10, 300, 100)", show(zoomAxesFor(240, 10, 300, 100))],
+            ["zoomAxesFor(3, 1, 300, 100)", show(zoomAxesFor(3, 1, 300, 100))],
+          ]}
+        />
       </Example>
     </>
   );

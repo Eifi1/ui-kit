@@ -16,6 +16,7 @@ import {
   Tooltip as RechartsTooltip,
 } from "recharts";
 import { cn } from "../lib/cn";
+import { isRtl } from "../lib/direction";
 
 export interface ChartSeriesConfig {
   label: ReactNode;
@@ -37,6 +38,20 @@ interface ChartContainerProps extends ComponentProps<"div"> {
   children: ComponentProps<typeof ResponsiveContainer>["children"];
 }
 
+/**
+ * The shell every chart in the kit is drawn inside.
+ *
+ * **The plot is not mirrored in RTL.** An x axis is a number line or a timeline, and
+ * both run left-to-right in Hebrew and Arabic charts as much as in English ones; a
+ * time axis flipped to run right-to-left is the surprise, not the courtesy. So no
+ * `reversed` on any axis, and the SVG is pinned to `direction: ltr` — without that it
+ * inherits the page's `rtl`, which flips what `text-anchor: end` means, and the tick
+ * labels of a left-hand y axis are drawn INTO the plot instead of beside it. Text
+ * inside the SVG still shapes by its own script; only the anchoring is physical.
+ * The HTML around the plot — legend, tooltip, the zoom reset button — follows the
+ * page's direction like any other markup. A consumer who does want a mirrored
+ * category axis passes `reversed` on its own `XAxis`.
+ */
 export function ChartContainer({ id, className, children, config, ...props }: ChartContainerProps) {
   const uid = useId();
   // The id is pasted into an UNQUOTED `[data-chart=…]` selector below, so it has to be
@@ -54,6 +69,8 @@ export function ChartContainer({ id, className, children, config, ...props }: Ch
           // a horizontal drag is handed to recharts for tooltip scrubbing,
           // instead of the page scrolling underneath the gesture (feedback #292).
           "flex w-full touch-pan-y justify-center text-xs",
+          // physical anchoring for the unmirrored plot (see the doc comment above)
+          "[&_.recharts-surface]:[direction:ltr]",
           // muted axis labels + gridlines; one class each, since the tokens
           // already carry the light/dark values
           "[&_.recharts-cartesian-axis-tick_text]:fill-[var(--text-muted)]",
@@ -101,6 +118,19 @@ const CSS_IDENT = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 const CSS_COLOR =
   /^(?:#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|(?:rgba?|hsla?)\([0-9A-Za-z.,%/ -]*\)|var\(--[A-Za-z0-9_-]+\))$/;
 
+/**
+ * The colour an entry is painted with, or `undefined` when the style block refuses it.
+ *
+ * The one gate both sides go through: {@link ChartStyle} emits exactly these, and the
+ * legend and tooltip swatches show exactly these. They used to read `config[key].color`
+ * directly, so an entry the style block had skipped still showed its configured colour
+ * in the key — a swatch promising a colour the series was never painted in.
+ */
+function paintedColor(key: string, entry: ChartSeriesConfig | undefined): string | undefined {
+  if (!entry?.color) return undefined;
+  return CSS_IDENT.test(key) && CSS_COLOR.test(entry.color) ? entry.color : undefined;
+}
+
 // Inject each series colour as a `--color-<key>` custom property scoped to this
 // chart, so chart JSX can refer to `var(--color-total)` and the legend/tooltip
 // stay in sync from one source of truth.
@@ -127,7 +157,22 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
   return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
 
-export const ChartTooltip = RechartsTooltip;
+/**
+ * recharts' `Tooltip`, with `filterNull` defaulting to **false**.
+ *
+ * recharts drops every payload entry whose value is `null`/`undefined` before the
+ * content sees it, so the missing-value path {@link ChartTooltipContent} documents —
+ * the em dash, `formatValue(undefined)` — never ran under the default: a series with a
+ * gap at the cursor simply vanished from the tooltip, which reads as "this series does
+ * not exist here" rather than "it has no value here". Kept, the entry prints "—".
+ *
+ * The other half of that filter — dropping series drawn with `hide` — is redone by
+ * `ChartTooltipContent` itself (honouring `includeHidden`), so a legend toggle still
+ * takes a series out of the tooltip. Pass `filterNull` to get recharts' behaviour back.
+ */
+export function ChartTooltip(props: ComponentProps<typeof RechartsTooltip>) {
+  return <RechartsTooltip filterNull={false} {...props} />;
+}
 export const ChartLegend = RechartsLegend;
 
 interface TooltipPayloadItem {
@@ -135,6 +180,8 @@ interface TooltipPayloadItem {
   name?: string | number;
   value?: number | string;
   color?: string;
+  /** A series drawn with `hide` — dropped here, see {@link ChartTooltip}. */
+  hide?: boolean;
   payload?: Record<string, unknown>;
 }
 
@@ -194,6 +241,8 @@ interface ChartTooltipContentProps {
    *  spill past the right edge of this (usually horizontally-scrolling) container
    *  — e.g. a wide chart whose rightmost bars sat off-screen (feedback #77). */
   boundaryRef?: RefObject<HTMLElement | null>;
+  /** Injected by recharts: keep series drawn with `hide` in the tooltip. */
+  includeHidden?: boolean;
 }
 
 export function ChartTooltipContent({
@@ -207,17 +256,29 @@ export function ChartTooltipContent({
   formatValue,
   coordinate,
   boundaryRef,
+  includeHidden = false,
 }: ChartTooltipContentProps) {
   const config = useChart();
   const tipRef = useRef<HTMLDivElement>(null);
-  if (!active || !payload?.length) return null;
+  // `ChartTooltip` keeps null values (so they can print "—"), which also keeps the
+  // series a legend toggle switched off with `hide`; those go here instead.
+  const items = includeHidden ? payload : payload?.filter((item) => item.hide !== true);
+  if (!active || !items?.length) return null;
   // Recharts anchors the tooltip at coordinate.x inside the full (scrolled) chart
   // width; subtract the container's scrollLeft to get its on-screen x, then flip
   // left if the tooltip's own width would run past the visible right edge.
+  //
+  // Both the cursor and the flip are PHYSICAL (the plot is never mirrored, see
+  // `ChartContainer`), but an RTL scroller counts `scrollLeft` from its right edge —
+  // 0 at the start, negative going left — so there the content's left edge sits
+  // `scrollWidth - clientWidth + scrollLeft` px to the left of the visible one.
   let flip = false;
   const boundary = boundaryRef?.current;
   if (boundary && coordinate?.x != null) {
-    const visibleX = coordinate.x - boundary.scrollLeft;
+    const offset = isRtl(boundary)
+      ? boundary.scrollWidth - boundary.clientWidth + boundary.scrollLeft
+      : boundary.scrollLeft;
+    const visibleX = coordinate.x - offset;
     const tipWidth = tipRef.current?.offsetWidth ?? 160;
     flip = visibleX + tipWidth + 12 > boundary.clientWidth;
   }
@@ -233,7 +294,7 @@ export function ChartTooltipContent({
         </div>
       )}
       <div className="grid gap-1.5">
-        {payload.map((item, i) => {
+        {items.map((item, i) => {
           // Bars/lines/areas identify a series by dataKey; pies/treemaps key off
           // `name` (the nameKey value). Prefer whichever the config knows.
           const dk = item.dataKey != null ? String(item.dataKey) : undefined;
@@ -245,7 +306,7 @@ export function ChartTooltipContent({
           // or a bar with a per-cell colour, IS the colour the reader is pointing at,
           // while `item.color` is the series-wide one — every tile's swatch came out
           // `--chart-1` whatever colour the tile was.
-          const color = series?.color ?? fill ?? item.color ?? "#64748b";
+          const color = paintedColor(cfgKey, series) ?? fill ?? item.color ?? "#64748b";
           const name = series?.label ?? nm ?? cfgKey;
           const raw = tooltipValue(item.value);
           let shown: ReactNode;
@@ -262,7 +323,7 @@ export function ChartTooltipContent({
                 style={{ backgroundColor: color }}
               />
               <span className="text-[var(--text-muted)]">{name}</span>
-              <span data-private className="ml-auto font-mono font-medium tabular-nums text-[var(--text-primary)]">
+              <span data-private className="ms-auto font-mono font-medium tabular-nums text-[var(--text-primary)]">
                 {shown}
               </span>
             </div>
@@ -313,7 +374,7 @@ export function ChartLegendContent({
         const vv = item.value != null ? String(item.value) : undefined;
         const cfgKey = dk && config[dk] ? dk : vv && config[vv] ? vv : (dk ?? vv ?? String(i));
         const series = config[cfgKey];
-        const color = series?.color ?? item.color ?? "#64748b";
+        const color = paintedColor(cfgKey, series) ?? item.color ?? "#64748b";
         const label = series?.label ?? vv ?? cfgKey;
         const off = hidden?.has(cfgKey) ?? false;
         const dimmed = off || (activeKey != null && activeKey !== cfgKey);

@@ -8,9 +8,16 @@ import { contrast, parseHex as parseRgbHex } from "./color";
 
 const PALETTE_SIZE = 9;
 
-/** CVD-safe categorical colour for series `index`, as a theme-aware CSS var. */
+/** CVD-safe categorical colour for series `index`, as a theme-aware CSS var.
+ *
+ *  Wraps in both directions, the way `strokeDash` does: JS `%` keeps the sign,
+ *  so `-1 % 9` is `-1` and the plain formula named `--chart-0`, a token that does not
+ *  exist — a series with no stroke at all. A fractional index is truncated, and one
+ *  that is not a number (NaN, ±Infinity — an `indexOf` miss divided by something)
+ *  takes the first colour rather than `var(--chart-NaN)`. */
 export function paletteFor(index: number): string {
-  return `var(--chart-${(index % PALETTE_SIZE) + 1})`;
+  const i = Number.isFinite(index) ? Math.trunc(index) : 0;
+  return `var(--chart-${(((i % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE) + 1})`;
 }
 
 /** Semantic money colours, theme-aware via tokens. Pair with +/- and arrow

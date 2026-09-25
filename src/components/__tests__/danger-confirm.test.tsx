@@ -123,6 +123,28 @@ describe("DangerConfirm", () => {
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
   });
 
+  it("shows the locked reason as a tooltip on the arm button, which stays focusable (0.7.0)", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm lockedReason="The demo is read-only." onConfirm={() => {}} />);
+    const arm = screen.getByRole("button", { name: "Delete…" });
+    expect(arm).not.toBeDisabled();
+    await user.hover(arm);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("The demo is read-only.");
+    await user.unhover(arm);
+    await user.tab();
+    expect(arm).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("The demo is read-only.");
+    // Described ONCE, by the visible line — the bubble is not appended to it.
+    expect(arm).toHaveAccessibleDescription("The demo is read-only.");
+  });
+
+  it("has no tooltip when it is not locked", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm onConfirm={() => {}} />);
+    await user.hover(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
   it("disables the arm button with `disabled`", () => {
     render(<DangerConfirm disabled onConfirm={() => {}} />);
     expect(screen.getByRole("button", { name: "Delete…" })).toBeDisabled();
@@ -140,5 +162,43 @@ describe("DangerConfirm", () => {
     await user.click(screen.getByRole("button", { name: "Löschen…" }));
     expect(screen.getByLabelText("„weg“ eintippen")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+  });
+
+  it("phraseMatch=\"exact\" refuses surrounding spaces", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm phrase="DELETE" phraseMatch="exact" onConfirm={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    const field = screen.getByLabelText("Type “DELETE” to confirm");
+    await user.type(field, " DELETE ");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    await user.clear(field);
+    await user.type(field, "DELETE");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+  });
+
+  it("takes a finished string as the phrase label, and a placeholder (string or function)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <DangerConfirm
+        phrase="DELETE"
+        armed
+        onConfirm={() => {}}
+        labels={{ phrase: "Type DELETE to confirm", phrasePlaceholder: "DELETE" }}
+      />,
+    );
+    expect(screen.getByLabelText("Type DELETE to confirm")).toHaveAttribute("placeholder", "DELETE");
+    rerender(
+      <DangerConfirm phrase="wipe" armed onConfirm={() => {}} labels={{ phrasePlaceholder: (p) => `e.g. ${p}` }} />,
+    );
+    expect(screen.getByLabelText("Type “wipe” to confirm")).toHaveAttribute("placeholder", "e.g. wipe");
+    await user.type(screen.getByLabelText("Type “wipe” to confirm"), "wipe");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+  });
+
+  it("keeps the floating label, and no placeholder text, unless one is given", () => {
+    render(<DangerConfirm phrase="wipe" armed onConfirm={() => {}} />);
+    const field = screen.getByLabelText("Type “wipe” to confirm");
+    // The floating field's own single space, which drives its label — not text.
+    expect(field.getAttribute("placeholder")?.trim() ?? "").toBe("");
   });
 });

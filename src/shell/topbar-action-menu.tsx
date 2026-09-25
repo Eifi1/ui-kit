@@ -60,7 +60,7 @@ export function TopBarActionMenu({
               <span className="flex w-full items-center gap-2">
                 {entry.icon}
                 {entry.label}
-                {entry.trailing && <span className="ml-auto pl-2">{entry.trailing}</span>}
+                {entry.trailing && <span className="ms-auto ps-2">{entry.trailing}</span>}
               </span>
             );
             return (

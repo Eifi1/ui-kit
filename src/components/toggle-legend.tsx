@@ -198,7 +198,11 @@ export function LegendGroup({ title, children }: { title: ReactNode; children: R
  *  front of it.
  *
  *  A stroke is an SVG line with the chart's own `strokeDasharray`, not a CSS gradient
- *  approximating it: a gradient can say "solid or dashed" and nothing more. */
+ *  approximating it: a gradient can say "solid or dashed" and nothing more.
+ *
+ *  A hidden stroke is NOT faded here: the button around it already is (`opacity-35`),
+ *  and the line used to take its own 0.35 on top — 0.35 × 0.35, about 12 %, a mark
+ *  gone rather than dimmed, while the square beside it read at the full 35 %. */
 function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
   if (entry.marker === "stroke") {
     return (
@@ -211,7 +215,6 @@ function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
           stroke={entry.color}
           strokeWidth={2}
           strokeDasharray={strokeDash(entry.dash ?? 0)}
-          opacity={off ? 0.35 : 1}
         />
       </svg>
     );

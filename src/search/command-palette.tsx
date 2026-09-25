@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useFocusTrap } from "../hooks/use-focus-trap";
+import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useKitLabels } from "../i18n/kit-labels";
 
 export interface CommandItem {
@@ -42,6 +44,11 @@ export interface CommandPaletteLabels {
    * `CommandPaletteLabels` keeps compiling; the default always carries it.
    */
   dialog?: string;
+  /**
+   * Shown in place of the results when the `search` provider throws or its promise
+   * rejects. Optional for the same reason as `dialog`; the default always carries it.
+   */
+  error?: string;
 }
 
 export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
@@ -49,6 +56,7 @@ export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
   empty: "No results",
   loading: "Searching…",
   dialog: "Search",
+  error: "Search failed. Try again.",
 };
 
 /** The defaults minus `dialog`, so a resolved `dialog` means someone SUPPLIED one —
@@ -124,7 +132,16 @@ export function CommandPalette({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CommandItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [active, setActive] = useState(0);
+  // Per instance: these were the literal "command-palette-list" / "command-item-<id>",
+  // so two palettes on one page (an app-wide one and a scoped one) pointed each
+  // other's `aria-controls` and `aria-activedescendant` at the wrong list.
+  const uid = useId();
+  const listId = `${uid}-list`;
+  const itemId = (id: string) => `${uid}-item-${id}`;
+  const groupId = (index: number) => `${uid}-group-${index}`;
+  const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const searchRef = useRef(search);
@@ -137,13 +154,17 @@ export function CommandPalette({
   // mounting-while-open is what lets it sit here.
   useOverlayHistory(open, onClose);
 
-  // Reset + focus when opened.
+  // A modal like any other: Tab stays inside, the page behind does not scroll, and
+  // focus goes back to whatever opened it — the palette used to drop it on <body>.
+  // Initial focus is the field, not the container: typing is the only reason to open it.
+  useFocusTrap(dialogRef, { active: open, initialFocus: () => inputRef.current });
+  useBodyScrollLock(open);
+
+  // Reset when opened.
   useEffect(() => {
     if (!open) return;
     setQuery("");
     setActive(0);
-    const id = requestAnimationFrame(() => inputRef.current?.focus());
-    return () => cancelAnimationFrame(id);
   }, [open]);
 
   // Debounced, race-safe search.
@@ -156,8 +177,18 @@ export function CommandPalette({
         const r = await Promise.resolve(searchRef.current(query));
         if (reqId.current === id) {
           setResults(r);
+          setFailed(false);
           setActive(0);
         }
+      } catch (err) {
+        // There was no catch: the previous query's results stayed on screen as if they
+        // answered this one, and the rejection went unhandled. Clear them and say so.
+        if (reqId.current === id) {
+          setResults([]);
+          setFailed(true);
+          setActive(0);
+        }
+        console.error("CommandPalette: search failed", err);
       } finally {
         if (reqId.current === id) setLoading(false);
       }
@@ -202,7 +233,13 @@ export function CommandPalette({
     } else if (e.key === "Enter") {
       e.preventDefault();
       choose(flat[active]);
-    } else if (e.key === "Escape") {
+    }
+  };
+
+  // Escape on the whole dialog, not only the field: once Tab has moved focus to a row
+  // (or a footer control), Escape used to do nothing at all.
+  const onDialogKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
       e.preventDefault();
       onClose();
     }
@@ -224,11 +261,17 @@ export function CommandPalette({
         if (e.target === e.currentTarget) onClose();
       }}
     >
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape from anywhere in the dialog */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={dialogName}
-        className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl"
+        // The trap's fallback target when the field is not there to take focus.
+        tabIndex={-1}
+        // Escape bubbling up from anything inside — a dialog is where it belongs.
+        onKeyDown={onDialogKeyDown}
+        className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl outline-none"
       >
         <div className="flex items-center gap-2 border-b border-[var(--border)] px-3">
           <Search className="size-4 shrink-0 text-[var(--text-placeholder)]" />
@@ -236,8 +279,8 @@ export function CommandPalette({
             ref={inputRef}
             role="combobox"
             aria-expanded
-            aria-controls="command-palette-list"
-            aria-activedescendant={flat[active] ? `command-item-${flat[active].id}` : undefined}
+            aria-controls={listId}
+            aria-activedescendant={flat[active] ? itemId(flat[active].id) : undefined}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
@@ -247,16 +290,31 @@ export function CommandPalette({
           {loading && <span className="shrink-0 text-[11px] text-[var(--text-placeholder)]">{l.loading}</span>}
         </div>
 
-        <ul id="command-palette-list" ref={listRef} role="listbox" className="min-h-0 flex-1 overflow-y-auto py-1">
-          {flat.length === 0 && !loading && (
-            <li className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">{l.empty}</li>
-          )}
-          {groups.map(({ group, items }) => (
-            <li key={group}>
-              <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+        {/* The status lines sit outside the listbox: a listbox owns options and groups,
+            and "No results" is neither. */}
+        {failed && !loading && (
+          <div role="alert" className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">
+            {l.error ?? DEFAULT_COMMAND_PALETTE_LABELS.error}
+          </div>
+        )}
+        {!failed && flat.length === 0 && !loading && (
+          <div className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">{l.empty}</div>
+        )}
+        {/* Listbox grouping: each group is a `role="group"` named by its heading, and
+            the list markup in between is presentational so the listbox's children are
+            groups and options only — as a plain <li>/<ul> tree a reader announced
+            "list, 2 items" between options and never tied the heading to its rows. */}
+        <ul id={listId} ref={listRef} role="listbox" aria-label={dialogName} className="min-h-0 flex-1 overflow-y-auto py-1">
+          {groups.map(({ group, items }, groupIndex) => (
+            <li key={group} role="presentation">
+              <div
+                id={groupId(groupIndex)}
+                role="presentation"
+                className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]"
+              >
                 {group}
               </div>
-              <ul>
+              <ul role="group" aria-labelledby={groupId(groupIndex)}>
                 {items.map((item) => {
                   flatIndex += 1;
                   const idx = flatIndex;
@@ -266,13 +324,13 @@ export function CommandPalette({
                   // `role="option"` on an <a href> is fine: the browser's middle-click
                   // behaviour keys off the element, not the ARIA role.
                   const shared = {
-                    id: `command-item-${item.id}`,
+                    id: itemId(item.id),
                     role: "option" as const,
                     "aria-selected": isActive,
                     "data-index": idx,
                     onMouseMove: () => setActive(idx),
                     className: cn(
-                      "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm",
+                      "flex w-full items-center gap-2.5 px-3 py-2 text-start text-sm",
                       isActive
                         ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
                         : "text-[var(--text-secondary)]",
@@ -292,7 +350,7 @@ export function CommandPalette({
                     </>
                   );
                   return (
-                    <li key={item.id}>
+                    <li key={item.id} role="presentation">
                       {item.href ? (
                         <a
                           {...shared}

@@ -5,6 +5,8 @@ import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { cn } from "../lib/cn";
+import { dirOf } from "../lib/direction";
+import type { Direction } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 
 /** The panel's accessible name. A `role="dialog"` with no name announces as "dialog"
@@ -101,13 +103,22 @@ export function Popover({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  // The trigger's reading direction, read when it is pressed. The panel is portalled to
+  // <body>, out of any `dir="rtl"` subtree the trigger sits in, so without carrying it
+  // across a right-to-left calendar or filter rendered left-to-right.
+  const [dir, setDir] = useState<Direction>("ltr");
   const close = () => setOpen(false);
-  const toggle = () => setOpen((v) => !v);
+  const toggle = () => {
+    setDir(dirOf(triggerRef.current));
+    setOpen((v) => !v);
+  };
   // prop > `<UiKitProvider labels={{ popover }}>` > English. The provider's
   // `popover.panel` is only the last-resort name for a panel no caller named.
   const text = useKitLabels("popover", DEFAULT_POPOVER_LABELS, labels);
 
-  // Align the panel's right edge to the trigger's and clamp it horizontally; the
+  // Align the panel's END edge to the trigger's — right in LTR, left in RTL; it was
+  // always `rect.right`, so an RTL panel hung off the wrong side — and clamp it
+  // horizontally; the
   // hook owns the vertical half — below by default, flipped above (and height-capped)
   // when that is where the room is, e.g. once a mobile keyboard has eaten the bottom
   // of the screen (feedback #135). It re-measures on scroll/resize.
@@ -116,7 +127,10 @@ export function Popover({
   const pos = rect
     ? {
         top: placement.top,
-        left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
+        left: Math.min(
+          Math.max(8, dir === "rtl" ? rect.left : rect.right - width),
+          window.innerWidth - width - 8,
+        ),
       }
     : null;
 
@@ -169,6 +183,7 @@ export function Popover({
             // element; the DOM spelling is the one being standardised on, so where both
             // are present it is the one that survives.
             aria-label={ariaLabel ?? text.panel}
+            dir={rest.dir ?? dir}
             // Without it the panel cannot take focus at all, and the trap above would
             // silently do nothing on a panel whose children are not yet tabbable.
             tabIndex={-1}

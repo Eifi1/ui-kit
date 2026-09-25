@@ -40,7 +40,7 @@ import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
  *
  *   step 1  a validator REGISTERED by the mounted step through `useWizardContext`,
  *           returning per-field errors, plus `setNextBlocked` for a hard disable;
- *   step 2  the step config's own `validate`, returning a bare boolean, which is
+ *   step 2  the step config's own async `validate`, resolving a bare boolean, which is
  *           the shape that routes through `missingRequiredMessage`;
  *   step 3  no gate — `WizardSummary`, whose edit buttons call `goToStep`.
  */
@@ -211,6 +211,8 @@ export function Wizard() {
             ["cancelDismissLabel", DEFAULT_WIZARD_LABELS.cancelDismissLabel],
             ["reviewTitle", DEFAULT_WIZARD_LABELS.reviewTitle],
             ["edit", DEFAULT_WIZARD_LABELS.edit],
+            ["missingRequired (optional key)", DEFAULT_WIZARD_LABELS.missingRequired],
+            ["genericError (optional key)", DEFAULT_WIZARD_LABELS.genericError],
           ]}
         />
       </Example>
@@ -298,7 +300,8 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
   const dataRef = useRef<Draft>(INITIAL_DRAFT);
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Draft | null>(null);
-  const [outcome, setOutcome] = useState<"succeed" | "fail">("succeed");
+  const [outcome, setOutcome] = useState<"succeed" | "fail" | "opaque">("succeed");
+  const [sizeChecks, setSizeChecks] = useState(0);
 
   const steps: WizardStepConfig[] = [
     // No `validate` here: the mounted step registers its own through the context.
@@ -308,7 +311,13 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
       label: "Size",
       // A bare boolean, on purpose. It blocks, but it carries no per-field detail,
       // which is the branch that falls through to `missingRequiredMessage` below.
-      validate: () => dataRef.current.size !== "",
+      // And async, the shape a server-side check has: `goNext` awaits it, so Next
+      // lands a beat after the click — long enough here to double-click into.
+      validate: async () => {
+        setSizeChecks((n) => n + 1);
+        await new Promise<void>((resolve) => setTimeout(resolve, 600));
+        return dataRef.current.size !== "";
+      },
     },
     { id: "review", label: "Review" },
   ];
@@ -328,6 +337,10 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
         // Whatever `onComplete` rejects with lands in `wizard.error` and is
         // rendered by StepperNav; `isSubmitting` is released either way.
         throw new Error("The pretend server refused this draft.");
+      }
+      if (outcome === "opaque") {
+        // Nothing readable — not an Error — so the engine shows `genericError`.
+        throw { status: 500 };
       }
       setSubmitted(data);
     },
@@ -402,6 +415,18 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
         </StepperNav>
       </Example>
 
+      <Note>
+        <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code>{" "}
+        is async (a 600ms pretend server check). Pick a size and double-click Next: the counter
+        in the table below goes up by one, not two, and the wizard moves one step. Before 0.7.0
+        the second click validated the same step again and advanced twice — from step 1 that
+        walked straight past step 2&apos;s check. <code className="font-mono">goNext</code>,{" "}
+        <code className="font-mono">skip</code> and <code className="font-mono">finish</code> now
+        refuse to start while a move is in flight, and a move decided on a step that is no
+        longer current is dropped; a double-click on Finish calls{" "}
+        <code className="font-mono">onComplete</code> once.
+      </Note>
+
       <Example label="Engine state, live" hint="read off the same `wizard` object the chrome above is driven by">
         <OutTable
           rows={[
@@ -424,6 +449,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             ["wizard.canFinish", String(wizard.canFinish)],
             ["wizard.nextBlocked", String(wizard.nextBlocked)],
             ["wizard.isSubmitting", String(wizard.isSubmitting)],
+            ["step 2 async validate() calls", String(sizeChecks)],
             ["wizard.fieldErrors", JSON.stringify(wizard.fieldErrors)],
             ["wizard.error", JSON.stringify(wizard.error)],
             ["wizard.data", JSON.stringify(wizard.data)],
@@ -432,19 +458,21 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
         />
         <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-3">
           <p className="text-xs text-[var(--text-secondary)]">
-            What Finish should do — the failing branch rejects, which is how{" "}
+            What Finish should do — the failing branches reject, which is how{" "}
             <code className="font-mono">wizard.error</code> and the alert inside{" "}
-            <code className="font-mono">StepperNav</code> get populated.
+            <code className="font-mono">StepperNav</code> get populated. A rejection with no
+            readable message shows <code className="font-mono">genericError</code>.
           </p>
           <Row>
-            <ToggleGroup<"succeed" | "fail">
+            <ToggleGroup<"succeed" | "fail" | "opaque">
               value={outcome}
               onChange={setOutcome}
               ariaLabel="Submit outcome"
               className="w-auto"
               options={[
                 { value: "succeed", label: "onComplete resolves" },
-                { value: "fail", label: "onComplete rejects" },
+                { value: "fail", label: "rejects with an Error" },
+                { value: "opaque", label: "rejects with a non-Error" },
               ]}
             />
             <Button
@@ -454,6 +482,14 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
               onClick={wizard.clearError}
             >
               clearError()
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={Object.keys(wizard.fieldErrors).length === 0}
+              onClick={wizard.clearFieldErrors}
+            >
+              clearFieldErrors()
             </Button>
             <Button type="button" variant="ghost" onClick={onRestart}>
               Start over

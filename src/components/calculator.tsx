@@ -147,9 +147,13 @@ function CalculatorPanel({
             equals();
           }
         }}
+        // Arithmetic reads left to right in every script, and a calculator display
+        // is right-aligned in every script too — so both stay physical, pinned
+        // with `dir="ltr"` rather than mirrored in a right-to-left form.
+        dir="ltr"
         className="block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]"
       />
-      <div className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
+      <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
       </div>
       <div className="grid grid-cols-4 gap-1.5">

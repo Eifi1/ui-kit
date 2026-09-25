@@ -2,6 +2,7 @@ import { useId, useRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Ban, Check } from "lucide-react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 import { Tooltip } from "./tooltip";
 
 /**
@@ -97,14 +98,11 @@ export function TileRadioGroup<T extends string>({
     // Left and right are VISUAL directions: in a right-to-left page the row runs the
     // other way. Up and down follow reading order either way — the APG's radio group
     // treats them as previous/next, and the tiles wrap, so there is no column to keep.
-    const rtl = e.currentTarget.closest("[dir]")?.getAttribute("dir") === "rtl";
+    const horizontal = horizontalStep(e.key, e.currentTarget);
     let step: number | "first" | "last";
-    switch (e.key) {
-      case "ArrowRight":
-        step = rtl ? -1 : 1;
-        break;
-      case "ArrowLeft":
-        step = rtl ? 1 : -1;
+    switch (horizontal ? "horizontal" : e.key) {
+      case "horizontal":
+        step = horizontal;
         break;
       case "ArrowDown":
         step = 1;

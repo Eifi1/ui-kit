@@ -1,4 +1,4 @@
-import { formatFileSize } from "@eifi1/ui-kit";
+import { UI_KIT_LABELS_IT } from "@eifi1/ui-kit/i18n/it";
 import type { Dictionary } from "./types";
 
 /**
@@ -17,9 +17,6 @@ import type { Dictionary } from "./types";
  *  4. PLURALS. Only 1 is singular ("1 riga", "0 righe", "2 righe"). Numbers go through
  *     `Intl.NumberFormat("it-IT")`, so a footer says "1.234".
  */
-const num = new Intl.NumberFormat("it-IT");
-const n = (value: number) => num.format(value);
-const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
 
 export const it: Dictionary = {
   tag: "it-IT",
@@ -47,12 +44,19 @@ export const it: Dictionary = {
     contentsPosition: "Posizione dell'indice",
     positionStart: "A sinistra",
     positionEnd: "A destra",
+    devicePreview: "Anteprima per dimensioni dello schermo",
+    previewHint:
+      "La pagina nelle tre dimensioni di schermo più comuni, dal vivo: scorri e fai clic in ogni riquadro. Tema, tavolozza e lingua seguono la barra in alto.",
+    phone: "Telefono",
+    tablet: "Tablet",
+    desktop: "Desktop",
   },
 
   groups: {
     "Getting started": "Per iniziare",
     Foundations: "Fondamenti",
     Inputs: "Input",
+    "Pickers & entry": "Selettori e inserimento",
     "Data display": "Visualizzazione dati",
     Overlays: "Overlay",
     // "Chrome" in the UI sense: the frame around the content, not the browser.
@@ -60,11 +64,20 @@ export const it: Dictionary = {
     API: "API",
   },
 
+  groupShort: {
+    "Getting started": "Inizio",
+    Foundations: "Token",
+    "Pickers & entry": "Selettori",
+    "Data display": "Dati",
+    "App chrome": "Struttura",
+  },
+
   pages: {
     overview: {
       title: "Panoramica",
+      short: "Panoramica",
       blurb:
-        "Che cos’è @eifi1/ui-kit, i sei livelli su cui è costruito e come leggere una pagina di questa vetrina.",
+        "Che cos’è @eifi1/ui-kit, i sette livelli su cui è costruito e come leggere una pagina di questa vetrina.",
     },
     foundations: {
       title: "Fondamenti",
@@ -73,61 +86,107 @@ export const it: Dictionary = {
     },
     tokens: {
       title: "Token",
+      short: "Token",
       blurb:
         "Ogni valore del TokenSet attivo, dal vivo. Cambia tema o palette nella barra in alto e guarda questa pagina cambiare: tutto ciò che resta fermo è scritto nel codice.",
     },
     palette: {
       title: "Generatore di palette",
+      short: "Palette",
       blurb:
         "Un colore del brand in ingresso, entrambi i temi in uscita — ogni rapporto di contrasto misurato anziché dichiarato, e ogni compromesso chiamato per nome.",
     },
     localisation: {
       title: "Localizzazione",
+      short: "Localizzazione",
       blurb:
         "Ogni testo che il kit mostra, come un unico albero tipizzato — e il provider che consegna una traduzione a tutti i componenti in una volta.",
     },
     inputs: {
       title: "Input",
       blurb:
-        "Ogni modo di acquisire un valore. Condividono una stessa anatomia — un’etichetta flottante, il valore, una riga di aiuto sotto — così un modulo si legge come un tutt’uno.",
+        "Ogni modo di digitare o impostare un valore: testo, scelte, numeri, date, file e l’adattatore per i moduli che li avvolge. Condividono una stessa anatomia — un’etichetta flottante, il valore, una riga di aiuto sotto — così un modulo si legge come un tutt’uno.",
     },
     fields: {
       title: "Campi di testo",
+      short: "Testo",
       blurb:
         "I campi di input e le costanti di classe con cui un’app compone i propri campi.",
     },
+    forms: {
+      title: "Moduli (react-hook-form)",
+      short: "Moduli",
+      blurb:
+        "L’adattatore react-hook-form di @eifi1/ui-kit/rhf: etichetta, controllo, descrizione e messaggio di un campo collegati tra loro e allo stato del modulo, con i messaggi solo dove l’utente li può vedere.",
+    },
     choices: {
       title: "Scelte",
+      short: "Scelte",
       blurb:
         "Acceso o spento, uno fra pochi, un valore su una scala — e la scelta di un colore, di un’icona o di una scheda.",
     },
     numbers: {
       title: "Numeri e importi",
+      short: "Numeri",
       blurb:
         "Lo stack numerico: un campo numerico con calcolatrice, un campo il cui valore è un numero, il campo importo con i suoi toni e il selettore di valuta.",
     },
-    dropdowns: {
-      title: "Menu a tendina e selettori",
+    calendars: {
+      title: "Calendari e selettori di date",
+      short: "Calendari",
       blurb:
-        "Combobox, selezione multipla, selettori raggruppati e a foglio, e le primitive dei menu a tendina su cui si basano.",
+        "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie e i loro limiti, e il primo giorno della settimana.",
+    },
+    "month-time": {
+      title: "Mese e ora",
+      short: "Mese e ora",
+      blurb:
+        "La scala più ampia e quella più fine: un mese scelto da solo, in un campo o tra pulsanti di avanzamento, e un orario.",
     },
     files: {
       title: "File",
+      short: "File",
       blurb:
         "Scegliere file: un pulsante che apre il selettore o la fotocamera, l’area di rilascio e i rifiuti segnalati dove l’utente sta guardando, mai come toast.",
     },
-    dates: {
-      title: "Date e ora",
+    pickers: {
+      title: "Selettori e inserimento",
       blurb:
-        "Scegliere un momento a ogni scala: un giorno, un intervallo di giorni, un mese, un orario.",
+        "Scegliere da un elenco invece di digitare, e i tipi di inserimento più impegnativi: una tabella di misure, un campo salvato quando lo lasci, una firma, una password.",
+    },
+    comboboxes: {
+      title: "Combobox",
+      short: "Combobox",
+      blurb:
+        "Testo libero con suggerimenti: la combobox il cui valore è ciò che è stato digitato, e il completamento automatico che cerca mentre scrivi.",
+    },
+    "entity-pickers": {
+      title: "Selettori di entità",
+      short: "Entità",
+      blurb:
+        "Scegliere un record tramite il suo id: selettori a forma di campo o di pulsante, opzioni statiche o caricate, più valori insieme, e gli stati non valido, errore e disabilitato che condividono.",
+    },
+    "dropdown-parts": {
+      title: "Componenti dei dropdown",
+      short: "Componenti",
+      blurb:
+        "La selezione multipla, il selettore raggruppato e il foglio per telefono — e gli hook e il pannello con cui è costruito ogni dropdown del kit.",
+    },
+    "measured-grid": {
+      title: "Inserimento tabella",
+      short: "Tabella",
+      blurb:
+        "Inserire una tabella di misure: una griglia di celle da tastiera, un blocco incollato da un foglio di calcolo e la stessa tabella come testo — migliaia di righe, solo quelle visibili montate.",
     },
     "field-sync": {
       title: "Stato di sincronizzazione",
+      short: "Sincronizzazione",
       blurb:
         "Stato di sincronizzazione di un campo legato a un database, salvato all'uscita dal campo: il colore del bordo e un'icona alla fine del campo indicano modificato, salvataggio, salvato o errore — passa sopra il simbolo d'errore per vederne il motivo.",
     },
     "signature-password": {
       title: "Firma, password e conferma",
+      short: "Firma",
       blurb:
         "Acquisire una firma — e mostrarne una salvata —, indicare all’utente quanto è sicura la sua password e confermare un’azione distruttiva.",
     },
@@ -136,28 +195,63 @@ export const it: Dictionary = {
       blurb:
         "Mostrare valori invece di acquisirli: i mattoni di base, la tabella e i grafici.",
     },
-    primitives: {
-      title: "Primitive",
+    buttons: {
+      title: "Pulsanti e superfici",
+      short: "Pulsanti",
       blurb:
-        "Pulsanti, schede, tab, banner, avatar — i pezzi con cui è costruito tutto il resto.",
+        "Pulsanti, pulsanti a icona, schede, indicatori di caricamento, stati vuoti, avatar e banner — i pezzi con cui è costruito tutto il resto.",
+    },
+    "chips-toggles": {
+      title: "Chip e interruttori",
+      short: "Chip",
+      blurb:
+        "I chip e il campo a chip, il gruppo di interruttori e le tab — i piccoli controlli che scelgono uno fra pochi o contengono un breve elenco.",
     },
     "data-table": {
       title: "Tabella dati",
+      short: "Tabella",
       blurb:
-        "Il componente più grande del kit: ordinamento, filtri, selezione, paginazione, sincronizzazione con l’URL e le sue funzioni pure.",
+        "Il componente più grande del kit, per intero: ordinamento, filtri, selezione ed espansione, controllo dall’esterno, tabella corta senza paginazione, riempimento di un riquadro e da destra a sinistra.",
     },
-    charts: {
-      title: "Grafici",
+    "data-table-server": {
+      title: "Tabella dati: server, URL e telefono",
+      short: "Server e telefono",
       blurb:
-        "L’involucro dei grafici a tema sopra Recharts, il suo sistema di colori, il grafico a riquadri (treemap) e il grafico a serie con zoom condivisi dalle app.",
+        "La tabella quando non possiede tutto: la vista conservata nell’indirizzo, le righe paginate da un server e il layout per telefono con schede, gruppi e azioni a scorrimento.",
+    },
+    "data-table-parts": {
+      title: "Tabella dati: componenti e funzioni",
+      short: "Parti tabella",
+      blurb:
+        "Ciò di cui è fatta la tabella, utilizzabile da solo: la paginazione, il popover dei filtri, l’albero delle etichette e le funzioni pure per ordinamento, filtri e URL.",
+    },
+    "chart-shell": {
+      title: "Involucro dei grafici",
+      short: "Grafici",
+      blurb:
+        "L’involucro dei grafici a tema sopra Recharts — contenitore, tooltip e legenda — e il sistema di colori da cui attinge ogni grafico del kit.",
+    },
+    "tile-chart": {
+      title: "Grafico a riquadri",
+      short: "Riquadri",
+      blurb:
+        "La treemap: le parti di un tutto come riquadri, con etichette che ci stanno e riquadri cliccabili — e il drill-down, con un grafico a barre come con i riquadri.",
+    },
+    "series-chart": {
+      title: "Grafico a serie",
+      short: "Serie",
+      blurb:
+        "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici e le funzioni sottostanti.",
     },
     stats: {
       title: "Statistiche e sparkline",
+      short: "Statistiche",
       blurb:
         "Il riquadro KPI che ogni dashboard ripete — valore, variazione, tendenza — e la minuscola linea che sta in una cella di tabella.",
     },
     layout: {
       title: "Sezione espandibile e cornice dei dialoghi",
+      short: "Espandibile",
       blurb:
         "Una sezione che si richiude e la cornice intestazione-corpo-azioni che ogni finestra di dialogo ripete.",
     },
@@ -167,14 +261,34 @@ export const it: Dictionary = {
         "Tutto ciò che fluttua sopra la pagina, e l’unica temporizzazione che tutti condividono quando si chiudono.",
     },
     dialogs: {
-      title: "Finestre di dialogo e popover",
+      title: "Finestre di dialogo",
+      short: "Dialoghi",
       blurb:
-        "Modale, dialogo a schermo intero, popover, menu al passaggio del mouse e tooltip — più la temporizzazione di chiusura condivisa.",
+        "La modale e il dialogo a schermo intero, il clic sullo sfondo che li chiude e la temporizzazione di chiusura condivisa da tutti gli overlay.",
     },
-    "tour-search-files": {
-      title: "Tour, palette comandi e file",
+    popovers: {
+      title: "Popover, menu e tooltip",
+      short: "Popover",
       blurb:
-        "Il tour guidato, la palette dei comandi, l’area di rilascio dei file e la riga scorrevole.",
+        "Gli overlay ancorati a un elemento: popover, menu al passaggio del mouse e tooltip — capovolti e contenuti nella finestra, specchiati da destra a sinistra — e il posizionamento puro che li regge.",
+    },
+    tour: {
+      title: "Tour guidato",
+      short: "Tour",
+      blurb:
+        "Un tour con riflettore sulla pagina vera: passaggi che indicano qualsiasi elemento tramite selettore, attendono un clic, eseguono codice prima e sopravvivono a un bersaglio mancante.",
+    },
+    "command-palette": {
+      title: "Palette dei comandi",
+      short: "Comandi",
+      blurb:
+        "La palette ⌘K: un elenco di luoghi e azioni in cui cercare, aperto dalla scorciatoia ovunque nella pagina, con risultati che possono arrivare in ritardo.",
+    },
+    "swipeable-row": {
+      title: "Riga scorrevole",
+      short: "Scorrimento",
+      blurb:
+        "Una riga di elenco che mostra le sue azioni quando la trascini di lato — con il dito o il mouse, a livelli, da destra a sinistra — con le stesse azioni raggiungibili da tastiera.",
     },
     "app-chrome": {
       title: "Struttura dell’app",
@@ -183,352 +297,51 @@ export const it: Dictionary = {
     },
     shell: {
       title: "Shell",
+      short: "Shell",
       blurb: "La cornice dell’app che stai guardando, smontata pezzo per pezzo.",
     },
     settings: {
       title: "Campi delle impostazioni",
+      short: "Impostazioni",
       blurb:
         "Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
     },
     wizard: {
       title: "Procedura guidata",
+      short: "Procedura",
       blurb: "Il motore a più passaggi, la sua cornice e il passaggio di riepilogo.",
     },
     "feedback-compose": {
       title: "Feedback — scrittura",
+      short: "Scrittura",
       blurb: "Il modulo di segnalazione e il suo campo per gli allegati.",
     },
     "feedback-inbox": {
       title: "Feedback — posta in arrivo",
+      short: "In arrivo",
       blurb:
         "Il vocabolario di stati condiviso, le regole di transizione e le parti con cui si costruisce una casella di posta.",
-    },
-    "hooks-lib": {
-      title: "Hook e lib",
-      blurb:
-        "Le esportazioni non visive: gli hook osservati dal vivo e le funzioni pure come input → output.",
     },
     api: {
       title: "API",
       blurb:
         "Ciò che resta togliendo i pixel: gli hook con cui sono costruiti i componenti e le funzioni pure e le costanti che un'app chiama direttamente.",
     },
+    "hooks-lib": {
+      title: "Hook e lib",
+      short: "Hook",
+      blurb:
+        "Le esportazioni non visive: gli hook osservati dal vivo e le funzioni pure come input → output.",
+    },
     helpers: {
       title: "Funzioni e costanti",
+      short: "Funzioni",
       blurb:
         "Le funzioni e i dati dietro i campi, come input → risultato: il calcolo delle date di @eifi1/ui-kit/dates, il valutatore della calcolatrice, la tabella delle valute e le costanti di classe con cui si compone un campo personalizzato.",
     },
   },
 
-  kit: {
-    pageContents: { title: "In questa pagina" },
-    common: {
-      close: "Chiudi",
-      clear: "Cancella",
-      search: "Cerca",
-      done: "Fine",
-      cancel: "Annulla",
-      save: "Salva",
-      back: "Indietro",
-      next: "Avanti",
-      remove: "Rimuovi",
-      loading: "Caricamento…",
-      noResults: "Nessun risultato",
-      fieldValue: (field, value) => `${field}: ${value}`,
-    },
-    dataTable: {
-      columns: "Colonne",
-      selectAllRows: "Seleziona tutte le righe",
-      sortHint: "Fai clic per ordinare · Maiusc+clic per aggiungere un ordinamento",
-      filter: "Filtra",
-      close: "Chiudi",
-      selectRow: "Seleziona riga",
-      autoSize: "Adatta larghezza colonne",
-      loading: "Caricamento…",
-      filters: "Filtri",
-      clearAll: "Cancella tutto",
-      done: "Fine",
-      pageSize: "Righe per pagina",
-      pageSizeAll: "Tutte",
-      prevPage: "Pagina precedente",
-      nextPage: "Pagina successiva",
-      clearFilter: "Cancella filtro",
-      filterPlaceholder: "Filtra…",
-      selectFilter: "Seleziona",
-      selectAll: "Tutti",
-      selectNone: "Nessuno",
-      dateFrom: "Dal",
-      dateTo: "Al",
-      numberMin: "Min",
-      numberMax: "Max",
-      numberAbs: "Valore assoluto",
-      presets: {
-        today: "Oggi",
-        yesterday: "Ieri",
-        this_week: "Questa settimana",
-        last_week: "Settimana scorsa",
-        last_7_days: "Ultimi 7 giorni",
-        last_30_days: "Ultimi 30 giorni",
-        this_month: "Questo mese",
-        last_month: "Mese scorso",
-        last_3_months: "Ultimi 3 mesi",
-        ytd: "Da inizio anno",
-        last_year: "Anno scorso",
-      },
-      table: "Tabella dati",
-      filterResults: (shown, total) =>
-        `${n(shown)} di ${n(total)} ${plural(total, "riga", "righe")}`,
-      sortedAscending: (column) => `Ordinato per ${column}, crescente`,
-      sortedDescending: (column) => `Ordinato per ${column}, decrescente`,
-      sortCleared: (column) => `Ordinamento per ${column} rimosso`,
-      pageChanged: (page, totalPages) => `Pagina ${n(page)} di ${n(totalPages)}`,
-      pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
-      rowCount: (total) => n(total),
-      columnsCount: (visible, total) => `Colonne (${n(visible)}/${n(total)})`,
-    },
-    miniCalendar: {
-      previousMonth: "Mese precedente",
-      nextMonth: "Mese successivo",
-      // Already formatted in the provider's locale ("lunedì 14 settembre 2026").
-      day: (date) => date,
-      chooseStart: "Scegli una data di inizio",
-      chooseEnd: "Scegli una data di fine",
-      // "Data" is feminine and the formatted day cannot agree with a participle, so the
-      // date follows a label instead of being the subject.
-      startSelected: (date) => `Data di inizio: ${date}. Scegli una data di fine.`,
-      rangeSelected: (from, to) =>
-        `Periodo selezionato: da ${from} a ${to}. Scegli una data di inizio per ricominciare.`,
-    },
-    monthPicker: {
-      previousYear: "Anno precedente",
-      nextYear: "Anno successivo",
-      panel: "Scegli un mese",
-      month: (monthYear) => monthYear,
-    },
-    datePicker: {
-      panel: "Scegli una data",
-      rangePanel: "Scegli un intervallo di date",
-      clear: "Cancella",
-      previousDay: "Giorno precedente",
-      nextDay: "Giorno successivo",
-      today: "Oggi",
-    },
-    popover: {
-      panel: "Finestra a comparsa",
-    },
-    combobox: {
-      search: "Cerca",
-      noResults: "Nessun risultato",
-      clear: "Cancella",
-      loading: "Caricamento…",
-      create: (query) => `Crea «${query}»`,
-      selectedCount: (count) => `${n(count)} ${plural(count, "selezionato", "selezionati")}`,
-      loadError: "Impossibile caricare i risultati",
-      resultCount: (count) => `${n(count)} ${plural(count, "risultato", "risultati")}`,
-      minChars: (count) => `Digita almeno ${n(count)} ${plural(count, "carattere", "caratteri")}`,
-    },
-    multiSelect: {
-      search: "Cerca",
-      selectAll: "Seleziona tutto",
-      clear: "Cancella",
-      all: "Tutti",
-      // The bare count, as in English: the trigger has always shown just the number.
-      selectedCount: (count) => n(count),
-    },
-    calculator: {
-      open: "Apri calcolatrice",
-      panel: "Calcolatrice",
-      calculation: "Calcolo",
-      backspace: "Cancella ultimo carattere",
-      clear: "Azzera",
-      equals: "Uguale",
-      done: "Fine",
-      plus: "Più",
-      minus: "Meno",
-      times: "Per",
-      divide: "Diviso",
-      decimal: "Separatore decimale",
-    },
-    currency: {
-      currency: "Valuta",
-      search: "Cerca valuta",
-    },
-    chipInput: {
-      // The quoted value is a citation; the participle agrees with the implied
-      // "elemento" whatever the chip says.
-      added: (value) => `«${value}» aggiunto`,
-      removed: (value) => `«${value}» rimosso`,
-      remove: "Rimuovi",
-      atLimit: (max) => `Limite di ${n(max)} ${plural(max, "elemento", "elementi")} raggiunto`,
-      duplicate: (value) => `«${value}» è già nell’elenco`,
-    },
-    swatchPicker: {
-      none: "Nessun colore",
-      mixed: "Misto: gli elementi selezionati hanno colori diversi",
-    },
-    iconPicker: {
-      none: "Nessuna icona",
-      mixed: "Misto: gli elementi selezionati hanno icone diverse",
-      search: "Cerca icone",
-      noResults: "Nessuna icona corrispondente",
-      resultCount: (count) => `${n(count)} ${plural(count, "icona", "icone")}`,
-    },
-    fieldSync: {
-      synced: "Salvato",
-      edited: "Modifiche non salvate",
-      pending: "Salvataggio…",
-      error: "Impossibile salvare",
-      retry: "Riprova",
-    },
-    passwordReveal: {
-      show: "Mostra password",
-      hide: "Nascondi password",
-    },
-    dangerConfirm: {
-      arm: "Elimina…",
-      confirm: "Elimina",
-      cancel: "Annulla",
-      prompt: "Questa operazione non può essere annullata.",
-      password: "Password",
-      phrase: (phrase) => `Digita «${phrase}» per confermare`,
-    },
-    tabs: {
-      add: "Aggiungi scheda",
-      remove: (tab) => `Rimuovi ${tab}`,
-    },
-    appShell: {
-      collapse: "Comprimi barra laterale",
-      expand: "Espandi barra laterale",
-      toggleGroup: (groupLabel) => `${groupLabel}: pagine`,
-    },
-    topBar: {
-      theme: "Cambia tema",
-      palette: "Preset di aspetto",
-      language: "Lingua",
-      switchRole: "Cambia ruolo",
-      role: (value) => `Ruolo: ${value}`,
-    },
-    pickerSheet: {
-      close: "Chiudi",
-    },
-    dialogFrame: {
-      close: "Chiudi",
-    },
-    swipeableRow: {
-      actions: "Azioni della riga",
-    },
-    file: {
-      // The kit's own `Intl` unit formatting, pinned to this locale ("3,4 MB").
-      size: (bytes) => formatFileSize(bytes, "it-IT"),
-    },
-    filePicker: {
-      // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
-      rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
-      rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
-      rejectedCount: (name, maxFiles) => `«${name}» non è stato aggiunto: al massimo ${n(maxFiles)} file`,
-      rejectedInvalid: (name) => `«${name}» non può essere usato qui`,
-      rejectedMany: (count) =>
-        count === 1 ? "1 file non è stato aggiunto" : `${n(count)} file non sono stati aggiunti`,
-      selected: (count, firstName) =>
-        count === 1 ? `«${firstName}» selezionato` : `${n(count)} file selezionati`,
-      remove: (name) => `Rimuovi «${name}»`,
-      clearAll: "Rimuovi tutti i file",
-      removed: (name) => `«${name}» rimosso`,
-      cleared: "Tutti i file rimossi",
-    },
-    wizard: {
-      cancel: "Annulla",
-      back: "Indietro",
-      next: "Avanti",
-      skip: "Salta",
-      finish: "Fine",
-      submitting: "Creazione in corso…",
-      steps: "Passaggi",
-      step: (current, total) => `Passaggio ${n(current)} di ${n(total)}`,
-      cancelTitle: "Scartare questo modulo?",
-      confirmCancel: "I dati inseriti andranno persi.",
-      cancelConfirmLabel: "Scarta",
-      cancelDismissLabel: "Continua a modificare",
-      reviewTitle: "Riepilogo",
-      edit: "Modifica",
-      missingRequired: "Compila tutti i campi obbligatori.",
-      genericError: "Si è verificato un errore",
-    },
-    tour: {
-      next: "Avanti",
-      back: "Indietro",
-      skip: "Salta",
-      done: "Fine",
-      awaitClickHint: "Fai clic sull’elemento evidenziato per continuare",
-      step: (current, total) => `${n(current)} / ${n(total)}`,
-    },
-    commandPalette: {
-      placeholder: "Cerca…",
-      empty: "Nessun risultato",
-      loading: "Ricerca in corso…",
-      dialog: "Ricerca",
-    },
-    sparkline: {
-      rising: (first, last) => `In aumento da ${first} a ${last}`,
-      falling: (first, last) => `In calo da ${first} a ${last}`,
-      flat: (value) => `Stabile a ${value}`,
-      single: (value) => `Un solo valore: ${value}`,
-      noData: "Nessun dato",
-      named: (name, summary) => `${name}: ${summary}`,
-    },
-    statTile: {
-      increase: (amount) => `In aumento di ${amount}`,
-      decrease: (amount) => `In calo di ${amount}`,
-      unchanged: "Nessuna variazione",
-      better: (change) => `${change} (favorevole)`,
-      worse: (change) => `${change} (sfavorevole)`,
-      noValue: "Nessun dato",
-      loading: "Caricamento…",
-    },
-    signaturePad: {
-      label: "Firma",
-      instructions: "Firma nel riquadro con il mouse, il dito o una penna.",
-      typedFallbackHint: "Se non puoi disegnare, scrivi invece il tuo nome.",
-      empty: "Ancora nessun tratto",
-      signed: "Firma tracciata",
-      undo: "Annulla l’ultimo tratto",
-      clear: "Cancella",
-      save: "Salva firma",
-      useTyped: "Scrivi il nome",
-      useDrawn: "Disegna la firma",
-      typedName: "Nome e cognome",
-      cleared: "Firma cancellata",
-      undone: "Ultimo tratto rimosso",
-      viewEmpty: "Non firmato",
-      viewDrawn: "Firma autografa",
-      viewTyped: (name) => `Firmato con il nome digitato ${name}`,
-    },
-    passwordStrength: {
-      // Agrees with "password" (feminine in Italian).
-      tooShort: "Troppo corta",
-      weak: "Debole",
-      fair: "Discreta",
-      good: "Buona",
-      strong: "Forte",
-      announcement: (level) => `Sicurezza della password: ${level}`,
-      // Unformatted, as in the English default.
-      ruleLength: (minLength) =>
-        `Almeno ${minLength} ${plural(minLength, "carattere", "caratteri")}`,
-      ruleCase: "Maiuscole e minuscole",
-      ruleDigit: "Un numero",
-      ruleSymbol: "Un simbolo",
-      optional: (rule) => `${rule} (facoltativo)`,
-      met: "Soddisfatto:",
-      notMet: "Non soddisfatto:",
-      tooLong: (maxBytes) =>
-        `Al massimo ${maxBytes} ${plural(maxBytes, "carattere", "caratteri")} (le lettere accentate e le emoji contano più di uno).`,
-    },
-    seriesChart: {
-      resetZoom: "Reimposta zoom",
-      zoomHint:
-        "Trascina per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Fai doppio clic per ripristinare.",
-      empty: "Nessun dato",
-      legend: "Serie",
-    },
-  },
+
+  // The kit's own words ship with the package — the same import an app writes.
+  kit: UI_KIT_LABELS_IT,
 };

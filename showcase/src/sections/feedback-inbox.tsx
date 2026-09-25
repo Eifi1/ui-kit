@@ -37,9 +37,8 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * Two consequences worth expecting before you scroll:
  *   • Every label on this page is the SHOWCASE'S. The kit ships no strings, not even
  *     English ones, because both apps translate.
- *   • The colours here do NOT follow the palette switch in the top bar. That is
- *     deliberate for the status and category treatments and accidental for a few
- *     greys — see the note at the foot of the section.
+ *   • The colours are the kit's semantic tokens (warning, info, success, danger…),
+ *     so they follow the palette switch in the top bar like everything else.
  */
 
 /**
@@ -145,8 +144,8 @@ export function FeedbackInbox() {
                   ? `chain ${CHAIN.indexOf(status) + 1}/${CHAIN.length}`
                   : "off the chain"}
               </span>
-              {/* The treatment the kit hardcodes, printed so the closing note about
-                  the palette is checkable rather than asserted. */}
+              {/* The treatment the kit ships, printed so it is checkable rather than
+                  asserted: a semantic token, not a fixed colour. */}
               <code className="ml-auto font-mono text-[11px] text-[var(--text-muted)]">
                 {FEEDBACK_STATUS_META[status].activeBg}
               </code>
@@ -155,8 +154,8 @@ export function FeedbackInbox() {
         </div>
         <p className="mt-3 text-xs text-[var(--text-secondary)]">
           Four are a chain and three sit off it. Every one carries its own glyph as well as
-          its own tone, because two of these are a violet and an indigo apart and colour
-          alone is not a label.
+          its own tone, because two of them share the neutral tone and colour alone is not a
+          label.
         </p>
       </Example>
 
@@ -349,16 +348,11 @@ export function FeedbackInbox() {
       </Note>
 
       <Note>
-        <strong>Nothing in this section follows the palette.</strong> Switch the palette in the
-        top bar: the cards around these specimens move, the pills do not. For the status and
-        category treatments that is right — a status colour that drifted with the theme preset
-        would stop being a code people can learn, and the class strings printed in the two grids
-        above are Tailwind&apos;s own palette for exactly that reason. The greys are the
-        accident: <code className="font-mono">FeedbackProse</code>&apos;s body text,{" "}
-        <code className="font-mono">FeedbackDetailSection</code>&apos;s titles, the note
-        editor&apos;s hint line and the icon variant&apos;s inactive glyphs are all{" "}
-        <code className="font-mono">slate-*</code> where the rest of the kit would use{" "}
-        <code className="font-mono">var(--text-secondary)</code>.
+        <strong>Everything here follows the palette.</strong> The status and category
+        treatments are semantic tokens (<code className="font-mono">--warning-bg</code>,{" "}
+        <code className="font-mono">--info</code>, …), as the class strings printed in the two
+        grids above show — switch the palette in the top bar and the pills move with the page
+        while keeping their meaning.
       </Note>
     </>
   );
@@ -465,9 +459,8 @@ function OutcomeEditor() {
 
   return (
     <FeedbackNoteEditor
-      // Re-seeded by an effect whenever this changes, which is what lets the editor
-      // be reopened on a value that was edited elsewhere in the meantime. The flip
-      // side is that a parent which changes `initial` mid-typing discards the draft.
+      // Seeds the draft once, on mount — this editor is remounted each time it is
+      // opened, which is what picks up a value edited elsewhere in the meantime.
       initial={saved}
       pending={pending}
       onSave={(value) => {
@@ -504,6 +497,8 @@ function ReplyEditor() {
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);
+  // Bumped after a send: the editor's `resetKey`, so the next reply starts empty.
+  const [sentCount, setSentCount] = useState(0);
 
   const attachment: FeedbackNoteAttachment = {
     labels: {
@@ -513,7 +508,10 @@ function ReplyEditor() {
       attachmentAdd: "Add a picture",
       attachmentRemove: "Remove the picture",
       attachmentPaste: "…or paste a screenshot straight into the box above.",
+      attachmentCapture: "Capture this page",
     },
+    // Passed through to the field; a stand-in here, as on the compose page.
+    onCaptureScreenshot: captureStandIn,
     // Tighter than the kit's defaults on purpose, to show that the reply path is held
     // to the app's own limits rather than to whatever the field ships with.
     accept: ["image/png", "image/jpeg"],
@@ -537,6 +535,7 @@ function ReplyEditor() {
           void beat().then(() => {
             setSent(file ? `${value}  [+ ${file.name}]` : value);
             setPending(false);
+            setSentCount((n) => n + 1);
           });
         }}
         onCancel={() => {
@@ -547,6 +546,7 @@ function ReplyEditor() {
         cancelLabel="Discard"
         placeholder="A note back to whoever filed this. A picture is optional."
         attachment={attachment}
+        resetKey={sentCount}
       />
       {rejected && <p className="text-xs text-[var(--text-secondary)]">{rejected}</p>}
       <p className="text-xs text-[var(--text-muted)]">
@@ -554,10 +554,10 @@ function ReplyEditor() {
         <span className="font-mono text-[var(--text-secondary)]">{sent ?? "— nothing yet —"}</span>
       </p>
       <Note>
-        The draft stays in the box after a send, because <code className="font-mono">initial</code>{" "}
-        is still <code className="font-mono">&quot;&quot;</code> and the editor only re-seeds when
-        that value changes. A real inbox unmounts the editor on success, or hands it a new{" "}
-        <code className="font-mono">initial</code>. Pasting an image while the caret is in the
+        The box empties after a send because <code className="font-mono">resetKey</code> changes:
+        the editor drops the draft and the picture and re-seeds from{" "}
+        <code className="font-mono">initial</code>. <code className="font-mono">initial</code> alone
+        never does — a new value arriving mid-typing would otherwise throw the draft away. Pasting an image while the caret is in the
         textarea works because the field is told to listen on{" "}
         <code className="font-mono">pasteFrom</code> — the editor&apos;s own root — rather than on
         its own subtree: the box is the field&apos;s sibling, so a paste made in it never passes
@@ -565,6 +565,22 @@ function ReplyEditor() {
       </Note>
     </div>
   );
+}
+
+/** A stand-in for the app's screenshot call: a small canvas drawing, as a PNG. */
+async function captureStandIn(): Promise<File | null> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 180;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = "#e7e5e4";
+  ctx.fillRect(0, 0, 320, 180);
+  ctx.fillStyle = "#111";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("Stand-in capture", 16, 40);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  return blob ? new File([blob], "capture.png", { type: "image/png" }) : null;
 }
 
 /**

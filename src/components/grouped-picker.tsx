@@ -100,7 +100,7 @@ export function GroupedPicker({
         <ChevronDown className="size-4 shrink-0 text-[var(--text-placeholder)]" />
       </button>
       {open && (
-        <div className="absolute left-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg">
+        <div className="absolute start-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg">
           <DropdownSearchHeader
             query={query}
             onQueryChange={setQuery}
@@ -132,7 +132,7 @@ export function GroupedPicker({
                                 setOpen(false);
                               }}
                               className={cn(
-                                "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-left text-sm",
+                                "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-start text-sm",
                                 isSelected
                                   ? "bg-[var(--brand-bg)] font-medium text-[var(--brand-muted)]"
                                   : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",

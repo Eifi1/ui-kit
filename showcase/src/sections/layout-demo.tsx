@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Button, Collapse, DialogFrame, Disclosure, Input, cn } from "@eifi1/ui-kit";
+import { Button, Collapse, DialogFrame, Disclosure, Input, buttonClasses, cn } from "@eifi1/ui-kit";
 import { Example, Note, Row, Stage } from "../lib/section";
 
 /**
@@ -47,6 +47,47 @@ export function LayoutDemo() {
         <Stage>
           <BareSpecimen />
         </Stage>
+      </Example>
+
+      <Example label="Disclosure — trailing" hint="A count, a date or an action beside the title">
+        <Stage>
+          <TrailingSpecimens />
+        </Stage>
+        <Note>
+          <code className="font-mono">trailing</code> is a sibling of the header button, never
+          inside it: a button cannot hold another button, and a count inside it would be read as
+          part of its name. The header button is stretched under the whole row, so the empty
+          space and the chevron still toggle.
+        </Note>
+      </Example>
+
+      <Example label="Disclosure — trigger-only" hint="The header governs rows rendered elsewhere">
+        <Stage>
+          <TriggerOnlySpecimen />
+        </Stage>
+        <Note>
+          <code className="font-mono">controls</code> takes the id of the caller&apos;s own
+          element; the header&apos;s <code className="font-mono">aria-controls</code> points
+          there and the disclosure renders no body.
+        </Note>
+      </Example>
+
+      <Example
+        label="Disclosure — disabled, keepMounted and right-to-left"
+        hint="A locked section; a body that keeps its state; the bare chevron mirrored"
+      >
+        <Stage>
+          <MoreDisclosureSpecimens />
+        </Stage>
+        <Note>
+          <code className="font-mono">disabled</code> locks the header in whatever state it is
+          in — the open one stays readable. <code className="font-mono">keepMounted</code> keeps
+          the body (hidden and <code className="font-mono">inert</code>) while shut: type in the
+          field, close, reopen, and the text and the mount time are both unchanged.{" "}
+          <code className="font-mono">bodyClassName</code> sets the body&apos;s padding and
+          spacing. In RTL the bare chevron points left while shut — along the reading
+          direction — and the card chevron sits at the left end.
+        </Note>
       </Example>
 
       <Example label="Collapse" hint="The fold alone, for a trigger of your own">
@@ -123,6 +164,126 @@ function BareSpecimen() {
   );
 }
 
+function TrailingSpecimens() {
+  const [edits, setEdits] = useState(0);
+  const threads = [
+    { subject: "Import stops at row 400", when: "09:14" },
+    { subject: "Totals differ on the phone", when: "Yesterday" },
+  ];
+  return (
+    <div data-stage="wide" className="mx-auto w-full max-w-xl space-y-3">
+      <Disclosure
+        title="Scheduled payments"
+        hint="Rules that book on their own"
+        headingAs="h4"
+        trailing={
+          <>
+            <span className="rounded-full bg-[var(--bg-surface-2)] px-2 text-xs tabular-nums text-[var(--text-secondary)]">
+              4
+            </span>
+            <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEdits((n) => n + 1)}>
+              Edit
+            </Button>
+          </>
+        }
+      >
+        <MountStamp />
+        <p className="font-mono text-xs text-[var(--text-muted)]">edit clicks = {edits} (the fold did not move)</p>
+      </Disclosure>
+      <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]">
+        {threads.map((t, i) => (
+          <Disclosure
+            key={t.subject}
+            variant="bare"
+            title={t.subject}
+            className={cn("px-3 py-2.5", i > 0 && "border-t border-[var(--border)]")}
+            headerClassName="text-[var(--text-primary)]"
+            trailing={<span className="text-xs tabular-nums text-[var(--text-muted)]">{t.when}</span>}
+          >
+            <p className="text-sm text-[var(--text-secondary)]">The thread&apos;s messages.</p>
+          </Disclosure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TriggerOnlySpecimen() {
+  const [open, setOpen] = useState(false);
+  const rowsId = useId();
+  const visible = ["Checking", "Savings"];
+  const hidden = ["Old savings", "Closed card", "Travel wallet"];
+  return (
+    <div data-stage="wide" className="mx-auto w-full max-w-xl space-y-2">
+      <Disclosure
+        variant="bare"
+        title={`${open ? "Hide" : "Show"} ${hidden.length} hidden accounts`}
+        controls={rowsId}
+        open={open}
+        onOpenChange={setOpen}
+        trailing={<span className="text-xs text-[var(--text-muted)]">aria-controls → the table&apos;s rows</span>}
+      />
+      <table className="w-full overflow-hidden rounded-lg border border-[var(--border)] text-sm">
+        <tbody className="divide-y divide-[var(--border)]">
+          {visible.map((a) => (
+            <tr key={a}>
+              <td className="px-3 py-2 text-[var(--text-primary)]">{a}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tbody id={rowsId} className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+          {open &&
+            hidden.map((a) => (
+              <tr key={a}>
+                <td className="px-3 py-2 text-[var(--text-muted)]">{a}</td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function MoreDisclosureSpecimens() {
+  const [locked, setLocked] = useState(true);
+  return (
+    <>
+      <div className="space-y-2">
+        <Disclosure
+          title="Billing address"
+          hint={locked ? "Locked while the invoice is being sent" : "Editable again"}
+          headingAs="h4"
+          defaultOpen
+          disabled={locked}
+        >
+          <p className="text-sm text-[var(--text-secondary)]">Hauptstraße 5, 10115 Berlin</p>
+        </Disclosure>
+        <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
+          {locked ? "Unlock the header" : "Lock the header"}
+        </Button>
+      </div>
+      <Disclosure
+        title="Draft note"
+        hint="keepMounted — the text survives a close"
+        headingAs="h4"
+        keepMounted
+        bodyClassName="space-y-2 bg-[var(--bg-surface-2)] px-4 py-3 rounded-b-lg"
+      >
+        <MountStamp />
+        <Input aria-label="Draft note" placeholder="Type, close, reopen" />
+      </Disclosure>
+      <div dir="rtl" className="space-y-3">
+        <Disclosure title="الإعدادات المتقدمة" hint="بطاقة: السهم في الطرف" headingAs="h4">
+          <p className="text-sm text-[var(--text-secondary)]">المحتوى</p>
+        </Disclosure>
+        <Disclosure variant="bare" title="إظهار ٣ حسابات مخفية">
+          <p className="text-sm text-[var(--text-secondary)]">حساب التوفير القديم</p>
+        </Disclosure>
+      </div>
+    </>
+  );
+}
+
 function CollapseSpecimen() {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -142,7 +303,7 @@ function CollapseSpecimen() {
   );
 }
 
-type DialogKind = "form" | "commit" | "tall" | "sheet";
+type DialogKind = "form" | "commit" | "tall" | "sheet" | "question" | "wide" | "header";
 
 function DialogSpecimens() {
   const [kind, setKind] = useState<DialogKind | null>(null);
@@ -163,7 +324,97 @@ function DialogSpecimens() {
         <Button variant="secondary" onClick={() => setKind("sheet")}>
           Full-screen on a phone
         </Button>
+        <Button variant="secondary" onClick={() => setKind("question")}>
+          Question only (no body)
+        </Button>
+        <Button variant="secondary" onClick={() => setKind("wide")}>
+          Wide (xl), draggable, custom close label
+        </Button>
+        <Button variant="secondary" onClick={() => setKind("header")}>
+          headerActions (node and function)
+        </Button>
       </Row>
+      <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">open = {kind ?? "null"}</p>
+
+      {kind === "wide" && (
+        <DialogFrame
+          onClose={close}
+          title="Compare two imports"
+          description="Drag the panel by its top edge to see the page behind it."
+          headingAs="h4"
+          size="xl"
+          draggable
+          closeButton
+          closeLabel="Dismiss the comparison"
+          aria-describedby="dialogframe-extra-note"
+        >
+          <p className="text-sm text-[var(--text-secondary)]">
+            <code className="font-mono">size</code> is the panel&apos;s max width —{" "}
+            <code className="font-mono">md</code> 28rem (default), <code className="font-mono">lg</code>{" "}
+            32rem, <code className="font-mono">xl</code> 48rem. On a phone all three are the same
+            full-width bottom sheet, and dragging is off.
+          </p>
+          <p id="dialogframe-extra-note" className="text-sm text-[var(--text-secondary)]">
+            This paragraph is joined to the description through the caller&apos;s own{" "}
+            <code className="font-mono">aria-describedby</code>; the X is named by{" "}
+            <code className="font-mono">closeLabel</code>.
+          </p>
+        </DialogFrame>
+      )}
+
+      {kind === "header" && (
+        <DialogFrame
+          onClose={close}
+          title="Invoice INV-2026-0142"
+          description="Draft · last edited 2 minutes ago"
+          headingAs="h4"
+          closeButton
+          // The node form: a link that belongs to the header, not to the actions row.
+          headerActions={
+            <a
+              href="#/layout"
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClasses("ghost", "text-xs")}
+            >
+              Open in full page ↗
+            </a>
+          }
+          actions={(animatedClose) => (
+            <Button variant="secondary" onClick={animatedClose}>
+              Close
+            </Button>
+          )}
+        >
+          <p className="text-sm text-[var(--text-secondary)]">
+            <code className="font-mono">headerActions</code> render beside the title, before the X.
+            On a phone, where title and controls do not fit on one line, they wrap under the title
+            and the X keeps its corner — try the phone preview.
+          </p>
+        </DialogFrame>
+      )}
+
+      {kind === "question" && (
+        // No children: title, description and actions are the whole dialog, and the
+        // frame renders no empty body (and no rule over the actions) for it.
+        <DialogFrame
+          onClose={close}
+          title="Log out with 3 unsynced changes?"
+          description="They exist only on this device until the next sync."
+          headingAs="h4"
+          closeButton
+          actions={(animatedClose) => (
+            <>
+              <Button variant="secondary" onClick={animatedClose}>
+                Cancel
+              </Button>
+              <Button variant="brand" onClick={close}>
+                Sync now
+              </Button>
+            </>
+          )}
+        />
+      )}
 
       {kind === "form" && (
         <DialogFrame
@@ -189,10 +440,22 @@ function DialogSpecimens() {
       )}
 
       {kind === "commit" && (
-        <DialogFrame onClose={close} title="Group settings" headingAs="h4" closeButton>
+        <DialogFrame
+          onClose={close}
+          title="Group settings"
+          headingAs="h4"
+          closeButton
+          // The function form receives the animated close, as `actions` does.
+          headerActions={(animatedClose) => (
+            <Button variant="ghost" className="text-xs" onClick={animatedClose}>
+              Done
+            </Button>
+          )}
+        >
           <p className="text-sm text-[var(--text-secondary)]">
             Every change here saves as it is made, so there is no actions row — the X is the way
-            out.
+            out, and so is the header&apos;s own <strong>Done</strong>: a{" "}
+            <code className="font-mono">headerActions</code> function handed the animated close.
           </p>
         </DialogFrame>
       )}
@@ -206,6 +469,11 @@ function DialogSpecimens() {
           size="lg"
           closeButton={kind === "sheet"}
           fullBleed={kind === "sheet"}
+          // The phone sheet: a rule under the header that stays, and one gutter
+          // (px-3) for header and body alike.
+          headerDivider={kind === "sheet"}
+          headerClassName={cn(kind === "sheet" && "px-3")}
+          bodyClassName={cn(kind === "sheet" && "px-3")}
           className={cn(kind === "sheet" && "h-[100dvh] max-w-full rounded-none md:h-auto md:max-w-lg md:rounded-lg")}
           actions={(animatedClose) => (
             <>

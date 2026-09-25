@@ -65,6 +65,15 @@ export interface IconPickerProps<T extends string>
   searchable?: boolean;
   /** 28 / 32 / 44px tiles. Default "md"; "lg" is the touch-target size. */
   size?: TileSize;
+  /**
+   * Classes for every tile's frame, merged after the kit's own — so a caller's
+   * `size-*` beats `size`'s. For a tile that has to follow a container query or a
+   * breakpoint (keksdose grows its tiles to 40px in a narrow card:
+   * `tileClassName="@max-md:size-10"`) without reaching into the kit's markup with an
+   * `[&_[role=radio]]` selector. The swatch dot / glyph inside keeps `size`'s
+   * dimensions; the tile grows round it.
+   */
+  tileClassName?: string;
   disabled?: boolean;
   labels?: Partial<IconPickerLabels>;
 }
@@ -93,6 +102,7 @@ export function IconPicker<T extends string>({
   activation = "automatic",
   searchable = false,
   size = "md",
+  tileClassName,
   disabled = false,
   labels,
   className,
@@ -156,7 +166,10 @@ export function IconPicker<T extends string>({
             return Icon ? <Icon aria-hidden className={TILE_SIZE[size].glyph} /> : null;
           }}
           tileClassName={(_item, selected) =>
-            selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"
+            cn(
+              selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+              tileClassName,
+            )
           }
         />
       </div>

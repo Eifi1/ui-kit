@@ -21,7 +21,7 @@ import { useGroupLabel, usePageText } from "../i18n";
  * A group's index: one card per page, each naming the exported components that page
  * demonstrates. Modelled on the component indexes of MUI and Carbon — the reader who
  * arrives looking for `MultiSelect` should not have to guess that it lives under
- * "Dropdowns & pickers" rather than "Text fields".
+ * "Dropdown parts" rather than "Text fields".
  */
 export function GroupOverview({ group }: { group: ShowcaseGroup }) {
   return (
@@ -75,7 +75,7 @@ function PageCard({ page }: { page: ShowcasePage }) {
 /**
  * The page the rest hangs off: what the kit is, the order its layers build in, and
  * the conventions every component keeps — which is the common thread a reader clicking
- * through fifteen pages of specimens otherwise has to reconstruct for themselves.
+ * through forty pages of specimens otherwise has to reconstruct for themselves.
  */
 export function GettingStarted() {
   const layers = GROUPS.filter((g) => g.slug !== "start");
@@ -98,7 +98,7 @@ export function GettingStarted() {
       </Example>
 
       <Example
-        label="The six layers, in the order they build on each other"
+        label="The seven layers, in the order they build on each other"
         hint="each group in the sidebar is one layer; its entry opens an overview"
       >
         <ol className="grid gap-3 sm:grid-cols-2">
@@ -108,9 +108,9 @@ export function GettingStarted() {
         </ol>
         <Note>
           Read top to bottom and each layer only uses the ones above it. Tokens are what every
-          pixel is painted with; inputs and displays are built from primitives in those tokens;
-          overlays float them above the page; the app chrome composes all of it into a frame;
-          the API layer is what remains when you take the pixels away.
+          pixel is painted with; inputs, pickers and displays are built from primitives in those
+          tokens; overlays float them above the page; the app chrome composes all of it into a
+          frame; the API layer is what remains when you take the pixels away.
         </Note>
       </Example>
 
@@ -220,12 +220,12 @@ const CONVENTIONS: Array<[string, string]> = [
 ];
 
 const MUI_MAP: Array<[string, string]> = [
-  ["Inputs", "Inputs — text, choices, numbers, pickers, dates, sync state"],
-  ["Data display", "Data display — primitives, data table, charts"],
-  ["Feedback (Dialog, Snackbar, Alert)", "Overlays, and AlertBanner under Primitives"],
-  ["Surfaces (Card, Accordion)", "Primitives"],
-  ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, wizard; Tabs under Primitives"],
+  ["Inputs", "Inputs — text, forms, choices, numbers, dates, files; Pickers & entry — comboboxes, entity pickers, table entry, sync state"],
+  ["Data display", "Data display — buttons, chips, data table, charts, stats"],
+  ["Feedback (Dialog, Snackbar, Alert)", "Overlays — dialogs, popovers; AlertBanner under Buttons & surfaces"],
+  ["Surfaces (Card, Accordion)", "Buttons & surfaces; Disclosure under Data display"],
+  ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, wizard; Tabs under Chips & toggles"],
   ["Layout / Utils", "API — hooks and helpers"],
   ["Customization (Theming)", "Foundations — tokens, palettes, localisation"],
-  ["MUI X (Data Grid, Date Pickers, Charts)", "Data table, Dates, Charts"],
+  ["MUI X (Data Grid, Date Pickers, Charts)", "Data table, Calendars & date pickers, Chart shell"],
 ];

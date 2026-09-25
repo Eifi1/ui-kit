@@ -77,6 +77,14 @@ describe("ToggleLegend", () => {
     expect(container.querySelectorAll("svg[aria-hidden]")).toHaveLength(1);
   });
 
+  it("fades a hidden stroke mark once, with its button, not a second time on the line", () => {
+    // The line used to carry its own opacity 0.35 inside the button's opacity-35: about
+    // 12 % in all, a mark gone rather than dimmed, while a square beside it read at 35 %.
+    render(<ToggleLegend entries={ENTRIES} hidden={new Set(["z"])} onToggle={() => {}} />);
+    expect(button("Z")).toHaveClass("opacity-35");
+    expect(button("Z").querySelector("line")!.hasAttribute("opacity")).toBe(false);
+  });
+
   it("draws a stroke entry in the chart's own dash pattern", () => {
     render(<ToggleLegend entries={ENTRIES} hidden={new Set()} onToggle={() => {}} />);
     const line = button("Z").querySelector("line")!;
@@ -167,5 +175,19 @@ describe("LegendColumn / LegendGroup", () => {
     const title = screen.getByText("Channel");
     expect(title.parentElement!.parentElement).toHaveClass("justify-center", "w-36");
     expect(screen.getByText("entry")).toBeInTheDocument();
+  });
+});
+
+describe("ToggleLegend in RTL", () => {
+  it("uses only logical alignment, so entries start at the reading edge", () => {
+    render(
+      <div dir="rtl">
+        <ToggleLegend entries={ENTRIES} hidden={new Set()} onToggle={() => {}} />
+      </div>,
+    );
+    for (const b of screen.getAllByRole("button")) {
+      expect(b).toHaveClass("text-start");
+      expect(b.className).not.toMatch(/\b(text-left|text-right|ml-|mr-|pl-|pr-)/);
+    }
   });
 });

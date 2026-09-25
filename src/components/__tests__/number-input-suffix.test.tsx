@@ -36,13 +36,15 @@ describe("NumberInput suffix", () => {
       <NumberInput label="Rate" value="1" suffix="%" onChange={vi.fn()} />,
     );
     const field = () => container.querySelector("input")!;
-    expect(field().className).toContain("pr-16");
+    // `pe-*`, not the `pr-*` this pinned before 0.7.0: the reservation sits at the
+    // inline END so a right-to-left form keeps its digits clear of the unit too.
+    expect(field().className).toContain("pe-16");
 
     rerender(<NumberInput label="Rate" value="1" suffix="%" calculator={false} onChange={vi.fn()} />);
-    expect(field().className).toContain("pr-8");
+    expect(field().className).toContain("pe-8");
 
     rerender(<NumberInput label="Rate" value="1" onChange={vi.fn()} />);
-    expect(field().className).toContain("pr-9");
+    expect(field().className).toContain("pe-9");
   });
 
   it("changes nothing for a field that passes no unit", () => {

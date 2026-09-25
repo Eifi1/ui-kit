@@ -56,6 +56,15 @@ export function Fields() {
   const [triggerIdx, setTriggerIdx] = useState(0);
   const [query, setQuery] = useState("transfer");
   const [plainQuery, setPlainQuery] = useState("");
+  const [inlineClassQuery, setInlineClassQuery] = useState("");
+  const [multiPick, setMultiPick] = useState<string[]>(["de", "ch"]);
+  const [rtlQuery, setRtlQuery] = useState("بحث");
+  const [iban, setIban] = useState("DE89 3704 0044");
+  const [statesAccount, setStatesAccount] = useState("");
+  const [statesReason, setStatesReason] = useState("");
+  const [staticRef, setStaticRef] = useState("INV-2026-0142");
+  const [period, setPeriod] = useState("q3");
+  const [listPick, setListPick] = useState("eur");
 
   // Ids are ours to mint here because these specimens assemble FloatingField by
   // hand; the Input/Select/Textarea wrappers generate their own.
@@ -63,6 +72,8 @@ export function Fields() {
   const displayId = useId();
   const handRolledId = useId();
   const handRolledPickId = useId();
+  const staticId = useId();
+  const ibanHintId = useId();
 
   // The display treatment is not a style you choose, it is a style the VIEWPORT
   // chooses — so the specimen says out loud whether it is switched on right now.
@@ -70,6 +81,9 @@ export function Fields() {
 
   const emailInvalid = email.trim() !== "" && !email.includes("@");
   const reasonInvalid = reason.length > 80;
+  const ibanDigits = iban.replace(/\s/g, "");
+  const ibanError =
+    ibanDigits.length === 22 ? undefined : `That IBAN has ${ibanDigits.length} characters, not 22.`;
 
   return (
     <>
@@ -130,7 +144,7 @@ export function Fields() {
 
       <Example
         label="Input — password reveal"
-        hint="type=password gets an eye toggle; it is tabIndex={-1} so it never sits between two fields in the tab order"
+        hint="type=password gets an eye toggle — a real tab stop with aria-pressed, named by passwordLabels"
       >
         <Stage>
           <Input
@@ -147,7 +161,112 @@ export function Fields() {
             value={pin}
             onChange={(e) => setPin(e.target.value)}
           />
+          {/* The toggle is the one string Input renders on its own behalf, so it is the
+              one `passwordLabels` translates — it is the eye's accessible name. */}
+          <Input
+            className="w-56"
+            label="Kennwort"
+            type="password"
+            passwordLabels={{ show: "Kennwort anzeigen", hide: "Kennwort verbergen" }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Input
+            className="w-56"
+            label="Disabled — no reveal either"
+            type="password"
+            disabled
+            readOnly
+            value="hunter2"
+          />
         </Stage>
+        <p className="mt-3 text-xs text-[var(--text-muted)]">
+          The third field passes{" "}
+          <code className="font-mono">
+            passwordLabels={"{{"} show, hide {"}}"}
+          </code>{" "}
+          — without it the names come from <code className="font-mono">&lt;UiKitProvider labels&gt;</code>
+          , then English. A disabled field disables its toggle too: a value the user may not edit
+          is not one the keyboard may reveal.
+        </p>
+      </Example>
+
+      <Example
+        label="Input, Select, Textarea — states"
+        hint="default · disabled · readOnly · invalid · error — one row per control"
+      >
+        <Stage>
+          <div data-stage="wide" className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Input label="Default" defaultValue="Amelia" />
+              <Input label="Disabled" disabled readOnly value="Amelia" />
+              <Input label="Read-only" readOnly value="Amelia" />
+              <Input label="Invalid" invalid defaultValue="Amelia" />
+              <Input
+                label="IBAN"
+                value={iban}
+                onChange={(e) => setIban(e.target.value)}
+                error={ibanError}
+                aria-describedby={ibanHintId}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Select label="Default" defaultValue="b">
+                <option value="b">Business</option>
+                <option value="p">Personal</option>
+              </Select>
+              <Select label="Disabled" disabled defaultValue="b">
+                <option value="b">Business</option>
+              </Select>
+              {/* A caller's own aria-invalid — what a form library's control slot sets —
+                  paints as well as announces, the same as `invalid`. */}
+              <Select label="aria-invalid" aria-invalid defaultValue="">
+                <option value="">Choose…</option>
+                <option value="b">Business</option>
+              </Select>
+              <Select label="Invalid" invalid defaultValue="">
+                <option value="">Choose…</option>
+                <option value="b">Business</option>
+              </Select>
+              <Select
+                label="Account"
+                value={statesAccount}
+                onChange={(e) => setStatesAccount(e.target.value)}
+                error={statesAccount === "" ? "Choose the account to settle from." : undefined}
+              >
+                <option value="">Choose…</option>
+                <option value="current">Current — 2051</option>
+              </Select>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Textarea rows={2} label="Default" defaultValue="Treasury" />
+              <Textarea rows={2} label="Disabled" disabled defaultValue="Treasury" />
+              <Textarea rows={2} label="Read-only" readOnly defaultValue="Treasury" />
+              <Textarea rows={2} label="Invalid" invalid defaultValue="Treasury" />
+              <Textarea
+                rows={2}
+                label="Reason"
+                value={statesReason}
+                onChange={(e) => setStatesReason(e.target.value)}
+                error={statesReason.trim() === "" ? "Say why the entry is returned." : undefined}
+              />
+            </div>
+            <p id={ibanHintId} className="text-xs text-[var(--text-muted)]">
+              IBAN hint: 22 characters for a German account — this line is the IBAN field&apos;s
+              own <code className="font-mono">aria-describedby</code>.
+            </p>
+          </div>
+        </Stage>
+        <p className="text-xs text-[var(--text-muted)]">
+          The last column passes <code className="font-mono">error</code>: the message renders under
+          the field, implies <code className="font-mono">invalid</code>, and is attached through{" "}
+          <code className="font-mono">aria-describedby</code> — MERGED with one the caller passed
+          (the IBAN field keeps pointing at its hint line and adds the error after it). Type a valid
+          IBAN, pick an account or give a reason and the message goes; a falsy{" "}
+          <code className="font-mono">error</code> (<code className="font-mono">undefined</code>,{" "}
+          <code className="font-mono">&quot;&quot;</code>, <code className="font-mono">false</code>)
+          renders nothing and leaves the DOM exactly as without the prop.
+        </p>
       </Example>
 
       <Example
@@ -288,6 +407,77 @@ export function Fields() {
       </Example>
 
       <Example
+        label="Select — size, and selectClassName"
+        hint='size="sm" is the 28px toolbar select; a NUMBER is still the native list-box rows'
+      >
+        <Stage>
+          <div className="flex items-center gap-2">
+            <Select
+              size="sm"
+              aria-label="Period"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+            >
+              <option value="q3">Q3 2026</option>
+              <option value="q2">Q2 2026</option>
+            </Select>
+            <span className="text-xs text-[var(--text-muted)]">size=&quot;sm&quot; · {period}</span>
+          </div>
+          {/* `selectClassName` reaches the <select>; `className` (the width here) stays
+              on the wrapper the chevron is positioned against. */}
+          <Select
+            label="Fee currency (monospace)"
+            selectClassName="font-mono tabular-nums"
+            value={handRolledPick}
+            onChange={(e) => setHandRolledPick(e.target.value)}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
+          <Select
+            size={4}
+            aria-label="Currency list box"
+            value={listPick}
+            onChange={(e) => setListPick(e.target.value)}
+          >
+            <option value="eur">EUR — Euro</option>
+            <option value="gbp">GBP — Pound sterling</option>
+            <option value="usd">USD — US dollar</option>
+            <option value="chf">CHF — Swiss franc</option>
+            <option value="jpy">JPY — Yen</option>
+          </Select>
+          {/* `multiple`: a list box too, and labelled — the floated label takes the top
+              strip, so the first row starts under it. */}
+          <Select
+            label="Markets (multiple)"
+            multiple
+            size={4}
+            value={multiPick}
+            onChange={(e) => setMultiPick(Array.from(e.target.selectedOptions, (o) => o.value))}
+          >
+            <option value="de">Germany</option>
+            <option value="at">Austria</option>
+            <option value="ch">Switzerland</option>
+            <option value="fr">France</option>
+            <option value="it">Italy</option>
+          </Select>
+        </Stage>
+        <p className="text-xs text-[var(--text-muted)]">
+          <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects
+          only — a floating label needs the tall box to float in, so a labelled Select ignores it.{" "}
+          <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML
+          attribute (the rows of a list box; picked: <code className="font-mono">{listPick}</code>).
+          Above 1, or with <code className="font-mono">multiple</code>, the browser draws a list box
+          and the Select drops its chevron and the end padding reserved for it, so no row is
+          clipped and nothing sits on the text. Ctrl/⌘-click picks several in the last one:{" "}
+          <code className="font-mono">{JSON.stringify(multiPick)}</code>.
+        </p>
+      </Example>
+
+      <Example
         label="FieldHint — the “?” on the label line"
         hint="a button, not a bare glyph: hover alone puts the explanation out of reach of a keyboard and of every touch device"
       >
@@ -324,6 +514,22 @@ export function Fields() {
                 onChange={(e) => setReference(e.target.value)}
               />
             </FloatingField>
+            {/* `aria-label` shortens what a screen reader hears without shortening
+                what the bubble shows — by default the bubble text IS the name. */}
+            <Select
+              className="w-64"
+              label="Booking date basis"
+              hint={
+                <FieldHint
+                  label="Value date is when the money moves; booking date is when the bank records it. Statements sort by booking date."
+                  aria-label="About the date basis"
+                />
+              }
+              defaultValue="value"
+            >
+              <option value="value">Value date</option>
+              <option value="booking">Booking date</option>
+            </Select>
             <div>
               <p className="mb-2 text-xs text-[var(--text-muted)]">
                 All four sides — hover or tab to each. The bubble is portalled, so it measures
@@ -401,7 +607,7 @@ export function Fields() {
             <div className="relative w-56">
               <select
                 id={handRolledPickId}
-                className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "appearance-none pr-9")}
+                className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "appearance-none pe-9")}
                 value={handRolledPick}
                 onChange={(e) => setHandRolledPick(e.target.value)}
               >
@@ -417,6 +623,18 @@ export function Fields() {
               <FieldChevron />
             </div>
 
+            {/* FloatingField with `staticLabel`: the label is always floated, for a
+                control that always has a value. `srOnlyLabel` is shown in the display
+                specimen above, `hint` in the FieldHint one. */}
+            <FloatingField className="w-56" htmlFor={staticId} label="Invoice number" staticLabel>
+              <input
+                id={staticId}
+                className={cn(FIELD_BASE, FIELD_FLOATING_PAD)}
+                value={staticRef}
+                onChange={(e) => setStaticRef(e.target.value)}
+              />
+            </FloatingField>
+
             {/* A dropdown trigger: FIELD_TRIGGER is FIELD_BASE as a flex row, and it
                 carries `relative` precisely so FieldChevron can centre on the FIELD
                 box. As an ordinary flex child the chevron centres on the CONTENT box
@@ -428,7 +646,7 @@ export function Fields() {
               <button
                 type="button"
                 onClick={() => setTriggerIdx((i) => (i + 1) % CURRENCIES.length)}
-                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pr-9")}
+                className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
                 <span className="truncate">{CURRENCIES[triggerIdx]}</span>
                 <FieldChevron />
@@ -444,47 +662,77 @@ export function Fields() {
             <SearchField
               value={query}
               onChange={setQuery}
-              label="Filter entries"
+              aria-label="Filter entries"
               clearLabel="Clear filter"
             />
             <SearchField
               value={plainQuery}
               onChange={setPlainQuery}
-              label="Filter entries (no clear)"
+              aria-label="Filter entries (no clear)"
               placeholder="No clearLabel, no ×"
             />
+            {/* `inputClassName` reaches the <input>; `className` only the wrapper the
+                icon and the × are positioned against. */}
+            <SearchField
+              value={inlineClassQuery}
+              onChange={setInlineClassQuery}
+              aria-label="Filter by reference"
+              placeholder="Reference (monospace)"
+              clearLabel="Clear reference"
+              inputClassName="font-mono"
+            />
+            <SearchField
+              value=""
+              onChange={() => {}}
+              aria-label="Filter (disabled)"
+              clearLabel="Clear filter"
+              disabled
+            />
+            {/* The deprecated spelling still works, and names the field only when
+                `aria-label` is absent. */}
+            <SearchField
+              value={plainQuery}
+              onChange={setPlainQuery}
+              label="Deprecated label= spelling"
+            />
+            <div dir="rtl">
+              <SearchField
+                value={rtlQuery}
+                onChange={setRtlQuery}
+                aria-label="تصفية القيود"
+                clearLabel="مسح"
+              />
+            </div>
             <p className="text-xs text-[var(--text-muted)]">
               Current value: <code className="font-mono">{JSON.stringify(query)}</code>
             </p>
           </div>
         </Stage>
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          <code className="font-mono">label</code> is required and is deliberately not defaulted to
-          the placeholder — a placeholder vanishes the moment someone types, so a field named only
+          A name is required — <code className="font-mono">aria-label</code>, or the deprecated{" "}
+          <code className="font-mono">label</code> — and the placeholder falls back to it, never the
+          other way round — a placeholder vanishes the moment someone types, so a field named only
           by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}
           <code className="font-mono">clearLabel</code> removes the clear button entirely, and the
-          right padding with it; that is a decision, not a default. Chrome paints its own native
+          end padding with it; that is a decision, not a default. Chrome paints its own native
           cross on <code className="font-mono">type=&quot;search&quot;</code>, so the kit suppresses
-          it and keeps the named one that also returns focus to the input.
+          it and keeps the named one that also returns focus to the input. The last field sits in{" "}
+          <code className="font-mono">dir=&quot;rtl&quot;</code>: the icon and the clear button are
+          placed with logical sides, so they swap ends with the writing direction.
         </p>
       </Example>
 
       <Note>
-        <strong>`invalid` paints and announces, but carries no message.</strong> It sets{" "}
+        <strong>`invalid` paints and announces; `error` also explains.</strong>{" "}
+        <code className="font-mono">invalid</code> sets{" "}
         <code className="font-mono">aria-invalid</code> on the control and applies{" "}
         <code className="font-mono">FIELD_INVALID</code> — the two were fused into one prop because
-        writing the attribute by hand announced the problem and painted nothing, and there is no{" "}
-        <code className="font-mono">[aria-invalid]</code> rule in this package or in either
-        consumer. What it does <em>not</em> do is attach the error text: there is no{" "}
-        <code className="font-mono">error</code> / <code className="font-mono">describedBy</code>{" "}
-        prop, and nothing wires <code className="font-mono">aria-errormessage</code> or{" "}
-        <code className="font-mono">aria-describedby</code> to a message node. If you are coming
-        from a form library, this is the piece you have to supply: render your own message, give it
-        an id, and pass <code className="font-mono">aria-describedby</code> through — it reaches the
-        element via the props spread on Input and Textarea. On a labelled{" "}
-        <code className="font-mono">Select</code> it reaches the element too, but note that Select
-        overwrites a hand-written <code className="font-mono">aria-invalid</code> after the spread,
-        where Input and Textarea OR with it.
+        writing the attribute by hand announced the problem and painted nothing. A caller&apos;s own{" "}
+        <code className="font-mono">aria-invalid</code> (what a form library sets) now paints too,
+        on all three. <code className="font-mono">error</code> is the message: rendered under the
+        field and wired through <code className="font-mono">aria-describedby</code>, merged with any
+        id you pass. Use <code className="font-mono">invalid</code> alone when the message lives
+        elsewhere — a summary at the top of a dialog.
       </Note>
 
       <Note>

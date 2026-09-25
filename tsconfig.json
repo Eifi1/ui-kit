@@ -25,7 +25,10 @@
     // them makes CI disagree with the dev server.
     "paths": {
       "@eifi1/ui-kit": ["./src/index.ts"],
-      "@eifi1/ui-kit/dates": ["./src/lib/dates.ts"]
+      "@eifi1/ui-kit/dates": ["./src/lib/dates.ts"],
+      "@eifi1/ui-kit/rhf": ["./src/rhf.ts"],
+      "@eifi1/ui-kit/table-text": ["./src/table-text.ts"],
+      "@eifi1/ui-kit/i18n/*": ["./src/i18n/locales/*.ts"]
     }
   },
   // The showcase is typechecked with the package, on purpose: an export deleted from

@@ -1,16 +1,36 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ALTERNATIVE_PRESETS,
+  AlertBanner,
+  Button,
   CHART_COLORS,
+  DEFAULT_PRESET,
+  DERIVED_PRESETS,
   HEATMAP_HEX,
+  IMPRINT_PRESET,
+  Input,
   PALETTES,
   PALETTE_HEX,
+  Select,
+  applyPersistedPalette,
+  applyPersistedTheme,
+  applyTokenSet,
   lerpHex,
   paletteFor,
+  presetById,
   textOn,
 } from "@eifi1/ui-kit";
-import type { HeatStops, TokenSet } from "@eifi1/ui-kit";
+import type { HeatStops, PalettePreset, TokenSet } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, Swatch } from "../lib/section";
-import { useActiveTokenSet, usePalette, useTheme } from "../stores";
+import {
+  PALETTE_KEY,
+  THEME_KEY,
+  useActiveTokenSet,
+  useChartHex,
+  useHeatStops,
+  usePalette,
+  useTheme,
+} from "../stores";
 
 /**
  * Foundations & tokens.
@@ -171,7 +191,9 @@ export function Foundations() {
         (In jsdom nothing applies them, so in the render test these chips are simply blank.) The
         index wraps at nine — <code className="font-mono">paletteFor(9)</code> is{" "}
         <code className="font-mono">var(--chart-1)</code> — so a tenth series silently reuses the
-        first one&rsquo;s colour.
+        first one&rsquo;s colour. It wraps backwards too: <code className="font-mono">paletteFor(-1)</code>{" "}
+        is <code className="font-mono">var(--chart-9)</code>, and a <code className="font-mono">NaN</code>{" "}
+        index takes the first colour rather than naming a token that does not exist.
       </Note>
 
       <Example label="CHART_COLORS" hint="semantic money roles, as theme-aware CSS vars">
@@ -400,7 +422,7 @@ export function Foundations() {
         immediately, so those classes are never applied.
       </Note>
 
-      <Example label="PALETTES" hint="the two live presets, in menu order">
+      <Example label="PALETTES" hint={`the ${PALETTES.length} presets an app offers, in menu order`}>
         <div className="space-y-4">
           {PALETTES.map((p) => (
             <div key={p.id} className="space-y-1.5">
@@ -414,9 +436,9 @@ export function Foundations() {
                 )}
               </div>
               <p className="text-xs text-[var(--text-secondary)]">{p.blurb}</p>
-              {/* The ramps side by side are the argument: Imprint is the default
-                  preset with ONLY the nine categorical hues swapped, so every other
-                  row of this section is identical under both. */}
+              {/* The ramps side by side: Imprint is the default preset with ONLY the
+                  nine categorical hues swapped; the derived presets come out of
+                  `derivePalette` and keep the default's Paul Tol ramp. */}
               <Row className="gap-1.5">
                 {p[mode].chart.map((hex, i) => (
                   <span
@@ -432,13 +454,197 @@ export function Foundations() {
         </div>
       </Example>
 
-      <Note>
-        <code className="font-mono">ALTERNATIVE_PRESETS</code> holds five more vetted sets
-        (Warm Paper, Nord Frost, Indigo Noir, Solar Dusk, Zinc Mono) but is a reference bank, not a
-        menu: <code className="font-mono">PALETTES</code> is the live pair, and{" "}
-        <code className="font-mono">presetById</code> falls back to the default for any stale
-        persisted id, so a removed preset degrades rather than throwing.
-      </Note>
+      <Example
+        label="Every preset, scoped to one card"
+        hint="applyTokenSet on a <div> instead of <html> — the card below is repainted, the page is not"
+      >
+        <PresetPreview />
+      </Example>
+
+      <Example
+        label="createThemeStore · createPaletteStore"
+        hint="the store API this page runs on, driven from here — the top bar follows"
+      >
+        <StoreApi />
+      </Example>
     </>
+  );
+}
+
+/** Where a preset comes from, for the table under the preview. */
+function sourceOf(p: PalettePreset): string {
+  if (p === DEFAULT_PRESET) return "DEFAULT_PRESET";
+  if (p === IMPRINT_PRESET) return "IMPRINT_PRESET";
+  if (DERIVED_PRESETS.includes(p)) return "DERIVED_PRESETS";
+  return "ALTERNATIVE_PRESETS";
+}
+
+const ALL_PRESETS: PalettePreset[] = [...PALETTES, ...ALTERNATIVE_PRESETS];
+
+/**
+ * Any preset — including the five in `ALTERNATIVE_PRESETS`, which are a reference bank
+ * and not in `PALETTES` — written onto one element. `applyTokenSet` takes any element,
+ * and the custom properties it writes cascade to the kit components inside.
+ */
+function PresetPreview() {
+  const mode = useTheme((s) => s.mode);
+  const [id, setId] = useState(ALTERNATIVE_PRESETS[0].id);
+  const card = useRef<HTMLDivElement>(null);
+  const preset = ALL_PRESETS.find((p) => p.id === id) ?? DEFAULT_PRESET;
+
+  // In an effect: the write goes to the DOM, and re-runs when the theme flips.
+  useEffect(() => {
+    if (card.current) applyTokenSet(card.current, preset[mode]);
+  }, [preset, mode]);
+
+  return (
+    <div className="space-y-4">
+      <div className="max-w-xs">
+        <Select label="Preset" value={id} onChange={(e) => setId(e.target.value)}>
+          {ALL_PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} — {sourceOf(p)}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div
+        ref={card}
+        className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--bg-page)] p-4 text-[var(--text-primary)]"
+      >
+        <p className="text-sm">
+          {preset.name} <span className="text-[var(--text-muted)]">— {preset.blurb}</span>
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-56">
+            <Input label="Amount" defaultValue="1,250.00" />
+          </div>
+          <Button variant="brand">Save</Button>
+          <Button variant="secondary">Cancel</Button>
+        </div>
+        <AlertBanner tone="warning">Semantic colours come from tokens.css, not the preset.</AlertBanner>
+        <div className="flex flex-wrap gap-1.5">
+          {preset[mode].chart.map((hex, i) => (
+            <span
+              key={i}
+              className="size-5 rounded border border-[var(--border)]"
+              style={{ background: `var(--chart-${i + 1})` }}
+              title={hex}
+            />
+          ))}
+        </div>
+      </div>
+      <OutTable
+        rows={[
+          ["DEFAULT_PRESET.id", DEFAULT_PRESET.id],
+          ["IMPRINT_PRESET.id", IMPRINT_PRESET.id],
+          ["DERIVED_PRESETS.map(p => p.id)", DERIVED_PRESETS.map((p) => p.id).join(", ")],
+          ["ALTERNATIVE_PRESETS.map(p => p.id)", ALTERNATIVE_PRESETS.map((p) => p.id).join(", ")],
+          ["PALETTES.map(p => p.id)", PALETTES.map((p) => p.id).join(", ")],
+          ['presetById("ink").id', presetById("ink").id],
+          [
+            `presetById("${ALTERNATIVE_PRESETS[0].id}").id`,
+            <>
+              {presetById(ALTERNATIVE_PRESETS[0].id).id}{" "}
+              <span className="font-sans font-normal text-[var(--text-muted)]">
+                — not in PALETTES, so the default
+              </span>
+            </>,
+          ],
+        ]}
+      />
+      <Note>
+        Only the semantic layer comes from <code className="font-mono">tokens.css</code> (danger,
+        warning, info…), so those do not change with the preset here — the same is true of the
+        page itself. The palette store only knows <code className="font-mono">PALETTES</code>: an
+        alternative preset is something an app copies into its own list, not an id it can
+        persist.
+      </Note>
+    </div>
+  );
+}
+
+/** A small action button in this page's own tokens. */
+const STORE_BUTTON =
+  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1 font-mono text-xs text-[var(--text-primary)] hover:border-[var(--brand)]";
+
+/**
+ * The hooks the two factories return, wired to the showcase's real stores
+ * (`../stores`). Every button changes the actual page.
+ */
+function StoreApi() {
+  const mode = useTheme((s) => s.mode);
+  const preference = useTheme((s) => s.preference);
+  const setMode = useTheme((s) => s.setMode);
+  const setPreference = useTheme((s) => s.setPreference);
+  const toggle = useTheme((s) => s.toggle);
+  const id = usePalette((s) => s.id);
+  const setId = usePalette((s) => s.setId);
+  const chartHex = useChartHex();
+  const heat = useHeatStops();
+  const [boot, setBoot] = useState<string | null>(null);
+  const next = PALETTES[(PALETTES.findIndex((p) => p.id === id) + 1) % PALETTES.length];
+
+  return (
+    <div className="space-y-3">
+      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        {`// stores.ts — one key per app, so two apps on one origin do not share a theme
+export const { useTheme, useApplyTheme } = createThemeStore("${THEME_KEY}");
+export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
+  createPaletteStore("${PALETTE_KEY}", useTheme);
+
+// main.tsx — before createRoot, so the first paint is already right
+const mode = applyPersistedTheme("${THEME_KEY}");
+applyPersistedPalette("${PALETTE_KEY}", mode);`}
+      </pre>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className={STORE_BUTTON} onClick={() => setMode("light")}>
+          setMode(&quot;light&quot;)
+        </button>
+        <button type="button" className={STORE_BUTTON} onClick={() => setMode("dark")}>
+          setMode(&quot;dark&quot;)
+        </button>
+        <button type="button" className={STORE_BUTTON} onClick={() => setPreference("system")}>
+          setPreference(&quot;system&quot;)
+        </button>
+        <button type="button" className={STORE_BUTTON} onClick={toggle}>
+          toggle()
+        </button>
+        <button type="button" className={STORE_BUTTON} onClick={() => setId(next.id)}>
+          setId(&quot;{next.id}&quot;)
+        </button>
+        <button
+          type="button"
+          className={STORE_BUTTON}
+          onClick={() => {
+            // Harmless to call again: it only re-reads storage and re-applies.
+            const booted = applyPersistedTheme(THEME_KEY);
+            applyPersistedPalette(PALETTE_KEY, booted);
+            setBoot(booted);
+          }}
+        >
+          applyPersistedTheme() + applyPersistedPalette()
+        </button>
+      </div>
+      <OutTable
+        rows={[
+          ["useTheme(s => s.preference)", preference],
+          ["useTheme(s => s.mode)", mode],
+          ["usePalette(s => s.id)", id],
+          ["useChartHex().length", String(chartHex.length)],
+          ["useHeatStops().under", <Hex value={heat.under} />],
+          ["applyPersistedTheme(key) returned", boot ?? "(not called on this page yet)"],
+        ]}
+      />
+      <Note>
+        <code className="font-mono">setMode</code> and <code className="font-mono">toggle</code>{" "}
+        both store an explicit preference, which is why neither can hand the user back to
+        &ldquo;system&rdquo; — only <code className="font-mono">setPreference</code> can.{" "}
+        <code className="font-mono">useApplyTheme</code> and{" "}
+        <code className="font-mono">useApplyPalette</code> are mounted once, in the app root
+        (<code className="font-mono">showcase.tsx</code> here): they write the class and the
+        tokens onto <code className="font-mono">&lt;html&gt;</code>.
+      </Note>
+    </div>
   );
 }

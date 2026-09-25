@@ -83,6 +83,17 @@ export function Numbers() {
   const [units, setUnits] = useState("");
   const [inline, setInline] = useState("18");
   const [noCalc, setNoCalc] = useState("18");
+  const [goal, setGoal] = useState("5000");
+  const [bare, setBare] = useState("7");
+  const [mono, setMono] = useState("1042.5");
+
+  // Translated strings
+  const [deAmount, setDeAmount] = useState("12.50");
+  const [deCurrency, setDeCurrency] = useState("CHF");
+  const [dePick, setDePick] = useState("CHF");
+  const [deCalc, setDeCalc] = useState("18");
+  const [deCalcButton, setDeCalcButton] = useState("7");
+  const [unlabelledAmount, setUnlabelledAmount] = useState("");
 
   // CalculatorButton, standing on its own
   const [calcValue, setCalcValue] = useState("42");
@@ -102,6 +113,9 @@ export function Numbers() {
   const [fee, setFee] = useState("12.40");
   const [headline, setHeadline] = useState("1250");
   const [centred, setCentred] = useState("1250");
+  const [rtlAmount, setRtlAmount] = useState("49.90");
+  const [rtlCurrency, setRtlCurrency] = useState("EUR");
+  const [rtlUnits, setRtlUnits] = useState("12");
 
   // CurrencySelect
   const [pickerCode, setPickerCode] = useState("EUR");
@@ -111,6 +125,7 @@ export function Numbers() {
   // NumberPadSheet, mounted by hand — see the example's note.
   const [padOpen, setPadOpen] = useState(false);
   const [padValue, setPadValue] = useState("12.50+3.20");
+  const [dePadOpen, setDePadOpen] = useState(false);
 
   // The same query the kit gates its phone shapes on, read here only to TELL the
   // reader which half of the page they are looking at. Nothing below branches on it.
@@ -224,6 +239,43 @@ export function Numbers() {
             disabled
           />
         </Stage>
+      </Example>
+
+      <Example
+        label='NumberInput — variant="display", unlabelled and inputClassName'
+        hint={`display is phone-only: ${isPhone ? "active at this width" : "inactive at this width — narrow below 768px"}`}
+      >
+        <Stage>
+          {/* The goal-target shape: one number a dialog is about, at display size
+              with the chrome dropped — below PHONE_QUERY only. */}
+          <NumberInput
+            label="Savings goal"
+            value={goal}
+            onChange={setGoal}
+            variant="display"
+            suffix="€"
+          />
+          {/* No label: `ariaLabel` names it, for a table cell or an inline editor. */}
+          <NumberInput
+            ariaLabel="Quantity"
+            value={bare}
+            onChange={setBare}
+            calculator={false}
+          />
+          <NumberInput
+            label="Amount (tabular, end-aligned)"
+            inputClassName="text-right font-mono tabular-nums"
+            value={mono}
+            onChange={setMono}
+          />
+        </Stage>
+        <State
+          rows={[
+            ["goal", goal],
+            ["quantity", bare],
+            ["amount", mono],
+          ]}
+        />
       </Example>
 
       <Example
@@ -457,6 +509,121 @@ export function Numbers() {
       </Example>
 
       <Example
+        label="Translated strings — labels and currencyNames"
+        hint="one labels object per control; every key is optional and overrides <UiKitProvider labels> for this field only"
+      >
+        <Stage>
+          <div className="space-y-2">
+            {/* AmountInput owns the most strings: the currency chip's name, the
+                picker's search box, the calculator trigger and its popover, and the
+                phone pad. `currencyNames` is data-keyed, so it sits beside labels. */}
+            <AmountInput
+              label="Betrag"
+              value={deAmount}
+              onChange={setDeAmount}
+              currency={deCurrency}
+              onCurrencyChange={setDeCurrency}
+              placeholder="0,00"
+              labels={{
+                currency: "Währung",
+                currencySearch: "Währung suchen",
+                calculatorTrigger: "Rechner öffnen",
+                calculator: { panel: "Rechner", backspace: "Löschen", clear: "Alles löschen", equals: "Ergebnis" },
+                pad: { done: "Fertig", pad: "Ziffernblock" },
+              }}
+              currencyNames={{ CHF: "Schweizer Franken", EUR: "Euro", GBP: "Britisches Pfund" }}
+            />
+            <State rows={[["value", deAmount], ["currency", deCurrency]]} />
+          </div>
+          <div className="space-y-2">
+            <CurrencySelect
+              label="Währung"
+              value={dePick}
+              onChange={setDePick}
+              labels={{ search: "Währung suchen" }}
+              currencyNames={{ CHF: "Schweizer Franken", USD: "US-Dollar", JPY: "Japanischer Yen" }}
+            />
+            <State rows={[["value", dePick]]} />
+          </div>
+          <div className="space-y-2">
+            <NumberInput
+              label="Zielbetrag"
+              value={deCalc}
+              onChange={setDeCalc}
+              labels={{
+                calculatorTrigger: "Rechner öffnen",
+                calculator: { equals: "Ergebnis", clear: "Alles löschen" },
+                pad: { done: "Fertig" },
+              }}
+            />
+            <State rows={[["value", deCalc]]} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-sm text-[var(--text-primary)]">{deCalcButton}</span>
+              <CalculatorButton
+                value={deCalcButton}
+                onChange={(next) => setDeCalcButton(next)}
+                ariaLabel="Rechner"
+                labels={{ panel: "Rechner", equals: "Ergebnis", plus: "plus", minus: "minus" }}
+              />
+            </div>
+            {/* No `label` on this one: `ariaLabel` names an amount field that sits in
+                a table cell, and `placeholder` is what it shows while empty. */}
+            <AmountInput
+              ariaLabel="Amount for row 3"
+              placeholder="0.00"
+              value={unlabelledAmount}
+              onChange={setUnlabelledAmount}
+              currency="EUR"
+            />
+          </div>
+        </Stage>
+        <p className="text-xs text-[var(--text-muted)]">
+          Open the currency list on the first two and search &quot;Franken&quot;: the filter matches
+          the <em>shown</em>, translated name. The calculator names are screen-reader names — inspect
+          the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
+          last field is unlabelled: <code className="font-mono">ariaLabel</code> names it and{" "}
+          <code className="font-mono">placeholder</code> fills it while empty.
+        </p>
+      </Example>
+
+      <Example
+        label="NumberInput and AmountInput — right-to-left"
+        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
+      >
+        <Stage>
+          <div dir="rtl" className="flex flex-wrap items-start gap-4">
+            <div className="w-56">
+              <AmountInput
+                label="المبلغ"
+                value={rtlAmount}
+                onChange={setRtlAmount}
+                currency={rtlCurrency}
+                onCurrencyChange={setRtlCurrency}
+              />
+            </div>
+            <NumberInput
+              className="w-56"
+              label="الكمية"
+              value={rtlUnits}
+              onChange={setRtlUnits}
+              suffix="kg"
+            />
+          </div>
+        </Stage>
+        <State rows={[["amount", rtlAmount], ["currency", rtlCurrency], ["units", rtlUnits]]} />
+        <p className="text-xs text-[var(--text-muted)]">
+          The currency chip, the calculator trigger and the unit suffix are the figure&apos;s
+          trailing controls, so they sit at the logical END — the left here — with the padding
+          reserved on that side; the currency list opens from the end edge too. The figures
+          themselves and the calculator stay left-to-right (<code className="font-mono">dir=&quot;ltr&quot;</code>{" "}
+          on its display and on the phone number pad&apos;s): arithmetic reads the same way in
+          every script.
+        </p>
+      </Example>
+
+      <Example
         label="NumberPadSheet"
         hint="mounted directly here; in a field it opens by FOCUS, below 768px only"
       >
@@ -478,6 +645,9 @@ export function Numbers() {
               <Button type="button" variant="primary" onClick={() => setPadOpen(true)}>
                 Open the number pad
               </Button>
+              <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>
+                Open it with labels (German)
+              </Button>
               <span className="font-mono text-sm text-[var(--text-primary)]">
                 {padValue || "0"}
               </span>
@@ -492,6 +662,28 @@ export function Numbers() {
                 onChange={setPadValue}
                 onDone={() => setPadOpen(false)}
                 label="Receipt total"
+              />
+            )}
+            {/* `labels`: `done` is the primary key's visible text, the rest are the
+                screen-reader names of the pad and its non-digit keys. */}
+            {dePadOpen && (
+              <NumberPadSheet
+                value={padValue}
+                onChange={setPadValue}
+                onDone={() => setDePadOpen(false)}
+                label="Belegsumme"
+                labels={{
+                  done: "Fertig",
+                  pad: "Ziffernblock",
+                  backspace: "Zeichen löschen",
+                  clear: "Alles löschen",
+                  equals: "Ergebnis",
+                  plus: "plus",
+                  minus: "minus",
+                  times: "mal",
+                  divide: "geteilt durch",
+                  decimal: "Komma",
+                }}
               />
             )}
           </div>

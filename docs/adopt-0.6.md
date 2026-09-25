@@ -31,7 +31,7 @@ dialog frame; Primitives).
 | category-editor colour tiles | `<SwatchPicker options={… swatchClassName} value onChange allowNone labels={{ none }} />` | drops the hand-made Tooltip and tile classes |
 | category-editor icon grid | `<IconPicker options={… note: inUse ? … : undefined} allowNone searchable? />` | `note` gives the dot and the bubble |
 | `FlagPicker` | `<SwatchPicker … mixed={value === undefined} allowNone activation="manual" />` | clicking the active flag no longer clears it — "None" does |
-| `direction-toggle.tsx` | `<Chip size="lg" tone={outflow ? "expense" : "income"} selected onClick>` | give it ONE fixed label; `selected` carries the state |
+| `direction-toggle.tsx` | `<Chip size="lg" tone={outflow ? "expense" : "income"} onClick aria-label={…}>` with a label that FOLLOWS the state ("− Ausgang" / "+ Eingang") | an action button between two named states, not an on/off toggle: no `selected` (so no `aria-pressed`, from 0.6.2), and `aria-label` names current and next ("Richtung: Ausgang — tippen für Eingang"). A fixed label contradicts the figure (#417). |
 | support-panel filter pills | `<ToggleGroup allowEmpty value={f ?? null} onChange={setF}>` | |
 | `transaction-search.tsx` field | `<SearchField variant="inline" className="min-w-0 flex-1 text-base" />` | |
 | `shared/components/danger-confirm.tsx` | `DangerConfirm` | `requireText.expected` → `phrase`; password → `requirePassword`; `pending` → `busy`; `lock` → `lockedReason`; `tone="amber"` → `"warning"` |
@@ -63,7 +63,7 @@ dialog frame; Primitives).
 | `shared/lib/parse-table.ts` | `@eifi1/ui-kit/table-text` | same signatures; update `measured-grid.tsx`, `features/control/csv.ts`, the `parseRows as parsePoints` re-export in `features/gear/common.tsx`; delete the file and its test. The grid itself comes in 0.7. |
 | `ScopeFields` (`Input list` + `<datalist>`) | `<Combobox label value onChange options disabled error>` | delete `listId` and the datalists |
 | `columns-input.tsx`, `step-points-panel.tsx` | `<FileButton variant="secondary" accept=… droppable onFiles={([f]) => …}>` | the test id moves to the button; find the input with `querySelector('input[type=file]')` |
-| setpoint `IconButton` | kit `IconButton size="xs"` (28) / `"2xs"` (24), `tone="danger"` | `label` → `aria-label`. `nested` is NOT supported (a button in a button is invalid HTML): put the actions BESIDE the row button — `relative` wrapper, `absolute inset-y-0 end-2` — see Primitives in the showcase |
+| setpoint `IconButton` | kit `IconButton size="xs"` (28) / `"2xs"` (24), `tone="danger"` | `label` → `aria-label`. `nested` is NOT supported (a button in a button is invalid HTML): put the actions BESIDE the row button — `relative` wrapper, `absolute inset-y-0 end-2` — see "Buttons & surfaces" (`#/buttons`) in the showcase |
 | `sheet-tabs.tsx` | kit `Tabs` | `activeId` → `active`, `onSelect` → `onChange`, `add={{label,onAdd}}` → `addLabel` + `onAdd`, `swatches` → `icon`; `detail`, `empty`, `busy` map directly. The kit draws its underline strip, not the folder-tab look. |
 | `shared/ui/collapsible-card.tsx` (10 sites) | `Disclosure` | `title`, `hint`, `open`, `onOpenChange`, `defaultOpen` carry over; the body still unmounts when closed. Body class is `space-y-3 px-4 pb-4` (was `mt-3 space-y-3`); `onOpenChange(false)` is no longer delayed. |
 | 8 hand-framed dialogs | `<DialogFrame title actions={(close) => …}>` | drop hard-coded heading ids and the `max-h-[92dvh]` scroll overrides — the frame scrolls its body |

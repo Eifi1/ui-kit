@@ -1,14 +1,27 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Check, CircleAlert, Copy, RotateCcw, TriangleAlert } from "lucide-react";
 import {
   Button,
   FIELD_BASE,
+  Slider,
   applyTokenSet,
   auditChartRamp,
+  auditPalette,
   cn,
+  contrast,
+  deltaE,
   deriveChartRamp,
   derivePalette,
+  describe,
+  hexToOklch,
+  luminance,
+  oklchToHex,
+  oklchToRgb,
   parseHex,
+  rgbToOklch,
+  simulateCvd,
+  solveLightness,
   toHex,
 } from "@eifi1/ui-kit";
 import type {
@@ -16,6 +29,7 @@ import type {
   ChartRampReport,
   ContrastCheck,
   ContrastReport,
+  CvdType,
   DerivedPalette,
   PaletteAnchors,
   SemanticTokens,
@@ -417,6 +431,10 @@ export function PaletteGenerator() {
   const [rampCount, setRampCount] = useState(9);
   const [previewing, setPreviewing] = useState(false);
   const [copied, setCopied] = useState(false);
+  // `derivePalette`'s two tuning options. `undefined` means "the deriver's default",
+  // which is what the reset buttons put back.
+  const [surfaceTint, setSurfaceTint] = useState<number | undefined>(undefined);
+  const [mutedTarget, setMutedTarget] = useState<number | undefined>(undefined);
 
   function changeBrand(next: string) {
     setBrandText(next);
@@ -440,8 +458,18 @@ export function PaletteGenerator() {
   // anchors OBJECT so a keystroke that does not change a parsed colour — a second `#`,
   // a half-typed digit — costs nothing, and so the two themes below are always the same
   // input seen twice rather than two inputs that happen to agree.
-  const light = useMemo(() => derivePalette({ anchors, mode: "light" }), [anchors]);
-  const dark = useMemo(() => derivePalette({ anchors, mode: "dark" }), [anchors]);
+  const textContrast = useMemo(
+    () => (mutedTarget === undefined ? undefined : { muted: mutedTarget }),
+    [mutedTarget],
+  );
+  const light = useMemo(
+    () => derivePalette({ anchors, mode: "light", surfaceTint, textContrast }),
+    [anchors, surfaceTint, textContrast],
+  );
+  const dark = useMemo(
+    () => derivePalette({ anchors, mode: "dark", surfaceTint, textContrast }),
+    [anchors, surfaceTint, textContrast],
+  );
   const derived = mode === "dark" ? dark : light;
 
   // Each ramp is measured against the surfaces it would actually be drawn on — the
@@ -570,6 +598,49 @@ export function PaletteGenerator() {
         that does not exist until you ask for it, and the only one{" "}
         <code className="font-mono">tokens.css</code> has no variable for yet.
       </Note>
+
+      <Example
+        label="Options — surfaceTint and textContrast"
+        hint="the two knobs derivePalette takes besides the anchors"
+      >
+        <div className="grid max-w-3xl gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Slider
+              label="surfaceTint"
+              min={0}
+              max={1}
+              step={0.05}
+              value={surfaceTint ?? 0.55}
+              onChange={setSurfaceTint}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              How much of the brand hue the surfaces carry. 0 is neutral grey; the default is
+              0.55; above ~0.5 they start competing with the content.
+            </p>
+            <Button variant="ghost" className="text-xs" onClick={() => setSurfaceTint(undefined)}>
+              <RotateCcw aria-hidden className="size-3.5" /> default
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Slider
+              label="textContrast.muted"
+              min={3}
+              max={7}
+              step={0.1}
+              value={mutedTarget ?? 4.6}
+              onChange={setMutedTarget}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              The contrast the muted text is solved to against the worst surface (default
+              4.6). <code className="font-mono">primary</code> (10) and{" "}
+              <code className="font-mono">secondary</code> (7) take a target the same way.
+            </p>
+            <Button variant="ghost" className="text-xs" onClick={() => setMutedTarget(undefined)}>
+              <RotateCcw aria-hidden className="size-3.5" /> default
+            </Button>
+          </div>
+        </div>
+      </Example>
 
       <Example
         label="The derived palette, both themes"
@@ -743,6 +814,13 @@ export function PaletteGenerator() {
         <code className="font-mono">--chart-N</code> unless you asked for a derived ramp.
       </Note>
 
+      <Example
+        label="Colour maths — theme/color and the audit"
+        hint="the functions the deriver is built from, called live on your brand colour"
+      >
+        <ColourMaths brand={brandHex} tokens={activeTokens} />
+      </Example>
+
       <Example label="The categorical chart ramp" hint="a separate system, deliberately">
         <div className="space-y-5">
           <p className="max-w-3xl text-sm text-[var(--text-secondary)]">
@@ -846,5 +924,81 @@ export function PaletteGenerator() {
         audit nobody would leave switched on.
       </Note>
     </>
+  );
+}
+
+const fmt = (n: number, digits = 3) => n.toFixed(digits);
+const lch = (v: { l: number; c: number; h: number } | null) =>
+  v ? `{ l: ${fmt(v.l)}, c: ${fmt(v.c)}, h: ${fmt(v.h, 1)} }` : "null";
+const CVD_TYPES: CvdType[] = ["protanopia", "deuteranopia", "tritanopia"];
+
+function Chip({ hex }: { hex: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        aria-hidden
+        className="inline-block size-3.5 rounded-sm border border-[var(--border)]"
+        style={{ background: hex }}
+      />
+      {hex}
+    </span>
+  );
+}
+
+/**
+ * The OKLCH and WCAG primitives, each on the current brand colour, and
+ * `auditPalette` on the live preset — the same audit `derivePalette` runs on its own
+ * output, pointed at a token set somebody else chose.
+ */
+function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
+  const rgb = parseHex(brand) ?? { r: 79, g: 70, b: 229 };
+  const white = { r: 255, g: 255, b: 255 };
+  const asLch = rgbToOklch(rgb);
+  const solvedL = solveLightness(4.5, white, asLch.h, asLch.c, "darker");
+  const solved = oklchToHex({ l: solvedL, c: asLch.c, h: asLch.h });
+  const audit = auditPalette(tokens);
+
+  return (
+    <div className="space-y-4">
+      <OutTable
+        rows={[
+          [`describe("${brand}")`, lch(describe(brand))],
+          [`hexToOklch("${brand}")`, lch(hexToOklch(brand))],
+          ["rgbToOklch(parseHex(brand))", lch(asLch)],
+          ["oklchToRgb(rgbToOklch(rgb))", JSON.stringify(oklchToRgb(asLch))],
+          ["oklchToHex(rgbToOklch(rgb))", <Chip hex={oklchToHex(asLch)} />],
+          ["luminance(rgb)", fmt(luminance(rgb), 4)],
+          [`contrast("${brand}", "#ffffff")`, `${fmt(contrast(brand, "#ffffff"), 2)} : 1`],
+          [
+            "solveLightness(4.5, white, h, c, \"darker\")",
+            <>
+              l = {fmt(solvedL)} → <Chip hex={solved} /> ({fmt(contrast(solved, "#ffffff"), 2)} : 1)
+            </>,
+          ],
+          ...CVD_TYPES.map((type): [string, ReactNode] => {
+            const sim = simulateCvd(rgb, type);
+            return [
+              `simulateCvd(rgb, "${type}")`,
+              <>
+                <Chip hex={toHex(sim)} /> · deltaE {fmt(deltaE(rgb, sim))}
+              </>,
+            ];
+          }),
+        ]}
+      />
+      <OutTable
+        rows={[
+          ["auditPalette(activeTokens).checks.length", String(audit.checks.length)],
+          ["auditPalette(activeTokens).failures", audit.failures.map((f) => f.pair).join(", ") || "none"],
+          ["auditPalette(activeTokens).passes", String(audit.passes)],
+        ]}
+      />
+      <p className="text-xs text-[var(--text-secondary)]">
+        <code className="font-mono">deltaE</code> is a distance in OKLab — the number the chart
+        ramp&apos;s separability is measured in. <code className="font-mono">solveLightness</code>{" "}
+        keeps hue and chroma and searches only lightness, which is how the deriver moves a
+        colour until it clears a contrast target.
+      </p>
+    </div>
   );
 }

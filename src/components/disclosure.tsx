@@ -149,7 +149,27 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
   headerClassName?: string;
   /** Extra classes for the body's wrapper — where its padding and spacing live. */
   bodyClassName?: string;
-  children: ReactNode;
+  /**
+   * Content at the far end of the header row, beside the title: a count, a date, a
+   * status chip, an action button. It is a SIBLING of the header button, never inside
+   * it — a button may not contain another interactive element, and a count inside it
+   * would also be read as part of the button's name. The header button still spans
+   * the row under it (a stretched hit area), so clicking the empty space or the
+   * card's chevron still toggles, while whatever sits in `trailing` gets its own
+   * clicks. With `trailing`, the card's chevron moves after it, to the row's end.
+   */
+  trailing?: ReactNode;
+  /**
+   * Trigger-only mode: the id of an element the CALLER renders elsewhere — the hidden
+   * rows of a table, a panel in another column — which this header shows and hides.
+   * The header's `aria-controls` points at it and the disclosure renders no body of
+   * its own (`children`, `bodyClassName` and `keepMounted` are ignored). Pair it with
+   * `open` / `onOpenChange`: the caller owns the state, since the caller renders what
+   * it governs.
+   */
+  controls?: string;
+  /** The body. Not rendered in trigger-only mode ({@link DisclosureProps.controls}). */
+  children?: ReactNode;
 }
 
 /**
@@ -178,6 +198,8 @@ export function Disclosure({
   disabled,
   headerClassName,
   bodyClassName,
+  trailing,
+  controls,
   className,
   children,
   ...rest
@@ -186,6 +208,10 @@ export function Disclosure({
   const open = controlled ?? own;
   const bodyId = useId();
   const card = variant === "card";
+  const triggerOnly = controls !== undefined;
+  // The card's header squares its lower corners only when a body opens under it.
+  const joined = open && !triggerOnly;
+  const hasTrailing = trailing !== undefined && trailing !== null && trailing !== false;
 
   const toggle = () => {
     const next = !open;
@@ -197,43 +223,79 @@ export function Disclosure({
     <button
       type="button"
       aria-expanded={open}
-      aria-controls={bodyId}
+      aria-controls={triggerOnly ? controls : bodyId}
       disabled={disabled}
       onClick={toggle}
+      data-disclosure-trigger=""
       className={cn(
         "flex w-full gap-2 text-start outline-none disabled:cursor-not-allowed disabled:opacity-50",
-        "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        hasTrailing
+          ? // Stretched over the whole header row (the row is `relative`), so the space
+            // round `trailing` and the card's chevron still toggle; the ring and the
+            // card's hover paint on the stretched area / the row, not the text box.
+            cn(
+              "min-w-0 flex-1 after:absolute after:inset-0 after:content-['']",
+              "focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
+              card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : "after:rounded-sm",
+            )
+          : "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
         card
           ? cn(
-              "items-center justify-between rounded-lg p-4 hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
-              open && "rounded-b-none",
+              "items-center justify-between rounded-lg p-4",
+              hasTrailing ? "pe-0" : "hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
+              joined && "rounded-b-none",
             )
           : "items-center rounded-sm text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
         headerClassName,
       )}
     >
       {!card && <Chevron open={open} leading />}
-      <span className="min-w-0">
+      {/* `flex-1`: the title takes the row, so whatever a caller puts at its end sits
+          at the header's far edge. */}
+      <span className="min-w-0 flex-1">
         <span className={cn("block", card && "text-sm font-semibold text-[var(--text-primary)]")}>{title}</span>
         {hint !== undefined && (
           <span className="mt-0.5 block text-xs font-normal text-[var(--text-muted)]">{hint}</span>
         )}
       </span>
-      {card && <Chevron open={open} />}
+      {card && !hasTrailing && <Chevron open={open} />}
     </button>
   );
+
+  // Preflight already makes h1–h6 inherit size and weight, so the heading adds
+  // structure and nothing visible.
+  const header = Heading ? <Heading className={hasTrailing ? "min-w-0 flex-1" : undefined}>{button}</Heading> : button;
 
   return (
     <div
       {...rest}
       className={cn(card && "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm", className)}
     >
-      {/* Preflight already makes h1–h6 inherit size and weight, so the heading adds
-          structure and nothing visible. */}
-      {Heading ? <Heading>{button}</Heading> : button}
-      <Collapse id={bodyId} open={open} keepMounted={keepMounted}>
-        <div className={cn(card ? "space-y-3 px-4 pb-4" : "space-y-2 pt-2", bodyClassName)}>{children}</div>
-      </Collapse>
+      {hasTrailing ? (
+        <div
+          className={cn(
+            "relative flex items-center gap-2",
+            card &&
+              cn(
+                "rounded-lg pe-4 has-[[data-disclosure-trigger]:enabled:hover]:bg-[var(--bg-hover)]",
+                joined && "rounded-b-none",
+              ),
+          )}
+        >
+          {header}
+          {/* Positioned, so it paints over the stretched button and takes its own
+              clicks; the chevron is not, so a click on it lands on the button. */}
+          <div className="relative flex shrink-0 items-center gap-2">{trailing}</div>
+          {card && <Chevron open={open} />}
+        </div>
+      ) : (
+        header
+      )}
+      {!triggerOnly && (
+        <Collapse id={bodyId} open={open} keepMounted={keepMounted}>
+          <div className={cn(card ? "space-y-3 px-4 pb-4" : "space-y-2 pt-2", bodyClassName)}>{children}</div>
+        </Collapse>
+      )}
     </div>
   );
 }

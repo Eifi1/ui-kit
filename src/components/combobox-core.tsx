@@ -13,12 +13,28 @@ import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { PHONE_QUERY } from "./ui";
+import { FLOATING_LABEL_STATIC, PHONE_QUERY, Spinner } from "./ui";
+import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
+
+/**
+ * What an entity picker hands `onChange` when it is cleared — `clearValue` on
+ * {@link EntityCombobox} and {@link InlineEntityCombobox}. `null` by default.
+ *
+ * A closed set rather than any value, on purpose: every member is something no
+ * option can be (an option's value is a `string | number`, and `""` is never a real
+ * id), so the picker can also READ it back — a field whose `value` is the clear
+ * value shows as empty, with no clear button, exactly as `null` does. An arbitrary
+ * sentinel could collide with an id and would make that read ambiguous.
+ *
+ * No `undefined`: a prop set to `undefined` is a prop not passed, so it would read as
+ * the default and emit `null` — the one outcome the caller had asked not to get.
+ */
+export type ComboClearValue = null | "";
 
 export interface ComboOption<V extends string | number> {
   value: V;
@@ -33,6 +49,76 @@ export interface ComboOption<V extends string | number> {
    * Searchable like `sublabel`.
    */
   group?: string;
+  /**
+   * Shown but not takeable: rendered dimmed with `aria-disabled`, passed over by the
+   * arrow keys, and a click or Enter on it does nothing. For a row whose existence is
+   * the information — a write-locked result, an account that is closed — where
+   * leaving it out would read as "there is no such thing". Say WHY in `sublabel`: a
+   * hover tooltip is the one explanation a phone cannot show.
+   *
+   * Honoured by {@link Autocomplete}, {@link InlineEntityCombobox} and the panel
+   * pickers ({@link EntityCombobox}, {@link MultiEntityCombobox}); on those an already
+   * chosen disabled option stays chosen — the row only refuses to be toggled.
+   */
+  disabled?: boolean;
+}
+
+/** A row the user may take — present and not {@link ComboOption.disabled}. */
+export const isOptionEnabled = (o: { disabled?: boolean } | undefined): boolean =>
+  o !== undefined && !o.disabled;
+
+/**
+ * The next takeable row from `from`, stepping `dir` — what the arrow keys use so a
+ * disabled row is passed over, as the APG allows. Stays on `from` at the end of the
+ * list (the family's arrows clamp rather than wrap) and answers `-1` when `from` is
+ * not a row and there is nothing to step to.
+ */
+export function stepEnabled(
+  rows: readonly { disabled?: boolean }[],
+  from: number,
+  dir: 1 | -1,
+): number {
+  for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
+    if (!rows[i].disabled) return i;
+  }
+  return from >= 0 && from < rows.length ? from : -1;
+}
+
+/** `i` when that row is takeable, else the nearest takeable one after it, else
+ *  before it, else `-1`. For a highlight that starts on a fixed index (the panel
+ *  pickers open on row 0) and must never rest on a disabled row. */
+export function settleEnabled(rows: readonly { disabled?: boolean }[], i: number): number {
+  if (i < 0 || i >= rows.length) return -1;
+  if (!rows[i].disabled) return i;
+  const after = stepEnabled(rows, i, 1);
+  if (after !== i) return after;
+  const before = stepEnabled(rows, i, -1);
+  return before !== i ? before : -1;
+}
+
+/** Classes a disabled row adds over its normal ones — dimmed, no hover, the
+ *  kit's soft-disabled look (`DangerConfirm`, `SignaturePad`). */
+export const DISABLED_ROW_CLASS = "cursor-not-allowed opacity-50 hover:bg-transparent";
+
+/**
+ * The family's floating label, as a real `<label for>` (lenkbank): the input is then
+ * named the way {@link Input}'s is, so `getByLabelText` and any helper that walks
+ * `<label htmlFor>` finds it. Same placement and type as {@link FieldLabel}, which
+ * stays a `<span>` for the TRIGGER pickers — a `<button>` is labelable, but those
+ * compose their own "label: value" name. `pointer-events-none` (from the class)
+ * keeps a press on it landing on the field under it, as before.
+ */
+export function ComboboxFieldLabel({
+  htmlFor,
+  className,
+  children,
+  ...rest
+}: ComponentPropsWithoutRef<"label"> & { htmlFor: string }) {
+  return (
+    <label {...rest} htmlFor={htmlFor} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
+      {children}
+    </label>
+  );
 }
 
 /**
@@ -323,7 +409,7 @@ export const SUGGESTION_LIST_CLASS =
 
 export const suggestionRowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate px-3 py-1.5 text-left text-sm text-[var(--text-primary)]",
+    "block w-full truncate px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
     isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
   );
 
@@ -373,7 +459,7 @@ export interface ComboboxPanelProps<V extends string | number>
 
 /**
  * The portalled dropdown (search header + result rows + optional create row)
- * shared by the single- and multi-value comboboxes. Left-aligned to the trigger
+ * shared by the single- and multi-value comboboxes. Start-aligned to the trigger
  * and sized to its width; `multi` swaps the trailing check for a leading
  * checkbox. `onChoose` decides whether to close (single) or stay open (multi).
  *
@@ -434,34 +520,47 @@ export function ComboboxPanel<V extends string | number>({
   // Same core, same results, same handlers — only the container differs, so the
   // two presentations cannot drift in what they offer.
   const isPhone = useMediaQuery(PHONE_QUERY, false);
-  const rowCount = results.length + (showCreate ? 1 : 0);
+  // Every row the keyboard can land on, the create row included (never disabled).
+  const rows: readonly { disabled?: boolean }[] = showCreate ? [...results, {}] : results;
+  const rowCount = rows.length;
   const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const activeId = active >= 0 && active < rowCount ? optionId(active) : undefined;
+  // The core opens on row 0 and knows nothing of `disabled`; the highlight is settled
+  // HERE, derived, so it can never rest on a row that cannot be taken — whatever the
+  // async list turned out to hold.
+  const current = settleEnabled(rows, active);
+  const activeId = current >= 0 ? optionId(current) : undefined;
   useActiveOptionScroll(activeId);
   // The consumers resolve their own props against the provider already; this is
   // for the loading row, which no consumer names, and for a caller that renders the
   // panel directly and leaves the two optional strings out.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS);
+  // Portalled to <body>, the panel leaves the subtree its `dir` came from — so the
+  // direction is read off the trigger and put back on the panel below.
+  const dir = useAnchorDir(core.triggerRef, core.open);
 
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
   // commits, Tab leaves. Escape is the one key handled elsewhere — `useComboboxCore`
   // registers it on the document, so it answers wherever focus has ended up.
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    // Disabled rows are passed over (`stepEnabled`), and each step starts from the
+    // SETTLED highlight, not the raw index, so the first Down from a disabled row 0
+    // goes to the row after the one already shown as highlighted.
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, rowCount - 1));
+      setActive(stepEnabled(rows, current, 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
+      setActive(current < 0 ? -1 : stepEnabled(rows, current, -1));
     } else if (e.key === "Home") {
       e.preventDefault();
-      setActive(0);
+      setActive(stepEnabled(rows, -1, 1));
     } else if (e.key === "End") {
       e.preventDefault();
-      setActive(rowCount - 1);
+      setActive(stepEnabled(rows, rowCount, -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (active < results.length) onChoose(results[active]);
+      if (current < 0) return;
+      if (current < results.length) onChoose(results[current]);
       else if (showCreate) onCreate();
     } else if (e.key === "Tab") {
       // The panel is PORTALLED to <body>, so the browser's own Tab would move from
@@ -490,7 +589,16 @@ export function ComboboxPanel<V extends string | number>({
         <span aria-hidden>…</span>
         <span className="sr-only">{labels.loading}</span>
       </>
-    ) : !busy && results.length === 0 && !showCreate ? (
+    ) : busy ? (
+      // Loading with the LAST query's rows still up. This was `null`, so a refetch —
+      // a new query, or a caller's `loading` while it reloads — looked exactly like a
+      // finished list: rows that were about to be replaced, with nothing saying so.
+      // A line of its own under the rows, in words, so it reads without the spinner.
+      <span className="flex items-center gap-2">
+        <Spinner label={null} className="size-3.5 border" />
+        {labels.loading}
+      </span>
+    ) : results.length === 0 && !showCreate ? (
       failed ? (
         (loadErrorLabel ?? labels.loadError)
       ) : tooShort ? (
@@ -525,6 +633,9 @@ export function ComboboxPanel<V extends string | number>({
       id={listboxId}
       role="listbox"
       aria-multiselectable={multi}
+      // The rows are provisional while a lookup is in flight — whether or not the
+      // previous query's are still showing.
+      aria-busy={busy || undefined}
       className={cn("min-h-0 flex-1 overflow-y-auto py-1", isPhone && "flex-none")}
     >
       {results.map((o, i) => {
@@ -556,19 +667,26 @@ export function ComboboxPanel<V extends string | number>({
               id={optionId(i)}
               role="option"
               aria-selected={selected}
+              aria-disabled={o.disabled || undefined}
               tabIndex={-1}
               onMouseDown={(e) => {
                 e.preventDefault();
-                onChoose(o);
+                if (!o.disabled) onChoose(o);
               }}
-              onMouseEnter={() => setActive(i)}
+              onMouseEnter={() => {
+                if (!o.disabled) setActive(i);
+              }}
               className={cn(
                 isPhone
                   ? SHEET_ROW_CLASS
-                  : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
-                i === active && !isPhone
-                  ? "bg-[var(--bg-active)]"
-                  : !isPhone && "hover:bg-[var(--bg-hover)]",
+                  : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+                o.disabled
+                  ? DISABLED_ROW_CLASS
+                  : i === current && !isPhone
+                    ? "bg-[var(--bg-active)]"
+                    : !isPhone && "hover:bg-[var(--bg-hover)]",
+                // After SHEET_ROW_CLASS, so its hover is the one cancelled.
+                o.disabled && isPhone && DISABLED_ROW_CLASS,
               )}
             >
               {multi && (
@@ -620,9 +738,9 @@ export function ComboboxPanel<V extends string | number>({
             className={cn(
               isPhone
                 ? SHEET_ROW_CLASS
-                : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
+                : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
               "text-[var(--text-secondary)]",
-              active === results.length && !isPhone
+              current === results.length && !isPhone
                 ? "bg-[var(--bg-active)]"
                 : !isPhone && "hover:bg-[var(--bg-hover)]",
             )}
@@ -663,6 +781,14 @@ export function ComboboxPanel<V extends string | number>({
   }
 
   if (!rect) return null;
+  // The panel hangs from the trigger's START edge: its left in a left-to-right form,
+  // its right in a right-to-left one (it may be wider than the trigger, `minWidth`).
+  // `clientWidth` rather than `innerWidth`, because a fixed box's `right` is measured
+  // from the edge of the viewport inside any scrollbar.
+  const inline =
+    dir === "rtl"
+      ? { right: (document.documentElement.clientWidth || window.innerWidth) - rect.right }
+      : { left: rect.left };
 
   return createPortal(
     <div
@@ -672,6 +798,7 @@ export function ComboboxPanel<V extends string | number>({
       // `aria-describedby` has nothing to collide with.
       {...rest}
       ref={panelRef}
+      dir={dir}
       onKeyDown={onKeyDown}
       // `placement` keeps the panel inside the region actually on screen: on a phone
       // the search box below pulls up the keyboard, and a panel pinned under a
@@ -680,7 +807,7 @@ export function ComboboxPanel<V extends string | number>({
         ...style,
         position: "fixed",
         top: placement.top,
-        left: rect.left,
+        ...inline,
         width: rect.width,
         minWidth: 220,
         maxHeight: placement.maxHeight,

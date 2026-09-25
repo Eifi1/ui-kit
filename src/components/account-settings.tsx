@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Button, Card, FIELD_WRITABLE_LOOK, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
@@ -42,6 +42,10 @@ export function ProfileSetting({
   labels: ProfileSettingLabels;
 }) {
   const dirty = value.trim().length > 0 && value.trim() !== (name ?? "");
+  // Generated, not the literal "display-name" it was: two of these on one page (an
+  // admin editing someone else's profile beside their own) shared an id, and the
+  // second label pointed at the first field.
+  const inputId = useId();
   return (
     <Card className="p-4 space-y-3">
       <div className="flex items-center gap-3">
@@ -58,7 +62,7 @@ export function ProfileSetting({
         <span>{memberSince ?? "—"}</span>
       </div>
       <Input
-        id="display-name"
+        id={inputId}
         label={labels.displayName}
         value={value}
         onChange={(e) => onChange(e.target.value)}

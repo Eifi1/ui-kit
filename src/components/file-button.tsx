@@ -36,8 +36,14 @@ import { Button, Spinner } from "./ui";
 /** Every string the file pickers ({@link FileButton}, `FileDropzone`) render or speak.
  *  Messages are functions of the file name so a translation can put it anywhere. */
 export interface FilePickerLabels {
-  /** The file's type is not in `accept`. */
+  /** The file's type is not in `accept`, when no `accept` is known to name (see
+   *  `rejectedTypeOnly`). */
   rejectedType: (name: string) => string;
+  /** The file's type is not in `accept`, naming what IS accepted: `accept`'s tokens,
+   *  lower-cased and joined with ", " (`".csv"` => "Only .csv files"). Used whenever
+   *  `accept` is set — kastlan kept a custom `isValid` + `invalidMessage` per form only
+   *  to say this, and `accept` already knows it. */
+  rejectedTypeOnly: (accept: string, name: string) => string;
   /** The file is larger than `maxSize`; `maxSize` arrives formatted ("5 MB"). */
   rejectedSize: (name: string, maxSize: string) => string;
   /** The file was one too many for `maxFiles`. */
@@ -46,6 +52,9 @@ export interface FilePickerLabels {
   rejectedInvalid: (name: string) => string;
   /** Spoken instead of the per-file message when more than one file was refused. */
   rejectedMany: (count: number) => string;
+  /** Spoken (and shown, on a dropzone) when `onPick` refused the WHOLE pick.
+   *  Receives the number of files in it. */
+  rejectedPick: (count: number) => string;
   /** Spoken after a pick the component itself echoes (the dropzone). */
   selected: (count: number, firstName: string) => string;
   /** The dropzone's remove button for one file. */
@@ -59,11 +68,14 @@ export interface FilePickerLabels {
 
 export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
   rejectedType: (name) => `“${name}” is not a supported file type`,
+  rejectedTypeOnly: (accept) => `Only ${accept} files`,
   rejectedSize: (name, maxSize) => `“${name}” is larger than ${maxSize}`,
   rejectedCount: (name, maxFiles) =>
     `“${name}” was not added: at most ${maxFiles} ${maxFiles === 1 ? "file" : "files"}`,
   rejectedInvalid: (name) => `“${name}” cannot be used here`,
   rejectedMany: (count) => `${count} files were not added`,
+  rejectedPick: (count) =>
+    count === 1 ? "The file was not added" : `None of the ${count} files were added`,
   selected: (count, firstName) => (count === 1 ? `“${firstName}” selected` : `${count} files selected`),
   remove: (name) => `Remove “${name}”`,
   clearAll: "Remove all files",
@@ -136,6 +148,15 @@ function typeFromExtension(name: string): string | undefined {
   return dot === -1 ? undefined : EXTENSION_TYPES[name.slice(dot + 1)];
 }
 
+/** `" .PDF, image/png ,"` => `".pdf, image/png"` — `accept` as a person reads it. */
+function formatAccept(accept: string): string {
+  return accept
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+    .join(", ");
+}
+
 /** What the pickers screen a pick with. All optional; nothing set accepts everything. */
 export interface FileScreenOptions {
   accept?: string;
@@ -160,6 +181,15 @@ export function screenFiles(
 ): { accepted: File[]; rejected: FileRejection[] } {
   const accepted: File[] = [];
   const rejected: FileRejection[] = [];
+  // Name what `accept` takes ("Only .csv files") — unless the host translated
+  // `rejectedType` but not yet `rejectedTypeOnly`: its own sentence beats an English one.
+  const acceptText = opts.accept ? formatAccept(opts.accept) : "";
+  const useOnly =
+    acceptText !== "" &&
+    (labels.rejectedTypeOnly !== DEFAULT_FILE_PICKER_LABELS.rejectedTypeOnly ||
+      labels.rejectedType === DEFAULT_FILE_PICKER_LABELS.rejectedType);
+  const typeMessage = (name: string) =>
+    useOnly ? labels.rejectedTypeOnly(acceptText, name) : labels.rejectedType(name);
   for (const file of files) {
     let reason: FileRejectionReason | null = null;
     if (!matchesAccept(file, opts.accept)) reason = "type";
@@ -174,7 +204,7 @@ export function screenFiles(
     }
     const message =
       reason === "type"
-        ? labels.rejectedType(file.name)
+        ? typeMessage(file.name)
         : reason === "size"
           ? labels.rejectedSize(file.name, formatSize(opts.maxSize ?? 0))
           : reason === "count"
@@ -183,6 +213,34 @@ export function screenFiles(
     rejected.push({ file, reason, message });
   }
   return { accepted, rejected };
+}
+
+/**
+ * Judges a pick as a whole — keksdose's "refuse the pick if any file is bad", which
+ * with `onFiles` + `onReject` alone had to be rebuilt from two calls in a microtask.
+ *
+ * Called ONCE per pick, after screening and before `onFiles` / `onReject`, with both
+ * halves (either may be empty). Return `false` to refuse the whole pick: the accepted
+ * files are not delivered, `onReject` still receives what screening refused, and one
+ * sentence (`labels.rejectedPick`) is spoken for the pick instead of a per-file one.
+ * Return nothing to let the pick through as usual.
+ *
+ * ```tsx
+ * onPick={(ok, bad) => bad.length === 0 || false}  // all or nothing
+ * ```
+ */
+export type FilePickHandler = (accepted: File[], rejected: FileRejection[]) => boolean | void;
+
+/** @internal The shared tail of both pickers: run `onPick`, and say whether the pick
+ *  stands. A pick with nothing accepted has nothing to refuse, so `false` there is
+ *  treated as no verdict and the usual per-file messages are kept. */
+export function judgePick(
+  onPick: FilePickHandler | undefined,
+  accepted: File[],
+  rejected: FileRejection[],
+): boolean {
+  if (!onPick) return true;
+  return onPick(accepted, rejected) !== false || accepted.length === 0;
 }
 
 /** One sentence for a whole batch of refusals: the file's own message for one, a
@@ -205,8 +263,11 @@ export interface UseFilePickerOptions extends FileScreenOptions {
    * keksdose's camera input has no `multiple`. Pass one or the other.
    */
   capture?: boolean | "user" | "environment";
-  /** The files that passed, in pick order. Never called with an empty array. */
-  onFiles: (files: File[]) => void;
+  /** The files that passed, in pick order. Never called with an empty array.
+   *  Optional since 0.7 for a caller that takes the pick through `onPick` alone. */
+  onFiles?: (files: File[]) => void;
+  /** See {@link FilePickHandler}: the whole pick at once, with the power to refuse it. */
+  onPick?: FilePickHandler;
   /** The files that did not, with a translated message each. The refusals are also
    *  spoken through a live region, so this is for SHOWING them, not for a11y. */
   onReject?: (rejections: FileRejection[]) => void;
@@ -246,6 +307,7 @@ export function useFilePicker({
   isValid,
   invalidMessage,
   onFiles,
+  onPick,
   onReject,
   disabled,
   labels: labelsProp,
@@ -269,7 +331,12 @@ export function useFilePicker({
       labels,
       fileText.size,
     );
-    if (accepted.length > 0) onFiles(accepted);
+    if (!judgePick(onPick, accepted, rejected)) {
+      if (rejected.length > 0) onReject?.(rejected);
+      announce(labels.rejectedPick(files.length));
+      return;
+    }
+    if (accepted.length > 0) onFiles?.(accepted);
     if (rejected.length > 0) {
       onReject?.(rejected);
       announce(summariseRejections(rejected, labels));
@@ -355,6 +422,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     isValid,
     invalidMessage,
     onFiles,
+    onPick,
     onReject,
     labels,
     pending,
@@ -381,6 +449,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     isValid,
     invalidMessage,
     onFiles,
+    onPick,
     onReject,
     labels,
     disabled: inert,
