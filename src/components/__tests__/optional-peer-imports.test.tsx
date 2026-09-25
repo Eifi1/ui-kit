@@ -40,6 +40,10 @@ function renderDropzone(props: Partial<Parameters<typeof FileDropzone>[0]> = {})
   );
 }
 
+/** The drop target. A `group` since the zone stopped being a `role="button"` that
+ *  wrapped real buttons (nested interactive controls); these tests queried "button". */
+const target = () => screen.getByRole("group", { name: "Drop a file" });
+
 /** A drop, as the browser delivers it. */
 function drop(el: Element, file: File) {
   fireEvent.drop(el, { dataTransfer: { files: [file], types: ["Files"] } });
@@ -51,7 +55,7 @@ describe("FileDropzone's rejection path", () => {
     const onFileSelected = vi.fn();
     renderDropzone({ onInvalid, onFileSelected });
     const file = ZIP();
-    drop(screen.getByRole("button", { name: "Drop a file" }), file);
+    drop(target(), file);
     expect(onInvalid).toHaveBeenCalledWith(file);
     expect(onFileSelected).not.toHaveBeenCalled();
   });
@@ -59,7 +63,7 @@ describe("FileDropzone's rejection path", () => {
   it("falls back to a sonner toast when it does not", async () => {
     const { toast } = await import("sonner");
     renderDropzone();
-    drop(screen.getByRole("button", { name: "Drop a file" }), ZIP());
+    drop(target(), ZIP());
     // The import is dynamic now, so the toast lands a microtask later.
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Nur .zip-Dateien"));
   });
@@ -68,7 +72,7 @@ describe("FileDropzone's rejection path", () => {
     const onFileSelected = vi.fn();
     const file = ZIP();
     renderDropzone({ isValid: () => true, onFileSelected });
-    drop(screen.getByRole("button", { name: "Drop a file" }), file);
+    drop(target(), file);
     expect(onFileSelected).toHaveBeenCalledWith(file);
   });
 });

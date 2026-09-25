@@ -36,8 +36,14 @@ import { Button, Spinner } from "./ui";
 /** Every string the file pickers ({@link FileButton}, `FileDropzone`) render or speak.
  *  Messages are functions of the file name so a translation can put it anywhere. */
 export interface FilePickerLabels {
-  /** The file's type is not in `accept`. */
+  /** The file's type is not in `accept`, when no `accept` is known to name (see
+   *  `rejectedTypeOnly`). */
   rejectedType: (name: string) => string;
+  /** The file's type is not in `accept`, naming what IS accepted: `accept`'s tokens,
+   *  lower-cased and joined with ", " (`".csv"` => "Only .csv files"). Used whenever
+   *  `accept` is set — kastlan kept a custom `isValid` + `invalidMessage` per form only
+   *  to say this, and `accept` already knows it. */
+  rejectedTypeOnly: (accept: string, name: string) => string;
   /** The file is larger than `maxSize`; `maxSize` arrives formatted ("5 MB"). */
   rejectedSize: (name: string, maxSize: string) => string;
   /** The file was one too many for `maxFiles`. */
@@ -62,6 +68,7 @@ export interface FilePickerLabels {
 
 export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
   rejectedType: (name) => `“${name}” is not a supported file type`,
+  rejectedTypeOnly: (accept) => `Only ${accept} files`,
   rejectedSize: (name, maxSize) => `“${name}” is larger than ${maxSize}`,
   rejectedCount: (name, maxFiles) =>
     `“${name}” was not added: at most ${maxFiles} ${maxFiles === 1 ? "file" : "files"}`,
@@ -141,6 +148,15 @@ function typeFromExtension(name: string): string | undefined {
   return dot === -1 ? undefined : EXTENSION_TYPES[name.slice(dot + 1)];
 }
 
+/** `" .PDF, image/png ,"` => `".pdf, image/png"` — `accept` as a person reads it. */
+function formatAccept(accept: string): string {
+  return accept
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+    .join(", ");
+}
+
 /** What the pickers screen a pick with. All optional; nothing set accepts everything. */
 export interface FileScreenOptions {
   accept?: string;
@@ -165,6 +181,15 @@ export function screenFiles(
 ): { accepted: File[]; rejected: FileRejection[] } {
   const accepted: File[] = [];
   const rejected: FileRejection[] = [];
+  // Name what `accept` takes ("Only .csv files") — unless the host translated
+  // `rejectedType` but not yet `rejectedTypeOnly`: its own sentence beats an English one.
+  const acceptText = opts.accept ? formatAccept(opts.accept) : "";
+  const useOnly =
+    acceptText !== "" &&
+    (labels.rejectedTypeOnly !== DEFAULT_FILE_PICKER_LABELS.rejectedTypeOnly ||
+      labels.rejectedType === DEFAULT_FILE_PICKER_LABELS.rejectedType);
+  const typeMessage = (name: string) =>
+    useOnly ? labels.rejectedTypeOnly(acceptText, name) : labels.rejectedType(name);
   for (const file of files) {
     let reason: FileRejectionReason | null = null;
     if (!matchesAccept(file, opts.accept)) reason = "type";
@@ -179,7 +204,7 @@ export function screenFiles(
     }
     const message =
       reason === "type"
-        ? labels.rejectedType(file.name)
+        ? typeMessage(file.name)
         : reason === "size"
           ? labels.rejectedSize(file.name, formatSize(opts.maxSize ?? 0))
           : reason === "count"

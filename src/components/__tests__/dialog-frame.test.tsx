@@ -184,10 +184,63 @@ describe("DialogFrame", () => {
         <p>Fields</p>
       </DialogFrame>,
     );
-    const headerRow = screen.getByRole("heading", { name: "Edit row" }).parentElement!.parentElement!;
+    // Three levels up since 0.7.0: heading → title block → the title/headerActions
+    // wrapping row → the header row (it was two before `headerActions`).
+    const headerRow = screen.getByRole("heading", { name: "Edit row" }).parentElement!.parentElement!
+      .parentElement!;
     expect(headerRow.className).toContain("border-b");
     expect(headerRow.className).toContain("px-3");
     expect(headerRow.className).not.toContain("px-4");
     expect(screen.getByText("Fields").parentElement!.className).toContain("pt-3");
+  });
+});
+
+describe("DialogFrame headerActions (0.7.0, kastlan)", () => {
+  it("renders them beside the title, before the X, in a row that can wrap", () => {
+    render(
+      <DialogFrame onClose={vi.fn()} title="Booking" closeButton headerActions={<button type="button">Edit</button>}>
+        <p>Body</p>
+      </DialogFrame>,
+    );
+    const heading = screen.getByRole("heading", { name: "Booking" });
+    const edit = screen.getByRole("button", { name: "Edit" });
+    const close = screen.getByRole("button", { name: "Close" });
+    // Document order: title, then the header actions, then the X.
+    expect(heading.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(edit.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const slot = edit.closest("[data-dialog-header-actions]")!;
+    // The title and the actions share the wrapping row; the X sits outside it.
+    const row = slot.parentElement!;
+    expect(row.className).toContain("flex-wrap");
+    expect(row).toContainElement(heading);
+    expect(row).not.toContainElement(close);
+    expect(slot.className).toContain("gap-2");
+  });
+
+  it("hands a function the animated close", () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    render(
+      <DialogFrame
+        onClose={onClose}
+        title="Booking"
+        headerActions={(close) => (
+          <button type="button" onClick={close}>
+            Done
+          </button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    act(() => {
+      vi.advanceTimersByTime(OVERLAY_EXIT_MS + 50);
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
+  it("renders no slot without them", () => {
+    render(<DialogFrame onClose={vi.fn()} title="Plain" />);
+    expect(document.querySelector("[data-dialog-header-actions]")).toBeNull();
   });
 });

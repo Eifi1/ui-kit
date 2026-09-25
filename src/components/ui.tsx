@@ -1,7 +1,8 @@
 import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
-import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
@@ -49,6 +50,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** In a flex row next to a taller labelled field, fill the field's height so the
    *  two line up. No effect outside a flex row. */
   stretch?: boolean;
+  /** The `<button>` element. React 19 passes `ref` to a function component as an
+   *  ordinary prop, so it rides `...rest` onto the element with no `forwardRef` —
+   *  declared here only because `ButtonHTMLAttributes` does not carry it. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function Button({ variant = "primary", stretch, className, ...rest }: ButtonProps) {
@@ -275,7 +280,7 @@ export const FIELD_DISPLAY =
 // button the way the native Select does.
 export const FIELD_TRIGGER = cn(
   FIELD_BASE,
-  "relative flex items-center justify-between gap-2 text-left hover:bg-[var(--bg-hover)]",
+  "relative flex items-center justify-between gap-2 text-start hover:bg-[var(--bg-hover)]",
 );
 
 /** An alias rather than an interface: the chevron adds nothing of its own to an
@@ -290,7 +295,10 @@ export type FieldChevronProps = Omit<ComponentPropsWithoutRef<"svg">, "children"
  * it centres on the *content* box instead, and `FIELD_FLOATING_PAD` (pt-4 pb-1)
  * pushes that box's midline down — so a labelled currency/multi-select chevron
  * sat visibly lower than the native select's right beside it (feedback #400).
- * Pair it with `pr-9` on the trigger so the value can't run underneath. */
+ * Pair it with `pe-9` on the trigger so the value can't run underneath. At the
+ * inline END, not the right: a right-to-left form reads the value from the right,
+ * and a chevron parked on top of its first word hid exactly the part that says
+ * what was picked. */
 export function FieldChevron({ className, ...rest }: FieldChevronProps) {
   return (
     <ChevronDown
@@ -300,7 +308,7 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
       // announcement of the same field.
       aria-hidden
       className={cn(
-        "pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+        "pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
         className,
       )}
     />
@@ -311,7 +319,7 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
 // floats up INSIDE the top strip on focus or once the field has a value. Sits on
 // the field's own surface, so no background chip and nothing to mismatch the card.
 export const FLOATING_LABEL_CLASS = cn(
-  "pointer-events-none absolute left-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
+  "pointer-events-none absolute start-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
   "max-w-[calc(100%-1.5rem)] truncate",
   "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
   "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
@@ -324,13 +332,13 @@ export const FLOATING_LABEL_CLASS = cn(
 // selector, so the classes have to sit on the element that is actually a sibling
 // of the input, and a label nested inside a wrapper is not one.
 //
-// Wider right clearance than the label alone takes (`3rem` rather than `1.5rem`),
+// Wider end clearance than the label alone takes (`3rem` rather than `1.5rem`),
 // because the controls that carry an animated label are the ones with something
-// at the right edge of the field — NumberInput's calculator is the case this was
+// at the end edge of the field — NumberInput's calculator is the case this was
 // written for. The label truncates a little sooner; the alternative was the "?"
 // sitting on top of a button (steering-design feedback #48).
 const FLOATING_ROW_CLASS = cn(
-  "pointer-events-none absolute left-3 top-2.5 flex items-center gap-1 transition-all",
+  "pointer-events-none absolute start-3 top-2.5 flex items-center gap-1 transition-all",
   "max-w-[calc(100%-3rem)] text-sm text-[var(--text-placeholder)]",
   "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
   "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
@@ -348,7 +356,7 @@ const STATIC_LABEL_TYPE =
 // A field that always has a value (select / dropdown trigger) keeps the label
 // permanently in the floated position — small, in the top strip, value below.
 export const FLOATING_LABEL_STATIC = cn(
-  "pointer-events-none absolute left-3 top-1",
+  "pointer-events-none absolute start-3 top-1",
   STATIC_LABEL_TYPE,
   "max-w-[calc(100%-1.5rem)] truncate",
 );
@@ -377,7 +385,7 @@ export interface FloatingFieldProps extends ComponentPropsWithoutRef<"div"> {
    *  It rides an ANIMATED label too, and the two cases place it differently on
    *  purpose. A static label has a field-wide strip to itself, so the hint sits
    *  at the far end of it and a long label truncates into the gap. An animated
-   *  one belongs to a control with something at the right edge of the field — a
+   *  one belongs to a control with something at the end edge of the field — a
    *  calculator, a stepper — so the hint follows the label instead, and it is
    *  the label that gives way (steering-design feedback #48). */
   hint?: ReactNode;
@@ -422,8 +430,8 @@ export function FloatingField({
     <div {...rest} className={cn("relative", className)}>
       {children}
       {withHint ? (
-        // Static: `inset-x-3` rather than `left-3`, so a long label truncates at
-        // the field's own right padding instead of running under the chevron.
+        // Static: `inset-x-3` rather than `start-3`, so a long label truncates at
+        // the field's own end padding instead of running under the chevron.
         // Animated: the row floats with the label and is only as wide as it needs
         // to be. Either way the hint keeps its width (`shrink-0`) and the label
         // is the one that gives way.
@@ -765,7 +773,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       disabled={rest.disabled}
       aria-label={revealed ? passwordText.hide : passwordText.show}
       aria-pressed={revealed}
-      className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:cursor-default disabled:opacity-50"
+      className="absolute inset-y-0 end-0 flex items-center rounded-e-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:cursor-default disabled:opacity-50"
     >
       {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
     </button>
@@ -804,7 +812,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             {...rest}
             aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
             aria-describedby={describedBy}
-            className={cn(FIELD_BASE, "pr-9", inputClassName, isInvalid && FIELD_INVALID)}
+            className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID)}
           />
           {revealToggle}
         </div>
@@ -831,7 +839,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             asDisplay
               ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
               : FLOATING_INPUT_CLASS,
-            isPassword && "pr-9",
+            isPassword && "pe-9",
             inputClassName,
             isInvalid && FIELD_INVALID,
           )}
@@ -858,7 +866,9 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    * the tall box to float in, so a labelled Select ignores `"sm"`.
    *
    * A NUMBER is still the native attribute (the rows of a list box) and is passed
-   * straight through, so the one HTML meaning of `size` keeps working.
+   * straight through, so the one HTML meaning of `size` keeps working. Above 1 (as
+   * with `multiple`) the browser draws a list box, and the Select drops its chevron
+   * and the end padding reserved for it.
    */
   size?: "sm" | "md" | number;
   /** Classes for the `<select>` itself. `className` styles the WRAPPER — the box
@@ -870,7 +880,7 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
 // The compact select: the field's colours, a toolbar button's height. `py-0` and a
 // fixed height rather than a smaller padding, so the box is 28px whatever line
 // height the caller's type brings with it.
-const SELECT_SM = "h-7 py-0 pl-2 pr-7 text-xs";
+const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { className, label, id, children, invalid, error, hint, size, selectClassName, ...rest },
@@ -879,6 +889,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const generated = useId();
   // Only a number reaches the DOM; the two words are this component's own.
   const nativeSize = typeof size === "number" ? size : undefined;
+  // A numeric size above 1 (or `multiple`) makes the browser draw a LIST BOX — all
+  // the rows in the field, no menu to drop. The dropdown dress did not fit it: the
+  // chevron was centred on a box several rows tall, sat on top of the rows' text
+  // at the end edge, and `pe-9` clipped every option nine units early. A list box
+  // gets the plain field instead — its own native scroll, no chevron, even padding.
+  const listBox = (nativeSize !== undefined && nativeSize > 1) || Boolean(rest.multiple);
   const small = size === "sm" && label === undefined;
   const fieldId = id ?? generated;
   const { isInvalid, describedBy, errorEl } = useFieldError(
@@ -888,13 +904,16 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     rest["aria-invalid"],
   );
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
-  // in from the right border and matches both themes — feedback #223. A DISABLED
+  // in from the end border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
   // thing on the control that promises a choice (Keksdose dev#474, where the
   // account type became read-only and still looked exactly like a picker).
-  const chevron = rest.disabled ? null : (
-    <FieldChevron className={small ? "right-1.5 size-3.5" : undefined} />
-  );
+  const chevron =
+    rest.disabled || listBox ? null : (
+      <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />
+    );
+  // `pe-9` is the room the chevron takes; a list box has none to make room for.
+  const dress = listBox ? "overflow-y-auto" : "appearance-none pe-9";
   if (label === undefined) {
     return (
       <FieldGroup errorEl={errorEl}>
@@ -919,7 +938,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             aria-describedby={describedBy}
             className={cn(
               FIELD_BASE,
-              "appearance-none pr-9",
+              dress,
               small && SELECT_SM,
               selectClassName,
               isInvalid && FIELD_INVALID,
@@ -944,8 +963,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           aria-describedby={describedBy}
           className={cn(
             FIELD_BASE,
-            FIELD_FLOATING_PAD,
-            "peer appearance-none pr-9",
+            // The floated label takes the top strip of a list box too, so its first
+            // row starts under the label rather than behind it.
+            listBox ? "pt-5 pb-1" : FIELD_FLOATING_PAD,
+            "peer",
+            dress,
             selectClassName,
             isInvalid && FIELD_INVALID,
           )}
@@ -1489,7 +1511,9 @@ export function Tabs<T extends string>({
       if (!busy) requestRemove(tab.id);
       return;
     }
-    const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    // Along the reading direction: the strip is a flex row, so in RTL the NEXT tab sits
+    // to the left, and ArrowLeft has to reach it.
+    const step = horizontalStep(e.key, e.currentTarget);
     if (step === 0 && e.key !== "Home" && e.key !== "End") return;
     const strip = e.currentTarget.closest('[role="tablist"]');
     if (!strip) return;

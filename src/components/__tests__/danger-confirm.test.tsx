@@ -123,6 +123,28 @@ describe("DangerConfirm", () => {
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
   });
 
+  it("shows the locked reason as a tooltip on the arm button, which stays focusable (0.7.0)", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm lockedReason="The demo is read-only." onConfirm={() => {}} />);
+    const arm = screen.getByRole("button", { name: "Delete…" });
+    expect(arm).not.toBeDisabled();
+    await user.hover(arm);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("The demo is read-only.");
+    await user.unhover(arm);
+    await user.tab();
+    expect(arm).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("The demo is read-only.");
+    // Described ONCE, by the visible line — the bubble is not appended to it.
+    expect(arm).toHaveAccessibleDescription("The demo is read-only.");
+  });
+
+  it("has no tooltip when it is not locked", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm onConfirm={() => {}} />);
+    await user.hover(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
   it("disables the arm button with `disabled`", () => {
     render(<DangerConfirm disabled onConfirm={() => {}} />);
     expect(screen.getByRole("button", { name: "Delete…" })).toBeDisabled();

@@ -203,9 +203,11 @@ export function NumberPadSheet({
         {label != null && (
           <span className="truncate pb-1 text-xs font-medium text-[var(--money-neutral)]">{label}</span>
         )}
-        <div className="ml-auto min-w-0 text-right">
-          <div className="truncate font-mono text-lg leading-tight text-[var(--text-primary)]">{value || "0"}</div>
-          <div className="h-4 font-mono text-xs text-[var(--money-neutral)]">{preview}</div>
+        {/* At the logical end, opposite the label; the figures themselves stay
+            left-to-right and right-aligned, like the desktop calculator's. */}
+        <div className="ms-auto min-w-0">
+          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-[var(--text-primary)]">{value || "0"}</div>
+          <div dir="ltr" className="h-4 text-right font-mono text-xs text-[var(--money-neutral)]">{preview}</div>
         </div>
       </div>
 

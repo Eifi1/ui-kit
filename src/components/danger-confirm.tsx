@@ -3,6 +3,7 @@ import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, Input, Label, Spinner } from "./ui";
+import { Tooltip } from "./tooltip";
 
 /**
  * Every string the tile renders — the `dangerConfirm` namespace of
@@ -243,22 +244,39 @@ export function DangerConfirm({
   const toneText = tone === "warning" ? "text-[var(--warning)]" : "text-[var(--danger)]";
 
   if (!armed) {
+    const arm = (
+      <Button
+        id={armId}
+        type="button"
+        variant={tone === "warning" ? "secondary" : "danger"}
+        disabled={disabled}
+        aria-disabled={locked || undefined}
+        aria-describedby={locked ? reasonId : undefined}
+        onClick={() => {
+          if (!locked) setArmed(true);
+        }}
+        className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+      >
+        {armLabel ?? labels.arm}
+      </Button>
+    );
     return (
       <div {...rest} className={cn("space-y-1", className)}>
-        <Button
-          id={armId}
-          type="button"
-          variant={tone === "warning" ? "secondary" : "danger"}
-          disabled={disabled}
-          aria-disabled={locked || undefined}
-          aria-describedby={locked ? reasonId : undefined}
-          onClick={() => {
-            if (!locked) setArmed(true);
-          }}
-          className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
-        >
-          {armLabel ?? labels.arm}
-        </Button>
+        {locked ? (
+          // The reason on the button itself too, where the pointer that tried it is —
+          // the line below can sit out of view in a long settings card. Portalled, so
+          // a card that scrolls neither clips it nor grows by it.
+          //
+          // The button in a FRAGMENT on purpose: Tooltip clones an element child to
+          // add the bubble to its `aria-describedby`, and the button is already
+          // described by the visible line below — the same sentence twice, read out
+          // on every focus. A fragment is left as it is, so the bubble stays visual.
+          <Tooltip label={lockedReason} portal>
+            <>{arm}</>
+          </Tooltip>
+        ) : (
+          arm
+        )}
         {locked && (
           <p id={reasonId} className="text-xs text-[var(--text-muted)]">
             {lockedReason}

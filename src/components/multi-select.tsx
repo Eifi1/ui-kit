@@ -8,7 +8,7 @@ import { Check } from "lucide-react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
-import { useActiveOptionScroll } from "./combobox-core";
+import { useActiveOptionScroll, useComboboxFieldError } from "./combobox-core";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_MULTI_SELECT_LABELS,
@@ -50,6 +50,14 @@ export interface MultiSelectProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  this package carries it now, so a form can mark any of its fields rather than
    *  only the one that happened to have it first. */
   invalid?: boolean;
+  /** What is wrong with the selection, in the caller's words. Rendered under the
+   *  field, pointed at by the trigger's `aria-describedby` (merged with any the
+   *  caller passed) and implies `invalid` — {@link Input}'s `error`, on the same
+   *  rules. */
+  error?: ReactNode;
+  /** The trigger cannot be opened: FIELD_BASE's settled grey, no chevron (as a
+   *  disabled {@link Select} drops its own), and a dimmed label. */
+  disabled?: boolean;
 }
 
 export function MultiSelect({
@@ -66,7 +74,10 @@ export function MultiSelect({
   className,
   panelClassName,
   invalid,
+  error,
+  disabled,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
   ...rest
 }: MultiSelectProps) {
   const { open, setOpen, wrapperRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
@@ -81,6 +92,7 @@ export function MultiSelect({
     selectedCount: itemLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const field = useComboboxFieldError(error, invalid, ariaDescribedBy);
   // One id per instance: `aria-controls` on the trigger names the list while the
   // list is still closed.
   const uid = useId();
@@ -151,10 +163,11 @@ export function MultiSelect({
     // the thing with a role. Spread FIRST so the ARIA the trigger composes, and the
     // handlers that open the list, cannot be replaced by accident from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
+      {label !== undefined && <FieldLabel className={disabled ? "opacity-50" : undefined}>{label}</FieldLabel>}
       <button
         ref={triggerRef}
         type="button"
+        disabled={disabled}
         // A combobox, not a bare button: this trigger carried `aria-invalid`, which
         // `button` does not support, so a required-and-empty filter painted its rose
         // border and announced nothing (ESLint's `role-supports-aria-props`, the
@@ -187,15 +200,25 @@ export function MultiSelect({
             setActive(0);
           }
         }}
-        aria-invalid={invalid || undefined}
-        className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD, invalid && FIELD_INVALID)}
+        aria-invalid={field.isInvalid || undefined}
+        // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
+        // the component is taken off the wrapper for the same reason.
+        aria-describedby={field.describedBy}
+        className={cn(
+          FIELD_TRIGGER,
+          "pe-9",
+          label !== undefined && FIELD_FLOATING_PAD,
+          // FIELD_TRIGGER's hover would still light a trigger nothing can open.
+          "disabled:hover:bg-[var(--bg-surface-2)]",
+          field.isInvalid && FIELD_INVALID,
+        )}
       >
         {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
             than restating a lighter one (Keksdose dev#477). */}
         <span className="truncate">{selectedSummary}</span>
-        <FieldChevron />
+        {!disabled && <FieldChevron />}
       </button>
-      {open && (
+      {open && !disabled && (
         <DropdownPanel
           // 16rem by default; `panelClassName` is how a caller widens it (Keksdose
           // feedback #147: the market picker's rows carry a postcode, a town, a
@@ -266,7 +289,7 @@ export function MultiSelect({
                     onClick={() => toggle(o.value)}
                     onMouseEnter={() => setActive(i)}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm text-left hover:bg-[var(--bg-hover)]",
+                      "flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-[var(--bg-hover)]",
                       checked && "bg-[var(--bg-active)]",
                       i === active && "bg-[var(--bg-hover)]",
                     )}
@@ -298,6 +321,10 @@ export function MultiSelect({
             })}
         </DropdownPanel>
       )}
+      {/* After the panel, not before it: the panel is `absolute` with no `top`, so it
+          opens at its place in the flow — under the message, had the message come
+          first. */}
+      {field.errorEl}
     </div>
   );
 }

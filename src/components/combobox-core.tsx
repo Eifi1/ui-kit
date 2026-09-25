@@ -13,12 +13,28 @@ import { cn } from "../lib/cn";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { FLOATING_LABEL_STATIC, PHONE_QUERY } from "./ui";
+import { FLOATING_LABEL_STATIC, PHONE_QUERY, Spinner } from "./ui";
+import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
+
+/**
+ * What an entity picker hands `onChange` when it is cleared — `clearValue` on
+ * {@link EntityCombobox} and {@link InlineEntityCombobox}. `null` by default.
+ *
+ * A closed set rather than any value, on purpose: every member is something no
+ * option can be (an option's value is a `string | number`, and `""` is never a real
+ * id), so the picker can also READ it back — a field whose `value` is the clear
+ * value shows as empty, with no clear button, exactly as `null` does. An arbitrary
+ * sentinel could collide with an id and would make that read ambiguous.
+ *
+ * No `undefined`: a prop set to `undefined` is a prop not passed, so it would read as
+ * the default and emit `null` — the one outcome the caller had asked not to get.
+ */
+export type ComboClearValue = null | "";
 
 export interface ComboOption<V extends string | number> {
   value: V;
@@ -393,7 +409,7 @@ export const SUGGESTION_LIST_CLASS =
 
 export const suggestionRowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate px-3 py-1.5 text-left text-sm text-[var(--text-primary)]",
+    "block w-full truncate px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
     isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
   );
 
@@ -443,7 +459,7 @@ export interface ComboboxPanelProps<V extends string | number>
 
 /**
  * The portalled dropdown (search header + result rows + optional create row)
- * shared by the single- and multi-value comboboxes. Left-aligned to the trigger
+ * shared by the single- and multi-value comboboxes. Start-aligned to the trigger
  * and sized to its width; `multi` swaps the trailing check for a leading
  * checkbox. `onChoose` decides whether to close (single) or stay open (multi).
  *
@@ -518,6 +534,9 @@ export function ComboboxPanel<V extends string | number>({
   // for the loading row, which no consumer names, and for a caller that renders the
   // panel directly and leaves the two optional strings out.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS);
+  // Portalled to <body>, the panel leaves the subtree its `dir` came from — so the
+  // direction is read off the trigger and put back on the panel below.
+  const dir = useAnchorDir(core.triggerRef, core.open);
 
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
   // commits, Tab leaves. Escape is the one key handled elsewhere — `useComboboxCore`
@@ -570,7 +589,16 @@ export function ComboboxPanel<V extends string | number>({
         <span aria-hidden>…</span>
         <span className="sr-only">{labels.loading}</span>
       </>
-    ) : !busy && results.length === 0 && !showCreate ? (
+    ) : busy ? (
+      // Loading with the LAST query's rows still up. This was `null`, so a refetch —
+      // a new query, or a caller's `loading` while it reloads — looked exactly like a
+      // finished list: rows that were about to be replaced, with nothing saying so.
+      // A line of its own under the rows, in words, so it reads without the spinner.
+      <span className="flex items-center gap-2">
+        <Spinner label={null} className="size-3.5 border" />
+        {labels.loading}
+      </span>
+    ) : results.length === 0 && !showCreate ? (
       failed ? (
         (loadErrorLabel ?? labels.loadError)
       ) : tooShort ? (
@@ -605,6 +633,9 @@ export function ComboboxPanel<V extends string | number>({
       id={listboxId}
       role="listbox"
       aria-multiselectable={multi}
+      // The rows are provisional while a lookup is in flight — whether or not the
+      // previous query's are still showing.
+      aria-busy={busy || undefined}
       className={cn("min-h-0 flex-1 overflow-y-auto py-1", isPhone && "flex-none")}
     >
       {results.map((o, i) => {
@@ -750,6 +781,14 @@ export function ComboboxPanel<V extends string | number>({
   }
 
   if (!rect) return null;
+  // The panel hangs from the trigger's START edge: its left in a left-to-right form,
+  // its right in a right-to-left one (it may be wider than the trigger, `minWidth`).
+  // `clientWidth` rather than `innerWidth`, because a fixed box's `right` is measured
+  // from the edge of the viewport inside any scrollbar.
+  const inline =
+    dir === "rtl"
+      ? { right: (document.documentElement.clientWidth || window.innerWidth) - rect.right }
+      : { left: rect.left };
 
   return createPortal(
     <div
@@ -759,6 +798,7 @@ export function ComboboxPanel<V extends string | number>({
       // `aria-describedby` has nothing to collide with.
       {...rest}
       ref={panelRef}
+      dir={dir}
       onKeyDown={onKeyDown}
       // `placement` keeps the panel inside the region actually on screen: on a phone
       // the search box below pulls up the keyboard, and a panel pinned under a
@@ -767,7 +807,7 @@ export function ComboboxPanel<V extends string | number>({
         ...style,
         position: "fixed",
         top: placement.top,
-        left: rect.left,
+        ...inline,
         width: rect.width,
         minWidth: 220,
         maxHeight: placement.maxHeight,

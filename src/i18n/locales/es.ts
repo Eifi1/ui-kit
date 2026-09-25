@@ -16,6 +16,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
   const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "Adjuntar imagen",
+      attachmentCapture: "Capturar pantalla",
+      attachmentPaste: "…o pega una captura de pantalla desde el portapapeles.",
+      attachmentRemove: "Quitar adjunto",
+    },
     measuredGrid: {
       view: "Vista de tabla",
       cellsView: "Celdas",
@@ -237,6 +243,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rejectedPick: (count) =>
         count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${count} archivos`,
       rejectedType: (name) => `El tipo de archivo de «${name}» no es compatible`,
+      rejectedTypeOnly: (accept) => `Solo archivos ${accept}`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
       rejectedCount: (name, maxFiles) =>
         `«${name}» no se ha añadido: como máximo ${n(maxFiles)} ${plural(maxFiles, "archivo", "archivos")}`,
@@ -281,6 +288,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       empty: "Sin resultados",
       loading: "Buscando…",
       dialog: "Búsqueda",
+      error: "La búsqueda ha fallado. Inténtelo de nuevo.",
     },
     sparkline: {
       rising: (first, last) => `Sube de ${first} a ${last}`,

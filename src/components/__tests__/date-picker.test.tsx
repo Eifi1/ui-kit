@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { DatePicker, DateRangePicker } from "../date-picker";
 import { formatIsoDate } from "../../lib/dates";
 
@@ -80,5 +80,54 @@ describe("an empty DatePicker trigger", () => {
   it("shows the placeholder instead when the caller gives one", () => {
     render(<DatePicker value="" onChange={() => {}} locale="en" label="When" placeholder="varies" />);
     expect(trigger().textContent).toBe("varies");
+  });
+});
+
+describe("Date pickers in RTL (0.7.0)", () => {
+  it("carries the field's `dir` onto the portalled calendar panel", () => {
+    render(
+      <div dir="rtl">
+        <DatePicker value="2026-09-14" onChange={() => {}} locale="en-GB" />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("combobox"));
+    const panel = screen.getByRole("dialog");
+    expect(panel).toHaveAttribute("dir", "rtl");
+  });
+
+  it("does the same for the range picker", () => {
+    render(
+      <div dir="rtl">
+        <DateRangePicker from="2026-09-01" to="2026-09-14" onChange={() => {}} locale="en-GB" />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("combobox"));
+    expect(screen.getByRole("dialog")).toHaveAttribute("dir", "rtl");
+  });
+
+  it("puts the clear button and the trigger's padding on the logical END", () => {
+    render(<DatePicker value="2026-09-14" onChange={() => {}} clearable clearLabel="Clear" />);
+    const clear = screen.getByRole("button", { name: "Clear" });
+    expect(clear.className).toContain("end-1.5");
+    expect(clear.className).not.toMatch(/\bright-/);
+    expect(screen.getByRole("combobox").className).toContain("pe-9");
+  });
+
+  it("mirrors the ‹ › day steps in RTL but not the today icon", () => {
+    render(
+      <DatePicker
+        value="2026-09-14"
+        onChange={() => {}}
+        step
+        today="2026-09-20"
+        stepLabels={{ prev: "Previous day", next: "Next day" }}
+        todayLabel="Today"
+      />,
+    );
+    const icon = (name: string) =>
+      screen.getByRole("button", { name }).querySelector("svg")!.getAttribute("class") ?? "";
+    expect(icon("Previous day")).toContain("rtl:-scale-x-100");
+    expect(icon("Next day")).toContain("rtl:-scale-x-100");
+    expect(icon("Today")).not.toContain("rtl:-scale-x-100");
   });
 });

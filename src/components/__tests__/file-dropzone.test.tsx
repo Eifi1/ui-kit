@@ -58,19 +58,19 @@ describe("FileDropzone 0.6", () => {
     const onReject = vi.fn();
     const { toast } = await import("sonner");
     zone({ onFileSelected, onReject });
-    const root = screen.getByRole("button", { name: LABELS.dropLabel });
+    const root = screen.getByRole("group", { name: LABELS.dropLabel });
     drop(root, png());
     expect(onFileSelected).not.toHaveBeenCalled();
     expect(onReject.mock.calls[0][0][0]).toMatchObject({ reason: "type" });
-    await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent("“plan.png” is not a supported file type"),
-    );
+    // Was "“plan.png” is not a supported file type". The default now names what
+    // `accept` takes (kastlan's request) — see file-dropzone-structure.test.tsx.
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Only .pdf files"));
     expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("shows the refusal inline, tied to the zone, until the next good pick", async () => {
     const { container } = zone({ onFileSelected: vi.fn(), rejectionFeedback: "inline", maxSize: 5 });
-    const root = screen.getByRole("button", { name: LABELS.dropLabel });
+    const root = screen.getByRole("group", { name: LABELS.dropLabel });
     drop(root, pdf("big.pdf", 50));
     expect(root).toHaveAttribute("data-invalid", "true");
     const describedBy = root.getAttribute("aria-describedby")!;
@@ -85,7 +85,7 @@ describe("FileDropzone 0.6", () => {
 
   it("keeps a caller's aria-describedby next to its own", () => {
     zone({ rejectionFeedback: "inline", "aria-describedby": "outside-hint" });
-    const root = screen.getByRole("button", { name: LABELS.dropLabel });
+    const root = screen.getByRole("group", { name: LABELS.dropLabel });
     drop(root, png());
     expect(root.getAttribute("aria-describedby")).toMatch(/^outside-hint \S+$/);
   });
@@ -102,7 +102,10 @@ describe("FileDropzone 0.6", () => {
     fireEvent.click(remove);
     expect(click).not.toHaveBeenCalled();
     expect(screen.getByText(LABELS.emptyLabel)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: LABELS.dropLabel })).toHaveFocus();
+    // Focus lands on Browse, where the next pick starts. It used to land on the zone,
+    // which was a `role="button"` wrapping these very buttons — see
+    // file-dropzone-structure.test.tsx for why it no longer is one.
+    expect(screen.getByRole("button", { name: LABELS.browseLabel })).toHaveFocus();
     expect(await screen.findByText("“lease.pdf” removed")).toBeInTheDocument();
   });
 
@@ -120,7 +123,7 @@ describe("FileDropzone 0.6", () => {
       const c = pdf("c.pdf");
       const { container, rerender } = zone({ multiple: true, maxFiles: 2, onFilesSelected, onReject });
       expect(input(container).multiple).toBe(true);
-      drop(screen.getByRole("button", { name: LABELS.dropLabel }), a, b, c);
+      drop(screen.getByRole("group", { name: LABELS.dropLabel }), a, b, c);
       expect(onFilesSelected).toHaveBeenCalledWith([a, b]);
       expect(onReject.mock.calls[0][0].map((r: { file: File }) => r.file)).toEqual([c]);
       rerender(

@@ -219,6 +219,26 @@ describe("MonthPicker keyboard", () => {
     }
   });
 
+  it("carries a wrapper's `dir` onto the portalled panel (0.7.0)", () => {
+    // Before 0.7.0 only a `dir` on <html> reached the grid: the panel is portalled out
+    // of the field's subtree, so an RTL section of an LTR page got an LTR grid.
+    render(
+      <div dir="rtl">
+        <MonthPicker value="2026-08" onChange={() => {}} locale="en-GB" currentMonth="2026-09" />
+      </div>,
+    );
+    open();
+    expect(screen.getByRole("dialog")).toHaveAttribute("dir", "rtl");
+    fireEvent.keyDown(cell("August 2026"), { key: "ArrowLeft" });
+    expect(focusedMonth()).toBe("2026-09");
+  });
+
+  it("gives the panel of an LTR field `dir=ltr`", () => {
+    renderPicker();
+    open();
+    expect(screen.getByRole("dialog")).toHaveAttribute("dir", "ltr");
+  });
+
   it("commits the focused month with Enter, as a button does", () => {
     // A native <button> turns Enter into a click; jsdom does not, so the click is
     // what is asserted to be wired — the key → click step is the browser's.

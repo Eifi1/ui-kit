@@ -70,16 +70,18 @@ import * as i18nZh from "../i18n/locales/zh";
  *
  * 326 -> 330 (0.7.0): `MeasuredGrid`, `useMeasuredRows`, `DEFAULT_MEASURED_GRID_LABELS`
  * and `useWindowedRows` — lenkbank's measured grid, stages 2–3 of its proposal.
+ * 330 -> 331: `DEFAULT_FEEDBACK_ATTACHMENT_LABELS` (also in /feedback, 20 -> 21) — the
+ * attachment field reads the provider's new `feedbackAttachment` namespace.
  * New pattern entry `/i18n/<code>`: the kit's translations, one standalone module per
  * language (`UI_KIT_LABELS_XX` + its `uiKitLabelsXx(numberLocale)` factory; de-CH is
  * derived and has only the constant).
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 330],
+  ["@eifi1/ui-kit", barrel, 331],
   ["@eifi1/ui-kit/chart", chart, 50],
   ["@eifi1/ui-kit/data-table", dataTable, 18],
-  ["@eifi1/ui-kit/feedback", feedback, 20],
+  ["@eifi1/ui-kit/feedback", feedback, 21],
   ["@eifi1/ui-kit/search", search, 3],
   ["@eifi1/ui-kit/shell", shell, 10],
   ["@eifi1/ui-kit/tour", tour, 4],

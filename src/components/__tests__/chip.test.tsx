@@ -297,3 +297,105 @@ describe("Chip as an action button (0.6.2)", () => {
     expect(screen.getByRole("button", { name: "Snoozed" })).toHaveAttribute("aria-pressed", "false");
   });
 });
+
+describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
+  it("draws ONE pill around the body and the ×, as siblings rather than nested", () => {
+    // Before 0.7.0 the tone and border sat on the link alone and the × hung outside it,
+    // while the link's trimmed end padding assumed the × was inside.
+    render(
+      <Chip href="#x" onRemove={() => {}} tone="brand" className="custom">
+        tag
+      </Chip>,
+    );
+    const link = screen.getByRole("link", { name: "tag" });
+    const remove = screen.getByRole("button", { name: "Remove: tag" });
+    const pill = link.parentElement!;
+    expect(remove.parentElement).toBe(pill);
+    expect(link).not.toContainElement(remove);
+    expect(pill.className).toContain("rounded-full");
+    expect(pill.className).toContain("border");
+    expect(pill.className).toContain("bg-[var(--brand-bg)]");
+    expect(pill.className).toContain("custom");
+    expect(link.className).not.toContain("border");
+  });
+
+  it("does the same for an onClick chip, and keeps ref and ARIA on the body", () => {
+    const ref = { current: null as HTMLElement | null };
+    render(
+      <Chip ref={ref} onClick={() => {}} onRemove={() => {}} aria-describedby="d">
+        filter
+      </Chip>,
+    );
+    const button = screen.getByRole("button", { name: "filter" });
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("aria-describedby", "d");
+    expect(button.parentElement).toContainElement(screen.getByRole("button", { name: "Remove: filter" }));
+  });
+
+  it("uses logical margins on the ×, so it hugs the END of the pill in RTL", () => {
+    render(<Chip onRemove={() => {}}>tag</Chip>);
+    const remove = screen.getByRole("button", { name: "Remove: tag" });
+    expect(remove.className).toContain("-me-0.5");
+    expect(remove.className).toContain("ms-0.5");
+    expect(remove.className).not.toMatch(/\b-?m[lr]-/);
+  });
+
+  it("refuses href together with onClick at the type level", () => {
+    // @ts-expect-error — a chip is a link OR a button; onClick used to be silently dropped.
+    const both = <Chip href="#x" onClick={() => {}}>x</Chip>;
+    expect(both).toBeTruthy();
+  });
+});
+
+describe("ChipInput — visible rejections and RTL (0.7.0)", () => {
+  const type = (text: string) => {
+    const input = screen.getByLabelText("Tags");
+    fireEvent.change(input, { target: { value: text } });
+    return input;
+  };
+
+  it("shows a refusal under the field, keeps the live region, and clears on the next edit", () => {
+    render(<Harness validate={(v) => (v.includes("@") ? null : "Needs an @")} />);
+    const input = type("nope");
+    fireEvent.keyDown(input, { key: "Enter" });
+    const shown = document.querySelector("[data-chip-input-rejected]")!;
+    expect(shown).toHaveTextContent("Needs an @");
+    expect(screen.getByRole("status")).toHaveTextContent("Needs an @");
+    expect(input).toHaveAccessibleDescription("Needs an @");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    type("nope@");
+    expect(document.querySelector("[data-chip-input-rejected]")).toBeNull();
+    expect(input).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("shows duplicate and limit refusals too", () => {
+    render(<Harness value={["a"]} max={1} />);
+    fireEvent.keyDown(type("b"), { key: "Enter" });
+    expect(document.querySelector("[data-chip-input-rejected]")).toHaveTextContent("Limit of 1");
+  });
+
+  it("keeps a consumer error beside the refusal in the description", () => {
+    render(<Harness value={["a"]} error="Pick wisely" />);
+    const input = type("a");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(input).toHaveAccessibleDescription(/Pick wisely.*already in the list/);
+  });
+
+  it("mirrors ← → between chips in RTL", () => {
+    render(
+      <div dir="rtl">
+        <Harness value={["alpha", "beta"]} />
+      </div>,
+    );
+    fireEvent.keyDown(screen.getByLabelText("Tags"), { key: "Backspace" });
+    const beta = screen.getByRole("listitem", { name: "beta" });
+    expect(beta).toHaveFocus();
+    // In RTL the previous chip sits to the RIGHT.
+    fireEvent.keyDown(beta, { key: "ArrowRight" });
+    expect(screen.getByRole("listitem", { name: "alpha" })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("listitem", { name: "alpha" }), { key: "ArrowLeft" });
+    expect(beta).toHaveFocus();
+    fireEvent.keyDown(beta, { key: "ArrowLeft" });
+    expect(screen.getByLabelText("Tags")).toHaveFocus();
+  });
+});

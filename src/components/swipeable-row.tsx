@@ -24,10 +24,19 @@ export interface SwipeAction {
   armedClassName: string;
 }
 
+/**
+ * `right`/`left` are PHYSICAL drag directions in every writing direction, and stay so on
+ * purpose: a swipe is a movement of the finger across the glass, the gesture hook
+ * measures it in screen pixels, and "which way is destructive" is an app decision that
+ * RTL guidelines do not agree on. An app that wants mirrored actions in RTL swaps the
+ * two arrays itself. What the component does mirror is everything it lays out: the
+ * reveal panel's contents hug the physical edge being uncovered, and the keyboard
+ * buttons sit at the row's logical END.
+ */
 export interface SwipeableRowProps {
-  /** Actions committed by dragging RIGHT, nearest threshold first. */
+  /** Actions committed by dragging (physically) RIGHT, nearest threshold first. */
   right?: SwipeAction[];
-  /** Actions committed by dragging LEFT, nearest threshold first. */
+  /** Actions committed by dragging (physically) LEFT, nearest threshold first. */
   left?: SwipeAction[];
   /** Turn the gesture off — an open editor, a pending mutation, a locked row. This
    *  also withdraws the keyboard buttons below: a row that must not be acted on must
@@ -180,8 +189,10 @@ export function SwipeableRow({
             armed ? "opacity-100" : "opacity-60",
             armed ? shown.armedClassName : shown.className,
             // The panel is anchored to the edge the row is uncovering, so the label
-            // sits where the eye already is rather than across the screen.
-            draggingLeft && "flex-row-reverse",
+            // sits where the eye already is rather than across the screen. That edge is
+            // physical, while a flex row starts at the INLINE start — so in RTL the two
+            // directions swap, or the label sat under the row on the covered side.
+            draggingLeft ? "flex-row-reverse rtl:flex-row" : "rtl:flex-row-reverse",
           )}
         >
           {shown.icon && (
@@ -236,10 +247,14 @@ export function SwipeableRow({
           //
           // `pointer-events-none` here, restored on a button only once it HAS focus: a
           // sr-only button is clipped to nothing but is still a hit target, and this
-          // strip sits at the row's right edge — exactly where a leftward drag begins.
+          // strip sits at the row's trailing edge — exactly where a drag toward the
+          // start begins.
+          //
+          // `end-0`/`pe-2`, not `right-0`/`pr-2`: in RTL the right edge is where the
+          // row's title starts, and a focused button there covered it.
           // A gesture that silently failed to start because it landed on an invisible
           // button is not a bug anyone would find by looking at the screen.
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center gap-1 pr-2"
+          className="pointer-events-none absolute inset-y-0 end-0 z-10 flex items-center gap-1 pe-2"
         >
           {/* Both sides, each still nearest-threshold first, so the tab order reads in
               the order the gesture arms them. */}

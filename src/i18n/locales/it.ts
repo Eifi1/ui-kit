@@ -16,6 +16,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
   const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "Allega immagine",
+      attachmentCapture: "Cattura schermata",
+      attachmentPaste: "…oppure incolla uno screenshot dagli appunti.",
+      attachmentRemove: "Rimuovi allegato",
+    },
     measuredGrid: {
       view: "Vista tabella",
       cellsView: "Celle",
@@ -239,6 +245,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         count === 1 ? "Il file non è stato aggiunto" : `Nessuno dei ${count} file è stato aggiunto`,
       // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
       rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
+      rejectedTypeOnly: (accept) => `Solo file ${accept}`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
       rejectedCount: (name, maxFiles) =>
         `«${name}» non è stato aggiunto: al massimo ${n(maxFiles)} file`,
@@ -283,6 +290,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       empty: "Nessun risultato",
       loading: "Ricerca in corso…",
       dialog: "Ricerca",
+      error: "Ricerca non riuscita. Riprova.",
     },
     sparkline: {
       rising: (first, last) => `In aumento da ${first} a ${last}`,

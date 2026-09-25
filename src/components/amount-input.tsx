@@ -189,7 +189,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     const editable = !!onCurrencyChange;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
-    // right-padding keys off showCalc, so it tightens up automatically.
+    // end padding keys off showCalc, so it tightens up automatically.
     const isMobile = useMediaQuery(PHONE_QUERY, false);
     const showCalc = !disabled && !isMobile;
     const [focused, setFocused] = useState(false);
@@ -335,14 +335,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // 375px screen those 16px are the difference between a readable figure
             // and a clipped one (feedback #430 rework).
             asDisplay
-              ? currency ? (editable ? "pr-16" : "pr-12") : "pr-0"
+              ? currency ? (editable ? "pe-16" : "pe-12") : "pe-0"
               : showCalc
-                ? currency ? (editable ? "pr-24" : "pr-16") : "pr-10"
-                : currency ? (editable ? "pr-20" : "pr-14") : "pr-3",
+                ? currency ? (editable ? "pe-24" : "pe-16") : "pe-10"
+                : currency ? (editable ? "pe-20" : "pe-14") : "pe-3",
             // Centred display shape: centre in what is LEFT of the currency chip.
             // `text-center` alone would centre the figure in the whole box, i.e.
             // partly underneath the chip; the padding above is what takes the chip
-            // out of the centring, and nothing is added on the left because a
+            // out of the centring, and nothing is added at the start because a
             // mirrored reservation would spend the width twice (see `align`).
             asDisplay && align === "center" && "text-center",
             // Last, so it wins over the base class's own text colour.
@@ -363,12 +363,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         {/* Trailing controls share one flex track so the calculator icon and the
             currency suffix/picker sit side by side without overlapping. */}
         {/* The display shape has no box to inset from, so the controls align to the
-            figure's own right edge and its baseline strip (`bottom-1`, matching the
+            figure's own end edge and its baseline strip (`bottom-1`, matching the
             input's pb-1) instead of floating inside a field. */}
         <div
           className={cn(
             "absolute flex items-center gap-0.5",
-            asDisplay ? "bottom-1 right-0" : "inset-y-1 right-1",
+            // Logical `end-*`: the chip and the calculator are the figure's trailing
+            // controls, so a right-to-left form carries them on the left.
+            asDisplay ? "bottom-1 end-0" : "inset-y-1 end-1",
           )}
         >
           {showCalc && (
@@ -437,7 +439,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                         setOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-[var(--bg-hover)]",
+                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-start hover:bg-[var(--bg-hover)]",
                         active && "bg-[var(--bg-active)]",
                       )}
                     >

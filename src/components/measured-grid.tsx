@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { ClipboardPaste, Eraser, Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 // The cell pair reads ONE cell, where a comma has no columns to separate and so is
 // always a decimal mark; `splitRow` and `parseRows` read a pasted table, where it may
 // be either and the line decides. See the three named rules at the top of table-text.
@@ -493,8 +494,8 @@ function CellGrid({
         return event.shiftKey ? go(row - 1, column) : down(row, column);
       case "ArrowLeft":
       case "ArrowRight": {
-        const rtl = event.currentTarget.closest("[dir]")?.getAttribute("dir") === "rtl";
-        const forward = (event.key === "ArrowRight") !== rtl;
+        // Along the reading direction: ArrowLeft is "next column" in RTL.
+        const forward = horizontalStep(event.key, event.currentTarget) === 1;
         if (inText && input) {
           const edge = forward ? input.value.length : 0;
           // Inside the text the caret moves; only at its edge does it leave the cell.

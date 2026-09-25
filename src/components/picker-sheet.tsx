@@ -246,6 +246,6 @@ export function PickerSheet({
 /** A row inside a {@link PickerSheet} — the phone-sized version of a dropdown row,
  *  so a list is comfortable to hit with a thumb rather than merely legible. */
 export const SHEET_ROW_CLASS = cn(
-  "flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-base",
+  "flex min-h-11 w-full items-center gap-2 px-4 py-2 text-start text-base",
   "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
 );

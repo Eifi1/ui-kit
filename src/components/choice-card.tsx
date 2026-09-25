@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useId, useRef } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
 import type { ChangeEvent, ComponentType, InputHTMLAttributes, ReactNode } from "react";
 import { Check, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -48,6 +48,29 @@ export interface ChoiceCardProps extends Omit<InputHTMLAttributes<HTMLInputEleme
   onCheckedChange?: (checked: boolean) => void;
   /** Classes for the `<input>`. `className` styles the card. */
   inputClassName?: string;
+  /**
+   * Must be ticked to submit. Reaches the `<input>` as the native `required` (a
+   * `<form>` refuses to submit without it, a screen reader announces "required"),
+   * and draws the kit's `aria-hidden` star after the title — {@link Checkbox}'s
+   * contract, down to writing the title WITHOUT a literal "*". Inside a
+   * {@link ChoiceCardGroup} the star goes on the legend instead, once.
+   */
+  required?: boolean;
+}
+
+/** Set by {@link ChoiceCardGroup}: its legend carries the one required mark, so the
+ *  cards inside it draw none of their own. Private — not a prop a caller could set
+ *  by accident on a lone card. */
+const InGroupContext = createContext(false);
+
+/** The kit's required mark — {@link Label}'s: `aria-hidden`, because the word is
+ *  announced from the control and a star read out in the name is only noise. */
+function RequiredMark() {
+  return (
+    <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+      *
+    </span>
+  );
 }
 
 // The card. `has-[:checked]` and `has-[:focus-visible]` read the INPUT's state, so an
@@ -93,10 +116,12 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
     inputClassName,
     id,
     disabled,
+    required,
     ...rest
   },
   ref,
 ) {
+  const inGroup = useContext(InGroupContext);
   const generated = useId();
   const inputId = id ?? generated;
   const titleId = `${inputId}-title`;
@@ -131,6 +156,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
           ref={setRef}
           id={inputId}
           disabled={disabled}
+          required={required}
           {...rest}
           type={type}
           aria-labelledby={rest["aria-labelledby"] ?? titleId}
@@ -174,6 +200,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
           className="block select-none text-sm font-medium leading-5 text-[var(--text-primary)]"
         >
           {title}
+          {required && !inGroup && <RequiredMark />}
         </span>
         {showDescription && (
           <span id={descriptionId} className="mt-0.5 block text-xs text-[var(--text-muted)]">
@@ -217,7 +244,16 @@ interface ChoiceCardGroupBaseProps<T extends string> {
   /** What is wrong with the answer as a whole. Rendered under the cards and attached
    *  to the fieldset. */
   error?: ReactNode;
-  /** Radio mode only: marks the first input `required`, which is how a radio set is. */
+  /**
+   * An answer is needed. Draws the required star after the `legend` (none without
+   * one — the name then comes from `aria-label`, which has nowhere to draw it), and
+   * reaches the inputs as the native `required`:
+   *  - radios: every radio of the set, which is how HTML marks a radio group — the
+   *    group is satisfied by any one of them, and each announces "required";
+   *  - checkboxes: every box while NONE is ticked, dropped from all of them once one
+   *    is — "at least one", which checkboxes cannot say natively. A form then refuses
+   *    to submit an empty set, and nothing is left demanding a second box.
+   */
   required?: boolean;
 }
 
@@ -267,39 +303,44 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
   };
 
   return (
-    <fieldset
-      aria-label={props["aria-label"]}
-      aria-describedby={showError ? errorId : undefined}
-      disabled={disabled}
-      className="min-w-0"
-    >
-      {legend !== undefined && (
-        <legend className="mb-2 text-sm font-medium text-[var(--text-primary)]">{legend}</legend>
-      )}
-      <div className={cn("grid gap-2 sm:grid-cols-2", className)}>
-        {options.map((o, i) => (
-          <ChoiceCard
-            key={o.value}
-            type={props.multiple ? "checkbox" : "radio"}
-            name={groupName}
-            value={o.value}
-            title={o.title}
-            description={o.description}
-            icon={o.icon}
-            disabled={o.disabled}
-            invalid={showError}
-            required={!props.multiple && required && i === 0 ? true : undefined}
-            checked={isChecked(o.value)}
-            onCheckedChange={(on) => toggle(o.value, on)}
-            className={cardClassName}
-          />
-        ))}
-      </div>
-      {showError && (
-        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
-          {error}
-        </p>
-      )}
-    </fieldset>
+    <InGroupContext.Provider value={true}>
+      <fieldset
+        aria-label={props["aria-label"]}
+        aria-describedby={showError ? errorId : undefined}
+        disabled={disabled}
+        className="min-w-0"
+      >
+        {legend !== undefined && (
+          <legend className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+            {legend}
+            {required && <RequiredMark />}
+          </legend>
+        )}
+        <div className={cn("grid gap-2 sm:grid-cols-2", className)}>
+          {options.map((o) => (
+            <ChoiceCard
+              key={o.value}
+              type={props.multiple ? "checkbox" : "radio"}
+              name={groupName}
+              value={o.value}
+              title={o.title}
+              description={o.description}
+              icon={o.icon}
+              disabled={o.disabled}
+              invalid={showError}
+              required={required && (!props.multiple || props.value.length === 0) ? true : undefined}
+              checked={isChecked(o.value)}
+              onCheckedChange={(on) => toggle(o.value, on)}
+              className={cardClassName}
+            />
+          ))}
+        </div>
+        {showError && (
+          <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+            {error}
+          </p>
+        )}
+      </fieldset>
+    </InGroupContext.Provider>
   );
 }

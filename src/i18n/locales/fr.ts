@@ -16,6 +16,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
   const plural = (count: number, one: string, many: string) => (count < 2 ? one : many);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "Joindre une image",
+      attachmentCapture: "Capturer l’écran",
+      attachmentPaste: "…ou collez une capture d’écran depuis le presse-papiers.",
+      attachmentRemove: "Retirer la pièce jointe",
+    },
     measuredGrid: {
       view: "Vue du tableau",
       cellsView: "Cellules",
@@ -244,6 +250,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           ? "Le fichier n\u2019a pas été ajouté"
           : `Aucun des ${count} fichiers n\u2019a été ajouté`,
       rejectedType: (name) => `Le type du fichier «\u202f${name}\u202f» n’est pas pris en charge`,
+      rejectedTypeOnly: (accept) => `Uniquement des fichiers ${accept}`,
       rejectedSize: (name, maxSize) => `«\u202f${name}\u202f» dépasse ${maxSize}`,
       rejectedCount: (name, maxFiles) =>
         `«\u202f${name}\u202f» n’a pas été ajouté\u00a0: ${n(maxFiles)} ${plural(maxFiles, "fichier", "fichiers")} au maximum`,
@@ -293,6 +300,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       empty: "Aucun résultat",
       loading: "Recherche…",
       dialog: "Recherche",
+      error: "La recherche a échoué. Réessayez.",
     },
     sparkline: {
       // "En hausse de 12 à 40" would read as "up BY 12", hence the colon.

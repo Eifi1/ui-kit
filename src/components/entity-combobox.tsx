@@ -7,20 +7,30 @@ import {
   ComboboxPanel,
   useComboboxCore,
   useComboboxFieldError,
+  type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
-export type { ComboOption } from "./combobox-core";
+export type { ComboClearValue, ComboOption } from "./combobox-core";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
  *  than the div's form event, so the DOM's spelling of it is omitted. */
-export interface EntityComboboxProps<V extends string | number>
+export interface EntityComboboxProps<V extends string | number, C extends ComboClearValue = null>
   extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
-  /** Selected id, or null/undefined when nothing is selected. */
-  value: V | null | undefined;
-  /** Selecting an option emits its value; the clear button emits `null`. */
-  onChange: (value: V | null) => void;
+  /** Selected id; `null`, `undefined` or `clearValue` when nothing is selected. */
+  value: V | C | null | undefined;
+  /** Selecting an option emits its value; the clear button emits `clearValue`. */
+  onChange: (value: V | C) => void;
+  /**
+   * What the clear button emits. Default `null`. Pass `""` for a form whose schema
+   * wants an empty string for "no choice" (a zod `z.string()` field), rather than
+   * mapping `null` in every `onChange` — the type of `onChange` follows it, so the
+   * mapping cannot be forgotten on one field and not another. The picker also reads
+   * the value back as empty, so `value=""` shows the placeholder and no "×".
+   * See {@link ComboClearValue} for why the choice is closed.
+   */
+  clearValue?: C;
   /** Already-loaded options (client-side filtered). Also used to resolve the
    *  trigger label for the current `value`. */
   options?: ComboOption<V>[];
@@ -70,9 +80,10 @@ export interface EntityComboboxProps<V extends string | number>
  * the shared field/anchor/dismiss/search primitives (no cmdk/Radix). For picking
  * several entities use {@link MultiEntityCombobox}.
  */
-export function EntityCombobox<V extends string | number>({
+export function EntityCombobox<V extends string | number, C extends ComboClearValue = null>({
   value,
   onChange,
+  clearValue = null as C,
   options,
   loadOptions,
   loading,
@@ -95,7 +106,7 @@ export function EntityCombobox<V extends string | number>({
   loadErrorLabel,
   "aria-label": ariaLabel,
   ...rest
-}: EntityComboboxProps<V>) {
+}: EntityComboboxProps<V, C>) {
   const core = useComboboxCore<V>({
     options,
     loadOptions,
@@ -120,11 +131,13 @@ export function EntityCombobox<V extends string | number>({
   // belongs to whoever renders both ends of it.
   const listboxId = useId();
 
-  const selectedOption = value == null ? null : resolve(value);
+  // The clear value is "nothing selected" too, whichever one the caller picked.
+  const chosen: V | null = value == null || value === clearValue ? null : (value as V);
+  const selectedOption = chosen == null ? null : resolve(chosen);
   const q = core.query.trim();
   const showCreate =
     Boolean(onCreate) && q.length > 0 && !results.some((o) => o.label.toLowerCase() === q.toLowerCase());
-  const showClear = Boolean(clearable && value != null && !disabled);
+  const showClear = Boolean(clearable && chosen != null && !disabled);
   /** What the closed control is showing — the second half of its accessible name. */
   const triggerText = selectedOption?.label ?? placeholder ?? "";
 
@@ -184,7 +197,7 @@ export function EntityCombobox<V extends string | number>({
         }}
         className={cn(
           FIELD_TRIGGER,
-          "pr-9",
+          "pe-9",
           label !== undefined && FIELD_FLOATING_PAD,
           disabled && "cursor-not-allowed opacity-50",
           field.isInvalid && FIELD_INVALID,
@@ -215,9 +228,9 @@ export function EntityCombobox<V extends string | number>({
             aria-label={labels.clear}
             onClick={(e) => {
               e.stopPropagation();
-              onChange(null);
+              onChange(clearValue);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
           >
             <X className="size-4" />
           </span>

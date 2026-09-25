@@ -43,6 +43,15 @@ export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "child
    */
   actions?: ReactNode | ((close: () => void) => ReactNode);
   /**
+   * Controls that belong to the HEADER rather than to the actions row — an "Edit"
+   * toggle, a status badge with a menu, a "Copy link" (kastlan). Rendered beside the
+   * title, before the optional X; on a phone, where title and controls do not fit on
+   * one line, they wrap under the title and the X keeps its corner.
+   *
+   * A function receives the animated close, as `actions` does.
+   */
+  headerActions?: ReactNode | ((close: () => void) => ReactNode);
+  /**
    * Show an X in the header. Off by default: a centred dialog has a backdrop and
    * Escape, and a form dialog has a Cancel. On for a dialog that commits as it goes
    * and has no actions row, where the X is the only visible way out.
@@ -108,6 +117,7 @@ export function DialogFrame({
   description,
   headingAs: Heading = "h2",
   actions,
+  headerActions,
   closeButton = false,
   closeLabel,
   bodyClassName,
@@ -144,14 +154,22 @@ export function DialogFrame({
           headerClassName,
         )}
       >
-        <div className="min-w-0">
-          <Heading id={titleId} className="text-lg font-semibold leading-snug text-[var(--text-primary)]">
-            {title}
-          </Heading>
-          {hasDescription && (
-            <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
-              {description}
-            </p>
+        {/* Title and header actions share a wrapping row of their own, so it is THEY
+            that wrap on a phone — the actions drop under a title that needs its 12rem —
+            while the X stays outside it, pinned to the top-end corner. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="min-w-0 grow basis-48">
+            <Heading id={titleId} className="text-lg font-semibold leading-snug text-[var(--text-primary)]">
+              {title}
+            </Heading>
+            {hasDescription && (
+              <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
+                {description}
+              </p>
+            )}
+          </div>
+          {headerActions !== undefined && headerActions !== null && headerActions !== false && (
+            <FrameHeaderActions actions={headerActions} onClose={modal.onClose} />
           )}
         </div>
         {closeButton && <FrameClose label={closeLabel} onClose={modal.onClose} />}
@@ -190,6 +208,22 @@ function FrameClose({ label, onClose }: { label?: string; onClose: () => void })
     >
       <X aria-hidden className="size-5" />
     </button>
+  );
+}
+
+/** The header's own controls; a component for the same reason as {@link FrameClose}. */
+function FrameHeaderActions({
+  actions,
+  onClose,
+}: {
+  actions: NonNullable<DialogFrameProps["headerActions"]>;
+  onClose: () => void;
+}) {
+  const close = useContext(ModalCloseContext) ?? onClose;
+  return (
+    <div data-dialog-header-actions="" className="flex shrink-0 flex-wrap items-center gap-2">
+      {typeof actions === "function" ? actions(close) : actions}
+    </div>
   );
 }
 

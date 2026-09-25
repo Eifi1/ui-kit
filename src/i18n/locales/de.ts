@@ -15,6 +15,12 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
   const n = (value: number) => num.format(value);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "Bild anhängen",
+      attachmentCapture: "Screenshot aufnehmen",
+      attachmentPaste: "…oder einen Screenshot aus der Zwischenablage einfügen.",
+      attachmentRemove: "Anhang entfernen",
+    },
     measuredGrid: {
       view: "Tabellenansicht",
       cellsView: "Zellen",
@@ -242,6 +248,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
           ? "Die Datei wurde nicht hinzugefügt"
           : `Keine der ${count} Dateien wurde hinzugefügt`,
       rejectedType: (name) => `„${name}“ hat einen nicht unterstützten Dateityp`,
+      rejectedTypeOnly: (accept) => `Nur ${accept}-Dateien`,
       rejectedSize: (name, maxSize) => `„${name}“ ist größer als ${maxSize}`,
       rejectedCount: (name, maxFiles) =>
         `„${name}“ wurde nicht hinzugefügt: höchstens ${n(maxFiles)} ${maxFiles === 1 ? "Datei" : "Dateien"}`,
@@ -288,6 +295,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       empty: "Keine Ergebnisse",
       loading: "Wird gesucht…",
       dialog: "Suche",
+      error: "Die Suche ist fehlgeschlagen. Bitte erneut versuchen.",
     },
     sparkline: {
       rising: (first, last) => `Steigend von ${first} auf ${last}`,

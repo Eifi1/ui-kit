@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
+import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
 import { parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
 import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
@@ -322,12 +323,13 @@ export function MiniCalendar({
    */
   const onDayKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     const next = new Date(activeDate);
-    switch (e.key) {
-      case "ArrowLeft":
-        next.setDate(next.getDate() - 1);
-        break;
-      case "ArrowRight":
-        next.setDate(next.getDate() + 1);
+    // ←/→ are "previous/next day" along the READING direction: the grid's columns run
+    // right-to-left in RTL (it is a CSS grid, so the browser mirrors it), and ArrowLeft
+    // there moves to the day that sits to the left — the next one.
+    const step = horizontalStep(e.key, e.currentTarget);
+    switch (step ? "horizontal" : e.key) {
+      case "horizontal":
+        next.setDate(next.getDate() + step);
         break;
       case "ArrowUp":
         next.setDate(next.getDate() - 7);
@@ -419,7 +421,8 @@ export function MiniCalendar({
           aria-label={labels.previousMonth}
           className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
         >
-          <ChevronLeft className="size-4" />
+          {/* Mirrored in RTL: "previous" points to the reading START, which is right. */}
+          <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden />
         </button>
         {/* Named by this element rather than by a string of its own, and `aria-live`
             so paging months says which month you have landed on — the caption is the
@@ -438,7 +441,7 @@ export function MiniCalendar({
           aria-label={labels.nextMonth}
           className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
         >
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
         </button>
       </div>
       <div

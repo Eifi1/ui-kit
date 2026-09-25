@@ -15,6 +15,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
   const n = (value: number) => num.format(value);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "Kép csatolása",
+      attachmentCapture: "Képernyőkép készítése",
+      attachmentPaste: "…vagy illesszen be egy képernyőképet a vágólapról.",
+      attachmentRemove: "Melléklet eltávolítása",
+    },
     measuredGrid: {
       view: "Táblázatnézet",
       cellsView: "Cellák",
@@ -239,6 +245,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Each message opens with the quoted name, so no a/az has to agree with it, and
       // keeps numerals and the formatted size bare (convention 3).
       rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,
+      rejectedTypeOnly: (accept) => `Csak ${accept} fájl engedélyezett`,
       rejectedSize: (name, maxSize) => `„${name}”: a fájl mérete legfeljebb ${maxSize} lehet`,
       rejectedCount: (name, maxFiles) =>
         `„${name}” nem lett hozzáadva: legfeljebb ${n(maxFiles)} fájl adható meg`,
@@ -283,6 +290,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       empty: "Nincs találat",
       loading: "Keresés folyamatban…",
       dialog: "Keresés",
+      error: "A keresés nem sikerült. Próbálja újra.",
     },
     sparkline: {
       // Numerals stay bare (see 3. above): "12-ről 40-re" would need vowel harmony.

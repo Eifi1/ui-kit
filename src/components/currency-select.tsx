@@ -215,7 +215,7 @@ export function CurrencySelect({
         aria-controls={listboxId}
         aria-expanded={open}
         aria-invalid={invalid || undefined}
-        className={cn(FIELD_TRIGGER, "pr-9", label !== undefined && FIELD_FLOATING_PAD, invalid && FIELD_INVALID)}
+        className={cn(FIELD_TRIGGER, "pe-9", label !== undefined && FIELD_FLOATING_PAD, invalid && FIELD_INVALID)}
       >
         {/* The trigger stays COMPACT — flag + code only — so it never clips in a
             narrow field; the full names live in the (wider) popup (feedback
@@ -235,10 +235,10 @@ export function CurrencySelect({
       {open && (
         <DropdownPanel
           // At least as wide as the trigger, but grows to fit the full currency
-          // names and caps so it never runs off-screen. RIGHT-aligned so it grows
-          // leftward instead of pushing the page width when there's content to the
-          // right of the field (feedback #308).
-          className="right-0 min-w-full w-max max-w-[min(20rem,calc(100vw-2rem))]"
+          // names and caps so it never runs off-screen. END-aligned so it grows
+          // toward the start instead of pushing the page width when there's content
+          // after the field (feedback #308).
+          className="end-0 min-w-full w-max max-w-[min(20rem,calc(100vw-2rem))]"
           empty={filtered.length === 0}
           listProps={{ id: listboxId }}
           header={
@@ -261,7 +261,7 @@ export function CurrencySelect({
                       setOpen(false);
                     }}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm text-left hover:bg-[var(--bg-hover)]",
+                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm text-start hover:bg-[var(--bg-hover)]",
                       active && "bg-[var(--bg-active)]",
                     )}
                   >

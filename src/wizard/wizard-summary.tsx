@@ -54,7 +54,7 @@ export function WizardSummary({
                   )}
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-[var(--text-muted)]">{item.label}</dt>
-                    <dd className="text-right font-medium text-[var(--text-primary)]">
+                    <dd className="text-end font-medium text-[var(--text-primary)]">
                       {item.value}
                     </dd>
                   </div>

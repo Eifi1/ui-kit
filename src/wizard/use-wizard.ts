@@ -33,10 +33,13 @@ interface WizardState<TData> {
 }
 
 type WizardAction<TData> =
-  | { type: "GO_NEXT" }
+  // `from` is the step the move was decided ON. A move whose step is no longer the
+  // current one is stale — see `goNext` — and is dropped rather than applied relative
+  // to wherever the wizard has got to since.
+  | { type: "GO_NEXT"; from: number }
   | { type: "GO_BACK" }
   | { type: "GO_TO_STEP"; index: number }
-  | { type: "SKIP" }
+  | { type: "SKIP"; from: number }
   | { type: "UPDATE_DATA"; partial: Partial<TData> }
   | { type: "SET_SUBMITTING"; value: boolean }
   | { type: "SET_ERROR"; error: string | null }
@@ -50,6 +53,7 @@ function createReducer<TData>(stepCount: number) {
   ): WizardState<TData> {
     switch (action.type) {
       case "GO_NEXT": {
+        if (action.from !== state.currentStepIndex) return state;
         const completed = new Set(state.completedSteps);
         completed.add(state.currentStepIndex);
         const nextIndex = Math.min(state.currentStepIndex + 1, stepCount - 1);
@@ -67,6 +71,7 @@ function createReducer<TData>(stepCount: number) {
         return { ...state, currentStepIndex: action.index };
       }
       case "SKIP": {
+        if (action.from !== state.currentStepIndex) return state;
         const skipped = new Set(state.skippedSteps);
         skipped.add(state.currentStepIndex);
         const nextIndex = Math.min(state.currentStepIndex + 1, stepCount - 1);
@@ -243,11 +248,32 @@ export function useWizard<TData extends Record<string, unknown>>(
     return true;
   }, [state.currentStepIndex, missingRequired, onValidationFailed]);
 
+  /**
+   * One forward move at a time. A double-click on Next used to validate the CURRENT
+   * step twice and then advance twice — the second GO_NEXT landing on a step whose
+   * own validators never ran, so a required field two steps in could be walked past.
+   * Two layers, because either alone leaves a gap:
+   *
+   *  - this ref refuses a second `goNext`/`skip`/`finish` while one is in flight,
+   *    which covers an async validator (a server check) of any length;
+   *  - the `from` on each action drops a move decided on a step that is no longer
+   *    current, which covers the click that arrives after the first move resolved
+   *    but before React re-rendered — its closure still holds the old step index.
+   */
+  const advancingRef = useRef(false);
+
   const goNext = useCallback(async () => {
-    if (await runStepValidators()) {
-      dispatch({ type: "GO_NEXT" });
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    const from = state.currentStepIndex;
+    try {
+      if (await runStepValidators()) {
+        dispatch({ type: "GO_NEXT", from });
+      }
+    } finally {
+      advancingRef.current = false;
     }
-  }, [runStepValidators]);
+  }, [runStepValidators, state.currentStepIndex]);
 
   const goBack = useCallback(() => {
     dispatch({ type: "GO_BACK" });
@@ -258,8 +284,11 @@ export function useWizard<TData extends Record<string, unknown>>(
   }, []);
 
   const skip = useCallback(() => {
-    dispatch({ type: "SKIP" });
-  }, []);
+    // Not while Next is validating: the skip would land first and the pending GO_NEXT
+    // would then be stale anyway — but the user asked for one move, not a race.
+    if (advancingRef.current) return;
+    dispatch({ type: "SKIP", from: state.currentStepIndex });
+  }, [state.currentStepIndex]);
 
   const cancel = useCallback(() => {
     dispatch({ type: "SHOW_CANCEL_DIALOG", show: true });
@@ -288,18 +317,27 @@ export function useWizard<TData extends Record<string, unknown>>(
 
   const finish = useCallback(async () => {
     if (!onComplete || !canFinish) return;
-    // Validate the (possibly form-bearing) last step before submitting, matching
-    // the Next gate — review-only steps register no validators and pass through.
-    if (!(await runStepValidators())) return;
-    dispatch({ type: "SET_SUBMITTING", value: true });
-    dispatch({ type: "SET_ERROR", error: null });
+    // The same re-entry guard as `goNext`: a double-click on Finish would otherwise
+    // validate twice and call `onComplete` twice — `isSubmitting` is only set once
+    // validation has passed, too late to stop the second click.
+    if (advancingRef.current) return;
+    advancingRef.current = true;
     try {
-      await onComplete(state.data);
-    } catch (err) {
-      const message = err instanceof Error && err.message ? err.message : genericError;
-      dispatch({ type: "SET_ERROR", error: message });
+      // Validate the (possibly form-bearing) last step before submitting, matching
+      // the Next gate — review-only steps register no validators and pass through.
+      if (!(await runStepValidators())) return;
+      dispatch({ type: "SET_SUBMITTING", value: true });
+      dispatch({ type: "SET_ERROR", error: null });
+      try {
+        await onComplete(state.data);
+      } catch (err) {
+        const message = err instanceof Error && err.message ? err.message : genericError;
+        dispatch({ type: "SET_ERROR", error: message });
+      } finally {
+        dispatch({ type: "SET_SUBMITTING", value: false });
+      }
     } finally {
-      dispatch({ type: "SET_SUBMITTING", value: false });
+      advancingRef.current = false;
     }
   }, [onComplete, canFinish, state.data, runStepValidators, genericError]);
 

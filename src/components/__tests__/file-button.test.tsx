@@ -134,7 +134,8 @@ describe("FileButton", () => {
     expect(onFiles).toHaveBeenCalledWith([good]);
     const rejections = onReject.mock.calls[0][0];
     expect(rejections.map((r) => r.reason)).toEqual(["type", "size", "invalid", "count"]);
-    expect(rejections[0].message).toBe("“plan.png” is not a supported file type");
+    // 0.7.0: with `accept` set, the refusal names what is accepted (`rejectedTypeOnly`).
+    expect(rejections[0].message).toBe("Only .pdf files");
     expect(rejections[1].message).toMatch(/^“big\.pdf” is larger than /);
     expect(rejections[2].message).toBe("Not a lease");
     expect(rejections[3].message).toBe("“second.pdf” was not added: at most 1 file");
@@ -345,6 +346,6 @@ describe("onPick — judging the whole pick", () => {
       </FileButton>,
     );
     pick(fileInput(container), png());
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("“plan.png” is not a supported file type"));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Only .pdf files"));
   });
 });

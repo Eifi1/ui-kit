@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { useAnchorDir } from "./use-anchor-dir";
 import {
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
@@ -211,6 +212,7 @@ function AutocompleteInner<V extends string | number = string>(
   const activeId = expanded && isOptionEnabled(results[active]) ? optionId(active) : undefined;
   useActiveOptionScroll(activeId);
   const { rect, top, maxHeight } = useAnchoredPanel(fieldRef, expanded, { preferredHeight: 256 });
+  const dir = useAnchorDir(fieldRef, expanded);
 
   const close = () => {
     setOpen(false);
@@ -370,6 +372,9 @@ function AutocompleteInner<V extends string | number = string>(
             // Every press inside the list keeps focus in the field — rows, the status
             // line, the scrollbar — or the input's blur would close the list first.
             role="presentation"
+            // Portalled out of the form's `dir`; the field's is put back. The list is
+            // exactly the field's width, so `left` places it in either direction.
+            dir={dir}
             onMouseDown={(e) => e.preventDefault()}
             className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
             style={{ top, left: rect.left, width: rect.width, maxHeight }}

@@ -15,6 +15,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
   const n = (value: number) => num.format(value);
 
   return {
+    feedbackAttachment: {
+      attachmentAdd: "附加图片",
+      attachmentCapture: "截取屏幕",
+      attachmentPaste: "……或从剪贴板粘贴截图。",
+      attachmentRemove: "移除附件",
+    },
     measuredGrid: {
       view: "表格视图",
       cellsView: "单元格",
@@ -231,6 +237,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     filePicker: {
       rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${count} 个文件均未添加`),
       rejectedType: (name) => `“${name}”的文件类型不受支持`,
+      rejectedTypeOnly: (accept) => `仅限 ${accept} 文件`,
       rejectedSize: (name, maxSize) => `“${name}”超过 ${maxSize}`,
       rejectedCount: (name, maxFiles) => `未添加“${name}”：最多 ${n(maxFiles)} 个文件`,
       rejectedInvalid: (name) => `“${name}”无法在此使用`,
@@ -273,6 +280,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       empty: "无结果",
       loading: "搜索中…",
       dialog: "搜索",
+      error: "搜索失败，请重试。",
     },
     sparkline: {
       rising: (first, last) => `从 ${first} 上升到 ${last}`,

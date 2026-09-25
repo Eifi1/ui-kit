@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
+import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
 import { FieldLabel, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./ui";
 import { Popover } from "./popover";
@@ -309,17 +310,14 @@ function MonthGrid({
 
   const onCellKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     // Left and right are VISUAL directions: in a right-to-left page the grid runs the
-    // other way, so "right" is the previous month there. Read from the nearest `dir`
-    // up the tree, which for this portalled panel is in practice <html>'s.
-    const rtl = e.currentTarget.closest("[dir]")?.getAttribute("dir") === "rtl";
+    // other way, so "right" is the previous month there. The panel is portalled, but
+    // it carries the field's `dir` (see MonthPicker), so the nearest `dir` is right.
+    const step = horizontalStep(e.key, e.currentTarget);
     const col = (active.month - 1) % COLUMNS;
     let delta: number;
-    switch (e.key) {
-      case "ArrowLeft":
-        delta = rtl ? 1 : -1;
-        break;
-      case "ArrowRight":
-        delta = rtl ? -1 : 1;
+    switch (step ? "horizontal" : e.key) {
+      case "horizontal":
+        delta = step;
         break;
       case "ArrowUp":
         delta = -COLUMNS;
@@ -502,9 +500,14 @@ export function MonthPicker({
   const panelId = `${id}-panel`;
   // Only a STRING label can double as a name; a ReactNode may hold its own controls.
   const named = typeof label === "string";
+  // The panel is portalled to <body>, out of the subtree whose `dir` it inherited — an
+  // RTL form got an LTR grid. Read when opening (`toggle` is the popover's only way
+  // open) and put back on the panel. Also what the arrow keys above read.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [dir, setDir] = useState<Direction>("ltr");
 
   return (
-    <div {...wrapperRest} className={cn("relative", className)}>
+    <div {...wrapperRest} ref={rootRef} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       {/* The hidden twin the trigger is named by — see DateField. `sr-only-fixed`,
           and inside this `relative` root either way. */}
@@ -517,10 +520,14 @@ export function MonthPicker({
         width={256}
         panelId={panelId}
         labels={{ panel: labels.panel }}
+        dir={dir}
         trigger={({ open, toggle, ref }) => (
           <MonthFieldTrigger
             open={open}
-            toggle={toggle}
+            toggle={() => {
+              setDir(dirOf(rootRef.current));
+              toggle();
+            }}
             triggerRef={ref}
             triggerText={triggerText}
             hasValue={selected != null}

@@ -53,3 +53,85 @@ describe("useWizard, when a step validator throws", () => {
     expect(result.current.currentStepIndex).toBe(1);
   });
 });
+
+describe("useWizard, when Next is pressed twice (0.7.0)", () => {
+  const THREE = (validateTwo: () => boolean | Promise<boolean>, validateOne = () => true) => [
+    { id: "one", label: "One", validate: validateOne },
+    { id: "two", label: "Two", validate: validateTwo },
+    { id: "three", label: "Three" },
+  ];
+
+  it("does not walk past the next step's validation on a double-click", async () => {
+    // Both calls come from the same render, as two clicks before a re-render do: the
+    // second closure still holds step 0. It used to validate step 0 again and advance
+    // a second time — onto step 2, with step 1's validator never run.
+    const validateTwo = vi.fn(() => false);
+    const { result } = renderHook(() => useWizard({ steps: THREE(validateTwo), onValidationFailed: () => {} }), {
+      wrapper: MemoryRouter,
+    });
+    const goNext = result.current.goNext;
+    await act(async () => {
+      await Promise.all([goNext(), goNext()]);
+    });
+    expect(result.current.currentStepIndex).toBe(1);
+    expect(validateTwo).not.toHaveBeenCalled();
+  });
+
+  it("drops a second press that arrives after the first resolved but before a re-render", async () => {
+    const validateTwo = vi.fn(() => false);
+    const { result } = renderHook(() => useWizard({ steps: THREE(validateTwo), onValidationFailed: () => {} }), {
+      wrapper: MemoryRouter,
+    });
+    const staleGoNext = result.current.goNext;
+    await act(async () => {
+      await staleGoNext();
+      await staleGoNext();
+    });
+    expect(result.current.currentStepIndex).toBe(1);
+  });
+
+  it("ignores Next while an async validator is still running", async () => {
+    let release!: (ok: boolean) => void;
+    const validateOne = vi.fn(() => new Promise<boolean>((r) => (release = r)));
+    const { result } = renderHook(
+      () => useWizard({ steps: THREE(() => false, validateOne as never), onValidationFailed: () => {} }),
+      { wrapper: MemoryRouter },
+    );
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.goNext();
+    });
+    await act(async () => {
+      await result.current.goNext();
+    });
+    expect(validateOne).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      release(true);
+      await first;
+    });
+    expect(result.current.currentStepIndex).toBe(1);
+  });
+
+  it("calls onComplete once on a double-click on Finish", async () => {
+    const onComplete = vi.fn(async () => {});
+    const { result } = renderHook(
+      () => useWizard({ steps: [{ id: "only", label: "Only", validate: async () => true }], onComplete }),
+      { wrapper: MemoryRouter },
+    );
+    const finish = result.current.finish;
+    await act(async () => {
+      await Promise.all([finish(), finish()]);
+    });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips one step per double-clicked Skip", async () => {
+    const { result } = renderHook(() => useWizard({ steps: THREE(() => true) }), { wrapper: MemoryRouter });
+    const skip = result.current.skip;
+    act(() => {
+      skip();
+      skip();
+    });
+    expect(result.current.currentStepIndex).toBe(1);
+  });
+});

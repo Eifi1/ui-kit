@@ -19,10 +19,11 @@ export interface FeedbackAttachmentLabels {
    *  straight under its textarea, where a second heading is noise. */
   attachment?: string;
   attachmentAdd: string;
-  /** Label for the "capture screenshot" button. Optional — falls back to an English default. */
+  /** Label for the "capture screenshot" button. Optional — falls back to the provider's
+   *  `feedbackAttachment.attachmentCapture`, then English. */
   attachmentCapture?: string;
   /** The line under the attachment buttons saying a screenshot can be pasted
-   *  straight in. Optional — falls back to an English default. */
+   *  straight in. Optional — falls back to the provider's `feedbackAttachment`, then English. */
   attachmentPaste?: string;
   attachmentRemove: string;
 }

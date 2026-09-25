@@ -2,11 +2,35 @@ import { cn } from "../lib/cn";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button } from "../components/ui";
-import { useKitFileLabels } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
 export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+/**
+ * The field's own strings — the `feedbackAttachment` namespace of `<UiKitProvider
+ * labels>`. The keys are {@link FeedbackAttachmentLabels}' own, so the `labels` prop
+ * (and a whole `FeedbackDialogLabels` handed down by the dialog) merges over them
+ * one to one. The optional heading, `attachment`, stays a prop: a note editor puts
+ * the buttons straight under its textarea and wants none.
+ *
+ * Before 0.7.0 the two optional keys fell back to hard-coded English, so a German app
+ * that relied on its provider got "Capture screenshot" under a German form.
+ */
+export interface FeedbackAttachmentFieldLabels {
+  attachmentAdd: string;
+  attachmentCapture: string;
+  attachmentPaste: string;
+  attachmentRemove: string;
+}
+
+export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels = {
+  attachmentAdd: "Attach image",
+  attachmentCapture: "Capture screenshot",
+  attachmentPaste: "…or paste a screenshot from the clipboard.",
+  attachmentRemove: "Remove attachment",
+};
 
 /**
  * Picking one picture: the file dialog, a capture of the app view, or a paste.
@@ -40,7 +64,7 @@ export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 export function FeedbackAttachmentField({
   value,
   onChange,
-  labels,
+  labels: labelsProp,
   accept = DEFAULT_ATTACHMENT_ACCEPT,
   maxBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
   onError,
@@ -51,7 +75,9 @@ export function FeedbackAttachmentField({
 }: {
   value: File | null;
   onChange: (file: File | null) => void;
-  labels: FeedbackAttachmentLabels;
+  /** Prop > `<UiKitProvider labels={{ feedbackAttachment }}>` > English. Optional
+   *  since 0.7.0; `attachment` (the heading) is only ever read from here. */
+  labels?: Partial<FeedbackAttachmentLabels>;
   accept?: string[];
   maxBytes?: number;
   onError?: (kind: "type" | "size") => void;
@@ -73,6 +99,7 @@ export function FeedbackAttachmentField({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // `file.size` from `<UiKitProvider labels>`, formatted in its locale — see FileDropzone.
   const fileText = useKitFileLabels();
+  const text = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
 
   // Object-URL preview lifecycle (create on change, revoke on cleanup).
   useEffect(() => {
@@ -151,9 +178,9 @@ export function FeedbackAttachmentField({
           : (event) => takeImage(event.clipboardData, () => event.preventDefault())
       }
     >
-      {labels.attachment && (
+      {labelsProp?.attachment && (
         <div className="mb-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-          {labels.attachment}
+          {labelsProp.attachment}
         </div>
       )}
       {value ? (
@@ -180,7 +207,7 @@ export function FeedbackAttachmentField({
           <button
             type="button"
             onClick={() => onChange(null)}
-            aria-label={labels.attachmentRemove}
+            aria-label={text.attachmentRemove}
             className="rounded p-1.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
           >
             <X className="size-4" />
@@ -190,7 +217,7 @@ export function FeedbackAttachmentField({
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-              <Paperclip className="size-4" /> {labels.attachmentAdd}
+              <Paperclip className="size-4" /> {text.attachmentAdd}
             </Button>
             {onCaptureScreenshot && (
               <Button
@@ -208,14 +235,14 @@ export function FeedbackAttachmentField({
                 }}
               >
                 <Camera className="size-4" />{" "}
-                {capturing ? "…" : (labels.attachmentCapture ?? "Capture screenshot")}
+                {capturing ? "…" : text.attachmentCapture}
               </Button>
             )}
           </div>
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
           <p className="text-xs text-[var(--text-muted)]">
-            {labels.attachmentPaste ?? "…or paste a screenshot from the clipboard."}
+            {text.attachmentPaste}
           </p>
         </div>
       )}

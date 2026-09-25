@@ -156,3 +156,21 @@ describe("the tab strip's keyboard", () => {
     expect(tab("One")).toHaveFocus();
   });
 });
+
+describe("the tab strip in RTL (0.7.0)", () => {
+  it("walks along the reading direction: ArrowLeft is the NEXT tab", async () => {
+    const user = userEvent.setup();
+    render(
+      <div dir="rtl">
+        <Harness />
+      </div>,
+    );
+    await user.tab();
+    await user.tab();
+    expect(tab("Two")).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(tab("Three")).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(tab("Two")).toHaveFocus();
+  });
+});
