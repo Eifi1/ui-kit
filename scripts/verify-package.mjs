@@ -21,7 +21,7 @@
  * just been imported without it — and with the peer installed it must load.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -70,7 +70,20 @@ try {
   ok("npm install succeeded");
 
   console.log("• every exports entry resolves BY PACKAGE NAME");
-  const subpaths = Object.keys(pkg.exports).filter((k) => !k.endsWith(".css") && k !== "./package.json");
+  // A pattern entry ("./i18n/*") is expanded to every file it matches in the INSTALLED
+  // package, so each translation is imported by the name an app writes.
+  const installed = join(scratch, "node_modules", pkg.name);
+  const subpaths = Object.entries(pkg.exports)
+    .filter(([k]) => !k.endsWith(".css") && k !== "./package.json")
+    .flatMap(([k, target]) => {
+      if (!k.includes("*")) return [k];
+      const [dir, suffix] = target.import.replace(/^\.\//, "").split("*");
+      const found = readdirSync(join(installed, dir))
+        .filter((f) => f.endsWith(suffix))
+        .map((f) => k.replace("*", f.slice(0, -suffix.length)));
+      if (found.length === 0) fail(`${k} matches no file in ${dir}`);
+      return found;
+    });
   const probe = join(scratch, "probe.mjs");
   const specifierOf = (s) => s.replace(/^\./, pkg.name);
   // One line per entry: `OK <subpath> <export count>` or `ERR <subpath> <message>`.

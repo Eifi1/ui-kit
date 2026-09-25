@@ -52,6 +52,10 @@
       "types": "./dist/rhf.d.ts",
       "import": "./dist/rhf.js"
     },
+    "./i18n/*": {
+      "types": "./dist/i18n/locales/*.d.ts",
+      "import": "./dist/i18n/locales/*.js"
+    },
     "./tokens.css": "./tokens.css",
     "./package.json": "./package.json"
   },

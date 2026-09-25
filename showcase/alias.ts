@@ -15,7 +15,15 @@ import { fileURLToPath } from "node:url";
  * ORDER MATTERS: Vite matches object aliases as ordered prefixes, so every
  * subpath must come first or the bare specifier swallows it.
  */
+const LOCALES = ["de", "de-CH", "fr", "it", "es", "hu", "zh"];
+
 export const SHOWCASE_ALIAS = {
+  ...Object.fromEntries(
+    LOCALES.map((code) => [
+      `@eifi1/ui-kit/i18n/${code}`,
+      fileURLToPath(new URL(`../src/i18n/locales/${code}.ts`, import.meta.url)),
+    ]),
+  ),
   "@eifi1/ui-kit/dates": fileURLToPath(new URL("../src/lib/dates.ts", import.meta.url)),
   "@eifi1/ui-kit/rhf": fileURLToPath(new URL("../src/rhf.ts", import.meta.url)),
   "@eifi1/ui-kit/table-text": fileURLToPath(new URL("../src/table-text.ts", import.meta.url)),

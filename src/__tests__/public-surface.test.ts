@@ -8,6 +8,13 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as tableText from "../table-text";
+import * as i18nDe from "../i18n/locales/de";
+import * as i18nDeCh from "../i18n/locales/de-CH";
+import * as i18nEs from "../i18n/locales/es";
+import * as i18nFr from "../i18n/locales/fr";
+import * as i18nHu from "../i18n/locales/hu";
+import * as i18nIt from "../i18n/locales/it";
+import * as i18nZh from "../i18n/locales/zh";
 
 /**
  * The public surface, pinned.
@@ -63,6 +70,9 @@ import * as tableText from "../table-text";
  *
  * 326 -> 330 (0.7.0): `MeasuredGrid`, `useMeasuredRows`, `DEFAULT_MEASURED_GRID_LABELS`
  * and `useWindowedRows` — lenkbank's measured grid, stages 2–3 of its proposal.
+ * New pattern entry `/i18n/<code>`: the kit's translations, one standalone module per
+ * language (`UI_KIT_LABELS_XX` + its `uiKitLabelsXx(numberLocale)` factory; de-CH is
+ * derived and has only the constant).
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
@@ -76,15 +86,27 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/wizard", wizard, 9],
   ["@eifi1/ui-kit/rhf", rhf, 8],
   ["@eifi1/ui-kit/table-text", tableText, 5],
+  ["@eifi1/ui-kit/i18n/de", i18nDe, 2],
+  ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],
+  ["@eifi1/ui-kit/i18n/es", i18nEs, 2],
+  ["@eifi1/ui-kit/i18n/fr", i18nFr, 2],
+  ["@eifi1/ui-kit/i18n/hu", i18nHu, 2],
+  ["@eifi1/ui-kit/i18n/it", i18nIt, 2],
+  ["@eifi1/ui-kit/i18n/zh", i18nZh, 2],
 ];
 
 /**
  * Entries that are deliberately NOT slices of the barrel. `/rhf` must stay out of it —
  * the barrel may not import react-hook-form (packaging-contract enforces that), or
  * every app would need it installed. `/table-text` is pure string handling with no
- * component to sit beside, standalone the way `/dates` is.
+ * component to sit beside, standalone the way `/dates` is. The `/i18n/<code>`
+ * translations are data an app opts into per language, never part of the barrel.
  */
-const STANDALONE = new Set(["@eifi1/ui-kit/rhf", "@eifi1/ui-kit/table-text"]);
+const STANDALONE = new Set([
+  "@eifi1/ui-kit/rhf",
+  "@eifi1/ui-kit/table-text",
+  ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),
+]);
 
 describe("public surface", () => {
   it.each(ENTRIES)("%s exports exactly %#", (name, mod, count) => {
