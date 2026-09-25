@@ -1,0 +1,47 @@
+# Aligned with keksdose, kastlan and lenkbank (Eifi1/shared-workflows conventions).
+#
+# Monthly, grouped: one PR for every minor/patch bump, one per major. `build` / `ci`
+# prefixes are hidden changelog types, so a bump never cuts a release on its own, and
+# they pass the Conventional Commits check.
+#
+# Majors of react, react-dom and recharts are held back: this package's PEER ranges
+# define what the three apps may install, so moving past one is a deliberate release
+# with adoption notes, not a dependency bump.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Zurich
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: "@types/react"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@types/react-dom"
+        update-types: [version-update:semver-major]
+      - dependency-name: recharts
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Zurich
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        patterns: ["*"]
