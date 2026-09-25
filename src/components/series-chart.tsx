@@ -27,7 +27,7 @@
 // invent. What each of those does to the zoom is decided in one place,
 // `defaultZoomAxes` in `chart-zoom.tsx`.
 import { useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import {
   Area,
   Bar,
@@ -112,6 +112,13 @@ export interface SeriesChartSeries {
   /** An area's or bar's fill opacity. Default: 1 for a bar, 0.55 for a stacked area
    *  (the layers must stay tellable apart where they meet) and 0.2 for a single one. */
   fillOpacity?: number;
+  /**
+   * The dot that follows the pointer along a line or an area. `false` takes it off a
+   * series that is not a measurement — keksdose's cash-buffer PROJECTION, where a hover
+   * ring on the extrapolated line reads as a sampled value (`cash-buffer-chart.tsx`).
+   * `{ r }` sets its radius. Default: recharts' dot. Bars have none, and ignore it.
+   */
+  activeDot?: boolean | { r?: number };
 }
 
 /** What a series draws. See {@link SeriesChartSeries.type}. */
@@ -266,6 +273,33 @@ export interface SeriesChartX {
   /** The ticks instead of the automatic ones, in the caller's terms: numbers, the
    *  categories to label, or instants. See `SeriesChartAxis.tickValues`. */
   tickValues?: SeriesChartTickValues<SeriesChartXValue>;
+  /**
+   * Tilt the tick labels by this many degrees — negative rises to the right. For long
+   * category names that do not fit side by side: keksdose's budget performance draws its
+   * categories at −45° (`budget-performance-tab.tsx`). The label is anchored by its END
+   * for a negative angle and its START for a positive one, so it hangs off the tick
+   * instead of being centred across it; the anchor is physical, like the plot (see
+   * `ChartContainer`), so it is the same in RTL. The band under the axis grows to the
+   * rotated height of the longest label on show, estimated from its length (at most
+   * 120 px, past which a label is clipped). Default 0.
+   */
+  tickAngle?: number;
+}
+
+/** Room for the tooltip beyond the chart — see {@link SeriesChartProps.tooltip}. */
+export interface SeriesChartTooltip {
+  /** Let the tooltip run past the chart's own box on that axis instead of recharts
+   *  clamping it inside. Default: `{ x: true }` when `boundary` is set, else neither. */
+  allowEscapeViewBox?: { x?: boolean; y?: boolean };
+  /**
+   * The element that actually CLIPS the chart — usually a horizontal-scroll wrapper
+   * around a chart wider than the card. The tooltip then flips to the left of the cursor
+   * when it would spill past that element's visible right edge (see
+   * `ChartTooltipContent`'s `boundaryRef`), rather than against the wide chart's far edge
+   * the reader has not scrolled to. keksdose's budget performance, which keeps a scroll
+   * wrapper and a per-category `minWidth` (`budget-performance-tab.tsx`).
+   */
+  boundary?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -418,6 +452,9 @@ export interface SeriesChartProps {
    * A drag that zoomed is not a click.
    */
   onPointClick?: (hit: SeriesChartHit) => void;
+  /** Where the tooltip may go: for a chart inside a scroll wrapper. See
+   *  {@link SeriesChartTooltip}. */
+  tooltip?: SeriesChartTooltip;
   /** Supplied by `withChartZoom` and by nothing else. */
   zoom?: ZoomBinding;
   /** Per-chart strings over `<UiKitProvider labels={{ seriesChart }}>`. */
@@ -435,6 +472,29 @@ export const AXIS_TITLE_STRIP = 16;
 
 /** Where inside its strip the rotated title sits. */
 const AXIS_TITLE_OFFSET = 10;
+
+/** The tallest band tilted x ticks reserve, in px. A category name longer than this at
+ *  its angle is clipped rather than squeezing the plot down to a strip. */
+const MAX_TILTED_TICK_BAND = 120;
+
+/** What one character of a tick label is taken to be, in px, for the tilted band — the
+ *  shell's `text-xs`. An estimate: the SVG is not laid out yet when the band is decided. */
+const TICK_CHAR_WIDTH = 7;
+const TICK_LINE_HEIGHT = 12;
+/** recharts' gap between the axis line and a bottom tick's text. */
+const TICK_GAP = 8;
+
+/**
+ * The height the x axis reserves for ticks tilted by `angle` degrees: the rotated box of
+ * the longest label, from its length. `undefined` for level ticks — recharts' own 30 px.
+ */
+function tiltedTickBand(labels: readonly string[], angle: number): number | undefined {
+  if (!angle) return undefined;
+  const rad = (Math.abs(angle) * Math.PI) / 180;
+  const longest = Math.max(0, ...labels.map((label) => label.length)) * TICK_CHAR_WIDTH;
+  const band = Math.sin(rad) * longest + Math.cos(rad) * TICK_LINE_HEIGHT + TICK_GAP;
+  return Math.min(MAX_TILTED_TICK_BAND, Math.max(30, Math.ceil(band)));
+}
 
 /** The width the ticks of a y axis get when a caller does not say. */
 export const AXIS_TICK_WIDTH = 48;
@@ -756,6 +816,7 @@ function SeriesPlot({
   references,
   markers,
   onPointClick,
+  tooltip,
   zoom,
   labels: labelsProp,
   locale: localeProp,
@@ -873,6 +934,9 @@ function SeriesPlot({
     x.label ??
     (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
   const xLabel = (position: number) => label(position, tickAt(position));
+
+  const tickAngle = x.ticks === false ? 0 : (x.tickAngle ?? 0);
+  const tickBand = tiltedTickBand((xTicks ?? []).map((tick) => xFormat(tick)), tickAngle);
 
   const source: ZoomFitSource = {
     rows: plotted,
@@ -998,9 +1062,12 @@ function SeriesPlot({
           axisLine={false}
           minTickGap={32}
           tick={x.ticks === false ? false : undefined}
+          {...(tickAngle
+            ? { angle: tickAngle, textAnchor: tickAngle < 0 ? "end" : "start" }
+            : {})}
           // With neither ticks nor title there is nothing to reserve the band for, and
           // recharts' own 30 px would leave a gap under every chart of a stack.
-          height={x.ticks === false && !x.title ? 4 : undefined}
+          height={x.ticks === false && !x.title ? 4 : tickBand}
           tickFormatter={(value: number) => xFormat(Number(value))}
         >
           {x.title && (
@@ -1051,10 +1118,17 @@ function SeriesPlot({
           );
         })}
         <ChartTooltip
+          {...(tooltip?.allowEscapeViewBox || tooltip?.boundary
+            ? { allowEscapeViewBox: tooltip.allowEscapeViewBox ?? { x: true } }
+            : {})}
+          // The content shifts itself 12 px off the cursor (or flips) against the
+          // boundary; recharts' own offset on top would double it.
+          {...(tooltip?.boundary ? { offset: 0 } : {})}
           content={
             <ChartTooltipContent
               labelFormatter={(value) => xLabel(Number(value))}
               valueFormatter={valueFormat ?? number}
+              boundaryRef={tooltip?.boundary}
             />
           }
         />
@@ -1104,6 +1178,7 @@ function SeriesPlot({
                 fill={color}
                 fillOpacity={entry.fillOpacity ?? (entry.stack !== undefined ? 0.55 : 0.2)}
                 dot={dotFor(entry)}
+                {...(entry.activeDot !== undefined ? { activeDot: entry.activeDot } : {})}
                 connectNulls={connectNulls}
                 {...animation}
               />
@@ -1119,6 +1194,7 @@ function SeriesPlot({
               strokeWidth={width}
               strokeDasharray={dash}
               dot={dotFor(entry)}
+              {...(entry.activeDot !== undefined ? { activeDot: entry.activeDot } : {})}
               connectNulls={connectNulls}
               {...animation}
             />
