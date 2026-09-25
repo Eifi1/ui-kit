@@ -6,13 +6,16 @@ import { dirOf, type Direction } from "../lib/direction";
 import { addDaysIso, parseIsoDate } from "../lib/dates";
 import {
   DEFAULT_DATE_PICKER_LABELS,
+  DEFAULT_PICKER_SHEET_LABELS,
   useKitLabels,
   useKitLocale,
   type DatePickerLabels,
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { Button, FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { Button, FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { FullBleedDialog } from "./full-bleed-dialog";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
@@ -67,6 +70,51 @@ function formatDate(iso: string, locale: string | undefined, options?: Intl.Date
 }
 
 /**
+ * Everything the kit's own trigger button carries, handed to a custom one
+ * ({@link DateRangePickerProps.renderTrigger}) to spread onto its `<button>`. Spread
+ * it WHOLE: the ref is how focus comes back when the panel closes, the id pair and
+ * `aria-labelledby` are the 0.5.1 naming (an external `<label htmlFor>`, a form
+ * library's `aria-describedby`), and `role`/`aria-haspopup`/`aria-controls`/
+ * `aria-expanded` are what tell a screen reader this opens a calendar and whether it
+ * is open. `className` is the kit's field look (42px with a label, `pe-9` for the
+ * glyph the field draws at its end) — merge yours after it with `cn`.
+ */
+export interface DateTriggerAttributes {
+  ref: RefObject<HTMLButtonElement | null>;
+  type: "button";
+  id?: string;
+  role: "combobox";
+  "aria-haspopup": "dialog";
+  "aria-controls": string;
+  "aria-expanded": boolean;
+  "aria-labelledby"?: string;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: true;
+  disabled?: boolean;
+  onClick: () => void;
+  className: string;
+}
+
+/** A custom trigger, as `DateField` calls it; each picker adapts it to its own props. */
+type TriggerRenderer = (attrs: DateTriggerAttributes, valueId: string) => ReactNode;
+
+/** A caller's trigger, as an element of its own: the attributes carry the trigger's
+ *  ref, and a ref is handed to a child as a prop, not passed to a function in the
+ *  middle of the parent's render. */
+function CustomTrigger({
+  render,
+  attrs,
+  valueId,
+}: {
+  render: TriggerRenderer;
+  attrs: DateTriggerAttributes;
+  valueId: string;
+}) {
+  return render(attrs, valueId);
+}
+
+/**
  * The field-shaped button that opens the calendar.
  *
  * A component of its own rather than JSX inline in `Popover`'s `trigger` render prop,
@@ -86,9 +134,12 @@ function DateFieldTrigger({
   invalid,
   panelId,
   aria,
+  renderTrigger,
 }: {
   /** The caller's naming/description attributes, routed here from the field. */
   aria: TriggerAria;
+  /** Draw the button yourself, with these attributes — see {@link DateTriggerAttributes}. */
+  renderTrigger?: TriggerRenderer;
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -123,47 +174,55 @@ function DateFieldTrigger({
     // is this trigger, every time, however the panel was opened.
   }, [open, triggerRef]);
 
+  // One attribute object, worn either by the kit's own button below or by a caller's
+  // (`renderTrigger`) — so a custom trigger cannot quietly fall out of step with the
+  // naming and state this one announces.
+  const attrs: DateTriggerAttributes = {
+    ref: triggerRef,
+    type: "button",
+    disabled,
+    onClick: toggle,
+    // The name has to carry the VALUE. A bare `aria-label={label}` — which is what
+    // this was — replaces the button's text outright, so the one field in the form
+    // whose entire job is to show a date announced "Due date" and stopped there,
+    // and a screen-reader user could not read back what they had picked without
+    // opening the calendar and hunting for the selected day.
+    //
+    // Two ids rather than one composed string (`common.fieldValue`): "label: value"
+    // is a sentence, and a name reference is spoken as the two texts in order with
+    // no punctuation to translate at all. The hidden twin of the FieldLabel lives
+    // in DateField, next to the label it copies.
+    id: aria.id,
+    "aria-labelledby": aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy,
+    "aria-label": aria["aria-label"],
+    "aria-describedby": aria["aria-describedby"],
+    // `role="combobox"` on a button that opens a calendar is the APG date-picker
+    // shape, and it is what makes the next two lines legal: `button` supports
+    // neither `aria-expanded` nor `aria-invalid`, so the previous markup set an
+    // invalid state that announced nothing (ESLint's `role-supports-aria-props`).
+    //
+    // `aria-haspopup="dialog"` is now honest — it was not when this comment first
+    // said so. `Popover` gained a real `role="dialog"` in the same wave, so the
+    // trigger's promise and the panel's role finally agree. The phone sheet is a
+    // `role="dialog"` too, and carries the same id.
+    role: "combobox",
+    "aria-haspopup": "dialog",
+    "aria-controls": panelId,
+    "aria-expanded": open,
+    "aria-invalid":
+      invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined,
+    className: cn(
+      FIELD_TRIGGER,
+      "pe-9",
+      padded && FIELD_FLOATING_PAD,
+      disabled && "cursor-not-allowed opacity-50",
+      invalid && FIELD_INVALID,
+    ),
+  };
+  if (renderTrigger) return <CustomTrigger render={renderTrigger} attrs={attrs} valueId={valueId} />;
+
   return (
-    <button
-      ref={triggerRef}
-      type="button"
-      disabled={disabled}
-      onClick={toggle}
-      // The name has to carry the VALUE. A bare `aria-label={label}` — which is what
-      // this was — replaces the button's text outright, so the one field in the form
-      // whose entire job is to show a date announced "Due date" and stopped there,
-      // and a screen-reader user could not read back what they had picked without
-      // opening the calendar and hunting for the selected day.
-      //
-      // Two ids rather than one composed string (`common.fieldValue`): "label: value"
-      // is a sentence, and a name reference is spoken as the two texts in order with
-      // no punctuation to translate at all. The hidden twin of the FieldLabel lives
-      // in DateField, next to the label it copies.
-      id={aria.id}
-      aria-labelledby={aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy}
-      aria-label={aria["aria-label"]}
-      aria-describedby={aria["aria-describedby"]}
-      // `role="combobox"` on a button that opens a calendar is the APG date-picker
-      // shape, and it is what makes the next two lines legal: `button` supports
-      // neither `aria-expanded` nor `aria-invalid`, so the previous markup set an
-      // invalid state that announced nothing (ESLint's `role-supports-aria-props`).
-      //
-      // `aria-haspopup="dialog"` is now honest — it was not when this comment first
-      // said so. `Popover` gained a real `role="dialog"` in the same wave, so the
-      // trigger's promise and the panel's role finally agree.
-      role="combobox"
-      aria-haspopup="dialog"
-      aria-controls={panelId}
-      aria-expanded={open}
-      aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
-      className={cn(
-        FIELD_TRIGGER,
-        "pe-9",
-        padded && FIELD_FLOATING_PAD,
-        disabled && "cursor-not-allowed opacity-50",
-        invalid && FIELD_INVALID,
-      )}
-    >
+    <button {...attrs}>
       <span id={valueId} className={cn("truncate", !hasValue && "text-[var(--text-placeholder)]")}>
         {/* `|| " "` (a NON-BREAKING space) — triggerText is "" when there is no value and no
             placeholder was passed. An empty span has no line box, so the
@@ -184,6 +243,24 @@ function DateFieldTrigger({
   );
 }
 
+/**
+ * How a panel's body and its action row are put on screen — the popover stacks them,
+ * the phone sheet pins the actions in its footer. Handed to the panel rather than
+ * applied around it because the actions belong to the panel's own draft state
+ * (`RangePanel`), while the frame they sit in belongs to the field.
+ */
+type PanelFrame = (body: ReactNode, actions?: ReactNode) => ReactNode;
+
+const popoverFrame: PanelFrame = (body, actions) =>
+  actions ? (
+    <div className="flex flex-col gap-2">
+      {body}
+      <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] pt-2">{actions}</div>
+    </div>
+  ) : (
+    body
+  );
+
 /** A field-styled trigger that opens a portalled MiniCalendar. Shared by the
  *  single- and range-date pickers below. */
 function DateField({
@@ -198,6 +275,9 @@ function DateField({
   width,
   onClear,
   invalid,
+  sheet = false,
+  sheetBackCloses = true,
+  renderTrigger,
   children,
   ...rest
 }: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
@@ -215,7 +295,13 @@ function DateField({
   /** Popover panel width; omit for the default (a bare calendar). */
   width?: number;
   onClear: () => void;
-  children: (close: () => void) => ReactNode;
+  /** Open as a full-screen sheet instead of the popover — the picker decides when
+   *  (below {@link PHONE_QUERY}). */
+  sheet?: boolean;
+  /** The sheet's `FullBleedDialog backCloses`. */
+  sheetBackCloses?: boolean;
+  renderTrigger?: TriggerRenderer;
+  children: (close: () => void, frame: PanelFrame) => ReactNode;
 }) {
   const showClear = Boolean(clearable && hasValue && !disabled);
   const [aria, wrapperRest] = splitTriggerAria(rest);
@@ -233,6 +319,83 @@ function DateField({
   // its own interactive "?" hint in it, and naming a button with that reads the hint
   // out as part of the field's name.
   const named = typeof label === "string";
+  // The sheet's open flag. Only the phone branch owns one: on desktop `Popover` owns
+  // it, so the two can never disagree about what is on screen.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetTriggerRef = useRef<HTMLButtonElement>(null);
+  const closeSheet = () => setSheetOpen(false);
+  const sheetLabels = useKitLabels("pickerSheet", DEFAULT_PICKER_SHEET_LABELS);
+  const sheetFrame: PanelFrame = (body, actions) => (
+    <FullBleedDialog
+      open
+      onClose={closeSheet}
+      // The same id the popover panel wears, so the trigger's `aria-controls` holds in
+      // both presentations; named the way the popover is.
+      id={panelId}
+      aria-label={panelLabel}
+      header={panelLabel}
+      // `pickerSheet.close`: the one "close this full-screen picker" string the kit
+      // already translates, rather than a second key saying the same thing.
+      closeLabel={sheetLabels.close}
+      backCloses={sheetBackCloses}
+      dir={dir}
+      // Portalled to <body>, the sheet is not inside the field's wrapper, so a
+      // document-level "outside click" listener — a Popover or dropdown this field
+      // sits in — would read a tap on a day as outside and unmount the cell before
+      // its click (Keksdose dev#477, the fix `PickerSheet` carries).
+      onMouseDown={(e) => e.stopPropagation()}
+      footer={actions}
+    >
+      {body}
+    </FullBleedDialog>
+  );
+  const fieldTrigger = ({
+    open,
+    toggle,
+    ref,
+  }: {
+    open: boolean;
+    toggle: () => void;
+    ref: RefObject<HTMLButtonElement | null>;
+  }) => (
+    <DateFieldTrigger
+      open={open}
+      toggle={() => {
+        setDir(dirOf(rootRef.current));
+        toggle();
+      }}
+      triggerRef={ref}
+      triggerText={triggerText}
+      hasValue={hasValue}
+      // ALWAYS a name reference, never `undefined`. A `<button>` takes its
+      // accessible name from its contents, so an unlabelled trigger used to
+      // announce its own date text for free. `role="combobox"` does not —
+      // content is excluded from name computation for that role — so leaving
+      // this undefined made an unlabelled date field announce nothing at all.
+      // Named: "label, value". Unnamed: the value alone, which is what the
+      // button was saying before.
+      //
+      // A caller's own reference comes first. And when the caller gives the field
+      // an `id` (so an external `<label htmlFor>` can point at it), the trigger
+      // lists ITSELF first: a self-reference in `aria-labelledby` is resolved
+      // from the element's native label (accname 2B → 2D), so "Due date" from
+      // that <label> is spoken before the value, instead of being overridden.
+      labelledBy={[
+        aria["aria-labelledby"],
+        named ? labelId : !aria["aria-labelledby"] && aria.id ? aria.id : undefined,
+        valueId,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria={aria}
+      panelId={panelId}
+      valueId={valueId}
+      padded={label !== undefined}
+      disabled={disabled}
+      invalid={invalid}
+      renderTrigger={renderTrigger}
+    />
+  );
   return (
     // The caller's attributes land here, on the field's own box — the trigger inside is
     // named by `aria-labelledby` and must keep the id pair it is given.
@@ -250,54 +413,26 @@ function DateField({
           {label}
         </span>
       )}
-      <Popover
-        width={width}
-        panelId={panelId}
-        // Named for what it is. Unnamed, it fell back to `popover.panel`, and a date
-        // field announced its calendar as "Popover" — in English, in every language.
-        labels={{ panel: panelLabel }}
-        dir={dir}
-        trigger={({ open, toggle, ref }) => (
-          <DateFieldTrigger
-            open={open}
-            toggle={() => {
-              setDir(dirOf(rootRef.current));
-              toggle();
-            }}
-            triggerRef={ref}
-            triggerText={triggerText}
-            hasValue={hasValue}
-            // ALWAYS a name reference, never `undefined`. A `<button>` takes its
-            // accessible name from its contents, so an unlabelled trigger used to
-            // announce its own date text for free. `role="combobox"` does not —
-            // content is excluded from name computation for that role — so leaving
-            // this undefined made an unlabelled date field announce nothing at all.
-            // Named: "label, value". Unnamed: the value alone, which is what the
-            // button was saying before.
-            //
-            // A caller's own reference comes first. And when the caller gives the field
-            // an `id` (so an external `<label htmlFor>` can point at it), the trigger
-            // lists ITSELF first: a self-reference in `aria-labelledby` is resolved
-            // from the element's native label (accname 2B → 2D), so "Due date" from
-            // that <label> is spoken before the value, instead of being overridden.
-            labelledBy={[
-              aria["aria-labelledby"],
-              named ? labelId : !aria["aria-labelledby"] && aria.id ? aria.id : undefined,
-              valueId,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            aria={aria}
-            panelId={panelId}
-            valueId={valueId}
-            padded={label !== undefined}
-            disabled={disabled}
-            invalid={invalid}
-          />
-        )}
-      >
-        {(close) => children(close)}
-      </Popover>
+      {sheet ? (
+        <>
+          {fieldTrigger({ open: sheetOpen, toggle: () => setSheetOpen((v) => !v), ref: sheetTriggerRef })}
+          {/* Mounted only while open, like the popover's children: the panel's draft is
+              born with it, so every open starts again from the committed value. */}
+          {sheetOpen && children(closeSheet, sheetFrame)}
+        </>
+      ) : (
+        <Popover
+          width={width}
+          panelId={panelId}
+          // Named for what it is. Unnamed, it fell back to `popover.panel`, and a date
+          // field announced its calendar as "Popover" — in English, in every language.
+          labels={{ panel: panelLabel }}
+          dir={dir}
+          trigger={fieldTrigger}
+        >
+          {(close) => children(close, popoverFrame)}
+        </Popover>
+      )}
       {showClear ? (
         <button
           type="button"
@@ -612,6 +747,45 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
   preset?: string | null;
   /** See {@link DateRangeCommit}. Default `"immediate"`. */
   commit?: DateRangeCommit;
+  /**
+   * Draw the trigger yourself. keksdose's report range field
+   * (reports/report-range-field.tsx, "Why this is app-level") is why: its trigger
+   * NAMES the active preset ("Last 3 months", the window as a muted suffix) where the
+   * kit's shows two dates, sits inside a Tooltip, and is squared off on one side so the
+   * granularity control can join it flush at the field's 42px.
+   *
+   * Spread `props.triggerProps` onto a `<button>` whole and put `props.valueProps` on
+   * the element that shows the value — see {@link DateTriggerAttributes} for what each
+   * part is for. The field around it (label, hidden name twin, clear/calendar glyph,
+   * popover or phone sheet) is unchanged.
+   */
+  renderTrigger?: (props: DateRangeTriggerRenderProps) => ReactNode;
+  /**
+   * Below {@link PHONE_QUERY} the panel opens as a full-screen sheet (`FullBleedDialog`)
+   * with presets in a grid above the calendar and Apply pinned in the footer, instead
+   * of the 440px popover that hung off a 360px screen (keksdose's report range field,
+   * which hand-rolled exactly this). This is its `backCloses`: on by default, so Back
+   * dismisses the sheet; off for a caller whose commit rewrites the URL with
+   * `replaceState` in the same tick — keksdose's `?preset/from/to` — where the router
+   * would overwrite the sheet's history marker.
+   */
+  sheetBackCloses?: boolean;
+}
+
+/** What {@link DateRangePickerProps.renderTrigger} is called with. */
+export interface DateRangeTriggerRenderProps {
+  /** Spread onto the `<button>`, whole. Merge your class after `triggerProps.className`. */
+  triggerProps: DateTriggerAttributes;
+  /** Put on the element showing the value: the trigger is named "label, value" by
+   *  reference to this id. Without it the name is the label alone. */
+  valueProps: { id: string };
+  open: boolean;
+  from: string;
+  to: string;
+  /** The preset the column marks for the committed range, if any — the one to name. */
+  preset: DateRangePickerPreset | undefined;
+  /** What the kit's own trigger would show: the formatted range, or the placeholder. */
+  text: string;
 }
 
 interface RangeDraft {
@@ -648,11 +822,15 @@ function PresetColumn({
   marked,
   label,
   onPick,
+  sheet,
 }: {
   presets: readonly DateRangePickerPreset[];
   marked: number;
   label: string;
   onPick: (p: DateRangePickerPreset) => void;
+  /** The phone sheet's shape: a two-column grid ABOVE the calendar with 44px rows —
+   *  a 128px column beside a month grid leaves the grid ~200px on a 360px screen. */
+  sheet?: boolean;
 }) {
   return (
     // `border-e`/`pe`, not `-r`: the preset column is on the START side, and the rule
@@ -660,7 +838,11 @@ function PresetColumn({
     <div
       role="group"
       aria-label={label}
-      className="flex w-32 shrink-0 flex-col gap-0.5 border-e border-[var(--border)] pe-2"
+      className={
+        sheet
+          ? "grid grid-cols-2 gap-0.5"
+          : "flex w-32 shrink-0 flex-col gap-0.5 border-e border-[var(--border)] pe-2"
+      }
     >
       {presets.map((p, i) => {
         const selected = i === marked;
@@ -672,7 +854,9 @@ function PresetColumn({
             data-preset={p.id}
             onClick={() => onPick(p)}
             className={cn(
-              "rounded px-2 py-1.5 text-start text-xs",
+              "rounded px-2 text-start",
+              // 44px on a phone: the kit's touch-target size (`SHEET_ROW_CLASS`).
+              sheet ? "min-h-11 py-2 text-sm" : "py-1.5 text-xs",
               selected
                 ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
@@ -700,6 +884,8 @@ function RangePanel({
   controlled,
   commit,
   close,
+  frame,
+  sheet,
   commitRange,
   calendarProps,
   labels,
@@ -711,6 +897,9 @@ function RangePanel({
   controlled: boolean;
   commit: DateRangeCommit;
   close: () => void;
+  /** Where the body and the Apply row go — see `PanelFrame`. */
+  frame: PanelFrame;
+  sheet: boolean;
   commitRange: (from: string, to: string, presetId: string | undefined) => void;
   calendarProps: Pick<MiniCalendarProps, "locale" | "min" | "max" | "labels">;
   labels: DatePickerLabels;
@@ -748,8 +937,9 @@ function RangePanel({
 
   const body =
     presets && presets.length > 0 ? (
-      <div className="flex gap-3">
+      <div className={sheet ? "flex flex-col gap-3" : "flex gap-3"}>
         <PresetColumn
+          sheet={sheet}
           presets={presets}
           marked={marked}
           label={labels.presets}
@@ -770,29 +960,30 @@ function RangePanel({
       calendar
     );
 
-  if (!drafting) return body;
-  return (
-    <div className="flex flex-col gap-2">
-      {body}
-      <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] pt-2">
-        <Button type="button" variant="ghost" onClick={close}>
-          {labels.cancel}
-        </Button>
-        <Button
-          type="button"
-          // A half-made `(from, "")` would commit a window with no end — a blank
-          // report, one click into a two-click gesture.
-          disabled={!complete}
-          onClick={() => {
-            if (!complete) return;
-            commitRange(draft.from, draft.to, draft.presetId);
-            close();
-          }}
-        >
-          {labels.apply}
-        </Button>
-      </div>
-    </div>
+  if (!drafting) return frame(body);
+  return frame(
+    body,
+    <>
+      {/* `flex-1` in the sheet: two thumb-wide halves of the footer, not two small
+          buttons in its corner. */}
+      <Button type="button" variant="ghost" className={sheet ? "flex-1" : undefined} onClick={close}>
+        {labels.cancel}
+      </Button>
+      <Button
+        type="button"
+        className={sheet ? "flex-1" : undefined}
+        // A half-made `(from, "")` would commit a window with no end — a blank
+        // report, one click into a two-click gesture.
+        disabled={!complete}
+        onClick={() => {
+          if (!complete) return;
+          commitRange(draft.from, draft.to, draft.presetId);
+          close();
+        }}
+      >
+        {labels.apply}
+      </Button>
+    </>,
   );
 }
 
@@ -813,6 +1004,8 @@ export function DateRangePicker({
   presets,
   preset,
   commit = "immediate",
+  renderTrigger,
+  sheetBackCloses,
   calendarLabels,
   label,
   clearable,
@@ -837,6 +1030,7 @@ export function DateRangePicker({
       : `${a}${separator}…`
     : (placeholder ?? "");
   const hasPresets = Boolean(presets && presets.length > 0);
+  const sheet = useMediaQuery(PHONE_QUERY, false);
   const commitRange = (f: string, t: string, presetId: string | undefined) => {
     setOwnPreset(presetId);
     // Two arguments when no preset is involved — exactly the 0.7 call, so a caller's
@@ -858,8 +1052,23 @@ export function DateRangePicker({
       hasValue={Boolean(from || to)}
       triggerText={triggerText}
       onClear={() => commitRange("", "", undefined)}
+      sheet={sheet}
+      sheetBackCloses={sheetBackCloses}
+      renderTrigger={
+        renderTrigger &&
+        ((triggerProps, valueId) =>
+          renderTrigger({
+            triggerProps,
+            valueProps: { id: valueId },
+            open: triggerProps["aria-expanded"],
+            from,
+            to,
+            preset: presets?.[markedPreset(presets, from, to, activeId, controlled)],
+            text: triggerText,
+          }))
+      }
     >
-      {(close) => (
+      {(close, frame) => (
         <RangePanel
           from={from}
           to={to}
@@ -868,6 +1077,8 @@ export function DateRangePicker({
           controlled={controlled}
           commit={commit}
           close={close}
+          frame={frame}
+          sheet={sheet}
           commitRange={commitRange}
           calendarProps={{ locale, min, max, labels: calendarLabels }}
           labels={text}

@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Search } from "lucide-react";
+import { CornerDownLeft, Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { PHONE_QUERY } from "../components/ui";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
@@ -27,6 +29,11 @@ export interface CommandItem {
    *  with a link and JavaScript cannot fake — the rejected alternative, an
    *  `onAuxClick` calling `window.open`, gets the middle click and nothing else. */
   href?: string;
+  /** Marks this row's label and hint `data-private`, so session replay and screenshot
+   *  tooling masks them — a payee, an account name, an amount. Overrides the palette's
+   *  {@link CommandPaletteProps.redactLabels} either way, so `false` un-masks one
+   *  harmless row ("Settings") in a palette that masks by default. */
+  redact?: boolean;
 }
 
 export interface CommandPaletteLabels {
@@ -49,6 +56,13 @@ export interface CommandPaletteLabels {
    * rejects. Optional for the same reason as `dialog`; the default always carries it.
    */
   error?: string;
+  /** Names the "×" that empties the field. Optional like `dialog`. */
+  clear?: string;
+  /** Names the button that commits the typed text when `searchOn="submit"`. */
+  submit?: string;
+  /** Names the close button of the full-screen phone presentation, which has no
+   *  backdrop to tap and, on a phone, no Escape key. */
+  close?: string;
 }
 
 export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
@@ -57,6 +71,9 @@ export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
   loading: "Searching…",
   dialog: "Search",
   error: "Search failed. Try again.",
+  clear: "Clear search",
+  submit: "Search",
+  close: "Close",
 };
 
 /** The defaults minus `dialog`, so a resolved `dialog` means someone SUPPLIED one —
@@ -105,6 +122,35 @@ interface CommandPaletteProps {
   /** Every edit of the field's text. Fires in both modes — uncontrolled, it only
    *  observes. */
   onQueryChange?: (query: string) => void;
+  /**
+   * When the typed text becomes THE query — the one `search` runs on and
+   * `onQueryChange` reports.
+   *
+   * - `"input"` (default): every keystroke, debounced for the search, as before.
+   * - `"submit"`: typing edits a draft; the query is committed by ↵ or the submit
+   *   button beside the field. Until then the results stay on the last committed query
+   *   and `onQueryChange` stays quiet — which is what an owner binding `query` to the
+   *   URL's `q` needs, or every keystroke re-filters the page behind and pushes history.
+   *   ↵ with a draft that differs from the committed query COMMITS; ↵ with nothing new
+   *   typed chooses the highlighted row, as in `"input"` mode. The draft follows any
+   *   outside change of the committed query (Back through the URL), and an uncommitted
+   *   draft is dropped when the palette is closed.
+   *
+   * The clear "×" commits the empty query in both modes: an emptied box over results
+   * (or a page) still filtered by the old text is the stuck state Keksdose #423 was.
+   */
+  searchOn?: "input" | "submit";
+  /** Mark every row's label and hint `data-private` (see {@link CommandItem.redact},
+   *  which overrides it per row). Off by default. */
+  redactLabels?: boolean;
+  /**
+   * Below the phone breakpoint ({@link PHONE_QUERY}) the palette fills the screen:
+   * no inset, no rounded panel, the field pinned at the top inside the safe areas and
+   * the list scrolling under it, with a close button since there is no backdrop to tap.
+   * On by default — a top-centred card at 70vh leaves little room once the keyboard is
+   * up. `false` keeps the card on every viewport.
+   */
+  fullScreenOnPhone?: boolean;
   labels?: Partial<CommandPaletteLabels>;
 }
 
@@ -135,6 +181,9 @@ export function CommandPalette({
   revision,
   query: queryProp,
   onQueryChange,
+  searchOn = "input",
+  redactLabels = false,
+  fullScreenOnPhone = true,
   labels,
 }: CommandPaletteProps) {
   const l = useKitLabels("commandPalette", DEFAULTS_WITHOUT_DIALOG, labels);
@@ -152,6 +201,23 @@ export function CommandPalette({
     if (!controlled) setOwnQuery(next);
     onQueryChange?.(next);
   };
+  const submitMode = searchOn === "submit";
+  // The field's text in `"submit"` mode. It follows the committed query whenever that
+  // changes — adjusted during render, React's pattern for state derived from a prop,
+  // rather than in an effect that would paint the stale draft first.
+  const [draft, setDraft] = useState(query);
+  const [draftBase, setDraftBase] = useState(query);
+  if (draftBase !== query) {
+    setDraftBase(query);
+    setDraft(query);
+  }
+  const fieldText = submitMode ? draft : query;
+  const commit = (next: string) => {
+    setDraft(next);
+    setQuery(next);
+  };
+  const dirty = submitMode && draft !== query;
+  const isPhone = useMediaQuery(PHONE_QUERY, false) && fullScreenOnPhone;
   const [results, setResults] = useState<CommandItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -187,6 +253,8 @@ export function CommandPalette({
   useEffect(() => {
     if (!open) return;
     if (!controlled) setOwnQuery("");
+    // An uncommitted draft does not outlive the open it was typed in.
+    setDraft(controlled ? query : "");
     setActive(0);
     // `controlled` is read at the open, not watched: a caller switching modes while
     // the palette is open is not a reason to wipe what is typed.
@@ -258,7 +326,8 @@ export function CommandPalette({
       setActive((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      choose(flat[active]);
+      if (dirty) commit(draft);
+      else choose(flat[active]);
     }
   };
 
@@ -282,7 +351,10 @@ export function CommandPalette({
   let flatIndex = -1;
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-start justify-center bg-black/40 p-4 pt-[10vh]"
+      className={cn(
+        "fixed inset-0 z-[70] flex items-start justify-center bg-black/40",
+        isPhone ? "p-0" : "p-4 pt-[10vh]",
+      )}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -297,9 +369,27 @@ export function CommandPalette({
         tabIndex={-1}
         // Escape bubbling up from anything inside — a dialog is where it belongs.
         onKeyDown={onDialogKeyDown}
-        className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl outline-none"
+        data-fullscreen={isPhone || undefined}
+        className={cn(
+          "flex w-full flex-col overflow-hidden bg-[var(--bg-surface)] outline-none",
+          isPhone
+            ? "h-full"
+            : "max-h-[70vh] max-w-xl rounded-xl border border-[var(--border)] shadow-2xl",
+        )}
+        // Full screen means edge to edge, so the notch, the home indicator and the
+        // rounded corners are the panel's to keep clear of.
+        style={
+          isPhone
+            ? {
+                paddingTop: "max(0px, env(safe-area-inset-top))",
+                paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+                paddingLeft: "max(0px, env(safe-area-inset-left))",
+                paddingRight: "max(0px, env(safe-area-inset-right))",
+              }
+            : undefined
+        }
       >
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-3">
+        <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3">
           <Search className="size-4 shrink-0 text-[var(--text-placeholder)]" />
           <input
             ref={inputRef}
@@ -307,13 +397,54 @@ export function CommandPalette({
             aria-expanded
             aria-controls={listId}
             aria-activedescendant={flat[active] ? itemId(flat[active].id) : undefined}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={fieldText}
+            onChange={(e) => (submitMode ? setDraft(e.target.value) : setQuery(e.target.value))}
             onKeyDown={onKeyDown}
             placeholder={l.placeholder}
-            className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]"
+            enterKeyHint={submitMode ? "search" : undefined}
+            className={cn(
+              "w-full bg-transparent py-3 outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
+              // 16px on a phone, or iOS zooms the page in on focus.
+              isPhone ? "text-base" : "text-sm",
+            )}
           />
           {loading && <span className="shrink-0 text-[11px] text-[var(--text-placeholder)]">{l.loading}</span>}
+          {fieldText !== "" && (
+            <button
+              type="button"
+              aria-label={l.clear ?? DEFAULT_COMMAND_PALETTE_LABELS.clear}
+              onClick={() => {
+                commit("");
+                // Clearing starts the next query far more often than it ends this one.
+                inputRef.current?.focus();
+              }}
+              className="shrink-0 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+          {dirty && (
+            <button
+              type="button"
+              aria-label={l.submit ?? DEFAULT_COMMAND_PALETTE_LABELS.submit}
+              onClick={() => {
+                commit(draft);
+                inputRef.current?.focus();
+              }}
+              className="shrink-0 rounded p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              <CornerDownLeft className="size-4" />
+            </button>
+          )}
+          {isPhone && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="-me-1 shrink-0 rounded px-1 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              {l.close ?? DEFAULT_COMMAND_PALETTE_LABELS.close}
+            </button>
+          )}
         </div>
 
         {/* The status lines sit outside the listbox: a listbox owns options and groups,
@@ -345,6 +476,7 @@ export function CommandPalette({
                   flatIndex += 1;
                   const idx = flatIndex;
                   const isActive = idx === active;
+                  const redact = item.redact ?? redactLabels;
                   // Written once and worn by either tag below, so the anchor and the
                   // button can never drift apart in looks or in listbox semantics.
                   // `role="option"` on an <a href> is fine: the browser's middle-click
@@ -369,9 +501,13 @@ export function CommandPalette({
                           {item.icon}
                         </span>
                       )}
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      <span data-private={redact || undefined} className="min-w-0 flex-1 truncate">
+                        {item.label}
+                      </span>
                       {item.hint && (
-                        <span className="shrink-0 text-xs text-[var(--text-placeholder)]">{item.hint}</span>
+                        <span data-private={redact || undefined} className="shrink-0 text-xs text-[var(--text-placeholder)]">
+                          {item.hint}
+                        </span>
                       )}
                     </>
                   );

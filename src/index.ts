@@ -163,6 +163,8 @@ export { FilterPopover } from "./components/data-table-filter-popover";
 export { DataTable } from "./components/data-table";
 export type {
   DataTableColumn,
+  DataTableCellProps,
+  DataTableHeadProps,
   DataTableProps,
   ServerPagination,
   FilterState,
