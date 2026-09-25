@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Camera, Paperclip, Upload } from "lucide-react";
-import { AlertBanner, Button, FileButton, FileDropzone, useFilePicker } from "@eifi1/ui-kit";
+import { AlertBanner, Button, Checkbox, FileButton, FileDropzone, useFilePicker } from "@eifi1/ui-kit";
 import type { FileRejection } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 
@@ -47,8 +47,17 @@ export function FileInputs() {
       </Example>
 
       <Example
+        label="FileButton — own check, own words, opened through its ref"
+        hint="isValid + invalidMessage refuse an empty file; labels rewords the built-in refusals."
+      >
+        <Stage>
+          <OwnWordsButton />
+        </Stage>
+      </Example>
+
+      <Example
         label="useFilePicker — someone else's trigger"
-        hint="The headless half: the input and the checks, opened from any control."
+        hint="The headless half: the input and the checks, opened from any control — or fed a paste with take()."
       >
         <Stage>
           <HeadlessPicker />
@@ -61,6 +70,16 @@ export function FileInputs() {
       >
         <Stage>
           <DropzoneSingle />
+        </Stage>
+      </Example>
+
+      <Example
+        label="FileDropzone — the default toast, and a check of its own"
+        hint="No onReject/onInvalid: refusals toast. With isValid, accept is not re-checked."
+      >
+        <Stage>
+          <DropzoneToast />
+          <DropzoneOwnCheck />
         </Stage>
       </Example>
 
@@ -176,18 +195,94 @@ function CameraAndDrop() {
 }
 
 function HeadlessPicker() {
-  const [file, setFile] = useState<File | null>(null);
-  const picker = useFilePicker({ accept: ".pdf,application/pdf", onFiles: ([f]) => setFile(f) });
+  const [files, setFiles] = useState<File[]>([]);
+  const [rejections, setRejections] = useState<FileRejection[]>([]);
+  const [locked, setLocked] = useState(false);
+  const picker = useFilePicker({
+    accept: ".pdf,application/pdf,image/*",
+    multiple: true,
+    maxSize: 2_000_000,
+    // `open()` and `take()` both do nothing while this is set.
+    disabled: locked,
+    onFiles: (picked) => {
+      setRejections([]);
+      setFiles((f) => [...f, ...picked]);
+    },
+    onReject: setRejections,
+  });
   return (
     <div className="space-y-2 rounded-md border border-[var(--border)] p-3">
       {picker.element}
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-[var(--text-primary)]">Lease documents</span>
-        <Button variant="ghost" onClick={picker.open}>
+        <Button variant="ghost" disabled={locked} onClick={picker.open}>
           + Add
         </Button>
       </div>
+      <textarea
+        aria-label="Paste a file here"
+        placeholder="…or copy a file and paste it here"
+        rows={2}
+        readOnly
+        onPaste={(e) => {
+          if (e.clipboardData.files.length === 0) return;
+          e.preventDefault();
+          picker.take(e.clipboardData.files);
+        }}
+        className="w-full resize-none rounded-md border border-dashed border-[var(--border)] bg-transparent p-2 text-xs text-[var(--text-secondary)]"
+      />
+      <Checkbox
+        label="Lock the card (disabled)"
+        checked={locked}
+        onChange={(e) => setLocked(e.target.checked)}
+      />
+      <p className={READOUT}>files: {names(files)}</p>
+      <Refusal rejections={rejections} />
+    </div>
+  );
+}
+
+/** `isValid` + `invalidMessage`, `labels`, and the ref: the `<button>` itself, so a
+ *  second control can open the same picker with `ref.current.click()`. */
+function OwnWordsButton() {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [rejections, setRejections] = useState<FileRejection[]>([]);
+  return (
+    <div className="space-y-2">
+      <FileButton
+        ref={ref}
+        variant="secondary"
+        accept=".csv,text/csv"
+        maxSize={500_000}
+        isValid={(f) => f.size > 0}
+        invalidMessage="That file is empty — export the statement again."
+        labels={{
+          rejectedType: (name) => `Only CSV statements can be imported, not “${name}”.`,
+          rejectedSize: (name, max) => `“${name}” is over ${max}; split the export by month.`,
+        }}
+        onFiles={([f]) => {
+          setRejections([]);
+          setFile(f);
+        }}
+        onReject={setRejections}
+      >
+        <Upload aria-hidden className="size-4" />
+        Import statement
+      </FileButton>
+      <p className="text-xs text-[var(--text-secondary)]">
+        No button handy?{" "}
+        <button
+          type="button"
+          className="text-[var(--brand)] underline"
+          onClick={() => ref.current?.click()}
+        >
+          Open it from this link
+        </button>
+        .
+      </p>
       <p className={READOUT}>file: {file?.name ?? "—"}</p>
+      <Refusal rejections={rejections} />
     </div>
   );
 }
@@ -207,6 +302,52 @@ function DropzoneSingle() {
       emptyLabel="Drop a PDF here"
       hint="Up to 2 MB"
     />
+  );
+}
+
+/** No `onReject`, no `onInvalid`, no `rejectionFeedback`: the 0.5 default, a toast. */
+function DropzoneToast() {
+  const [file, setFile] = useState<File | null>(null);
+  return (
+    <FileDropzone
+      file={file}
+      onFileSelected={setFile}
+      onClear={() => setFile(null)}
+      accept="image/*"
+      maxSize={1_000_000}
+      dropLabel="Drop a profile photo"
+      browseLabel="Browse…"
+      emptyLabel="Drop an image"
+      hint="Refusals appear as a toast"
+    />
+  );
+}
+
+/** The caller's own check. `accept` still filters the dialog but is NOT re-checked:
+ *  `isValid` is taken to be the type check. `onInvalid` gets each refused file. */
+function DropzoneOwnCheck() {
+  const [file, setFile] = useState<File | null>(null);
+  const [refused, setRefused] = useState<string[]>([]);
+  return (
+    <div className="space-y-2">
+      <FileDropzone
+        file={file}
+        onFileSelected={setFile}
+        onClear={() => setFile(null)}
+        accept=".zip"
+        isValid={(f) => /\.zip$/i.test(f.name) && f.size > 0}
+        invalidMessage="Only a non-empty .zip export can be imported"
+        onInvalid={(f) => setRefused((r) => [...r, f.name].slice(-3))}
+        rejectionFeedback="inline"
+        labels={{ remove: (name) => `Discard ${name}` }}
+        aria-label="Budget export (.zip)"
+        dropLabel="Drop a budget export"
+        browseLabel="Choose .zip…"
+        emptyLabel="Drop the .zip here"
+        hint="Checked by isValid"
+      />
+      <p className={READOUT}>onInvalid: {refused.length ? refused.join(" · ") : "—"}</p>
+    </div>
   );
 }
 

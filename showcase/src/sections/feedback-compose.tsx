@@ -5,6 +5,7 @@ import {
   DEFAULT_MAX_ATTACHMENT_BYTES,
   FeedbackAttachmentField,
   FeedbackDialog,
+  Switch,
   Textarea,
   pastedName,
 } from "@eifi1/ui-kit";
@@ -28,10 +29,10 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * differently and are meant to.
  *
  * That is why the label constants below read like a translation file rather than
- * like props: `FeedbackDialogLabels` is nine REQUIRED strings, with no English
+ * like props: `FeedbackDialogLabels` is ten REQUIRED strings, with no English
  * defaults, because both apps translate and a hardcoded "Cancel" would be a bug
- * in one of them. Only three strings are optional, and each is optional for a
- * reason the source gives.
+ * in one of them. Only two are optional (`attachmentCapture`, `attachmentPaste`),
+ * and on the standalone field the `attachment` heading is optional too.
  */
 
 const CATEGORIES: FeedbackCategoryOption[] = [
@@ -41,9 +42,9 @@ const CATEGORIES: FeedbackCategoryOption[] = [
   { value: "other", label: "Something else" },
 ];
 
-// `attachmentCapture` is left out on purpose and not because it was forgotten:
-// the button it names only exists when `onCaptureScreenshot` is passed, which
-// this page deliberately does not do (see the note below the dialog).
+// All twelve: the ten required strings plus the two optional ones —
+// `attachmentCapture` names the button `onCaptureScreenshot` adds, and
+// `attachmentPaste` is the hint line under the buttons.
 const DIALOG_LABELS: FeedbackDialogLabels = {
   title: "Report an issue",
   category: "Category",
@@ -55,7 +56,36 @@ const DIALOG_LABELS: FeedbackDialogLabels = {
   save: "Send report",
   attachmentAdd: "Add attachment",
   attachmentRemove: "Remove attachment",
+  attachmentCapture: "Capture screenshot",
+  attachmentPaste: "…or press Ctrl/Cmd+V anywhere to paste one.",
 };
+
+/**
+ * A stand-in for `onCaptureScreenshot`. The apps snapshot their view with
+ * `modern-screenshot`, a dependency of theirs and not of the kit; this draws a
+ * labelled card on a canvas instead, so the button, its busy state and the file it
+ * hands back are all real. The `File` goes through the same accept/size checks as a
+ * picked or pasted one.
+ */
+async function fakeCapture(): Promise<File | null> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 400));
+  const canvas = document.createElement("canvas");
+  canvas.width = 480;
+  canvas.height = 270;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const css = getComputedStyle(document.documentElement);
+  ctx.fillStyle = css.getPropertyValue("--bg-page").trim() || "#f5f5f4";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = css.getPropertyValue("--brand").trim() || "#4f46e5";
+  ctx.fillRect(0, 0, canvas.width, 36);
+  ctx.fillStyle = css.getPropertyValue("--text-primary").trim() || "#111";
+  ctx.font = "16px sans-serif";
+  ctx.fillText("App view — stand-in capture", 20, 80);
+  ctx.fillText(new Date().toLocaleTimeString(), 20, 108);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  return blob ? new File([blob], "screenshot.png", { type: "image/png" }) : null;
+}
 
 // The standalone field with `attachment` omitted: the heading is optional
 // precisely so an editor can put the buttons straight under its own textarea,
@@ -101,15 +131,14 @@ export function FeedbackCompose() {
 
       <Note>
         <strong>
-          <code className="font-mono">onCaptureScreenshot</code> is deliberately not passed here,
-          so there is no “Capture screenshot” button.
+          <code className="font-mono">onCaptureScreenshot</code> here is a stand-in.
         </strong>{" "}
         The prop takes a function that snapshots the app view and returns a{" "}
         <code className="font-mono">File</code>; both consuming apps implement it with{" "}
         <code className="font-mono">modern-screenshot</code>, which is a dependency of theirs and
         not of this repository — the kit stays free of a DOM-rasterising library it would
-        otherwise force on every consumer. The button appears only when the prop is given, so its
-        absence on this page is the omission and not a missing feature.
+        otherwise force on every consumer. This page draws a labelled card on a canvas instead.
+        Without the prop there is no “Capture screenshot” button at all.
       </Note>
 
       <Note>
@@ -142,6 +171,13 @@ export function FeedbackCompose() {
       </Example>
 
       <Example
+        label="documentPaste + onCaptureScreenshot — standalone"
+        hint="Switch documentPaste on, click anywhere on the page and press Ctrl/Cmd+V with an image copied."
+      >
+        <DocumentPaste />
+      </Example>
+
+      <Example
         label="pasteFrom — the field beside the box you paste into"
         hint="Put the caret in the textarea and paste an image; the listener is on their shared parent."
       >
@@ -154,7 +190,8 @@ export function FeedbackCompose() {
         buttons and a visually hidden file input, so a paste made with nothing focused never
         reaches it. That is not a defect so much as the reason the other two exist:{" "}
         <code className="font-mono">documentPaste</code> is for a modal, which traps focus and so
-        owns every paste in the page while it is up (the dialog above passes it), and{" "}
+        owns every paste in the page while it is up (the dialog above passes it, and the
+        switch above shows it on its own), and{" "}
         <code className="font-mono">pasteFrom</code> is for a field standing beside the text box
         the paste is actually made in — events bubble upwards, so the common parent is the only
         element that hears both. It is worth knowing before concluding the standalone specimen
@@ -203,6 +240,7 @@ function Dialog() {
   const [submitting, setSubmitting] = useState(false);
   const [rejected, setRejected] = useState<"type" | "size" | null>(null);
   const [last, setLast] = useState<FeedbackSubmission | null>(null);
+  const [narrow, setNarrow] = useState(false);
 
   // A no-op that resolves, but not instantly: `submitting` is the prop worth
   // seeing, and one that flips back inside the same microtask never paints. The
@@ -232,6 +270,12 @@ function Dialog() {
           anywhere in the page.
         </span>
       </Row>
+      <Switch
+        label="attachmentAccept={['image/png']} · maxAttachmentBytes={64 KB}"
+        description="Off: the defaults. On: most real screenshots are refused, which shows onAttachmentError."
+        checked={narrow}
+        onCheckedChange={setNarrow}
+      />
 
       {last ? (
         <p className={READOUT}>
@@ -251,6 +295,9 @@ function Dialog() {
         onSubmit={onSubmit}
         submitting={submitting}
         onAttachmentError={setRejected}
+        attachmentAccept={narrow ? ["image/png"] : undefined}
+        maxAttachmentBytes={narrow ? 64 * 1024 : undefined}
+        onCaptureScreenshot={fakeCapture}
         // The slot the app fills with what only it knows — who is reporting, which
         // route they were on. Rendered inside the panel, under the attachment
         // field, which is why the rejection line below is put here rather than
@@ -324,6 +371,47 @@ function Validation() {
         Both checks run on the picked file, the captured screenshot and the pasted image alike —
         one <code className="font-mono">pick()</code> behind all three ways in, which is the
         point of the field being one component rather than three handlers.
+      </p>
+    </div>
+  );
+}
+
+function DocumentPaste() {
+  const [file, setFile] = useState<File | null>(null);
+  const [rejected, setRejected] = useState<"type" | "size" | null>(null);
+  const [documentPaste, setDocumentPaste] = useState(false);
+
+  return (
+    <div className="max-w-md space-y-2">
+      <Switch
+        label="documentPaste"
+        description="Listen on the whole document, as the dialog does while open"
+        checked={documentPaste}
+        onCheckedChange={setDocumentPaste}
+      />
+      <FeedbackAttachmentField
+        value={file}
+        onChange={(next) => {
+          setRejected(null);
+          setFile(next);
+        }}
+        labels={{
+          ...FIELD_LABELS,
+          attachment: "Screenshot",
+          attachmentCapture: "Capture the app view",
+          attachmentPaste: documentPaste
+            ? "…or paste an image anywhere on this page."
+            : "…or paste while one of these buttons has focus.",
+        }}
+        documentPaste={documentPaste}
+        onCaptureScreenshot={fakeCapture}
+        onError={setRejected}
+      />
+      <RejectedLine kind={rejected} />
+      <FileReadout file={file} />
+      <p className="text-xs text-[var(--text-muted)]">
+        Leave the switch off when the field is inline on a page with other fields: a paste meant
+        for one of them would otherwise land here.
       </p>
     </div>
   );

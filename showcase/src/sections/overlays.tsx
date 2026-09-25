@@ -1,11 +1,12 @@
-import { useId, useState } from "react";
-import { Info, Pencil } from "lucide-react";
+import { useContext, useId, useState } from "react";
+import { Info, Keyboard, Pencil } from "lucide-react";
 import {
   Button,
   FullBleedDialog,
   HoverMenu,
   IconButton,
   Modal,
+  ModalCloseContext,
   OVERLAY_EXIT_MS,
   Popover,
   Tooltip,
@@ -40,14 +41,13 @@ const TOOLTIP_SIDES = ["top", "right", "bottom", "left"] as const;
 
 const MENU_ITEMS = ["Duplicate", "Export as CSV", "Archive"];
 
-// Token-styled field: the kit's own panels are still painted with literal
-// `bg-white`/`slate-*` (see the note at the foot of this section), but anything this
-// page draws itself has to follow the palette, or the palette switch proves nothing.
+// Token-styled field: the kit's panels are painted with the tokens, and anything this
+// page draws itself has to follow the palette too, or the palette switch proves nothing.
 const FIELD =
   "w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--brand)]";
 
 const MENU_ITEM =
-  "block w-full px-3 py-1.5 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]";
+  "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]";
 
 export function Overlays() {
   return (
@@ -57,11 +57,19 @@ export function Overlays() {
         hint={
           <>
             Portals to <code className="font-mono">document.body</code>; covers the page, not
-            this card.
+            this card. Below 768px (try the screen-size preview) every size is the same
+            full-width bottom sheet.
           </>
         }
       >
         <ModalSizes />
+      </Example>
+
+      <Example
+        label="Modal — tall content, a popover inside, pass-through attributes"
+        hint="Escape closes the popover first and the dialog only on a second press; Back closes the dialog too."
+      >
+        <ModalTall />
       </Example>
 
       <Example
@@ -93,10 +101,24 @@ export function Overlays() {
       </Example>
 
       <Example
+        label="Popover — labels, panelId, aria-label and a combobox trigger"
+        hint="Open one near the bottom of the window: the panel flips above its trigger and caps its height."
+      >
+        <PopoverNaming />
+      </Example>
+
+      <Example
         label="HoverMenu"
         hint="Hover opens after 120ms; a click or Enter opens instantly."
       >
         <HoverMenus />
+      </Example>
+
+      <Example
+        label="HoverMenu — aria-label, className and the viewport clamp"
+        hint="On a narrow window (or the phone preview) the wide panel is shifted back inside an 8px margin."
+      >
+        <HoverMenuClamp />
       </Example>
       <Note>
         <strong>Only one HoverMenu in the whole document may be open at a time.</strong> The
@@ -118,6 +140,20 @@ export function Overlays() {
       </Example>
 
       <Example
+        label="Tooltip — rich labels, className and the portal flip"
+        hint="Focus a trigger with Tab and press Escape: the bubble goes (WCAG 1.4.13) and comes back on the next focus."
+      >
+        <TooltipMore />
+      </Example>
+
+      <Example
+        label="Right-to-left — which placements flip"
+        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
+      >
+        <OverlaysRtl />
+      </Example>
+
+      <Example
         label="placeTooltip"
         hint="Pure, viewport pixels in and out — which is why it can be shown as a table at all."
       >
@@ -132,30 +168,27 @@ export function Overlays() {
       </Example>
 
       <Note>
-        <strong>Accessibility, checked against the source rather than assumed.</strong> Only{" "}
-        <code className="font-mono">Modal</code> manages focus: it focuses the panel on open (the
-        panel, not the first field, so a phone keyboard does not pop), keeps Tab inside it, and
-        restores focus to the element that was focused before it mounted.{" "}
-        <code className="font-mono">FullBleedDialog</code> puts{" "}
-        <code className="font-mono">role="dialog" aria-modal="true"</code> on its backdrop but
-        moves no focus, traps nothing and restores nothing — the aria claim is not backed by the
-        behaviour. <code className="font-mono">Popover</code> and the portalled{" "}
-        <code className="font-mono">Tooltip</code> mount in{" "}
-        <code className="font-mono">document.body</code>, so they are not even in their trigger's
-        tab order; nothing focuses them. <code className="font-mono">HoverMenu</code>'s panel is
-        rendered inline, so Tab does reach its items by DOM order — but it has no Escape handler
-        at all (only outside-click), so a keyboard user inside an open menu cannot dismiss it
-        without moving the pointer.
+        <strong>Accessibility, checked against the source rather than assumed.</strong>{" "}
+        <code className="font-mono">Modal</code> and <code className="font-mono">FullBleedDialog</code>{" "}
+        focus the dialog itself on open (not the first field, so a phone keyboard does not pop),
+        keep Tab inside it, and hand focus back to the element that opened them.{" "}
+        <code className="font-mono">Popover</code> traps Tab as well — it is portalled to the end
+        of <code className="font-mono">&lt;body&gt;</code>, so letting Tab walk out would land
+        nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
+        Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
+        <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
+        <code className="font-mono">HoverMenu</code>'s panel is rendered inline, so Tab reaches
+        its items by DOM order — but it has no Escape handler (only an outside press), and its
+        panel says <code className="font-mono">role="menu"</code> while the items are whatever
+        the caller renders, with no arrow-key navigation.
       </Note>
 
       <Note>
-        <strong>These panels do not follow the palette.</strong> Flip the palette in the top bar
-        and the tooltip bubble re-skins while the modal, dialog, popover and hover-menu panels do
-        not: `Tooltip` is painted with the tokens, the other four still carry literal{" "}
-        <code className="font-mono">bg-white / dark:bg-slate-900</code> and{" "}
-        <code className="font-mono">border-slate-200</code>. The content this page puts inside
-        them is token-coloured, so the text does move. It is a real gap in the kit, not in the
-        specimens.
+        <strong>All five follow the palette.</strong> The panels are painted with{" "}
+        <code className="font-mono">--bg-surface</code> and{" "}
+        <code className="font-mono">--border</code>, so flipping the palette in the top bar
+        re-skins them. The one fixed colour is the backdrop's{" "}
+        <code className="font-mono">bg-black/40</code> dim behind a Modal or a FullBleedDialog.
       </Note>
     </>
   );
@@ -196,13 +229,14 @@ function ModalSizes() {
             onChange={(e) => setDraft(e.target.value)}
           />
           <Row className="justify-end">
-            {/* Closing from inside the panel skips the exit animation, and that is the
-                documented limit of useCloseTransition: it can only animate a dismissal it
-                was asked for (Escape, backdrop, Back, the X). Compare this button with
-                pressing Escape. */}
+            {/* Closing from inside the panel by flipping the caller's own state skips the
+                exit animation — useCloseTransition can only animate a dismissal it was
+                asked for. `ModalCloseContext` is the way to ask from inside: it hands out
+                the panel's own animated close, the one Escape and the backdrop use. */}
             <Button variant="secondary" onClick={() => setSize(null)}>
               Close (no exit animation)
             </Button>
+            <AnimatedCloseButton />
           </Row>
         </Modal>
       )}
@@ -277,6 +311,103 @@ function ModalOptions() {
   );
 }
 
+/** Reads the panel's own animated close. `null` outside a Modal, which is why the
+ *  button falls back to rendering nothing rather than a control that does nothing. */
+function AnimatedCloseButton() {
+  const close = useContext(ModalCloseContext);
+  if (!close) return null;
+  return <Button onClick={close}>Close (animated, via ModalCloseContext)</Button>;
+}
+
+const TALL_LINES = Array.from({ length: 40 }, (_, i) => `Line ${i + 1} of a panel taller than the screen.`);
+
+function ModalTall() {
+  const [open, setOpen] = useState(false);
+  const [closes, setCloses] = useState(0);
+  const [picked, setPicked] = useState("—");
+  const headingId = useId();
+  const descId = useId();
+
+  return (
+    <>
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open a tall size=&quot;lg&quot; modal
+        </Button>
+        <span className="text-xs text-[var(--text-muted)]">
+          onClose calls: {closes} · picked in the popover: {picked}
+        </span>
+      </Row>
+      {open && (
+        <Modal
+          size="lg"
+          labelledBy={headingId}
+          // Everything a <div> takes lands on the PANEL (role="dialog"): a description,
+          // a test id, a tour anchor. `style` is merged with the drag offset, not replaced.
+          aria-describedby={descId}
+          data-testid="showcase-tall-modal"
+          style={{ borderTop: "4px solid var(--brand)" }}
+          className="space-y-3"
+          onClose={() => {
+            setOpen(false);
+            setCloses((n) => n + 1);
+          }}
+        >
+          <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
+            A panel taller than the window
+          </h4>
+          <p id={descId} className="text-xs text-[var(--text-secondary)]">
+            The panel scrolls itself (<code className="font-mono">max-h-full overflow-y-auto</code>);
+            the page behind is scroll-locked. The brand stripe on top is the caller&apos;s{" "}
+            <code className="font-mono">style</code>, and this paragraph is the dialog&apos;s{" "}
+            <code className="font-mono">aria-describedby</code>.
+          </p>
+          <Popover
+            labels={{ panel: "Pick a colour" }}
+            trigger={({ open: popOpen, toggle, ref }) => (
+              <button
+                ref={ref}
+                type="button"
+                onClick={toggle}
+                aria-expanded={popOpen}
+                className={buttonClasses("secondary")}
+              >
+                Open a popover inside the dialog
+              </button>
+            )}
+          >
+            {(close) => (
+              <Row>
+                {["Red", "Green", "Blue"].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={buttonClasses("ghost", "text-xs")}
+                    onClick={() => {
+                      setPicked(c);
+                      close();
+                    }}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </Row>
+            )}
+          </Popover>
+          <ul className="space-y-1 text-xs text-[var(--text-muted)]">
+            {TALL_LINES.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <Row className="justify-end">
+            <AnimatedCloseButton />
+          </Row>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 function BackdropClose() {
   const [dismissed, setDismissed] = useState(false);
   const backdrop = useBackdropClose(() => setDismissed(true));
@@ -322,6 +453,8 @@ function BackdropClose() {
 function FullBleed() {
   const [open, setOpen] = useState(false);
   const [backCloses, setBackCloses] = useState(true);
+  const [capped, setCapped] = useState(false);
+  const [closes, setCloses] = useState(0);
   const [notes, setNotes] = useState("");
 
   return (
@@ -338,6 +471,11 @@ function FullBleed() {
           />
           <code className="font-mono">backCloses</code>
         </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={capped} onChange={(e) => setCapped(e.target.checked)} />
+          <code className="font-mono">className=&quot;md:max-w-2xl&quot;</code>
+        </label>
+        <span className="text-xs text-[var(--text-muted)]">onClose calls: {closes}</span>
       </Row>
       {/* Rendered unconditionally with an `open` prop — the opposite of Modal. It early
           returns null while closed, AFTER its hooks, so it stays mounted and its
@@ -345,9 +483,16 @@ function FullBleed() {
           use-close-transition.ts is about. */}
       <FullBleedDialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setCloses((n) => n + 1);
+        }}
         backCloses={backCloses}
         closeLabel="Close the row editor"
+        // `className` is the PANEL's; every other attribute goes to the outer element,
+        // the one with role="dialog" — which is where an accessible name belongs.
+        className={capped ? "md:max-w-2xl" : undefined}
+        aria-label="Row editor"
         header={<span className="truncate text-sm">Row editor — Ada Lovelace</span>}
       >
         <div className="space-y-3">
@@ -368,6 +513,11 @@ function FullBleed() {
             <code className="font-mono">backCloses</code> is off for a caller whose open state is
             already in the URL — a sentinel on top of a router entry costs two presses to close
             one dialog. Toggle it and try the browser's Back.
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">
+            With the <code className="font-mono">md:max-w-2xl</code> class the panel is capped on a
+            wide screen, so the dimmed backdrop shows beside it — and a press that starts and ends
+            there closes the dialog. On a phone the cap does not bite and nothing is exposed.
           </p>
           <Row>
             <Button variant="secondary" onClick={() => setOpen(false)}>
@@ -460,6 +610,107 @@ function Popovers() {
   );
 }
 
+const CATEGORIES = ["Groceries", "Rent", "Transport", "Leisure"];
+
+function PopoverNaming() {
+  const panelId = useId();
+  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [due, setDue] = useState("—");
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Popover
+          // The panel is rendered here, not by the caller, so its id has to come in from
+          // outside for the trigger's `aria-controls` to point at it.
+          panelId={panelId}
+          labels={{ panel: "Choose a category" }}
+          width={220}
+          className="p-1"
+          trigger={({ open, toggle, ref }) => (
+            <button
+              ref={ref}
+              type="button"
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={open ? panelId : undefined}
+              aria-haspopup="dialog"
+              onClick={toggle}
+              className={buttonClasses("secondary")}
+            >
+              Category: {category}
+            </button>
+          )}
+        >
+          {(close) => (
+            <ul>
+              {CATEGORIES.map((c) => (
+                <li key={c}>
+                  <button
+                    type="button"
+                    className={MENU_ITEM}
+                    onClick={() => {
+                      setCategory(c);
+                      close();
+                    }}
+                  >
+                    {c}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Popover>
+
+        <Popover
+          // The DOM spelling wins over `labels.panel` wherever both are given.
+          aria-label="Due date shortcuts"
+          labels={{ panel: "Never read — aria-label wins" }}
+          data-testid="showcase-due-popover"
+          style={{ borderColor: "var(--brand)" }}
+          trigger={({ open, toggle, ref }) => (
+            <button
+              ref={ref}
+              type="button"
+              onClick={toggle}
+              aria-expanded={open}
+              className={buttonClasses("secondary")}
+            >
+              Due: {due}
+            </button>
+          )}
+        >
+          {(close) => (
+            <Row>
+              {["Today", "Tomorrow", "Next week"].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={buttonClasses("ghost", "text-xs")}
+                  onClick={() => {
+                    setDue(d);
+                    close();
+                  }}
+                >
+                  {d}
+                </button>
+              ))}
+            </Row>
+          )}
+        </Popover>
+      </Row>
+      <OutTable
+        rows={[
+          ['labels={{ panel: "Choose a category" }}', 'panel aria-label = "Choose a category"'],
+          ['aria-label="Due date shortcuts" + labels.panel', 'panel aria-label = "Due date shortcuts"'],
+          ["neither", `"Pop-up" — the English fallback (or the provider's popover.panel)`],
+          ["className / style", "reach the PANEL; the measured position is merged over style"],
+        ]}
+      />
+    </div>
+  );
+}
+
 /* ── HoverMenu ────────────────────────────────────────────────────────────── */
 
 function HoverMenus() {
@@ -503,6 +754,66 @@ function HoverMenus() {
       ))}
       <span className="text-xs text-[var(--text-muted)]">Chosen: {chosen}</span>
     </Row>
+  );
+}
+
+function HoverMenuClamp() {
+  const [chosen, setChosen] = useState("—");
+
+  const items = (close: () => void) => (
+    <ul className="py-1">
+      {MENU_ITEMS.map((item) => (
+        <li key={item}>
+          <button
+            type="button"
+            className={MENU_ITEM}
+            onClick={() => {
+              setChosen(item);
+              close();
+            }}
+          >
+            {item}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <HoverMenu
+          // The DOM spelling; the deprecated `ariaLabel` (above) loses to it when both
+          // are given. `className` is the WRAPPER's, `panelClassName` the panel's.
+          aria-label="Sort options"
+          className="rounded-md ring-1 ring-[var(--border)]"
+          data-testid="showcase-sort-menu"
+          align="left"
+          trigger={({ open, toggle }) => (
+            <Button variant="ghost" onClick={toggle} aria-expanded={open}>
+              aria-label + className
+            </Button>
+          )}
+        >
+          {items}
+        </HoverMenu>
+        <HoverMenu
+          // Deliberately the WRONG alignment for a trigger at the right edge: the panel
+          // opens towards the edge and would spill off it, so the clamp has to move it.
+          align="left"
+          panelClassName="w-96"
+          aria-label="Wide menu at the edge"
+          trigger={({ open, toggle }) => (
+            <Button variant="secondary" onClick={toggle} aria-expanded={open}>
+              w-96, align=&quot;left&quot;
+            </Button>
+          )}
+        >
+          {items}
+        </HoverMenu>
+      </div>
+      <span className="text-xs text-[var(--text-muted)]">Chosen: {chosen}</span>
+    </div>
   );
 }
 
@@ -563,6 +874,141 @@ function TooltipPortal() {
       </Tooltip>
       <span className="text-xs text-[var(--text-muted)]">Last pressed: {pressed}</span>
     </Row>
+  );
+}
+
+function TooltipMore() {
+  const helpId = useId();
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        {/* A ReactNode label, not only a string. */}
+        <Tooltip
+          label={
+            <span className="inline-flex items-center gap-1">
+              Open the palette: <kbd className="font-mono">Ctrl</kbd>+<kbd className="font-mono">K</kbd>
+            </span>
+          }
+        >
+          <IconButton aria-label="Keyboard shortcut">
+            <Keyboard />
+          </IconButton>
+        </Tooltip>
+
+        {/* `0` is a real label; only "", null, undefined and false count as empty. */}
+        <Tooltip label={0} side="bottom">
+          <button type="button" className={buttonClasses("secondary")}>
+            label={"{0}"}
+          </button>
+        </Tooltip>
+
+        {/* The caller's own description is APPENDED to, never replaced: the button ends
+            up described by the hint text below AND the bubble. `className` and any other
+            span attribute land on the wrapper. */}
+        <Tooltip
+          label="…and the bubble, appended"
+          className="rounded-md ring-1 ring-[var(--brand)]"
+          data-testid="showcase-tooltip-wrapper"
+        >
+          <button type="button" aria-describedby={helpId} className={buttonClasses("secondary")}>
+            Own aria-describedby
+          </button>
+        </Tooltip>
+        <span id={helpId} className="text-xs text-[var(--text-muted)]">
+          Described by this text…
+        </span>
+      </Row>
+      <Row>
+        <Tooltip
+          portal
+          side="left"
+          label="side='left' is a preference for the portal variant: with no room on the left, this bubble turns round to the right and is clamped into the window."
+        >
+          <button type="button" className={buttonClasses("secondary")}>
+            portal, side=&quot;left&quot;
+          </button>
+        </Tooltip>
+        <span className="text-xs text-[var(--text-muted)]">
+          Needs the window&apos;s left edge within ~20rem to flip — the phone preview shows it.
+        </span>
+      </Row>
+    </div>
+  );
+}
+
+/* ── Right-to-left ────────────────────────────────────────────────────────── */
+
+function OverlaysRtl() {
+  const [picked, setPicked] = useState("—");
+
+  return (
+    <div className="space-y-3">
+      <div dir="rtl" className="flex flex-wrap items-center gap-3">
+        <HoverMenu
+          aria-label="قائمة"
+          trigger={({ open, toggle }) => (
+            <Button variant="secondary" onClick={toggle} aria-expanded={open}>
+              HoverMenu (align=&quot;right&quot;)
+            </Button>
+          )}
+        >
+          {(close) => (
+            <ul className="py-1">
+              {["نسخ", "تصدير", "أرشفة"].map((item) => (
+                <li key={item}>
+                  <button
+                    type="button"
+                    className={MENU_ITEM}
+                    onClick={() => {
+                      setPicked(item);
+                      close();
+                    }}
+                  >
+                    {item}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </HoverMenu>
+        <Tooltip side="left" label="side='left' — still the physical left">
+          <button type="button" className={buttonClasses("secondary")}>
+            Tooltip left
+          </button>
+        </Tooltip>
+        <Popover
+          trigger={({ open, toggle, ref }) => (
+            <button
+              ref={ref}
+              type="button"
+              onClick={toggle}
+              aria-expanded={open}
+              className={buttonClasses("secondary")}
+            >
+              Popover
+            </button>
+          )}
+        >
+          {() => (
+            <p className="text-xs text-[var(--text-secondary)]">
+              Portalled to &lt;body&gt;, so this panel does not inherit the local dir=&quot;rtl&quot;,
+              and it is aligned to the trigger&apos;s RIGHT edge whatever the direction.
+            </p>
+          )}
+        </Popover>
+      </div>
+      <span className="text-xs text-[var(--text-muted)]">Picked: {picked}</span>
+      <Note>
+        Nothing here reads the writing direction. <code className="font-mono">HoverMenu</code>&apos;s{" "}
+        <code className="font-mono">align</code> and <code className="font-mono">Tooltip</code>&apos;s{" "}
+        <code className="font-mono">side</code> are physical, so an RTL caller has to swap them
+        itself; <code className="font-mono">Popover</code> always lines the panel up with the
+        trigger&apos;s right edge (the trailing edge in LTR, the leading one in RTL). The portalled
+        panels take the direction of <code className="font-mono">&lt;html&gt;</code>, not of the
+        subtree the trigger sits in.
+      </Note>
+    </div>
   );
 }
 

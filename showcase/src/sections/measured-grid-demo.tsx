@@ -1,4 +1,5 @@
-import { MeasuredGrid, UiKitProvider, useMeasuredRows } from "@eifi1/ui-kit";
+import { useRef } from "react";
+import { Button, MeasuredGrid, UiKitProvider, useMeasuredRows, useWindowedRows } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 
 /**
@@ -46,6 +47,8 @@ export function MeasuredGridDemo() {
   const sweep = useMeasuredRows(SWEEP, { digits: 3 });
   const pasted = useMeasuredRows([]);
   const german = useMeasuredRows([[0.5, 1.25], [1, 2.5]], { locale: "de-DE" });
+  const generated = useMeasuredRows([], { digits: 2, locale: "fr-FR" });
+  const rtl = useMeasuredRows([[1, 10], [2, 20], [3, 30]]);
 
   return (
     <>
@@ -132,6 +135,120 @@ export function MeasuredGridDemo() {
           arrows; nothing in it can be changed.
         </Note>
       </Example>
+
+      <Example
+        label="MeasuredGrid — generated rows, taller rows, own words"
+        hint="setRows writes numbers in; rowHeight, a locale prop and labels change the grid itself"
+      >
+        <Stage>
+          <div data-stage="wide" className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  generated.setRows(
+                    Array.from({ length: 24 }, (_, i) => [i * 15, Math.sin((i * 15 * Math.PI) / 180)]),
+                  )
+                }
+              >
+                Generate a sine (setRows)
+              </Button>
+              <Button variant="ghost" onClick={() => generated.setCells([])}>
+                Empty it (setCells)
+              </Button>
+            </div>
+            <MeasuredGrid
+              label="Generated curve"
+              columns={[{ label: "Angle", unit: "deg" }, { label: "Sine" }]}
+              // The decimal comma for pasted and text-view cells, without a provider.
+              locale="fr-FR"
+              // Fixed row height the windowing divides by; taller for a touch screen.
+              rowHeight={36}
+              labels={{
+                addRow: "Add a measurement",
+                clear: "Start over",
+                pasteHint: "Paste straight from the lab's spreadsheet",
+                points: (n) => (n === 1 ? "1 measurement" : `${n} measurements`),
+              }}
+              {...generated.props}
+            />
+            <StateLine ready={generated.ready} points={generated.rows.length} problems={generated.problems} />
+            <p className="font-mono text-xs text-[var(--text-muted)]">
+              rows[1] = {generated.rows[1] ? JSON.stringify(generated.rows[1]) : "—"}
+            </p>
+          </div>
+        </Stage>
+        <Note>
+          <code>setRows</code> takes numbers and writes them as cells in the hook&apos;s locale
+          (<code>fr-FR</code>, so a comma) rounded to its <code>digits</code> (2);{" "}
+          <code>rows</code> reads them back as numbers once the table is whole.
+        </Note>
+      </Example>
+
+      <Example label="MeasuredGrid — right-to-left" hint='dir="rtl": the columns run from the right, and so do the arrows'>
+        <Stage>
+          <div data-stage="wide" dir="rtl">
+            <MeasuredGrid
+              label="Right-to-left"
+              columns={[{ label: "x" }, { label: "y" }]}
+              views={["cells"]}
+              {...rtl.props}
+            />
+          </div>
+        </Stage>
+        <p className="text-xs text-[var(--text-muted)]">
+          Click the first cell (on the right) and press ←: the caret moves to the next column, which
+          is further left. Left and Right are visual directions, not &quot;previous&quot; and
+          &quot;next&quot;.
+        </p>
+      </Example>
+
+      <Example label="useWindowedRows — a list of your own" hint="10,000 fixed-height rows; only the visible ones and a few either side are mounted">
+        <Stage>
+          <div data-stage="wide">
+            <WindowedList />
+          </div>
+        </Stage>
+      </Example>
     </>
+  );
+}
+
+/** Ten thousand rows, rendered as a window: a spacer the full height of the list, and
+ *  only rows `first` to `last` positioned inside it. */
+function WindowedList() {
+  const COUNT = 10_000;
+  const ROW = 32;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { first, last, totalHeight } = useWindowedRows(COUNT, ROW, scrollRef);
+  return (
+    <div className="space-y-2">
+      <div
+        ref={scrollRef}
+        className="h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)]"
+      >
+        <div style={{ height: totalHeight, position: "relative" }}>
+          {Array.from({ length: last - first }, (_, i) => {
+            const index = first + i;
+            return (
+              <div
+                key={index}
+                style={{ position: "absolute", top: index * ROW, height: ROW, insetInline: 0 }}
+                className="flex items-center justify-between border-b border-[var(--border)] px-3 text-sm text-[var(--text-primary)]"
+              >
+                <span>Reading {index + 1}</span>
+                <span className="font-mono text-xs text-[var(--text-muted)]">
+                  {(Math.sin(index / 50) * 100).toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <p className="font-mono text-xs text-[var(--text-muted)]">
+        first = {first} · last = {last} · mounted = {last - first} of {COUNT} · totalHeight ={" "}
+        {totalHeight}px
+      </p>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Bell, Copy, Ellipsis, Hash, Pencil, Star, Tag, Trash2 } from "lucide-react";
+import { Bell, Copy, Ellipsis, Hash, Pencil, Pin, Star, Tag, Trash2 } from "lucide-react";
 import {
   AlertBanner,
   Button,
@@ -23,7 +23,7 @@ import {
   buttonClasses,
   toneFrameClass,
 } from "@eifi1/ui-kit";
-import type { AlertTone, ButtonVariant } from "@eifi1/ui-kit";
+import type { AlertTone, ButtonVariant, ToggleOption } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
 import { useT } from "../i18n";
 
@@ -78,8 +78,9 @@ function ButtonVariants() {
           saturated fill — <code className="font-mono">brand</code> is the solid accent, kept
           for the one strong call to action on a screen. Both draw from the palette tokens, so
           they move when you switch preset in the top bar. <code className="font-mono">danger</code>{" "}
-          is hard-coded red on purpose: destructive is a semantic, not a brand colour, and a
-          palette that made it green would be a bug.
+          paints from the semantic <code className="font-mono">--danger</code> family instead:
+          destructive is a meaning, not a brand colour, so a preset does not move it — but a
+          consumer can re-point that one family on purpose.
         </Note>
       </div>
     </Example>
@@ -146,10 +147,10 @@ function ButtonClasses() {
           styling lands on an element that is genuinely not a <button>, and still
           has to be indistinguishable from one. */}
       <Row>
-        <a className={buttonClasses("secondary")} href="#primitives">
+        <a className={buttonClasses("secondary")} href="#/primitives#buttonclasses">
           an &lt;a&gt; wearing buttonClasses(&quot;secondary&quot;)
         </a>
-        <a className={buttonClasses("brand")} href="#foundations">
+        <a className={buttonClasses("brand")} href="#/tokens">
           …and buttonClasses(&quot;brand&quot;)
         </a>
       </Row>
@@ -310,13 +311,15 @@ function FlushCard() {
 function SpinnerDemo() {
   const [busy, setBusy] = useState(false);
   return (
-    <Example label="Spinner" hint="a bare ring — size and thickness come from className">
+    <Example label="Spinner" hint="role=status with spoken text; label={null} makes it decoration">
       <Row>
         <Spinner />
-        <Spinner className="size-4 border-2" />
+        <Spinner className="size-4 border-2" label="Refreshing the balances" />
         <Spinner className="size-8 border-4" />
+        {/* Inside a button whose text already says it: decorative, or the button's
+            name becomes "Loading… Saving…". */}
         <Button variant="primary" onClick={() => setBusy((v) => !v)} disabled={busy}>
-          {busy && <Spinner className="size-4 border-2" />}
+          {busy && <Spinner className="size-4 border-2" label={null} />}
           {busy ? "Saving…" : "Save"}
         </Button>
         {busy && (
@@ -329,10 +332,14 @@ function SpinnerDemo() {
         <Note>
           The busy state here is a plain toggle rather than a timer — nothing on this page
           should depend on a clock, because the render test mounts every section at once. In an
-          app, drive it from your request&apos;s pending flag. Note that{" "}
-          <code className="font-mono">Spinner</code> paints from Tailwind&apos;s slate scale
-          rather than the kit&apos;s tokens, so it is the one thing in this specimen that does{" "}
-          <em>not</em> move when you switch palette.
+          app, drive it from your request&apos;s pending flag. The first three spinners are
+          polite live regions: the first says the provider&apos;s{" "}
+          <code className="font-mono">common.loading</code> (it changes with the page
+          language), the second its own <code className="font-mono">label</code>. The one in
+          the button is <code className="font-mono">label={"{null}"}</code> — hidden from
+          assistive tech, because the button&apos;s text already says &ldquo;Saving…&rdquo;.
+          The ring paints from <code className="font-mono">--border</code> and{" "}
+          <code className="font-mono">--text-primary</code>, so it follows the palette.
         </Note>
       </div>
     </Example>
@@ -368,8 +375,7 @@ function EmptyStateDemo() {
         <Note>
           <code className="font-mono">EmptyState</code> takes strings, not nodes — there is no
           slot for a call-to-action button inside it, so put the action beside it as above.
-          Like <code className="font-mono">Spinner</code>, its dashed frame and text are
-          Tailwind slate rather than tokens, so it stays put across palettes.
+          Its dashed frame and text are tokens, so it follows the palette.
         </Note>
       </div>
     </Example>
@@ -397,7 +403,7 @@ function TabStrip() {
           // window; a plain left click is still cancelled and routed through
           // `onChange`, so the switch stays client-side. Anchored at this page's own
           // section so the specimen is harmless to actually open.
-          { id: "docs", label: "Docs", href: "#primitives" },
+          { id: "docs", label: "Docs", href: "#/primitives" },
         ]}
       />
       <div className="pt-3 text-sm text-[var(--text-secondary)]">
@@ -478,7 +484,7 @@ const PEOPLE: Array<{ name?: string | null; email?: string | null }> = [
 
 function Avatars() {
   return (
-    <Example label="UserAvatar" hint="aria-hidden — it is decoration, never the accessible name">
+    <Example label="UserAvatar" hint="three sizes; aria-hidden by default, opt out when it stands alone">
       <Row className="items-end">
         <UserAvatar size="sm" name="Marcel Eifert" />
         <UserAvatar size="md" name="Marcel Eifert" />
@@ -490,13 +496,27 @@ function Avatars() {
         <IconButton aria-label="Account menu — Marcel Eifert" title="Account menu" className="p-0">
           <UserAvatar size="sm" name="Marcel Eifert" />
         </IconButton>
+        {/* Standing ALONE (an assignee column): nothing beside it says who it is, so
+            the default aria-hidden is switched off and the avatar names itself. */}
+        <UserAvatar
+          size="sm"
+          name="Ada Lovelace"
+          aria-hidden={false}
+          role="img"
+          aria-label="Assigned to Ada Lovelace"
+          title="Assigned to Ada Lovelace"
+        />
       </Row>
       <div className="mt-3">
         <Note>
           The chip is <code className="font-mono">aria-hidden</code> on purpose — two letters
-          read aloud are noise — so whatever wraps it has to carry the name, as the last
-          specimen does. Its fill is Tailwind slate rather than a token, so it does not follow
-          the palette.
+          read aloud are noise — so whatever wraps it has to carry the name, as the account-menu
+          button does. That is a default, not an invariant: the last avatar stands alone, so it
+          passes <code className="font-mono">aria-hidden={"{false}"}</code> with its own{" "}
+          <code className="font-mono">aria-label</code>, which the spread lets win. Sizes are{" "}
+          <code className="font-mono">sm</code> 28px, <code className="font-mono">md</code> 32px
+          (the default), <code className="font-mono">lg</code> 48px; the fill is the inverse
+          token pair.
         </Note>
       </div>
     </Example>
@@ -545,9 +565,10 @@ function Alerts() {
           <code className="font-mono">AlertBanner</code>&apos;s prop is{" "}
           <code className="font-mono">Exclude&lt;AlertTone, &quot;neutral&quot;&gt;</code> — the
           neutral frame exists for callers that own their own box, not for a banner with a
-          warning triangle in it. Its rose/amber palette is deliberately not tokenised:
-          &quot;this is dangerous&quot; is a semantic, and a preset that recoloured it would be
-          lying.
+          warning triangle in it. Its colours come from the semantic{" "}
+          <code className="font-mono">--danger-*</code> / <code className="font-mono">--warning-*</code>{" "}
+          families, which a palette preset does not move: &quot;this is dangerous&quot; is a
+          meaning, not a brand colour.
         </Note>
       </div>
     </Example>
@@ -604,10 +625,10 @@ function ToggleGroups() {
   const [view, setView] = useState<ViewMode>("board");
   const [locked, setLocked] = useState(false);
   return (
-    <Example label="ToggleGroup — controlled" hint="role=radiogroup; value and onChange are required">
+    <Example label="ToggleGroup — controlled" hint="role=radiogroup; value and onChange are required; aria-label names it">
       <div className="max-w-sm">
         <ToggleGroup<ViewMode>
-          ariaLabel="View mode"
+          aria-label="View mode"
           value={view}
           onChange={setView}
           disabled={locked}
@@ -658,7 +679,7 @@ function ToggleGroupUnset() {
     >
       <div className="max-w-xs">
         <ToggleGroup<Settlement | "">
-          ariaLabel="Settlement status"
+          aria-label="Settlement status"
           value={status}
           onChange={setStatus}
           options={[
@@ -676,10 +697,63 @@ function ToggleGroupUnset() {
         <Note>
           <code className="font-mono">value</code> is required, so the unset state is expressed
           by widening the union rather than by omitting the prop — a row whose status does not
-          exist yet is a real case, and this is the shape it takes. Neither{" "}
-          <code className="font-mono">ToggleGroupProps</code> nor its option type is exported,
-          so an app that wants to hold its options in a typed constant has to re-declare the
-          shape.
+          exist yet is a real case, and this is the shape it takes. Once chosen, a
+          required group cannot be emptied from the keyboard or the pointer — only the caller
+          can reset it, as the button does. For a group the USER may empty, see{" "}
+          <code className="font-mono">allowEmpty</code> below. Hold options in a typed
+          constant with the exported <code className="font-mono">ToggleOption&lt;T&gt;</code>.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+type Queue = "open" | "mine" | "blocked";
+
+const QUEUE_OPTIONS: ToggleOption<Queue>[] = [
+  { value: "open", label: "Open" },
+  { value: "mine", label: "Mine" },
+  { value: "blocked", label: "Blocked" },
+];
+
+function ToggleGroupClearable() {
+  const [filter, setFilter] = useState<Queue | null>("open");
+  const [log, setLog] = useState<string[]>([]);
+  return (
+    <Example
+      label="ToggleGroup — allowEmpty"
+      hint="click the pressed option again to clear it; onChange receives null"
+    >
+      <div className="max-w-sm">
+        <ToggleGroup
+          allowEmpty
+          aria-label="Filter the queue"
+          value={filter}
+          onChange={(next) => {
+            setFilter(next);
+            setLog((l) => [String(next), ...l].slice(0, 4));
+          }}
+          options={QUEUE_OPTIONS}
+        />
+      </div>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        filter: <span className="font-mono text-[var(--text-secondary)]">{String(filter)}</span>
+        {log.length > 0 && (
+          <>
+            {" "}· onChange calls, newest first:{" "}
+            <span className="font-mono text-[var(--text-secondary)]">{log.join(", ")}</span>
+          </>
+        )}
+      </p>
+      <div className="mt-3">
+        <Note>
+          With <code className="font-mono">allowEmpty</code> the segments stop being radios:
+          the group is <code className="font-mono">role=&quot;group&quot;</code> and each
+          option a toggle button with <code className="font-mono">aria-pressed</code>, because
+          a radio cannot be unchecked by pressing it again and nobody expects it to. The prop
+          also changes the type — <code className="font-mono">value</code> may be{" "}
+          <code className="font-mono">null</code> and <code className="font-mono">onChange</code>{" "}
+          receives it — so a group that cannot emit null never makes its caller handle one.
         </Note>
       </div>
     </Example>
@@ -706,15 +780,27 @@ export function Primitives() {
       <ToneFrames />
       <ToggleGroups />
       <ToggleGroupUnset />
+      <ToggleGroupClearable />
       <Chips />
       <ChipInputDemo />
+      <ChipInputOptions />
+      <ChipsRtl />
     </>
   );
 }
 
 /* ── Chip ─────────────────────────────────────────────────────────────────── */
 
-const CHIP_TONES = ["neutral", "brand", "danger", "warning", "success", "info"] as const;
+const CHIP_TONES = [
+  "neutral",
+  "brand",
+  "danger",
+  "warning",
+  "success",
+  "info",
+  "income",
+  "expense",
+] as const;
 
 function Chips() {
   const [pressed, setPressed] = useState<string[]>(["Unpaid"]);
@@ -727,7 +813,7 @@ function Chips() {
       <Example label="Chip — the three shapes" hint="inert, a link, or a toggle — decided by which prop you pass">
         <Row>
           <Chip icon={Tag}>inert</Chip>
-          <Chip href="#chip-the-three-shapes" icon={Hash}>
+          <Chip href="#/primitives#chip-the-three-shapes" icon={Hash}>
             a link
           </Chip>
           {["Unpaid", "Overdue"].map((v) => (
@@ -765,12 +851,22 @@ function Chips() {
           <Row>
             <Chip size="sm">small</Chip>
             <Chip size="md">medium</Chip>
+            <Chip size="lg">large — 44px touch target</Chip>
             <Chip size="sm" tone="brand" selected icon={Star}>
               small, selected, with an icon
             </Chip>
           </Row>
         </div>
+        <Note>
+          <code className="font-mono">income</code> and <code className="font-mono">expense</code>{" "}
+          are the money pair: only the text and border carry the tint, on the neutral
+          chip&apos;s surfaces, so the chip does not smear into the amber or teal figure beside
+          it. <code className="font-mono">lg</code> is the phone size — a{" "}
+          <code className="font-mono">min-h-11</code> target for a filter row a thumb has to hit.
+        </Note>
       </Example>
+
+      <ChipStates />
 
       <Example label="Chip — removable" hint="the dismiss button is named after the value it removes">
         <Row>
@@ -794,6 +890,104 @@ function Chips() {
         </Note>
       </Example>
     </>
+  );
+}
+
+function ChipStates() {
+  const [inflow, setInflow] = useState(false);
+  const [filters, setFilters] = useState(["Overdue", "EUR"]);
+  const [on, setOn] = useState<string[]>(["Overdue"]);
+  const [log, setLog] = useState("—");
+  const [locked, setLocked] = useState(true);
+  return (
+    <Example
+      label="Chip — states and combinations"
+      hint="action vs toggle, current link, remove beside a link or a toggle, disabled"
+    >
+      <div className="space-y-3">
+        <Row>
+          {/* An ACTION, not a toggle: no `selected`, so no aria-pressed — the label and
+              tone follow the state and aria-label names what a press will do. */}
+          <Chip
+            tone={inflow ? "income" : "expense"}
+            onClick={() => {
+              setInflow((v) => !v);
+              setLog(`direction → ${inflow ? "outflow" : "inflow"}`);
+            }}
+            aria-label={inflow ? "Direction: inflow — tap for outflow" : "Direction: outflow — tap for inflow"}
+          >
+            {inflow ? "+ Inflow" : "− Outflow"}
+          </Chip>
+          <Chip href="#/primitives#chip-states-and-combinations" tone="brand" selected>
+            this section (aria-current)
+          </Chip>
+          <Chip href="#/primitives#chip-the-three-shapes" tone="brand">
+            another section
+          </Chip>
+        </Row>
+        <Row>
+          {filters.map((f) => (
+            <Chip
+              key={f}
+              tone="brand"
+              selected={on.includes(f)}
+              onClick={() => {
+                setOn((o) => (o.includes(f) ? o.filter((x) => x !== f) : [...o, f]));
+                setLog(`toggle ${f}`);
+              }}
+              onRemove={() => {
+                setFilters((l) => l.filter((x) => x !== f));
+                setLog(`remove ${f}`);
+              }}
+            >
+              {f}
+            </Chip>
+          ))}
+          <Chip href="#/primitives#chip-states-and-combinations" icon={Hash} onRemove={() => setLog("remove the pinned link")}>
+            pinned link
+          </Chip>
+          <Chip icon={Pin} onRemove={() => setLog("remove, custom label")} removeLabel="Unpin">
+            <em>not plain text</em>
+          </Chip>
+          {filters.length < 2 && (
+            <Button variant="ghost" onClick={() => setFilters(["Overdue", "EUR"])}>
+              Restore the filters
+            </Button>
+          )}
+        </Row>
+        <Row>
+          <Chip disabled={locked} icon={Tag}>
+            inert
+          </Chip>
+          <Chip disabled={locked} href="#/primitives#chip-states-and-combinations">
+            link
+          </Chip>
+          <Chip disabled={locked} tone="brand" selected onClick={() => setLog("disabled toggle clicked")}>
+            toggle
+          </Chip>
+          <Chip disabled={locked} onRemove={() => setLog("disabled remove clicked")}>
+            removable
+          </Chip>
+          <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
+            {locked ? "Enable the row" : "Disable the row"}
+          </Button>
+        </Row>
+      </div>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        last event: <span className="font-mono text-[var(--text-secondary)]">{log}</span>
+      </p>
+      <Note>
+        The first chip is the <em>action</em> shape: with <code className="font-mono">onClick</code>{" "}
+        and no <code className="font-mono">selected</code> it reports no pressed state at all,
+        so its label may follow the state. The two links mark the current one with{" "}
+        <code className="font-mono">aria-current</code>. A remove beside a link or a toggle is a
+        sibling button, not a nested one, and removing never follows the link. A chip whose
+        content is not plain text has no value to name its × after, so it falls back to{" "}
+        <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the
+        provider&apos;s <code className="font-mono">common.remove</code>. A disabled link renders
+        as an inert span, so it cannot be followed at all.
+      </Note>
+    </Example>
   );
 }
 
@@ -845,6 +1039,99 @@ function ChipInputDemo() {
         Escape clears the draft without touching the committed values, blur commits (losing
         what you typed because you clicked away is the usual complaint about this pattern),
         and a pasted list splits on the separators as ONE change rather than one per item.
+      </Note>
+    </Example>
+  );
+}
+
+function ChipInputOptions() {
+  const [keywords, setKeywords] = useState(["tax", "tax"]);
+  const [codes, setCodes] = useState(["DE", "FR"]);
+  const [small, setSmall] = useState(["sm", "chips"]);
+  const [large, setLarge] = useState(["lg"]);
+  const [cc, setCc] = useState<string[]>([]);
+  const missing = cc.length === 0;
+  return (
+    <Example
+      label="ChipInput — separators, duplicates, sizes and errors"
+      hint="semicolon and space commit; duplicates allowed; error wires aria-describedby"
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <ChipInput
+          label="Keywords (; or space commits, duplicates allowed)"
+          value={keywords}
+          onChange={setKeywords}
+          separators={[";", " "]}
+          allowDuplicates
+          tone="info"
+          placeholder="tax; receipt; 2026"
+        />
+        <ChipInput
+          label="Country codes (two capitals)"
+          value={codes}
+          onChange={setCodes}
+          validate={(v) => (/^[A-Z]{2}$/.test(v) ? null : `${v} is not a two-letter code`)}
+          invalid={codes.length === 0}
+          tone="success"
+        />
+        <ChipInput label="Small" value={small} onChange={setSmall} size="sm" />
+        <ChipInput label="Large (phone)" value={large} onChange={setLarge} size="lg" tone="brand" />
+        {/* No visible label: `aria-label` names the inner <input>, not the wrapper. */}
+        <ChipInput
+          aria-label="Copy to"
+          value={cc}
+          onChange={setCc}
+          placeholder="Copy to… (no visible label)"
+          error={missing ? "Add at least one recipient." : undefined}
+        />
+      </div>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        values:{" "}
+        <span className="font-mono text-[var(--text-secondary)]">
+          {JSON.stringify({ keywords, codes, cc })}
+        </span>
+      </p>
+      <Note>
+        <code className="font-mono">separators</code> replaces the default comma — here both{" "}
+        <code className="font-mono">;</code> and a space commit, and a pasted{" "}
+        <code className="font-mono">a;b c</code> splits into three chips.{" "}
+        <code className="font-mono">allowDuplicates</code> keeps the second &ldquo;tax&rdquo;;
+        without it a repeat is refused. <code className="font-mono">invalid</code> paints the
+        frame only (clear the codes to see it); <code className="font-mono">error</code> implies
+        it and adds the text below, wired to the input with{" "}
+        <code className="font-mono">aria-describedby</code>. A rejection from{" "}
+        <code className="font-mono">validate</code>, <code className="font-mono">max</code> or a
+        duplicate is only <em>announced</em> — the draft stays in the field, but no visible
+        message appears unless the caller shows one through <code className="font-mono">error</code>.
+      </Note>
+    </Example>
+  );
+}
+
+function ChipsRtl() {
+  const [tags, setTags] = useState(["فاتورة", "٢٠٢٦", "مسودة"]);
+  return (
+    <Example label="Chip and ChipInput — right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
+      <div dir="rtl" className="max-w-md space-y-3">
+        <Row>
+          <Chip icon={Tag}>وسم</Chip>
+          <Chip tone="brand" selected onClick={() => undefined} onRemove={() => undefined}>
+            غير مدفوعة
+          </Chip>
+          <Chip href="#/primitives#chip-and-chipinput-right-to-left" icon={Hash} onRemove={() => undefined}>
+            رابط
+          </Chip>
+        </Row>
+        <ChipInput label="الوسوم" value={tags} onChange={setTags} placeholder="اكتب ثم Enter" />
+      </div>
+      <Note>
+        The icon leads and the × trails in the reading direction, because the chip is a flex
+        row. Two things are still physical and worth watching here: the × button&apos;s
+        margins and the body&apos;s reduced end padding beside it are{" "}
+        <code className="font-mono">mr</code>/<code className="font-mono">ml</code>/
+        <code className="font-mono">pr</code> rather than logical, so in RTL the × hugs the
+        wrong side by a couple of pixels; and in the field, ← still moves to the
+        <em> previous</em> chip in DOM order, which in RTL is the chip to the right.
       </Note>
     </Example>
   );

@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Archive, Check, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { useLocation } from "react-router";
 import {
   Button,
@@ -17,6 +17,7 @@ import {
   encodeFilterValue,
   encodeSorts,
   isFilterActive,
+  missingDataTableLabels,
   nextSorts,
   normalizeSorts,
   resolveDataTableLabels,
@@ -28,6 +29,7 @@ import type {
   DataTableColumn,
   FilterState,
   SortState,
+  SwipeAction,
 } from "@eifi1/ui-kit";
 import { shiftIso } from "@eifi1/ui-kit/dates";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
@@ -256,6 +258,12 @@ export function DataTableSection() {
       </Note>
       <MainTable />
       <UrlSyncTable />
+      <ControlledTable />
+      <ServerTable />
+      <ShortTable />
+      <FillHeightTable />
+      <PhoneTable />
+      <RtlTable />
       <PaginationSpecimen />
       <FilterPopoverSpecimen />
       <LabelsSpecimen />
@@ -286,7 +294,7 @@ function MainTable() {
   return (
     <Example
       label="DataTable — the whole surface"
-      hint="click a row to expand · ⌘/Ctrl- or Shift-click to select · the header sticks because the body is capped"
+      hint="click a row to expand · ⌘/Ctrl- or Shift-click to select · the header sticks because the body is capped · on a phone the rows become cards and the detail opens full-screen"
     >
       <Row className="mb-3 justify-between">
         <span className="text-xs text-[var(--text-secondary)]">
@@ -412,13 +420,16 @@ function MainTable() {
           nesting two anchors disables the inner one outright.
         </Note>
         <Note>
-          Not shown, and why: <code className="font-mono">fillHeight</code> needs a parent
-          with a bounded height to flex into (this page scrolls, so{" "}
-          <code className="font-mono">maxBodyHeight</code> is the honest choice here);{" "}
-          <code className="font-mono">mobileGroupBy</code> requires rows already ordered so
-          equal keys are contiguous, i.e. a matching default sort;{" "}
-          <code className="font-mono">serverPagination</code> replaces client filtering and
-          sorting wholesale and needs a server to be about.
+          What this table leaves to the examples below: controlled filters and{" "}
+          <code className="font-mono">onToggleMany</code>,{" "}
+          <code className="font-mono">serverPagination</code>,{" "}
+          <code className="font-mono">paginated=&#123;false&#125;</code> with the{" "}
+          <code className="font-mono">labels</code> prop and{" "}
+          <code className="font-mono">noRowLink</code>,{" "}
+          <code className="font-mono">fillHeight</code>, and the phone-only props (
+          <code className="font-mono">mobileCard</code>,{" "}
+          <code className="font-mono">mobileGroupBy</code>,{" "}
+          <code className="font-mono">mobileSwipeActions</code>).
         </Note>
       </div>
     </Example>
@@ -477,6 +488,624 @@ function UrlSyncTable() {
           That is what stops the browser's own history fighting the user's next click — but
           it also means editing the address by hand does nothing until you reload.
         </Note>
+        <Note>
+          On this page even the reload does nothing. The showcase runs under{" "}
+          <code className="font-mono">HashRouter</code>, so the table <em>writes</em> into the
+          hash (<code className="font-mono">#/data-table?sort=…</code>, via{" "}
+          <code className="font-mono">useSearchParams</code>) but <em>reads</em> the initial
+          view from <code className="font-mono">window.location.search</code>, which is empty
+          here — a shared hash link opens on the default view and is then overwritten. Under a
+          BrowserRouter both sides are the same query string and the round trip works.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── controlled filters, selection callbacks ─────────────────────────────── */
+
+/** One line per callback, newest first — so a click on the table has a visible
+ *  consequence even where the table itself looks the same afterwards. */
+function useCallbackLog(max = 4) {
+  const [log, setLog] = useState<string[]>([]);
+  const record = (line: string) => setLog((l) => [line, ...l].slice(0, max));
+  return { log, record };
+}
+
+function CallbackLog({ log }: { log: string[] }) {
+  return (
+    <OutTable
+      rows={
+        log.length
+          ? log.map((line, i) => [i === 0 ? "last callback" : "", line] as [string, ReactNode])
+          : [["last callback", "— (interact with the table)"]]
+      }
+    />
+  );
+}
+
+const statusValues = (f: FilterState): string[] => {
+  const v = f.status;
+  return v && v.type === "select" ? v.values : [];
+};
+
+function ControlledTable() {
+  const [filters, setFilters] = useState<FilterState>({
+    status: { type: "select", values: ["open"] },
+  });
+  const [sorts, setSorts] = useState<SortState[]>([{ key: "name", dir: "asc" }]);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const { log, record } = useCallbackLog();
+
+  const active = statusValues(filters);
+  const toggleChip = (s: Status) => {
+    const values = active.includes(s) ? active.filter((v) => v !== s) : [...active, s];
+    setFilters((prev) => ({ ...prev, status: { type: "select", values } }));
+  };
+
+  const selectedCount = ROWS.filter((r) => selected.has(r.id)).length;
+
+  return (
+    <Example
+      label="Controlled filters and selection callbacks"
+      hint="the chips and the Status funnel edit the same state · Shift-click a second row to fire onToggleMany"
+    >
+      <Row className="mb-3">
+        {STATUS_ORDER.map((s) => (
+          <Button
+            key={s}
+            variant={active.includes(s) ? "primary" : "secondary"}
+            className="px-2 py-1 text-xs"
+            aria-pressed={active.includes(s)}
+            onClick={() => toggleChip(s)}
+          >
+            {STATUS_LABEL[s]}
+          </Button>
+        ))}
+        <Button
+          variant="ghost"
+          className="px-2 py-1 text-xs"
+          disabled={Object.keys(filters).length === 0}
+          onClick={() => setFilters({})}
+        >
+          Reset filters
+        </Button>
+      </Row>
+
+      <DataTable
+        rows={ROWS}
+        columns={COLUMNS}
+        rowKey={(r) => r.id}
+        defaultPageSize={10}
+        maxBodyHeight="18rem"
+        filters={filters}
+        onFiltersChange={(next) => {
+          record(`onFiltersChange(${j(next)})`);
+          setFilters(next);
+        }}
+        sorts={sorts}
+        onSortsChange={(next) => {
+          record(`onSortsChange(${j(next)})`);
+          setSorts(next);
+        }}
+        selection={{
+          isSelected: (r) => selected.has(r.id),
+          onToggle: (r, checked) => {
+            record(`onToggle(${r.id}, ${checked})`);
+            setSelected((prev) => {
+              const next = new Set(prev);
+              if (checked) next.add(r.id);
+              else next.delete(r.id);
+              return next;
+            });
+          },
+          // One call for a whole Shift-range instead of one onToggle per row.
+          onToggleMany: (rows, checked) => {
+            record(`onToggleMany([${rows.map((r) => r.id).join(", ")}], ${checked})`);
+            setSelected((prev) => {
+              const next = new Set(prev);
+              for (const r of rows) {
+                if (checked) next.add(r.id);
+                else next.delete(r.id);
+              }
+              return next;
+            });
+          },
+          allSelected: selectedCount === ROWS.length,
+          someSelected: selectedCount > 0,
+          onToggleAll: (checked) => {
+            record(`onToggleAll(${checked})`);
+            setSelected(checked ? new Set(ROWS.map((r) => r.id)) : new Set());
+          },
+        }}
+      />
+
+      <div className="mt-3 space-y-2">
+        <OutTable
+          rows={[
+            ["filters (owned by this page)", j(filters)],
+            ["sorts (owned by this page)", j(sorts)],
+            ["selected", `${selectedCount} of ${ROWS.length}`],
+          ]}
+        />
+        <CallbackLog log={log} />
+        <Note>
+          With <code className="font-mono">onFiltersChange</code> set the table stops owning
+          the filters: it renders <code className="font-mono">filters</code> as given and
+          reports every edit. It also stops resetting the page on a filter change — that
+          becomes the owner&apos;s job, and the owner cannot reach the table&apos;s page, so
+          narrowing from page 3 only lands on page 1 because the page index is clamped.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── serverPagination ────────────────────────────────────────────────────── */
+
+/** A pretend 70-row server: the same fixture three times over, with fresh ids. */
+const SERVER_ROWS: TableRow[] = [0, 1, 2].flatMap((batch) =>
+  ROWS.slice(0, batch === 2 ? 20 : ROWS.length).map((r, i) => ({
+    ...r,
+    id: `S-${String(batch * 100 + i + 1).padStart(3, "0")}`,
+    name: batch === 0 ? r.name : `${r.name} ${batch + 1}`,
+  })),
+);
+
+const SERVER_COLUMNS: DataTableColumn<TableRow>[] = [NAME_COL, OPENED_COL, STATUS_COL, AMOUNT_COL];
+
+interface ServerQuery {
+  page: number;
+  pageSize: number;
+  filters: FilterState;
+  sorts: SortState[];
+}
+
+/** What the "backend" does with a query — built from the kit's own pure helpers,
+ *  which is also how a real server-side port would stay in step with the client. */
+function runQuery(q: ServerQuery): { rows: TableRow[]; total: number } {
+  let rows = SERVER_ROWS;
+  for (const col of SERVER_COLUMNS) {
+    const state = q.filters[col.key];
+    if (state && isFilterActive(state)) rows = rows.filter((r) => rowMatches(col, r, state));
+  }
+  if (q.sorts.length) {
+    rows = [...rows].sort((a, b) => {
+      for (const s of q.sorts) {
+        const by = SERVER_COLUMNS.find((c) => c.key === s.key)?.sortBy;
+        if (!by) continue;
+        const av = by(a) ?? "";
+        const bv = by(b) ?? "";
+        if (av < bv) return s.dir === "asc" ? -1 : 1;
+        if (av > bv) return s.dir === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+  const total = rows.length;
+  if (q.pageSize === Infinity) return { rows, total };
+  return { rows: rows.slice(q.page * q.pageSize, (q.page + 1) * q.pageSize), total };
+}
+
+function queryString(q: ServerQuery): string {
+  const sp = new URLSearchParams();
+  sp.set("page", String(q.page));
+  sp.set("size", q.pageSize === Infinity ? "all" : String(q.pageSize));
+  const sort = encodeSorts(q.sorts);
+  if (sort) sp.set("sort", sort);
+  for (const [key, value] of Object.entries(q.filters)) {
+    const enc = encodeFilterValue(value);
+    if (enc != null) sp.set(`f.${key}`, enc);
+  }
+  return `GET /rows?${decodeURIComponent(sp.toString())}`;
+}
+
+const INITIAL_QUERY: ServerQuery = { page: 0, pageSize: 10, filters: {}, sorts: [] };
+
+function ServerTable() {
+  const [query, setQuery] = useState<ServerQuery>(INITIAL_QUERY);
+  const [result, setResult] = useState(() => runQuery(INITIAL_QUERY));
+  const [loading, setLoading] = useState(false);
+  const [takeOver, setTakeOver] = useState(true);
+  const latest = useRef(0);
+  const { log, record } = useCallbackLog(3);
+
+  // Every change is a round trip: the table shows the old page until the new one
+  // arrives 600ms later, exactly as it would over a network.
+  const request = (patch: Partial<ServerQuery>, what: string) => {
+    record(what);
+    const next = { ...query, ...patch };
+    setQuery(next);
+    setLoading(true);
+    const id = ++latest.current;
+    window.setTimeout(() => {
+      if (id !== latest.current) return; // a newer request superseded this one
+      setResult(runQuery(next));
+      setLoading(false);
+    }, 600);
+  };
+
+  return (
+    <Example
+      label="serverPagination — the server owns the rows"
+      hint="600ms simulated latency · uncheck the toggle to see the sort and filter controls disappear"
+    >
+      <Row className="mb-3 justify-between">
+        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={takeOver}
+            onChange={(e) => {
+              setTakeOver(e.target.checked);
+              request({ page: 0, filters: {}, sorts: [] }, `takeOver = ${e.target.checked}`);
+            }}
+          />
+          pass onFiltersChange / onSortsChange
+        </label>
+        <span
+          role="status"
+          className={cn("text-xs", loading ? "text-[var(--brand)]" : "text-[var(--text-muted)]")}
+        >
+          {loading ? "Loading… (the page's own indicator)" : `${result.total} rows on the server`}
+        </span>
+      </Row>
+
+      <DataTable
+        rows={result.rows}
+        columns={SERVER_COLUMNS}
+        rowKey={(r) => r.id}
+        maxBodyHeight="18rem"
+        rowClassName={() => (loading ? "opacity-50" : undefined)}
+        serverPagination={{
+          page: query.page,
+          pageSize: query.pageSize,
+          total: result.total,
+          isLoading: loading,
+          onPageChange: (page) => request({ page }, `onPageChange(${page})`),
+          onPageSizeChange: (pageSize) =>
+            request({ pageSize, page: 0 }, `onPageSizeChange(${pageSize})`),
+        }}
+        {...(takeOver
+          ? {
+              filters: query.filters,
+              // The page reset on a new filter is the owner's job in this mode.
+              onFiltersChange: (filters: FilterState) =>
+                request({ filters, page: 0 }, `onFiltersChange(${j(filters)})`),
+              sorts: query.sorts,
+              onSortsChange: (sorts: SortState[]) =>
+                request({ sorts, page: 0 }, `onSortsChange(${j(sorts)})`),
+            }
+          : {})}
+        empty="The server returned no rows for this query."
+      />
+
+      <div className="mt-3 space-y-2">
+        <OutTable rows={[["request", queryString(query)]]} />
+        <CallbackLog log={log} />
+        <Note>
+          In this mode the table renders <code className="font-mono">rows</code> as-is — no
+          filtering, sorting or slicing — and the footer is driven by{" "}
+          <code className="font-mono">page</code> / <code className="font-mono">pageSize</code>{" "}
+          / <code className="font-mono">total</code>. Sort arrows and filter funnels only
+          appear when the page takes them over; unchecked above, the headers are plain text.
+          On a phone the pager stays (there is no endless scroll over rows that are not here).
+        </Note>
+        <Note>
+          <code className="font-mono">serverPagination.isLoading</code> is passed here, and
+          nothing in the table changes: the prop is declared but never read. The dimmed rows
+          and the status line above are this page&apos;s own doing, through{" "}
+          <code className="font-mono">rowClassName</code>.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── a short table: paginated={false}, labels, noRowLink, empty ──────────── */
+
+interface LineItem {
+  id: string;
+  item: string;
+  qty: number;
+  price: number;
+  spec: string;
+}
+
+const LINE_ITEMS: LineItem[] = [
+  { id: "L1", item: "Basalt tile, 30×30", qty: 12, price: 18.5, spec: "BT-30" },
+  { id: "L2", item: "Cobalt glaze", qty: 2, price: 42, spec: "CG-2" },
+  { id: "L3", item: "Flint grout", qty: 5, price: 9.9, spec: "FG-5" },
+  { id: "L4", item: "Quartz sealant", qty: 1, price: 27.25, spec: "QS-1" },
+];
+
+const LINE_COLUMNS: DataTableColumn<LineItem>[] = [
+  {
+    key: "spec",
+    header: "Spec sheet",
+    // The cell owns a link of its own. Without `noRowLink` the row anchor would land
+    // HERE (first column, no mobilePrimary) and nest <a> in <a>.
+    cell: (r) => (
+      <a
+        href={`https://example.com/spec/${r.spec}`}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 text-[var(--brand)] hover:underline"
+      >
+        {r.spec} <ExternalLink aria-hidden className="size-3" />
+      </a>
+    ),
+    noRowLink: true,
+    className: "whitespace-nowrap",
+  },
+  { key: "item", header: "Item", cell: (r) => r.item, sortBy: (r) => r.item, filterBy: (r) => r.item },
+  {
+    key: "qty",
+    header: "Qty",
+    cell: (r) => r.qty,
+    sortBy: (r) => r.qty,
+    className: "text-right tabular-nums",
+    headClassName: "text-right",
+  },
+  {
+    key: "total",
+    header: "Line total",
+    cell: (r) => AMOUNT_FMT.format(r.qty * r.price),
+    sortBy: (r) => r.qty * r.price,
+    className: "text-right tabular-nums",
+    headClassName: "text-right",
+  },
+];
+
+function ShortTable() {
+  const [lines, setLines] = useState<LineItem[]>(LINE_ITEMS);
+  const [opened, setOpened] = useState<string | null>(null);
+
+  return (
+    <Example
+      label="A short table — paginated={false}, labels, noRowLink, empty"
+      hint="no footer at all · middle-click an Item cell for a new tab · hover a header or the side rail for the relabelled strings"
+    >
+      <Row className="mb-3">
+        <Button
+          variant="secondary"
+          className="px-2 py-1 text-xs"
+          onClick={() => setLines((l) => (l.length ? [] : LINE_ITEMS))}
+        >
+          {lines.length ? "Remove every line" : "Restore the lines"}
+        </Button>
+      </Row>
+      <DataTable
+        rows={lines}
+        columns={LINE_COLUMNS}
+        rowKey={(r) => r.id}
+        paginated={false}
+        onRowClick={(r) => setOpened(r.id)}
+        rowHref={(r) => `#/data-table/line/${r.id}`}
+        labels={{
+          table: "Line items",
+          columns: "Fields",
+          sortHint: "Click to order · Shift-click for a second key",
+          filter: "Narrow",
+          filterPlaceholder: "Item contains…",
+          autoSize: "Fit fields to content",
+        }}
+        empty={
+          <span className="text-[var(--text-secondary)]">
+            No line items yet — the <code className="font-mono">empty</code> prop, not a “—”.
+          </span>
+        }
+      />
+      <div className="mt-3 space-y-2">
+        <OutTable
+          rows={[
+            ["onRowClick", opened ?? "—"],
+            ["accessible name (labels.table)", "Line items"],
+          ]}
+        />
+        <Note>
+          <code className="font-mono">rowHref</code> puts the row&apos;s anchor on the first
+          column that does not set <code className="font-mono">noRowLink</code> — here Item,
+          because Spec sheet renders its own link. On a phone the whole card would be the
+          anchor, which a card with a linked cell cannot be, so it falls back to a
+          role=&quot;button&quot; card and the spec link keeps working.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── fillHeight ──────────────────────────────────────────────────────────── */
+
+function FillHeightTable() {
+  return (
+    <Example
+      label="fillHeight — a table in a bounded pane"
+      hint="desktop only · the dashed box is a fixed 18rem flex column; the table fills it and scrolls inside"
+    >
+      <div className="flex h-72 flex-col rounded-md border border-dashed border-[var(--border)] p-2">
+        <div className="pb-2 text-xs text-[var(--text-muted)]">A toolbar above the table</div>
+        <DataTable
+          rows={ROWS}
+          columns={SMALL_COLUMNS}
+          rowKey={(r) => r.id}
+          defaultPageSize={25}
+          fillHeight
+          labels={{ table: "Fill-height table" }}
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          The pager stays pinned to the bottom of the pane and the header to the top, and
+          <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded
+          flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
+          and the prop does nothing — which is why the main table above uses{" "}
+          <code className="font-mono">maxBodyHeight</code> instead.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── the phone layout ───────────────────────────────────────────────────── */
+
+/** Pre-sorted by status, then name: `mobileGroupBy` groups CONSECUTIVE rows. */
+const BY_STATUS = [...ROWS].sort(
+  (a, b) =>
+    STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+    a.name.localeCompare(b.name),
+);
+
+function PhoneTable() {
+  const [statusById, setStatusById] = useState<Record<string, Status>>({});
+  const [compact, setCompact] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { log, record } = useCallbackLog(3);
+
+  const rows = useMemo(() => {
+    const withOverrides = BY_STATUS.map((r) => ({ ...r, status: statusById[r.id] ?? r.status }));
+    return withOverrides.sort(
+      (a, b) =>
+        STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+        a.name.localeCompare(b.name),
+    );
+  }, [statusById]);
+
+  const setStatus = (r: TableRow, s: Status) => {
+    record(`${r.name} → ${STATUS_LABEL[s]}`);
+    setStatusById((m) => ({ ...m, [r.id]: s }));
+  };
+
+  const swipe = (r: TableRow): { left?: SwipeAction[]; right?: SwipeAction[] } | null => {
+    // A row that must not move returns null — here the archived ones.
+    if (r.status === "archived") return null;
+    return {
+      right: [
+        {
+          label: "Done",
+          icon: <Check className="size-4" />,
+          onCommit: () => setStatus(r, "done"),
+          className: "bg-[var(--money-neutral)]",
+          armedClassName: "bg-[var(--money-income)]",
+        },
+      ],
+      left: [
+        {
+          label: "Archive",
+          icon: <Archive className="size-4" />,
+          onCommit: () => setStatus(r, "archived"),
+          className: "bg-[var(--money-neutral)]",
+          armedClassName: "bg-[var(--money-expense)]",
+        },
+      ],
+    };
+  };
+
+  return (
+    <Example
+      label="Phone layout — mobileCard, mobileGroupBy, mobileSwipeActions"
+      hint="below 768px only: narrow the window or open the screen-size preview in the top bar"
+    >
+      <Row className="mb-3 justify-between">
+        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} />
+          custom <code className="font-mono">mobileCard</code>
+        </label>
+        <Button
+          variant="ghost"
+          className="px-2 py-1 text-xs"
+          disabled={Object.keys(statusById).length === 0}
+          onClick={() => setStatusById({})}
+        >
+          Undo swipes
+        </Button>
+      </Row>
+      <DataTable
+        rows={rows}
+        columns={COLUMNS}
+        rowKey={(r) => r.id}
+        defaultPageSize={8}
+        maxBodyHeight="18rem"
+        onRowClick={(r) => setExpandedId((cur) => (cur === r.id ? null : r.id))}
+        isExpanded={(r) => r.id === expandedId}
+        // Inline on the phone this time (no mobileExpandAsDialog): the chevron points
+        // down and flips when the panel is open.
+        expandedRow={(r) => (
+          <span className="text-xs text-[var(--text-secondary)]">
+            {r.id} · opened {r.opened} · {AMOUNT_FMT.format(r.amount)}
+          </span>
+        )}
+        mobileGroupBy={(r) => r.status}
+        mobileGroupLabel={(key) => (
+          <span className="inline-flex items-center gap-2">
+            {STATUS_LABEL[key as Status]}
+            <span className="font-normal normal-case tracking-normal">
+              ({rows.filter((r) => r.status === key).length})
+            </span>
+          </span>
+        )}
+        mobileCard={
+          compact
+            ? (r) => (
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{r.name}</span>
+                    <span className="block text-xs text-[var(--text-muted)]">{r.opened}</span>
+                  </span>
+                  <span className="tabular-nums">
+                    <Amount value={r.amount} />
+                  </span>
+                </div>
+              )
+            : undefined
+        }
+        mobileSwipeActions={swipe}
+        rowClassName={(r) => (r.status === "archived" ? "opacity-60" : undefined)}
+      />
+      <div className="mt-3 space-y-2">
+        <CallbackLog log={log} />
+        <Note>
+          On a phone the table becomes a card list and never both — the desktop header, the
+          column rail and selection are not rendered at all. Filters move into a{" "}
+          <em>Filters</em> bar that opens a bottom sheet; paging becomes endless scroll that
+          reveals <code className="font-mono">defaultPageSize</code> more cards (8 here) as
+          the “Loading…” sentinel nears the viewport. Swipe a card right for <em>Done</em>,
+          left for <em>Archive</em>; archived and expanded cards do not move. With the custom
+          card unchecked you get the default body: the <code className="font-mono">mobilePrimary</code>{" "}
+          column bold on top, the rest as labelled pairs, ID skipped by{" "}
+          <code className="font-mono">mobileHidden</code>.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── right-to-left ───────────────────────────────────────────────────────── */
+
+function RtlTable() {
+  return (
+    <Example label="Right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot; · locale=&quot;ar-EG&quot;</code>}>
+      <div dir="rtl">
+        <DataTable
+          rows={SMALL_ROWS}
+          columns={SMALL_COLUMNS}
+          rowKey={(r) => r.id}
+          defaultPageSize={10}
+          locale="ar-EG"
+          labels={{ table: "RTL table" }}
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          The text columns follow the direction, because each header is a flex row and a
+          flex row starts at the inline start. The right-aligned Amount column does not: its
+          cells use the physical <code className="font-mono">text-right</code> class and hug
+          the right edge of the column, while the header — flipped by the same{" "}
+          <code className="font-mono">text-right</code> sniff that is meant to keep the arrow
+          beside the numbers — lands on the left edge. The pager&apos;s previous / next
+          chevrons keep pointing left / right. The page numbers do follow{" "}
+          <code className="font-mono">locale</code>.
+        </Note>
       </div>
     </Example>
   );
@@ -519,6 +1148,33 @@ function PaginationSpecimen() {
             ["totalPages", String(totalPages)],
           ]}
         />
+        <div className="rounded-md border border-[var(--border)]">
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            total={total}
+            onPage={setPage}
+            onPageSize={(n) => {
+              setPageSize(n);
+              setPage(0);
+            }}
+            locale="ar-EG"
+            labels={PAGER_LABELS}
+          />
+        </div>
+        <Note>
+          The second pager is the same state with <code className="font-mono">locale=&quot;ar-EG&quot;</code>{" "}
+          (Arabic-Indic digits on the strip and in the select) and a complete{" "}
+          <code className="font-mono">labels</code> object whose{" "}
+          <code className="font-mono">pageRange</code>, <code className="font-mono">rowCount</code>{" "}
+          and <code className="font-mono">pageSizeAll</code> are overridden — the range summary
+          is a function precisely so a translation can format its own numbers. Without{" "}
+          <code className="font-mono">labels</code>, a standalone{" "}
+          <code className="font-mono">Pagination</code> uses the English defaults and ignores
+          the provider&apos;s <code className="font-mono">dataTable</code> labels, unlike{" "}
+          <code className="font-mono">FilterPopover</code>.
+        </Note>
         <Note>
           The page strip is windowed: up to seven pages are all shown, beyond that it is
           first, last and ±2 around the current page with an ellipsis across the gap. Jump
@@ -537,6 +1193,15 @@ function PaginationSpecimen() {
   );
 }
 
+const AR_NUM = new Intl.NumberFormat("ar-EG");
+
+const PAGER_LABELS = resolveDataTableLabels({
+  pageSizeAll: "Everything",
+  pageRange: (from, to, total) =>
+    `rows ${AR_NUM.format(from)} to ${AR_NUM.format(to)} of ${AR_NUM.format(total)}`,
+  rowCount: (total) => `all ${AR_NUM.format(total)} rows`,
+});
+
 /* ── FilterPopover, standalone ───────────────────────────────────────────── */
 
 /** The columns that actually have a filter, paired with the resolved config —
@@ -550,14 +1215,11 @@ const FILTERABLE: Array<{ col: DataTableColumn<TableRow>; filter: ColumnFilter<T
 
 function FilterPopoverSpecimen() {
   const [state, setState] = useState<FilterState>({});
-  // Mounted on demand, one at a time, because that is how the table mounts them —
-  // and because it has to be. `FilterPopover` hard-codes `autoFocus` on its text
-  // input (data-table-filter-popover.tsx:58), which is right for popover content
-  // and unavoidable anywhere else: React's `autoFocus` is not the HTML attribute,
-  // it is an imperative `.focus()` after mount. Rendered always-open in a long
-  // page, that one input pulled focus on load and scrolled this page 25,000px
-  // down to itself before the reader saw anything.
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  // Mounted on demand: the one instance that keeps the default `autoFocus`. React's
+  // `autoFocus` is an imperative `.focus()` after mount, and the browser scrolls the
+  // focused input into view — fine in a popover, wrong for a panel that is simply on
+  // the page. The four panels below pass `autoFocus={false}` for exactly that reason.
+  const [focusDemo, setFocusDemo] = useState(false);
   const labels = resolveDataTableLabels({ filterPlaceholder: "Type to narrow…" });
 
   const encoded: Array<[string, ReactNode]> = FILTERABLE.map(({ col, filter }) => {
@@ -565,10 +1227,37 @@ function FilterPopoverSpecimen() {
     return [`f.${col.key}`, encodeFilterValue(value) ?? "— (inactive, so nothing is written)"];
   });
 
+  const panel = (col: DataTableColumn<TableRow>, filter: ColumnFilter<TableRow>, autoFocus: boolean) => (
+    <FilterPopover
+      column={col}
+      state={state[col.key] ?? defaultFilterState(filter)}
+      onChange={(next) => setState((prev) => ({ ...prev, [col.key]: next }))}
+      onClear={() =>
+        setState((prev) => {
+          const rest = { ...prev };
+          delete rest[col.key];
+          return rest;
+        })
+      }
+      // NOT derived from the rows by this component: the table computes the option
+      // list (from `filter.options`, or from the distinct values it can see) and
+      // passes it down. On its own, FilterPopover shows an empty checklist for a
+      // select column that is handed none.
+      selectOptions={filter.type === "select" ? STATUS_OPTIONS : []}
+      locale="en-GB"
+      labels={labels}
+      // The component's own prop, demonstrated on purpose (see the note below).
+      // eslint-disable-next-line jsx-a11y/no-autofocus
+      autoFocus={autoFocus}
+    />
+  );
+
+  const nameEntry = FILTERABLE.find(({ col }) => col.key === "name");
+
   return (
     <Example
       label="FilterPopover"
-      hint="the contents of a column's filter popover — one per filter type, driving the encoded value underneath"
+      hint="the contents of a column's filter popover — one per filter type (text, date, select, number), driving the encoded value underneath"
     >
       <div className="grid gap-4 md:grid-cols-2">
         {FILTERABLE.map(({ col, filter }) => (
@@ -582,57 +1271,40 @@ function FilterPopoverSpecimen() {
             )}
           >
             <div className="mb-2 flex items-baseline justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setOpenKey((k) => (k === col.key ? null : col.key))}
-                aria-expanded={openKey === col.key}
-                className="text-xs font-medium text-[var(--brand)] hover:underline"
-              >
-                {col.header}
-              </button>
+              <span className="text-xs font-medium text-[var(--text-primary)]">{col.header}</span>
               <span className="font-mono text-[11px] text-[var(--text-muted)]">
                 {filter.type}
                 {col.filterBy && !col.filter && " (via filterBy)"}
               </span>
             </div>
-            {openKey !== col.key ? (
-              <p className="text-xs text-[var(--text-muted)]">
-                Closed — the state below is still live.
-              </p>
-            ) : (
-            <FilterPopover
-              column={col}
-              state={state[col.key] ?? defaultFilterState(filter)}
-              onChange={(next) => setState((prev) => ({ ...prev, [col.key]: next }))}
-              onClear={() =>
-                setState((prev) => {
-                  const rest = { ...prev };
-                  delete rest[col.key];
-                  return rest;
-                })
-              }
-              // NOT derived from the rows by this component: the table computes
-              // the option list (from `filter.options`, or from the distinct
-              // values it can see) and passes it down. On its own, FilterPopover
-              // shows an empty checklist for a select column that is handed none.
-              selectOptions={filter.type === "select" ? STATUS_OPTIONS : []}
-              locale="en-GB"
-              labels={labels}
-            />
-            )}
+            {panel(col, filter, false)}
           </div>
         ))}
       </div>
 
+      {nameEntry && (
+        <div className="mt-4 rounded-md border border-dashed border-[var(--border)] p-3">
+          <Button
+            variant="secondary"
+            className="px-2 py-1 text-xs"
+            aria-expanded={focusDemo}
+            onClick={() => setFocusDemo((v) => !v)}
+          >
+            {focusDemo ? "Unmount" : "Mount a Name filter with the default autoFocus"}
+          </Button>
+          {focusDemo && <div className="mt-3">{panel(nameEntry.col, nameEntry.filter, true)}</div>}
+        </div>
+      )}
+
       <div className="mt-3 space-y-2">
         <OutTable rows={encoded} />
         <Note>
-          Open one with its column name. They mount closed because{" "}
-          <code className="font-mono">FilterPopover</code> hard-codes{" "}
-          <code className="font-mono">autoFocus</code> on the text input — correct for
-          popover content, and a real constraint on embedding it anywhere else: a
-          consumer who renders it inline gets focus pulled to it on mount, with no prop
-          to opt out.
+          <code className="font-mono">autoFocus</code> defaults to true, which is right for
+          the popover the table opens on an explicit press of <em>Filter</em>. Embedded in a
+          page, pass <code className="font-mono">false</code> — as the four panels above do —
+          or the text input takes focus on mount and the browser scrolls to it. The mount
+          button shows the default: the input is focused the moment it appears, and it
+          shares its state with the Name panel above.
         </Note>
         <Note>
           <code className="font-mono">FilterPopover</code> and{" "}
@@ -687,6 +1359,15 @@ function LabelsSpecimen() {
           ["…and an untouched key", MERGED.filter],
           ['…presets: { today: "Heute" } → presets.today', MERGED.presets.today],
           ["…presets.last_week (merged, not replaced)", MERGED.presets.last_week],
+          ["missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS)", j(missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS))],
+          [
+            'missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).length',
+            String(missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).length),
+          ],
+          [
+            "…first three",
+            j(missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).slice(0, 3)),
+          ],
         ]}
       />
       <div className="mt-4 grid gap-6 md:grid-cols-2">
@@ -710,6 +1391,13 @@ function LabelsSpecimen() {
           merge only happens when there is something to merge, so the common case allocates
           nothing. Nested <code className="font-mono">presets</code> are merged key by key,
           so translating one preset does not blank the other ten.
+        </Note>
+        <Note>
+          <code className="font-mono">missingDataTableLabels</code> is the other half of that
+          lenient merge: it lists every key that would fall back to English (presets one by
+          one), so a translated app can assert <code className="font-mono">toEqual([])</code>{" "}
+          in its own test. A translated <code className="font-mono">columns</code> counts for{" "}
+          <code className="font-mono">columnsCount</code> too.
         </Note>
       </div>
     </Example>

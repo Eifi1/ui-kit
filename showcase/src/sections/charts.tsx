@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -162,6 +162,40 @@ const WIDE_DATA = Array.from({ length: 18 }, (_, i) => ({
   revenue: Math.round(14000 + 900 * Math.sin(i / 1.7) + 260 * i),
 }));
 
+// Actuals up to June, a projection from June on, and one month (March) whose capture
+// never happened. Absent keys, not zeros: the tooltip's job is to say "nothing here".
+const FORECAST_CONFIG: ChartConfig = {
+  actual: { label: "Actual", color: paletteFor(0) },
+  forecast: { label: "Forecast", color: paletteFor(1) },
+};
+
+const FORECAST_DATA: Array<{ period: string; actual?: number; forecast?: number }> = [
+  { period: "2025-01", actual: 18240 },
+  { period: "2025-02", actual: 19980 },
+  { period: "2025-03" },
+  { period: "2025-04", actual: 22130 },
+  { period: "2025-05", actual: 24780 },
+  { period: "2025-06", actual: 23410, forecast: 23410 },
+  { period: "2025-07", forecast: 24600 },
+  { period: "2025-08", forecast: 25300 },
+  { period: "2025-09", forecast: 26100 },
+];
+
+// Two keys the shell has to refuse: one that is not a CSS identifier (a space), and a
+// colour that is not a colour. Both are skipped with a console warning; the valid one
+// keeps its paint.
+const REFUSED_CONFIG: ChartConfig = {
+  valid: { label: "valid key", color: paletteFor(0) },
+  "bad key": { label: "key with a space", color: paletteFor(1) },
+  badColour: { label: "url() colour", color: "url(#pattern)" },
+};
+
+const REFUSED_DATA = [
+  { period: "2025-01", valid: 12, "bad key": 9, badColour: 7 },
+  { period: "2025-02", valid: 14, "bad key": 11, badColour: 8 },
+  { period: "2025-03", valid: 13, "bad key": 10, badColour: 9 },
+];
+
 /**
  * A legend written from scratch on top of `useChart`, which is the only way to show
  * what the hook is actually for: anything rendered inside a `ChartContainer` — custom
@@ -201,6 +235,14 @@ export function Charts() {
   const pieData = SPEND.map((s) => (sliceHidden.has(s.key) ? { ...s, amount: 0 } : s));
   const pieTotal = pieData.reduce((sum, s) => sum + s.amount, 0);
   const scroller = useRef<HTMLDivElement>(null);
+  // Isolate mode: the ONE series in focus, or null for none.
+  const [isolated, setIsolated] = useState<string | null>(null);
+  // Read back what the container actually wrote, rather than restating the rule.
+  const refusedRef = useRef<HTMLDivElement>(null);
+  const [refusedAttr, setRefusedAttr] = useState<string | null>(null);
+  useEffect(() => {
+    setRefusedAttr(refusedRef.current?.querySelector("[data-chart]")?.getAttribute("data-chart") ?? null);
+  }, []);
 
   return (
     <>
@@ -441,6 +483,200 @@ export function Charts() {
             the first hover of a session uses a 160px guess. It is right from the second
             hover on, which is why the effect is invisible in practice and worth knowing
             about if you ever see one tooltip land half a centimetre wrong.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="Tooltip — a series with no value here"
+        hint="hover March (a missed capture) or July (no actual yet); left: the default dash, right: formatValue"
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          {(["default", "formatValue"] as const).map((mode) => (
+            <div key={mode} className="min-w-0">
+              <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">
+                {mode === "default" ? "valueFormatter only" : "formatValue"}
+              </p>
+              <ChartContainer config={FORECAST_CONFIG} className="h-56">
+                <LineChart data={FORECAST_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="period"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={shortMonth}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    width={44}
+                    tickFormatter={(v: number) => COMPACT.format(v)}
+                  />
+                  <ChartTooltip
+                    // recharts DROPS an item with no value before the content sees it
+                    // (`filterNull`, on by default), so without this the absence never
+                    // reaches the tooltip and March shows no tooltip at all.
+                    filterNull={false}
+                    content={
+                      mode === "default" ? (
+                        <ChartTooltipContent
+                          indicator="line"
+                          labelFormatter={longMonth}
+                          valueFormatter={(v) => MONEY.format(v)}
+                        />
+                      ) : (
+                        <ChartTooltipContent
+                          indicator="line"
+                          labelFormatter={longMonth}
+                          // Handed `undefined` for the absence, and wins over
+                          // valueFormatter for every value — so it formats both.
+                          formatValue={(v) => (v == null ? <em>none</em> : MONEY.format(v))}
+                        />
+                      )
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="var(--color-actual)"
+                    strokeWidth={2}
+                    dot={{ r: 2.5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="var(--color-forecast)"
+                    strokeWidth={2}
+                    strokeDasharray="5 4"
+                    dot={{ r: 2.5 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3">
+          <Note>
+            A series with no value at a point prints <code className="font-mono">—</code>, never a
+            made-up <code className="font-mono">0</code>; <code className="font-mono">valueFormatter</code>{" "}
+            is not called for it. <code className="font-mono">formatValue</code> is handed the{" "}
+            <code className="font-mono">undefined</code> and decides the wording itself. Both need{" "}
+            <code className="font-mono">&lt;ChartTooltip filterNull=&#123;false&#125;&gt;</code>: by
+            default recharts drops the empty item before the content ever sees it. Side by side from{" "}
+            <code className="font-mono">md</code> up, stacked on a phone.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="Legend — isolate one series (activeKey)"
+        hint="click an entry to bring it forward and dim the rest; click it again to show all"
+      >
+        <ChartContainer config={CASHFLOW_CONFIG} className="h-60">
+          <LineChart data={CASHFLOW_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={shortMonth}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={44}
+              tickFormatter={(v: number) => COMPACT.format(v)}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  labelFormatter={longMonth}
+                  valueFormatter={(v) => MONEY.format(v)}
+                />
+              }
+            />
+            <ChartLegend
+              content={
+                <ChartLegendContent
+                  activeKey={isolated}
+                  onItemClick={(key) => setIsolated((k) => (k === key ? null : key))}
+                />
+              }
+            />
+            {CASHFLOW_KEYS.map((key) => (
+              <Line
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={`var(--color-${key})`}
+                // Dimming the marks is the chart's half of isolate mode, as `hide` is
+                // for toggle mode: the legend only dims its own entries.
+                strokeOpacity={isolated == null || isolated === key ? 1 : 0.2}
+                strokeWidth={isolated === key ? 3 : 2}
+                dot={false}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
+        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+          activeKey: {isolated ?? "null"}
+        </p>
+        <div className="mt-3">
+          <Note>
+            Isolate mode is kept for the charts built on it; a legend whose entries switch their own
+            series (<code className="font-mono">hiddenKeys</code>, above) is what readers expect.
+            Here <code className="font-mono">aria-pressed</code> marks the isolated entry. A legend
+            with neither <code className="font-mono">hiddenKeys</code> nor{" "}
+            <code className="font-mono">activeKey</code> leaves <code className="font-mono">aria-pressed</code>{" "}
+            off, and one with no <code className="font-mono">onItemClick</code> is a plain key of
+            spans rather than buttons (see the bar chart drilldown below).
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="ChartContainer — config the shell refuses"
+        hint="a key that is not a CSS identifier and a colour that is not a colour are skipped, with a console warning"
+      >
+        <div ref={refusedRef}>
+          <ChartContainer id="Q2 sales #2" config={REFUSED_CONFIG} className="h-48">
+            <BarChart data={REFUSED_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="period"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={shortMonth}
+              />
+              <YAxis tickLine={false} axisLine={false} width={32} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={longMonth} />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {Object.keys(REFUSED_CONFIG).map((key) => (
+                <Bar key={key} dataKey={key} fill={`var(--color-${key})`} radius={[3, 3, 0, 0]} />
+              ))}
+            </BarChart>
+          </ChartContainer>
+        </div>
+        <OutTable
+          rows={[
+            ['id="Q2 sales #2"', `data-chart="${refusedAttr ?? "…"}"`],
+            ['"bad key"', "skipped — no --color-bad key, bar unpainted"],
+            ['badColour: "url(#pattern)"', "skipped — no --color-badColour, bar unpainted"],
+          ]}
+        />
+        <div className="mt-3">
+          <Note>
+            The config is written into a <code className="font-mono">&lt;style&gt;</code> unescaped,
+            and a config can be built from user data, so each key must be a CSS identifier and each
+            colour hex, <code className="font-mono">rgb/hsl()</code> or a bare{" "}
+            <code className="font-mono">var(--token)</code>. A refused entry costs that one series its
+            colour and nothing else. The <code className="font-mono">id</code> (default:{" "}
+            <code className="font-mono">useId()</code>) is stripped to a CSS identifier for the same
+            reason. Build keys out of data with <code className="font-mono">seriesKey()</code>.
           </Note>
         </div>
       </Example>

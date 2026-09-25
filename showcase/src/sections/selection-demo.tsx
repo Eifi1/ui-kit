@@ -15,6 +15,7 @@ import {
   Wrench,
 } from "lucide-react";
 import {
+  Button,
   Chip,
   ChoiceCard,
   ChoiceCardGroup,
@@ -69,6 +70,18 @@ const SYMBOLS: IconOption<Glyph>[] = [
 ];
 
 type Role = "owner" | "manager" | "viewer";
+type Plan = "basic" | "plus" | "pro";
+type Perm = "read" | "write" | "admin";
+
+/** Colours that live in CLASSES rather than values — `swatchClassName` paints the dot,
+ *  and a light/dark pair is exactly what a class can hold and an inline colour cannot. */
+const CLASS_SWATCHES: SwatchOption<Colour>[] = [
+  { value: "c1", label: "Ink", swatchClassName: "bg-[var(--text-primary)]" },
+  { value: "c2", label: "Brand", swatchClassName: "bg-[var(--brand)]" },
+  { value: "c3", label: "Income", swatchClassName: "bg-[var(--money-income)]" },
+  { value: "c4", label: "Expense", swatchClassName: "bg-[var(--money-expense)]" },
+  { value: "c5", label: "Retired colour", swatchClassName: "bg-[var(--border-strong)]", disabled: true },
+];
 type Status = "open" | "waiting" | "closed";
 
 const shown = (v: unknown) =>
@@ -85,6 +98,20 @@ export function SelectionDemo() {
   const [status, setStatus] = useState<Status | null>("open");
   const [outflow, setOutflow] = useState(true);
   const [range, setRange] = useState("month");
+  const [period, setPeriod] = useState<"month" | "quarter" | "year">("month");
+  const [lockedStatus] = useState<Status>("waiting");
+  const [bulkSymbol, setBulkSymbol] = useState<Glyph | null>(null);
+  const [bulkSymbolMixed, setBulkSymbolMixed] = useState(true);
+  const [themed, setThemed] = useState<Colour | null>("c3");
+  const [deSymbol, setDeSymbol] = useState<Glyph | null>(null);
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [planTried, setPlanTried] = useState(false);
+  const [perms, setPerms] = useState<Perm[]>(["read"]);
+  const [autopay, setAutopay] = useState<"on" | "off">("on");
+  const [ack, setAck] = useState(false);
+  const [ackTried, setAckTried] = useState(false);
+  const [rtlColour, setRtlColour] = useState<Colour | null>("c1");
+  const [rtlRole, setRtlRole] = useState<Role | null>("owner");
 
   return (
     <>
@@ -144,6 +171,99 @@ export function SelectionDemo() {
               searchable
             />
             <p className="text-xs text-[var(--text-muted)]">value: {shown(symbol)}</p>
+          </div>
+        </Stage>
+      </Example>
+
+      <Example
+        label="SwatchPicker & IconPicker — mixed, disabled, class colours and labels"
+        hint="per-option disabled · whole-picker disabled · swatchClassName · labels"
+      >
+        <Stage>
+          <div className="space-y-2">
+            <SwatchPicker
+              aria-label="Theme colour (class-painted)"
+              options={CLASS_SWATCHES}
+              value={themed}
+              onChange={setThemed}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              value: {shown(themed)} · the last tile is disabled
+            </p>
+          </div>
+          <div className="space-y-2">
+            <SwatchPicker
+              aria-label="Category colour (locked)"
+              options={COLOURS}
+              value="c4"
+              onChange={() => {}}
+              disabled
+            />
+            <p className="text-xs text-[var(--text-muted)]">disabled — the choice stays visible</p>
+          </div>
+          <div className="space-y-2">
+            <IconPicker
+              aria-label="Symbol, for the selected rows"
+              options={SYMBOLS.slice(0, 6)}
+              value={bulkSymbol}
+              mixed={bulkSymbolMixed}
+              onChange={(next) => {
+                setBulkSymbol(next);
+                setBulkSymbolMixed(false);
+              }}
+              allowNone
+              activation="manual"
+              size="lg"
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              {bulkSymbolMixed ? "mixed — arrows move, Space/Enter chooses" : `value: ${shown(bulkSymbol)}`}
+            </p>
+          </div>
+          <div className="space-y-2">
+            {/* Every string the picker renders, from `labels` — type "xyz" to see
+                noResults, and the count is the live region's resultCount. */}
+            <IconPicker
+              aria-label="Kategoriesymbol"
+              options={SYMBOLS}
+              value={deSymbol}
+              onChange={setDeSymbol}
+              allowNone
+              searchable
+              size="sm"
+              labels={{
+                none: "Kein Symbol",
+                search: "Symbole suchen",
+                noResults: "Kein Symbol passt",
+                resultCount: (n) => (n === 1 ? "1 Symbol" : `${n} Symbole`),
+              }}
+            />
+            <p className="text-xs text-[var(--text-muted)]">value: {shown(deSymbol)}</p>
+          </div>
+          <div className="space-y-2">
+            <IconPicker
+              aria-label="Category symbol (locked)"
+              options={SYMBOLS.slice(0, 6)}
+              value="car"
+              onChange={() => {}}
+              disabled
+            />
+          </div>
+          <div className="space-y-2">
+            <SwatchPicker
+              aria-label="Farbe"
+              options={COLOURS}
+              value={null}
+              mixed
+              onChange={() => {}}
+              allowNone
+              labels={{
+                none: "Keine Farbe",
+                mixed: "Gemischt: die gewählten Zeilen haben verschiedene Farben",
+              }}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              labels.none names the ∅ tile; labels.mixed describes the group
+            </p>
           </div>
         </Stage>
       </Example>
@@ -241,7 +361,111 @@ export function SelectionDemo() {
         </Stage>
       </Example>
 
-      <Example label="ToggleGroup — allowEmpty" hint="click the active option to clear it">
+      <Example
+        label="ChoiceCard — states"
+        hint="radio · indeterminate · invalid · error · disabled · required, on a single card and on a group"
+      >
+        <Stage>
+          <div data-stage="wide" className="mx-auto max-w-2xl space-y-5">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {/* A standalone radio pair: `type="radio"` and a shared `name`, so the
+                  browser's own arrow keys move between them. */}
+              <ChoiceCard
+                type="radio"
+                name="autopay"
+                value="on"
+                title="Pay automatically"
+                description="On the due date, from the default account."
+                icon={Building2}
+                checked={autopay === "on"}
+                onCheckedChange={(on) => on && setAutopay("on")}
+              />
+              <ChoiceCard
+                type="radio"
+                name="autopay"
+                value="off"
+                title="Pay by hand"
+                description="You get a reminder three days before."
+                checked={autopay === "off"}
+                onCheckedChange={(on) => on && setAutopay("off")}
+              />
+              <ChoiceCard
+                title="All permissions"
+                description="Some but not all are granted."
+                indeterminate
+                readOnly
+              />
+              <ChoiceCard title="Disabled, checked" description="Set by the plan." disabled checked readOnly />
+              <ChoiceCard title="Invalid, no message" invalid />
+              <ChoiceCard
+                title="I have read the lease"
+                description="Both pages, including the house rules."
+                required
+                checked={ack}
+                onCheckedChange={setAck}
+                error={ackTried && !ack ? "Confirm you have read the lease." : undefined}
+              />
+            </div>
+            {/* A group's `error` names the answer as a whole and is attached to the
+                fieldset; `required` marks the first radio, which is how a radio set is.
+                No `legend` here, so the group is named by `aria-label`. */}
+            <ChoiceCardGroup<Plan>
+              aria-label="Plan"
+              name="plan"
+              required
+              options={[
+                { value: "basic", title: "Basic", description: "One property." },
+                { value: "plus", title: "Plus", description: "Up to ten." },
+                { value: "pro", title: "Pro", description: "Unlimited.", disabled: true },
+              ]}
+              value={plan}
+              onChange={setPlan}
+              error={planTried && plan === null ? "Choose a plan to continue." : undefined}
+              className="sm:grid-cols-3"
+              cardClassName="p-2"
+            />
+            <ChoiceCardGroup<Perm>
+              multiple
+              legend="Permissions (whole group disabled)"
+              disabled
+              options={[
+                { value: "read", title: "Read" },
+                { value: "write", title: "Write" },
+                { value: "admin", title: "Admin" },
+              ]}
+              value={perms}
+              onChange={setPerms}
+              className="sm:grid-cols-3"
+            />
+            <div className="flex justify-center">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPlanTried(true);
+                  setAckTried(true);
+                }}
+              >
+                Continue
+              </Button>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              autopay: {shown(autopay)} · plan: {shown(plan)} · lease read: {shown(ack)}
+            </p>
+          </div>
+        </Stage>
+        <Note>
+          Press <strong>Continue</strong> with nothing chosen to raise both errors.{" "}
+          <code className="font-mono">cardClassName</code> reaches every card of a group (tighter
+          padding on the plan cards), <code className="font-mono">className</code> the grid; a
+          per-option <code className="font-mono">disabled</code> greys one card (Pro), the
+          group&apos;s own <code className="font-mono">disabled</code> is the fieldset&apos;s.
+        </Note>
+      </Example>
+
+      <Example
+        label="ToggleGroup — allowEmpty, required and disabled"
+        hint="click the active option to clear it · optionClassName · per-option className"
+      >
         <Stage>
           <div className="space-y-2">
             <ToggleGroup
@@ -257,6 +481,35 @@ export function SelectionDemo() {
             />
             <p className="text-xs text-[var(--text-muted)]">value: {shown(status)}</p>
           </div>
+          <div className="space-y-2">
+            {/* Without allowEmpty: radios, one option is always the answer. */}
+            <ToggleGroup
+              aria-label="Period"
+              value={period}
+              onChange={setPeriod}
+              optionClassName="px-4"
+              options={[
+                { value: "month", label: "Month" },
+                { value: "quarter", label: "Quarter" },
+                { value: "year", label: "Year", className: "font-semibold" },
+              ]}
+            />
+            <p className="text-xs text-[var(--text-muted)]">value: {shown(period)} (required mode)</p>
+          </div>
+          <div className="space-y-2">
+            <ToggleGroup
+              aria-label="Status (locked)"
+              disabled
+              value={lockedStatus}
+              onChange={() => {}}
+              options={[
+                { value: "open", label: "Open" },
+                { value: "waiting", label: "Waiting" },
+                { value: "closed", label: "Closed" },
+              ]}
+            />
+            <p className="text-xs text-[var(--text-muted)]">disabled — the chosen one keeps its fill</p>
+          </div>
         </Stage>
         <Note>
           With <code className="font-mono">allowEmpty</code> the options are toggle buttons
@@ -268,6 +521,36 @@ export function SelectionDemo() {
           in both modes, so a <code className="font-mono">useState&lt;Status | null&gt;</code>{" "}
           setter goes straight in — no <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>.
         </Note>
+      </Example>
+
+      <Example label="Pickers and cards, right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
+        <Stage>
+          <div data-stage="wide" dir="rtl" className="mx-auto max-w-2xl space-y-4">
+            {/* Arrow keys follow the picture: → moves right, which in an RTL row is back
+                towards its start (the previous tile in DOM order). */}
+            <SwatchPicker
+              aria-label="لون الفئة"
+              options={COLOURS}
+              value={rtlColour}
+              onChange={setRtlColour}
+              allowNone
+              labels={{ none: "بلا لون" }}
+            />
+            <ChoiceCardGroup<Role>
+              legend="دعوة بصفة"
+              options={[
+                { value: "owner", title: "مالك", description: "كل شيء، بما في ذلك الفواتير.", icon: KeyRound },
+                { value: "manager", title: "مدير", description: "العقارات والعقود والمستأجرون.", icon: Building2 },
+              ]}
+              value={rtlRole}
+              onChange={setRtlRole}
+            />
+          </div>
+        </Stage>
+        <p className="text-xs text-[var(--text-muted)]">
+          colour: {shown(rtlColour)} · role: {shown(rtlRole)} — focus a swatch and press ← : it moves
+          left, to the next tile, as the arrow points.
+        </p>
       </Example>
 
       <Example

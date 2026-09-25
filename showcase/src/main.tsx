@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router";
-import { TourProvider, applyPersistedTheme, applyPersistedPalette } from "@eifi1/ui-kit";
+import { applyPersistedTheme, applyPersistedPalette } from "@eifi1/ui-kit";
 import { Showcase } from "./showcase";
 import { LOCALE_STORAGE_KEY, LocaleProvider, dictionaryFor } from "./i18n";
 import { THEME_KEY, PALETTE_KEY } from "./stores";
@@ -48,9 +48,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       {/* Above everything, including AppShell: the provider owns `<html dir>`, and the
           whole frame — sidebar side, menu alignment, pager arrows — is laid out from it. */}
       <LocaleProvider>
-        <TourProvider>
-          <Showcase />
-        </TourProvider>
+        <Showcase />
       </LocaleProvider>
     </HashRouter>
   </React.StrictMode>,

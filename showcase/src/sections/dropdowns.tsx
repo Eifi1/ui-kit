@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Banknote, Home, PiggyBank, ShoppingCart, Train, Zap } from "lucide-react";
 import {
   Button,
+  Checkbox,
   Combobox,
   DropdownPanel,
   DropdownSearchHeader,
@@ -123,6 +124,26 @@ function loadCustomers(query: string): Promise<ComboOption<string>[]> {
   });
 }
 
+/** The same customer search, down whenever `outage` is set — the rejection is what
+ *  `loadErrorLabel` is for. Slower than {@link loadCustomers} so the busy row stays up
+ *  long enough to read. */
+function searchCustomers(query: string, outage: boolean): Promise<ComboOption<string>[]> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (outage) reject(new Error("503"));
+      else void loadCustomers(query).then(resolve);
+    }, 350);
+  });
+}
+
+/** A list a server has already searched and ranked: "best match first", and rows
+ *  whose label does not contain the query at all. `filter={false}` shows it as given. */
+const RANKED: ComboOption<string>[] = [
+  { value: "r-1", label: "Bahnhofstrasse 1, Zürich", sublabel: "exact match" },
+  { value: "r-2", label: "Bahnhofplatz, Bern", sublabel: "similar street" },
+  { value: "r-3", label: "Hauptbahnhof, Basel", sublabel: "same landmark" },
+];
+
 const TAGS: ComboOption<string>[] = [
   { value: "t-business", label: "Business" },
   { value: "t-reimburse", label: "Reimbursable" },
@@ -218,6 +239,28 @@ export function Dropdowns() {
   const [tags, setTags] = useState<string[]>(["t-business"]);
   const [markets, setMarkets] = useState<(string | number)[]>([]);
   const [picked, setPicked] = useState<{ group: string; item: string } | null>(null);
+
+  // Click-to-edit cells: which cell is an editor right now, and what it last said.
+  const [editing, setEditing] = useState<"payee" | "account" | null>(null);
+  const [cellPayee, setCellPayee] = useState("Rewe");
+  const [cellAccount, setCellAccount] = useState<string | null>("chk");
+  const [editLog, setEditLog] = useState("—");
+
+  // Field states.
+  const [stateAccount, setStateAccount] = useState<string | null>(null);
+  const [stateCategory, setStateCategory] = useState<string | null>(null);
+  const [stateTags, setStateTags] = useState<string[]>([]);
+  const [stateMarkets, setStateMarkets] = useState<(string | number)[]>([]);
+
+  // Async knobs.
+  const [outage, setOutage] = useState(false);
+  const [slowCustomer, setSlowCustomer] = useState<string | null>(null);
+  const [rankedPick, setRankedPick] = useState<string | null>(null);
+  const [callerLoading, setCallerLoading] = useState(false);
+  const [rankedRows, setRankedRows] = useState(RANKED);
+  const [people, setPeople] = useState<string[]>([]);
+  const [newPeople, setNewPeople] = useState<ComboOption<string>[]>([]);
+  const [plainMarkets, setPlainMarkets] = useState<(string | number)[]>([]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetQuery, setSheetQuery] = useState("");
@@ -348,6 +391,66 @@ export function Dropdowns() {
       </Example>
 
       <Example
+        label="Click-to-edit cells"
+        hint="autoFocus lands the caret in the field that was clicked; onBlur and onSubmit close the editor"
+      >
+        <Stage>
+          <div data-stage="wide" className="mx-auto grid max-w-xl gap-3 sm:grid-cols-2">
+            {editing === "payee" ? (
+              <Combobox
+                aria-label="Payee"
+                value={cellPayee}
+                onChange={setCellPayee}
+                options={PAYEES}
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- mounted by the click that asked for it
+                autoFocus
+                // Focus genuinely left — a click on a row does NOT fire this, which is
+                // what makes it usable as "close the editor".
+                onBlur={() => {
+                  setEditLog("onBlur → editor closed");
+                  setEditing(null);
+                }}
+                // Enter with no row highlighted: "I mean what I typed".
+                onSubmit={() => {
+                  setEditLog("onSubmit → editor closed");
+                  setEditing(null);
+                }}
+              />
+            ) : (
+              <Button variant="secondary" onClick={() => setEditing("payee")}>
+                Payee: {cellPayee || "—"}
+              </Button>
+            )}
+            {editing === "account" ? (
+              <InlineEntityCombobox
+                aria-label="Account"
+                value={cellAccount}
+                onChange={(v) => {
+                  setCellAccount(v);
+                  setEditLog(`onChange(${v === null ? "null" : `"${v}"`}) → editor closed`);
+                  setEditing(null);
+                }}
+                options={ACCOUNTS}
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- mounted by the click that asked for it
+                autoFocus
+              />
+            ) : (
+              <Button variant="secondary" onClick={() => setEditing("account")}>
+                Account: {ACCOUNTS.find((a) => a.value === cellAccount)?.label ?? "—"}
+              </Button>
+            )}
+          </div>
+        </Stage>
+        <Current label="last" value={editLog} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Click a cell: it becomes the field, focused, with its list open. In the payee cell, type
+          and press Enter (<code className="font-mono">onSubmit</code>) or click elsewhere (
+          <code className="font-mono">onBlur</code>); picking a row keeps the editor, because the
+          rows never take focus from the input.
+        </p>
+      </Example>
+
+      <Example
         label="EntityCombobox — static options"
         hint="a trigger button, not an input; filtered in the browser"
       >
@@ -416,6 +519,147 @@ export function Dropdowns() {
       </Example>
 
       <Example
+        label="EntityCombobox — minChars, debounceMs, a failed lookup"
+        hint="nothing is asked below 2 characters; 600ms of quiet before each request"
+      >
+        <Stage>
+          <EntityCombobox
+            label="Customer (slow service)"
+            value={slowCustomer}
+            onChange={setSlowCustomer}
+            loadOptions={(q) => searchCustomers(q, outage)}
+            minChars={2}
+            debounceMs={600}
+            placeholder="Search customers"
+            searchPlaceholder="At least 2 letters"
+            loadErrorLabel="The customer service is not answering — try again later"
+            emptyLabel="Nobody matches"
+          />
+        </Stage>
+        <Checkbox
+          label="Simulate an outage (loadOptions rejects)"
+          checked={outage}
+          onChange={(e) => setOutage(e.target.checked)}
+        />
+        <Current label="value" value={slowCustomer === null ? "null" : `"${slowCustomer}"`} />
+      </Example>
+
+      <Example
+        label="EntityCombobox — filter={false} and an external loading flag"
+        hint="a list the caller already searched and ranked, and a caller-side fetch in flight"
+      >
+        <Stage>
+          <EntityCombobox
+            label="Address"
+            value={rankedPick}
+            onChange={setRankedPick}
+            options={rankedRows}
+            // Shown exactly as given: typing "bahnhof" keeps "Hauptbahnhof, Basel" and
+            // typing "zurich" keeps all three — the ranking is the server's.
+            filter={false}
+            loading={callerLoading}
+            placeholder="Pick a match"
+          />
+        </Stage>
+        <Button
+          variant="secondary"
+          disabled={callerLoading}
+          onClick={() => {
+            // The caller's own fetch: rows gone, `loading` up, for two seconds.
+            setRankedRows([]);
+            setCallerLoading(true);
+            window.setTimeout(() => {
+              setRankedRows(RANKED);
+              setCallerLoading(false);
+            }, 2000);
+          }}
+        >
+          {callerLoading ? "Fetching…" : "Refetch the list (2 s)"}
+        </Button>
+        <Current label="value" value={rankedPick === null ? "null" : `"${rankedPick}"`} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Open it and type anything: with <code className="font-mono">filter={"{false}"}</code> the
+          three rows stay, in their order. Press Refetch and open it: while the caller&apos;s{" "}
+          <code className="font-mono">loading</code> is up and there are no rows, the panel says it
+          is loading instead of &quot;no results&quot; — the flag is OR-ed with the component&apos;s
+          own async state.
+        </p>
+      </Example>
+
+      <Example
+        label="Field states — invalid, error, disabled"
+        hint="the same contract on every picker: invalid paints, error also explains, disabled settles"
+      >
+        <Stage>
+          <InlineEntityCombobox
+            label="Account"
+            value={stateAccount}
+            onChange={setStateAccount}
+            options={ACCOUNTS}
+            placeholder="Required"
+            error={stateAccount === null ? "Choose the account to book from" : undefined}
+          />
+          <EntityCombobox
+            label="Category"
+            value={stateCategory}
+            onChange={setStateCategory}
+            options={CATEGORIES}
+            placeholder="Required"
+            // `invalid` alone: the ring and aria-invalid, no message.
+            invalid={stateCategory === null}
+          />
+          <MultiEntityCombobox
+            label="Tags"
+            value={stateTags}
+            onChange={setStateTags}
+            options={TAGS}
+            placeholder="At least one"
+            error={stateTags.length === 0 ? "Tag it at least once" : undefined}
+          />
+          <MultiSelect
+            label="Markets"
+            options={MARKETS}
+            values={stateMarkets}
+            onChange={setStateMarkets}
+            placeholder="None chosen"
+            invalid={stateMarkets.length === 0}
+          />
+          <InlineEntityCombobox
+            label="Account (disabled)"
+            value="sav"
+            onChange={() => {}}
+            options={ACCOUNTS}
+            disabled
+          />
+          <EntityCombobox
+            label="Category (disabled)"
+            value="rent"
+            onChange={() => {}}
+            options={CATEGORIES}
+            clearable
+            disabled
+          />
+          <MultiEntityCombobox
+            label="Tags (disabled)"
+            value={["t-business", "t-gift"]}
+            onChange={() => {}}
+            options={TAGS}
+            clearable
+            disabled
+          />
+        </Stage>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Answer each field and its mark goes away. <code className="font-mono">error</code> is
+          rendered under the field and tied to it with{" "}
+          <code className="font-mono">aria-describedby</code>;{" "}
+          <code className="font-mono">invalid</code> carries no text. A disabled picker drops its
+          clear button — a settled field offers no action. <code className="font-mono">MultiSelect</code>{" "}
+          has <code className="font-mono">invalid</code> but no <code className="font-mono">error</code>{" "}
+          or <code className="font-mono">disabled</code> of its own.
+        </p>
+      </Example>
+
+      <Example
         label="MultiEntityCombobox"
         hint="rows toggle and the panel stays open — picking several is the point"
       >
@@ -435,8 +679,43 @@ export function Dropdowns() {
             emptyLabel="No tag matches"
             closeLabel="Close"
           />
+          <MultiEntityCombobox
+            label="Recipients"
+            value={people}
+            onChange={setPeople}
+            // Created rows live in the caller's state; passing them as `options` is
+            // what lets the trigger name them once the search has moved on.
+            options={newPeople}
+            loadOptions={(q) =>
+              loadCustomers(q).then((hits) => [
+                ...hits,
+                ...newPeople.filter((p) => p.label.toLowerCase().includes(q.trim().toLowerCase())),
+              ])
+            }
+            placeholder="Nobody yet"
+            createLabel={(q) => `Invite “${q}”`}
+            onCreate={(q) => {
+              const value = `new-${q.toLowerCase().replace(/\s+/g, "-")}`;
+              setNewPeople((prev) =>
+                prev.some((p) => p.value === value)
+                  ? prev
+                  : [...prev, { value, label: q, sublabel: "invited" }],
+              );
+              setPeople((prev) => (prev.includes(value) ? prev : [...prev, value]));
+            }}
+          />
         </Stage>
-        <Current label="value" value={tags.length ? JSON.stringify(tags) : "[]"} />
+        <Current label="tags" value={tags.length ? JSON.stringify(tags) : "[]"} />
+        <Current label="recipients" value={people.length ? JSON.stringify(people) : "[]"} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The second field has no <code className="font-mono">itemLabel</code>, so its trigger
+          lists the picked names, joined the locale&apos;s way (<code className="font-mono">
+            Intl.ListFormat
+          </code>
+          ). Its rows come from <code className="font-mono">loadOptions</code>; type a name that is
+          not there and <code className="font-mono">onCreate</code> adds it — the panel stays open,
+          and selecting the new row is the caller&apos;s job, done here in the same handler.
+        </p>
       </Example>
 
       <Example label="MultiSelect" hint="value-less means ALL — every visible string is a prop">
@@ -461,8 +740,29 @@ export function Dropdowns() {
               panelClassName="w-72"
             />
           </div>
+          <div className="w-64">
+            {/* Only `placeholder`: it stands in for `allLabel`, and every other string
+                (search, select all, clear, the count) comes from the provider. */}
+            <MultiSelect
+              aria-label="Markets"
+              options={MARKETS}
+              values={plainMarkets}
+              onChange={setPlainMarkets}
+              placeholder="Any market"
+            />
+          </div>
         </Stage>
         <Current label="values" value={markets.length ? JSON.stringify(markets) : "[] (= all)"} />
+        <Current
+          label="second"
+          value={plainMarkets.length ? JSON.stringify(plainMarkets) : "[] (= all)"}
+        />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          The second one passes no strings but <code className="font-mono">placeholder</code>: its
+          search box, its two actions and its count come from{" "}
+          <code className="font-mono">multiSelect.*</code> in the provider — switch the showcase
+          language to see them follow. Ticking every market reads as &quot;all&quot; again.
+        </p>
       </Example>
 
       <Example label="GroupedPicker" hint="one panel of columns instead of one long scroll">
@@ -472,7 +772,8 @@ export function Dropdowns() {
             buttonLabel={pickedLabel}
             selected={picked}
             onSelect={(group, item) => setPicked({ group, item })}
-            ariaLabel="Category"
+            // `aria-label`, the DOM spelling; the older `ariaLabel` prop is deprecated.
+            aria-label="Category"
             filterPlaceholder="Filter categories"
           />
         </Stage>
@@ -556,6 +857,9 @@ export function Dropdowns() {
           <Row>
             <div ref={sort.wrapperRef} className="relative w-56">
               <button
+                // `triggerRef` is what Escape hands focus back to. Leave it off and
+                // Escape still closes the list, but the caret drops to <body>.
+                ref={sort.triggerRef}
                 type="button"
                 aria-haspopup="listbox"
                 aria-expanded={sort.open}
@@ -570,7 +874,12 @@ export function Dropdowns() {
                 // child of the wrapper and the caller sizes it. Cheapest form, and the
                 // one an ancestor with `overflow` will CLIP — which is why every picker
                 // above passes an anchor instead.
-                <DropdownPanel className="w-56" empty={false}>
+                <DropdownPanel
+                  className="w-56"
+                  empty={false}
+                  // Attributes for the panel's own <ul>, merged with its classes.
+                  listProps={{ "aria-label": "Sort order" }}
+                >
                   {SORTS.map((s) => (
                     // The panel renders its children inside its own <ul>, so a child
                     // that is not an <li> is invalid markup, not a styling choice.
@@ -596,6 +905,12 @@ export function Dropdowns() {
           </Row>
         </Stage>
         <Current label="sort" value={`"${sortKey}"`} />
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Open it and press Escape: the list closes and focus is back on the button, because the
+          button carries <code className="font-mono">triggerRef</code>. Browser Back closes the
+          list too, without leaving the page (<code className="font-mono">backCloses</code>,
+          default on).
+        </p>
       </Example>
 
       <Example

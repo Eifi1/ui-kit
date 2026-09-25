@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Treemap } from "@eifi1/ui-kit";
+import { Treemap, fitLabel } from "@eifi1/ui-kit";
 import type { TreemapNode } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
  * Treemap — the tile chart.
@@ -84,7 +84,20 @@ const COUNTS: TreemapNode[] = [
   { id: "c4", name: "Health", value: 5 },
 ];
 
+// Nodes the map has to leave off: a zero, a negative (a refund larger than the spend)
+// and a NaN from a failed parse. Only the positive ones are drawn.
+const MIXED: TreemapNode[] = [
+  { id: "m1", name: "Rent", value: 1050 },
+  { id: "m2", name: "Groceries", value: 412 },
+  { id: "m3", name: "Refunds", value: -40 },
+  { id: "m4", name: "Transport", value: 188 },
+  { id: "m5", name: "Gifts", value: 0 },
+  { id: "m6", name: "Unparsed", value: Number.NaN },
+];
+const DROPPED = MIXED.filter((n) => !(Number.isFinite(n.value) && n.value > 0));
+
 export function TreemapDemo() {
+  const [allZero, setAllZero] = useState(false);
   const [group, setGroup] = useState<string | null>(null);
   const [clicked, setClicked] = useState<string | null>(null);
   const drilled = group ? CHILDREN[group] : undefined;
@@ -186,7 +199,7 @@ export function TreemapDemo() {
 
       <Example
         label="Treemap — a series that is not money"
-        hint="counts, capped: maxTiles draws the first N drawable nodes in the order given"
+        hint="counts, capped: maxTiles draws the first N drawable nodes in the order given; the cap matters most on a phone, where small tiles lose their labels first"
       >
         <Treemap
           data={COUNTS}
@@ -198,6 +211,46 @@ export function TreemapDemo() {
           {COUNTS.length - 3} more not shown — the caller&apos;s line, since only it knows how many it
           passed.
         </p>
+      </Example>
+
+      <Example
+        label="Treemap — default format, dropped nodes, nothing drawable"
+        hint="no valueFormatter: the bare number in the runtime locale; zero, negative and NaN nodes are left off"
+      >
+        <Row className="mb-2 text-xs">
+          <button
+            type="button"
+            aria-pressed={allZero}
+            onClick={() => setAllZero((z) => !z)}
+            className="rounded border border-[var(--border)] px-2 py-1 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          >
+            {allZero ? "Restore the values" : "Set every value to 0"}
+          </button>
+        </Row>
+        <Treemap data={allZero ? MIXED.map((n) => ({ ...n, value: 0 })) : MIXED} height={220} />
+        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+          {allZero
+            ? "Treemap rendered nothing: this sentence is the caller's."
+            : `not drawn: ${DROPPED.map((n) => `${n.name} (${n.value})`).join(", ")}`}
+        </p>
+        <div className="mt-3">
+          <OutTable
+            rows={[
+              ['fitLabel("Groceries", 120, 12)', String(fitLabel("Groceries", 120, 12))],
+              ['fitLabel("Leisure & entertainment", 90, 12)', String(fitLabel("Leisure & entertainment", 90, 12))],
+              ['fitLabel("Gifts", 30, 12)', `${String(fitLabel("Gifts", 30, 12))}  // no room: no label`],
+            ]}
+          />
+        </div>
+        <div className="mt-3">
+          <Note>
+            <code className="font-mono">fitLabel</code> and <code className="font-mono">TreemapCell</code>{" "}
+            are exported so a caller drawing its own recharts <code className="font-mono">&lt;Treemap&gt;</code>{" "}
+            gets the same label rules. The colours are still by index into{" "}
+            <code className="font-mono">data</code> as given, dropped nodes included — so Transport keeps
+            the colour it would have with Refunds present.
+          </Note>
+        </div>
       </Example>
     </>
   );

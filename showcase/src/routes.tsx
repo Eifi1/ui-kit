@@ -334,7 +334,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The largest component in the kit: sorting, filtering, selection, pagination, URL sync and its pure helpers.",
         icon: Table,
-        components: ["DataTable", "useTableState", "DataTableFilterPopover"],
+        components: ["DataTable", "Pagination", "FilterPopover"],
         Body: DataTableSection,
       },
       {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { create } from "zustand";
 import {
   Button,
   OVERLAY_EXIT_MS,
@@ -8,17 +9,21 @@ import {
   anchoredPanelPlacement,
   buttonClasses,
   cn,
+  logger,
+  setStoreLog,
   useAnchoredPanel,
   useAnchoredRect,
   useBodyScrollLock,
   useCloseTransition,
+  useAnnounce,
   useEscapeKey,
+  useFocusTrap,
   useMediaQuery,
   useOutsideClick,
   useOverlayHistory,
   useVisualViewport,
 } from "@eifi1/ui-kit";
-import type { AnchorRect, ViewportBox } from "@eifi1/ui-kit";
+import type { AnchorRect, FocusTrapOptions, ViewportBox } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -488,6 +493,195 @@ function CloseTransitionSpecimen() {
   );
 }
 
+/* ── useFocusTrap ───────────────────────────────────────────────────────────── */
+
+function FocusTrapSpecimen() {
+  const [open, setOpen] = useState(false);
+  const [nested, setNested] = useState(false);
+  const [restoreFocus, setRestoreFocus] = useState(true);
+  const [initialFocus, setInitialFocus] = useState<"container" | "first" | "save">("container");
+  const panel = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const save = useRef<HTMLButtonElement>(null);
+  const options: FocusTrapOptions = {
+    active: open,
+    restoreFocus,
+    // The thunk form: any element, found when the trap engages.
+    initialFocus: initialFocus === "save" ? () => save.current : initialFocus,
+  };
+  useFocusTrap(panel, options);
+  useFocusTrap(inner, { active: nested, initialFocus: "first" });
+  useEscapeKey(() => (nested ? setNested(false) : setOpen(false)), open);
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)} disabled={open}>
+          Open a trapped panel
+        </Button>
+        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={restoreFocus}
+            onChange={(e) => setRestoreFocus(e.target.checked)}
+          />
+          restoreFocus
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+          initialFocus
+          <select
+            value={initialFocus}
+            onChange={(e) => setInitialFocus(e.target.value as typeof initialFocus)}
+            className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
+          >
+            <option value="container">&quot;container&quot;</option>
+            <option value="first">&quot;first&quot;</option>
+            <option value="save">{"() => saveButton"}</option>
+          </select>
+        </label>
+      </Row>
+      {open && (
+        // tabIndex -1: the default `initialFocus` focuses the container itself.
+        <div ref={panel} tabIndex={-1} className={cn(PANEL, "max-w-md space-y-2 outline-none")}>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Tab and Shift+Tab cycle inside this box; Escape closes it.
+          </p>
+          <input
+            aria-label="Name"
+            placeholder="A field"
+            className="w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-sm"
+          />
+          <Row>
+            {/* A native button: the kit's Button takes no ref, and the thunk needs one. */}
+            <button
+              ref={save}
+              type="button"
+              className={buttonClasses("brand")}
+              onClick={() => setOpen(false)}
+            >
+              Save
+            </button>
+            <Button variant="secondary" onClick={() => setNested(true)} disabled={nested}>
+              Open a nested trap
+            </Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </Row>
+          {nested && (
+            <div ref={inner} className={cn(PANEL, "space-y-2 bg-[var(--bg-surface)]")}>
+              <p className="text-xs text-[var(--text-secondary)]">
+                The innermost trap owns Tab now; closing it hands control back.
+              </p>
+              <Row>
+                <Button variant="secondary">One</Button>
+                <Button variant="secondary">Two</Button>
+                <Button variant="ghost" onClick={() => setNested(false)}>
+                  Close nested
+                </Button>
+              </Row>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── useAnnounce ────────────────────────────────────────────────────────────── */
+
+function AnnounceSpecimen() {
+  const polite = useAnnounce();
+  const assertive = useAnnounce({ politeness: "assertive" });
+  const [page, setPage] = useState(1);
+  const [said, setSaid] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            const next = page + 1;
+            setPage(next);
+            const text = `Page ${next} of 14`;
+            polite.announce(text);
+            setSaid(`polite: "${text}"`);
+          }}
+        >
+          Next page (polite)
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            assertive.announce("Upload failed");
+            setSaid('assertive: "Upload failed"');
+          }}
+        >
+          Fail (assertive)
+        </Button>
+      </Row>
+      {/* The two live regions: visually hidden, read by a screen reader. */}
+      <span {...polite.regionProps} />
+      <span {...assertive.regionProps} />
+      <OutTable
+        rows={[
+          ["last announce()", said ?? "(none yet)"],
+          ["useAnnounce().regionProps.role", polite.regionProps.role],
+          [
+            'useAnnounce({ politeness: "assertive" }).regionProps.role',
+            assertive.regionProps.role,
+          ],
+          ["regionProps.className", polite.regionProps.className],
+        ]}
+      />
+    </div>
+  );
+}
+
+/* ── logger ─────────────────────────────────────────────────────────────────── */
+
+/** A real store behind the kit's middleware, created once at module scope like any
+ *  zustand store. Creating it logs nothing; only a `set` does. */
+const useDemoCounter = create<{ count: number; bump: () => void }>()(
+  logger((set) => ({ count: 0, bump: () => set((s) => ({ count: s.count + 1 })) }), "showcase-demo"),
+);
+
+function LoggerSpecimen() {
+  const count = useDemoCounter((s) => s.count);
+  const bump = useDemoCounter((s) => s.bump);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  return (
+    <Row>
+      <Button variant="secondary" onClick={bump}>
+        bump() — count {count}
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setStoreLog(true);
+          setEnabled(true);
+        }}
+      >
+        setStoreLog(true)
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setStoreLog(false);
+          setEnabled(false);
+        }}
+      >
+        setStoreLog(false)
+      </Button>
+      <span className="font-mono text-xs text-[var(--text-muted)]">
+        {enabled === null ? "default for this build" : `logging ${enabled ? "on" : "off"}`} — open
+        the console and bump
+      </span>
+    </Row>
+  );
+}
+
 /* ── useBodyScrollLock ──────────────────────────────────────────────────────── */
 
 function ScrollLockSpecimen() {
@@ -727,6 +921,31 @@ export function HooksLib() {
       </Example>
 
       <Example
+        label="useFocusTrap(ref, { active, restoreFocus, initialFocus })"
+        hint="Open the panel and press Tab repeatedly — focus never leaves it."
+      >
+        <FocusTrapSpecimen />
+        <Note>
+          The tabbable list is recomputed on every Tab, so fields that appear later are included.
+          With <code className="font-mono">restoreFocus</code> on, closing puts focus back on the
+          button that opened the panel. <code className="font-mono">&quot;container&quot;</code>{" "}
+          is the default because focusing a field first pops the phone keyboard before the user
+          has asked to type.
+        </Note>
+      </Example>
+
+      <Example
+        label="useAnnounce({ politeness })"
+        hint="For a change that moves no focus — use a screen reader to hear it."
+      >
+        <AnnounceSpecimen />
+        <Note>
+          <code className="font-mono">announce</code> clears the region and sets the text a tick
+          later, so saying the same sentence twice is still read twice.
+        </Note>
+      </Example>
+
+      <Example
         label="cn(...inputs)"
         hint="clsx for the conditionals, tailwind-merge for the conflicts."
       >
@@ -746,8 +965,9 @@ export function HooksLib() {
 
       <Example
         label="logger · setStoreLog(enabled)"
-        hint="Described, not fired — its only output is a console.debug group."
+        hint="Its only output is a console.debug line per set — open devtools."
       >
+        <LoggerSpecimen />
         <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
           {`import { create } from "zustand";
 import { logger } from "@eifi1/ui-kit";
@@ -772,10 +992,9 @@ export const useTx = create<TxState>()(
           ]}
         />
         <Note>
-          Not fired on this page for two reasons: the middleware wraps a zustand store&rsquo;s{" "}
-          <code className="font-mono">set</code>, so demonstrating it means creating a store and
-          mutating it, and the result is a <code className="font-mono">console.debug</code> group
-          in a devtools panel nobody reading a showcase has open. The decision above is read
+          The middleware wraps a zustand store&rsquo;s <code className="font-mono">set</code>: the
+          counter above is a real store built with it, and each bump logs{" "}
+          <code className="font-mono">{"{ prev, next }"}</code> while logging is on. The decision above is read
           ONCE at module scope rather than on every <code className="font-mono">set</code> — the
           stores this wraps transition per pointer event, and the override cannot change without
           a reload anyway. <code className="font-mono">setStoreLog</code> is the console escape

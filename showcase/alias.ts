@@ -12,10 +12,12 @@ import { fileURLToPath } from "node:url";
  * next to a component is copy-pasteable into a consuming app unchanged, and an
  * edit to a component is on screen on save without a `npm run build` first.
  *
- * ORDER MATTERS: Vite matches object aliases as ordered prefixes, so the "/dates"
+ * ORDER MATTERS: Vite matches object aliases as ordered prefixes, so every
  * subpath must come first or the bare specifier swallows it.
  */
 export const SHOWCASE_ALIAS = {
   "@eifi1/ui-kit/dates": fileURLToPath(new URL("../src/lib/dates.ts", import.meta.url)),
+  "@eifi1/ui-kit/rhf": fileURLToPath(new URL("../src/rhf.ts", import.meta.url)),
+  "@eifi1/ui-kit/table-text": fileURLToPath(new URL("../src/table-text.ts", import.meta.url)),
   "@eifi1/ui-kit": fileURLToPath(new URL("../src/index.ts", import.meta.url)),
 };

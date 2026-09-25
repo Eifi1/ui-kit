@@ -6,6 +6,8 @@ import {
   FieldSyncIndicator,
   FieldSyncRow,
   Input,
+  Select,
+  Textarea,
   ToggleGroup,
   useFieldSync,
 } from "@eifi1/ui-kit";
@@ -51,7 +53,10 @@ export function FieldSync() {
       <StatesExample />
       <LiveFieldExample />
       <RaceExample />
+      <AutoSaveExample />
+      <ExplicitSaveExample />
       <CompactIndicatorExample />
+      <RtlExample />
       <TokensExample />
     </>
   );
@@ -125,25 +130,46 @@ function frozenSync(state: FieldSyncState): UseFieldSyncReturn<string> {
 
 function CompactIndicatorExample() {
   const t = useT();
+  const [retries, setRetries] = useState(0);
   return (
     <Example
       label="Compact indicator"
       hint="for a table cell or a toolbar, where there is no room for a helper line"
     >
       <Stage>
-        <Row>
-          {ALL_STATES.map((state) => (
-            <FieldSyncIndicator
-              key={state}
-              labels={t.kit.fieldSync}
-              state={state}
-              showLabel
-              error={state === "error" ? new Error("Row is locked by another session") : null}
-              onRetry={state === "error" ? () => {} : undefined}
-            />
-          ))}
-        </Row>
+        <div data-stage="wide" className="space-y-4">
+          <Row className="justify-center">
+            {ALL_STATES.map((state) => (
+              <FieldSyncIndicator
+                key={state}
+                labels={t.kit.fieldSync}
+                state={state}
+                showLabel
+                error={state === "error" ? new Error("Row is locked by another session") : null}
+                onRetry={state === "error" ? () => setRetries((n) => n + 1) : undefined}
+              />
+            ))}
+          </Row>
+          {/* Icon only: the words move into the tooltip (and stay in the DOM for the
+              live region). No `onRetry`, so the error state has no retry button, and
+              an error with no message falls back to the translated `error` label. */}
+          <Row className="justify-center">
+            {ALL_STATES.map((state) => (
+              <FieldSyncIndicator
+                key={state}
+                labels={t.kit.fieldSync}
+                state={state}
+                error={state === "error" ? new Error("") : null}
+              />
+            ))}
+          </Row>
+        </div>
       </Stage>
+      <p className="text-xs text-[var(--text-muted)]">
+        Top row: <code className="font-mono">showLabel</code> and{" "}
+        <code className="font-mono">onRetry</code> (retries pressed: {retries}). Bottom row: the
+        defaults — icon only, hover for the words, no retry.
+      </p>
     </Example>
   );
 }
@@ -286,6 +312,188 @@ function RaceExample() {
         waits for the first to settle, compares the draft again, and sends the difference exactly
         once — so the log always ends committed to what is on screen.
       </Note>
+    </Example>
+  );
+}
+
+/* ── Auto-save after a pause, on any native control ──────────────────────── */
+
+function AutoSaveExample() {
+  const t = useT();
+  const [serverNote, setServerNote] = useState("Keys are with the caretaker.");
+  const [serverKind, setServerKind] = useState("flat");
+  const note = useFieldSync<string>({
+    value: serverNote,
+    // Opt-in auto-save: 800ms after the last keystroke. The default (0) never saves
+    // mid-typing; this is for a notes field where that is genuinely wanted.
+    debounceMs: 800,
+    onSave: async (next) => {
+      await fakeSave("ok")(next);
+      setServerNote(next);
+    },
+  });
+  const kind = useFieldSync<string>({
+    value: serverKind,
+    onSave: async (next) => {
+      await fakeSave("ok")(next);
+      setServerKind(next);
+    },
+  });
+  return (
+    <Example
+      label="Auto-save after a pause, on a textarea and a select"
+      hint="debounceMs={800} · savedMs={4000} · the frame reaches any input, select or textarea inside the row"
+    >
+      <Stage>
+        <FieldSyncRow sync={note} labels={t.kit.fieldSync} savedMs={4000}>
+          <Textarea
+            label="Handover note"
+            rows={3}
+            value={note.value}
+            onChange={(e) => note.setValue(e.target.value)}
+          />
+        </FieldSyncRow>
+        {/* A select commits on change: there is no half-typed value to wait for, so
+            the caller saves straight away rather than on blur. */}
+        <FieldSyncRow sync={kind} labels={t.kit.fieldSync}>
+          <Select
+            label="Unit type"
+            value={kind.value}
+            onChange={(e) => {
+              kind.setValue(e.target.value);
+              // The draft is held in a ref as well as in state, so it can be saved
+              // in the same handler.
+              kind.save();
+            }}
+          >
+            <option value="flat">Flat</option>
+            <option value="house">House</option>
+            <option value="garage">Garage</option>
+          </Select>
+        </FieldSyncRow>
+      </Stage>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-xs sm:grid-cols-4">
+        {(
+          [
+            ["note state", note.state],
+            ["note on server", serverNote],
+            ["unit state", kind.state],
+            ["unit on server", serverKind],
+          ] as const
+        ).map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-[var(--text-muted)]">{k}</dt>
+            <dd className="truncate text-[var(--text-primary)]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <Note>
+        Stop typing in the note for a moment and it saves without leaving the field; the green
+        confirmation then stays for four seconds (<code className="font-mono">savedMs</code>) instead
+        of {FIELD_SYNC_SAVED_MS / 1000}.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── Save only on request: saveOnBlur off, equals, onError, onRetry ─────── */
+
+function ExplicitSaveExample() {
+  const t = useT();
+  const [serverValue, setServerValue] = useState("DE89 3704 0044 0532 0130 00");
+  const [attempts, setAttempts] = useState(0);
+  const [log, setLog] = useState<string[]>([]);
+  const add = (line: string) => setLog((l) => [...l.slice(-5), line]);
+
+  const sync = useFieldSync<string>({
+    value: serverValue,
+    // Spaces are presentation, not data: "DE89 3704…" and "DE8937 04…" are the
+    // same IBAN, so re-spacing it leaves the field clean.
+    equals: (a, b) => a.replace(/\s/g, "") === b.replace(/\s/g, ""),
+    onSave: async (next) => {
+      const attempt = attempts + 1;
+      setAttempts(attempt);
+      // Every first attempt fails, so the error state and its retry are reachable.
+      if (attempt % 2 === 1) {
+        await new Promise((r) => setTimeout(r, 450));
+        throw new Error("Gateway timeout — the bank did not answer");
+      }
+      await fakeSave("ok")(next);
+      setServerValue(next);
+      add(`✓ saved ${next}`);
+    },
+    onError: (error) => add(`onError: ${error.message}`),
+  });
+
+  return (
+    <Example
+      label="Save on request only, with a custom comparison"
+      hint="saveOnBlur={false} · equals ignores spaces · onError · onRetry — every other save fails here"
+    >
+      <Stage>
+        <div className="space-y-3">
+          <FieldSyncRow
+            sync={sync}
+            labels={t.kit.fieldSync}
+            saveOnBlur={false}
+            onRetry={() => {
+              add("onRetry → sync.retry()");
+              sync.retry();
+            }}
+          >
+            <Input
+              label="IBAN"
+              value={sync.value}
+              onChange={(e) => sync.setValue(e.target.value)}
+            />
+          </FieldSyncRow>
+          <Row>
+            <Button variant="secondary" onClick={sync.save} disabled={!sync.dirty}>
+              Save
+            </Button>
+            <Button variant="ghost" onClick={sync.reset} disabled={!sync.dirty}>
+              Discard
+            </Button>
+          </Row>
+        </div>
+      </Stage>
+      <p className="font-mono text-xs text-[var(--text-muted)]">
+        state {sync.state} · dirty {String(sync.dirty)}
+      </p>
+      <pre className="mt-1 max-h-32 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-[11px] text-[var(--text-secondary)]">
+        {log.length ? log.join("\n") : "— nothing yet —"}
+      </pre>
+      <Note>
+        Click away from the field: nothing is sent — with{" "}
+        <code className="font-mono">saveOnBlur</code> off only the button saves. Add or remove a
+        space and the field stays clean, because <code className="font-mono">equals</code> says the
+        value did not change. The first save fails: <code className="font-mono">onError</code> logs
+        it once, and the red mark in the field calls the caller&apos;s{" "}
+        <code className="font-mono">onRetry</code> instead of the hook&apos;s own.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── Right-to-left ───────────────────────────────────────────────────────── */
+
+function RtlExample() {
+  const t = useT();
+  return (
+    <Example label="Right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
+      <Stage>
+        {(["edited", "error"] as const).map((state) => (
+          <div key={state} dir="rtl">
+            <FieldSyncRow sync={frozenSync(state)} labels={t.kit.fieldSync}>
+              <Input aria-label={`حقل (${state})`} defaultValue="أميليا فورنييه" />
+            </FieldSyncRow>
+          </div>
+        ))}
+      </Stage>
+      <p className="text-xs text-[var(--text-muted)]">
+        The icon sits at the field&apos;s END and the input reserves end padding for it — logical
+        sides, so in a right-to-left page both move to the left edge.
+      </p>
     </Example>
   );
 }

@@ -23,6 +23,8 @@ export function NumberFieldDemo() {
   const [yoke, setYoke] = useState<number | null>(null);
   const [german, setGerman] = useState<number | null>(1234.5);
   const [gain, setGain] = useState<number | null>(0.125);
+  const [track, setTrack] = useState<number | null>(null);
+  const [french, setFrench] = useState<number | null>(1580.25);
 
   return (
     <>
@@ -91,6 +93,32 @@ export function NumberFieldDemo() {
           />
         </Stage>
         <StateLine>{String(yoke)}</StateLine>
+      </Example>
+
+      <Example
+        label="NumberField — invalid, disabled and the locale prop"
+        hint="invalid without a message · disabled · locale on the field itself, overriding the provider"
+      >
+        <Stage>
+          <NumberField
+            label="Track width"
+            unit="mm"
+            nullable
+            value={track}
+            onCommit={setTrack}
+            invalid={track === null}
+          />
+          <NumberField label="Kerb weight" unit="kg" value={1450} onCommit={() => {}} disabled />
+          <NumberField
+            label="Montant"
+            unit="€"
+            digits={2}
+            locale="fr-FR"
+            value={french}
+            onCommit={setFrench}
+          />
+        </Stage>
+        <StateLine>{`track ${String(track)}, montant ${String(french)}`}</StateLine>
       </Example>
 
       <Example

@@ -72,6 +72,24 @@ export function LayoutDemo() {
         </Note>
       </Example>
 
+      <Example
+        label="Disclosure — disabled, keepMounted and right-to-left"
+        hint="A locked section; a body that keeps its state; the bare chevron mirrored"
+      >
+        <Stage>
+          <MoreDisclosureSpecimens />
+        </Stage>
+        <Note>
+          <code className="font-mono">disabled</code> locks the header in whatever state it is
+          in — the open one stays readable. <code className="font-mono">keepMounted</code> keeps
+          the body (hidden and <code className="font-mono">inert</code>) while shut: type in the
+          field, close, reopen, and the text and the mount time are both unchanged.{" "}
+          <code className="font-mono">bodyClassName</code> sets the body&apos;s padding and
+          spacing. In RTL the bare chevron points left while shut — along the reading
+          direction — and the card chevron sits at the left end.
+        </Note>
+      </Example>
+
       <Example label="Collapse" hint="The fold alone, for a trigger of your own">
         <Stage>
           <CollapseSpecimen />
@@ -226,6 +244,46 @@ function TriggerOnlySpecimen() {
   );
 }
 
+function MoreDisclosureSpecimens() {
+  const [locked, setLocked] = useState(true);
+  return (
+    <>
+      <div className="space-y-2">
+        <Disclosure
+          title="Billing address"
+          hint={locked ? "Locked while the invoice is being sent" : "Editable again"}
+          headingAs="h4"
+          defaultOpen
+          disabled={locked}
+        >
+          <p className="text-sm text-[var(--text-secondary)]">Hauptstraße 5, 10115 Berlin</p>
+        </Disclosure>
+        <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
+          {locked ? "Unlock the header" : "Lock the header"}
+        </Button>
+      </div>
+      <Disclosure
+        title="Draft note"
+        hint="keepMounted — the text survives a close"
+        headingAs="h4"
+        keepMounted
+        bodyClassName="space-y-2 bg-[var(--bg-surface-2)] px-4 py-3 rounded-b-lg"
+      >
+        <MountStamp />
+        <Input aria-label="Draft note" placeholder="Type, close, reopen" />
+      </Disclosure>
+      <div dir="rtl" className="space-y-3">
+        <Disclosure title="الإعدادات المتقدمة" hint="بطاقة: السهم في الطرف" headingAs="h4">
+          <p className="text-sm text-[var(--text-secondary)]">المحتوى</p>
+        </Disclosure>
+        <Disclosure variant="bare" title="إظهار ٣ حسابات مخفية">
+          <p className="text-sm text-[var(--text-secondary)]">حساب التوفير القديم</p>
+        </Disclosure>
+      </div>
+    </>
+  );
+}
+
 function CollapseSpecimen() {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -245,7 +303,7 @@ function CollapseSpecimen() {
   );
 }
 
-type DialogKind = "form" | "commit" | "tall" | "sheet" | "question";
+type DialogKind = "form" | "commit" | "tall" | "sheet" | "question" | "wide";
 
 function DialogSpecimens() {
   const [kind, setKind] = useState<DialogKind | null>(null);
@@ -269,7 +327,37 @@ function DialogSpecimens() {
         <Button variant="secondary" onClick={() => setKind("question")}>
           Question only (no body)
         </Button>
+        <Button variant="secondary" onClick={() => setKind("wide")}>
+          Wide (xl), draggable, custom close label
+        </Button>
       </Row>
+      <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">open = {kind ?? "null"}</p>
+
+      {kind === "wide" && (
+        <DialogFrame
+          onClose={close}
+          title="Compare two imports"
+          description="Drag the panel by its top edge to see the page behind it."
+          headingAs="h4"
+          size="xl"
+          draggable
+          closeButton
+          closeLabel="Dismiss the comparison"
+          aria-describedby="dialogframe-extra-note"
+        >
+          <p className="text-sm text-[var(--text-secondary)]">
+            <code className="font-mono">size</code> is the panel&apos;s max width —{" "}
+            <code className="font-mono">md</code> 28rem (default), <code className="font-mono">lg</code>{" "}
+            32rem, <code className="font-mono">xl</code> 48rem. On a phone all three are the same
+            full-width bottom sheet, and dragging is off.
+          </p>
+          <p id="dialogframe-extra-note" className="text-sm text-[var(--text-secondary)]">
+            This paragraph is joined to the description through the caller&apos;s own{" "}
+            <code className="font-mono">aria-describedby</code>; the X is named by{" "}
+            <code className="font-mono">closeLabel</code>.
+          </p>
+        </DialogFrame>
+      )}
 
       {kind === "question" && (
         // No children: title, description and actions are the whole dialog, and the

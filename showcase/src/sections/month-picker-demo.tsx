@@ -42,6 +42,10 @@ export function MonthPickerDemo() {
   const [empty, setEmpty] = useState("");
   const [localised, setLocalised] = useState(now);
   const [loc, setLoc] = useState<Loc>("de-DE");
+  const [short, setShort] = useState(now);
+  const [fiscal, setFiscal] = useState(now);
+  // Two months back: a host whose books close late.
+  const openBooks = shiftKey(now, -2);
 
   // A floor a year and a half back, the way "the first month we have data for" is.
   const floor = shiftKey(now, -18);
@@ -139,6 +143,38 @@ export function MonthPickerDemo() {
           />
         </Stage>
         <StateLine>{`"${empty}"`}</StateLine>
+      </Example>
+
+      <Example
+        label="MonthPicker — trigger format, pinned now, disabled"
+        hint="formatOptions shapes the trigger's text; currentMonth moves the ring; disabled settles the field"
+      >
+        <Stage>
+          <MonthPicker
+            label="Short trigger"
+            value={short}
+            onChange={setShort}
+            locale={LOCALE}
+            formatOptions={{ month: "short", year: "2-digit" }}
+          />
+          <MonthPicker
+            label="Fiscal “now”"
+            value={fiscal}
+            onChange={setFiscal}
+            locale={LOCALE}
+            // The host's own idea of "now": the month its books are open for, not the
+            // wall clock's. The grid rings this month instead of the real one.
+            currentMonth={openBooks}
+          />
+          <MonthPicker
+            label="Closed period"
+            value={shiftKey(now, -1)}
+            onChange={() => {}}
+            locale={LOCALE}
+            disabled
+          />
+        </Stage>
+        <StateLine>{`"${short}" · "${fiscal}" (currentMonth ${openBooks})`}</StateLine>
       </Example>
 
       <Example

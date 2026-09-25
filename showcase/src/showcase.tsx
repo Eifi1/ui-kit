@@ -16,6 +16,7 @@ import {
   ThemeToggle,
   Tooltip,
   TopBar,
+  TourProvider,
   UiKitProvider,
   useScrollSpy,
 } from "@eifi1/ui-kit";
@@ -113,6 +114,8 @@ export function Showcase() {
     // button — reads its words and its locale from here, so the sections do not thread
     // label props by hand. This one line is what a consuming app writes.
     <UiKitProvider labels={t.kit} locale={tag}>
+    {/* Below the provider, so the tour card speaks the page's language. */}
+    <TourProvider>
     <AppShell
       nav={nav}
       subNav={sidebarStyle}
@@ -218,6 +221,7 @@ export function Showcase() {
           resolved before hydration is only the first paint's snapshot. */}
       <Toaster position="top-center" richColors closeButton theme={mode} />
     </AppShell>
+    </TourProvider>
     </UiKitProvider>
   );
 }

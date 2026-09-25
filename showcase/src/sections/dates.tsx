@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { DatePicker, DateRangePicker, MiniCalendar, ToggleGroup } from "@eifi1/ui-kit";
+import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup } from "@eifi1/ui-kit";
 import type { DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
@@ -84,6 +84,16 @@ const PRESET_LABELS: Record<string, string> = {
   last_year: "Last year",
 };
 
+/** The calendar's own strings in German — arrows, spoken prompts and announcements. */
+const DE_CALENDAR = {
+  previousMonth: "Vorheriger Monat",
+  nextMonth: "Nächster Monat",
+  chooseStart: "Startdatum wählen",
+  chooseEnd: "Enddatum wählen",
+  startSelected: (d: string) => `${d} als Start gewählt. Enddatum wählen.`,
+  rangeSelected: (f: string, t: string) => `Zeitraum ${f} bis ${t} gewählt.`,
+};
+
 /** The live value under a specimen. A controlled component is only demonstrably
  *  controlled once you can watch the state it is driven by change underneath it. */
 function StateLine({ children }: { children: ReactNode }) {
@@ -115,6 +125,14 @@ export function Dates() {
   const [to, setTo] = useState("");
   const [presetFrom, setPresetFrom] = useState(startOfMonthIso(-1));
   const [presetTo, setPresetTo] = useState(endOfMonthIso(-1));
+  const [boundFrom, setBoundFrom] = useState("");
+  const [boundTo, setBoundTo] = useState("");
+  const [deDay, setDeDay] = useState(todayIso());
+  const [deFrom, setDeFrom] = useState(startOfMonthIso(0));
+  const [deTo, setDeTo] = useState(todayIso());
+  const [sundayDay, setSundayDay] = useState(todayIso());
+  const [focusDay, setFocusDay] = useState(todayIso());
+  const [popped, setPopped] = useState(false);
 
   // Bounds are computed from today rather than written out, so the specimen stays
   // operable whatever day you open this page (and in whatever timezone).
@@ -236,6 +254,49 @@ export function Dates() {
           &quot; · selected=
           {formatIsoDate(localeDay, loc, { dateStyle: "full" })}
         </StateLine>
+      </Example>
+
+      <Example
+        label="MiniCalendar — weekStartsOn and focusOnOpen"
+        hint="the prop beats the locale's first day; focusOnOpen puts the caret on the selected day at mount"
+      >
+        <Stage>
+          <MiniCalendar
+            mode="single"
+            from={sundayDay}
+            to={sundayDay}
+            locale={LOCALE}
+            // en-GB starts on Monday; the prop wins over the locale and the provider.
+            weekStartsOn={0}
+            onSelect={(f) => setSundayDay(f)}
+          />
+          <div className="space-y-2">
+            <Button variant="secondary" onClick={() => setPopped((p) => !p)}>
+              {popped ? "Hide the calendar" : "Show a calendar that takes focus"}
+            </Button>
+            {popped && (
+              <MiniCalendar
+                mode="single"
+                from={focusDay}
+                to={focusDay}
+                locale={LOCALE}
+                focusOnOpen
+                onSelect={(f) => {
+                  setFocusDay(f);
+                  setPopped(false);
+                }}
+              />
+            )}
+          </div>
+        </Stage>
+        <StateLine>
+          weekStartsOn=0 → {iso(sundayDay)} · focusOnOpen → {iso(focusDay)}
+        </StateLine>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          Open the second calendar with the keyboard (Enter on the button): focus lands on the
+          selected day, so ←/→ move a day and Enter picks — no hunt through 42 cells. The first
+          calendar is rendered inline and so does not take focus merely by existing.
+        </p>
       </Example>
 
       <Example
@@ -429,6 +490,87 @@ export function Dates() {
           page&apos;s own map. A preset is selected-looking only when both ends match exactly, so
           the field opens on &quot;Last month&quot; already highlighted — and stops being
           highlighted the moment you touch the calendar.
+        </p>
+      </Example>
+
+      <Example
+        label="DateRangePicker — bounded, invalid, disabled"
+        hint="min/max close the calendar's days outside the window; invalid and disabled as on DatePicker"
+      >
+        <Stage>
+          <DateRangePicker
+            from={boundFrom}
+            to={boundTo}
+            locale={LOCALE}
+            label="Within ±10 days"
+            placeholder="Required"
+            min={nearMin}
+            max={nearMax}
+            invalid={boundFrom === "" || boundTo === ""}
+            clearable
+            clearLabel="Clear range"
+            onChange={(f, t) => {
+              setBoundFrom(f);
+              setBoundTo(t);
+            }}
+          />
+          <DateRangePicker
+            from={startOfMonthIso(-1)}
+            to={endOfMonthIso(-1)}
+            locale={LOCALE}
+            label="Closed period"
+            disabled
+            onChange={() => {}}
+          />
+        </Stage>
+        <StateLine>
+          from={iso(boundFrom)} to={iso(boundTo)} · min={nearMin} · max={nearMax}
+        </StateLine>
+      </Example>
+
+      <Example
+        label="DatePicker & DateRangePicker — German trigger and calendar"
+        hint="locale, calendarLabels for the calendar's own strings, separator and formatValue for the trigger"
+      >
+        <Stage>
+          <DatePicker
+            value={deDay}
+            onChange={setDeDay}
+            locale="de-DE"
+            label="Buchungstag"
+            formatOptions={{ weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }}
+            calendarLabels={DE_CALENDAR}
+            clearable
+            clearLabel="Datum löschen"
+          />
+          <DateRangePicker
+            from={deFrom}
+            to={deTo}
+            locale="de-DE"
+            label="Zeitraum"
+            placeholder="Alle Tage"
+            separator=" bis "
+            // The host's own rendering of each end: "3. Sept." rather than Intl's default.
+            formatValue={(value) => {
+              const d = parseIsoDate(value);
+              return d ? d.toLocaleDateString("de-DE", { day: "numeric", month: "short" }) : value;
+            }}
+            calendarLabels={DE_CALENDAR}
+            onChange={(f, t) => {
+              setDeFrom(f);
+              setDeTo(t);
+            }}
+          />
+        </Stage>
+        <StateLine>
+          value={iso(deDay)} · from={iso(deFrom)} to={iso(deTo)}
+        </StateLine>
+        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          <code className="font-mono">calendarLabels</code> reaches the calendar inside the popover —
+          its month arrows and the spoken &quot;choose a start / end date&quot; — which the trigger
+          has no other way to pass down. The provider&apos;s{" "}
+          <code className="font-mono">miniCalendar.*</code> usually makes it unnecessary; the prop is
+          for the one field that says it differently.
         </p>
       </Example>
 
