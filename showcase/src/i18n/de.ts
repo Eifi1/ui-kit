@@ -66,6 +66,7 @@ export const de: Dictionary = {
     Inputs: "Eingaben",
     "Pickers & entry": "Picker & Erfassung",
     "Data display": "Datenanzeige",
+    Charts: "Diagramme",
     // Kept English: "Overlay" is the word German front-end work uses for these.
     Overlays: "Overlays",
     // "Chrome" in the UI sense is the frame around the content, not the browser.
@@ -86,7 +87,7 @@ export const de: Dictionary = {
       title: "Übersicht",
       short: "Übersicht",
       blurb:
-        "Was @eifi1/ui-kit ist, aus welchen sieben Schichten es besteht und wie Sie eine Seite dieses Showcase lesen.",
+        "Was @eifi1/ui-kit ist, aus welchen acht Schichten es besteht und wie Sie eine Seite dieses Showcase lesen.",
     },
     foundations: {
       title: "Grundlagen",
@@ -202,19 +203,37 @@ export const de: Dictionary = {
     "data-display": {
       title: "Datenanzeige",
       blurb:
-        "Werte zeigen statt erfassen: die Grundbausteine, die Tabelle und die Diagramme.",
+        "Werte zeigen statt erfassen: die Grundbausteine, Rückmeldung und Fortschritt, Listen, Bäume und die Tabelle.",
     },
     buttons: {
       title: "Buttons & Flächen",
       short: "Buttons",
       blurb:
-        "Buttons, Icon-Buttons, Karten, Ladeanzeigen, Leerzustände, Avatare und Banner — die Teile, aus denen alles andere gebaut ist.",
+        "Buttons, Button-Gruppen, Icon-Buttons, Karten, Ladeanzeigen und Avatare — die Teile, aus denen alles andere gebaut ist.",
     },
     "chips-toggles": {
       title: "Chips & Umschalter",
       short: "Chips",
       blurb:
         "Chips und das Chip-Feld, die Umschaltgruppe und Tabs — die kleinen Bedienelemente, die eins aus wenigen wählen oder eine kurze Liste halten.",
+    },
+    feedback: {
+      title: "Rückmeldung & Fortschritt",
+      short: "Rückmeldung",
+      blurb:
+        "Wie weit eine Aufgabe ist, dass Inhalte unterwegs sind, dass hier nichts ist und dass etwas gelesen werden muss: Fortschrittsbalken und Messanzeigen, Platzhalter, Leerzustände und Banner.",
+    },
+    "description-list": {
+      title: "Beschreibungsliste & Tabelle",
+      short: "Listen & Tabellen",
+      blurb:
+        "Fakten ohne jede Mechanik angeordnet: eine Liste aus Begriffen und Angaben, eine schlichte statische Tabelle sowie Trennlinie und Scrollbereich, die zwischen beiden stehen.",
+    },
+    "tree-view": {
+      title: "Baumansicht",
+      short: "Baum",
+      blurb:
+        "Eine Hierarchie, die man mit der Tastatur durchläuft — ein einziger Tab-Stopp, Pfeiltasten zum Auf- und Zuklappen, Sprung per Tippen — mit nachgeladenen Kindknoten, von außen gesteuert, von rechts nach links und mit ihrer Zeile für sich allein.",
     },
     "data-table": {
       title: "Datentabelle",
@@ -234,6 +253,11 @@ export const de: Dictionary = {
       blurb:
         "Woraus die Tabelle zusammengesetzt ist, auch einzeln nutzbar: die Seitennavigation, das Filter-Popover, der Label-Baum und die reinen Hilfsfunktionen für Sortierung, Filter und URL.",
     },
+    charts: {
+      title: "Diagramme",
+      blurb:
+        "Werte als Bilder: die Hülle im Theme über Recharts, das Kacheldiagramm, das zoombare Reihendiagramm mit seinen Balken und Flächen und die KPI-Kachel.",
+    },
     "chart-shell": {
       title: "Diagramm-Hülle",
       short: "Diagramme",
@@ -251,6 +275,12 @@ export const de: Dictionary = {
       short: "Reihen",
       blurb:
         "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme und die Hilfsfunktionen darunter.",
+    },
+    "series-chart-marks": {
+      title: "Reihendiagramm: Balken, Flächen & Zeit",
+      short: "Balken & Flächen",
+      blurb:
+        "Dasselbe Diagramm mit Balken, Flächen und Stapeln, über Kategorien und echter Zeit, mit Referenzlinien, Markierungen, Punkten und Klicks — und einer Legende, deren Farben stehen bleiben.",
     },
     stats: {
       title: "Kennzahlen & Sparklines",
@@ -274,6 +304,12 @@ export const de: Dictionary = {
       short: "Dialoge",
       blurb:
         "Modal und Vollbild-Dialog, der Klick auf den Hintergrund, der sie schließt, und das Timing des Schließens, das alle Overlays teilen.",
+    },
+    "confirm-floating": {
+      title: "Bestätigungsdialog & schwebendes Panel",
+      short: "Bestätigen",
+      blurb:
+        "Das Promise, das window.confirm ersetzt — mit Abstufungen von gefährlich bis neutral, eigenen Worten und einer Warteschlange — und das nicht-modale Panel, das hinter einem schwebenden Button in einer Ecke andockt.",
     },
     popovers: {
       title: "Popover, Menüs & Tooltips",
@@ -341,6 +377,12 @@ export const de: Dictionary = {
       short: "Hooks",
       blurb:
         "Die nicht sichtbaren Exporte: die Hooks live beobachtet, die reinen Hilfsfunktionen als Eingabe → Ausgabe.",
+    },
+    "clipboard-timing": {
+      title: "Zwischenablage & Timing",
+      short: "Zwischenablage",
+      blurb:
+        "Kopieren, das sagt, ob es geklappt hat, und Warten, bis das Tippen aufhört: der Kopier-Button und sein Hook sowie der entprellte Wert und Callback.",
     },
     helpers: {
       title: "Hilfsfunktionen & Konstanten",

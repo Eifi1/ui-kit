@@ -268,11 +268,49 @@ export function TreemapDemo() {
       </Example>
 
       <Example
+        label="Treemap — labelColor"
+        hint="the ink for a fill the kit cannot measure: a var() or a color-mix()"
+      >
+        <LabelColorTreemaps />
+      </Example>
+
+      <Example
         label="Treemap — right-to-left"
         hint="left: Treemap under dir=rtl reads the direction itself; right: a hand-built recharts Treemap with <TreemapCell dir> — toggle it"
       >
         <RtlTreemaps />
       </Example>
+    </>
+  );
+}
+
+/** keksdose's recency plot: one hue, faded by age with `color-mix` — a fill with no
+ *  hex to measure, so without `labelColor` the ink is `currentColor`. */
+function LabelColorTreemaps() {
+  const [withInk, setWithInk] = useState(true);
+  const mixes = [100, 85, 70, 55, 40, 30, 20, 12];
+  const data: TreemapNode[] = SPEND.map((n, i) => ({
+    ...n,
+    fill: `color-mix(in srgb, var(--chart-1) ${mixes[i]}%, transparent)`,
+    // Strong fills get the inverse ink, the faded ones the page's own text.
+    labelColor: withInk ? (mixes[i] >= 55 ? "#ffffff" : "var(--text-primary)") : undefined,
+  }));
+  return (
+    <>
+      <Row className="mb-2">
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={withInk} onChange={(e) => setWithInk(e.target.checked)} />
+          <code className="font-mono">labelColor</code> per node
+        </label>
+      </Row>
+      <Treemap data={data} valueFormatter={moneyAndShare} height={260} />
+      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>.
+        The kit measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it
+        falls back to <code className="font-mono">currentColor</code> — untick the box and the page&apos;s
+        dark text sits on full-strength colour (~1.5:1 in the light theme). <code className="font-mono">labelColor</code>{" "}
+        wins over the measured ink whenever it is given.
+      </p>
     </>
   );
 }

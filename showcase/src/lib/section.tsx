@@ -120,8 +120,11 @@ export function OutTable({ rows }: { rows: Array<[expression: string, result: Re
       <tbody>
         {rows.map(([expr, result], i) => (
           <tr key={i} className="border-b border-[var(--border)] last:border-b-0">
-            <td className="py-1.5 pr-4 align-top font-mono text-[var(--text-secondary)]">{expr}</td>
-            <td className="py-1.5 align-top font-mono font-medium text-[var(--text-primary)]">
+            {/* `overflow-wrap: anywhere`: an expression is often one long identifier
+                (`missingKitLabels(UI_KIT_LABELS_DE_CH_INFORMAL)`), and on a phone a
+                cell that cannot break widens the table past the card. */}
+            <td className="py-1.5 pr-4 align-top font-mono text-[var(--text-secondary)] [overflow-wrap:anywhere]">{expr}</td>
+            <td className="py-1.5 align-top font-mono font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
               {result}
             </td>
           </tr>

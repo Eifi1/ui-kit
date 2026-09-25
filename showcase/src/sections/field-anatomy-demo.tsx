@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { IconButton, Input, Label, SearchField, Select, Tabs } from "@eifi1/ui-kit";
 import type { TabItem } from "@eifi1/ui-kit";
 import { Example, Note, Row, Stage } from "../lib/section";
@@ -200,8 +200,11 @@ export function FieldAnatomyDemo() {
 export function IconButtonControls() {
   return (
     <>
-      <Example label="Icon button sizes and tones" hint="md 36 · sm 32 · xs 28 · 2xs 24">
+      <Example label="Icon button sizes and tones" hint="lg 44 · md 36 · sm 32 · xs 28 · 2xs 24">
         <Row>
+          <IconButton size="lg" aria-label="Delete (lg)" tone="danger">
+            <Trash2 />
+          </IconButton>
           <IconButton aria-label="Delete (md)" tone="danger">
             <Trash2 />
           </IconButton>
@@ -216,6 +219,9 @@ export function IconButtonControls() {
           </IconButton>
           <IconButton size="xs" aria-label="Copy (muted)" tone="muted">
             <Copy />
+          </IconButton>
+          <IconButton size="sm" aria-label="Needs review (warning)" title={`tone="warning"`} tone="warning">
+            <TriangleAlert />
           </IconButton>
         </Row>
       </Example>

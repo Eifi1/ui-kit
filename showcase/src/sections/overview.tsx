@@ -98,7 +98,7 @@ export function GettingStarted() {
       </Example>
 
       <Example
-        label="The seven layers, in the order they build on each other"
+        label="The eight layers, in the order they build on each other"
         hint="each group in the sidebar is one layer; its entry opens an overview"
       >
         <ol className="grid gap-3 sm:grid-cols-2">
@@ -108,9 +108,9 @@ export function GettingStarted() {
         </ol>
         <Note>
           Read top to bottom and each layer only uses the ones above it. Tokens are what every
-          pixel is painted with; inputs, pickers and displays are built from primitives in those
-          tokens; overlays float them above the page; the app chrome composes all of it into a
-          frame; the API layer is what remains when you take the pixels away.
+          pixel is painted with; inputs, pickers, displays and charts are built from primitives in
+          those tokens; overlays float them above the page; the app chrome composes all of it into
+          a frame; the API layer is what remains when you take the pixels away.
         </Note>
       </Example>
 
@@ -221,11 +221,11 @@ const CONVENTIONS: Array<[string, string]> = [
 
 const MUI_MAP: Array<[string, string]> = [
   ["Inputs", "Inputs — text, forms, choices, numbers, dates, files; Pickers & entry — comboboxes, entity pickers, table entry, sync state"],
-  ["Data display", "Data display — buttons, chips, data table, charts, stats"],
-  ["Feedback (Dialog, Snackbar, Alert)", "Overlays — dialogs, popovers; AlertBanner under Buttons & surfaces"],
+  ["Data display", "Data display — buttons, chips, description lists and tables, tree view, data table; Charts — chart shell, tile and series charts, stats"],
+  ["Feedback (Dialog, Snackbar, Alert, Progress, Skeleton)", "Overlays — dialogs, confirm dialog, popovers; Feedback & progress under Data display"],
   ["Surfaces (Card, Accordion)", "Buttons & surfaces; Disclosure under Data display"],
   ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, wizard; Tabs under Chips & toggles"],
-  ["Layout / Utils", "API — hooks and helpers"],
+  ["Layout / Utils", "API — hooks, clipboard & timing, helpers; Separator and ScrollArea under Description list & table"],
   ["Customization (Theming)", "Foundations — tokens, palettes, localisation"],
-  ["MUI X (Data Grid, Date Pickers, Charts)", "Data table, Calendars & date pickers, Chart shell"],
+  ["MUI X (Data Grid, Date Pickers, Charts, Tree View)", "Data table, Calendars & date pickers, Charts, Tree view"],
 ];

@@ -5,10 +5,13 @@ import {
   CalendarClock,
   CalendarDays,
   ChartColumn,
+  ChartArea,
+  ChartBar,
   ChartLine,
   ChevronsUpDown,
   CircleDot,
   ClipboardCheck,
+  ClipboardCopy,
   Command,
   Compass,
   Component as ComponentIcon,
@@ -23,8 +26,12 @@ import {
   Languages,
   Layers,
   Layout,
+  ListTree,
+  List as ListIcon,
   LayoutGrid,
   LayoutPanelLeft,
+  Loader,
+  MessageCircleQuestion,
   ListFilter,
   MessageSquarePlus,
   MousePointerClick,
@@ -97,6 +104,12 @@ import { SwipeableRowDemo } from "./sections/swipeable-row-demo";
 import { HooksLib } from "./sections/hooks-lib";
 import { Helpers } from "./sections/helpers";
 import { GettingStarted, GroupOverview } from "./sections/overview";
+import { FeedbackProgress } from "./sections/feedback-progress";
+import { DescriptionTable } from "./sections/description-table";
+import { TreeViewDemo } from "./sections/tree-view-demo";
+import { ConfirmFloating } from "./sections/confirm-floating";
+import { ClipboardTiming } from "./sections/clipboard-timing";
+import { SeriesChartMarks } from "./sections/series-chart-marks";
 import { Localisation } from "./sections/localisation";
 
 /**
@@ -116,8 +129,8 @@ import { Localisation } from "./sections/localisation";
  * indexes do, and the pages below it answer "how does this one work".
  *
  * THE ORDER IS THE COMMON THREAD. Each group builds on the ones above it: tokens are
- * what everything paints with; inputs, pickers and displays are built from primitives
- * in those tokens; overlays float those over the page; the app chrome composes all of it
+ * what everything paints with; inputs, pickers, displays and charts are built from
+ * primitives in those tokens; overlays float those over the page; the app chrome composes all of it
  * into a frame; the API group is what is left when you take the pixels away. The Getting
  * started page says this in prose.
  *
@@ -126,7 +139,8 @@ import { Localisation } from "./sections/localisation";
  * current group's pages are a row of pills above the bottom bar that WRAPS rather than
  * scrolls, so every page added to a group is another line of pills over the content.
  * Inputs outgrew it once the dropdown, date and table pages were split, which is why
- * "Pickers & entry" exists. A split page leaves its old slug in `RETIRED_SLUGS`.
+ * "Pickers & entry" exists, and Data display outgrew it in 0.8.0, which is why the chart
+ * pages became "Charts". A split page leaves its old slug in `RETIRED_SLUGS`.
  */
 
 export interface ShowcasePage {
@@ -169,7 +183,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Overview",
         short: "Overview",
         blurb:
-          "What @eifi1/ui-kit is, the seven layers it is built in, and how to read a page of this showcase.",
+          "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
         icon: Compass,
         Body: GettingStarted,
       },
@@ -210,7 +224,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDe"],
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE", "UI_KIT_LABELS_DE_CH", "UI_KIT_LABELS_DE_INFORMAL", "uiKitLabelsDe"],
         Body: Localisation,
       },
     ],
@@ -282,7 +296,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
         icon: CalendarDays,
-        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "UiKitProvider"],
+        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "calendarMonthPresets", "UiKitProvider"],
         Body: () => (
           <>
             <Dates />
@@ -312,7 +326,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
         icon: FileUp,
-        components: ["FileButton", "useFilePicker", "FileDropzone"],
+        components: ["FileButton", "useFilePicker", "FileDropzone", "useFileDrop"],
         Body: FileInputs,
       },
     ],
@@ -409,16 +423,16 @@ export const GROUPS: ShowcaseGroup[] = [
     shortLabel: "Display",
     icon: ComponentIcon,
     blurb:
-      "Showing values rather than taking them: the building blocks, the table, and the charts.",
+      "Showing values rather than taking them: the building blocks, feedback and progress, lists, trees and the table.",
     pages: [
       {
         slug: "buttons",
         title: "Buttons & surfaces",
         short: "Buttons",
         blurb:
-          "Buttons, icon buttons, cards, spinners, empty states, avatars and banners — the pieces everything else is built from.",
+          "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "IconButton", "Card", "Spinner", "EmptyState", "UserAvatar", "AlertBanner"],
+        components: ["Button", "ButtonGroup", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses"],
         Body: ButtonsSurfaces,
       },
       {
@@ -430,6 +444,36 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Tags,
         components: ["Chip", "ChipInput", "ToggleGroup", "Tabs"],
         Body: ChipsToggles,
+      },
+      {
+        slug: "feedback",
+        title: "Feedback & progress",
+        short: "Feedback",
+        blurb:
+          "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
+        icon: Loader,
+        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass"],
+        Body: FeedbackProgress,
+      },
+      {
+        slug: "description-list",
+        title: "Description list & table",
+        short: "Lists & tables",
+        blurb:
+          "Facts laid out without any machinery: a list of terms and details, a plain static table, and the separator and scroll area that sit between them.",
+        icon: ListIcon,
+        components: ["DescriptionList", "DescriptionItem", "Table", "TableCaption", "TableFoot", "NUMERIC_CELL_CLASS", "Separator", "ScrollArea"],
+        Body: DescriptionTable,
+      },
+      {
+        slug: "tree-view",
+        title: "Tree view",
+        short: "Tree",
+        blurb:
+          "A hierarchy walked with the keyboard — one Tab stop, arrows to open and close, type-ahead — with children loaded on demand, controlled from outside, right-to-left, and its row on its own.",
+        icon: ListTree,
+        components: ["TreeView", "TreeRow", "TreeNode"],
+        Body: TreeViewDemo,
       },
       {
         slug: "data-table",
@@ -461,6 +505,24 @@ export const GROUPS: ShowcaseGroup[] = [
         components: ["Pagination", "FilterPopover", "DEFAULT_DATA_TABLE_LABELS", "resolveDataTableLabels", "nextSorts", "rowMatches"],
         Body: DataTablePartsSection,
       },
+      {
+        slug: "layout",
+        title: "Disclosure & dialog frame",
+        short: "Disclosure",
+        blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
+        icon: PanelTopClose,
+        components: ["Disclosure", "Collapse", "DialogFrame"],
+        Body: LayoutDemo,
+      },
+    ],
+  },
+  {
+    slug: "charts",
+    label: "Charts",
+    icon: ChartArea,
+    blurb:
+      "Values as pictures: the themed shell over Recharts, the tile chart, the zoomable series chart with its bars and areas, and the KPI tile.",
+    pages: [
       {
         slug: "chart-shell",
         title: "Chart shell",
@@ -497,6 +559,16 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: SeriesChartDemo,
       },
       {
+        slug: "series-chart-marks",
+        title: "Series chart: bars, areas & time",
+        short: "Bars & areas",
+        blurb:
+          "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
+        icon: ChartBar,
+        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries", "defaultZoomAxes"],
+        Body: SeriesChartMarks,
+      },
+      {
         slug: "stats",
         title: "Stats & sparklines",
         short: "Stats",
@@ -505,15 +577,6 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Gauge,
         components: ["StatTile", "StatTileGrid", "Sparkline"],
         Body: StatsDemo,
-      },
-      {
-        slug: "layout",
-        title: "Disclosure & dialog frame",
-        short: "Disclosure",
-        blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
-        icon: PanelTopClose,
-        components: ["Disclosure", "Collapse", "DialogFrame"],
-        Body: LayoutDemo,
       },
     ],
   },
@@ -533,6 +596,16 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: AppWindow,
         components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition"],
         Body: Dialogs,
+      },
+      {
+        slug: "confirm-floating",
+        title: "Confirm dialog & floating panel",
+        short: "Confirm",
+        blurb:
+          "The promise that replaces window.confirm — with tones, its own words and a queue — and the non-modal panel docked in a corner behind a floating button.",
+        icon: MessageCircleQuestion,
+        components: ["ConfirmProvider", "useConfirm", "FloatingPanel", "FloatingActionButton"],
+        Body: ConfirmFloating,
       },
       {
         slug: "popovers",
@@ -648,13 +721,23 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: HooksLib,
       },
       {
+        slug: "clipboard-timing",
+        title: "Clipboard & timing",
+        short: "Clipboard",
+        blurb:
+          "Copying that says whether it worked, and waiting until the typing stops: the copy button and its hook, and the debounced value and callback.",
+        icon: ClipboardCopy,
+        components: ["CopyButton", "useCopyToClipboard", "copyToClipboard", "useDebounce", "useDebouncedCallback"],
+        Body: ClipboardTiming,
+      },
+      {
         slug: "helpers",
         title: "Helpers & constants",
         short: "Helpers",
         blurb:
           "The functions and data behind the inputs, shown as input → output: date arithmetic at @eifi1/ui-kit/dates, the calculator's evaluator, the currency table, and the class constants a custom field is composed from.",
         icon: FunctionSquare,
-        components: ["todayIso", "dateRangePresets", "evaluateExpression", "CURRENCIES", "FIELD_BASE"],
+        components: ["todayIso", "dateRangePresets", "calendarMonthPresets", "lastFullMonthsRange", "evaluateExpression", "CURRENCIES", "FIELD_BASE"],
         Body: Helpers,
       },
     ],
@@ -673,8 +756,10 @@ export const RETIRED_SLUGS: Record<string, string> = {
   primitives: "buttons",
   dropdowns: "comboboxes",
   dates: "calendars",
-  charts: "chart-shell",
   "tour-search-files": "tour",
+  // `charts` redirected to "chart-shell" until 0.8.0, when the charts left Data display
+  // for a group of their own — which took the slug for its overview. An old /charts link
+  // now lands one level up, on the index of the chart pages, which is still right.
 };
 
 /** A group whose sidebar entry opens an overview page rather than its only page. */

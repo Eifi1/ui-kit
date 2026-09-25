@@ -1,6 +1,6 @@
-import { useId, useRef, useState } from "react";
-import { Camera, Paperclip, Upload } from "lucide-react";
-import { AlertBanner, Button, Checkbox, FileButton, FileDropzone, useFilePicker } from "@eifi1/ui-kit";
+import { useEffect, useId, useRef, useState } from "react";
+import { Camera, FileText, Paperclip, Upload } from "lucide-react";
+import { AlertBanner, Button, Card, Checkbox, FileButton, FileDropzone, Spinner, cn, formatFileSize, useFileDrop, useFilePicker } from "@eifi1/ui-kit";
 import type { FileDropzoneRejectionFeedback, FilePickerLabels, FileRejection } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, Stage } from "../lib/section";
 
@@ -117,6 +117,24 @@ export function FileInputs() {
         <Stage>
           <div data-stage="wide">
             <DropzoneMultiple />
+          </div>
+        </Stage>
+      </Example>
+
+      <Example
+        label="FileDropzone — disabled, busy and renderBody"
+        hint="Locked while another form holds changes; inert with a spinner while it uploads; a body of your own. The strings default to the provider's filePicker.*."
+      >
+        <DropzoneStates />
+      </Example>
+
+      <Example
+        label="useFileDrop — any element as a drop target"
+        hint="Drop a PDF on the card: the same screening as FileButton, with no dashed box drawn over a list."
+      >
+        <Stage>
+          <div data-stage="wide">
+            <DropOnCard />
           </div>
         </Stage>
       </Example>
@@ -563,5 +581,149 @@ function DropzoneFeedback() {
         it, which ARIA forbids.
       </Note>
     </div>
+  );
+}
+
+/** The two inert states and a custom body. No label props at all: every string comes
+ *  from `<UiKitProvider labels>` — switch the language and the zone follows. */
+function DropzoneStates() {
+  const [file, setFile] = useState<File | null>(null);
+  const [locked, setLocked] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  // Stands in for an upload: busy for a moment after each pick.
+  useEffect(() => {
+    if (!busy) return;
+    const t = setTimeout(() => setBusy(false), 1800);
+    return () => clearTimeout(t);
+  }, [busy]);
+  return (
+    <>
+      <Row className="mb-3">
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
+          <code className="font-mono">disabled</code>
+        </label>
+        <Button variant="ghost" onClick={() => setBusy(true)} disabled={busy}>
+          Simulate an upload (<code className="font-mono">busy</code>)
+        </Button>
+      </Row>
+      <Stage>
+        <FileDropzone
+          file={file}
+          onFileSelected={(f) => {
+            setFile(f);
+            setBusy(true);
+          }}
+          onClear={() => setFile(null)}
+          accept=".pdf,application/pdf"
+          disabled={locked}
+          busy={busy}
+          rejectionFeedback="inline"
+        />
+        <FileDropzone
+          multiple
+          files={photos}
+          onFilesSelected={(picked) => setPhotos((p) => [...p, ...picked])}
+          onRemove={(_, i) => setPhotos((p) => p.filter((__, j) => j !== i))}
+          onClear={() => setPhotos([])}
+          accept="image/*"
+          maxFiles={6 - photos.length}
+          rejectionFeedback="inline"
+          busy={busy}
+          renderBody={(state) => (
+            <div className="flex flex-col items-center gap-2 text-center text-sm">
+              {state.busy ? <Spinner className="size-5 border-2" label={null} /> : <Camera aria-hidden className="size-6 text-[var(--text-muted)]" />}
+              <p className={cn("text-[var(--text-secondary)]", state.dragOver && "font-medium text-[var(--brand)]")}>
+                {state.busy
+                  ? state.labels.busy
+                  : state.dragOver
+                    ? "Let go to add them"
+                    : state.files.length
+                      ? `${state.files.length} photo${state.files.length === 1 ? "" : "s"} — several are possible`
+                      : "Several photos are possible"}
+              </p>
+              {state.files.length > 0 && (
+                <p className="text-xs text-[var(--text-muted)]">{state.files.map((f) => f.name).join(", ")}</p>
+              )}
+              {state.error && <p className="text-xs text-[var(--danger)]">{state.error}</p>}
+              <Button variant="secondary" onClick={state.open} disabled={state.disabled || state.busy}>
+                <Camera className="size-4" aria-hidden /> Take a photo
+              </Button>
+            </div>
+          )}
+        />
+      </Stage>
+      <Note>
+        <code className="font-mono">disabled</code> takes no drop, opens no picker and removes no file,
+        with <code className="font-mono">aria-disabled</code> on the group. <code className="font-mono">busy</code>{" "}
+        is inert the same way plus <code className="font-mono">aria-busy</code>, a spinner for the upload
+        icon and <code className="font-mono">filePicker.busy</code> as the text — pick a PDF on the first
+        zone (untick <code className="font-mono">disabled</code> first) and it goes busy while it
+        &ldquo;uploads&rdquo;. The second zone&apos;s <code className="font-mono">renderBody</code> is handed{" "}
+        <code className="font-mono">{"{ dragOver, disabled, busy, files, error, open, labels }"}</code>{" "}
+        and brings a second trigger; the Browse button, the inline error region and the live regions
+        stay, because Browse is the keyboard path. None of the four label props is passed: since 0.8
+        they default to the provider&apos;s strings.
+      </Note>
+    </>
+  );
+}
+
+interface Doc {
+  name: string;
+  size: number;
+}
+
+function DropOnCard() {
+  const [docs, setDocs] = useState<Doc[]>([
+    { name: "rental-agreement.pdf", size: 482_113 },
+    { name: "handover-protocol.pdf", size: 96_870 },
+  ]);
+  const [error, setError] = useState<string | null>(null);
+  const { dropProps, isOver, open, element } = useFileDrop<HTMLDivElement>({
+    accept: ".pdf,application/pdf",
+    multiple: true,
+    maxSize: 5_000_000,
+    onFiles: (files) => {
+      setError(null);
+      setDocs((d) => [...d, ...files.map((f) => ({ name: f.name, size: f.size }))]);
+    },
+    onReject: ([first]) => setError(first.message),
+  });
+  return (
+    <>
+      {element}
+      <Card
+        {...dropProps}
+        data-drop-over={isOver || undefined}
+        className={cn(
+          "p-4 transition-colors",
+          isOver && "border-[var(--brand)] bg-[var(--bg-hover)] ring-2 ring-[var(--brand)]",
+        )}
+      >
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h4 className="text-sm font-semibold text-[var(--text-primary)]">Booking documents</h4>
+          <Button variant="secondary" onClick={open}>
+            <Paperclip className="size-4" aria-hidden /> Attach…
+          </Button>
+        </div>
+        <ul className="divide-y divide-[var(--border)] text-sm">
+          {docs.map((d, i) => (
+            <li key={`${d.name}-${i}`} className="flex items-center gap-2 py-2 text-[var(--text-secondary)]">
+              <FileText className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{d.name}</span>
+              <span className="shrink-0 text-xs tabular-nums text-[var(--text-muted)]">{formatFileSize(d.size, "en-GB")}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">{isOver ? "Drop to attach" : "Drop PDFs anywhere on this card (up to 5 MB)."}</p>
+        {error && (
+          <AlertBanner tone="danger" className="mt-2">
+            {error}
+          </AlertBanner>
+        )}
+      </Card>
+    </>
   );
 }

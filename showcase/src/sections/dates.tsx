@@ -4,10 +4,13 @@ import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup } from "
 import type { DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
+  calendarMonthPresets,
   dateRangePresets,
   endOfMonthIso,
   endOfYearIso,
   formatIsoDate,
+  lastFullMonthsRange,
+  lastFullYearsRange,
   monthKey,
   pad,
   parseIsoDate,
@@ -70,6 +73,14 @@ const ARROW_LABELS: Record<Loc, { previousMonth: string; nextMonth: string }> = 
  * consumer's own `table.preset_*` catalog. This map is the showcase playing the part
  * of that catalog — an app would look these up in its translations instead.
  */
+/** Labels for `calendarMonthPresets()`'s keys — the host's words, as with the others. */
+const MONTH_PRESET_LABELS: Record<string, string> = {
+  last_3_full_months: "Last 3 full months",
+  last_6_full_months: "Last 6 full months",
+  last_12_full_months: "Last 12 full months",
+  last_2_full_years: "Last 2 full years",
+};
+
 const PRESET_LABELS: Record<string, string> = {
   today: "Today",
   yesterday: "Yesterday",
@@ -496,6 +507,8 @@ export function Dates() {
         </p>
       </Example>
 
+      <ReportRangeExample />
+
       <Example
         label="DateRangePicker — bounded, invalid, disabled"
         hint="min/max close the calendar's days outside the window; invalid and disabled as on DatePicker"
@@ -637,6 +650,67 @@ export function Dates() {
 }
 
 /**
+ * keksdose's report range: month-aligned presets with ids, drafted and committed on
+ * Apply. A component of its own so its state sits beside it.
+ */
+function ReportRangeExample() {
+  // Recomputed on every render from today, as the prop's docs ask: the id is the
+  // preset's identity, the dates are only what it means today.
+  const monthPresets: DateRangePickerPreset[] = calendarMonthPresets({ months: [3, 6, 12], years: [2] }).map((p) => ({
+    id: p.key,
+    label: MONTH_PRESET_LABELS[p.key] ?? p.key,
+    from: p.from,
+    to: p.to,
+  }));
+  const initial = lastFullMonthsRange(3);
+  const [range, setRange] = useState<{ from: string; to: string; preset: string | null }>({
+    from: initial.from,
+    to: initial.to,
+    preset: "last_3_full_months",
+  });
+  const [commits, setCommits] = useState(0);
+  return (
+    <Example
+      label='DateRangePicker — preset ids and commit="apply"'
+      hint="a preset arms the calendar instead of committing; nothing reaches onChange until Apply"
+    >
+      <Stage>
+        <DateRangePicker
+          from={range.from}
+          to={range.to}
+          locale={LOCALE}
+          label="Report period"
+          presets={monthPresets}
+          preset={range.preset}
+          commit="apply"
+          formatOptions={{ dateStyle: "medium" }}
+          onChange={(from, to, presetId) => {
+            setRange({ from, to, preset: presetId ?? null });
+            setCommits((n) => n + 1);
+          }}
+        />
+      </Stage>
+      <StateLine>
+        from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`} · commits={commits}
+      </StateLine>
+      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        Open it: &ldquo;Last 3 full months&rdquo; is marked, by its <code className="font-mono">id</code>{" "}
+        (the controlled <code className="font-mono">preset</code>) as long as its dates still match.
+        Pick &ldquo;Last 6 full months&rdquo;, then nudge the end a few days — nothing has been
+        committed yet, the preset mark goes away, and Apply stays disabled until both ends exist.
+        Apply hands <code className="font-mono">onChange(from, to, presetId)</code> the id, or{" "}
+        <code className="font-mono">undefined</code> for days picked by hand; Cancel, Escape and a
+        click outside throw the draft away. The presets are{" "}
+        <code className="font-mono">calendarMonthPresets()</code>: WHOLE calendar months and years,
+        never the rolling 90 days up to this morning. Apply and Cancel are{" "}
+        <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code>{" "}
+        and the column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
+      </p>
+    </Example>
+  );
+}
+
+/**
  * The `@eifi1/ui-kit/dates` helpers, input → output. Shown on the API group's Helpers
  * page rather than beside the pickers: they are functions an app calls, not components
  * it places, and between two picker specimens they read as part of the pickers.
@@ -697,6 +771,19 @@ export function DateHelpers() {
               localMidnight ? String(sameYmd(localMidnight, new Date())) : "null",
             ],
             ["dateRangePresets().length", String(dateRangePresets().length)],
+            // Month-aligned, beside the rolling ones: the last WHOLE months or years.
+            ["lastFullMonthsRange(3)", `${lastFullMonthsRange(3).from} → ${lastFullMonthsRange(3).to}`],
+            ["lastFullYearsRange(2)", `${lastFullYearsRange(2).from} → ${lastFullYearsRange(2).to}`],
+            [
+              'lastFullMonthsRange(1, new Date(2026, 2, 15))',
+              `${lastFullMonthsRange(1, new Date(2026, 2, 15)).from} → ${lastFullMonthsRange(1, new Date(2026, 2, 15)).to}`,
+            ],
+            [
+              "calendarMonthPresets().map((p) => p.key)",
+              calendarMonthPresets()
+                .map((p) => p.key)
+                .join(", "),
+            ],
           ]}
         />
       </Example>

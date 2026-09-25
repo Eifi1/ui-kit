@@ -58,6 +58,7 @@ export const it: Dictionary = {
     Inputs: "Input",
     "Pickers & entry": "Selettori e inserimento",
     "Data display": "Visualizzazione dati",
+    Charts: "Grafici",
     Overlays: "Overlay",
     // "Chrome" in the UI sense: the frame around the content, not the browser.
     "App chrome": "Struttura dell’app",
@@ -77,7 +78,7 @@ export const it: Dictionary = {
       title: "Panoramica",
       short: "Panoramica",
       blurb:
-        "Che cos’è @eifi1/ui-kit, i sette livelli su cui è costruito e come leggere una pagina di questa vetrina.",
+        "Che cos’è @eifi1/ui-kit, gli otto livelli su cui è costruito e come leggere una pagina di questa vetrina.",
     },
     foundations: {
       title: "Fondamenti",
@@ -193,19 +194,37 @@ export const it: Dictionary = {
     "data-display": {
       title: "Visualizzazione dati",
       blurb:
-        "Mostrare valori invece di acquisirli: i mattoni di base, la tabella e i grafici.",
+        "Mostrare valori invece di acquisirli: i mattoni di base, riscontro e avanzamento, elenchi, alberi e la tabella.",
     },
     buttons: {
       title: "Pulsanti e superfici",
       short: "Pulsanti",
       blurb:
-        "Pulsanti, pulsanti a icona, schede, indicatori di caricamento, stati vuoti, avatar e banner — i pezzi con cui è costruito tutto il resto.",
+        "Pulsanti, gruppi di pulsanti, pulsanti a icona, schede, indicatori di caricamento e avatar — i pezzi con cui è costruito tutto il resto.",
     },
     "chips-toggles": {
       title: "Chip e interruttori",
       short: "Chip",
       blurb:
         "I chip e il campo a chip, il gruppo di interruttori e le tab — i piccoli controlli che scelgono uno fra pochi o contengono un breve elenco.",
+    },
+    feedback: {
+      title: "Riscontro e avanzamento",
+      short: "Avanzamento",
+      blurb:
+        "A che punto è un lavoro, che un contenuto sta arrivando, che qui non c’è nulla e che c’è qualcosa da leggere: barre di avanzamento e indicatori, skeleton, stati vuoti e banner.",
+    },
+    "description-list": {
+      title: "Elenco descrittivo e tabella",
+      short: "Elenchi e tabelle",
+      blurb:
+        "Fatti disposti senza alcun meccanismo: un elenco di termini e dettagli, una semplice tabella statica, e il separatore e l’area di scorrimento che stanno tra i due.",
+    },
+    "tree-view": {
+      title: "Vista ad albero",
+      short: "Albero",
+      blurb:
+        "Una gerarchia che percorri con la tastiera — una sola tappa di Tab, le frecce per aprire e chiudere, la ricerca mentre digiti — con figli caricati su richiesta, controllata dall’esterno, da destra a sinistra, e la sua riga da sola.",
     },
     "data-table": {
       title: "Tabella dati",
@@ -225,6 +244,11 @@ export const it: Dictionary = {
       blurb:
         "Ciò di cui è fatta la tabella, utilizzabile da solo: la paginazione, il popover dei filtri, l’albero delle etichette e le funzioni pure per ordinamento, filtri e URL.",
     },
+    charts: {
+      title: "Grafici",
+      blurb:
+        "I valori come immagini: l’involucro con tema sopra Recharts, il grafico a riquadri, il grafico a serie con zoom con le sue barre e aree, e il riquadro KPI.",
+    },
     "chart-shell": {
       title: "Involucro dei grafici",
       short: "Grafici",
@@ -242,6 +266,12 @@ export const it: Dictionary = {
       short: "Serie",
       blurb:
         "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici e le funzioni sottostanti.",
+    },
+    "series-chart-marks": {
+      title: "Grafico a serie: barre, aree e tempo",
+      short: "Barre e aree",
+      blurb:
+        "Lo stesso grafico che disegna barre, aree e pile, su categorie e sul tempo reale, con linee di riferimento, marcatori, punti e clic — e una legenda i cui colori restano fermi.",
     },
     stats: {
       title: "Statistiche e sparkline",
@@ -265,6 +295,12 @@ export const it: Dictionary = {
       short: "Dialoghi",
       blurb:
         "La modale e il dialogo a schermo intero, il clic sullo sfondo che li chiude e la temporizzazione di chiusura condivisa da tutti gli overlay.",
+    },
+    "confirm-floating": {
+      title: "Dialogo di conferma e pannello flottante",
+      short: "Conferma",
+      blurb:
+        "La promise che sostituisce window.confirm — con toni, parole proprie e una coda — e il pannello non modale ancorato in un angolo dietro un pulsante flottante.",
     },
     popovers: {
       title: "Popover, menu e tooltip",
@@ -332,6 +368,12 @@ export const it: Dictionary = {
       short: "Hook",
       blurb:
         "Le esportazioni non visive: gli hook osservati dal vivo e le funzioni pure come input → output.",
+    },
+    "clipboard-timing": {
+      title: "Appunti e tempi",
+      short: "Appunti",
+      blurb:
+        "Una copia che dice se è riuscita, e l’attesa finché non smetti di digitare: il pulsante di copia e il suo hook, e il valore e la callback con debounce.",
     },
     helpers: {
       title: "Funzioni e costanti",

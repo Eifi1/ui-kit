@@ -62,6 +62,7 @@ export const fr: Dictionary = {
     Inputs: "Saisie",
     "Pickers & entry": "Sélecteurs et saisie",
     "Data display": "Affichage des données",
+    Charts: "Graphiques",
     Overlays: "Superpositions",
     // "Chrome" in the UI sense: the frame around the content, not the browser.
     "App chrome": "Cadre de l’application",
@@ -81,7 +82,7 @@ export const fr: Dictionary = {
       title: "Présentation",
       short: "Présentation",
       blurb:
-        "Ce qu’est @eifi1/ui-kit, les sept couches qui le composent et comment lire une page de cette vitrine.",
+        "Ce qu’est @eifi1/ui-kit, les huit couches qui le composent et comment lire une page de cette vitrine.",
     },
     foundations: {
       title: "Fondations",
@@ -197,19 +198,37 @@ export const fr: Dictionary = {
     "data-display": {
       title: "Affichage des données",
       blurb:
-        "Montrer des valeurs plutôt que les saisir\u00a0: les briques de base, le tableau et les graphiques.",
+        "Montrer des valeurs plutôt que les saisir\u00a0: les briques de base, le retour et la progression, les listes, les arbres et le tableau.",
     },
     buttons: {
       title: "Boutons et surfaces",
       short: "Boutons",
       blurb:
-        "Boutons, boutons-icônes, cartes, indicateurs de chargement, états vides, avatars et bannières — les pièces à partir desquelles tout le reste est construit.",
+        "Boutons, groupes de boutons, boutons-icônes, cartes, indicateurs de chargement et avatars — les pièces à partir desquelles tout le reste est construit.",
     },
     "chips-toggles": {
       title: "Puces et bascules",
       short: "Puces",
       blurb:
         "Les puces et le champ à puces, le groupe de bascules et les onglets — les petits contrôles qui choisissent une option parmi quelques-unes ou tiennent une courte liste.",
+    },
+    feedback: {
+      title: "Retour et progression",
+      short: "Progression",
+      blurb:
+        "Où en est une tâche, qu’un contenu arrive, qu’il n’y a rien ici et que quelque chose mérite d’être lu\u00a0: barres de progression et jauges, squelettes, états vides et bannières.",
+    },
+    "description-list": {
+      title: "Liste de descriptions et tableau",
+      short: "Listes et tableaux",
+      blurb:
+        "Des faits présentés sans aucune mécanique\u00a0: une liste de termes et de détails, un simple tableau statique, et le séparateur et la zone de défilement qui se placent entre les deux.",
+    },
+    "tree-view": {
+      title: "Arborescence",
+      short: "Arbre",
+      blurb:
+        "Une hiérarchie parcourue au clavier — un seul arrêt de tabulation, les flèches pour ouvrir et fermer, la recherche à la frappe — avec des enfants chargés à la demande, pilotée de l’extérieur, de droite à gauche, et sa ligne employée seule.",
     },
     "data-table": {
       title: "Tableau de données",
@@ -229,6 +248,11 @@ export const fr: Dictionary = {
       blurb:
         "Ce dont le tableau est fait, utilisable seul\u00a0: la pagination, le popover de filtre, l’arbre des libellés, et les utilitaires purs de tri, de filtre et d’URL.",
     },
+    charts: {
+      title: "Graphiques",
+      blurb:
+        "Des valeurs en images\u00a0: l’enveloppe thémée au-dessus de Recharts, le graphique en tuiles, le graphique de séries zoomable avec ses barres et ses aires, et la tuile d’indicateur.",
+    },
     "chart-shell": {
       title: "Enveloppe de graphique",
       short: "Graphiques",
@@ -246,6 +270,12 @@ export const fr: Dictionary = {
       short: "Séries",
       blurb:
         "Le graphique de séries zoomable que partagent les applications\u00a0: un axe par unité, une légende d’interrupteurs, un seul zoom pour une pile de graphiques, et les utilitaires en dessous.",
+    },
+    "series-chart-marks": {
+      title: "Graphique de séries\u00a0: barres, aires et temps",
+      short: "Barres et aires",
+      blurb:
+        "Le même graphique qui dessine des barres, des aires et des empilements, sur des catégories et sur le temps réel, avec des lignes de référence, des repères, des points et des clics — et une légende dont les couleurs ne bougent pas.",
     },
     stats: {
       title: "Indicateurs et sparklines",
@@ -269,6 +299,12 @@ export const fr: Dictionary = {
       short: "Dialogues",
       blurb:
         "La modale et le dialogue plein écran, l’appui sur le fond qui les ferme, et la temporisation de fermeture que partagent toutes les superpositions.",
+    },
+    "confirm-floating": {
+      title: "Dialogue de confirmation et panneau flottant",
+      short: "Confirmation",
+      blurb:
+        "La promesse qui remplace window.confirm — avec ses tons, ses propres mots et une file d’attente — et le panneau non modal ancré dans un coin derrière un bouton flottant.",
     },
     popovers: {
       title: "Popovers, menus et info-bulles",
@@ -336,6 +372,12 @@ export const fr: Dictionary = {
       short: "Hooks",
       blurb:
         "Les exports non visuels\u00a0: les hooks observés en direct, et les utilitaires purs sous forme entrée → sortie.",
+    },
+    "clipboard-timing": {
+      title: "Presse-papiers et temporisation",
+      short: "Presse-papiers",
+      blurb:
+        "Une copie qui dit si elle a réussi, et l’attente jusqu’à la fin de la frappe\u00a0: le bouton de copie et son hook, et la valeur et le callback temporisés.",
     },
     helpers: {
       title: "Fonctions et constantes",

@@ -49,6 +49,42 @@ export function LayoutDemo() {
         </Stage>
       </Example>
 
+      <Example
+        label="Disclosure — chevronPosition"
+        hint='"end" puts a bare chevron at the far end of the row, like a menu row with a sub-list'
+      >
+        <Stage>
+          <ChevronEndSpecimen />
+        </Stage>
+        <Note>
+          <code className="font-mono">chevronPosition=&quot;end&quot;</code> draws the bare chevron at the
+          row&apos;s end, pointing down and turning up as the card&apos;s does; with{" "}
+          <code className="font-mono">trailing</code> it follows it — &ldquo;Language 🇩🇪 ⌄&rdquo;. The
+          default <code className="font-mono">start</code> is the leading chevron that turns from the
+          reading direction to down. A <code className="font-mono">card</code> always has it at the end,
+          so the prop is ignored there.
+        </Note>
+      </Example>
+
+      <Example
+        label="Disclosure — triggerProps"
+        hint="attributes for the header BUTTON, or a function of the open state"
+      >
+        <Stage>
+          <TriggerPropsSpecimen />
+        </Stage>
+        <Note>
+          The visible title is only the group&apos;s name, so each toggle is named{" "}
+          <em>&ldquo;Expand group Food&rdquo;</em> / <em>&ldquo;Collapse group Food&rdquo;</em> through{" "}
+          <code className="font-mono">{"triggerProps={(open) => ({ \"aria-label\": … })}"}</code> — the
+          name still contains the title&apos;s words (WCAG 2.5.3). The third passes a plain object, an{" "}
+          <code className="font-mono">id</code> and a <code className="font-mono">data-*</code> hook. The
+          disclosure keeps <code className="font-mono">aria-expanded</code>,{" "}
+          <code className="font-mono">aria-controls</code>, <code className="font-mono">onClick</code> and the
+          content for itself; the outer props still go to the wrapping div.
+        </Note>
+      </Example>
+
       <Example label="Disclosure — trailing" hint="A count, a date or an action beside the title">
         <Stage>
           <TrailingSpecimens />
@@ -159,6 +195,84 @@ function BareSpecimen() {
             <li key={h}>{h}</li>
           ))}
         </ul>
+      </Disclosure>
+    </div>
+  );
+}
+
+const BUDGET_GROUPS = [
+  { name: "Food", items: ["Groceries", "Eating out"] },
+  { name: "Housing", items: ["Rent", "Energy", "Insurance"] },
+];
+
+function TriggerPropsSpecimen() {
+  const [names, setNames] = useState<Record<string, string>>({});
+  return (
+    <div data-stage="wide" className="mx-auto w-full max-w-xl space-y-2">
+      {BUDGET_GROUPS.map((g) => (
+        <Disclosure
+          key={g.name}
+          title={g.name}
+          trailing={<span className="text-xs text-[var(--text-muted)]">{g.items.length} lines</span>}
+          triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group ${g.name}` })}
+          onOpenChange={(open) => setNames((n) => ({ ...n, [g.name]: `${open ? "Collapse" : "Expand"} group ${g.name}` }))}
+        >
+          <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+            {g.items.map((i) => (
+              <li key={i}>{i}</li>
+            ))}
+          </ul>
+        </Disclosure>
+      ))}
+      <Disclosure
+        variant="bare"
+        title="Archived groups"
+        triggerProps={{ id: "archived-groups-toggle", "data-tour": "archived-groups" }}
+      >
+        <p className="text-xs text-[var(--text-muted)]">The header button carries id=&quot;archived-groups-toggle&quot;.</p>
+      </Disclosure>
+      <p className="font-mono text-xs text-[var(--text-muted)]">
+        toggle names now: {BUDGET_GROUPS.map((g) => names[g.name] ?? `Expand group ${g.name}`).join(" · ")}
+      </p>
+    </div>
+  );
+}
+
+function ChevronEndSpecimen() {
+  const [lang, setLang] = useState("Deutsch");
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-sm">
+      <p className="rounded px-2 py-1.5 text-[var(--text-primary)]">Profile</p>
+      <Disclosure
+        variant="bare"
+        chevronPosition="end"
+        title="Language"
+        className="px-2 py-1.5"
+        headerClassName="text-[var(--text-primary)]"
+        trailing={<span className="text-xs text-[var(--text-muted)]">{lang}</span>}
+      >
+        <ul className="mt-1 space-y-0.5 ps-2">
+          {["Deutsch", "English", "Français"].map((l) => (
+            <li key={l}>
+              <button
+                type="button"
+                onClick={() => setLang(l)}
+                className={cn(
+                  "w-full rounded px-2 py-1 text-start hover:bg-[var(--bg-hover)]",
+                  l === lang ? "font-medium text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+                )}
+              >
+                {l}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Disclosure>
+      <Disclosure variant="bare" chevronPosition="end" title="Hidden accounts" className="px-2 py-1.5">
+        <p className="text-xs text-[var(--text-muted)]">No trailing: the chevron alone at the end.</p>
+      </Disclosure>
+      <Disclosure variant="bare" title="Default: chevron at the start" className="px-2 py-1.5">
+        <p className="text-xs text-[var(--text-muted)]">chevronPosition=&quot;start&quot;.</p>
       </Disclosure>
     </div>
   );

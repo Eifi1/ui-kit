@@ -6,6 +6,8 @@ import {
   DEFAULT_COMBOBOX_LABELS,
   DEFAULT_COMMAND_PALETTE_LABELS,
   DEFAULT_COMMON_LABELS,
+  DEFAULT_CONFIRM_DIALOG_LABELS,
+  DEFAULT_COPY_BUTTON_LABELS,
   DEFAULT_CURRENCY_LABELS,
   DEFAULT_DANGER_CONFIRM_LABELS,
   DEFAULT_DATA_TABLE_LABELS,
@@ -15,6 +17,7 @@ import {
   DEFAULT_FILE_LABELS,
   DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
   DEFAULT_FILE_PICKER_LABELS,
+  DEFAULT_FLOATING_PANEL_LABELS,
   DEFAULT_ICON_PICKER_LABELS,
   DEFAULT_MEASURED_GRID_LABELS,
   DEFAULT_MINI_CALENDAR_LABELS,
@@ -36,6 +39,7 @@ import {
   DEFAULT_TOUR_LABELS,
   DEFAULT_UI_KIT_LABELS,
   DEFAULT_WIZARD_LABELS,
+  DangerConfirm,
   MiniCalendar,
   Pagination,
   PasswordStrengthMeter,
@@ -57,6 +61,8 @@ import {
 import type { UiKitLabels } from "@eifi1/ui-kit";
 import { UI_KIT_LABELS_DE, uiKitLabelsDe } from "@eifi1/ui-kit/i18n/de";
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+import { UI_KIT_LABELS_DE_INFORMAL } from "@eifi1/ui-kit/i18n/de-informal";
+import { UI_KIT_LABELS_DE_CH_INFORMAL } from "@eifi1/ui-kit/i18n/de-CH-informal";
 import { UI_KIT_LABELS_FR } from "@eifi1/ui-kit/i18n/fr";
 import { UI_KIT_LABELS_IT } from "@eifi1/ui-kit/i18n/it";
 import { UI_KIT_LABELS_ES } from "@eifi1/ui-kit/i18n/es";
@@ -74,6 +80,7 @@ export function Localisation() {
     <>
       <ProviderExample />
       <ShippedTranslationsExample />
+      <InformalGermanExample />
       <NestingExample />
       <FileSizeExample />
       <CompletenessExample />
@@ -112,6 +119,8 @@ import { de } from "./i18n/kit-de"; // a UiKitLabels (or any part of one)
 const SHIPPED: [string, UiKitLabels][] = [
   ["UI_KIT_LABELS_DE", UI_KIT_LABELS_DE],
   ["UI_KIT_LABELS_DE_CH", UI_KIT_LABELS_DE_CH],
+  ["UI_KIT_LABELS_DE_INFORMAL", UI_KIT_LABELS_DE_INFORMAL],
+  ["UI_KIT_LABELS_DE_CH_INFORMAL", UI_KIT_LABELS_DE_CH_INFORMAL],
   ["UI_KIT_LABELS_FR", UI_KIT_LABELS_FR],
   ["UI_KIT_LABELS_IT", UI_KIT_LABELS_IT],
   ["UI_KIT_LABELS_ES", UI_KIT_LABELS_ES],
@@ -140,6 +149,8 @@ function ShippedTranslationsExample() {
       <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
         {`import { UI_KIT_LABELS_DE } from "@eifi1/ui-kit/i18n/de";
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+import { UI_KIT_LABELS_DE_INFORMAL } from "@eifi1/ui-kit/i18n/de-informal";
+import { UI_KIT_LABELS_DE_CH_INFORMAL } from "@eifi1/ui-kit/i18n/de-CH-informal";
 // also: /i18n/fr, /it, /es, /hu, /zh — UI_KIT_LABELS_FR … and uiKitLabelsFr(numberLocale) …
 
 <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
@@ -192,6 +203,89 @@ import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
         every message function, so a name the app passes in is respelled too. The page-number strip
         is formatted with the provider&apos;s <code className="font-mono">locale</code>; the range
         summary by the labels themselves.
+      </Note>
+    </Example>
+  );
+}
+
+
+/** The four German catalogues side by side: two registers × two spellings. */
+const GERMAN_REGISTERS: { title: string; code: string; labels: UiKitLabels; locale: string }[] = [
+  { title: "formal", code: "UI_KIT_LABELS_DE", labels: UI_KIT_LABELS_DE, locale: "de-DE" },
+  { title: "informal", code: "UI_KIT_LABELS_DE_INFORMAL", labels: UI_KIT_LABELS_DE_INFORMAL, locale: "de-DE" },
+  { title: "informal, Swiss", code: "UI_KIT_LABELS_DE_CH_INFORMAL", labels: UI_KIT_LABELS_DE_CH_INFORMAL, locale: "de-CH" },
+];
+
+/** `dangerConfirm.phrase` is a string or a function of the phrase — call it if it is one. */
+const phraseOf = (labels: UiKitLabels) => {
+  const phrase = labels.dangerConfirm.phrase;
+  return typeof phrase === "function" ? phrase("löschen") : phrase;
+};
+
+function InformalGermanExample() {
+  const [picked, setPicked] = useState<Record<string, { from: string; to: string }>>({});
+  const sampleDate = "1. Oktober 2026";
+  return (
+    <Example
+      label="Formal and informal German — Sie and du"
+      hint="@eifi1/ui-kit/i18n/de-informal and de-CH-informal: only the sentences that address the user differ"
+    >
+      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        {`import { UI_KIT_LABELS_DE_INFORMAL } from "@eifi1/ui-kit/i18n/de-informal";
+import { UI_KIT_LABELS_DE_CH_INFORMAL } from "@eifi1/ui-kit/i18n/de-CH-informal";
+// also: uiKitLabelsDeInformal(numberLocale) — "du" with Austrian digits, say`}
+      </pre>
+      <div className="mt-3 grid gap-4 lg:grid-cols-3">
+        {GERMAN_REGISTERS.map((v) => {
+          const range = picked[v.code];
+          return (
+            <div key={v.code} className="min-w-0 space-y-3 rounded-md border border-[var(--border)] p-3">
+              <p className="font-mono text-[11px] text-[var(--text-muted)]">
+                {v.code} · {v.title}
+              </p>
+              <UiKitProvider labels={v.labels} locale={v.locale}>
+                <MiniCalendar
+                  mode="range"
+                  from={range?.from ?? ""}
+                  to={range?.to ?? ""}
+                  onSelect={(from, to) => setPicked((p) => ({ ...p, [v.code]: { from, to } }))}
+                />
+                <p className="text-xs text-[var(--text-secondary)]" aria-hidden>
+                  <span className="text-[var(--text-muted)]">announced: </span>
+                  {range?.from && !range.to
+                    ? v.labels.miniCalendar.startSelected(range.from)
+                    : v.labels.miniCalendar.startSelected(sampleDate)}
+                </p>
+                <DangerConfirm
+                  armLabel="Konto löschen…"
+                  confirmLabel="Endgültig löschen"
+                  phrase="löschen"
+                  onConfirm={() => undefined}
+                />
+              </UiKitProvider>
+            </div>
+          );
+        })}
+      </div>
+      <OutTable
+        rows={[
+          ["wizard.missingRequired", `${UI_KIT_LABELS_DE.wizard.missingRequired}  →  ${UI_KIT_LABELS_DE_INFORMAL.wizard.missingRequired}`],
+          ["wizard.confirmCancel", `${UI_KIT_LABELS_DE.wizard.confirmCancel}  →  ${UI_KIT_LABELS_DE_INFORMAL.wizard.confirmCancel}`],
+          ["tour.awaitClickHint", `${UI_KIT_LABELS_DE.tour.awaitClickHint}  →  ${UI_KIT_LABELS_DE_INFORMAL.tour.awaitClickHint}`],
+          ["signaturePad.typedFallbackHint", `${UI_KIT_LABELS_DE.signaturePad.typedFallbackHint}  →  ${UI_KIT_LABELS_DE_INFORMAL.signaturePad.typedFallbackHint}`],
+          ['dangerConfirm.phrase("löschen")', `${phraseOf(UI_KIT_LABELS_DE)}  →  ${phraseOf(UI_KIT_LABELS_DE_INFORMAL)}`],
+          ["common.save (unchanged)", `${UI_KIT_LABELS_DE.common.save}  →  ${UI_KIT_LABELS_DE_INFORMAL.common.save}`],
+        ]}
+      />
+      <Note>
+        Pick a first day in each calendar: the line under it is what a screen reader hears —
+        &ldquo;Wählen Sie jetzt ein Enddatum&rdquo; against &ldquo;Wähle jetzt ein Enddatum&rdquo;. Arm
+        the delete below it for the typed-phrase prompt in each register. Everything else is the same
+        text in both, because a German UI labels actions with infinitives (&ldquo;Speichern&rdquo;)
+        and never addressed anyone there; the informal catalogue is built on the formal one and
+        overrides only the eight sentences that do. The Swiss one respells ß as ss on top. The
+        showcase&apos;s own language menu keeps one German — its dictionaries are keyed by language,
+        not by register — so the registers are compared here instead.
       </Note>
     </Example>
   );
@@ -453,6 +547,9 @@ const NAMESPACE_CONSTANTS: Array<[string, keyof UiKitLabels, unknown]> = [
   ["DEFAULT_FILE_PICKER_LABELS", "filePicker", DEFAULT_FILE_PICKER_LABELS],
   ["DEFAULT_MEASURED_GRID_LABELS", "measuredGrid", DEFAULT_MEASURED_GRID_LABELS],
   ["DEFAULT_FEEDBACK_ATTACHMENT_LABELS", "feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS],
+  ["DEFAULT_CONFIRM_DIALOG_LABELS", "confirmDialog", DEFAULT_CONFIRM_DIALOG_LABELS],
+  ["DEFAULT_FLOATING_PANEL_LABELS", "floatingPanel", DEFAULT_FLOATING_PANEL_LABELS],
+  ["DEFAULT_COPY_BUTTON_LABELS", "copyButton", DEFAULT_COPY_BUTTON_LABELS],
 ];
 
 function NamespaceConstantsExample() {
