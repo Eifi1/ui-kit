@@ -95,6 +95,7 @@ export function FullBleedDialog({
   footer,
   onMouseDown,
   onMouseUp,
+  onKeyDown,
   ...rest
 }: FullBleedDialogProps) {
   // Every way OUT goes through `requestClose`, so the panel lowers itself before the
@@ -121,7 +122,10 @@ export function FullBleedDialog({
   useFocusTrap(dialogRef, { active: open });
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Escape") return;
+    // The caller's handler first (keksdose's transaction-search keeps its list keys on
+    // the dialog); `preventDefault()` there claims the key, Escape included.
+    onKeyDown?.(e);
+    if (e.defaultPrevented || e.key !== "Escape") return;
     // On the panel, the way `Modal` does it, and NOT through `useEscapeKey`: this
     // dialog is the thing a `PickerSheet` opens on top of, and a document-level
     // listener cannot tell which of the two the user meant. One press would dismiss
@@ -186,7 +190,7 @@ export function FullBleedDialog({
         )}
       >
         <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-3">
-          <div className="min-w-0 font-medium">{header}</div>
+          <div className="min-w-0 flex-1 font-medium">{header}</div>
           <button
             type="button"
             onClick={requestClose}

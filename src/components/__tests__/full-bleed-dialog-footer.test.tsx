@@ -140,3 +140,30 @@ describe("FullBleedDialog footer", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("FullBleedDialog — caller keys and a stretching header (keksdose B18)", () => {
+  it("runs the caller's onKeyDown, and a prevented Escape does not close", () => {
+    const onClose = vi.fn();
+    const onKeyDown = vi.fn((e: { key: string; preventDefault: () => void }) => {
+      if (e.key === "Escape") e.preventDefault();
+    });
+    render(
+      <FullBleedDialog open closeLabel="Close" onClose={onClose} header="Search" onKeyDown={onKeyDown}>
+        <p>body</p>
+      </FullBleedDialog>,
+    );
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "ArrowDown" });
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(onKeyDown).toHaveBeenCalledTimes(2);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("lets the header slot take the free width", () => {
+    render(
+      <FullBleedDialog open closeLabel="Close" onClose={() => {}} header={<span data-testid="h">Search</span>}>
+        <p>body</p>
+      </FullBleedDialog>,
+    );
+    expect(screen.getByTestId("h").parentElement).toHaveClass("flex-1");
+  });
+});
