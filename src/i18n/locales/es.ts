@@ -295,6 +295,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Borrar búsqueda",
+      submit: "Buscar",
+      close: "Cerrar",
       placeholder: "Buscar…",
       empty: "Sin resultados",
       loading: "Buscando…",

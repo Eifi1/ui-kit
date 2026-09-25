@@ -302,6 +302,9 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Suche löschen",
+      submit: "Suchen",
+      close: "Schließen",
       placeholder: "Suchen…",
       empty: "Keine Ergebnisse",
       loading: "Wird gesucht…",

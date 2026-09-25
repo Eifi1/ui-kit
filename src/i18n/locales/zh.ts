@@ -287,6 +287,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "清除搜索",
+      submit: "搜索",
+      close: "关闭",
       placeholder: "搜索…",
       empty: "无结果",
       loading: "搜索中…",

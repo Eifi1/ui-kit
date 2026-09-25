@@ -297,6 +297,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Keresés törlése",
+      submit: "Keresés",
+      close: "Bezárás",
       placeholder: "Keresés…",
       empty: "Nincs találat",
       loading: "Keresés folyamatban…",

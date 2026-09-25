@@ -307,6 +307,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     commandPalette: {
+      clear: "Effacer la recherche",
+      submit: "Rechercher",
+      close: "Fermer",
       placeholder: "Rechercher…",
       empty: "Aucun résultat",
       loading: "Recherche…",
