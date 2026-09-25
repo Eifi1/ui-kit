@@ -84,6 +84,13 @@ export function buttonClasses(
   return cn(BUTTON_BASE, BUTTON_SIZES[size], buttonVariantClasses[variant], className);
 }
 
+/**
+ * ⚠️ No default `type`: like a native `<button>`, a `Button` inside a `<form>` SUBMITS
+ * it unless you pass `type="button"`. Kept native on purpose — a form's own submit
+ * button relies on it, and changing the default would silently stop those forms from
+ * submitting. Pass `type="button"` for every other action in a form (keksdose had six
+ * link buttons submitting their form).
+ */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   /** `md` (default) is the page's action button. `sm` is the compact one — 12px text
