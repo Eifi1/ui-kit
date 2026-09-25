@@ -167,3 +167,21 @@ describe("FullBleedDialog — caller keys and a stretching header (keksdose B18)
     expect(screen.getByTestId("h").parentElement).toHaveClass("flex-1");
   });
 });
+
+describe("FullBleedDialog — a descendant's preventDefault does not block Escape (0.8.1)", () => {
+  it("closes on Escape although a search input in the header prevented it", () => {
+    const onClose = vi.fn();
+    render(
+      <FullBleedDialog
+        open
+        closeLabel="Close"
+        onClose={onClose}
+        header={<input type="search" aria-label="Search" onKeyDown={(e) => e.key === "Escape" && e.preventDefault()} />}
+      >
+        <p>body</p>
+      </FullBleedDialog>,
+    );
+    fireEvent.keyDown(screen.getByRole("searchbox", { name: "Search" }), { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+});

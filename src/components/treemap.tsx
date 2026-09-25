@@ -389,6 +389,9 @@ export function Treemap({
       name: d.name,
       size: d.value,
       fill: d.fill ?? ramp[idx % ramp.length],
+      // recharts hands each node's fields to its cell; a field left out of this map
+      // never reaches `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose).
+      labelColor: d.labelColor,
     }))
     .filter((n) => Number.isFinite(n.size) && n.size > 0)
     .slice(0, maxTiles ?? undefined);
