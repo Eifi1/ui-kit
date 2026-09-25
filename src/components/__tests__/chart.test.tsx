@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import {
   ChartContainer,
   ChartLegendContent,
+  ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "../chart";
@@ -17,11 +18,17 @@ import {
  * div. Nothing in this file is testing recharts' layout; it is testing what the kit
  * puts inside it.
  */
+const tooltipProps = vi.hoisted(() => ({ last: null as Record<string, unknown> | null }));
+
 vi.mock("recharts", async () => {
   const { createElement } = await import("react");
   return {
     Legend: () => null,
-    Tooltip: () => null,
+    // Records what `ChartTooltip` hands recharts, so its defaults can be asserted.
+    Tooltip: (props: Record<string, unknown>) => {
+      tooltipProps.last = props;
+      return null;
+    },
     ResponsiveContainer: ({ children }: { children: ReactNode }) =>
       createElement("div", null, children),
   };
@@ -235,5 +242,160 @@ describe("ChartLegendContent", () => {
       </ChartContainer>,
     );
     for (const b of screen.getAllByRole("button")) expect(b).not.toHaveAttribute("aria-pressed");
+  });
+});
+
+/** A legend entry's swatch colour, as jsdom normalised it. A key entry is one <span>
+ *  holding the swatch and the label text. */
+const swatchOf = (text: string) =>
+  (screen.getByText(text).querySelector("span[style]") as HTMLElement).style.backgroundColor;
+
+describe("the key shows the colour the series is painted with", () => {
+  // Both entries below are refused by ChartStyle — one for its key, one for its colour —
+  // so neither gets a `--color-…` and neither is painted in its configured colour. The
+  // swatch used to show that colour anyway: a key promising red for a series drawn in
+  // recharts' own colour.
+  const REFUSING: ChartConfig = {
+    revenue: { label: "Revenue", color: "#00ff00" },
+    "bad key": { label: "Bad key", color: "#ff0000" },
+    badColour: { label: "Bad colour", color: "#f00; x: y" },
+  };
+
+  it("in the legend", () => {
+    render(
+      <ChartContainer id="legcol" config={REFUSING}>
+        <ChartLegendContent
+          payload={[
+            { dataKey: "revenue", color: "#0000ff" },
+            { dataKey: "bad key", color: "#0000ff" },
+            { dataKey: "badColour", color: "#0000ff" },
+          ]}
+        />
+      </ChartContainer>,
+    );
+    expect(swatchOf("Revenue")).toBe("rgb(0, 255, 0)");
+    expect(swatchOf("Bad key")).toBe("rgb(0, 0, 255)");
+    expect(swatchOf("Bad colour")).toBe("rgb(0, 0, 255)");
+  });
+
+  it("in the tooltip", () => {
+    render(
+      <ChartContainer id="tipcol" config={REFUSING}>
+        <ChartTooltipContent
+          active
+          payload={[
+            { dataKey: "revenue", value: 1, color: "#0000ff" },
+            { dataKey: "bad key", value: 2, color: "#0000ff" },
+            { dataKey: "badColour", value: 3, color: "#0000ff" },
+          ]}
+        />
+      </ChartContainer>,
+    );
+    const swatch = (text: string) =>
+      (screen.getByText(text).parentElement!.querySelector("span[style]") as HTMLElement).style.backgroundColor;
+    expect(swatch("Revenue")).toBe("rgb(0, 255, 0)");
+    expect(swatch("Bad key")).toBe("rgb(0, 0, 255)");
+    expect(swatch("Bad colour")).toBe("rgb(0, 0, 255)");
+  });
+});
+
+describe("ChartTooltip — the missing-value path runs by default", () => {
+  it("keeps null values (recharts' filterNull defaults to true), and a caller can opt back", () => {
+    // Under recharts' default the em dash documented on ChartTooltipContent never ran:
+    // a series with no value at the cursor was dropped before the content saw it.
+    render(<ChartTooltip />);
+    expect(tooltipProps.last?.filterNull).toBe(false);
+    render(<ChartTooltip filterNull />);
+    expect(tooltipProps.last?.filterNull).toBe(true);
+  });
+
+  it("still drops series drawn with `hide`, unless recharts says includeHidden", () => {
+    // The other half of the filter recharts no longer applies: a legend toggle must
+    // still take its series out of the tooltip.
+    const payload = [
+      { dataKey: "revenue", value: 1 },
+      { dataKey: "gone", value: 2, hide: true },
+      { dataKey: "gap" },
+    ];
+    const { unmount } = render(
+      <ChartContainer id="tiphide" config={CONFIG}>
+        <ChartTooltipContent active payload={payload} />
+      </ChartContainer>,
+    );
+    expect(screen.queryByText("gone")).toBeNull();
+    expect(screen.getByText("gap")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    unmount();
+    render(
+      <ChartContainer id="tiphide2" config={CONFIG}>
+        <ChartTooltipContent active payload={payload} includeHidden />
+      </ChartContainer>,
+    );
+    expect(screen.getByText("gone")).toBeInTheDocument();
+  });
+
+  it("renders nothing when every entry is hidden", () => {
+    const { container } = render(
+      <ChartContainer id="tipnone" config={CONFIG}>
+        <ChartTooltipContent active payload={[{ dataKey: "revenue", value: 1, hide: true }]} />
+      </ChartContainer>,
+    );
+    expect(container.querySelector(".shadow-xl")).toBeNull();
+  });
+});
+
+describe("chart shell in RTL", () => {
+  it("pins the plot's SVG to ltr, so tick anchoring stays physical", () => {
+    const { container } = render(
+      <div dir="rtl">
+        <ChartContainer id="rtl" config={CONFIG}>
+          <div />
+        </ChartContainer>
+      </div>,
+    );
+    expect(container.querySelector("[data-chart]")).toHaveClass("[&_.recharts-surface]:[direction:ltr]");
+  });
+
+  it("puts the tooltip's value at the logical end", () => {
+    render(
+      <div dir="rtl">
+        <ChartContainer id="rtltip" config={CONFIG}>
+          <ChartTooltipContent active payload={[{ dataKey: "revenue", value: 7 }]} />
+        </ChartContainer>
+      </div>,
+    );
+    const value = screen.getByText("7");
+    expect(value).toHaveClass("ms-auto");
+    expect(value).not.toHaveClass("ml-auto");
+  });
+
+  it("reads an RTL scroller's scrollLeft from its right edge when deciding to flip", () => {
+    // 1000px of chart in a 400px RTL scroller, scrolled fully to its START (the right
+    // end): scrollLeft 0, and the visible window is x 600…1000. A cursor at x 700 is
+    // 100px into it, so the tooltip fits to its right. Read as LTR, 700 - 0 is past the
+    // edge and it flipped for no reason.
+    const scroller = document.createElement("div");
+    scroller.setAttribute("dir", "rtl");
+    Object.defineProperties(scroller, {
+      scrollLeft: { value: 0 },
+      scrollWidth: { value: 1000 },
+      clientWidth: { value: 400 },
+    });
+    document.body.appendChild(scroller);
+    const ref = { current: scroller };
+    const { container } = render(
+      <ChartContainer id="rtlflip" config={CONFIG}>
+        <ChartTooltipContent
+          active
+          payload={[{ dataKey: "revenue", value: 7 }]}
+          boundaryRef={ref}
+          coordinate={{ x: 700 }}
+        />
+      </ChartContainer>,
+      { container: scroller },
+    );
+    const tip = container.querySelector(".shadow-xl") as HTMLElement;
+    expect(tip.style.transform).toBe("translateX(12px)");
+    scroller.remove();
   });
 });

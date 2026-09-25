@@ -8,12 +8,13 @@
 // chart. The one thing it cannot take from a CSS var is the tile colour: the label ink
 // is MEASURED against the fill, and a `var(--chart-3)` string measures as nothing — see
 // `useChartTokenHex` below for how the concrete hex is found instead.
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import { PALETTE_HEX, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
+import { dirOf, type Direction } from "../lib/direction";
 
 /**
  * One tile.
@@ -174,6 +175,10 @@ export interface TreemapCellProps {
   onNodeClick?: (id: string, name: string) => void;
   redactNames?: boolean;
   nodeNote?: (id: string) => string | undefined;
+  /** The page's reading direction, which `Treemap` reads off its own root. In `rtl`
+   *  the label stands in the tile's top RIGHT corner and is shaped right-to-left, so a
+   *  clipped name ends in its ellipsis on the reading end. Default `ltr`. */
+  dir?: Direction;
 }
 
 /**
@@ -199,6 +204,7 @@ export function TreemapCell({
   onNodeClick,
   redactNames,
   nodeNote,
+  dir = "ltr",
 }: TreemapCellProps) {
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
@@ -220,6 +226,11 @@ export function TreemapCell({
   const rawNote = id != null && nodeNote ? nodeNote(id) : undefined;
   const note =
     label != null && rawNote != null && ph >= 36 ? fitLabel(rawNote, pw, NOTE_FONT_SIZE) : null;
+  // The label's START edge, 6px in from the tile's. The tiles themselves are laid out
+  // physically (the plot is not mirrored, see `ChartContainer`) and the chart's SVG is
+  // pinned `ltr`, so the direction is set on each <text> explicitly: `start` is then
+  // the right end in RTL, and the label grows leftwards from the tile's right edge.
+  const textX = dir === "rtl" ? px + pw - 6 : px + 6;
   const activate = id != null && onNodeClick ? () => onNodeClick(id, name ?? "") : undefined;
   const onKeyDown = activate
     ? (e: KeyboardEvent<SVGGElement>) => {
@@ -261,8 +272,9 @@ export function TreemapCell({
           // A plain attribute, so the host's `[data-private]` rule reaches an SVG
           // <text> exactly as it reaches a table cell.
           data-private={redactNames ? "" : undefined}
-          x={px + 6}
+          x={textX}
           y={py + 15}
+          direction={dir}
           fill={ink}
           stroke={tileFill}
           strokeWidth={2.5}
@@ -277,8 +289,9 @@ export function TreemapCell({
       )}
       {note != null && (
         <text
-          x={px + 6}
+          x={textX}
           y={py + 29}
+          direction={dir}
           fill={ink}
           fillOpacity={0.85}
           stroke={tileFill}
@@ -350,6 +363,14 @@ export function Treemap({
   ...rest
 }: TreemapProps) {
   const tokenHex = useChartTokenHex();
+  // Read off the DOM after mount: the `dir` a treemap sits under is an ancestor's
+  // attribute, and SVG text anchoring cannot follow it by CSS (see TreemapCell). Again
+  // on new data, because a map that had nothing to draw rendered no root to read.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [dir, setDir] = useState<Direction>("ltr");
+  useLayoutEffect(() => {
+    setDir(dirOf(rootRef.current));
+  }, [data]);
   const ramp = colors && colors.length > 0 ? colors : tokenHex;
   // Coloured by index into `data` AS GIVEN, before anything is dropped: a caller
   // painting a legend or a second map from the same list must land on the same hue
@@ -373,7 +394,7 @@ export function Treemap({
   };
   const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   return (
-    <ChartContainer {...rest} config={TREEMAP_CONFIG} style={{ ...style, height }}>
+    <ChartContainer {...rest} ref={rootRef} config={TREEMAP_CONFIG} style={{ ...style, height }}>
       {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
           it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
       <RechartsTreemap
@@ -381,7 +402,9 @@ export function Treemap({
         dataKey="size"
         fill="var(--chart-1)"
         isAnimationActive={false}
-        content={<TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} />}
+        content={
+          <TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />
+        }
       >
         <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
       </RechartsTreemap>

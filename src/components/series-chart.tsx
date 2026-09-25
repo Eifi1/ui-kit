@@ -24,6 +24,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { DEFAULT_Y_AXIS, withChartZoom, type ZoomBinding } from "./chart-zoom";
 import { STEP_DASH, strokeDash } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
+import { niceTicks } from "./series-chart-ticks";
 import { paletteFor } from "../theme/chart-palette";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -353,6 +354,8 @@ export function StaticSeriesChart({
   };
 
   // Fitted with air around it, unless the reader has zoomed or the caller pinned it.
+  // Ticks are the round values INSIDE whichever domain that is (see
+  // `series-chart-ticks.ts`), so a zoom window still gets round numbers, just finer.
   const fittedX = zoom?.xDomain ?? paddedDomain(rows.map((row) => row[xKey]));
   const fittedY = (axis: SeriesChartAxis) =>
     zoom?.yDomains[axis.id] ??
@@ -375,6 +378,7 @@ export function StaticSeriesChart({
           // category axis would straighten exactly the curvature the chart is for.
           type="number"
           domain={fittedX ?? ["dataMin", "dataMax"]}
+          ticks={niceTicks(fittedX)}
           // Clip the lines to a zoom window instead of recharts widening it back out.
           allowDataOverflow={zoom?.xDomain !== undefined}
           tickLine={false}
@@ -395,37 +399,41 @@ export function StaticSeriesChart({
             />
           )}
         </XAxis>
-        {axes.map((axis) => (
-          <YAxis
-            key={axis.id}
-            yAxisId={axis.id}
-            hide={axis.hide}
-            domain={fittedY(axis)}
-            allowDataOverflow={zoom?.yDomains[axis.id] !== undefined}
-            orientation={axis.orientation ?? "left"}
-            width={axisBandWidth(axis.width, Boolean(axis.title) && !axis.hide)}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={axis.format ?? number}
-            // With an axis per channel the tint is the only thing saying which
-            // numbers belong to which line.
-            tick={axis.color ? { fill: axis.color } : undefined}
-          >
-            {axis.title && !axis.hide && (
-              <Label
-                value={axis.title}
-                // Rotated so both sides read upward from the bottom of their axis.
-                angle={axis.orientation === "right" ? 90 : -90}
-                position={axis.orientation === "right" ? "insideRight" : "insideLeft"}
-                // Inline, so a sole series' colour beats the class's neutral fill —
-                // and absent for a shared axis, so the class draws it.
-                style={{ textAnchor: "middle", fill: soleSeriesColor(axis, series) }}
-                offset={AXIS_TITLE_OFFSET}
-                className="fill-[var(--text-muted)] text-[11px]"
-              />
-            )}
-          </YAxis>
-        ))}
+        {axes.map((axis) => {
+          const domain = fittedY(axis);
+          return (
+            <YAxis
+              key={axis.id}
+              yAxisId={axis.id}
+              hide={axis.hide}
+              domain={domain}
+              ticks={niceTicks(domain)}
+              allowDataOverflow={zoom?.yDomains[axis.id] !== undefined}
+              orientation={axis.orientation ?? "left"}
+              width={axisBandWidth(axis.width, Boolean(axis.title) && !axis.hide)}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={axis.format ?? number}
+              // With an axis per channel the tint is the only thing saying which
+              // numbers belong to which line.
+              tick={axis.color ? { fill: axis.color } : undefined}
+            >
+              {axis.title && !axis.hide && (
+                <Label
+                  value={axis.title}
+                  // Rotated so both sides read upward from the bottom of their axis.
+                  angle={axis.orientation === "right" ? 90 : -90}
+                  position={axis.orientation === "right" ? "insideRight" : "insideLeft"}
+                  // Inline, so a sole series' colour beats the class's neutral fill —
+                  // and absent for a shared axis, so the class draws it.
+                  style={{ textAnchor: "middle", fill: soleSeriesColor(axis, series) }}
+                  offset={AXIS_TITLE_OFFSET}
+                  className="fill-[var(--text-muted)] text-[11px]"
+                />
+              )}
+            </YAxis>
+          );
+        })}
         <ChartTooltip
           content={
             <ChartTooltipContent

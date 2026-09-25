@@ -337,6 +337,13 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     };
     const state: ZoomState = { x: xWindow, y: ownY };
     const zoomed = xWindow !== undefined || ownY !== null;
+    // A chart handed no rows or no series draws its empty state, not a plot — and a
+    // "Reset zoom" floating over "No data" (every line toggled off while zoomed) offers
+    // to undo something the reader cannot see. The zoom itself is KEPT: it is where they
+    // were looking, and it applies again the moment a line comes back. Only an array
+    // that is there and empty counts; a chart that does not pass its data is not known
+    // to be empty.
+    const empty = props.rows?.length === 0 || props.series?.length === 0;
 
     const clear = () => {
       setXWindow(undefined);
@@ -362,7 +369,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     return (
       <div className="relative">
         <Chart {...props} zoom={binding} />
-        {zoomed && (
+        {zoomed && !empty && (
           <button
             type="button"
             onClick={clear}

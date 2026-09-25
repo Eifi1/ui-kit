@@ -15,6 +15,17 @@ describe("paletteFor", () => {
     expect(paletteFor(17)).toBe("var(--chart-9)");
   });
 
+  it("wraps negative indices too, and never names a token that does not exist", () => {
+    // `-1 % 9` is -1 in JS, so this returned `var(--chart-0)` — no such token, and a
+    // series painted with it had no stroke at all.
+    expect(paletteFor(-1)).toBe("var(--chart-9)");
+    expect(paletteFor(-9)).toBe("var(--chart-1)");
+    expect(paletteFor(-10)).toBe("var(--chart-9)");
+    expect(paletteFor(2.7)).toBe("var(--chart-3)");
+    for (const bad of [NaN, Infinity, -Infinity]) expect(paletteFor(bad)).toBe("var(--chart-1)");
+    for (let i = -30; i <= 30; i++) expect(paletteFor(i)).toMatch(/^var\(--chart-[1-9]\)$/);
+  });
+
   it("keeps the money colours semantic", () => {
     expect(CHART_COLORS.income).toBe("var(--money-income)");
     expect(CHART_COLORS.expense).toBe("var(--money-expense)");

@@ -327,3 +327,51 @@ describe("Treemap", () => {
     expect(getByTestId("map")).toHaveAttribute("data-chart");
   });
 });
+
+describe("Treemap in RTL", () => {
+  it("anchors a tile's labels at its right edge, shaped right-to-left", () => {
+    // The tiles are laid out physically, but the chart's SVG is pinned `ltr`: without a
+    // direction of its own, an Arabic name sat at the tile's LEFT edge with its ellipsis
+    // on the wrong end.
+    const { container } = render(
+      <svg>
+        <TreemapCell
+          depth={1}
+          x={10}
+          y={0}
+          width={200}
+          height={60}
+          name="البقالة"
+          fill="#332288"
+          id="1"
+          nodeNote={() => "+12%"}
+          dir="rtl"
+        />
+      </svg>,
+    );
+    const texts = [...container.querySelectorAll("text")];
+    expect(texts).toHaveLength(2);
+    for (const text of texts) {
+      expect(text.getAttribute("x")).toBe(String(10 + 200 - 6));
+      expect(text.getAttribute("direction")).toBe("rtl");
+    }
+  });
+
+  it("stays at the left edge in LTR, which is the default", () => {
+    const { container } = renderCell({ width: 200, height: 60, name: "Groceries", fill: "#332288" });
+    const text = container.querySelector("text")!;
+    expect(text.getAttribute("x")).toBe("6");
+    expect(text.getAttribute("direction")).toBe("ltr");
+  });
+
+  it("reads the direction off its own root and hands it to the cell", () => {
+    render(
+      <div dir="rtl">
+        <Treemap data={DATA} />
+      </div>,
+    );
+    expect((cellElement().props as Record<string, unknown>).dir).toBe("rtl");
+    render(<Treemap data={DATA} />);
+    expect((cellElement().props as Record<string, unknown>).dir).toBe("ltr");
+  });
+});

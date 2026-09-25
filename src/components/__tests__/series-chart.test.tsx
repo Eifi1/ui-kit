@@ -169,6 +169,22 @@ describe("SeriesChart — what it draws", () => {
     expect(ticks().every((t) => /^<-?\d+>$/.test(t ?? ""))).toBe(true);
   });
 
+  it("ticks both axes at round values inside the padded band", () => {
+    // Handed the padded domain, recharts split it evenly and printed wherever that
+    // landed — 92.08, 275.25 … for data running 126…974.
+    const rows = [
+      { x: 126, a: 126 },
+      { x: 974, a: 974 },
+    ];
+    const { container } = render(
+      <SeriesChart rows={rows} series={[{ key: "a", label: "A" }]} axes={oneAxis(String, "V")} x={{ format: String }} />,
+    );
+    const read = (axis: string) =>
+      [...container.querySelectorAll(`.recharts-${axis}-tick-labels tspan`)].map((t) => Number(t.textContent));
+    expect(read("yAxis")).toEqual([200, 400, 600, 800, 1000]);
+    for (const tick of read("xAxis")) expect(tick % 200).toBe(0);
+  });
+
   it("closes shapes with spans, on the axis they name, in the muted ink by default", () => {
     const { container } = draw({
       spans: [
@@ -257,6 +273,8 @@ describe("SeriesChart — zoom, through real recharts scales", () => {
     const width = Number(rect.getAttribute("width"));
     dragOver(rect, [left + width * 0.4, 100], [left + width * 0.6, 104]);
     const zoomed = xTicks(container);
+    // Still round numbers inside the window, just a finer step (see niceTicks).
+    for (const tick of zoomed) expect(Number.isInteger(tick * 10)).toBe(true);
     expect(Math.min(...zoomed)).toBeGreaterThan(Math.min(...before));
     expect(Math.max(...zoomed)).toBeLessThan(Math.max(...before));
     fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
