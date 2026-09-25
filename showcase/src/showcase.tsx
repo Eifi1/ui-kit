@@ -27,6 +27,7 @@ import type { AppShellNavItem } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
+import { ShowcaseSearch } from "./search/showcase-search";
 import { GROUPS, HOME_SLUG, NAV, PAGES, RETIRED_SLUGS, groupOf, hasOverview } from "./routes";
 import type { ShowcasePage } from "./routes";
 import { LOCALE_OPTIONS, en, useGroupLabel, useLocale, usePageText, useT } from "./i18n";
@@ -161,6 +162,10 @@ export function Showcase() {
           }
           actions={
             <>
+              {/* ⌘K / Ctrl K from anywhere: components, examples, and what a reader
+                  needs in their own words — the kit's GlobalSearch, fed like an app feeds
+                  it (see search/showcase-search.tsx). */}
+              <ShowcaseSearch />
               <ThemeToggle
                 mode={mode}
                 onToggle={toggle}

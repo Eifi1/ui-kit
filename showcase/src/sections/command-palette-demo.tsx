@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { ReactNode } from "react";
-import { Command, FileText, Layers, Palette, Receipt, Table2 } from "lucide-react";
-import { Button, CommandPalette, Input, useCommandKey } from "@eifi1/ui-kit";
-import type { CommandItem } from "@eifi1/ui-kit";
+import { Command, FileText, Layers, Moon, Palette, Plus, Receipt, Table2, User } from "lucide-react";
+import { Button, CommandPalette, GlobalSearch, Input, useCommandKey } from "@eifi1/ui-kit";
+import type { CommandItem, GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -68,6 +68,13 @@ export function CommandPaletteDemo() {
         hint="query + onQueryChange: the text lives outside the palette, here in the address bar's ?q="
       >
         <ControlledQueryDemo />
+      </Example>
+
+      <Example
+        label="GlobalSearch — ranked index, async source and suggestions"
+        hint="the whole ⌘K search an app puts in its top bar; the one in THIS top bar is the same component"
+      >
+        <GlobalSearchDemo />
       </Example>
     </>
   );
@@ -501,6 +508,98 @@ function ControlledQueryDemo() {
         still there — a controlled palette is never reset on open, because the owner decides what an
         open shows. <code className="font-mono">onQueryChange</code> fires in both modes; uncontrolled,
         it only observes.
+      </Note>
+    </div>
+  );
+}
+
+/* ── global search ─────────────────────────────────────────────────────────── */
+
+/** A small app's static index: pages, actions and settings, with keywords in the words
+ *  a user types rather than the ones on the page. */
+const APP_ENTRIES: SearchEntry[] = [
+  { id: "budget", title: "Budget", group: "Pages", href: "/budget", icon: <Table2 className="size-4" />, keywords: ["envelopes", "plan"] },
+  { id: "accounts", title: "Accounts", group: "Pages", href: "/accounts", icon: <Layers className="size-4" />, keywords: ["bank", "wallet"] },
+  { id: "reports", title: "Reports", group: "Pages", href: "/reports", icon: <FileText className="size-4" />, keywords: ["charts", "spending"] },
+  { id: "new-transaction", title: "New transaction", group: "Actions", href: "/transactions?action=new", icon: <Plus className="size-4" />, keywords: ["add", "expense", "income"] },
+  { id: "new-account", title: "New account", group: "Actions", href: "/accounts?action=new", icon: <Plus className="size-4" /> },
+  { id: "dark-mode", title: "Dark mode", group: "Settings", href: "/settings#theme", icon: <Moon className="size-4" />, keywords: ["theme", "appearance"] },
+  { id: "two-factor", title: "Two-factor authentication", group: "Settings", href: "/settings#2fa", icon: <User className="size-4" />, keywords: ["2fa", "security", "otp"] },
+];
+
+/** What a server would hold — searched by the async source, never by the index. */
+const TRANSACTIONS = [
+  { id: "t1", payee: "Bäckerei Müller", amount: "€ 4.80" },
+  { id: "t2", payee: "Rent — Hausverwaltung", amount: "€ 950.00" },
+  { id: "t3", payee: "Budget airline", amount: "€ 129.99" },
+  { id: "t4", payee: "Café Central", amount: "€ 7.40" },
+];
+
+function GlobalSearchDemo() {
+  const [went, setWent] = useState<string | null>(null);
+  const [fail, setFail] = useState(false);
+  const [calls, setCalls] = useState(0);
+
+  // A fake server: 600ms away, abortable, optionally broken. Its answer is shown as
+  // given — the source ranks, the index does not re-filter.
+  const transactions: GlobalSearchSource = {
+    id: "transactions",
+    group: "Transactions",
+    redact: true,
+    search: (query, signal) =>
+      new Promise<SearchEntry[]>((resolve, reject) => {
+        setCalls((n) => n + 1);
+        const timer = setTimeout(() => {
+          if (fail) return reject(new Error("offline"));
+          const needle = query.toLowerCase();
+          resolve(
+            TRANSACTIONS.filter((t) => t.payee.toLowerCase().includes(needle)).map((t) => ({
+              id: t.id,
+              title: t.payee,
+              hint: t.amount,
+              icon: <Receipt className="size-4" />,
+              href: `/transactions?payee=${encodeURIComponent(t.payee)}`,
+            })),
+          );
+        }, 600);
+        signal.addEventListener("abort", () => clearTimeout(timer));
+      }),
+  };
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        {/* `shortcut={false}`: this page's first specimen and the top bar already own ⌘K. */}
+        <GlobalSearch
+          entries={APP_ENTRIES}
+          sources={[transactions]}
+          suggestions={["new-transaction", "budget", { query: "theme" }]}
+          navigate={setWent}
+          hrefFor={(href) => href}
+          shortcut={false}
+          triggerClassName="border border-[var(--border)]"
+        />
+        <span className="text-xs text-[var(--text-secondary)]">← the trigger (tooltip names the shortcut)</span>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={fail} onChange={(e) => setFail(e.target.checked)} />
+          the server is down
+        </label>
+      </Row>
+      <OutTable
+        rows={[
+          ["navigate(href)", <span className={READOUT}>{went ?? "—"}</span>],
+          ["source calls", <span className={READOUT}>{calls}</span>],
+        ]}
+      />
+      <Note>
+        Try <code className="font-mono">accnt</code> (a typo), <code className="font-mono">2fa</code> (a keyword),{" "}
+        <code className="font-mono">mode dark</code> (either order), or <code className="font-mono">bu</code> —
+        the static rows show at once, and the Transactions group streams in 600ms later with its own
+        &ldquo;Searching…&rdquo; line; with the server down that group alone shows the error. Its rows are{" "}
+        <code className="font-mono">redact: true</code>, hints (amounts) included. A request whose query has moved
+        on is aborted. <code className="font-mono">navigate</code> is passed here so choosing a row only reports
+        it; inside a router the default is the router&apos;s own, and every row is still a real link for a
+        middle-click.
       </Note>
     </div>
   );

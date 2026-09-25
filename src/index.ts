@@ -219,6 +219,8 @@ export * from "./tour/tour";
 
 // ── command palette / global search ──────────────────────────────────────────
 export * from "./search/command-palette";
+export * from "./search/search-index";
+export * from "./search/global-search";
 
 // ── i18n: one label tree, one optional provider ──────────────────────────────
 // `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`

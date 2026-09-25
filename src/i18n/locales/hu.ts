@@ -306,6 +306,13 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       dialog: "Keresés",
       error: "A keresés nem sikerült. Próbálja újra.",
     },
+    globalSearch: {
+      trigger: "Keresés",
+      placeholder: "Keresés vagy ugrás…",
+      shortcut: (keys) => `Keresés (${keys})`,
+      suggestions: "Próbálja ki",
+      results: "Találatok",
+    },
     sparkline: {
       // Numerals stay bare (see 3. above): "12-ről 40-re" would need vowel harmony.
       rising: (first, last) => `Emelkedik (első érték: ${first}, utolsó: ${last})`,

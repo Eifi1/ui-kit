@@ -9,6 +9,7 @@ import type { PasswordRevealLabels, TabsLabels } from "../components/ui";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { CommandPaletteLabels } from "../search/command-palette";
+import type { GlobalSearchLabels } from "../search/global-search";
 import type { MonthPickerLabels } from "../components/month-picker";
 import type { PageContentsLabels } from "../components/page-contents";
 import type { SeriesChartLabels } from "../components/series-chart-labels";
@@ -212,6 +213,7 @@ export interface UiKitLabels {
   wizard: WizardLabels;
   tour: TourLabels;
   commandPalette: CommandPaletteLabels;
+  globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
   sparkline: SparklineLabels;
   statTile: StatTileLabels;

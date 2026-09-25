@@ -311,6 +311,13 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       dialog: "Suche",
       error: "Die Suche ist fehlgeschlagen. Bitte erneut versuchen.",
     },
+    globalSearch: {
+      trigger: "Suche",
+      placeholder: "Suchen oder springen zu…",
+      shortcut: (keys) => `Suche (${keys})`,
+      suggestions: "Vorschläge",
+      results: "Ergebnisse",
+    },
     sparkline: {
       rising: (first, last) => `Steigend von ${first} auf ${last}`,
       falling: (first, last) => `Fallend von ${first} auf ${last}`,

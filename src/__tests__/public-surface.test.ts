@@ -85,16 +85,20 @@ import * as i18nZh from "../i18n/locales/zh";
  * helpers, and a `DEFAULT_*_LABELS` per new namespace.
  * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
  * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
+ * 368 -> 374 (and /search 3 -> 9), all additive: `GlobalSearch` and
+ * `DEFAULT_GLOBAL_SEARCH_LABELS` (the ⌘K search kastlan and keksdose each hand-built on
+ * `CommandPalette`), and its pure matcher `createSearchIndex`, `matchEntries`,
+ * `normalizeSearchText` and `SEARCH_TIER_POINTS`.
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 368],
+  ["@eifi1/ui-kit", barrel, 374],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 55],
   ["@eifi1/ui-kit/data-table", dataTable, 18],
   ["@eifi1/ui-kit/feedback", feedback, 21],
-  ["@eifi1/ui-kit/search", search, 3],
+  ["@eifi1/ui-kit/search", search, 9],
   ["@eifi1/ui-kit/shell", shell, 10],
   ["@eifi1/ui-kit/tour", tour, 4],
   ["@eifi1/ui-kit/wizard", wizard, 9],

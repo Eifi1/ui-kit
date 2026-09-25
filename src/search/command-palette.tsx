@@ -34,6 +34,30 @@ export interface CommandItem {
    *  {@link CommandPaletteProps.redactLabels} either way, so `false` un-masks one
    *  harmless row ("Settings") in a palette that masks by default. */
   redact?: boolean;
+  /**
+   * `"status"` makes the row a line of text rather than a choice — a group's
+   * "Searching…" while its source is still out, or its error. It is skipped by the
+   * arrow keys and ↵, has no hover highlight, and its `onSelect` is never called.
+   * Default `"option"`.
+   */
+  kind?: "option" | "status";
+}
+
+/** Group items preserving first-seen group order; `flat` is the navigable rows only. */
+function groupItems(items: CommandItem[]) {
+  const order: string[] = [];
+  const byGroup = new Map<string, CommandItem[]>();
+  for (const item of items) {
+    if (!byGroup.has(item.group)) {
+      byGroup.set(item.group, []);
+      order.push(item.group);
+    }
+    byGroup.get(item.group)!.push(item);
+  }
+  return {
+    groups: order.map((g) => ({ group: g, items: byGroup.get(g)! })),
+    flat: order.flatMap((g) => byGroup.get(g)!).filter((item) => item.kind !== "status"),
+  };
 }
 
 export interface CommandPaletteLabels {
@@ -235,6 +259,11 @@ export function CommandPalette({
   const searchRef = useRef(search);
   searchRef.current = search;
   const reqId = useRef(0);
+  /** The query the results on screen answer, and the row highlighted in them — so a
+   *  re-run for the SAME query (a `revision` change: a source streaming in) keeps the
+   *  highlight on its row instead of throwing it back to the top mid-arrow. */
+  const shownQuery = useRef<string | null>(null);
+  const activeIdRef = useRef<string | undefined>(undefined);
 
   // Back dismisses the palette (Keksdose feedback #172). Declared with the other
   // hooks, above the `if (!open) return null` below — a hook past a conditional
@@ -256,6 +285,7 @@ export function CommandPalette({
     // An uncommitted draft does not outlive the open it was typed in.
     setDraft(controlled ? query : "");
     setActive(0);
+    shownQuery.current = null;
     // `controlled` is read at the open, not watched: a caller switching modes while
     // the palette is open is not a reason to wipe what is typed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,14 +300,18 @@ export function CommandPalette({
       try {
         const r = await Promise.resolve(searchRef.current(query));
         if (reqId.current === id) {
+          const keep = shownQuery.current === query ? activeIdRef.current : undefined;
+          const at = keep === undefined ? -1 : groupItems(r).flat.findIndex((item) => item.id === keep);
+          shownQuery.current = query;
           setResults(r);
           setFailed(false);
-          setActive(0);
+          setActive(Math.max(at, 0));
         }
       } catch (err) {
         // There was no catch: the previous query's results stayed on screen as if they
         // answered this one, and the rejection went unhandled. Clear them and say so.
         if (reqId.current === id) {
+          shownQuery.current = null;
           setResults([]);
           setFailed(true);
           setActive(0);
@@ -295,21 +329,10 @@ export function CommandPalette({
   }, [query, open, revision]);
 
   // Group results, preserving first-seen group order; keep a flat list for nav.
-  const { groups, flat } = useMemo(() => {
-    const order: string[] = [];
-    const byGroup = new Map<string, CommandItem[]>();
-    for (const item of results) {
-      if (!byGroup.has(item.group)) {
-        byGroup.set(item.group, []);
-        order.push(item.group);
-      }
-      byGroup.get(item.group)!.push(item);
-    }
-    return {
-      groups: order.map((g) => ({ group: g, items: byGroup.get(g)! })),
-      flat: order.flatMap((g) => byGroup.get(g)!),
-    };
-  }, [results]);
+  const { groups, flat } = useMemo(() => groupItems(results), [results]);
+  useEffect(() => {
+    activeIdRef.current = flat[active]?.id;
+  });
 
   const choose = (item: CommandItem | undefined) => {
     if (!item) return;
@@ -454,7 +477,9 @@ export function CommandPalette({
             {l.error ?? DEFAULT_COMMAND_PALETTE_LABELS.error}
           </div>
         )}
-        {!failed && flat.length === 0 && !loading && (
+        {/* `results`, not `flat`: a group whose only row is its "Searching…" line is not
+            an empty result. */}
+        {!failed && results.length === 0 && !loading && (
           <div className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">{l.empty}</div>
         )}
         {/* Listbox grouping: each group is a `role="group"` named by its heading, and
@@ -473,6 +498,18 @@ export function CommandPalette({
               </div>
               <ul role="group" aria-labelledby={groupId(groupIndex)}>
                 {items.map((item) => {
+                  if (item.kind === "status") {
+                    return (
+                      <li
+                        key={item.id}
+                        role="presentation"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--text-placeholder)]"
+                      >
+                        {item.icon && <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>}
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      </li>
+                    );
+                  }
                   flatIndex += 1;
                   const idx = flatIndex;
                   const isActive = idx === active;

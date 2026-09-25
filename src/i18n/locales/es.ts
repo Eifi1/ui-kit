@@ -304,6 +304,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       dialog: "Búsqueda",
       error: "La búsqueda ha fallado. Inténtelo de nuevo.",
     },
+    globalSearch: {
+      trigger: "Buscar",
+      placeholder: "Buscar o ir a…",
+      shortcut: (keys) => `Buscar (${keys})`,
+      suggestions: "Pruebe",
+      results: "Resultados",
+    },
     sparkline: {
       rising: (first, last) => `Sube de ${first} a ${last}`,
       falling: (first, last) => `Baja de ${first} a ${last}`,

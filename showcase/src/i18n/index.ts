@@ -226,7 +226,7 @@ export function useGroupLabel(label: string): string {
   return dict.groups[label] ?? en.groups[label] ?? label;
 }
 
-export type { Dictionary } from "./types";
+export type { Dictionary, PageSlug } from "./types";
 export { en } from "./en";
 export { de } from "./de";
 export { fr } from "./fr";

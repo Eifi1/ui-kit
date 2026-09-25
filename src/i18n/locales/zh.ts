@@ -296,6 +296,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       dialog: "搜索",
       error: "搜索失败，请重试。",
     },
+    globalSearch: {
+      trigger: "搜索",
+      placeholder: "搜索或跳转到…",
+      shortcut: (keys) => `搜索（${keys}）`,
+      suggestions: "试试",
+      results: "结果",
+    },
     sparkline: {
       rising: (first, last) => `从 ${first} 上升到 ${last}`,
       falling: (first, last) => `从 ${first} 下降到 ${last}`,

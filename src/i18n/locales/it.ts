@@ -306,6 +306,13 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       dialog: "Ricerca",
       error: "Ricerca non riuscita. Riprova.",
     },
+    globalSearch: {
+      trigger: "Cerca",
+      placeholder: "Cerca o vai a…",
+      shortcut: (keys) => `Cerca (${keys})`,
+      suggestions: "Prova",
+      results: "Risultati",
+    },
     sparkline: {
       rising: (first, last) => `In aumento da ${first} a ${last}`,
       falling: (first, last) => `In calo da ${first} a ${last}`,
