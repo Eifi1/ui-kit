@@ -1,5 +1,5 @@
 import { forwardRef, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -33,6 +33,21 @@ export type ChipTone =
   | "expense";
 /** `lg` is the 44px touch target (`min-h-11`) a phone surface wants; `md` is ~28px. */
 export type ChipSize = "sm" | "md" | "lg";
+/**
+ * How much of the tone the chip wears.
+ *
+ * - `soft` (default): the tinted surface every chip has had.
+ * - `outline`: the tone's border and text on NO surface — keksdose's DEV badge in the
+ *   account menu and kastlan's 27 shadcn `variant="outline"` badges, which sit on
+ *   coloured rows where a second tint would muddy the row.
+ * - `solid`: the tone as a fill under contrasting text — the "count" pill (unread
+ *   messages, open tasks). It centres its content and sets figures tabular, so a
+ *   one-digit count is a round dot and "9" → "10" does not jiggle the row.
+ */
+export type ChipVariant = "soft" | "outline" | "solid";
+/** `pill` (default) is fully rounded; `square` has the small radius of a field or a
+ *  button — for a chip that sits in a table cell or beside square controls. */
+export type ChipShape = "pill" | "square";
 
 const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   neutral: {
@@ -72,6 +87,72 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
     selected: "border-current bg-[var(--bg-active)] text-[var(--money-expense)]",
   },
 };
+
+// `outline` idle looks: the tone's border and text, the surface left to whatever the
+// chip sits on. Selected still takes the tone's `selected` look (below), because an
+// outline toggle that stays an outline when on has no visible state.
+const OUTLINE: Record<ChipTone, string> = {
+  neutral: "border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)]",
+  brand: "border-[var(--brand)] bg-transparent text-[var(--brand)]",
+  danger: "border-[var(--danger-border)] bg-transparent text-[var(--danger)]",
+  warning: "border-[var(--warning-border)] bg-transparent text-[var(--warning)]",
+  success: "border-[var(--success-border)] bg-transparent text-[var(--success)]",
+  info: "border-[var(--info-border)] bg-transparent text-[var(--info)]",
+  income: "border-current/60 bg-transparent text-[var(--money-income)]",
+  expense: "border-current/60 bg-transparent text-[var(--money-expense)]",
+};
+
+// `solid`: the fill under its contrast pair. Only brand and danger have a declared
+// `-contrast` token; the other hues are 700s in the light theme and 300s in the dark
+// one, so `--text-inverse` (the surface colour) is the side of the pair that contrasts
+// with them in both — which is what the inverse token is for. The border goes
+// transparent rather than away, so a solid chip is exactly as tall as a soft one.
+const SOLID: Record<ChipTone, string> = {
+  neutral: "border-transparent bg-[var(--bg-inverse)] text-[var(--text-inverse)]",
+  brand: "border-transparent bg-[var(--brand)] text-[var(--brand-contrast)]",
+  danger: "border-transparent bg-[var(--danger)] text-[var(--danger-contrast)]",
+  warning: "border-transparent bg-[var(--warning)] text-[var(--text-inverse)]",
+  success: "border-transparent bg-[var(--success)] text-[var(--text-inverse)]",
+  info: "border-transparent bg-[var(--info)] text-[var(--text-inverse)]",
+  income: "border-transparent bg-[var(--money-income)] text-[var(--text-inverse)]",
+  expense: "border-transparent bg-[var(--money-expense)] text-[var(--text-inverse)]",
+};
+
+/** The status-badge type (`caps`): a size step down, heavier and tracked, because
+ *  capitals at body size shout and capitals untracked run together. Per size, so it
+ *  replaces the size's own `text-*` through tailwind-merge. */
+const CAPS: Record<ChipSize, string> = {
+  sm: "text-[10px] font-semibold uppercase tracking-wider",
+  md: "text-[11px] font-semibold uppercase tracking-wider",
+  lg: "text-xs font-semibold uppercase tracking-wider",
+};
+
+function surfaceOf(tone: ChipTone, variant: ChipVariant, selected: boolean | undefined): string {
+  const palette = TONE[tone];
+  if (variant === "solid") {
+    // A solid chip is already the strongest look there is, so "on" is a ring round it.
+    return cn(SOLID[tone], selected && "ring-2 ring-[var(--border-strong)] ring-offset-1 ring-offset-[var(--bg-surface)]");
+  }
+  if (selected) return palette.selected;
+  return variant === "outline" ? OUTLINE[tone] : palette.idle;
+}
+
+/** What {@link ChipProps.renderLink} is handed: everything the chip would have put on
+ *  its own `<a>`. Spread it onto your router's link, mapping `href` to what the link
+ *  calls it — `renderLink={({ href, ...p }) => <Link to={href} {...p} />}`. */
+export interface ChipLinkProps {
+  href: string;
+  /** The chip's whole look — keep it, or the pill is a bare link. */
+  className: string;
+  children: ReactNode;
+  /** The chip's forwarded ref. React 19 passes it to a function component as a prop. */
+  ref?: Ref<HTMLAnchorElement>;
+  "aria-current"?: "true";
+  id?: string;
+  title?: string;
+  [key: `aria-${string}`]: string | boolean | number | undefined;
+  [key: `data-${string}`]: unknown;
+}
 
 /**
  * `body` is the whole pill when the chip is ONE element. When a link or a button also has
@@ -118,6 +199,19 @@ interface ChipBaseProps {
   children: ReactNode;
   tone?: ChipTone;
   size?: ChipSize;
+  /** See {@link ChipVariant}. Default `soft`. */
+  variant?: ChipVariant;
+  /** See {@link ChipShape}. Default `pill`. */
+  shape?: ChipShape;
+  /**
+   * The uppercase, tracked "status badge" type — keksdose's ~25 PAID / DRAFT /
+   * OVERDUE / ADMIN badges, each spelling `uppercase tracking-wide text-[10px]` by
+   * hand. A flag rather than a fourth `variant` because it is TYPE, not surface: a
+   * status badge is soft, outlined or solid as the row needs, and a `variant="tag"`
+   * would have had to pick one. Screen readers read the text as written, not as
+   * drawn, so write it in normal case.
+   */
+  caps?: boolean;
   icon?: LucideIcon;
   /**
    * Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a
@@ -141,6 +235,11 @@ interface ChipBaseProps {
   /** Accessible name for the dismiss button. Default: `common.remove` from the
    *  {@link UiKitProvider}, else "Remove". */
   removeLabel?: string;
+  /** Disables the × ONLY — the chip itself stays a working link or toggle. For the
+   *  value that may not be removed right now (the last filter of a required set, a
+   *  tag the user may read but not edit) where `disabled` would also kill the chip's
+   *  own action. */
+  removeDisabled?: boolean;
   disabled?: boolean;
   className?: string;
   /**
@@ -176,9 +275,25 @@ export type ChipProps = ChipBaseProps &
         /** Renders the chip as a link. Mutually exclusive with `onClick`. */
         href?: string;
         onClick?: never;
+        /**
+         * Renders the link for `href` — pass your router's `<Link>` here, since a
+         * plain `<a>` reloads a single-page app (keksdose's account-menu admin pill).
+         * Default: `<a>`. Ignored without `href`.
+         *
+         * A render function rather than an `as={Link}`, for three reasons. It is the
+         * API `StatTile` already has (`renderLink`), so a consumer learns it once.
+         * Router links do not take `href` — react-router's takes `to` — so an `as`
+         * would either have to pass props through untyped or teach the kit about one
+         * router; here the caller maps `href` onto its own link in one line, fully
+         * typed. And it keeps `href` as THE link prop, which is what the `href` /
+         * `onClick` exclusion below is typed on: the pill is a link because it has an
+         * href, whichever element draws it.
+         */
+        renderLink?: (props: ChipLinkProps) => ReactElement;
       }
     | {
         href?: never;
+        renderLink?: never;
         /** Renders the chip as a toggle button. Mutually exclusive with `href`. Receives
          *  the click, so a chip inside a clickable row can `stopPropagation()`. */
         onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -198,12 +313,17 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     children,
     tone = "neutral",
     size = "md",
+    variant = "soft",
+    shape = "pill",
+    caps = false,
     icon: Icon,
     selected,
     href,
+    renderLink,
     onClick,
     onRemove,
     removeLabel,
+    removeDisabled = false,
     disabled = false,
     className,
     tabIndex,
@@ -216,15 +336,20 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 ) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
   const s = SIZE[size];
-  const palette = TONE[tone];
   const interactive = !!href || !!onClick;
+  // One radius for every rounded piece — the pill, the body inside a split pill, the ×
+  // — so a square chip has no round focus ring inside it.
+  const radius = shape === "square" ? (size === "sm" ? "rounded" : "rounded-md") : "rounded-full";
+  const type = cn(caps && CAPS[size], variant === "solid" && "justify-center tabular-nums");
   const surface = cn(
-    selected ? palette.selected : palette.idle,
+    surfaceOf(tone, variant, selected),
     disabled && "cursor-default opacity-50",
   );
   const look = cn(
     CHIP_BASE,
     s.body,
+    type,
+    radius,
     surface,
     interactive && !disabled && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
     className,
@@ -257,12 +382,16 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         e.stopPropagation();
         onRemove();
       }}
-      disabled={disabled}
+      disabled={disabled || removeDisabled}
       className={cn(
         // Logical margins: the × sits at the END of the pill, which is the left in RTL.
-        "-me-0.5 ms-0.5 shrink-0 rounded-full p-0.5 transition-colors",
+        "-me-0.5 ms-0.5 shrink-0 p-0.5 transition-colors",
+        shape === "square" ? "rounded-sm" : "rounded-full",
         "hover:bg-[var(--bg-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
-        disabled && "pointer-events-none",
+        (disabled || removeDisabled) && "pointer-events-none",
+        // A disabled chip is already dimmed as a whole; dimming the × again on top
+        // would take it to a quarter. `removeDisabled` alone dims just the ×.
+        removeDisabled && !disabled && "opacity-40",
       )}
     >
       <X className={s.remove} aria-hidden />
@@ -271,7 +400,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 
   // ── The combined shape: one pill, two interactive siblings inside it.
   const pill = (inner: ReactNode) => (
-    <span className={cn(CHIP_PILL, s.tail, surface, className)}>
+    <span className={cn(CHIP_PILL, s.tail, radius, surface, className)}>
       {inner}
       {remove}
     </span>
@@ -279,16 +408,30 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   // The body inside a pill: no border or surface of its own (the pill has them), a
   // hover wash in the text's own hue so it works on every tone.
   const inner = cn(
-    "inline-flex min-w-0 items-center self-stretch rounded-full transition-colors",
+    "inline-flex min-w-0 items-center self-stretch transition-colors",
+    radius,
     CHIP_RING,
     s.split,
+    type,
     !disabled && "cursor-pointer hover:bg-current/10",
     disabled && "cursor-default",
   );
 
   // ── The three shapes.
   if (href && !disabled) {
-    const link = (
+    const linkProps: ChipLinkProps = {
+      ...rest,
+      ref: ref as Ref<HTMLAnchorElement>,
+      href,
+      "aria-current": selected ? "true" : undefined,
+      className: remove ? inner : look,
+      children: body,
+    };
+    const link = renderLink ? (
+      // Through a component rather than called here, so the forwarded ref arrives as
+      // an ordinary prop of an element and is never handed to a function mid-render.
+      <RenderedLink render={renderLink} {...linkProps} />
+    ) : (
       <a
         ref={ref as React.Ref<HTMLAnchorElement>}
         href={href}
@@ -337,6 +480,14 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     </span>
   );
 });
+
+/** Calls a chip's `renderLink` with the props it was given — see its call site. */
+function RenderedLink({
+  render,
+  ...props
+}: ChipLinkProps & { render: (props: ChipLinkProps) => ReactElement }) {
+  return render(props);
+}
 
 /* ── ChipInput ────────────────────────────────────────────────────────────── */
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
-import { Button, DataTable } from "@eifi1/ui-kit";
-import type { DataTableColumn, FilterState, SortState } from "@eifi1/ui-kit";
+import { Button, Card, CardContent, CardHeader, CardTitle, DataTable, Pagination, ToggleGroup } from "@eifi1/ui-kit";
+import type { DataTableChrome, DataTableColumn, DataTableDensity, FilterState, SortCycle, SortState } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import {
   AMOUNT_FMT,
@@ -44,6 +44,8 @@ export function DataTableSection() {
       <MainTable />
       <ControlledTable />
       <ShortTable />
+      <DensityTable />
+      <ReportTable />
       <FillHeightTable />
       <RtlTable />
     </>
@@ -467,6 +469,227 @@ function ShortTable() {
           to <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>,
           so old column definitions are right in both directions (write{" "}
           <code className="font-mono">ltr:text-right rtl:text-right</code> for a truly physical side).
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── density ─────────────────────────────────────────────────────────────── */
+
+function DensityTable() {
+  const [density, setDensity] = useState<DataTableDensity>("compact");
+  const [page, setPage] = useState(0);
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
+  return (
+    <Example
+      label="density"
+      hint='"compact" tightens the header, the cells, the checkboxes, the pager and the phone cards together'
+    >
+      <Row className="mb-3">
+        <ToggleGroup<DataTableDensity>
+          aria-label="Density"
+          value={density}
+          onChange={setDensity}
+          options={[
+            { value: "comfortable", label: "comfortable" },
+            { value: "compact", label: "compact" },
+          ]}
+        />
+      </Row>
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle className="text-[var(--text-primary)]">Measurements in a card</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3">
+          <DataTable
+            rows={SMALL_ROWS}
+            columns={SMALL_COLUMNS}
+            rowKey={(r) => r.id}
+            density={density}
+            defaultPageSize={5}
+            selection={{
+              isSelected: (r) => picked.has(r.id),
+              onToggle: (r, checked) =>
+                setPicked((p) => {
+                  const next = new Set(p);
+                  if (checked) next.add(r.id);
+                  else next.delete(r.id);
+                  return next;
+                }),
+              allSelected: picked.size === SMALL_ROWS.length,
+              someSelected: picked.size > 0 && picked.size < SMALL_ROWS.length,
+              onToggleAll: (checked) => setPicked(checked ? new Set(SMALL_ROWS.map((r) => r.id)) : new Set()),
+            }}
+            labels={{ table: "Invoices, density demo" }}
+          />
+        </CardContent>
+      </Card>
+      <div className="mt-4 max-w-xl rounded-md border border-[var(--border)]">
+        <Pagination page={page} totalPages={8} pageSize={25} total={187} onPage={setPage} density={density} />
+      </div>
+      <div className="mt-3">
+        <Note>
+          Lenkbank&apos;s in-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
+          because at the default padding a table inside a card came out twice its height and pushed
+          the card&apos;s own content below the fold. <code className="font-mono">density=&quot;compact&quot;</code>{" "}
+          is <code className="font-mono">text-xs</code> with <code className="font-mono">px-2 py-1</code>{" "}
+          cells, and it reaches the pager under the table too — the standalone{" "}
+          <code className="font-mono">Pagination</code> below takes the same prop. Narrow the window to
+          see the phone cards tighten with it.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+
+/* ── a report table: firstSort, sortCycle, chrome, frame ─────────────────── */
+
+interface PayeeRow {
+  payee: string;
+  count: number;
+  total: number;
+}
+
+const PAYEES: PayeeRow[] = [
+  { payee: "Rewe", count: 38, total: 1642.1 },
+  { payee: "Landlord", count: 9, total: 10620 },
+  { payee: "Deutsche Bahn", count: 14, total: 486.3 },
+  { payee: "Stadtwerke", count: 3, total: 212.75 },
+  { payee: "Bakery", count: 61, total: 188.4 },
+  { payee: "Insurance", count: 9, total: 577.8 },
+  { payee: "Pharmacy", count: 5, total: 64.2 },
+];
+
+const PAYEE_COLUMNS: DataTableColumn<PayeeRow>[] = [
+  { key: "payee", header: "Payee", cell: (r) => r.payee, sortBy: (r) => r.payee.toLowerCase(), mobilePrimary: true },
+  {
+    key: "count",
+    header: "Bookings",
+    cell: (r) => r.count,
+    sortBy: (r) => r.count,
+    firstSort: "desc",
+    className: "text-end tabular-nums",
+    headClassName: "text-end",
+  },
+  {
+    key: "total",
+    header: "Total",
+    cell: (r) => AMOUNT_FMT.format(r.total),
+    sortBy: (r) => r.total,
+    firstSort: "desc",
+    className: "text-end tabular-nums whitespace-nowrap",
+    headClassName: "text-end",
+  },
+];
+
+type Tri = "preset" | "on" | "off";
+const TRI_OPTIONS: { value: Tri; label: string }[] = [
+  { value: "preset", label: "preset" },
+  { value: "on", label: "on" },
+  { value: "off", label: "off" },
+];
+const tri = (v: Tri) => (v === "preset" ? undefined : v === "on");
+
+function ReportTable() {
+  const [chrome, setChrome] = useState<DataTableChrome>("minimal");
+  const [cycle, setCycle] = useState<SortCycle>("toggle");
+  const [framed, setFramed] = useState(false);
+  const [columnSettings, setColumnSettings] = useState<Tri>("preset");
+  const [resizable, setResizable] = useState<Tri>("preset");
+  const [multiSort, setMultiSort] = useState<Tri>("preset");
+  const [opened, setOpened] = useState<string>("—");
+  return (
+    <Example
+      label="A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows"
+      hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
+    >
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+        <span className="flex items-center gap-2">
+          chrome
+          <ToggleGroup<DataTableChrome>
+            aria-label="chrome"
+            value={chrome}
+            onChange={setChrome}
+            options={[
+              { value: "full", label: "full" },
+              { value: "minimal", label: "minimal" },
+            ]}
+          />
+        </span>
+        <span className="flex items-center gap-2">
+          sortCycle
+          <ToggleGroup<SortCycle>
+            aria-label="sortCycle"
+            value={cycle}
+            onChange={setCycle}
+            options={[
+              { value: "tri", label: "tri" },
+              { value: "toggle", label: "toggle" },
+            ]}
+          />
+        </span>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={framed} onChange={(e) => setFramed(e.target.checked)} />
+          <code className="font-mono">frame</code>
+        </label>
+      </div>
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+        {(
+          [
+            ["columnSettings", columnSettings, setColumnSettings],
+            ["resizable", resizable, setResizable],
+            ["multiSort", multiSort, setMultiSort],
+          ] as const
+        ).map(([name, value, set]) => (
+          <span key={name} className="flex items-center gap-2">
+            <code className="font-mono">{name}</code>
+            <ToggleGroup<Tri> aria-label={name} value={value} onChange={set} options={TRI_OPTIONS} />
+          </span>
+        ))}
+      </div>
+      <Card className="max-w-lg">
+        <CardHeader>
+          <CardTitle className="text-[var(--text-primary)]">Top payees, September</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3">
+          <DataTable
+            rows={PAYEES}
+            columns={PAYEE_COLUMNS}
+            rowKey={(r) => r.payee}
+            paginated={false}
+            chrome={chrome}
+            sortCycle={cycle}
+            columnSettings={tri(columnSettings)}
+            resizable={tri(resizable)}
+            multiSort={tri(multiSort)}
+            frame={framed}
+            className={framed ? undefined : "rounded-md border border-[var(--border)]"}
+            density="compact"
+            onRowClick={(r) => setOpened(r.payee)}
+            labels={{ table: "Top payees" }}
+          />
+        </CardContent>
+      </Card>
+      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">onRowClick → {opened}</p>
+      <div className="mt-3">
+        <Note>
+          Bookings and Total are <code className="font-mono">firstSort: &quot;desc&quot;</code>: the first
+          click ranks the big ones on top. With <code className="font-mono">sortCycle=&quot;toggle&quot;</code>{" "}
+          the next click flips it and the table is never unsorted again; <code className="font-mono">tri</code>{" "}
+          is the old desc → asc → off. <code className="font-mono">aria-sort</code> and the spoken &ldquo;Sorted
+          by …&rdquo; follow either way. <code className="font-mono">chrome=&quot;minimal&quot;</code> drops the
+          columns rail, the resize handles and multi-sort (and its Shift-click tooltip); each has its own
+          switch, and an explicit on/off wins over the preset. <code className="font-mono">frame={"{false}"}</code>{" "}
+          removes the table&apos;s own card, so it sits in the app&apos;s without a frame inside a frame, and{" "}
+          <code className="font-mono">className</code> reaches the root — here a plain border instead.
+        </Note>
+        <Note>
+          <strong>Clickable rows take the keyboard.</strong> With <code className="font-mono">onRowClick</code>{" "}
+          the body is one roving tab stop: Tab into it, ↑/↓ and Home/End move between rows, Enter or
+          Space opens one — and the rows keep their <code className="font-mono">row</code> role. A click on a
+          control inside a row no longer opens the row as well.
         </Note>
       </div>
     </Example>

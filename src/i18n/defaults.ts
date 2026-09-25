@@ -20,7 +20,10 @@ import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame";
 import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button";
 import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid";
+import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog";
+import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel";
 import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment";
+import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -80,4 +83,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   filePicker: DEFAULT_FILE_PICKER_LABELS,
   measuredGrid: DEFAULT_MEASURED_GRID_LABELS,
   feedbackAttachment: DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
+  confirmDialog: DEFAULT_CONFIRM_DIALOG_LABELS,
+  floatingPanel: DEFAULT_FLOATING_PANEL_LABELS,
+  copyButton: DEFAULT_COPY_BUTTON_LABELS,
 };

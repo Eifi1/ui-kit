@@ -20,7 +20,7 @@ import {
 } from "./data-table-filters";
 import type { ColumnFilter, FilterValue } from "./data-table-filters";
 import { nextSorts } from "./data-table-sort";
-import type { SortState } from "./data-table-sort";
+import type { SortCycle, SortDir, SortState } from "./data-table-sort";
 import { FilterPopover } from "./data-table-filter-popover";
 import { Pagination } from "./data-table-pagination";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
@@ -68,6 +68,14 @@ export interface DataTableColumn<T> {
    * see without reaching into React elements it deliberately treats as opaque.
    */
   noRowLink?: boolean;
+  /**
+   * The direction this column sorts in on its FIRST click. `"desc"` for money and
+   * count columns, where the rows worth reading are the large ones and an ascending
+   * first click opens on the zero rows (keksdose's aggregated report tables). The
+   * rest of the cycle follows from it — see {@link DataTableProps.sortCycle}.
+   * Default `"asc"`.
+   */
+  firstSort?: SortDir;
 }
 
 /** A column resize in flight. Held in a ref rather than in state: the live width is
@@ -306,7 +314,71 @@ export interface DataTableProps<T> {
    * "hide upcoming/scheduled" toggle).
    */
   leadingRow?: ReactNode;
+  /**
+   * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
+   * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
+   * twice their height and pushed the card's own content below the fold — the whole
+   * reason they were still hand-rolled `<table>`s. It tightens the header, the cells,
+   * the selection checkboxes, the pager and the phone cards together, so a compact
+   * table is compact everywhere rather than a dense body under a roomy header.
+   *
+   * Defaults to `"comfortable"`, which is the table every caller has today.
+   */
+  density?: DataTableDensity;
+  /**
+   * What a repeated click on a sorted header does. `"tri"` (the default, and the only
+   * behaviour before 0.8.0): first direction → the other → unsorted. `"toggle"`: first
+   * direction ⇄ the other, never unsorted — for a report table that is always ranked
+   * by something. Each column's first direction is its own `firstSort`. `aria-sort`
+   * and the spoken "Sorted by …" follow whatever the click produced, so they are
+   * right under either cycle.
+   */
+  sortCycle?: SortCycle;
+  /**
+   * The desktop table's power-user chrome, as one switch. `"full"` (default) is the
+   * table as it has always been. `"minimal"` is a compact report table in a half-width
+   * card: no column-settings rail, no resize handles, no multi-sort (and so no
+   * "Shift-click to add a sort" tooltip) — the three pieces that cost width and
+   * attention and that a ten-row summary never needs. Each can still be set on its
+   * own below; an explicit boolean wins over the preset.
+   */
+  chrome?: DataTableChrome;
+  /**
+   * The vertical "Columns (n/m)" rail and its show/hide + auto-size panel. Default:
+   * on, unless `chrome="minimal"`. With it off, every column is shown and a hidden
+   * set persisted under `storageKey` is ignored — there would be no way to get a
+   * column back.
+   */
+  columnSettings?: boolean;
+  /**
+   * The drag handles on the header's trailing edges. Default: on, unless
+   * `chrome="minimal"`. With it off, widths persisted under `storageKey` are ignored
+   * for the same reason as above: nothing could reset them.
+   */
+  resizable?: boolean;
+  /**
+   * Shift-click adds a secondary sort criterion. Default: on, unless
+   * `chrome="minimal"`. With it off, a shift-click sorts like a plain click and the
+   * header drops the tooltip that advertises the gesture.
+   */
+  multiSort?: boolean;
+  /**
+   * The card around the table — border, surface, radius, shadow. Set false to sit the
+   * table inside the app's own card, under its own caption and CSV button, without a
+   * frame inside a frame. The table's layout is unchanged; only the chrome goes.
+   * Default true.
+   */
+  frame?: boolean;
+  /** Extra classes for the table's root element (the card, or with `frame={false}`
+   *  the plain wrapper). Merged last, so a caller's margin or width wins. */
+  className?: string;
 }
+
+/** See {@link DataTableProps.chrome}. */
+export type DataTableChrome = "full" | "minimal";
+
+/** See {@link DataTableProps.density}. */
+export type DataTableDensity = "comfortable" | "compact";
 
 export type FilterState = Record<string, FilterValue>;
 export type { SortState };
@@ -388,6 +460,48 @@ function cleanAttrs(
 function columnLabel<T>(col: DataTableColumn<T>): string {
   return typeof col.header === "string" ? col.header : col.key;
 }
+
+/**
+ * What counts as a control of its own inside a clickable row: a click or key press
+ * that lands on one of these belongs to it, not to the row's `onRowClick`. The row's
+ * own link (`rowHref`, marked `data-row-link`) is the exception — it IS the row.
+ */
+const OWN_CONTROL =
+  'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"],[role="switch"],[role="menuitem"],[role="option"],[contenteditable=""],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
+
+/** Whether an event on `row` started on a control nested inside it. */
+function fromOwnControl(target: EventTarget | null, row: HTMLElement): boolean {
+  if (!(target instanceof Element)) return false;
+  const hit = target.closest(OWN_CONTROL);
+  return !!hit && hit !== row && row.contains(hit) && !hit.hasAttribute("data-row-link");
+}
+
+/** Arrow/Home/End between the focusable rows of one `<tbody>` — the roving half of
+ *  the keyboard-activatable rows (see the row's `onKeyDown`). */
+function moveRowFocus(from: HTMLElement, key: string): boolean {
+  if (!(key in ROW_NAV_KEYS)) return false;
+  const body = from.parentElement;
+  if (!body) return false;
+  const rows = Array.from(body.children).filter(
+    (el): el is HTMLElement => el instanceof HTMLElement && el.hasAttribute("data-row-nav"),
+  );
+  const i = rows.indexOf(from);
+  const target =
+    key === "ArrowDown"
+      ? rows[i + 1]
+      : key === "ArrowUp"
+        ? rows[i - 1]
+        : key === "Home"
+          ? rows[0]
+          : key === "End"
+            ? rows[rows.length - 1]
+            : undefined;
+  // At either end the key is still consumed, or ArrowDown on the last row would
+  // scroll the page out from under a focused row.
+  target?.focus();
+  return true;
+}
+const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
 
 /** A click the APP owns. Anything else — middle, ⌘/Ctrl, Shift, Alt — belongs to
  *  the browser, and the whole feature is not touching it. */
@@ -501,7 +615,20 @@ export function DataTable<T>({
   mobileCard,
   mobileSwipeActions,
   leadingRow,
+  density = "comfortable",
+  sortCycle = "tri",
+  chrome = "full",
+  columnSettings: columnSettingsProp,
+  resizable: resizableProp,
+  multiSort: multiSortProp,
+  frame = true,
+  className,
 }: DataTableProps<T>) {
+  const compact = density === "compact";
+  const minimal = chrome === "minimal";
+  const columnSettings = columnSettingsProp ?? !minimal;
+  const resizable = resizableProp ?? !minimal;
+  const multiSort = multiSortProp ?? !minimal;
   const isServer = !!serverPagination;
   const isLoading = !!serverPagination?.isLoading;
   // prop > provider > English, through the table's own resolver rather than
@@ -538,9 +665,9 @@ export function DataTable<T>({
     setPage,
     pageSize,
     setPageSize,
-    widths,
+    widths: storedWidths,
     setWidths,
-    hiddenCols,
+    hiddenCols: storedHiddenCols,
     setHiddenCols,
     showSettings,
     setShowSettings,
@@ -554,6 +681,16 @@ export function DataTable<T>({
     sortsProp,
     filtersProp,
   });
+
+  // With the controls that change them switched off, persisted widths and hidden
+  // columns are ignored rather than applied: a table cannot be left in a state the
+  // user has no control to get out of. They stay in storage untouched, so turning
+  // the control back on brings them back.
+  const widths = useMemo(() => (resizable ? storedWidths : {}), [resizable, storedWidths]);
+  const hiddenCols = useMemo(
+    () => (columnSettings ? storedHiddenCols : new Set<string>()),
+    [columnSettings, storedHiddenCols],
+  );
 
   // Every call site builds `columns` inline — `columns={[{ key: "name", … }]}` right
   // there in the JSX — so the array is a new object on every render of the page around
@@ -664,8 +801,14 @@ export function DataTable<T>({
       ? sorted
       : sorted.slice(safePage * effectivePageSize, safePage * effectivePageSize + effectivePageSize);
 
-  const toggleSort = (key: string, additive: boolean) => {
-    const next = nextSorts(sorts, key, additive);
+  const toggleSort = (key: string, shiftKey: boolean) => {
+    const col = columns.find((c) => c.key === key);
+    // The cycle is the table's, the first direction the column's. The announcement
+    // below reads the RESULT, so it can never describe a step the cycle did not take.
+    const next = nextSorts(sorts, key, multiSort && shiftKey, {
+      firstDir: col?.firstSort,
+      cycle: sortCycle,
+    });
     if (onSortsChange) onSortsChange(next);
     else setInternalSorts(next);
 
@@ -673,7 +816,6 @@ export function DataTable<T>({
     // criterion BEHIND the existing one, and answering "Sorted by Date" to a click on
     // Name misreports what the click did. The third click drops the column entirely,
     // which is the state a user is most likely to have reached by accident.
-    const col = columns.find((c) => c.key === key);
     const name = col ? columnLabel(col) : key;
     const entry = next.find((s) => s.key === key);
     announce(
@@ -970,6 +1112,33 @@ export function DataTable<T>({
   // header was clicked addresses a different row afterwards — and the range then ran
   // from a row the user had never touched.
   const selectionAnchor = useRef<string | number | null>(null);
+  // ---- Keyboard-activatable rows ----
+  //
+  // A desktop row with `onRowClick` opened on a mouse click and on nothing else: no
+  // tab stop, no Enter, no focus ring (keksdose's report tables hand-rolled all three,
+  // which is half of why they could not move onto this table). The row now takes
+  // focus itself, as a ROVING tab stop: one row of the table is in the tab order
+  // (the last one focused, else the first), ArrowUp/ArrowDown/Home/End move between
+  // rows, Enter and Space activate.
+  //
+  // Why the `<tr>` rather than the two alternatives:
+  //  * `role="button"` on the row would replace its `row` role, and the cells with
+  //    it — a screen reader would stop reading the table as a table.
+  //  * A button or link in one cell is what `rowHref` already is where the row HAS a
+  //    URL. Without one, a synthetic button would have to wrap caller-rendered cell
+  //    content, which nests the controls those cells carry (status toggles, links)
+  //    inside it — illegal markup, and the reason the mobile card is a div.
+  // A focused `<tr>` keeps its role and reads out its cells. Roving rather than a tab
+  // stop per row, so a 100-row page does not put 100 stops between the header and
+  // the pager.
+  const rowsFocusable = !!onRowClick;
+  const [focusRowKey, setFocusRowKey] = useState<string | number | null>(null);
+  const tabRowKey =
+    focusRowKey !== null && slice.some((r) => rowKey(r) === focusRowKey)
+      ? focusRowKey
+      : slice.length
+        ? rowKey(slice[0])
+        : null;
   /** The checkbox click that drew a range, so its `onChange` can be told apart. */
   const rangeClick = useRef<Event | null>(null);
   const canSelect = (row: T) => !!selection && (selection.isSelectable?.(row) ?? true);
@@ -1031,7 +1200,8 @@ export function DataTable<T>({
     const swipeEnabled = !!swipe && !expanded;
     const href = mobileCardLinkable ? rowHref?.(row) : undefined;
     const cardClass = cn(
-      "w-full px-4 py-3 text-start flex items-center gap-3",
+      "w-full text-start flex items-center",
+      compact ? "px-3 py-2 gap-2 text-sm" : "px-4 py-3 gap-3",
       // Live #320's other half: the card acknowledges the touch before the sheet
       // arrives. On a cold route the data can take a beat, and an unacknowledged tap
       // reads as "did that register?" — which is most of what "abrupt" means here.
@@ -1051,14 +1221,19 @@ export function DataTable<T>({
       <>
         {/* The card's own content keeps the column it always had; the chevron sits
             beside it rather than inside, so a caller's `mobileCard` is untouched. */}
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className={cn("flex min-w-0 flex-1 flex-col", compact ? "gap-1" : "gap-2")}>
           {mobileCard ? (
             mobileCard(row)
           ) : (
             <>
               {mobilePrimaryCol && <div className="font-medium">{mobilePrimaryCol.cell(row)}</div>}
               {mobileSecondaryColumns.length > 0 && (
-                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                <dl
+                  className={cn(
+                    "grid grid-cols-[auto_1fr] gap-x-3",
+                    compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
+                  )}
+                >
                   {mobileSecondaryColumns.map((col) => (
                     <Fragment key={col.key}>
                       <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)] self-center">
@@ -1124,6 +1299,8 @@ export function DataTable<T>({
           onKeyDown={
             interactive
               ? (e) => {
+                  // A key press inside a nested control is that control's.
+                  if (e.target !== e.currentTarget) return;
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     onRowClick!(row);
@@ -1147,7 +1324,12 @@ export function DataTable<T>({
           body
         )}
         {expansion && !mobileExpandAsDialog && (
-          <div className="px-4 py-3 bg-[var(--bg-surface-2)] border-t border-[var(--border)]">
+          <div
+            className={cn(
+              "bg-[var(--bg-surface-2)] border-t border-[var(--border)]",
+              compact ? "px-3 py-2" : "px-4 py-3",
+            )}
+          >
             {expansion}
           </div>
         )}
@@ -1168,8 +1350,23 @@ export function DataTable<T>({
       }, [])
     : null;
 
+  // `frame={false}` swaps the Card for a bare wrapper carrying the same hooks and
+  // layout classes, so everything inside renders identically either way.
+  const Root = frame ? FramedRoot : PlainRoot;
+
   return (
-    <Card flush className={cn("overflow-clip", fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0")}>
+    <Root
+      // A styling and testing hook: a host's own cell content can follow the table's
+      // density (`group-data-[density=compact]/table:…`) without being told twice.
+      data-density={density}
+      data-frame={frame ? undefined : "none"}
+      className={cn(
+        "group/table",
+        frame ? "overflow-clip" : "min-w-0",
+        fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0",
+        className,
+      )}
+    >
       {/* Outside both viewport branches on purpose. A screen reader subscribes to a
           live region when it encounters it, so one that appears together with its
           first message is usually missed — and crossing the md breakpoint swaps the
@@ -1214,7 +1411,12 @@ export function DataTable<T>({
               ))
             : mobileSlice.map(renderMobileRow)}
           {mobileSlice.length === 0 && (
-            <li className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
+            <li
+              className={cn(
+                "text-center text-[var(--text-muted)]",
+                compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
+              )}
+            >
               {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
             </li>
           )}
@@ -1241,6 +1443,7 @@ export function DataTable<T>({
             onPageSize={serverPagination!.onPageSizeChange}
             labels={labels}
             locale={locale}
+            density={density}
           />
         )}
         {/* The row's own first column is this dialog's title — the same cell the card
@@ -1274,7 +1477,7 @@ export function DataTable<T>({
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
         <table
-          className="w-full text-sm"
+          className={cn("w-full", compact ? "text-xs" : "text-sm")}
           aria-label={labels.table}
           aria-busy={isLoading || undefined}
         >
@@ -1292,11 +1495,14 @@ export function DataTable<T>({
               {selection && (
                 <th
                   scope="col"
-                  className="sticky top-0 z-10 w-10 bg-[var(--bg-surface-2)] px-3 py-2 align-middle backdrop-blur-sm"
+                  className={cn(
+                    "sticky top-0 z-10 bg-[var(--bg-surface-2)] align-middle backdrop-blur-sm",
+                    compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
+                  )}
                 >
                   <input
                     type="checkbox"
-                    className="size-4 align-middle accent-indigo-600"
+                    className={cn("align-middle accent-indigo-600", compact ? "size-3.5" : "size-4")}
                     checked={selection.allSelected}
                     ref={(el) => {
                       if (el) el.indeterminate = selection.someSelected && !selection.allSelected;
@@ -1350,7 +1556,8 @@ export function DataTable<T>({
                     }
                     style={width ? { width, minWidth: width, maxWidth: width } : undefined}
                     className={cn(
-                      "relative px-3 py-2 font-medium align-middle whitespace-nowrap",
+                      "relative font-medium align-middle whitespace-nowrap",
+                      compact ? "px-2 py-1" : "px-3 py-2",
                       // Keep the header visible while the user scrolls the page.
                       // Each <th> carries its own bg so the row doesn't render
                       // transparent over the data rows underneath.
@@ -1364,7 +1571,7 @@ export function DataTable<T>({
                         isEndAligned && "flex-row-reverse",
                       )}
                     >
-                      <Tooltip label={sortable ? labels.sortHint : undefined} portal>
+                      <Tooltip label={sortable && multiSort ? labels.sortHint : undefined} portal>
                         <button
                           type="button"
                           onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
@@ -1423,6 +1630,7 @@ export function DataTable<T>({
                         </Popover>
                       )}
                     </div>
+                    {resizable && (
                     <span
                       role="separator"
                       aria-orientation="vertical"
@@ -1444,6 +1652,7 @@ export function DataTable<T>({
                       // trailing edge, which is its left one in a right-to-left table.
                       className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-[var(--brand-bg-hover)]"
                     />
+                    )}
                   </th>
                 );
               })}
@@ -1464,18 +1673,55 @@ export function DataTable<T>({
               const expansion = expanded ? expandedRow?.(row) : null;
               const rowInteractive = !!onRowClick || !!selection;
               const href = rowHref?.(row);
+              const key = rowKey(row);
               return (
-                <Fragment key={rowKey(row)}>
+                <Fragment key={key}>
                   <tr
                     {...cleanAttrs(rowAttributes?.(row))}
+                    data-row-nav={rowsFocusable ? "" : undefined}
+                    tabIndex={rowsFocusable ? (key === tabRowKey ? 0 : -1) : undefined}
+                    aria-expanded={rowsFocusable && expandedRow ? expanded : undefined}
+                    onFocus={
+                      rowsFocusable
+                        ? (e) => {
+                            if (e.target === e.currentTarget) setFocusRowKey(key);
+                          }
+                        : undefined
+                    }
+                    onKeyDown={
+                      rowsFocusable
+                        ? (e) => {
+                            // Only the row's own key presses: Enter on a nested button
+                            // or link is that control's, and Space in a nested input
+                            // is a space.
+                            if (e.target !== e.currentTarget) return;
+                            if (e.altKey || e.ctrlKey || e.metaKey) return;
+                            if (e.key === "Enter" || e.key === " ") {
+                              // Space would otherwise scroll the table.
+                              e.preventDefault();
+                              onRowClick!(row);
+                              return;
+                            }
+                            if (e.shiftKey) return;
+                            if (moveRowFocus(e.currentTarget, e.key)) e.preventDefault();
+                          }
+                        : undefined
+                    }
                     className={cn(
                       "border-t border-[var(--border)]",
                       rowInteractive && "cursor-pointer hover:bg-[var(--bg-hover)]",
+                      rowsFocusable &&
+                        "focus-visible:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
                       rowClassName?.(row),
                     )}
                     onClick={
                       rowInteractive
                         ? (e) => {
+                            // A click on a control inside the row (a button, a link,
+                            // an input the cell renders) is that control's — it must
+                            // not also open the row. Cells no longer have to
+                            // `stopPropagation` to get that.
+                            if (fromOwnControl(e.target, e.currentTarget)) return;
                             // Modifier-clicks anywhere in the row drive
                             // selection instead of expanding it (feedback #289):
                             // Ctrl/Cmd toggles a single row, Shift selects the
@@ -1507,7 +1753,7 @@ export function DataTable<T>({
                   >
                     {selection && (
                       <td
-                        className="w-10 px-3 py-2 align-top"
+                        className={cn("align-top", compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2")}
                         // Don't let selecting a row also trigger the row click
                         // (which expands/edits it).
                         onClick={(e) => e.stopPropagation()}
@@ -1515,7 +1761,7 @@ export function DataTable<T>({
                         {canSelect(row) && (
                           <input
                             type="checkbox"
-                            className="size-4 accent-indigo-600"
+                            className={cn("accent-indigo-600", compact ? "size-3.5" : "size-4")}
                             checked={selection.isSelected(row)}
                             // Shift+click selects the range from the last toggled
                             // row. `preventDefault` puts the box back, but it does NOT
@@ -1555,7 +1801,8 @@ export function DataTable<T>({
                           data-col={col.key}
                           style={width ? { width, minWidth: width, maxWidth: width } : undefined}
                           className={cn(
-                            "px-3 py-2 align-top",
+                            "align-top",
+                            compact ? "px-2 py-1" : "px-3 py-2",
                             width && "overflow-hidden text-ellipsis",
                             logicalAlign(col.className),
                           )}
@@ -1564,7 +1811,7 @@ export function DataTable<T>({
                             // No `onActivate`: the click is left to bubble to the
                             // <tr> handler above, which already owns expand-vs-select.
                             // Calling it here as well would toggle the row twice.
-                            <RowLink href={href} className="block">
+                            <RowLink href={href} className="block" data-row-link="">
                               {col.cell(row)}
                             </RowLink>
                           ) : (
@@ -1588,7 +1835,9 @@ export function DataTable<T>({
                           perturb the columns; the div then fills to the full row
                           width only at paint time, and long text wraps within it. */}
                       <td colSpan={totalColSpan} className="p-0">
-                        <div className="w-0 min-w-full px-3 py-3">{expansion}</div>
+                        <div className={cn("w-0 min-w-full", compact ? "px-2 py-2" : "px-3 py-3")}>
+                          {expansion}
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -1599,7 +1848,7 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={totalColSpan}
-                  className="px-3 py-4 text-center text-[var(--text-muted)]"
+                  className={cn("text-center text-[var(--text-muted)]", compact ? "px-2 py-2" : "px-3 py-4")}
                 >
                   {/* Nothing is not the same as not-yet: "no results" while the first
                       page is still in flight is a claim the table cannot make. */}
@@ -1627,9 +1876,12 @@ export function DataTable<T>({
               }
               labels={labels}
               locale={locale}
+              density={density}
             />
           )}
         </div>
+        {columnSettings && (
+        <>
         <Tooltip label={columnsCountLabel} portal>
           <button
             type="button"
@@ -1710,10 +1962,27 @@ export function DataTable<T>({
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
       )}
+    </Root>
+  );
+}
+
+/** The framed root: the kit's flush Card, as every table had before `frame`. */
+function FramedRoot({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <Card flush {...rest}>
+      {children}
     </Card>
   );
+}
+
+/** The unframed root (`frame={false}`): no border, surface, radius or shadow — the
+ *  host's own card supplies them. */
+function PlainRoot(props: React.HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} />;
 }
 
 /** The loading row's content: a spinner beside the word, the word for everyone. */

@@ -40,6 +40,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     pageContents: { title: "Ezen az oldalon" },
     common: {
+      dismiss: "Bezárás",
       close: "Bezárás",
       clear: "Törlés",
       search: "Keresés",
@@ -121,6 +122,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       month: (monthYear) => monthYear,
     },
     datePicker: {
+      apply: "Alkalmaz",
+      cancel: "Mégse",
+      presets: "Gyors tartományok",
       panel: "Dátum kiválasztása",
       rangePanel: "Időszak kiválasztása",
       clear: "Törlés",
@@ -238,6 +242,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "Fájlfeltöltés",
+      browse: "Tallózás",
+      empty: "Húzzon ide egy fájlt",
+      emptyMultiple: "Húzzon ide fájlokat",
+      hint: (accept) => (accept ? `Elfogadott: ${accept}` : "Bármilyen fájltípus"),
+      busy: "Feltöltés…",
       rejectedPick: (count) =>
         count === 1
           ? "A fájl nem lett hozzáadva"
@@ -259,6 +269,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       cleared: "Minden fájl eltávolítva",
     },
     wizard: {
+      done: "Kész",
       cancel: "Mégse",
       back: "Vissza",
       next: "Tovább",
@@ -352,6 +363,20 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Dupla kattintással visszaállíthatja.",
       empty: "Nincs adat",
       legend: "Adatsorok",
+    },
+    confirmDialog: {
+      confirm: "Megerősítés",
+      cancel: "Mégse",
+    },
+    floatingPanel: {
+      close: "Bezárás",
+    },
+    copyButton: {
+      copy: "Másolás",
+      copied: "Másolva",
+      failed: "A másolás nem sikerült",
+      copiedAnnouncement: "Vágólapra másolva",
+      failedAnnouncement: "Nem sikerült a vágólapra másolni",
     },
   };
 }

@@ -449,6 +449,13 @@ function HelperTable() {
           ['nextSorts(ASC, "name", false)', j(nextSorts(ASC, "name", false))],
           ['nextSorts(DESC, "name", false)', j(nextSorts(DESC, "name", false))],
           ['nextSorts(ASC, "amount", true) // shift-click', j(nextSorts(ASC, "amount", true))],
+          // 0.8.0: a column's first direction, and a cycle that never unsorts.
+          ['nextSorts([], "amount", false, { firstDir: "desc" })', j(nextSorts([], "amount", false, { firstDir: "desc" }))],
+          [
+            'nextSorts([{ key: "amount", dir: "asc" }], "amount", false, { firstDir: "desc" })',
+            j(nextSorts([{ key: "amount", dir: "asc" }], "amount", false, { firstDir: "desc" })),
+          ],
+          ['nextSorts(DESC, "name", false, { cycle: "toggle" })', j(nextSorts(DESC, "name", false, { cycle: "toggle" }))],
           [
             'encodeSorts([{ opened, desc }, { name, asc }])',
             String(encodeSorts([{ key: "opened", dir: "desc" }, { key: "name", dir: "asc" }])),

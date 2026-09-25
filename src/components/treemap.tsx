@@ -37,8 +37,13 @@ export interface TreemapNode {
   /** Overrides the by-index palette colour for this tile — e.g. to paint every child
    *  in its parent group's colour, so the groups stay legible in one picture. A
    *  concrete `#rrggbb` keeps the label ink measured; anything else (a CSS var) gets
-   *  `currentColor` ink, because there is nothing to measure. */
+   *  `currentColor` ink, because there is nothing to measure — set `labelColor` then. */
   fill?: string;
+  /** The label's ink, for a `fill` the kit cannot measure (a `var()` or `color-mix()`):
+   *  keksdose's recency plot fills with `color-mix(in srgb, var(--chart-1) N%,
+   *  transparent)`, where `currentColor` put dark page text on full-strength indigo
+   *  (~1.5:1). Wins over the measured ink when given. */
+  labelColor?: string;
 }
 
 /**
@@ -171,6 +176,8 @@ export interface TreemapCellProps {
   height?: number;
   name?: string;
   fill?: string;
+  /** See {@link TreemapNode.labelColor}; recharts hands each node's fields to its cell. */
+  labelColor?: string;
   id?: string;
   onNodeClick?: (id: string, name: string) => void;
   redactNames?: boolean;
@@ -200,6 +207,7 @@ export function TreemapCell({
   height = 0,
   name,
   fill,
+  labelColor,
   id,
   onNodeClick,
   redactNames,
@@ -215,7 +223,7 @@ export function TreemapCell({
   const pw = Math.round(width);
   const ph = Math.round(height);
   const tileFill = fill ?? "var(--chart-1)";
-  const ink = textOn(tileFill);
+  const ink = labelColor ?? textOn(tileFill);
   // Below ~44x20 there is no room for a readable word, so no label at all rather than
   // a one-letter stub bleeding over the tile edge.
   const label = pw >= 44 && ph >= 20 ? fitLabel(name ?? "", pw, LABEL_FONT_SIZE) : null;

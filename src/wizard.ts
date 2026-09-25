@@ -1,7 +1,8 @@
 // `@eifi1/ui-kit/wizard` — the multi-step engine, its chrome and its review step.
 //
-// A re-slicing of the main barrel, not a new API. This entry point requires
-// `react-router`: useWizard syncs the active step to `?step=` via useSearchParams.
+// A re-slicing of the main barrel, not a new API. By default useWizard syncs the
+// active step to `?step=` via react-router's useSearchParams, so it needs a router;
+// `urlSync: false` keeps the step in memory and needs none.
 //
 // NOT the same thing as `WizardStepper` in components/wizard-stepper, which is a bare
 // two-step indicator with no engine and stays on the main barrel.

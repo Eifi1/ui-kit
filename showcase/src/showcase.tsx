@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
 import {
   AppShell,
+  ConfirmProvider,
   EmptyState,
   IconButton,
   LanguageMenu,
@@ -125,6 +126,9 @@ export function Showcase() {
     <UiKitProvider labels={t.kit} locale={tag}>
     {/* Below the provider, so the tour card speaks the page's language. */}
     <TourProvider>
+    {/* The one confirm host for every `useConfirm()` on every page — inside the
+        UiKitProvider, so its Confirm/Cancel fallbacks follow the language menu. */}
+    <ConfirmProvider>
     <AppShell
       nav={nav}
       subNav={sidebarStyle}
@@ -234,6 +238,7 @@ export function Showcase() {
           resolved before hydration is only the first paint's snapshot. */}
       <Toaster position="top-center" richColors closeButton theme={mode} />
     </AppShell>
+    </ConfirmProvider>
     </TourProvider>
     </UiKitProvider>
   );

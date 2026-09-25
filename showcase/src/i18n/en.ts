@@ -69,6 +69,7 @@ export const en: Dictionary = {
     Inputs: "Inputs",
     "Pickers & entry": "Pickers & entry",
     "Data display": "Data display",
+    Charts: "Charts",
     Overlays: "Overlays",
     "App chrome": "App chrome",
     API: "API",
@@ -91,7 +92,7 @@ export const en: Dictionary = {
       title: "Overview",
       short: "Overview",
       blurb:
-        "What @eifi1/ui-kit is, the seven layers it is built in, and how to read a page of this showcase.",
+        "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
     },
     foundations: {
       title: "Foundations",
@@ -205,19 +206,37 @@ export const en: Dictionary = {
     "data-display": {
       title: "Data display",
       blurb:
-        "Showing values rather than taking them: the building blocks, the table, and the charts.",
+        "Showing values rather than taking them: the building blocks, feedback and progress, lists, trees and the table.",
     },
     buttons: {
       title: "Buttons & surfaces",
       short: "Buttons",
       blurb:
-        "Buttons, icon buttons, cards, spinners, empty states, avatars and banners — the pieces everything else is built from.",
+        "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
     },
     "chips-toggles": {
       title: "Chips & toggles",
       short: "Chips",
       blurb:
         "Chips and the chip field, the toggle group, and tabs — the small controls that pick one of a few or hold a short list.",
+    },
+    feedback: {
+      title: "Feedback & progress",
+      short: "Feedback",
+      blurb:
+        "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
+    },
+    "description-list": {
+      title: "Description list & table",
+      short: "Lists & tables",
+      blurb:
+        "Facts laid out without any machinery: a list of terms and details, a plain static table, and the separator and scroll area that sit between them.",
+    },
+    "tree-view": {
+      title: "Tree view",
+      short: "Tree",
+      blurb:
+        "A hierarchy walked with the keyboard — one Tab stop, arrows to open and close, type-ahead — with children loaded on demand, controlled from outside, right-to-left, and its row on its own.",
     },
     "data-table": {
       title: "Data table",
@@ -237,6 +256,11 @@ export const en: Dictionary = {
       blurb:
         "What the table is assembled from, usable on its own: the pager, the filter popover, the label tree, and the pure sort, filter and URL helpers.",
     },
+    charts: {
+      title: "Charts",
+      blurb:
+        "Values as pictures: the themed shell over Recharts, the tile chart, the zoomable series chart with its bars and areas, and the KPI tile.",
+    },
     "chart-shell": {
       title: "Chart shell",
       short: "Charts",
@@ -254,6 +278,12 @@ export const en: Dictionary = {
       short: "Series",
       blurb:
         "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
+    },
+    "series-chart-marks": {
+      title: "Series chart: bars, areas & time",
+      short: "Bars & areas",
+      blurb:
+        "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
     },
     stats: {
       title: "Stats & sparklines",
@@ -275,6 +305,12 @@ export const en: Dictionary = {
       short: "Dialogs",
       blurb:
         "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
+    },
+    "confirm-floating": {
+      title: "Confirm dialog & floating panel",
+      short: "Confirm",
+      blurb:
+        "The promise that replaces window.confirm — with tones, its own words and a queue — and the non-modal panel docked in a corner behind a floating button.",
     },
     popovers: {
       title: "Popovers, menus & tooltips",
@@ -340,6 +376,12 @@ export const en: Dictionary = {
       title: "Hooks & lib",
       short: "Hooks",
       blurb: "The non-visual exports: hooks read live, and the pure helpers as input → output.",
+    },
+    "clipboard-timing": {
+      title: "Clipboard & timing",
+      short: "Clipboard",
+      blurb:
+        "Copying that says whether it worked, and waiting until the typing stops: the copy button and its hook, and the debounced value and callback.",
     },
     helpers: {
       title: "Helpers & constants",

@@ -42,6 +42,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     pageContents: { title: "In questa pagina" },
     common: {
+      dismiss: "Chiudi",
       close: "Chiudi",
       clear: "Cancella",
       search: "Cerca",
@@ -125,6 +126,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       month: (monthYear) => monthYear,
     },
     datePicker: {
+      apply: "Applica",
+      cancel: "Annulla",
+      presets: "Intervalli rapidi",
       panel: "Scegli una data",
       rangePanel: "Scegli un intervallo di date",
       clear: "Cancella",
@@ -241,6 +245,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       size: (bytes) => formatFileSize(bytes, numberLocale),
     },
     filePicker: {
+      dropzone: "Caricamento file",
+      browse: "Sfoglia",
+      empty: "Trascina qui un file",
+      emptyMultiple: "Trascina qui i file",
+      hint: (accept) => (accept ? `Accettati: ${accept}` : "Qualsiasi tipo di file"),
+      busy: "Caricamento…",
       rejectedPick: (count) =>
         count === 1 ? "Il file non è stato aggiunto" : `Nessuno dei ${count} file è stato aggiunto`,
       // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
@@ -260,6 +270,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       cleared: "Tutti i file rimossi",
     },
     wizard: {
+      done: "Fine",
       cancel: "Annulla",
       back: "Indietro",
       next: "Avanti",
@@ -353,6 +364,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Trascina per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Fai doppio clic per ripristinare.",
       empty: "Nessun dato",
       legend: "Serie",
+    },
+    confirmDialog: {
+      confirm: "Conferma",
+      cancel: "Annulla",
+    },
+    floatingPanel: {
+      close: "Chiudi",
+    },
+    copyButton: {
+      copy: "Copia",
+      copied: "Copiato",
+      failed: "Copia non riuscita",
+      copiedAnnouncement: "Copiato negli appunti",
+      failedAnnouncement: "Impossibile copiare negli appunti",
     },
   };
 }

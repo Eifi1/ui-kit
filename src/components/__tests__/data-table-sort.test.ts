@@ -94,3 +94,49 @@ describe("nextSorts (header click semantics)", () => {
     expect(s[1].dir).toBe("desc");
   });
 });
+
+describe("nextSorts cycle options", () => {
+  it("defaults to the pre-0.8.0 asc → desc → none cycle", () => {
+    expect(nextSorts([], "date", false)).toEqual([{ key: "date", dir: "asc" }]);
+    expect(nextSorts([{ key: "date", dir: "asc" }], "date", false)).toEqual([
+      { key: "date", dir: "desc" },
+    ]);
+    expect(nextSorts([{ key: "date", dir: "desc" }], "date", false)).toEqual([]);
+  });
+
+  it("starts a desc-first column descending and still takes every step", () => {
+    const o = { firstDir: "desc" } as const;
+    const a = nextSorts([], "amount", false, o);
+    expect(a).toEqual([{ key: "amount", dir: "desc" }]);
+    const b = nextSorts(a, "amount", false, o);
+    expect(b).toEqual([{ key: "amount", dir: "asc" }]);
+    expect(nextSorts(b, "amount", false, o)).toEqual([]);
+  });
+
+  it("toggle skips the unsorted step, plain and additive", () => {
+    const o = { firstDir: "desc", cycle: "toggle" } as const;
+    const a = nextSorts([], "amount", false, o);
+    const b = nextSorts(a, "amount", false, o);
+    expect(b).toEqual([{ key: "amount", dir: "asc" }]);
+    expect(nextSorts(b, "amount", false, o)).toEqual([{ key: "amount", dir: "desc" }]);
+
+    const two: SortState[] = [{ key: "date", dir: "asc" }, { key: "amount", dir: "asc" }];
+    expect(nextSorts(two, "amount", true, o)).toEqual([
+      { key: "date", dir: "asc" },
+      { key: "amount", dir: "desc" },
+    ]);
+    // Another column still replaces the sort outright, in ITS first direction.
+    expect(nextSorts(b, "payee", false, { cycle: "toggle" })).toEqual([
+      { key: "payee", dir: "asc" },
+    ]);
+  });
+
+  it("appends an additive criterion in its first direction and removes it under tri", () => {
+    const o = { firstDir: "desc" } as const;
+    const a = nextSorts([{ key: "date", dir: "asc" }], "amount", true, o);
+    expect(a).toEqual([{ key: "date", dir: "asc" }, { key: "amount", dir: "desc" }]);
+    const b = nextSorts(a, "amount", true, o);
+    expect(b[1]).toEqual({ key: "amount", dir: "asc" });
+    expect(nextSorts(b, "amount", true, o)).toEqual([{ key: "date", dir: "asc" }]);
+  });
+});

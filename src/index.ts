@@ -32,6 +32,15 @@ export { useOverlayHistory } from "./hooks/use-overlay-history";
 export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transition";
 export { useRowSwipe } from "./hooks/use-row-swipe";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
+// Any element as a file drop target, screened like FileButton (kastlan).
+export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";
+export type { UseFileDropOptions, UseFileDropReturn, FileDropProps } from "./hooks/use-file-drop";
+// kastlan's search boxes each carried a hand-rolled copy, two without the cleanup.
+export { useDebounce, useDebouncedCallback } from "./hooks/use-debounce";
+export type { DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
+// Copy that reports whether it worked — keksdose's copy buttons said "Copied" when it had not.
+export { useCopyToClipboard, copyToClipboard } from "./hooks/use-copy-to-clipboard";
+export type { CopyState, UseCopyToClipboardOptions, UseCopyToClipboardReturn } from "./hooks/use-copy-to-clipboard";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
 export * from "./theme/chart-palette";
@@ -83,6 +92,10 @@ export * from "./components/page-contents";
 export * from "./components/disclosure";
 export * from "./components/dialog-frame";
 export * from "./components/danger-confirm";
+// `useConfirm()` — the promise-based replacement for `window.confirm`, one host per app.
+export * from "./components/confirm-dialog";
+// A non-modal corner panel and its round trigger (keksdose's assistant launcher).
+export * from "./components/floating-panel";
 export * from "./components/swatch-picker";
 export * from "./components/icon-picker";
 export * from "./components/choice-card";
@@ -123,7 +136,21 @@ export * from "./components/grouped-picker";
 export * from "./components/file-dropzone";
 export * from "./components/mini-calendar";
 export * from "./components/date-picker";
+export * from "./components/tree-view";
 export * from "./components/chart";
+// 0.8.0 layout and feedback primitives the apps hand-rolled or took from shadcn/Radix.
+export * from "./components/description-list";
+export * from "./components/progress-bar";
+// Named: skeleton.tsx also holds SKELETON_CLASS, the look StatTile shares — internal.
+export { Skeleton } from "./components/skeleton";
+export type { SkeletonProps, SkeletonShape } from "./components/skeleton";
+export * from "./components/copy-button";
+export * from "./components/button-group";
+export * from "./components/table";
+export * from "./components/separator";
+// Named: scroll-area.tsx also holds the overflow hook and scrollbar class Table shares.
+export { ScrollArea } from "./components/scroll-area";
+export type { ScrollAreaProps } from "./components/scroll-area";
 
 // ── data-table suite ─────────────────────────────────────────────────────────
 export * from "./components/data-table-labels";
@@ -140,6 +167,8 @@ export type {
   ServerPagination,
   FilterState,
   MobileSwipeActions,
+  DataTableDensity,
+  DataTableChrome,
 } from "./components/data-table";
 
 // ── shell (composable app chrome) ────────────────────────────────────────────

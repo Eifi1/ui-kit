@@ -20,7 +20,7 @@
 // Everything with a decision in it is a pure exported function below (`zoomAxesFor`,
 // `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`); the
 // components are plumbing between a pointer and those.
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
 import {
   usePlotArea,
@@ -59,10 +59,16 @@ export function zoomAxesFor(
   width: number,
   height: number,
   threshold: number = ZOOM_SQUARE_ENOUGH,
+  /** A chart that zooms ONE axis only (see {@link ZoomTarget.zoomAxes}): every drag is
+   *  a band along it, however it was drawn, and a drag with no extent along it is
+   *  nothing — a tall narrow drag over a bar chart names no stretch of the abscissa. */
+  only?: "x" | "y",
 ): ZoomAxes | null {
   if (!(width > 0) || !(height > 0)) return null;
   const across = Math.abs(dx) / width;
   const down = Math.abs(dy) / height;
+  if (only === "x") return across < ZOOM_MIN_DRAG ? null : "x";
+  if (only === "y") return down < ZOOM_MIN_DRAG ? null : "y";
   if (across < ZOOM_MIN_DRAG && down < ZOOM_MIN_DRAG) return null;
   const longer = Math.max(across, down);
   const shorter = Math.min(across, down);
@@ -107,8 +113,16 @@ export function selectionFromDrag(
   xInverse: InverseScaleFunction | undefined,
   yInverse: (axisId: string) => InverseScaleFunction | undefined,
   axisIds: readonly string[],
+  only?: "x" | "y",
 ): ZoomSelection | null {
-  const which = zoomAxesFor(drag.toX - drag.fromX, drag.toY - drag.fromY, plot.width, plot.height);
+  const which = zoomAxesFor(
+    drag.toX - drag.fromX,
+    drag.toY - drag.fromY,
+    plot.width,
+    plot.height,
+    ZOOM_SQUARE_ENOUGH,
+    only,
+  );
   if (!which) return null;
   const next: ZoomSelection = { which, y: {} };
   if (which !== "y" && xInverse) {
@@ -128,12 +142,28 @@ export function selectionFromDrag(
   return next.x || Object.keys(next.y).length ? next : null;
 }
 
+/** One row of a zoomable chart. Loose on purpose: a row also carries what the chart
+ *  does not plot — keksdose's `rawPeriod` for a drilldown, a label for a category axis —
+ *  and only the finite NUMBERS in it are ever read as samples. */
+export type ZoomRow = Readonly<Record<string, unknown>>;
+
+/** A series as the fit sees it. `stack` groups bars/areas drawn on top of each other
+ *  (recharts' `stackId`), whose extent is their SUM, not any one of them. */
+export interface ZoomFitSeries {
+  key: string;
+  axis?: string;
+  stack?: string;
+  /** Only `"line"` matters here: recharts cannot stack a line, so a line's `stack` is
+   *  ignored rather than summed into a height nothing on the chart reaches. */
+  type?: string;
+}
+
 /** What a band refit needs to know about the chart — a subset of `SeriesChart`'s own
  *  props, so a chart hands its data straight over. */
 export interface ZoomFitSource {
-  rows: Record<string, number>[];
-  series: { key: string; axis?: string }[];
-  axes: { id: string }[];
+  rows: readonly ZoomRow[];
+  series: readonly ZoomFitSeries[];
+  axes: readonly { id: string }[];
   xKey: string;
 }
 
@@ -156,8 +186,8 @@ type Span = [number, number] | undefined;
 
 /** A pair widened by one value. A non-finite one is not a value — one NaN would
  *  otherwise take the whole window with it. */
-function widen(span: Span, value: number): Span {
-  if (!Number.isFinite(value)) return span;
+function widen(span: Span, value: unknown): Span {
+  if (typeof value !== "number" || !Number.isFinite(value)) return span;
   if (!span) return [value, value];
   if (value < span[0]) span[0] = value;
   else if (value > span[1]) span[1] = value;
@@ -169,6 +199,63 @@ function keysOn(source: ZoomFitSource, axisId: string): string[] {
   return source.series
     .filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axisId)
     .map((entry) => entry.key);
+}
+
+/** A row's value as a sample, or 0 for a stack's missing layer — a stacked bar with no
+ *  value for one series draws the rest of the stack from where that one would end. */
+const layer = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+/**
+ * The lowest and highest value an axis DRAWS over the rows whose abscissa is inside
+ * `window` (every row when there is none) — `undefined` when it draws nothing finite.
+ *
+ * Stack-aware, and that is why it exists: a stack of three bars reaches the SUM of
+ * them, and fitting the axis to the tallest single layer (what fitting on values did)
+ * cuts the top two thirds of every stack off. Positive and negative layers are summed
+ * apart, as recharts draws them under `stackOffset="sign"` — a month with 900 income
+ * and −300 expense stacks up to 900 and down to −300, not to 600. A stacked extent
+ * therefore always contains the zero its layers stand on.
+ *
+ * `SeriesChart` fits its axes with this and the zoom refits them with it, so the two
+ * cannot disagree about how tall a stack is.
+ */
+export function axisExtent(
+  source: ZoomFitSource,
+  axisId: string,
+  window?: readonly [number, number],
+): [number, number] | undefined {
+  const mine = source.series.filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axisId);
+  const loose: string[] = [];
+  const stacks = new Map<string, string[]>();
+  for (const entry of mine) {
+    if (entry.stack === undefined || entry.type === "line" || entry.type === undefined) {
+      loose.push(entry.key);
+    } else {
+      stacks.set(entry.stack, [...(stacks.get(entry.stack) ?? []), entry.key]);
+    }
+  }
+  let span: Span;
+  for (const row of source.rows) {
+    if (window) {
+      const at = row[source.xKey];
+      if (typeof at !== "number" || !(at >= window[0] && at <= window[1])) continue;
+    }
+    for (const key of loose) span = widen(span, row[key]);
+    for (const keys of stacks.values()) {
+      let up = 0;
+      let down = 0;
+      let any = false;
+      for (const key of keys) {
+        const value = layer(row[key]);
+        any ||= typeof row[key] === "number" && Number.isFinite(row[key]);
+        if (value >= 0) up += value;
+        else down += value;
+      }
+      if (!any) continue;
+      span = widen(widen(span, down), up);
+    }
+  }
+  return span;
 }
 
 /**
@@ -185,16 +272,9 @@ export function fitYToX(
   source: ZoomFitSource,
   window: readonly [number, number],
 ): Record<string, [number, number]> {
-  const [from, to] = window;
   const fitted: Record<string, [number, number]> = {};
   for (const axis of source.axes) {
-    const keys = keysOn(source, axis.id);
-    let span: Span;
-    for (const row of source.rows) {
-      const at = row[source.xKey];
-      if (!(at >= from && at <= to)) continue;
-      for (const key of keys) span = widen(span, row[key]);
-    }
+    const span = axisExtent(source, axis.id, window);
     if (span) fitted[axis.id] = airy(span[0], span[1]);
   }
   return fitted;
@@ -215,7 +295,7 @@ export function fitXToY(
     for (const key of keysOn(source, axisId)) {
       for (const row of source.rows) {
         const value = row[key];
-        if (Number.isFinite(value) && value >= low && value <= high) {
+        if (typeof value === "number" && Number.isFinite(value) && value >= low && value <= high) {
           hits = widen(hits, row[source.xKey]);
         }
       }
@@ -275,17 +355,43 @@ export interface ZoomBinding {
   layer: ReactNode;
 }
 
+/**
+ * Which axes a chart lets a drag zoom. `"none"` draws no drag layer and no reset.
+ * A drag on a one-axis chart is always a band along that axis (see {@link zoomAxesFor}).
+ */
+export type ZoomAxesSetting = ZoomAxes | "none";
+
+/**
+ * The zoom a chart gets when it does not say, read off what its series ARE.
+ *
+ * - Only lines: `"both"` — lenkbank's measurement plots, unchanged.
+ * - Any area: `"x"`. An area's height is a length from zero, and a y window that cuts
+ *   the baseline off draws a band of 40 as three times one of 20 — so its y axis refits
+ *   to the x window (still from zero), and a drag never names a y range.
+ * - Any bar: `"none"`. A bar chart is a handful of periods read one bar at a time, and
+ *   in keksdose every one of them is CLICKED — to drill into a payee, a month, a budget
+ *   line — which a drag layer over the plot would swallow. A chart of many bars opts
+ *   back in with `zoomAxes: "x"`; a click then reports the period, not the bar.
+ */
+export function defaultZoomAxes(series: readonly { type?: string }[] | undefined): ZoomAxesSetting {
+  if (series?.some((entry) => entry.type === "bar")) return "none";
+  if (series?.some((entry) => entry.type === "area")) return "x";
+  return "both";
+}
+
 /** The props `withChartZoom` reads off the chart it wraps. */
 export interface ZoomTarget {
   /** Default: the single axis {@link DEFAULT_Y_AXIS}. */
   axes?: readonly { id: string; hide?: boolean }[];
   /** The chart's own data, so a band can refit the axis it did not name. Optional: a
    *  chart with nothing plotted has nothing to fit to. */
-  rows?: Record<string, number>[];
-  series?: readonly { key: string; axis?: string }[];
+  rows?: readonly ZoomRow[];
+  series?: readonly ZoomFitSeries[];
   x?: { key?: string };
   zoom?: ZoomBinding;
   labels?: Partial<SeriesChartLabels>;
+  /** Which axes a drag may zoom. Default: {@link defaultZoomAxes} of `series`. */
+  zoomAxes?: ZoomAxesSetting;
 }
 
 const SharedX = createContext<{
@@ -326,6 +432,8 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     const xWindow = group ? group.window : ownX;
     const setXWindow = group ? group.set : setOwnX;
     const axes = props.axes ?? [{ id: DEFAULT_Y_AXIS }];
+    const setting = props.zoomAxes ?? defaultZoomAxes(props.series);
+    const only = setting === "x" || setting === "y" ? setting : undefined;
 
     // Every axis, hidden ones included: a hidden axis still scales its lines, and a
     // line whose axis did not refit is drawn as a flat streak inside the window.
@@ -350,11 +458,22 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       setOwnY(null);
     };
 
+    // Switched off, the chart still gets a binding — with no window and no layer — so a
+    // chart whose series change type mid-life is not remounted by a different tree.
+    if (setting === "none") {
+      return (
+        <div className="relative">
+          <Chart {...props} zoom={{ yDomains: {}, layer: null }} />
+        </div>
+      );
+    }
+
     const binding: ZoomBinding = {
       ...zoomDomains(state, source),
       layer: (
         <ZoomLayer
           axisIds={axes.map((axis) => axis.id)}
+          only={only}
           label={labels.zoomHint}
           onZoom={(selection) => {
             const next = zoomAfter(state, selection, source);
@@ -395,11 +514,13 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
  */
 function ZoomLayer({
   axisIds,
+  only,
   label,
   onZoom,
   onReset,
 }: {
   axisIds: string[];
+  only?: "x" | "y";
   label: string;
   onZoom: (selection: ZoomSelection) => void;
   onReset: () => void;
@@ -411,6 +532,9 @@ function ZoomLayer({
   // one thing React will not forgive.
   const [scales] = useState(() => new Map<string, InverseScaleFunction | undefined>());
   const [drag, setDrag] = useState<ZoomDrag | null>(null);
+  // A finished drag is followed by a click on the same element, and a chart with an
+  // `onClick` (keksdose opens a drilldown on one) would read the zoom as a pick.
+  const draggedRef = useRef(false);
 
   if (!plot || plot.width <= 0 || plot.height <= 0) return null;
 
@@ -425,14 +549,22 @@ function ZoomLayer({
   const finish = () => {
     if (!drag) return;
     setDrag(null);
-    const selection = selectionFromDrag(drag, plot, xInverse, (id) => scales.get(id), axisIds);
+    const selection = selectionFromDrag(drag, plot, xInverse, (id) => scales.get(id), axisIds, only);
+    draggedRef.current = selection !== null;
     if (selection) onZoom(selection);
   };
 
   // What the drag would do, shown while it is being made: a band paints the full width
   // or height, so the reader sees it is about to let the other axis refit.
   const which = drag
-    ? zoomAxesFor(drag.toX - drag.fromX, drag.toY - drag.fromY, plot.width, plot.height)
+    ? zoomAxesFor(
+        drag.toX - drag.fromX,
+        drag.toY - drag.fromY,
+        plot.width,
+        plot.height,
+        ZOOM_SQUARE_ENOUGH,
+        only,
+      )
     : null;
 
   return (
@@ -463,6 +595,7 @@ function ZoomLayer({
         style={{ cursor: "crosshair" }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
+          draggedRef.current = false;
           const point = at(event);
           // Best effort: capture keeps a drag alive past the plot's edge, but a
           // pointer id the environment does not know throws — jsdom refuses them all —
@@ -481,6 +614,11 @@ function ZoomLayer({
         }}
         onPointerUp={finish}
         onPointerCancel={() => setDrag(null)}
+        onClick={(event) => {
+          if (!draggedRef.current) return;
+          draggedRef.current = false;
+          event.stopPropagation();
+        }}
         onDoubleClick={onReset}
       />
     </g>

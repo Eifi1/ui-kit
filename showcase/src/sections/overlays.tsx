@@ -9,6 +9,7 @@ import {
   ModalCloseContext,
   OVERLAY_EXIT_MS,
   Popover,
+  SearchField,
   Tooltip,
   buttonClasses,
   cn,
@@ -82,6 +83,13 @@ export function Dialogs() {
       </Example>
 
       <Example
+        label='Modal — role="alertdialog"'
+        hint="for a question the user must answer; announced with more urgency, still modal"
+      >
+        <AlertDialogModal />
+      </Example>
+
+      <Example
         label="useBackdropClose"
         hint="Press and release must BOTH land on the backdrop."
       >
@@ -93,6 +101,20 @@ export function Dialogs() {
         hint="Edge to edge — the X is the only way out on a phone, by design."
       >
         <FullBleed />
+      </Example>
+
+      <Example
+        label="FullBleedDialog — footer"
+        hint="a row pinned under the scrolling body — the Apply that must not scroll away with the calendar"
+      >
+        <FullBleedFooter />
+      </Example>
+
+      <Example
+        label="FullBleedDialog — onKeyDown, and a header that stretches"
+        hint="the caller's handler runs first; preventDefault() on Escape claims it"
+      >
+        <FullBleedSearch />
       </Example>
 
       <Example
@@ -550,6 +572,234 @@ function FullBleed() {
           </Row>
         </div>
       </FullBleedDialog>
+    </>
+  );
+}
+
+
+function AlertDialogModal() {
+  const [open, setOpen] = useState(false);
+  const [answer, setAnswer] = useState<string>("—");
+  const titleId = useId();
+  const bodyId = useId();
+  return (
+    <>
+      <Row>
+        <Button variant="danger" onClick={() => setOpen(true)}>
+          Discard the draft…
+        </Button>
+        <span className="text-xs text-[var(--text-muted)]">answer: {answer}</span>
+      </Row>
+      {open && (
+        <Modal
+          role="alertdialog"
+          labelledBy={titleId}
+          aria-describedby={bodyId}
+          className="space-y-3"
+          onClose={() => {
+            setAnswer("dismissed");
+            setOpen(false);
+          }}
+        >
+          <h4 id={titleId} className="text-sm font-semibold text-[var(--text-primary)]">
+            Discard the unsent report?
+          </h4>
+          <p id={bodyId} className="text-xs text-[var(--text-secondary)]">
+            The text and both attachments will be lost.
+          </p>
+          <Row className="justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setAnswer("keep");
+                setOpen(false);
+              }}
+            >
+              Keep editing
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setAnswer("discard");
+                setOpen(false);
+              }}
+            >
+              Discard
+            </Button>
+          </Row>
+        </Modal>
+      )}
+      <div className="mt-3">
+        <Note>
+          Only the two dialog roles are allowed — <code className="font-mono">role</code> is typed{" "}
+          <code className="font-mono">&quot;dialog&quot; | &quot;alertdialog&quot;</code> — so the panel
+          stays modal either way. <code className="font-mono">useConfirm()</code> renders exactly this
+          for you (see &ldquo;Confirm dialog &amp; floating panel&rdquo;); reach for the role by hand only
+          when the question needs more than a title, a line and two buttons.
+        </Note>
+      </div>
+    </>
+  );
+}
+
+function FullBleedFooter() {
+  const [open, setOpen] = useState(false);
+  const [applied, setApplied] = useState<string | null>(null);
+  const [pick, setPick] = useState("Last 3 months");
+  const options = ["This month", "Last month", "Last 3 months", "Last 6 months", "This year", "Last year", "All time"];
+  return (
+    <>
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Pick a report range
+        </Button>
+        <span className="text-xs text-[var(--text-muted)]">applied: {applied ?? "—"}</span>
+      </Row>
+      <FullBleedDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-label="Report range"
+        closeLabel="Close the report range"
+        header={<span className="truncate text-sm">Report range</span>}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="brand"
+              onClick={() => {
+                setApplied(pick);
+                setOpen(false);
+              }}
+            >
+              Apply
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          {options.map((o) => (
+            <label key={o} className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-3 text-sm text-[var(--text-primary)]">
+              <input type="radio" name="report-range" checked={pick === o} onChange={() => setPick(o)} />
+              {o}
+            </label>
+          ))}
+          <p className="pt-2 text-xs text-[var(--text-muted)]">
+            On a phone this list is longer than the screen: scroll it and the Apply row stays put.
+          </p>
+          <div aria-hidden className="h-96" />
+        </div>
+      </FullBleedDialog>
+      <div className="mt-3">
+        <Note>
+          The footer sits outside the scroller, so it stays put without{" "}
+          <code className="font-mono">position: sticky</code>, and pads itself for the home indicator,
+          since it is the panel&apos;s bottom edge. The body is what gives way to it (
+          <code className="font-mono">min-h-0</code>), not the footer that gets pushed off the bottom.
+        </Note>
+      </div>
+    </>
+  );
+}
+
+
+const TRANSACTIONS = [
+  "Rewe — groceries",
+  "Rent, September",
+  "Salary",
+  "Deutsche Bahn — ticket",
+  "Stadtwerke — electricity",
+  "Bakery",
+  "Insurance",
+  "Refund, train ticket",
+];
+
+function FullBleedSearch() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [claimed, setClaimed] = useState(0);
+  const hits = TRANSACTIONS.filter((t) => t.toLowerCase().includes(query.trim().toLowerCase()));
+  return (
+    <>
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Search transactions
+        </Button>
+        <span className="text-xs text-[var(--text-muted)]">
+          picked: {picked ?? "—"} · Escapes claimed: {claimed}
+        </span>
+      </Row>
+      <FullBleedDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-label="Search transactions"
+        closeLabel="Close the search"
+        className="md:max-w-xl"
+        header={
+          <SearchField
+            value={query}
+            onChange={(q) => {
+              setQuery(q);
+              setActive(0);
+            }}
+            aria-label="Search transactions"
+            clearLabel="Clear the search"
+          />
+        }
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const step = e.key === "ArrowDown" ? 1 : -1;
+            setActive((i) => (hits.length ? (i + step + hits.length) % hits.length : 0));
+          } else if (e.key === "Enter" && hits[active]) {
+            setPicked(hits[active]);
+            setOpen(false);
+          } else if (e.key === "Escape" && query) {
+            // The first Escape clears the query; only an empty field lets it close.
+            e.preventDefault();
+            setQuery("");
+            setClaimed((n) => n + 1);
+          }
+        }}
+      >
+        <ul role="listbox" aria-label="Results" className="space-y-1">
+          {hits.map((t, i) => (
+            // The keys for these options live on the dialog's onKeyDown (↑/↓/Enter), the
+            // listbox pattern with focus kept in the search field; this is the mouse path.
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+            <li
+              key={t}
+              role="option"
+              aria-selected={i === active}
+              onClick={() => {
+                setPicked(t);
+                setOpen(false);
+              }}
+              className={cn(
+                "cursor-pointer rounded-md px-3 py-2 text-sm",
+                i === active ? "bg-[var(--bg-active)] text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+              )}
+            >
+              {t}
+            </li>
+          ))}
+          {hits.length === 0 && <li className="px-3 py-2 text-sm text-[var(--text-muted)]">No match</li>}
+        </ul>
+      </FullBleedDialog>
+      <div className="mt-3">
+        <Note>
+          Type, then ↑/↓ and Enter: the list keys live on the dialog&apos;s own{" "}
+          <code className="font-mono">onKeyDown</code>, which runs before the built-in handling. With
+          text in the field, Escape clears it — the handler calls{" "}
+          <code className="font-mono">preventDefault()</code>, which claims the key — and only the next
+          Escape closes. The <code className="font-mono">header</code> slot stretches to the X, so a{" "}
+          <code className="font-mono">SearchField</code> there takes the whole strip rather than its
+          content width.
+        </Note>
+      </div>
     </>
   );
 }

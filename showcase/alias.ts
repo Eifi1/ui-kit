@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
  * ORDER MATTERS: Vite matches object aliases as ordered prefixes, so every
  * subpath must come first or the bare specifier swallows it.
  */
-const LOCALES = ["de", "de-CH", "fr", "it", "es", "hu", "zh"];
+const LOCALES = ["de", "de-CH", "de-informal", "de-CH-informal", "fr", "it", "es", "hu", "zh"];
 
 export const SHOWCASE_ALIAS = {
   ...Object.fromEntries(

@@ -171,3 +171,82 @@ describe("StatTileGrid", () => {
     );
   });
 });
+
+describe("StatTile 0.8.0 (keksdose B22)", () => {
+  it("a sub-value with tone none stays untinted on a toned tile", () => {
+    render(
+      <StatTile
+        label="Income"
+        value={100}
+        tone="income"
+        subValues={[
+          { label: "AUG", value: 90 },
+          { label: "Count", value: "12", tone: "none" },
+        ]}
+      />,
+    );
+    const tinted = screen.getByText("90");
+    expect(tinted.className).toContain("text-[var(--money-income)]");
+    const plain = screen.getByText("12");
+    expect(plain.className).not.toMatch(/text-\[var/);
+    expect(plain.className).not.toContain("opacity-75");
+  });
+
+  it("draws the projection directly under the headline, before the delta, description and sub-values", () => {
+    render(
+      <StatTile
+        label="Spend"
+        value={420}
+        format={(n) => `€${n}`}
+        valueLabel="SEP"
+        delta={5}
+        description="To date"
+        projection={{ label: "Projected", value: 1850 }}
+        subValues={[{ label: "AUG", value: 900 }]}
+      />,
+    );
+    const projected = screen.getByText("€1850");
+    const headline = screen.getByText("€420");
+    const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(after(headline, projected)).toBe(true);
+    expect(after(projected, screen.getByText("To date"))).toBe(true);
+    expect(after(projected, screen.getByText("€900"))).toBe(true);
+    expect(after(projected, screen.getByText("Up €5"))).toBe(true);
+    // A labelled term/definition pair, spaced tight to the headline.
+    expect(screen.getByText("Projected").tagName).toBe("DT");
+    expect(projected.closest("dl")?.className).toContain("mt-0.5");
+  });
+
+  it("withholds the projection while loading", () => {
+    render(<StatTile label="Spend" value={1} loading projection={{ label: "Projected", value: 9 }} />);
+    expect(screen.queryByText("Projected")).toBeNull();
+  });
+
+  it("names the trend sparkline from a non-string label's text", () => {
+    render(
+      <StatTile
+        label={
+          <span title="Monthly active users">
+            <span>Active users</span>
+          </span>
+        }
+        value={3}
+        trend={[1, 3]}
+      />,
+    );
+    expect(screen.getByRole("img", { name: /^Active users/ })).toBeInTheDocument();
+  });
+
+  it("takes name over the label's text, for a label with none", () => {
+    render(<StatTile label={<svg aria-hidden />} name="Errors" value={3} trend={[1, 3]} />);
+    expect(screen.getByRole("img", { name: /^Errors/ })).toBeInTheDocument();
+  });
+
+  it("truncateLabel with a string label is the tooltip keksdose wrapped by hand", () => {
+    render(<StatTile label="Aktive Abonnements (30 Tage)" value={3} truncateLabel trend={[1, 3]} />);
+    const label = screen.getByText("Aktive Abonnements (30 Tage)");
+    expect(label.className).toContain("truncate");
+    // The full string is still the sparkline's name.
+    expect(screen.getByRole("img", { name: /^Aktive Abonnements \(30 Tage\)/ })).toBeInTheDocument();
+  });
+});

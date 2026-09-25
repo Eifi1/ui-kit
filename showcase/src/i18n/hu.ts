@@ -64,6 +64,7 @@ export const hu: Dictionary = {
     Inputs: "Bevitel",
     "Pickers & entry": "Választók és bevitel",
     "Data display": "Adatmegjelenítés",
+    Charts: "Diagramok",
     // Hungarian UI writing has no settled loanword for "overlay"; "felugró elemek"
     // (pop-up elements) is what a Hungarian designer calls this group.
     Overlays: "Felugró elemek",
@@ -84,7 +85,7 @@ export const hu: Dictionary = {
       title: "Áttekintés",
       short: "Áttekintés",
       blurb:
-        "Mi az @eifi1/ui-kit, milyen hét rétegre épül, és hogyan érdemes olvasni ennek a bemutatónak egy oldalát.",
+        "Mi az @eifi1/ui-kit, milyen nyolc rétegre épül, és hogyan érdemes olvasni ennek a bemutatónak egy oldalát.",
     },
     foundations: {
       title: "Alapok",
@@ -200,19 +201,37 @@ export const hu: Dictionary = {
     "data-display": {
       title: "Adatmegjelenítés",
       blurb:
-        "Értékek megjelenítése bevitel helyett: az alapelemek, a táblázat és a diagramok.",
+        "Értékek megjelenítése bevitel helyett: az alapelemek, a visszajelzés és a folyamatjelzés, a listák, a fák és a táblázat.",
     },
     buttons: {
       title: "Gombok és felületek",
       short: "Gombok",
       blurb:
-        "Gombok, ikongombok, kártyák, töltésjelzők, üres állapotok, avatarok és értesítősávok — a darabok, amelyekből minden más épül.",
+        "Gombok, gombcsoportok, ikongombok, kártyák, töltésjelzők és avatarok — a darabok, amelyekből minden más épül.",
     },
     "chips-toggles": {
       title: "Címkék és kapcsolók",
       short: "Címkék",
       blurb:
         "A címkék (chipek) és a címkemező, a kapcsolócsoport és a fülek — a kis vezérlők, amelyekkel néhány közül egy választható, vagy amelyek egy rövid listát tartanak.",
+    },
+    feedback: {
+      title: "Visszajelzés és folyamat",
+      short: "Folyamat",
+      blurb:
+        "Hol tart egy feladat, hogy úton van a tartalom, hogy itt nincs semmi, és hogy valamit el kell olvasni: folyamatjelzők és mérősávok, vázak, üres állapotok és értesítősávok.",
+    },
+    "description-list": {
+      title: "Leíró lista és táblázat",
+      short: "Listák, táblák",
+      blurb:
+        "Tények bármiféle gépezet nélkül elrendezve: fogalmak és részleteik listája, egy egyszerű statikus táblázat, valamint az elválasztó és a görgethető terület, amelyek a kettő között állnak.",
+    },
+    "tree-view": {
+      title: "Fanézet",
+      short: "Fa",
+      blurb:
+        "Billentyűzettel bejárható hierarchia — egyetlen tabulátorállomás, nyilak a kinyitáshoz és becsukáshoz, gépelés közbeni ugrás — igény szerint betöltött gyermekekkel, kívülről vezérelve, jobbról balra, és a sora önmagában.",
     },
     "data-table": {
       title: "Adattáblázat",
@@ -232,6 +251,11 @@ export const hu: Dictionary = {
       blurb:
         "Amiből a táblázat összeáll, külön is használható formában: a lapozó, a szűrő popover, a címkék fája, valamint a rendezés, szűrés és URL tiszta segédfüggvényei.",
     },
+    charts: {
+      title: "Diagramok",
+      blurb:
+        "Értékek képekként: a témázott keret a Recharts fölött, a csempés diagram, a nagyítható adatsor-diagram oszlopaival és területeivel, valamint a KPI-csempe.",
+    },
     "chart-shell": {
       title: "Diagramkeret",
       short: "Diagramok",
@@ -249,6 +273,12 @@ export const hu: Dictionary = {
       short: "Adatsorok",
       blurb:
         "Az alkalmazások közös, nagyítható adatsor-diagramja: mértékegységenként egy tengely, kapcsolókból álló jelmagyarázat, egyetlen nagyítás diagramok egész sorára, és az alattuk lévő segédfüggvények.",
+    },
+    "series-chart-marks": {
+      title: "Adatsor-diagram: oszlopok, területek és idő",
+      short: "Oszlopok",
+      blurb:
+        "Ugyanaz a diagram oszlopokkal, területekkel és halmozással, kategóriák és valós idő felett, referenciavonalakkal, jelölőkkel, pontokkal és kattintásokkal — és egy jelmagyarázattal, amelynek színei nem változnak.",
     },
     stats: {
       title: "Mutatók és sparkline-ok",
@@ -272,6 +302,12 @@ export const hu: Dictionary = {
       short: "Párbeszéd",
       blurb:
         "A modális és a teljes képernyős párbeszédablak, a háttérre kattintás, amely bezárja őket, és a bezárási időzítés, amelyen minden felugró elem osztozik.",
+    },
+    "confirm-floating": {
+      title: "Megerősítő párbeszéd és lebegő panel",
+      short: "Megerősítés",
+      blurb:
+        "A window.confirm helyére lépő promise — tónusokkal, saját szavakkal és várakozási sorral — és a nem modális panel, amely egy lebegő gomb mögött dokkol a sarokban.",
     },
     popovers: {
       title: "Popoverek, menük és elemleírások",
@@ -339,6 +375,12 @@ export const hu: Dictionary = {
       short: "Hookok",
       blurb:
         "A nem vizuális exportok: a hookok élőben, a tiszta segédfüggvények pedig bemenet → kimenet formában.",
+    },
+    "clipboard-timing": {
+      title: "Vágólap és időzítés",
+      short: "Vágólap",
+      blurb:
+        "Másolás, amely megmondja, sikerült-e, és várakozás, amíg a gépelés abbamarad: a másológomb és a hookja, valamint a késleltetett érték és visszahívás.",
     },
     helpers: {
       title: "Segédfüggvények és konstansok",

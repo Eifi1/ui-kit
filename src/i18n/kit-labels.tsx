@@ -23,6 +23,9 @@ import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
+import type { ConfirmDialogLabels } from "../components/confirm-dialog";
+import type { FloatingPanelLabels } from "../components/floating-panel";
+import type { CopyButtonLabels } from "../components/copy-button";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -72,6 +75,9 @@ export interface CommonLabels {
    *  A colon-and-space is not universal punctuation (French puts a space before
    *  the colon, Chinese uses a full-width one). */
   fieldValue: (field: string, value: string) => string;
+  /** The × that puts away a banner or a notice (`AlertBanner onDismiss`). Not `close`:
+   *  nothing opened, and "Close" on a banner reads as closing the page it sits on. */
+  dismiss: string;
 }
 
 /** `DatePicker` / `DateRangePicker` chrome. The calendar inside has its own
@@ -85,6 +91,12 @@ export interface DatePickerLabels {
   previousDay: string;
   nextDay: string;
   today: string;
+  /** `DateRangePicker commit="apply"`: the button that commits the drafted range. */
+  apply: string;
+  /** …and the one that discards it. */
+  cancel: string;
+  /** Accessible name of `DateRangePicker`'s preset column. */
+  presets: string;
 }
 
 /** The whole combobox family: `Combobox`, `EntityCombobox`,
@@ -212,6 +224,9 @@ export interface UiKitLabels {
   filePicker: FilePickerLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
+  confirmDialog: ConfirmDialogLabels;
+  floatingPanel: FloatingPanelLabels;
+  copyButton: CopyButtonLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a
@@ -233,6 +248,7 @@ export const DEFAULT_COMMON_LABELS: CommonLabels = {
   loading: "Loading…",
   noResults: "No results",
   fieldValue: (field, value) => `${field}: ${value}`,
+  dismiss: "Dismiss",
 };
 
 export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {
@@ -242,6 +258,9 @@ export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {
   previousDay: "Previous day",
   nextDay: "Next day",
   today: "Today",
+  apply: "Apply",
+  cancel: "Cancel",
+  presets: "Quick ranges",
 };
 
 export const DEFAULT_COMBOBOX_LABELS: ComboboxLabels = {

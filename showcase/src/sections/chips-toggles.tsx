@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Hash, Pin, Star, Tag } from "lucide-react";
+import { Link } from "react-router";
+import { Bell, CreditCard, Hash, Pin, Settings2, Star, Tag, User } from "lucide-react";
 import { Button, Chip, ChipInput, Tabs, ToggleGroup } from "@eifi1/ui-kit";
-import type { ToggleOption } from "@eifi1/ui-kit";
+import type { ChipLinkProps, ToggleOption } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
 import { useT } from "../i18n";
 import { TabControls } from "./field-anatomy-demo";
@@ -266,6 +267,8 @@ export function ChipsToggles() {
   return (
     <>
       <Chips />
+      <ChipVariants />
+      <ChipLinksAndRemove />
       <ChipInputDemo />
       <ChipInputOptions />
       <ChipsRtl />
@@ -274,8 +277,203 @@ export function ChipsToggles() {
       <ToggleGroupClearable />
       <TabStrip />
       <WrappedTabStrip />
+      <VerticalTabs />
       <TabControls />
     </>
+  );
+}
+
+
+/* ── 0.8.0: variant, shape, caps, renderLink, removeDisabled ──────────────── */
+
+const STATUS_BADGES = [
+  { text: "Paid", tone: "success" },
+  { text: "Draft", tone: "neutral" },
+  { text: "Overdue", tone: "danger" },
+  { text: "Admin", tone: "brand" },
+] as const;
+
+/** react-router's Link takes `to`, not `href` — so the chip hands its props over and the
+ *  caller maps the one name. */
+const routerLink = ({ href, ...props }: ChipLinkProps) => <Link to={href} {...props} />;
+
+function ChipVariants() {
+  const [unread, setUnread] = useState(7);
+  const [on, setOn] = useState(["Overdue"]);
+  const toggle = (v: string) => setOn((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  return (
+    <Example
+      label="Chip — soft, outline and solid; pill and square; caps"
+      hint="variant is how much of the tone it wears; shape the radius; caps the status-badge type"
+    >
+      <div className="space-y-3">
+        {(["soft", "outline", "solid"] as const).map((variant) => (
+          <Row key={variant}>
+            <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">{variant}</span>
+            {CHIP_TONES.map((t) => (
+              <Chip key={t} tone={t} variant={variant}>
+                {t}
+              </Chip>
+            ))}
+          </Row>
+        ))}
+        <Row>
+          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">caps</span>
+          {STATUS_BADGES.map((b) => (
+            <Chip key={b.text} tone={b.tone} size="sm" caps>
+              {b.text}
+            </Chip>
+          ))}
+          {STATUS_BADGES.map((b) => (
+            <Chip key={`o-${b.text}`} tone={b.tone} size="sm" caps variant="outline" shape="square">
+              {b.text}
+            </Chip>
+          ))}
+        </Row>
+        <Row>
+          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">square</span>
+          {["Overdue", "EUR", "Q3"].map((v) => (
+            <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
+              {v}
+            </Chip>
+          ))}
+          <Chip shape="square" size="sm">
+            sm square
+          </Chip>
+          <Chip shape="square" size="lg" icon={Tag}>
+            lg square
+          </Chip>
+        </Row>
+        <Row>
+          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">count</span>
+          <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
+            <Bell className="size-4" aria-hidden /> Inbox
+            <Chip tone="danger" variant="solid" size="sm" aria-label={`${unread} unread`}>
+              {unread}
+            </Chip>
+          </span>
+          <Button variant="ghost" onClick={() => setUnread((n) => (n >= 12 ? 1 : n + 1))}>
+            One more
+          </Button>
+        </Row>
+      </div>
+      <Note>
+        <code className="font-mono">outline</code> is the tone&apos;s border and text on no surface —
+        for a badge on a row that is already coloured. <code className="font-mono">solid</code> is the
+        tone as a fill under contrasting ink and centres a tabular figure, so a one-digit count is a
+        round dot and 9 → 10 does not jiggle the row; a selected solid chip gets a ring instead. An
+        outline toggle takes the tone&apos;s selected look when on, or it would have no visible state.{" "}
+        <code className="font-mono">caps</code> is TYPE, not surface — a size step down, heavier and
+        tracked — so it combines with any variant; write the text in normal case, as a reader reads it
+        as written.
+      </Note>
+    </Example>
+  );
+}
+
+function ChipLinksAndRemove() {
+  const [filters, setFilters] = useState(["Account: Main", "2026", "Category: Food"]);
+  const [removeLocked, setRemoveLocked] = useState(true);
+  return (
+    <Example
+      label="Chip — renderLink and removeDisabled"
+      hint="a router link that does not reload the app; an × that is off while the chip still works"
+    >
+      <Row>
+        <Chip href="/buttons" renderLink={routerLink} icon={Hash}>
+          Buttons (router Link)
+        </Chip>
+        <Chip href="/tree-view" renderLink={routerLink} tone="brand" variant="outline" shape="square" caps size="sm">
+          Tree view
+        </Chip>
+        <Chip href="#/buttons" icon={Hash}>
+          plain &lt;a href&gt;
+        </Chip>
+      </Row>
+      <Row className="mt-3">
+        {filters.map((f, i) => (
+          <Chip
+            key={f}
+            tone="neutral"
+            // The first filter is required: its × is off, the chip itself stays a link.
+            removeDisabled={i === 0 && removeLocked}
+            href={i === 0 ? "/data-table" : undefined}
+            renderLink={i === 0 ? routerLink : undefined}
+            onRemove={() => setFilters((all) => all.filter((x) => x !== f))}
+          >
+            {f}
+          </Chip>
+        ))}
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={removeLocked} onChange={(e) => setRemoveLocked(e.target.checked)} />
+          <code className="font-mono">removeDisabled</code> on the first
+        </label>
+        {filters.length < 3 && (
+          <Button variant="ghost" onClick={() => setFilters(["Account: Main", "2026", "Category: Food"])}>
+            Reset
+          </Button>
+        )}
+      </Row>
+      <Note>
+        <code className="font-mono">renderLink</code> is handed everything the chip would have put on
+        its own <code className="font-mono">&lt;a&gt;</code> — <code className="font-mono">href</code>, the
+        whole <code className="font-mono">className</code>, the children, the ref — and here maps{" "}
+        <code className="font-mono">href</code> to react-router&apos;s <code className="font-mono">to</code>:{" "}
+        <code className="font-mono">{"({ href, ...p }) => <Link to={href} {...p} />"}</code>. The first two
+        chips navigate inside the app; the third is a plain anchor. <code className="font-mono">removeDisabled</code>{" "}
+        dims and disables only the × — the first filter is still a working link to the data table —
+        where <code className="font-mono">disabled</code> would also kill the chip&apos;s own action.
+      </Note>
+    </Example>
+  );
+}
+
+type SettingsTab = "profile" | "billing" | "notifications" | "advanced";
+
+function VerticalTabs() {
+  const [active, setActive] = useState<SettingsTab>("profile");
+  const labels: Record<SettingsTab, string> = {
+    profile: "Profile",
+    billing: "Billing",
+    notifications: "Notifications",
+    advanced: "Advanced",
+  };
+  return (
+    <Example
+      label='Tabs — orientation="vertical"'
+      hint="a side nav with the strip's keyboard: ↑/↓ walk it, Home/End; on a phone it becomes the horizontal strip"
+    >
+      <div className="grid gap-4 md:grid-cols-[14rem_1fr]">
+        <Tabs<SettingsTab>
+          orientation="vertical"
+          label="Settings sections"
+          active={active}
+          onChange={setActive}
+          tabs={[
+            { id: "profile", label: <span className="inline-flex items-center gap-2"><User className="size-4" aria-hidden /> Profile</span> },
+            { id: "billing", label: <span className="inline-flex items-center gap-2"><CreditCard className="size-4" aria-hidden /> Billing</span> },
+            {
+              id: "notifications",
+              label: <span className="inline-flex items-center gap-2"><Bell className="size-4" aria-hidden /> Notifications</span>,
+              badge: <CountPill>{4}</CountPill>,
+            },
+            { id: "advanced", label: <span className="inline-flex items-center gap-2"><Settings2 className="size-4" aria-hidden /> Advanced</span>, href: "#/chips-toggles" },
+          ]}
+        />
+        <div className="rounded-md border border-[var(--border)] p-4 text-sm text-[var(--text-secondary)]">
+          The <span className="font-medium text-[var(--text-primary)]">{labels[active]}</span> panel.
+        </div>
+      </div>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">aria-orientation=&quot;vertical&quot;</code> on the tablist and ↑/↓
+          instead of ←/→; the open row is filled and a badge moves to the row&apos;s end. Below{" "}
+          <code className="font-mono">md</code> the orientation is switched in JavaScript, not with
+          classes, so the arrow keys a reader is told about always match the layout — try the
+          screen-size preview. The caller&apos;s two-column grid stacks at the same breakpoint.
+        </Note>
+      </div>
+    </Example>
   );
 }
 

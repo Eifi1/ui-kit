@@ -50,21 +50,60 @@ export function decodeSorts(raw: string | null, validKeys: ReadonlySet<string>):
   return out;
 }
 
+/**
+ * How a header click steps through the directions (see {@link nextSorts}).
+ *
+ * * `"tri"` — first direction → the other → unsorted. The default, and the only cycle
+ *   before 0.8.0.
+ * * `"toggle"` — first direction ⇄ the other, never unsorted: a report table that is
+ *   ALWAYS ranked by something (keksdose's aggregated tables) must not have a third
+ *   click that silently drops the ranking. Clicking another column still replaces
+ *   the sort, so the table can always be re-ranked; a shift-click criterion flips in
+ *   place and stays for the same reason.
+ */
+export type SortCycle = "tri" | "toggle";
+
+/** Per-click options for {@link nextSorts}; every field is optional and the
+ *  defaults reproduce the pre-0.8.0 cycle exactly. */
+export interface SortStepOptions {
+  /** The direction a column starts in on its first click. `"desc"` for money and
+   *  count columns, where the interesting rows are the large ones. Default `"asc"`. */
+  firstDir?: SortDir;
+  /** Default `"tri"`. */
+  cycle?: SortCycle;
+}
+
+const flip = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
+
 /** Header-click semantics. Plain click: make `key` the only sort — cycling
- *  asc → desc → none when it already is the sole criterion. Shift-click
- *  (`additive`): append `key` as the next-priority sort, or cycle an existing
- *  entry's direction in place (asc → desc → removed). */
-export function nextSorts(prev: SortState[], key: string, additive: boolean): SortState[] {
+ *  first → other → none (`"tri"`) or first ⇄ other (`"toggle"`) when it already is
+ *  the sole criterion. Shift-click (`additive`): append `key` as the next-priority
+ *  sort, or step an existing entry in place (first → other → removed under `"tri"`,
+ *  a plain flip under `"toggle"`). `firstDir` defaults to `"asc"`, `cycle` to
+ *  `"tri"` — the cycle every table had before the options existed. */
+export function nextSorts(
+  prev: SortState[],
+  key: string,
+  additive: boolean,
+  options: SortStepOptions = {},
+): SortState[] {
+  const first = options.firstDir ?? "asc";
+  const toggle = options.cycle === "toggle";
   const idx = prev.findIndex((s) => s.key === key);
+  // One step from `dir`: the second direction after the first, then either back to
+  // the first (toggle) or off (null). Judged against THIS column's first direction,
+  // so a desc-first column goes desc → asc → none rather than skipping a step.
+  const step = (dir: SortDir): SortDir | null =>
+    dir === first ? flip(first) : toggle ? first : null;
   if (!additive) {
     if (prev.length === 1 && idx === 0) {
-      return prev[0].dir === "asc" ? [{ key, dir: "desc" }] : [];
+      const dir = step(prev[0].dir);
+      return dir ? [{ key, dir }] : [];
     }
-    return [{ key, dir: "asc" }];
+    return [{ key, dir: first }];
   }
-  if (idx === -1) return [...prev, { key, dir: "asc" }];
-  if (prev[idx].dir === "asc") {
-    return prev.map((s, i) => (i === idx ? { key, dir: "desc" as SortDir } : s));
-  }
+  if (idx === -1) return [...prev, { key, dir: first }];
+  const dir = step(prev[idx].dir);
+  if (dir) return prev.map((s, i) => (i === idx ? { key, dir } : s));
   return prev.filter((_, i) => i !== idx);
 }

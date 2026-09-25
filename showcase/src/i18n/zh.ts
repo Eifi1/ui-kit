@@ -63,6 +63,7 @@ export const zh: Dictionary = {
     Inputs: "输入",
     "Pickers & entry": "选择器与录入",
     "Data display": "数据展示",
+    Charts: "图表",
     // The established term for popups/layers in Chinese component libraries.
     Overlays: "浮层",
     // "Chrome" as in the frame around an app, not the browser.
@@ -82,7 +83,7 @@ export const zh: Dictionary = {
     overview: {
       title: "概览",
       short: "概览",
-      blurb: "@eifi1/ui-kit 是什么、它由哪七层构成，以及如何阅读本展示站的页面。",
+      blurb: "@eifi1/ui-kit 是什么、它由哪八层构成，以及如何阅读本展示站的页面。",
     },
     foundations: {
       title: "设计基础",
@@ -189,18 +190,38 @@ export const zh: Dictionary = {
     },
     "data-display": {
       title: "数据展示",
-      blurb: "展示数值而非采集数值：基础构件、表格和图表。",
+      blurb:
+        "展示数值而非采集数值：基础构件、反馈与进度、列表、树和表格。",
     },
     buttons: {
       title: "按钮与表面",
       short: "按钮",
-      blurb: "按钮、图标按钮、卡片、加载指示器、空状态、头像和横幅——其余一切都由这些构件搭建而成。",
+      blurb:
+        "按钮、按钮组、图标按钮、卡片、加载指示器和头像——其余一切都由这些构件搭建而成。",
     },
     "chips-toggles": {
       title: "标签与切换",
       short: "标签",
       blurb:
         "标签（Chip）与标签输入框、切换按钮组和标签页——用于在几项中选一项或承载一个短列表的小控件。",
+    },
+    feedback: {
+      title: "反馈与进度",
+      short: "反馈",
+      blurb:
+        "任务进行到哪一步、内容正在加载、这里什么都没有、有内容需要阅读：进度条与计量条、骨架屏、空状态和横幅。",
+    },
+    "description-list": {
+      title: "描述列表与表格",
+      short: "列表与表格",
+      blurb:
+        "不借助任何机制排列信息：由术语和说明组成的列表、简单的静态表格，以及位于两者之间的分隔线和滚动区域。",
+    },
+    "tree-view": {
+      title: "树视图",
+      short: "树",
+      blurb:
+        "用键盘浏览的层级结构——只占一个 Tab 停靠点、方向键展开与折叠、输入即跳转——支持按需加载子节点、外部受控、从右到左，以及单独使用的行。",
     },
     "data-table": {
       title: "数据表格",
@@ -220,6 +241,11 @@ export const zh: Dictionary = {
       blurb:
         "表格的组成部分，也可单独使用：分页器、筛选弹出框、标签树，以及排序、筛选和 URL 的纯函数工具。",
     },
+    charts: {
+      title: "图表",
+      blurb:
+        "以图形呈现数值：基于 Recharts 的主题化外壳、矩形树图、带柱形和面积的可缩放序列图，以及 KPI 卡片。",
+    },
     "chart-shell": {
       title: "图表外壳",
       short: "图表",
@@ -237,6 +263,12 @@ export const zh: Dictionary = {
       short: "序列",
       blurb:
         "各应用共用的可缩放序列图：每种单位一条坐标轴、由开关组成的图例、一组图表共用一次缩放，以及其底层的工具函数。",
+    },
+    "series-chart-marks": {
+      title: "序列图：柱形、面积与时间",
+      short: "柱形与面积",
+      blurb:
+        "同一个图表绘制柱形、面积和堆叠，横轴可为分类或真实时间，带参考线、标记、数据点和点击——图例颜色始终保持不变。",
     },
     stats: {
       title: "统计卡片与迷你图",
@@ -257,6 +289,12 @@ export const zh: Dictionary = {
       title: "对话框",
       short: "对话框",
       blurb: "模态框与全屏对话框、点击背景关闭它们的规则，以及所有浮层共用的关闭过渡时序。",
+    },
+    "confirm-floating": {
+      title: "确认对话框与浮动面板",
+      short: "确认",
+      blurb:
+        "取代 window.confirm 的 Promise——支持三种语气、自定义文案和排队——以及停靠在角落、由浮动按钮打开的非模态面板。",
     },
     popovers: {
       title: "弹出框、菜单与工具提示",
@@ -320,6 +358,12 @@ export const zh: Dictionary = {
       title: "Hooks 与 lib",
       short: "Hooks",
       blurb: "非可视化的导出：实时运行的 hooks，以及以“输入 → 输出”形式展示的纯函数工具。",
+    },
+    "clipboard-timing": {
+      title: "剪贴板与定时",
+      short: "剪贴板",
+      blurb:
+        "会说明是否成功的复制，以及等输入停下再执行：复制按钮及其 Hook，以及防抖的值和回调。",
     },
     helpers: {
       title: "辅助函数与常量",

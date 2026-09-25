@@ -7,6 +7,7 @@ import {
   StepperNav,
   Textarea,
   ToggleGroup,
+  Tooltip,
   WizardContextProvider,
   WizardStep,
   WizardStepper,
@@ -98,6 +99,8 @@ export function Wizard() {
       </Note>
 
       <ToyWizard key={runId} onRestart={() => setRunId((n) => n + 1)} />
+
+      <ImportWizardDemo />
 
       <Note>
         <strong>Skip bypasses validation entirely.</strong> Step 1 is{" "}
@@ -213,6 +216,7 @@ export function Wizard() {
             ["edit", DEFAULT_WIZARD_LABELS.edit],
             ["missingRequired (optional key)", DEFAULT_WIZARD_LABELS.missingRequired],
             ["genericError (optional key)", DEFAULT_WIZARD_LABELS.genericError],
+            ["done (optional key)", DEFAULT_WIZARD_LABELS.done ?? ""],
           ]}
         />
       </Example>
@@ -284,6 +288,200 @@ export function Wizard() {
         started&quot;.
       </Note>
     </>
+  );
+}
+
+
+/* ── a committing step with a step after it ─────────────────────────────── */
+
+type ImportDraft = { file: string; replace: boolean; rules: boolean };
+
+function ImportWizardDemo() {
+  const [run, setRun] = useState(0);
+  const [cancellable, setCancellable] = useState(true);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const note = (line: string) => setLog((l) => [line, ...l].slice(0, 5));
+  return (
+    <Example
+      label="A committing step, a step after it, and the chrome's options"
+      hint="urlSync: false (no ?step= written) · commits · onDone · onExit · cancellable · confirmCancel · finishVariant · finishDisabled · renderFinish · nextLabel"
+    >
+      <Row className="mb-3 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={cancellable} onChange={(e) => setCancellable(e.target.checked)} />
+          <code className="font-mono">cancellable</code>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={confirmCancel} onChange={(e) => setConfirmCancel(e.target.checked)} />
+          <code className="font-mono">confirmCancel</code>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
+          write lock (<code className="font-mono">finishDisabled</code>)
+        </label>
+        <Button size="sm" variant="ghost" onClick={() => setRun((n) => n + 1)}>
+          Start over
+        </Button>
+      </Row>
+      <ImportWizard
+        key={run}
+        cancellable={cancellable}
+        confirmCancel={confirmCancel}
+        locked={locked}
+        onEvent={note}
+        onRestart={() => setRun((n) => n + 1)}
+      />
+      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">callbacks: {log.length ? log.join(" · ") : "—"}</p>
+      <div className="mt-3">
+        <Note>
+          Step 2 is flagged <code className="font-mono">commits</code>: its button is Finish (labelled by the
+          step&apos;s <code className="font-mono">nextLabel</code>, &ldquo;Import 214 rows&rdquo;) and a
+          successful <code className="font-mono">onComplete</code> moves ON to step 3 instead of ending. From
+          there Back and the indicator cannot cross the commit and Cancel is gone; the last step&apos;s button
+          is Done, which calls <code className="font-mono">onDone</code>. Step 1&apos;s Next,
+          &ldquo;Analyse&rdquo;, runs a 900 ms async check: it shows pending (spinner,{" "}
+          <code className="font-mono">aria-busy</code>, disabled) until the check settles. Back on step 1 is
+          offered because <code className="font-mono">onExit</code> is given — &ldquo;back to the
+          dropzone&rdquo;. <code className="font-mono">urlSync: false</code> keeps the step in memory, so this
+          wizard never touches the address bar the one above writes to.
+        </Note>
+        <Note>
+          Tick &ldquo;replace&rdquo; on step 2 and Finish becomes <code className="font-mono">finishVariant=&quot;danger&quot;</code>;
+          tick the write lock and it is <code className="font-mono">finishDisabled</code>, wrapped by{" "}
+          <code className="font-mono">renderFinish</code> in a tooltip that says why — on a wrapping span,
+          since a disabled button gets no pointer events. The review summary&apos;s first section has no{" "}
+          <code className="font-mono">stepIndex</code>, so it has no edit button, and{" "}
+          <code className="font-mono">disabled</code> greys the others while the import runs.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+function ImportWizard({
+  cancellable,
+  confirmCancel,
+  locked,
+  onEvent,
+  onRestart,
+}: {
+  cancellable: boolean;
+  confirmCancel: boolean;
+  locked: boolean;
+  onEvent: (line: string) => void;
+  onRestart: () => void;
+}) {
+  const steps: WizardStepConfig[] = [
+    {
+      id: "file",
+      label: "File",
+      nextLabel: "Analyse",
+      validate: async () => {
+        await new Promise<void>((resolve) => setTimeout(resolve, 900));
+        return true;
+      },
+    },
+    { id: "review", label: "Review", commits: true, nextLabel: "Import 214 rows" },
+    { id: "rules", label: "Rules" },
+  ];
+  const wizard = useWizard<ImportDraft>({
+    steps,
+    initialData: { file: "ynab-export-2026-09.csv", replace: false, rules: true },
+    urlSync: false,
+    cancellable,
+    confirmCancel,
+    onCancel: () => {
+      onEvent("onCancel");
+      onRestart();
+    },
+    onExit: () => onEvent("onExit — back to the dropzone"),
+    onDone: () => {
+      onEvent("onDone");
+      onRestart();
+    },
+    onComplete: async () => {
+      await new Promise<void>((resolve) => setTimeout(resolve, 1200));
+      onEvent("onComplete");
+    },
+  });
+  const sections: SummarySection[] = [
+    {
+      label: "File",
+      items: [
+        { label: "Rows", value: "214" },
+        { label: "Accounts", value: "3" },
+      ],
+    },
+    {
+      label: "Options",
+      stepIndex: 0,
+      items: [
+        { label: "File", value: wizard.data.file },
+        { label: "Mode", value: wizard.data.replace ? "Replace everything" : "Add to existing" },
+      ],
+    },
+  ];
+  return (
+    <StepperNav
+      wizard={wizard}
+      title="Import transactions"
+      finishVariant={wizard.data.replace ? "danger" : "brand"}
+      finishDisabled={locked}
+      renderFinish={(button) =>
+        locked ? (
+          <Tooltip label="Another tab is editing these accounts.">
+            <span className="inline-flex">{button}</span>
+          </Tooltip>
+        ) : (
+          button
+        )
+      }
+    >
+      {wizard.currentStepIndex === 0 && (
+        <WizardStep>
+          <p className="text-sm text-[var(--text-secondary)]">
+            <span className="font-mono text-[var(--text-primary)]">{wizard.data.file}</span> — press
+            &ldquo;Analyse&rdquo; and watch it pend while the pretend server checks the file.
+          </p>
+        </WizardStep>
+      )}
+      {wizard.currentStepIndex === 1 && (
+        <WizardStep>
+          <label className="mb-3 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={wizard.data.replace}
+              onChange={(e) => wizard.updateData({ replace: e.target.checked })}
+              disabled={wizard.isSubmitting}
+            />
+            Replace everything already imported
+          </label>
+          <WizardSummary sections={sections} onEditStep={wizard.goToStep} disabled={wizard.isSubmitting} />
+        </WizardStep>
+      )}
+      {wizard.currentStepIndex === 2 && (
+        <WizardStep>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Imported. Set up rules for the 12 payees seen for the first time?
+          </p>
+          <label className="mt-2 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={wizard.data.rules}
+              onChange={(e) => wizard.updateData({ rules: e.target.checked })}
+            />
+            Suggest rules
+          </label>
+        </WizardStep>
+      )}
+      <p className="mt-3 font-mono text-[11px] text-[var(--text-muted)]">
+        isCommitStep={String(wizard.isCommitStep)} · committed={String(wizard.committed)} · canGoBack=
+        {String(wizard.canGoBack)} · canCancel={String(wizard.canCancel)} · canDone={String(wizard.canDone)} ·
+        isValidating={String(wizard.isValidating)}
+      </p>
+    </StepperNav>
   );
 }
 
@@ -468,7 +666,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
               value={outcome}
               onChange={setOutcome}
               ariaLabel="Submit outcome"
-              className="w-auto"
+              className="w-full sm:w-auto"
               options={[
                 { value: "succeed", label: "onComplete resolves" },
                 { value: "fail", label: "rejects with an Error" },

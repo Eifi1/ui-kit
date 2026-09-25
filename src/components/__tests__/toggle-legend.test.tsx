@@ -191,3 +191,17 @@ describe("ToggleLegend in RTL", () => {
     }
   });
 });
+
+describe("ToggleLegend custom dash", () => {
+  it("draws a custom stroke-dasharray string as given", () => {
+    const { container } = render(
+      <ToggleLegend
+        showSingle
+        entries={[{ key: "p", label: "Projection", color: "#000", marker: "stroke", dash: "4 3" }]}
+        hidden={new Set()}
+        onToggle={() => {}}
+      />,
+    );
+    expect(container.querySelector("[stroke-dasharray]")?.getAttribute("stroke-dasharray")).toBe("4 3");
+  });
+});

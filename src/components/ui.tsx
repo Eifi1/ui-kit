@@ -7,13 +7,27 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
 // Shared base ring for every button-styled element. Kept as a named const so the
 // <Button> component and the {@link buttonClasses} helper draw from one source and
 // can never drift apart.
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+
+export type ButtonSize = "sm" | "md";
+
+// Box geometry per size, split out of the base so the two cannot be merged into one
+// string that a size then has to fight. `md` is the pre-0.8.0 look, unchanged. `sm` is
+// the compact secondary action keksdose repeats by hand as `px-2 py-1 text-xs` (and
+// `px-2 py-0.5 text-xs`) on the buttons in a toolbar or a table header; one rung is
+// enough, so the two spellings meet at `py-1`. There is no `lg`: no app has asked for
+// a bigger text button (IconButton's `lg` is a touch target, not a text size). The
+// variant map comes AFTER the size, so `link`'s `p-0` still wins at either size.
+const BUTTON_SIZES: Record<ButtonSize, string> = {
+  md: "gap-2 px-3 py-2 text-sm",
+  sm: "gap-1.5 px-2 py-1 text-xs",
+};
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
 // Actions default to a warm bordered look (primary = filled warm chip, secondary =
@@ -32,21 +46,51 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
     "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus:ring-[var(--danger-border)]",
   brand:
     "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus:ring-[var(--brand)]",
+  // A text link that is still a `<button>` — keksdose's six hand-rolled
+  // `<button className="text-brand underline">` sites ("Resend code", "Show all",
+  // "Undo" in a toast…), which act rather than navigate and so must not be anchors.
+  // The box padding goes (`p-0`) so it sits in a sentence at the text's own size, but
+  // the base's `focus:ring-2` stays: those copies had `outline-none` and no ring, so
+  // a keyboard user tabbing onto them saw nothing at all. `rounded-sm` keeps that
+  // ring hugging the word instead of drawing a pill round it.
+  link:
+    "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus:ring-[var(--brand)]",
 };
+
+/** The second argument of {@link buttonClasses} in its options form. */
+export interface ButtonClassesOptions {
+  /** See {@link ButtonProps.size}. */
+  size?: ButtonSize;
+  className?: string;
+}
 
 /**
  * Button classes for the rare case where the styling must land on a non-`<button>`
  * element that {@link Button} can't render — e.g. a router `<Link>` or a Radix
  * AlertDialog Action/Cancel (which must stay the Radix element). Everywhere a real
- * button works, prefer `<Button>`. Draws from the same base + variant maps as
+ * button works, prefer `<Button>`. Draws from the same base, size and variant maps as
  * `<Button>`, so the two stay in lockstep.
+ *
+ * The second argument is either the extra classes (the pre-0.8.0 form) or
+ * `{ size, className }` — `buttonClasses("secondary", { size: "sm" })` for keksdose's
+ * compact toolbar links.
  */
-export function buttonClasses(variant: ButtonVariant = "primary", className?: string): string {
-  return cn(BUTTON_BASE, buttonVariantClasses[variant], className);
+export function buttonClasses(
+  variant: ButtonVariant = "primary",
+  classNameOrOptions?: string | ButtonClassesOptions,
+): string {
+  const { size = "md", className } =
+    typeof classNameOrOptions === "object" ? classNameOrOptions : { className: classNameOrOptions };
+  return cn(BUTTON_BASE, BUTTON_SIZES[size], buttonVariantClasses[variant], className);
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  /** `md` (default) is the page's action button. `sm` is the compact one — 12px text
+   *  and `px-2 py-1` — for the secondary actions in a toolbar, a card header or a
+   *  table's header row (keksdose writes `px-2 py-1 text-xs` over `secondary` by hand
+   *  there). Every variant takes either size. */
+  size?: ButtonSize;
   /** In a flex row next to a taller labelled field, fill the field's height so the
    *  two line up. No effect outside a flex row. */
   stretch?: boolean;
@@ -56,12 +100,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
 }
 
-export function Button({ variant = "primary", stretch, className, ...rest }: ButtonProps) {
+export function Button({ variant = "primary", size = "md", stretch, className, ...rest }: ButtonProps) {
   return (
     <button
       {...rest}
       className={cn(
         BUTTON_BASE,
+        BUTTON_SIZES[size],
         // In a flex row next to a taller labelled field, `stretch` makes the button
         // fill the field's height so the two line up (self-stretch overrides the row's
         // align-items). No effect outside a flex row / when it's already the tallest.
@@ -86,12 +131,15 @@ export function Button({ variant = "primary", stretch, className, ...rest }: But
 const ICON_BUTTON_BASE =
   "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
-export type IconButtonSize = "md" | "sm" | "xs" | "2xs";
+export type IconButtonSize = "lg" | "md" | "sm" | "xs" | "2xs";
 
 // Box and glyph together, so a 24px chip action cannot end up holding a 20px icon
 // that touches its edges. The two small steps are lenkbank's list-row (28px) and
 // chip (24px) actions, which it had hand-rolled beside the kit's 32/36px ones.
 const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
+  // The 44px touch target (WCAG 2.5.5's size) with the same 20px glyph — keksdose's
+  // bulk-action bars write `size-11` by hand over an `md` button to get it on phones.
+  lg: "size-11 [&_svg]:size-5",
   md: "size-9 [&_svg]:size-5",
   sm: "size-8 [&_svg]:size-5",
   xs: "size-7 rounded [&_svg]:size-4",
@@ -109,18 +157,83 @@ const ICON_BUTTON_TONES = {
     "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]",
   danger:
     "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)]",
+  // Amber AT REST, unlike `danger`: a warning icon button is the one on the row that
+  // needs attention (keksdose's "needs review" flag on a transaction, the stale-rate
+  // marker), not an action repeated down a list — quiet grey would hide the very
+  // thing it is there to point out.
+  warning:
+    "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus:ring-[var(--warning-border)]",
+  // Sky at rest, for the same reason as `warning`: keksdose's reconcile action on an
+  // account row (accounts-page:867) is the one on the row to notice, and it is
+  // informational rather than a problem, so it takes the `--info` family.
+  info: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
 } as const;
 
+// A disabled button must not answer the pointer. The hover classes above are plain
+// `hover:` (so a caller's `className="hover:…"` still replaces them through
+// tailwind-merge), which means they fire on a disabled button too — the old grey
+// icon lit up on hover while refusing the click. Rather than rewrite every hover as
+// `enabled:hover:` (which never matches the `<a>` that `buttonClasses` also styles,
+// and would out-rank a caller's plain `hover:` override), each variant pins its
+// RESTING look under `disabled:hover:`, which out-ranks any `hover:` by specificity
+// and only ever matches a disabled button.
+const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay", string> = {
+  primary: "disabled:hover:bg-[var(--bg-surface-2)]",
+  secondary: "disabled:hover:bg-transparent",
+  ghost: "disabled:hover:bg-transparent",
+  danger: "disabled:hover:bg-[var(--danger)]",
+  brand: "disabled:hover:bg-[var(--brand)]",
+  link: "disabled:hover:bg-transparent disabled:hover:no-underline",
+  overlay: "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
+};
+
+// The tones that change the glyph on hover pin their resting glyph the same way.
+const ICON_BUTTON_TONES_DISABLED_REST: Partial<Record<keyof typeof ICON_BUTTON_TONES, string>> = {
+  muted: "disabled:hover:text-[var(--text-placeholder)]",
+  danger: "disabled:hover:text-[var(--text-placeholder)]",
+};
+
+// `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
+// "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
+// beside them. After the tone, so a pressed `muted` button is brand, not grey.
+const ICON_BUTTON_PRESSED =
+  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-[var(--brand)] disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
+
+// `variant="overlay"`: a round, translucent disc for a control that sits ON a photo
+// (keksdose's receipt-scan preview: close, rotate, retake over the camera image).
+// The inverse pair, not the surface one: what has to hold is the contrast between the
+// disc and its glyph, whatever the picture underneath is, and `--bg-inverse` /
+// `--text-inverse` are the one token pair defined as each other's opposite in both
+// themes. The disc is the inverse at 60% (`color-mix`, so it stays a token a palette
+// can re-point); the blur keeps a busy background from breaking the glyph's edge.
+const ICON_BUTTON_OVERLAY =
+  "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-[var(--text-inverse)] backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus:ring-[var(--text-inverse)]";
+
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  /** Box size: md = 36px (matches the top bar), sm = 32px — both with a 20px icon;
+  /** Any {@link ButtonVariant}, or `overlay` — a round translucent disc for use over
+   *  an image (see `ICON_BUTTON_OVERLAY`). */
+  variant?: ButtonVariant | "overlay";
+  /** Box size: lg = 44px (a phone's touch target), md = 36px (matches the top bar),
+   *  sm = 32px — all three with a 20px icon;
    *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
    *  icon (an action on a chip or a tab). */
   size?: IconButtonSize;
   /** Glyph colour over the variant. `muted`: placeholder grey, full text colour on
    *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
-   *  remove/delete that repeats down a list. Default: the variant's own colours. */
+   *  remove/delete that repeats down a list. `warning`: amber at rest — a flag that
+   *  wants attention. `info`: sky at rest — a notice-worthy but harmless action
+   *  (keksdose's reconcile). Default: the variant's own colours. */
   tone?: keyof typeof ICON_BUTTON_TONES;
+  /**
+   * Make it a toggle button. `true` sets `aria-pressed="true"` and draws the "on" look
+   * (brand glyph on the quiet brand fill); `false` sets `aria-pressed="false"` with the
+   * normal look, so a screen reader still hears a toggle that is off. Left out, it is
+   * an ordinary button with no `aria-pressed` — or whatever `aria-pressed` the caller
+   * passes. For keksdose's budget share toggle (budgets-page:291), which paints its own
+   * brand colour over a ghost button today. Keep the `aria-label` the same in both
+   * states ("Share budget"): the pressed state already says whether it is on.
+   */
+  pressed?: boolean;
   /** Keep the click (and the Enter/Space that produces it) from reaching an
    *  ancestor's handler — for an action inside a clickable table row or card.
    *
@@ -149,13 +262,14 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { variant = "ghost", size = "md", tone = "default", stopPropagation, className, onClick, onKeyDown, ...rest },
+  { variant = "ghost", size = "md", tone = "default", pressed, stopPropagation, className, onClick, onKeyDown, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
       {...rest}
+      aria-pressed={pressed ?? rest["aria-pressed"]}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
         onClick?.(e);
@@ -169,8 +283,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       className={cn(
         ICON_BUTTON_BASE,
         ICON_BUTTON_SIZES[size],
-        buttonVariantClasses[variant],
+        // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
+        variant === "overlay" ? ICON_BUTTON_OVERLAY : buttonVariantClasses[variant],
+        ICON_BUTTON_DISABLED_REST[variant],
         ICON_BUTTON_TONES[tone],
+        ICON_BUTTON_TONES_DISABLED_REST[tone],
+        pressed && ICON_BUTTON_PRESSED,
         className,
       )}
     />
@@ -1044,20 +1162,34 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
    * content cards on data pages; leave off for centered dialog/panel cards.
    */
   flush?: boolean;
+  /**
+   * `inset`: a panel INSIDE a card rather than a card on the page — the raised
+   * `--bg-surface-2`, a small radius, `p-3` of its own and no border or shadow, since
+   * it is already sitting on the card that has them. Lenkbank's results blocks and
+   * corner panels write this by hand (`rounded-md bg-surface-2 p-3`) under a Card of
+   * their own. Unlike the default card it carries its padding, because every one of
+   * those copies wanted the same one; a caller's `p-*` still wins. `flush` is ignored:
+   * an inset panel never runs edge to edge.
+   */
+  variant?: "default" | "inset";
 }
 
-export function Card({ className, children, flush, ...rest }: CardProps) {
+export function Card({ className, children, flush, variant = "default", ...rest }: CardProps) {
   return (
     <div
       {...rest}
       className={cn(
-        // Surface + border are theme tokens so the palette switcher (feedback
-        // #307) can re-skin every card; a caller's own bg-*/border-* override
-        // still wins via tailwind-merge.
-        "bg-[var(--bg-surface)]",
-        flush
-          ? "border-y border-[var(--border)] md:rounded-lg md:border md:shadow-sm"
-          : "rounded-lg border border-[var(--border)] shadow-sm",
+        variant === "inset"
+          ? "rounded-md bg-[var(--bg-surface-2)] p-3"
+          : cn(
+              // Surface + border are theme tokens so the palette switcher (feedback
+              // #307) can re-skin every card; a caller's own bg-*/border-* override
+              // still wins via tailwind-merge.
+              "bg-[var(--bg-surface)]",
+              flush
+                ? "border-y border-[var(--border)] md:rounded-lg md:border md:shadow-sm"
+                : "rounded-lg border border-[var(--border)] shadow-sm",
+            ),
         className,
       )}
     >
@@ -1198,12 +1330,23 @@ export function Spinner({ className, label, ...rest }: SpinnerProps) {
 export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** The box renders `title` and `hint` in its own two-line rhythm, which is what makes
    *  every empty state in three apps look like the same thing — so there is no
-   *  `children` slot to put arbitrary content in. */
+   *  `children` slot to put arbitrary content in. The two slots below are the only
+   *  other things an empty state has turned out to need, and each has a fixed place. */
   title: string;
   hint?: string;
+  /** A glyph ABOVE the title — kastlan's InboxEmptyState (an inbox), keksdose's
+   *  offline card (a cloud with a slash). Sized by the box (`[&_svg]:size-8`) and
+   *  muted, so five call sites cannot pick five sizes; hidden from assistive tech,
+   *  because the title already says what it shows. */
+  icon?: ReactNode;
+  /** What to do about it, BELOW the hint: keksdose's query-state cards (Retry), its
+   *  error boundary (Retry / Reload / Go home — pass all three in a fragment, they
+   *  wrap and centre as one row), kastlan's "Create a rule". Buttons or links the
+   *  caller renders; the box only places them. */
+  action?: ReactNode;
 }
 
-export function EmptyState({ title, hint, className, ...rest }: EmptyStateProps) {
+export function EmptyState({ title, hint, icon, action, className, ...rest }: EmptyStateProps) {
   return (
     <div
       {...rest}
@@ -1212,8 +1355,16 @@ export function EmptyState({ title, hint, className, ...rest }: EmptyStateProps)
         className,
       )}
     >
+      {icon != null && (
+        <div aria-hidden className="mb-3 text-[var(--text-placeholder)] [&_svg]:size-8">
+          {icon}
+        </div>
+      )}
       <div className="font-medium text-[var(--text-secondary)]">{title}</div>
       {hint && <div className="mt-1 text-xs">{hint}</div>}
+      {action != null && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>
+      )}
     </div>
   );
 }
@@ -1386,6 +1537,26 @@ export interface TabsProps<T extends string>
   /** An add or a remove is in flight: the × and the add button are disabled and
    *  Delete is ignored, so a double click cannot remove two tabs. Nothing moves. */
   busy?: boolean;
+  /**
+   * `"vertical"`: the same strip as a SIDE NAV — one item per row, the open one
+   * filled, ↑/↓ walking it (Home/End as before) and `aria-orientation="vertical"` on
+   * the tablist. For keksdose's admin page and settings page, which each hand-built
+   * the identical sidebar with none of this strip's keyboard, roving tab stop or
+   * routed-`href` handling. Everything else — `href` tabs, `badge`, `panelId`,
+   * `onRemove`, `onAdd` — means exactly what it means on the horizontal strip; the
+   * badge moves to the row's end.
+   *
+   * **On a phone ({@link PHONE_QUERY}) it becomes the horizontal strip**, `wrap` and
+   * all, rather than staying a column. A side nav only works beside its content; on
+   * a phone it has to go ABOVE it, and eight full-width rows there push the panel
+   * the user picked below the fold on every visit — the two keksdose pages both
+   * collapsed theirs into a scrolling row by hand for exactly that reason. The
+   * orientation is switched in JavaScript, not with `md:` classes, so the
+   * `aria-orientation` a screen reader hears and the arrow keys that work always
+   * match the layout on screen. The caller's own two-column layout has to stack at
+   * the same breakpoint (`md:grid-cols-[14rem_1fr]`).
+   */
+  orientation?: "horizontal" | "vertical";
 }
 
 // The two shapes are written out as whole strings rather than as one base plus a
@@ -1398,6 +1569,17 @@ export interface TabsProps<T extends string>
 // that the colours are tokens: there is no `md:dark:` tier left to keep in step.
 const TABLIST_CLASSES =
   "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]";
+// The side nav. A column of full-width rows with the open one FILLED rather than
+// underlined: an underline under one row of a list reads as a separator, not as a
+// selection. `--bg-active` is the kit's own selected-row fill (the sidebar's), so the
+// admin page's nav and the app's own sidebar mark "you are here" the same way.
+const TABLIST_VERTICAL_CLASSES = "flex flex-col gap-0.5";
+const TAB_VERTICAL_CLASSES =
+  "flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+const TAB_VERTICAL_ACTIVE_CLASSES = "bg-[var(--bg-active)] text-[var(--text-primary)]";
+const TAB_VERTICAL_INACTIVE_CLASSES =
+  "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
+
 const TABLIST_WRAP_CLASSES =
   "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-[var(--border)]";
 
@@ -1445,10 +1627,14 @@ export function Tabs<T extends string>({
   addLabel,
   labels,
   busy = false,
+  orientation = "horizontal",
   "aria-label": ariaLabel,
   ...rest
 }: TabsProps<T>) {
   const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
+  // See `orientation`: a vertical strip is the horizontal one on a phone.
+  const phone = useMediaQuery(PHONE_QUERY, false);
+  const vertical = orientation === "vertical" && !phone;
   const stripRef = useRef<HTMLDivElement>(null);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
   // Whether Delete reaches this tab: every removable tab, or only the open one.
@@ -1514,8 +1700,16 @@ export function Tabs<T extends string>({
       return;
     }
     // Along the reading direction: the strip is a flex row, so in RTL the NEXT tab sits
-    // to the left, and ArrowLeft has to reach it.
-    const step = horizontalStep(e.key, e.currentTarget);
+    // to the left, and ArrowLeft has to reach it. A vertical strip answers ↑/↓ instead
+    // — and ONLY those, as the pattern has it: ←/→ are left to the page, where a side
+    // nav's neighbour (the panel) may well want them.
+    const step: 1 | -1 | 0 = vertical
+      ? e.key === "ArrowDown"
+        ? 1
+        : e.key === "ArrowUp"
+          ? -1
+          : 0
+      : horizontalStep(e.key, e.currentTarget);
     if (step === 0 && e.key !== "Home" && e.key !== "End") return;
     const strip = e.currentTarget.closest('[role="tablist"]');
     if (!strip) return;
@@ -1541,10 +1735,13 @@ export function Tabs<T extends string>({
       role="tablist"
       // The DOM spelling wins over the deprecated `label`; see {@link TabsProps}.
       aria-label={ariaLabel ?? label}
+      // Only when vertical: `horizontal` is the tablist's implicit value, and the
+      // attribute on every existing strip would be noise in every snapshot of them.
+      aria-orientation={vertical ? "vertical" : undefined}
       // With an add button the strip gains an outer box, and `className` goes there
       // — it is the box a caller's margin or width is meant for.
       className={cn(
-        wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES,
+        vertical ? TABLIST_VERTICAL_CLASSES : wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES,
         onAdd ? "min-w-0" : className,
       )}
     >
@@ -1574,20 +1771,33 @@ export function Tabs<T extends string>({
           id: isActive && panelId ? `${panelId}-tab` : undefined,
           "aria-keyshortcuts": deletesOnKey(tab) ? "Delete" : undefined,
           onKeyDown: (e: KeyboardEvent<HTMLElement>) => onTabKeyDown(e, tab),
-          className: cn(
-            wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
-            wrap
-              ? isActive
-                ? TAB_WRAP_ACTIVE_CLASSES
-                : TAB_WRAP_INACTIVE_CLASSES
-              : isActive
-                ? TAB_ACTIVE_CLASSES
-                : TAB_INACTIVE_CLASSES,
-            removable && TAB_REMOVABLE_CLASSES,
-          ),
+          className: vertical
+            ? cn(
+                TAB_VERTICAL_CLASSES,
+                isActive ? TAB_VERTICAL_ACTIVE_CLASSES : TAB_VERTICAL_INACTIVE_CLASSES,
+                removable && "pe-8",
+              )
+            : cn(
+                wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
+                wrap
+                  ? isActive
+                    ? TAB_WRAP_ACTIVE_CLASSES
+                    : TAB_WRAP_INACTIVE_CLASSES
+                  : isActive
+                    ? TAB_ACTIVE_CLASSES
+                    : TAB_INACTIVE_CLASSES,
+                removable && TAB_REMOVABLE_CLASSES,
+              ),
         };
         const inner = (
-          <span className={cn("inline-flex items-center gap-1.5", tab.empty && TAB_EMPTY_CLASSES)}>
+          <span
+            className={cn(
+              // In a side nav the row is the full width, so the label takes it and a
+              // badge lands at the row's end, where a column of counts lines up.
+              vertical ? "flex min-w-0 flex-1 items-center gap-1.5" : "inline-flex items-center gap-1.5",
+              tab.empty && TAB_EMPTY_CLASSES,
+            )}
+          >
             {tab.icon != null && (
               <span aria-hidden className="inline-flex shrink-0 items-center gap-0.5">
                 {tab.icon}
@@ -1606,7 +1816,9 @@ export function Tabs<T extends string>({
             ) : (
               tab.label
             )}
-            {tab.badge != null ? tab.badge : null}
+            {tab.badge != null ? (
+              vertical ? <span className="ms-auto flex shrink-0 items-center">{tab.badge}</span> : tab.badge
+            ) : null}
           </span>
         );
         const element = tab.href ? (
@@ -1654,7 +1866,7 @@ export function Tabs<T extends string>({
           // The × cannot go INSIDE the tab: a button in a button is invalid HTML, and
           // a tab's children are presentational, so a reader would flatten it into the
           // tab's name. It sits beside the tab, over the gutter the tab reserves.
-          <div key={tab.id} className="relative flex shrink-0">
+          <div key={tab.id} className={cn("relative flex", !vertical && "shrink-0")}>
             {element}
             {isActive && (
               <IconButton
@@ -1684,6 +1896,18 @@ export function Tabs<T extends string>({
     </div>
   );
   if (!onAdd) return tablist;
+  if (vertical) {
+    // Under the column, not beside it, and with no rule to carry on: a side nav has none.
+    return (
+      <div className={cn("flex flex-col gap-0.5", className)}>
+        {tablist}
+        <button type="button" onClick={onAdd} disabled={busy} className={TAB_ADD_CLASSES}>
+          <Plus aria-hidden />
+          {addLabel ?? text.add}
+        </button>
+      </div>
+    );
+  }
   return (
     <div
       className={cn(

@@ -13,6 +13,7 @@ import {
   padBand,
   paddedDomain,
   seriesKey,
+  seriesLegendEntries,
   soleSeriesColor,
   type SeriesChartAxis,
   type SeriesChartProps,
@@ -21,6 +22,7 @@ import {
 import { FACING_SIDES, facingAxes, facingBand, facingHeadingPad } from "../facing-pair";
 import { SharedXZoom } from "../chart-zoom";
 import { STROKE_PATTERNS } from "../toggle-legend";
+import { integerTicks } from "../series-chart-ticks";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**
@@ -396,5 +398,64 @@ describe("a facing pair", () => {
     expect(facingHeadingPad("right", TICKS)).toEqual({ paddingRight: facingBand(TICKS) });
     expect(facingBand(TICKS)).toBe(TICKS + AXIS_TITLE_STRIP);
     expect(facingBand()).toBe(AXIS_TICK_WIDTH + AXIS_TITLE_STRIP);
+  });
+});
+
+describe("SeriesChart 0.8.0 (keksdose B21)", () => {
+  const xTicks = (container: HTMLElement) =>
+    [...container.querySelectorAll(".recharts-xAxis-tick-labels tspan")].map((t) => Number(t.textContent));
+
+  it("takes a height in pixels, inline, on the chart and on its empty state", () => {
+    const { container, unmount } = draw({ height: 260 });
+    const root = container.querySelector<HTMLElement>("[data-chart]")!;
+    expect(root.style.height).toBe("260px");
+    expect(root).not.toHaveClass("h-72");
+    unmount();
+    const empty = draw({ rows: [], height: 180 });
+    const box = screen.getByText("No data").parentElement!;
+    expect(box.style.height).toBe("180px");
+    expect(empty.container.querySelector(".h-72")).toBeNull();
+  });
+
+  it("ticks a short whole-number series on whole numbers only, automatically", () => {
+    const { container } = draw({ rows: ROWS.slice(0, 3) });
+    const ticks = xTicks(container);
+    expect(ticks.length).toBeGreaterThan(1);
+    for (const tick of ticks) expect(Number.isInteger(tick)).toBe(true);
+  });
+
+  it("integerTicks: false keeps the fractional ticks of the same series", () => {
+    const { container } = draw({ rows: ROWS.slice(0, 3), x: { integerTicks: false } });
+    expect(xTicks(container).some((tick) => !Number.isInteger(tick))).toBe(true);
+  });
+
+  it("does not switch on by itself over fractional abscissae", () => {
+    const rows = [0, 0.5, 1, 1.5, 2].map((x, i) => ({ x, a: i }));
+    const { container } = draw({ rows });
+    expect(xTicks(container).some((tick) => !Number.isInteger(tick))).toBe(true);
+  });
+
+  it("dash takes a custom dash array, and its legend entry draws the same one", () => {
+    const series: SeriesChartSeries[] = [{ key: "a", label: "Projection", dash: "4 3" }];
+    const { container } = draw({ series });
+    expect(paths(container)[0].getAttribute("stroke-dasharray")).toBe("4 3");
+    expect(seriesLegendEntries(series)[0]).toMatchObject({ marker: "stroke", dash: "4 3" });
+  });
+});
+
+describe("integerTicks", () => {
+  it("never steps below 1", () => {
+    expect(integerTicks([-0.2, 4.2])).toEqual([0, 1, 2, 3, 4]);
+    expect(integerTicks([-0.05, 2.05])).toEqual([0, 1, 2]);
+  });
+
+  it("matches the round ladder on a wide span", () => {
+    expect(integerTicks([0, 1000])).toEqual([0, 200, 400, 600, 800, 1000]);
+  });
+
+  it("is undefined for a window with no whole number in it, or no window", () => {
+    expect(integerTicks([1.2, 1.8])).toBeUndefined();
+    expect(integerTicks(undefined)).toBeUndefined();
+    expect(integerTicks([Number.NaN, 1])).toBeUndefined();
   });
 });

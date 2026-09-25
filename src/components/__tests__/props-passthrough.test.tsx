@@ -323,6 +323,8 @@ describe("what a caller may not clobber", () => {
     render(
       // `tabIndex={0}` rather than a positive one on purpose: the assertion is that the
       // panel keeps its own `-1`, and a positive tabindex is its own lint error.
+      // @ts-expect-error — `role` takes only the two dialog roles since 0.8.0; an untyped
+      // caller's other role is still overridden at runtime.
       <Modal onClose={noop} role="presentation" tabIndex={0} aria-label={NAME}>
         <p>body</p>
       </Modal>,

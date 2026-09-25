@@ -120,6 +120,79 @@ export function StatsDemo() {
         </StatTileGrid>
       </Example>
 
+      <Example
+        label="projection, sub-value tone none, name"
+        hint="a figure that belongs WITH the headline; history rows left plain; a plain-text name for the trend"
+      >
+        <StatTileGrid>
+          <StatTile
+            label="Spent this month"
+            value={420}
+            currency="EUR"
+            tone="expense"
+            valueLabel="TO DATE"
+            projection={{ label: "Projected", value: 1850 }}
+            delta={{ value: -0.06, unit: "percent", label: "vs AUG" }}
+            goodDirection="down"
+            subValues={[
+              { label: "AUG", value: 1968, tone: "none" },
+              { label: "JUL", value: 1790, tone: "none" },
+            ]}
+          />
+          <StatTile
+            label="Net"
+            value={-182.4}
+            currency="EUR"
+            tone="signed"
+            subValues={[
+              { label: "AUG (signed)", value: 310 },
+              { label: "JUL (none)", value: -45, tone: "none" },
+            ]}
+          />
+          <StatTile
+            label={
+              <span className="inline-flex items-center gap-1">
+                <Users className="size-3.5" aria-hidden /> Active
+              </span>
+            }
+            name="Active users"
+            value={1284}
+            trend={[980, 1010, 1080, 1120, 1190, 1284]}
+          />
+        </StatTileGrid>
+        <Note>
+          <code className="font-mono">projection</code> is drawn directly under the value, before the
+          delta and the history rows, with only a hair of space — keksdose&apos;s &ldquo;Projected
+          €1,850&rdquo; under a to-date €420, which it used to smuggle into{" "}
+          <code className="font-mono">description</code>. A sub-value&apos;s{" "}
+          <code className="font-mono">tone: &quot;none&quot;</code> leaves the figure in the row&apos;s own
+          muted text even on a toned tile (the Net tile: August follows <code className="font-mono">signed</code>,
+          July does not). The third tile&apos;s label is an icon plus a word; <code className="font-mono">name</code>{" "}
+          gives the sparkline its accessible name, &ldquo;Active users&rdquo;, where the label&apos;s text
+          would only say &ldquo;Active&rdquo;.
+        </Note>
+      </Example>
+
+      <Example
+        label="truncateLabel"
+        hint="one line, cut with an ellipsis, the whole label in a tooltip — only while it is actually cut"
+      >
+        <StatTileGrid minTileWidth="9rem" className="gap-2">
+          <StatTile size="sm" truncateLabel label="Aktive Abonnements (30 Tage)" value={1284} />
+          <StatTile size="sm" truncateLabel label="Neue Konten" value={87} />
+          <StatTile size="sm" truncateLabel label="Kündigungen im laufenden Quartal" value={12} tone="warning" />
+          <StatTile size="sm" label="Kündigungen im laufenden Quartal (wraps)" value={12} tone="warning" />
+        </StatTileGrid>
+        <Note>
+          keksdose&apos;s admin wall: German labels wrapped onto two or three lines and put each
+          tile&apos;s figure at a different height. With <code className="font-mono">truncateLabel</code>{" "}
+          the first and third are cut and show the whole label on hover and focus; &ldquo;Neue
+          Konten&rdquo; fits and gets no bubble repeating itself. The last tile is the default, which
+          wraps. The label element keeps the full text — the ellipsis is paint — so it is still the
+          tile&apos;s accessible name. Re-measured on resize: widen the window and the tooltips go.
+        </Note>
+      </Example>
+
       <Example label="Interactive and loading" hint="href / onClick stretch over the tile; the hint stays reachable">
         <StatTileGrid minTileWidth="11rem">
           <StatTile label="Invoices" value={128} href="#/stats#kpi-row" hint="Open and overdue" icon={<Activity />} />

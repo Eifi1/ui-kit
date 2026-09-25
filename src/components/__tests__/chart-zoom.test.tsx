@@ -6,6 +6,8 @@ import {
   SharedXZoom,
   ZOOM_MIN_DRAG,
   ZOOM_SQUARE_ENOUGH,
+  axisExtent,
+  defaultZoomAxes,
   fitXToY,
   fitYToX,
   selectionFromDrag,
@@ -15,6 +17,7 @@ import {
   zoomDomains,
   type ZoomBinding,
   type ZoomFitSource,
+  type ZoomAxesSetting,
   type ZoomSelection,
 } from "../chart-zoom";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -315,9 +318,10 @@ function StubChart({
 }: {
   axes?: { id: string; hide?: boolean }[];
   rows?: Record<string, number>[];
-  series?: { key: string; axis?: string }[];
+  series?: { key: string; axis?: string; type?: string; stack?: string }[];
   zoom?: ZoomBinding;
   labels?: { resetZoom?: string };
+  zoomAxes?: ZoomAxesSetting;
 }) {
   return (
     <svg data-testid="chart">
@@ -496,5 +500,102 @@ describe("withChartZoom", () => {
     pointer(rect, "pointermove", 610, 210);
     pointer(rect, "pointerup", 610, 210);
     expect(screen.getByRole("button", { name: "Alles zeigen" })).toBeInTheDocument();
+  });
+});
+
+/* ── One axis, or none (0.8.0: bars, areas) ─────────────────────────────── */
+
+describe("zoomAxesFor on a one-axis chart", () => {
+  it("reads every drag as a band along the one axis", () => {
+    // A box, a tall band and a wide band are all x bands on an x-only chart…
+    expect(zoomAxesFor(300, 200, 900, 300, ZOOM_SQUARE_ENOUGH, "x")).toBe("x");
+    expect(zoomAxesFor(100, 290, 900, 300, ZOOM_SQUARE_ENOUGH, "x")).toBe("x");
+    // …unless it has no extent along x at all.
+    expect(zoomAxesFor(2, 290, 900, 300, ZOOM_SQUARE_ENOUGH, "x")).toBeNull();
+    expect(zoomAxesFor(600, 2, 900, 300, ZOOM_SQUARE_ENOUGH, "y")).toBeNull();
+    expect(zoomAxesFor(600, 100, 900, 300, ZOOM_SQUARE_ENOUGH, "y")).toBe("y");
+  });
+
+  it("picks the zoom off the marks", () => {
+    expect(defaultZoomAxes(undefined)).toBe("both");
+    expect(defaultZoomAxes([{}, { type: "line" }])).toBe("both");
+    expect(defaultZoomAxes([{ type: "line" }, { type: "area" }])).toBe("x");
+    expect(defaultZoomAxes([{ type: "area" }, { type: "bar" }])).toBe("none");
+  });
+});
+
+describe("axisExtent", () => {
+  const source = (series: ZoomFitSource["series"]): ZoomFitSource => ({
+    rows: [
+      { x: 0, a: 100, b: 50, c: -30 },
+      { x: 1, a: 200, b: 80 },
+      { x: 2, a: 150, b: 30, c: -60, label: "skip me" },
+    ],
+    series,
+    axes: [{ id: "y" }],
+    xKey: "x",
+  });
+
+  it("is the plain extent of loose series and of lines, stack or not", () => {
+    expect(axisExtent(source([{ key: "a" }, { key: "c" }]), "y")).toEqual([-60, 200]);
+    // recharts cannot stack a line, so its `stack` is not summed.
+    expect(axisExtent(source([{ key: "a", stack: "s", type: "line" }, { key: "b", stack: "s", type: "line" }]), "y")).toEqual([30, 200]);
+  });
+
+  it("sums a stack, positives up and negatives down, from zero", () => {
+    const stacked = source([
+      { key: "a", stack: "s", type: "bar" },
+      { key: "b", stack: "s", type: "bar" },
+      { key: "c", stack: "s", type: "bar" },
+    ]);
+    expect(axisExtent(stacked, "y")).toEqual([-60, 280]);
+    expect(axisExtent(stacked, "y", [0, 0.5])).toEqual([-30, 150]);
+  });
+
+  it("refits a zoom window on the stack's sum, not its tallest layer", () => {
+    const stacked = source([
+      { key: "a", stack: "s", type: "area" },
+      { key: "b", stack: "s", type: "area" },
+    ]);
+    const { y } = fitYToX(stacked, [0.5, 1.5]);
+    expect(y[1]).toBeGreaterThanOrEqual(280);
+  });
+});
+
+describe("withChartZoom — one axis, or none", () => {
+  it("draws no layer and no reset for `none`, and still hands the chart a binding", () => {
+    render(<Zoomable axes={[{ id: "y" }]} zoomAxes="none" />);
+    expect(screen.queryByLabelText(HINT)).toBeNull();
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+  });
+
+  it("switches off by default for a chart with bars", () => {
+    render(<Zoomable axes={[{ id: "y" }]} series={[{ key: "a", type: "bar" }]} rows={[{ x: 0, a: 1 }]} />);
+    expect(screen.queryByLabelText(HINT)).toBeNull();
+  });
+
+  it("turns a box drag into an x band on an x-only chart", () => {
+    render(<Zoomable axes={[{ id: "y" }]} zoomAxes="x" />);
+    drag([160, 60], [610, 210]);
+    expect(bindings()[0].x).toEqual([100, 550]);
+    // Derived, not dragged: no y window was taken from the box.
+    expect(bindings()[0].y).toEqual({});
+  });
+
+  it("does not let the click that ends a drag through to the chart", () => {
+    const onClick = vi.fn();
+    // A button, standing in for recharts' wrapper, which listens for the click the same
+    // way: bubbling up through React from the overlay.
+    render(
+      <button type="button" onClick={onClick}>
+        <Zoomable axes={[{ id: "y" }]} />
+      </button>,
+    );
+    drag([160, 60], [610, 210]);
+    fireEvent.click(overlay());
+    expect(onClick).not.toHaveBeenCalled();
+    // A click that was only a click still is one.
+    fireEvent.click(overlay());
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 });

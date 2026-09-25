@@ -12,7 +12,7 @@ import {
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { Button, FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
@@ -553,23 +553,252 @@ export function DatePicker({
 }
 
 export interface DateRangePickerPreset {
+  /**
+   * The preset's identity, independent of its dates — `"last_3_months"`, not two ISO
+   * strings. Optional for the 0.x callers that pass anonymous pairs.
+   *
+   * keksdose's report range field (report-range-field.tsx, "Why this is app-level")
+   * is why it exists: its URL stores `?preset=last_3_months` and recomputes the dates
+   * from today on every read, so a preset that is only its dates froze "last 3 months"
+   * at whatever day the panel rendered, and two presets that happen to cover the same
+   * days (this week and today, on a Monday) could not be told apart. With an `id` the
+   * choice is reported to `onChange` and shown as selected for as long as the range
+   * still matches it. Recompute `from`/`to` on every render (`calendarMonthPresets()`,
+   * `dateRangePresets()`) and pass the key as the id.
+   */
+  id?: string;
   label: ReactNode;
   from: string;
   to: string;
 }
 
+/**
+ * When the picker hands its range to `onChange`.
+ *
+ *  - `"immediate"` (the default, and all of 0.7): a preset click commits and closes,
+ *    and each calendar click is reported as it happens — the half-made `(from, "")`
+ *    included. The right shape for quick ranges on a filter, where one click is one
+ *    answer.
+ *  - `"apply"`: the panel works on a DRAFT. A preset ARMS the calendar instead of
+ *    committing, days can then be nudged ("last 3 months, but end it last Friday"),
+ *    and nothing reaches `onChange` until Apply — which stays disabled until both ends
+ *    exist. Cancel, Escape and an outside click discard the draft, and every open
+ *    starts again from the committed value. keksdose's report range asked for exactly
+ *    this: each commit there re-runs a whole page of charts, so an intermediate state
+ *    must never escape the panel.
+ */
+export type DateRangeCommit = "immediate" | "apply";
+
 export interface DateRangePickerProps extends DatePickerBaseProps {
   from: string;
   to: string;
-  onChange: (from: string, to: string) => void;
+  /** The committed range. `presetId` is the chosen preset's `id` when a preset
+   *  produced it (and the range was not nudged since), `undefined` for days picked by
+   *  hand. A 0.x two-argument handler simply ignores it. */
+  onChange: (from: string, to: string, presetId?: string) => void;
   /** Separator between the two formatted dates in the trigger (default " – "). */
   separator?: string;
-  /** Optional named ranges rendered as a left column (last month / YTD / …). */
+  /** Optional named ranges rendered as a start-side column (last month / YTD / …). */
   presets?: DateRangePickerPreset[];
+  /**
+   * The active preset's `id`, controlled — e.g. straight from keksdose's `?preset=`.
+   * `null` (or an id no preset has, such as `"custom"`) says "no preset": nothing in
+   * the column is marked even if a preset happens to cover the same days. A preset is
+   * marked only while its dates still equal `from`/`to`.
+   *
+   * Leave it `undefined` and the picker remembers the last preset it committed
+   * itself; with no memory at all it falls back to the first preset whose dates match.
+   */
+  preset?: string | null;
+  /** See {@link DateRangeCommit}. Default `"immediate"`. */
+  commit?: DateRangeCommit;
+}
+
+interface RangeDraft {
+  from: string;
+  to: string;
+  presetId: string | undefined;
+}
+
+/** Which preset (by index) the column marks, or -1. See `DateRangePickerProps.preset`. */
+function markedPreset(
+  presets: readonly DateRangePickerPreset[],
+  from: string,
+  to: string,
+  activeId: string | null | undefined,
+  controlled: boolean,
+): number {
+  const matches = (p: DateRangePickerPreset) => p.from === from && p.to === to;
+  if (activeId != null) {
+    const byId = presets.findIndex((p) => p.id === activeId && matches(p));
+    if (byId !== -1 || controlled) return byId;
+  } else if (controlled) {
+    return -1;
+  }
+  return presets.findIndex(matches);
+}
+
+/**
+ * The preset column: a named group of toggle buttons, `aria-pressed` on the marked one.
+ * Pressed-state rather than colour alone, because "which range is this" is the one
+ * thing a screen-reader user opening the panel needs to hear.
+ */
+function PresetColumn({
+  presets,
+  marked,
+  label,
+  onPick,
+}: {
+  presets: readonly DateRangePickerPreset[];
+  marked: number;
+  label: string;
+  onPick: (p: DateRangePickerPreset) => void;
+}) {
+  return (
+    // `border-e`/`pe`, not `-r`: the preset column is on the START side, and the rule
+    // between it and the calendar has to follow it in a right-to-left UI.
+    <div
+      role="group"
+      aria-label={label}
+      className="flex w-32 shrink-0 flex-col gap-0.5 border-e border-[var(--border)] pe-2"
+    >
+      {presets.map((p, i) => {
+        const selected = i === marked;
+        return (
+          <button
+            key={p.id ?? i}
+            type="button"
+            aria-pressed={selected}
+            data-preset={p.id}
+            onClick={() => onPick(p)}
+            className={cn(
+              "rounded px-2 py-1.5 text-start text-xs",
+              selected
+                ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+            )}
+          >
+            {p.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The panel's body. A component of its own so `commit="apply"` can keep its draft in
+ * state that is born when the panel opens: `Popover` unmounts its children on close,
+ * so the draft is re-seeded from the committed value on every open, and an abandoned
+ * half-selection cannot survive into the next one.
+ */
+function RangePanel({
+  from,
+  to,
+  presets,
+  activeId,
+  controlled,
+  commit,
+  close,
+  commitRange,
+  calendarProps,
+  labels,
+}: {
+  from: string;
+  to: string;
+  presets: readonly DateRangePickerPreset[] | undefined;
+  activeId: string | null | undefined;
+  controlled: boolean;
+  commit: DateRangeCommit;
+  close: () => void;
+  commitRange: (from: string, to: string, presetId: string | undefined) => void;
+  calendarProps: Pick<MiniCalendarProps, "locale" | "min" | "max" | "labels">;
+  labels: DatePickerLabels;
+}) {
+  const drafting = commit === "apply";
+  const [draft, setDraft] = useState<RangeDraft>({
+    from,
+    to,
+    presetId: activeId ?? undefined,
+  });
+  // What the panel SHOWS: the draft while drafting, the committed value otherwise.
+  const shown = drafting ? draft : { from, to, presetId: activeId ?? undefined };
+  const marked = presets
+    ? markedPreset(presets, shown.from, shown.to, drafting ? draft.presetId : activeId, drafting || controlled)
+    : -1;
+  const complete = Boolean(draft.from && draft.to);
+
+  const calendar = (
+    <MiniCalendar
+      {...calendarProps}
+      focusOnOpen
+      from={shown.from}
+      to={shown.to}
+      onSelect={(f, t) => {
+        if (drafting) {
+          setDraft({ from: f, to: t, presetId: undefined });
+          return;
+        }
+        commitRange(f, t, undefined);
+        // Two-click range: only dismiss once both ends are chosen.
+        if (f && t) close();
+      }}
+    />
+  );
+
+  const body =
+    presets && presets.length > 0 ? (
+      <div className="flex gap-3">
+        <PresetColumn
+          presets={presets}
+          marked={marked}
+          label={labels.presets}
+          onPick={(p) => {
+            if (drafting) {
+              setDraft({ from: p.from, to: p.to, presetId: p.id });
+              return;
+            }
+            commitRange(p.from, p.to, p.id);
+            close();
+          }}
+        />
+        {/* `flex-1`: the calendar takes the rest of the panel. Content-sized it was
+            seven tiny cells beside a wide preset column. */}
+        <div className="min-w-0 flex-1">{calendar}</div>
+      </div>
+    ) : (
+      calendar
+    );
+
+  if (!drafting) return body;
+  return (
+    <div className="flex flex-col gap-2">
+      {body}
+      <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] pt-2">
+        <Button type="button" variant="ghost" onClick={close}>
+          {labels.cancel}
+        </Button>
+        <Button
+          type="button"
+          // A half-made `(from, "")` would commit a window with no end — a blank
+          // report, one click into a two-click gesture.
+          disabled={!complete}
+          onClick={() => {
+            if (!complete) return;
+            commitRange(draft.from, draft.to, draft.presetId);
+            close();
+          }}
+        >
+          {labels.apply}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 /** Two-date range picker: click a start then an end; closes once both are set.
- *  With `presets`, a left column of named ranges is shown beside the calendar. */
+ *  With `presets`, a column of named ranges is shown beside the calendar; with
+ *  `commit="apply"` the panel drafts and commits on Apply (see {@link DateRangeCommit}). */
 export function DateRangePicker({
   from,
   to,
@@ -582,6 +811,8 @@ export function DateRangePicker({
   formatValue,
   separator = " – ",
   presets,
+  preset,
+  commit = "immediate",
   calendarLabels,
   label,
   clearable,
@@ -593,6 +824,11 @@ export function DateRangePicker({
   const locale = useKitLocale(localeProp);
   const text = useDatePickerLabels(clearLabel, undefined, undefined);
   const render = formatValue ?? ((iso: string) => formatDate(iso, locale, formatOptions));
+  // The preset this picker committed itself, for a caller that does not control
+  // `preset`. Cleared by a hand-picked range or a clear.
+  const [ownPreset, setOwnPreset] = useState<string | undefined>(undefined);
+  const controlled = preset !== undefined;
+  const activeId = controlled ? preset : ownPreset;
   const a = from ? render(from) : "";
   const b = to ? render(to) : "";
   const triggerText = from
@@ -601,22 +837,13 @@ export function DateRangePicker({
       : `${a}${separator}…`
     : (placeholder ?? "");
   const hasPresets = Boolean(presets && presets.length > 0);
-  const calendar = (close: () => void) => (
-    <MiniCalendar
-      focusOnOpen
-      from={from}
-      to={to}
-      locale={locale}
-      min={min}
-      max={max}
-      labels={calendarLabels}
-      onSelect={(f, t) => {
-        onChange(f, t);
-        // Two-click range: only dismiss once both ends are chosen.
-        if (f && t) close();
-      }}
-    />
-  );
+  const commitRange = (f: string, t: string, presetId: string | undefined) => {
+    setOwnPreset(presetId);
+    // Two arguments when no preset is involved — exactly the 0.7 call, so a caller's
+    // `toHaveBeenCalledWith(from, to)` and a variadic handler see no difference.
+    if (presetId === undefined) onChange(f, t);
+    else onChange(f, t, presetId);
+  };
   return (
     <DateField
       {...rest}
@@ -630,44 +857,22 @@ export function DateRangePicker({
       width={hasPresets ? 440 : undefined}
       hasValue={Boolean(from || to)}
       triggerText={triggerText}
-      onClear={() => onChange("", "")}
+      onClear={() => commitRange("", "", undefined)}
     >
-      {(close) =>
-        hasPresets ? (
-          <div className="flex gap-3">
-            {/* `border-e`/`pe`, not `-r`: the preset column is on the START side, and the
-                rule between it and the calendar has to follow it in a right-to-left UI. */}
-            <div className="flex w-32 shrink-0 flex-col gap-0.5 border-e border-[var(--border)] pe-2">
-              {presets!.map((p, i) => {
-                const selected = p.from === from && p.to === to;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => {
-                      onChange(p.from, p.to);
-                      close();
-                    }}
-                    className={cn(
-                      "rounded px-2 py-1.5 text-start text-xs",
-                      selected
-                        ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
-            {/* `flex-1`: the calendar takes the rest of the panel. Content-sized it was
-                seven tiny cells beside a wide preset column. */}
-            <div className="min-w-0 flex-1">{calendar(close)}</div>
-          </div>
-        ) : (
-          calendar(close)
-        )
-      }
+      {(close) => (
+        <RangePanel
+          from={from}
+          to={to}
+          presets={presets}
+          activeId={activeId}
+          controlled={controlled}
+          commit={commit}
+          close={close}
+          commitRange={commitRange}
+          calendarProps={{ locale, min, max, labels: calendarLabels }}
+          labels={text}
+        />
+      )}
     </DateField>
   );
 }

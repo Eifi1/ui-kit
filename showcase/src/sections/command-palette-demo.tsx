@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import type { ReactNode } from "react";
 import { Command, FileText, Layers, Palette, Receipt, Table2 } from "lucide-react";
-import { Button, CommandPalette, useCommandKey } from "@eifi1/ui-kit";
+import { Button, CommandPalette, Input, useCommandKey } from "@eifi1/ui-kit";
 import type { CommandItem } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
@@ -46,6 +47,13 @@ export function CommandPaletteDemo() {
         hint="The provider rejects: the stale results are cleared and the error line shows in their place."
       >
         <FailingPaletteDemo />
+      </Example>
+
+      <Example
+        label="CommandPalette — a controlled query"
+        hint="query + onQueryChange: the text lives outside the palette, here in the address bar's ?q="
+      >
+        <ControlledQueryDemo />
       </Example>
     </>
   );
@@ -282,6 +290,77 @@ function FailingPaletteDemo() {
         clears it. With <code className="font-mono">labels.error</code> off the line is the
         provider&apos;s <code className="font-mono">commandPalette.error</code> — switch this
         page&apos;s language to see it translated.
+      </Note>
+    </div>
+  );
+}
+
+/* ── controlled query ──────────────────────────────────────────────────────── */
+
+function ControlledQueryDemo() {
+  const [open, setOpen] = useState(false);
+  // The query is the URL's `q`, as keksdose binds it: it survives a reload, can be sent
+  // as a link, and Back walks through the searches. `replace` so each keystroke does not
+  // become a history entry of its own.
+  const [params, setParams] = useSearchParams();
+  const query = params.get("q") ?? "";
+  const setQuery = (q: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (q) next.set("q", q);
+        else next.delete("q");
+        return next;
+      },
+      { replace: true },
+    );
+  const [edits, setEdits] = useState(0);
+  const search = (q: string): CommandItem[] => {
+    const needle = q.trim().toLowerCase();
+    return PALETTE_INDEX.filter((e) => !needle || e.label.toLowerCase().includes(needle)).map((e) => ({
+      ...e,
+      href: undefined,
+      onSelect: () => setOpen(false),
+    }));
+  };
+  return (
+    <div className="space-y-3">
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open with the current query
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setQuery("data");
+            setOpen(true);
+          }}
+        >
+          Open on “data”
+        </Button>
+        <span className={READOUT}>onQueryChange calls: {edits}</span>
+      </Row>
+      <div className="max-w-xs">
+        <Input aria-label="The query, outside the palette" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type here, or in the palette" />
+      </div>
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={PALETTE_INDEX}
+        query={query}
+        onQueryChange={(q) => {
+          setQuery(q);
+          setEdits((n) => n + 1);
+        }}
+        labels={{ dialog: "Search (query in the URL)" }}
+      />
+      <Note>
+        Type in the palette and the field above follows, and so does the address bar (
+        <code className="font-mono">#/command-palette?q=…</code>); close it and reopen and the text is
+        still there — a controlled palette is never reset on open, because the owner decides what an
+        open shows. <code className="font-mono">onQueryChange</code> fires in both modes; uncontrolled,
+        it only observes.
       </Note>
     </div>
   );

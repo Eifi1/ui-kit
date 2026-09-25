@@ -10,6 +10,8 @@ import * as rhf from "../rhf";
 import * as tableText from "../table-text";
 import * as i18nDe from "../i18n/locales/de";
 import * as i18nDeCh from "../i18n/locales/de-CH";
+import * as i18nDeInformal from "../i18n/locales/de-informal";
+import * as i18nDeChInformal from "../i18n/locales/de-CH-informal";
 import * as i18nEs from "../i18n/locales/es";
 import * as i18nFr from "../i18n/locales/fr";
 import * as i18nHu from "../i18n/locales/hu";
@@ -75,11 +77,21 @@ import * as i18nZh from "../i18n/locales/zh";
  * New pattern entry `/i18n/<code>`: the kit's translations, one standalone module per
  * language (`UI_KIT_LABELS_XX` + its `uiKitLabelsXx(numberLocale)` factory; de-CH is
  * derived and has only the constant).
+ * 331 -> 368 (0.8.0), all additive — the three apps' 0.7 proposals: `ConfirmProvider` /
+ * `useConfirm`, `FloatingPanel` / `FloatingActionButton`, `DescriptionList`, `ProgressBar`,
+ * `Skeleton`, `CopyButton` / `useCopyToClipboard` / `copyToClipboard`, `useDebounce` /
+ * `useDebouncedCallback`, `ButtonGroup`, the static `Table` parts, `Separator`,
+ * `ScrollArea`, `TreeView` / `TreeRow`, `useFileDrop` / `dragHasFiles`, the series-chart
+ * helpers, and a `DEFAULT_*_LABELS` per new namespace.
+ * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
+ * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 331],
-  ["@eifi1/ui-kit/chart", chart, 50],
+  ["@eifi1/ui-kit", barrel, 368],
+  // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
+  // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
+  ["@eifi1/ui-kit/chart", chart, 55],
   ["@eifi1/ui-kit/data-table", dataTable, 18],
   ["@eifi1/ui-kit/feedback", feedback, 21],
   ["@eifi1/ui-kit/search", search, 3],
@@ -90,6 +102,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/table-text", tableText, 5],
   ["@eifi1/ui-kit/i18n/de", i18nDe, 2],
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],
+  ["@eifi1/ui-kit/i18n/de-informal", i18nDeInformal, 2],
+  ["@eifi1/ui-kit/i18n/de-CH-informal", i18nDeChInformal, 1],
   ["@eifi1/ui-kit/i18n/es", i18nEs, 2],
   ["@eifi1/ui-kit/i18n/fr", i18nFr, 2],
   ["@eifi1/ui-kit/i18n/hu", i18nHu, 2],

@@ -3,10 +3,16 @@
  * per-step async validators, collected data, field errors, submit and the
  * cancel-confirm gate.
  *
- * Domain-free, but NOT router-free: it mirrors the active step to `?step=N`, so
- * it must be mounted inside a react-router context — the same requirement
- * `DataTable` already carries. It only ever WRITES that param (see the note on
- * `initialStep` below for why it deliberately does not read it back).
+ * Domain-free, and router-free on request. By default it mirrors the active step
+ * to `?step=N`, so it must be mounted inside a react-router context — the same
+ * requirement `DataTable` already carries. `urlSync: false` keeps the step in
+ * memory and needs no router; `urlSync: { param }` renames the param. It only ever
+ * WRITES that param (see the note on `initialStep` below for why it deliberately
+ * does not read it back), and removes it when the wizard is left through the kit
+ * (see `UseWizardOptions.urlSync`).
+ *
+ * The committing step is the last one unless a step says `commits: true`; the
+ * steps after that one are post-commit steps (see `WizardStepConfig.commits`).
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -27,9 +33,26 @@ interface WizardState<TData> {
   skippedSteps: Set<number>;
   data: TData;
   isSubmitting: boolean;
+  isValidating: boolean;
   error: string | null;
   fieldErrors: FieldErrors;
   showCancelDialog: boolean;
+  /** The step whose `onComplete` resolved, or null before any commit. */
+  committedStepIndex: number | null;
+}
+
+/** Past the commit: the active step comes after the step that committed. Moves to
+ *  that step or any before it are refused from here. */
+function isAfterCommit(state: { currentStepIndex: number; committedStepIndex: number | null }) {
+  return state.committedStepIndex !== null && state.currentStepIndex > state.committedStepIndex;
+}
+
+/** Whether `index` is on the far side of a commit the wizard has already moved past. */
+function crossesCommit(
+  state: { currentStepIndex: number; committedStepIndex: number | null },
+  index: number,
+) {
+  return isAfterCommit(state) && index <= (state.committedStepIndex as number);
 }
 
 type WizardAction<TData> =
@@ -41,7 +64,9 @@ type WizardAction<TData> =
   | { type: "GO_TO_STEP"; index: number }
   | { type: "SKIP"; from: number }
   | { type: "UPDATE_DATA"; partial: Partial<TData> }
+  | { type: "COMMITTED"; from: number }
   | { type: "SET_SUBMITTING"; value: boolean }
+  | { type: "SET_VALIDATING"; value: boolean }
   | { type: "SET_ERROR"; error: string | null }
   | { type: "SET_FIELD_ERRORS"; errors: FieldErrors }
   | { type: "SHOW_CANCEL_DIALOG"; show: boolean };
@@ -61,10 +86,12 @@ function createReducer<TData>(stepCount: number) {
       }
       case "GO_BACK": {
         const prevIndex = Math.max(state.currentStepIndex - 1, 0);
+        if (crossesCommit(state, prevIndex)) return state;
         return { ...state, currentStepIndex: prevIndex, fieldErrors: {} };
       }
       case "GO_TO_STEP": {
         if (action.index < 0 || action.index >= stepCount) return state;
+        if (crossesCommit(state, action.index)) return state;
         if (!state.completedSteps.has(action.index) && action.index > state.currentStepIndex) {
           return state;
         }
@@ -86,8 +113,27 @@ function createReducer<TData>(stepCount: number) {
         }
         return { ...state, data: { ...state.data, ...action.partial }, fieldErrors: nextErrors };
       }
+      case "COMMITTED": {
+        // Recorded whatever step committed, so `wizard.committed` reads true after any
+        // successful Finish. Only a commit with steps after it MOVES: the default
+        // last-step commit stays where it is and looks exactly as it did before 0.8.
+        const committed = { ...state, committedStepIndex: action.from };
+        if (action.from !== state.currentStepIndex || action.from >= stepCount - 1) {
+          return committed;
+        }
+        const completed = new Set(state.completedSteps);
+        completed.add(action.from);
+        return {
+          ...committed,
+          currentStepIndex: action.from + 1,
+          completedSteps: completed,
+          fieldErrors: {},
+        };
+      }
       case "SET_SUBMITTING":
         return { ...state, isSubmitting: action.value };
+      case "SET_VALIDATING":
+        return { ...state, isValidating: action.value };
       case "SET_ERROR":
         return { ...state, error: action.error };
       case "SET_FIELD_ERRORS":
@@ -103,8 +149,19 @@ function createReducer<TData>(stepCount: number) {
 export function useWizard<TData extends Record<string, unknown>>(
   options: UseWizardOptions<TData>,
 ): UseWizardReturn<TData> {
-  const { steps, initialData, onComplete, onCancel, missingRequiredMessage, onValidationFailed } =
-    options;
+  const {
+    steps,
+    initialData,
+    onComplete,
+    onCancel,
+    onExit,
+    onDone,
+    cancellable = true,
+    confirmCancel: askBeforeCancel = true,
+    urlSync = true,
+    missingRequiredMessage,
+    onValidationFailed,
+  } = options;
   const stepsRef = useRef<WizardStepConfig[]>(steps);
   stepsRef.current = steps;
   // A hook, not a component, but it produces two sentences of its own — the
@@ -138,7 +195,13 @@ export function useWizard<TData extends Record<string, unknown>>(
     [],
   );
 
-  const [, setUrlParams] = useSearchParams();
+  // Chosen once, at mount: a hook may not be called conditionally, but it may be
+  // chosen once and then called unconditionally on every render — which is what
+  // makes `urlSync: false` work with no router above the wizard at all.
+  const [useStepUrl] = useState(() => (urlSync === false ? useNoStepUrl : useSearchParamStepUrl));
+  const [urlParam] = useState(() =>
+    typeof urlSync === "object" && urlSync.param ? urlSync.param : "step",
+  );
   // The wizard's entered `data` and `completedSteps` are NOT persisted across a
   // reload / deep-link (the reducer re-inits to empty defaults on every mount).
   // Restoring a later step index from `?step=N` would therefore leave the wizard
@@ -154,9 +217,11 @@ export function useWizard<TData extends Record<string, unknown>>(
     skippedSteps: new Set<number>(),
     data: (initialData ?? {}) as TData,
     isSubmitting: false,
+    isValidating: false,
     error: null,
     fieldErrors: {},
     showCancelDialog: false,
+    committedStepIndex: null,
   });
 
   // A mounted step can DISABLE forward navigation (Next/Skip) while its own
@@ -168,26 +233,36 @@ export function useWizard<TData extends Record<string, unknown>>(
     [],
   );
 
-  // Sync step index to URL
-  useEffect(() => {
-    setUrlParams((prev) => {
-      prev.set("step", String(state.currentStepIndex));
-      return prev;
-    }, { replace: true });
-  }, [state.currentStepIndex, setUrlParams]);
+  // Sync step index to URL (a no-op under `urlSync: false`). `clearStepUrl` drops
+  // the param when the wizard is left through the kit, and stops the sync writing
+  // it back.
+  const clearStepUrl = useStepUrl(urlParam, state.currentStepIndex);
 
-  const currentStep = stepsRef.current[state.currentStepIndex];
+  // `steps`, not `stepsRef.current`: during render the two are the same array, and
+  // reading a ref in render is what the hooks linter (rightly) objects to.
+  const currentStep = steps[state.currentStepIndex];
   const isFirstStep = state.currentStepIndex === 0;
-  const isLastStep = state.currentStepIndex === stepsRef.current.length - 1;
-  // Finish is only valid once every step before the last has actually been
-  // walked through (completed or skipped). Guards against a restored/last-step
+  const isLastStep = state.currentStepIndex === steps.length - 1;
+  // The step whose forward button commits: the first one flagged `commits`, else the
+  // last — which is every wizard written before the flag existed.
+  const flagged = steps.findIndex((s) => s.commits);
+  const commitStepIndex = flagged === -1 ? steps.length - 1 : flagged;
+  const isCommitStep = state.currentStepIndex === commitStepIndex;
+  const afterCommit = isAfterCommit(state);
+  // Finish is only valid once every step before the committing one has actually
+  // been walked through (completed or skipped). Guards against a restored/last-step
   // index submitting a payload built from empty defaults.
-  const canFinish = stepsRef.current.every(
+  const canFinish = steps.every(
     (_, index) =>
-      index === stepsRef.current.length - 1 ||
+      index >= commitStepIndex ||
       state.completedSteps.has(index) ||
       state.skippedSteps.has(index),
   );
+  const canGoBack =
+    (!isFirstStep || onExit !== undefined) &&
+    !crossesCommit(state, state.currentStepIndex - 1);
+  const canCancel = cancellable && !afterCommit;
+  const canDone = isLastStep && afterCommit && onDone !== undefined;
 
   // Runs the active step's config `validate` plus every validator its mounted
   // components registered (RHF steps via useRhfWizardStep), AND-combining the
@@ -266,22 +341,49 @@ export function useWizard<TData extends Record<string, unknown>>(
     if (advancingRef.current) return;
     advancingRef.current = true;
     const from = state.currentStepIndex;
+    // Pending state for the chrome (spinner, aria-busy). The ref above is still what
+    // refuses the second click: state would only be seen after a re-render.
+    dispatch({ type: "SET_VALIDATING", value: true });
     try {
       if (await runStepValidators()) {
         dispatch({ type: "GO_NEXT", from });
       }
     } finally {
+      dispatch({ type: "SET_VALIDATING", value: false });
       advancingRef.current = false;
     }
   }, [runStepValidators, state.currentStepIndex]);
 
+  // Read by `goBack`, which must not move while `onComplete` runs: the commit was
+  // decided on the data of the step the user is on, and Back mid-commit would show a
+  // step whose edits can no longer reach it. The chrome disables the button too; this
+  // covers an app calling `goBack` itself.
+  const submittingRef = useRef(false);
+
   const goBack = useCallback(() => {
+    if (submittingRef.current) return;
+    if (state.currentStepIndex === 0 && onExit) {
+      clearStepUrl();
+      onExit();
+      return;
+    }
+    // On step 0 with no `onExit` this stays the no-op move (clearing field errors) it
+    // always was.
     dispatch({ type: "GO_BACK" });
-  }, []);
+  }, [state.currentStepIndex, onExit, clearStepUrl]);
 
   const goToStep = useCallback((index: number) => {
     dispatch({ type: "GO_TO_STEP", index });
   }, []);
+
+  const canGoToStep = useCallback(
+    (index: number) =>
+      index >= 0 &&
+      index < steps.length &&
+      (index <= state.currentStepIndex || state.completedSteps.has(index)) &&
+      !crossesCommit(state, index),
+    [steps.length, state],
+  );
 
   const skip = useCallback(() => {
     // Not while Next is validating: the skip would land first and the pending GO_NEXT
@@ -290,14 +392,24 @@ export function useWizard<TData extends Record<string, unknown>>(
     dispatch({ type: "SKIP", from: state.currentStepIndex });
   }, [state.currentStepIndex]);
 
-  const cancel = useCallback(() => {
-    dispatch({ type: "SHOW_CANCEL_DIALOG", show: true });
-  }, []);
-
   const confirmCancel = useCallback(() => {
     dispatch({ type: "SHOW_CANCEL_DIALOG", show: false });
+    clearStepUrl();
     onCancel?.();
-  }, [onCancel]);
+  }, [onCancel, clearStepUrl]);
+
+  const cancel = useCallback(() => {
+    if (!askBeforeCancel) {
+      confirmCancel();
+      return;
+    }
+    dispatch({ type: "SHOW_CANCEL_DIALOG", show: true });
+  }, [askBeforeCancel, confirmCancel]);
+
+  const done = useCallback(() => {
+    clearStepUrl();
+    onDone?.();
+  }, [onDone, clearStepUrl]);
 
   const dismissCancel = useCallback(() => {
     dispatch({ type: "SHOW_CANCEL_DIALOG", show: false });
@@ -317,29 +429,55 @@ export function useWizard<TData extends Record<string, unknown>>(
 
   const finish = useCallback(async () => {
     if (!onComplete || !canFinish) return;
+    // A commit with steps after it happens once: those steps exist because the
+    // data has been written. (A last-step commit keeps its old behaviour — the app
+    // may retry Finish after `onComplete` resolved, as it always could.)
+    if (commitStepIndex < steps.length - 1 && state.committedStepIndex !== null) return;
     // The same re-entry guard as `goNext`: a double-click on Finish would otherwise
     // validate twice and call `onComplete` twice — `isSubmitting` is only set once
     // validation has passed, too late to stop the second click.
     if (advancingRef.current) return;
     advancingRef.current = true;
+    const from = state.currentStepIndex;
     try {
-      // Validate the (possibly form-bearing) last step before submitting, matching
-      // the Next gate — review-only steps register no validators and pass through.
-      if (!(await runStepValidators())) return;
+      // Validate the (possibly form-bearing) committing step before submitting,
+      // matching the Next gate — review-only steps register no validators and pass
+      // through.
+      dispatch({ type: "SET_VALIDATING", value: true });
+      let valid: boolean;
+      try {
+        valid = await runStepValidators();
+      } finally {
+        dispatch({ type: "SET_VALIDATING", value: false });
+      }
+      if (!valid) return;
+      submittingRef.current = true;
       dispatch({ type: "SET_SUBMITTING", value: true });
       dispatch({ type: "SET_ERROR", error: null });
       try {
         await onComplete(state.data);
+        dispatch({ type: "COMMITTED", from });
       } catch (err) {
         const message = err instanceof Error && err.message ? err.message : genericError;
         dispatch({ type: "SET_ERROR", error: message });
       } finally {
+        submittingRef.current = false;
         dispatch({ type: "SET_SUBMITTING", value: false });
       }
     } finally {
       advancingRef.current = false;
     }
-  }, [onComplete, canFinish, state.data, runStepValidators, genericError]);
+  }, [
+    onComplete,
+    canFinish,
+    commitStepIndex,
+    steps.length,
+    state.committedStepIndex,
+    state.currentStepIndex,
+    state.data,
+    runStepValidators,
+    genericError,
+  ]);
 
   const stepStatus = useCallback(
     (index: number): StepStatus => {
@@ -354,16 +492,24 @@ export function useWizard<TData extends Record<string, unknown>>(
   return {
     currentStepIndex: state.currentStepIndex,
     currentStep,
-    steps: stepsRef.current,
+    steps,
     isFirstStep,
     isLastStep,
     canFinish,
+    commitStepIndex,
+    isCommitStep,
+    committed: state.committedStepIndex !== null,
+    canGoBack,
+    canCancel,
+    canDone,
+    canGoToStep,
     goNext,
     goBack,
     goToStep,
     skip,
     cancel,
     finish,
+    done,
     registerStepValidate,
     nextBlocked,
     setNextBlocked,
@@ -372,6 +518,7 @@ export function useWizard<TData extends Record<string, unknown>>(
     data: state.data,
     updateData,
     isSubmitting: state.isSubmitting,
+    isValidating: state.isValidating,
     error: state.error,
     clearError,
     fieldErrors: state.fieldErrors,
@@ -381,3 +528,36 @@ export function useWizard<TData extends Record<string, unknown>>(
     dismissCancel,
   };
 }
+
+/**
+ * `urlSync: true` / `{ param }`: mirror the active step to `?<param>=N`, and hand back
+ * the function that removes it again. Once removed it stays removed — the sync effect
+ * re-runs whenever react-router hands out a new setter (every search change), and
+ * without the latch it would write the param straight back after the exit cleared it.
+ */
+function useSearchParamStepUrl(param: string, index: number): () => void {
+  const [, setUrlParams] = useSearchParams();
+  const leftRef = useRef(false);
+  useEffect(() => {
+    if (leftRef.current) return;
+    setUrlParams((prev) => {
+      prev.set(param, String(index));
+      return prev;
+    }, { replace: true });
+  }, [param, index, setUrlParams]);
+  return useCallback(() => {
+    if (leftRef.current) return;
+    leftRef.current = true;
+    setUrlParams((prev) => {
+      prev.delete(param);
+      return prev;
+    }, { replace: true });
+  }, [param, setUrlParams]);
+}
+
+/** `urlSync: false`: the step lives in the reducer only. Touches no router context. */
+function useNoStepUrl(_param: string, _index: number): () => void {
+  return noop;
+}
+
+function noop() {}

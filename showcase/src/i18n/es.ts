@@ -59,6 +59,7 @@ export const es: Dictionary = {
     Inputs: "Entradas",
     "Pickers & entry": "Selectores y entrada",
     "Data display": "Visualización de datos",
+    Charts: "Gráficos",
     Overlays: "Superposiciones",
     // The frame around the app, not the browser — "chrome" in Spanish only means the browser.
     "App chrome": "Marco de la aplicación",
@@ -78,7 +79,7 @@ export const es: Dictionary = {
       title: "Introducción",
       short: "Introducción",
       blurb:
-        "Qué es @eifi1/ui-kit, las siete capas sobre las que está construido y cómo leer una página de este escaparate.",
+        "Qué es @eifi1/ui-kit, las ocho capas sobre las que está construido y cómo leer una página de este escaparate.",
     },
     foundations: {
       title: "Fundamentos",
@@ -194,19 +195,37 @@ export const es: Dictionary = {
     "data-display": {
       title: "Visualización de datos",
       blurb:
-        "Mostrar valores en lugar de capturarlos: las piezas básicas, la tabla y los gráficos.",
+        "Mostrar valores en lugar de capturarlos: las piezas básicas, la respuesta y el progreso, listas, árboles y la tabla.",
     },
     buttons: {
       title: "Botones y superficies",
       short: "Botones",
       blurb:
-        "Botones, botones de icono, tarjetas, indicadores de carga, estados vacíos, avatares y avisos — las piezas con las que se construye todo lo demás.",
+        "Botones, grupos de botones, botones de icono, tarjetas, indicadores de carga y avatares — las piezas con las que se construye todo lo demás.",
     },
     "chips-toggles": {
       title: "Chips e interruptores",
       short: "Chips",
       blurb:
         "Los chips y el campo de chips, el grupo de interruptores y las pestañas — los controles pequeños que eligen uno entre pocos o guardan una lista corta.",
+    },
+    feedback: {
+      title: "Respuesta y progreso",
+      short: "Progreso",
+      blurb:
+        "Cuánto ha avanzado una tarea, que el contenido está en camino, que aquí no hay nada y que hay algo que leer: barras de progreso y medidores, esqueletos, estados vacíos y avisos.",
+    },
+    "description-list": {
+      title: "Lista de descripción y tabla",
+      short: "Listas y tablas",
+      blurb:
+        "Datos presentados sin ninguna maquinaria: una lista de términos y detalles, una tabla estática sencilla, y el separador y el área de desplazamiento que quedan entre ambas.",
+    },
+    "tree-view": {
+      title: "Vista de árbol",
+      short: "Árbol",
+      blurb:
+        "Una jerarquía que recorres con el teclado — una sola parada de tabulación, flechas para abrir y cerrar, búsqueda al escribir — con hijos cargados bajo demanda, controlada desde fuera, de derecha a izquierda, y su fila por separado.",
     },
     "data-table": {
       title: "Tabla de datos",
@@ -226,6 +245,11 @@ export const es: Dictionary = {
       blurb:
         "Aquello de lo que está hecha la tabla, utilizable por separado: el paginador, el popover de filtro, el árbol de etiquetas y las utilidades puras de ordenación, filtro y URL.",
     },
+    charts: {
+      title: "Gráficos",
+      blurb:
+        "Los valores como imágenes: el contenedor con tema sobre Recharts, el gráfico de mosaicos, el gráfico de series con zoom con sus barras y áreas, y la tarjeta de KPI.",
+    },
     "chart-shell": {
       title: "Contenedor de gráficos",
       short: "Gráficos",
@@ -243,6 +267,12 @@ export const es: Dictionary = {
       short: "Series",
       blurb:
         "El gráfico de series con zoom que comparten las aplicaciones: un eje por unidad, una leyenda de interruptores, un solo zoom para una pila de gráficos y las utilidades que hay debajo.",
+    },
+    "series-chart-marks": {
+      title: "Gráfico de series: barras, áreas y tiempo",
+      short: "Barras y áreas",
+      blurb:
+        "El mismo gráfico dibujando barras, áreas y pilas, sobre categorías y tiempo real, con líneas de referencia, marcadores, puntos y clics — y una leyenda cuyos colores no cambian.",
     },
     stats: {
       title: "Estadísticas y sparklines",
@@ -266,6 +296,12 @@ export const es: Dictionary = {
       short: "Diálogos",
       blurb:
         "El modal y el diálogo a pantalla completa, la pulsación en el fondo que los cierra y la temporización de cierre que comparten todas las superposiciones.",
+    },
+    "confirm-floating": {
+      title: "Diálogo de confirmación y panel flotante",
+      short: "Confirmar",
+      blurb:
+        "La promesa que sustituye a window.confirm — con tonos, palabras propias y una cola — y el panel no modal anclado en una esquina tras un botón flotante.",
     },
     popovers: {
       title: "Popovers, menús y tooltips",
@@ -333,6 +369,12 @@ export const es: Dictionary = {
       short: "Hooks",
       blurb:
         "Las exportaciones no visuales: los hooks observados en vivo y las utilidades puras como entrada → salida.",
+    },
+    "clipboard-timing": {
+      title: "Portapapeles y tiempos",
+      short: "Portapapeles",
+      blurb:
+        "Copiar diciendo si ha funcionado, y esperar a que dejes de escribir: el botón de copiar y su hook, y el valor y el callback con debounce.",
     },
     helpers: {
       title: "Funciones y constantes",
