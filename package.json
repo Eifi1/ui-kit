@@ -71,7 +71,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "check:tokens": "node scripts/check-token-discipline.mjs",
-    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm test && npm run build && node scripts/verify-package.mjs && npm run build:showcase",
+    "test:coverage": "vitest run --coverage",
+    "check:graph": "node scripts/check-module-graph.mjs",
+    "check:package": "node scripts/verify-package.mjs",
+    "check:tailwind": "node scripts/check-tailwind-scan.mjs",
+    "check:security": "npm audit --audit-level=high",
+    "check:commits": "node scripts/check-commit-range.cjs",
+    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm run test:coverage && npm run build && npm run check:graph && npm run check:package && npm run build:showcase && npm run check:tailwind && npm run check:security && npm run check:commits",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsup && node scripts/fix-esm-extensions.mjs",
@@ -83,7 +89,6 @@
     "prepublishOnly": "npm run build",
     "release": "commit-and-tag-version",
     "release:dry": "commit-and-tag-version --dry-run",
-    "commitlint": "node scripts/check-commit-range.cjs",
     "prepare": "husky || true"
   },
   "peerDependencies": {

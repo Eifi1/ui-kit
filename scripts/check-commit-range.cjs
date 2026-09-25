@@ -16,6 +16,15 @@ const git = (cmd) => execSync(`git ${cmd}`, { encoding: "utf8" }).trim();
 let base = process.env.BASE_SHA || "";
 const head = process.env.HEAD_SHA || "HEAD";
 if (base === ZERO) base = "";
+// Locally (no CI range): every commit not yet on origin/main — exactly what the next
+// push would send, so `npm run check` fails before the push instead of CI after it.
+if (!process.env.BASE_SHA) {
+  try {
+    base = git(`merge-base origin/main ${head}`);
+  } catch {
+    // No origin/main (a fresh clone without it): fall back to the tip commit below.
+  }
+}
 
 let shas;
 try {

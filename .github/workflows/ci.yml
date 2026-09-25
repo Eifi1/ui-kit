@@ -13,96 +13,33 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# LOCAL FIRST. CI only CONFIRMS what `npm run check` already proved on the machine that
+# pushed: the husky pre-push hook runs the very same script, and every check lives in
+# an npm script (see package.json → "check") rather than as an inline step here, so the
+# two cannot drift. What each check guards is documented in its script:
+#   typecheck · lint · check:tokens · test:coverage (the coverage ratchet in
+#   vitest.config.ts) · build · check:graph (one module per source file, so
+#   `sideEffects` still tree-shakes recharts) · check:package (installs the packed
+#   tarball and imports every entry point by name) · build:showcase · check:tailwind
+#   (the documented @source scan reaches the package) · check:security (npm audit,
+#   high) · check:commits (Conventional Commits over the pushed range).
 jobs:
-  verify:
-    name: Typecheck · tests · build
+  check:
+    name: npm run check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # Node 24, not 20, and not by preference: jsdom 30 pulls undici, which calls
-      # `webidl.util.markAsUncloneable` — added to Node in 20.18. On plain 20 every
-      # test file dies before it runs with "Failed to start forks worker" and a
-      # TypeError from inside CacheStorage, which names neither jsdom nor the Node
-      # version. It is also what all four consumers build this package with (their
-      # .nvmrc is 24.19.0), so testing it on anything else tests something nobody
-      # ships — which is why the version is read from this repo's .nvmrc, the same
-      # file the apps pin, rather than written here.
+        with:
+          fetch-depth: 0 # the whole range, so check:commits can read every message in it
+      # Node from .nvmrc (24.19.0), the file the apps pin too. Not 20: jsdom 30 pulls
+      # undici, which calls `webidl.util.markAsUncloneable` — added in Node 20.18 — and
+      # on plain 20 every test file dies with "Failed to start forks worker".
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-
-      # The suite, WITH coverage — once, not twice. `vitest run --coverage` is the
-      # same run as `npm test` plus v8 instrumentation, and it fails the job when the
-      # ratchet in vitest.config.ts is crossed, so a change that deletes a test's
-      # subject along with the test cannot come out even.
-      #
-      # The thresholds are floors under the measured figure, not a goal: raise them
-      # in the commit that earns the rise. A red build here means either a real drop
-      # in what is exercised or a module added with nothing rendering it — both worth
-      # a sentence in the PR, neither worth lowering the floor for.
-      - name: Tests, with coverage
-        run: npx vitest run --coverage
-
-      - run: npm run build
-
-      # The build is only correct if it preserves the module graph. A bundling build
-      # would fuse the modules into one chunk and `sideEffects` could no longer let a
-      # consumer drop what it does not use — the regression that dragged all ~433KB of
-      # recharts into Keksdose's entry chunk. Assert the graph, not a string.
-      - name: Assert the build preserved the module graph
-        run: |
-          set -euo pipefail
-          test -f dist/components/chart.js
-          grep -q 'from "recharts"' dist/components/chart.js
-          # One file per source module, not a bundle: a bundling build collapses these.
-          test "$(find dist -name '*.js' | wc -l)" -gt 50
-          echo "OK: one output file per source module, chart keeps its own import."
-
-      # Every check this repo had ran against src/ or against dist/ by RELATIVE path,
-      # which is why both 0.4.x consumer-facing defects were invisible: the exports map
-      # was never exercised and the tarball was never installed. This packs the real
-      # artifact, installs it with only the declared REQUIRED peers, and imports every
-      # entry point by package name.
-      - name: Verify the publish artifact
-        run: node scripts/verify-package.mjs
-
-      # The showcase is the only place this package is RENDERED in CI. `npm test`
-      # mounts it under jsdom; this builds it for real, so a break here is a broken
-      # import, a missing peer, or a Tailwind path that stopped resolving — each of
-      # which a consumer would otherwise be the first to hit.
-      - name: Build the showcase
-        run: npm run build:showcase
-
-      # The documented adoption step is a Tailwind @source path, and a wrong one is
-      # SILENT: the app builds, runs, and renders unstyled. The showcase follows the
-      # same instruction against this repo's own source, so its emitted CSS is a
-      # proof that the scan reaches the package. `pointer-events-auto` comes from the
-      # kit's overlays and from almost nothing else.
-      - name: Assert the Tailwind scan reached the package
-        run: |
-          set -euo pipefail
-          css="$(ls showcase/dist/assets/*.css)"
-          for cls in pointer-events-auto sr-only; do
-            grep -q "$cls" "$css" || { echo "::error::$cls missing from $css — the @source scan is not reaching src/"; exit 1; }
-          done
-          echo "OK: the showcase CSS carries the kit utilities."
-
-  commits:
-    name: Conventional commits
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0 # the whole range, so every commit message in it can be read
-      # The same range script as Eifi1/shared-workflows' commit-check, kept as a local
-      # copy on purpose: that repository is private, and GitHub does not let a PUBLIC
-      # repository's workflows use actions from a private one (the job fails with
-      # "Unable to resolve action"). Reads this repo's .versionrc.cjs; no install.
-      - name: Commit messages — Conventional Commits
-        run: node scripts/check-commit-range.cjs
+      - run: npm run check
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
