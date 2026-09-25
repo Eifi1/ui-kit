@@ -386,3 +386,19 @@ describe("Treemap in RTL", () => {
     expect((cellElement().props as Record<string, unknown>).dir).toBe("ltr");
   });
 });
+
+describe("Treemap passes labelColor through to its cells (0.8.1)", () => {
+  it("puts each node's labelColor on the node recharts receives", () => {
+    render(
+      <Treemap
+        data={[
+          { id: "a", name: "Newest", value: 10, fill: "color-mix(in srgb, var(--chart-1) 100%, transparent)", labelColor: "#ffffff" },
+          { id: "b", name: "Oldest", value: 5 },
+        ]}
+      />,
+    );
+    const nodes = captured.props!.data as Array<{ id: string; labelColor?: string }>;
+    expect(nodes.find((n) => n.id === "a")!.labelColor).toBe("#ffffff");
+    expect(nodes.find((n) => n.id === "b")!.labelColor).toBeUndefined();
+  });
+});
