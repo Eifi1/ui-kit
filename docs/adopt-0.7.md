@@ -58,7 +58,7 @@ entry, Data display, Overlays. Old links redirect to the new pages.
 | `measured-grid.tsx` (the app's grid) | `MeasuredGrid` + `useMeasuredRows` | `<MeasuredGrid label columns cells onCells views? rowHeight? />`. `useMeasuredRows(initial, { digits })` keeps the parsed numbers and the cell strings in step. Windowing is built in (`useWindowedRows`) for long series. Invalid cells get `FIELD_INVALID` + `aria-invalid`. |
 | sheet tabs deletable only when active | `Tabs removeOn="active"` | |
 | `ScopeFields` label workaround | none needed | the Combobox floating label is now a real `<label htmlFor>` |
-| gear/control charts | nothing to do | ticks are now round (1/2/5 × 10ⁿ) and missing points show "—" in the tooltip |
+| `shared/charts/` (series-chart, with-zoom, zoom-fit, toggle-legend, facing-pair) | `@eifi1/ui-kit/chart` — **still pending from `adopt-0.5.md`** | lenkbank never swapped its chart copy, so it does not get 0.7's chart fixes (round ticks, "—" for missing points, swatches matching paint, RTL) until it does. `PAGE_CHART` and the grid ink class stay local; `FacingRow` / `FacingHeadings` build on the kit's `facingAxes` / `facingBand` / `facingHeadingPad`. |
 
 ## kastlan
 
