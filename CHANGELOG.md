@@ -20,6 +20,23 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.8.0](https://github.com/Eifi1/ui-kit/compare/v0.7.1...v0.8.0) (2026-09-25)
+
+### Added
+
+* 0.8.0 components and props from the apps' 0.7 audits ([007f234](https://github.com/Eifi1/ui-kit/commit/007f234dc4d89d3f05172ce3b1c234ceedb157f7))
+* Button sm, IconButton pressed/info, Disclosure triggerProps, chart and tile fits ([bb84aee](https://github.com/Eifi1/ui-kit/commit/bb84aeed11abd522be1d03a84389f3cbd3b459ac))
+* **chart:** angled x ticks, tooltip containment, per-series hover dot ([67dcb8b](https://github.com/Eifi1/ui-kit/commit/67dcb8bac00a79a384279041937265a0778d29a8))
+* **chart:** legend entries draw a custom dash array as the series does ([cd7a63c](https://github.com/Eifi1/ui-kit/commit/cd7a63c779dbe2bd98e19ee0aa27e65c19f29665))
+* **chart:** SeriesChart bars, areas, category/time axes, references, dots ([ec5d96d](https://github.com/Eifi1/ui-kit/commit/ec5d96d7850873f7f576318a6f411c1f127fccec))
+* **data-table:** keyboard rows, sort cycle, minimal chrome, frameless mode ([9226ec8](https://github.com/Eifi1/ui-kit/commit/9226ec85c696ba7aac9b8e141b647894ae189c36))
+* **i18n:** informal German (`du`) catalogues ([abae625](https://github.com/Eifi1/ui-kit/commit/abae6251a1ff6a7d505811e55cdc7ddf6a23537f))
+* **wizard:** commit step with steps after it, optional URL sync and Cancel, custom Finish ([a1b014b](https://github.com/Eifi1/ui-kit/commit/a1b014bfa2e129f25f58736820e1ae2d711fe087))
+
+### Fixed
+
+* **full-bleed-dialog:** compose the caller's onKeyDown; header slot stretches ([5efad64](https://github.com/Eifi1/ui-kit/commit/5efad64cbba83cb43b50f77bece9257a7986c43b))
+
 ## [0.7.1](https://github.com/Eifi1/ui-kit/compare/v0.7.0...v0.7.1) (2026-09-25)
 
 ### Added
