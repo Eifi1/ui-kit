@@ -164,38 +164,6 @@ function refocusField() {
   });
 }
 
-/** The marker `useOverlayHistory` puts on the history entry it pushes for an open overlay. */
-const OVERLAY_HISTORY_MARK = "__hbUiOverlayHistory";
-
-/**
- * Run a navigation once the palette's own history entry is gone.
- *
- * The palette pushes a same-URL entry while it is open, so Back closes it, and takes it
- * back off with a deferred `history.go(-1)` when it closes. A router push issued in the
- * same tick as the close lands ON TOP of that entry — and the unwind, which repairs a
- * missing marker on the entry it believes it is standing on, re-tags the NEW page's entry
- * as its own and goes back from it: the navigation is undone a frame after it happened
- * (observed under the showcase's HashRouter). So an href is followed after the unwind's
- * popstate — or after a short fallback, when there was no entry to unwind.
- */
-function afterOverlayUnwinds(run: () => void): void {
-  const state: unknown = typeof window !== "undefined" ? window.history.state : null;
-  if (!state || typeof state !== "object" || !(OVERLAY_HISTORY_MARK in state)) {
-    run();
-    return;
-  }
-  let done = false;
-  const finish = () => {
-    if (done) return;
-    done = true;
-    window.removeEventListener("popstate", finish);
-    clearTimeout(fallback);
-    run();
-  };
-  window.addEventListener("popstate", finish);
-  const fallback = setTimeout(finish, 500);
-}
-
 interface SourceResult {
   query: string;
   status: "loading" | "done" | "error";
@@ -382,10 +350,7 @@ function GlobalSearchImpl({
         // than the one this row was built from.
         const current = live.current.entries.find((e) => e.id === entry.id) ?? entry;
         if (current.onSelect) current.onSelect();
-        else if (current.href !== undefined) {
-          const href = current.href;
-          afterOverlayUnwinds(() => live.current.navigate(href));
-        }
+        else if (current.href !== undefined) live.current.navigate(current.href);
       },
     }),
     [hrefFor, redactLabels],

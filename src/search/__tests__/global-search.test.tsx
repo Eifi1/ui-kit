@@ -148,7 +148,8 @@ describe("GlobalSearch: results", () => {
    * `history.go(-1)` when it closes. A router push in the same tick landed on top of it,
    * the unwind re-tagged the NEW entry as its own and went back from it — the page
    * changed and changed straight back (seen in the browser under a HashRouter). The
-   * href is therefore followed once that unwind has happened.
+   * hook now tells a router push from a wiped marker by the router's `idx`, so the href
+   * is followed straight away and nothing undoes it.
    */
   it("is not undone by the palette's own history entry being unwound", async () => {
     window.history.replaceState(null, "", "/");
