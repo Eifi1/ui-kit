@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,10 +25,11 @@ jobs:
       # TypeError from inside CacheStorage, which names neither jsdom nor the Node
       # version. It is also what all four consumers build this package with (their
       # .nvmrc is 24.19.0), so testing it on anything else tests something nobody
-      # ships.
+      # ships — which is why the version is read from this repo's .nvmrc, the same
+      # file the apps pin, rather than written here.
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run typecheck
@@ -95,8 +97,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # the whole range, so every commit message in it can be read
-      # Dependency-free (no install): the release tool derives the version and the
-      # changelog from these messages, so one it cannot categorise is a gap in both.
+      # The same range script as Eifi1/shared-workflows' commit-check, kept as a local
+      # copy on purpose: that repository is private, and GitHub does not let a PUBLIC
+      # repository's workflows use actions from a private one (the job fails with
+      # "Unable to resolve action"). Reads this repo's .versionrc.cjs; no install.
       - name: Commit messages — Conventional Commits
         run: node scripts/check-commit-range.cjs
         env:

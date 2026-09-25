@@ -37,7 +37,7 @@ jobs:
       # Node 24 for the same reason ci.yml pins it — see the note there.
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       # A project site is served from /<repo>/, so every asset must be requested
