@@ -1005,8 +1005,8 @@ export const useTx = create<TxState>()(
       <Note>
         The rest of the non-visual surface, and what is deliberately not on this page:{" "}
         <code className="font-mono">useRowSwipe</code> is exported and is shown with{" "}
-        <code className="font-mono">SwipeableRow</code> under &ldquo;Tour, palette &amp;
-        files&rdquo;; the <code className="font-mono">lib/calc</code> helpers are exported and
+        <code className="font-mono">SwipeableRow</code> under &ldquo;Swipeable
+        row&rdquo;; the <code className="font-mono">lib/calc</code> helpers are exported and
         shown under &ldquo;Numbers &amp; money&rdquo;, where the fields that parse with them
         are. Two things a reader may go looking for are NOT exported from the barrel at all:{" "}
         <code className="font-mono">useMobileReveal</code> (src/components/use-mobile-reveal.ts,

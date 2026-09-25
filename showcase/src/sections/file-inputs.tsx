@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Camera, Paperclip, Upload } from "lucide-react";
 import { AlertBanner, Button, Checkbox, FileButton, FileDropzone, useFilePicker } from "@eifi1/ui-kit";
-import type { FileRejection } from "@eifi1/ui-kit";
-import { Example, Note, Stage } from "../lib/section";
+import type { FileDropzoneRejectionFeedback, FilePickerLabels, FileRejection } from "@eifi1/ui-kit";
+import { Example, Note, OutTable, Row, Stage } from "../lib/section";
 
 /**
  * FILE INPUTS — `FileButton`, `useFilePicker` and the 0.6 `FileDropzone`.
@@ -74,6 +74,13 @@ export function FileInputs() {
       </Example>
 
       <Example
+        label="FileDropzone — rejectionFeedback, labels and the refusal payload"
+        hint="Switch the mode, then pick a non-.txt file or one over 2 kB."
+      >
+        <DropzoneFeedback />
+      </Example>
+
+      <Example
         label="FileDropzone — the default toast, and a check of its own"
         hint="No onReject/onInvalid: refusals toast. With isValid, accept is not re-checked."
       >
@@ -81,6 +88,14 @@ export function FileInputs() {
           <DropzoneToast />
           <DropzoneOwnCheck />
         </Stage>
+        <Note>
+          With no <code className="font-mono">onInvalid</code>, a rejection does{" "}
+          <code className="font-mono">await import("sonner")</code> and toasts. The static
+          import is avoided on purpose: sonner is an OPTIONAL peer, and the barrel re-exports
+          this module — so importing it at the top would have broken{" "}
+          <code className="font-mono">import {"{"} Button {"}"}</code> for any app that never
+          installs it.
+        </Note>
       </Example>
 
       <Example label="FileDropzone — multiple" hint="Up to 4 images; each can be removed on its own.">
@@ -437,6 +452,95 @@ function WholePickDropzone() {
         refusals to <code className="font-mono">onReject</code>, and replaces the per-file message
         with one sentence for the pick (<code className="font-mono">labels.rejectedPick</code>) —
         spoken, and shown inline here.
+      </Note>
+    </div>
+  );
+}
+
+/* ── rejectionFeedback, labels and the refusal payload ─────────────────────
+ * Moved here from the old "Tour, palette & files" page, with the two dropzone
+ * specimens it had beside it folded into the ones above: its default-toast zone is
+ * "the default toast" (the note on why sonner is imported lazily came along), and its
+ * onInvalid zone is "a check of its own".
+ */
+
+const FEEDBACK_MODES: FileDropzoneRejectionFeedback[] = ["toast", "inline", "none"];
+
+/** Overridden in German, so it is plain which strings came from `labels`. */
+const DROPZONE_LABELS_DE: Partial<FilePickerLabels> = {
+  rejectedType: (name) => `„${name}“ ist keine Textdatei`,
+  rejectedSize: (name, max) => `„${name}“ ist größer als ${max}`,
+  selected: (_count, name) => `„${name}“ ausgewählt`,
+  remove: (name) => `„${name}“ entfernen`,
+  removed: (name) => `„${name}“ entfernt`,
+};
+
+function DropzoneFeedback() {
+  const [mode, setMode] = useState<FileDropzoneRejectionFeedback>("inline");
+  const [file, setFile] = useState<File | null>(null);
+  const [rejections, setRejections] = useState<FileRejection[] | null>(null);
+  const helpId = useId();
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        {FEEDBACK_MODES.map((m) => (
+          <Button
+            key={m}
+            variant={m === mode ? "brand" : "secondary"}
+            aria-pressed={m === mode}
+            onClick={() => setMode(m)}
+          >
+            rejectionFeedback=&quot;{m}&quot;
+          </Button>
+        ))}
+      </Row>
+      <FileDropzone
+        file={file}
+        onFileSelected={(f) => {
+          setRejections(null);
+          setFile(f);
+        }}
+        onClear={() => setFile(null)}
+        // Without `isValid`, the zone checks `accept` itself — a drop ignores the
+        // dialog's filter, so this is what refuses a dragged-in .png.
+        accept=".txt,text/plain"
+        maxSize={2_000}
+        rejectionFeedback={mode}
+        onReject={setRejections}
+        labels={DROPZONE_LABELS_DE}
+        // The DOM spelling wins over dropLabel as the accessible name; a caller's own
+        // description is merged with the inline error's.
+        aria-label="Textnotiz ablegen"
+        aria-describedby={helpId}
+        className="bg-[var(--bg-surface-2)]"
+        dropLabel="Drop a text note"
+        browseLabel="Choose a note…"
+        emptyLabel="Drop a .txt note here"
+        hint="Plain text, at most 2 kB"
+      />
+      <p id={helpId} className="text-xs text-[var(--text-muted)]">
+        Notes are attached to the current row. (This paragraph is the zone&apos;s own{" "}
+        <code className="font-mono">aria-describedby</code>.)
+      </p>
+      <OutTable
+        rows={[
+          ["file", file ? `${file.name} (${file.size} B)` : "null"],
+          [
+            "onReject(rejections)",
+            rejections
+              ? rejections.map((r) => `{ reason: "${r.reason}", message: "${r.message}" }`).join(", ")
+              : "—",
+          ],
+        ]}
+      />
+      <Note>
+        <code className="font-mono">"toast"</code> goes through sonner;{" "}
+        <code className="font-mono">"inline"</code> prints under the zone in the danger colour
+        and ties it to the zone with <code className="font-mono">aria-describedby</code>;{" "}
+        <code className="font-mono">"none"</code> shows nothing and leaves it to the caller — the
+        payload above. Inline and none are also spoken through the zone&apos;s live region (a
+        toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash.
       </Note>
     </div>
   );

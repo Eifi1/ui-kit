@@ -195,9 +195,9 @@ export function FieldAnatomyDemo() {
   );
 }
 
-/** Primitives: icon-button sizes and tones, actions over a clickable row, and tabs
- *  that add and remove — controls, not fields, so they live beside Button and Tabs. */
-export function ControlsDemo() {
+/** Icon-button sizes and tones, and actions over a clickable row — controls, not
+ *  fields, so they live beside Button and IconButton on "Buttons & surfaces". */
+export function IconButtonControls() {
   return (
     <>
       <Example label="Icon button sizes and tones" hint="md 36 · sm 32 · xs 28 · 2xs 24">
@@ -236,7 +236,15 @@ export function ControlsDemo() {
         over its end. Inside a clickable table row or card (not a button),{" "}
         <code>stopPropagation</code> keeps the click and its Enter from reaching the row.
       </Note>
+    </>
+  );
+}
 
+/** Tabs that add and remove — a control, not a field, so it lives beside Tabs on
+ *  "Chips & toggles". */
+export function TabControls() {
+  return (
+    <>
       <Example label="Tabs that add and remove" hint="× on the open tab · Delete on a focused tab">
         <Stage>
           <SheetStrip />

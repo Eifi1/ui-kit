@@ -333,7 +333,7 @@ export function SignatureViewDemo() {
   return <SignatureViews />;
 }
 
-/** Dates & time: the week start pinned on the provider. */
+/** Calendars & date pickers: the week start pinned on the provider. */
 export function WeekStartDemo() {
   return <WeekStart />;
 }

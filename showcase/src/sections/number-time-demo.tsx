@@ -136,7 +136,7 @@ export function NumberFieldDemo() {
   );
 }
 
-/** TimeInput — on the Dates page, beside the other pickers of a point in time. */
+/** TimeInput — on the "Month & time" page, beside the month picker. */
 export function TimeInputDemo() {
   const [meeting, setMeeting] = useState("18:30");
   const [quietStart, setQuietStart] = useState("22:00");

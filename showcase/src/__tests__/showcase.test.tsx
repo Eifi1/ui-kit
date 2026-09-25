@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { DEFAULT_UI_KIT_LABELS, TourProvider, missingKitLabels } from "@eifi1/ui-kit";
 import { Showcase } from "../showcase";
-import { GROUPS, NAV, PAGES, hasOverview } from "../routes";
+import { GROUPS, NAV, PAGES, RETIRED_SLUGS, hasOverview } from "../routes";
 import { LOCALES, LOCALE_STORAGE_KEY, LocaleProvider, de, en, es, fr, hu } from "../i18n";
 
 /**
@@ -130,6 +130,33 @@ describe("navigation", () => {
     expect(screen.getByText("No such page")).toBeInTheDocument();
   });
 
+  /**
+   * Pages get split when they outgrow a reader's scroll — Primitives held 29 specimens —
+   * and the old slug lives on in links nobody here can edit. Each one must land on a
+   * real page, never on "No such page", and must not point at a slug that is itself
+   * still a page (that would be a split that was never finished).
+   */
+  it.each(Object.entries(RETIRED_SLUGS))(
+    "redirects the retired /%s to /%s",
+    (old, target) => {
+      const slugs = new Set(PAGES.map((p) => p.slug));
+      expect(slugs.has(old), `/${old} is retired but still a page`).toBe(false);
+      expect(slugs.has(target), `/${old} redirects to /${target}, which is no page`).toBe(true);
+      renderAt(`/${old}`);
+      const page = PAGES.find((p) => p.slug === target)!;
+      expect(screen.getByRole("heading", { name: page.title, level: 1 })).toBeInTheDocument();
+      expect(screen.queryByText("No such page")).not.toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
+
+  it("keeps every group at or under ten pages, for the phone's row of page pills", () => {
+    // Below `md` the pills WRAP, so each page past ten is another line over the content.
+    for (const group of GROUPS) {
+      expect(group.pages.length, group.label).toBeLessThanOrEqual(10);
+    }
+  });
+
   it("offers previous/next between adjacent pages", () => {
     const second = PAGES[1];
     renderAt(`/${second.slug}`);
@@ -141,7 +168,7 @@ describe("navigation", () => {
 
 describe("on-this-page contents", () => {
   it("links only to headings that exist on the page", async () => {
-    renderAt("/primitives");
+    renderAt("/buttons");
     // Built from the DOM after paint, so wait for it rather than asserting immediately.
     // Two copies: the rail (xl and up) and the disclosure under the title (below xl).
     // jsdom applies no CSS, so both are present here; in a browser one is display:none.
@@ -149,7 +176,7 @@ describe("on-this-page contents", () => {
     expect(navs).toHaveLength(2);
     const hrefs = navs
       .flatMap((nav) => within(nav).getAllByRole("link"))
-      // The router builds the href (`#/primitives#id` under HashRouter, `/primitives#id`
+      // The router builds the href (`#/buttons#id` under HashRouter, `/buttons#id`
       // in a MemoryRouter), so the heading id is whatever follows the LAST `#`.
       .map((a) => a.getAttribute("href")!.split("#").pop()!);
     expect(hrefs.length).toBeGreaterThan(1);
@@ -178,9 +205,33 @@ describe("dictionaries", () => {
   it("names every page and every group in every language", () => {
     const slugs = Object.keys(en.pages).sort();
     const groups = Object.keys(en.groups).sort();
+    const groupShort = Object.keys(en.groupShort).sort();
     for (const dict of LOCALES) {
       expect(Object.keys(dict.pages).sort(), dict.tag).toEqual(slugs);
       expect(Object.keys(dict.groups).sort(), dict.tag).toEqual(groups);
+      expect(Object.keys(dict.groupShort).sort(), dict.tag).toEqual(groupShort);
+    }
+  });
+
+  it("matches routes.tsx: every page in English, and a short title for every page", () => {
+    // en.ts is a transcription of routes.tsx (see its header), so the two cannot differ.
+    const overviews = new Set(GROUPS.filter(hasOverview).map((g) => g.slug));
+    expect(Object.keys(en.pages).sort()).toEqual(PAGES.map((p) => p.slug).sort());
+    for (const page of PAGES) {
+      if (overviews.has(page.slug)) continue;
+      expect(en.pages[page.slug], page.slug).toEqual({
+        title: page.title,
+        short: page.short,
+        blurb: page.blurb,
+      });
+      // `short` is optional in the type only because overview pages have none.
+      for (const dict of LOCALES) {
+        expect(dict.pages[page.slug]?.short, `${dict.tag} ${page.slug}`).toBeTruthy();
+      }
+    }
+    for (const group of GROUPS) {
+      expect(en.groups[group.label], group.label).toBe(group.label);
+      if (group.shortLabel) expect(en.groupShort[group.label], group.label).toBe(group.shortLabel);
     }
   });
 });
@@ -204,11 +255,12 @@ describe("language menu", () => {
   function openMenu(): HTMLElement {
     const trigger = languageTrigger();
     fireEvent.click(trigger);
-    return trigger.closest("div[aria-label]") as HTMLElement;
+    // 0.7.0: HoverMenu names its `role="menu"` panel, not a role-less wrapper.
+    return screen.getByRole("menu");
   }
 
   function choose(endonym: string): void {
-    fireEvent.click(within(openMenu()).getByRole("button", { name: endonym }));
+    fireEvent.click(within(openMenu()).getByRole("menuitem", { name: endonym }));
   }
 
   it("lists all seven locales, each named in its own language", () => {
@@ -229,7 +281,7 @@ describe("language menu", () => {
     ]);
     for (const dict of LOCALES) {
       expect(
-        within(menu).getByRole("button", { name: dict.name }),
+        within(menu).getByRole("menuitem", { name: dict.name }),
         `${dict.tag} is missing from the menu`,
       ).toBeInTheDocument();
     }

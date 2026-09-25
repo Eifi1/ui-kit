@@ -49,7 +49,9 @@ const FIELD =
 const MENU_ITEM =
   "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]";
 
-export function Overlays() {
+/** The "Dialogs" page: the two modal surfaces, the backdrop rule they share, and the
+ *  exit timing every overlay closes on. The notes at the end cover all five overlays. */
+export function Dialogs() {
   return (
     <>
       <Example
@@ -93,6 +95,45 @@ export function Overlays() {
         <FullBleed />
       </Example>
 
+      <Example
+        label="OVERLAY_EXIT_MS + useCloseTransition"
+        hint="Dismiss the panel and watch `closing` flip for one animation's length."
+      >
+        <CloseTransition />
+      </Example>
+
+      <Note>
+        <strong>Accessibility, checked against the source rather than assumed.</strong>{" "}
+        <code className="font-mono">Modal</code> and <code className="font-mono">FullBleedDialog</code>{" "}
+        focus the dialog itself on open (not the first field, so a phone keyboard does not pop),
+        keep Tab inside it, and hand focus back to the element that opened them.{" "}
+        <code className="font-mono">Popover</code> traps Tab as well — it is portalled to the end
+        of <code className="font-mono">&lt;body&gt;</code>, so letting Tab walk out would land
+        nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
+        Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
+        <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
+        <code className="font-mono">HoverMenu</code>'s panel is rendered inline, so Tab reaches
+        its items by DOM order — but it has no Escape handler (only an outside press), and its
+        panel says <code className="font-mono">role="menu"</code> while the items are whatever
+        the caller renders, with no arrow-key navigation.
+      </Note>
+
+      <Note>
+        <strong>All five follow the palette.</strong> The panels are painted with{" "}
+        <code className="font-mono">--bg-surface</code> and{" "}
+        <code className="font-mono">--border</code>, so flipping the palette in the top bar
+        re-skins them. The one fixed colour is the backdrop's{" "}
+        <code className="font-mono">bg-black/40</code> dim behind a Modal or a FullBleedDialog.
+      </Note>
+    </>
+  );
+}
+
+/** The "Popovers, menus & tooltips" page: the non-modal overlays — anchored to a
+ *  trigger, flipped and clamped against the viewport — and the pure placement math. */
+export function PopoversMenusTooltips() {
+  return (
+    <>
       <Example
         label="Popover"
         hint="position: fixed and portalled, so a table or overflow ancestor cannot clip it."
@@ -159,37 +200,6 @@ export function Overlays() {
       >
         <OutTable rows={PLACEMENT_ROWS} />
       </Example>
-
-      <Example
-        label="OVERLAY_EXIT_MS + useCloseTransition"
-        hint="Dismiss the panel and watch `closing` flip for one animation's length."
-      >
-        <CloseTransition />
-      </Example>
-
-      <Note>
-        <strong>Accessibility, checked against the source rather than assumed.</strong>{" "}
-        <code className="font-mono">Modal</code> and <code className="font-mono">FullBleedDialog</code>{" "}
-        focus the dialog itself on open (not the first field, so a phone keyboard does not pop),
-        keep Tab inside it, and hand focus back to the element that opened them.{" "}
-        <code className="font-mono">Popover</code> traps Tab as well — it is portalled to the end
-        of <code className="font-mono">&lt;body&gt;</code>, so letting Tab walk out would land
-        nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
-        Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
-        <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
-        <code className="font-mono">HoverMenu</code>'s panel is rendered inline, so Tab reaches
-        its items by DOM order — but it has no Escape handler (only an outside press), and its
-        panel says <code className="font-mono">role="menu"</code> while the items are whatever
-        the caller renders, with no arrow-key navigation.
-      </Note>
-
-      <Note>
-        <strong>All five follow the palette.</strong> The panels are painted with{" "}
-        <code className="font-mono">--bg-surface</code> and{" "}
-        <code className="font-mono">--border</code>, so flipping the palette in the top bar
-        re-skins them. The one fixed colour is the backdrop's{" "}
-        <code className="font-mono">bg-black/40</code> dim behind a Modal or a FullBleedDialog.
-      </Note>
     </>
   );
 }

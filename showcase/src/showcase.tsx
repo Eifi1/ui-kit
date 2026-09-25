@@ -10,6 +10,7 @@ import {
   LanguageMenu,
   OptionSwitcherMenu,
   PALETTES,
+  PHONE_QUERY,
   PageContents,
   PageContentsLayout,
   PaletteMenu,
@@ -18,13 +19,14 @@ import {
   TopBar,
   TourProvider,
   UiKitProvider,
+  useMediaQuery,
   useScrollSpy,
 } from "@eifi1/ui-kit";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
-import { GROUPS, HOME_SLUG, NAV, PAGES, groupOf, hasOverview } from "./routes";
+import { GROUPS, HOME_SLUG, NAV, PAGES, RETIRED_SLUGS, groupOf, hasOverview } from "./routes";
 import type { ShowcasePage } from "./routes";
 import { LOCALE_OPTIONS, en, useGroupLabel, useLocale, usePageText, useT } from "./i18n";
 import {
@@ -47,6 +49,12 @@ import {
  */
 function useTranslatedNav(): AppShellNavItem[] {
   const t = useT();
+  // Below `md` the sub-items are only ever rendered as the phone's row of page pills,
+  // which WRAPS: a group of ten pages with their full titles ("Data table: server, URL &
+  // phone") filled five lines over the content. There each pill takes the page's short
+  // title instead. Above `md` the same items are the sidebar's, which has the room for
+  // the full one — so the switch is by width, not a second list.
+  const phone = useMediaQuery(PHONE_QUERY, false);
   return useMemo(
     () =>
       NAV.map((item, i) => {
@@ -56,25 +64,26 @@ function useTranslatedNav(): AppShellNavItem[] {
           GROUPS.find((g) => `/${hasOverview(g) ? g.slug : g.pages[0].slug}` === item.to) ??
           GROUPS[i];
         const title = (slug: string) => t.pages[slug]?.title ?? en.pages[slug]?.title ?? slug;
+        const short = (slug: string) =>
+          t.pages[slug]?.short ?? en.pages[slug]?.short ?? title(slug);
         return {
           ...item,
           label: t.groups[group.label] ?? en.groups[group.label] ?? group.label,
-          // `shortLabel` is a per-item override in routes.tsx ("Foundations" → "Tokens"),
-          // not a field of `Dictionary`: it names the group by its primary page. So it is
-          // translated as that page's title — but only when it really is that title, so a
-          // future short label that is a word of its own is left alone rather than
-          // silently replaced by something it does not say.
-          shortLabel:
-            item.shortLabel && item.shortLabel === en.pages[group.pages[0].slug]?.title
-              ? title(group.pages[0].slug)
-              : item.shortLabel,
-          items: item.items?.map((sub) => ({
-            ...sub,
-            label: title(sub.to.replace(/^\//, "")),
-          })),
+          // `shortLabel` is a per-item override in routes.tsx ("App chrome" → "Chrome")
+          // for the bottom bar, keyed in the dictionaries by the group's English label
+          // like `groups` is. It used to be translated only when it happened to equal the
+          // group's first page title, which left "Start", "Display" and "Chrome" English
+          // in all seven languages.
+          shortLabel: item.shortLabel
+            ? (t.groupShort[group.label] ?? en.groupShort[group.label] ?? item.shortLabel)
+            : undefined,
+          items: item.items?.map((sub) => {
+            const slug = sub.to.replace(/^\//, "");
+            return { ...sub, label: phone ? short(slug) : title(slug) };
+          }),
         };
       }),
-    [t],
+    [t, phone],
   );
 }
 
@@ -213,7 +222,11 @@ export function Showcase() {
         <Route path="/" element={<Navigate to={`/${HOME_SLUG}`} replace />} />
         <Route
           path="/:slug"
-          element={preview ? <PreviewRoute /> : <PageRoute contentsPosition={contentsPosition} />}
+          element={
+            <RetiredSlugRedirect>
+              {preview ? <PreviewRoute /> : <PageRoute contentsPosition={contentsPosition} />}
+            </RetiredSlugRedirect>
+          }
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -258,6 +271,22 @@ function SidebarStyleToggle({
       </IconButton>
     </Tooltip>
   );
+}
+
+/**
+ * A slug retired by a page split (see `RETIRED_SLUGS` in routes.tsx) goes to the page
+ * that took over its first specimens. `replace`, so Back does not bounce the reader into
+ * the redirect again. The query and the `#anchor` ride along: an anchor whose section
+ * moved to that first page still scrolls to it, and one that moved to a sibling page
+ * lands at the top of the first — the showcase's own links were rewritten to the
+ * precise page, so only links from outside take that road.
+ */
+function RetiredSlugRedirect({ children }: { children: ReactNode }) {
+  const { slug } = useParams();
+  const { search, hash } = useLocation();
+  const target = slug ? RETIRED_SLUGS[slug] : undefined;
+  if (target) return <Navigate to={{ pathname: `/${target}`, search, hash }} replace />;
+  return <>{children}</>;
 }
 
 /** The preview replaces the page: the frames ARE the page, three times over. */

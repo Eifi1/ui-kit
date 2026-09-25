@@ -64,6 +64,7 @@ export const de: Dictionary = {
     "Getting started": "Erste Schritte",
     Foundations: "Grundlagen",
     Inputs: "Eingaben",
+    "Pickers & entry": "Picker & Erfassung",
     "Data display": "Datenanzeige",
     // Kept English: "Overlay" is the word German front-end work uses for these.
     Overlays: "Overlays",
@@ -72,11 +73,20 @@ export const de: Dictionary = {
     API: "API",
   },
 
+  groupShort: {
+    "Getting started": "Start",
+    Foundations: "Tokens",
+    "Pickers & entry": "Picker",
+    "Data display": "Anzeige",
+    "App chrome": "Rahmen",
+  },
+
   pages: {
     overview: {
       title: "Übersicht",
+      short: "Übersicht",
       blurb:
-        "Was @eifi1/ui-kit ist, aus welchen sechs Schichten es besteht und wie Sie eine Seite dieses Showcase lesen.",
+        "Was @eifi1/ui-kit ist, aus welchen sieben Schichten es besteht und wie Sie eine Seite dieses Showcase lesen.",
     },
     foundations: {
       title: "Grundlagen",
@@ -85,66 +95,107 @@ export const de: Dictionary = {
     },
     tokens: {
       title: "Tokens",
+      short: "Tokens",
       blurb:
         "Jeder Wert des aktiven TokenSet, live. Wechseln Sie oben in der Leiste Theme oder Palette und sehen Sie dieser Seite beim Umschalten zu — was sich nicht bewegt, ist hart kodiert.",
     },
     palette: {
       title: "Palettengenerator",
+      short: "Palette",
       blurb:
         "Eine Markenfarbe hinein, beide Themes heraus — jedes Kontrastverhältnis gemessen statt behauptet, und jeder Kompromiss beim Namen genannt.",
     },
     localisation: {
       title: "Lokalisierung",
+      short: "Lokalisierung",
       blurb:
         "Jeder Text, den das Kit rendert, als ein typisierter Baum — und der Provider, der eine Übersetzung an alle Komponenten zugleich weitergibt.",
     },
     inputs: {
       title: "Eingaben",
       blurb:
-        "Jede Art, einen Wert zu erfassen. Alle teilen denselben Aufbau — schwebendes Label, Wert, Hilfezeile darunter —, sodass sich ein Formular wie aus einem Guss liest.",
+        "Jede Art, einen Wert einzutippen oder einzustellen: Text, Auswahl, Zahlen, Daten, Dateien und der Formular-Adapter darum herum. Alle teilen denselben Aufbau — schwebendes Label, Wert, Hilfezeile darunter —, sodass sich ein Formular wie aus einem Guss liest.",
     },
     fields: {
       title: "Textfelder",
+      short: "Text",
       blurb:
         "Eingabefelder und die Klassenkonstanten, aus denen eine Anwendung ihre eigenen Felder zusammensetzt.",
     },
+    forms: {
+      title: "Formulare (react-hook-form)",
+      short: "Formulare",
+      blurb:
+        "Der react-hook-form-Adapter unter @eifi1/ui-kit/rhf: Label, Steuerelement, Beschreibung und Meldung eines Felds, miteinander und mit dem Formularzustand verbunden — und Meldungen nur dort, wo der Nutzer sie sieht.",
+    },
     choices: {
       title: "Auswahl",
+      short: "Auswahl",
       blurb:
         "An oder aus, eins aus wenigen, ein Wert auf einer Skala — und die Wahl einer Farbe, eines Symbols oder einer Karte.",
     },
     numbers: {
       title: "Zahlen & Geld",
+      short: "Zahlen",
       blurb:
         "Der Zahlen-Baukasten: ein Zahlenfeld mit Rechner, ein Feld, dessen Wert eine Zahl ist, das Geldfeld mit seinen Tönen und die Währungsauswahl.",
     },
-    dropdowns: {
-      title: "Dropdowns & Picker",
+    calendars: {
+      title: "Kalender & Datumsauswahl",
+      short: "Kalender",
       blurb:
-        "Comboboxen, Mehrfachauswahl, gruppierte Picker und Sheet-Picker sowie die Dropdown-Primitiven darunter.",
+        "Einen Tag oder einen Zeitraum wählen: der Kalender selbst, die darauf gebauten Datums- und Zeitraum-Picker, ihre Vorgaben und Grenzen sowie der erste Tag der Woche.",
+    },
+    "month-time": {
+      title: "Monat & Uhrzeit",
+      short: "Monat & Zeit",
+      blurb:
+        "Die gröbere und die feinere Körnung: ein Monat für sich, im Feld oder zwischen Schritt-Buttons, und eine Uhrzeit.",
     },
     files: {
       title: "Dateien",
+      short: "Dateien",
       blurb:
         "Dateien auswählen: eine Schaltfläche, die den Dateidialog oder die Kamera öffnet, die Ablagefläche und Ablehnungen, die dort gemeldet werden, wo der Nutzer gerade hinschaut — nie als Toast.",
     },
+    pickers: {
+      title: "Picker & Erfassung",
+      blurb:
+        "Aus einer Liste wählen statt tippen, und die aufwendigeren Arten der Erfassung: eine Messtabelle, ein Feld, das beim Verlassen speichert, eine Unterschrift, ein Passwort.",
+    },
+    comboboxes: {
+      title: "Comboboxen",
+      short: "Comboboxen",
+      blurb:
+        "Freitext mit Vorschlägen: die Combobox, deren Wert das Getippte ist, und die Autovervollständigung, die schon beim Tippen sucht.",
+    },
+    "entity-pickers": {
+      title: "Datensatz-Picker",
+      short: "Datensätze",
+      blurb:
+        "Einen Datensatz über seine ID wählen: Picker in Feld- und in Button-Form, statische und nachgeladene Optionen, mehrere auf einmal sowie die gemeinsamen Zustände ungültig, Fehler und deaktiviert.",
+    },
+    "dropdown-parts": {
+      title: "Dropdown-Bausteine",
+      short: "Bausteine",
+      blurb:
+        "Mehrfachauswahl, der gruppierte Picker und das Smartphone-Sheet — und die Hooks und das Panel, aus denen jedes Dropdown des Kits gebaut ist.",
+    },
     "measured-grid": {
       title: "Tabelleneingabe",
+      short: "Tabelleneingabe",
       blurb:
         "Eine Messtabelle eingeben: ein Zellenraster für die Tastatur, ein aus einer Tabellenkalkulation eingefügter Block und dieselbe Tabelle als Text — Tausende Zeilen, nur die sichtbaren gerendert.",
     },
-    dates: {
-      title: "Datum & Uhrzeit",
-      blurb:
-        "Einen Zeitpunkt in jeder Körnung wählen: einen Tag, einen Zeitraum, einen Monat, eine Uhrzeit.",
-    },
     "field-sync": {
       title: "Synchronisationsstatus",
+      short: "Sync-Status",
       blurb:
         "Sync-Status eines datenbankgestützten Felds, gespeichert beim Verlassen: Rahmenfarbe und ein Symbol am Feldende zeigen geändert, speichert, gespeichert oder fehlgeschlagen — der Fehlergrund erscheint beim Überfahren des Fehlersymbols.",
     },
     "signature-password": {
       title: "Unterschrift, Passwort & Bestätigung",
+      short: "Unterschrift",
       blurb:
         "Eine Unterschrift erfassen — und eine gespeicherte anzeigen —, zeigen, wie stark ein Passwort ist, und eine unwiderrufliche Aktion bestätigen lassen.",
     },
@@ -153,28 +204,63 @@ export const de: Dictionary = {
       blurb:
         "Werte zeigen statt erfassen: die Grundbausteine, die Tabelle und die Diagramme.",
     },
-    primitives: {
-      title: "Grundbausteine",
+    buttons: {
+      title: "Buttons & Flächen",
+      short: "Buttons",
       blurb:
-        "Buttons, Karten, Tabs, Banner, Avatare — die Teile, aus denen alles andere gebaut ist.",
+        "Buttons, Icon-Buttons, Karten, Ladeanzeigen, Leerzustände, Avatare und Banner — die Teile, aus denen alles andere gebaut ist.",
+    },
+    "chips-toggles": {
+      title: "Chips & Umschalter",
+      short: "Chips",
+      blurb:
+        "Chips und das Chip-Feld, die Umschaltgruppe und Tabs — die kleinen Bedienelemente, die eins aus wenigen wählen oder eine kurze Liste halten.",
     },
     "data-table": {
       title: "Datentabelle",
+      short: "Tabelle",
       blurb:
-        "Die größte Komponente des Kits: Sortierung, Filter, Auswahl, Seitenaufteilung, URL-Abgleich und ihre reinen Hilfsfunktionen.",
+        "Die größte Komponente des Kits, vollständig: Sortierung, Filter, Auswahl und Aufklappen, von außen gesteuert, kurz und ohne Seitenaufteilung, in einem begrenzten Bereich und von rechts nach links.",
     },
-    charts: {
-      title: "Diagramme",
+    "data-table-server": {
+      title: "Datentabelle: Server, URL & Smartphone",
+      short: "Server & Mobil",
       blurb:
-        "Die Diagramm-Hülle im Theme des Kits auf Basis von Recharts, ihr Farbsystem, das Kacheldiagramm (Treemap) und das zoombare Reihendiagramm, das die Apps teilen.",
+        "Die Tabelle, wenn ihr nicht alles selbst gehört: die Ansicht in der Adresse, die Zeilen seitenweise vom Server und das Smartphone-Layout aus Karten, Gruppen und Wischaktionen.",
+    },
+    "data-table-parts": {
+      title: "Datentabelle: Bausteine & Hilfsfunktionen",
+      short: "Tabellenteile",
+      blurb:
+        "Woraus die Tabelle zusammengesetzt ist, auch einzeln nutzbar: die Seitennavigation, das Filter-Popover, der Label-Baum und die reinen Hilfsfunktionen für Sortierung, Filter und URL.",
+    },
+    "chart-shell": {
+      title: "Diagramm-Hülle",
+      short: "Diagramme",
+      blurb:
+        "Die Diagramm-Hülle im Theme des Kits auf Basis von Recharts — Container, Tooltip und Legende — und das Farbsystem, aus dem jedes Diagramm des Kits schöpft.",
+    },
+    "tile-chart": {
+      title: "Kacheldiagramm",
+      short: "Kacheln",
+      blurb:
+        "Die Treemap: Anteile an einem Ganzen als Kacheln, mit passenden Beschriftungen und anklickbaren Kacheln — und der Drilldown, per Balkendiagramm wie per Kacheln.",
+    },
+    "series-chart": {
+      title: "Reihendiagramm",
+      short: "Reihen",
+      blurb:
+        "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme und die Hilfsfunktionen darunter.",
     },
     stats: {
       title: "Kennzahlen & Sparklines",
+      short: "Kennzahlen",
       blurb:
         "Die KPI-Kachel, die jedes Dashboard wiederholt — Wert, Veränderung, Trend — und die winzige Linie, die in eine Tabellenzelle passt.",
     },
     layout: {
       title: "Aufklappbereich & Dialograhmen",
+      short: "Aufklappen",
       blurb:
         "Ein Abschnitt, der sich einklappen lässt, und der Rahmen aus Kopf, Inhalt und Aktionen, den jeder Dialog wiederholt.",
     },
@@ -184,14 +270,34 @@ export const de: Dictionary = {
         "Alles, was über der Seite schwebt, und das eine Timing, das sie alle beim Schließen teilen.",
     },
     dialogs: {
-      title: "Dialoge & Popover",
+      title: "Dialoge",
+      short: "Dialoge",
       blurb:
-        "Modal, Vollbild-Dialog, Popover, Hover-Menü und Tooltip — dazu das gemeinsame Timing des Schließens.",
+        "Modal und Vollbild-Dialog, der Klick auf den Hintergrund, der sie schließt, und das Timing des Schließens, das alle Overlays teilen.",
     },
-    "tour-search-files": {
-      title: "Tour, Befehlspalette & Dateien",
+    popovers: {
+      title: "Popover, Menüs & Tooltips",
+      short: "Popover",
       blurb:
-        "Die geführte Tour, die Befehlspalette, die Ablagefläche für Dateien und die wischbare Zeile.",
+        "Die Overlays, die an einem Auslöser hängen: Popover, Hover-Menü und Tooltip — am Fensterrand umgeklappt und eingegrenzt, für Rechts-nach-links gespiegelt — und die reine Positionsberechnung dahinter.",
+    },
+    tour: {
+      title: "Geführte Tour",
+      short: "Tour",
+      blurb:
+        "Eine Spotlight-Tour über die echte Seite: Schritte, die per Selektor auf jedes Element zeigen, auf einen Klick warten, vorher Code ausführen und ein fehlendes Ziel überstehen.",
+    },
+    "command-palette": {
+      title: "Befehlspalette",
+      short: "Befehle",
+      blurb:
+        "Die ⌘K-Palette: eine durchsuchbare Liste von Orten und Aktionen, per Tastenkürzel überall auf der Seite geöffnet, mit Ergebnissen, die auch später eintreffen dürfen.",
+    },
+    "swipeable-row": {
+      title: "Wischbare Zeile",
+      short: "Wischen",
+      blurb:
+        "Eine Listenzeile, die ihre Aktionen zeigt, wenn man sie zur Seite zieht — mit Finger oder Maus, in Stufen, von rechts nach links — und dieselben Aktionen per Tastatur erreichbar.",
     },
     "app-chrome": {
       title: "App-Rahmen",
@@ -200,42 +306,50 @@ export const de: Dictionary = {
     },
     shell: {
       title: "Grundgerüst",
+      short: "Grundgerüst",
       blurb: "Der Anwendungsrahmen, den Sie gerade vor sich haben, auseinandergenommen.",
     },
     settings: {
       title: "Einstellungsfelder",
+      short: "Einstellungen",
       blurb:
         "Die Zeilen der Kontoeinstellungen: Theme, Sprache, Profil, Passwort und Zwei-Faktor-Authentifizierung.",
     },
     wizard: {
       title: "Assistent",
+      short: "Assistent",
       blurb: "Die mehrstufige Engine, ihr Rahmen und ihr Prüfschritt.",
     },
     "feedback-compose": {
       title: "Feedback — Erfassen",
+      short: "Erfassen",
       blurb: "Das Meldeformular und sein Feld für Anhänge.",
     },
     "feedback-inbox": {
       title: "Feedback — Posteingang",
+      short: "Posteingang",
       blurb:
         "Das gemeinsame Statusvokabular, die Regeln für Statusübergänge und die Teile, aus denen ein Posteingang gebaut wird.",
-    },
-    "hooks-lib": {
-      title: "Hooks & lib",
-      blurb:
-        "Die nicht sichtbaren Exporte: die Hooks live beobachtet, die reinen Hilfsfunktionen als Eingabe → Ausgabe.",
     },
     api: {
       title: "API",
       blurb:
         "Was übrig bleibt, wenn man die Pixel weglässt: die Hooks, aus denen die Komponenten gebaut sind, und die reinen Hilfsfunktionen und Konstanten, die eine App direkt aufruft.",
     },
+    "hooks-lib": {
+      title: "Hooks & lib",
+      short: "Hooks",
+      blurb:
+        "Die nicht sichtbaren Exporte: die Hooks live beobachtet, die reinen Hilfsfunktionen als Eingabe → Ausgabe.",
+    },
     helpers: {
       title: "Hilfsfunktionen & Konstanten",
+      short: "Hilfsfunktionen",
       blurb:
         "Die Funktionen und Daten hinter den Eingabefeldern, als Eingabe → Ergebnis: Datumsrechnung aus @eifi1/ui-kit/dates, der Auswerter des Rechners, die Währungstabelle und die Klassenkonstanten, aus denen ein eigenes Feld zusammengesetzt wird.",
     },
   },
+
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_DE,
