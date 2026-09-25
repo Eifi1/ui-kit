@@ -54,6 +54,14 @@ the showcase has every component live.
 | admin MetricTile | `StatTile truncateLabel` | |
 | category-treemap (recency fills) | `Treemap` nodes with `labelColor` | for `color-mix()` / `var()` fills |
 | grouped-bar, stacked-area, income-expense-bar, budget-performance, cash-buffer, paper-price, price-history, networth, investments | `SeriesChart` with `type: "bar" \| "area"`, `stack`, `x.type: "category" \| "time"`, `references`, `markers`, `tickValues`, `dot`, `x.tickAngle`, `tooltip.boundary`, `activeDot` | per-chart sketches below |
+| `className="px-2 py-1 text-xs"` on secondary buttons | `<Button size="sm">` / `buttonClasses(variant, { size: "sm" })` | `py-0.5` still via `className` |
+| budgets-page share toggle, accounts reconcile, disabled hover suppression | `IconButton pressed`, `tone="info"` | disabled IconButtons no longer tint on hover |
+| budget-table / budget-mobile-list group toggles | `Disclosure triggerProps={(open) => ({ "aria-label": … })}` | the label must still contain the title's words |
+| ynab-import-panel | `useWizard` `commits` step + post-commit steps (`onDone`), `urlSync: false`, `cancellable` / `confirmCancel` / `onExit`; `StepperNav finishVariant="danger" finishDisabled renderFinish={(b) => <SaveGuard>{b}</SaveGuard>}`; step `nextLabel` | Back is disabled while submitting; Next shows pending during async `validate`. WizardSummary `disabled`, and sections without `stepIndex` |
+| reports aggregated-table | `DataTable onRowClick` (keyboard rows), column `firstSort: "desc"`, `sortCycle="toggle"`, `chrome="minimal"`, `frame={false}`, `className` | |
+| transaction-search keys, RangeSheet dev#477, header SearchField width | `FullBleedDialog` (the caller's `onKeyDown`/`onMouseDown` are combined with the dialog's; the header stretches) | drop the `w-screen max-w-full` workaround |
+| `SizedSeriesChart`, blank 0.5 ticks, `"4 3"` companions | `SeriesChart height={220}`, automatic whole-number ticks, `dash: "4 3"`, `strokeWidth` | |
+| KpiCard projected line, untinted sub-values, Tooltip-wrapped labels | `StatTile projection`, sub-value `tone: "none"`, `truncateLabel` with a plain string label | `hint` is the "?" tooltip, `description` the visible line |
 
 **Chart sketches:**
 - **grouped-bar:** `x: {type: "category", key: "period"}`, series `{key: seriesKey(id), type: "bar"}`, and `onPointClick: ({key, row}) => …`.
