@@ -37,7 +37,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 const MODAL_SIZES = ["md", "lg", "xl"] as const;
 type ModalSize = (typeof MODAL_SIZES)[number];
 
-const TOOLTIP_SIDES = ["top", "right", "bottom", "left"] as const;
+const TOOLTIP_SIDES = ["top", "right", "bottom", "left", "start", "end"] as const;
 
 const MENU_ITEMS = ["Duplicate", "Export as CSV", "Archive"];
 
@@ -1017,7 +1017,17 @@ function OverlaysRtl() {
             </ul>
           )}
         </HoverMenu>
-        <Tooltip side="left" label="side='left' — still the physical left">
+        <Tooltip side="end" label="side='end' — the left here">
+          <button type="button" className={buttonClasses("secondary")}>
+            Tooltip end
+          </button>
+        </Tooltip>
+        <Tooltip side="end" portal label="side='end' portal — left, and dir=rtl">
+          <button type="button" className={buttonClasses("secondary")}>
+            Portalled end
+          </button>
+        </Tooltip>
+        <Tooltip side="left" label="side='left' — the physical left in either direction">
           <button type="button" className={buttonClasses("secondary")}>
             Tooltip left
           </button>
@@ -1046,9 +1056,14 @@ function OverlaysRtl() {
       </div>
       <span className="text-xs text-[var(--text-muted)]">Picked: {picked}</span>
       <Note>
-        Only <code className="font-mono">Tooltip</code> is still physical:{" "}
-        <code className="font-mono">side=&quot;left&quot;</code> is the screen&apos;s left in
-        either direction, so an RTL caller swaps it itself.{" "}
+        <code className="font-mono">Tooltip</code> takes{" "}
+        <code className="font-mono">side=&quot;start&quot;</code>/
+        <code className="font-mono">&quot;end&quot;</code>, which mirror here (the portalled
+        bubble also carries the trigger&apos;s <code className="font-mono">dir</code>);{" "}
+        <code className="font-mono">left</code>/<code className="font-mono">right</code> stay the
+        screen&apos;s sides in either direction. <code className="font-mono">FieldHint</code>{" "}
+        defaults to <code className="font-mono">start</code>, and the shell&apos;s collapsed
+        sidebar tooltips use <code className="font-mono">end</code>.{" "}
         <code className="font-mono">HoverMenu</code>&apos;s <code className="font-mono">align</code>{" "}
         takes <code className="font-mono">start</code>/<code className="font-mono">end</code>{" "}
         (default <code className="font-mono">end</code>), which mirror here —{" "}

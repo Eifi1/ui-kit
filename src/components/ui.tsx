@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttribute
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { Tooltip } from "./tooltip";
+import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
@@ -472,12 +472,14 @@ export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">,
   /** The explanation. It is both the tooltip's text and, by default, the button's
    *  accessible name, so a screen reader gets it without the bubble ever opening. */
   label: string;
-  side?: "left" | "right" | "top" | "bottom";
+  /** Default `"start"`: before the hint in the reading direction (the left in LTR, the
+   *  right in RTL). `left` / `right` stay physical. */
+  side?: TooltipSide;
 }
 
 export function FieldHint({
   label,
-  side = "left",
+  side = "start",
   className,
   "aria-label": ariaLabel,
   ...rest

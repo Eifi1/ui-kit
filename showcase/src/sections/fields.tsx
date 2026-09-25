@@ -532,11 +532,13 @@ export function Fields() {
             </Select>
             <div>
               <p className="mb-2 text-xs text-[var(--text-muted)]">
-                All four sides — hover or tab to each. The bubble is portalled, so it measures
+                Every side — hover or tab to each. <code>start</code> (the default) and{" "}
+                <code>end</code> follow the reading direction; <code>left</code>/<code>right</code>{" "}
+                are the screen&apos;s. The bubble is portalled, so it measures
                 itself and turns round when the chosen side would not fit.
               </p>
               <Row>
-                {(["left", "right", "top", "bottom"] as const).map((side) => (
+                {(["start", "end", "left", "right", "top", "bottom"] as const).map((side) => (
                   <span key={side} className="inline-flex items-center gap-1.5">
                     <FieldHint label={`side="${side}"`} side={side} />
                     <code className="font-mono text-xs text-[var(--text-secondary)]">{side}</code>

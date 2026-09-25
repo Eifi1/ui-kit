@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.7.1](https://github.com/Eifi1/ui-kit/compare/v0.7.0...v0.7.1) (2026-09-25)
+
+### Added
+
+* **tooltip:** logical `start` / `end` sides that follow the reading direction ([fa60939](https://github.com/Eifi1/ui-kit/commit/fa609392a84670c6675e17a5d7e8b8e508d55b65))
+
 ## [0.7.0](https://github.com/Eifi1/ui-kit/compare/v0.6.1...v0.7.0) (2026-09-25)
 
 ### ⚠ BREAKING CHANGES

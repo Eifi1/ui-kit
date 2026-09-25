@@ -13,8 +13,22 @@ import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { useEscapeKey } from "../hooks/use-dismiss";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
+import { dirOf, type Direction } from "../lib/direction";
 
-type TooltipSide = "top" | "bottom" | "left" | "right";
+/** Where the bubble sits. `start` / `end` follow the reading direction — `end` is the
+ *  right in LTR and the left in RTL — and are what a layout that mirrors should ask
+ *  for. `left` / `right` stay physical, for a bubble tied to something that does not
+ *  mirror (a chart axis, a map). */
+export type TooltipSide = "top" | "bottom" | "left" | "right" | "start" | "end";
+
+/** The placement the maths works in: a logical side resolved against the trigger. */
+type PhysicalSide = "top" | "bottom" | "left" | "right";
+
+function physicalSide(side: TooltipSide, dir: Direction): PhysicalSide {
+  if (side === "start") return dir === "rtl" ? "right" : "left";
+  if (side === "end") return dir === "rtl" ? "left" : "right";
+  return side;
+}
 
 /** The floating bubble itself. Uses the shared surface/border/text tokens so it
  *  reads as part of the app's chrome (like the top bar and cards) rather than the
@@ -37,6 +51,10 @@ const sidePositionClass: Record<TooltipSide, string> = {
   bottom: "top-full left-1/2 -translate-x-1/2 mt-1",
   left: "right-full top-1/2 -translate-y-1/2 mr-1",
   right: "left-full top-1/2 -translate-y-1/2 ml-1",
+  // Logical insets, so CSS resolves the side from the inherited direction with no
+  // JavaScript: `end-full` pins the bubble's END edge to the trigger's start.
+  start: "end-full top-1/2 -translate-y-1/2 me-1",
+  end: "start-full top-1/2 -translate-y-1/2 ms-1",
 };
 
 /**
@@ -248,7 +266,7 @@ const TOOLTIP_GAP = 4;
  *  against the glass reads as clipped even when every character is on screen. */
 const TOOLTIP_MARGIN = 4;
 
-const portalTransformBySide: Record<TooltipSide, string> = {
+const portalTransformBySide: Record<PhysicalSide, string> = {
   right: "translate(0, -50%)",
   left: "translate(-100%, -50%)",
   top: "translate(-50%, -100%)",
@@ -259,7 +277,7 @@ const portalTransformBySide: Record<TooltipSide, string> = {
  *  with {@link portalTransformBySide}, which shifts the box onto that point. */
 function tooltipAnchor(
   r: AnchorRect,
-  side: TooltipSide,
+  side: PhysicalSide,
 ): { left: number; top: number } {
   switch (side) {
     case "right":
@@ -287,10 +305,10 @@ export interface TooltipPlacement {
   left: number;
   top: number;
   /** Which side it ended up on, which need not be the one that was asked for. */
-  side: TooltipSide;
+  side: PhysicalSide;
 }
 
-const opposite: Record<TooltipSide, TooltipSide> = {
+const opposite: Record<PhysicalSide, PhysicalSide> = {
   left: "right",
   right: "left",
   top: "bottom",
@@ -300,7 +318,7 @@ const opposite: Record<TooltipSide, TooltipSide> = {
 /** Whether the bubble clears the viewport edge on `side` of the trigger. */
 function roomOn(
   r: AnchorRect,
-  side: TooltipSide,
+  side: PhysicalSide,
   size: TooltipSize,
   viewport: TooltipViewport,
 ): boolean {
@@ -359,7 +377,7 @@ function clamp(value: number, low: number, high: number): number {
  */
 export function placeTooltip(
   r: AnchorRect,
-  side: TooltipSide,
+  side: PhysicalSide,
   size: TooltipSize,
   viewport: TooltipViewport,
 ): TooltipPlacement {
@@ -394,6 +412,14 @@ function PortalTooltip({
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const bubbleRef = useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = useState(false);
+  // The trigger's reading direction, read when the bubble is asked for (an event, not a
+  // render): it resolves `start` / `end`, and the portalled bubble — which has left the
+  // subtree it would have inherited `dir` from — carries it too.
+  const [dir, setDir] = useState<Direction>("ltr");
+  const show = (el: Element) => {
+    setDir(dirOf(el));
+    setVisible(true);
+  };
   const id = useId();
   // Escape closes it outright, since this variant's bubble only exists while it is
   // shown. The next mouseenter/focus brings it back, which is the behaviour WCAG
@@ -424,11 +450,12 @@ function PortalTooltip({
     });
   }, [visible, rect, label]);
 
-  const point = rect ? tooltipAnchor(rect, side) : null;
+  const physical = physicalSide(side, dir);
+  const point = rect ? tooltipAnchor(rect, physical) : null;
   // Unmeasured on the very first pass, where the anchor point plus the side's
   // own transform is exactly what this always did. One layout effect later the
   // size is known and the placement is decided properly.
-  const placed = rect && room ? placeTooltip(rect, side, room.size, room.viewport) : null;
+  const placed = rect && room ? placeTooltip(rect, physical, room.size, room.viewport) : null;
 
   return (
     <>
@@ -440,9 +467,9 @@ function PortalTooltip({
         {...rest}
         ref={triggerRef}
         className={cn("relative inline-flex", className)}
-        onMouseEnter={() => setVisible(true)}
+        onMouseEnter={(e) => show(e.currentTarget)}
         onMouseLeave={() => setVisible(false)}
-        onFocus={() => setVisible(true)}
+        onFocus={(e) => show(e.currentTarget)}
         onBlur={() => setVisible(false)}
       >
         {describedBy(children, visible ? id : undefined)}
@@ -455,6 +482,7 @@ function PortalTooltip({
             ref={bubbleRef}
             id={id}
             role="tooltip"
+            dir={dir}
             data-private={redact ? "" : undefined}
             style={
               placed
@@ -463,7 +491,7 @@ function PortalTooltip({
                     position: "fixed",
                     left: point.left,
                     top: point.top,
-                    transform: portalTransformBySide[side],
+                    transform: portalTransformBySide[physical],
                   }
             }
             className={cn(TOOLTIP_SURFACE, "pointer-events-none z-50")}
