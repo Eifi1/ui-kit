@@ -48,7 +48,7 @@ afterEach(() => {
   document.documentElement.classList.remove("dark");
 });
 
-function renderCell(props: { width: number; height: number; name: string; fill?: string }) {
+function renderCell(props: { width: number; height: number; name: string; fill?: string; labelColor?: string }) {
   // The chart root used to carry stroke="#fff", which INHERITS into the label text —
   // that is what smeared the glyphs. Reproduce it so the cell has to defend itself.
   return render(
@@ -108,6 +108,17 @@ describe("TreemapCell", () => {
   it("inherits the ink for a fill it cannot measure", () => {
     const { container } = renderCell({ width: 200, height: 60, name: "Groceries", fill: "var(--chart-3)" });
     expect(container.querySelector("text")!.getAttribute("fill")).toBe("currentColor");
+  });
+
+  it("takes the caller's labelColor for a fill it cannot measure (keksdose B13)", () => {
+    const { container } = renderCell({
+      width: 200,
+      height: 60,
+      name: "Newest",
+      fill: "color-mix(in srgb, var(--chart-1) 100%, transparent)",
+      labelColor: "#ffffff",
+    });
+    expect(container.querySelector("text")!.getAttribute("fill")).toBe("#ffffff");
   });
 
   it("snaps its geometry to whole pixels", () => {

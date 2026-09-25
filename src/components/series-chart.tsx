@@ -17,14 +17,43 @@
 // Charts are drawn left-to-right in every writing direction — an abscissa is a number
 // line, not text — so `orientation` below is physical, and only the HTML chrome (the
 // reset button) is placed by logical side.
+//
+// **Bars, areas and periods too (0.8.0).** keksdose drew five money charts in raw
+// recharts — net worth, investments, income/expense, grouped payees, stacked categories
+// — each re-deciding the grid, the tooltip, the axis width and the "—" for a gap. They
+// are the same arrangement with a different mark, so a series now says `type: "bar" |
+// "area"` (and `stack`), and the abscissa may be a row of PERIODS (`x.type:
+// "category"`) or real dates (`x.type: "time"`) instead of a number the app had to
+// invent. What each of those does to the zoom is decided in one place,
+// `defaultZoomAxes` in `chart-zoom.tsx`.
 import { useMemo } from "react";
 import type { ReactNode } from "react";
-import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Label,
+  Line,
+  ReferenceDot,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
-import { DEFAULT_Y_AXIS, withChartZoom, type ZoomBinding } from "./chart-zoom";
-import { STEP_DASH, strokeDash } from "./toggle-legend";
+import {
+  DEFAULT_Y_AXIS,
+  axisExtent,
+  withChartZoom,
+  type ZoomAxesSetting,
+  type ZoomBinding,
+  type ZoomFitSource,
+} from "./chart-zoom";
+import { STEP_DASH, strokeDash, type LegendEntry } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
-import { niceTicks } from "./series-chart-ticks";
+import { categoryTicks, niceTicks, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
+// The tick module stays internal; the one type of it a public prop names is re-exported.
+export type { TimeTickUnit } from "./series-chart-ticks";
 import { paletteFor } from "../theme/chart-palette";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -49,7 +78,77 @@ export interface SeriesChartSeries {
   step?: boolean;
   /** Which of `axes` this line is measured on. Default: `"y"`, the single one. */
   axis?: string;
+  /**
+   * The mark. `"line"` (the default) is what every chart before 0.8.0 drew. `"bar"` and
+   * `"area"` are read as a LENGTH from zero, so the axis they stand on always includes
+   * zero (see `SeriesChartAxis.includeZero`) and the zoom treats them differently (see
+   * `defaultZoomAxes`). Bars without a `stack` stand side by side in each slot — the
+   * grouped bars of keksdose's payee report.
+   */
+  type?: SeriesChartType;
+  /**
+   * Bars or areas with the same `stack` are drawn on top of each other and the axis is
+   * fitted to their SUM (positive and negative layers apart, like recharts'
+   * `stackOffset="sign"`). keksdose's spending-by-category area. Ignored on a line:
+   * recharts cannot stack one.
+   */
+  stack?: string;
+  /**
+   * Marks on the line's (or area's) points. `true` rings every sample — the price
+   * history, where a shop has a value only on the days somebody shopped there and the
+   * dots are the only thing saying which points were MEASURED. A function decides per
+   * point: `true` for the default dot, `false`/`null` for none, or any SVG node drawn
+   * as-is at `point.cx`/`point.cy` — a buy/sell marker on keksdose's paper price.
+   * Never called for a point with no value. Bars have no points, and ignore it.
+   */
+  dot?: boolean | ((point: SeriesChartPoint) => ReactNode);
+  /** Line (or area outline) weight in px. Default 2, or 1.5 for a `step`. keksdose
+   *  draws the subject of a chart at 2.5 and the reference it is read against at 1.5. */
+  strokeWidth?: number;
+  /** `"linear"` for a line that must not look smoothed — keksdose's cash-buffer
+   *  PROJECTION, a straight extrapolation that a monotone curve would dress up as data.
+   *  Default `"monotone"`; `step` wins over both. */
+  curve?: "monotone" | "linear";
+  /** An area's or bar's fill opacity. Default: 1 for a bar, 0.55 for a stacked area
+   *  (the layers must stay tellable apart where they meet) and 0.2 for a single one. */
+  fillOpacity?: number;
 }
+
+/** What a series draws. See {@link SeriesChartSeries.type}. */
+export type SeriesChartType = "line" | "bar" | "area";
+
+/** One point of a series, as a `dot` function is handed it. */
+export interface SeriesChartPoint {
+  /** The series' key. */
+  key: string;
+  /** The row's position in `rows`. */
+  index: number;
+  /** The caller's own row, with everything the chart did not plot still in it. */
+  row: SeriesChartRow;
+  /** The abscissa in the caller's terms: the number, the category, or (time) a Date. */
+  x: SeriesChartXValue;
+  value: number;
+  /** Where the point is drawn, in the chart's pixels. */
+  cx: number;
+  cy: number;
+  /** The series' paint, `var(--color-<key>)`. */
+  color: string;
+}
+
+/** A row of a series chart: one abscissa value and the series' values at it. Anything
+ *  else in it (a raw ISO period for a drilldown) rides along untouched and is handed
+ *  back in {@link SeriesChartPoint.row} and {@link SeriesChartHit.row}. */
+export type SeriesChartRow = Readonly<Record<string, unknown>>;
+
+/** An abscissa value: a number (`x.type: "number"`), a category (a string, a number or
+ *  a Date standing for a period), or a time (a Date, epoch ms or an ISO string). */
+export type SeriesChartXValue = number | string | Date;
+
+/** Ticks a caller decides — a list, or a function of the domain on show, so a zoom
+ *  window gets ticks from the same rule instead of none. */
+export type SeriesChartTickValues<T> =
+  | readonly T[]
+  | ((domain: [number, number]) => readonly T[] | undefined);
 
 interface SeriesChartAxisShape {
   id: string;
@@ -75,6 +174,21 @@ interface SeriesChartAxisShape {
    *  tooltip gets it from `valueFormat`. Default: `Intl.NumberFormat` in the kit's
    *  locale, up to two fraction digits. */
   format?: (value: number) => string;
+  /**
+   * The tick values, instead of the round ones the chart picks. For a grid the DATA
+   * dictates — keksdose's price axes tick on whole cents (`pricePaddedDomain`), where a
+   * 1/2/5 ladder would print €1.25 under a formatter that can only say €1.3. Values
+   * outside the domain on show are dropped; a function is asked again for every zoom
+   * window, so the cent grid can refine with it.
+   */
+  tickValues?: SeriesChartTickValues<number>;
+  /**
+   * Keep zero inside the fitted band. On by default for an axis carrying a bar or an
+   * area — their length IS the value, and a truncated baseline draws 40 as three times
+   * 20 — and off for lines, whose shape is the point (a stock price anchored at zero is
+   * a hairline). A pinned `domain` is left alone either way.
+   */
+  includeZero?: boolean;
 }
 
 /**
@@ -89,21 +203,69 @@ interface SeriesChartAxisShape {
 export type SeriesChartAxis = SeriesChartAxisShape &
   ({ title: string; hide?: false } | { title?: string; hide: true });
 
+/**
+ * What a tick or the tooltip heading of the abscissa is handed besides its position —
+ * the value in the caller's own terms, which on a category or time axis is not the
+ * number the plot runs on.
+ */
+export interface SeriesChartXTick {
+  /** The number itself, the row's category, or (time) a Date. */
+  value: SeriesChartXValue;
+  /** The slot, on a category axis: the row's index in `rows`. */
+  index?: number;
+  /** On a time axis: what one step of the ticks on show is, so a label can say as much
+   *  as it means — a month start as "Mar 26", a midnight as "14 Mar". */
+  unit?: TimeTickUnit;
+}
+
 export interface SeriesChartX {
+  /**
+   * What the abscissa is.
+   *
+   * - `"number"` (the default) — a number line, and all a chart before 0.8.0 could draw.
+   * - `"category"` — PERIODS or names, one evenly spaced slot per row, in row order:
+   *   keksdose's months, quarters and budget categories, which it used to hand recharts
+   *   preformatted. The values stay the caller's own — `"2026-05"`, a Date for the
+   *   month, a category name — and need not be sortable, unique or numeric. The plot
+   *   runs on the slot INDEX, which is what lets it zoom: a drag across the third to the
+   *   ninth month shows those months, a tick on each whole slot and the bars clipped at
+   *   the edge. What else zooms depends on the MARKS, not the axis — see `zoomAxes`.
+   * - `"time"` — real TIME: a Date, epoch ms or an ISO string per row, placed by when
+   *   it happened. keksdose's price history and cash buffer, where a slot per row would
+   *   draw two receipts a day apart and two five months apart the same width. Ticks fall
+   *   on calendar boundaries (midnights, Mondays, month and quarter starts, new years)
+   *   in local time; a date-only ISO string is LOCAL midnight, not the UTC one
+   *   `new Date("2026-05-01")` gives, which lands on the previous day west of Greenwich.
+   *   Zooms like a number line.
+   */
+  type?: "number" | "category" | "time";
   /** Row key of the abscissa. Default `"x"`, which is what {@link mergeSeries} writes. */
   key?: string;
   /** What the abscissa is, with its unit. Drawn under the axis. */
   title?: string;
-  /** A tick, formatted — bare, like the y axes'. */
-  format?: (value: number) => string;
+  /**
+   * A tick, formatted — bare, like the y axes'.
+   *
+   * `value` is the POSITION on the number line the plot runs on — the number itself,
+   * epoch ms, or the slot index — so the one-argument formatters every chart before
+   * 0.8.0 passes keep their meaning, and a time axis' `(ms) => …` is the tickFormatter
+   * keksdose already has. The caller's own value (the category, the Date) is `tick.value`.
+   * Default: the kit's number format; a category as is (a number formatted, a Date as a
+   * medium date); a time as much of the date as the tick step means.
+   */
+  format?: (value: number, tick: SeriesChartXTick) => string;
   /**
    * Whether this chart prints the abscissa's ticks. On by default; off for every chart
    * of a stack sharing one x window but the bottom one, which prints them for all. It
    * costs no alignment: the x mapping is decided by the margins and the y bands.
    */
   ticks?: boolean;
-  /** The tooltip's heading. Default: the abscissa value through `format`. */
-  label?: (value: number) => ReactNode;
+  /** The tooltip's heading. Default: `format` — or, on a time axis, a medium date (with
+   *  the time for hourly data), since a tick's "Mar 26" is not which day it was. */
+  label?: (value: number, tick: SeriesChartXTick) => ReactNode;
+  /** The ticks instead of the automatic ones, in the caller's terms: numbers, the
+   *  categories to label, or instants. See `SeriesChartAxis.tickValues`. */
+  tickValues?: SeriesChartTickValues<SeriesChartXValue>;
 }
 
 /**
@@ -124,9 +286,99 @@ export interface SeriesChartSpan {
   color?: string;
 }
 
+/** The colours a reference or a marker can take by name — the kit's semantic tokens,
+ *  so a threshold reads the same on every chart and flips with the theme. */
+export type SeriesChartTone =
+  | "muted"
+  | "brand"
+  | "income"
+  | "expense"
+  | "net"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info";
+
+const TONE_COLOR: Record<SeriesChartTone, string> = {
+  muted: "var(--text-muted)",
+  brand: "var(--brand)",
+  income: "var(--money-income)",
+  expense: "var(--money-expense)",
+  net: "var(--money-net)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger: "var(--danger)",
+  info: "var(--info)",
+};
+
+/**
+ * A line across the whole plot at one value: a threshold, a target, an event.
+ *
+ * keksdose's cash buffer draws "one month of runway" across at y = 30 and the projected
+ * depletion date down at its x. Unlike a {@link SeriesChartSpan}, which closes a shape
+ * in data coordinates, a reference spans the plot, whatever the zoom.
+ *
+ * A reference is part of the FITTED band: one outside the data widens the axis to show
+ * it, because a threshold the reader cannot see is not a threshold. A pinned domain or a
+ * zoom window does not widen — there it is discarded when outside, like a span.
+ */
+export interface SeriesChartReference {
+  /** Distinct within the chart. Default: its position in the list. */
+  key?: string;
+  /** `"x"` for a vertical line at an abscissa, otherwise the id of the y axis the value
+   *  is measured on. Default `"y"`, the single one — so no y axis may be called `"x"`. */
+  axis?: string;
+  /** An abscissa in the x axis' own terms (a category, a Date) for `axis: "x"`, a
+   *  number on that axis otherwise. A category the rows do not have draws nothing. */
+  value: SeriesChartXValue;
+  /** Written along the line, inside the plot at its top-left. SVG text: a string. */
+  label?: string;
+  /** Default `"muted"`. `color` wins over it. */
+  tone?: SeriesChartTone;
+  color?: string;
+  /** Which of `STROKE_PATTERNS`. Default 1, dashed: a reference is not data, and a
+   *  solid line reads as a series nobody put in the legend. */
+  dash?: number;
+}
+
+/**
+ * A single labelled point — today's figure on keksdose's cash buffer, the month the
+ * projection runs dry. For a mark on EVERY sample, or on the samples that meet a test,
+ * use the series' `dot` instead; a marker is for a point that is a fact of its own.
+ * Fitted like a reference: it widens the band it would otherwise fall outside of.
+ */
+export interface SeriesChartMarker {
+  /** Distinct within the chart. Default: its position in the list. */
+  key?: string;
+  /** In the x axis' own terms, like a reference's `value`. */
+  x: SeriesChartXValue;
+  y: number;
+  /** The y axis `y` is measured on. Default `"y"`. */
+  axis?: string;
+  /** Written above the point. */
+  label?: string;
+  /** Default `"brand"`. `color` wins over it. */
+  tone?: SeriesChartTone;
+  color?: string;
+  /** Radius in px. Default 4.5. */
+  r?: number;
+}
+
+/** What a click on the plot picked. */
+export interface SeriesChartHit {
+  /** The row's position in `rows`. */
+  index: number;
+  /** The caller's own row — with its `rawPeriod`, id or whatever the drilldown needs. */
+  row: SeriesChartRow;
+  x: SeriesChartXValue;
+  /** The series, when the click landed ON a bar. A click anywhere else picks the slot
+   *  (the period), not a series. */
+  key?: string;
+}
+
 export interface SeriesChartProps {
   /** One row per abscissa value. A missing key is a hole (see `connectNulls`). */
-  rows: Record<string, number>[];
+  rows: readonly SeriesChartRow[];
   series: SeriesChartSeries[];
   /** Default: one untitled axis, `"y"`. */
   axes?: SeriesChartAxis[];
@@ -149,6 +401,23 @@ export interface SeriesChartProps {
    */
   animationMs?: number;
   spans?: SeriesChartSpan[];
+  /** Lines across the plot at one value. */
+  references?: SeriesChartReference[];
+  /** Single labelled points. */
+  markers?: SeriesChartMarker[];
+  /**
+   * Which axes a drag may zoom: `"both"`, `"x"`, `"y"` or `"none"`. Default: read off
+   * the marks — see `defaultZoomAxes` (lines both, areas x, bars none). An axis carrying
+   * bars or areas never takes a DRAGGED y window: it refits to the x window, from zero.
+   * Ignored by `StaticSeriesChart`, which does not zoom.
+   */
+  zoomAxes?: ZoomAxesSetting;
+  /**
+   * A click on the plot: the slot under the pointer, and the series when it landed on a
+   * bar. keksdose's drilldowns — a payee's month, a budget line, a spending category.
+   * A drag that zoomed is not a click.
+   */
+  onPointClick?: (hit: SeriesChartHit) => void;
   /** Supplied by `withChartZoom` and by nothing else. */
   zoom?: ZoomBinding;
   /** Per-chart strings over `<UiKitProvider labels={{ seriesChart }}>`. */
@@ -275,6 +544,56 @@ export function seriesKey(...parts: (string | number)[]): string {
   return /^[A-Za-z_]/.test(key) ? key : `_${key}`;
 }
 
+/**
+ * The band an axis carrying bars or areas draws: the data's extent with ZERO in it,
+ * padded only on the sides that are not zero — bars standing on a frame's bottom edge,
+ * not floating four per cent above it on a band of air nobody asked for.
+ * `undefined` when there is nothing to fit.
+ */
+export function anchoredBand(extent: readonly [number, number] | undefined): [number, number] | undefined {
+  if (!extent) return undefined;
+  const low = Math.min(0, extent[0]);
+  const high = Math.max(0, extent[1]);
+  const pad = (high - low) * AUTO_PAD || 1;
+  return [low < 0 ? low - pad : 0, high > 0 ? high + pad : 0];
+}
+
+/**
+ * Series with their colours settled BEFORE any are switched off.
+ *
+ * A series with no `color` takes `paletteFor(its position)` — and a legend toggle that
+ * hands the chart a shorter list moves every later series one position up, repainting
+ * it in its neighbour's colour on each click. Resolving the colours on the full list
+ * and filtering after keeps each series in the colour its legend entry shows.
+ */
+export function visibleSeries(
+  series: readonly SeriesChartSeries[],
+  hidden: ReadonlySet<string>,
+): SeriesChartSeries[] {
+  return series
+    .map((entry, index) => ({ ...entry, color: entry.color ?? paletteFor(index) }))
+    .filter((entry) => !hidden.has(entry.key));
+}
+
+/**
+ * The `ToggleLegend` entries for a chart's FULL series list — colours resolved the way
+ * the chart resolves them, and a stroke mark for a line drawn in a pattern (dashed,
+ * step) so the key promises the stroke the plot draws. A bar or an area is a swatch.
+ * Pair with {@link visibleSeries} for the chart itself.
+ */
+export function seriesLegendEntries(series: readonly SeriesChartSeries[]): LegendEntry[] {
+  return series.map((entry, index) => {
+    const dash = entry.step ? STEP_DASH : (entry.dash ?? (entry.dashed ? 1 : 0));
+    const line = (entry.type ?? "line") === "line";
+    return {
+      key: entry.key,
+      label: entry.label,
+      color: entry.color ?? paletteFor(index),
+      ...(line && dash !== 0 ? { marker: "stroke" as const, dash } : {}),
+    };
+  });
+}
+
 /** The number format every default falls back to. */
 function useDefaultFormat(localeProp: string | undefined): (value: number) => string {
   const locale = useKitLocale(localeProp);
@@ -287,14 +606,145 @@ function useDefaultFormat(localeProp: string | undefined): (value: number) => st
 /** The Y-axis list a chart draws when the caller gave none. */
 const ONE_UNTITLED_AXIS: SeriesChartAxis[] = [{ id: DEFAULT_Y_AXIS, title: "" }];
 
+/** Where a category or time chart keeps each row's plotted position. Not the caller's
+ *  key: that one still holds their own value, which `format` and a hit hand back. */
+const PLOTTED_X = "__seriesChartX";
+
+/** A finite number, or `undefined` — the only thing a row cell counts as a sample. */
+const finite = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isFinite(value) ? value : undefined;
+
+/** A time value as epoch ms. A date-only ISO string is LOCAL midnight (see
+ *  `SeriesChartX.type`); anything unreadable is `undefined`, i.e. not plotted. */
+function toTime(value: unknown): number | undefined {
+  if (value instanceof Date) return finite(value.getTime());
+  if (typeof value === "number") return finite(value);
+  if (typeof value !== "string") return undefined;
+  const day = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(value);
+  if (day) return new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3] ?? 1)).getTime();
+  return finite(Date.parse(value));
+}
+
+/** A category's identity, so a Date matches another Date of the same instant. */
+const categoryId = (value: unknown) =>
+  value instanceof Date ? `d:${value.getTime()}` : `${typeof value}:${String(value)}`;
+
 /**
- * {@link SeriesChart} without the zoom: the same picture, no drag layer, no reset
- * button. For a thumbnail, a print view, or a chart the consumer wraps in its own
- * interaction.
+ * The abscissa, reduced to a number line — which is all the plot, the ticks and the
+ * zoom ever deal in. A number stays itself; a category becomes its slot index; a time
+ * its epoch ms. Everything the caller sees (ticks, tooltip, hits) is turned back.
  */
-export function StaticSeriesChart({
-  rows,
-  x = {},
+interface XModel {
+  kind: "number" | "category" | "time";
+  /** The caller's key, still holding their value. */
+  sourceKey: string;
+  /** The key the plot reads. The same as `sourceKey` on a number line. */
+  plotKey: string;
+  /** The rows as plotted. The caller's own on a number line. */
+  rows: readonly SeriesChartRow[];
+  /** The caller's rows, which dots and hits hand back. */
+  source: readonly SeriesChartRow[];
+  position: (value: unknown) => number | undefined;
+  valueAt: (position: number) => SeriesChartXValue;
+}
+
+function xModel(rows: readonly SeriesChartRow[], x: SeriesChartX): XModel {
+  const sourceKey = x.key ?? "x";
+  if (x.type === "category") {
+    const slots = new Map<string, number>();
+    rows.forEach((row, index) => {
+      const id = categoryId(row[sourceKey]);
+      if (!slots.has(id)) slots.set(id, index);
+    });
+    return {
+      kind: "category",
+      sourceKey,
+      plotKey: PLOTTED_X,
+      rows: rows.map((row, index) => ({ ...row, [PLOTTED_X]: index })),
+      source: rows,
+      position: (value) => slots.get(categoryId(value)),
+      valueAt: (position) => rows[Math.round(position)]?.[sourceKey] as SeriesChartXValue,
+    };
+  }
+  if (x.type === "time") {
+    return {
+      kind: "time",
+      sourceKey,
+      plotKey: PLOTTED_X,
+      rows: rows.map((row) => ({ ...row, [PLOTTED_X]: toTime(row[sourceKey]) })),
+      source: rows,
+      position: toTime,
+      valueAt: (position) => new Date(position),
+    };
+  }
+  return {
+    kind: "number",
+    sourceKey,
+    plotKey: sourceKey,
+    rows,
+    source: rows,
+    position: finite,
+    valueAt: (position) => position,
+  };
+}
+
+/** Caller ticks, as positions inside the domain on show. */
+function resolveTicks<T>(
+  values: SeriesChartTickValues<T> | undefined,
+  domain: [number, number] | undefined,
+  position: (value: T) => number | undefined,
+): number[] | undefined {
+  if (!values || !domain) return undefined;
+  const list = typeof values === "function" ? values(domain) : values;
+  if (!list) return undefined;
+  const slack = (domain[1] - domain[0]) * 1e-9;
+  return list
+    .map(position)
+    .filter((at): at is number => at !== undefined && at >= domain[0] - slack && at <= domain[1] + slack);
+}
+
+/** A low/high pair widened by some values, or `undefined` if there is still none. */
+function extend(
+  span: readonly [number, number] | undefined,
+  values: readonly (number | undefined)[],
+): [number, number] | undefined {
+  let out: [number, number] | undefined = span ? [span[0], span[1]] : undefined;
+  for (const value of values) {
+    if (value === undefined || !Number.isFinite(value)) continue;
+    out = out ? [Math.min(out[0], value), Math.max(out[1], value)] : [value, value];
+  }
+  return out;
+}
+
+/** How a time tick is written, by what one step of the ticks is. */
+const TIME_TICK_FORMAT: Record<TimeTickUnit, Intl.DateTimeFormatOptions> = {
+  hour: { hour: "2-digit", minute: "2-digit" },
+  day: { day: "numeric", month: "short" },
+  month: { month: "short", year: "2-digit" },
+  year: { year: "numeric" },
+};
+
+/** The two numbers every mark type needs to agree on for the chart to read as one. */
+const LINE_WIDTH = 2;
+const STEP_WIDTH = 1.5;
+
+/** Bars round their FREE end only, and a stacked bar has none but the top layer's —
+ *  which recharts cannot tell apart per cell, so stacks stay square. */
+const BAR_RADIUS: [number, number, number, number] = [3, 3, 0, 0];
+
+interface PlotProps extends Omit<SeriesChartProps, "rows" | "x"> {
+  /** The rows AS PLOTTED — what the zoom fits on. The caller's are `model.source`. */
+  rows: readonly SeriesChartRow[];
+  /** What the zoom fits on: the plotted key. */
+  x: { key: string };
+  model: XModel;
+  xAxis: SeriesChartX;
+}
+
+/** The chart proper, over an abscissa already reduced to numbers (see {@link XModel}). */
+function SeriesPlot({
+  model,
+  xAxis,
   series,
   axes = ONE_UNTITLED_AXIS,
   valueFormat,
@@ -303,18 +753,22 @@ export function StaticSeriesChart({
   empty,
   animationMs = 0,
   spans,
+  references,
+  markers,
+  onPointClick,
   zoom,
   labels: labelsProp,
-  locale,
+  locale: localeProp,
   className,
-}: SeriesChartProps) {
+}: PlotProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
-  const number = useDefaultFormat(locale);
+  const locale = useKitLocale(localeProp);
+  const number = useDefaultFormat(localeProp);
 
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
   // the moment a legend entry was switched off.
-  if (!rows.length || !series.length) {
+  if (!model.source.length || !series.length) {
     return (
       <div className={cn("flex w-full items-center justify-center px-2 text-center", height)}>
         {empty !== undefined ? (
@@ -326,8 +780,10 @@ export function StaticSeriesChart({
     );
   }
 
-  const xKey = x.key ?? "x";
-  const xFormat = x.format ?? number;
+  const x = xAxis;
+  const xKey = model.plotKey;
+  const plotted = model.rows;
+  const rows = model.source;
   const config: ChartConfig = Object.fromEntries(
     series.map((entry, index) => [
       entry.key,
@@ -346,29 +802,184 @@ export function StaticSeriesChart({
   // gutter on its side, so a margin beside one is a second gutter. What remains is the
   // overhang of the first/last x tick where no y axis covers it.
   const margin = {
-    top: 8,
+    // Room for a marker's label over a point at the top of the band.
+    top: markers?.some((marker) => marker.label) ? 22 : 8,
     right: onRight ? 0 : 10,
     left: onLeft ? 0 : 10,
     // Under the ticks, not under the whole axis: whatever comes next owns the gap.
     bottom: x.title ? 18 : 2,
   };
 
+  const refs = references ?? [];
+  const xRefs = refs.filter((ref) => ref.axis === "x");
+  const yRefs = refs.filter((ref) => ref.axis !== "x");
+  const xPos = (value: SeriesChartXValue) => model.position(value);
+
   // Fitted with air around it, unless the reader has zoomed or the caller pinned it.
   // Ticks are the round values INSIDE whichever domain that is (see
   // `series-chart-ticks.ts`), so a zoom window still gets round numbers, just finer.
-  const fittedX = zoom?.xDomain ?? paddedDomain(rows.map((row) => row[xKey]));
-  const fittedY = (axis: SeriesChartAxis) =>
-    zoom?.yDomains[axis.id] ??
-    axis.domain ??
-    paddedDomain(
-      series
-        .filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id)
-        .flatMap((entry) => rows.map((row) => row[entry.key])),
+  // A category axis is its slots, each half a slot of air either side — room for a
+  // bar, and the tick under the middle of it.
+  const fittedX: [number, number] | undefined =
+    zoom?.xDomain ??
+    (model.kind === "category"
+      ? [-0.5, rows.length - 0.5]
+      : padBand(
+          ...(extend(
+            undefined,
+            [
+              ...plotted.map((row) => finite(row[xKey])),
+              ...xRefs.map((ref) => xPos(ref.value)),
+              ...(markers ?? []).map((marker) => xPos(marker.x)),
+            ],
+          ) ?? [Infinity, -Infinity]),
+        ));
+
+  const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX) : undefined;
+  const xTicks =
+    resolveTicks(x.tickValues, fittedX, xPos) ??
+    (model.kind === "category"
+      ? categoryTicks(fittedX, rows.length)
+      : model.kind === "time"
+        ? timeUnit?.ticks
+        : niceTicks(fittedX));
+
+  // Ticks and the tooltip heading, back in the caller's terms.
+  const timeFormat = new Intl.DateTimeFormat(locale, TIME_TICK_FORMAT[timeUnit?.unit ?? "day"]);
+  const dateFormat = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    ...(timeUnit?.unit === "hour" ? { timeStyle: "short" } : {}),
+  });
+  const categoryText = (value: SeriesChartXValue) =>
+    value instanceof Date
+      ? dateFormat.format(value)
+      : typeof value === "number"
+        ? number(value)
+        : String(value ?? "");
+  const tickAt = (position: number): SeriesChartXTick => ({
+    value: model.valueAt(position),
+    ...(model.kind === "category" ? { index: Math.round(position) } : {}),
+    ...(timeUnit ? { unit: timeUnit.unit } : {}),
+  });
+  const defaultFormat = (position: number, tick: SeriesChartXTick) =>
+    model.kind === "category"
+      ? categoryText(tick.value)
+      : model.kind === "time"
+        ? timeFormat.format(position)
+        : number(position);
+  const format = x.format ?? defaultFormat;
+  const xFormat = (position: number) => format(position, tickAt(position));
+  const label =
+    x.label ??
+    (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
+  const xLabel = (position: number) => label(position, tickAt(position));
+
+  const source: ZoomFitSource = {
+    rows: plotted,
+    series,
+    axes,
+    xKey,
+  };
+  // An axis a bar or an area stands on is read from zero (see `includeZero`).
+  const anchored = (axis: SeriesChartAxis) =>
+    axis.includeZero ??
+    series.some(
+      (entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id && (entry.type ?? "line") !== "line",
     );
+  const onAxis = (axisId: string) => (ref: { axis?: string }) => (ref.axis ?? DEFAULT_Y_AXIS) === axisId;
+  const fittedY = (axis: SeriesChartAxis): [number, number] | undefined => {
+    const own = [
+      ...yRefs.filter(onAxis(axis.id)).map((ref) => finite(ref.value)),
+      ...(markers ?? []).filter(onAxis(axis.id)).map((marker) => finite(marker.y)),
+    ];
+    if (anchored(axis)) {
+      // Never a dragged y window: refitted to the x window, still from zero.
+      if (zoom?.xDomain) return anchoredBand(axisExtent(source, axis.id, zoom.xDomain)) ?? axis.domain;
+      return axis.domain ?? anchoredBand(extend(axisExtent(source, axis.id), own));
+    }
+    return (
+      zoom?.yDomains[axis.id] ??
+      axis.domain ??
+      padBand(...(extend(axisExtent(source, axis.id), own) ?? [Infinity, -Infinity]))
+    );
+  };
+
+  // The abscissa of a row in the caller's terms: a category is its slot, which is
+  // its index; a time or a number is read back from where it was plotted.
+  const xOf = (index: number): SeriesChartXValue =>
+    model.kind === "category"
+      ? (rows[index][model.sourceKey] as SeriesChartXValue)
+      : model.valueAt(finite(plotted[index][xKey]) ?? NaN);
+  const hitAt = (index: number, key?: string): SeriesChartHit | undefined => {
+    const row = rows[index];
+    return row ? { index, row, x: xOf(index), key } : undefined;
+  };
+
+  const dotFor = (entry: SeriesChartSeries) => {
+    const want = entry.dot;
+    if (!want) return false;
+    const color = `var(--color-${entry.key})`;
+    return (props: { cx?: number; cy?: number; index: number }) => {
+      const { cx, cy, index } = props;
+      const value = finite(rows[index]?.[entry.key]);
+      if (value === undefined || !Number.isFinite(cx) || !Number.isFinite(cy)) return <g />;
+      const point: SeriesChartPoint = {
+        key: entry.key,
+        index,
+        row: rows[index],
+        x: xOf(index),
+        value,
+        cx: cx!,
+        cy: cy!,
+        color,
+      };
+      const drawn = want === true ? true : want(point);
+      if (drawn === true) {
+        return (
+          <circle
+            className="recharts-dot"
+            cx={cx}
+            cy={cy}
+            r={3}
+            fill={color}
+            // Ringed in the surface, so a dot on a crossing line still reads as a dot.
+            stroke="var(--bg-surface)"
+            strokeWidth={1.5}
+          />
+        );
+      }
+      if (drawn === false || drawn == null) return <g />;
+      return <g>{drawn}</g>;
+    };
+  };
+
+  const animation = {
+    isAnimationActive: animationMs > 0,
+    animationDuration: animationMs,
+    animationEasing: "ease-out" as const,
+  };
 
   return (
-    <ChartContainer config={config} className={cn("w-full", height, className)}>
-      <LineChart data={rows} margin={margin}>
+    <ChartContainer
+      config={config}
+      className={cn("w-full", height, className, onPointClick && "cursor-pointer")}
+    >
+      <ComposedChart
+        data={plotted as Record<string, unknown>[]}
+        margin={margin}
+        // Positive and negative layers stacked apart, as `axisExtent` fits them — a
+        // month's expenses hang below the axis instead of eating into its income.
+        stackOffset="sign"
+        onClick={
+          onPointClick
+            ? (state) => {
+                const index = Number(state?.activeTooltipIndex ?? state?.activeIndex);
+                const hit = Number.isInteger(index) ? hitAt(index) : undefined;
+                if (hit) onPointClick(hit);
+              }
+            : undefined
+        }
+      >
         {/* Both ways: a measurement plot is read by putting a ruler on it, and a
             horizontal-only grid answers half of those questions. */}
         <CartesianGrid yAxisId={gridAxis} />
@@ -376,11 +987,13 @@ export function StaticSeriesChart({
           dataKey={xKey}
           // Numeric, not categorical: a measured sweep is unevenly spaced, and a
           // category axis would straighten exactly the curvature the chart is for.
+          // A category chart is numeric too — on the slot index — which is what lets
+          // it zoom and keeps its ticks under the middle of each bar group.
           type="number"
           domain={fittedX ?? ["dataMin", "dataMax"]}
-          ticks={niceTicks(fittedX)}
+          ticks={xTicks}
           // Clip the lines to a zoom window instead of recharts widening it back out.
-          allowDataOverflow={zoom?.xDomain !== undefined}
+          allowDataOverflow={zoom?.xDomain !== undefined || model.kind === "category"}
           tickLine={false}
           axisLine={false}
           minTickGap={32}
@@ -388,7 +1001,7 @@ export function StaticSeriesChart({
           // With neither ticks nor title there is nothing to reserve the band for, and
           // recharts' own 30 px would leave a gap under every chart of a stack.
           height={x.ticks === false && !x.title ? 4 : undefined}
-          tickFormatter={xFormat}
+          tickFormatter={(value: number) => xFormat(Number(value))}
         >
           {x.title && (
             <Label
@@ -401,14 +1014,17 @@ export function StaticSeriesChart({
         </XAxis>
         {axes.map((axis) => {
           const domain = fittedY(axis);
+          const zoomed = anchored(axis)
+            ? zoom?.xDomain !== undefined
+            : zoom?.yDomains[axis.id] !== undefined;
           return (
             <YAxis
               key={axis.id}
               yAxisId={axis.id}
               hide={axis.hide}
               domain={domain}
-              ticks={niceTicks(domain)}
-              allowDataOverflow={zoom?.yDomains[axis.id] !== undefined}
+              ticks={resolveTicks(axis.tickValues, domain, finite) ?? niceTicks(domain)}
+              allowDataOverflow={zoomed}
               orientation={axis.orientation ?? "left"}
               width={axisBandWidth(axis.width, Boolean(axis.title) && !axis.hide)}
               tickLine={false}
@@ -437,29 +1053,77 @@ export function StaticSeriesChart({
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelFormatter={(value) => (x.label ?? xFormat)(Number(value))}
+              labelFormatter={(value) => xLabel(Number(value))}
               valueFormatter={valueFormat ?? number}
             />
           }
         />
-        {series.map((entry) => (
-          <Line
-            key={entry.key}
-            yAxisId={entry.axis ?? DEFAULT_Y_AXIS}
-            type={entry.step ? "stepAfter" : "monotone"}
-            dataKey={entry.key}
-            stroke={`var(--color-${entry.key})`}
-            strokeWidth={entry.step ? 1.5 : 2}
-            strokeDasharray={strokeDash(
-              entry.step ? STEP_DASH : (entry.dash ?? (entry.dashed ? 1 : 0)),
-            )}
-            dot={false}
-            connectNulls={connectNulls}
-            isAnimationActive={animationMs > 0}
-            animationDuration={animationMs}
-            animationEasing="ease-out"
-          />
-        ))}
+        {series.map((entry) => {
+          const type = entry.type ?? "line";
+          const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
+          const color = `var(--color-${entry.key})`;
+          const dash = strokeDash(entry.step ? STEP_DASH : (entry.dash ?? (entry.dashed ? 1 : 0)));
+          const curve = entry.step ? "stepAfter" : (entry.curve ?? "monotone");
+          const width = entry.strokeWidth ?? (entry.step ? STEP_WIDTH : LINE_WIDTH);
+          if (type === "bar") {
+            return (
+              <Bar
+                key={entry.key}
+                yAxisId={yAxisId}
+                dataKey={entry.key}
+                stackId={entry.stack}
+                fill={color}
+                fillOpacity={entry.fillOpacity}
+                radius={entry.stack === undefined ? BAR_RADIUS : 0}
+                onClick={
+                  onPointClick
+                    ? (_bar, index, event) => {
+                        // The plot's own click would report the same slot again,
+                        // without the series.
+                        event.stopPropagation();
+                        const hit = hitAt(index, entry.key);
+                        if (hit) onPointClick(hit);
+                      }
+                    : undefined
+                }
+                {...animation}
+              />
+            );
+          }
+          if (type === "area") {
+            return (
+              <Area
+                key={entry.key}
+                yAxisId={yAxisId}
+                type={curve}
+                dataKey={entry.key}
+                stackId={entry.stack}
+                stroke={color}
+                strokeWidth={width}
+                strokeDasharray={dash}
+                fill={color}
+                fillOpacity={entry.fillOpacity ?? (entry.stack !== undefined ? 0.55 : 0.2)}
+                dot={dotFor(entry)}
+                connectNulls={connectNulls}
+                {...animation}
+              />
+            );
+          }
+          return (
+            <Line
+              key={entry.key}
+              yAxisId={yAxisId}
+              type={curve}
+              dataKey={entry.key}
+              stroke={color}
+              strokeWidth={width}
+              strokeDasharray={dash}
+              dot={dotFor(entry)}
+              connectNulls={connectNulls}
+              {...animation}
+            />
+          );
+        })}
         {spans?.map((span) => (
           <ReferenceLine
             key={span.key}
@@ -475,15 +1139,95 @@ export function StaticSeriesChart({
             ifOverflow="discard"
           />
         ))}
+        {refs.map((ref, index) => {
+          const vertical = ref.axis === "x";
+          const at = vertical ? xPos(ref.value) : finite(ref.value);
+          if (at === undefined) return null;
+          const color = ref.color ?? TONE_COLOR[ref.tone ?? "muted"];
+          return (
+            <ReferenceLine
+              key={ref.key ?? `reference-${index}`}
+              // A vertical line still needs a y axis to be drawn against, and every
+              // axis here is named — the grid's is always there.
+              yAxisId={vertical ? gridAxis : (ref.axis ?? DEFAULT_Y_AXIS)}
+              {...(vertical ? { x: at } : { y: at })}
+              stroke={color}
+              strokeWidth={1}
+              strokeDasharray={strokeDash(ref.dash ?? 1)}
+              ifOverflow="discard"
+              label={
+                ref.label
+                  ? {
+                      value: ref.label,
+                      position: "insideTopLeft",
+                      fontSize: 10,
+                      fill: color,
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+        {markers?.map((marker, index) => {
+          const at = xPos(marker.x);
+          if (at === undefined || finite(marker.y) === undefined) return null;
+          const color = marker.color ?? TONE_COLOR[marker.tone ?? "brand"];
+          return (
+            <ReferenceDot
+              key={marker.key ?? `marker-${index}`}
+              yAxisId={marker.axis ?? DEFAULT_Y_AXIS}
+              x={at}
+              y={marker.y}
+              r={marker.r ?? 4.5}
+              fill={color}
+              stroke="var(--bg-surface)"
+              strokeWidth={1.5}
+              ifOverflow="discard"
+              label={
+                marker.label
+                  ? {
+                      value: marker.label,
+                      position: "top",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--text-primary)",
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
         {zoom?.layer}
-      </LineChart>
+      </ComposedChart>
     </ChartContainer>
   );
+}
+
+const ZoomablePlot = withChartZoom(SeriesPlot);
+
+/** The caller's props, with the abscissa reduced to numbers for the plot and the zoom. */
+function plotProps(props: SeriesChartProps): PlotProps {
+  const x = props.x ?? {};
+  const model = xModel(props.rows, x);
+  return { ...props, rows: model.rows, x: { key: model.plotKey }, model, xAxis: x };
+}
+
+/**
+ * {@link SeriesChart} without the zoom: the same picture, no drag layer, no reset
+ * button. For a thumbnail, a print view, or a chart the consumer wraps in its own
+ * interaction.
+ */
+export function StaticSeriesChart(props: SeriesChartProps) {
+  return <SeriesPlot {...plotProps(props)} />;
 }
 
 /**
  * The series chart, zoomable. Drag across the plot to zoom (the drag's shape picks the
  * axes), double-click or press the reset button to go back; wrap several in
- * `SharedXZoom` to move their x windows together.
+ * `SharedXZoom` to move their x windows together. Which axes zoom depends on the marks
+ * — see {@link SeriesChartProps.zoomAxes}.
  */
-export const SeriesChart = withChartZoom(StaticSeriesChart);
+export function SeriesChart(props: SeriesChartProps) {
+  // The zoom fits the PLOTTED rows — slot indices and epoch ms, not the caller's labels.
+  return <ZoomablePlot {...plotProps(props)} />;
+}
