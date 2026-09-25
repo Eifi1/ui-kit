@@ -20,6 +20,13 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.8.1](https://github.com/Eifi1/ui-kit/compare/v0.8.0...v0.8.1) (2026-09-25)
+
+### Fixed
+
+* **full-bleed-dialog:** only the caller's own preventDefault claims Escape ([c9cbb76](https://github.com/Eifi1/ui-kit/commit/c9cbb767c084877091855f434405c2c61ea2dd1f))
+* **treemap:** pass labelColor through to the cells ([f057719](https://github.com/Eifi1/ui-kit/commit/f057719454e20d67d5150242a6628f8301bc84bc))
+
 ## [0.8.0](https://github.com/Eifi1/ui-kit/compare/v0.7.1...v0.8.0) (2026-09-25)
 
 ### Added
