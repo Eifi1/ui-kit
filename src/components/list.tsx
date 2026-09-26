@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useContext } from "react";
+import { createContext, forwardRef, useContext, useId } from "react";
 import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -96,10 +96,10 @@ export interface ListItemLinkProps {
   [key: `data-${string}`]: unknown;
 }
 
-const PAD: Record<ListDensity, { target: string; actions: string; gap: string }> = {
-  compact: { target: "gap-2 px-2 py-1.5", actions: "pe-1.5", gap: "gap-0.5" },
-  default: { target: "gap-3 px-3 py-2.5", actions: "pe-2", gap: "gap-1" },
-  comfortable: { target: "gap-3 px-4 py-3", actions: "pe-3", gap: "gap-1" },
+const PAD: Record<ListDensity, { target: string; actions: string; gap: string; body: string }> = {
+  compact: { target: "gap-2 px-2 py-1.5", actions: "pe-1.5", gap: "gap-0.5", body: "px-2 pb-1.5" },
+  default: { target: "gap-3 px-3 py-2.5", actions: "pe-2", gap: "gap-1", body: "px-3 pb-2.5" },
+  comfortable: { target: "gap-3 px-4 py-3", actions: "pe-3", gap: "gap-1", body: "px-4 pb-3" },
 };
 
 const TARGET_RING =
@@ -135,6 +135,26 @@ interface ListItemBaseProps {
    * on "Copy" from selecting the row.
    */
   actions?: ReactNode;
+  /**
+   * Rich content UNDER the title row and outside its target: photos, per-row buttons,
+   * form fields — kastlan's handover room inspector (room-inspector.tsx), the handover
+   * detail page and the wizard's defects step (wizard/defects-step.tsx), which draw
+   * each room or defect as a `Card variant="inset"` because a row could not hold a
+   * photo strip with its own buttons.
+   *
+   * The same rule as {@link actions}, one row down: the title area stays ONE named
+   * target (the button or link, with the title and subtitle as its name), and the body
+   * is its sibling, never nested in it — a thumbnail's "Remove" inside the row's button
+   * would be invalid HTML and unreachable by a screen reader. The body is a
+   * `role="group"` named by the row's title (`aria-labelledby`), so tabbing into the
+   * third photo's button of the second room is heard as "Kitchen, group" first rather
+   * than as a button floating free of any row. Inside the row's box, so a `selected`
+   * border and a `divider` hold both; the hover fill stays on the target alone, since
+   * the body is not what a click on the row does.
+   */
+  children?: ReactNode;
+  /** Classes on the {@link children} body. */
+  bodyClassName?: string;
   /**
    * The unread mark: a brand dot at the row's end, the title in semibold, and "Unread"
    * read after the title (keksdose notification-inbox.tsx:215). For another status,
@@ -268,6 +288,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     targetProps,
     bordered = false,
     as = "li",
+    children,
+    bodyClassName,
     href,
     renderLink,
     external = false,
@@ -286,6 +308,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   const isButton = !isLink && onClick !== undefined && href === undefined;
   const interactive = isLink || isButton;
   const inert = disabled || loading;
+  const hasBody = children !== undefined && children !== null && children !== false;
+  const titleId = useId();
 
   const mark =
     status ??
@@ -302,6 +326,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       {leading}
       <span className="flex min-w-0 flex-1 flex-col">
         <span
+          // Names the body's group; harmless without one.
+          id={hasBody ? titleId : undefined}
           className={cn(
             "block truncate text-sm text-[var(--text-primary)]",
             unread ? "font-semibold" : "font-medium",
@@ -339,7 +365,10 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     "flex min-w-0 flex-1 text-start",
     align === "start" ? "items-start" : "items-center",
     pad.target,
-    "rounded-[inherit]",
+    // With a body the target is the top of the box, not all of it, so it takes its
+    // own corners and its own hover fill (see `children`).
+    hasBody ? "rounded-md" : "rounded-[inherit]",
+    hasBody && interactive && !inert && !selected && "transition-colors hover:bg-[var(--bg-hover)]",
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
     loading && "cursor-progress",
@@ -409,6 +438,9 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     );
   }
 
+  const actionsEl =
+    actions != null ? <div className={cn("flex shrink-0 items-center", pad.gap, pad.actions)}>{actions}</div> : null;
+
   const Tag = as;
   return (
     <Tag
@@ -419,20 +451,33 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     >
       <div
         className={cn(
-          "flex min-w-0 items-center rounded-md border transition-colors",
+          "flex min-w-0 rounded-md border transition-colors",
+          hasBody ? "flex-col" : "items-center",
           selected
             ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
             : bordered
               ? "border-[var(--border)]"
               : "border-transparent",
-          interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
+          !hasBody && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
           disabled && "opacity-50",
           className,
         )}
       >
-        {main}
-        {actions != null && (
-          <div className={cn("flex shrink-0 items-center", pad.gap, pad.actions)}>{actions}</div>
+        {hasBody ? (
+          <>
+            <div className="flex min-w-0 items-center">
+              {main}
+              {actionsEl}
+            </div>
+            <div role="group" aria-labelledby={titleId} className={cn("min-w-0", pad.body, bodyClassName)}>
+              {children}
+            </div>
+          </>
+        ) : (
+          <>
+            {main}
+            {actionsEl}
+          </>
         )}
       </div>
     </Tag>

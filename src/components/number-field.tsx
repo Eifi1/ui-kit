@@ -62,6 +62,14 @@ export interface NumberFieldProps
    *  injects `id` / `aria-describedby` / `aria-invalid`) can wrap this directly. */
   "aria-describedby"?: string;
   "aria-invalid"?: boolean | "true" | "false";
+  /**
+   * Set on the `<input>`. Declared, with `id` (from NumberInput) and the two above, so
+   * `Field`'s render-prop spread — `{(ids) => <NumberField {...ids} … />}`, kastlan's
+   * wizard steps — is typed and reaches the input rather than being dropped: before
+   * this, `aria-required` was not in the type and a required number was announced as
+   * optional.
+   */
+  "aria-required"?: boolean | "true" | "false";
 }
 
 /** The locale's decimal mark, as far as this field can type it: "," or ".". A mark
@@ -163,6 +171,7 @@ export function NumberField({
   id,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: NumberFieldProps) {
   const locale = useKitLocale(localeProp);
@@ -253,12 +262,16 @@ export function NumberField({
   // NumberInput takes no `aria-describedby` of its own, so the reference is set on
   // its <input> directly, found by the id this field hands it. React never renders
   // that attribute there, so nothing reconciles it away again.
+  // `aria-required` the same way, for the same reason: NumberInput has no prop for it.
+  const required = ariaRequired === true || ariaRequired === "true";
   useEffect(() => {
     const input = document.getElementById(fieldId);
     if (!input) return;
     if (describedBy) input.setAttribute("aria-describedby", describedBy);
     else input.removeAttribute("aria-describedby");
-  }, [fieldId, describedBy]);
+    if (required) input.setAttribute("aria-required", "true");
+    else input.removeAttribute("aria-required");
+  }, [fieldId, describedBy, required]);
 
   const labelWithUnit =
     unit !== undefined && unitPlacement === "label"

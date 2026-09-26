@@ -55,6 +55,40 @@ export interface FieldControlProps {
   "aria-required": true | undefined;
 }
 
+/**
+ * The second argument of a `Field`'s render-prop children: what a GROUP needs that
+ * a single control does not. `htmlFor` names an `<input>`, but a `<label>` pointing
+ * at a `role="radiogroup"` div names nothing — so a group (a {@link ToggleGroup})
+ * takes `aria-labelledby={labelId}` instead. Kept out of {@link FieldControlProps}
+ * so the spread every existing control takes is unchanged.
+ */
+export interface FieldRenderMeta {
+  /** The label element's id, or `undefined` when the field has no label. */
+  labelId: string | undefined;
+}
+
+/**
+ * Where the label is visible. `"visible"` (default); `"sr-only"`: never drawn, still
+ * the control's name; `"below-sm"` / `"below-md"` / `"below-lg"`: drawn only under
+ * that breakpoint and screen-reader-only from it up.
+ *
+ * For table-like editors — kastlan's journal entry lines
+ * (accounting/components/wizard/journal-entry-lines-step.tsx) — where a desktop
+ * row sits under column headers that already say "Account" and "Amount", but the
+ * phone layout stacks each line as a card and needs the labels back. The name stays
+ * on the control at every width; only the ink changes.
+ */
+export type FieldLabelVisibility = "visible" | "sr-only" | "below-sm" | "below-md" | "below-lg";
+
+// Literal class strings so Tailwind's scanner sees each one.
+const LABEL_VISIBILITY: Record<FieldLabelVisibility, string | undefined> = {
+  visible: undefined,
+  "sr-only": "sr-only",
+  "below-sm": "sm:sr-only",
+  "below-md": "md:sr-only",
+  "below-lg": "lg:sr-only",
+};
+
 export interface FieldProps {
   /** The label above the control. Omit it for a group whose control is labelled
    *  some other way; the hint and error still render. */
@@ -74,10 +108,13 @@ export interface FieldProps {
   disabled?: boolean;
   /** The label's size: `sm` for a dense row, `md` otherwise. */
   labelSize?: "sm" | "md";
+  /** See {@link FieldLabelVisibility}. */
+  labelVisibility?: FieldLabelVisibility;
   /** Wrapper className. */
   className?: string;
-  /** The control. A function receives {@link FieldControlProps} to spread on it. */
-  children: ReactNode | ((control: FieldControlProps) => ReactNode);
+  /** The control. A function receives {@link FieldControlProps} to spread on it, and
+   *  {@link FieldRenderMeta} (the label's id, for a group). */
+  children: ReactNode | ((control: FieldControlProps, meta: FieldRenderMeta) => ReactNode);
 }
 
 const isShown = (node: ReactNode) =>
@@ -91,6 +128,7 @@ export function Field({
   htmlFor,
   disabled,
   labelSize,
+  labelVisibility = "visible",
   className,
   children,
 }: FieldProps) {
@@ -98,6 +136,7 @@ export function Field({
   const id = htmlFor ?? `${generated}-control`;
   const hintId = `${generated}-hint`;
   const errorId = `${generated}-error`;
+  const labelId = `${generated}-label`;
   const hasHint = isShown(hint);
   const hasError = isShown(error);
   const describedBy = [hasHint && hintId, hasError && errorId].filter(Boolean).join(" ");
@@ -108,20 +147,32 @@ export function Field({
     "aria-required": required || undefined,
   };
   return (
-    <div data-slot="field" className={cn("grid gap-1.5", className)}>
+    <div
+      data-slot="field"
+      className={cn(
+        "grid gap-1.5",
+        // A hidden label is `position: absolute`; `relative` keeps its containing
+        // block here rather than the page's (see sr-only-containment.test).
+        labelVisibility !== "visible" && "relative",
+        className,
+      )}
+    >
       {label !== undefined && (
         <Label
+          id={labelId}
           htmlFor={id}
           required={required}
           disabled={disabled}
           size={labelSize}
           data-error={hasError || undefined}
-          className="data-[error=true]:text-[var(--danger)]"
+          className={cn("data-[error=true]:text-[var(--danger)]", LABEL_VISIBILITY[labelVisibility])}
         >
           {label}
         </Label>
       )}
-      {typeof children === "function" ? children(control) : children}
+      {typeof children === "function"
+        ? children(control, { labelId: label !== undefined ? labelId : undefined })
+        : children}
       {hasHint && (
         <p id={hintId} className="text-[11px] leading-tight text-[var(--text-muted)]">
           {hint}

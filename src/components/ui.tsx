@@ -71,8 +71,18 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
  *
  * A `tone` rather than a `link-muted` variant, because it is the axis IconButton
  * already has (`tone="muted"`, `tone="danger"`, same quiet-until-hover meaning), and
- * because the same two looks are wanted on `ghost`. The filled and bordered variants
- * carry their meaning in the box, not the text, so a tone on them does nothing.
+ * because the same two looks are wanted on `ghost`.
+ *
+ * `danger` also reaches the two NEUTRAL boxed variants, where the box carries it:
+ * `secondary` becomes an outlined destructive button (`--danger` text and a
+ * `--danger-border` outline, the quiet danger fill on hover) and `primary` a soft one
+ * (the quiet fill at rest, solid `--danger` on hover). kastlan's meeting-invitations-
+ * tab.tsx "Remove all" is `variant="secondary" className="text-destructive"` — a
+ * destructive action that must sit in a row of secondary buttons without shouting
+ * like the solid `variant="danger"` would, and whose red text alone left the border
+ * and hover saying "neutral". `muted` stays a text look and does nothing on a box, and
+ * `danger`, `brand` and `link`'s own colours are left alone: a tone that recoloured a
+ * solid danger or brand button would be a second variant under another name.
  */
 export type ButtonTone = "default" | "muted" | "danger";
 
@@ -83,8 +93,18 @@ const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
     "text-[var(--text-secondary)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)] disabled:hover:text-[var(--text-secondary)]",
 };
 
-/** Only the two transparent variants take a tone; see {@link ButtonTone}. */
+/** Only the two transparent variants take every tone; see {@link ButtonTone}. */
 const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
+
+// `tone="danger"` on the neutral boxed variants — see {@link ButtonTone}. Each string
+// restates every colour the variant sets (border, fill, text, hover, ring) so none of
+// the neutral ones survives the merge.
+const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
+  secondary:
+    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border)]",
+  primary:
+    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus:ring-[var(--danger-border)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
+};
 
 // `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
 // lenkbank's "All speeds" toggle paints by hand (gear/hysteresis-charts.tsx:482). After
@@ -141,8 +161,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    *  declared here only because `ButtonHTMLAttributes` does not carry it. */
   ref?: Ref<HTMLButtonElement>;
   /** Text colour for `link` and `ghost`: `muted` (quiet, body colour on hover) or
-   *  `danger` (quiet, `--danger` on hover). Ignored by the other variants. See
-   *  {@link ButtonTone}. */
+   *  `danger` (quiet, `--danger` on hover). `danger` also makes `secondary` an
+   *  outlined destructive button and `primary` a soft one; ignored by the other
+   *  variants. See {@link ButtonTone}. */
   tone?: ButtonTone;
   /**
    * Make it a toggle button, as {@link IconButton}'s `pressed` does. `true` sets
@@ -248,6 +269,7 @@ function buttonLook(variant: ButtonVariant, size: ButtonSize, stretch: boolean |
     stretch && "self-stretch",
     buttonVariantClasses[variant],
     tone !== "default" && TONED_VARIANTS.has(variant) && BUTTON_TONES[tone],
+    tone === "danger" && BUTTON_BOXED_DANGER[variant],
   );
 }
 
@@ -1771,14 +1793,29 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
    * those copies wanted the same one; a caller's `p-*` still wins. `flush` is ignored:
    * an inset panel never runs edge to edge.
    */
-  variant?: "default" | "inset";
+  variant?: "default" | "inset" | "outline";
+  /**
+   * The card's own padding: `none`, `sm` (`p-3`) or `md` (`p-4`).
+   *
+   * `outline` is the bordered box with no shadow — a row or a block INSIDE a section
+   * rather than a card on the page: kastlan's rent breakdown rows
+   * (tenancy/components/breakdown-row.tsx, `rounded-lg border p-4`) and the meters
+   * list's inline add row (meters/components/meter-add-row.tsx). It takes `md` by
+   * default, as every one of those copies does; `sm` is the dense row.
+   *
+   * Left out, the default card keeps no padding (its CardHeader / CardContent own the
+   * rhythm) and `inset` keeps its `p-3`; passing it sets theirs too. A caller's `p-*`
+   * in `className` still wins.
+   */
+  padding?: "none" | "sm" | "md";
   /**
    * A card that is a WARNING (or other status) as a whole: the border in the tone's
    * `-border` colour and the {@link CardTitle} in the tone's text colour. kastlan's
    * dunning summary (invoice-detail-page.tsx:231-235) writes both by hand —
    * `border-[var(--warning-border)]` on the Card, `text-[var(--warning)]` on the title
-   * — and the next status card would copy the pair. An `inset` panel has no border, so
-   * it takes the tone's quiet `-bg` fill instead. `data-tone` is set for a caller's own
+   * — and the next status card would copy the pair (`outline` takes it the same way).
+   * An `inset` panel has no border, so it takes the tone's quiet `-bg` fill instead.
+   * `data-tone` is set for a caller's own
    * selectors.
    */
   tone?: CardTone;
@@ -1811,8 +1848,16 @@ const CARD_TONES: Record<CardTone, { border: string; fill: string; title: string
   },
 };
 
-export function Card({ className, children, flush, variant = "default", tone, ...rest }: CardProps) {
+const CARD_PADDING: Record<NonNullable<CardProps["padding"]>, string> = {
+  none: "p-0",
+  sm: "p-3",
+  md: "p-4",
+};
+
+export function Card({ className, children, flush, variant = "default", tone, padding, ...rest }: CardProps) {
   const toned = tone ? CARD_TONES[tone] : undefined;
+  // An outline card is bordered like the default one, so a tone recolours its border.
+  const bordered = variant !== "inset";
   return (
     <div
       data-tone={tone}
@@ -1820,7 +1865,10 @@ export function Card({ className, children, flush, variant = "default", tone, ..
       className={cn(
         variant === "inset"
           ? "rounded-md bg-[var(--bg-surface-2)] p-3"
-          : cn(
+          : variant === "outline"
+            ? // No shadow and no `flush`: it sits on a surface that already has both.
+              "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4"
+            : cn(
               // Surface + border are theme tokens so the palette switcher (feedback
               // #307) can re-skin every card; a caller's own bg-*/border-* override
               // still wins via tailwind-merge.
@@ -1829,8 +1877,9 @@ export function Card({ className, children, flush, variant = "default", tone, ..
                 ? "border-y border-[var(--border)] md:rounded-lg md:border md:shadow-sm"
                 : "rounded-lg border border-[var(--border)] shadow-sm",
             ),
-        toned && (variant === "inset" ? toned.fill : toned.border),
+        toned && (bordered ? toned.border : toned.fill),
         toned?.title,
+        padding && CARD_PADDING[padding],
         className,
       )}
     >

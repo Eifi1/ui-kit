@@ -2,6 +2,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SearchField } from "../search-field";
+import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**
  * The page-level filter box, which Keksdose had four of.
@@ -64,12 +65,28 @@ describe("SearchField", () => {
     expect(screen.getByRole("searchbox")).toHaveFocus();
   });
 
-  it("renders no clear button when the caller names none", () => {
-    // Omitting `clearLabel` is a decision, not a default — an unnamed icon button is
-    // worse than no button, so the way to get one is to name it.
+  it("draws the clear button by default, named from the catalogue", () => {
+    // Every kastlan call site passed `clearLabel={t("table.clear")}` just to get the
+    // button; the catalogue already has the word, so the button is the default now.
     render(<Harness />);
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "dark" } });
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+  });
+
+  it("names the default clear button in the provider's language", () => {
+    render(
+      <UiKitProvider labels={{ common: { clear: "Leeren" } }}>
+        <SearchField value="dark" onChange={vi.fn()} aria-label="Suche" />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Leeren" })).toBeInTheDocument();
+  });
+
+  it("renders no clear button with clearable={false}, and reserves no room for one", () => {
+    render(<SearchField value="dark" onChange={vi.fn()} aria-label="Find" clearable={false} />);
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByRole("searchbox").className).toContain("pe-3");
   });
 
   it("suppresses the browser's own clear cross", () => {
