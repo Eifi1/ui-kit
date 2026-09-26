@@ -11,7 +11,13 @@ the release notes, and the showcase (⌘K) has every prop live.
 2. **New label keys** (only if you type a complete `UiKitLabels`): `floatingPanel.badge`
    and the namespace `calendarHeatmap`. Every `@eifi1/ui-kit/i18n/<code>` catalogue has
    them.
-3. **New:**
+3. **Tooltips inside DataTable / Table portal the same way in tests as in the browser.**
+   The table's scroller now carries `data-clips` (`CLIPS_ATTRIBUTE`), so an in-place
+   bubble there is only in the DOM after hover or focus. A test that found it without
+   hovering needs a hover or focus first, and cell names no longer double
+   ("CheckingChecking"). Mark your own scroll containers with `data-clips` too, and drop
+   the explicit `portal` props you kept only for tests.
+4. **New:**
    - `Field` (label above, hint, error and required, with the ids wired up)
    - `ActionCard` and `NavPills`
    - `FloatingActionGroup` / `FloatingAction`, `ButtonGroupLink`
