@@ -138,6 +138,18 @@ import { ProgressSegmentsDemo } from "./sections/progress-segments-demo";
 import { FieldDemo } from "./sections/field-demo";
 import { RhfWizardDemo } from "./sections/rhf-wizard-demo";
 import { ListDragDemo } from "./sections/list-drag-demo";
+import {
+  AlertBannerBlockDemo,
+  BulkActionBarPanelDemo,
+  ClipsMarkerDemo,
+  EmptyStateSmallDemo,
+  IconButtonDisabledReasonDemo,
+  MenuItemBadgeDemo,
+  MinBarLengthDemo,
+  SectionLabelMdDemo,
+  StatusDotHuesDemo,
+  TableHeaderValignDemo,
+} from "./sections/props-011-demo";
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -482,6 +494,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ButtonsSurfaces />
             <ButtonLabelsTones />
             <ButtonsMore />
+            <IconButtonDisabledReasonDemo />
           </>
         ),
       },
@@ -514,6 +527,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackProgress />
             <ProgressSegmentsDemo />
             <FeedbackMore />
+            <AlertBannerBlockDemo />
+            <EmptyStateSmallDemo />
             <ToastsDemo />
           </>
         ),
@@ -530,6 +545,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <DescriptionTable />
             <DescriptionTableMore />
+            <TableHeaderValignDemo />
           </>
         ),
       },
@@ -555,6 +571,8 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <ListsMenus />
             <ListDragDemo />
+            <MenuItemBadgeDemo />
+            <BulkActionBarPanelDemo />
           </>
         ),
       },
@@ -663,6 +681,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <SeriesChartMarks />
             <KeyboardPointsDemo />
+            <MinBarLengthDemo />
           </>
         ),
       },
@@ -737,11 +756,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The overlays anchored to a trigger: popover, hover menu and tooltip — flipped and clamped against the window, mirrored right-to-left, and the pure placement behind them.",
         icon: MousePointerClick,
-        components: ["Popover", "HoverMenu", "Tooltip", "placeTooltip"],
+        components: ["Popover", "HoverMenu", "Tooltip", "placeTooltip", "CLIPS_ATTRIBUTE"],
         Body: () => (
           <>
             <PopoversMenusTooltips />
             <TooltipAutoPortal />
+            <ClipsMarkerDemo />
           </>
         ),
       },
@@ -811,6 +831,8 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <PageStructure />
             <NavPillsDemo />
+            <SectionLabelMdDemo />
+            <StatusDotHuesDemo />
           </>
         ),
       },

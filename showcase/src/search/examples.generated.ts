@@ -257,6 +257,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ButtonGroupLink — current and renderLink",
     "IconButton — xl, stretch, tone=\"success\", tone=\"custom\" and shape=\"round\"",
     "UserAvatar — badge, every tone and right-to-left",
+    "IconButton — disabledReason, with and without label",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -297,6 +298,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ProgressBar — segments, legend and showValue",
     "EmptyState — inline variant and the danger and success tones",
     "AlertBanner — success, size sm, strip with an action, elevated",
+    "AlertBanner — inline block and live={false}",
+    "EmptyState — inline size sm",
     "Toasts — every tone, with and without a description",
     "Toasts — an action, undo and redo",
     "Toasts — replace by id, and loading to success",
@@ -312,6 +315,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DescriptionList — stacked, with columns and span",
     "DescriptionList — tight, card columns and prose",
     "Table — empty, TableEmpty, density none and layout",
+    "Table — header size and weight, valign on a table of inputs",
   ],
   "tree-view": [
     "TreeView — keyboard, icons, trailing figures",
@@ -331,6 +335,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "BulkActionBar — floating, count, clear and labels",
     "ListItem — targetProps: the whole row is the drag source",
     "ListItem — bordered, in a wrapping strip",
+    "MenuItem — badge beside a long, truncating label",
+    "BulkActionBar — panel, open at zero, responsive variant",
   ],
   "data-table": [
     "DataTable — the whole surface",
@@ -412,6 +418,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "visibleSeries / seriesLegendEntries — colours that hold still",
     "Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash",
     "Bars and periods from the keyboard — onPointClick",
+    "Bars — minBarLength, chart-wide and per series",
   ],
   "stats": [
     "Sparkline",
@@ -468,6 +475,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Right-to-left — which placements flip",
     "placeTooltip",
     "Tooltip — auto-portal inside a scroll container",
+    "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [
     "Guided tour — useTour + TourProvider",
@@ -514,6 +522,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "StatusDot — every tone, sizes, ring and label",
     "NavPills — links through renderLink",
     "NavPills — buttons with onSelect, icons, disabled, sizes and landmark={false}",
+    "SectionLabel — size md",
+    "StatusDot — hues beside matching Chips",
   ],
   "settings": [
     "ThemeSetting",
