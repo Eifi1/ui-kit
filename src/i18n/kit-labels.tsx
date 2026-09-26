@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
+import type { AnchorHTMLAttributes, ReactElement, Ref } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
 import type { MiniCalendarLabels, WeekDay } from "../components/mini-calendar";
@@ -364,7 +365,19 @@ interface KitI18n {
   labels?: UiKitLabelOverrides;
   locale?: string;
   weekStartsOn?: WeekDay;
+  linkComponent?: KitLinkComponent;
 }
+
+/**
+ * What every kit link receives: the anchor attributes the kit decided (href, class,
+ * aria-current, handlers, children, ref). An app's router link maps them —
+ * `({ href, ...p }) => <Link to={href} {...p} />` — ONCE, on the provider.
+ */
+export type KitLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  href: string;
+  ref?: Ref<HTMLAnchorElement>;
+};
+export type KitLinkComponent = (props: KitLinkProps) => ReactElement;
 
 const KitI18nContext = createContext<KitI18n>({});
 
@@ -387,6 +400,13 @@ export interface UiKitProviderProps {
    * and switching it to `en-GB` to get Monday changes every date and number format.
    */
   weekStartsOn?: WeekDay;
+  /**
+   * The app's router link, used by every kit component that renders an in-app link
+   * and was not handed its own `renderLink` — so `renderLink` stops being repeated on
+   * each ListItem, Breadcrumbs, StatTile, Chip… (kastlan). A component's own
+   * `renderLink` wins; external links stay plain `<a>`.
+   */
+  linkComponent?: KitLinkComponent;
   children: ReactNode;
 }
 
@@ -398,15 +418,22 @@ export interface UiKitProviderProps {
  * it names, so a page can re-label one table's `dataTable.table` without restating
  * the language.
  */
-export function UiKitProvider({ labels, locale, weekStartsOn, children }: UiKitProviderProps) {
+export function UiKitProvider({
+  labels,
+  locale,
+  weekStartsOn,
+  linkComponent,
+  children,
+}: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
   const value = useMemo<KitI18n>(
     () => ({
       locale: locale ?? outer.locale,
       weekStartsOn: weekStartsOn ?? outer.weekStartsOn,
       labels: mergeOverrides(outer.labels, labels),
+      linkComponent: linkComponent ?? outer.linkComponent,
     }),
-    [outer, labels, locale, weekStartsOn],
+    [outer, labels, locale, weekStartsOn, linkComponent],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -475,6 +502,12 @@ export function useKitLocale(prop?: string): string | undefined {
 /** The week start the nearest `<UiKitProvider weekStartsOn>` pins, else `undefined`
  *  (the caller then asks the locale). A component's own prop goes first:
  *  `prop ?? useKitWeekStart()`. */
+/** The provider's router link, or `undefined` — a component's own `renderLink` should
+ *  win over it: `const Link = renderLink ?? useKitLink()`. */
+export function useKitLink(): KitLinkComponent | undefined {
+  return useContext(KitI18nContext).linkComponent;
+}
+
 export function useKitWeekStart(): WeekDay | undefined {
   return useContext(KitI18nContext).weekStartsOn;
 }
