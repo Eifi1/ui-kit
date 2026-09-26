@@ -50,6 +50,15 @@ the release notes, and the showcase (⌘K) has every prop live.
 | transaction-fields:162 field-height delete, sync-status-indicator:142 | `IconButton stretch`, `tone="custom" toneColor={…}`, `shape="round"`, `size="xl"` | |
 | privacy-enroll-dialog:345 CustodyOption | `ActionCard icon title description meta metaTone` | |
 | swipe-settings-card:152 | `NavPills items current onSelect` | wraps; `aria-current`, not tabs |
+| **D1** invoice-lines BulkFields under the toolbar; Select → pick flow at 0 selected; payees-selection-bar's useMediaQuery | `BulkActionBar panel={…}`, `open`, `variant={{ base: "floating", md: "sticky" }}` | the panel sits outside the toolbar's arrow keys |
+| **D2** explicit `portal` on table-cell tooltips (transaction-cells, cleared-status-toggle, users-panel, budget-cells) | drop it | DataTable / Table scrollers carry `data-clips`; see "Everyone" 3 |
+| **D3** accounts-page hide/delete, budgets-page delete "why disabled" | `IconButton label disabledReason={…}` | the name stays "Delete"; the reason is described and shown |
+| **D4** budget-switcher guest/shared Chip | `MenuItem badge={<Chip …/>}` | stays beside the truncating name |
+| **D5** hints sharing a line / centred glyph; camt-review-step:214 alert on mount | `AlertBanner variant="inline" block`, `live={false}` | `block` is opt-in because inline-flex is load-bearing elsewhere |
+| **D6** 11px labels (budget-summary-card, support-thread) | `SectionLabel size="md"` | |
+| **D7** panel empty lines (holdings-panel:554, asset-loan-panel:108, loan-payment-panel:191) | `EmptyState variant="inline" size="sm"` | |
+| **D8** spending-tab zero weekday | `SeriesChart minBarLength={4}` (or per series) | drawing only; values and names unchanged |
+| **D9** vat-summary raw th/td | `TableHeaderCell size weight`, `valign` on row/cell | |
 
 ## lenkbank
 
