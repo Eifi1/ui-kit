@@ -13,6 +13,21 @@ export type TableDensity = "comfortable" | "compact" | "none";
  *  figures for room. */
 export type TableLayout = "auto" | "fixed";
 export type TableAlign = "start" | "center" | "end";
+/**
+ * Vertical alignment of a cell's content (0.11.0). The defaults stay as they were — a
+ * head cell sits on the `bottom` (a wrapped heading ends on the line above the
+ * figures), a body cell at the `top` (a wrapped note starts level with its row). A
+ * table whose cells are INPUTS wants `middle`: keksdose's VAT summary
+ * (invoices/vat-summary.tsx) sets fields beside derived read-out figures in one row,
+ * and a figure at the top of its cell sat above the middle of the field next to it —
+ * so it writes `<tr className="align-middle">` over raw `<th>`/`<td>`, because the
+ * kit's cells each stated `align-top` and a class on the row could not reach them.
+ */
+export type TableVAlign = "top" | "middle" | "bottom";
+/** The head cell's type size: `xs` (the head's default) or `sm` (the body's). */
+export type TableHeaderCellSize = "xs" | "sm";
+/** The header cell's weight. Default `medium`. */
+export type TableHeaderCellWeight = "normal" | "medium" | "semibold";
 
 interface TableContextValue {
   density: TableDensity;
@@ -32,6 +47,28 @@ const TableContext = createContext<TableContextValue>({
 
 /** Which section a row sits in — zebra and hover apply to body rows only. */
 const SectionContext = createContext<"head" | "body" | "foot">("body");
+
+/** A {@link TableRow}'s `valign`, which its cells take unless they set their own. It
+ *  cannot be left to CSS inheritance: every cell states its own default alignment,
+ *  and a class on the cell beats one on the row. */
+const RowVAlignContext = createContext<TableVAlign | undefined>(undefined);
+
+const VALIGN: Record<TableVAlign, string> = {
+  top: "align-top",
+  middle: "align-middle",
+  bottom: "align-bottom",
+};
+
+const HEADER_SIZE: Record<TableHeaderCellSize, string> = {
+  xs: "text-xs",
+  sm: "text-sm",
+};
+
+const HEADER_WEIGHT: Record<TableHeaderCellWeight, string> = {
+  normal: "font-normal",
+  medium: "font-medium",
+  semibold: "font-semibold",
+};
 
 const CELL_PAD: Record<TableDensity, string> = {
   comfortable: "px-3 py-2",
@@ -125,6 +162,7 @@ export function Table({
         {...(overflowing ? regionName : null)}
         tabIndex={overflowing ? 0 : undefined}
         data-overflowing={overflowing || undefined}
+        data-clips=""
         className={cn(
           // `relative`: the containing block for an `sr-only` caption.
           "relative w-full overflow-x-auto",
@@ -252,23 +290,31 @@ export function TableFoot({ className, ...rest }: TableFootProps) {
   );
 }
 
-export type TableRowProps = ComponentPropsWithoutRef<"tr">;
+/** The deprecated HTML `valign` attribute is replaced by a class-backed one. */
+export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
+  /** Vertical alignment for every cell of the row that does not set its own. See
+   *  {@link TableVAlign}. Left out, each cell keeps its default. */
+  valign?: TableVAlign;
+}
 
-export function TableRow({ className, ...rest }: TableRowProps) {
+export function TableRow({ valign, className, ...rest }: TableRowProps) {
   const { zebra, hover } = useContext(TableContext);
   const section = useContext(SectionContext);
   const body = section === "body";
-  return (
+  const row = (
     <tr
       {...rest}
       className={cn(
         body && "border-b border-[var(--border)]",
         body && zebra && "even:bg-[var(--bg-surface-2)]",
         body && hover && "transition-colors hover:bg-[var(--bg-hover)]",
+        // On the row as well, for a raw `<td>` of the caller's, which inherits it.
+        valign && VALIGN[valign],
         className,
       )}
     />
   );
+  return valign ? <RowVAlignContext.Provider value={valign}>{row}</RowVAlignContext.Provider> : row;
 }
 
 interface CellAlignProps {
@@ -276,19 +322,44 @@ interface CellAlignProps {
   numeric?: boolean;
   /** Logical alignment. Default `start` (`end` when `numeric`). */
   align?: TableAlign;
+  /** Vertical alignment. Default: the row's `valign`, else `bottom` for a head cell and
+   *  `top` for a body cell. See {@link TableVAlign}. */
+  valign?: TableVAlign;
 }
 
-/** The deprecated HTML `align` attribute is replaced by a logical one. */
-export interface TableHeaderCellProps extends Omit<ComponentPropsWithoutRef<"th">, "align">, CellAlignProps {}
+/** The deprecated HTML `align` and `valign` attributes are replaced by class-backed ones. */
+export interface TableHeaderCellProps extends Omit<ComponentPropsWithoutRef<"th">, "align" | "valign">, CellAlignProps {
+  /**
+   * Type size. Left out: `xs` in the head, the table's own size in the body — as
+   * before. keksdose's VAT summary heads its columns at the body size and normal weight
+   * (vat-summary.tsx:158–168, `font-normal` on each `<th>`), a quiet header over a
+   * small table of figures, and could not say so without overriding classes.
+   */
+  size?: TableHeaderCellSize;
+  /** Default `medium`. `normal` for the quiet header above; see {@link size}. */
+  weight?: TableHeaderCellWeight;
+}
 
 /**
  * A `<th>`. `scope` defaults to `col` in the head and `row` in the body — a header
  * cell in a body row is the row's label ("Net rent" in a key-value table), and a
  * reader needs the scope to read it with each cell beside it.
  */
-export function TableHeaderCell({ numeric = false, align, scope, className, ...rest }: TableHeaderCellProps) {
+export function TableHeaderCell({
+  numeric = false,
+  align,
+  valign,
+  size,
+  weight = "medium",
+  scope,
+  className,
+  ...rest
+}: TableHeaderCellProps) {
   const { density } = useContext(TableContext);
   const section = useContext(SectionContext);
+  const rowVAlign = useContext(RowVAlignContext);
+  const head = section === "head";
+  const textSize = size ?? (head ? "xs" : undefined);
   return (
     <th
       {...rest}
@@ -297,24 +368,27 @@ export function TableHeaderCell({ numeric = false, align, scope, className, ...r
         CELL_PAD[density],
         ALIGN[align ?? (numeric ? "end" : "start")],
         numeric && "tabular-nums",
-        "align-bottom font-medium",
-        section === "head" ? "text-xs text-[var(--text-muted)]" : "align-top text-[var(--text-secondary)]",
+        VALIGN[valign ?? rowVAlign ?? (head ? "bottom" : "top")],
+        HEADER_WEIGHT[weight],
+        head ? "text-[var(--text-muted)]" : "text-[var(--text-secondary)]",
+        textSize && HEADER_SIZE[textSize],
         className,
       )}
     />
   );
 }
 
-export interface TableCellProps extends Omit<ComponentPropsWithoutRef<"td">, "align">, CellAlignProps {}
+export interface TableCellProps extends Omit<ComponentPropsWithoutRef<"td">, "align" | "valign">, CellAlignProps {}
 
-export function TableCell({ numeric = false, align, className, ...rest }: TableCellProps) {
+export function TableCell({ numeric = false, align, valign, className, ...rest }: TableCellProps) {
   const { density } = useContext(TableContext);
+  const rowVAlign = useContext(RowVAlignContext);
   return (
     <td
       {...rest}
       className={cn(
         CELL_PAD[density],
-        "align-top",
+        VALIGN[valign ?? rowVAlign ?? "top"],
         ALIGN[align ?? (numeric ? "end" : "start")],
         numeric && "tabular-nums whitespace-nowrap",
         className,

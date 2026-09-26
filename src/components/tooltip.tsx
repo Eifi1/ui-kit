@@ -17,6 +17,13 @@ import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 import { dirOf, type Direction } from "../lib/direction";
 import { hasClippingAncestor } from "../lib/clipping";
 
+/** The attribute that marks an element as a clipping container for {@link Tooltip}'s
+ *  auto-portal, whatever its computed `overflow` — `<div data-clips>` or
+ *  `<div {...{ [CLIPS_ATTRIBUTE]: "" }}>`. Put it on an app's own scroller so a test
+ *  environment without stylesheets (jsdom) portals the same tooltips the browser
+ *  does. DataTable's body and Table's wrapper already carry it. */
+export { CLIPS_ATTRIBUTE } from "../lib/clipping";
+
 /** Where the bubble sits. `start` / `end` follow the reading direction — `end` is the
  *  right in LTR and the left in RTL — and are what a layout that mirrors should ask
  *  for. `left` / `right` stay physical, for a bubble tied to something that does not
@@ -75,8 +82,8 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
   /**
    * Where the bubble lives. Left out (the default since 0.10.0), the tooltip decides for
    * itself: the bubble stays next to the trigger unless an ancestor clips or scrolls
-   * (`overflow` other than `visible`), in which case it is portalled — see "Inside a
-   * scroll container" below. `true` always portals, `false` never does; both are exactly
+   * (`overflow` other than `visible`, or the {@link CLIPS_ATTRIBUTE} marker), in which
+   * case it is portalled — see "Inside a scroll container" below. `true` always portals, `false` never does; both are exactly
    * what they were before the default existed.
    */
   portal?: boolean;
@@ -144,7 +151,14 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: Toolt
  * being one: every tooltip in a table, a drawer or a scrolling card had to remember it,
  * and the ones that forgot were only found by someone scrolling sideways. So with
  * `portal` left out, the tooltip looks for a clipping ancestor itself — any element
- * between it and `<body>` whose computed `overflow-x` / `overflow-y` is not `visible`.
+ * between it and `<body>` whose computed `overflow-x` / `overflow-y` is not `visible`,
+ * or that carries {@link CLIPS_ATTRIBUTE} (`data-clips`). The marker is what makes the
+ * answer the same under test: jsdom computes no Tailwind, so there every scroller
+ * reads `visible` and a table-cell tooltip used to stay in place — its always-mounted
+ * bubble then repeated the label in the cell's accessible name and `textContent`
+ * ("CheckingChecking"), and apps pinned `portal` to stop it. The kit's own scrollers
+ * are marked, so a tooltip in a DataTable or Table cell portals in jsdom exactly as it
+ * does in the browser.
  * It looks at MOUNT, not only on open: dev#488's phantom scroll is caused by a bubble
  * nobody opened, so a check that waited for the hover would find the damage already
  * done. It looks again on every open, for a container that started scrolling after

@@ -122,6 +122,14 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       rangeSelected: (from, to) =>
         `Période du ${from} au ${to} sélectionnée. Choisissez une date de début pour recommencer.`,
     },
+    calendarHeatmap: {
+      grid: "Valeurs quotidiennes",
+      day: (date, value) => `${date} : ${value}`,
+      less: "Moins",
+      more: "Plus",
+      truncated: (count) =>
+        `Affichage des jours les plus récents ; ${n(count)} ${count === 1 ? "jour antérieur n’est pas affiché" : "jours antérieurs ne sont pas affichés"}.`,
+    },
     datePicker: {
       apply: "Appliquer",
       cancel: "Annuler",
@@ -398,6 +406,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     floatingPanel: {
       close: "Fermer",
+      badge: (count) => `${n(count)} ${plural(count, "nouveau", "nouveaux")}`,
     },
     copyButton: {
       copy: "Copier",

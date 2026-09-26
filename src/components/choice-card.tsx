@@ -1,5 +1,5 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
-import type { ChangeEvent, ComponentType, InputHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ChangeEvent, ComponentType, InputHTMLAttributes, ReactNode } from "react";
 import { Check, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
@@ -217,6 +217,102 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
   );
 });
 ChoiceCard.displayName = "ChoiceCard";
+
+/* ── ActionCard ──────────────────────────────────────────────────────────── */
+
+/** The colour of {@link ActionCardProps.meta}. */
+export type ActionCardMetaTone = "muted" | "warning" | "danger" | "info" | "success";
+
+const META_TONE: Record<ActionCardMetaTone, string> = {
+  muted: "text-[var(--text-muted)]",
+  warning: "text-[var(--warning)]",
+  danger: "text-[var(--danger)]",
+  info: "text-[var(--info)]",
+  success: "text-[var(--success)]",
+};
+
+export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "title"> {
+  /** What the card does — the button's accessible name. */
+  title: ReactNode;
+  /** A line or two on what it means. Attached with `aria-describedby`. */
+  description?: ReactNode;
+  /**
+   * What it costs, or what else to know — a third line, said as prose and not as fine
+   * print (keksdose's custody choice: both options are legitimate and neither is free,
+   * so a card listing only benefits would be selling rather than explaining). Attached
+   * with `aria-describedby` after the description.
+   */
+  meta?: ReactNode;
+  /** The meta line's colour. Default `muted`; keksdose's cost line is `warning`. */
+  metaTone?: ActionCardMetaTone;
+  /** A Lucide icon (or any component taking a `className`), shown at the card's start. */
+  icon?: ChoiceCardProps["icon"];
+}
+
+/**
+ * A {@link ChoiceCard} that ACTS rather than holds a state: a `<button>` with the
+ * card's icon, title and description, plus a `meta` line, that runs `onClick` the
+ * moment it is pressed. keksdose's privacy enrolment (privacy-enroll-dialog:345,
+ * `CustodyOption`) offers two custody modes this way — picking one IS the next step,
+ * so there is no checked state to show and no "Continue" to press after it.
+ *
+ * A separate component rather than `ChoiceCard as="button"`: a ChoiceCard is an
+ * `<input>` (its ref, its `checked`, its form value), and a button shares none of it.
+ * Named by the title alone and described by the rest, so a screen reader hears
+ * "Keep the key yourself, button" and then the explanation, not one long name.
+ */
+export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(function ActionCard(
+  { title, description, meta, metaTone = "muted", icon: Icon, className, id, type = "button", ...rest },
+  ref,
+) {
+  const generated = useId();
+  const baseId = id ?? generated;
+  const titleId = `${baseId}-title`;
+  const descriptionId = `${baseId}-description`;
+  const metaId = `${baseId}-meta`;
+  const showDescription = hasMessage(description);
+  const showMeta = hasMessage(meta);
+  return (
+    <button
+      ref={ref}
+      id={id}
+      type={type}
+      {...rest}
+      aria-labelledby={rest["aria-labelledby"] ?? titleId}
+      aria-describedby={mergeDescribedBy(
+        rest["aria-describedby"],
+        showDescription && descriptionId,
+        showMeta && metaId,
+      )}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-start shadow-sm transition-colors",
+        "hover:border-[var(--brand)] hover:bg-[var(--bg-hover)]",
+        // The outline, as on ChoiceCard: the card is what the eye is on.
+        "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+        "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-[var(--border)] disabled:hover:bg-[var(--bg-surface)]",
+        className,
+      )}
+    >
+      {Icon && <Icon aria-hidden className="mt-0.5 size-5 shrink-0 text-[var(--text-secondary)]" />}
+      <span className="min-w-0 flex-1 space-y-1">
+        <span id={titleId} className="block text-sm font-medium leading-5 text-[var(--text-primary)]">
+          {title}
+        </span>
+        {showDescription && (
+          <span id={descriptionId} className="block text-sm text-[var(--text-secondary)]">
+            {description}
+          </span>
+        )}
+        {showMeta && (
+          <span id={metaId} className={cn("block text-sm", META_TONE[metaTone])}>
+            {meta}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+});
+ActionCard.displayName = "ActionCard";
 
 /* ── ChoiceCardGroup ─────────────────────────────────────────────────────── */
 

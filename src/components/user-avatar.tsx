@@ -1,5 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { StatusDot } from "./status-dot";
+import type { StatusDotSize, StatusDotTone } from "./status-dot";
 
 /** Initials from a display name (first + last) or, failing that, an email —
  *  e.g. "Marcel Eifert" → "ME", "marcel@x.com" → "MA". App-agnostic.
@@ -25,19 +27,71 @@ const AVATAR_SIZES = {
   lg: "size-12 text-base",
 } as const;
 
+const CHIP =
+  "inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] font-semibold text-[var(--text-inverse)]";
+
+/** The dot grows with the avatar: 8px on `sm`, 10px on `md` (keksdose's), 12px on `lg`. */
+const BADGE_SIZES: Record<keyof typeof AVATAR_SIZES, StatusDotSize> = { sm: "sm", md: "md", lg: "lg" };
+
+/** A status dot in the avatar's top corner — an unread count, presence. */
+export interface UserAvatarBadge {
+  /** What the dot MEANS, for a screen reader ("3 unread"). Required: a coloured circle
+   *  says nothing to someone who cannot see it. */
+  label: ReactNode;
+  /** Default `danger`, the unread dot both apps draw by hand. */
+  tone?: StatusDotTone;
+}
+
 /** A `<span>`'s props, minus `children`: the content is the initials this computes
  *  from `name`/`email`, so there is nothing for a caller to put inside. */
 export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   name?: string | null;
   email?: string | null;
   size?: keyof typeof AVATAR_SIZES;
+  /**
+   * A status dot in the top-end corner (the top-right in LTR, top-left in RTL), ringed
+   * in the surface colour so it reads as its own mark (keksdose account-menu ~385,
+   * top-bar :152). Its `label` is read as text where the dot sits — inside a button
+   * named by its content it joins that name. In `TopBarActionMenu`'s `trigger` the
+   * button is named by the menu's `ariaLabel` followed by this label: "Account menu
+   * 3 unread". The initials stay hidden either way, so the person's name is NOT part
+   * of it — put it in `ariaLabel` ("Marcel Eifert, account menu") if it should be.
+   */
+  badge?: UserAvatarBadge | null;
 }
 
 /**
  * A round initials avatar — the common user chip shared across apps (feedback
  * #333). Purely presentational; wrap it in a button for the account menu trigger.
  */
-export function UserAvatar({ name, email, size = "md", className, ...rest }: UserAvatarProps) {
+export function UserAvatar({ name, email, size = "md", badge, className, ...rest }: UserAvatarProps) {
+  if (badge) {
+    // A wrapper, because the chip itself is `aria-hidden` and the badge label must not
+    // be. `className` stays on the chip (a size override still sizes the circle); the
+    // other attributes go on the wrapper, which is what a caller addresses. `relative`
+    // also contains the sr-only text.
+    return (
+      <span {...rest} className="relative inline-flex shrink-0">
+        <span
+          aria-hidden
+          className={cn(
+            CHIP,
+            AVATAR_SIZES[size],
+            className,
+          )}
+        >
+          {avatarInitials(name, email)}
+        </span>
+        <StatusDot
+          ring
+          tone={badge.tone ?? "danger"}
+          size={BADGE_SIZES[size]}
+          className="absolute -end-0.5 -top-0.5"
+        />
+        <span className="sr-only">{badge.label}</span>
+      </span>
+    );
+  }
   return (
     <span
       // `aria-hidden` sits BEFORE the spread, unlike the structural attributes on the
@@ -50,7 +104,7 @@ export function UserAvatar({ name, email, size = "md", className, ...rest }: Use
       aria-hidden
       {...rest}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] font-semibold text-[var(--text-inverse)]",
+        CHIP,
         AVATAR_SIZES[size],
         className,
       )}

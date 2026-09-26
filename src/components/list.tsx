@@ -1,5 +1,5 @@
 import { createContext, forwardRef, useContext } from "react";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactElement, ReactNode, Ref } from "react";
+import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -165,6 +165,19 @@ interface ListItemBaseProps {
   className?: string;
   /** Classes on the main target (the button, link or static block). */
   targetClassName?: string;
+  /**
+   * Extra attributes and handlers for the main target — e.g. HTML5 drag-and-drop
+   * (`draggable`, `onDragStart`, `onDragEnd`): lenkbank's segment list drags the WHOLE
+   * 44px row, and a grip inside the button cannot start a drag in Firefox. Spread first,
+   * so the row's own role, name, state and click handling always win.
+   */
+  targetProps?: HTMLAttributes<HTMLElement>;
+  /**
+   * A visible border while unselected, instead of the transparent one. For rows laid out
+   * as a wrapping strip (lenkbank's profile bar), where borderless rows read as loose
+   * text. The selected row's brand border is unchanged.
+   */
+  bordered?: boolean;
   /** `div` for a single row outside a {@link List}; an `<li>` must sit in a list. */
   as?: "li" | "div";
   /** Reaches the main target — the element with the row's name and action. */
@@ -250,6 +263,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     align = "center",
     className,
     targetClassName,
+    targetProps,
+    bordered = false,
     as = "li",
     href,
     renderLink,
@@ -328,9 +343,14 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     targetClassName,
   );
 
+  // `role` is the row's own (a button, a link, or nothing on a static block): a
+  // targetProps role would silently turn the row into something else.
+  const { role: _ignoredRole, ...targetExtras } = targetProps ?? {};
+
   let main: ReactNode;
   if (isLink) {
     const linkProps: ListItemLinkProps = {
+      ...(targetExtras as Partial<ListItemLinkProps>),
       ...rest,
       ref: ref as Ref<HTMLAnchorElement>,
       href,
@@ -354,6 +374,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   } else if (isButton) {
     main = (
       <button
+        {...(targetExtras as HTMLAttributes<HTMLButtonElement>)}
         {...rest}
         ref={ref as Ref<HTMLButtonElement>}
         type="button"
@@ -372,6 +393,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   } else {
     main = (
       <div
+        {...(targetExtras as HTMLAttributes<HTMLDivElement>)}
         {...rest}
         ref={ref as Ref<HTMLDivElement>}
         aria-disabled={disabled || undefined}
@@ -394,7 +416,11 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       <div
         className={cn(
           "flex min-w-0 items-center rounded-md border transition-colors",
-          selected ? "border-[var(--brand)] bg-[var(--bg-surface-2)]" : "border-transparent",
+          selected
+            ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
+            : bordered
+              ? "border-[var(--border)]"
+              : "border-transparent",
           interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
           disabled && "opacity-50",
           className,

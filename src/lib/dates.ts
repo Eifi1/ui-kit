@@ -149,6 +149,43 @@ export function addDaysIso(iso: string, days: number): string {
   return toLocalIso(d);
 }
 
+/**
+ * `d` moved by whole months, keeping the day of the month where the target has one.
+ * `setMonth` alone ROLLS OVER — 31 January + 1 month is 3 March — which would skip
+ * February entirely for anyone paging through the year with PageDown. Returns a new
+ * Date; `d` is not touched.
+ */
+export function addMonthsClamped(d: Date, months: number): Date {
+  const day = d.getDate();
+  const out = new Date(d.getFullYear(), d.getMonth() + months, 1);
+  const lastOfTarget = new Date(out.getFullYear(), out.getMonth() + 1, 0).getDate();
+  out.setDate(Math.min(day, lastOfTarget));
+  return out;
+}
+
+/**
+ * The first day of the week in `locale`, as a `Date#getDay` index (0 = Sunday).
+ *
+ * `Intl.Locale#getWeekInfo()` is the standard spelling; V8 shipped it first as the
+ * `weekInfo` accessor, and Firefox has neither yet — hence both reads and a Monday
+ * fallback, which is ISO 8601. Its `firstDay` counts 1 = Monday … 7 = Sunday, so `% 7`
+ * maps it onto `getDay`. `undefined` asks for the runtime's default locale.
+ */
+export function localeWeekStart(locale: string | undefined): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
+  try {
+    const tag = locale ?? new Intl.DateTimeFormat().resolvedOptions().locale;
+    const loc = new Intl.Locale(tag) as Intl.Locale & {
+      getWeekInfo?: () => { firstDay: number };
+      weekInfo?: { firstDay: number };
+    };
+    const firstDay = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay;
+    if (typeof firstDay === "number") return (firstDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  } catch {
+    // A malformed tag throws from `Intl.Locale`; a calendar still has to render.
+  }
+  return 1;
+}
+
 /** Whether two Dates fall on the same local calendar day. */
 export function sameYmd(a: Date, b: Date): boolean {
   return (

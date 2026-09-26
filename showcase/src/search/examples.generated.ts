@@ -65,9 +65,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Label above a field",
     "Toolbar select",
     "Search as a header",
+    "Field — render-prop children with Input, Select and Textarea",
+    "Field — plain children with htmlFor, labelSize and disabled",
   ],
   "forms": [
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
+    "useRhfWizardStep — two steps of one form, fields per step",
+    "useRhfWizardStep — the whole form, and your own nav",
   ],
   "choices": [
     "Checkbox — states",
@@ -88,6 +92,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ToggleGroup — allowEmpty, required and disabled",
     "Pickers and cards, right-to-left",
     "Chip — touch size and money tones",
+    "ActionCard — icon, description, meta and every metaTone",
   ],
   "numbers": [
     "NumberInput — the string contract",
@@ -130,6 +135,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DatePicker & DateRangePicker — German trigger and calendar",
     "Calendars and pickers — right-to-left",
     "UiKitProvider weekStartsOn",
+  ],
+  "month-view": [
+    "MiniCalendar size=\"lg\" — renderDay and a day panel",
+    "MiniCalendar — month, onMonthChange and hideNavigation",
+    "MiniCalendar — renderDay at sm",
   ],
   "month-time": [
     "MonthPicker — labelled field",
@@ -243,6 +253,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Button — tone on link and ghost",
     "Button — pressed",
     "Button — disabledReason",
+    "ButtonGroup — elevated, and gapped over an image",
+    "ButtonGroupLink — current and renderLink",
+    "IconButton — xl, stretch, tone=\"success\", tone=\"custom\" and shape=\"round\"",
+    "UserAvatar — badge, every tone and right-to-left",
+    "IconButton — disabledReason, with and without label",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -266,6 +281,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Chip — the five categorical hues × every variant",
     "Chip — xs, checkbox mode and the dot variant",
     "ToggleGroup — size sm, and label, hint and error in a form row",
+    "ToggleGroup — caption, static and as a function of the value",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -279,8 +295,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AlertBanner — onDismiss, a whole-row button or link, an icon",
     "AlertBanner — inline",
     "toneFrameClass() / alertFrameClass()",
+    "ProgressBar — segments, legend and showValue",
     "EmptyState — inline variant and the danger and success tones",
     "AlertBanner — success, size sm, strip with an action, elevated",
+    "AlertBanner — inline block and live={false}",
+    "EmptyState — inline size sm",
     "Toasts — every tone, with and without a description",
     "Toasts — an action, undo and redo",
     "Toasts — replace by id, and loading to success",
@@ -296,6 +315,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DescriptionList — stacked, with columns and span",
     "DescriptionList — tight, card columns and prose",
     "Table — empty, TableEmpty, density none and layout",
+    "Table — header size and weight, valign on a table of inputs",
   ],
   "tree-view": [
     "TreeView — keyboard, icons, trailing figures",
@@ -313,6 +333,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "MenuItem — links, current and renderLink",
     "BulkActionBar — sticky and inline",
     "BulkActionBar — floating, count, clear and labels",
+    "ListItem — targetProps: the whole row is the drag source",
+    "ListItem — bordered, in a wrapping strip",
+    "MenuItem — badge beside a long, truncating label",
+    "BulkActionBar — panel, open at zero, responsive variant",
   ],
   "data-table": [
     "DataTable — the whole surface",
@@ -394,6 +418,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "visibleSeries / seriesLegendEntries — colours that hold still",
     "Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash",
     "Bars and periods from the keyboard — onPointClick",
+    "Bars — minBarLength, chart-wide and per series",
   ],
   "stats": [
     "Sparkline",
@@ -407,6 +432,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "StatTile — number formatting and remaining tones",
     "StatTile — renderLink, custom sparkline and labels",
     "StatTile — right-to-left",
+  ],
+  "calendar-heatmap": [
+    "CalendarHeatmap — a year of weeks, onSelect and formatValue",
+    "CalendarHeatmap — layout=\"month\" and a custom tooltip",
+    "CalendarHeatmap — levels, max and color",
+    "CalendarHeatmap — maxDays, legend and sensitive",
+    "CalendarHeatmap — right-to-left and weekStartsOn",
   ],
   "dialogs": [
     "Modal",
@@ -427,6 +459,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useConfirm — a second call queues",
     "FloatingPanel + FloatingActionButton",
   ],
+  "floating-actions": [
+    "FloatingActionButton — extended, live, surface and hidden",
+    "FloatingActionButton tooltip and tooltipSide, FloatingPanel fabTooltip",
+    "FloatingActionGroup and FloatingAction",
+  ],
   "popovers": [
     "Popover",
     "Popover — labels, panelId, aria-label and a combobox trigger",
@@ -438,6 +475,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Right-to-left — which placements flip",
     "placeTooltip",
     "Tooltip — auto-portal inside a scroll container",
+    "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [
     "Guided tour — useTour + TourProvider",
@@ -473,6 +511,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShellNavItem — field by field",
     "AppShell — every prop on a switch",
     "AppShell — the contracts",
+    "TopBarActionMenu — an account menu",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
@@ -481,6 +520,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Breadcrumbs — separator, renderLink, labels and right-to-left",
     "SectionLabel and Caption",
     "StatusDot — every tone, sizes, ring and label",
+    "NavPills — links through renderLink",
+    "NavPills — buttons with onSelect, icons, disabled, sizes and landmark={false}",
+    "SectionLabel — size md",
+    "StatusDot — hues beside matching Chips",
   ],
   "settings": [
     "ThemeSetting",

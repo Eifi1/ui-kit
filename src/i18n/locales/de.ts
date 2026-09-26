@@ -118,6 +118,14 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       rangeSelected: (from, to) =>
         `Zeitraum ${from} bis ${to} gewählt. Wählen Sie ein Startdatum, um neu zu beginnen.`,
     },
+    calendarHeatmap: {
+      grid: "Tageswerte",
+      day: (date, value) => `${date}: ${value}`,
+      less: "Weniger",
+      more: "Mehr",
+      truncated: (count) =>
+        `Die neuesten Tage werden angezeigt; ${n(count)} ${count === 1 ? "früherer Tag wird" : "frühere Tage werden"} nicht angezeigt.`,
+    },
     datePicker: {
       apply: "Übernehmen",
       cancel: "Abbrechen",
@@ -392,6 +400,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     },
     floatingPanel: {
       close: "Schließen",
+      badge: (count) => `${n(count)} neu`,
     },
     copyButton: {
       copy: "Kopieren",

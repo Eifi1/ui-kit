@@ -254,12 +254,15 @@ export function Button({
 const ICON_BUTTON_BASE =
   "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
-export type IconButtonSize = "lg" | "md" | "sm" | "xs" | "2xs";
+export type IconButtonSize = "xl" | "lg" | "md" | "sm" | "xs" | "2xs";
 
 // Box and glyph together, so a 24px chip action cannot end up holding a 20px icon
 // that touches its edges. The two small steps are lenkbank's list-row (28px) and
 // chip (24px) actions, which it had hand-rolled beside the kit's 32/36px ones.
 const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
+  // 48px with a 24px glyph: the one primary action of a phone screen or sheet, a step
+  // past the 44px minimum rather than on it.
+  xl: "size-12 [&_svg]:size-6",
   // The 44px touch target (WCAG 2.5.5's size) with the same 20px glyph — keksdose's
   // bulk-action bars write `size-11` by hand over an `md` button to get it on phones.
   lg: "size-11 [&_svg]:size-5",
@@ -267,6 +270,18 @@ const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
   sm: "size-8 [&_svg]:size-5",
   xs: "size-7 rounded [&_svg]:size-4",
   "2xs": "size-6 rounded [&_svg]:size-3.5",
+};
+
+// `stretch`: the same WIDTH and glyph, and a height taken from the row instead of
+// stated — `size-*` sets a height that `self-stretch` cannot override, so the box is
+// written as a width plus a minimum height (the square it would otherwise be).
+const ICON_BUTTON_STRETCH_SIZES: Record<IconButtonSize, string> = {
+  xl: "w-12 min-h-12 self-stretch [&_svg]:size-6",
+  lg: "w-11 min-h-11 self-stretch [&_svg]:size-5",
+  md: "w-9 min-h-9 self-stretch [&_svg]:size-5",
+  sm: "w-8 min-h-8 self-stretch [&_svg]:size-5",
+  xs: "w-7 min-h-7 self-stretch rounded [&_svg]:size-4",
+  "2xs": "w-6 min-h-6 self-stretch rounded [&_svg]:size-3.5",
 };
 
 // A tone re-colours the glyph without changing what the variant draws around it.
@@ -279,9 +294,14 @@ const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
 // on the row to notice (keksdose's "needs review" flag, its reconcile action at
 // accounts-page:867), and quiet grey would hide the very thing they point out.
 // `muted` is quiet by definition and has no toned look; `default` has no tone.
-export type IconButtonTone = "default" | "muted" | "danger" | "warning" | "info";
+//
+// `success` is toned at rest too: the green is the news (keksdose's "in sync" chip).
+// `custom` paints from `--icon-button-tone`, which `toneColor` sets — for a glyph whose
+// colour FOLLOWS STATE across tones (keksdose's sync chip: rose, amber, sky, green as
+// the sync moves), where swapping `tone` would do but the colour is one variable.
+export type IconButtonTone = "default" | "muted" | "danger" | "warning" | "info" | "success" | "custom";
 
-type ColouredTone = "danger" | "warning" | "info";
+type ColouredTone = "danger" | "warning" | "info" | "success" | "custom";
 
 const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
   danger: {
@@ -299,13 +319,33 @@ const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> 
       "text-[var(--text-placeholder)] hover:bg-[var(--info-bg)] hover:text-[var(--info)] focus:ring-[var(--info-border)]",
     toned: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
   },
+  success: {
+    quiet:
+      "text-[var(--text-placeholder)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] focus:ring-[var(--success-border)]",
+    toned: "text-[var(--success)] hover:bg-[var(--success-bg)] focus:ring-[var(--success-border)]",
+  },
+  // The hover fill and the ring are MIXED from the one colour, since a custom tone
+  // brings no `-bg` / `-border` pair of its own. The fallback is the body colour, so a
+  // `custom` tone with no colour set is the default look rather than invisible.
+  custom: {
+    quiet:
+      "text-[var(--text-placeholder)] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+    toned:
+      "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+  },
 };
 
 const ICON_BUTTON_MUTED =
   "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]";
 
 /** Which tones sit quiet at rest when `quiet` is left out. */
-const QUIET_BY_DEFAULT: Record<ColouredTone, boolean> = { danger: true, warning: false, info: false };
+const QUIET_BY_DEFAULT: Record<ColouredTone, boolean> = {
+  danger: true,
+  warning: false,
+  info: false,
+  success: false,
+  custom: false,
+};
 
 function iconButtonToneClass(tone: IconButtonTone, quiet: boolean | undefined): string {
   if (tone === "default") return "";
@@ -362,11 +402,31 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
    *  icon (an action on a chip or a tab). */
   size?: IconButtonSize;
+  /**
+   * Fill the height of the flex row it stands in, keeping its width — the delete at
+   * the end of keksdose's split line (transaction-fields:162), level with the labelled
+   * fields beside it rather than floating at half their height. {@link Button}'s
+   * `stretch`; no effect outside a flex row. With a `label`, the tooltip's wrapper is
+   * what stretches.
+   */
+  stretch?: boolean;
+  /** `round`: a circle instead of the rounded square — a compact status chip in a top
+   *  bar (keksdose's sync indicator). `overlay` is always round. */
+  shape?: "square" | "round";
+  /**
+   * The colour of `tone="custom"`, as any CSS colour — a token (`var(--warning)`),
+   * ideally. Sets `--icon-button-tone` on the button, so passing a different one per
+   * state re-colours the glyph, its hover fill and its focus ring together. Passing it
+   * implies `tone="custom"`. Or leave it out and set the variable yourself from a class
+   * (`className="[--icon-button-tone:var(--success)]"`).
+   */
+  toneColor?: string;
   /** Glyph colour over the variant. `muted`: placeholder grey, full text colour on
    *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
    *  remove/delete that repeats down a list. `warning`: amber at rest — a flag that
    *  wants attention. `info`: sky at rest — a notice-worthy but harmless action
-   *  (keksdose's reconcile). Default: the variant's own colours. See `quiet` for
+   *  (keksdose's reconcile). `success`: green at rest — a good state worth seeing.
+   *  `custom`: the colour of `toneColor` (see there). Default: the variant's own colours. See `quiet` for
    *  turning a coloured tone's resting look the other way. */
   tone?: IconButtonTone;
   /**
@@ -448,35 +508,73 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   tooltipSide?: TooltipSide;
   /** Passed to the `label` tooltip's `portal`. Left out, Tooltip decides (see there). */
   tooltipPortal?: boolean;
+  /**
+   * Why the action is not available — {@link Button}'s `disabledReason`, on the icon
+   * button: keksdose's accounts page cannot hide an account with a balance or delete
+   * one with bookings (accounts-page:879/913 — "hide requires zero", "delete blocked"),
+   * nor its budgets page delete the only budget (budgets-page:330), and each wrapped a
+   * natively disabled IconButton in a Tooltip that swaps its label for the reason — a
+   * bubble a keyboard never opens, since `disabled` leaves the tab order, and a reason
+   * a screen reader never hears.
+   *
+   * The same contract as Button's: `aria-disabled` instead of `disabled`, so it stays
+   * focusable and hoverable; clicks (and the Enter/Space they stand for) are swallowed
+   * — `stopPropagation` still applies, so a locked action in a clickable row does not
+   * open the row either; the reason shows in the kit {@link Tooltip} and is attached
+   * through `aria-describedby` as a `hidden` copy. The NAME stays `aria-label` /
+   * `label` — "Delete", described by "The active budget cannot be deleted" — and the
+   * bubble shows the reason in place of the label, since the glyph already says what
+   * the button is and the reason is the news. Shown even with `tooltip={false}`: a
+   * reason nobody can see is not one. Wins over `disabled`, as on Button.
+   */
+  disabledReason?: ReactNode;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   {
     variant = "ghost",
     size = "md",
-    tone = "default",
+    tone: toneProp,
     quiet,
     pressed,
     stopPropagation,
+    stretch,
+    shape = "square",
+    toneColor,
     label,
     tooltip = true,
     tooltipSide,
     tooltipPortal,
+    disabledReason,
     className,
+    style,
     onClick,
     onKeyDown,
     ...rest
   },
   ref,
 ) {
+  const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
+  const reasonId = useId();
+  const locked = hasContent(disabledReason);
+  const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
       ref={ref}
       {...rest}
+      disabled={locked ? undefined : rest.disabled}
+      aria-disabled={locked || rest["aria-disabled"]}
+      aria-describedby={locked ? (ownDescribedBy ? `${ownDescribedBy} ${reasonId}` : reasonId) : ownDescribedBy}
       aria-label={rest["aria-label"] ?? label}
       aria-pressed={pressed ?? rest["aria-pressed"]}
+      style={toneColor !== undefined ? { ...style, ["--icon-button-tone" as string]: toneColor } : style}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
+        // `preventDefault` too: a locked submit must not submit its form.
+        if (locked) {
+          e.preventDefault();
+          return;
+        }
         onClick?.(e);
       }}
       onKeyDown={(e) => {
@@ -487,21 +585,43 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       }}
       className={cn(
         ICON_BUTTON_BASE,
-        ICON_BUTTON_SIZES[size],
+        stretch ? ICON_BUTTON_STRETCH_SIZES[size] : ICON_BUTTON_SIZES[size],
         // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
         variant === "overlay" ? ICON_BUTTON_OVERLAY : buttonVariantClasses[variant],
+        shape === "round" && "rounded-full",
         ICON_BUTTON_DISABLED_REST[variant],
         iconButtonToneClass(tone, quiet),
         pressed && ICON_BUTTON_PRESSED,
+        // The disabled look for the focusable kind of disabled, as on Button.
+        locked && "cursor-not-allowed opacity-50",
         className,
       )}
     />
   );
+  if (locked) {
+    return (
+      // Button's shape: the button and the hidden reason in a FRAGMENT, so Tooltip does
+      // not add its bubble to the description as well.
+      <Tooltip
+        label={disabledReason}
+        side={tooltipSide}
+        portal={tooltipPortal}
+        className={stretch ? "self-stretch" : undefined}
+      >
+        <>
+          {button}
+          <span id={reasonId} hidden>
+            {disabledReason}
+          </span>
+        </>
+      </Tooltip>
+    );
+  }
   if (!tooltip || label === undefined || label === "") return button;
   return (
     // A fragment, so Tooltip leaves the button's description alone: the bubble says
     // exactly what `aria-label` already does.
-    <Tooltip label={label} side={tooltipSide} portal={tooltipPortal}>
+    <Tooltip label={label} side={tooltipSide} portal={tooltipPortal} className={stretch ? "self-stretch" : undefined}>
       <>{button}</>
     </Tooltip>
   );
@@ -1590,6 +1710,16 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * verdict.
    */
   tone?: "danger" | "success";
+  /**
+   * `inline` only (0.11.0). `sm`: 12px, start-aligned and tight (`py-1`) — the empty
+   * line INSIDE a detail panel, under a panel heading and among `text-xs` rows, where
+   * the default's 14px centred line with `py-4` read as a section of its own.
+   * keksdose's holdings panel (holdings-panel:563), asset-loan panel
+   * (asset-loan-panel:108) and loan-payment panel (loan-payment-panel:191) each wrote
+   * `className="justify-start py-1"` over it and still got body-size text. Default `md`,
+   * the look it had. Ignored by the box.
+   */
+  size?: "sm" | "md";
 }
 
 const EMPTY_STATE_TONE: Record<"danger" | "success", string> = {
@@ -1605,6 +1735,7 @@ export function EmptyState({
   headingAs,
   variant = "box",
   tone,
+  size = "md",
   className,
   ...rest
 }: EmptyStateProps) {
@@ -1612,22 +1743,29 @@ export function EmptyState({
   const toneClass = tone ? EMPTY_STATE_TONE[tone] : undefined;
   const hasHint = hint != null && hint !== false && hint !== "";
   if (variant === "inline") {
+    const sm = size === "sm";
     return (
       <div
         {...rest}
         className={cn(
-          "flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-4 text-center text-sm text-[var(--text-muted)]",
+          "flex flex-wrap items-center text-[var(--text-muted)]",
+          sm
+            ? "justify-start gap-x-1.5 gap-y-0.5 py-1 text-start text-xs"
+            : "justify-center gap-x-2 gap-y-1 py-4 text-center text-sm",
           className,
         )}
       >
         {icon != null && (
-          <span aria-hidden className={cn("flex text-[var(--text-placeholder)] [&_svg]:size-4", toneClass)}>
+          <span
+            aria-hidden
+            className={cn("flex text-[var(--text-placeholder)]", sm ? "[&_svg]:size-3.5" : "[&_svg]:size-4", toneClass)}
+          >
             {icon}
           </span>
         )}
         {/* No weight of its own: one muted line is what these sites were, and a
             bold title would turn a quiet "nothing here" into a heading. */}
-        <Title className={cn("text-sm", toneClass)}>{title}</Title>
+        <Title className={cn(sm ? "text-xs" : "text-sm", toneClass)}>{title}</Title>
         {hasHint && <span className="text-xs">{hint}</span>}
         {action != null && <span className="flex flex-wrap items-center gap-2">{action}</span>}
       </div>

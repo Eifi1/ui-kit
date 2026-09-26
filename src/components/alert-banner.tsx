@@ -141,6 +141,31 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
   /** See {@link AlertSize}. Default `md`. */
   size?: AlertSize;
   /**
+   * `inline` only (0.11.0): lay the message out as a BLOCK — a full-width `flex` row,
+   * the glyph on the text's FIRST line when it wraps — instead of the `inline-flex`,
+   * centred line it is by default. keksdose writes `className="flex"` on nearly every
+   * inline banner it has (accounts-page:564, holdings-panel:631, import-map-step:66/314,
+   * guest-key-control:84) to get a line of its own under a total or a field, and a
+   * two-line hint there then centres its glyph between the lines.
+   *
+   * An option rather than the new default, because the inline-flex is load-bearing for
+   * the callers the variant was made for: lenkbank's corner-motion toolbar
+   * (corner-motion.tsx:178) sets it as a `shrink-0` item beside the controls, kastlan's
+   * import page and keksdose's rules page place it in a run of content — a block would
+   * take the whole row in the second kind, and top-align the first against a taller
+   * control. Ignored by `box` and `strip`, which are blocks already.
+   */
+  block?: boolean;
+  /**
+   * `false` opts an inline banner out of its live region (no `role="alert"` /
+   * `role="status"`), for a message that is static page content rather than the answer
+   * to something the user just did: keksdose's CAMT review step (camt-review-step:214)
+   * renders "unresolved rows block the import" as part of the step, and as
+   * `role="alert"` a screen reader interrupted with it on every mount. A `role` you pass
+   * still wins. Default `true`; the box and the strip are role-less either way.
+   */
+  live?: boolean;
+  /**
    * An opaque, raised surface (a shadow, and no translucency in dark mode) for a
    * notice that floats over the page — see {@link TONE_ELEVATED}. `box` and `strip`
    * only; an inline message has no surface to raise.
@@ -200,6 +225,8 @@ export function AlertBanner({
   tone = "danger",
   variant = "box",
   size = "md",
+  block = false,
+  live = true,
   elevated = false,
   action,
   icon,
@@ -217,11 +244,13 @@ export function AlertBanner({
   const strip = variant === "strip";
   const sm = size === "sm";
   const interactive = href !== undefined || onClick !== undefined;
-  const resolvedRole = role ?? (inline ? (tone === "danger" ? "alert" : "status") : undefined);
+  // A block-laid inline banner behaves like a box for layout: a row that may wrap.
+  const inlineRow = inline && !block;
+  const resolvedRole = role ?? (inline && live ? (tone === "danger" ? "alert" : "status") : undefined);
 
   const Glyph = TONE_GLYPH[tone];
   // Onto the first line of a box's text: 2px at 14px/20px, 1px at 12px/16px.
-  const nudge = inline || strip ? undefined : sm ? "mt-px" : "mt-0.5";
+  const nudge = inlineRow || strip ? undefined : sm ? "mt-px" : "mt-0.5";
   const glyph =
     icon === null ? null : icon !== undefined ? (
       <span
@@ -239,7 +268,7 @@ export function AlertBanner({
   // column, so the action drops under it instead. A box may wrap its text, so it
   // top-aligns and nudges the glyph onto the first line.
   const row = cn(
-    inline ? "inline-flex items-center" : strip ? "flex flex-wrap items-center gap-y-1" : "flex items-start",
+    inlineRow ? "inline-flex items-center" : strip ? "flex flex-wrap items-center gap-y-1" : "flex items-start",
     sm ? "gap-1.5 text-xs" : inline ? "gap-1.5 text-sm" : "gap-2 text-sm",
   );
   const frame = inline
@@ -254,7 +283,7 @@ export function AlertBanner({
   const content = (
     <>
       {glyph}
-      <span className={cn(!inline && "flex-1", "min-w-0 text-start")}>{children}</span>
+      <span className={cn(!inlineRow && "flex-1", "min-w-0 text-start")}>{children}</span>
       {interactive && (
         <ChevronRight
           aria-hidden
@@ -288,7 +317,7 @@ export function AlertBanner({
   // `relative z-10` so it stays clickable over a whole-row banner's stretched target.
   const trailing =
     action !== undefined && action !== null ? (
-      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inline && "self-center", strip && "ms-auto")}>
+      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inlineRow && "self-center", strip && "ms-auto")}>
         {action}
       </div>
     ) : null;
@@ -319,12 +348,12 @@ export function AlertBanner({
     ? cn(
         "flex min-w-0 flex-1 text-start",
         sm ? "gap-1.5" : "gap-2",
-        inline || strip ? "items-center" : "items-start",
+        inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
         strip ? "after:rounded-none" : "after:rounded-md",
         "focus-visible:after:ring-2 focus-visible:after:ring-[var(--brand)]",
       )
-    : cn(row, !inline && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
+    : cn(row, !inlineRow && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
   // The div's attributes are the row element's: an `id`, a test id or an
   // `aria-describedby` belongs on the thing that takes focus. The live-region role is
   // NOT carried over — a button or a link that is also a `status` is neither.

@@ -152,6 +152,12 @@ export const de: Dictionary = {
       blurb:
         "Einen Tag oder einen Zeitraum wählen: der Kalender selbst, die darauf gebauten Datums- und Zeitraum-Picker, ihre Vorgaben und Grenzen sowie der erste Tag der Woche.",
     },
+    "month-view": {
+      title: "Kalender-Monatsansicht",
+      short: "Monatsansicht",
+      blurb:
+        "Der Kalender als Seite: ein linierter Monat mit den Terminen jedes Tages in seiner Zelle, eine eigene Kopfzeile der Seite, die ihn steuert, und ein Bereich für den gewählten Tag.",
+    },
     "month-time": {
       title: "Monat & Uhrzeit",
       short: "Monat & Zeit",
@@ -299,6 +305,12 @@ export const de: Dictionary = {
       blurb:
         "Die KPI-Kachel, die jedes Dashboard wiederholt — Wert, Veränderung, Trend — und die winzige Linie, die in eine Tabellenzelle passt.",
     },
+    "calendar-heatmap": {
+      title: "Kalender-Heatmap",
+      short: "Heatmap",
+      blurb:
+        "Tage als schattierte Quadrate: ein Jahr in Wochen oder ein Monat, ein auswählbarer Tag, Stufen, Obergrenze und Farbe der Skala, ein langer Zeitraum auf die letzten Tage gekürzt, und von rechts nach links.",
+    },
     layout: {
       title: "Aufklappbereich & Dialograhmen",
       short: "Aufklappen",
@@ -321,6 +333,12 @@ export const de: Dictionary = {
       short: "Bestätigen",
       blurb:
         "Das Promise, das window.confirm ersetzt — mit Abstufungen von gefährlich bis neutral, eigenen Worten und einer Warteschlange — und das nicht-modale Panel, das hinter einem schwebenden Button in einer Ecke andockt.",
+    },
+    "floating-actions": {
+      title: "Schwebende Aktionen",
+      short: "Schwebend",
+      blurb:
+        "Die Bedienelemente in der Ecke: ein erweiterter Button, der einen Status meldet und bei Änderungen angesagt wird, der Kit-Tooltip an einem schwebenden Button und eine Leiste aus Eck-Schaltern, Links und Zählern.",
     },
     popovers: {
       title: "Popover, Menüs & Tooltips",
@@ -471,6 +489,7 @@ export const de: Dictionary = {
       "Dropdown-Auswahl",
       "Feld leeren",
       "eigenes Feld bauen",
+      "Beschriftung über dem Feld",
     ],
     forms: [
       "Formular validieren",
@@ -480,6 +499,7 @@ export const de: Dictionary = {
       "Formular absenden",
       "Label mit Eingabefeld verknüpfen",
       "Formular mit Validierungsschema",
+      "einen Wizard-Schritt prüfen",
     ],
     choices: [
       "Einstellung ein- oder ausschalten",
@@ -490,6 +510,7 @@ export const de: Dictionary = {
       "Icon auswählen",
       "zwischen Karten wählen",
       "Bereich mit Schieberegler wählen",
+      "Karte, die eine Aktion auslöst",
     ],
     numbers: [
       "Geldbetrag eingeben",
@@ -510,6 +531,14 @@ export const de: Dictionary = {
       "erster Tag der Woche",
       "Von- und Bis-Datum wählen",
       "zu heute springen",
+    ],
+    "month-view": [
+      "Monatskalender als Seite",
+      "Termine im Kalender anzeigen",
+      "Planer-Monatsraster",
+      "eigener Inhalt in einem Kalendertag",
+      "Kalender mit eigener Kopfzeile",
+      "Punkte an Kalendertagen",
     ],
     "month-time": [
       "Monat auswählen",
@@ -606,6 +635,7 @@ export const de: Dictionary = {
       "Ladeanzeige",
       "Avatar mit Initialen",
       "deaktivierter Button",
+      "Statuspunkt am Avatar",
     ],
     "chips-toggles": [
       "eine von wenigen Optionen wählen",
@@ -748,6 +778,14 @@ export const de: Dictionary = {
       "Kennzahlen im Dashboard",
       "kleines Liniendiagramm",
     ],
+    "calendar-heatmap": [
+      "Beitragsdiagramm",
+      "Aktivität pro Tag",
+      "Ausgabenkalender",
+      "Heatmap der Tage",
+      "Tage nach Wert einfärben",
+      "Jahr auf einen Blick",
+    ],
     overlays: [
       "etwas über der Seite anzeigen",
       "Dialog öffnen",
@@ -771,6 +809,15 @@ export const de: Dictionary = {
       "schwebender Aktionsbutton",
       "Panel in einer Ecke angedockt",
       "Chat- oder Hilfe-Panel",
+    ],
+    "floating-actions": [
+      "schwebende Status-Pille",
+      "Statusänderung ansagen",
+      "Offline-Anzeige",
+      "Tooltip an schwebendem Button",
+      "Umschalter in einer Ecke",
+      "Badge mit Zähler",
+      "schwebende Werkzeugleiste",
     ],
     popovers: [
       "Tooltip beim Überfahren",
@@ -822,6 +869,7 @@ export const de: Dictionary = {
       "Online-Anzeige",
       "Ungelesen-Punkt am Avatar",
       "Legendenfarbe",
+      "Links als umbrechende Pillen",
     ],
     shell: [
       "App-Layout mit Seitenleiste",
@@ -832,6 +880,7 @@ export const de: Dictionary = {
       "Theme umschalten",
       "Sprachmenü",
       "Seitenleiste einklappen",
+      "Kontomenü mit Avatar",
     ],
     settings: [
       "Kontoeinstellungen",

@@ -1427,6 +1427,11 @@ export function DataTable<T>({
       // density (`group-data-[density=compact]/table:…`) without being told twice.
       data-density={density}
       data-frame={frame ? undefined : "none"}
+      // The frame clips (`overflow-clip`), so it is a clipping container for a
+      // Tooltip's auto-portal — said as an attribute as well, because jsdom computes no
+      // classes and a table-cell tooltip must portal under test just as it does in the
+      // browser (see `CLIPS_ATTRIBUTE`). The bare root clips nothing and is not marked.
+      data-clips={frame ? "" : undefined}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
@@ -1535,6 +1540,8 @@ export function DataTable<T>({
               other half of the `w-0 min-w-full` fix on the expansion cell below
               (feedback #104: "expanding an item resizes the columns"). */}
           <div
+            // The scroller: marked for the Tooltip's auto-portal (see the root above).
+            data-clips=""
             className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "flex-1 min-h-0")}
             style={fillHeight ? undefined : { maxHeight: maxBodyHeight }}
           >

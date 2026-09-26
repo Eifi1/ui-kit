@@ -9,8 +9,15 @@ import { cn } from "../lib/cn";
  * (control-page.tsx:119/123/127) draw. Two sizes because the label sits either inside a
  * dense panel (a legend, a menu) or above a block of page content, and one size looked
  * wrong in the other place.
+ *
+ * `md` (0.11.0) is 11px, the rung between them: keksdose's budget-summary card labels
+ * its figures ("Assigned", "Activity", "Upcoming", "Available" —
+ * budget-summary-card:258/264/286/297) and its support thread its day divider and a message's meta line
+ * (support-thread:153/223) at `text-[11px]` by hand — 10px read as a footnote under a
+ * figure that size, 12px competed with it. Named `md` rather than slotted in order
+ * because `sm` was already the default and renaming it would move every caller.
  */
-export type SectionLabelSize = "xs" | "sm";
+export type SectionLabelSize = "xs" | "md" | "sm";
 
 /**
  * The small, uppercase, tracked, muted label — as a class string, per size.
@@ -23,6 +30,7 @@ export type SectionLabelSize = "xs" | "sm";
  */
 export const SECTION_LABEL_CLASS: Record<SectionLabelSize, string> = {
   xs: "text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]",
+  md: "text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]",
   sm: "text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]",
 };
 

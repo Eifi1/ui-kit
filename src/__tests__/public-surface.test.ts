@@ -90,6 +90,9 @@ import * as i18nZh from "../i18n/locales/zh";
  * 389 -> 393 (0.10.0), all additive: `toast`, `Toaster`, `DEFAULT_TOAST_LABELS` and
  * `TOAST_ACTION_DURATION` — the toast layer over sonner both apps wired by hand
  * (keksdose C26, kastlan). sonner stays an optional peer: the module loads it lazily.
+ * 393 -> 403 (0.11.0), all additive: `FloatingActionGroup` / `FloatingAction`,
+ * `ButtonGroupLink`, `CalendarHeatmap` / `heatmapLevel` / `DEFAULT_CALENDAR_HEATMAP_LABELS`,
+ * `Field`, `useOptionalWizardContext`, `ActionCard`, `NavPills`; 403 -> 404: `CLIPS_ATTRIBUTE`.
  * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
  * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
  * 368 -> 374 (and /search 3 -> 9), all additive: `GlobalSearch` and
@@ -99,7 +102,7 @@ import * as i18nZh from "../i18n/locales/zh";
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 393],
+  ["@eifi1/ui-kit", barrel, 404],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 55],
@@ -108,8 +111,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/search", search, 9],
   ["@eifi1/ui-kit/shell", shell, 10],
   ["@eifi1/ui-kit/tour", tour, 4],
-  ["@eifi1/ui-kit/wizard", wizard, 9],
-  ["@eifi1/ui-kit/rhf", rhf, 8],
+  // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
+  // read `useRhfWizardStep` registers through.
+  ["@eifi1/ui-kit/wizard", wizard, 10],
+  // 0.11.0: `useRhfWizardStep`, the react-hook-form bridge to the wizard's Next gate.
+  ["@eifi1/ui-kit/rhf", rhf, 9],
   ["@eifi1/ui-kit/table-text", tableText, 5],
   ["@eifi1/ui-kit/i18n/de", i18nDe, 2],
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],

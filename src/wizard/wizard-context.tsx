@@ -27,3 +27,12 @@ export function useWizardContext(): WizardContextValue {
   }
   return ctx;
 }
+
+/**
+ * The wizard context, or `null` outside a `<StepperNav>`. For a hook that registers
+ * with the wizard when there is one and works without it — `useRhfWizardStep` in
+ * `@eifi1/ui-kit/rhf`, whose returned `validate` a custom nav can call itself.
+ */
+export function useOptionalWizardContext(): WizardContextValue | null {
+  return useContext(WizardContext);
+}

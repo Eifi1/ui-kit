@@ -1,14 +1,17 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import type { ProgressBarTone } from "./progress-bar";
+import type { ChipHue } from "./chip";
 
 /**
  * The tones are `ProgressBar`'s, name for name — which are `Chip`'s, less nothing — so a
  * dot in a legend, the bar it explains and the badge beside it can be given the same
  * word and agree. The money pair is here for the same reason it is there: a legend
- * swatch for income is money, not "success".
+ * swatch for income is money, not "success". Chip's categorical hues are here too
+ * (0.11): a unit-status dot in a combobox (kastlan lease-unit-step.tsx:35, "rented"
+ * is blue) must match the Chip that states the same status elsewhere.
  */
-export type StatusDotTone = ProgressBarTone;
+export type StatusDotTone = ProgressBarTone | ChipHue;
 
 /** `sm` 8px (keksdose's unread dot on the support trigger), `md` 10px (the avatar's
  *  unread dot), `lg` 12px (kastlan's occupancy legend swatch). */
@@ -23,6 +26,11 @@ const FILL: Record<StatusDotTone, string> = {
   info: "bg-[var(--info)]",
   income: "bg-[var(--money-income)]",
   expense: "bg-[var(--money-expense)]",
+  blue: "bg-[var(--hue-blue)]",
+  indigo: "bg-[var(--hue-indigo)]",
+  purple: "bg-[var(--hue-purple)]",
+  teal: "bg-[var(--hue-teal)]",
+  orange: "bg-[var(--hue-orange)]",
 };
 
 const SIZE: Record<StatusDotSize, string> = { sm: "size-2", md: "size-2.5", lg: "size-3" };

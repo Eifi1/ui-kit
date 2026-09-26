@@ -144,6 +144,12 @@ export const es: Dictionary = {
       blurb:
         "Elegir un día o un intervalo de días: el calendario en sí, los selectores de fecha y de intervalo construidos sobre él, sus atajos y sus límites, y el primer día de la semana.",
     },
+    "month-view": {
+      title: "Vista mensual del calendario",
+      short: "Vista mes",
+      blurb:
+        "El calendario como página: un mes cuadriculado con los eventos de cada día en su celda, una cabecera propia de la página que lo controla y un panel para el día elegido.",
+    },
     "month-time": {
       title: "Mes y hora",
       short: "Mes y hora",
@@ -291,6 +297,12 @@ export const es: Dictionary = {
       blurb:
         "La tarjeta de KPI que repite cada panel — valor, variación, tendencia — y la diminuta línea que cabe en una celda de tabla.",
     },
+    "calendar-heatmap": {
+      title: "Mapa de calor del calendario",
+      short: "Mapa de calor",
+      blurb:
+        "Los días como cuadrados sombreados: un año en semanas o un mes, un día que se puede elegir, los niveles, el tope y el color de la escala, un periodo largo recortado a sus últimos días, y de derecha a izquierda.",
+    },
     layout: {
       title: "Sección plegable y marco de diálogo",
       short: "Plegable",
@@ -313,6 +325,12 @@ export const es: Dictionary = {
       short: "Confirmar",
       blurb:
         "La promesa que sustituye a window.confirm — con tonos, palabras propias y una cola — y el panel no modal anclado en una esquina tras un botón flotante.",
+    },
+    "floating-actions": {
+      title: "Acciones flotantes",
+      short: "Flotantes",
+      blurb:
+        "Los controles de esquina: un botón extendido que informa de un estado y se anuncia cuando cambia, el tooltip del kit en un botón flotante y una píldora de interruptores, enlaces y contadores.",
     },
     popovers: {
       title: "Popovers, menús y tooltips",
@@ -463,6 +481,7 @@ export const es: Dictionary = {
       "lista desplegable",
       "vaciar un campo",
       "crear un campo propio",
+      "etiqueta encima del campo",
     ],
     forms: [
       "validar un formulario",
@@ -472,6 +491,7 @@ export const es: Dictionary = {
       "enviar un formulario",
       "asociar la etiqueta a su campo",
       "formulario con esquema de validación",
+      "validar un paso del asistente",
     ],
     choices: [
       "activar o desactivar un ajuste",
@@ -482,6 +502,7 @@ export const es: Dictionary = {
       "elegir un icono",
       "elegir entre tarjetas",
       "seleccionar un rango con un deslizador",
+      "tarjeta que inicia una acción",
     ],
     numbers: [
       "introducir un importe",
@@ -502,6 +523,14 @@ export const es: Dictionary = {
       "primer día de la semana",
       "elegir fecha de inicio y de fin",
       "volver a hoy",
+    ],
+    "month-view": [
+      "página de calendario mensual",
+      "mostrar eventos en un calendario",
+      "cuadrícula mensual de agenda",
+      "contenido propio en un día del calendario",
+      "calendario con cabecera propia",
+      "puntos en los días del calendario",
     ],
     "month-time": [
       "elegir un mes",
@@ -598,6 +627,7 @@ export const es: Dictionary = {
       "indicador de carga",
       "avatar con iniciales",
       "botón desactivado",
+      "punto de estado en un avatar",
     ],
     "chips-toggles": [
       "elegir entre pocas opciones",
@@ -740,6 +770,14 @@ export const es: Dictionary = {
       "cifras para un panel",
       "minigráfico de líneas",
     ],
+    "calendar-heatmap": [
+      "gráfico de contribuciones",
+      "actividad por día",
+      "calendario de gastos",
+      "mapa de calor de días",
+      "sombrear días por valor",
+      "el año de un vistazo",
+    ],
     overlays: [
       "mostrar algo encima de la página",
       "abrir un diálogo",
@@ -763,6 +801,15 @@ export const es: Dictionary = {
       "botón de acción flotante",
       "panel fijo en una esquina",
       "panel de chat o de ayuda",
+    ],
+    "floating-actions": [
+      "píldora de estado flotante",
+      "anunciar un cambio de estado",
+      "indicador sin conexión",
+      "tooltip en un botón flotante",
+      "botones de alternancia en una esquina",
+      "insignia con un contador",
+      "barra de herramientas flotante",
     ],
     popovers: [
       "mostrar un tooltip al pasar el ratón",
@@ -814,6 +861,7 @@ export const es: Dictionary = {
       "indicador de en línea",
       "punto de no leído en el avatar",
       "color de leyenda",
+      "enlaces como píldoras que saltan de línea",
     ],
     shell: [
       "estructura de la aplicación con barra lateral",
@@ -824,6 +872,7 @@ export const es: Dictionary = {
       "cambiar de tema",
       "menú de idioma",
       "contraer la barra lateral",
+      "menú de cuenta con avatar",
     ],
     settings: [
       "ajustes de la cuenta",

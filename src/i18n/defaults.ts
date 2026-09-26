@@ -1,5 +1,6 @@
 import { DEFAULT_DATA_TABLE_LABELS } from "../components/data-table-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS } from "../components/mini-calendar";
+import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "../components/calendar-heatmap";
 import { DEFAULT_MONTH_PICKER_LABELS } from "../components/month-picker";
 import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents";
 import { DEFAULT_POPOVER_LABELS } from "../components/popover";
@@ -56,6 +57,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   common: DEFAULT_COMMON_LABELS,
   dataTable: DEFAULT_DATA_TABLE_LABELS,
   miniCalendar: DEFAULT_MINI_CALENDAR_LABELS,
+  calendarHeatmap: DEFAULT_CALENDAR_HEATMAP_LABELS,
   datePicker: DEFAULT_DATE_PICKER_LABELS,
   monthPicker: DEFAULT_MONTH_PICKER_LABELS,
   popover: DEFAULT_POPOVER_LABELS,

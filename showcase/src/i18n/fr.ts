@@ -147,6 +147,12 @@ export const fr: Dictionary = {
       blurb:
         "Choisir un jour ou une période\u00a0: le calendrier lui-même, les sélecteurs de date et de période construits dessus, leurs préréglages et leurs bornes, et le premier jour de la semaine.",
     },
+    "month-view": {
+      title: "Vue mensuelle du calendrier",
+      short: "Vue mois",
+      blurb:
+        "Le calendrier comme page : un mois quadrillé avec les événements de chaque jour dans sa case, un en-tête propre à la page qui le pilote, et un panneau pour le jour choisi.",
+    },
     "month-time": {
       title: "Mois et heure",
       short: "Mois et heure",
@@ -294,6 +300,12 @@ export const fr: Dictionary = {
       blurb:
         "La tuile d’indicateur (KPI) que répète chaque tableau de bord — valeur, variation, tendance — et la minuscule courbe qui tient dans une cellule de tableau.",
     },
+    "calendar-heatmap": {
+      title: "Carte de chaleur calendaire",
+      short: "Heatmap",
+      blurb:
+        "Les jours en carrés ombrés : une année en semaines ou un mois, un jour que l'on peut choisir, les paliers, le plafond et la couleur de l'échelle, une longue période réduite à ses derniers jours, et de droite à gauche.",
+    },
     layout: {
       title: "Section repliable et cadre de dialogue",
       short: "Repliable",
@@ -316,6 +328,12 @@ export const fr: Dictionary = {
       short: "Confirmation",
       blurb:
         "La promesse qui remplace window.confirm — avec ses tons, ses propres mots et une file d’attente — et le panneau non modal ancré dans un coin derrière un bouton flottant.",
+    },
+    "floating-actions": {
+      title: "Actions flottantes",
+      short: "Flottant",
+      blurb:
+        "Les commandes d'angle : un bouton étendu qui signale un état et est annoncé quand il change, l'infobulle du kit sur un bouton flottant, et une pilule de bascules, de liens et de compteurs.",
     },
     popovers: {
       title: "Popovers, menus et info-bulles",
@@ -466,6 +484,7 @@ export const fr: Dictionary = {
       "liste déroulante",
       "vider un champ",
       "créer un champ sur mesure",
+      "libellé au-dessus du champ",
     ],
     forms: [
       "valider un formulaire",
@@ -475,6 +494,7 @@ export const fr: Dictionary = {
       "envoyer un formulaire",
       "relier un libellé à son champ",
       "formulaire avec schéma de validation",
+      "valider une étape d'assistant",
     ],
     choices: [
       "activer ou désactiver un réglage",
@@ -485,6 +505,7 @@ export const fr: Dictionary = {
       "choisir une icône",
       "choisir entre des cartes",
       "sélectionner une plage avec un curseur",
+      "carte qui lance une action",
     ],
     numbers: [
       "saisir un montant",
@@ -505,6 +526,14 @@ export const fr: Dictionary = {
       "premier jour de la semaine",
       "choisir une date de début et de fin",
       "revenir à aujourd’hui",
+    ],
+    "month-view": [
+      "page de calendrier mensuel",
+      "afficher des événements dans un calendrier",
+      "grille mensuelle de planning",
+      "contenu personnalisé dans un jour",
+      "calendrier avec son propre en-tête",
+      "points sur les jours du calendrier",
     ],
     "month-time": [
       "choisir un mois",
@@ -601,6 +630,7 @@ export const fr: Dictionary = {
       "indicateur de chargement",
       "avatar avec initiales",
       "bouton désactivé",
+      "pastille d'état sur un avatar",
     ],
     "chips-toggles": [
       "choisir parmi quelques options",
@@ -743,6 +773,14 @@ export const fr: Dictionary = {
       "chiffres du tableau de bord",
       "mini courbe",
     ],
+    "calendar-heatmap": [
+      "graphe de contributions",
+      "activité par jour",
+      "calendrier des dépenses",
+      "carte de chaleur des jours",
+      "colorer les jours selon la valeur",
+      "l'année d'un coup d'œil",
+    ],
     overlays: [
       "afficher quelque chose par-dessus la page",
       "ouvrir une boîte de dialogue",
@@ -766,6 +804,15 @@ export const fr: Dictionary = {
       "bouton d’action flottant",
       "panneau ancré dans un coin",
       "panneau de chat ou d’aide",
+    ],
+    "floating-actions": [
+      "pastille d'état flottante",
+      "annoncer un changement d'état",
+      "indicateur hors ligne",
+      "infobulle sur un bouton flottant",
+      "boutons bascule dans un coin",
+      "badge avec un compteur",
+      "barre d'outils flottante",
     ],
     popovers: [
       "infobulle au survol",
@@ -817,6 +864,7 @@ export const fr: Dictionary = {
       "indicateur en ligne",
       "pastille non lu sur un avatar",
       "couleur de légende",
+      "liens en pastilles qui passent à la ligne",
     ],
     shell: [
       "mise en page avec barre latérale",
@@ -827,6 +875,7 @@ export const fr: Dictionary = {
       "changer de thème",
       "menu des langues",
       "replier la barre latérale",
+      "menu de compte avec avatar",
     ],
     settings: [
       "paramètres du compte",

@@ -1,10 +1,17 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
-import { parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
+import {
+  addMonthsClamped,
+  localeWeekStart,
+  monthKey,
+  parseIsoDate,
+  sameYmd,
+  toLocalIso,
+} from "../lib/dates";
 import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
 
 /**
@@ -80,8 +87,10 @@ const DAY_NAME_FORMAT: Intl.DateTimeFormatOptions = {
  * before this, a closed prop list dropped both (audit §api-design).
  */
 export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
-  from: string;
-  to: string;
+  /** The selection's start as "YYYY-MM-DD"; `""` (the default) for none. */
+  from?: string;
+  /** The selection's end; `""` (the default) for none. */
+  to?: string;
   /**
    * BCP 47 tag for the month caption, the weekday heads, the day numbers and the
    * spoken dates. Optional since the kit grew `<UiKitProvider locale>`: a calendar
@@ -122,47 +131,92 @@ export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">,
    * merely by existing.
    */
   focusOnOpen?: boolean;
+  /**
+   * `"sm"` (default) is the compact picker: 32px round days, the size the date
+   * pickers and the data-table filter draw. `"lg"` is a MONTH VIEW for a page — tall
+   * cells in a ruled grid, the day number in the top corner and {@link renderDay}'s
+   * content under it — the calendar a planner page hand-built before this existed.
+   * Both are the same grid underneath: the same roles, roving tabindex, keys, RTL
+   * mirroring and week start.
+   */
+  size?: "sm" | "lg";
+  /**
+   * Custom content for one day: events, an amount, a dot. Called for every day of the
+   * month on show; return `null` for none.
+   *
+   * ⚠️ **It renders INSIDE the day's button** — a dot under the number at `"sm"`, a
+   * column under it at `"lg"` — so it must not be interactive: no links, no buttons,
+   * no inputs. A control inside a control is invalid HTML, and a screen reader lands
+   * on the day and never reaches what is inside it. Events that are themselves
+   * clickable are shown here as plain text, and the DAY is what is clicked: pass
+   * `mode="single"` and let `onSelect` open a day panel (a drawer, a popover) that
+   * lists that day's events as real links.
+   *
+   * The day's accessible name stays the full date; this content is attached to it as
+   * its DESCRIPTION (`aria-describedby`), so "Monday, 14 September 2026" is read
+   * first and "Rent due · Plumber" after it. Anything decorative (a coloured dot)
+   * should be `aria-hidden` or carry an `sr-only` word for what it means.
+   */
+  renderDay?: (day: Date, state: MiniCalendarDayState) => ReactNode;
+  /**
+   * The month on show, as "YYYY-MM". FOLLOWED rather than controlled, exactly like
+   * `from`/`to`: when it changes the grid moves there, and in between the user pages
+   * freely — every move to another month is reported through {@link onMonthChange}.
+   * For a month page whose own header (a month picker, a Today button) drives the
+   * calendar. Left out, the grid opens on the selection or today.
+   */
+  month?: string;
+  /** Called with "YYYY-MM" whenever the USER moves the grid to another month (the
+   *  arrows, PageUp/PageDown, arrowing off the edge). */
+  onMonthChange?: (month: string) => void;
+  /**
+   * Hide the built-in previous/next arrows and month caption, for a page that draws
+   * its own. The caption is kept for assistive technology (visually hidden), because
+   * it is what names the grid.
+   */
+  hideNavigation?: boolean;
   /** Extra classes for the calendar's root. */
   className?: string;
 }
 
-export type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-/**
- * The first day of the week in `locale`, as a `Date#getDay` index.
- *
- * `Intl.Locale#getWeekInfo()` is the standard spelling; V8 shipped it first as the
- * `weekInfo` accessor, and Firefox has neither yet — hence both reads and a Monday
- * fallback, which is ISO 8601 and what this grid did unconditionally before. Its
- * `firstDay` counts 1 = Monday … 7 = Sunday, so `% 7` maps it onto `getDay`.
- */
-function localeWeekStart(locale: string | undefined): WeekDay {
-  try {
-    const tag = locale ?? new Intl.DateTimeFormat().resolvedOptions().locale;
-    const loc = new Intl.Locale(tag) as Intl.Locale & {
-      getWeekInfo?: () => { firstDay: number };
-      weekInfo?: { firstDay: number };
-    };
-    const firstDay = (loc.getWeekInfo?.() ?? loc.weekInfo)?.firstDay;
-    if (typeof firstDay === "number") return (firstDay % 7) as WeekDay;
-  } catch {
-    // A malformed tag throws from `Intl.Locale`; the calendar still has to render.
-  }
-  return 1;
+/** What {@link MiniCalendarProps.renderDay} is told about the day it draws. */
+export interface MiniCalendarDayState {
+  /** The day as "YYYY-MM-DD". */
+  iso: string;
+  /** The day number as drawn, in the calendar's locale. */
+  label: string;
+  today: boolean;
+  /** Outside `min`/`max`. */
+  disabled: boolean;
+  /** Part of the selection — an end or a day between. */
+  selected: boolean;
+  rangeStart: boolean;
+  rangeEnd: boolean;
+  /** Strictly between the two ends of a range. */
+  inRange: boolean;
+  /** The day that holds the tab stop. */
+  active: boolean;
+  size: "sm" | "lg";
 }
+
+export type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Where `d` sits in a week that starts on `weekStart` (the first column = 0). */
 const weekdayIndex = (d: Date, weekStart: WeekDay) => (d.getDay() - weekStart + 7) % 7;
 
-/** Move `d` by whole months, keeping the day of the month where the target has one.
- *  `setMonth` alone ROLLS OVER — 31 January + 1 month is 3 March — which would skip
- *  February entirely for anyone paging through the year with PageDown. */
-function stepMonths(d: Date, months: number): Date {
-  const day = d.getDate();
-  const out = new Date(d.getFullYear(), d.getMonth() + months, 1);
-  const lastOfTarget = new Date(out.getFullYear(), out.getMonth() + 1, 0).getDate();
-  out.setDate(Math.min(day, lastOfTarget));
-  return out;
+/** Move `d` by whole months without rolling over (see {@link addMonthsClamped}). */
+const stepMonths = addMonthsClamped;
+
+/** A month-view cell: tall enough for two or three event lines, shorter on a phone. */
+const LG_CELL_HEIGHT = "min-h-16 md:min-h-24";
+
+/** The 1st of a "YYYY-MM" month, or null when absent or malformed. */
+const monthStart = (key: string | undefined) => (key ? parseIsoDate(`${key}-01`) : null);
+
+/** `day`'s day of the month in `first`'s month, clamped to that month's length. */
+function sameDayIn(first: Date, day: Date): Date {
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return new Date(first.getFullYear(), first.getMonth(), Math.min(day.getDate(), last));
 }
 
 /**
@@ -187,8 +241,8 @@ function stepMonths(d: Date, months: number): Date {
  * readable, and the click handler is what refuses them.
  */
 export function MiniCalendar({
-  from,
-  to,
+  from = "",
+  to = "",
   locale: localeProp,
   weekStartsOn,
   onSelect,
@@ -197,9 +251,15 @@ export function MiniCalendar({
   max,
   labels: labelsProp,
   focusOnOpen,
+  size = "sm",
+  renderDay,
+  month,
+  onMonthChange,
+  hideNavigation,
   className,
   ...rest
 }: MiniCalendarProps) {
+  const lg = size === "lg";
   const labels = useKitLabels("miniCalendar", DEFAULT_MINI_CALENDAR_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
   const providerWeekStart = useKitWeekStart();
@@ -232,7 +292,11 @@ export function MiniCalendar({
    * so a bounded calendar opens on a day it will actually let you pick.
    */
   const [activeIso, setActiveIso] = useState(() => {
-    const start = fromDate ?? toDate ?? new Date();
+    let start = fromDate ?? toDate ?? new Date();
+    // A `month` wins over the selection's month: the page asked for THAT month. The
+    // selection (or today) is kept when it falls inside it, else the 1st.
+    const first = monthStart(month);
+    if (first && monthKey(start) !== month) start = first;
     if (minDate && start < minDate) return toLocalIso(minDate);
     if (maxDate && start > maxDate) return toLocalIso(maxDate);
     return toLocalIso(start);
@@ -251,6 +315,19 @@ export function MiniCalendar({
     setLastValue({ from, to });
     const next = parseIsoDate(changed) ?? fromDate ?? toDate;
     if (next && toLocalIso(next) !== activeIso) setActiveIso(toLocalIso(next));
+  }
+
+  // …and the caller's month, the same way. Only a CHANGE moves the grid, so paging
+  // with the arrows is not snapped back by a parent that ignores `onMonthChange`.
+  const [lastMonth, setLastMonth] = useState(month);
+  if (lastMonth !== month) {
+    setLastMonth(month);
+    const first = monthStart(month);
+    const current = parseIsoDate(activeIso) ?? new Date();
+    if (first && monthKey(current) !== month) {
+      // Keep the day of the month, clamped: the 31st in a 30-day month is the 30th.
+      setActiveIso(toLocalIso(sameDayIn(first, current)));
+    }
   }
 
   const activeDate = parseIsoDate(activeIso) ?? new Date();
@@ -281,6 +358,7 @@ export function MiniCalendar({
       d.setDate(ref.getDate() + i);
       return {
         narrow: d.toLocaleDateString(locale, { weekday: "narrow" }),
+        short: d.toLocaleDateString(locale, { weekday: "short" }),
         long: d.toLocaleDateString(locale, { weekday: "long" }),
       };
     });
@@ -312,6 +390,8 @@ export function MiniCalendar({
     if (iso === activeIso) return;
     if (focus) pendingFocus.current = iso;
     setActiveIso(iso);
+    const key = monthKey(d);
+    if (key !== monthKey(activeDate)) onMonthChange?.(key);
   };
 
   /**
@@ -414,7 +494,13 @@ export function MiniCalendar({
     // `className` does everywhere else in the kit; `...rest` first, as in the rest of
     // this wave, so nothing from outside can take the grid's own wiring away.
     <div {...rest} className={cn("select-none", className)}>
-      <div className="flex items-center justify-between pb-1">
+      {hideNavigation ? (
+        // Still in the tree: the caption is what names the grid.
+        <div id={monthId} className="sr-only-fixed">
+          {monthLabel}
+        </div>
+      ) : (
+      <div className={cn("flex items-center justify-between", lg ? "pb-2" : "pb-1")}>
         <button
           type="button"
           onClick={() => moveMonth(-1)}
@@ -431,7 +517,12 @@ export function MiniCalendar({
         <div
           id={monthId}
           aria-live="polite"
-          className="text-xs font-medium capitalize text-[var(--text-secondary)]"
+          className={cn(
+            "capitalize",
+            lg
+              ? "text-base font-semibold text-[var(--text-primary)]"
+              : "text-xs font-medium text-[var(--text-secondary)]",
+          )}
         >
           {monthLabel}
         </div>
@@ -444,31 +535,57 @@ export function MiniCalendar({
           <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
         </button>
       </div>
+      )}
       <div
         ref={gridRef}
         role="grid"
         aria-labelledby={monthId}
         aria-describedby={mode === "range" ? hintId : undefined}
-        className="grid gap-y-0.5"
+        className={cn(
+          "grid",
+          // The month view is RULED: a 1px gap over a border-coloured ground draws the
+          // lines between the cells, the way a wall calendar does.
+          lg
+            ? "gap-px overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--border)]"
+            : "gap-y-0.5",
+        )}
       >
         <div
           role="row"
-          className="grid grid-cols-7 text-center text-[10px] font-medium uppercase text-[var(--text-placeholder)]"
+          className={cn(
+            "grid grid-cols-7 text-center font-medium",
+            lg
+              ? "gap-px text-xs text-[var(--text-muted)]"
+              : "text-[10px] uppercase text-[var(--text-placeholder)]",
+          )}
         >
           {weekdayLabels.map((w, i) => (
-            <div key={i} role="columnheader" aria-label={w.long} className="py-0.5">
-              {w.narrow}
+            <div
+              key={i}
+              role="columnheader"
+              aria-label={w.long}
+              className={lg ? "bg-[var(--bg-surface)] py-2" : "py-0.5"}
+            >
+              {lg ? w.short : w.narrow}
             </div>
           ))}
         </div>
         {weeks.map((week, wi) => (
           // No column gap: the days of a range join into ONE band. With a gap each day
           // was its own tinted box, and a selected fortnight read as fourteen chips.
-          <div key={wi} role="row" className="grid grid-cols-7">
+          <div key={wi} role="row" className={cn("grid grid-cols-7", lg && "gap-px")}>
             {week.map((d, di) => {
               // The padding cells still have to BE cells, or the rows are ragged and
               // a screen reader's "column 3" stops meaning Wednesday.
-              if (!d) return <div key={di} role="gridcell" className="h-8" />;
+              if (!d) {
+                return (
+                  <div
+                    key={di}
+                    role="gridcell"
+                    className={lg ? cn(LG_CELL_HEIGHT, "bg-[var(--bg-surface-2)]") : "h-8"}
+                  />
+                );
+              }
               const iso = toLocalIso(d);
               const disabled = isDisabled(d);
               const isStart = !disabled && fromDate && sameYmd(d, fromDate);
@@ -476,12 +593,29 @@ export function MiniCalendar({
               const isToday = sameYmd(d, today);
               const isInRange = !disabled && inRange(d) && !isStart && !isEnd;
               const isActive = iso === activeIso;
+              const isSelected = Boolean(isStart || isEnd || isInRange);
+              const label = dayNumber.format(d.getDate());
+              const content = renderDay?.(d, {
+                iso,
+                label,
+                today: isToday,
+                disabled,
+                selected: isSelected,
+                rangeStart: Boolean(isStart),
+                rangeEnd: Boolean(isEnd),
+                inRange: isInRange,
+                active: isActive,
+                size,
+              });
+              const hasContent = content != null && content !== false && content !== "";
+              const contentId = `${id}-day-${iso}`;
               // The band behind the day: full width between the ends, half width at an
               // end (so the round endpoint sits ON the band's tip), rounded where a row
               // or the month breaks it. Only when both ends exist and differ — a lone
-              // start is a dot, not a band of one.
+              // start is a dot, not a band of one. The month view tints whole cells
+              // instead, so it has no band.
               const banded =
-                hasBand && !disabled && (isStart || isEnd || isInRange);
+                !lg && hasBand && !disabled && (isStart || isEnd || isInRange);
               const lastOfMonth = d.getDate() === daysInMonth(d);
               const band = banded
                 ? cn(
@@ -494,7 +628,14 @@ export function MiniCalendar({
                   )
                 : null;
               return (
-                <div key={di} role="none" className="relative flex h-8 items-center justify-center">
+                <div
+                  key={di}
+                  role="none"
+                  className={cn(
+                    "relative flex",
+                    lg ? "min-w-0" : "h-8 items-center justify-center",
+                  )}
+                >
                 {band && <span aria-hidden className={band} />}
                 <button
                   key={di}
@@ -506,12 +647,28 @@ export function MiniCalendar({
                   // control, which is the same reason the pattern exists.
                   tabIndex={isActive ? 0 : -1}
                   aria-label={labels.day(formatDay(d))}
-                  aria-selected={Boolean(isStart || isEnd || isInRange)}
+                  // The custom content is the day's DESCRIPTION: `aria-label` replaces
+                  // the button's text as its name, so without this link a screen
+                  // reader would hear the date and never the events drawn under it.
+                  aria-describedby={hasContent ? contentId : undefined}
+                  aria-selected={isSelected}
                   aria-disabled={disabled || undefined}
                   aria-current={isToday ? "date" : undefined}
                   onClick={() => handleClick(d)}
                   onKeyDown={onDayKeyDown}
-                  className={cn(
+                  className={
+                    lg
+                      ? cn(
+                          "flex w-full min-w-0 flex-col items-stretch gap-1 overflow-hidden p-1.5 text-start text-xs transition-colors",
+                          LG_CELL_HEIGHT,
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]",
+                          disabled
+                            ? "cursor-not-allowed bg-[var(--bg-surface)] text-[var(--text-placeholder)]"
+                            : isSelected
+                              ? "bg-[var(--brand-bg)] text-[var(--text-primary)] hover:bg-[var(--brand-bg-hover)]"
+                              : "bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                        )
+                      : cn(
                     "relative size-8 rounded-full text-xs tabular-nums transition-colors",
                     // A grid you can walk with the keyboard needs to show where the
                     // keyboard IS. Inset because the cells sit half a pixel apart and
@@ -537,9 +694,43 @@ export function MiniCalendar({
                           ? "font-medium text-[var(--brand-muted)] hover:bg-[var(--brand-bg-hover)]"
                           : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
                     isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
-                  )}
+                  )
+                  }
                 >
-                  {dayNumber.format(d.getDate())}
+                  {lg ? (
+                    <>
+                      <span
+                        className={cn(
+                          "inline-flex size-6 shrink-0 items-center justify-center self-start rounded-full tabular-nums",
+                          isStart || isEnd
+                            ? "bg-[var(--brand)] font-semibold text-[var(--brand-contrast)]"
+                            : isToday && !disabled
+                              ? "font-semibold text-[var(--brand)] ring-1 ring-inset ring-[var(--brand)]"
+                              : isInRange && "font-medium text-[var(--brand-muted)]",
+                        )}
+                      >
+                        {label}
+                      </span>
+                      {hasContent && (
+                        <span id={contentId} className="flex min-w-0 flex-col gap-0.5">
+                          {content}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {label}
+                      {/* Under the number, inside the circle: room for a dot or two. */}
+                      {hasContent && (
+                        <span
+                          id={contentId}
+                          className="pointer-events-none absolute inset-x-0 bottom-0.5 flex justify-center gap-px leading-none"
+                        >
+                          {content}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </button>
                 </div>
               );
