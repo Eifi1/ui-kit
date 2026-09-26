@@ -6,6 +6,8 @@ import {
   CalendarClock,
   CloudCheck,
   Clock,
+  Eye,
+  EyeOff,
   FileText,
   Plus,
   RefreshCw,
@@ -34,7 +36,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * Leaving the page unmounts them.
  */
 
-type Which = "status" | "tooltip" | "group" | null;
+type Which = "status" | "tooltip" | "group" | "pressed" | null;
 
 function ShowBox({
   id,
@@ -389,6 +391,58 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
   );
 }
 
+/* ── pressedStyle ───────────────────────────────────────────────────────── */
+
+function PressedStyle({ active, setActive }: { active: Which; setActive: (w: Which) => void }) {
+  const [tinted, setTinted] = useState(true);
+  const [plain, setPlain] = useState(true);
+  const shown = active === "pressed";
+  return (
+    <Example
+      label="FloatingAction — pressedStyle"
+      hint="tint (default) paints the “on” state; plain leaves the look alone and changes only aria-pressed"
+    >
+      <Row>
+        <ShowBox id="pressed" active={active} setActive={setActive} />
+      </Row>
+      <OutTable
+        rows={[
+          ['pressedStyle="tint" — aria-pressed', String(tinted)],
+          ['pressedStyle="plain" — aria-pressed', String(plain)],
+          ["plain member's icon", plain ? "Eye (showing hidden rows)" : "EyeOff"],
+        ]}
+      />
+      {shown && (
+        <FloatingActionGroup aria-label="Pressed styles">
+          <FloatingAction
+            label="Upcoming only (tint)"
+            icon={<CalendarClock />}
+            pressed={tinted}
+            pressedStyle="tint"
+            onClick={() => setTinted((v) => !v)}
+          />
+          <FloatingAction
+            label="Show hidden rows (plain)"
+            icon={plain ? <Eye /> : <EyeOff />}
+            pressed={plain}
+            pressedStyle="plain"
+            onClick={() => setPlain((v) => !v)}
+          />
+        </FloatingActionGroup>
+      )}
+      <div className="mt-3">
+        <Note>
+          Both members start pressed. The first uses the default{" "}
+          <code className="font-mono">pressedStyle=&quot;tint&quot;</code>, so it shows the brand wash while on. The
+          second uses <code className="font-mono">pressedStyle=&quot;plain&quot;</code>: its icon already shows the
+          state (an open or a crossed-out eye), so it keeps its quiet look either way and only{" "}
+          <code className="font-mono">aria-pressed</code> changes, which the table above reads back.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 export function FloatingActions() {
   const [active, setActive] = useState<Which>(null);
   return (
@@ -396,6 +450,7 @@ export function FloatingActions() {
       <StatusFab active={active} setActive={setActive} />
       <TooltipFab active={active} setActive={setActive} />
       <Group active={active} setActive={setActive} />
+      <PressedStyle active={active} setActive={setActive} />
     </>
   );
 }

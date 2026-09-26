@@ -41,6 +41,7 @@ export type PageSlug =
   | "month-view"
   | "month-time"
   | "files"
+  | "media"
   | "pickers"
   | "comboboxes"
   | "entity-pickers"
@@ -62,6 +63,7 @@ export type PageSlug =
   | "charts"
   | "chart-shell"
   | "tile-chart"
+  | "pie-chart"
   | "series-chart"
   | "series-chart-marks"
   | "stats"
@@ -77,14 +79,18 @@ export type PageSlug =
   | "app-chrome"
   | "shell"
   | "page-structure"
+  | "links"
   | "settings"
+  | "auth-account"
   | "wizard"
   | "feedback-compose"
   | "feedback-inbox"
   | "api"
   | "hooks-lib"
   | "clipboard-timing"
-  | "helpers";
+  | "helpers"
+  | "formatting"
+  | "url-state";
 
 export interface Dictionary {
   /** BCP-47 tag, used for `lang` and for every `Intl` formatter on the page. */

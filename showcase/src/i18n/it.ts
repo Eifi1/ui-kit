@@ -79,6 +79,42 @@ export const it: Dictionary = {
   },
 
   pages: {
+    media: {
+      title: "Immagini e media",
+      short: "Media",
+      blurb:
+        "Mostrare ciò che è stato caricato: una griglia di miniature con azioni e didascalie, il visualizzatore a schermo intero con tasti, swipe e zoom, e immagini che richiedono un recupero autenticato.",
+    },
+    "pie-chart": {
+      title: "Grafico a torta",
+      short: "Torta",
+      blurb:
+        "La quota di un totale come ciambella o torta: modalità della legenda, spicchi cliccabili e raggiungibili da tastiera, importi nascosti, il grafico vuoto, da destra a sinistra — e la legenda da sola.",
+    },
+    links: {
+      title: "Link",
+      short: "Link",
+      blurb:
+        "Ogni link del kit instradato dal router dell'app, impostato una volta sul provider: il link testuale e i suoi toni, un pulsante o una scheda azione che è un link, e i link che escono dall'app.",
+    },
+    "auth-account": {
+      title: "Accesso e sicurezza dell'account",
+      short: "Accesso",
+      blurb:
+        "Le pagine prima dell'app — un accesso stretto e una pagina legale ampia — e la sicurezza dell'account: l'autenticazione a due fattori configurata da un codice QR, e passkey aggiunte, rinominate e rimosse.",
+    },
+    formatting: {
+      title: "Formattazione e valori con segno",
+      short: "Formattazione",
+      blurb:
+        "Numeri, importi, percentuali, date e tempi relativi nella lingua del lettore — come input → output in più lingue — e l'importo con segno e la variazione che si colorano da soli.",
+    },
+    "url-state": {
+      title: "Stato nell'URL",
+      short: "Stato URL",
+      blurb:
+        "Un valore, una scheda e una finestra di dialogo aperta conservati nell'indirizzo, così un ricaricamento li mantiene e Indietro li annulla: gli hook dei parametri di ricerca e la finestra che si apre da un link.",
+    },
     overview: {
       title: "Panoramica",
       short: "Panoramica",
@@ -422,6 +458,48 @@ export const it: Dictionary = {
   // The top-bar search's "Di cosa hai bisogno?" rows: a task in the reader's words, and
   // the page that does it. Phrased as typed into a search box — lower case, no full stop.
   needs: {
+    media: [
+      "mostrare le immagini caricate",
+      "aprire un'immagine a schermo intero",
+      "galleria di immagini con didascalie",
+      "caricare un'immagine che richiede l'accesso",
+      "anteprima di un allegato PDF",
+    ],
+    "pie-chart": [
+      "mostrare quote di un totale",
+      "grafico a ciambella",
+      "cliccare su uno spicchio",
+      "legenda senza grafico",
+      "nascondere gli importi in un grafico",
+    ],
+    links: [
+      "collegare un'altra pagina dell'app",
+      "usare il mio router per i link del kit",
+      "link che apre una nuova scheda",
+      "un pulsante che naviga",
+      "evidenziare il link della pagina corrente",
+    ],
+    "auth-account": [
+      "layout della pagina di accesso",
+      "configurare i due fattori con un codice QR",
+      "gestire le passkey",
+      "pagina di termini e privacy",
+      "mostrare il segreto dei due fattori con un pulsante copia",
+    ],
+    formatting: [
+      "formattare un importo nella lingua dell'utente",
+      "mostrare una data come «3 giorni fa»",
+      "formattare una percentuale",
+      "importo positivo o negativo a colori",
+      "mostrare la variazione rispetto al mese scorso",
+    ],
+    "url-state": [
+      "tenere un filtro nell'URL",
+      "ricordare la scheda aperta al ricaricamento",
+      "aprire una finestra di dialogo da un link",
+      "chiudere una finestra con Indietro",
+      "condividere un link alla vista corrente",
+    ],
     overview: [
       "iniziare con il kit",
       "come è organizzato il kit",

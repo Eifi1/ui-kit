@@ -83,6 +83,42 @@ export const fr: Dictionary = {
   },
 
   pages: {
+    media: {
+      title: "Images et médias",
+      short: "Médias",
+      blurb:
+        "Afficher ce qui a été téléversé : une grille de vignettes avec actions et légendes, la visionneuse plein écran avec clavier, balayage et zoom, et des images qui exigent une récupération authentifiée.",
+    },
+    "pie-chart": {
+      title: "Graphique circulaire",
+      short: "Secteurs",
+      blurb:
+        "La part d'un tout en anneau ou en camembert : modes de légende, secteurs cliquables et atteignables au clavier, montants masqués, le graphique vide, de droite à gauche — et la légende seule.",
+    },
+    links: {
+      title: "Liens",
+      short: "Liens",
+      blurb:
+        "Chaque lien du kit routé par le routeur de l'application, défini une fois sur le provider : le lien texte et ses tons, un bouton ou une carte d'action qui est un lien, et les liens qui quittent l'application.",
+    },
+    "auth-account": {
+      title: "Connexion et sécurité du compte",
+      short: "Connexion",
+      blurb:
+        "Les pages avant l'application — une connexion étroite et une page juridique large — et la sécurité du compte : la double authentification configurée par QR code, et des clés d'accès ajoutées, renommées et supprimées.",
+    },
+    formatting: {
+      title: "Formatage et valeurs signées",
+      short: "Formatage",
+      blurb:
+        "Nombres, montants, pourcentages, dates et temps relatifs dans la langue du lecteur — en entrée → sortie dans plusieurs langues — et le montant signé et la variation qui se colorent d'eux-mêmes.",
+    },
+    "url-state": {
+      title: "État dans l'URL",
+      short: "État URL",
+      blurb:
+        "Une valeur, un onglet et une boîte de dialogue ouverte gardés dans l'adresse, pour qu'un rechargement les conserve et que Retour les annule : les hooks de paramètres de recherche et la boîte de dialogue qui s'ouvre depuis un lien.",
+    },
     overview: {
       title: "Présentation",
       short: "Présentation",
@@ -426,6 +462,48 @@ export const fr: Dictionary = {
   // The top-bar search's « De quoi avez-vous besoin ? » rows, as a French reader types
   // them: infinitives and plain nouns, lower case, no full stop.
   needs: {
+    media: [
+      "afficher les images téléversées",
+      "ouvrir une image en plein écran",
+      "galerie d'images avec légendes",
+      "charger une image qui exige une connexion",
+      "aperçu d'une pièce jointe PDF",
+    ],
+    "pie-chart": [
+      "montrer des parts d'un total",
+      "graphique en anneau",
+      "cliquer sur un secteur",
+      "légende sans graphique",
+      "masquer les montants d'un graphique",
+    ],
+    links: [
+      "lier vers une autre page de l'application",
+      "utiliser mon routeur pour les liens du kit",
+      "lien qui ouvre un nouvel onglet",
+      "un bouton qui navigue",
+      "mettre en évidence le lien de la page actuelle",
+    ],
+    "auth-account": [
+      "mise en page de la connexion",
+      "configurer la double authentification par QR code",
+      "gérer les clés d'accès",
+      "page des conditions et de confidentialité",
+      "afficher le secret de double authentification avec un bouton copier",
+    ],
+    formatting: [
+      "formater un montant selon la langue",
+      "afficher une date comme « il y a 3 jours »",
+      "formater un pourcentage",
+      "montant positif ou négatif en couleur",
+      "afficher la variation par rapport au mois dernier",
+    ],
+    "url-state": [
+      "garder un filtre dans l'URL",
+      "retenir l'onglet ouvert au rechargement",
+      "ouvrir une boîte de dialogue depuis un lien",
+      "fermer une boîte de dialogue avec Retour",
+      "partager un lien vers la vue actuelle",
+    ],
     overview: [
       "débuter avec le kit",
       "organisation du kit",

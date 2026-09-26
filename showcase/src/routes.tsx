@@ -8,6 +8,12 @@ import {
   ChartColumn,
   ChartArea,
   ChartBar,
+  ChartPie,
+  Bookmark,
+  Images,
+  KeyRound,
+  Link2,
+  Percent,
   ChartLine,
   ChevronsUpDown,
   CircleDot,
@@ -150,6 +156,23 @@ import {
   StatusDotHuesDemo,
   TableHeaderValignDemo,
 } from "./sections/props-011-demo";
+import { LinksDemo } from "./sections/links-demo";
+import { Buttons012 } from "./sections/buttons-012-demo";
+import { FormLayoutDemo, RhfFieldsDemo } from "./sections/forms-012-demo";
+import { WizardStepHooksDemo } from "./sections/wizard-012-demo";
+import { DescriptionPlaceholderDemo, TableVariantsDemo } from "./sections/table-012-demo";
+import { DataTableActionsDemo, DataTableUrlFiltersDemo } from "./sections/data-table-012-demo";
+import { UrlStateDemo } from "./sections/url-state-demo";
+import { FormattingDemo } from "./sections/formatting-demo";
+import { HotkeyDemo, StatesDemo } from "./sections/states-012-demo";
+import { PieChartDemo } from "./sections/pie-chart-demo";
+import { HeatmapRampDemo } from "./sections/heatmap-012-demo";
+import { MonthStepperDemo, OutsideDaysDemo } from "./sections/calendars-012-demo";
+import { ComboboxClipsDemo, PickerSheetClipsDemo } from "./sections/clips-012-demo";
+import { MediaDemo } from "./sections/media-demo";
+import { AuthAccountDemo } from "./sections/auth-account-demo";
+import { FeedbackThreadDemo } from "./sections/feedback-thread-demo";
+import { ShellBrandDemo } from "./sections/shell-012-demo";
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -297,11 +320,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems"],
         Body: () => (
           <>
             <FormsRhf />
             <RhfWizardDemo />
+            <RhfFieldsDemo />
+            <FormLayoutDemo />
           </>
         ),
       },
@@ -347,6 +372,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <Dates />
             <WeekStartDemo />
+            <OutsideDaysDemo />
           </>
         ),
       },
@@ -371,6 +397,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <MonthPickerDemo />
+            <MonthStepperDemo />
             <TimeInputDemo />
           </>
         ),
@@ -384,6 +411,16 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: FileUp,
         components: ["FileButton", "useFilePicker", "FileDropzone", "useFileDrop"],
         Body: FileInputs,
+      },
+      {
+        slug: "media",
+        title: "Images & media",
+        short: "Media",
+        blurb:
+          "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, and images that need a signed-in fetch.",
+        icon: Images,
+        components: ["ImageGrid", "Lightbox", "AuthedImage", "useAuthedSrc"],
+        Body: MediaDemo,
       },
     ],
   },
@@ -407,6 +444,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <Comboboxes />
             <AutocompleteDemo />
+            <ComboboxClipsDemo />
           </>
         ),
       },
@@ -428,7 +466,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Multi-select, the grouped picker and the phone sheet — and the hooks and panel every dropdown in the kit is built from.",
         icon: Puzzle,
         components: ["MultiSelect", "GroupedPicker", "PickerSheet", "useDropdown", "useDropdownSearch", "DropdownPanel"],
-        Body: DropdownParts,
+        Body: () => (
+          <>
+            <DropdownParts />
+            <PickerSheetClipsDemo />
+          </>
+        ),
       },
       {
         slug: "measured-grid",
@@ -495,6 +538,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ButtonLabelsTones />
             <ButtonsMore />
             <IconButtonDisabledReasonDemo />
+            <Buttons012 />
           </>
         ),
       },
@@ -521,7 +565,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster"],
+        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary"],
         Body: () => (
           <>
             <FeedbackProgress />
@@ -530,6 +574,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <AlertBannerBlockDemo />
             <EmptyStateSmallDemo />
             <ToastsDemo />
+            <StatesDemo />
           </>
         ),
       },
@@ -546,6 +591,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <DescriptionTable />
             <DescriptionTableMore />
             <TableHeaderValignDemo />
+            <TableVariantsDemo />
+            <DescriptionPlaceholderDemo />
           </>
         ),
       },
@@ -583,8 +630,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The largest component in the kit, whole: sorting, filtering, selection and expansion, controlled from outside, short and unpaginated, filling a pane, and right-to-left.",
         icon: Table,
-        components: ["DataTable"],
-        Body: DataTableSection,
+        components: ["DataTable", "BooleanMark", "booleanColumn", "CopyButton"],
+        Body: () => (
+          <>
+            <DataTableSection />
+            <DataTableActionsDemo />
+          </>
+        ),
       },
       {
         slug: "data-table-server",
@@ -593,8 +645,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The table when it does not own everything: the view kept in the address, the rows paged by a server, and the phone layout of cards, groups and swipe actions.",
         icon: Server,
-        components: ["DataTable"],
-        Body: DataTableServerSection,
+        components: ["DataTable", "useTableUrlState", "filterHref"],
+        Body: () => (
+          <>
+            <DataTableServerSection />
+            <DataTableUrlFiltersDemo />
+          </>
+        ),
       },
       {
         slug: "data-table-parts",
@@ -655,6 +712,16 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
+        slug: "pie-chart",
+        title: "Pie chart",
+        short: "Pie",
+        blurb:
+          "A share of a whole as a donut or a pie: legend modes, slices that can be clicked and reached by keyboard, hidden amounts, the empty chart, right-to-left — and the legend on its own.",
+        icon: ChartPie,
+        components: ["PieChart", "StaticLegend"],
+        Body: PieChartDemo,
+      },
+      {
         slug: "series-chart",
         title: "Series chart",
         short: "Series",
@@ -702,8 +769,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Days as shaded squares: a year of weeks or one month, a day that can be picked, the scale's steps, top and colour, a long window cut to its latest days, and right-to-left.",
         icon: CalendarDays,
-        components: ["CalendarHeatmap", "heatmapLevel"],
-        Body: CalendarHeatmapDemo,
+        components: ["CalendarHeatmap", "heatmapLevel", "heatmapWindowEnd"],
+        Body: () => (
+          <>
+            <CalendarHeatmapDemo />
+            <HeatmapRampDemo />
+          </>
+        ),
       },
     ],
   },
@@ -721,7 +793,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
         icon: AppWindow,
-        components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition"],
+        components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition", "useDialogParam"],
         Body: () => (
           <>
             <Dialogs />
@@ -811,11 +883,12 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar"],
         Body: () => (
           <>
             <ShellSection />
             <AccountMenuDemo />
+            <ShellBrandDemo />
           </>
         ),
       },
@@ -837,6 +910,16 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
+        slug: "links",
+        title: "Links",
+        short: "Links",
+        blurb:
+          "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
+        icon: Link2,
+        components: ["TextLink", "UiKitProvider", "useKitLink", "Button", "ActionCard"],
+        Body: LinksDemo,
+      },
+      {
         slug: "settings",
         title: "Settings fields",
         short: "Settings",
@@ -846,13 +929,28 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: Settings,
       },
       {
+        slug: "auth-account",
+        title: "Sign-in & account security",
+        short: "Auth",
+        blurb:
+          "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
+        icon: KeyRound,
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS"],
+        Body: AuthAccountDemo,
+      },
+      {
         slug: "wizard",
         title: "Wizard",
         short: "Wizard",
         blurb: "The multi-step engine, its chrome and its review step.",
         icon: Wand2,
-        components: ["useWizard", "StepperNav", "WizardSummary"],
-        Body: Wizard,
+        components: ["useWizard", "StepperNav", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
+        Body: () => (
+          <>
+            <Wizard />
+            <WizardStepHooksDemo />
+          </>
+        ),
       },
       {
         slug: "feedback-compose",
@@ -869,8 +967,13 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackInbox", "FEEDBACK_STATUSES"],
-        Body: FeedbackInbox,
+        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer"],
+        Body: () => (
+          <>
+            <FeedbackInbox />
+            <FeedbackThreadDemo />
+          </>
+        ),
       },
     ],
   },
@@ -887,8 +990,13 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Hooks",
         blurb: "The non-visual exports: hooks read live, and the pure helpers as input → output.",
         icon: FileText,
-        components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn"],
-        Body: HooksLib,
+        components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn", "useHotkey"],
+        Body: () => (
+          <>
+            <HooksLib />
+            <HotkeyDemo />
+          </>
+        ),
       },
       {
         slug: "clipboard-timing",
@@ -909,6 +1017,26 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: FunctionSquare,
         components: ["todayIso", "dateRangePresets", "calendarMonthPresets", "lastFullMonthsRange", "evaluateExpression", "CURRENCIES", "FIELD_BASE"],
         Body: Helpers,
+      },
+      {
+        slug: "formatting",
+        title: "Formatting & signed values",
+        short: "Formatting",
+        blurb:
+          "Numbers, money, percentages, dates and relative times in the reader's locale — as input → output in several languages — and the signed amount and change that colour themselves.",
+        icon: Percent,
+        components: ["formatNumber", "formatMoney", "formatPercent", "formatDate", "formatRelativeTime", "useKitFormat", "SignedAmount", "Delta", "Tone", "toneTextClass"],
+        Body: FormattingDemo,
+      },
+      {
+        slug: "url-state",
+        title: "State in the URL",
+        short: "URL state",
+        blurb:
+          "A value, a tab and an open dialog kept in the address, so a reload keeps them and Back undoes them: the search-param hooks and the dialog that opens from a link.",
+        icon: Bookmark,
+        components: ["useSearchParamState", "useTabParam", "useDialogParam", "Modal"],
+        Body: UrlStateDemo,
       },
     ],
   },
