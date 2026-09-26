@@ -20,6 +20,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.11.0](https://github.com/Eifi1/ui-kit/compare/v0.10.0...v0.11.0) (2026-09-26)
+
+### Added
+
+* 0.11 — floating chrome, account menu, calendars, Field, rhf wizard steps ([6b46828](https://github.com/Eifi1/ui-kit/commit/6b46828becf92c51317540283f14e40fc68c03f2))
+* keksdose's 0.10 feedback — bulk bar panel/open/responsive and more ([014cb83](https://github.com/Eifi1/ui-kit/commit/014cb83e4e2fc01bdbdf56b63b7711684a9627a6))
+* **list:** ListItem targetProps (e.g. drag-and-drop on the row) and bordered ([24be17d](https://github.com/Eifi1/ui-kit/commit/24be17d8274d71ddc8c16564d95c59fe9d696c00))
+* **status-dot:** Chip's categorical hues, so a dot matches its Chip ([b64ffdc](https://github.com/Eifi1/ui-kit/commit/b64ffdccad2aebfed3514fdf6a716d21d5c7b3d1))
+
+### Fixed
+
+* avatar trigger name docs, heatmap stays on latest weeks on resize, segment fallback colours ([922d4fe](https://github.com/Eifi1/ui-kit/commit/922d4fee1a81fc7eaecd93a13dbf6a1bd717f617))
+
 ## [0.10.0](https://github.com/Eifi1/ui-kit/compare/v0.9.0...v0.10.0) (2026-09-26)
 
 ### Added
