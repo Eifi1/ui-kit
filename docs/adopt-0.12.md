@@ -21,7 +21,10 @@ every prop live.
    - new keys in existing namespaces: `dataTable`, `monthPicker` and `common.opensInNewTab`
 
    Every `@eifi1/ui-kit/i18n/<code>` catalogue has them.
-5. **Fixed:** CopyButton no longer pins `tooltipPortal={false}`, so inside a DataTable its bubble portals like any Tooltip.
+5. **SearchField draws its clear button by default** (labelled `common.clear`).
+   `clearable={false}` removes it. You can drop the `clearLabel` you only passed to get the
+   button.
+6. **Fixed:** CopyButton no longer pins `tooltipPortal={false}`, so inside a DataTable its bubble portals like any Tooltip.
 
 ---
 
@@ -58,6 +61,14 @@ every prop live.
 | profile-page labels, qrcode.react, passkeys-card | settings labels from the provider (`accountSettings`), `TwoFactorSetting setup={{ otpauthUri }}` (built-in QR), `PasskeysSetting` | |
 | feedback-button labels, feedback-page thread | `feedbackDialog` labels, `FeedbackThread`, `FeedbackComposer` | |
 | feedback-button Ctrl+Shift+F | `useHotkey("Mod+Shift+F", …)` | |
+| 32 SearchField `clearLabel` repeated (4 sites) | drop it | the clear button is on by default |
+| 33 journal-entry-lines per-field labels on phones | `Field labelVisibility="below-md"` | the label stays the control's name at every width |
+| 34 MultiEntityCombobox To/Cc/Bcc in Field | `{(ids) => <MultiEntityCombobox {...ids} … />}` | ids now land on the trigger; the same for EntityCombobox, Combobox, AmountInput, DatePicker, NumberInput |
+| 35 DE cap button pair in Field | `ToggleGroup labelPlacement="above"`, or bare with `aria-labelledby={labelId}` (Field's 2nd render arg) | |
+| 36 "Remove all" `text-destructive` | `Button variant="secondary" tone="danger"` | |
+| 37 room-inspector / handover-detail / defects-step inset cards | `ListItem` with a body (`children`) | the body sits beside the row's target, named by its title |
+| 38 breakdown-row, meter-add-row sub-boxes | `Card variant="outline" padding="sm"` | |
+| 39 NumberField aria from Field | typed now | |
 | tours/utils/completions storage | `readStored` / `writeStored` | |
 
 ## keksdose
