@@ -1,0 +1,51 @@
+# Adopting `@eifi1/ui-kit` 0.11 — per repository
+
+The rest of the three apps' 0.9 audits (items 19–25), plus the feedback from adopting
+0.10. Everything is additive. The one visible change: `TopBarActionMenu` rows are now
+`MenuItem`s, so their labels truncate instead of wrapping. `CHANGELOG.md` → `0.11.0` has
+the release notes, and the showcase (⌘K) has every prop live.
+
+## Everyone
+
+1. Bump to `^0.11.0` by hand; a caret below 1.0 locks the minor version.
+2. **New label keys** (only if you type a complete `UiKitLabels`): `floatingPanel.badge`
+   and the namespace `calendarHeatmap`. Every `@eifi1/ui-kit/i18n/<code>` catalogue has
+   them.
+3. **New:**
+   - `Field` (label above, hint, error and required, with the ids wired up)
+   - `ActionCard` and `NavPills`
+   - `FloatingActionGroup` / `FloatingAction`, `ButtonGroupLink`
+   - `CalendarHeatmap`
+   - in `/rhf`: `useRhfWizardStep`
+
+---
+
+## kastlan
+
+| Replace | With | Notes |
+|---|---|---|
+| account menu hand-built in HoverMenu (app/top-bar.tsx:147–205) | `TopBarActionMenu trigger={() => <UserAvatar … />} header={{ title, subtitle }} entries={[…, { tone: "danger", … }]} footer={…} footerLabel` | arrow keys skip the header and footer; Tab reaches the footer links |
+| offline indicator (shared/offline/offline-indicator.tsx:39) | `FloatingActionButton extended live variant="surface"` | keep it mounted and pass `hidden` when there is nothing to report, so the live region announces changes |
+| calendar page month grid (calendar-page.tsx:304–335) | `MiniCalendar size="lg" renderDay={(day, s) => …} month={m} onMonthChange={setM} hideNavigation` | day content stays non-interactive; open a day panel via `onSelect` for clickable events |
+| shared/components/wizard/wizard-field.tsx | `Field label hint error required` with `{(ids) => <Input {...ids} />}` | |
+| use-rhf-wizard-step.ts | `useRhfWizardStep(form, { fields })` from `@eifi1/ui-kit/rhf` | your `(form, onValid)` call shape still works |
+
+## keksdose
+
+| Replace | With | Notes |
+|---|---|---|
+| feedback-page:854, transactions-page:644 corner toggles | `FloatingActionGroup` with `FloatingAction pressed badge` | badge count joins the name; tooltip is the kit Tooltip (dev#523) |
+| FAB native title | `FloatingActionButton tooltip` / `FloatingPanel fabTooltip` | |
+| scan-file-preview +/− discs, over-content toolbars | `ButtonGroup variant="gapped" elevated` | |
+| account-menu trigger dot | `UserAvatar badge={{ label, tone }}` | the badge's label becomes part of the trigger's name |
+| category-editor / charts calendar-heatmap.tsx | `CalendarHeatmap` (`layout="month"` on phones, `maxDays`, `sensitive` default on) | |
+| cut-card:133 stacked meter | `ProgressBar segments={…} legend` | |
+| transaction-fields:162 field-height delete, sync-status-indicator:142 | `IconButton stretch`, `tone="custom" toneColor={…}`, `shape="round"`, `size="xl"` | |
+| privacy-enroll-dialog:345 CustodyOption | `ActionCard icon title description meta metaTone` | |
+| swipe-settings-card:152 | `NavPills items current onSelect` | wraps; `aria-current`, not tabs |
+
+## lenkbank
+
+| Replace | With | Notes |
+|---|---|---|
+| ToggleField's per-option caption (gear/common.tsx) | `ToggleGroup label caption={(v) => …}` | announced when the choice changes |
