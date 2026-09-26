@@ -28,6 +28,7 @@ the release notes, and the showcase (⌘K) has every prop live.
 | offline indicator (shared/offline/offline-indicator.tsx:39) | `FloatingActionButton extended live variant="surface"` | keep it mounted and pass `hidden` when there is nothing to report, so the live region announces changes |
 | calendar page month grid (calendar-page.tsx:304–335) | `MiniCalendar size="lg" renderDay={(day, s) => …} month={m} onMonthChange={setM} hideNavigation` | day content stays non-interactive; open a day panel via `onSelect` for clickable events |
 | shared/components/wizard/wizard-field.tsx | `Field label hint error required` with `{(ids) => <Input {...ids} />}` | |
+| lease-unit-step.tsx:35 raw-class unit-status dots | `StatusDot tone="blue" \| "indigo" \| …` | StatusDot now takes Chip's hues, so a dot matches its Chip |
 | use-rhf-wizard-step.ts | `useRhfWizardStep(form, { fields })` from `@eifi1/ui-kit/rhf` | your `(form, onValid)` call shape still works |
 
 ## keksdose
