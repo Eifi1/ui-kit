@@ -107,7 +107,8 @@ export function StepperNav<TData extends Record<string, unknown>>({
   const pending = wizard.isValidating;
   const stepNextLabel = wizard.currentStep.nextLabel;
 
-  let forwardButton: ReactNode = null;
+  // Every branch below assigns it; no initial value to overwrite.
+  let forwardButton: ReactNode;
   if (wizard.isCommitStep) {
     const finishButton = (
       <Button

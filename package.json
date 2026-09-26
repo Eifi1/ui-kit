@@ -115,7 +115,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.0",
@@ -126,7 +126,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.2",
     "commit-and-tag-version": "^13.2.1",
-    "eslint": "^9.39.5",
+    "eslint": "^10.11.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
@@ -165,8 +165,11 @@
   "engines": {
     "node": ">=20.18"
   },
-  "_overrides": "esbuild is forced to ^0.28.2 for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows, fixed in 0.28.1). vite already allows ^0.28; tsup 8.5.1 still pins ^0.27, and `npm run check` (build + package verification) proves it works on 0.28. Drop this once tsup allows 0.28 itself.",
+  "_overrides": "esbuild is forced to ^0.28.2 for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows, fixed in 0.28.1). vite already allows ^0.28; tsup 8.5.1 still pins ^0.27, and `npm run check` (build + package verification) proves it works on 0.28. Drop this once tsup allows 0.28 itself. eslint-plugin-jsx-a11y 6.10.2 (its latest) declares eslint peers up to ^9; it runs unchanged on eslint 10 — every a11y rule still fires, same counts — so its eslint peer is pointed at ours. Drop that entry once jsx-a11y declares ^10.",
   "overrides": {
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    }
   }
 }
