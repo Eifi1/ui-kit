@@ -12,7 +12,9 @@ every prop live.
    `<UiKitProvider linkComponent={({ href, ...p }) => <Link to={href} {...p} />}>`.
    Then drop `renderLink` from ListItem, Breadcrumbs, StatTile, Chip, MenuItem, NavPills,
    ButtonGroupLink, FloatingAction and ActionCard, and use `TextLink` / `Button href`. A
-   component's own `renderLink` still wins. External and absolute URLs stay plain `<a>`.
+   component's own `renderLink` still wins. The rule is the same in every kit link: `/x`, `x`
+   and the hash-router form `#/x` go through your router link; `https:`, `mailto:`, `//host`
+   and an in-page `#anchor` stay plain `<a>`.
 3. **Visible changes:**
    - **DescriptionItem** shows "—" for an empty value; `placeholder={null}` restores the old empty cell.
    - **DataTable's default empty text** is now "No entries" (`dataTable.empty`), no longer "—".
@@ -41,7 +43,7 @@ every prop live.
 | journal-entry-lines, floor-card, floors-units, invoice-line-items, lease-components, new-budget | `LineItems` / `RhfLineItems` | |
 | DetailField em dash | `DescriptionList` (the placeholder is now the default) | |
 | resource-list-page row actions and toolbar | `DataTable rowActions={[{ kind: "edit", … }, { kind: "delete", confirm: useConfirm(), … }]} toolbar={…}` | the same actions become mobile swipes |
-| use-server-table, build-list-url, column-filters | `useTableUrlState`, `filterHref`, `selectFilter(record)` / `textFilter` / `dateFilter` / `numberFilter` | |
+| use-server-table, build-list-url, column-filters | `useTableUrlState`, `filterHref`, `selectFilter(record)` / `textFilter` / `dateFilter` / `numberFilter` | two URL-synced tables on one page: `urlSync={{ prefix: "units." }}` / `urlPrefix` |
 | bool-cell | `BooleanMark` / `booleanColumn` | |
 | hand-framed tables (6), balance sheet / income statement / journal totals | `Table framed`, `TableRow variant="group" \| "subtotal" \| "total"` | |
 | use-search-param-state, use-tab-param, use-dialog-param | `useSearchParamState`, `useTabParam`, `useDialogParam` / `Modal urlParam` | |
@@ -56,7 +58,7 @@ every prop live.
 | invoice-detail warning card | `Card tone="warning"` | |
 | usage-progress-bar | `ProgressBar max={null}`, `hint`, `overage` | |
 | error-boundary | `ErrorBoundary` | |
-| login / register / verify / two-factor / legal layouts | `AuthLayout` (`width="wide" card={false}` for legal) | |
+| login / register / verify / two-factor / legal layouts | `AuthLayout` (`width="wide" card={false}` for legal) | `landmark={false} headingAs="h2"` when it is embedded in another page |
 | app-layout sidebar footer, top-bar brand | `AppShell sidebarFooterItems`, `TopBarBrand` | |
 | profile-page labels, qrcode.react, passkeys-card | settings labels from the provider (`accountSettings`), `TwoFactorSetting setup={{ otpauthUri }}` (built-in QR), `PasskeysSetting` | |
 | feedback-button labels, feedback-page thread | `feedbackDialog` labels, `FeedbackThread`, `FeedbackComposer` | |
