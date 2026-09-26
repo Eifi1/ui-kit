@@ -7,7 +7,7 @@ import { TOPBAR_TRIGGER_CLASS } from "../shell/topbar-controls";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { CommandPalette, DEFAULT_COMMAND_PALETTE_LABELS, useCommandKey } from "./command-palette";
-import type { CommandItem, CommandPaletteLabels } from "./command-palette";
+import type { CommandItem, CommandPaletteDensity, CommandPaletteLabels } from "./command-palette";
 import { createSearchIndex } from "./search-index";
 import type { SearchEntry, SearchIndexOptions } from "./search-index";
 
@@ -94,6 +94,14 @@ export interface GlobalSearchProps {
   sources?: readonly GlobalSearchSource[];
   /** What the empty query shows, under the `suggestions` heading. */
   suggestions?: readonly GlobalSearchSuggestion[];
+  /**
+   * Show each suggested ENTRY under its own `group` instead of all of them under the
+   * one `suggestions` heading — keksdose's empty palette listed "Pages" and "Actions"
+   * apart, and one "Try" heading over both lost the difference. An entry with no
+   * `group` and a query suggestion (`{ query }`) stay under `suggestions`. `groupOrder`
+   * orders these groups as it orders the results'. Off by default.
+   */
+  suggestionsKeepGroups?: boolean;
   /** Groups listed here come first, in this order; the rest follow in ranking order. */
   groupOrder?: readonly string[];
   /** Ranking and capping — `groupLimit` (default 8) applies to every group. */
@@ -130,6 +138,14 @@ export interface GlobalSearchProps {
   hideTriggerOnPhone?: boolean;
   /** Class for the default trigger button, merged over `TOPBAR_TRIGGER_CLASS`. */
   triggerClassName?: string;
+  /**
+   * The default trigger's magnifier, in px. Default 16 (`size-4`), as it always was;
+   * 20 matches the kit's other top-bar triggers (`TopbarIconButton` draws `size-5`) and
+   * keksdose's top bar, which reached into the button with `[&_svg]:size-5` for it.
+   */
+  triggerIconSize?: number;
+  /** The palette's row height — `CommandPalette`'s `density`. Default `"compact"`. */
+  density?: CommandPaletteDensity;
   labels?: Partial<GlobalSearchLabels>;
   /** Passed through to the palette (`empty`, `loading`, `error`, `hint`, …). */
   paletteLabels?: Partial<CommandPaletteLabels>;
@@ -211,6 +227,7 @@ function GlobalSearchImpl({
   entries,
   sources,
   suggestions,
+  suggestionsKeepGroups = false,
   groupOrder,
   indexOptions,
   navigate,
@@ -226,6 +243,8 @@ function GlobalSearchImpl({
   trigger = "button",
   hideTriggerOnPhone = false,
   triggerClassName,
+  triggerIconSize,
+  density,
   labels,
   paletteLabels,
 }: GlobalSearchProps & { navigate: (href: string) => void; hrefFor: (href: string) => string }) {
@@ -360,12 +379,27 @@ function GlobalSearchImpl({
   // which the compiler lint cannot tell from a read during render.
   /* eslint-disable react-hooks/refs */
   const items = useMemo((): CommandItem[] => {
+    const ordered = (out: CommandItem[]) => {
+      if (!order.length) return out;
+      const rank = (group: string) => {
+        const i = order.indexOf(group);
+        return i === -1 ? order.length : i;
+      };
+      // Stable: within a rank, groups keep the order their best hit gave them.
+      return out
+        .map((item, i) => ({ item, i }))
+        .sort((a, b) => rank(a.item.group) - rank(b.item.group) || a.i - b.i)
+        .map(({ item }) => item);
+    };
+
     if (!q) {
       const out: CommandItem[] = [];
+      const groupOf = (entry: SearchEntry) =>
+        suggestionsKeepGroups ? (entry.group ?? l.suggestions) : l.suggestions;
       suggestionList.forEach((s, i) => {
         if (typeof s === "string") {
           const entry = byId.get(s);
-          if (entry) out.push(toItem("try:", entry, l.suggestions));
+          if (entry) out.push(toItem("try:", entry, groupOf(entry)));
         } else if ("query" in s) {
           out.push({
             id: `try:q${i}`,
@@ -380,9 +414,10 @@ function GlobalSearchImpl({
               refocusField();
             },
           });
-        } else out.push(toItem("try:", s, l.suggestions));
+        } else out.push(toItem("try:", s, groupOf(s)));
       });
-      return out;
+      // One heading has nothing to order; kept groups are ordered like results.
+      return suggestionsKeepGroups ? ordered(out) : out;
     }
 
     const out = index.search(q).map((hit) => toItem("s:", hit.entry, hit.entry.group ?? l.results));
@@ -410,17 +445,8 @@ function GlobalSearchImpl({
       }
     }
 
-    if (!order.length) return out;
-    const rank = (group: string) => {
-      const i = order.indexOf(group);
-      return i === -1 ? order.length : i;
-    };
-    // Stable: within a rank, groups keep the order their best hit gave them.
-    return out
-      .map((item, i) => ({ item, i }))
-      .sort((a, b) => rank(a.item.group) - rank(b.item.group) || a.i - b.i)
-      .map(({ item }) => item);
-  }, [q, suggestionList, byId, index, sourceList, sourceResults, order, groupLimit, toItem, l.suggestions, l.results, pl.loading, pl.error, setOpen, setQuery, noop, redactLabels]);
+    return ordered(out);
+  }, [q, suggestionList, suggestionsKeepGroups, byId, index, sourceList, sourceResults, order, groupLimit, toItem, l.suggestions, l.results, pl.loading, pl.error, setOpen, setQuery, noop, redactLabels]);
   /* eslint-enable react-hooks/refs */
 
   // The palette re-runs its provider on a `revision` change, never on the provider's
@@ -461,7 +487,10 @@ function GlobalSearchImpl({
                 aria-haspopup="dialog"
                 className={cn(TOPBAR_TRIGGER_CLASS, triggerClassName)}
               >
-                <Search className="size-4" />
+                <Search
+                  className={triggerIconSize === undefined ? "size-4" : undefined}
+                  style={triggerIconSize === undefined ? undefined : { width: triggerIconSize, height: triggerIconSize }}
+                />
               </button>
             </Tooltip>
           )}
@@ -475,6 +504,7 @@ function GlobalSearchImpl({
         searchOn={searchOn}
         redactLabels={redactLabels}
         fullScreenOnPhone={fullScreenOnPhone}
+        density={density}
         labels={resolvedPaletteLabels}
       />
     </>

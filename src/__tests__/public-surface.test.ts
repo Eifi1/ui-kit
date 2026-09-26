@@ -83,6 +83,10 @@ import * as i18nZh from "../i18n/locales/zh";
  * `useDebouncedCallback`, `ButtonGroup`, the static `Table` parts, `Separator`,
  * `ScrollArea`, `TreeView` / `TreeRow`, `useFileDrop` / `dragHasFiles`, the series-chart
  * helpers, and a `DEFAULT_*_LABELS` per new namespace.
+ * 374 -> 389 (0.10.0), all additive — the apps' 0.9 audits: `List` / `ListItem`,
+ * `MenuItem`, `SectionLabel` / `Caption` (+ their class constants), `StatusDot`,
+ * `PageHeader`, `Breadcrumbs`, `BulkActionBar`, `TableEmpty`, and a `DEFAULT_*_LABELS`
+ * per new namespace.
  * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
  * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
  * 368 -> 374 (and /search 3 -> 9), all additive: `GlobalSearch` and
@@ -92,7 +96,7 @@ import * as i18nZh from "../i18n/locales/zh";
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 374],
+  ["@eifi1/ui-kit", barrel, 389],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 55],

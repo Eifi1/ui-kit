@@ -236,6 +236,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     dialogFrame: {
       close: "Cerrar",
     },
+    bulkActionBar: {
+      selected: (count) => `${n(count)} ${count === 1 ? "seleccionado" : "seleccionados"}`,
+      clear: "Borrar selección",
+      cleared: "Selección borrada",
+    },
     swipeableRow: {
       actions: "Acciones de la fila",
     },
@@ -372,6 +377,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "Arrastra para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. Haz doble clic para restablecer.",
       empty: "Sin datos",
       legend: "Series",
+      points: "Valores del gráfico",
     },
     confirmDialog: {
       confirm: "Confirmar",
@@ -386,6 +392,14 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       failed: "No se pudo copiar",
       copiedAnnouncement: "Copiado al portapapeles",
       failedAnnouncement: "No se pudo copiar al portapapeles",
+    },
+    list: {
+      unread: "No leído",
+      opensInNewTab: "se abre en una pestaña nueva",
+    },
+    breadcrumbs: {
+      label: "Ruta de navegación",
+      showAll: "Mostrar la ruta completa",
     },
   };
 }

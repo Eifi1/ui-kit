@@ -5,6 +5,7 @@ import {
   TableBody,
   TableCaption,
   TableCell,
+  TableEmpty,
   TableFoot,
   TableHead,
   TableHeaderCell,
@@ -110,5 +111,91 @@ describe("Table", () => {
     render(<Ledger caption={false} aria-label="Ledger" />);
     expect(screen.getByRole("region", { name: "Ledger" })).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Ledger" })).toBeInTheDocument();
+  });
+});
+
+describe("Table 0.10.0", () => {
+  function Units({ units, empty }: { units: string[]; empty?: string }) {
+    return (
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Unit</TableHeaderCell>
+            <TableHeaderCell>Floor</TableHeaderCell>
+            <TableHeaderCell numeric>Share</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody empty={empty}>
+          {units.map((u) => (
+            <TableRow key={u}>
+              <TableCell>{u}</TableCell>
+              <TableCell>1</TableCell>
+              <TableCell numeric>10</TableCell>
+            </TableRow>
+          ))}
+          {false}
+        </TableBody>
+      </Table>
+    );
+  }
+
+  it("renders `empty` as one full-width row when the body has no rows", () => {
+    const { container } = render(<Units units={[]} empty="No units yet" />);
+    const row = container.querySelector("tbody tr[data-table-empty]")!;
+    expect(row).not.toBeNull();
+    const cell = within(row as HTMLElement).getByText("No units yet");
+    // Measured from the head row: three columns, counted, not hand-written.
+    expect(cell).toHaveAttribute("colspan", "3");
+    expect(cell.className).toContain("text-center");
+    expect(cell.className).toContain("text-[var(--text-muted)]");
+  });
+
+  it("shows the rows, not `empty`, once there are rows", () => {
+    const { container } = render(<Units units={["A1"]} empty="No units yet" />);
+    expect(screen.queryByText("No units yet")).not.toBeInTheDocument();
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(1);
+  });
+
+  it("TableEmpty takes an explicit colSpan", () => {
+    render(
+      <Table>
+        <TableBody>
+          <TableEmpty colSpan={5}>No line items</TableEmpty>
+        </TableBody>
+      </Table>,
+    );
+    expect(screen.getByText("No line items")).toHaveAttribute("colspan", "5");
+  });
+
+  it("density=none drops every cell's padding", () => {
+    render(
+      <Table density="none">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Rate</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell>8.1%</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    for (const text of ["Rate", "8.1%"]) {
+      const cls = screen.getByText(text).className;
+      expect(cls).toContain("p-0");
+      expect(cls).not.toMatch(/\bp[xy]-/);
+    }
+    expect(screen.getByRole("table").className).not.toContain("text-xs");
+  });
+
+  it("layout sets table-layout, and nothing when unset", () => {
+    const { rerender } = render(<Ledger layout="fixed" />);
+    expect(screen.getByRole("table").className).toContain("table-fixed");
+    rerender(<Ledger layout="auto" />);
+    expect(screen.getByRole("table").className).toContain("table-auto");
+    rerender(<Ledger />);
+    expect(screen.getByRole("table").className).not.toMatch(/table-(fixed|auto)/);
   });
 });

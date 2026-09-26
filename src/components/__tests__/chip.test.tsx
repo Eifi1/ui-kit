@@ -482,3 +482,76 @@ describe("Chip link onClick (0.8.x)", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 });
+
+describe("Chip 0.10.0", () => {
+  it("paints the categorical hues from their own token triple, in every variant", () => {
+    render(
+      <>
+        <Chip tone="purple" data-testid="soft">Assigned</Chip>
+        <Chip tone="teal" variant="outline" data-testid="outline">Invoiced</Chip>
+        <Chip tone="orange" variant="solid" data-testid="solid">3</Chip>
+        <Chip tone="indigo" selected onClick={() => {}} data-testid="on">Scheduled</Chip>
+      </>,
+    );
+    const soft = screen.getByTestId("soft").className;
+    expect(soft).toContain("bg-[var(--hue-purple-bg)]");
+    expect(soft).toContain("text-[var(--hue-purple)]");
+    expect(soft).toContain("border-[var(--hue-purple-border)]");
+    expect(screen.getByTestId("outline").className).toContain("bg-transparent");
+    expect(screen.getByTestId("outline").className).toContain("text-[var(--hue-teal)]");
+    expect(screen.getByTestId("solid").className).toContain("bg-[var(--hue-orange)]");
+    expect(screen.getByTestId("on").className).toContain("border-[var(--hue-indigo)]");
+  });
+
+  it("size=xs is 11px type at px-1.5", () => {
+    render(<Chip size="xs" data-testid="xs">Goal</Chip>);
+    const cls = screen.getByTestId("xs").className;
+    expect(cls).toContain("text-[11px]");
+    expect(cls).toContain("px-1.5");
+    expect(cls).not.toContain("text-xs");
+  });
+
+  it("checkbox mode is a checkbox with a tick only when selected", () => {
+    function Harness() {
+      const [on, setOn] = useState(false);
+      return (
+        <Chip checkbox selected={on} onClick={() => setOn((v) => !v)}>
+          Groceries
+        </Chip>
+      );
+    }
+    render(<Harness />);
+    const box = screen.getByRole("checkbox", { name: "Groceries" });
+    expect(box).toHaveAttribute("aria-checked", "false");
+    expect(box).not.toHaveAttribute("aria-pressed");
+    // The box is drawn in both states, so ticking never shifts the label.
+    expect(box.querySelector("[data-chip-check]")).not.toBeNull();
+    expect(box.querySelector("[data-chip-check] svg")).toBeNull();
+    fireEvent.click(box);
+    expect(box).toHaveAttribute("aria-checked", "true");
+    expect(box.querySelector("[data-chip-check] svg")).not.toBeNull();
+  });
+
+  it("ignores checkbox on a chip that is not a toggle", () => {
+    render(<Chip checkbox>Tag</Chip>);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-chip-check]")).toBeNull();
+  });
+
+  it("variant=dot is a coloured dot beside plain text, with no pill surface", () => {
+    render(
+      <Chip tone="blue" variant="dot" data-testid="dot">
+        Rented
+      </Chip>,
+    );
+    const chip = screen.getByTestId("dot");
+    expect(chip.className).toContain("bg-transparent");
+    expect(chip.className).toContain("border-transparent");
+    expect(chip.className).toContain("px-0");
+    expect(chip.className).toContain("text-[var(--text-secondary)]");
+    const dot = chip.querySelector("[data-chip-dot]")!;
+    expect(dot).toHaveAttribute("aria-hidden");
+    expect(dot.className).toContain("bg-[var(--hue-blue)]");
+    expect(chip).toHaveTextContent("Rented");
+  });
+});

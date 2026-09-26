@@ -1,6 +1,8 @@
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement } from "react";
+import { useId } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+import { FIELD_INVALID, FloatingField } from "./ui";
 
 export interface ToggleOption<T extends string> {
   value: T;
@@ -44,6 +46,34 @@ export interface ToggleGroupBaseProps<T extends string>
    * live and others are not is a menu with holes in it, and no caller here wants one.
    */
   disabled?: boolean;
+  /**
+   * `sm`: 12px options with `px-2 py-1` — the compact group keksdose's rule editor
+   * (rule-editor:204) writes as `optionClassName="px-2 py-1 text-xs"` beside a small
+   * caption. `md` (default) is the size every other group has.
+   */
+  size?: "sm" | "md";
+  /**
+   * Stand in a form row as a FIELD: with a label the group wears the field's chrome —
+   * border, surface, the top strip with a small static label in it, a labelled
+   * {@link Select}'s height — so beside an Input or a Select it reads as one of them
+   * rather than as a control with a caption over it. lenkbank builds exactly this by
+   * hand as `ToggleField` (features/gear/common.tsx:97, feedback #69), and its notes
+   * are why the chrome STRETCHES to its row as well as matching the select's padding:
+   * a native select's height is the browser's, so a toggle a few pixels short of it
+   * is levelled up by the row rather than by arithmetic.
+   *
+   * The label names the group (`aria-labelledby`), so `aria-label` is not needed. With
+   * a label, `className` styles the field's wrapper — as on {@link Select} — and the
+   * group's own box is dropped: two nested borders read as a control in a control.
+   */
+  label?: ReactNode;
+  /** A {@link FieldHint} on the label line, as on a labelled {@link Select}. Only with
+   *  `label`. */
+  hint?: ReactNode;
+  /** The message under the field when it is wrong: paints the field's border with
+   *  `--danger`, marks the group `aria-invalid` and describes it with the message, as
+   *  {@link Select}'s `error` does. Only with `label`. */
+  error?: ReactNode;
 }
 
 /** The group as it has always been: one option is always the answer. */
@@ -95,9 +125,17 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     optionClassName,
     ariaLabel,
     disabled = false,
+    size = "md",
+    label,
+    hint,
+    error,
     "aria-label": ariaLabelAttr,
     ...restWithMode
   } = props;
+  const labelId = useId();
+  const errorId = useId();
+  const field = label !== undefined && label !== null && label !== false && label !== "";
+  const hasError = field && error !== undefined && error !== null && error !== false && error !== "";
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
   const { allowEmpty: _allowEmpty, onChange: _onChange, ...rest } = restWithMode;
@@ -127,7 +165,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     buttons?.[next]?.focus();
     choose(options[next].value);
   };
-  return (
+  const group = (
     <div
       // The audit's named example of a closed prop list (§"Public API design"): the
       // tour locates a step by CSS SELECTOR, so a component that drops every attribute
@@ -144,6 +182,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
       // have not moved yet.
       aria-label={ariaLabelAttr ?? ariaLabel}
+      aria-labelledby={field && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
+      aria-invalid={hasError || rest["aria-invalid"] || undefined}
+      aria-describedby={
+        hasError ? (rest["aria-describedby"] ? `${rest["aria-describedby"]} ${errorId}` : errorId) : rest["aria-describedby"]
+      }
       // `aria-disabled` on the group as well as `disabled` on each button: a radio
       // group is what the user is being refused, and a screen reader announcing
       // three separately-disabled radios does not say that.
@@ -166,7 +209,10 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // package does; `cursor-not-allowed` is on the buttons, which is what a
         // pointer is actually over.
         disabled && "opacity-60",
-        className,
+        // Inside the field's chrome the group is only a row of segments: no border, no
+        // surface, no padding of its own, and the field (not the group) is what dims.
+        field && "border-0 bg-transparent p-0 shadow-none opacity-100",
+        !field && className,
       )}
     >
       {options.map((opt, index) => {
@@ -206,6 +252,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
               // inside the segment it belongs to; focus-visible keeps it for the
               // keyboard, which is the only input that needs it.
               "min-w-0 flex-1 basis-auto truncate rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+              size === "sm" && "px-2 py-1 text-xs",
+              // In a field: no vertical padding and a 20px line — a `text-sm` line, the
+              // same line a labelled Select holds under its label strip — so the field's
+              // own `pt-4 pb-1` decides the height, as it does for the select.
+              field && "py-0 leading-5",
               active
                 ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
@@ -220,6 +271,34 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           </button>
         );
       })}
+    </div>
+  );
+  if (!field) return group;
+  return (
+    // `h-full` + `flex-1`: the chrome fills a grid or stretched flex row, which is what
+    // levels it with a select beside it whatever the browser makes of the select.
+    <div className={cn("flex h-full flex-col", className)}>
+      <FloatingField
+        className="flex flex-1 flex-col"
+        label={<span id={labelId}>{label}</span>}
+        staticLabel
+        hint={hint}
+      >
+        <div
+          className={cn(
+            "flex flex-1 flex-col justify-center rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-1 pt-4 pb-1 shadow-sm",
+            disabled && "bg-[var(--bg-surface-2)] opacity-60",
+            hasError && FIELD_INVALID,
+          )}
+        >
+          {group}
+        </div>
+      </FloatingField>
+      {hasError && (
+        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

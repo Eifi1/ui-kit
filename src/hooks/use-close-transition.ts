@@ -7,6 +7,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const OVERLAY_EXIT_MS = 220;
 
 /**
+ * Whether the user has asked for no motion, read NOW. `true` where `matchMedia` is
+ * absent (jsdom, SSR): nothing is painting there, so "no animation" is the only
+ * correct answer. Shared by every exit timer in the package, so they agree.
+ */
+export function prefersReducedMotion(): boolean {
+  return (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function" ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
  * The state machine an exit animation needs, written once for every overlay in this
  * package (Keksdose live #320 rework: *"Recognized the opening transition. Choose
  * transition should be the same, only backwards"*).
@@ -66,11 +79,7 @@ export function useCloseTransition(
     // Read at close time, not at mount: the setting can change under a long-lived
     // page, and `matchMedia` is absent in jsdom and in SSR — where "no animation" is
     // also the only correct answer, since nothing is painting.
-    const reduced =
-      typeof window === "undefined" ||
-      typeof window.matchMedia !== "function" ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || ms <= 0) {
+    if (prefersReducedMotion() || ms <= 0) {
       latest.current();
       return;
     }

@@ -25,6 +25,9 @@ import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel";
 import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment";
 import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
+import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar";
+import { DEFAULT_LIST_LABELS } from "../components/list";
+import { DEFAULT_BREADCRUMBS_LABELS } from "../components/breadcrumbs";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -88,4 +91,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   confirmDialog: DEFAULT_CONFIRM_DIALOG_LABELS,
   floatingPanel: DEFAULT_FLOATING_PANEL_LABELS,
   copyButton: DEFAULT_COPY_BUTTON_LABELS,
+  bulkActionBar: DEFAULT_BULK_ACTION_BAR_LABELS,
+  list: DEFAULT_LIST_LABELS,
+  breadcrumbs: DEFAULT_BREADCRUMBS_LABELS,
 };

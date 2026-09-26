@@ -231,6 +231,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     dialogFrame: {
       close: "关闭",
     },
+    bulkActionBar: {
+      selected: (count) => `已选择 ${n(count)} 项`,
+      clear: "清除选择",
+      cleared: "已清除选择",
+    },
     swipeableRow: {
       actions: "行操作",
     },
@@ -362,6 +367,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
       empty: "无数据",
       legend: "数据系列",
+      points: "图表数值",
     },
     confirmDialog: {
       confirm: "确认",
@@ -376,6 +382,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       failed: "复制失败",
       copiedAnnouncement: "已复制到剪贴板",
       failedAnnouncement: "无法复制到剪贴板",
+    },
+    list: {
+      unread: "未读",
+      opensInNewTab: "在新标签页中打开",
+    },
+    breadcrumbs: {
+      label: "面包屑导航",
+      showAll: "显示完整路径",
     },
   };
 }

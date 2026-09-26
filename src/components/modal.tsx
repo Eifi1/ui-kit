@@ -1,4 +1,4 @@
-import { createContext, useRef, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -11,7 +11,7 @@ import { cn } from "../lib/cn";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
-import { useCloseTransition } from "../hooks/use-close-transition";
+import { OVERLAY_EXIT_MS, prefersReducedMotion, useCloseTransition } from "../hooks/use-close-transition";
 
 /**
  * Drag the panel by its top strip, in pointer space (dev#460).
@@ -40,6 +40,9 @@ function useDragOffset(enabled: boolean) {
   };
 
   return {
+    /** Back to where the panel opens. A `Modal` with an `open` prop outlives its own
+     *  closes, so "the position resets when the dialog closes" needs saying. */
+    reset: () => setOffset(null),
     style: offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined,
     handlers: !enabled
       ? undefined
@@ -120,6 +123,28 @@ export function useBackdropClose(onClose: () => void) {
 export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
   /** Invoked on backdrop click and on Escape. */
   onClose: () => void;
+  /**
+   * Who decides whether the dialog is up, when the caller wants to keep it MOUNTED.
+   *
+   * Left out, the dialog is open for as long as it is mounted — `{open && <Modal/>}`,
+   * which is every caller before this prop and stays exactly as it was. That idiom has
+   * one blind spot: a close the CALLER decides on (a save that succeeded, a
+   * `setOpen(false)` from outside) unmounts the panel on the spot, with no exit,
+   * because there is nothing left to animate. kastlan's `FormModal` was nothing but an
+   * `if (!open) return null` gate in front of this.
+   *
+   * Passed, the component stays mounted while closed and renders nothing, and a flip
+   * to `false` plays the same exit a dismissal does before the panel goes. The focus
+   * trap, the scroll lock and the Back-gesture history entry are held only while
+   * `open` is true — they are released the moment it turns false, so focus is back on
+   * the trigger while the panel is still lowering. A dismissal (Escape, the backdrop,
+   * Back, the frame's X) animates first and then calls `onClose`; the `false` that
+   * comes back from it is not animated a second time.
+   *
+   * The body is unmounted once the exit has finished, as it is today, so a form inside
+   * still starts fresh on the next open.
+   */
+  open?: boolean;
   /** `"alertdialog"` for a dialog that interrupts to ask a question the user must
    *  answer (a confirmation) — screen readers announce it with more urgency. Only the
    *  two dialog roles are allowed: the panel stays modal either way. */
@@ -183,6 +208,7 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
  */
 export function Modal({
   onClose,
+  open,
   children,
   size = "md",
   className,
@@ -196,37 +222,68 @@ export function Modal({
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const drag = useDragOffset(Boolean(draggable));
+  // Without `open`, mounted means open — the constant `true` every hook below used to
+  // be given. With it, `open` itself.
+  const active = open ?? true;
+
+  // Whether the last close came through `requestClose`, i.e. has ALREADY been
+  // animated. Set in the same batch as the caller's `onClose`, so the render that sees
+  // `open` turn false also sees this and does not lower the panel a second time.
+  const [dismissed, setDismissed] = useState(false);
+  // The exit of a close the caller decided on (only reachable with `open`). Adjusted
+  // during render when `open` flips — `Collapse`'s pattern — so the very render that
+  // closes it already paints the `-out` classes rather than a frame of nothing.
+  const [exiting, setExiting] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    setDismissed(false);
+    setExiting(open === false && prevOpen === true && !dismissed && !prefersReducedMotion());
+    if (open) drag.reset();
+  }
+  useEffect(() => {
+    if (!exiting) return;
+    const timer = setTimeout(() => setExiting(false), OVERLAY_EXIT_MS);
+    return () => clearTimeout(timer);
+  }, [exiting]);
+
   // The panel lowers itself before the caller unmounts it (live #320 rework). Every
   // dismissal below goes through `requestClose`; `onClose` still does the closing, one
   // animation later. A caller that closes the dialog ITSELF — after a save, say —
-  // unmounts with no exit, which is the documented limit of this.
-  const { closing, requestClose } = useCloseTransition(onClose);
-  const backdropClose = useBackdropClose(requestClose);
+  // unmounts with no exit unless it passes `open`, which is what that prop is for.
+  const { closing, requestClose } = useCloseTransition(() => {
+    setDismissed(true);
+    onClose();
+  });
+  // A panel on its way out after `open` turned false is already closed: a press on
+  // its fading backdrop must not report a second close.
+  const backdropClose = useBackdropClose(active ? requestClose : () => {});
   // Back means the same as Escape here. On a phone Escape doesn't exist, so without
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
-  // Mounted only while open, hence the constant `true`.
-  useOverlayHistory(true, requestClose);
+  // Held only while open: a closed `open={false}` dialog must not own a history entry.
+  useOverlayHistory(active, requestClose);
 
-  // Mounted only while open, hence the constant `true`. Through the shared hook and
-  // not by hand: this component's own save/restore copy was one half of the pair that
-  // left the page permanently unscrollable when a dialog containing an open sheet was
-  // closed — see the note in use-body-scroll-lock.ts.
-  useBodyScrollLock(true);
+  // Through the shared hook and not by hand: this component's own save/restore copy
+  // was one half of the pair that left the page permanently unscrollable when a dialog
+  // containing an open sheet was closed — see the note in use-body-scroll-lock.ts.
+  useBodyScrollLock(active);
 
   // Focus the panel itself (not the first field) so opening doesn't pop the mobile
   // keyboard, while still moving focus into the dialog for keyboard and screen-reader
   // users. Through the shared hook since this component is where it came from — the
   // hook adds per-keystroke recomputation, a guard on restoring to a detached node,
-  // and nesting, none of which this copy had.
-  useFocusTrap(panelRef, { active: true, initialFocus: "container" });
+  // and nesting, none of which this copy had. Released when `open` turns false, which
+  // hands focus back to the trigger while the panel is still on its way out.
+  useFocusTrap(panelRef, { active, initialFocus: "container" });
+  const leaving = closing || exiting;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e);
     if (e.defaultPrevented) return;
     if (e.key === "Escape") {
       e.stopPropagation();
-      requestClose();
+      if (active) requestClose();
       return;
     }
     // Tab containment lives in useFocusTrap, which listens on the panel itself.
@@ -237,13 +294,19 @@ export function Modal({
   // bar (a z-30 context) could paint BELOW a sibling z-30 sticky element like the
   // expanded transaction editor (feedback #320). The tour/command-palette overlays
   // already portal for the same reason.
+  if (!active && !exiting) return null;
   return createPortal(
     <div
+      // Out of the accessibility tree for the length of a caller-driven exit: focus is
+      // already back on the page, and an `aria-modal` panel that is leaving would hide
+      // that page from a screen reader for 220ms. Not `inert` — that would let a tap
+      // fall through the fading backdrop to the row underneath.
+      aria-hidden={exiting || undefined}
       className={cn(
         // Live #320. The panel below rises only where it is bottom-anchored: from md up
         // it is centred, and a centred box sliding up from off-screen reads as a
         // different component arriving rather than as the same one settling.
-        closing ? "animate-overlay-out" : "animate-overlay",
+        leaving ? "animate-overlay-out" : "animate-overlay",
         "fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center",
         fullBleed ? "p-0 md:p-4" : "p-4",
       )}
@@ -270,7 +333,7 @@ export function Modal({
         // the ones where the panel is being dragged.
         style={{ ...style, ...drag.style }}
         className={cn(
-          closing ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
+          leaving ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
           "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm outline-none",
           { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is

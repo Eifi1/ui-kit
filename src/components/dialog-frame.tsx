@@ -103,6 +103,13 @@ export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "child
  * tailwind-merged last), which is how a full-screen phone sheet is spelt:
  * `fullBleed className="h-[100dvh] max-w-full rounded-none md:h-auto md:rounded-lg"`.
  *
+ * ## Kept mounted
+ *
+ * `open` reaches the `Modal` like every other prop, so `<DialogFrame open={open} …>`
+ * replaces the `{open && <DialogFrame …/>}` gate (kastlan's `FormModal` was only
+ * that gate) and gains the exit a caller-driven close otherwise skips. See
+ * {@link ModalProps.open}.
+ *
  * ## What it is not
  *
  * Not `FullBleedDialog`: that is the phone's full-screen editor with its own `open`,

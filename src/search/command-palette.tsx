@@ -100,6 +100,18 @@ export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
   close: "Close",
 };
 
+/**
+ * How tall the palette's rows are. `"compact"` (the default) is the desktop list the
+ * palette always drew, 36px a row; `"comfortable"` gives every row the kit's 44px touch
+ * target (`min-h-11`) and body-size text — keksdose's phone search, where a 36px row
+ * under a thumb picks its neighbour.
+ */
+export type CommandPaletteDensity = "compact" | "comfortable";
+
+/** A provider's answer is a promise — the only case with anything to wait for. */
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | null)?.then === "function";
+
 /** The defaults minus `dialog`, so a resolved `dialog` means someone SUPPLIED one —
  *  see the dialog's `aria-label` for why that distinction matters. */
 const { dialog: DEFAULT_DIALOG_NAME, ...DEFAULTS_WITHOUT_DIALOG } = DEFAULT_COMMAND_PALETTE_LABELS;
@@ -111,6 +123,14 @@ interface CommandPaletteProps {
    * Returns results for a query (called debounced as the user types; an empty
    * query is allowed — return defaults like pages/recent). Sync or async; stale
    * async responses are ignored.
+   *
+   * A SYNCHRONOUS provider (one returning an array, not a promise) never shows the
+   * "Searching…" hint: its answer is there the moment it is asked, and the hint only
+   * flashed through the debounce before results that were never late — keksdose's
+   * transaction search filters a list already in memory. The palette tells the two
+   * apart by what the provider RETURNS, call by call, so there is no prop to keep in
+   * step with the implementation: an async provider shows the hint from the first
+   * promise on (and during the debounce of every later query), a sync one never.
    *
    * Its IDENTITY is not a re-run signal — it is read through a ref, so the palette
    * never re-searches merely because the caller rebuilt the callback. That is
@@ -175,6 +195,8 @@ interface CommandPaletteProps {
    * up. `false` keeps the card on every viewport.
    */
   fullScreenOnPhone?: boolean;
+  /** Row height — see {@link CommandPaletteDensity}. Default `"compact"`. */
+  density?: CommandPaletteDensity;
   labels?: Partial<CommandPaletteLabels>;
 }
 
@@ -208,6 +230,7 @@ export function CommandPalette({
   searchOn = "input",
   redactLabels = false,
   fullScreenOnPhone = true,
+  density = "compact",
   labels,
 }: CommandPaletteProps) {
   const l = useKitLabels("commandPalette", DEFAULTS_WITHOUT_DIALOG, labels);
@@ -259,6 +282,10 @@ export function CommandPalette({
   const searchRef = useRef(search);
   searchRef.current = search;
   const reqId = useRef(0);
+  /** What the provider's last answer was: a promise (`false`), an array (`true`), or
+   *  not known yet. Only a provider known to be async shows "Searching…" while the
+   *  debounce runs — see `search`. */
+  const syncRef = useRef<boolean | undefined>(undefined);
   /** The query the results on screen answer, and the row highlighted in them — so a
    *  re-run for the SAME query (a `revision` change: a source streaming in) keeps the
    *  highlight on its row instead of throwing it back to the top mid-arrow. */
@@ -295,10 +322,13 @@ export function CommandPalette({
   useEffect(() => {
     if (!open) return;
     const id = ++reqId.current;
-    setLoading(true);
+    if (syncRef.current === false) setLoading(true);
     const run = async () => {
       try {
-        const r = await Promise.resolve(searchRef.current(query));
+        const answer = searchRef.current(query);
+        syncRef.current = !isThenable(answer);
+        if (!syncRef.current) setLoading(true);
+        const r = await answer;
         if (reqId.current === id) {
           const keep = shownQuery.current === query ? activeIdRef.current : undefined;
           const at = keep === undefined ? -1 : groupItems(r).flat.findIndex((item) => item.id === keep);
@@ -373,6 +403,7 @@ export function CommandPalette({
 
   if (!open) return null;
 
+  const comfortable = density === "comfortable";
   let flatIndex = -1;
   return createPortal(
     <div
@@ -505,7 +536,10 @@ export function CommandPalette({
                       <li
                         key={item.id}
                         role="presentation"
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--text-placeholder)]"
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 text-xs text-[var(--text-placeholder)]",
+                          comfortable ? "min-h-11 py-2.5" : "py-2",
+                        )}
                       >
                         {item.icon && <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>}
                         <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -527,7 +561,8 @@ export function CommandPalette({
                     "data-index": idx,
                     onMouseMove: () => setActive(idx),
                     className: cn(
-                      "flex w-full items-center gap-2.5 px-3 py-2 text-start text-sm",
+                      "flex w-full items-center gap-2.5 px-3 text-start",
+                      comfortable ? "min-h-11 py-2.5 text-base" : "py-2 text-sm",
                       isActive
                         ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
                         : "text-[var(--text-secondary)]",

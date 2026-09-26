@@ -100,3 +100,111 @@ describe("DescriptionList", () => {
     expect(container.querySelector("dd")!.className).toMatch(/text-end/);
   });
 });
+
+describe("DescriptionList 0.10.0", () => {
+  it("layout=stacked is a borderless grid, term above detail, n columns wide", () => {
+    const { container } = render(
+      <DescriptionList layout="stacked" columns={3}>
+        <DescriptionItem term="Lease number">L-104</DescriptionItem>
+        <DescriptionItem term="Start">2024-04-01</DescriptionItem>
+        <DescriptionItem term="Notes" span="full">
+          Keys handed over
+        </DescriptionItem>
+        <DescriptionItem term="Rent" span={2} numeric>
+          1’850.00
+        </DescriptionItem>
+      </DescriptionList>,
+    );
+    const dl = container.querySelector("dl")!;
+    expect(dl.parentElement!.className).toContain("@container");
+    expect(dl).toHaveAttribute("data-layout", "stacked");
+    expect(dl.className).toContain("grid");
+    expect(dl.className).toContain("@xl:grid-cols-3");
+    expect(dl.className).not.toContain("@3xl:grid-cols-4");
+    expect(dl.className).not.toContain("divide-y");
+    const [first, , notes, rent] = Array.from(dl.children) as HTMLElement[];
+    // Term first, detail under it; no card border.
+    expect(first.firstElementChild!.tagName).toBe("DT");
+    expect(first.className).not.toContain("border");
+    expect(notes.className).toContain("col-span-full");
+    expect(rent.className).toContain("@xs:col-span-2");
+    // A stacked figure keeps the term's start edge.
+    expect(rent.querySelector("dd")!.className).toContain("tabular-nums");
+    expect(rent.querySelector("dd")!.className).not.toContain("text-end");
+  });
+
+  it("clamps a stacked span to the list's columns", () => {
+    const { container } = render(
+      <DescriptionList layout="stacked" columns={2}>
+        <DescriptionItem term="Notes" span={4}>
+          Long
+        </DescriptionItem>
+      </DescriptionList>,
+    );
+    const item = container.querySelector("dl > div")!;
+    expect(item.className).toContain("@xs:col-span-2");
+    expect(item.className).not.toContain("col-span-3");
+  });
+
+  it("density=tight is 11px on a 2px rhythm without rules", () => {
+    const { container } = render(
+      <DescriptionList density="tight" numeric>
+        <DescriptionItem term="Signed up">12</DescriptionItem>
+        <DescriptionItem term="Verified">9</DescriptionItem>
+      </DescriptionList>,
+    );
+    const dl = container.querySelector("dl")!;
+    expect(dl.className).toContain("text-[11px]");
+    expect(dl.className).not.toContain("divide-y");
+    expect(dl.firstElementChild!.className).toContain("py-px");
+  });
+
+  it("columns caps a card grid without knowing the gap", () => {
+    const { container } = render(
+      <DescriptionList layout="cards" density="compact" columns={2} minCardWidth="0px">
+        <DescriptionItem term="Activity">-40.00</DescriptionItem>
+        <DescriptionItem term="Available">60.00</DescriptionItem>
+      </DescriptionList>,
+    );
+    const style = container.querySelector("dl")!.getAttribute("style")!;
+    expect(style).toContain("max(0px, (100% - 1 * 0.5rem) / 2)");
+    // Without `columns` the template is exactly what it was.
+    const { container: plain } = render(
+      <DescriptionList layout="cards">
+        <DescriptionItem term="a">b</DescriptionItem>
+      </DescriptionList>,
+    );
+    expect(plain.querySelector("dl")!.style.gridTemplateColumns).toBe(
+      "repeat(auto-fill, minmax(min(100%, 10rem), 1fr))",
+    );
+  });
+
+  it("prose lightens card details; values keep their weight", () => {
+    const { container } = render(
+      <DescriptionList layout="cards">
+        <DescriptionItem term="Opened">2024-01-03</DescriptionItem>
+        <DescriptionItem term="Stream" prose>
+          The bench reads the stream at 1 kHz and averages it.
+        </DescriptionItem>
+      </DescriptionList>,
+    );
+    const [value, prose] = Array.from(container.querySelectorAll("dd"));
+    expect(value.className).toContain("font-medium");
+    expect(value.className).toContain("text-[var(--text-primary)]");
+    expect(prose.className).toContain("font-normal");
+    expect(prose.className).not.toContain("font-medium");
+    expect(prose.className).toContain("text-[var(--text-secondary)]");
+
+    const { container: list } = render(
+      <DescriptionList layout="cards" prose>
+        <DescriptionItem term="a">Words</DescriptionItem>
+        <DescriptionItem term="b" prose={false}>
+          42
+        </DescriptionItem>
+      </DescriptionList>,
+    );
+    const [p, v] = Array.from(list.querySelectorAll("dd"));
+    expect(p.className).toContain("font-normal");
+    expect(v.className).toContain("font-medium");
+  });
+});

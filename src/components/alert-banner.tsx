@@ -1,12 +1,18 @@
 import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
-import { AlertTriangle, ChevronRight, Info, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /** `info` (0.8.0) is the sky family, for news that is neither good nor bad: keksdose's
  *  preview and beta-performance banners, which borrowed `warning` for want of it and
  *  so told every user of the preview build that something was wrong. */
-export type AlertTone = "danger" | "warning" | "info" | "neutral";
+export type AlertTone = "danger" | "warning" | "info" | "success" | "neutral";
+
+/** `sm` (0.10.0): 12px type and a 14px glyph — the hint line under a field or a total
+ *  that keksdose spells `text-xs text-amber-700 dark:text-amber-400` by hand
+ *  (accounts-page's missing-rate note, import-map-step, guest-key-control's two
+ *  key states, goal-form). At body size those read as a second heading. */
+export type AlertSize = "sm" | "md";
 
 /** Border + surface per tone, WITHOUT a radius or padding, so a caller that owns
  * its own box (a Card, say) can take the tone alone. Single source for both
@@ -25,8 +31,25 @@ const TONE_FRAME: Record<AlertTone, string> = {
   danger: "border-2 border-[var(--danger-border)] bg-[var(--danger-bg)]",
   warning: "border-2 border-[var(--warning-border)] bg-[var(--warning-bg)]",
   info: "border-2 border-[var(--info-border)] bg-[var(--info-bg)]",
+  success: "border-2 border-[var(--success-border)] bg-[var(--success-bg)]",
   neutral: "border border-[var(--border)]",
 };
+
+/** `elevated`: the same frame on an OPAQUE surface. The dark tone washes are
+ *  translucent (a 20–25 % tint), which is right on a page and wrong on anything that
+ *  floats over one — keksdose's server-wake notice (#209) let the page's own text
+ *  show through the one message whose job is to be read when nothing else makes
+ *  sense. So the surface becomes `--bg-surface` and the tone's wash is layered on it
+ *  as a background IMAGE (a flat gradient), which keeps the exact tint in both themes
+ *  without a second, opaque copy of every `-bg` token. */
+const TONE_ELEVATED: Record<AlertTone, string> = {
+  danger: "bg-[image:linear-gradient(var(--danger-bg),var(--danger-bg))]",
+  warning: "bg-[image:linear-gradient(var(--warning-bg),var(--warning-bg))]",
+  info: "bg-[image:linear-gradient(var(--info-bg),var(--info-bg))]",
+  success: "bg-[image:linear-gradient(var(--success-bg),var(--success-bg))]",
+  neutral: "",
+};
+const ELEVATED = "bg-[var(--bg-surface)] shadow-lg";
 
 /** The tone's border + surface on their own — for a caller that already has a box
  * with its own radius and padding (e.g. a Card). Remember to shave 1px off that
@@ -38,15 +61,34 @@ export function toneFrameClass(tone: AlertTone): string {
 /** Single source for the warning-callout frame (feedback #277): the tone's border
  * and surface plus this component's own radius and padding, the latter
  * compensating the 2px colored border so toggling tones never shifts layout. */
-export function alertFrameClass(tone: AlertTone): string {
-  const box = tone === "neutral" ? "rounded-md p-3" : "rounded-md p-[11px]";
+export function alertFrameClass(tone: AlertTone, size: AlertSize = "md"): string {
+  const box =
+    size === "sm"
+      ? tone === "neutral"
+        ? "rounded-md px-2.5 py-1.5"
+        : "rounded-md px-[9px] py-[5px]"
+      : tone === "neutral"
+        ? "rounded-md p-3"
+        : "rounded-md p-[11px]";
   return `${box} ${TONE_FRAME[tone]}`;
+}
+
+/** The `strip` frame: the tone's surface edge to edge, no radius, and only the BOTTOM
+ *  border, 1px — a strip is a band across the top of a page, and its one visible edge
+ *  is the line it draws under itself. kastlan's trial, past-due and tour banners. */
+function stripFrameClass(tone: AlertTone, size: AlertSize): string {
+  return cn(
+    TONE_FRAME[tone],
+    "rounded-none border-0 border-b",
+    size === "sm" ? "px-4 py-1.5" : "px-4 py-2",
+  );
 }
 
 const TONE_TEXT: Record<AlertTone, string> = {
   danger: "text-[var(--danger)]",
   warning: "text-[var(--warning)]",
   info: "text-[var(--info)]",
+  success: "text-[var(--success)]",
   neutral: "text-[var(--text-secondary)]",
 };
 
@@ -54,6 +96,7 @@ const TONE_ICON: Record<AlertTone, string> = {
   danger: "text-[var(--danger)]",
   warning: "text-[var(--warning)]",
   info: "text-[var(--info)]",
+  success: "text-[var(--success)]",
   neutral: "text-[var(--text-muted)]",
 };
 
@@ -66,6 +109,7 @@ const TONE_GLYPH: Record<AlertTone, typeof AlertTriangle> = {
   danger: AlertTriangle,
   warning: AlertTriangle,
   info: Info,
+  success: CheckCircle2,
   neutral: Info,
 };
 
@@ -86,8 +130,30 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
    * otherwise never hears. The box stays role-less as it always was: it is usually
    * page furniture present at load, and an alert that fires on every navigation is
    * noise. Either way a `role` you pass wins.
+   *
+   * `strip` (0.10.0): a band across the top of a page or a panel — edge to edge, no
+   * radius, only a bottom border, content centred on one line, and usually an
+   * {@link action}. kastlan's billing trial-banner and past-due-banner and its tours
+   * tour-banner each built this by hand in amber or red Tailwind classes, with a
+   * separate dark: spelling apiece. Role-less like the box: it is page furniture.
    */
-  variant?: "box" | "inline";
+  variant?: "box" | "inline" | "strip";
+  /** See {@link AlertSize}. Default `md`. */
+  size?: AlertSize;
+  /**
+   * An opaque, raised surface (a shadow, and no translucency in dark mode) for a
+   * notice that floats over the page — see {@link TONE_ELEVATED}. `box` and `strip`
+   * only; an inline message has no surface to raise.
+   */
+  elevated?: boolean;
+  /**
+   * A trailing control — the "Update payment method" button on kastlan's trial and
+   * past-due strips, the "Exit" on its tour strip. Sits at the end of the row,
+   * vertically centred, and never shrinks. On a whole-row banner (`href`/`onClick`)
+   * it is rendered BESIDE the row's own link or button, as the × is, because
+   * interactive content may not nest.
+   */
+  action?: ReactNode;
   /** Replaces the tone's glyph — a `<Spinner label={null} />` for "Solving…", say.
    *  `null` draws none. Always decorative; the text carries the message. */
   icon?: ReactNode;
@@ -133,6 +199,9 @@ export type AlertBannerProps = AlertBannerBaseProps &
 export function AlertBanner({
   tone = "danger",
   variant = "box",
+  size = "md",
+  elevated = false,
+  action,
   icon,
   onDismiss,
   dismissLabel,
@@ -145,22 +214,38 @@ export function AlertBanner({
 }: AlertBannerProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { dismiss: dismissLabel });
   const inline = variant === "inline";
+  const strip = variant === "strip";
+  const sm = size === "sm";
   const interactive = href !== undefined || onClick !== undefined;
   const resolvedRole = role ?? (inline ? (tone === "danger" ? "alert" : "status") : undefined);
 
   const Glyph = TONE_GLYPH[tone];
+  // Onto the first line of a box's text: 2px at 14px/20px, 1px at 12px/16px.
+  const nudge = inline || strip ? undefined : sm ? "mt-px" : "mt-0.5";
   const glyph =
     icon === null ? null : icon !== undefined ? (
-      <span aria-hidden className={cn("flex shrink-0 [&_svg]:size-4", !inline && "mt-0.5", TONE_ICON[tone])}>
+      <span
+        aria-hidden
+        className={cn("flex shrink-0", sm ? "[&_svg]:size-3.5" : "[&_svg]:size-4", nudge, TONE_ICON[tone])}
+      >
         {icon}
       </span>
     ) : (
-      <Glyph aria-hidden className={cn("size-4 shrink-0", !inline && "mt-0.5", TONE_ICON[tone])} />
+      <Glyph aria-hidden className={cn(sm ? "size-3.5" : "size-4", "shrink-0", nudge, TONE_ICON[tone])} />
     );
 
-  // The row layout, shared by every shape below.
-  const row = inline ? "inline-flex items-center gap-1.5 text-sm" : "flex items-start gap-2 text-sm";
-  const frame = inline ? "" : alertFrameClass(tone);
+  // The row layout, shared by every shape below. A strip is one line, so it centres;
+  // a box may wrap, so it top-aligns and nudges the glyph onto the first line.
+  const row = cn(
+    inline ? "inline-flex items-center" : strip ? "flex items-center" : "flex items-start",
+    sm ? "gap-1.5 text-xs" : inline ? "gap-1.5 text-sm" : "gap-2 text-sm",
+  );
+  const frame = inline
+    ? ""
+    : cn(
+        strip ? stripFrameClass(tone, size) : alertFrameClass(tone, size),
+        elevated && cn(ELEVATED, TONE_ELEVATED[tone]),
+      );
   const focusRing =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]";
 
@@ -171,7 +256,7 @@ export function AlertBanner({
       {interactive && (
         <ChevronRight
           aria-hidden
-          className={cn("size-4 shrink-0 opacity-70 rtl:-scale-x-100", !inline && "mt-0.5")}
+          className={cn(sm ? "size-3.5" : "size-4", "shrink-0 opacity-70 rtl:-scale-x-100", nudge)}
         />
       )}
     </>
@@ -198,6 +283,14 @@ export function AlertBanner({
     </button>
   ) : null;
 
+  // `relative z-10` so it stays clickable over a whole-row banner's stretched target.
+  const trailing =
+    action !== undefined && action !== null ? (
+      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inline && "self-center")}>
+        {action}
+      </div>
+    ) : null;
+
   if (!interactive) {
     return (
       <div
@@ -210,6 +303,7 @@ export function AlertBanner({
         className={cn(row, frame, TONE_TEXT[tone], className)}
       >
         {content}
+        {trailing}
         {dismiss}
       </div>
     );
@@ -218,12 +312,14 @@ export function AlertBanner({
   const hover = "cursor-pointer transition-[filter] hover:brightness-[0.97] dark:hover:brightness-110";
   // With a dismiss the frame is a wrapper and the row element is stretched over it;
   // without one the row element IS the frame.
-  const split = dismiss !== null;
+  const split = dismiss !== null || trailing !== null;
   const actionClass = split
     ? cn(
-        "flex min-w-0 flex-1 gap-2 text-start",
-        inline ? "items-center" : "items-start",
-        "outline-none after:absolute after:inset-0 after:rounded-md after:content-['']",
+        "flex min-w-0 flex-1 text-start",
+        sm ? "gap-1.5" : "gap-2",
+        inline || strip ? "items-center" : "items-start",
+        "outline-none after:absolute after:inset-0 after:content-['']",
+        strip ? "after:rounded-none" : "after:rounded-md",
         "focus-visible:after:ring-2 focus-visible:after:ring-[var(--brand)]",
       )
     : cn(row, !inline && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
@@ -232,7 +328,7 @@ export function AlertBanner({
   // NOT carried over — a button or a link that is also a `status` is neither.
   const actionRest = split ? {} : rest;
 
-  const action =
+  const rowAction =
     href !== undefined ? (
       <a
         {...(actionRest as ComponentPropsWithoutRef<"a">)}
@@ -252,14 +348,15 @@ export function AlertBanner({
       </button>
     );
 
-  if (!split) return action;
+  if (!split) return rowAction;
   return (
     <div
       {...rest}
       role={resolvedRole}
       className={cn("relative", row, frame, TONE_TEXT[tone], hover, className)}
     >
-      {action}
+      {rowAction}
+      {trailing}
       {dismiss}
     </div>
   );

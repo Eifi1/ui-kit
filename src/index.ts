@@ -96,6 +96,8 @@ export * from "./components/danger-confirm";
 export * from "./components/confirm-dialog";
 // A non-modal corner panel and its round trigger (keksdose's assistant launcher).
 export * from "./components/floating-panel";
+// The count / clear / actions bar a selection brings up (keksdose's three copies).
+export * from "./components/bulk-action-bar";
 export * from "./components/swatch-picker";
 export * from "./components/icon-picker";
 export * from "./components/choice-card";
@@ -151,6 +153,13 @@ export * from "./components/separator";
 // Named: scroll-area.tsx also holds the overflow hook and scrollbar class Table shares.
 export { ScrollArea } from "./components/scroll-area";
 export type { ScrollAreaProps } from "./components/scroll-area";
+// 0.10.0 rows, menu rows, text primitives and page chrome the apps drew by hand.
+export * from "./components/list";
+export * from "./components/menu-item";
+export * from "./components/text";
+export * from "./components/status-dot";
+export * from "./components/page-header";
+export * from "./components/breadcrumbs";
 
 // ── data-table suite ─────────────────────────────────────────────────────────
 export * from "./components/data-table-labels";
