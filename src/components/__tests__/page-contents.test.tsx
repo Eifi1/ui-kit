@@ -114,3 +114,10 @@ describe("useScrollSpy", () => {
     expect(result.current).toBe("a");
   });
 });
+
+describe("the rail wraps long entries instead of a native title (keksdose dev#523)", () => {
+  it("puts no title attribute on its links", () => {
+    render(<PageContents items={ITEMS} />);
+    for (const link of screen.getAllByRole("link")) expect(link).not.toHaveAttribute("title");
+  });
+});
