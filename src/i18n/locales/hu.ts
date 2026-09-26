@@ -402,6 +402,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       label: "Morzsamenü",
       showAll: "Teljes útvonal megjelenítése",
     },
+    toast: {
+      close: "Értesítés bezárása",
+      notifications: "Értesítések",
+      undo: "Visszavonás",
+      redo: "Újra",
+    },
   };
 }
 

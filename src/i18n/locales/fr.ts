@@ -414,6 +414,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       label: "Fil d’Ariane",
       showAll: "Afficher le chemin complet",
     },
+    toast: {
+      close: "Fermer la notification",
+      notifications: "Notifications",
+      undo: "Annuler",
+      redo: "Rétablir",
+    },
   };
 }
 

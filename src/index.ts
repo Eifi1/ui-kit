@@ -160,6 +160,23 @@ export * from "./components/text";
 export * from "./components/status-dot";
 export * from "./components/page-header";
 export * from "./components/breadcrumbs";
+// The toast layer over sonner (an OPTIONAL peer, loaded lazily): `toast` mirrors sonner's
+// API so apps migrate by swapping the import; `<Toaster>` carries the placement, theme,
+// tones and z-index both apps had wired by hand.
+export { toast, Toaster, DEFAULT_TOAST_LABELS, TOAST_ACTION_DURATION } from "./components/toast";
+export type {
+  ToastId,
+  ToastAction,
+  ToastOptions,
+  ToastPromiseOptions,
+  ToastUndoOptions,
+  ToastRedoOptions,
+  ToastLabels,
+  ToastPosition,
+  ToastSwipeDirection,
+  ToasterOffset,
+  ToasterProps,
+} from "./components/toast";
 
 // ── data-table suite ─────────────────────────────────────────────────────────
 export * from "./components/data-table-labels";

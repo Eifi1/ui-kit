@@ -628,6 +628,9 @@ export const de: Dictionary = {
       "Warn- oder Fehlerbanner",
       "Erfolgsmeldung",
       "Prozentanzeige",
+      "kurze Bestätigung anzeigen",
+      "Rückgängig nach dem Löschen",
+      "Toast",
     ],
     "description-list": [
       "Schlüssel-Wert-Paare anzeigen",

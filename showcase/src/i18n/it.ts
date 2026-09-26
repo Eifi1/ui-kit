@@ -619,6 +619,9 @@ export const it: Dictionary = {
       "banner di avviso o errore",
       "messaggio di conferma",
       "indicatore percentuale",
+      "mostrare una breve conferma",
+      "annullare dopo l’eliminazione",
+      "toast",
     ],
     "description-list": [
       "mostrare coppie chiave e valore",

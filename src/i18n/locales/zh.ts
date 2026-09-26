@@ -391,6 +391,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       label: "面包屑导航",
       showAll: "显示完整路径",
     },
+    toast: {
+      close: "关闭通知",
+      notifications: "通知",
+      undo: "撤销",
+      redo: "重做",
+    },
   };
 }
 

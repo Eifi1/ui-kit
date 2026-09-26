@@ -401,6 +401,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       label: "Ruta de navegación",
       showAll: "Mostrar la ruta completa",
     },
+    toast: {
+      close: "Cerrar notificación",
+      notifications: "Notificaciones",
+      undo: "Deshacer",
+      redo: "Rehacer",
+    },
   };
 }
 

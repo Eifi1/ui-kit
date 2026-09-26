@@ -627,6 +627,9 @@ export const en: Dictionary = {
       "warning or error banner",
       "success message",
       "percentage meter",
+      "show a short confirmation",
+      "undo after delete",
+      "toast",
     ],
     "description-list": [
       "show key and value pairs",

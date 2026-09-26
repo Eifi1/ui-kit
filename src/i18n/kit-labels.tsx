@@ -30,6 +30,7 @@ import type { CopyButtonLabels } from "../components/copy-button";
 import type { BulkActionBarLabels } from "../components/bulk-action-bar";
 import type { ListLabels } from "../components/list";
 import type { BreadcrumbsLabels } from "../components/breadcrumbs";
+import type { ToastLabels } from "../components/toast";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -235,6 +236,7 @@ export interface UiKitLabels {
   bulkActionBar: BulkActionBarLabels;
   list: ListLabels;
   breadcrumbs: BreadcrumbsLabels;
+  toast: ToastLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a

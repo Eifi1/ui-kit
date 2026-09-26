@@ -28,6 +28,7 @@ import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar";
 import { DEFAULT_LIST_LABELS } from "../components/list";
 import { DEFAULT_BREADCRUMBS_LABELS } from "../components/breadcrumbs";
+import { DEFAULT_TOAST_LABELS } from "../components/toast";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -94,4 +95,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   bulkActionBar: DEFAULT_BULK_ACTION_BAR_LABELS,
   list: DEFAULT_LIST_LABELS,
   breadcrumbs: DEFAULT_BREADCRUMBS_LABELS,
+  toast: DEFAULT_TOAST_LABELS,
 };

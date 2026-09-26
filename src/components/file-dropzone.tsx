@@ -14,6 +14,7 @@ import {
 } from "./file-button";
 import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
 import { useDragTarget } from "../hooks/use-file-drop";
+import { toast } from "./toast";
 
 /**
  * Where a refused file's message goes.
@@ -97,10 +98,9 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * carries the reason and the translated message as well.
    *
    * Its existence used to be what switched the toast off, and it still does (see
-   * {@link rejectionFeedback}). The toast is a dynamic `import("sonner")` on the
-   * failure path only: `sonner` is an OPTIONAL peer, and a static import here once
-   * broke `import { Button }` for every app without it (see
-   * `optional-peer-imports.test.tsx`).
+   * {@link rejectionFeedback}). The toast is the kit's `toast`, which loads `sonner`
+   * lazily: it is an OPTIONAL peer, and a static import here once broke
+   * `import { Button }` for every app without it (see `optional-peer-imports.test.tsx`).
    */
   onInvalid?: (file: File) => void;
   /** Every refused file of one pick, with its reason and message. */
@@ -246,12 +246,11 @@ export function FileDropzone({
         ? summariseRejections(rejected, labels)
         : labels.rejectedPick(picked.length);
       if (feedback === "toast") {
-        // sonner is an optional peer: imported here, on the failure path only, so an
-        // app that never trips this never has to install it. Not awaited — nothing
-        // downstream depends on the toast having appeared, and the handlers that
-        // reach this are DOM events. sonner's own toaster is a live region, so this
-        // path does not announce a second time.
-        void import("sonner").then(({ toast }) => toast.error(message));
+        // The kit's `toast`, which loads sonner (an optional peer) lazily, so an app
+        // that never trips this never has to install it. Nothing downstream depends
+        // on the toast having appeared. The toaster is a live region, so this path
+        // does not announce a second time.
+        toast.error(message);
       } else {
         if (feedback === "inline") setError(message);
         alert.announce(message);

@@ -623,6 +623,9 @@ export const fr: Dictionary = {
       "bannière d’avertissement ou d’erreur",
       "message de réussite",
       "jauge en pourcentage",
+      "afficher une brève confirmation",
+      "annuler après suppression",
+      "toast",
     ],
     "description-list": [
       "afficher des paires clé-valeur",

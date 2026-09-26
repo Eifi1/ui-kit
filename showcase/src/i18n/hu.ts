@@ -626,6 +626,9 @@ export const hu: Dictionary = {
       "figyelmeztető vagy hiba sáv",
       "sikerüzenet",
       "százalékos mérő",
+      "rövid megerősítés megjelenítése",
+      "visszavonás törlés után",
+      "toast",
     ],
     "description-list": [
       "kulcs–érték párok",

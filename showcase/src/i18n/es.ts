@@ -620,6 +620,9 @@ export const es: Dictionary = {
       "banner de aviso o error",
       "mensaje de éxito",
       "indicador de porcentaje",
+      "mostrar una confirmación breve",
+      "deshacer tras borrar",
+      "toast",
     ],
     "description-list": [
       "mostrar pares clave y valor",

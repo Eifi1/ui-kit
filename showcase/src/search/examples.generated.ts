@@ -281,6 +281,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "toneFrameClass() / alertFrameClass()",
     "EmptyState — inline variant and the danger and success tones",
     "AlertBanner — success, size sm, strip with an action, elevated",
+    "Toasts — every tone, with and without a description",
+    "Toasts — an action, undo and redo",
+    "Toasts — replace by id, and loading to success",
+    "Toasts — redact, and where they appear on a phone",
   ],
   "description-list": [
     "DescriptionList — rows and cards, comfortable and compact",

@@ -118,6 +118,7 @@ import { PageStructure } from "./sections/page-structure";
 import { ButtonLabelsTones } from "./sections/button-labels-demo";
 import { ChipHuesToggleField } from "./sections/chip-hues-demo";
 import { FeedbackMore } from "./sections/feedback-more-demo";
+import { ToastsDemo } from "./sections/toast-demo";
 import { DescriptionTableMore } from "./sections/description-table-more";
 import { DisclosureMore } from "./sections/disclosure-more-demo";
 import { IntegerTicksDemo, KeyboardPointsDemo } from "./sections/series-chart-ticks-keys";
@@ -474,11 +475,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass"],
+        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster"],
         Body: () => (
           <>
             <FeedbackProgress />
             <FeedbackMore />
+            <ToastsDemo />
           </>
         ),
       },

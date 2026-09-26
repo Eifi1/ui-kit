@@ -109,8 +109,8 @@ export interface UseWizardOptions<TData extends Record<string, unknown>> {
    */
   missingRequiredMessage?: string;
   /**
-   * How to surface {@link missingRequiredMessage}. Defaults to a `sonner` toast
-   * (an optional peer, imported only when this actually fires). Pass your own to
+   * How to surface {@link missingRequiredMessage}. Defaults to the kit's `toast.error`
+   * (sonner, an optional peer, is loaded only when a toast is shown). Pass your own to
    * route it somewhere else, or to a no-op to silence it.
    */
   onValidationFailed?: (message: string) => void;

@@ -403,6 +403,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       label: "Percorso di navigazione",
       showAll: "Mostra percorso completo",
     },
+    toast: {
+      close: "Chiudi notifica",
+      notifications: "Notifiche",
+      undo: "Annulla",
+      redo: "Ripeti",
+    },
   };
 }
 

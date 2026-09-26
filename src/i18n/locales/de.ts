@@ -408,6 +408,12 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       label: "Brotkrümelnavigation",
       showAll: "Vollständigen Pfad anzeigen",
     },
+    toast: {
+      close: "Benachrichtigung schließen",
+      notifications: "Benachrichtigungen",
+      undo: "Rückgängig",
+      redo: "Wiederholen",
+    },
   };
 }
 

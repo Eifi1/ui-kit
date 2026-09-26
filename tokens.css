@@ -233,6 +233,53 @@
   --success-bg: rgba(6, 78, 59, 0.25);
 }
 
+/* ── Toasts ─────────────────────────────────────────────────────────────────
+   The kit `<Toaster>` (components/toast.tsx) paints sonner with the AlertBanner
+   tones. These are ALIASES, not new colours, and they exist for one reason: sonner
+   declares its own `--success-bg` / `--success-border` (and info, warning) on the
+   toaster element, so that element cannot read the kit's value under the same name
+   — `--success-bg: var(--success-bg)` is a cycle. Declared here, they are computed
+   on `<html>` and inherited down under a name sonner does not touch.
+
+   The background is the tone's wash layered on the surface, as AlertBanner's
+   `elevated` frame does: the dark washes are translucent, and a toast floats over
+   content. `--z-toast` is above every kit overlay (modal and sheets z-50, tour
+   z-60/61, command palette z-70) and above whatever an app stacks on top of those —
+   a toast confirming a dialog's action must not land under the dialog. */
+:root,
+.dark {
+  --z-toast: 2147483647;
+  --toast-success-bg: linear-gradient(var(--success-bg), var(--success-bg)) var(--bg-surface);
+  --toast-success-border: var(--success-border);
+  --toast-info-bg: linear-gradient(var(--info-bg), var(--info-bg)) var(--bg-surface);
+  --toast-info-border: var(--info-border);
+  --toast-warning-bg: linear-gradient(var(--warning-bg), var(--warning-bg)) var(--bg-surface);
+  --toast-warning-border: var(--warning-border);
+  --toast-danger-bg: linear-gradient(var(--danger-bg), var(--danger-bg)) var(--bg-surface);
+  --toast-danger-border: var(--danger-border);
+}
+
+/* The description of an untoned toast in the secondary text colour (sonner hard-codes
+   #3f3f3f, unreadable in the dark theme); a toned toast's inherits its tone. */
+.kit-toaster [data-sonner-toast][data-styled="true"]:not([data-type="success"], [data-type="info"], [data-type="warning"], [data-type="error"]) [data-description] {
+  color: var(--text-secondary);
+}
+/* The action button in the tone's own colour rather than sonner's black pill. */
+.kit-toaster [data-sonner-toast][data-styled="true"] [data-button]:not([data-cancel]) {
+  background: var(--toast-action-bg, var(--text-primary));
+  color: var(--bg-surface);
+}
+.kit-toaster [data-sonner-toast][data-type="success"] { --toast-action-bg: var(--success); }
+.kit-toaster [data-sonner-toast][data-type="info"] { --toast-action-bg: var(--info); }
+.kit-toaster [data-sonner-toast][data-type="warning"] { --toast-action-bg: var(--warning); }
+.kit-toaster [data-sonner-toast][data-type="error"] { --toast-action-bg: var(--danger); }
+/* The kit's focus ring on the toast's buttons — sonner's is a black shadow that
+   vanishes on the dark theme. */
+.kit-toaster [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 /* ── Categorical hues ───────────────────────────────────────────────────────
    Colours that MEAN nothing but "this is a different value": kastlan's status
    enums (status-badge.tsx over enum-meta.ts), where ~15 enums map to 9 Tailwind

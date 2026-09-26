@@ -609,6 +609,9 @@ export const zh: Dictionary = {
       "警告或错误 横幅",
       "成功 提示",
       "百分比 仪表",
+      "显示 简短确认",
+      "删除后 撤销",
+      "toast 提示",
     ],
     "description-list": [
       "键值对 展示",
