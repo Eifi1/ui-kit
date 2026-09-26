@@ -4,6 +4,8 @@ import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
 import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { lerpHex, textOn } from "../theme/chart-palette";
+import { parseHex } from "../theme/color";
 import { Tooltip } from "./tooltip";
 import type { WeekDay } from "./mini-calendar";
 
@@ -104,6 +106,39 @@ export interface CalendarHeatmapProps extends Omit<ComponentPropsWithoutRef<"div
    *  mixed into `--bg-surface`, so the ramp follows the theme. */
   color?: string;
   /**
+   * A CONTINUOUS scale from `colorFrom` (the smallest value) to `colorTo` (the busiest
+   * day), instead of `levels` steps of `color` — keksdose's palette-store ramp,
+   * `seqLow` → `seqHigh`. Both are needed; `color` is then unused. Two `#rrggbb`
+   * colours are interpolated in JS, so the fill is a concrete hex and the day number's
+   * ink (in `"month"`) is MEASURED against it; anything else (a `var()`) is mixed with
+   * `color-mix()`. `levels` still sets `data-level` and the legend's swatch count.
+   */
+  colorFrom?: string;
+  colorTo?: string;
+  /**
+   * A fill of the caller's own for a day with a value: handed the value and the
+   * scale's `max`, returns any CSS colour. Wins over `color` and `colorFrom`/`colorTo`.
+   * Also paints the legend, at `max × level / levels`.
+   */
+  fill?: (value: number, max: number) => string;
+  /** The fill of a day with no value (or a value of 0). Default: a wash of the text
+   *  colour over the surface, which reads as a cell on both themes. */
+  emptyColor?: string;
+  /**
+   * Where the window ENDS — the day `maxDays` counts back from, and the last one drawn:
+   *
+   * - `"to"` (default): on `to`.
+   * - `"today"`: on today.
+   * - `"latest"`: on the last day that can carry a figure — today, or a later day that
+   *   actually has a value. A window running into the future (a report's "all" preset
+   *   ends a year ahead) then spends its cells on the days a person is looking for,
+   *   not on a year of empty ones.
+   * - a `"YYYY-MM-DD"`: on that day.
+   *
+   * Always kept inside `from`…`to`.
+   */
+  anchor?: "to" | "today" | "latest" | (string & {});
+  /**
    * The most days to draw. A longer window keeps its LATEST `maxDays` and says how many
    * it left out (`labels.truncated`) rather than silently ending. Default: no cap.
    */
@@ -130,6 +165,26 @@ const DAY_NAME_FORMAT: Intl.DateTimeFormatOptions = {
 const EMPTY_FILL = "color-mix(in oklab, var(--text-primary) 8%, var(--bg-surface))";
 
 const weekdayIndex = (d: Date, weekStart: WeekDay) => (d.getDay() - weekStart + 7) % 7;
+
+/** Where the window ends for an {@link CalendarHeatmapProps.anchor}, kept in `[from, to]`.
+ *  `latestData` is the latest ISO date carrying a value, or `""`. */
+export function heatmapWindowEnd(
+  from: string,
+  to: string,
+  anchor: string,
+  latestData: string,
+  today: string = toLocalIso(new Date()),
+): string {
+  let end: string;
+  if (anchor === "today") end = today;
+  else if (anchor === "latest") end = latestData > today ? latestData : today;
+  else if (anchor === "to" || !parseIsoDate(anchor)) end = to;
+  else end = anchor;
+  // ISO dates sort as strings, so the clamp is plain comparison.
+  if (end > to) end = to;
+  if (end < from) end = from;
+  return end;
+}
 
 /** The step a value falls on: 0 for nothing, else 1…levels by its share of `max`. */
 export function heatmapLevel(value: number, max: number, levels: number): number {
@@ -159,7 +214,9 @@ function levelFill(level: number, levels: number, color: string): string {
  * the other way round, mirrored in RTL — PageUp/PageDown move a month and Home/End go
  * to the window's first/last day. Each cell is named with its whole date AND its value,
  * because the colour is not something a screen reader can say, and carries
- * `data-day="YYYY-MM-DD"` as its identity for tests and for the host.
+ * `data-day="YYYY-MM-DD"` as its identity for tests and for the host. Note that in
+ * `"weeks"` the cells are in DOM order by WEEKDAY ROW (all Mondays, then all
+ * Tuesdays…), not by date — query by `data-day`, not by position.
  *
  * The tooltip is portalled (a year of squares always sits in a sideways scroller) and
  * `data-private` unless `sensitive={false}`. Cell size in `"weeks"` is the CSS variable
@@ -178,6 +235,11 @@ export function CalendarHeatmap({
   max: maxProp,
   levels = 4,
   color = "var(--brand)",
+  colorFrom,
+  colorTo,
+  fill: fillProp,
+  emptyColor,
+  anchor = "to",
   maxDays,
   legend = true,
   locale: localeProp,
@@ -202,9 +264,16 @@ export function CalendarHeatmap({
 
   // The window, trimmed from the FRONT: the days a person looks for are the recent
   // ones, and a cap that kept the oldest would end the calendar before today.
+  const latestData = useMemo(() => {
+    let latest = "";
+    for (const [iso, v] of values) if (v !== 0 && iso > latest) latest = iso;
+    return latest;
+  }, [values]);
+  const windowEnd = heatmapWindowEnd(from, to, anchor, latestData);
+
   const { days, dropped } = useMemo(() => {
     const start = parseIsoDate(from);
-    const end = parseIsoDate(to);
+    const end = parseIsoDate(windowEnd);
     const list: Date[] = [];
     if (!start || !end || end < start) return { days: list, dropped: 0 };
     const cursor = new Date(end);
@@ -216,7 +285,7 @@ export function CalendarHeatmap({
     const first = list[0];
     const trimmed = first ? Math.round((first.getTime() - start.getTime()) / 86_400_000) : 0;
     return { days: list, dropped: Math.max(0, trimmed) };
-  }, [from, to, maxDays]);
+  }, [from, windowEnd, maxDays]);
 
   const firstIso = days.length ? toLocalIso(days[0]) : "";
   const lastIso = days.length ? toLocalIso(days[days.length - 1]) : "";
@@ -341,13 +410,43 @@ export function CalendarHeatmap({
   };
 
   const legendLevels = Array.from({ length: levels + 1 }, (_, l) => l);
+  const empty = emptyColor ?? EMPTY_FILL;
+  const continuous = colorFrom !== undefined && colorTo !== undefined;
+  const hexRamp = continuous && parseHex(colorFrom) != null && parseHex(colorTo) != null;
+
+  /** A day's fill, and the ink its number is set in (`"month"`). */
+  const paint = (value: number, level: number): { fill: string; ink: string } => {
+    if (level === 0) return { fill: empty, ink: "var(--text-primary)" };
+    if (fillProp || continuous) {
+      const t = max > 0 ? Math.min(1, Math.max(0, value / max)) : 1;
+      const fill = fillProp
+        ? fillProp(value, max)
+        : hexRamp
+          ? lerpHex(colorFrom!, colorTo!, t)
+          : `color-mix(in oklab, ${colorTo} ${Math.round(t * 100)}%, ${colorFrom})`;
+      // Measured where the fill is a colour; a mix of references cannot be measured,
+      // and the page's own text colour is the safe answer there.
+      const measured = textOn(fill);
+      return { fill, ink: measured === "currentColor" ? "var(--text-primary)" : measured };
+    }
+    // Light text once the fill is the stronger half of the mix — `--bg-surface` is the
+    // colour the scale is mixed INTO, so it is the one that contrasts with its far end
+    // on either theme.
+    const strong = levelPercent(level, levels) >= 45;
+    return {
+      fill: levelFill(level, levels, color),
+      ink: strong ? "var(--bg-surface)" : "var(--text-primary)",
+    };
+  };
+  // The legend's swatches: a value that lands on each step (the top one on `max`).
+  const legendFill = (l: number) => paint(((max > 0 ? max : 1) * l) / levels, l).fill;
 
   const cell = (d: Date, wrapClass: string, cellClass: string, withNumber: boolean) => {
     const iso = toLocalIso(d);
     const raw = values.get(iso);
     const value = raw ?? 0;
     const level = heatmapLevel(value, max, levels);
-    const fill = levelFill(level, levels, color);
+    const { fill, ink } = paint(value, level);
     const formattedDate = formatDay(d);
     const formattedValue = formatValue(value);
     const name = labels.day(formattedDate, formattedValue);
@@ -355,10 +454,6 @@ export function CalendarHeatmap({
       ? tooltip({ iso, date: d, value, hasData: raw !== undefined, level, formattedDate, formattedValue })
       : name;
     const isSelected = selected === iso;
-    // Light text once the fill is the stronger half of the mix — `--bg-surface` is the
-    // colour the scale is mixed INTO, so it is the one that contrasts with its far end
-    // on either theme.
-    const strong = level > 0 && levelPercent(level, levels) >= 45;
     const shared = {
       role: "gridcell",
       "data-day": iso,
@@ -370,7 +465,7 @@ export function CalendarHeatmap({
       onFocus: () => {
         if (iso !== activeIso) setActiveIso(iso);
       },
-      style: { background: fill, color: strong ? "var(--bg-surface)" : "var(--text-primary)" },
+      style: { background: fill, color: ink },
       className: cn(
         cellClass,
         isSelected && "ring-2 ring-[var(--text-primary)]",
@@ -493,7 +588,7 @@ export function CalendarHeatmap({
               key={l}
               data-legend-level={l}
               className="size-2.5 rounded-sm"
-              style={{ background: levelFill(l, levels, color) }}
+              style={{ background: legendFill(l) }}
             />
           ))}
           <span className="ms-0.5">{labels.more}</span>

@@ -15,7 +15,8 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
 
 export interface FloatingPanelLabels {
@@ -588,8 +589,17 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
   label: string;
   icon: ReactNode;
   /** Make it a toggle: `aria-pressed` and the brand "on" look (the brand glyph on the
-   *  quiet brand fill), as {@link FloatingActionButtonProps.pressed}. Ignored on a link. */
+   *  quiet brand fill), as {@link FloatingActionButtonProps.pressed}. Ignored on a link.
+   *  For the state without the tint, see {@link pressedStyle}. */
   pressed?: boolean;
+  /**
+   * How `pressed` looks. `tint` (default): the brand "on" look. `plain`: the member
+   * keeps its quiet look in both states and only `aria-pressed` changes — for a toggle
+   * whose icon already says which state it is in (keksdose's /transactions "Upcoming"
+   * swaps two icons; a tint on top said it twice). The same as passing `aria-pressed`
+   * without `pressed`, which also rides through untinted.
+   */
+  pressedStyle?: "tint" | "plain";
   /**
    * `primary`: the brand-filled member, for the group's main action (the /transactions
    * "+"). Default: the quiet one.
@@ -611,8 +621,8 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
   tooltip?: boolean;
   /** Where the tooltip opens. Default `top` — the group sits at the bottom of the screen. */
   tooltipSide?: TooltipSide;
-  /** Make it a link — the /transactions invoices member. A plain `<a>` unless
-   *  `renderLink` hands it to your router. */
+  /** Make it a link — the /transactions invoices member. Drawn by `renderLink`, else
+   *  the `<UiKitProvider linkComponent>` (an in-app `href`), else a plain `<a>`. */
   href?: string;
   /** Render the link through your router's `Link` — see {@link FloatingActionLinkProps}. */
   renderLink?: (props: FloatingActionLinkProps) => ReactElement;
@@ -637,6 +647,7 @@ export function FloatingAction({
   label,
   icon,
   pressed,
+  pressedStyle = "tint",
   variant = "default",
   badge,
   badgeLabel,
@@ -652,6 +663,7 @@ export function FloatingAction({
   ...rest
 }: FloatingActionProps) {
   const labels = useKitLabels("floatingPanel", DEFAULT_FLOATING_PANEL_LABELS);
+  const kitLink = useKitLink();
   const counted = badge !== undefined && badge > 0;
   const name = counted ? `${label}, ${badgeLabel ?? labels.badge(badge)}` : label;
   const isLink = href !== undefined;
@@ -661,7 +673,7 @@ export function FloatingAction({
     "disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5",
     variant === "primary"
       ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
-      : pressed && !isLink
+      : pressed && !isLink && pressedStyle === "tint"
         ? "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]"
         : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
     className,
@@ -697,8 +709,9 @@ export function FloatingAction({
       children: body,
     };
     const { children: content, ...anchor } = linkProps;
-    member = renderLink ? (
-      <RenderedFloatingLink render={renderLink} {...linkProps} />
+    const render = pickLinkRenderer(renderLink, kitLink, href);
+    member = render ? (
+      <RenderedFloatingLink render={render} {...linkProps} />
     ) : (
       <a {...anchor}>{content}</a>
     );

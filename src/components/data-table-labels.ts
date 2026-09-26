@@ -69,6 +69,22 @@ export interface DataTableLabels {
   rowCount: (total: number) => string;
   /** The column-settings rail and its heading: "Columns (4/9)". */
   columnsCount: (visible: number, total: number) => string;
+
+  // ---- Empty state, row actions, boolean cells (0.12.0) ----
+
+  /** The body of a table with no rows and no `empty` prop of its own. A sentence, not
+   *  "—": a dash in the only row of a table reads as one row with a missing value. */
+  empty: string;
+  /** The accessible name of the `rowActions` column (its header is visually empty). */
+  actions: string;
+  /** The `kind: "edit"` row action's name — its tooltip and its swipe label. */
+  edit: string;
+  /** The `kind: "delete"` row action's name. */
+  delete: string;
+  /** What {@link BooleanMark} says to a screen reader for `true` / `false` / nothing. */
+  booleanTrue: string;
+  booleanFalse: string;
+  booleanUnset: string;
 }
 
 export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
@@ -120,6 +136,13 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   pageRange: (from, to, total) => `${from}–${to} / ${total}`,
   rowCount: (total) => `${total}`,
   columnsCount: (visible, total) => `Columns (${visible}/${total})`,
+  empty: "No entries",
+  actions: "Actions",
+  edit: "Edit",
+  delete: "Delete",
+  booleanTrue: "Yes",
+  booleanFalse: "No",
+  booleanUnset: "Not set",
 };
 
 /**

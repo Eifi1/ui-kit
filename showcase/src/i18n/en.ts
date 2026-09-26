@@ -93,6 +93,42 @@ export const en: Dictionary = {
   // page is keyed by the GROUP's slug and carries the group's blurb; every other page
   // also carries its `short` title for the phone's row of page pills.
   pages: {
+    media: {
+      title: "Images & media",
+      short: "Media",
+      blurb:
+        "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, and images that need a signed-in fetch.",
+    },
+    "pie-chart": {
+      title: "Pie chart",
+      short: "Pie",
+      blurb:
+        "A share of a whole as a donut or a pie: legend modes, slices that can be clicked and reached by keyboard, hidden amounts, the empty chart, right-to-left — and the legend on its own.",
+    },
+    links: {
+      title: "Links",
+      short: "Links",
+      blurb:
+        "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
+    },
+    "auth-account": {
+      title: "Sign-in & account security",
+      short: "Auth",
+      blurb:
+        "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
+    },
+    formatting: {
+      title: "Formatting & signed values",
+      short: "Formatting",
+      blurb:
+        "Numbers, money, percentages, dates and relative times in the reader's locale — as input → output in several languages — and the signed amount and change that colour themselves.",
+    },
+    "url-state": {
+      title: "State in the URL",
+      short: "URL state",
+      blurb:
+        "A value, a tab and an open dialog kept in the address, so a reload keeps them and Back undoes them: the search-param hooks and the dialog that opens from a link.",
+    },
     overview: {
       title: "Overview",
       short: "Overview",
@@ -430,6 +466,48 @@ export const en: Dictionary = {
   // The top-bar search's "What do you need?" rows: a task in the reader's words, and the
   // page that does it. Phrased as typed into a search box — lower case, no full stop.
   needs: {
+    media: [
+      "show uploaded images",
+      "open an image full screen",
+      "image gallery with captions",
+      "load an image that needs a login",
+      "preview a PDF attachment",
+    ],
+    "pie-chart": [
+      "show shares of a total",
+      "donut chart",
+      "click a slice",
+      "legend without a chart",
+      "hide amounts in a chart",
+    ],
+    links: [
+      "link to another page of the app",
+      "use my router for kit links",
+      "link that opens a new tab",
+      "a button that navigates",
+      "highlight the current page link",
+    ],
+    "auth-account": [
+      "login page layout",
+      "set up two-factor with a QR code",
+      "manage passkeys",
+      "terms and privacy page",
+      "show the two-factor secret with a copy button",
+    ],
+    formatting: [
+      "format money in the user's locale",
+      "show a date as “3 days ago”",
+      "format a percentage",
+      "show a positive or negative amount in colour",
+      "show a change against last month",
+    ],
+    "url-state": [
+      "keep a filter in the URL",
+      "remember the open tab on reload",
+      "open a dialog from a link",
+      "close a dialog with Back",
+      "share a link to the current view",
+    ],
     overview: [
       "get started with the kit",
       "how the kit is organised",

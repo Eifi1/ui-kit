@@ -2,7 +2,8 @@ import { isValidElement, useId, useLayoutEffect, useState } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 import { Card, FieldHint } from "./ui";
 import { Sparkline } from "./sparkline";
 import { Tooltip } from "./tooltip";
@@ -219,7 +220,8 @@ export interface StatTileProps
   /** Makes the tile a link. See {@link renderLink} for a router. */
   href?: string;
   /** Renders the link for `href` — pass your router's `<Link>` here, since a plain
-   *  `<a>` reloads a single-page app. Default: `<a>`. */
+   *  `<a>` reloads a single-page app. Default: the `<UiKitProvider linkComponent>`
+   *  (for an in-app `href`), then `<a>`. */
   renderLink?: (props: StatTileLinkProps) => ReactElement;
   /** Makes the tile a button (ignored when `href` is given). */
   onClick?: () => void;
@@ -297,6 +299,7 @@ export function StatTile({
   ...rest
 }: StatTileProps) {
   const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
+  const kitLink = useKitLink();
   const [labelEl, setLabelEl] = useState<HTMLElement | null>(null);
   const labelCut = useIsTruncated(truncateLabel ? labelEl : null);
   const kitLocale = useKitLocale(locale);
@@ -334,8 +337,11 @@ export function StatTile({
       "aria-describedby": describedBy,
       children: label,
     };
+    const kit = pickLinkRenderer<StatTileLinkProps>(undefined, kitLink, href);
     labelNode = renderLink ? (
       renderLink(linkProps)
+    ) : kit ? (
+      <RenderedKitLink render={kit} props={linkProps} />
     ) : (
       <a href={href} className={stretched} aria-describedby={describedBy}>
         {label}

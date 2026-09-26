@@ -2,23 +2,36 @@ import { useId, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Button, Card, FIELD_WRITABLE_LOOK, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
+import { CopyButton } from "./copy-button";
+import { QrCode } from "./qr-code";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { useAccountSettingsLabels } from "./account-settings-labels";
+import type {
+  PasswordSettingLabels,
+  ProfileSettingLabels,
+  TwoFactorSettingLabels,
+} from "./account-settings-labels";
+
+// The label types moved beside the namespace's defaults (0.12.0); re-exported here so
+// every existing `import type { ProfileSettingLabels }` keeps resolving.
+export type {
+  AccountSettingsLabels,
+  PasskeysSettingLabels,
+  PasswordSettingLabels,
+  ProfileSettingLabels,
+  TwoFactorSettingLabels,
+} from "./account-settings-labels";
+export { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "./account-settings-labels";
 
 /**
  * App-agnostic account-settings SECTIONS (feedback #333). The presentation lives
  * in @hb/ui; each app injects its own auth-API handlers + translated labels and
  * arranges these next to its own app-specific cards (appearance, budgets, …).
  * Every section is a self-contained <Card> owning its transient form state.
+ *
+ * Every `labels` prop is optional since 0.12.0: the strings come from the provider's
+ * `accountSettings` namespace, then English (see account-settings-labels.ts).
  */
-
-export interface ProfileSettingLabels {
-  title: string;
-  email: string;
-  role: string;
-  memberSince: string;
-  displayName: string;
-  save: string;
-}
 
 export function ProfileSetting({
   name,
@@ -29,7 +42,7 @@ export function ProfileSetting({
   onChange,
   onSave,
   saving,
-  labels,
+  labels: labelsProp,
 }: {
   name?: string | null;
   email?: string | null;
@@ -39,8 +52,10 @@ export function ProfileSetting({
   onChange: (value: string) => void;
   onSave: () => void;
   saving?: boolean;
-  labels: ProfileSettingLabels;
+  /** Prop > `<UiKitProvider labels={{ accountSettings: { profile } }}>` > English. */
+  labels?: Partial<ProfileSettingLabels>;
 }) {
+  const labels = useAccountSettingsLabels("profile", labelsProp);
   const dirty = value.trim().length > 0 && value.trim() !== (name ?? "");
   // Generated, not the literal "display-name" it was: two of these on one page (an
   // admin editing someone else's profile beside their own) shared an id, and the
@@ -52,7 +67,12 @@ export function ProfileSetting({
         <UserAvatar name={name} email={email} size="lg" />
         <div className="min-w-0">
           <div className="text-sm font-medium">{labels.title}</div>
-          <div className="truncate font-mono text-xs text-[var(--text-muted)]">{email ?? "—"}</div>
+          <div className="truncate font-mono text-xs text-[var(--text-muted)]">
+            {/* `email` was a required key that nothing rendered; it names the address
+                for a screen reader, which otherwise hears a bare string under a title. */}
+            <span className="sr-only">{labels.email}: </span>
+            {email ?? "—"}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
@@ -75,28 +95,20 @@ export function ProfileSetting({
   );
 }
 
-export interface PasswordSettingLabels {
-  title: string;
-  current: string;
-  next: string;
-  confirm: string;
-  submit: string;
-  tooShort: string;
-  mismatch: string;
-}
-
 export function PasswordSetting({
   onSubmit,
   pending,
   minLength = 8,
-  labels,
+  labels: labelsProp,
 }: {
   /** Called with the validated (current, new) pair; return a promise to auto-clear on success. */
   onSubmit: (currentPassword: string, newPassword: string) => void | Promise<unknown>;
   pending?: boolean;
   minLength?: number;
-  labels: PasswordSettingLabels;
+  /** Prop > `<UiKitProvider labels={{ accountSettings: { password } }}>` > English. */
+  labels?: Partial<PasswordSettingLabels>;
 }) {
+  const labels = useAccountSettingsLabels("password", labelsProp);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -136,34 +148,35 @@ export function PasswordSetting({
   );
 }
 
-export interface TwoFactorSettingLabels {
-  status: string;
-  enabledText: string;
-  disabledText: string;
-  enable: string;
-  scanHint: string;
-  codeLabel: string;
-  verify: string;
-  disableSection: string;
-  password: string;
-  disable: string;
-  /**
-   * Alt text for the setup QR image, which shipped as a hardcoded `alt="QR"`.
-   *
-   * OPTIONAL, alone among these keys, and not because it matters less: this
-   * interface is annotated at consumer call sites (`const LABELS:
-   * TwoFactorSettingLabels = {…}`), so a new REQUIRED key is a compile error in
-   * every app on the next `npm update` — the additive-API rule in the README. It
-   * falls back to English here the way `AmountInput`'s label keys do. Make it
-   * required in the next major, when the three apps can be updated with it.
-   */
-  qrAlt?: string;
+/**
+ * What the app's setup call returned.
+ *
+ * `otpauthUri` (0.12.0) is what an authenticator backend actually hands out; the kit
+ * draws the QR code itself ({@link QrCode}) and reads the manual-entry key out of the
+ * URI's `secret` parameter when `secret` is not given. The `qrSvg` shape — a
+ * base64-encoded SVG image — is what the section took before, which made every app
+ * render a QR library to a static string and base64 it only for the kit to draw it back.
+ */
+export type TwoFactorSetupData =
+  | { qrSvg: string; secret: string }
+  | { otpauthUri: string; secret?: string };
+
+/** The `secret` parameter of an `otpauth://` URI, or null. */
+function otpauthSecret(uri: string): string | null {
+  const match = /[?&]secret=([^&#]*)/i.exec(uri);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]) || null;
+  } catch {
+    return match[1] || null;
+  }
 }
 
-/** `qrAlt`'s English fallback, kept beside the interface rather than inline so the
- *  one English word in this section is findable by the same `DEFAULT_*` grep as
- *  every other one. Module-private: the key goes required in the next major. */
-const DEFAULT_QR_ALT = "QR code";
+/** "JBSW Y3DP EHPK 3PXP": the key in groups of four, which is how an authenticator's
+ *  manual-entry screen shows it and how a person copies it by eye. */
+function groupSecret(secret: string): string {
+  return secret.replace(/\s+/g, "").replace(/(.{4})(?=.)/g, "$1 ");
+}
 
 export function TwoFactorSetting({
   enabled,
@@ -172,17 +185,23 @@ export function TwoFactorSetting({
   onEnable,
   onDisable,
   busy,
-  labels,
+  renderQr,
+  labels: labelsProp,
 }: {
   enabled: boolean;
-  /** QR + secret returned by the app's setup call; null before setup starts. */
-  setup: { qrSvg: string; secret: string } | null;
+  /** What the app's setup call returned; null before setup starts. */
+  setup: TwoFactorSetupData | null;
   onStartSetup: () => void;
   onEnable: (code: string) => void;
   onDisable: (password: string, code: string) => void;
   busy?: boolean;
-  labels: TwoFactorSettingLabels;
+  /** Draw the code yourself (a branded QR, a library you already ship). Given the
+   *  `otpauthUri`; the kit's own {@link QrCode} otherwise. Unused with `qrSvg`. */
+  renderQr?: (otpauthUri: string) => ReactNode;
+  /** Prop > `<UiKitProvider labels={{ accountSettings: { twoFactor } }}>` > English. */
+  labels?: Partial<TwoFactorSettingLabels>;
 }) {
+  const labels = useAccountSettingsLabels("twoFactor", labelsProp);
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   // Browsers autofill one-time-code fields with the saved username; keep the
@@ -195,6 +214,9 @@ export function TwoFactorSetting({
   // Only for the "Status: Enabled" composition — the punctuation between a field's
   // name and its value is the language's (see `CommonLabels.fieldValue`).
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const secret = setup
+    ? (setup.secret ?? ("otpauthUri" in setup ? otpauthSecret(setup.otpauthUri) : null))
+    : null;
 
   return (
     <Card className="p-4 space-y-3">
@@ -216,15 +238,40 @@ export function TwoFactorSetting({
               their quiet zone. On the dark theme a surface-coloured backing makes it
               slow to acquire, and on a warm light preset it lowers the contrast ratio
               the spec is written against. This is the one place in the kit where a
-              literal colour is the correct answer. */}
-          <div className="inline-block rounded-md bg-white p-2">
-            <img
-              alt={labels.qrAlt ?? DEFAULT_QR_ALT}
-              src={`data:image/svg+xml;base64,${setup.qrSvg}`}
-              className="h-48 w-48"
-            />
-          </div>
-          <div className="break-all font-mono text-xs">{setup.secret}</div>
+              literal colour is the correct answer. `data-private`: the code IS the
+              second factor, and demo mode blurs it like any other secret. */}
+          {"otpauthUri" in setup ? (
+            // No backing of its own: QrCode draws its quiet zone white inside the SVG.
+            <div data-private className="inline-block overflow-hidden rounded-md">
+              {renderQr ? (
+                renderQr(setup.otpauthUri)
+              ) : (
+                <QrCode value={setup.otpauthUri} label={labels.qrAlt} className="size-48" />
+              )}
+            </div>
+          ) : (
+            <div data-private className="inline-block rounded-md bg-white p-2">
+              <img
+                alt={labels.qrAlt}
+                src={`data:image/svg+xml;base64,${setup.qrSvg}`}
+                className="h-48 w-48"
+              />
+            </div>
+          )}
+          {secret && (
+            <div className="space-y-1">
+              <div className="text-xs text-[var(--text-secondary)]">{labels.secretHint}</div>
+              <div className="flex items-center gap-1">
+                {/* `dir="ltr"`: a base32 key is Latin letters and digits in a fixed
+                    order, and in an RTL page the groups would otherwise be laid out
+                    right to left. */}
+                <code data-private dir="ltr" className="break-all font-mono text-xs select-all">
+                  {groupSecret(secret)}
+                </code>
+                <CopyButton text={secret} label={labels.copySecret} size="xs" tone="muted" />
+              </div>
+            </div>
+          )}
           <Input
             inputMode="numeric"
             autoComplete="one-time-code"

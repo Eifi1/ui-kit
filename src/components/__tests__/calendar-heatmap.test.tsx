@@ -250,3 +250,129 @@ describe("CalendarHeatmap scroll position on resize", () => {
     expect(box.left).toBe(-50);
   });
 });
+
+describe("CalendarHeatmap scales (0.12)", () => {
+  const WEEK = [
+    { date: "2026-09-01", value: 0 },
+    { date: "2026-09-02", value: 25 },
+    { date: "2026-09-03", value: 100 },
+  ];
+  const bg = (iso: string) => cellOn(iso).style.background;
+
+  it("draws a continuous ramp between two hex colours, with measured ink", () => {
+    render(
+      <CalendarHeatmap
+        data={WEEK}
+        from="2026-09-01"
+        to="2026-09-07"
+        layout="month"
+        colorFrom="#ffffff"
+        colorTo="#000000"
+        emptyColor="#eeeeee"
+        locale={LOCALE}
+      />,
+    );
+    // jsdom normalises hex to rgb().
+    expect(bg("2026-09-03")).toBe("rgb(0, 0, 0)");
+    expect(bg("2026-09-02")).toBe("rgb(191, 191, 191)");
+    expect(bg("2026-09-01")).toBe("rgb(238, 238, 238)");
+    expect(bg("2026-09-05")).toBe("rgb(238, 238, 238)");
+    // Measured: light ink on the black day, dark ink on the light one.
+    expect(cellOn("2026-09-03").style.color).toBe("rgb(248, 250, 252)");
+    expect(cellOn("2026-09-02").style.color).toBe("rgb(26, 26, 26)");
+    // Levels are still there, for data-level and the legend.
+    expect(cellOn("2026-09-03").dataset.level).toBe("4");
+    expect(document.querySelectorAll("[data-legend-level]")).toHaveLength(5);
+  });
+
+  it("mixes non-hex ends with color-mix", () => {
+    render(
+      <CalendarHeatmap
+        data={WEEK}
+        from="2026-09-01"
+        to="2026-09-07"
+        colorFrom="var(--seq-low)"
+        colorTo="var(--seq-high)"
+        locale={LOCALE}
+      />,
+    );
+    const style = cellOn("2026-09-02").getAttribute("style") ?? "";
+    expect(style).toContain("color-mix(in oklab, var(--seq-high) 25%, var(--seq-low))");
+  });
+
+  it("takes a fill of the caller's own, handed the value and the max", () => {
+    const fill = vi.fn((v: number, max: number) => (v === max ? "#ff0000" : "#00ff00"));
+    render(<CalendarHeatmap data={WEEK} from="2026-09-01" to="2026-09-07" fill={fill} locale={LOCALE} />);
+    expect(fill).toHaveBeenCalledWith(25, 100);
+    expect(bg("2026-09-03")).toBe("rgb(255, 0, 0)");
+    expect(bg("2026-09-02")).toBe("rgb(0, 255, 0)");
+    // The legend is painted by it too, at max × level / levels.
+    expect(fill).toHaveBeenCalledWith(50, 100);
+  });
+});
+
+describe("CalendarHeatmap anchor (0.12)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("ends on `to` by default", () => {
+    render(<CalendarHeatmap data={[]} from="2026-09-01" to="2026-12-31" locale={LOCALE} />);
+    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-12-31");
+  });
+
+  it("ends on today with anchor='today', and maxDays counts back from there", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 20, 12));
+    render(
+      <CalendarHeatmap data={[]} from="2026-01-01" to="2027-09-20" anchor="today" maxDays={10} locale={LOCALE} />,
+    );
+    const days = cells().map((c) => c.dataset.day).sort();
+    expect(days).toHaveLength(10);
+    expect(days[0]).toBe("2026-09-11");
+    expect(days.at(-1)).toBe("2026-09-20");
+  });
+
+  it("ends on the later of today and the last day with data, with anchor='latest'", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 20, 12));
+    const { unmount } = render(
+      <CalendarHeatmap
+        data={[{ date: "2026-10-05", value: 3 }]}
+        from="2026-09-01"
+        to="2027-09-20"
+        anchor="latest"
+        locale={LOCALE}
+      />,
+    );
+    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-10-05");
+    unmount();
+    // A past last entry: today still ends the window.
+    render(
+      <CalendarHeatmap data={[{ date: "2026-09-03", value: 3 }]} from="2026-09-01" to="2027-09-20" anchor="latest" locale={LOCALE} />,
+    );
+    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-09-20");
+  });
+
+  it("ends on an ISO date, kept inside the window", () => {
+    const { unmount } = render(
+      <CalendarHeatmap data={[]} from="2026-09-01" to="2026-09-30" anchor="2026-09-10" locale={LOCALE} />,
+    );
+    expect(cells()).toHaveLength(10);
+    unmount();
+    render(<CalendarHeatmap data={[]} from="2026-09-01" to="2026-09-30" anchor="2027-01-01" locale={LOCALE} />);
+    expect(cells()).toHaveLength(30);
+  });
+});
+
+describe("heatmapWindowEnd", () => {
+  it("clamps every anchor into [from, to]", async () => {
+    const { heatmapWindowEnd } = await import("../calendar-heatmap");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "to", "", "2026-06-01")).toBe("2026-12-31");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "today", "", "2026-06-01")).toBe("2026-06-01");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "today", "", "2027-06-01")).toBe("2026-12-31");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "latest", "2026-08-01", "2026-06-01")).toBe("2026-08-01");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "latest", "", "2025-06-01")).toBe("2026-01-01");
+    expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "not a date", "", "2026-06-01")).toBe("2026-12-31");
+  });
+});

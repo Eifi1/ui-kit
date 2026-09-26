@@ -233,6 +233,18 @@
   --success-bg: rgba(6, 78, 59, 0.25);
 }
 
+/* ── Media ─────────────────────────────────────────────────────────────────
+   Controls drawn ON a photo or a live camera picture (the camera shutter), whose
+   background is the picture, not the page — so they must NOT follow the theme: a
+   dark-mode inverse pair would put a dark ring on a dark viewfinder. The same in both
+   themes, on purpose. */
+:root,
+.dark {
+  --media-ink: #ffffff;
+  --media-scrim: rgb(0 0 0 / 0.35);
+  --media-scrim-hover: rgb(0 0 0 / 0.5);
+}
+
 /* ── Toasts ─────────────────────────────────────────────────────────────────
    The kit `<Toaster>` (components/toast.tsx) paints sonner with the AlertBanner
    tones. These are ALIASES, not new colours, and they exist for one reason: sonner

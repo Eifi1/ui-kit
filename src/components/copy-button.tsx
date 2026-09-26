@@ -56,7 +56,8 @@ export interface CopyButtonProps
   stopPropagation?: boolean;
   /** Icon variant only: where the result tooltip opens. */
   tooltipSide?: TooltipSide;
-  /** Pass through to the tooltip — needed inside a scroll container (see Tooltip). */
+  /** Pass through to the tooltip. Left unset, the Tooltip decides on its own — it
+   *  portals inside a clipping container (a DataTable's `data-clips` scroller). */
   tooltipPortal?: boolean;
   /** ms until the button returns to idle. Default 2000. */
   resetAfter?: number;
@@ -93,7 +94,7 @@ export function CopyButton({
   tone,
   stopPropagation,
   tooltipSide = "top",
-  tooltipPortal = false,
+  tooltipPortal,
   resetAfter = 2000,
   onCopied,
   labels,

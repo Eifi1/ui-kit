@@ -1,6 +1,8 @@
 import type { ComponentPropsWithoutRef, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { buttonClasses, type ButtonSize, type ButtonVariant } from "./ui";
+import { useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 // Every class below is spelled out in full rather than assembled from parts: the
 // consumer's Tailwind build finds classes by scanning this package's source as text,
@@ -147,7 +149,8 @@ export interface ButtonGroupLinkProps extends Omit<ComponentPropsWithoutRef<"a">
   /** The member for the page you are on: `aria-current="page"` and the "on" look of a
    *  pressed member, so a link row reads as a segmented switch between pages. */
   current?: boolean;
-  /** Render through your router's `Link` — see {@link ButtonGroupLinkRenderProps}. */
+  /** Render through your router's `Link` — see {@link ButtonGroupLinkRenderProps}.
+   *  Default: the `<UiKitProvider linkComponent>`, then `<a>`. */
   renderLink?: (props: ButtonGroupLinkRenderProps) => ReactElement;
   className?: string;
   children: ReactNode;
@@ -174,6 +177,7 @@ export function ButtonGroupLink({
   children,
   ...rest
 }: ButtonGroupLinkProps) {
+  const kitLink = useKitLink();
   const props: ButtonGroupLinkRenderProps = {
     ...rest,
     href,
@@ -181,7 +185,8 @@ export function ButtonGroupLink({
     className: buttonClasses(variant, { size, className: cn(current && LINK_CURRENT, className) }),
     children,
   };
-  if (renderLink) return <RenderedGroupLink render={renderLink} {...props} />;
+  const render = pickLinkRenderer(renderLink, kitLink, href);
+  if (render) return <RenderedGroupLink render={render} {...props} />;
   const { children: content, ...anchor } = props;
   return <a {...anchor}>{content}</a>;
 }

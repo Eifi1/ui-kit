@@ -12,6 +12,7 @@ import { DEFAULT_TOUR_LABELS } from "../tour/tour";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette";
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
+import { DEFAULT_PIE_CHART_LABELS } from "../components/pie-chart-labels";
 import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline";
 import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad";
@@ -25,11 +26,26 @@ import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel";
 import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment";
+import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "../feedback/feedback-dialog";
+import {
+  DEFAULT_FEEDBACK_COMPOSER_LABELS,
+  DEFAULT_FEEDBACK_THREAD_LABELS,
+} from "../feedback/feedback-thread";
+import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../components/account-settings-labels";
 import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar";
 import { DEFAULT_LIST_LABELS } from "../components/list";
 import { DEFAULT_BREADCRUMBS_LABELS } from "../components/breadcrumbs";
 import { DEFAULT_TOAST_LABELS } from "../components/toast";
+import { DEFAULT_FORM_ACTIONS_LABELS } from "../components/form-actions";
+import { DEFAULT_DESCRIPTION_LIST_LABELS } from "../components/description-list";
+import { DEFAULT_LINE_ITEMS_LABELS } from "../components/line-items";
+import { DEFAULT_PROGRESS_BAR_LABELS } from "../components/progress-bar";
+import { DEFAULT_SIGNED_AMOUNT_LABELS } from "../components/signed-amount";
+import { DEFAULT_ERROR_BOUNDARY_LABELS } from "../components/error-boundary";
+import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image";
+import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid";
+import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -80,6 +96,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   commandPalette: DEFAULT_COMMAND_PALETTE_LABELS,
   globalSearch: DEFAULT_GLOBAL_SEARCH_LABELS,
   seriesChart: DEFAULT_SERIES_CHART_LABELS,
+  pieChart: DEFAULT_PIE_CHART_LABELS,
   sparkline: DEFAULT_SPARKLINE_LABELS,
   statTile: DEFAULT_STAT_TILE_LABELS,
   signaturePad: DEFAULT_SIGNATURE_PAD_LABELS,
@@ -91,6 +108,10 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   filePicker: DEFAULT_FILE_PICKER_LABELS,
   measuredGrid: DEFAULT_MEASURED_GRID_LABELS,
   feedbackAttachment: DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
+  feedbackDialog: DEFAULT_FEEDBACK_DIALOG_LABELS,
+  feedbackThread: DEFAULT_FEEDBACK_THREAD_LABELS,
+  feedbackComposer: DEFAULT_FEEDBACK_COMPOSER_LABELS,
+  accountSettings: DEFAULT_ACCOUNT_SETTINGS_LABELS,
   confirmDialog: DEFAULT_CONFIRM_DIALOG_LABELS,
   floatingPanel: DEFAULT_FLOATING_PANEL_LABELS,
   copyButton: DEFAULT_COPY_BUTTON_LABELS,
@@ -98,4 +119,13 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   list: DEFAULT_LIST_LABELS,
   breadcrumbs: DEFAULT_BREADCRUMBS_LABELS,
   toast: DEFAULT_TOAST_LABELS,
+  form: DEFAULT_FORM_ACTIONS_LABELS,
+  descriptionList: DEFAULT_DESCRIPTION_LIST_LABELS,
+  lineItems: DEFAULT_LINE_ITEMS_LABELS,
+  progressBar: DEFAULT_PROGRESS_BAR_LABELS,
+  signedAmount: DEFAULT_SIGNED_AMOUNT_LABELS,
+  errorBoundary: DEFAULT_ERROR_BOUNDARY_LABELS,
+  authedImage: DEFAULT_AUTHED_IMAGE_LABELS,
+  imageGrid: DEFAULT_IMAGE_GRID_LABELS,
+  lightbox: DEFAULT_LIGHTBOX_LABELS,
 };

@@ -117,3 +117,14 @@ describe("CopyButton size, tone and stopPropagation (keksdose C27)", () => {
     }
   });
 });
+
+describe("CopyButton leaves portalling to the Tooltip (keksdose E0)", () => {
+  it("does not mount its bubble in place inside a data-clips scroller", () => {
+    const { container } = render(
+      <div data-clips="">
+        <CopyButton text="x" label="Copy IBAN" />
+      </div>,
+    );
+    expect(container.querySelector('[role="tooltip"]')).toBeNull();
+  });
+});

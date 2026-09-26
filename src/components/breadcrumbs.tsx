@@ -2,7 +2,8 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
 export interface BreadcrumbsLabels {
   /** The `nav` landmark's name — what a screen reader lists it as. */
@@ -35,7 +36,8 @@ export interface BreadcrumbLinkProps {
 
 export interface BreadcrumbsProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
   items: BreadcrumbItem[];
-  /** Your router's link. Default `<a>`. The API `Chip`, `StatTile` and `ListItem` share. */
+  /** Your router's link. Default: the `<UiKitProvider linkComponent>` (for an in-app
+   *  `href`), then `<a>`. The API `Chip`, `StatTile` and `ListItem` share. */
   renderLink?: (props: BreadcrumbLinkProps) => ReactElement;
   /**
    * The mark between crumbs. Default a chevron, mirrored in RTL — a chevron pointing
@@ -78,6 +80,7 @@ export function Breadcrumbs({
   ...rest
 }: BreadcrumbsProps) {
   const labels = useKitLabels("breadcrumbs", DEFAULT_BREADCRUMBS_LABELS, labelsProp);
+  const kitLink = useKitLink();
   const [expanded, setExpanded] = useState(false);
   // The "…" button vanishes when pressed; focus goes to the first crumb it revealed,
   // not back to the top of the document.
@@ -121,8 +124,11 @@ export function Breadcrumbs({
             );
           } else if (item.href !== undefined) {
             const props: BreadcrumbLinkProps = { href: item.href, className: linkClass, children: item.label };
+            const kit = pickLinkRenderer<BreadcrumbLinkProps>(undefined, kitLink, item.href);
             content = renderLink ? (
               renderLink(props)
+            ) : kit ? (
+              <RenderedKitLink render={kit} props={props} />
             ) : (
               <a href={props.href} className={props.className}>
                 {props.children}

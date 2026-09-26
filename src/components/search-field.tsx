@@ -3,6 +3,7 @@ import type { InputHTMLAttributes } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FIELD_BASE } from "./ui";
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 interface SearchFieldOwnProps
   extends Omit<
@@ -23,10 +24,22 @@ interface SearchFieldOwnProps
    * absent, so a consumer can migrate one call site at a time.
    */
   label?: string;
-  /** Names the clear button. Omit it and no clear button is rendered — which is a
-   *  decision, not a default: a filter you can type into and not untype is the
-   *  complaint that produced the button on three of these four screens. */
+  /** Names the clear button. Default: the catalogue's `common.clear`, in the
+   *  provider's language. */
   clearLabel?: string;
+  /**
+   * Draw the "×" that empties the field once there is something in it. Default
+   * `true`.
+   *
+   * It used to appear only when a `clearLabel` was passed, and every kastlan call
+   * site passed one — lease-list-page.tsx:91, trial-balance-page.tsx:~196,
+   * account-ledger-page.tsx:~131 and data-table/resource-list-page.tsx:256 each
+   * spelled `clearLabel={t("table.clear")}` — so the opt-in was boilerplate: a filter
+   * you can type into and not untype is the complaint that produced the button in
+   * the first place, and the catalogue already names it. `false` is for a field
+   * whose clearing lives elsewhere (a "Reset filters" beside it).
+   */
+  clearable?: boolean;
   /**
    * `"field"` (default): the bordered filter box that sits on a page.
    *
@@ -96,7 +109,8 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
     value,
     onChange,
     label,
-    clearLabel,
+    clearLabel: clearLabelProp,
+    clearable = true,
     className,
     inputClassName,
     placeholder,
@@ -107,6 +121,8 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
   ref,
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const clearLabel = clearable ? (clearLabelProp ?? common.clear) : undefined;
   // Whichever spelling the caller used. It is the accessible name AND the placeholder
   // fallback, so a box named only by `aria-label` still says what it is before anyone
   // has typed in it — the same deal `label` has always had.

@@ -1,17 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, matchPath, useLocation } from "react-router";
+import { Link, NavLink, matchPath, useLocation } from "react-router";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
+import { pickLinkRenderer } from "../components/text-link";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { DEFAULT_APP_SHELL_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
+import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 
 export interface AppShellSubItem {
   to: string;
@@ -49,6 +51,44 @@ export interface AppShellNavItem {
 }
 
 /**
+ * One entry of the sidebar's bottom area ({@link AppShellProps.sidebarFooterItems}) —
+ * the version link and the legal links kastlan hand-built in `sidebarFooter`.
+ *
+ * - `link` (default): one link. Expanded it shows `icon` + `text` (default `label`),
+ *   with `hint` as a tooltip if given; collapsed it is the icon alone, named and
+ *   tooltipped by `label`.
+ * - `links`: a small group — the legal links. Expanded, a `<nav>` named `label` holding
+ *   the links as a wrapping row of small text; collapsed, ONE icon link to `to` (default
+ *   the first link's), named and tooltipped by `label`, since a column of icons for
+ *   "Imprint", "Privacy" and "Terms" would say nothing an icon can.
+ */
+export type AppShellSidebarFooterItem =
+  | {
+      kind?: "link";
+      key: string;
+      to: string;
+      icon: LucideIcon;
+      /** The link's name, and the tooltip when collapsed ("What's new · v1.4.0"). */
+      label: string;
+      /** Visible text when expanded ("Kastlan v1.4.0"). Default `label`. */
+      text?: ReactNode;
+      /** A tooltip on the expanded link ("What's new"). */
+      hint?: string;
+      /** Leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`. */
+      external?: boolean;
+    }
+  | {
+      kind: "links";
+      key: string;
+      icon: LucideIcon;
+      /** The group's name — its `<nav>` label, and the collapsed icon's name ("Legal"). */
+      label: string;
+      /** The collapsed icon's target. Default the first link's `to`. */
+      to?: string;
+      links: { to: string; label: string; external?: boolean }[];
+    };
+
+/**
  * Exported and `<div>`-shaped. This is the outermost element of every consuming app, so
  * there is nothing above it to hang an id, a landmark label or a `data-tour` anchor on —
  * and nothing a consumer can wrap it in either, since the root owns the `h-dvh` and
@@ -66,6 +106,13 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
   /** Extra sidebar content above the collapse toggle (e.g. a version link).
    *  Receives the collapsed state so it can render compact vs. full. */
   sidebarFooter?: (collapsed: boolean) => ReactNode;
+  /** The sidebar's bottom area as data — a version link, the legal links — drawn full
+   *  when expanded and as icon + tooltip when collapsed. Rendered above
+   *  `sidebarFooter`, which stays for anything the data cannot describe. */
+  sidebarFooterItems?: AppShellSidebarFooterItem[];
+  /** The router link for `sidebarFooterItems`. Default: the provider's
+   *  `linkComponent`, else react-router's `Link`. */
+  renderLink?: KitLinkComponent;
   /** localStorage key for the persisted collapse state. */
   collapseStorageKey?: string;
   /** Default: `appShell.collapse` from the {@link UiKitProvider}, else English. */
@@ -201,6 +248,8 @@ export function AppShell({
   children,
   footer,
   sidebarFooter,
+  sidebarFooterItems,
+  renderLink,
   collapseStorageKey: collapseStorageKeyProp,
   collapseLabel,
   expandLabel,
@@ -296,6 +345,9 @@ export function AppShell({
                 ))}
               </div>
             </nav>
+            {!!sidebarFooterItems?.length && (
+              <SidebarFooterItems items={sidebarFooterItems} collapsed={collapsed} renderLink={renderLink} />
+            )}
             {sidebarFooter?.(collapsed)}
             <div className="border-t border-[var(--border)] p-2">
               {collapsed ? (
@@ -394,6 +446,99 @@ export function AppShell({
         </div>
       </div>
     </AppShellNesting.Provider>
+  );
+}
+
+const routerLink: KitLinkComponent = ({ href, ...p }) => <Link to={href} {...p} />;
+const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}</a>;
+
+const FOOTER_ICON_LINK =
+  "flex min-h-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]";
+
+/** Calls the link renderer as a component, so a router link's hooks are its own. */
+function RenderedLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
+  return render(props);
+}
+
+/** The sidebar's bottom area, from {@link AppShellSidebarFooterItem}s. */
+function SidebarFooterItems({
+  items,
+  collapsed,
+  renderLink,
+}: {
+  items: AppShellSidebarFooterItem[];
+  collapsed: boolean;
+  renderLink?: KitLinkComponent;
+}) {
+  const kitLink = useKitLink();
+  const linkTo = (to: string, external: boolean | undefined, { children, ...props }: Omit<KitLinkProps, "href">) => {
+    // The kit's one link rule (`pickLinkRenderer`): an external `to` or an in-page
+    // `#anchor` is a plain `<a>` even without `external`; only `external` opens a tab.
+    const InApp = pickLinkRenderer(renderLink, kitLink ?? routerLink, to) ?? plainLink;
+    return external ? (
+      <a href={to} target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
+    ) : (
+      <RenderedLink render={InApp} href={to} {...props}>
+        {children}
+      </RenderedLink>
+    );
+  };
+
+  return (
+    <div data-slot="sidebar-footer-items" className={cn("px-2 py-1", collapsed ? "space-y-1" : "space-y-1.5")}>
+      {items.map((item) => {
+        if (collapsed) {
+          const to = item.kind === "links" ? (item.to ?? item.links[0]?.to) : item.to;
+          if (!to) return null;
+          const external = item.kind === "links" ? item.links.find((l) => l.to === to)?.external : item.external;
+          return (
+            <Tooltip key={item.key} label={item.label} side="end" portal className="block">
+              {linkTo(to, external, {
+                "aria-label": item.label,
+                className: FOOTER_ICON_LINK,
+                children: <item.icon className="size-4" aria-hidden />,
+              })}
+            </Tooltip>
+          );
+        }
+        if (item.kind === "links") {
+          return (
+            <nav
+              key={item.key}
+              aria-label={item.label}
+              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--text-muted)]"
+            >
+              {item.links.map((l) => (
+                <span key={l.to}>
+                  {linkTo(l.to, l.external, {
+                    className: "rounded-sm hover:text-[var(--text-secondary)] hover:underline",
+                    children: l.label,
+                  })}
+                </span>
+              ))}
+            </nav>
+          );
+        }
+        const link = linkTo(item.to, item.external, {
+          className: cn(FOOTER_ICON_LINK, "gap-1.5 text-xs font-medium"),
+          children: (
+            <>
+              <item.icon className="size-3.5 shrink-0" aria-hidden />
+              <span className="min-w-0 truncate">{item.text ?? item.label}</span>
+            </>
+          ),
+        });
+        return item.hint ? (
+          <Tooltip key={item.key} label={item.hint} side="top" portal className="block">
+            {link}
+          </Tooltip>
+        ) : (
+          <div key={item.key}>{link}</div>
+        );
+      })}
+    </div>
   );
 }
 

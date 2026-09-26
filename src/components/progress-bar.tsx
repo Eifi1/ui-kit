@@ -3,6 +3,19 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
+/** The words a progress bar adds of its own. */
+export interface ProgressBarLabels {
+  /** Shown after the value when `max={null}`: a quota with no ceiling. */
+  unlimited: string;
+  /** The `overage` line: how far past `max` the value is. `amount` is formatted. */
+  overLimit: (amount: string) => string;
+}
+
+export const DEFAULT_PROGRESS_BAR_LABELS: ProgressBarLabels = {
+  unlimited: "Unlimited",
+  overLimit: (amount) => `${amount} over the limit`,
+};
+
 /**
  * `income` / `expense` are the money pair (`--money-income` / `--money-expense`), the
  * names `Chip`, `StatTile` and `Sparkline` already use for them: a share bar of what
@@ -82,6 +95,13 @@ export interface ProgressBarSegment {
   label?: ReactNode;
   /** A stable React key, when `label` is not a string. */
   key?: string;
+  /**
+   * List it in the `legend` but leave it out of the bar — its value, its share of the
+   * `aria-valuetext`, and the sum. keksdose's cut card (reports/cut-card:132) names
+   * EVERY bucket under its bar, the empty ones included, while the bar draws only the
+   * ones with a share: pass the empty buckets as `legendOnly` entries.
+   */
+  legendOnly?: boolean;
 }
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
@@ -89,7 +109,14 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  and nobody knows how much is left (an import that reports no count). */
   value?: number;
   min?: number;
-  max?: number;
+  /**
+   * The top of the scale (default 100). `null` is a quota with NO ceiling — kastlan's
+   * billing usage on an unlimited plan (usage-progress-bar:25): nothing to fill, so no
+   * bar is drawn; the label row shows the value and "Unlimited" (`progressBar.unlimited`)
+   * as plain text. `formatValue` is then called with `max` = `Infinity`; without it,
+   * the value is a plain number in the kit's locale.
+   */
+  max?: number | null;
   /**
    * `progress` (default): a task moving toward completion — `role="progressbar"`.
    * `meter`: a share of a known whole that is not going anywhere (budget used, disk
@@ -126,6 +153,25 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** With `segments`: a list under the bar naming each part with its swatch and value
    *  — the table view of the bar, in text tokens rather than the segment colour. */
   legend?: boolean;
+  /**
+   * What a legend row shows at its end, in place of the part's formatted value — which
+   * it is handed, with the segment and its index. keksdose's cut card shows the share
+   * AND a private outflow amount per bucket (cut-card:150), which one figure could not:
+   * `legendValue={(seg, share) => <>{share} <Amount … /></>}`.
+   */
+  legendValue?: (segment: ProgressBarSegment, formatted: string, index: number) => ReactNode;
+  /** A muted line under the bar — the plan's reset date, "3 of 5 seats in use". It
+   *  describes the bar (`aria-describedby`). */
+  hint?: ReactNode;
+  /**
+   * When `value` is past `max`, say by how much, in a danger-coloured line under the bar
+   * (kastlan usage-progress-bar:46): `true` prints `progressBar.overLimit` with the
+   * excess as a plain number; a function renders the line itself from the excess (a
+   * currency, "2 seats"). The bar stays full at `max` either way — colour it with
+   * `tone="danger"` if it should read as over. Ignored for `segments` and `max={null}`.
+   */
+  overage?: boolean | ((over: number) => ReactNode);
+  labels?: Partial<ProgressBarLabels>;
 }
 
 /**
@@ -148,7 +194,7 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
 export function ProgressBar({
   value,
   min = 0,
-  max = 100,
+  max: maxProp = 100,
   variant = "progress",
   label,
   showValue = false,
@@ -158,21 +204,65 @@ export function ProgressBar({
   locale,
   segments,
   legend = false,
+  legendValue,
+  hint,
+  overage,
+  labels,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
   ...rest
 }: ProgressBarProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const text = useKitLabels("progressBar", DEFAULT_PROGRESS_BAR_LABELS, labels);
   const kitLocale = useKitLocale(locale);
   const labelId = useId();
+  const hintId = useId();
+  const hintNode =
+    hint != null ? (
+      <p id={hintId} data-part="hint" className="mt-1 text-xs text-[var(--text-muted)]">
+        {hint}
+      </p>
+    ) : null;
+
+  if (maxProp === null) {
+    // No ceiling: no bar, no role — a meter with no maximum is not one. The value and
+    // "Unlimited" are the content, so they are plain visible text.
+    const shown =
+      value === undefined || !Number.isFinite(value)
+        ? undefined
+        : formatValue
+          ? formatValue(value, Infinity, min)
+          : new Intl.NumberFormat(kitLocale).format(value);
+    return (
+      <div {...rest} className={cn("min-w-0", className)} data-state="unlimited">
+        <div className="flex items-baseline gap-2 text-sm">
+          {label != null && (
+            <span id={labelId} className="min-w-0 text-[var(--text-secondary)]">
+              {label}
+            </span>
+          )}
+          <span data-part="unlimited" className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
+            {shown !== undefined && `${shown} · `}
+            {text.unlimited}
+          </span>
+        </div>
+        {hintNode}
+      </div>
+    );
+  }
+  const max = maxProp;
 
   const stacked = segments !== undefined;
   const meter = stacked || variant === "meter";
   const span = max - min;
   const partValue = (v: number) => (Number.isFinite(v) ? Math.max(0, v - min) : 0);
+  // Colours are dealt over EVERY segment, legend-only ones included, so an entry keeps
+  // its swatch whether or not it is in the bar this time.
   const fills = stacked ? segmentFills(segments) : [];
-  const partTotal = stacked ? min + segments.reduce((sum, seg) => sum + partValue(seg.value), 0) : undefined;
+  const barParts = stacked ? segments.filter((seg) => !seg.legendOnly) : [];
+  const partTotal = stacked ? min + barParts.reduce((sum, seg) => sum + partValue(seg.value), 0) : undefined;
   const format = (v: number) =>
     formatValue
       ? formatValue(v, max, min)
@@ -180,7 +270,7 @@ export function ProgressBar({
           span <= 0 ? 0 : (Math.min(max, Math.max(min, v)) - min) / span,
         );
   const partTexts = stacked
-    ? segments.map((seg) => {
+    ? barParts.map((seg) => {
         const text = format(min + partValue(seg.value));
         return typeof seg.label === "string" || typeof seg.label === "number"
           ? common.fieldValue(String(seg.label), text)
@@ -198,6 +288,19 @@ export function ProgressBar({
     stacked && partTexts.length > 0
       ? new Intl.ListFormat(kitLocale, { style: "short", type: "unit" }).format(partTexts)
       : valueText;
+
+  const over =
+    overage && !stacked && value !== undefined && Number.isFinite(value) && value > max ? value - max : 0;
+  const overageNode =
+    over > 0 ? (
+      <p id={`${hintId}-over`} data-part="overage" className="mt-1 text-xs text-[var(--danger)]">
+        {typeof overage === "function"
+          ? overage(over)
+          : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
+      </p>
+    ) : null;
+  const describedBy =
+    [ariaDescribedBy, hintNode && hintId, overageNode && `${hintId}-over`].filter(Boolean).join(" ") || undefined;
 
   const labelledBy = ariaLabelledBy ?? (label != null ? labelId : undefined);
   const name = labelledBy ? undefined : (ariaLabel ?? (indeterminate ? common.loading : undefined));
@@ -225,6 +328,7 @@ export function ProgressBar({
         role={meter ? "meter" : "progressbar"}
         aria-label={name}
         aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
         aria-valuemin={indeterminate ? undefined : min}
         aria-valuemax={indeterminate ? undefined : max}
         aria-valuenow={clamped}
@@ -238,20 +342,22 @@ export function ProgressBar({
           // The parts in a flex row with a 2px gap, so two neighbouring steps of one
           // hue are parted by the track rather than by their difference in lightness.
           <div className="flex h-full w-full gap-0.5">
-            {segments.map((seg, i) => (
-              <div
-                key={seg.key ?? i}
-                data-part="segment"
-                className={cn(
-                  "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
-                  fills[i],
-                )}
-                style={{
-                  width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
-                  backgroundColor: seg.className ? undefined : seg.color,
-                }}
-              />
-            ))}
+            {segments.map((seg, i) =>
+              seg.legendOnly ? null : (
+                <div
+                  key={seg.key ?? i}
+                  data-part="segment"
+                  className={cn(
+                    "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+                    fills[i],
+                  )}
+                  style={{
+                    width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
+                    backgroundColor: seg.className ? undefined : seg.color,
+                  }}
+                />
+              ),
+            )}
           </div>
         ) : indeterminate ? (
           <div
@@ -294,12 +400,16 @@ export function ProgressBar({
                 <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
               )}
               <span className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]">
-                {format(min + partValue(seg.value))}
+                {legendValue
+                  ? legendValue(seg, format(min + partValue(seg.value)), i)
+                  : format(min + partValue(seg.value))}
               </span>
             </li>
           ))}
         </ul>
       )}
+      {overageNode}
+      {hintNode}
     </div>
   );
 }

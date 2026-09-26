@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
+import type { AnchorHTMLAttributes, ReactElement, Ref } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
 import type { MiniCalendarLabels, WeekDay } from "../components/mini-calendar";
@@ -14,6 +15,7 @@ import type { GlobalSearchLabels } from "../search/global-search";
 import type { MonthPickerLabels } from "../components/month-picker";
 import type { PageContentsLabels } from "../components/page-contents";
 import type { SeriesChartLabels } from "../components/series-chart-labels";
+import type { PieChartLabels } from "../components/pie-chart-labels";
 import type { SparklineLabels } from "../components/sparkline";
 import type { StatTileLabels } from "../components/stat-tile";
 import type { SignaturePadLabels } from "../components/signature-pad";
@@ -25,6 +27,9 @@ import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
+import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
+import type { FeedbackComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
+import type { AccountSettingsLabels } from "../components/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
 import type { CopyButtonLabels } from "../components/copy-button";
@@ -32,6 +37,15 @@ import type { BulkActionBarLabels } from "../components/bulk-action-bar";
 import type { ListLabels } from "../components/list";
 import type { BreadcrumbsLabels } from "../components/breadcrumbs";
 import type { ToastLabels } from "../components/toast";
+import type { FormActionsLabels } from "../components/form-actions";
+import type { DescriptionListLabels } from "../components/description-list";
+import type { LineItemsLabels } from "../components/line-items";
+import type { ProgressBarLabels } from "../components/progress-bar";
+import type { SignedAmountLabels } from "../components/signed-amount";
+import type { ErrorBoundaryLabels } from "../components/error-boundary";
+import type { AuthedImageLabels } from "../components/authed-image";
+import type { ImageGridLabels } from "../components/image-grid";
+import type { LightboxLabels } from "../components/lightbox";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -84,6 +98,9 @@ export interface CommonLabels {
   /** The × that puts away a banner or a notice (`AlertBanner onDismiss`). Not `close`:
    *  nothing opened, and "Close" on a banner reads as closing the page it sits on. */
   dismiss: string;
+  /** Read after a link that opens a new tab (`<Button href external>`, TextLink):
+   *  nothing else tells a screen reader the page is about to change tabs. */
+  opensInNewTab: string;
 }
 
 /** `DatePicker` / `DateRangePicker` chrome. The calendar inside has its own
@@ -221,6 +238,7 @@ export interface UiKitLabels {
   commandPalette: CommandPaletteLabels;
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
+  pieChart: PieChartLabels;
   sparkline: SparklineLabels;
   statTile: StatTileLabels;
   signaturePad: SignaturePadLabels;
@@ -232,6 +250,14 @@ export interface UiKitLabels {
   filePicker: FilePickerLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
+  /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `FeedbackComposer`. */
+  feedbackDialog: FeedbackDialogTextLabels;
+  feedbackThread: FeedbackThreadLabels;
+  feedbackComposer: FeedbackComposerLabels;
+  /** 0.12.0: `ProfileSetting`, `PasswordSetting`, `TwoFactorSetting`, `PasskeysSetting`
+   *  — one record per section. The provider takes a whole section record; the
+   *  components merge it key by key, as a prop. */
+  accountSettings: AccountSettingsLabels;
   confirmDialog: ConfirmDialogLabels;
   floatingPanel: FloatingPanelLabels;
   copyButton: CopyButtonLabels;
@@ -239,11 +265,36 @@ export interface UiKitLabels {
   list: ListLabels;
   breadcrumbs: BreadcrumbsLabels;
   toast: ToastLabels;
+  form: FormActionsLabels;
+  descriptionList: DescriptionListLabels;
+  lineItems: LineItemsLabels;
+  progressBar: ProgressBarLabels;
+  signedAmount: SignedAmountLabels;
+  errorBoundary: ErrorBoundaryLabels;
+  authedImage: AuthedImageLabels;
+  imageGrid: ImageGridLabels;
+  lightbox: LightboxLabels;
 }
 
-/** Any subset of the tree, one level deep — each namespace may be partial, and a
- *  namespace that holds a record (`dataTable.presets`) is merged key by key. */
-export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: Partial<UiKitLabels[K]> };
+/**
+ * A label override, as deep as the labels go: an object of labels (a namespace, or a
+ * record inside one such as `accountSettings.passkeys` or `dataTable.presets`) may be
+ * partial at every level, because the provider merges it key by key at every level.
+ * A leaf stays as it is: a string, a function-valued label (`(n) => …`), and anything
+ * that is not purely an object (a `ReactNode` union) is given whole.
+ */
+export type LabelOverride<T> = [T] extends [(...args: never[]) => unknown]
+  ? T
+  : [T] extends [readonly unknown[]]
+    ? T
+    : [T] extends [object]
+      ? { [K in keyof T]?: LabelOverride<T[K]> }
+      : T;
+
+/** Any subset of the tree — each namespace may be partial, and so may any record
+ *  inside one (`accountSettings.passkeys`, `dataTable.presets`): they are merged key
+ *  by key, at every depth. */
+export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: LabelOverride<UiKitLabels[K]> };
 
 /* ── English defaults for the namespaces defined here ────────────────────── */
 
@@ -261,6 +312,7 @@ export const DEFAULT_COMMON_LABELS: CommonLabels = {
   noResults: "No results",
   fieldValue: (field, value) => `${field}: ${value}`,
   dismiss: "Dismiss",
+  opensInNewTab: "opens in a new tab",
 };
 
 export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {
@@ -364,7 +416,19 @@ interface KitI18n {
   labels?: UiKitLabelOverrides;
   locale?: string;
   weekStartsOn?: WeekDay;
+  linkComponent?: KitLinkComponent;
 }
+
+/**
+ * What every kit link receives: the anchor attributes the kit decided (href, class,
+ * aria-current, handlers, children, ref). An app's router link maps them —
+ * `({ href, ...p }) => <Link to={href} {...p} />` — ONCE, on the provider.
+ */
+export type KitLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  href: string;
+  ref?: Ref<HTMLAnchorElement>;
+};
+export type KitLinkComponent = (props: KitLinkProps) => ReactElement;
 
 const KitI18nContext = createContext<KitI18n>({});
 
@@ -387,6 +451,14 @@ export interface UiKitProviderProps {
    * and switching it to `en-GB` to get Monday changes every date and number format.
    */
   weekStartsOn?: WeekDay;
+  /**
+   * The app's router link, used by every kit component that renders an in-app link
+   * and was not handed its own `renderLink` — so `renderLink` stops being repeated on
+   * each ListItem, Breadcrumbs, StatTile, Chip… (kastlan). A component's own
+   * `renderLink` wins; external links and in-page `#anchor`s stay plain `<a>`, and a
+   * hash-router `#/path` is handed to it like `/path` (see `pickLinkRenderer`).
+   */
+  linkComponent?: KitLinkComponent;
   children: ReactNode;
 }
 
@@ -398,15 +470,22 @@ export interface UiKitProviderProps {
  * it names, so a page can re-label one table's `dataTable.table` without restating
  * the language.
  */
-export function UiKitProvider({ labels, locale, weekStartsOn, children }: UiKitProviderProps) {
+export function UiKitProvider({
+  labels,
+  locale,
+  weekStartsOn,
+  linkComponent,
+  children,
+}: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
   const value = useMemo<KitI18n>(
     () => ({
       locale: locale ?? outer.locale,
       weekStartsOn: weekStartsOn ?? outer.weekStartsOn,
       labels: mergeOverrides(outer.labels, labels),
+      linkComponent: linkComponent ?? outer.linkComponent,
     }),
-    [outer, labels, locale, weekStartsOn],
+    [outer, labels, locale, weekStartsOn, linkComponent],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -415,14 +494,23 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-/** Two levels: namespaces, and inside a namespace a record-valued key (presets). */
-function mergeNamespace<T extends object>(base: T, over: Partial<T> | undefined): T {
+/** A record of labels to merge into — not a React element, which is an object too but
+ *  is a label given whole. */
+function isLabelRecord(v: unknown): v is Record<string, unknown> {
+  return isRecord(v) && !("$$typeof" in v);
+}
+
+/** Merged key by key at EVERY depth — a namespace, a record inside it
+ *  (`accountSettings.passkeys`, `dataTable.presets`), and so on down — to match
+ *  {@link LabelOverride}. An `undefined` is skipped at every depth, so it never blanks
+ *  out what is under it. */
+function mergeNamespace<T extends object>(base: T, over: LabelOverride<T> | Partial<T> | undefined): T {
   if (!over) return base;
   const out = { ...base } as Record<string, unknown>;
   for (const [k, v] of Object.entries(over)) {
     if (v === undefined) continue;
     const prev = out[k];
-    out[k] = isRecord(prev) && isRecord(v) ? { ...prev, ...v } : v;
+    out[k] = isLabelRecord(prev) && isLabelRecord(v) ? mergeNamespace(prev, v) : v;
   }
   return out as T;
 }
@@ -475,6 +563,12 @@ export function useKitLocale(prop?: string): string | undefined {
 /** The week start the nearest `<UiKitProvider weekStartsOn>` pins, else `undefined`
  *  (the caller then asks the locale). A component's own prop goes first:
  *  `prop ?? useKitWeekStart()`. */
+/** The provider's router link, or `undefined` — a component's own `renderLink` should
+ *  win over it: `const Link = renderLink ?? useKitLink()`. */
+export function useKitLink(): KitLinkComponent | undefined {
+  return useContext(KitI18nContext).linkComponent;
+}
+
 export function useKitWeekStart(): WeekDay | undefined {
   return useContext(KitI18nContext).weekStartsOn;
 }

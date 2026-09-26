@@ -91,6 +91,8 @@ export interface DateTriggerAttributes {
   "aria-label"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: true;
+  /** The field's required state — `Field required` hands it down with the id pair. */
+  "aria-required"?: boolean | "true" | "false";
   disabled?: boolean;
   onClick: () => void;
   className: string;
@@ -132,6 +134,7 @@ function DateFieldTrigger({
   padded,
   disabled,
   invalid,
+  required,
   panelId,
   aria,
   renderTrigger,
@@ -153,6 +156,8 @@ function DateFieldTrigger({
   padded: boolean;
   disabled?: boolean;
   invalid?: boolean;
+  /** `aria-required`, on the trigger with the rest of the field's ARIA. */
+  required?: boolean | "true" | "false";
 }) {
   const wasOpen = useRef(false);
   useEffect(() => {
@@ -177,6 +182,7 @@ function DateFieldTrigger({
   // One attribute object, worn either by the kit's own button below or by a caller's
   // (`renderTrigger`) — so a custom trigger cannot quietly fall out of step with the
   // naming and state this one announces.
+  const isInvalid = Boolean(invalid) || aria["aria-invalid"] === true || aria["aria-invalid"] === "true";
   const attrs: DateTriggerAttributes = {
     ref: triggerRef,
     type: "button",
@@ -209,14 +215,15 @@ function DateFieldTrigger({
     "aria-haspopup": "dialog",
     "aria-controls": panelId,
     "aria-expanded": open,
-    "aria-invalid":
-      invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined,
+    "aria-invalid": isInvalid || undefined,
+    "aria-required": required,
     className: cn(
       FIELD_TRIGGER,
       "pe-9",
       padded && FIELD_FLOATING_PAD,
       disabled && "cursor-not-allowed opacity-50",
-      invalid && FIELD_INVALID,
+      // An `aria-invalid` from a Field spread paints too, as on Input and AmountInput.
+      isInvalid && FIELD_INVALID,
     ),
   };
   if (renderTrigger) return <CustomTrigger render={renderTrigger} attrs={attrs} valueId={valueId} />;
@@ -279,6 +286,10 @@ function DateField({
   sheetBackCloses = true,
   renderTrigger,
   children,
+  // The trigger's, not the wrapper's: `Field`'s render-prop spreads it with the id
+  // pair, and a required date read as optional while it sat on the role-less div.
+  // Taken here rather than in `splitTriggerAria`, which MonthPicker shares.
+  "aria-required": ariaRequired,
   ...rest
 }: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
   triggerText: string;
@@ -393,6 +404,7 @@ function DateField({
       padded={label !== undefined}
       disabled={disabled}
       invalid={invalid}
+      required={ariaRequired}
       renderTrigger={renderTrigger}
     />
   );
@@ -577,6 +589,9 @@ export function DatePicker({
   clearLabel,
   disabled,
   invalid,
+  // Named so it reaches the field (and so its trigger) when a step/today row is the
+  // root and takes the rest of the caller's props.
+  "aria-required": ariaRequired,
   ...rest
 }: DatePickerProps) {
   const locale = useKitLocale(localeProp);
@@ -593,6 +608,7 @@ export function DatePicker({
       // With step/today buttons the flex row is the root and takes the caller's props —
       // except the ones that name the field, which still belong on its trigger.
       {...(wrapped ? triggerAria : rest)}
+      aria-required={ariaRequired}
       label={label}
       clearable={clearable}
       clearLabel={text.clear}

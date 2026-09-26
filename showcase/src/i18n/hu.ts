@@ -86,6 +86,42 @@ export const hu: Dictionary = {
   },
 
   pages: {
+    media: {
+      title: "Képek és média",
+      short: "Média",
+      blurb:
+        "A feltöltöttek megjelenítése: bélyegképrács műveletekkel és képaláírásokkal, a teljes képernyős nézegető billentyűkkel, húzással és nagyítással, valamint bejelentkezést igénylő képek.",
+    },
+    "pie-chart": {
+      title: "Kördiagram",
+      short: "Kör",
+      blurb:
+        "Egy egész részei gyűrűként vagy tortaként: jelmagyarázat-módok, kattintható és billentyűzettel elérhető szeletek, elrejtett összegek, az üres diagram, jobbról balra — és a jelmagyarázat önmagában.",
+    },
+    links: {
+      title: "Hivatkozások",
+      short: "Linkek",
+      blurb:
+        "A kit minden hivatkozása az alkalmazás saját routerén át, egyszer beállítva a providerben: a szöveges hivatkozás és tónusai, egy hivatkozásként működő gomb vagy műveleti kártya, és az alkalmazásból kivezető hivatkozások.",
+    },
+    "auth-account": {
+      title: "Bejelentkezés és fiókbiztonság",
+      short: "Belépés",
+      blurb:
+        "Az alkalmazás előtti oldalak — egy keskeny bejelentkezés és egy széles jogi oldal — és a fiók biztonsága: QR-kóddal beállított kétlépcsős azonosítás, valamint hozzáadott, átnevezett és törölt passkey-k.",
+    },
+    formatting: {
+      title: "Formázás és előjeles értékek",
+      short: "Formázás",
+      blurb:
+        "Számok, pénzösszegek, százalékok, dátumok és relatív idők az olvasó nyelvén — bemenet → kimenet formában több nyelven — és az előjeles összeg és változás, amely magát színezi.",
+    },
+    "url-state": {
+      title: "Állapot az URL-ben",
+      short: "URL-állapot",
+      blurb:
+        "Egy érték, egy fül és egy nyitott párbeszédablak a címben tartva, hogy újratöltéskor megmaradjanak, és a Vissza visszavonja őket: a keresési paraméter hookok és a hivatkozásból nyíló párbeszédablak.",
+    },
     overview: {
       title: "Áttekintés",
       short: "Áttekintés",
@@ -429,6 +465,48 @@ export const hu: Dictionary = {
   // The top-bar search's "What do you need?" rows, phrased as typed into a search box.
   // Formal register throughout, but these are noun phrases, so no "Ön" appears.
   needs: {
+    media: [
+      "feltöltött képek megjelenítése",
+      "kép megnyitása teljes képernyőn",
+      "képgaléria feliratokkal",
+      "bejelentkezést igénylő kép betöltése",
+      "PDF-melléklet előnézete",
+    ],
+    "pie-chart": [
+      "egy összeg részeinek mutatása",
+      "gyűrűdiagram",
+      "kattintás egy szeletre",
+      "jelmagyarázat diagram nélkül",
+      "összegek elrejtése a diagramon",
+    ],
+    links: [
+      "hivatkozás az alkalmazás egy másik oldalára",
+      "saját router használata a kit hivatkozásaihoz",
+      "új lapon nyíló hivatkozás",
+      "navigáló gomb",
+      "az aktuális oldal hivatkozásának kiemelése",
+    ],
+    "auth-account": [
+      "bejelentkező oldal elrendezése",
+      "kétlépcsős azonosítás beállítása QR-kóddal",
+      "passkey-k kezelése",
+      "felhasználási feltételek és adatvédelmi oldal",
+      "a kétlépcsős titok megjelenítése másolás gombbal",
+    ],
+    formatting: [
+      "pénzösszeg formázása a felhasználó nyelvén",
+      "dátum „3 napja” formában",
+      "százalék formázása",
+      "pozitív vagy negatív összeg színesen",
+      "változás mutatása az előző hónaphoz képest",
+    ],
+    "url-state": [
+      "szűrő megtartása az URL-ben",
+      "nyitott fül megjegyzése újratöltéskor",
+      "párbeszédablak megnyitása hivatkozásból",
+      "párbeszédablak bezárása a Vissza gombbal",
+      "hivatkozás megosztása az aktuális nézetre",
+    ],
     overview: [
       "első lépések a csomaggal",
       "a csomag felépítése",

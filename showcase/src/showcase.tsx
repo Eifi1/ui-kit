@@ -23,7 +23,7 @@ import {
   useMediaQuery,
   useScrollSpy,
 } from "@eifi1/ui-kit";
-import type { AppShellNavItem } from "@eifi1/ui-kit";
+import type { AppShellNavItem, KitLinkComponent } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
@@ -124,7 +124,7 @@ export function Showcase() {
     // table's pager, the calendar inside its date filter, the sidebar's collapse
     // button — reads its words and its locale from here, so the sections do not thread
     // label props by hand. This one line is what a consuming app writes.
-    <UiKitProvider labels={t.kit} locale={tag}>
+    <UiKitProvider labels={t.kit} locale={tag} linkComponent={RouterLink}>
     {/* Below the provider, so the tour card speaks the page's language. */}
     <TourProvider>
     {/* The one confirm host for every `useConfirm()` on every page — inside the
@@ -249,6 +249,21 @@ export function Showcase() {
     </UiKitProvider>
   );
 }
+
+/**
+ * The app's router link, handed to the kit ONCE through `UiKitProvider linkComponent` —
+ * every kit link below (TextLink, ListItem, Breadcrumbs, Button `href`, ActionCard…)
+ * then routes inside the HashRouter instead of reloading the page. The kit decides the
+ * href and the attributes; this only maps `href` to react-router's `to`.
+ *
+ * The kit only hands it an in-app href: "/buttons", or the hash-router form "#/buttons"
+ * a demo may write by hand (mapped to the route "/buttons" here). An external href and
+ * an in-page "#anchor" never get here — every kit link draws those as a plain `<a>`
+ * (`pickLinkRenderer`).
+ */
+const RouterLink: KitLinkComponent = ({ href, ...rest }) => (
+  <Link to={href.startsWith("#/") ? href.slice(1) : href} {...rest} />
+);
 
 /**
  * Flyout ⇄ inline. The icon shows what a click switches TO, and the tooltip says it in

@@ -2,7 +2,7 @@ import { useId } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID, FloatingField } from "./ui";
+import { FIELD_INVALID, FloatingField, Label } from "./ui";
 
 export interface ToggleOption<T extends string> {
   value: T;
@@ -67,6 +67,19 @@ export interface ToggleGroupBaseProps<T extends string>
    * group's own box is dropped: two nested borders read as a control in a control.
    */
   label?: ReactNode;
+  /**
+   * Where `label` goes. `"field"` (default): the field chrome described under `label`.
+   * `"above"`: the kit's {@link Label} over the bare group — the shape of a {@link Field}
+   * — with `hint` beside the label and `error` under the group, for a form that sets
+   * its labels above its fields (kastlan's international-rent-calculator.tsx, whose DE
+   * cap pair sits in a `Field` column between two labelled-above inputs, where the
+   * chrome's inner label would be the only one of its kind).
+   *
+   * Inside a `Field`, pass no `label` at all and spread the render-prop instead —
+   * `{(ids, { labelId }) => <ToggleGroup {...ids} aria-labelledby={labelId} … />}` —
+   * so the Field's label names the group and its hint and error describe it.
+   */
+  labelPlacement?: "field" | "above";
   /** A {@link FieldHint} on the label line, as on a labelled {@link Select}. Only with
    *  `label`. */
   hint?: ReactNode;
@@ -143,6 +156,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     disabled = false,
     size = "md",
     label,
+    labelPlacement = "field",
     hint,
     error,
     "aria-label": ariaLabelAttr,
@@ -150,11 +164,17 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   } = props;
   const labelId = useId();
   const errorId = useId();
-  const field = label !== undefined && label !== null && label !== false && label !== "";
-  const hasError = field && error !== undefined && error !== null && error !== false && error !== "";
+  const labelled = label !== undefined && label !== null && label !== false && label !== "";
+  // `field` is the chrome; a label placed above keeps the bare group's own box.
+  const field = labelled && labelPlacement === "field";
+  const above = labelled && labelPlacement === "above";
+  const hasError = labelled && error !== undefined && error !== null && error !== false && error !== "";
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
   const { allowEmpty: _allowEmpty, onChange: _onChange, caption, ...rest } = restWithMode;
+  // Invalid from outside too: a `Field` hands the bare group `aria-invalid`, and the
+  // border has to say what the attribute says.
+  const outsideInvalid = rest["aria-invalid"] === true || rest["aria-invalid"] === "true";
   const captionId = useId();
   const captionIsLive = typeof caption === "function";
   const captionNode = captionIsLive ? (caption as (v: T | null) => ReactNode)(value) : caption;
@@ -202,7 +222,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
       // have not moved yet.
       aria-label={ariaLabelAttr ?? ariaLabel}
-      aria-labelledby={field && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
+      aria-labelledby={labelled && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
         [rest["aria-describedby"], hasCaption && captionId, hasError && errorId].filter(Boolean).join(" ") || undefined
@@ -229,10 +249,12 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // package does; `cursor-not-allowed` is on the buttons, which is what a
         // pointer is actually over.
         disabled && "opacity-60",
+        // The bare group (no chrome to paint) wears the invalid border itself.
+        !field && (outsideInvalid || (above && hasError)) && FIELD_INVALID,
         // Inside the field's chrome the group is only a row of segments: no border, no
         // surface, no padding of its own, and the field (not the group) is what dims.
         field && "border-0 bg-transparent p-0 shadow-none opacity-100",
-        !field && className,
+        !labelled && className,
       )}
     >
       {options.map((opt, index) => {
@@ -308,6 +330,36 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         {hasCaption ? captionNode : null}
       </p>
     ) : null;
+  const errorEl = hasError ? (
+    <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+      {error}
+    </p>
+  ) : null;
+  if (above) {
+    // `relative` so a caller's `sr-only` label cannot escape (sr-only-containment).
+    return (
+      <div className={cn("relative grid min-w-0 gap-1.5", className)}>
+        <div className="flex items-center gap-1">
+          {/* A `<label>` with no `htmlFor`: a group is not labelable, so it is named
+              by `aria-labelledby` on the group; the element keeps the Field look. */}
+          <Label
+            id={labelId}
+            disabled={disabled}
+            data-error={hasError || undefined}
+            className="data-[error=true]:text-[var(--danger)]"
+          >
+            {label}
+          </Label>
+          {hint}
+        </div>
+        <div className="min-w-0">
+          {group}
+          {captionEl}
+          {errorEl}
+        </div>
+      </div>
+    );
+  }
   if (!field) {
     if (!captionEl) return group;
     // The group keeps its `className`, as without a caption; the wrapper only stacks.
@@ -339,11 +391,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         </div>
       </FloatingField>
       {captionEl}
-      {hasError && (
-        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
-          {error}
-        </p>
-      )}
+      {errorEl}
     </div>
   );
 }

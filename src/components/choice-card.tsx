@@ -1,8 +1,19 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
-import type { ButtonHTMLAttributes, ChangeEvent, ComponentType, InputHTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  ChangeEvent,
+  ComponentType,
+  InputHTMLAttributes,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+  Ref,
+} from "react";
 import { Check, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
+import { useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 /**
  * A checkbox or a radio, presented as a bordered card: a title, a line of description,
@@ -231,6 +242,30 @@ const META_TONE: Record<ActionCardMetaTone, string> = {
   success: "text-[var(--success)]",
 };
 
+/** The colour of {@link ActionCardProps.icon}. `default` is the secondary text colour
+ *  the icon has always had; `brand` tints it (keksdose's privacy enrolment). */
+export type ActionCardIconTone = "default" | "muted" | "brand" | "warning" | "danger" | "info" | "success";
+
+const ICON_TONE: Record<ActionCardIconTone, string> = {
+  default: "text-[var(--text-secondary)]",
+  ...META_TONE,
+  brand: "text-[var(--brand)]",
+};
+
+/** What {@link ActionCardProps.renderLink} (and the provider's `linkComponent`) is
+ *  handed. Spread it onto your router's link — `({ href, ...p }) => <Link to={href} {...p} />`. */
+export interface ActionCardLinkProps {
+  href: string;
+  /** The card's whole look — keep it. */
+  className: string;
+  children: ReactNode;
+  ref?: Ref<HTMLAnchorElement>;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  id?: string;
+  [key: `aria-${string}`]: string | boolean | number | undefined;
+  [key: `data-${string}`]: unknown;
+}
+
 export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "title"> {
   /** What the card does — the button's accessible name. */
   title: ReactNode;
@@ -247,6 +282,21 @@ export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
   metaTone?: ActionCardMetaTone;
   /** A Lucide icon (or any component taking a `className`), shown at the card's start. */
   icon?: ChoiceCardProps["icon"];
+  /** The icon's colour. Default `default` (the secondary text colour). */
+  iconTone?: ActionCardIconTone;
+  /** Classes on the icon, after {@link iconTone} — a size, a tinted tile behind it. */
+  iconClassName?: string;
+  /**
+   * Makes the card a LINK to another page rather than a button that acts: kastlan's
+   * section tiles on the group overview (group-overview-page), each an icon, a name and
+   * a line on what is there. A real `<a href>`, so a middle click opens it in a new
+   * tab. A `disabled` card renders the inert button instead — a link cannot be
+   * disabled. The ref then reaches the `<a>`.
+   */
+  href?: string;
+  /** Your router's link for an in-app `href`. Default: the `<UiKitProvider
+   *  linkComponent>`, then a plain `<a>`. Ignored without `href`. */
+  renderLink?: (props: ActionCardLinkProps) => ReactElement;
 }
 
 /**
@@ -254,7 +304,8 @@ export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
  * card's icon, title and description, plus a `meta` line, that runs `onClick` the
  * moment it is pressed. keksdose's privacy enrolment (privacy-enroll-dialog:345,
  * `CustodyOption`) offers two custody modes this way — picking one IS the next step,
- * so there is no checked state to show and no "Continue" to press after it.
+ * so there is no checked state to show and no "Continue" to press after it. With
+ * `href` it is the same card as a link (kastlan's overview section tiles).
  *
  * A separate component rather than `ChoiceCard as="button"`: a ChoiceCard is an
  * `<input>` (its ref, its `checked`, its form value), and a button shares none of it.
@@ -262,9 +313,24 @@ export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
  * "Keep the key yourself, button" and then the explanation, not one long name.
  */
 export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(function ActionCard(
-  { title, description, meta, metaTone = "muted", icon: Icon, className, id, type = "button", ...rest },
+  {
+    title,
+    description,
+    meta,
+    metaTone = "muted",
+    icon: Icon,
+    iconTone = "default",
+    iconClassName,
+    href,
+    renderLink,
+    className,
+    id,
+    type = "button",
+    ...rest
+  },
   ref,
 ) {
+  const kitLink = useKitLink();
   const generated = useId();
   const baseId = id ?? generated;
   const titleId = `${baseId}-title`;
@@ -272,28 +338,23 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
   const metaId = `${baseId}-meta`;
   const showDescription = hasMessage(description);
   const showMeta = hasMessage(meta);
-  return (
-    <button
-      ref={ref}
-      id={id}
-      type={type}
-      {...rest}
-      aria-labelledby={rest["aria-labelledby"] ?? titleId}
-      aria-describedby={mergeDescribedBy(
-        rest["aria-describedby"],
-        showDescription && descriptionId,
-        showMeta && metaId,
-      )}
-      className={cn(
-        "flex w-full items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-start shadow-sm transition-colors",
-        "hover:border-[var(--brand)] hover:bg-[var(--bg-hover)]",
-        // The outline, as on ChoiceCard: the card is what the eye is on.
-        "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
-        "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-[var(--border)] disabled:hover:bg-[var(--bg-surface)]",
-        className,
-      )}
-    >
-      {Icon && <Icon aria-hidden className="mt-0.5 size-5 shrink-0 text-[var(--text-secondary)]" />}
+  const look = cn(
+    "flex w-full items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-start shadow-sm transition-colors",
+    "hover:border-[var(--brand)] hover:bg-[var(--bg-hover)]",
+    // The outline, as on ChoiceCard: the card is what the eye is on.
+    "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+    "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-[var(--border)] disabled:hover:bg-[var(--bg-surface)]",
+    className,
+  );
+  const labelledBy = rest["aria-labelledby"] ?? titleId;
+  const describedBy = mergeDescribedBy(
+    rest["aria-describedby"],
+    showDescription && descriptionId,
+    showMeta && metaId,
+  );
+  const body = (
+    <>
+      {Icon && <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", ICON_TONE[iconTone], iconClassName)} />}
       <span className="min-w-0 flex-1 space-y-1">
         <span id={titleId} className="block text-sm font-medium leading-5 text-[var(--text-primary)]">
           {title}
@@ -309,10 +370,60 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
           </span>
         )}
       </span>
+    </>
+  );
+
+  if (href !== undefined && !rest.disabled) {
+    // The button-only attributes stay behind; `aria-*`, `data-*` and handlers ride along.
+    const {
+      disabled: _disabled,
+      form: _form,
+      formAction: _formAction,
+      name: _name,
+      value: _value,
+      onClick,
+      ...anchorRest
+    } = rest;
+    const linkProps: ActionCardLinkProps = {
+      ...(anchorRest as Partial<ActionCardLinkProps>),
+      ref: ref as unknown as Ref<HTMLAnchorElement>,
+      id,
+      href,
+      "aria-labelledby": labelledBy,
+      "aria-describedby": describedBy,
+      onClick: onClick as unknown as ActionCardLinkProps["onClick"],
+      className: look,
+      children: body,
+    };
+    const render = pickLinkRenderer(renderLink, kitLink, href);
+    if (render) return <RenderedActionLink render={render} {...linkProps} />;
+    const { children: content, ...anchor } = linkProps;
+    return <a {...anchor}>{content}</a>;
+  }
+
+  return (
+    <button
+      ref={ref}
+      id={id}
+      type={type}
+      {...rest}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      className={look}
+    >
+      {body}
     </button>
   );
 });
 ActionCard.displayName = "ActionCard";
+
+/** Calls the link renderer as a component, so a router link's hooks are its own. */
+function RenderedActionLink({
+  render,
+  ...props
+}: ActionCardLinkProps & { render: (props: ActionCardLinkProps) => ReactElement }) {
+  return render(props);
+}
 
 /* ── ChoiceCardGroup ─────────────────────────────────────────────────────── */
 

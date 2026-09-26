@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { NumberInput } from "./number-input";
 import { evaluateExpression, formatResult } from "../lib/calc";
@@ -62,6 +62,14 @@ export interface NumberFieldProps
    *  injects `id` / `aria-describedby` / `aria-invalid`) can wrap this directly. */
   "aria-describedby"?: string;
   "aria-invalid"?: boolean | "true" | "false";
+  /**
+   * Set on the `<input>`. Declared, with `id` (from NumberInput) and the two above, so
+   * `Field`'s render-prop spread — `{(ids) => <NumberField {...ids} … />}`, kastlan's
+   * wizard steps — is typed and reaches the input rather than being dropped: before
+   * this, `aria-required` was not in the type and a required number was announced as
+   * optional.
+   */
+  "aria-required"?: boolean | "true" | "false";
 }
 
 /** The locale's decimal mark, as far as this field can type it: "," or ".". A mark
@@ -163,6 +171,7 @@ export function NumberField({
   id,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: NumberFieldProps) {
   const locale = useKitLocale(localeProp);
@@ -250,15 +259,9 @@ export function NumberField({
   const hasError = error !== undefined && error !== null && error !== false && error !== "";
   const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ");
 
-  // NumberInput takes no `aria-describedby` of its own, so the reference is set on
-  // its <input> directly, found by the id this field hands it. React never renders
-  // that attribute there, so nothing reconciles it away again.
-  useEffect(() => {
-    const input = document.getElementById(fieldId);
-    if (!input) return;
-    if (describedBy) input.setAttribute("aria-describedby", describedBy);
-    else input.removeAttribute("aria-describedby");
-  }, [fieldId, describedBy]);
+  // Straight onto NumberInput's <input>, which declares both now. They used to be set
+  // on the DOM node from an effect, because NumberInput had no props for them.
+  const required = ariaRequired === true || ariaRequired === "true";
 
   const labelWithUnit =
     unit !== undefined && unitPlacement === "label"
@@ -277,6 +280,8 @@ export function NumberField({
     <NumberInput
       {...rest}
       id={fieldId}
+      aria-describedby={describedBy || undefined}
+      aria-required={required || undefined}
       label={labelWithUnit}
       value={draft}
       onChange={onText}

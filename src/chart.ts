@@ -20,3 +20,7 @@ export * from "./components/chart-zoom";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";
+
+// The part-to-whole chart (donut / pie) — moved here from kastlan's dashboard and reports.
+export * from "./components/pie-chart";
+export * from "./components/pie-chart-labels";

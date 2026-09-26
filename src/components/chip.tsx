@@ -5,7 +5,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID } from "./ui";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 /**
  * A chip: a compact pill carrying one value.
@@ -384,7 +385,8 @@ export type ChipProps = ChipBaseProps &
         /**
          * Renders the link for `href` — pass your router's `<Link>` here, since a
          * plain `<a>` reloads a single-page app (keksdose's account-menu admin pill).
-         * Default: `<a>`. Ignored without `href`.
+         * Default: the `<UiKitProvider linkComponent>`, then `<a>`. Ignored without
+         * `href`.
          *
          * A render function rather than an `as={Link}`, for three reasons. It is the
          * API `StatTile` already has (`renderLink`), so a consumer learns it once.
@@ -455,6 +457,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   ref,
 ) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
+  const kitLink = useKitLink();
   const s = SIZE[size];
   const interactive = !!href || !!onClick;
   // One radius for every rounded piece — the pill, the body inside a split pill, the ×
@@ -570,10 +573,11 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       className: remove ? inner : look,
       children: body,
     };
-    const link = renderLink ? (
+    const render = pickLinkRenderer(renderLink, kitLink, href);
+    const link = render ? (
       // Through a component rather than called here, so the forwarded ref arrives as
       // an ordinary prop of an element and is never handed to a function mid-render.
-      <RenderedLink render={renderLink} {...linkProps} />
+      <RenderedLink render={render} {...linkProps} />
     ) : (
       <a
         ref={ref as React.Ref<HTMLAnchorElement>}

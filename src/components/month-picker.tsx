@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
-import { FieldLabel, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./ui";
+import { Button, FieldLabel, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, IconButton } from "./ui";
 import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
@@ -27,6 +27,11 @@ export interface MonthPickerLabels {
    * "Aug" read out on its own does not say which year the grid is on.
    */
   month: (monthYear: string) => string;
+  /** `variant="stepper"`: the icon-only arrows that step the value by one month. */
+  previousMonth: string;
+  nextMonth: string;
+  /** `variant="stepper"`: the button that jumps to the current month. Visible text. */
+  today: string;
 }
 
 /** The English starting point every override is merged onto. Exported (unlike the
@@ -37,6 +42,9 @@ export const DEFAULT_MONTH_PICKER_LABELS: MonthPickerLabels = {
   nextYear: "Next year",
   panel: "Choose a month",
   month: (monthYear) => monthYear,
+  previousMonth: "Previous month",
+  nextMonth: "Next month",
+  today: "Today",
 };
 
 /** Merge caller overrides onto the English defaults. */
@@ -95,6 +103,21 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** Extra classes for the trigger button — e.g. a compact `h-9 w-auto` trigger
    *  sitting between two icon buttons in a toolbar. */
   triggerClassName?: string;
+  /**
+   * `"field"` (default): the field-shaped trigger, for a form.
+   *
+   * `"stepper"`: the header of a month PAGE — the month as a heading that opens the
+   * grid, then Today and ‹ › stepping the value by one month. What a calendar page
+   * assembled by hand around the field (overriding its trigger to look like a
+   * heading). `label`, `placeholder`, `invalid` and `triggerClassName` are the field's
+   * and are not drawn here; with no `value` the arrows step from the current month.
+   */
+  variant?: "field" | "stepper";
+  /** `variant="stepper"`: the heading level the month is set in (`<h2>` by default), or
+   *  `false` for no heading element — the page already has one for the month. */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6 | false;
+  /** `variant="stepper"`: draw the Today button. Default `true`. */
+  showToday?: boolean;
 }
 
 // ── Month keys ────────────────────────────────────────────────────────────
@@ -140,6 +163,74 @@ const MONTH_NAME_FORMAT: Intl.DateTimeFormatOptions = { month: "long", year: "nu
 
 // ── Trigger ───────────────────────────────────────────────────────────────
 
+/** Hand focus back to the trigger when the panel closes with focus still inside it. */
+function useFocusBackOnClose(open: boolean, triggerRef: RefObject<HTMLButtonElement | null>) {
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    const justClosed = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (!justClosed) return;
+    // Only when focus went down with the panel. An outside click has already put it
+    // somewhere real, and dragging it back here would be worse than leaving it.
+    const active = document.activeElement;
+    if (!active || active === document.body) triggerRef.current?.focus();
+  }, [open, triggerRef]);
+}
+
+/**
+ * The stepper's trigger: the month as a heading-sized button that opens the grid.
+ *
+ * Its own text is its name ("September 2026"), so it needs no label of its own, and
+ * it is `aria-live` for the reason `MiniCalendar`'s caption is: pressing ‹ or › leaves
+ * focus on the arrow, and the heading is the only thing that says where the arrow
+ * went. A plain button with `aria-haspopup`, not the field's `combobox` — it does not
+ * look or behave like a field, and a heading reading "combobox" is a surprise.
+ */
+function MonthHeadingTrigger({
+  open,
+  toggle,
+  triggerRef,
+  text,
+  panelId,
+  disabled,
+  aria,
+}: {
+  open: boolean;
+  toggle: () => void;
+  triggerRef: RefObject<HTMLButtonElement | null>;
+  text: string;
+  panelId: string;
+  disabled?: boolean;
+  aria: TriggerAria;
+}) {
+  useFocusBackOnClose(open, triggerRef);
+  return (
+    <button
+      ref={triggerRef}
+      type="button"
+      disabled={disabled}
+      onClick={toggle}
+      aria-haspopup="dialog"
+      aria-controls={panelId}
+      aria-expanded={open}
+      id={aria.id}
+      aria-label={aria["aria-label"]}
+      aria-labelledby={aria["aria-labelledby"]}
+      aria-describedby={aria["aria-describedby"]}
+      className={cn(
+        "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-[var(--text-primary)] transition-colors",
+        "hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        disabled && "cursor-not-allowed opacity-50",
+      )}
+    >
+      <span aria-live="polite" className="truncate">
+        {text || "\u00a0"}
+      </span>
+      <ChevronDown aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+    </button>
+  );
+}
+
 /**
  * The field-shaped button that opens the grid. The same shape as `DatePicker`'s
  * trigger, for the same reasons written down there: `role="combobox"` so it may carry
@@ -176,16 +267,7 @@ function MonthFieldTrigger({
   invalid?: boolean;
   className?: string;
 }) {
-  const wasOpen = useRef(false);
-  useEffect(() => {
-    const justClosed = wasOpen.current && !open;
-    wasOpen.current = open;
-    if (!justClosed) return;
-    // Only when focus went down with the panel. An outside click has already put it
-    // somewhere real, and dragging it back here would be worse than leaving it.
-    const active = document.activeElement;
-    if (!active || active === document.body) triggerRef.current?.focus();
-  }, [open, triggerRef]);
+  useFocusBackOnClose(open, triggerRef);
 
   return (
     <button
@@ -475,6 +557,9 @@ export function MonthPicker({
   labels: labelsProp,
   className,
   triggerClassName,
+  variant = "field",
+  headingLevel = 2,
+  showToday = true,
   ...rest
 }: MonthPickerProps) {
   const labels = useMonthPickerLabels(labelsProp);
@@ -505,6 +590,89 @@ export function MonthPicker({
   // open) and put back on the panel. Also what the arrow keys above read.
   const rootRef = useRef<HTMLDivElement>(null);
   const [dir, setDir] = useState<Direction>("ltr");
+
+  const grid = (close: () => void) => (
+    <MonthGrid
+      value={selected}
+      locale={locale}
+      minKey={minKey}
+      maxKey={maxKey}
+      currentKey={currentKey}
+      labels={labels}
+      onPick={(key) => {
+        onChange(key);
+        close();
+      }}
+    />
+  );
+
+  if (variant === "stepper") {
+    // The arrows step from the value, or from "now" when there is none; each is dead
+    // once the month it leads to is out of bounds, and Today once "now" is.
+    const base = selected ?? parseMonth(currentKey)!;
+    const prevKey = toKey(shiftMonth(base, -1));
+    const nextKey = toKey(shiftMonth(base, 1));
+    const outside = (key: string) => Boolean((minKey && key < minKey) || (maxKey && key > maxKey));
+    const Heading = headingLevel ? (`h${headingLevel}` as const) : null;
+    const trigger = (
+      <Popover
+        width={256}
+        panelId={panelId}
+        labels={{ panel: labels.panel }}
+        dir={dir}
+        trigger={({ open, toggle, ref }) => (
+          <MonthHeadingTrigger
+            open={open}
+            toggle={() => {
+              setDir(dirOf(rootRef.current));
+              toggle();
+            }}
+            triggerRef={ref}
+            text={triggerText}
+            panelId={panelId}
+            disabled={disabled}
+            aria={aria}
+          />
+        )}
+      >
+        {grid}
+      </Popover>
+    );
+    return (
+      <div {...wrapperRest} ref={rootRef} className={cn("flex min-w-0 items-center gap-2", className)}>
+        {Heading ? <Heading className="m-0 min-w-0 text-lg font-semibold">{trigger}</Heading> : trigger}
+        <div className="ms-auto flex shrink-0 items-center gap-1">
+          {showToday && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={disabled || outside(currentKey)}
+              onClick={() => {
+                if (currentKey !== value) onChange(currentKey);
+              }}
+            >
+              {labels.today}
+            </Button>
+          )}
+          <IconButton
+            aria-label={labels.previousMonth}
+            disabled={disabled || outside(prevKey)}
+            onClick={() => onChange(prevKey)}
+          >
+            {/* Mirrored in RTL, where "previous" points the other way. */}
+            <ChevronLeft className="rtl:-scale-x-100" />
+          </IconButton>
+          <IconButton
+            aria-label={labels.nextMonth}
+            disabled={disabled || outside(nextKey)}
+            onClick={() => onChange(nextKey)}
+          >
+            <ChevronRight className="rtl:-scale-x-100" />
+          </IconButton>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div {...wrapperRest} ref={rootRef} className={cn("relative", className)}>
@@ -550,20 +718,7 @@ export function MonthPicker({
           />
         )}
       >
-        {(close) => (
-          <MonthGrid
-            value={selected}
-            locale={locale}
-            minKey={minKey}
-            maxKey={maxKey}
-            currentKey={currentKey}
-            labels={labels}
-            onPick={(key) => {
-              onChange(key);
-              close();
-            }}
-          />
-        )}
+        {grid}
       </Popover>
       <Calendar
         aria-hidden

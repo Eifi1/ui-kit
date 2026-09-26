@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { StatTile, StatTileGrid } from "../stat-tile";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 describe("StatTile", () => {
   it("formats a number value with Intl in the given locale and currency", () => {
@@ -248,5 +249,33 @@ describe("StatTile 0.8.0 (keksdose B22)", () => {
     expect(label.className).toContain("truncate");
     // The full string is still the sparkline's name.
     expect(screen.getByRole("img", { name: /^Aktive Abonnements \(30 Tage\)/ })).toBeInTheDocument();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("StatTile — the provider's router link", () => {
+  it("draws the stretched link with linkComponent, keeping its description; its own renderLink wins", () => {
+    const { unmount } = render(
+      <UiKitProvider linkComponent={routerLink}>
+        <StatTile label="Units" value={12} href="/units" />
+      </UiKitProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Units" });
+    expect(link).toHaveAttribute("data-router");
+    expect(link).toHaveAttribute("href", "/units");
+    expect(link).toHaveAttribute("aria-describedby");
+    unmount();
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <StatTile label="Units" value={12} href="/units" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Units" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Units" })).not.toHaveAttribute("data-router");
   });
 });

@@ -38,6 +38,15 @@ interface AmountInputProps {
   className?: string;
   id?: string;
   ariaLabel?: string;
+  /**
+   * Set on the `<input>`, with `id` above. Declared so `Field`'s render-prop spread —
+   * `{(ids) => <AmountInput {...ids} … />}` — is typed and reaches the input: the
+   * hint and error are described, a required amount is announced as required, and
+   * `aria-invalid` paints {@link FIELD_INVALID} the way `invalid` does.
+   */
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
+  "aria-required"?: boolean | "true" | "false";
   /** Every user-facing string this component and the two it composes own, so a
    *  translating host can supply its own. Each key optional, and each a per-field
    *  override of the kit-wide translation in `<UiKitProvider labels>`: `currency`
@@ -183,9 +192,10 @@ function isResultOf(previous: string, text: string): boolean {
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid, className, id, ariaLabel, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
+    const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
     const editable = !!onCurrencyChange;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
@@ -350,6 +360,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             invalid && FIELD_INVALID,
           )}
           aria-invalid={invalid || undefined}
+          aria-describedby={ariaDescribedBy}
+          aria-required={ariaRequired}
         />
         {label !== undefined && (
           // The display shape drops the label VISUALLY, not from the accessibility

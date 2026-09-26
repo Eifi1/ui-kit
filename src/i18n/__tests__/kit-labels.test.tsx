@@ -5,6 +5,7 @@ import {
   formatFileSize,
   missingKitLabels,
   useKitLabels,
+  useKitLink,
   useKitLocale,
 } from "../kit-labels";
 import type { CommonLabels } from "../kit-labels";
@@ -108,5 +109,35 @@ describe("formatFileSize", () => {
     expect(formatFileSize(512, "en-GB")).toBe("512 bytes");
     expect(formatFileSize(12_300, "en-GB")).toBe("12 kB");
     expect(formatFileSize(3_400_000, "de-DE")).toBe("3,4 MB");
+  });
+});
+
+describe("UiKitProvider linkComponent", () => {
+  it("hands the nearest provider's router link to useKitLink, inner over outer", () => {
+    const outer = () => <a href="/o">o</a>;
+    const inner = () => <a href="/i">i</a>;
+    // Renders which link it was handed, so the assertion reads the DOM rather than a
+    // variable the component writes during render.
+    function Probe() {
+      const link = useKitLink();
+      return <span data-testid="probe">{link === inner ? "inner" : link === outer ? "outer" : "none"}</span>;
+    }
+    const { unmount } = render(
+      <UiKitProvider linkComponent={outer}>
+        <UiKitProvider linkComponent={inner}>
+          <Probe />
+        </UiKitProvider>
+      </UiKitProvider>,
+    );
+    expect(screen.getByTestId("probe")).toHaveTextContent("inner");
+    unmount();
+    render(
+      <UiKitProvider linkComponent={outer}>
+        <UiKitProvider locale="de">
+          <Probe />
+        </UiKitProvider>
+      </UiKitProvider>,
+    );
+    expect(screen.getByTestId("probe")).toHaveTextContent("outer");
   });
 });

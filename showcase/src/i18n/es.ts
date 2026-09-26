@@ -80,6 +80,42 @@ export const es: Dictionary = {
   },
 
   pages: {
+    media: {
+      title: "Imágenes y multimedia",
+      short: "Multimedia",
+      blurb:
+        "Mostrar lo que se ha subido: una cuadrícula de miniaturas con acciones y pies de foto, el visor a pantalla completa con teclas, deslizamiento y zoom, e imágenes que requieren una descarga autenticada.",
+    },
+    "pie-chart": {
+      title: "Gráfico circular",
+      short: "Circular",
+      blurb:
+        "La parte de un total como anillo o tarta: modos de leyenda, sectores que se pueden pulsar y alcanzar con el teclado, importes ocultos, el gráfico vacío, de derecha a izquierda — y la leyenda por sí sola.",
+    },
+    links: {
+      title: "Enlaces",
+      short: "Enlaces",
+      blurb:
+        "Cada enlace del kit dirigido por el router de la aplicación, configurado una vez en el proveedor: el enlace de texto y sus tonos, un botón o una tarjeta de acción que es un enlace, y enlaces que salen de la aplicación.",
+    },
+    "auth-account": {
+      title: "Inicio de sesión y seguridad de la cuenta",
+      short: "Acceso",
+      blurb:
+        "Las páginas antes de la aplicación — un inicio de sesión estrecho y una página legal ancha — y la seguridad de la cuenta: la verificación en dos pasos configurada con un código QR, y llaves de acceso añadidas, renombradas y eliminadas.",
+    },
+    formatting: {
+      title: "Formato y valores con signo",
+      short: "Formato",
+      blurb:
+        "Números, dinero, porcentajes, fechas y tiempos relativos en el idioma del lector — como entrada → salida en varios idiomas — y el importe con signo y la variación que se colorean solos.",
+    },
+    "url-state": {
+      title: "Estado en la URL",
+      short: "Estado URL",
+      blurb:
+        "Un valor, una pestaña y un diálogo abierto guardados en la dirección, para que al recargar se mantengan y Atrás los deshaga: los hooks de parámetros de búsqueda y el diálogo que se abre desde un enlace.",
+    },
     overview: {
       title: "Introducción",
       short: "Introducción",
@@ -423,6 +459,48 @@ export const es: Dictionary = {
   // The top-bar search's "¿Qué necesitas?" rows: a task in the reader's words, and the
   // page that does it. Phrased as typed into a search box — lower case, no full stop.
   needs: {
+    media: [
+      "mostrar imágenes subidas",
+      "abrir una imagen a pantalla completa",
+      "galería de imágenes con pies de foto",
+      "cargar una imagen que requiere iniciar sesión",
+      "vista previa de un adjunto PDF",
+    ],
+    "pie-chart": [
+      "mostrar partes de un total",
+      "gráfico de anillo",
+      "pulsar un sector",
+      "leyenda sin gráfico",
+      "ocultar importes en un gráfico",
+    ],
+    links: [
+      "enlazar a otra página de la aplicación",
+      "usar mi router para los enlaces del kit",
+      "enlace que abre una pestaña nueva",
+      "un botón que navega",
+      "resaltar el enlace de la página actual",
+    ],
+    "auth-account": [
+      "diseño de la página de inicio de sesión",
+      "configurar la verificación en dos pasos con un código QR",
+      "gestionar llaves de acceso",
+      "página de términos y privacidad",
+      "mostrar el secreto de dos pasos con un botón de copiar",
+    ],
+    formatting: [
+      "formatear dinero en el idioma del usuario",
+      "mostrar una fecha como «hace 3 días»",
+      "formatear un porcentaje",
+      "importe positivo o negativo en color",
+      "mostrar el cambio respecto al mes pasado",
+    ],
+    "url-state": [
+      "guardar un filtro en la URL",
+      "recordar la pestaña abierta al recargar",
+      "abrir un diálogo desde un enlace",
+      "cerrar un diálogo con Atrás",
+      "compartir un enlace a la vista actual",
+    ],
     overview: [
       "empezar con el kit",
       "cómo está organizado el kit",

@@ -94,6 +94,15 @@ export function MultiEntityCombobox<V extends string | number>({
   debounceMs,
   loadErrorLabel,
   "aria-label": ariaLabel,
+  // The control's own wiring, taken off `rest` so it lands on the TRIGGER rather than
+  // the wrapper: `Field`'s render-prop spreads `{ id, aria-describedby, aria-invalid,
+  // aria-required }`, and on the role-less wrapper div the label's `htmlFor` named
+  // nothing and the hint and required state described nothing — kastlan's
+  // communication-page To/Cc/Bcc and lease-tenants-step.tsx read as unnamed pickers.
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: MultiEntityComboboxProps<V>) {
   const core = useComboboxCore<V>({
@@ -104,7 +113,11 @@ export function MultiEntityCombobox<V extends string | number>({
     minChars,
     debounceMs,
   });
-  const field = useComboboxFieldError(error, invalid);
+  const field = useComboboxFieldError(
+    error,
+    invalid || ariaInvalid === true || ariaInvalid === "true",
+    ariaDescribedBy,
+  );
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, {
@@ -154,13 +167,15 @@ export function MultiEntityCombobox<V extends string | number>({
   };
 
   return (
-    // `rest` dresses the wrapper, which has no role; the accessible NAME goes on
-    // the trigger, which has one. Spread FIRST so the trigger's ARIA and the
+    // `rest` dresses the wrapper, which has no role; the accessible NAME — and the
+    // id, description, invalid and required state above — go on the trigger, which
+    // has one. Spread FIRST so the trigger's ARIA and the
     // handlers that open the panel cannot be clobbered from outside.
     <div {...rest} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <button
         ref={core.triggerRef}
+        id={id}
         type="button"
         // A combobox, not a button. The distinction is not pedantry: this control
         // carried `aria-invalid`, which `button` does not support, so a required
@@ -188,6 +203,7 @@ export function MultiEntityCombobox<V extends string | number>({
         disabled={disabled}
         aria-invalid={field.isInvalid || undefined}
         aria-describedby={field.describedBy}
+        aria-required={ariaRequired}
         onClick={() => !disabled && setOpen((o) => !o)}
         // Down/Up opens the list from the closed trigger, per the APG. Enter and
         // Space already do it through the button's own click.

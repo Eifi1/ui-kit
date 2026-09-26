@@ -88,6 +88,42 @@ export const de: Dictionary = {
   },
 
   pages: {
+    media: {
+      title: "Bilder & Medien",
+      short: "Medien",
+      blurb:
+        "Hochgeladenes zeigen: ein Raster von Vorschaubildern mit Aktionen und Bildunterschriften, der Vollbild-Betrachter mit Tasten, Wischen und Zoom, und Bilder, die nur angemeldet geladen werden können.",
+    },
+    "pie-chart": {
+      title: "Kreisdiagramm",
+      short: "Kreis",
+      blurb:
+        "Anteile an einem Ganzen als Ring oder Kreis: Legendenarten, Segmente zum Anklicken und per Tastatur, verborgene Beträge, das leere Diagramm, rechts-nach-links — und die Legende für sich.",
+    },
+    links: {
+      title: "Links",
+      short: "Links",
+      blurb:
+        "Jeder Link des Kits über den Router der App, einmal am Provider gesetzt: der Textlink und seine Töne, ein Button oder eine Aktionskarte als Link, und Links, die die App verlassen.",
+    },
+    "auth-account": {
+      title: "Anmeldung & Kontosicherheit",
+      short: "Anmeldung",
+      blurb:
+        "Die Seiten vor der App — eine schmale Anmeldung und eine breite Rechtsseite — und die Sicherheit des Kontos: Zwei-Faktor per QR-Code eingerichtet, Passkeys hinzugefügt, umbenannt und entfernt.",
+    },
+    formatting: {
+      title: "Formatierung & Beträge mit Vorzeichen",
+      short: "Formatierung",
+      blurb:
+        "Zahlen, Geld, Prozente, Datumsangaben und relative Zeiten in der Sprache des Lesers — als Eingabe → Ausgabe in mehreren Sprachen — und der Betrag mit Vorzeichen und die Veränderung, die sich selbst einfärben.",
+    },
+    "url-state": {
+      title: "Zustand in der URL",
+      short: "URL-Zustand",
+      blurb:
+        "Ein Wert, ein Tab und ein offener Dialog in der Adresse gehalten, sodass ein Neuladen sie behält und Zurück sie rückgängig macht: die Suchparameter-Hooks und der Dialog, der sich über einen Link öffnet.",
+    },
     overview: {
       title: "Übersicht",
       short: "Übersicht",
@@ -431,6 +467,48 @@ export const de: Dictionary = {
   // The top-bar search's „Was brauchen Sie?“ rows, in the words a German reader types:
   // infinitives and plain nouns, no „Sie“ — a search phrase, not a sentence.
   needs: {
+    media: [
+      "hochgeladene Bilder anzeigen",
+      "Bild im Vollbild öffnen",
+      "Bildergalerie mit Beschriftung",
+      "Bild nur mit Anmeldung laden",
+      "PDF-Anhang in der Vorschau",
+    ],
+    "pie-chart": [
+      "Anteile an einer Summe zeigen",
+      "Ringdiagramm",
+      "auf ein Segment klicken",
+      "Legende ohne Diagramm",
+      "Beträge im Diagramm verbergen",
+    ],
+    links: [
+      "auf eine andere Seite der App verlinken",
+      "eigenen Router für Kit-Links nutzen",
+      "Link in neuem Tab öffnen",
+      "Button, der navigiert",
+      "Link der aktuellen Seite hervorheben",
+    ],
+    "auth-account": [
+      "Layout der Anmeldeseite",
+      "Zwei-Faktor per QR-Code einrichten",
+      "Passkeys verwalten",
+      "Seite für AGB und Datenschutz",
+      "Zwei-Faktor-Schlüssel mit Kopierknopf zeigen",
+    ],
+    formatting: [
+      "Geldbetrag im Gebietsschema formatieren",
+      "Datum als „vor 3 Tagen“",
+      "Prozent formatieren",
+      "positiven oder negativen Betrag farbig zeigen",
+      "Veränderung zum Vormonat zeigen",
+    ],
+    "url-state": [
+      "Filter in der URL behalten",
+      "offenen Tab beim Neuladen merken",
+      "Dialog über einen Link öffnen",
+      "Dialog mit Zurück schließen",
+      "Link auf die aktuelle Ansicht teilen",
+    ],
     overview: [
       "Einstieg ins Kit",
       "wie das Kit aufgebaut ist",

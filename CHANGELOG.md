@@ -20,6 +20,20 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.12.0](https://github.com/Eifi1/ui-kit/compare/v0.11.0...v0.12.0) (2026-09-26)
+
+### Added
+
+* 0.12 — links, forms, tables, formatters, charts, media, auth shell, settings ([f1e9954](https://github.com/Eifi1/ui-kit/commit/f1e99546c56cf84798c935a62b14be69a45011e7))
+* kastlan 32–39 — SearchField clear by default, Field label visibility, more ([b9bf925](https://github.com/Eifi1/ui-kit/commit/b9bf9250ce0ee127c12e7c5a7de1646e62c9ceb6))
+* **provider:** linkComponent — the app's router link, set once for every kit link ([45987b7](https://github.com/Eifi1/ui-kit/commit/45987b78dd2c89c1d180f53425cae0073c98ac9e))
+
+### Fixed
+
+* **copy-button:** leave tooltipPortal unset so the Tooltip auto-portals in tables ([9305a79](https://github.com/Eifi1/ui-kit/commit/9305a799c2918ac1fcfa3763598773a7935b2c5c))
+* Field's id/aria spread lands on the focusable control in every picker ([8672a5e](https://github.com/Eifi1/ui-kit/commit/8672a5e6fd0adc9958d1176f56d6e30a7f2c58e9))
+* PieChart key warning, consistent link routing, ErrorBoundary resetKeys, deep label overrides ([2fc1522](https://github.com/Eifi1/ui-kit/commit/2fc1522d8f84942f94dc5edad0be108e55de3c3b)), references [#anchor](https://github.com/Eifi1/ui-kit/issues/anchor)
+
 ## [0.11.0](https://github.com/Eifi1/ui-kit/compare/v0.10.0...v0.11.0) (2026-09-26)
 
 ### Added

@@ -4,6 +4,8 @@ import { Settings2, Trash2 } from "lucide-react";
 import { HoverMenu } from "../hover-menu";
 import { MenuItem } from "../menu-item";
 import { TOPBAR_MENU_ITEM_CLASS } from "../../shell/topbar-controls";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 /** keksdose's budget switcher, rebuilt from MenuItems: a radio set, a link, a danger row. */
 function BudgetMenu({ onPick = () => {}, active = "home" }: { onPick?: (id: string) => void; active?: string }) {
@@ -172,5 +174,29 @@ describe("MenuItem badge (keksdose's budget switcher)", () => {
   it("renders no badge wrapper when there is none", () => {
     render(<MenuItem onClick={() => {}}>Plain</MenuItem>);
     expect(document.querySelector("[data-menu-item-badge]")).toBeNull();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("MenuItem — the provider's router link", () => {
+  it("draws a link row with linkComponent, keeping its role; its own renderLink wins", () => {
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <MenuItem href="/budgets">Manage budgets</MenuItem>
+        <MenuItem href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+          Own
+        </MenuItem>
+      </UiKitProvider>,
+    );
+    const row = screen.getByRole("menuitem", { name: "Manage budgets" });
+    expect(row).toHaveAttribute("data-router");
+    expect(row).toHaveAttribute("href", "/budgets");
+    expect(screen.getByRole("menuitem", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("menuitem", { name: "Own" })).not.toHaveAttribute("data-router");
   });
 });

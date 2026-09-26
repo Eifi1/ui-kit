@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ButtonGroup, ButtonGroupLink } from "../button-group";
 import { Button, IconButton } from "../ui";
 import { Tooltip } from "../tooltip";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 const PHYSICAL = /(?:^|\s|:)(?:rounded-(?:l|r|tl|tr|bl|br)|border-(?:l|r)|ml|mr|pl|pr|left|right)-/;
 
@@ -186,5 +188,33 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
     expect(onExport).toHaveBeenCalledTimes(1);
     await user.tab();
     expect(screen.getByRole("link", { name: "Open report" })).toHaveFocus();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("ButtonGroupLink — the provider's router link", () => {
+  it("draws with linkComponent; its own renderLink wins", () => {
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <ButtonGroup aria-label="Pages">
+          <ButtonGroupLink href="/report" current>
+            Report
+          </ButtonGroupLink>
+          <ButtonGroupLink href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+            Own
+          </ButtonGroupLink>
+        </ButtonGroup>
+      </UiKitProvider>,
+    );
+    const report = screen.getByRole("link", { name: "Report" });
+    expect(report).toHaveAttribute("data-router");
+    expect(report).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
   });
 });

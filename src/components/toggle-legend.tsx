@@ -68,14 +68,21 @@ export interface LegendEntry {
   /**
    * What the entry's mark looks like. `swatch` — a filled square, the default — says
    * WHICH MEASUREMENT. `stroke` says WHICH QUANTITY, for the charts that carry both at
-   * once and tell them apart by colour and by dash.
+   * once and tell them apart by colour and by dash. `dot` is a round mark, for a
+   * MARKER on the chart (a point, an event) rather than a series.
    */
-  marker?: "swatch" | "stroke";
+  marker?: "swatch" | "stroke" | "dot";
   /** Which of {@link STROKE_PATTERNS}, when the marker is a stroke — the same index
    *  `SeriesChartSeries.dash` takes, so a legend cannot promise a dot-dash the plot
    *  draws dashed. Or the same custom `stroke-dasharray` string the series draws with
    *  (keksdose's `"4 3"`). */
   dash?: number | string;
+  /**
+   * A mark of the caller's own, drawn in place of {@link marker} — for a key whose
+   * mark is not a colour at all (a fading bar for "open-ended", a hairline for
+   * "today"). Decorative: it is wrapped `aria-hidden`, and the label is the name.
+   */
+  icon?: ReactNode;
 }
 
 export interface ToggleLegendProps {
@@ -163,6 +170,65 @@ export function ToggleLegend({
   );
 }
 
+export interface StaticLegendProps {
+  entries: LegendEntry[];
+  /** See {@link ToggleLegendProps.orientation}. */
+  orientation?: "horizontal" | "vertical";
+  /** The list's accessible name. Default: the `seriesChart.legend` label. */
+  "aria-label"?: string;
+  className?: string;
+  /** Per-instance strings over `<UiKitProvider labels={{ seriesChart }}>`. */
+  labels?: Partial<SeriesChartLabels>;
+}
+
+/**
+ * A legend that is a KEY, not a control: the same entries and marks as
+ * {@link ToggleLegend} — swatch, stroke (with the chart's own dash), dot, or a mark of
+ * the caller's own — but nothing to press.
+ *
+ * A separate component rather than `ToggleLegend` without `onToggle`, because the two
+ * are different things to a screen reader: a group of switches announces a pressed
+ * state on every entry, a key is a LIST, read as "list, 4 items" and walked with the
+ * list keys, and costs no tab stops. The apps drew this by hand under the charts that
+ * say what a colour or a dash means without letting you switch it (kastlan's lease
+ * timeline, keksdose's cash buffer).
+ *
+ * Unlike `ToggleLegend` it draws a single entry: a key with one line still says what
+ * the one mark on the chart means.
+ */
+export function StaticLegend({
+  entries,
+  orientation = "horizontal",
+  "aria-label": ariaLabel,
+  className,
+  labels: labelsProp,
+}: StaticLegendProps) {
+  const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
+  if (entries.length === 0) return null;
+  return (
+    <ul
+      aria-label={ariaLabel ?? labels.legend}
+      className={cn(
+        "m-0 flex list-none gap-x-3 gap-y-1 p-0",
+        orientation === "vertical"
+          ? "flex-col items-start justify-center"
+          : "mt-2 flex-wrap items-center",
+        className,
+      )}
+    >
+      {entries.map((entry) => (
+        <li
+          key={entry.key}
+          className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]"
+        >
+          <LegendMark entry={entry} off={false} />
+          {entry.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /**
  * The column a vertical legend stands in: beside the charts, on their horizontal
  * centre line. `h-full` + `justify-center`, so it centres in a grid cell or a flex row
@@ -205,6 +271,25 @@ export function LegendGroup({ title, children }: { title: ReactNode; children: R
  *  and the line used to take its own 0.35 on top — 0.35 × 0.35, about 12 %, a mark
  *  gone rather than dimmed, while the square beside it read at the full 35 %. */
 function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
+  if (entry.icon != null) {
+    return (
+      <span aria-hidden className="inline-flex shrink-0 items-center">
+        {entry.icon}
+      </span>
+    );
+  }
+  if (entry.marker === "dot") {
+    return (
+      <span
+        aria-hidden
+        className="size-2 shrink-0 rounded-full"
+        style={{
+          backgroundColor: off ? "transparent" : entry.color,
+          boxShadow: `inset 0 0 0 1.5px ${entry.color}`,
+        }}
+      />
+    );
+  }
   if (entry.marker === "stroke") {
     return (
       <svg aria-hidden viewBox="0 0 20 2" className="h-0.5 w-5 shrink-0 overflow-visible">

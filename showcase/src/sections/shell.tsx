@@ -12,7 +12,9 @@ import {
   MessageSquarePlus,
   PieChart,
   Receipt,
+  Scale,
   Server,
+  Sparkles,
   Upload,
   Wallet,
 } from "lucide-react";
@@ -32,6 +34,7 @@ import {
 } from "@eifi1/ui-kit";
 import type {
   AppShellNavItem,
+  AppShellSidebarFooterItem,
   LanguageOption,
   OptionSwitcherOption,
   TopBarMenuEntry,
@@ -631,6 +634,31 @@ const DEMO_NAV: AppShellNavItem[] = [
   },
 ];
 
+/** The sidebar's bottom area as data (0.12): a version link with a hint, a link that
+ *  leaves the app, and the legal links as one group — one icon when collapsed. */
+const DEMO_FOOTER_ITEMS: AppShellSidebarFooterItem[] = [
+  {
+    key: "version",
+    to: "/whats-new",
+    icon: Sparkles,
+    label: "What's new · v2.4.1",
+    text: "Acme Books v2.4.1",
+    hint: "What's new",
+  },
+  { key: "help", to: "https://example.com/help", icon: LifeBuoy, label: "Help centre", external: true },
+  {
+    kind: "links",
+    key: "legal",
+    icon: Scale,
+    label: "Legal",
+    links: [
+      { to: "/legal/imprint", label: "Imprint" },
+      { to: "/legal/privacy", label: "Privacy" },
+      { to: "/legal/terms", label: "Terms" },
+    ],
+  },
+];
+
 /** `null` is what a `LocationContext` holds outside any router. See the playground. */
 const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
@@ -655,6 +683,7 @@ function AppShellPlayground() {
   const [mobileSubNav, setMobileSubNav] = useState(true);
   const [withFooter, setWithFooter] = useState(true);
   const [withSidebarFooter, setWithSidebarFooter] = useState(true);
+  const [withFooterItems, setWithFooterItems] = useState(true);
   const [customLabels, setCustomLabels] = useState(false);
   const [embedded, setEmbedded] = useState(true);
   const [persist, setPersist] = useState(true);
@@ -692,6 +721,12 @@ function AppShellPlayground() {
           description="A function of `collapsed`"
           checked={withSidebarFooter}
           onCheckedChange={setWithSidebarFooter}
+        />
+        <Switch
+          label="sidebarFooterItems"
+          description="A version link, an external link and the legal links, as data — collapse the sidebar to see them as icons"
+          checked={withFooterItems}
+          onCheckedChange={setWithFooterItems}
         />
         <Switch
           label="collapseLabel · expandLabel · toggleGroupLabel"
@@ -752,6 +787,7 @@ function AppShellPlayground() {
                   </footer>
                 ) : undefined
               }
+              sidebarFooterItems={withFooterItems ? DEMO_FOOTER_ITEMS : undefined}
               sidebarFooter={
                 withSidebarFooter
                   ? (collapsed) => (
@@ -796,6 +832,17 @@ function AppShellPlayground() {
         <code className="font-mono">collapseStorageKey</code>), and open the screen-size preview
         from the top bar to see the phone bar with its page row. The collapsed sidebar always
         uses the flyout, whatever <code className="font-mono">subNav</code> says.
+      </Note>
+      <Note>
+        <code className="font-mono">sidebarFooterItems</code> sits above{" "}
+        <code className="font-mono">sidebarFooter</code>. Expanded, the version link shows its{" "}
+        <code className="font-mono">text</code> with <code className="font-mono">hint</code> as a
+        tooltip, and the legal links are a <code className="font-mono">&lt;nav aria-label=&quot;Legal&quot;&gt;</code>{" "}
+        of small links; collapsed, each item is one icon named and tooltipped by its{" "}
+        <code className="font-mono">label</code> (Legal goes to its first link). Internal links
+        use the provider&apos;s <code className="font-mono">linkComponent</code> (else
+        react-router&apos;s <code className="font-mono">Link</code>) — follow one and the route
+        above changes; the help link is a plain new-tab <code className="font-mono">&lt;a&gt;</code>.
       </Note>
     </div>
   );

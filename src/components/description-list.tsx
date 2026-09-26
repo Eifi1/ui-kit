@@ -1,7 +1,19 @@
 import { createContext, useContext } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useKitLabels } from "../i18n/kit-labels";
 import { FieldHint } from "./ui";
+
+/** The words a {@link DescriptionList} renders on its own behalf. */
+export interface DescriptionListLabels {
+  /** What an item with no value shows (see {@link DescriptionItemProps.placeholder}).
+   *  Default "—", an em dash. */
+  empty: string;
+}
+
+export const DEFAULT_DESCRIPTION_LIST_LABELS: DescriptionListLabels = {
+  empty: "—",
+};
 
 export type DescriptionListLayout = "rows" | "cards" | "stacked";
 export type DescriptionListDensity = "comfortable" | "compact" | "tight";
@@ -14,6 +26,7 @@ interface ListContextValue {
   prose: boolean;
   density: DescriptionListDensity;
   columns: DescriptionListColumns;
+  placeholder?: ReactNode;
 }
 
 const ListContext = createContext<ListContextValue>({
@@ -103,6 +116,9 @@ export interface DescriptionListProps extends ComponentPropsWithoutRef<"dl"> {
    * all would not be an improvement. Per item: {@link DescriptionItemProps.prose}.
    */
   prose?: boolean;
+  /** What an item with no value shows, for every item that does not set its own —
+   *  see {@link DescriptionItemProps.placeholder}. */
+  placeholder?: ReactNode;
 }
 
 /**
@@ -129,6 +145,7 @@ export function DescriptionList({
   density = "comfortable",
   minCardWidth = "10rem",
   columns,
+  placeholder,
   className,
   style,
   ...rest
@@ -147,7 +164,7 @@ export function DescriptionList({
   const grid: CSSProperties | undefined = cards
     ? { gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${track}), 1fr))` }
     : undefined;
-  const ctx: ListContextValue = { layout, numeric, prose, density, columns: columns ?? 2 };
+  const ctx: ListContextValue = { layout, numeric, prose, density, columns: columns ?? 2, placeholder };
   const text = density === "tight" ? "text-[11px] leading-4" : density === "compact" ? "text-xs" : "text-sm";
 
   if (stacked) {
@@ -215,6 +232,20 @@ export interface DescriptionItemProps extends Omit<ComponentPropsWithoutRef<"div
    * because a card grid's column count is not known to CSS ahead of layout.
    */
   span?: number | "full";
+  /**
+   * Shown in place of a value that is not there — `children` of `null`, `undefined`,
+   * `false` or `""` (a `0` is a value and is shown). Default: the list's own
+   * `placeholder`, else `descriptionList.empty` from the provider, else "—". `null`
+   * shows nothing, as an empty detail did before. kastlan's DetailField put its
+   * `EMPTY_VALUE` into every one of its call sites' values by hand.
+   *
+   * Drawn in the muted ink, so an absent value does not read as a value of "—".
+   */
+  placeholder?: ReactNode;
+}
+
+function isEmptyValue(node: ReactNode): boolean {
+  return node === undefined || node === null || node === false || node === "";
 }
 
 const ROW_PAD: Record<DescriptionListDensity, string> = {
@@ -236,11 +267,23 @@ export function DescriptionItem({
   numeric: numericProp,
   prose: proseProp,
   span,
+  placeholder: placeholderProp,
   detailClassName,
   className,
   ...rest
 }: DescriptionItemProps) {
-  const { layout, numeric: listNumeric, prose: listProse, density, columns } = useContext(ListContext);
+  const {
+    layout,
+    numeric: listNumeric,
+    prose: listProse,
+    density,
+    columns,
+    placeholder: listPlaceholder,
+  } = useContext(ListContext);
+  const labels = useKitLabels("descriptionList", DEFAULT_DESCRIPTION_LIST_LABELS);
+  const empty = isEmptyValue(children);
+  const placeholder =
+    placeholderProp !== undefined ? placeholderProp : listPlaceholder !== undefined ? listPlaceholder : labels.empty;
   const numeric = numericProp ?? listNumeric;
   const prose = proseProp ?? listProse;
   const cards = layout === "cards";
@@ -277,7 +320,13 @@ export function DescriptionItem({
         detailClassName,
       )}
     >
-      {children}
+      {empty && !isEmptyValue(placeholder) ? (
+        <span data-slot="description-empty" className="font-normal text-[var(--text-muted)]">
+          {placeholder}
+        </span>
+      ) : (
+        children
+      )}
     </dd>
   );
 

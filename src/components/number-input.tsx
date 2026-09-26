@@ -58,6 +58,15 @@ interface NumberInputProps {
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
   /**
+   * Set on the `<input>`, with `id` above. Declared so `Field`'s render-prop spread —
+   * `{(ids) => <NumberInput {...ids} … />}` — is typed and reaches the input: the hint
+   * and error are described, a required number is announced as required, and
+   * `aria-invalid` paints {@link FIELD_INVALID} the way `invalid` does.
+   */
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
+  "aria-required"?: boolean | "true" | "false";
+  /**
    * A static unit shown at the field's right edge — "%", "kg", "km/h".
    *
    * The read-out half of {@link AmountInput}'s currency chip, and it exists for the
@@ -156,7 +165,10 @@ export function NumberInput({
   calculator = true,
   variant = "field",
   hint,
-  invalid,
+  invalid: invalidProp,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   suffix,
   step,
   min,
@@ -164,6 +176,7 @@ export function NumberInput({
 }: NumberInputProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
+  const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
@@ -234,6 +247,8 @@ export function NumberInput({
         }}
         onKeyDown={onKeyDown}
         aria-invalid={invalid || undefined}
+        aria-describedby={ariaDescribedBy}
+        aria-required={ariaRequired}
         // The end padding sits last so it always wins over an inputClassName that
         // sets its own px. Both trailing controls can be on at once, so the room
         // they need is reserved together rather than by whichever happens to render:

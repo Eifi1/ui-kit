@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Chip, ChipInput } from "../chip";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 describe("Chip", () => {
   it("is inert by default — not a button, not a link", () => {
@@ -553,5 +555,29 @@ describe("Chip 0.10.0", () => {
     expect(dot).toHaveAttribute("aria-hidden");
     expect(dot.className).toContain("bg-[var(--hue-blue)]");
     expect(chip).toHaveTextContent("Rented");
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("Chip — the provider's router link", () => {
+  it("draws an in-app href with linkComponent, an absolute one as <a>; its own renderLink wins", () => {
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <Chip href="/admin">Admin</Chip>
+        <Chip href="mailto:a@b.c">Mail</Chip>
+        <Chip href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+          Own
+        </Chip>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Mail" })).not.toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
   });
 });

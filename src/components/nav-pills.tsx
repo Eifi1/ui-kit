@@ -1,5 +1,7 @@
 import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
 export interface NavPillItem<T extends string> {
   value: T;
@@ -33,7 +35,8 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
   /** Called with the pill's value on a click — of a button, and of a link too (before
    *  the router follows it), for a caller that keeps the choice in state as well. */
   onSelect?: (value: T) => void;
-  /** Your router's link. Default `<a>`. The API `Breadcrumbs`, `Chip` and `ListItem` share. */
+  /** Your router's link. Default: the `<UiKitProvider linkComponent>` (for an in-app
+   *  `href`), then `<a>`. The API `Breadcrumbs`, `Chip` and `ListItem` share. */
   renderLink?: (props: NavPillLinkProps) => ReactElement;
   /** What `aria-current` says on the current pill. Default `page` where the items
    *  are links and `true` where they are buttons (keksdose's swipe-surface picker
@@ -84,6 +87,7 @@ export function NavPills<T extends string>({
   className,
   ...rest
 }: NavPillsProps<T>) {
+  const kitLink = useKitLink();
   const Root = landmark ? "nav" : "div";
   return (
     <Root {...rest} role={landmark ? undefined : "group"} className={cn("min-w-0", className)}>
@@ -113,8 +117,11 @@ export function NavPills<T extends string>({
               "aria-current": isCurrent ? (currentType ?? "page") : undefined,
               onClick: () => onSelect?.(item.value),
             };
+            const kit = pickLinkRenderer<NavPillLinkProps>(undefined, kitLink, item.href);
             pill = renderLink ? (
               renderLink(props)
+            ) : kit ? (
+              <RenderedKitLink render={kit} props={props} />
             ) : (
               <a href={props.href} className={props.className} aria-current={props["aria-current"]} onClick={props.onClick}>
                 {props.children}

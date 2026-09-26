@@ -175,6 +175,18 @@ export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">,
    * it is what names the grid.
    */
   hideNavigation?: boolean;
+  /**
+   * Fill the leading and trailing cells with the neighbouring months' days, muted —
+   * the wall-calendar look, where the first row does not start on a hole.
+   *
+   * They are real days, not decoration: each is named with its whole date, honours
+   * `min`/`max`, and a click selects it and moves the grid to its month (focus goes
+   * with it). They are NOT stops of the roving tabindex — the keyboard already reaches
+   * them by arrowing off the month's edge, which moves the grid the same way — and
+   * `renderDay` is not called for them, so a day's events are drawn once, in its own
+   * month. Default `false`: the cells stay empty.
+   */
+  showOutsideDays?: boolean;
   /** Extra classes for the calendar's root. */
   className?: string;
 }
@@ -256,6 +268,7 @@ export function MiniCalendar({
   month,
   onMonthChange,
   hideNavigation,
+  showOutsideDays = false,
   className,
   ...rest
 }: MiniCalendarProps) {
@@ -335,12 +348,19 @@ export function MiniCalendar({
 
   const firstOfMonth = new Date(view.year, view.month, 1);
   const lastOfMonth = new Date(view.year, view.month + 1, 0);
-  // Leading blanks up to the first of the month, counted from the week's first day.
+  // Leading blanks up to the first of the month, counted from the week's first day —
+  // or the previous month's last days, with `showOutsideDays` (and the next month's
+  // first ones at the end). `new Date(y, m, 0)` is the day before the 1st, so the
+  // offsets below roll into the neighbouring month by themselves.
   const startWeekday = weekdayIndex(firstOfMonth, weekStart);
   const cells: (Date | null)[] = [];
-  for (let i = 0; i < startWeekday; i++) cells.push(null);
+  for (let i = 0; i < startWeekday; i++) {
+    cells.push(showOutsideDays ? new Date(view.year, view.month, i - startWeekday + 1) : null);
+  }
   for (let d = 1; d <= lastOfMonth.getDate(); d++) cells.push(new Date(view.year, view.month, d));
-  while (cells.length % 7 !== 0) cells.push(null);
+  for (let extra = 1; cells.length % 7 !== 0; extra++) {
+    cells.push(showOutsideDays ? new Date(view.year, view.month + 1, extra) : null);
+  }
   const weeks: (Date | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
@@ -588,6 +608,55 @@ export function MiniCalendar({
               }
               const iso = toLocalIso(d);
               const disabled = isDisabled(d);
+              // A neighbouring month's day (`showOutsideDays`): a muted, selectable
+              // cell outside the tab order — see the prop.
+              if (d.getMonth() !== view.month) {
+                return (
+                  <div
+                    key={di}
+                    role="none"
+                    className={cn(
+                      "relative flex",
+                      lg ? cn("min-w-0", LG_CELL_HEIGHT) : "h-8 items-center justify-center",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      role="gridcell"
+                      data-iso={iso}
+                      data-outside=""
+                      tabIndex={-1}
+                      aria-label={labels.day(formatDay(d))}
+                      aria-selected={!disabled && inRange(d)}
+                      aria-disabled={disabled || undefined}
+                      onClick={() => {
+                        if (disabled) return;
+                        // Focus follows into the month the click moves the grid to:
+                        // this button is gone after the next commit.
+                        pendingFocus.current = iso;
+                        handleClick(d);
+                      }}
+                      onKeyDown={onDayKeyDown}
+                      className={cn(
+                        "text-xs tabular-nums text-[var(--text-placeholder)] transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]",
+                        disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[var(--bg-hover)]",
+                        lg
+                          ? cn("flex w-full min-w-0 items-start bg-[var(--bg-surface-2)] p-1.5", LG_CELL_HEIGHT)
+                          : "size-8 rounded-full",
+                      )}
+                    >
+                      {lg ? (
+                        <span className="inline-flex size-6 items-center justify-center">
+                          {dayNumber.format(d.getDate())}
+                        </span>
+                      ) : (
+                        dayNumber.format(d.getDate())
+                      )}
+                    </button>
+                  </div>
+                );
+              }
               const isStart = !disabled && fromDate && sameYmd(d, fromDate);
               const isEnd = !disabled && toDate && sameYmd(d, toDate);
               const isToday = sameYmd(d, today);

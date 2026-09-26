@@ -3,6 +3,8 @@ import type { MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 /**
  * `TOPBAR_MENU_ITEM_CLASS`'s row, spelled out rather than imported: a component does
@@ -102,7 +104,8 @@ export type MenuItemProps = MenuItemBaseProps &
         /** Makes the row a link — keksdose's "Manage budgets" and account-menu rows. */
         href: string;
         /** Renders the link — pass your router's `<Link>`, since a plain `<a>` reloads
-         *  a single-page app. Default `<a>`. The same API as `Chip` and `StatTile`. */
+         *  a single-page app. Default: the `<UiKitProvider linkComponent>`, then `<a>`.
+         *  The same API as `Chip` and `StatTile`. */
         renderLink?: (props: MenuItemLinkProps) => ReactElement;
         /** Runs on the way (close the menu). */
         onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
@@ -148,6 +151,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
   },
   ref,
 ) {
+  const kitLink = useKitLink();
   const on = href !== undefined ? !!current : !!checked;
   const look = cn(
     MENU_ITEM_ROW,
@@ -193,7 +197,8 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       "aria-current": current ? "page" : undefined,
       children: body,
     };
-    if (renderLink) return <RenderedLink render={renderLink} {...linkProps} />;
+    const render = pickLinkRenderer(renderLink, kitLink, href);
+    if (render) return <RenderedLink render={render} {...linkProps} />;
     const { children: linkBody, ...anchorProps } = linkProps;
     return <a {...anchorProps}>{linkBody}</a>;
   }

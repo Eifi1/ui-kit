@@ -174,3 +174,80 @@ export function decodeFilterValueOfType(type: FilterValue["type"], raw: string):
 export function decodeFilterValue<T>(filter: ColumnFilter<T>, raw: string): FilterValue {
   return decodeFilterValueOfType(filter.type, raw);
 }
+
+// ---------- Filter builders ----------
+//
+// Terse builders for `DataTableColumn.filter`, lifted from kastlan's column-filters.ts,
+// which every converted list page imports. The one that earns its keep is `selectFilter`:
+// in `serverPagination` mode a select filter MUST declare its options (the table would
+// otherwise derive them from the rows of the page on screen), and the options an app has
+// to hand are usually a translated `{ value: label }` map.
+
+/** A free-text filter over `getValue`. */
+export function textFilter<T>(getValue: (row: T) => string): ColumnFilter<T> {
+  return { type: "text", getValue };
+}
+
+/**
+ * A multi-select filter. `options` is an options array, or a `{ value: label }` record
+ * (a translated status map) — kept in its key order. Left out, the table derives the
+ * options from the rows it holds.
+ */
+export function selectFilter<T>(
+  getValue: (row: T) => string,
+  options?: { value: string; label?: string }[] | Record<string, string>,
+): ColumnFilter<T> {
+  const opts = Array.isArray(options)
+    ? options
+    : options
+      ? Object.entries(options).map(([value, label]) => ({ value, label }))
+      : undefined;
+  return { type: "select", getValue, options: opts };
+}
+
+/** A from/to date filter over an ISO date (or date-time) string. */
+export function dateFilter<T>(getValue: (row: T) => string | null | undefined): ColumnFilter<T> {
+  return { type: "date", getValue };
+}
+
+/** A min/max (and absolute-value) filter over a number. */
+export function numberFilter<T>(getValue: (row: T) => number | null | undefined): ColumnFilter<T> {
+  return { type: "number", getValue };
+}
+
+/**
+ * A link to a list page with one column filter already applied — in the table's own URL
+ * scheme (`f.<column>=<encoded>`), which a table with `urlSync` (or
+ * {@link useTableUrlState}) reads on mount. kastlan's `buildListUrl`, which had to
+ * restate the `f.` prefix to do it.
+ *
+ * `value` is a string for a text filter, an array for a select filter, or any
+ * {@link FilterValue}. A filter that narrows nothing returns `path` unchanged. A `path`
+ * that already carries a query keeps it; a `#fragment` stays at the end.
+ *
+ *     filterHref("/units", "status", ["vacant"]) // "/units?f.status=vacant"
+ */
+export function filterHref(
+  path: string,
+  column: string,
+  value: string | string[] | FilterValue,
+  /** The target table's `urlSync` prefix, if it has one (`{ prefix: "inv." }` →
+   *  `inv.f.<column>`). */
+  options?: { prefix?: string },
+): string {
+  const state: FilterValue =
+    typeof value === "string"
+      ? { type: "text", q: value }
+      : Array.isArray(value)
+        ? { type: "select", values: value }
+        : value;
+  const encoded = encodeFilterValue(state);
+  if (encoded == null) return path;
+  const hashAt = path.indexOf("#");
+  const base = hashAt >= 0 ? path.slice(0, hashAt) : path;
+  const hash = hashAt >= 0 ? path.slice(hashAt) : "";
+  const queryAt = base.indexOf("?");
+  const params = new URLSearchParams(queryAt >= 0 ? base.slice(queryAt + 1) : "");
+  params.set(`${options?.prefix ?? ""}f.${column}`, encoded);
+  return `${queryAt >= 0 ? base.slice(0, queryAt) : base}?${params.toString()}${hash}`;
+}

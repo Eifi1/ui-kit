@@ -72,6 +72,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
     "useRhfWizardStep — two steps of one form, fields per step",
     "useRhfWizardStep — the whole form, and your own nav",
+    "Rhf* bound fields — every field in one form, with errors",
+    "FormActions — inline, sticky, dialog, destructive and pending",
+    "LineItems — totals, a minimum, and remove confirmation",
   ],
   "choices": [
     "Checkbox — states",
@@ -135,6 +138,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DatePicker & DateRangePicker — German trigger and calendar",
     "Calendars and pickers — right-to-left",
     "UiKitProvider weekStartsOn",
+    "MiniCalendar — showOutsideDays",
   ],
   "month-view": [
     "MiniCalendar size=\"lg\" — renderDay and a day panel",
@@ -149,6 +153,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "MonthPicker — trigger format, pinned now, disabled",
     "MonthPicker — localised",
     "MonthPicker — right-to-left",
+    "MonthPicker — variant=\"stepper\"",
     "TimeInput — labelled",
     "TimeInput — compact pair",
     "TimeInput — bounds and seconds",
@@ -167,6 +172,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useFileDrop — any element as a drop target",
     "All or nothing — onPick",
   ],
+  "media": [
+    "ImageGrid — actions, captions and a PDF tile",
+    "Lightbox — keys, swipe, zoom, download and a PDF card",
+    "AuthedImage — a fake fetcher with a delay and an error",
+    "useAuthedSrc — status, type and retry",
+  ],
   "comboboxes": [
     "Combobox",
     "Click-to-edit cells",
@@ -175,6 +186,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Autocomplete — search, then act",
     "Autocomplete — error and disabled",
     "Combobox — error and disabled",
+    "Combobox — a Tooltip in optionAdornment (data-clips)",
   ],
   "entity-pickers": [
     "InlineEntityCombobox",
@@ -193,6 +205,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PickerSheet + SHEET_ROW_CLASS",
     "useDropdown + DropdownPanel",
     "useDropdownSearch + DropdownSearchHeader + anchored DropdownPanel",
+    "PickerSheet — data-clips on the scroller",
   ],
   "measured-grid": [
     "MeasuredGrid — 400 measured rows",
@@ -258,6 +271,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "IconButton — xl, stretch, tone=\"success\", tone=\"custom\" and shape=\"round\"",
     "UserAvatar — badge, every tone and right-to-left",
     "IconButton — disabledReason, with and without label",
+    "Button — pending",
+    "Card — tone",
+    "Spinner — showLabel and labelPosition",
+    "IconButton — glyphSize, badge and disabledStyle",
+    "IconButton — size 2xl, variant shutter",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -304,6 +322,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Toasts — an action, undo and redo",
     "Toasts — replace by id, and loading to success",
     "Toasts — redact, and where they appear on a phone",
+    "LoadingState — sizes, inline and a label of its own",
+    "Skeleton — label announces the load once",
+    "ErrorBoundary — Retry, details and a fallback of your own",
+    "ProgressBar — unlimited, hint, overage and legend values",
   ],
   "description-list": [
     "DescriptionList — rows and cards, comfortable and compact",
@@ -316,6 +338,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DescriptionList — tight, card columns and prose",
     "Table — empty, TableEmpty, density none and layout",
     "Table — header size and weight, valign on a table of inputs",
+    "Table — framed, group, subtotal and total rows, dividers",
+    "DescriptionItem — placeholder for a missing value",
   ],
   "tree-view": [
     "TreeView — keyboard, icons, trailing figures",
@@ -347,11 +371,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Column cellProps and headProps",
     "fillHeight — a table in a bounded pane",
     "Right-to-left",
+    "rowActions, toolbar and the empty label",
   ],
   "data-table-server": [
     "urlSync — the view lives in the address",
     "serverPagination — the server owns the rows",
     "Phone layout — mobileCard, mobileGroupBy, mobileSwipeActions",
+    "useTableUrlState, filterHref and the filter builders",
   ],
   "data-table-parts": [
     "Pagination",
@@ -397,6 +423,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Drilldown — bar chart",
     "Drilldown — tile chart",
   ],
+  "pie-chart": [
+    "PieChart — donut and pie, legend modes and slice labels",
+    "PieChart — onSliceClick and the keyboard",
+    "PieChart — redact, empty and right-to-left",
+    "StaticLegend — a key, not a control",
+  ],
   "series-chart": [
     "SeriesChart — an axis per unit, and a legend of switches",
     "SeriesChart — five strokes for five channels",
@@ -439,6 +471,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CalendarHeatmap — levels, max and color",
     "CalendarHeatmap — maxDays, legend and sensitive",
     "CalendarHeatmap — right-to-left and weekStartsOn",
+    "CalendarHeatmap — colorFrom/colorTo, fill and emptyColor",
+    "CalendarHeatmap — anchor, where a long window ends",
   ],
   "dialogs": [
     "Modal",
@@ -463,6 +497,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FloatingActionButton — extended, live, surface and hidden",
     "FloatingActionButton tooltip and tooltipSide, FloatingPanel fabTooltip",
     "FloatingActionGroup and FloatingAction",
+    "FloatingAction — pressedStyle",
   ],
   "popovers": [
     "Popover",
@@ -512,6 +547,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShell — every prop on a switch",
     "AppShell — the contracts",
     "TopBarActionMenu — an account menu",
+    "TopBarBrand — logo and name, the name hidden on a phone",
+    "TopBarActionMenu — iconBadge",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
@@ -525,6 +562,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SectionLabel — size md",
     "StatusDot — hues beside matching Chips",
   ],
+  "links": [
+    "UiKitProvider linkComponent — the router link, set once",
+    "TextLink — tones and underline",
+    "TextLink — external, stopPropagation, current and icon",
+    "Button — href",
+    "ActionCard — href and iconTone",
+  ],
   "settings": [
     "ThemeSetting",
     "LanguageSetting",
@@ -535,6 +579,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PasswordSetting — rejecting handler",
     "TwoFactorSetting",
   ],
+  "auth-account": [
+    "AuthLayout — narrow sign-in and wide legal page",
+    "TwoFactorSetting — from an otpauth URI",
+    "PasskeysSetting — add, rename, delete, empty, loading, unavailable",
+    "Account-settings labels — accountSettings in the provider",
+  ],
   "wizard": [
     "Three-step wizard",
     "Engine state, live",
@@ -544,6 +594,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DEFAULT_WIZARD_LABELS",
     "resolveWizardLabels",
     "WizardStepper — the other one",
+    "WizardStep title and description, useWizardNextGate and useWizardStepValidate",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -567,6 +618,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "visibleFeedbackStatuses(current)",
     "selectableFeedbackStatuses(current)",
     "feedbackCategoryRank(category)",
+    "FeedbackThread — own, staff, attachments, redact and RTL",
+    "FeedbackComposer — pending, Ctrl/⌘+Enter and an attachment",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",
@@ -582,6 +635,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useAnnounce({ politeness })",
     "cn(...inputs)",
     "logger · setStoreLog(enabled)",
+    "useHotkey(combo, handler, options)",
   ],
   "clipboard-timing": [
     "CopyButton — icon and label, and a copy that fails",
@@ -601,5 +655,18 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "passwordRules · passwordByteLength",
     "matchesAccept(file, accept)",
     "Exported class constants",
+  ],
+  "formatting": [
+    "Formatters — one input, five locales",
+    "useKitFormat() — bound to the provider's locale",
+    "SignedAmount — sign, tone, arrow and spoken words",
+    "Delta — a change, judged or not",
+    "Tone and toneTextClass — the kit's text colours",
+  ],
+  "url-state": [
+    "useSearchParamState — one param as state",
+    "useTabParam — the open tab in ?tab",
+    "Modal urlParam — an edit dialog that survives reload",
+    "useDialogParam — several dialogs on one param",
   ],
 };
