@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   ChartColumn,
   ChartArea,
   ChartBar,
@@ -42,6 +43,7 @@ import {
   PanelTopClose,
   PanelsTopLeft,
   PenLine,
+  Pin,
   Puzzle,
   Server,
   Settings as SettingsIcon,
@@ -124,6 +126,18 @@ import { DisclosureMore } from "./sections/disclosure-more-demo";
 import { IntegerTicksDemo, KeyboardPointsDemo } from "./sections/series-chart-ticks-keys";
 import { DialogOpenDemo } from "./sections/dialog-open-demo";
 import { TooltipAutoPortal } from "./sections/tooltip-auto-portal-demo";
+import { FloatingActions } from "./sections/floating-actions-demo";
+import { CalendarHeatmapDemo } from "./sections/calendar-heatmap-demo";
+import { MonthViewDemo } from "./sections/month-view-demo";
+import { ButtonsMore } from "./sections/buttons-more-demo";
+import { AccountMenuDemo } from "./sections/account-menu-demo";
+import { ToggleCaptionDemo } from "./sections/toggle-caption-demo";
+import { ActionCardDemo } from "./sections/action-card-demo";
+import { NavPillsDemo } from "./sections/nav-pills-demo";
+import { ProgressSegmentsDemo } from "./sections/progress-segments-demo";
+import { FieldDemo } from "./sections/field-demo";
+import { RhfWizardDemo } from "./sections/rhf-wizard-demo";
+import { ListDragDemo } from "./sections/list-drag-demo";
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -255,11 +269,12 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint"],
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field"],
         Body: () => (
           <>
             <Fields />
             <FieldAnatomyDemo />
+            <FieldDemo />
           </>
         ),
       },
@@ -270,8 +285,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField"],
-        Body: FormsRhf,
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field"],
+        Body: () => (
+          <>
+            <FormsRhf />
+            <RhfWizardDemo />
+          </>
+        ),
       },
       {
         slug: "choices",
@@ -279,11 +299,12 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Choices",
         blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
-        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard"],
+        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ActionCard"],
         Body: () => (
           <>
             <Choices />
             <SelectionDemo />
+            <ActionCardDemo />
           </>
         ),
       },
@@ -316,6 +337,16 @@ export const GROUPS: ShowcaseGroup[] = [
             <WeekStartDemo />
           </>
         ),
+      },
+      {
+        slug: "month-view",
+        title: "Calendar month view",
+        short: "Month view",
+        blurb:
+          "The calendar as a page: a ruled month with each day's events drawn in its cell, a header of the page's own driving it, and a panel for the day that is picked.",
+        icon: CalendarRange,
+        components: ["MiniCalendar", "MiniCalendarDayState"],
+        Body: MonthViewDemo,
       },
       {
         slug: "month-time",
@@ -445,11 +476,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "ButtonGroup", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses"],
+        components: ["Button", "ButtonGroup", "ButtonGroupLink", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses"],
         Body: () => (
           <>
             <ButtonsSurfaces />
             <ButtonLabelsTones />
+            <ButtonsMore />
           </>
         ),
       },
@@ -465,6 +497,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <ChipsToggles />
             <ChipHuesToggleField />
+            <ToggleCaptionDemo />
           </>
         ),
       },
@@ -479,6 +512,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <FeedbackProgress />
+            <ProgressSegmentsDemo />
             <FeedbackMore />
             <ToastsDemo />
           </>
@@ -517,7 +551,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
         icon: ListChecks,
         components: ["List", "ListItem", "MenuItem", "BulkActionBar"],
-        Body: ListsMenus,
+        Body: () => (
+          <>
+            <ListsMenus />
+            <ListDragDemo />
+          </>
+        ),
       },
       {
         slug: "data-table",
@@ -637,6 +676,16 @@ export const GROUPS: ShowcaseGroup[] = [
         components: ["StatTile", "StatTileGrid", "Sparkline"],
         Body: StatsDemo,
       },
+      {
+        slug: "calendar-heatmap",
+        title: "Calendar heatmap",
+        short: "Heatmap",
+        blurb:
+          "Days as shaded squares: a year of weeks or one month, a day that can be picked, the scale's steps, top and colour, a long window cut to its latest days, and right-to-left.",
+        icon: CalendarDays,
+        components: ["CalendarHeatmap", "heatmapLevel"],
+        Body: CalendarHeatmapDemo,
+      },
     ],
   },
   {
@@ -670,6 +719,16 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: MessageCircleQuestion,
         components: ["ConfirmProvider", "useConfirm", "FloatingPanel", "FloatingActionButton"],
         Body: ConfirmFloating,
+      },
+      {
+        slug: "floating-actions",
+        title: "Floating actions",
+        short: "Floating",
+        blurb:
+          "The corner controls: an extended button that reports a status and is announced when it changes, the kit tooltip on a floating button, and a pill of corner toggles, links and counts.",
+        icon: Pin,
+        components: ["FloatingActionButton", "FloatingActionGroup", "FloatingAction", "FloatingPanel"],
+        Body: FloatingActions,
       },
       {
         slug: "popovers",
@@ -732,8 +791,13 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "PageContents", "ThemeToggle", "LanguageMenu"],
-        Body: ShellSection,
+        components: ["AppShell", "TopBar", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar"],
+        Body: () => (
+          <>
+            <ShellSection />
+            <AccountMenuDemo />
+          </>
+        ),
       },
       {
         slug: "page-structure",
@@ -742,8 +806,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
         icon: PanelTop,
-        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
-        Body: PageStructure,
+        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "NavPills", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        Body: () => (
+          <>
+            <PageStructure />
+            <NavPillsDemo />
+          </>
+        ),
       },
       {
         slug: "settings",

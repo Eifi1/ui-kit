@@ -143,6 +143,12 @@ export const it: Dictionary = {
       blurb:
         "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie e i loro limiti, e il primo giorno della settimana.",
     },
+    "month-view": {
+      title: "Vista mensile del calendario",
+      short: "Vista mese",
+      blurb:
+        "Il calendario come pagina: un mese a griglia con gli eventi di ogni giorno nella sua cella, un'intestazione della pagina che lo guida e un pannello per il giorno scelto.",
+    },
     "month-time": {
       title: "Mese e ora",
       short: "Mese e ora",
@@ -290,6 +296,12 @@ export const it: Dictionary = {
       blurb:
         "Il riquadro KPI che ogni dashboard ripete — valore, variazione, tendenza — e la minuscola linea che sta in una cella di tabella.",
     },
+    "calendar-heatmap": {
+      title: "Heatmap del calendario",
+      short: "Heatmap",
+      blurb:
+        "I giorni come quadrati sfumati: un anno in settimane o un mese, un giorno selezionabile, i livelli, il massimo e il colore della scala, un periodo lungo ridotto agli ultimi giorni, e da destra a sinistra.",
+    },
     layout: {
       title: "Sezione espandibile e cornice dei dialoghi",
       short: "Espandibile",
@@ -312,6 +324,12 @@ export const it: Dictionary = {
       short: "Conferma",
       blurb:
         "La promise che sostituisce window.confirm — con toni, parole proprie e una coda — e il pannello non modale ancorato in un angolo dietro un pulsante flottante.",
+    },
+    "floating-actions": {
+      title: "Azioni fluttuanti",
+      short: "Fluttuanti",
+      blurb:
+        "I controlli d'angolo: un pulsante esteso che segnala uno stato ed è annunciato quando cambia, il tooltip del kit su un pulsante fluttuante e una pillola di interruttori, link e contatori.",
     },
     popovers: {
       title: "Popover, menu e tooltip",
@@ -462,6 +480,7 @@ export const it: Dictionary = {
       "menu a tendina",
       "svuotare un campo",
       "creare un campo personalizzato",
+      "etichetta sopra il campo",
     ],
     forms: [
       "validare un modulo",
@@ -471,6 +490,7 @@ export const it: Dictionary = {
       "inviare un modulo",
       "collegare l’etichetta al suo input",
       "modulo con schema di validazione",
+      "validare un passo della procedura guidata",
     ],
     choices: [
       "attivare o disattivare un’impostazione",
@@ -481,6 +501,7 @@ export const it: Dictionary = {
       "scegliere un’icona",
       "scegliere tra delle schede",
       "selezionare un intervallo con uno slider",
+      "scheda che avvia un'azione",
     ],
     numbers: [
       "inserire un importo",
@@ -501,6 +522,14 @@ export const it: Dictionary = {
       "primo giorno della settimana",
       "scegliere data di inizio e di fine",
       "tornare a oggi",
+    ],
+    "month-view": [
+      "pagina calendario mensile",
+      "mostrare eventi in un calendario",
+      "griglia mensile da agenda",
+      "contenuto personalizzato in un giorno",
+      "calendario con intestazione propria",
+      "puntini sui giorni del calendario",
     ],
     "month-time": [
       "scegliere un mese",
@@ -597,6 +626,7 @@ export const it: Dictionary = {
       "indicatore di caricamento",
       "avatar con le iniziali",
       "pulsante disabilitato",
+      "punto di stato sull'avatar",
     ],
     "chips-toggles": [
       "scegliere tra poche opzioni",
@@ -739,6 +769,14 @@ export const it: Dictionary = {
       "cifre per la dashboard",
       "mini grafico a linee",
     ],
+    "calendar-heatmap": [
+      "grafico dei contributi",
+      "attività per giorno",
+      "calendario delle spese",
+      "heatmap dei giorni",
+      "colorare i giorni per valore",
+      "l'anno a colpo d'occhio",
+    ],
     overlays: [
       "mostrare qualcosa sopra la pagina",
       "aprire una finestra di dialogo",
@@ -762,6 +800,15 @@ export const it: Dictionary = {
       "pulsante di azione flottante",
       "pannello fissato in un angolo",
       "pannello di chat o di aiuto",
+    ],
+    "floating-actions": [
+      "pillola di stato fluttuante",
+      "annunciare un cambio di stato",
+      "indicatore offline",
+      "tooltip su un pulsante fluttuante",
+      "interruttori in un angolo",
+      "badge con un contatore",
+      "barra degli strumenti fluttuante",
     ],
     popovers: [
       "mostrare un tooltip al passaggio del mouse",
@@ -813,6 +860,7 @@ export const it: Dictionary = {
       "indicatore online",
       "punto non letto sull’avatar",
       "colore della legenda",
+      "link come pillole che vanno a capo",
     ],
     shell: [
       "layout dell’app con barra laterale",
@@ -823,6 +871,7 @@ export const it: Dictionary = {
       "cambio del tema",
       "menu della lingua",
       "comprimere la barra laterale",
+      "menu account con avatar",
     ],
     settings: [
       "impostazioni dell’account",

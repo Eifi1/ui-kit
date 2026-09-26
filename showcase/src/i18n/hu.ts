@@ -150,6 +150,12 @@ export const hu: Dictionary = {
       blurb:
         "Egy nap vagy időszak kiválasztása: maga a naptár, a rá épülő dátum- és időszakválasztók, azok előbeállításai és határai, valamint a hét első napja.",
     },
+    "month-view": {
+      title: "Naptár havi nézet",
+      short: "Havi nézet",
+      blurb:
+        "A naptár mint oldal: vonalazott hónap, minden nap eseményeivel a saját cellájában, az oldal saját fejléce, amely vezérli, és egy panel a kiválasztott naphoz.",
+    },
     "month-time": {
       title: "Hónap és időpont",
       short: "Hónap, idő",
@@ -297,6 +303,12 @@ export const hu: Dictionary = {
       blurb:
         "A KPI-csempe, amelyet minden irányítópult megismétel — érték, változás, trend —, és az apró vonal, amely elfér egy táblázatcellában.",
     },
+    "calendar-heatmap": {
+      title: "Naptár-hőtérkép",
+      short: "Hőtérkép",
+      blurb:
+        "Napok árnyalt négyzetekként: egy év hetekben vagy egy hónap, kiválasztható nap, a skála fokozatai, felső határa és színe, a legutóbbi napokra vágott hosszú időszak, és jobbról balra.",
+    },
     layout: {
       title: "Lenyíló szakasz és párbeszédkeret",
       short: "Lenyíló",
@@ -319,6 +331,12 @@ export const hu: Dictionary = {
       short: "Megerősítés",
       blurb:
         "A window.confirm helyére lépő promise — tónusokkal, saját szavakkal és várakozási sorral — és a nem modális panel, amely egy lebegő gomb mögött dokkol a sarokban.",
+    },
+    "floating-actions": {
+      title: "Lebegő műveletek",
+      short: "Lebegő",
+      blurb:
+        "A sarokban lévő vezérlők: egy kiterjesztett gomb, amely állapotot jelez és változáskor felolvasásra kerül, a kit tooltipje egy lebegő gombon, valamint sarokkapcsolók, linkek és számlálók sávja.",
     },
     popovers: {
       title: "Popoverek, menük és elemleírások",
@@ -469,6 +487,7 @@ export const hu: Dictionary = {
       "legördülő lista",
       "mező törlése",
       "egyedi mező készítése",
+      "címke a mező fölött",
     ],
     forms: [
       "űrlap validálása",
@@ -478,6 +497,7 @@ export const hu: Dictionary = {
       "űrlap beküldése",
       "címke összekötése a mezővel",
       "űrlap validációs sémával",
+      "egy varázslólépés ellenőrzése",
     ],
     choices: [
       "beállítás be- és kikapcsolása",
@@ -488,6 +508,7 @@ export const hu: Dictionary = {
       "ikon kiválasztása",
       "választás kártyák közül",
       "tartomány kiválasztása csúszkával",
+      "műveletet indító kártya",
     ],
     numbers: [
       "pénzösszeg megadása",
@@ -508,6 +529,14 @@ export const hu: Dictionary = {
       "a hét első napja",
       "kezdő és záró dátum",
       "ugrás a mai napra",
+    ],
+    "month-view": [
+      "havi naptár oldal",
+      "események megjelenítése a naptárban",
+      "tervező havi rács",
+      "saját tartalom egy naptárnapban",
+      "naptár saját fejléccel",
+      "pöttyök a naptárnapokon",
     ],
     "month-time": [
       "hónap kiválasztása",
@@ -604,6 +633,7 @@ export const hu: Dictionary = {
       "töltésjelző",
       "felhasználói avatar monogrammal",
       "letiltott gomb",
+      "állapotpötty az avataron",
     ],
     "chips-toggles": [
       "választás néhány lehetőség közül",
@@ -746,6 +776,14 @@ export const hu: Dictionary = {
       "irányítópult számai",
       "apró vonaldiagram",
     ],
+    "calendar-heatmap": [
+      "hozzájárulási grafikon",
+      "napi aktivitás",
+      "kiadási naptár",
+      "napok hőtérképe",
+      "napok színezése érték szerint",
+      "az év egy pillantásra",
+    ],
     overlays: [
       "tartalom az oldal felett",
       "párbeszédablak megnyitása",
@@ -769,6 +807,15 @@ export const hu: Dictionary = {
       "lebegő műveletgomb",
       "sarokba rögzített panel",
       "csevegő vagy súgó panel",
+    ],
+    "floating-actions": [
+      "lebegő állapotjelző",
+      "állapotváltozás felolvasása",
+      "offline jelző",
+      "tooltip lebegő gombon",
+      "kapcsológombok a sarokban",
+      "jelvény számlálóval",
+      "lebegő eszköztár",
     ],
     popovers: [
       "tooltip rámutatáskor",
@@ -820,6 +867,7 @@ export const hu: Dictionary = {
       "online jelző",
       "olvasatlan pont az avataron",
       "jelmagyarázat színe",
+      "linkek tördelődő pirulákként",
     ],
     shell: [
       "alkalmazás elrendezése oldalsávval",
@@ -830,6 +878,7 @@ export const hu: Dictionary = {
       "témaváltó",
       "nyelvválasztó menü",
       "oldalsáv becsukása",
+      "fiókmenü avatárral",
     ],
     settings: [
       "fiókbeállítások",

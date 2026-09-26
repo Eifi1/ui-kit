@@ -155,6 +155,12 @@ export const en: Dictionary = {
       blurb:
         "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
     },
+    "month-view": {
+      title: "Calendar month view",
+      short: "Month view",
+      blurb:
+        "The calendar as a page: a ruled month with each day's events drawn in its cell, a header of the page's own driving it, and a panel for the day that is picked.",
+    },
     "month-time": {
       title: "Month & time",
       short: "Month & time",
@@ -302,6 +308,12 @@ export const en: Dictionary = {
       blurb:
         "The KPI tile every dashboard repeats — value, change, trend — and the tiny line that fits in a table cell.",
     },
+    "calendar-heatmap": {
+      title: "Calendar heatmap",
+      short: "Heatmap",
+      blurb:
+        "Days as shaded squares: a year of weeks or one month, a day that can be picked, the scale's steps, top and colour, a long window cut to its latest days, and right-to-left.",
+    },
     layout: {
       title: "Disclosure & dialog frame",
       short: "Disclosure",
@@ -322,6 +334,12 @@ export const en: Dictionary = {
       short: "Confirm",
       blurb:
         "The promise that replaces window.confirm — with tones, its own words and a queue — and the non-modal panel docked in a corner behind a floating button.",
+    },
+    "floating-actions": {
+      title: "Floating actions",
+      short: "Floating",
+      blurb:
+        "The corner controls: an extended button that reports a status and is announced when it changes, the kit tooltip on a floating button, and a pill of corner toggles, links and counts.",
     },
     popovers: {
       title: "Popovers, menus & tooltips",
@@ -470,6 +488,7 @@ export const en: Dictionary = {
       "dropdown select",
       "clear a field",
       "build a custom field",
+      "label above the field",
     ],
     forms: [
       "validate a form",
@@ -479,6 +498,7 @@ export const en: Dictionary = {
       "submit a form",
       "wire a label to its input",
       "form with validation schema",
+      "validate one wizard step",
     ],
     choices: [
       "turn a setting on or off",
@@ -489,6 +509,7 @@ export const en: Dictionary = {
       "choose an icon",
       "choose between cards",
       "select a range with a slider",
+      "card that starts an action",
     ],
     numbers: [
       "enter a money amount",
@@ -509,6 +530,14 @@ export const en: Dictionary = {
       "first day of the week",
       "choose from and to dates",
       "jump to today",
+    ],
+    "month-view": [
+      "month calendar page",
+      "show events on a calendar",
+      "planner month grid",
+      "custom content in a calendar day",
+      "calendar with its own header",
+      "dots on calendar days",
     ],
     "month-time": [
       "pick a month",
@@ -605,6 +634,7 @@ export const en: Dictionary = {
       "loading spinner",
       "user avatar with initials",
       "disabled button",
+      "status dot on an avatar",
     ],
     "chips-toggles": [
       "choose one of a few options",
@@ -747,6 +777,14 @@ export const en: Dictionary = {
       "dashboard figures",
       "tiny line chart",
     ],
+    "calendar-heatmap": [
+      "contribution graph",
+      "activity per day",
+      "spending calendar",
+      "heatmap of days",
+      "shade days by value",
+      "year at a glance",
+    ],
     overlays: [
       "show something on top of the page",
       "open a dialog",
@@ -770,6 +808,15 @@ export const en: Dictionary = {
       "floating action button",
       "panel docked in a corner",
       "chat or help panel",
+    ],
+    "floating-actions": [
+      "floating status pill",
+      "announce a status change",
+      "offline indicator",
+      "tooltip on a floating button",
+      "toggle buttons in a corner",
+      "badge with a count",
+      "floating toolbar",
     ],
     popovers: [
       "show a tooltip on hover",
@@ -821,6 +868,7 @@ export const en: Dictionary = {
       "online indicator",
       "unread badge on an avatar",
       "legend swatch",
+      "links as wrapping pills",
     ],
     shell: [
       "app layout with sidebar",
@@ -831,6 +879,7 @@ export const en: Dictionary = {
       "theme toggle",
       "language menu",
       "collapse the sidebar",
+      "account menu with avatar",
     ],
     settings: [
       "account settings",
