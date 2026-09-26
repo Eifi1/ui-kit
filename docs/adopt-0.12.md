@@ -1,8 +1,8 @@
 # Adopting `@eifi1/ui-kit` 0.12 — per repository
 
 Built from kastlan's final audit ("keep nothing local the kit could cover") and
-keksdose's notes on adopting 0.11. Almost everything is additive. The two visible changes
-are marked. `CHANGELOG.md` → `0.12.0` has the release notes, and the showcase (⌘K) has
+keksdose's notes on adopting 0.11. Almost everything is additive. The three visible changes
+(DescriptionItem, DataTable empty text, SearchField clear button) are marked. `CHANGELOG.md` → `0.12.0` has the release notes, and the showcase (⌘K) has
 every prop live.
 
 ## Everyone
