@@ -112,3 +112,16 @@ describe("GlobalSearch density", () => {
     expect(option.className).toContain("min-h-11");
   });
 });
+
+describe("GlobalSearch triggerName (keksdose C25)", () => {
+  it("is named plainly by default", () => {
+    draw();
+    expect(screen.getByRole("button", { name: "Search" })).toHaveAttribute("aria-keyshortcuts");
+  });
+
+  it("includes the platform's shortcut in the name with withShortcut", () => {
+    draw({ triggerName: "withShortcut" });
+    const button = screen.getByRole("button", { name: /^Search \((⌘K|Ctrl K)\)$/ });
+    expect(button).toHaveAttribute("aria-keyshortcuts", "Meta+K Control+K");
+  });
+});

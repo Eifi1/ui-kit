@@ -144,6 +144,15 @@ export interface GlobalSearchProps {
    * keksdose's top bar, which reached into the button with `[&_svg]:size-5` for it.
    */
   triggerIconSize?: number;
+  /**
+   * Whether the trigger's accessible name includes the shortcut: `"plain"` (default)
+   * names it "Search"; `"withShortcut"` names it by `labels.shortcut(keys)` —
+   * "Search (⌘K)" on Apple platforms, "Search (Ctrl K)" elsewhere — the same text its
+   * tooltip shows, so a speech-control user ("click Search") and a sighted keyboard user
+   * meet the shortcut in the name itself (keksdose C25). `aria-keyshortcuts` is set
+   * either way. Also reaches a custom trigger as `triggerProps.label`.
+   */
+  triggerName?: "plain" | "withShortcut";
   /** The palette's row height — `CommandPalette`'s `density`. Default `"compact"`. */
   density?: CommandPaletteDensity;
   labels?: Partial<GlobalSearchLabels>;
@@ -244,6 +253,7 @@ function GlobalSearchImpl({
   hideTriggerOnPhone = false,
   triggerClassName,
   triggerIconSize,
+  triggerName = "plain",
   density,
   labels,
   paletteLabels,
@@ -460,9 +470,10 @@ function GlobalSearchImpl({
 
   const apple = useMemo(() => isApplePlatform(), []);
   const keys = apple ? "⌘K" : "Ctrl K";
+  const triggerLabel = triggerName === "withShortcut" ? l.shortcut(keys) : l.trigger;
   const triggerProps: GlobalSearchTriggerProps = {
     open: openSearch,
-    label: l.trigger,
+    label: triggerLabel,
     tooltip: l.shortcut(keys),
     keys,
     ariaKeyShortcuts: "Meta+K Control+K",
@@ -482,7 +493,7 @@ function GlobalSearchImpl({
               <button
                 type="button"
                 onClick={openSearch}
-                aria-label={l.trigger}
+                aria-label={triggerLabel}
                 aria-keyshortcuts={triggerProps.ariaKeyShortcuts}
                 aria-haspopup="dialog"
                 className={cn(TOPBAR_TRIGGER_CLASS, triggerClassName)}
