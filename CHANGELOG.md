@@ -20,6 +20,22 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.10.0](https://github.com/Eifi1/ui-kit/compare/v0.9.0...v0.10.0) (2026-09-26)
+
+### Added
+
+* 0.10 props from the apps' audits across buttons, surfaces, dialogs and charts ([91c43db](https://github.com/Eifi1/ui-kit/commit/91c43db5d9efcb159a8328d1a5496b4fe53473e4))
+* **copy-button:** size for the label variant, tone, stopPropagation ([4f6ad07](https://github.com/Eifi1/ui-kit/commit/4f6ad072d134e535169dba61fcbe2dce65307306))
+* **global-search:** triggerName="withShortcut" puts the shortcut in the trigger's name ([a65f680](https://github.com/Eifi1/ui-kit/commit/a65f680c65301fa8c435e0f36deab2d5d1cc2b1d))
+* List, MenuItem, text primitives, StatusDot, PageHeader, Breadcrumbs, BulkActionBar ([fcbff0b](https://github.com/Eifi1/ui-kit/commit/fcbff0b1a2b6b3d84e34c8072bddc1ddc3a09718))
+* **toast:** kit Toaster and a sonner-shaped toast API ([f555554](https://github.com/Eifi1/ui-kit/commit/f5555549d3eee38dd00ff082265c8e76f394bf63))
+
+### Fixed
+
+* **alert-banner:** a strip wraps its action under the text on narrow screens ([c3291d5](https://github.com/Eifi1/ui-kit/commit/c3291d5d905d785755fce6bcb79a73a48ef49976))
+* **command-palette:** optional-call scrollIntoView so jsdom test suites do not crash ([db3021d](https://github.com/Eifi1/ui-kit/commit/db3021d50545bd4f11621a62344dd46b8c304c67))
+* no native title on WizardSummary's edit button or the contents rail ([7203ffc](https://github.com/Eifi1/ui-kit/commit/7203ffce6e143a99e1c6fe8c66cd2a4f7e37129a)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+
 ## [0.9.0](https://github.com/Eifi1/ui-kit/compare/v0.8.1...v0.9.0) (2026-09-25)
 
 ### Added
