@@ -55,12 +55,17 @@ const SERIES_FILL = [
   "bg-[var(--chart-9)]",
 ];
 
-/** A segment's fill classes: its own classes, else its tone, else (with no `color`)
- *  the next chart colour. */
-function segmentFill(seg: ProgressBarSegment, index: number): string | undefined {
-  if (seg.className) return seg.className;
-  if (seg.tone) return FILL[seg.tone];
-  return seg.color ? undefined : SERIES_FILL[index % SERIES_FILL.length];
+/** Each segment's fill classes: its own classes, else its tone, else (with no `color`)
+ *  the next chart colour. "Next" counts the UNCOLOURED segments only — a segment with
+ *  its own `className`/`tone`/`color` does not use up `--chart-1`, so an "Other" in grey
+ *  ahead of two plain parts leaves them `--chart-1` and `--chart-2`. */
+function segmentFills(segments: ProgressBarSegment[]): Array<string | undefined> {
+  let next = 0;
+  return segments.map((seg) => {
+    if (seg.className) return seg.className;
+    if (seg.tone) return FILL[seg.tone];
+    return seg.color ? undefined : SERIES_FILL[next++ % SERIES_FILL.length];
+  });
 }
 
 /** One part of a stacked bar. See {@link ProgressBarProps.segments}. */
@@ -166,6 +171,7 @@ export function ProgressBar({
   const meter = stacked || variant === "meter";
   const span = max - min;
   const partValue = (v: number) => (Number.isFinite(v) ? Math.max(0, v - min) : 0);
+  const fills = stacked ? segmentFills(segments) : [];
   const partTotal = stacked ? min + segments.reduce((sum, seg) => sum + partValue(seg.value), 0) : undefined;
   const format = (v: number) =>
     formatValue
@@ -238,7 +244,7 @@ export function ProgressBar({
                 data-part="segment"
                 className={cn(
                   "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
-                  segmentFill(seg, i),
+                  fills[i],
                 )}
                 style={{
                   width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
@@ -280,7 +286,7 @@ export function ProgressBar({
                 aria-hidden
                 className={cn(
                   "size-2.5 shrink-0 rounded-sm",
-                  segmentFill(seg, i),
+                  fills[i],
                 )}
                 style={{ backgroundColor: seg.className ? undefined : seg.color }}
               />

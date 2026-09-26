@@ -251,10 +251,34 @@ export function CalendarHeatmap({
 
   // Open the sideways scroller on the latest weeks, not the oldest. In RTL the end is
   // on the left, where browsers count scrollLeft down from 0.
+  //
+  // And KEEP it there while the box changes size — a sidebar or a contents rail that
+  // appears after mount narrows the scroller, which leaves scrollLeft where it was and
+  // so shows older weeks than it opened on. The pin holds only while the view sits at
+  // the end: a user who scrolls back through the year unpins it, and a resize then
+  // leaves their position alone. (Scrolling back to the end pins it again.)
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el || layout !== "weeks") return;
-    el.scrollLeft = dirOf(el) === "rtl" ? -el.scrollWidth : el.scrollWidth;
+    const toEnd = () => {
+      el.scrollLeft = dirOf(el) === "rtl" ? -el.scrollWidth : el.scrollWidth;
+    };
+    toEnd();
+    if (typeof ResizeObserver === "undefined") return;
+    // |scrollLeft| covers both directions: 0 → max in LTR, 0 → -max in RTL.
+    let pinned = true;
+    const onScroll = () => {
+      pinned = Math.abs(el.scrollLeft) >= el.scrollWidth - el.clientWidth - 1;
+    };
+    const ro = new ResizeObserver(() => {
+      if (pinned) toEnd();
+    });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+    };
   }, [layout, firstIso, lastIso]);
 
   const formatDay = (d: Date) => d.toLocaleDateString(locale, DAY_NAME_FORMAT);

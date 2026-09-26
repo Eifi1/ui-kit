@@ -145,8 +145,10 @@ export function TopBarActionMenu({
    * the toggle, the keyboard. `open` is there for a chevron that turns.
    *
    * The button is named by `ariaLabel` followed by any readable text in the face — a
-   * `UserAvatar` `badge` label ("3 unread") reaches a screen reader that way, where an
-   * `aria-label` on the button would have hidden it.
+   * `UserAvatar` `badge` label reaches a screen reader that way ("Account menu 3
+   * unread"), where an `aria-label` on the button would have hidden it. A
+   * `UserAvatar`'s initials are `aria-hidden`, so the person's name is only in the
+   * name if `ariaLabel` carries it ("Marcel Eifert, account menu").
    */
   trigger?: (state: { open: boolean }) => ReactNode;
   /** Extra classes for the trigger button — `rounded-full` round an avatar. */
@@ -183,8 +185,8 @@ export function TopBarActionMenu({
         trigger ? (
           <button type="button" onClick={toggle} className={cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName)}>
             <span className="sr-only">{ariaLabel}</span>
-            {/* The space keeps the name from running into the face's text ("Marcel
-                Eifert3 unread"); as a flex item it takes no room. */}
+            {/* The space keeps the name from running into the face's text ("Account
+                menu3 unread"); as a flex item it takes no room. */}
             {" "}
             {trigger({ open })}
           </button>

@@ -22,8 +22,34 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
     expect(segs).toHaveLength(3);
     expect(segs[0]).toHaveStyle({ width: "40%" });
     expect(segs[0].className).toContain("bg-[var(--danger)]");
-    expect(segs[1].className).toContain("bg-[var(--chart-2)]");
+    // The first part WITHOUT a colour of its own: --chart-1, though it is second.
+    expect(segs[1].className).toContain("bg-[var(--chart-1)]");
     expect(segs[2].className).toContain("bg-[var(--brand)]");
+  });
+
+  it("counts the chart-colour fallback among uncoloured parts only, in the bar and the legend", () => {
+    render(
+      <ProgressBar
+        aria-label="x"
+        max={1}
+        legend
+        segments={[
+          { value: 0.1, label: "Tone", tone: "danger" },
+          { value: 0.1, label: "A" },
+          { value: 0.1, label: "Colour", color: "var(--text-muted)" },
+          { value: 0.1, label: "Class", className: "bg-[var(--brand)]" },
+          { value: 0.1, label: "B" },
+        ]}
+      />,
+    );
+    const segs = screen.getByRole("meter").querySelectorAll<HTMLElement>('[data-part="segment"]');
+    expect(segs[1].className).toContain("bg-[var(--chart-1)]");
+    expect(segs[4].className).toContain("bg-[var(--chart-2)]");
+    expect(segs[2].className).not.toMatch(/--chart-/);
+    expect(segs[2]).toHaveStyle({ backgroundColor: "var(--text-muted)" });
+    const swatches = document.querySelectorAll<HTMLElement>('[data-part="legend"] li > :first-child');
+    expect(swatches[1].className).toContain("bg-[var(--chart-1)]");
+    expect(swatches[4].className).toContain("bg-[var(--chart-2)]");
   });
 
   it("uses formatValue for each part and for the total shown", () => {

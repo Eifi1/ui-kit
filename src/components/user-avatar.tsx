@@ -52,8 +52,10 @@ export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, 
    * A status dot in the top-end corner (the top-right in LTR, top-left in RTL), ringed
    * in the surface colour so it reads as its own mark (keksdose account-menu ~385,
    * top-bar :152). Its `label` is read as text where the dot sits — inside a button
-   * named by its content, such as `TopBarActionMenu`'s `trigger`, the name becomes
-   * "Marcel Eifert 3 unread". The initials stay hidden either way.
+   * named by its content it joins that name. In `TopBarActionMenu`'s `trigger` the
+   * button is named by the menu's `ariaLabel` followed by this label: "Account menu
+   * 3 unread". The initials stay hidden either way, so the person's name is NOT part
+   * of it — put it in `ariaLabel` ("Marcel Eifert, account menu") if it should be.
    */
   badge?: UserAvatarBadge | null;
 }

@@ -77,6 +77,22 @@ describe("TopBarActionMenu as an account menu", () => {
     expect(trigger()).toHaveAccessibleName("Marcel Eifert 3 unread");
   });
 
+  it("takes the person's name from ariaLabel only: the avatar's initials stay hidden", () => {
+    render(
+      <MemoryRouter>
+        <TopBarActionMenu
+          ariaLabel="Account menu"
+          trigger={() => <UserAvatar name="Marcel Eifert" badge={{ label: "3 unread" }} />}
+          entries={[{ key: "x", label: "Log out", onSelect: () => {} }]}
+        />
+      </MemoryRouter>,
+    );
+    const btn = screen.getByRole("button");
+    // "Account menu" + the badge's sr-only label — not the name, not "ME".
+    expect(btn).toHaveAccessibleName("Account menu 3 unread");
+    expect(btn).not.toHaveAccessibleName(/Marcel|ME/);
+  });
+
   it("draws the header as text, not as a menu item", () => {
     render(<AccountMenu />);
     fireEvent.click(trigger());

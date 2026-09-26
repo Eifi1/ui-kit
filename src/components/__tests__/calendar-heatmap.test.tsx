@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarHeatmap, heatmapLevel } from "../calendar-heatmap";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -176,5 +176,77 @@ describe("CalendarHeatmap", () => {
     );
     expect(screen.getByRole("grid", { name: "Tageswerte" })).toBeTruthy();
     expect(screen.getByText("Weniger")).toBeTruthy();
+  });
+});
+
+/**
+ * "Opens on the latest weeks" must survive the scroller narrowing after mount (a
+ * sidebar appearing) — until the user scrolls it themselves. jsdom has no layout, so
+ * the box is faked on the element and the observer is a stub the test fires.
+ */
+describe("CalendarHeatmap scroll position on resize", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function setup(dir?: "rtl") {
+    const observers: Array<() => void> = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(cb: () => void) {
+          observers.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(
+      <div dir={dir}>
+        <CalendarHeatmap data={DATA} from="2025-10-01" to="2026-09-30" locale={LOCALE} />
+      </div>,
+    );
+    const el = screen.getByRole("grid").parentElement!;
+    const box = { scrollWidth: 1000, clientWidth: 600, left: 0 };
+    const max = () => box.scrollWidth - box.clientWidth;
+    Object.defineProperty(el, "scrollWidth", { get: () => box.scrollWidth });
+    Object.defineProperty(el, "clientWidth", { get: () => box.clientWidth });
+    // Clamped like a browser: [0, max] in LTR, [-max, 0] in RTL.
+    Object.defineProperty(el, "scrollLeft", {
+      get: () => box.left,
+      set: (v: number) => {
+        box.left = dir === "rtl" ? Math.min(0, Math.max(-max(), v)) : Math.max(0, Math.min(max(), v));
+      },
+    });
+    const resize = (clientWidth: number) => {
+      box.clientWidth = clientWidth;
+      observers.forEach((cb) => cb());
+    };
+    const userScroll = (left: number) => {
+      box.left = left;
+      fireEvent.scroll(el);
+    };
+    return { box, resize, userScroll };
+  }
+
+  it("follows the end when the scroller narrows, until the user scrolls away", () => {
+    const { box, resize, userScroll } = setup();
+    resize(600);
+    expect(box.left).toBe(400);
+    fireEvent.scroll(screen.getByRole("grid").parentElement!); // our own scroll: still at the end
+    resize(300); // a sidebar opened
+    expect(box.left).toBe(700);
+    userScroll(100); // back through the year
+    resize(200);
+    expect(box.left).toBe(100);
+  });
+
+  it("follows the end in RTL, where it is scrollLeft's negative extreme", () => {
+    const { box, resize, userScroll } = setup("rtl");
+    resize(600);
+    expect(box.left).toBe(-400);
+    resize(300);
+    expect(box.left).toBe(-700);
+    userScroll(-50);
+    resize(200);
+    expect(box.left).toBe(-50);
   });
 });
