@@ -9,9 +9,11 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded PR runs only. A push to main is never cancelled: its run carries the
+# artifacts that the Pages deploy and a release tag on that commit depend on.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # LOCAL FIRST. CI only CONFIRMS what `npm run check` already proved on the machine that
 # pushed: the husky pre-push hook runs the very same script, and every check lives in
@@ -43,3 +45,31 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # BUILD ONCE, SHIP THAT. On main, the run hands on what it built and tested, so
+      # nothing downstream installs or builds again:
+      #   npm-package → release.yml stage-publishes this exact tarball for a v* tag on
+      #                 this commit (the package on npm is the one CI checked);
+      #   showcase    → pages.yml deploys it once this run is green.
+      # `npm pack` repacks the dist `npm run check` just built and verified.
+      - name: Pack the tested package
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: mkdir -p .artifacts && npm pack --silent --pack-destination .artifacts
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: npm-package
+          path: .artifacts/*.tgz
+          if-no-files-found: error
+          retention-days: 30
+      # The Pages build needs the /ui-kit/ base; ~2s with Vite 8.
+      - name: Build the showcase for Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx vite build --config showcase/vite.config.ts --base=/ui-kit/ --outDir dist-pages --logLevel warn
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: showcase
+          path: showcase/dist-pages
+          if-no-files-found: error
+          retention-days: 30

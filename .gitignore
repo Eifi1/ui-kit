@@ -21,3 +21,7 @@ coverage/
 .idea/
 .DS_Store
 *.swp
+
+# Pages build of the showcase, made in CI only (base /ui-kit/)
+showcase/dist-pages
+.artifacts

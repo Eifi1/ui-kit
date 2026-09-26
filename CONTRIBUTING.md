@@ -340,6 +340,13 @@ just the symptom, because a reader upgrading needs to know whether it could have
 5. Tag the MERGE commit on main:
    `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
 
+**Build once, ship that.** CI is the only workflow that installs, tests and builds. On a
+push to `main` it uploads two artifacts: `npm-package` (the tarball packed from the dist
+`npm run check` verified) and `showcase` (built for Pages). `pages.yml` deploys the showcase
+only after that CI run is green, and `release.yml` stages exactly that tarball, so nothing is
+rebuilt. Tag the MERGE commit: the release looks up the CI run of the tagged commit on
+`main`, waits up to 20 minutes for it, and refuses a red one.
+
 Pushing a `v*` tag triggers `.github/workflows/release.yml`, which STAGES the version on npm
 through trusted publishing (OIDC, no token) with provenance. A maintainer approves it with
 `npm stage approve <id>` (2FA). It refuses to publish a tag that disagrees with `package.json` — the easiest
