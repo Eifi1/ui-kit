@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { NumberInput } from "./number-input";
 import { evaluateExpression, formatResult } from "../lib/calc";
@@ -259,19 +259,9 @@ export function NumberField({
   const hasError = error !== undefined && error !== null && error !== false && error !== "";
   const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ");
 
-  // NumberInput takes no `aria-describedby` of its own, so the reference is set on
-  // its <input> directly, found by the id this field hands it. React never renders
-  // that attribute there, so nothing reconciles it away again.
-  // `aria-required` the same way, for the same reason: NumberInput has no prop for it.
+  // Straight onto NumberInput's <input>, which declares both now. They used to be set
+  // on the DOM node from an effect, because NumberInput had no props for them.
   const required = ariaRequired === true || ariaRequired === "true";
-  useEffect(() => {
-    const input = document.getElementById(fieldId);
-    if (!input) return;
-    if (describedBy) input.setAttribute("aria-describedby", describedBy);
-    else input.removeAttribute("aria-describedby");
-    if (required) input.setAttribute("aria-required", "true");
-    else input.removeAttribute("aria-required");
-  }, [fieldId, describedBy, required]);
 
   const labelWithUnit =
     unit !== undefined && unitPlacement === "label"
@@ -290,6 +280,8 @@ export function NumberField({
     <NumberInput
       {...rest}
       id={fieldId}
+      aria-describedby={describedBy || undefined}
+      aria-required={required || undefined}
       label={labelWithUnit}
       value={draft}
       onChange={onText}

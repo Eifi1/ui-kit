@@ -400,3 +400,32 @@ describe("RhfField", () => {
     expect(input).toHaveFocus();
   });
 });
+
+describe("hint and required on the controls that now take them as props", () => {
+  it("describes each control with its hint and marks it aria-required", () => {
+    render(
+      <Harness>
+        {() => (
+          <>
+            <RhfNumberField name="count" label="Count" hint="Count hint" required />
+            <RhfMoneyField name="rent" label="Rent" hint="Rent hint" required />
+            <RhfDateField name="start" label="Start" hint="Start hint" required />
+            <RhfCombobox name="tenant" label="Tenant" hint="Tenant hint" required options={[{ value: 1, label: "Anna" }]} />
+            <RhfTextCombobox name="city" label="City" hint="City hint" required options={["Bern"]} />
+          </>
+        )}
+      </Harness>,
+    );
+    const controls = [
+      screen.getByRole("textbox", { name: "Count" }),
+      screen.getByRole("textbox", { name: "Rent" }),
+      screen.getByRole("combobox", { name: /^Start/ }),
+      screen.getByRole("combobox", { name: "Tenant" }),
+      screen.getByRole("combobox", { name: "City" }),
+    ];
+    for (const [i, hint] of ["Count", "Rent", "Start", "Tenant", "City"].entries()) {
+      expect(controls[i]).toHaveAttribute("aria-required", "true");
+      expect(controls[i]).toHaveAccessibleDescription(`${hint} hint`);
+    }
+  });
+});

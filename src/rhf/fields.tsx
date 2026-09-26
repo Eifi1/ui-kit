@@ -396,6 +396,7 @@ export function RhfNumberField<
         <NumberControl
           field={field as unknown as ControllerRenderProps}
           invalid={invalid}
+          required={required}
           id={id}
           emptyValue={emptyValue}
           nullable={nullable}
@@ -409,6 +410,7 @@ export function RhfNumberField<
 function NumberControl({
   field,
   invalid,
+  required,
   id,
   emptyValue,
   nullable,
@@ -417,6 +419,7 @@ function NumberControl({
 }: {
   field: ControllerRenderProps;
   invalid: boolean;
+  required?: boolean;
   id: string;
   emptyValue: null | "";
   nullable: boolean;
@@ -432,6 +435,7 @@ function NumberControl({
       {...numberProps}
       aria-describedby={aria["aria-describedby"]}
       aria-invalid={aria["aria-invalid"]}
+      aria-required={required || undefined}
       id={id}
       value={toNumber(field.value)}
       onCommit={(n) => {
@@ -486,12 +490,14 @@ function parseAmount(text: string): number | null | undefined {
 function MoneyControl({
   field,
   invalid,
+  required,
   id,
   describedBy,
   props,
 }: {
   field: ControllerRenderProps;
   invalid: boolean;
+  required?: boolean;
   id: string;
   describedBy: string | undefined;
   props: Omit<RhfMoneyFieldProps, keyof RhfFieldBaseProps>;
@@ -511,16 +517,6 @@ function MoneyControl({
     if (!same) setDraft(external);
   }
   const input = useRef<HTMLInputElement | null>(null);
-  // AmountInput takes no `aria-describedby` of its own (it sets `aria-invalid` from
-  // `invalid`), so the hint and message are attached on its <input> directly — an
-  // attribute React never renders there, so nothing reconciles it away again
-  // (NumberField does the same).
-  useLayoutEffect(() => {
-    const el = input.current;
-    if (!el) return;
-    if (describedBy) el.setAttribute("aria-describedby", describedBy);
-    else el.removeAttribute("aria-describedby");
-  });
   // AmountInput reports no blur, and react-hook-form needs one to mark the field
   // touched: listen on its <input>.
   const onBlur = field.onBlur;
@@ -536,6 +532,8 @@ function MoneyControl({
         {...amountProps}
         ariaLabel={ariaLabel}
         id={id}
+        aria-describedby={describedBy}
+        aria-required={required || undefined}
         ref={(el) => {
           input.current = el;
           field.ref(el);
@@ -586,6 +584,7 @@ export function RhfMoneyField<
         <MoneyControl
           field={field as unknown as ControllerRenderProps}
           invalid={invalid}
+          required={required}
           id={id}
           describedBy={describedBy}
           props={amountProps}
@@ -613,6 +612,7 @@ export type RhfDateFieldProps<
 function DateControl({
   field,
   invalid,
+  required,
   id,
   emptyValue,
   inputClassName,
@@ -621,6 +621,7 @@ function DateControl({
 }: {
   field: ControllerRenderProps;
   invalid: boolean;
+  required?: boolean;
   id: string;
   emptyValue: "" | null;
   inputClassName?: string;
@@ -634,6 +635,7 @@ function DateControl({
     <DatePicker
       {...pickerProps}
       {...aria}
+      aria-required={required || undefined}
       id={id}
       value={typeof value === "string" ? value : ""}
       onChange={(iso) => {
@@ -674,6 +676,7 @@ export function RhfDateField<
         <DateControl
           field={field as unknown as ControllerRenderProps}
           invalid={invalid}
+          required={required}
           id={id}
           emptyValue={emptyValue}
           inputClassName={inputClassName}
@@ -850,39 +853,28 @@ export type RhfComboboxProps<
 function EntityControl<V extends string | number>({
   field,
   invalid,
+  required,
   error,
-  labelId,
-  hasLabel,
+  id,
+  describedBy,
   clearValue,
   comboClassName,
   comboProps,
 }: {
   field: ControllerRenderProps;
   invalid: boolean;
+  required?: boolean;
   error: string | undefined;
-  labelId: string;
-  hasLabel: boolean;
+  id: string;
+  describedBy: string | undefined;
   clearValue: ComboClearValue;
   comboClassName?: string;
   comboProps: Omit<RhfComboboxProps<FieldValues, string, V>, keyof RhfFieldBaseProps | "clearValue" | "comboClassName">;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  const trigger = () => box.current?.querySelector<HTMLElement>("[role=combobox]");
-  useFocusHandle(field.ref, trigger);
-  // EntityCombobox puts a caller's `id` and ARIA on its wrapper, not on the trigger —
-  // so the label above names the trigger by reference instead, the APG's
-  // select-only combobox: `aria-labelledby` is the label, and the trigger's text (the
-  // choice) is the combobox's value. Set on the element directly, as NumberField does
-  // for its describedby; React never renders the attribute there.
-  useLayoutEffect(() => {
-    const el = trigger();
-    if (!el) return;
-    if (!hasLabel) {
-      el.removeAttribute("aria-labelledby");
-      return;
-    }
-    el.setAttribute("aria-labelledby", labelId);
-  });
+  // EntityCombobox puts `id` and the ARIA below on its trigger, so the label's
+  // `htmlFor` names it, the hint describes it and the focus handle finds it by id.
+  useFocusHandle(field.ref, () => document.getElementById(id));
   // EntityCombobox reports no blur: focus leaving the picker marks the field touched.
   const onBlur = field.onBlur;
   useLayoutEffect(() => {
@@ -897,12 +889,16 @@ function EntityControl<V extends string | number>({
       <EntityCombobox<V, ComboClearValue>
         {...comboProps}
         className={comboClassName}
+        id={id}
+        aria-describedby={describedBy}
+        aria-required={required || undefined}
         value={(value ?? null) as V | ComboClearValue | null}
         clearValue={clearValue}
         onChange={(v) => field.onChange(v)}
         disabled={field.disabled}
         invalid={invalid}
-        // Its own message, which it attaches to the trigger's aria-describedby.
+        // Its own message, which it merges into the trigger's aria-describedby after
+        // the hint.
         error={error}
       />
     </div>
@@ -937,13 +933,14 @@ export function RhfCombobox<
       {...{ name, control, rules, label, hint, required, disabled, className }}
       asControl={false}
       message={false}
-      render={({ field, invalid, error, labelId }) => (
+      render={({ field, invalid, error, id, describedBy }) => (
         <EntityControl<V>
           field={field as unknown as ControllerRenderProps}
           invalid={invalid}
+          required={required}
           error={error}
-          labelId={labelId}
-          hasLabel={hasContent(label)}
+          id={id}
+          describedBy={describedBy}
           clearValue={clearValue}
           comboClassName={comboClassName}
           comboProps={comboProps}
@@ -999,12 +996,14 @@ export function RhfTextCombobox<
       {...{ name, control, rules, label, hint, required, disabled, className }}
       asControl={false}
       message={false}
-      render={({ field, invalid, error, id }) => (
+      render={({ field, invalid, error, id, describedBy }) => (
         <TextComboControl
           field={field as unknown as ControllerRenderProps}
           invalid={invalid}
+          required={required}
           error={error}
           id={id}
+          describedBy={describedBy}
           className={comboClassName}
           comboProps={comboProps}
         />
@@ -1016,27 +1015,33 @@ export function RhfTextCombobox<
 function TextComboControl({
   field,
   invalid,
+  required,
   error,
   id,
+  describedBy,
   className,
   comboProps,
 }: {
   field: ControllerRenderProps;
   invalid: boolean;
+  required?: boolean;
   error: string | undefined;
   id: string;
+  describedBy: string | undefined;
   className?: string;
   comboProps: Omit<RhfTextComboboxProps, keyof RhfFieldBaseProps | "comboClassName">;
 }) {
-  // The combobox routes `id` to its <input>, so the label's `htmlFor` names it and
-  // the focus handle finds it; its ARIA goes on its wrapper, so the error is its own
-  // `error` prop, which it attaches to the input.
+  // The combobox routes `id` and its ARIA to its <input>, so the label's `htmlFor`
+  // names it, the hint describes it and the focus handle finds it; the error is its
+  // own `error` prop, which it merges in after the hint.
   useFocusHandle(field.ref, () => document.getElementById(id));
   const value: unknown = field.value;
   return (
     <Combobox
       {...comboProps}
       id={id}
+      aria-describedby={describedBy}
+      aria-required={required || undefined}
       className={className}
       value={typeof value === "string" ? value : value == null ? "" : String(value)}
       onChange={field.onChange}

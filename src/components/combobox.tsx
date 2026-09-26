@@ -238,9 +238,19 @@ export function Combobox({
   onBlur,
   onSubmit,
   "aria-label": ariaLabel,
+  // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
+  // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and
+  // on the wrapper div the hint and required state described nothing.
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: ComboboxProps) {
-  const field = useComboboxFieldError(error, invalid);
+  const field = useComboboxFieldError(
+    error,
+    invalid || ariaInvalid === true || ariaInvalid === "true",
+    ariaDescribedBy,
+  );
   const generated = useId();
   const fieldId = id ?? generated;
   // Derived from the GENERATED id, never from `id`: a caller's id is theirs to
@@ -366,9 +376,9 @@ export function Combobox({
       : null;
 
   return (
-    // `rest` dresses the outer box — a `data-tour` anchor, a test id, a form-level
-    // `aria-describedby`. Not the NAME: that belongs on the <input> below, which is
-    // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
+    // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
+    // description, invalid or required state: those belong on the <input> below,
+    // which is the combobox a reader meets. Spread FIRST, so the field's ARIA and the
     // handlers carrying live #309 and dev#549 cannot be replaced from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       {/* A real <label for> since lenkbank's tests met a field `getByLabelText` could
@@ -407,6 +417,7 @@ export function Combobox({
           aria-autocomplete="list"
           aria-invalid={field.isInvalid || undefined}
           aria-describedby={field.describedBy}
+          aria-required={ariaRequired}
           autoComplete="off"
           disabled={disabled}
           autoFocus={autoFocus}
@@ -729,12 +740,22 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   invalid,
   error,
   "aria-label": ariaLabel,
+  // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
+  // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and
+  // on the wrapper div the hint and required state described nothing.
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: InlineEntityComboboxProps<V, C>) {
   // The clear value reads as "nothing selected", whichever one the caller picked —
   // so from here down `value` is the id or `null`, as it always was.
   const value: V | null = rawValue == null || rawValue === clearValue ? null : (rawValue as V);
-  const field = useComboboxFieldError(error, invalid);
+  const field = useComboboxFieldError(
+    error,
+    invalid || ariaInvalid === true || ariaInvalid === "true",
+    ariaDescribedBy,
+  );
   const generated = useId();
   const fieldId = id ?? generated;
   // See the twin above on why these hang off the generated id.
@@ -853,9 +874,9 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   };
 
   return (
-    // `rest` dresses the outer box — a `data-tour` anchor, a test id, a form-level
-    // `aria-describedby`. Not the NAME: that belongs on the <input> below, which is
-    // the combobox a reader meets. Spread FIRST, so the field's ARIA and the
+    // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
+    // description, invalid or required state: those belong on the <input> below,
+    // which is the combobox a reader meets. Spread FIRST, so the field's ARIA and the
     // handlers carrying live #309 and dev#549 cannot be replaced from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       {/* A real <label for> — see {@link Combobox}. */}
@@ -889,6 +910,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
           aria-autocomplete="list"
           aria-invalid={field.isInvalid || undefined}
           aria-describedby={field.describedBy}
+          aria-required={ariaRequired}
           autoComplete="off"
           disabled={disabled}
           autoFocus={autoFocus}
