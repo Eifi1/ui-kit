@@ -49,7 +49,9 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">
 }
 
 /** Where the floating bar sits: clear of the phone nav and of the home indicator,
- *  whichever reaches higher — `FloatingPanel`'s rule, plus the bar's own 0.5rem gap. */
+ *  whichever reaches higher — `FloatingPanel`'s rule, plus the bar's own 0.5rem gap.
+ *  Set as inline style, so reposition it through `style` (which is merged over this,
+ *  e.g. `style={{ insetInline: "auto 2rem", width: "24rem" }}`), not `className`. */
 const FLOATING_STYLE: CSSProperties = {
   bottom: "calc(max(var(--app-nav-h, 0px), env(safe-area-inset-bottom, 0px)) + 0.5rem)",
   // Both insets on both sides: a logical side has no one physical inset to name, and

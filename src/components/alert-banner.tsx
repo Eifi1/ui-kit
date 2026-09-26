@@ -234,10 +234,12 @@ export function AlertBanner({
       <Glyph aria-hidden className={cn(sm ? "size-3.5" : "size-4", "shrink-0", nudge, TONE_ICON[tone])} />
     );
 
-  // The row layout, shared by every shape below. A strip is one line, so it centres;
-  // a box may wrap, so it top-aligns and nudges the glyph onto the first line.
+  // The row layout, shared by every shape below. A strip centres, and WRAPS: on a
+  // phone a long message plus an action would otherwise squeeze the text into a narrow
+  // column, so the action drops under it instead. A box may wrap its text, so it
+  // top-aligns and nudges the glyph onto the first line.
   const row = cn(
-    inline ? "inline-flex items-center" : strip ? "flex items-center" : "flex items-start",
+    inline ? "inline-flex items-center" : strip ? "flex flex-wrap items-center gap-y-1" : "flex items-start",
     sm ? "gap-1.5 text-xs" : inline ? "gap-1.5 text-sm" : "gap-2 text-sm",
   );
   const frame = inline
@@ -286,7 +288,7 @@ export function AlertBanner({
   // `relative z-10` so it stays clickable over a whole-row banner's stretched target.
   const trailing =
     action !== undefined && action !== null ? (
-      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inline && "self-center")}>
+      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inline && "self-center", strip && "ms-auto")}>
         {action}
       </div>
     ) : null;
