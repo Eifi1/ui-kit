@@ -2,10 +2,10 @@
 
 Built from the three apps' 0.9 audits. Everything here is additive: no existing prop,
 default or DOM changes. `CHANGELOG.md` → `0.10.0` has the release notes, and the showcase
-(⌘K) finds every component by name or by what you need. **0.9.1** went out just before it:
-the CommandPalette `scrollIntoView` crash in jsdom, no native `title` in WizardSummary or
-the contents rail, and the dev tooling upgrade (vite 8, vitest 5, eslint 10), which does not
-affect consumers.
+(⌘K) finds every component by name or by what you need. It also carries the fixes
+since 0.9.0: CommandPalette no longer crashes jsdom test suites (`scrollIntoView`),
+WizardSummary and the contents rail have no native `title`, and the dev tooling moved to
+vite 8, vitest 5 and eslint 10, which does not affect consumers.
 
 ## Everyone
 
@@ -18,7 +18,12 @@ affect consumers.
 4. **New label keys** (only if you type a complete `UiKitLabels`; `tsc` lists them): `list`,
    `breadcrumbs`, `bulkActionBar`, and `seriesChart.points`. Every
    `@eifi1/ui-kit/i18n/<code>` catalogue has them.
-5. **New components:**
+5. **Toasts: `<Toaster>` + `toast` from the kit** replace wiring sonner by hand. The
+   API mirrors sonner's, so migrating is an import swap. The kit's Toaster brings the
+   placement (top on desktop, bottom above the nav on phones), the theme, the tones, the
+   z-index and translated labels. An `action` gets a longer default duration (undo),
+   the same `id` replaces the previous toast, and `redact` covers private content.
+6. **New components:**
    - `List` / `ListItem` and `MenuItem`
    - `SectionLabel`, `Caption` and `StatusDot`
    - `PageHeader` and `Breadcrumbs`
