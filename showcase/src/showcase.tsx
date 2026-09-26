@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
-import { Toaster } from "sonner";
 import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
 import {
   AppShell,
@@ -17,6 +16,7 @@ import {
   PaletteMenu,
   ThemeToggle,
   Tooltip,
+  Toaster,
   TopBar,
   TourProvider,
   UiKitProvider,
@@ -239,9 +239,10 @@ export function Showcase() {
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {/* Inside the tree, not in main.tsx, so it follows the LIVE theme — the mode
-          resolved before hydration is only the first paint's snapshot. */}
-      <Toaster position="top-center" richColors closeButton theme={mode} />
+      {/* The kit's toaster: its placement (bottom above the nav on a phone, top on
+          desktop), z-index, tones and labels, and the theme read off <html> — inside
+          UiKitProvider so the close button and the undo action speak the page's language. */}
+      <Toaster />
     </AppShell>
     </ConfirmProvider>
     </TourProvider>

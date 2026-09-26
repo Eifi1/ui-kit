@@ -18,6 +18,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_WIZARD_LABELS } from "./types";
+import { toast } from "../components/toast";
 import type {
   FieldErrors,
   StepStatus,
@@ -312,9 +313,8 @@ export function useWizard<TData extends Record<string, unknown>>(
         if (onValidationFailed) {
           onValidationFailed(message);
         } else {
-          // sonner is an optional peer: imported here, on the failure path only,
-          // so an app that never trips this never has to install it.
-          const { toast } = await import("sonner");
+          // The kit's `toast` loads sonner (an optional peer) lazily, so an app
+          // that never trips this never has to install it.
           toast.error(message);
         }
       }

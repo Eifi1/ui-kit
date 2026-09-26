@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { X } from "lucide-react";
@@ -20,12 +20,29 @@ import { useFocusTrap } from "../hooks/use-focus-trap";
  * `aria-describedby` or a `data-tour` anchor belongs on. {@link className} keeps going
  * to the panel inside it, which is what it has always meant here.
  */
-export interface FullBleedDialogProps extends ComponentPropsWithoutRef<"div"> {
+export interface FullBleedDialogProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
   open: boolean;
   /** The X, the backdrop (where one shows) and — unless {@link backCloses} is off —
    *  the platform Back gesture all call this. */
   onClose: () => void;
-  /** What the header strip shows beside the close button. */
+  /**
+   * The dialog's HEADING: rendered as a real `h2` (see {@link headingAs}) at the start
+   * of the header strip, and wired to the dialog's `aria-labelledby`, so the dialog is
+   * announced by name rather than as just "dialog".
+   *
+   * Before this the strip was a styled `div`, and a caller that wanted its full-screen
+   * phone editor NAMED had to leave this component for `DialogFrame fullBleed` —
+   * keksdose's budget-table phone editor says so in a comment at the call site. A
+   * caller's own `aria-label` / `aria-labelledby` still wins.
+   */
+  title?: ReactNode;
+  /** The heading level of {@link title}. `h2` by default, as `DialogFrame`'s. */
+  headingAs?: "h1" | "h2" | "h3" | "h4";
+  /**
+   * Free content for the header strip, beside the close button — after the
+   * {@link title} when there is one, or on its own (the row editor shows the row's
+   * own first cell here). It does not name the dialog; `title` does.
+   */
   header?: ReactNode;
   closeLabel: string;
   children: ReactNode;
@@ -81,12 +98,16 @@ export interface FullBleedDialogProps extends ComponentPropsWithoutRef<"div"> {
  * ## What the caller still owns
  *
  * The HEADER's content, because the two callers name themselves differently: the row
- * editor shows the row's own first column, the create card a plain title. And `open`,
+ * editor shows the row's own first column, the create card a plain title. A plain
+ * title belongs in `title`, which is a real heading and the dialog's name; `header`
+ * stays the free slot beside it. And `open`,
  * because who decides is the caller's business — see {@link backCloses}.
  */
 export function FullBleedDialog({
   open,
   onClose,
+  title,
+  headingAs: Heading = "h2",
   header,
   closeLabel,
   children,
@@ -108,6 +129,9 @@ export function FullBleedDialog({
   useOverlayHistory(open && backCloses, requestClose);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const hasTitle = title !== undefined && title !== null && title !== false;
+  const hasHeader = header !== undefined && header !== null && header !== false;
   // The half of "modal" this dialog was only claiming. It has said
   // `aria-modal="true"` since it was extracted from `data-table.tsx`, which tells
   // assistive technology to hide everything outside it — while the user's focus stayed
@@ -166,6 +190,10 @@ export function FullBleedDialog({
       )}
       role="dialog"
       aria-modal="true"
+      // The heading names the dialog unless the caller named it some other way — an
+      // `aria-labelledby` of its own, or an `aria-label` (which a `labelledby` would
+      // silently outrank).
+      aria-labelledby={rest["aria-labelledby"] ?? (hasTitle && !rest["aria-label"] ? titleId : undefined)}
       // `tabIndex={-1}` is what makes the line above more than a claim: without it the
       // container cannot take focus and `useFocusTrap` silently does nothing.
       tabIndex={-1}
@@ -195,7 +223,16 @@ export function FullBleedDialog({
         )}
       >
         <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-3">
-          <div className="min-w-0 flex-1 font-medium">{header}</div>
+          {hasTitle ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <Heading id={titleId} className="min-w-0 break-words text-base font-semibold leading-snug text-[var(--text-primary)]">
+                {title}
+              </Heading>
+              {hasHeader && <div className="min-w-0 flex-1 font-medium">{header}</div>}
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1 font-medium">{header}</div>
+          )}
           <button
             type="button"
             onClick={requestClose}

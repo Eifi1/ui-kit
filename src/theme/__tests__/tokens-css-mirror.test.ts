@@ -105,3 +105,21 @@ describe("tokens.css mirrors DEFAULT_PRESET", () => {
     expect(Object.keys(expectedFrom(DEFAULT_PRESET.light))).toHaveLength(23);
   });
 });
+
+describe("tokens.css categorical hues (0.10.0)", () => {
+  // Not preset tokens — like `--danger`, a hue is a fixed colour that lives only in the
+  // stylesheet — so nothing above covers them. What can drift is the PAIR: a hue
+  // declared for light and forgotten for dark renders the light value on a dark page.
+  const hues = (selector: string) =>
+    Object.keys(declarationsUnder(selector))
+      .filter((name) => name.startsWith("--hue-"))
+      .sort();
+
+  it("declares every hue triple in both themes", () => {
+    const expected = ["blue", "indigo", "purple", "teal", "orange"]
+      .flatMap((h) => [`--hue-${h}`, `--hue-${h}-bg`, `--hue-${h}-border`])
+      .sort();
+    expect(hues(":root")).toEqual(expected);
+    expect(hues(".dark")).toEqual(expected);
+  });
+});

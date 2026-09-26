@@ -28,6 +28,8 @@ import {
   Layout,
   ListTree,
   List as ListIcon,
+  ListChecks,
+  PanelTop,
   LayoutGrid,
   LayoutPanelLeft,
   Loader,
@@ -111,6 +113,17 @@ import { ConfirmFloating } from "./sections/confirm-floating";
 import { ClipboardTiming } from "./sections/clipboard-timing";
 import { SeriesChartMarks } from "./sections/series-chart-marks";
 import { Localisation } from "./sections/localisation";
+import { ListsMenus } from "./sections/lists-menus";
+import { PageStructure } from "./sections/page-structure";
+import { ButtonLabelsTones } from "./sections/button-labels-demo";
+import { ChipHuesToggleField } from "./sections/chip-hues-demo";
+import { FeedbackMore } from "./sections/feedback-more-demo";
+import { ToastsDemo } from "./sections/toast-demo";
+import { DescriptionTableMore } from "./sections/description-table-more";
+import { DisclosureMore } from "./sections/disclosure-more-demo";
+import { IntegerTicksDemo, KeyboardPointsDemo } from "./sections/series-chart-ticks-keys";
+import { DialogOpenDemo } from "./sections/dialog-open-demo";
+import { TooltipAutoPortal } from "./sections/tooltip-auto-portal-demo";
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -433,7 +446,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
         icon: Blocks,
         components: ["Button", "ButtonGroup", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses"],
-        Body: ButtonsSurfaces,
+        Body: () => (
+          <>
+            <ButtonsSurfaces />
+            <ButtonLabelsTones />
+          </>
+        ),
       },
       {
         slug: "chips-toggles",
@@ -443,7 +461,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Chips and the chip field, the toggle group, and tabs — the small controls that pick one of a few or hold a short list.",
         icon: Tags,
         components: ["Chip", "ChipInput", "ToggleGroup", "Tabs"],
-        Body: ChipsToggles,
+        Body: () => (
+          <>
+            <ChipsToggles />
+            <ChipHuesToggleField />
+          </>
+        ),
       },
       {
         slug: "feedback",
@@ -452,8 +475,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass"],
-        Body: FeedbackProgress,
+        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster"],
+        Body: () => (
+          <>
+            <FeedbackProgress />
+            <FeedbackMore />
+            <ToastsDemo />
+          </>
+        ),
       },
       {
         slug: "description-list",
@@ -462,8 +491,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Facts laid out without any machinery: a list of terms and details, a plain static table, and the separator and scroll area that sit between them.",
         icon: ListIcon,
-        components: ["DescriptionList", "DescriptionItem", "Table", "TableCaption", "TableFoot", "NUMERIC_CELL_CLASS", "Separator", "ScrollArea"],
-        Body: DescriptionTable,
+        components: ["DescriptionList", "DescriptionItem", "Table", "TableBody", "TableEmpty", "TableCaption", "TableFoot", "NUMERIC_CELL_CLASS", "Separator", "ScrollArea"],
+        Body: () => (
+          <>
+            <DescriptionTable />
+            <DescriptionTableMore />
+          </>
+        ),
       },
       {
         slug: "tree-view",
@@ -474,6 +508,16 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: ListTree,
         components: ["TreeView", "TreeRow", "TreeNode"],
         Body: TreeViewDemo,
+      },
+      {
+        slug: "lists-menus",
+        title: "Lists & menus",
+        short: "Lists & menus",
+        blurb:
+          "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
+        icon: ListChecks,
+        components: ["List", "ListItem", "MenuItem", "BulkActionBar"],
+        Body: ListsMenus,
       },
       {
         slug: "data-table",
@@ -512,7 +556,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb: "A section that folds away, and the header-body-actions frame every dialog repeats.",
         icon: PanelTopClose,
         components: ["Disclosure", "Collapse", "DialogFrame"],
-        Body: LayoutDemo,
+        Body: () => (
+          <>
+            <LayoutDemo />
+            <DisclosureMore />
+          </>
+        ),
       },
     ],
   },
@@ -556,7 +605,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
         icon: ChartLine,
         components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "facingAxes"],
-        Body: SeriesChartDemo,
+        Body: () => (
+          <>
+            <SeriesChartDemo />
+            <IntegerTicksDemo />
+          </>
+        ),
       },
       {
         slug: "series-chart-marks",
@@ -566,7 +620,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
         icon: ChartBar,
         components: ["SeriesChart", "visibleSeries", "seriesLegendEntries", "defaultZoomAxes"],
-        Body: SeriesChartMarks,
+        Body: () => (
+          <>
+            <SeriesChartMarks />
+            <KeyboardPointsDemo />
+          </>
+        ),
       },
       {
         slug: "stats",
@@ -595,7 +654,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
         icon: AppWindow,
         components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition"],
-        Body: Dialogs,
+        Body: () => (
+          <>
+            <Dialogs />
+            <DialogOpenDemo />
+          </>
+        ),
       },
       {
         slug: "confirm-floating",
@@ -615,7 +679,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The overlays anchored to a trigger: popover, hover menu and tooltip — flipped and clamped against the window, mirrored right-to-left, and the pure placement behind them.",
         icon: MousePointerClick,
         components: ["Popover", "HoverMenu", "Tooltip", "placeTooltip"],
-        Body: PopoversMenusTooltips,
+        Body: () => (
+          <>
+            <PopoversMenusTooltips />
+            <TooltipAutoPortal />
+          </>
+        ),
       },
       {
         slug: "tour",
@@ -665,6 +734,16 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Layout,
         components: ["AppShell", "TopBar", "PageContents", "ThemeToggle", "LanguageMenu"],
         Body: ShellSection,
+      },
+      {
+        slug: "page-structure",
+        title: "Page header & breadcrumbs",
+        short: "Page header",
+        blurb:
+          "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
+        icon: PanelTop,
+        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        Body: PageStructure,
       },
       {
         slug: "settings",

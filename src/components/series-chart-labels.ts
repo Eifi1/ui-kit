@@ -15,6 +15,9 @@ export interface SeriesChartLabels {
   empty: string;
   /** Accessible name of a `ToggleLegend` — a group of switches, one per series. */
   legend: string;
+  /** Accessible name of the group of keyboard stops a clickable chart (`onPointClick`)
+   *  lays over its bars or periods — one tab stop, arrow keys between them. */
+  points: string;
 }
 
 export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
@@ -23,4 +26,5 @@ export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
     "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. Double-click to reset.",
   empty: "No data",
   legend: "Series",
+  points: "Chart values",
 };

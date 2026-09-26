@@ -237,6 +237,12 @@ export const en: Dictionary = {
       blurb:
         "Facts laid out without any machinery: a list of terms and details, a plain static table, and the separator and scroll area that sit between them.",
     },
+    "lists-menus": {
+      title: "Lists & menus",
+      short: "Lists & menus",
+      blurb:
+        "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
+    },
     "tree-view": {
       title: "Tree view",
       short: "Tree",
@@ -345,6 +351,12 @@ export const en: Dictionary = {
       title: "App chrome",
       blurb:
         "The frame an app lives in and the flows every app repeats: settings, multi-step forms, feedback.",
+    },
+    "page-structure": {
+      title: "Page header & breadcrumbs",
+      short: "Page header",
+      blurb:
+        "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
     },
     shell: {
       title: "Shell",
@@ -615,6 +627,9 @@ export const en: Dictionary = {
       "warning or error banner",
       "success message",
       "percentage meter",
+      "show a short confirmation",
+      "undo after delete",
+      "toast",
     ],
     "description-list": [
       "show key and value pairs",
@@ -624,6 +639,18 @@ export const en: Dictionary = {
       "divider line",
       "scrollable area",
       "right-align numbers in a table",
+    ],
+    "lists-menus": [
+      "list of items",
+      "clickable list row",
+      "row with actions",
+      "unread marker",
+      "inbox list",
+      "menu item with a check mark",
+      "danger item in a menu",
+      "select several rows",
+      "bulk actions on selected rows",
+      "selection toolbar",
     ],
     "tree-view": [
       "show hierarchical data",
@@ -782,6 +809,18 @@ export const en: Dictionary = {
       "settings page",
       "multi-step form",
       "collect user feedback",
+    ],
+    "page-structure": [
+      "page title with actions",
+      "page header",
+      "breadcrumb trail",
+      "breadcrumbs on a phone",
+      "small uppercase section label",
+      "caption text",
+      "status dot",
+      "online indicator",
+      "unread badge on an avatar",
+      "legend swatch",
     ],
     shell: [
       "app layout with sidebar",

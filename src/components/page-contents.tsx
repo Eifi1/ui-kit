@@ -176,14 +176,14 @@ export function PageContents({
           <li key={item.id} data-entry={item.id}>
             <a
               href={hrefFor(item.id)}
-              // One line per entry in the rail; past 22rem the ellipsis takes over and
-              // the full text is on hover. The disclosure has the page's width and wraps.
-              title={variant === "rail" && typeof item.label === "string" ? item.label : undefined}
+              // Entries WRAP in the rail rather than truncate: a cut-off heading needed a
+              // native `title` to be read at all, which a keyboard never sees and which
+              // broke keksdose's one-tooltip rule (dev#523).
               aria-current={current ? "location" : undefined}
               onClick={() => setClicked(item.id)}
               className={cn(
                 "-ms-px block border-s-2 py-1 pe-1 text-[13px] leading-snug transition-colors duration-150",
-                variant === "rail" && "truncate",
+                variant === "rail" && "[overflow-wrap:anywhere]",
                 item.level === 2 ? "ps-6" : "ps-3",
                 current
                   ? "border-[var(--brand)] font-medium text-[var(--brand)]"

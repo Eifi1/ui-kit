@@ -26,8 +26,8 @@
 // "category"`) or real dates (`x.type: "time"`) instead of a number the app had to
 // invent. What each of those does to the zoom is decided in one place,
 // `defaultZoomAxes` in `chart-zoom.tsx`.
-import { useMemo } from "react";
-import type { ReactNode, RefObject } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
   Bar,
@@ -37,8 +37,12 @@ import {
   Line,
   ReferenceDot,
   ReferenceLine,
+  Rectangle,
   XAxis,
   YAxis,
+  usePlotArea,
+  useXAxisScale,
+  type BarShapeProps,
 } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import {
@@ -202,6 +206,22 @@ interface SeriesChartAxisShape {
    * a hairline). A pinned `domain` is left alone either way.
    */
   includeZero?: boolean;
+  /**
+   * Tick only on whole numbers — the y counterpart of `SeriesChartX.integerTicks`, and
+   * what keksdose's user-count axis (`metrics-panel.tsx`, `wholeTicks`) and its runway
+   * in days (`cash-buffer-chart.tsx`, `wholeDayTicks`) each wrote by hand: a band of
+   * [0, 3.1] users is ticked 0 1 2 3, not 0 0.5 1 … 3, and a short runway is not ticked
+   * 0 / 0.5 / 1 under a rounding formatter that prints "1" twice. A (zoom) window that
+   * holds no whole number falls back to the ordinary ticks rather than to none.
+   *
+   * AUTOMATIC by default — on when every value this axis carries is a whole number
+   * (counts), because that is where a half tick is a value no sample can have, and it
+   * changes nothing on a span wider than about eight, which already ticks on whole
+   * steps. `true` forces it over fractional data (days of runway computed as 43.7);
+   * `false` keeps fractional ticks for a continuous quantity that merely happens to be
+   * whole in this sample. `tickValues` wins over either.
+   */
+  integerTicks?: boolean;
 }
 
 /**
@@ -818,6 +838,150 @@ const STEP_WIDTH = 1.5;
  *  which recharts cannot tell apart per cell, so stacks stay square. */
 const BAR_RADIUS: [number, number, number, number] = [3, 3, 0, 0];
 
+/**
+ * One keyboard stop of a clickable chart: a bar, or (a chart with no bars) a whole slot.
+ * `from`/`to` bound its slot on the plotted number line — half way to each neighbour,
+ * or to the edge of the window on show.
+ */
+interface PointStop {
+  index: number;
+  /** The bar's series; absent for a slot. */
+  key?: string;
+  from: number;
+  to: number;
+  /** The accessible name: where it is and what it says. */
+  name: string;
+}
+
+/**
+ * The shape of a series whose bar has keyboard focus: recharts' own rectangle, with an
+ * outline on the one bar at `index` — drawn at the bar's exact geometry, which an
+ * overlay could only guess at. Not `activeBar`: that follows the tooltip's active index,
+ * which recharts stops taking from `defaultIndex` once a pointer has hovered the chart.
+ */
+function focusedBarShape(index: number) {
+  return function FocusedBar(props: BarShapeProps) {
+    const focused = props.originalDataIndex === index;
+    return (
+      <Rectangle {...props} {...(focused ? { stroke: "var(--text-primary)", strokeWidth: 2 } : {})} />
+    );
+  };
+}
+
+/**
+ * The keyboard's way onto a clickable chart (`onPointClick`): one focusable `<rect>` per
+ * bar, or per slot when there are no bars, laid over the plot INSIDE the recharts chart,
+ * where the x scale answers.
+ *
+ * keksdose drew its weekday pattern as seven real `<button>`s (spending-tab.tsx) because
+ * a recharts bar is reachable by nothing but the pointer. This is that, for every chart:
+ *
+ * - ONE tab stop (roving `tabIndex`): Tab moves past the chart, not through 30 bars.
+ * - ←/→ step through the stops in order, ↑/↓ between the bars of one slot, Home/End.
+ * - ↵ and Space report the stop as a click would — with the series for a bar.
+ * - Each is a `role="button"` named "period — series: value".
+ *
+ * The stops take NO pointer events, so the drag-to-zoom layer, the tooltip and the
+ * pointer's own clicks underneath behave exactly as they did. Focus is shown by the
+ * slot tinted and, for a bar, its own outline (`focusedBarShape`) — and by the tooltip,
+ * moved to the stop through `defaultIndex`, which recharts honours until a pointer has
+ * hovered the chart.
+ */
+function PointKeys({
+  stops,
+  current,
+  label,
+  onFocusStop,
+  onBlurStops,
+  onPick,
+}: {
+  stops: readonly PointStop[];
+  current: number;
+  label: string;
+  onFocusStop: (at: number) => void;
+  onBlurStops: () => void;
+  onPick: (stop: PointStop) => void;
+}) {
+  const plot = usePlotArea();
+  const scale = useXAxisScale();
+  const refs = useRef<(SVGRectElement | null)[]>([]);
+  if (!plot || !scale || plot.width <= 0 || plot.height <= 0) return null;
+
+  const move = (at: number) => {
+    const next = Math.max(0, Math.min(stops.length - 1, at));
+    refs.current[next]?.focus();
+  };
+  const onKeyDown = (at: number) => (event: KeyboardEvent<SVGRectElement>) => {
+    const stop = stops[at];
+    // ↑/↓ stay in the slot: the next or previous bar of the same period. The stops are
+    // in slot order, so a slot's bars are neighbours.
+    const inSlot = (step: 1 | -1) => (stops[at + step]?.index === stop.index ? at + step : at);
+    const target =
+      event.key === "ArrowRight"
+        ? at + 1
+        : event.key === "ArrowLeft"
+          ? at - 1
+          : event.key === "ArrowDown"
+            ? inSlot(1)
+            : event.key === "ArrowUp"
+              ? inSlot(-1)
+              : event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? stops.length - 1
+                  : undefined;
+    if (target !== undefined) {
+      event.preventDefault();
+      move(target);
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onPick(stop);
+    }
+  };
+
+  const left = plot.x;
+  const right = plot.x + plot.width;
+  return (
+    <g role="group" aria-label={label}>
+      {stops.map((stop, at) => {
+        // An edge with no neighbour runs to the plot's edge.
+        const a = finite(scale(stop.from)) ?? left;
+        const b = finite(scale(stop.to)) ?? right;
+        const x0 = Math.max(left, Math.min(a, b));
+        const x1 = Math.min(right, Math.max(a, b));
+        return (
+          <rect
+            key={`${stop.index}:${stop.key ?? ""}`}
+            ref={(node) => {
+              refs.current[at] = node;
+            }}
+            role="button"
+            tabIndex={at === current ? 0 : -1}
+            aria-label={stop.name}
+            data-point-key={stop.key}
+            x={x0}
+            y={plot.y}
+            width={Math.max(0, x1 - x0)}
+            height={plot.height}
+            fill="transparent"
+            // Focus only: the pointer's drag, hover and click belong to what is below.
+            pointerEvents="none"
+            strokeWidth={2}
+            className={cn(
+              "outline-none focus-visible:fill-[var(--brand)]/10",
+              // A bar outlines ITSELF (see `FOCUSED_BAR`); a slot has nothing else to.
+              stop.key === undefined && "focus-visible:stroke-[var(--brand)]",
+            )}
+            onFocus={() => onFocusStop(at)}
+            onBlur={onBlurStops}
+            onKeyDown={onKeyDown(at)}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
 interface PlotProps extends Omit<SeriesChartProps, "rows" | "x"> {
   /** The rows AS PLOTTED — what the zoom fits on. The caller's are `model.source`. */
   rows: readonly SeriesChartRow[];
@@ -851,6 +1015,10 @@ function SeriesPlot({
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
   const number = useDefaultFormat(localeProp);
+  // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`).
+  // Up here, above the empty state's early return, like every hook.
+  const [keyStop, setKeyStop] = useState(0);
+  const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
 
   // A number is pixels, set inline; a string is a class. Either way the one value
   // sizes both the chart and its empty state.
@@ -995,6 +1163,19 @@ function SeriesPlot({
     series.some(
       (entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id && (entry.type ?? "line") !== "line",
     );
+  // Whole-number ticks on an axis whose values are all whole — see
+  // `SeriesChartAxis.integerTicks`. A stack of whole layers sums to a whole number, so
+  // the layers are enough to look at.
+  const wholeOnly = (axis: SeriesChartAxis) =>
+    axis.integerTicks ??
+    series
+      .filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id)
+      .every((entry) =>
+        plotted.every((row) => {
+          const value = finite(row[entry.key]);
+          return value === undefined || Number.isInteger(value);
+        }),
+      );
   const onAxis = (axisId: string) => (ref: { axis?: string }) => (ref.axis ?? DEFAULT_Y_AXIS) === axisId;
   const fittedY = (axis: SeriesChartAxis): [number, number] | undefined => {
     const own = [
@@ -1023,6 +1204,48 @@ function SeriesPlot({
     const row = rows[index];
     return row ? { index, row, x: xOf(index), key } : undefined;
   };
+
+  // The keyboard stops of a clickable chart — every bar with a value, slot by slot; or,
+  // with no bars, every slot with any value. Only what is inside the window on show.
+  const stops: PointStop[] = [];
+  if (onPointClick) {
+    const valueText = valueFormat ?? number;
+    const nameOf = (entry: SeriesChartSeries) =>
+      typeof entry.label === "string" || typeof entry.label === "number" ? String(entry.label) : entry.key;
+    const said = (entry: SeriesChartSeries, value: number) => {
+      const name = nameOf(entry);
+      return name ? `${name}: ${valueText(value)}` : valueText(value);
+    };
+    const bars = series.filter((entry) => entry.type === "bar");
+    const [low, high] = fittedX ?? [-Infinity, Infinity];
+    const placed = plotted
+      .map((row, index) => ({ index, at: model.kind === "category" ? index : finite(row[xKey]) }))
+      .filter((slot): slot is { index: number; at: number } => slot.at !== undefined && slot.at >= low && slot.at <= high)
+      .sort((a, b) => a.at - b.at);
+    placed.forEach(({ index, at }, k) => {
+      const from = k > 0 ? (placed[k - 1].at + at) / 2 : low;
+      const to = k < placed.length - 1 ? (placed[k + 1].at + at) / 2 : high;
+      // The heading the tooltip would give it, when that is text; else the tick.
+      const heading = xLabel(at);
+      const where = typeof heading === "string" && heading ? heading : xFormat(at);
+      const valued = (bars.length ? bars : series)
+        .map((entry) => ({ entry, value: finite(rows[index]?.[entry.key]) }))
+        .filter((cell): cell is { entry: SeriesChartSeries; value: number } => cell.value !== undefined);
+      if (bars.length) {
+        for (const { entry, value } of valued) {
+          stops.push({ index, key: entry.key, from, to, name: `${where} — ${said(entry, value)}` });
+        }
+      } else if (valued.length) {
+        stops.push({
+          index,
+          from,
+          to,
+          name: `${where} — ${valued.map(({ entry, value }) => said(entry, value)).join(", ")}`,
+        });
+      }
+    });
+  }
+  const focusedStop = keyFocus === undefined ? undefined : stops[keyFocus];
 
   const dotFor = (entry: SeriesChartSeries) => {
     const want = entry.dot;
@@ -1080,6 +1303,9 @@ function SeriesPlot({
         // Positive and negative layers stacked apart, as `axisExtent` fits them — a
         // month's expenses hang below the axis instead of eating into its income.
         stackOffset="sign"
+        // recharts' own keyboard layer makes the whole surface a tab stop whose arrows
+        // move the tooltip — a second stop beside `PointKeys`, and one ↵ does nothing on.
+        accessibilityLayer={!onPointClick}
         onClick={
           onPointClick
             ? (state) => {
@@ -1136,7 +1362,10 @@ function SeriesPlot({
               yAxisId={axis.id}
               hide={axis.hide}
               domain={domain}
-              ticks={resolveTicks(axis.tickValues, domain, finite) ?? niceTicks(domain)}
+              ticks={
+                resolveTicks(axis.tickValues, domain, finite) ??
+                (wholeOnly(axis) ? (integerTicks(domain) ?? niceTicks(domain)) : niceTicks(domain))
+              }
               allowDataOverflow={zoomed}
               orientation={axis.orientation ?? "left"}
               width={axisBandWidth(axis.width, Boolean(axis.title) && !axis.hide)}
@@ -1170,6 +1399,8 @@ function SeriesPlot({
           // The content shifts itself 12 px off the cursor (or flips) against the
           // boundary; recharts' own offset on top would double it.
           {...(tooltip?.boundary ? { offset: 0 } : {})}
+          // The keyboard's stop shows its tooltip as the pointer's would.
+          defaultIndex={focusedStop?.index}
           content={
             <ChartTooltipContent
               labelFormatter={(value) => xLabel(Number(value))}
@@ -1196,6 +1427,9 @@ function SeriesPlot({
                 fill={color}
                 fillOpacity={entry.fillOpacity}
                 radius={entry.stack === undefined ? BAR_RADIUS : 0}
+                // Only the focused stop's series swaps its shape, and only for as long
+                // as it has focus: every other bar keeps recharts' own.
+                {...(focusedStop?.key === entry.key ? { shape: focusedBarShape(focusedStop.index) } : {})}
                 onClick={
                   onPointClick
                     ? (_bar, index, event) => {
@@ -1320,6 +1554,22 @@ function SeriesPlot({
             />
           );
         })}
+        {stops.length > 0 && (
+          <PointKeys
+            stops={stops}
+            current={Math.min(keyStop, stops.length - 1)}
+            label={labels.points}
+            onFocusStop={(at) => {
+              setKeyStop(at);
+              setKeyFocus(at);
+            }}
+            onBlurStops={() => setKeyFocus(undefined)}
+            onPick={(stop) => {
+              const hit = hitAt(stop.index, stop.key);
+              if (hit) onPointClick?.(hit);
+            }}
+          />
+        )}
         {zoom?.layer}
       </ComposedChart>
     </ChartContainer>

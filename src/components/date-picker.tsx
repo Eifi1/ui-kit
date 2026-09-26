@@ -770,6 +770,27 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    * would overwrite the sheet's history marker.
    */
   sheetBackCloses?: boolean;
+  /**
+   * With `commit="apply"`: a line above the calendar saying what Apply would commit —
+   * keksdose's report range writes "Custom · 1 Mar 2026 – …" there
+   * (report-range-field.tsx), the one place a preset armed and then nudged by a day is
+   * seen to have become "Custom", and a half-made range to still lack its end. Called
+   * with the DRAFT on every change, in the popover and the phone sheet alike; `preset`
+   * is the preset the column marks for it (none once a day was picked by hand), `to` is
+   * `""` until the second click. The line is a polite live region, so a screen reader
+   * hears the draft change as the calendar is used.
+   *
+   * Ignored in `"immediate"` mode, where there is no draft: every click is the value.
+   */
+  renderDraftSummary?: (draft: DateRangeDraftSummary) => ReactNode;
+}
+
+/** What {@link DateRangePickerProps.renderDraftSummary} is called with. */
+export interface DateRangeDraftSummary {
+  from: string;
+  to: string;
+  /** The preset the column marks for the draft, if any. */
+  preset: DateRangePickerPreset | undefined;
 }
 
 /** What {@link DateRangePickerProps.renderTrigger} is called with. */
@@ -889,6 +910,7 @@ function RangePanel({
   commitRange,
   calendarProps,
   labels,
+  renderDraftSummary,
 }: {
   from: string;
   to: string;
@@ -903,6 +925,7 @@ function RangePanel({
   commitRange: (from: string, to: string, presetId: string | undefined) => void;
   calendarProps: Pick<MiniCalendarProps, "locale" | "min" | "max" | "labels">;
   labels: DatePickerLabels;
+  renderDraftSummary?: DateRangePickerProps["renderDraftSummary"];
 }) {
   const drafting = commit === "apply";
   const [draft, setDraft] = useState<RangeDraft>({
@@ -917,7 +940,12 @@ function RangePanel({
     : -1;
   const complete = Boolean(draft.from && draft.to);
 
-  const calendar = (
+  const summary =
+    drafting && renderDraftSummary
+      ? renderDraftSummary({ from: draft.from, to: draft.to, preset: presets?.[marked] })
+      : null;
+
+  const picker = (
     <MiniCalendar
       {...calendarProps}
       focusOnOpen
@@ -934,6 +962,24 @@ function RangePanel({
       }}
     />
   );
+  // The summary heads the CALENDAR's column, not the panel: beside a preset column it
+  // reads as the calendar's caption, and in the sheet it sits between the presets and
+  // the month it describes. `null` renders no line — a caller may opt out per draft —
+  // but keeps the wrapper, so the calendar is not remounted (and its month and focus
+  // lost) when a line comes or goes.
+  const calendar =
+    drafting && renderDraftSummary ? (
+      <div className="flex flex-col gap-2">
+        {summary != null && (
+          <div aria-live="polite" data-draft-summary="" className="text-xs text-[var(--text-muted)]">
+            {summary}
+          </div>
+        )}
+        {picker}
+      </div>
+    ) : (
+      picker
+    );
 
   const body =
     presets && presets.length > 0 ? (
@@ -1006,6 +1052,7 @@ export function DateRangePicker({
   commit = "immediate",
   renderTrigger,
   sheetBackCloses,
+  renderDraftSummary,
   calendarLabels,
   label,
   clearable,
@@ -1082,6 +1129,7 @@ export function DateRangePicker({
           commitRange={commitRange}
           calendarProps={{ locale, min, max, labels: calendarLabels }}
           labels={text}
+          renderDraftSummary={renderDraftSummary}
         />
       )}
     </DateField>

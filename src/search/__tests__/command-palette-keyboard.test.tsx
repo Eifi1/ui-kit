@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
@@ -38,25 +38,12 @@ function Harness({ items = ITEMS }: { items?: CommandItem[] }) {
 }
 
 /**
- * jsdom has no layout and therefore no `Element.prototype.scrollIntoView`, and the
- * palette keeps the active row in view by calling it on every highlight move — so the
- * first arrow key throws before it can move anything. `combobox-core.tsx` calls the
- * same method as `?.scrollIntoView?.({ block: "nearest" })` and says why; the palette
- * is the copy that did not, which is only visible from a test that presses a key.
- *
- * Stubbed rather than avoided: the subject here is where the highlight GOES, and the
- * scroll is the browser's business.
+ * jsdom has no layout and therefore no `Element.prototype.scrollIntoView`. The palette
+ * keeps the active row in view by calling it on every highlight move, and it used to
+ * call it unguarded — so in EVERY consumer's test suite the first arrow key threw
+ * (kastlan stubbed it in its setup). It is now optional-called like combobox-core's,
+ * and this file deliberately runs WITHOUT a stub: every key press below proves it.
  */
-const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
-const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
-beforeAll(() => {
-  if (!JSDOM_HAS_IT) PROTO.scrollIntoView = () => {};
-});
-afterAll(() => {
-  // Only remove what this file added — a future jsdom that implements it for real
-  // must not be left without it for whatever runs next in this worker.
-  if (!JSDOM_HAS_IT) delete PROTO.scrollIntoView;
-});
 
 /** The row the field says the keyboard is on, resolved the way a screen reader
  *  resolves it: through `aria-activedescendant`, not through a class. */
@@ -185,3 +172,4 @@ describe("the command palette's keyboard", () => {
     expect(screen.getByRole("combobox")).toHaveValue("bank");
   });
 });
+

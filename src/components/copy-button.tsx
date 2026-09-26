@@ -6,7 +6,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import type { CopyState } from "../hooks/use-copy-to-clipboard";
 import { Button, IconButton } from "./ui";
-import type { ButtonVariant, IconButtonSize } from "./ui";
+import type { ButtonSize, ButtonTone, ButtonVariant, IconButtonSize, IconButtonTone } from "./ui";
 import { Tooltip } from "./tooltip";
 import type { TooltipSide } from "./tooltip";
 
@@ -43,8 +43,17 @@ export interface CopyButtonProps
   label?: string;
   /** The button's own look. Default: `ghost` for the icon, `secondary` for the label. */
   buttonVariant?: ButtonVariant;
-  /** Icon variant only. */
-  size?: IconButtonSize;
+  /** The icon variant's IconButton size (default `sm`). The `label` variant takes a
+   *  Button size, `sm` or `md` — passed only when given, so an existing label button
+   *  keeps its look (keksdose budget-share-card and jobs-panel wanted the compact one). */
+  size?: IconButtonSize | ButtonSize;
+  /** The icon variant's IconButton tone (e.g. `muted`, so a row of copy icons is no
+   *  heavier than the row's other actions); in the `label` variant a Button tone,
+   *  which applies to `link` / `ghost`. The copied / failed colour still wins. */
+  tone?: IconButtonTone | ButtonTone;
+  /** Keep the click and Enter/Space from reaching a clickable row around the button,
+   *  as IconButton's own `stopPropagation` does (keksdose feedback-page, users-panel). */
+  stopPropagation?: boolean;
   /** Icon variant only: where the result tooltip opens. */
   tooltipSide?: TooltipSide;
   /** Pass through to the tooltip — needed inside a scroll container (see Tooltip). */
@@ -80,7 +89,9 @@ export function CopyButton({
   variant = "icon",
   label,
   buttonVariant,
-  size = "sm",
+  size,
+  tone,
+  stopPropagation,
   tooltipSide = "top",
   tooltipPortal = false,
   resetAfter = 2000,
@@ -123,8 +134,17 @@ export function CopyButton({
           {...rest}
           disabled={disabled}
           variant={buttonVariant ?? "secondary"}
+          size={size === "sm" || size === "md" ? size : undefined}
+          tone={tone === "default" || tone === "muted" || tone === "danger" ? tone : undefined}
           data-state={state}
-          onClick={onClick}
+          onClick={(e) => {
+            if (stopPropagation) e.stopPropagation();
+            void onClick();
+          }}
+          onKeyDown={(e) => {
+            if (stopPropagation && (e.key === "Enter" || e.key === " ")) e.stopPropagation();
+            rest.onKeyDown?.(e);
+          }}
           className={className}
         >
           <Icon aria-hidden className={cn("size-4 shrink-0", iconTone)} />
@@ -144,9 +164,11 @@ export function CopyButton({
           disabled={disabled}
           aria-label={idleText}
           variant={buttonVariant ?? "ghost"}
-          size={size}
+          size={(size ?? "sm") as IconButtonSize}
+          tone={tone as IconButtonTone | undefined}
+          stopPropagation={stopPropagation}
           data-state={state}
-          onClick={onClick}
+          onClick={() => void onClick()}
           className={cn(iconTone, className)}
         >
           <Icon aria-hidden />

@@ -560,8 +560,8 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
     steps,
     initialData: INITIAL_DRAFT,
     missingRequiredMessage: "Pick a size before continuing.",
-    // Without this the engine dynamically imports `sonner` and toasts — sonner is
-    // an optional peer, imported only on this path. Routed into the page instead
+    // Without this the engine calls the kit's `toast.error` (sonner, an optional
+    // peer, loaded lazily). Routed into the page instead
     // so the message is legible beside the step that produced it (and so the
     // render test never reaches an import it does not need).
     onValidationFailed: (message) => setBlockMessage(message),

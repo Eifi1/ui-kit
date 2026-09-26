@@ -99,3 +99,16 @@ describe("WizardSummary (0.8.0)", () => {
     expect(screen.queryAllByRole("button")).toEqual([]);
   });
 });
+
+describe("WizardSummary edit button has no native title (keksdose dev#523)", () => {
+  it("is named by aria-label and has no title attribute", () => {
+    render(
+      <WizardSummary
+        sections={[{ label: "Tenant", stepIndex: 0, items: [] }]}
+        onEditStep={() => {}}
+      />,
+    );
+    const edit = screen.getByRole("button", { name: /edit/i });
+    expect(edit).not.toHaveAttribute("title");
+  });
+});

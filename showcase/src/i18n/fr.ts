@@ -229,6 +229,12 @@ export const fr: Dictionary = {
       blurb:
         "Des faits présentés sans aucune mécanique\u00a0: une liste de termes et de détails, un simple tableau statique, et le séparateur et la zone de défilement qui se placent entre les deux.",
     },
+    "lists-menus": {
+      title: "Listes et menus",
+      short: "Listes et menus",
+      blurb:
+        "La ligne que chaque application dessine à la main — un bouton, un lien ou un enregistrement, avec ses actions à côté —, la ligne d’un menu, et la barre qu’une sélection de lignes fait apparaître.",
+    },
     "tree-view": {
       title: "Arborescence",
       short: "Arbre",
@@ -339,6 +345,12 @@ export const fr: Dictionary = {
       title: "Cadre de l’application",
       blurb:
         "Le cadre dans lequel vit une application, et les parcours que toute application répète\u00a0: paramètres, formulaires en plusieurs étapes, retours.",
+    },
+    "page-structure": {
+      title: "En-tête de page et fil d’Ariane",
+      short: "En-tête",
+      blurb:
+        "Les parties d’une page qui ne sont pas son contenu\u00a0: l’en-tête avec son fil et ses actions, le fil d’Ariane seul, et le libellé de section, la légende et la pastille d’état.",
     },
     shell: {
       title: "Structure",
@@ -611,6 +623,9 @@ export const fr: Dictionary = {
       "bannière d’avertissement ou d’erreur",
       "message de réussite",
       "jauge en pourcentage",
+      "afficher une brève confirmation",
+      "annuler après suppression",
+      "toast",
     ],
     "description-list": [
       "afficher des paires clé-valeur",
@@ -620,6 +635,18 @@ export const fr: Dictionary = {
       "ligne de séparation",
       "zone défilante",
       "aligner les nombres à droite dans un tableau",
+    ],
+    "lists-menus": [
+      "liste d’éléments",
+      "ligne de liste cliquable",
+      "ligne avec actions",
+      "marqueur non lu",
+      "liste de boîte de réception",
+      "élément de menu coché",
+      "élément de menu dangereux",
+      "sélectionner plusieurs lignes",
+      "actions groupées sur la sélection",
+      "barre d’outils de sélection",
     ],
     "tree-view": [
       "afficher des données hiérarchiques",
@@ -778,6 +805,18 @@ export const fr: Dictionary = {
       "page de paramètres",
       "formulaire en plusieurs étapes",
       "recueillir les avis des utilisateurs",
+    ],
+    "page-structure": [
+      "titre de page avec actions",
+      "en-tête de page",
+      "fil d’Ariane",
+      "fil d’Ariane sur mobile",
+      "petit libellé de section en majuscules",
+      "texte d’aide sous un champ",
+      "pastille d’état",
+      "indicateur en ligne",
+      "pastille non lu sur un avatar",
+      "couleur de légende",
     ],
     shell: [
       "mise en page avec barre latérale",

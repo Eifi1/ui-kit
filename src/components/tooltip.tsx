@@ -8,12 +8,14 @@ import {
   type ComponentPropsWithoutRef,
   type ReactElement,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { useEscapeKey } from "../hooks/use-dismiss";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 import { dirOf, type Direction } from "../lib/direction";
+import { hasClippingAncestor } from "../lib/clipping";
 
 /** Where the bubble sits. `start` / `end` follow the reading direction — `end` is the
  *  right in LTR and the left in RTL — and are what a layout that mirrors should ask
@@ -70,6 +72,13 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
   label: ReactNode;
   side?: TooltipSide;
   className?: string;
+  /**
+   * Where the bubble lives. Left out (the default since 0.10.0), the tooltip decides for
+   * itself: the bubble stays next to the trigger unless an ancestor clips or scrolls
+   * (`overflow` other than `visible`), in which case it is portalled — see "Inside a
+   * scroll container" below. `true` always portals, `false` never does; both are exactly
+   * what they were before the default existed.
+   */
   portal?: boolean;
   /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
   redact?: boolean;
@@ -83,11 +92,10 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: Toolt
 /**
  * Hover/focus label for a control.
  *
- * Two implementations, and the choice matters more than it looks. The default is
- * CSS-only: the bubble is always mounted next to the trigger and fades in on
- * `:hover`, which costs no state and works in a plain render test. The `portal`
- * variant mounts the bubble in `document.body` only while hovered, positioned by
- * measurement.
+ * Two placements, and the choice matters more than it looks. In place, the bubble is
+ * always mounted next to the trigger and fades in on `:hover`, which costs no state and
+ * works in a plain render test. Portalled, the bubble is mounted in `document.body`
+ * only while it is up, positioned by measurement.
  *
  * ⚠️ **A bubble that repeats a value has to be redactable.** The consuming app blurs
  * `[data-private]` under a `demo-mode` class on `<html>` — and the portalled bubble is
@@ -119,24 +127,41 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: Toolt
  * point somewhere else — which is precisely what you cannot do when what you need to
  * read is underneath it. The listener is the document's rather than the wrapper's
  * because the pointer opens this with the keyboard focus somewhere else entirely, and
- * it is subscribed only while a bubble is actually up: the CSS variant is always
+ * it is subscribed only while a bubble is actually up: the in-place bubble is always
  * mounted, and a table of forty tooltips must not mean forty keydown listeners.
  *
- * ⚠️ **Inside a scroll container, use `portal`.** An always-mounted bubble is
- * absolutely positioned, but an absolutely positioned descendant still counts
- * towards its scroll-container ancestor's scrollable overflow — so an invisible
- * bubble on a control near the right edge makes the container scroll sideways
- * with nothing to reveal. That is what Keksdose feedback dev#488 reported on the
- * admin roster: 66px of horizontal scroll on a table that fit, 44px of it owed to
- * tooltips nobody could see. The portalled bubble is `position: fixed` and absent
- * until hovered, so it adds no width — and, being outside the container, it also
- * cannot be clipped by it.
+ * ⚠️ **Inside a scroll container, the bubble has to be portalled — and by default it
+ * now is.** An always-mounted bubble is absolutely positioned, but an absolutely
+ * positioned descendant still counts towards its scroll-container ancestor's
+ * scrollable overflow — so an invisible bubble on a control near the right edge makes
+ * the container scroll sideways with nothing to reveal. That is what Keksdose feedback
+ * dev#488 reported on the admin roster: 66px of horizontal scroll on a table that fit,
+ * 44px of it owed to tooltips nobody could see. And a visible one is clipped by the
+ * container's edge. The portalled bubble is `position: fixed` and absent until hovered,
+ * so it adds no width and cannot be clipped.
+ *
+ * Until 0.10.0 the cure was `portal` at the call site, and kastlan asked for it to stop
+ * being one: every tooltip in a table, a drawer or a scrolling card had to remember it,
+ * and the ones that forgot were only found by someone scrolling sideways. So with
+ * `portal` left out, the tooltip looks for a clipping ancestor itself — any element
+ * between it and `<body>` whose computed `overflow-x` / `overflow-y` is not `visible`.
+ * It looks at MOUNT, not only on open: dev#488's phantom scroll is caused by a bubble
+ * nobody opened, so a check that waited for the hover would find the damage already
+ * done. It looks again on every open, for a container that started scrolling after
+ * the tooltip mounted (a table that grew). Only the bubble changes place; the trigger
+ * and the caller's child stay mounted, so a switch never costs a focused button its
+ * focus. Outside any such container the in-place bubble is kept, which is still the
+ * cheaper one and the one a plain render test can find without a hover.
+ *
+ * Why not simply portal everything? Because the in-place bubble is the one existing
+ * app tests rely on (it is in the DOM without a hover), and because it follows its
+ * trigger through a scroll or an animation for free — the portalled one re-measures.
  */
 export function Tooltip({
   label,
   side = "top",
   className,
-  portal = false,
+  portal,
   redact = false,
   children,
   ...rest
@@ -146,7 +171,7 @@ export function Tooltip({
   // wrapper on this branch, which is the documented limit of the pass-through: there is
   // no element left to put an attribute on.
   if (isEmptyLabel(label)) return <>{children}</>;
-  if (portal) {
+  if (portal === true) {
     return (
       <PortalTooltip
         label={label}
@@ -163,36 +188,73 @@ export function Tooltip({
   // hooks: the empty-label branch above returns before either of them, and a hook after
   // a conditional return is a hooks-order bug rather than a style violation.
   return (
-    <CssTooltip label={label} side={side} className={className} redact={redact} {...rest}>
+    <InPlaceTooltip
+      label={label}
+      side={side}
+      className={className}
+      redact={redact}
+      detect={portal === undefined}
+      {...rest}
+    >
       {children}
-    </CssTooltip>
+    </InPlaceTooltip>
   );
 }
 
-/** The always-mounted variant: the bubble sits next to the trigger and CSS fades it in.
+
+/** The variant that lives next to its trigger, and — when `detect` is on, which is the
+ *  default — moves its bubble to `<body>` when that turns out to be inside a clipping
+ *  container (see "Inside a scroll container" on {@link Tooltip}).
  *
- *  It holds the little state it does for the two things CSS cannot express — which
- *  element to point `aria-describedby` at, and Escape — and not for the fade, which is
- *  still `group-hover`/`group-focus-within` and still costs a render nothing. */
-function CssTooltip({
+ *  In place it holds the little state it does for the two things CSS cannot express —
+ *  which element to point `aria-describedby` at, and Escape — and not for the fade,
+ *  which is still `group-hover`/`group-focus-within` and still costs a render nothing.
+ *
+ *  ONE component for both placements rather than a switch between the two variants: a
+ *  switch would be a different component at the same place in the tree, and React
+ *  would remount the caller's child with it — a button that loses focus the moment
+ *  its own tooltip decided where to go. Here the wrapper and the child stay put and
+ *  only the bubble's slot changes. */
+function InPlaceTooltip({
   label,
   side,
   className,
   redact,
+  detect,
   children,
   ...rest
-}: TooltipVariantProps) {
+}: TooltipVariantProps & { detect: boolean }) {
   const id = useId();
+  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const [clipped, setClipped] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  useEscapeKey(() => setDismissed(true), (hovered || focused) && !dismissed);
+  const [dir, setDir] = useState<Direction>("ltr");
+  const open = (hovered || focused) && !dismissed;
+  useEscapeKey(() => setDismissed(true), open);
+  // At mount, before the first paint: the in-place bubble inside a scroller is the
+  // phantom-scroll bug whether or not anyone opens it.
+  useLayoutEffect(() => {
+    if (detect) setClipped(hasClippingAncestor(triggerRef.current));
+  }, [detect]);
+  // Re-armed by the next hover or focus rather than by an effect watching those flags:
+  // coming back to a trigger is a fresh request for its label, and an effect would also
+  // re-show the bubble under a pointer that never left. The clipping check is repeated
+  // here for a container that began to scroll after mount.
+  const arm = (el: Element) => {
+    setDismissed(false);
+    if (!detect) return;
+    setDir(dirOf(el));
+    setClipped(hasClippingAncestor(el));
+  };
   return (
     <span
       // `...rest` first: the four handlers below are what decides whether a bubble is
       // up, and a caller passing an `onFocus` of its own must not replace them.
       {...rest}
-      className={cn("relative inline-flex group/tooltip", className)}
+      ref={triggerRef}
+      className={cn("relative inline-flex", !clipped && "group/tooltip", className)}
       // These four track WHETHER A BUBBLE IS UP. They activate nothing — the only thing
       // here that can be activated is the caller's child, which keeps every handler it
       // arrived with — so this wrapper needs no role and no key handling of its own.
@@ -200,38 +262,41 @@ function CssTooltip({
       // already does about the portal variant's identical trigger below; both are left
       // visible rather than silenced, because a rule this package ratchets should be
       // argued with in the backlog and not in a disable comment.
-      //
-      // Re-armed by the next hover or focus rather than by an effect watching those
-      // flags: coming back to a trigger is a fresh request for its label, and an effect
-      // would also re-show the bubble under a pointer that never left.
-      onMouseEnter={() => {
+      onMouseEnter={(e) => {
         setHovered(true);
-        setDismissed(false);
+        arm(e.currentTarget);
       }}
       onMouseLeave={() => setHovered(false)}
-      onFocus={() => {
+      onFocus={(e) => {
         setFocused(true);
-        setDismissed(false);
+        arm(e.currentTarget);
       }}
       onBlur={() => setFocused(false)}
     >
-      {describedBy(children, dismissed ? undefined : id)}
-      <span
-        id={id}
-        role="tooltip"
-        // The `hidden` ATTRIBUTE, not an opacity class: dismissing has to take the
-        // bubble out of the accessibility tree as well as off the screen, or a screen
-        // reader still reads out the description of a bubble the user just closed.
-        hidden={dismissed || undefined}
-        data-private={redact ? "" : undefined}
-        className={cn(
-          TOOLTIP_SURFACE,
-          "pointer-events-none absolute z-50 opacity-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
-          sidePositionClass[side],
-        )}
-      >
-        {label}
-      </span>
+      {/* In place the bubble is always there to point at; portalled, only while up. */}
+      {describedBy(children, clipped ? (open ? id : undefined) : dismissed ? undefined : id)}
+      {clipped ? (
+        open && (
+          <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
+        )
+      ) : (
+        <span
+          id={id}
+          role="tooltip"
+          // The `hidden` ATTRIBUTE, not an opacity class: dismissing has to take the
+          // bubble out of the accessibility tree as well as off the screen, or a screen
+          // reader still reads out the description of a bubble the user just closed.
+          hidden={dismissed || undefined}
+          data-private={redact ? "" : undefined}
+          className={cn(
+            TOOLTIP_SURFACE,
+            "pointer-events-none absolute z-50 opacity-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
+            sidePositionClass[side],
+          )}
+        >
+          {label}
+        </span>
+      )}
     </span>
   );
 }
@@ -410,7 +475,6 @@ function PortalTooltip({
   ...rest
 }: TooltipVariantProps) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
-  const bubbleRef = useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = useState(false);
   // The trigger's reading direction, read when the bubble is asked for (an event, not a
   // render): it resolves `start` / `end`, and the portalled bubble — which has left the
@@ -425,9 +489,53 @@ function PortalTooltip({
   // shown. The next mouseenter/focus brings it back, which is the behaviour WCAG
   // 1.4.13 asks for: dismissible now, still available when you ask again.
   useEscapeKey(() => setVisible(false), visible);
+
+  return (
+    <>
+      <span
+        // As in `InPlaceTooltip`: the caller's attributes first, the four handlers that
+        // run this component after them. The BUBBLE is deliberately not given them — it
+        // is portalled to `<body>`, and an id or a tour anchor duplicated onto a node
+        // that only exists while hovered would match twice or match nothing.
+        {...rest}
+        ref={triggerRef}
+        className={cn("relative inline-flex", className)}
+        onMouseEnter={(e) => show(e.currentTarget)}
+        onMouseLeave={() => setVisible(false)}
+        onFocus={(e) => show(e.currentTarget)}
+        onBlur={() => setVisible(false)}
+      >
+        {describedBy(children, visible ? id : undefined)}
+      </span>
+      {visible && (
+        <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
+      )}
+    </>
+  );
+}
+
+/** The measured, `position: fixed` bubble on `<body>`, mounted only while it is up.
+ *  Shared by {@link PortalTooltip} and the in-place variant's clipped mode, so the two
+ *  cannot place a bubble differently. */
+function PortalBubble({
+  triggerRef,
+  id,
+  label,
+  side,
+  dir,
+  redact,
+}: {
+  triggerRef: RefObject<HTMLSpanElement | null>;
+  id: string;
+  label: ReactNode;
+  side: TooltipSide;
+  dir: Direction;
+  redact: boolean | undefined;
+}) {
+  const bubbleRef = useRef<HTMLSpanElement | null>(null);
   // The measure + scroll/resize-tracking lifecycle is owned by useAnchoredRect;
   // here we only map the rect to a side-specific anchor point.
-  const rect = useAnchoredRect(triggerRef, visible);
+  const rect = useAnchoredRect(triggerRef, true);
   // The bubble's own size and the window it has to fit in — neither of which is
   // knowable in render: the width is whatever the label wrapped to inside the
   // cap, and reading `window` while rendering is not a pure thing to do. Both
@@ -435,8 +543,7 @@ function PortalTooltip({
   // paints and there is no frame in which the label sits off the screen.
   const [room, setRoom] = useState<{ size: TooltipSize; viewport: TooltipViewport } | null>(null);
   useLayoutEffect(() => {
-    const measured = visible ? bubbleRef.current?.getBoundingClientRect() : undefined;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- a measurement is the one thing a layout effect is for
+    const measured = bubbleRef.current?.getBoundingClientRect();
     setRoom((previous) => {
       if (!measured) return null;
       const next = {
@@ -448,7 +555,7 @@ function PortalTooltip({
       // bubble forever.
       return previous && sameRoom(previous, next) ? previous : next;
     });
-  }, [visible, rect, label]);
+  }, [rect, label]);
 
   const physical = physicalSide(side, dir);
   const point = rect ? tooltipAnchor(rect, physical) : null;
@@ -457,49 +564,28 @@ function PortalTooltip({
   // size is known and the placement is decided properly.
   const placed = rect && room ? placeTooltip(rect, physical, room.size, room.viewport) : null;
 
-  return (
-    <>
-      <span
-        // As in `CssTooltip`: the caller's attributes first, the four handlers that run
-        // this component after them. The BUBBLE is deliberately not given them — it is
-        // portalled to `<body>`, and an id or a tour anchor duplicated onto a node that
-        // only exists while hovered would match twice or match nothing.
-        {...rest}
-        ref={triggerRef}
-        className={cn("relative inline-flex", className)}
-        onMouseEnter={(e) => show(e.currentTarget)}
-        onMouseLeave={() => setVisible(false)}
-        onFocus={(e) => show(e.currentTarget)}
-        onBlur={() => setVisible(false)}
-      >
-        {describedBy(children, visible ? id : undefined)}
-      </span>
-      {visible &&
-        point &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <span
-            ref={bubbleRef}
-            id={id}
-            role="tooltip"
-            dir={dir}
-            data-private={redact ? "" : undefined}
-            style={
-              placed
-                ? { position: "fixed", left: placed.left, top: placed.top }
-                : {
-                    position: "fixed",
-                    left: point.left,
-                    top: point.top,
-                    transform: portalTransformBySide[physical],
-                  }
+  if (!point || typeof document === "undefined") return null;
+  return createPortal(
+    <span
+      ref={bubbleRef}
+      id={id}
+      role="tooltip"
+      dir={dir}
+      data-private={redact ? "" : undefined}
+      style={
+        placed
+          ? { position: "fixed", left: placed.left, top: placed.top }
+          : {
+              position: "fixed",
+              left: point.left,
+              top: point.top,
+              transform: portalTransformBySide[physical],
             }
-            className={cn(TOOLTIP_SURFACE, "pointer-events-none z-50")}
-          >
-            {label}
-          </span>,
-          document.body,
-        )}
-    </>
+      }
+      className={cn(TOOLTIP_SURFACE, "pointer-events-none z-50")}
+    >
+      {label}
+    </span>,
+    document.body,
   );
 }

@@ -211,7 +211,7 @@ export function PopoversMenusTooltips() {
 
       <Example
         label="Tooltip — portal, redact and the empty label"
-        hint="Inside a scroll container use `portal`, or the invisible bubble adds width to the scroller."
+        hint="`portal` forces the portalled bubble; left out, a tooltip inside a scroll container portals on its own (see the auto-portal example below)."
       >
         <TooltipPortal />
       </Example>
@@ -256,9 +256,10 @@ function ModalSizes() {
           </Button>
         ))}
       </Row>
-      {/* Conditional mount, not an `open` prop: Modal has no `open` — the caller owning
-          the mount is what lets `useCloseTransition` hold the panel on screen for the
-          exit and then hand the unmount back. */}
+      {/* Conditional mount, the idiom every caller before 0.10.0 used: the caller owning
+          the mount is what lets `useCloseTransition` hold the panel on screen for a
+          dismissal's exit. A close decided from outside skips it — which is what the
+          `open` prop fixes (see "Modal — open" further down this page). */}
       {size && (
         <Modal size={size} labelledBy={headingId} className="space-y-3" onClose={() => setSize(null)}>
           <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">

@@ -241,6 +241,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     dialogFrame: {
       close: "Fermer",
     },
+    bulkActionBar: {
+      selected: (count) => `${n(count)} ${count === 1 ? "sélectionné" : "sélectionnés"}`,
+      clear: "Effacer la sélection",
+      cleared: "Sélection effacée",
+    },
     swipeableRow: {
       actions: "Actions de la ligne",
     },
@@ -385,6 +390,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Double-cliquez pour réinitialiser.",
       empty: "Aucune donnée",
       legend: "Séries",
+      points: "Valeurs du graphique",
     },
     confirmDialog: {
       confirm: "Confirmer",
@@ -399,6 +405,20 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       failed: "Échec de la copie",
       copiedAnnouncement: "Copié dans le presse-papiers",
       failedAnnouncement: "Impossible de copier dans le presse-papiers",
+    },
+    list: {
+      unread: "Non lu",
+      opensInNewTab: "s’ouvre dans un nouvel onglet",
+    },
+    breadcrumbs: {
+      label: "Fil d’Ariane",
+      showAll: "Afficher le chemin complet",
+    },
+    toast: {
+      close: "Fermer la notification",
+      notifications: "Notifications",
+      undo: "Annuler",
+      redo: "Rétablir",
     },
   };
 }

@@ -141,13 +141,19 @@ export function ShowcaseSearch() {
   // to ⌘K "anywhere on this page" — so on that one page the shortcut is the specimen's,
   // and the top-bar search is opened by its button. Two modals from one keystroke would
   // demonstrate nothing.
+  //
+  // `triggerName="withShortcut"`: the trigger is named "Search (Ctrl K)" rather than
+  // "Search", so the shortcut is met in the name itself — but only where the shortcut is
+  // live, or the name would promise a key that opens something else.
   const { pathname } = useLocation();
+  const shortcut = pathname !== "/command-palette";
   return (
     <GlobalSearch
       entries={entries}
       suggestions={SEARCH_SUGGESTIONS}
       labels={labels}
-      shortcut={pathname !== "/command-palette"}
+      shortcut={shortcut}
+      triggerName={shortcut ? "withShortcut" : "plain"}
     />
   );
 }

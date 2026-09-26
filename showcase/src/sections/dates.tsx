@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup, cn } from "@eifi1/ui-kit";
-import type { DateRangePickerPreset } from "@eifi1/ui-kit";
+import type { DateRangeDraftSummary, DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
   calendarMonthPresets,
@@ -508,6 +508,7 @@ export function Dates() {
       </Example>
 
       <ReportRangeExample />
+      <RangeDraftSummaryExample />
       <RangeSheetExample />
       <RangeTriggerExample />
 
@@ -707,6 +708,69 @@ function ReportRangeExample() {
         never the rolling 90 days up to this morning. Apply and Cancel are{" "}
         <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code>{" "}
         and the column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
+      </p>
+    </Example>
+  );
+}
+
+const SUMMARY_DATE = new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", year: "numeric" });
+const summaryDay = (iso: string) => {
+  const d = parseIsoDate(iso);
+  return d ? SUMMARY_DATE.format(d) : "…";
+};
+
+/** The line above the calendar saying what Apply would commit. */
+function RangeDraftSummaryExample() {
+  const monthPresets = useMonthPresets();
+  const initial = lastFullMonthsRange(3);
+  const [range, setRange] = useState<{ from: string; to: string; preset: string | null }>({
+    from: initial.from,
+    to: initial.to,
+    preset: "last_3_full_months",
+  });
+  // Called during the picker's render with the DRAFT — so it formats and returns,
+  // and never sets state.
+  const summary = ({ from, to, preset }: DateRangeDraftSummary) => {
+    const name = preset ? preset.label : "Custom";
+    return (
+      <>
+        <span className="font-medium text-[var(--text-secondary)]">{name}</span> · {summaryDay(from)} –{" "}
+        {to ? summaryDay(to) : "…"}
+      </>
+    );
+  };
+  return (
+    <Example
+      label="DateRangePicker — renderDraftSummary"
+      hint='commit="apply" only: a line above the calendar saying what Apply would commit, as the draft changes'
+    >
+      <Stage>
+        <DateRangePicker
+          from={range.from}
+          to={range.to}
+          locale={LOCALE}
+          label="Report period"
+          presets={monthPresets}
+          preset={range.preset}
+          commit="apply"
+          formatOptions={{ dateStyle: "medium" }}
+          renderDraftSummary={summary}
+          onChange={(from, to, presetId) => setRange({ from, to, preset: presetId ?? null })}
+        />
+      </Stage>
+      <StateLine>
+        from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`}
+      </StateLine>
+      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        Open it: the line reads &ldquo;Last 3 full months · …&rdquo;. Pick another preset and it follows; nudge a
+        day and it becomes &ldquo;Custom&rdquo; — the one place a preset armed and then changed is seen to have
+        stopped being one; click a first day and the end reads &ldquo;…&rdquo; until the second click. The
+        callback gets the DRAFT (<code className="font-mono">from</code>, <code className="font-mono">to</code>{" "}
+        — <code className="font-mono">&quot;&quot;</code> until the second click — and the marked{" "}
+        <code className="font-mono">preset</code>), in the popover and the phone sheet alike. The line is a polite
+        live region, so a screen reader hears the draft change. Returning <code className="font-mono">null</code>{" "}
+        hides it for that draft; in <code className="font-mono">commit=&quot;immediate&quot;</code> there is no
+        draft and it is ignored.
       </p>
     </Example>
   );

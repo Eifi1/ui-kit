@@ -239,6 +239,11 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     dialogFrame: {
       close: "Schließen",
     },
+    bulkActionBar: {
+      selected: (count) => `${n(count)} ausgewählt`,
+      clear: "Auswahl aufheben",
+      cleared: "Auswahl aufgehoben",
+    },
     swipeableRow: {
       actions: "Zeilenaktionen",
     },
@@ -379,6 +384,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
         "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Doppelklick setzt zurück.",
       empty: "Keine Daten",
       legend: "Datenreihen",
+      points: "Diagrammwerte",
     },
     confirmDialog: {
       confirm: "Bestätigen",
@@ -393,6 +399,20 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       failed: "Kopieren fehlgeschlagen",
       copiedAnnouncement: "In die Zwischenablage kopiert",
       failedAnnouncement: "Kopieren in die Zwischenablage fehlgeschlagen",
+    },
+    list: {
+      unread: "Ungelesen",
+      opensInNewTab: "öffnet in einem neuen Tab",
+    },
+    breadcrumbs: {
+      label: "Brotkrümelnavigation",
+      showAll: "Vollständigen Pfad anzeigen",
+    },
+    toast: {
+      close: "Benachrichtigung schließen",
+      notifications: "Benachrichtigungen",
+      undo: "Rückgängig",
+      redo: "Wiederholen",
     },
   };
 }

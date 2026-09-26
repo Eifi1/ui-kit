@@ -27,6 +27,10 @@ import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachm
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
 import type { CopyButtonLabels } from "../components/copy-button";
+import type { BulkActionBarLabels } from "../components/bulk-action-bar";
+import type { ListLabels } from "../components/list";
+import type { BreadcrumbsLabels } from "../components/breadcrumbs";
+import type { ToastLabels } from "../components/toast";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -229,6 +233,10 @@ export interface UiKitLabels {
   confirmDialog: ConfirmDialogLabels;
   floatingPanel: FloatingPanelLabels;
   copyButton: CopyButtonLabels;
+  bulkActionBar: BulkActionBarLabels;
+  list: ListLabels;
+  breadcrumbs: BreadcrumbsLabels;
+  toast: ToastLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a

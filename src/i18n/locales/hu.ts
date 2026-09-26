@@ -234,6 +234,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     dialogFrame: {
       close: "Bezárás",
     },
+    bulkActionBar: {
+      selected: (count) => `${n(count)} kijelölve`,
+      clear: "Kijelölés törlése",
+      cleared: "Kijelölés törölve",
+    },
     swipeableRow: {
       actions: "Sorműveletek",
     },
@@ -373,6 +378,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Dupla kattintással visszaállíthatja.",
       empty: "Nincs adat",
       legend: "Adatsorok",
+      points: "Diagramértékek",
     },
     confirmDialog: {
       confirm: "Megerősítés",
@@ -387,6 +393,20 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       failed: "A másolás nem sikerült",
       copiedAnnouncement: "Vágólapra másolva",
       failedAnnouncement: "Nem sikerült a vágólapra másolni",
+    },
+    list: {
+      unread: "Olvasatlan",
+      opensInNewTab: "új lapon nyílik meg",
+    },
+    breadcrumbs: {
+      label: "Morzsamenü",
+      showAll: "Teljes útvonal megjelenítése",
+    },
+    toast: {
+      close: "Értesítés bezárása",
+      notifications: "Értesítések",
+      undo: "Visszavonás",
+      redo: "Újra",
     },
   };
 }

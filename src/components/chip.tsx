@@ -1,6 +1,6 @@
 import { forwardRef, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
@@ -30,9 +30,22 @@ export type ChipTone =
   | "success"
   | "info"
   | "income"
-  | "expense";
-/** `lg` is the 44px touch target (`min-h-11`) a phone surface wants; `md` is ~28px. */
-export type ChipSize = "sm" | "md" | "lg";
+  | "expense"
+  | ChipHue;
+/**
+ * Categorical hues (0.10.0): colour that says "a different value" and nothing more —
+ * kastlan's status-badge.tsx paints ~15 enums in 9 Tailwind hues by hand. Four of those
+ * nine are semantic and already tones (green = `success`, yellow = `warning`, red =
+ * `danger`, gray = `neutral`); these five are the rest, each a `--hue-*` token triple
+ * in tokens.css with a light and a dark value. Use a semantic tone when the value HAS a
+ * meaning (overdue is `danger`), a hue when it only needs telling apart (sent vs
+ * accepted vs invoiced).
+ */
+export type ChipHue = "blue" | "indigo" | "purple" | "teal" | "orange";
+/** `lg` is the 44px touch target (`min-h-11`) a phone surface wants; `md` is ~28px.
+ *  `xs` (0.10.0) is 11px type at `px-1.5` — keksdose's goal markers and budget-cell
+ *  badges, which sit inside a figure's line and must not make it taller. */
+export type ChipSize = "xs" | "sm" | "md" | "lg";
 /**
  * How much of the tone the chip wears.
  *
@@ -43,8 +56,12 @@ export type ChipSize = "sm" | "md" | "lg";
  * - `solid`: the tone as a fill under contrasting text — the "count" pill (unread
  *   messages, open tasks). It centres its content and sets figures tabular, so a
  *   one-digit count is a round dot and "9" → "10" does not jiggle the row.
+ * - `dot` (0.10.0): no pill at all — a dot in the tone's colour before plain text, for
+ *   a status in a dense list or a table column where eight tinted pills in a column
+ *   would outshout the figures beside them (kastlan's unit picker already draws its
+ *   UnitStatus this way, from a separate `dotColor` map).
  */
-export type ChipVariant = "soft" | "outline" | "solid";
+export type ChipVariant = "soft" | "outline" | "solid" | "dot";
 /** `pill` (default) is fully rounded; `square` has the small radius of a field or a
  *  button — for a chip that sits in a table cell or beside square controls. */
 export type ChipShape = "pill" | "square";
@@ -86,6 +103,28 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
     idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-expense)]",
     selected: "border-current bg-[var(--bg-active)] text-[var(--money-expense)]",
   },
+  // The categorical hues: the `info` recipe with its own token triple, so a hue chip
+  // and a status chip in one row carry the same weight.
+  blue: {
+    idle: "border-[var(--hue-blue-border)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
+    selected: "border-[var(--hue-blue)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
+  },
+  indigo: {
+    idle: "border-[var(--hue-indigo-border)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
+    selected: "border-[var(--hue-indigo)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
+  },
+  purple: {
+    idle: "border-[var(--hue-purple-border)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
+    selected: "border-[var(--hue-purple)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
+  },
+  teal: {
+    idle: "border-[var(--hue-teal-border)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
+    selected: "border-[var(--hue-teal)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
+  },
+  orange: {
+    idle: "border-[var(--hue-orange-border)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
+    selected: "border-[var(--hue-orange)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
+  },
 };
 
 // `outline` idle looks: the tone's border and text, the surface left to whatever the
@@ -100,6 +139,11 @@ const OUTLINE: Record<ChipTone, string> = {
   info: "border-[var(--info-border)] bg-transparent text-[var(--info)]",
   income: "border-current/60 bg-transparent text-[var(--money-income)]",
   expense: "border-current/60 bg-transparent text-[var(--money-expense)]",
+  blue: "border-[var(--hue-blue-border)] bg-transparent text-[var(--hue-blue)]",
+  indigo: "border-[var(--hue-indigo-border)] bg-transparent text-[var(--hue-indigo)]",
+  purple: "border-[var(--hue-purple-border)] bg-transparent text-[var(--hue-purple)]",
+  teal: "border-[var(--hue-teal-border)] bg-transparent text-[var(--hue-teal)]",
+  orange: "border-[var(--hue-orange-border)] bg-transparent text-[var(--hue-orange)]",
 };
 
 // `solid`: the fill under its contrast pair. Only brand and danger have a declared
@@ -116,12 +160,40 @@ const SOLID: Record<ChipTone, string> = {
   info: "border-transparent bg-[var(--info)] text-[var(--text-inverse)]",
   income: "border-transparent bg-[var(--money-income)] text-[var(--text-inverse)]",
   expense: "border-transparent bg-[var(--money-expense)] text-[var(--text-inverse)]",
+  blue: "border-transparent bg-[var(--hue-blue)] text-[var(--text-inverse)]",
+  indigo: "border-transparent bg-[var(--hue-indigo)] text-[var(--text-inverse)]",
+  purple: "border-transparent bg-[var(--hue-purple)] text-[var(--text-inverse)]",
+  teal: "border-transparent bg-[var(--hue-teal)] text-[var(--text-inverse)]",
+  orange: "border-transparent bg-[var(--hue-orange)] text-[var(--text-inverse)]",
 };
+
+/** `dot`: the fill of the dot itself — the tone's strongest colour, which is the one
+ *  chosen to read on the page surface in both themes. Neutral takes the muted ink: a
+ *  grey dot is "no particular state", not a darker black. */
+const DOT: Record<ChipTone, string> = {
+  neutral: "bg-[var(--text-muted)]",
+  brand: "bg-[var(--brand)]",
+  danger: "bg-[var(--danger)]",
+  warning: "bg-[var(--warning)]",
+  success: "bg-[var(--success)]",
+  info: "bg-[var(--info)]",
+  income: "bg-[var(--money-income)]",
+  expense: "bg-[var(--money-expense)]",
+  blue: "bg-[var(--hue-blue)]",
+  indigo: "bg-[var(--hue-indigo)]",
+  purple: "bg-[var(--hue-purple)]",
+  teal: "bg-[var(--hue-teal)]",
+  orange: "bg-[var(--hue-orange)]",
+};
+
+/** Per size: the dot's diameter. */
+const DOT_SIZE: Record<ChipSize, string> = { xs: "size-1.5", sm: "size-2", md: "size-2", lg: "size-2.5" };
 
 /** The status-badge type (`caps`): a size step down, heavier and tracked, because
  *  capitals at body size shout and capitals untracked run together. Per size, so it
  *  replaces the size's own `text-*` through tailwind-merge. */
 const CAPS: Record<ChipSize, string> = {
+  xs: "text-[10px] font-semibold uppercase tracking-wider",
   sm: "text-[10px] font-semibold uppercase tracking-wider",
   md: "text-[11px] font-semibold uppercase tracking-wider",
   lg: "text-xs font-semibold uppercase tracking-wider",
@@ -129,6 +201,13 @@ const CAPS: Record<ChipSize, string> = {
 
 function surfaceOf(tone: ChipTone, variant: ChipVariant, selected: boolean | undefined): string {
   const palette = TONE[tone];
+  if (variant === "dot") {
+    // No surface and no border colour: the dot carries the tone, the text stays ink.
+    // The border goes transparent rather than away, so a dot chip lines up with a pill.
+    return selected
+      ? "border-transparent bg-transparent font-medium text-[var(--text-primary)]"
+      : "border-transparent bg-transparent text-[var(--text-secondary)]";
+  }
   if (variant === "solid") {
     // A solid chip is already the strongest look there is, so "on" is a ring round it.
     return cn(SOLID[tone], selected && "ring-2 ring-[var(--border-strong)] ring-offset-1 ring-offset-[var(--bg-surface)]");
@@ -172,6 +251,13 @@ const SIZE: Record<
   ChipSize,
   { body: string; split: string; tail: string; icon: string; remove: string }
 > = {
+  xs: {
+    body: "gap-1 px-1.5 py-0 text-[11px] leading-4",
+    split: "gap-1 ps-1.5 pe-0.5 py-0 text-[11px] leading-4",
+    tail: "pe-1",
+    icon: "size-3",
+    remove: "size-2.5",
+  },
   sm: {
     body: "gap-1 px-2 py-0.5 text-xs",
     split: "gap-1 ps-2 pe-1 py-0.5 text-xs",
@@ -238,6 +324,16 @@ interface ChipBaseProps {
    * it — "+ Outflow" in green next to an inflow (keksdose #417).
    */
   selected?: boolean;
+  /**
+   * Checkbox mode (0.10.0), for a toggle chip (`onClick` + `selected`): a small box
+   * at the start that shows a tick when `selected`, and the button reports
+   * `role="checkbox"` + `aria-checked` instead of `aria-pressed`. For a set of
+   * include/exclude choices where "on" must read as TICKED, not merely tinted —
+   * keksdose's add-group-card (the "which categories come along" pills), which put a
+   * real `<Checkbox>` inside a `<label>` pill by hand. The box is drawn in both
+   * states so ticking one never shifts its label.
+   */
+  checkbox?: boolean;
   /** Renders a dismiss affordance. Works alongside `href`/`onClick` — see the note below. */
   onRemove?: () => void;
   /** Accessible name for the dismiss button. Default: `common.remove` from the
@@ -341,6 +437,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     caps = false,
     icon: Icon,
     selected,
+    checkbox = false,
     href,
     renderLink,
     onClick,
@@ -362,7 +459,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const interactive = !!href || !!onClick;
   // One radius for every rounded piece — the pill, the body inside a split pill, the ×
   // — so a square chip has no round focus ring inside it.
-  const radius = shape === "square" ? (size === "sm" ? "rounded" : "rounded-md") : "rounded-full";
+  const radius =
+    shape === "square" ? (size === "sm" || size === "xs" ? "rounded" : "rounded-md") : "rounded-full";
+  const dot = variant === "dot";
   const type = cn(caps && CAPS[size], variant === "solid" && "justify-center tabular-nums");
   const surface = cn(
     surfaceOf(tone, variant, selected),
@@ -375,11 +474,29 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     radius,
     surface,
     interactive && !disabled && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
+    // An inert dot chip is text in a column: no inset, so it aligns with the header.
+    dot && !interactive && "px-0",
     className,
   );
 
+  // The checkbox box, only on the toggle shape it has meaning on.
+  const isCheckbox = checkbox && !!onClick && !href;
   const body = (
     <>
+      {isCheckbox && (
+        <span
+          aria-hidden
+          data-chip-check=""
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-sm border",
+            s.icon,
+            selected ? "border-current bg-current/15" : "border-current/50",
+          )}
+        >
+          {selected && <Check className="size-full" strokeWidth={3} />}
+        </span>
+      )}
+      {dot && <span aria-hidden data-chip-dot="" className={cn("shrink-0 rounded-full", DOT_SIZE[size], DOT[tone])} />}
       {Icon && <Icon className={cn(s.icon, "shrink-0")} aria-hidden />}
       <span className="min-w-0 truncate">{children}</span>
     </>
@@ -485,7 +602,11 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         // Only when `selected` is PASSED: a chip with `onClick` and no `selected` is an
         // action button (it does something), not a toggle (it is on or off), and
         // announcing it "not pressed" would claim a state it does not have.
-        aria-pressed={selected}
+        // A checkbox chip says "checked", not "pressed" — the same state in the words
+        // of the control it looks like.
+        role={isCheckbox ? "checkbox" : undefined}
+        aria-pressed={isCheckbox ? undefined : selected}
+        aria-checked={isCheckbox ? !!selected : undefined}
         className={remove ? inner : look}
         {...rest}
       >

@@ -123,6 +123,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DateRangePicker",
     "DateRangePicker — with presets",
     "DateRangePicker — preset ids and commit=\"apply\"",
+    "DateRangePicker — renderDraftSummary",
     "DateRangePicker — the phone sheet and sheetBackCloses",
     "DateRangePicker — renderTrigger",
     "DateRangePicker — bounded, invalid, disabled",
@@ -238,6 +239,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Spinner",
     "UserAvatar",
     "avatarInitials()",
+    "IconButton — label, tooltip, tooltipSide and tooltipPortal",
+    "Button — tone on link and ghost",
+    "Button — pressed",
+    "Button — disabledReason",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -258,6 +263,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tabs — orientation=\"vertical\"",
     "Tabs that add and remove",
     "Delete on the open tab only",
+    "Chip — the five categorical hues × every variant",
+    "Chip — xs, checkbox mode and the dot variant",
+    "ToggleGroup — size sm, and label, hint and error in a form row",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -271,6 +279,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AlertBanner — onDismiss, a whole-row button or link, an icon",
     "AlertBanner — inline",
     "toneFrameClass() / alertFrameClass()",
+    "EmptyState — inline variant and the danger and success tones",
+    "AlertBanner — success, size sm, strip with an action, elevated",
+    "Toasts — every tone, with and without a description",
+    "Toasts — an action, undo and redo",
+    "Toasts — replace by id, and loading to success",
+    "Toasts — redact, and where they appear on a phone",
   ],
   "description-list": [
     "DescriptionList — rows and cards, comfortable and compact",
@@ -279,6 +293,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Table — overflow",
     "Separator",
     "ScrollArea",
+    "DescriptionList — stacked, with columns and span",
+    "DescriptionList — tight, card columns and prose",
+    "Table — empty, TableEmpty, density none and layout",
   ],
   "tree-view": [
     "TreeView — keyboard, icons, trailing figures",
@@ -286,6 +303,16 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TreeView — lazy children",
     "TreeView — right-to-left",
     "TreeRow — on its own",
+  ],
+  "lists-menus": [
+    "ListItem — button, link, external and static rows",
+    "ListItem — unread, selected, status, loading and disabled",
+    "ListItem — subtitleLines, meta, leading and align",
+    "List — density, separator and as",
+    "MenuItem — radio, checkbox, danger and disabled",
+    "MenuItem — links, current and renderLink",
+    "BulkActionBar — sticky and inline",
+    "BulkActionBar — floating, count, clear and labels",
   ],
   "data-table": [
     "DataTable — the whole surface",
@@ -320,6 +347,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Disclosure — disabled, keepMounted and right-to-left",
     "Collapse",
     "DialogFrame",
+    "Disclosure — trailingInTrigger and chevronPosition after-title",
+    "Disclosure — an empty controls",
   ],
   "chart-shell": [
     "Bar — grouped series, toggle legend",
@@ -354,6 +383,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "StaticSeriesChart — holes, coloured spans, no zoom",
     "SeriesChart — labels, locale and right-to-left",
     "Series chart helpers",
+    "SeriesChart — whole-number y ticks (integerTicks)",
   ],
   "series-chart-marks": [
     "Bars, grouped, with a line over them — and onPointClick",
@@ -363,6 +393,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "zoomAxes — sixty bars that opt back into a zoom",
     "visibleSeries / seriesLegendEntries — colours that hold still",
     "Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash",
+    "Bars and periods from the keyboard — onPointClick",
   ],
   "stats": [
     "Sparkline",
@@ -387,6 +418,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FullBleedDialog — footer",
     "FullBleedDialog — onKeyDown, and a header that stretches",
     "OVERLAY_EXIT_MS + useCloseTransition",
+    "Modal — open, and the exit on a caller's close",
+    "DialogFrame — open",
+    "FullBleedDialog — title and headingAs",
   ],
   "confirm-floating": [
     "useConfirm — danger, warning, neutral",
@@ -403,6 +437,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tooltip — rich labels, className and the portal flip",
     "Right-to-left — which placements flip",
     "placeTooltip",
+    "Tooltip — auto-portal inside a scroll container",
   ],
   "tour": [
     "Guided tour — useTour + TourProvider",
@@ -417,6 +452,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CommandPalette — redactLabels and item redact",
     "CommandPalette — a controlled query",
     "GlobalSearch — ranked index, async source and suggestions",
+    "CommandPalette — density and a synchronous provider",
+    "GlobalSearch — suggestionsKeepGroups, triggerIconSize, triggerName and density",
   ],
   "swipeable-row": [
     "SwipeableRow",
@@ -436,6 +473,14 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShellNavItem — field by field",
     "AppShell — every prop on a switch",
     "AppShell — the contracts",
+  ],
+  "page-structure": [
+    "PageHeader — eyebrow, description, actions and breadcrumbs",
+    "PageHeader — title only, and title with actions",
+    "Breadcrumbs — collapse on phones and keepEnd",
+    "Breadcrumbs — separator, renderLink, labels and right-to-left",
+    "SectionLabel and Caption",
+    "StatusDot — every tone, sizes, ring and label",
   ],
   "settings": [
     "ThemeSetting",

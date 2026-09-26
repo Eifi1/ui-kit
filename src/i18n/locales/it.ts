@@ -237,6 +237,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     dialogFrame: {
       close: "Chiudi",
     },
+    bulkActionBar: {
+      selected: (count) => `${n(count)} ${count === 1 ? "selezionato" : "selezionati"}`,
+      clear: "Annulla selezione",
+      cleared: "Selezione annullata",
+    },
     swipeableRow: {
       actions: "Azioni della riga",
     },
@@ -374,6 +379,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Trascina per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Fai doppio clic per ripristinare.",
       empty: "Nessun dato",
       legend: "Serie",
+      points: "Valori del grafico",
     },
     confirmDialog: {
       confirm: "Conferma",
@@ -388,6 +394,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       failed: "Copia non riuscita",
       copiedAnnouncement: "Copiato negli appunti",
       failedAnnouncement: "Impossibile copiare negli appunti",
+    },
+    list: {
+      unread: "Non letto",
+      opensInNewTab: "si apre in una nuova scheda",
+    },
+    breadcrumbs: {
+      label: "Percorso di navigazione",
+      showAll: "Mostra percorso completo",
+    },
+    toast: {
+      close: "Chiudi notifica",
+      notifications: "Notifiche",
+      undo: "Annulla",
+      redo: "Ripeti",
     },
   };
 }

@@ -233,6 +233,103 @@
   --success-bg: rgba(6, 78, 59, 0.25);
 }
 
+/* ── Toasts ─────────────────────────────────────────────────────────────────
+   The kit `<Toaster>` (components/toast.tsx) paints sonner with the AlertBanner
+   tones. These are ALIASES, not new colours, and they exist for one reason: sonner
+   declares its own `--success-bg` / `--success-border` (and info, warning) on the
+   toaster element, so that element cannot read the kit's value under the same name
+   — `--success-bg: var(--success-bg)` is a cycle. Declared here, they are computed
+   on `<html>` and inherited down under a name sonner does not touch.
+
+   The background is the tone's wash layered on the surface, as AlertBanner's
+   `elevated` frame does: the dark washes are translucent, and a toast floats over
+   content. `--z-toast` is above every kit overlay (modal and sheets z-50, tour
+   z-60/61, command palette z-70) and above whatever an app stacks on top of those —
+   a toast confirming a dialog's action must not land under the dialog. */
+:root,
+.dark {
+  --z-toast: 2147483647;
+  --toast-success-bg: linear-gradient(var(--success-bg), var(--success-bg)) var(--bg-surface);
+  --toast-success-border: var(--success-border);
+  --toast-info-bg: linear-gradient(var(--info-bg), var(--info-bg)) var(--bg-surface);
+  --toast-info-border: var(--info-border);
+  --toast-warning-bg: linear-gradient(var(--warning-bg), var(--warning-bg)) var(--bg-surface);
+  --toast-warning-border: var(--warning-border);
+  --toast-danger-bg: linear-gradient(var(--danger-bg), var(--danger-bg)) var(--bg-surface);
+  --toast-danger-border: var(--danger-border);
+}
+
+/* The description of an untoned toast in the secondary text colour (sonner hard-codes
+   #3f3f3f, unreadable in the dark theme); a toned toast's inherits its tone. */
+.kit-toaster [data-sonner-toast][data-styled="true"]:not([data-type="success"], [data-type="info"], [data-type="warning"], [data-type="error"]) [data-description] {
+  color: var(--text-secondary);
+}
+/* The action button in the tone's own colour rather than sonner's black pill. */
+.kit-toaster [data-sonner-toast][data-styled="true"] [data-button]:not([data-cancel]) {
+  background: var(--toast-action-bg, var(--text-primary));
+  color: var(--bg-surface);
+}
+.kit-toaster [data-sonner-toast][data-type="success"] { --toast-action-bg: var(--success); }
+.kit-toaster [data-sonner-toast][data-type="info"] { --toast-action-bg: var(--info); }
+.kit-toaster [data-sonner-toast][data-type="warning"] { --toast-action-bg: var(--warning); }
+.kit-toaster [data-sonner-toast][data-type="error"] { --toast-action-bg: var(--danger); }
+/* The kit's focus ring on the toast's buttons — sonner's is a black shadow that
+   vanishes on the dark theme. */
+.kit-toaster [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ── Categorical hues ───────────────────────────────────────────────────────
+   Colours that MEAN nothing but "this is a different value": kastlan's status
+   enums (status-badge.tsx over enum-meta.ts), where ~15 enums map to 9 Tailwind
+   hues. Four of those are semantic and already have tokens — green = --success,
+   yellow = --warning, red = --danger, gray = the neutral chip — so only the five
+   below are new: blue (open / sent / rented), purple (assigned / accepted),
+   orange (terminated / high urgency), teal (invoiced) and indigo (a meeting
+   stage). The smallest set that covers every enum; deliberately not a ramp.
+
+   Same triple and same shades as the status family (700 text / 300 border /
+   100 surface in light, 300 text / translucent 700 border / 900 wash in dark),
+   so a categorical chip sits beside a semantic one at the same weight. Not in
+   `TokenSet`: like `--danger`, a hue is a specific colour, not a tint of the
+   palette preset, so it lives here and nowhere else. */
+:root {
+  --hue-blue: #1d4ed8;            /* blue-700 */
+  --hue-blue-border: #93c5fd;     /* blue-300 */
+  --hue-blue-bg: #dbeafe;         /* blue-100 */
+  --hue-indigo: #4338ca;          /* indigo-700 */
+  --hue-indigo-border: #a5b4fc;   /* indigo-300 */
+  --hue-indigo-bg: #e0e7ff;       /* indigo-100 */
+  --hue-purple: #7e22ce;          /* purple-700 */
+  --hue-purple-border: #d8b4fe;   /* purple-300 */
+  --hue-purple-bg: #f3e8ff;       /* purple-100 */
+  --hue-teal: #0f766e;            /* teal-700 */
+  --hue-teal-border: #5eead4;     /* teal-300 */
+  --hue-teal-bg: #ccfbf1;         /* teal-100 */
+  --hue-orange: #c2410c;          /* orange-700 */
+  --hue-orange-border: #fdba74;   /* orange-300 */
+  --hue-orange-bg: #ffedd5;       /* orange-100 */
+}
+
+.dark {
+  --hue-blue: #93c5fd;            /* blue-300 */
+  --hue-blue-border: rgba(29, 78, 216, 0.6);
+  --hue-blue-bg: rgba(30, 58, 138, 0.25);
+  --hue-indigo: #a5b4fc;          /* indigo-300 */
+  --hue-indigo-border: rgba(67, 56, 202, 0.6);
+  --hue-indigo-bg: rgba(49, 46, 129, 0.25);
+  --hue-purple: #d8b4fe;          /* purple-300 */
+  --hue-purple-border: rgba(126, 34, 206, 0.6);
+  --hue-purple-bg: rgba(88, 28, 135, 0.25);
+  --hue-teal: #5eead4;            /* teal-300 */
+  --hue-teal-border: rgba(15, 118, 110, 0.6);
+  --hue-teal-bg: rgba(19, 78, 74, 0.25);
+  --hue-orange: #fdba74;          /* orange-300 */
+  --hue-orange-border: rgba(194, 65, 12, 0.6);
+  --hue-orange-bg: rgba(124, 45, 18, 0.25);
+}
+
 /* Semantic colour utilities backed by the tokens above. Unlayered so they win
    over Tailwind's layered colour utilities, and theme-aware for free (the var
    flips under .dark) — no dark: variant needed at the call site. */

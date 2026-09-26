@@ -1,9 +1,17 @@
-import { createContext, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import { Children, createContext, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
-export type TableDensity = "comfortable" | "compact";
+/** `none` (0.10.0): no cell padding at all — keksdose's VAT summary, a table set
+ *  inside a card's own padding whose columns are spaced by hand (`pl-2` on exactly the
+ *  columns that need it). Type stays at the body size, as `comfortable`. */
+export type TableDensity = "comfortable" | "compact" | "none";
+/** CSS `table-layout`. `auto` (the browser default) sizes columns to their content;
+ *  `fixed` takes widths from the first row and ignores the rest — keksdose's VAT
+ *  summary switches to it while editing so two inputs stop bidding against the
+ *  figures for room. */
+export type TableLayout = "auto" | "fixed";
 export type TableAlign = "start" | "center" | "end";
 
 interface TableContextValue {
@@ -28,6 +36,7 @@ const SectionContext = createContext<"head" | "body" | "foot">("body");
 const CELL_PAD: Record<TableDensity, string> = {
   comfortable: "px-3 py-2",
   compact: "px-2 py-1",
+  none: "p-0",
 };
 
 const ALIGN: Record<TableAlign, string> = {
@@ -54,6 +63,8 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   hover?: boolean;
   /** Classes for the overflow wrapper around the `<table>` (a max-height, a border). */
   wrapperClassName?: string;
+  /** See {@link TableLayout}. Unset leaves the browser's `auto` and adds no class. */
+  layout?: TableLayout;
 }
 
 /**
@@ -78,6 +89,7 @@ export function Table({
   zebra = false,
   hover = false,
   wrapperClassName,
+  layout,
   className,
   "aria-label": ariaLabel,
   ...rest
@@ -127,6 +139,8 @@ export function Table({
           className={cn(
             "w-full caption-bottom border-collapse text-sm text-[var(--text-primary)]",
             density === "compact" && "text-xs",
+            layout === "fixed" && "table-fixed",
+            layout === "auto" && "table-auto",
             className,
           )}
         />
@@ -145,13 +159,84 @@ export function TableHead({ className, ...rest }: TableHeadProps) {
   );
 }
 
-export type TableBodyProps = ComponentPropsWithoutRef<"tbody">;
+export interface TableBodyProps extends ComponentPropsWithoutRef<"tbody"> {
+  /**
+   * Shown as ONE full-width row (a {@link TableEmpty}) when the body has no rows —
+   * `children` that render nothing: an empty `.map`, a `false`, `null`. kastlan hand-
+   * writes that row with a counted `colSpan` in unit-values-editor, the meeting agenda
+   * and invitations tabs, the journal-entry and invoice detail pages, and a column
+   * added later leaves every one of those counts one short.
+   */
+  empty?: ReactNode;
+}
 
-export function TableBody({ className, ...rest }: TableBodyProps) {
+export function TableBody({ className, empty, children, ...rest }: TableBodyProps) {
+  // `toArray` drops null/undefined/booleans and flattens arrays, so `[[], false]` —
+  // an empty map beside a conditional row that is off — is no rows.
+  const hasRows = Children.toArray(children).length > 0;
   return (
     <SectionContext.Provider value="body">
-      <tbody {...rest} className={cn("[&>tr:last-child]:border-b-0", className)} />
+      <tbody {...rest} className={cn("[&>tr:last-child]:border-b-0", className)}>
+        {hasRows || empty === undefined || empty === null || empty === false ? (
+          children
+        ) : (
+          <TableEmpty>{empty}</TableEmpty>
+        )}
+      </tbody>
     </SectionContext.Provider>
+  );
+}
+
+export interface TableEmptyProps extends Omit<ComponentPropsWithoutRef<"tr">, "children"> {
+  children: ReactNode;
+  /** Columns to span. Default: MEASURED — the widest row of the table it renders in,
+   *  counted after mount, so the row stays full width when a column is added. */
+  colSpan?: number;
+  /** Classes for the `<td>`. */
+  cellClassName?: string;
+}
+
+/**
+ * The "nothing here" row: one cell across every column, centred, muted. What
+ * {@link TableBodyProps.empty} renders, and usable on its own for a body whose rows
+ * are not its direct children.
+ */
+export function TableEmpty({ children, colSpan, cellClassName, className, ...rest }: TableEmptyProps) {
+  const { density } = useContext(TableContext);
+  const cell = useRef<HTMLTableCellElement | null>(null);
+  const [measured, setMeasured] = useState(1);
+  // Every render, deliberately: a column can appear in the head without anything this
+  // row depends on changing. It cannot loop — setting the same count is a bail-out.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    if (colSpan !== undefined) return;
+    const row = cell.current?.parentElement;
+    const table = cell.current?.closest("table");
+    if (!row || !table) return;
+    let widest = 1;
+    for (const r of Array.from(table.rows)) {
+      if (r === row) continue;
+      let n = 0;
+      for (const c of Array.from(r.cells)) n += c.colSpan || 1;
+      widest = Math.max(widest, n);
+    }
+    setMeasured(widest);
+  });
+  return (
+    <tr {...rest} data-table-empty="" className={className}>
+      <td
+        ref={cell}
+        colSpan={colSpan ?? measured}
+        className={cn(
+          // `none` keeps the message off the edges regardless: it is text, not a figure.
+          density === "none" ? "py-2" : CELL_PAD[density],
+          "text-center text-[var(--text-muted)]",
+          cellClassName,
+        )}
+      >
+        {children}
+      </td>
+    </tr>
   );
 }
 

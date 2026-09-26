@@ -57,6 +57,40 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
     "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus:ring-[var(--brand)]",
 };
 
+/**
+ * The text colour of a `link` or `ghost` button, over the variant's own.
+ *
+ * `muted` is the QUIET link keksdose hand-rolls in six places (tours-page:321's "Mark
+ * undone", transaction-fields:176/215's "Add line" / "Fill total",
+ * invoice-lines-table:376, invoice-review:464): secondary text that darkens to the
+ * body colour under the pointer, for an action that must be findable but not compete
+ * with the brand-coloured one beside it. `danger` is the same quiet look turning
+ * `--danger` on hover — transaction-editor:401's "Remove split", which is a text
+ * action that destroys something.
+ *
+ * A `tone` rather than a `link-muted` variant, because it is the axis IconButton
+ * already has (`tone="muted"`, `tone="danger"`, same quiet-until-hover meaning), and
+ * because the same two looks are wanted on `ghost`. The filled and bordered variants
+ * carry their meaning in the box, not the text, so a tone on them does nothing.
+ */
+export type ButtonTone = "default" | "muted" | "danger";
+
+const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
+  muted:
+    "text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:hover:text-[var(--text-secondary)]",
+  danger:
+    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)] disabled:hover:text-[var(--text-secondary)]",
+};
+
+/** Only the two transparent variants take a tone; see {@link ButtonTone}. */
+const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
+
+// `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
+// lenkbank's "All speeds" toggle paints by hand (gear/hysteresis-charts.tsx:482). After
+// the tone, so a pressed muted link is brand, and an unpressed one is quiet grey.
+const BUTTON_LINK_PRESSED =
+  "font-medium text-[var(--brand)] hover:text-[var(--brand)] disabled:hover:text-[var(--brand)]";
+
 /** The second argument of {@link buttonClasses} in its options form. */
 export interface ButtonClassesOptions {
   /** See {@link ButtonProps.size}. */
@@ -105,12 +139,75 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    *  ordinary prop, so it rides `...rest` onto the element with no `forwardRef` —
    *  declared here only because `ButtonHTMLAttributes` does not carry it. */
   ref?: Ref<HTMLButtonElement>;
+  /** Text colour for `link` and `ghost`: `muted` (quiet, body colour on hover) or
+   *  `danger` (quiet, `--danger` on hover). Ignored by the other variants. See
+   *  {@link ButtonTone}. */
+  tone?: ButtonTone;
+  /**
+   * Make it a toggle button, as {@link IconButton}'s `pressed` does. `true` sets
+   * `aria-pressed="true"` and draws the "on" look — on a `link`, the brand colour and a
+   * medium weight; on the boxed variants, the quiet brand fill IconButton uses — and
+   * `false` sets `aria-pressed="false"` with the ordinary look. Left out, no
+   * `aria-pressed` (or the caller's own). For lenkbank's "All speeds" text toggle
+   * (gear/hysteresis-charts.tsx:482), which is a hand-rolled `<button aria-pressed>`
+   * swapping two class strings; with `variant="link" tone="muted"` it is this.
+   */
+  pressed?: boolean;
+  /**
+   * Why the action is not available — the button's half of DangerConfirm's
+   * `lockedReason` (kastlan handover-detail-page.tsx:197 locks a signed handover).
+   *
+   * A disabled button that cannot say why is a dead end: the native `disabled` takes it
+   * out of the tab order, so a keyboard user never lands on it, and a pointer gets a
+   * `not-allowed` cursor and nothing else. With a reason the button is `aria-disabled`
+   * instead — still focusable, still hoverable — clicks (and the Enter/Space and form
+   * submission they stand for) do nothing, and the reason is shown in the kit
+   * {@link Tooltip} and attached with `aria-describedby`, so a screen reader hears it
+   * on focus. It wins over `disabled`: passing both keeps the button reachable, which is
+   * the point of giving a reason.
+   *
+   * The description is a `hidden` copy of the reason rather than the bubble itself: the
+   * bubble exists only while hovered or focused once it is portalled, and a description
+   * that comes and goes is read inconsistently. The bubble is kept visual, the way
+   * DangerConfirm keeps its own.
+   */
+  disabledReason?: ReactNode;
 }
 
-export function Button({ variant = "primary", size = "md", stretch, className, ...rest }: ButtonProps) {
-  return (
+function hasContent(node: ReactNode): boolean {
+  return node !== undefined && node !== null && node !== false && node !== "";
+}
+
+export function Button({
+  variant = "primary",
+  size = "md",
+  stretch,
+  tone = "default",
+  pressed,
+  disabledReason,
+  className,
+  onClick,
+  ...rest
+}: ButtonProps) {
+  const reasonId = useId();
+  const locked = hasContent(disabledReason);
+  const ownDescribedBy = rest["aria-describedby"];
+  const button = (
     <button
       {...rest}
+      disabled={locked ? undefined : rest.disabled}
+      aria-disabled={locked || rest["aria-disabled"]}
+      aria-describedby={locked ? (ownDescribedBy ? `${ownDescribedBy} ${reasonId}` : reasonId) : ownDescribedBy}
+      aria-pressed={pressed ?? rest["aria-pressed"]}
+      onClick={(e) => {
+        // `preventDefault` as well as not calling through: a locked submit button must
+        // not submit its form, and the browser does that after this handler returns.
+        if (locked) {
+          e.preventDefault();
+          return;
+        }
+        onClick?.(e);
+      }}
       className={cn(
         BUTTON_BASE,
         BUTTON_SIZES[size],
@@ -119,9 +216,28 @@ export function Button({ variant = "primary", size = "md", stretch, className, .
         // align-items). No effect outside a flex row / when it's already the tallest.
         stretch && "self-stretch",
         buttonVariantClasses[variant],
+        tone !== "default" && TONED_VARIANTS.has(variant) && BUTTON_TONES[tone],
+        pressed && (variant === "link" ? BUTTON_LINK_PRESSED : ICON_BUTTON_PRESSED),
+        // The disabled look for the focusable kind of disabled.
+        locked && "cursor-not-allowed opacity-50",
         className,
       )}
     />
+  );
+  if (!locked) return button;
+  return (
+    // The button in a FRAGMENT so Tooltip does not clone its bubble into the
+    // description as well — the hidden copy below already describes it, and the same
+    // sentence twice would be read on every focus. `stretch` moves to the wrapper,
+    // which is now the flex item.
+    <Tooltip label={disabledReason} className={stretch ? "self-stretch" : undefined}>
+      <>
+        {button}
+        <span id={reasonId} hidden>
+          {disabledReason}
+        </span>
+      </>
+    </Tooltip>
   );
 }
 
@@ -305,16 +421,59 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    *  The pair look exactly like the nested version, click exactly like it, and
    *  are two tab stops a screen reader can tell apart. */
   stopPropagation?: boolean;
+  /**
+   * The button's name, said once: it becomes the `aria-label` AND the text of a kit
+   * {@link Tooltip} round the button.
+   *
+   * Every app writes the pair by hand. lenkbank's nine icon actions all carry
+   * `aria-label={t(x)} title={t(x)}` (shared/lib/table-columns.tsx:103,
+   * projects-page.tsx:83, setpoint/segment-list.tsx:198/207, profile-bar.tsx:128/142,
+   * shortcut-dialog.tsx:815/857/1007) — and `title` is the browser's own tooltip,
+   * which shows late, never on focus and never on touch, and looks like no other
+   * label in the kit. kastlan's RowAction (shared/components/data-table/row-action.tsx)
+   * and keksdose's icon wrappers each exist to put a Tooltip round an IconButton.
+   *
+   * A caller's own `aria-label` still wins, for the rare name that should be longer
+   * than the bubble. The bubble is visual only: it would otherwise describe the button
+   * with its own name, and a screen reader would read the same word twice. Tooltip's
+   * default placement applies — in place, or portalled inside a scroll container —
+   * unless `tooltipPortal` says otherwise.
+   */
+  label?: string;
+  /** Show `label` as a tooltip. Default `true`; `false` keeps `label` as the
+   *  accessible name only — for a button whose glyph is universally read (a close ✕ in
+   *  a dialog header) or that already sits under a tooltip of its own. */
+  tooltip?: boolean;
+  /** Where the `label` tooltip opens. See {@link Tooltip}'s `side`. */
+  tooltipSide?: TooltipSide;
+  /** Passed to the `label` tooltip's `portal`. Left out, Tooltip decides (see there). */
+  tooltipPortal?: boolean;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { variant = "ghost", size = "md", tone = "default", quiet, pressed, stopPropagation, className, onClick, onKeyDown, ...rest },
+  {
+    variant = "ghost",
+    size = "md",
+    tone = "default",
+    quiet,
+    pressed,
+    stopPropagation,
+    label,
+    tooltip = true,
+    tooltipSide,
+    tooltipPortal,
+    className,
+    onClick,
+    onKeyDown,
+    ...rest
+  },
   ref,
 ) {
-  return (
+  const button = (
     <button
       ref={ref}
       {...rest}
+      aria-label={rest["aria-label"] ?? label}
       aria-pressed={pressed ?? rest["aria-pressed"]}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
@@ -337,6 +496,14 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         className,
       )}
     />
+  );
+  if (!tooltip || label === undefined || label === "") return button;
+  return (
+    // A fragment, so Tooltip leaves the button's description alone: the bubble says
+    // exactly what `aria-label` already does.
+    <Tooltip label={label} side={tooltipSide} portal={tooltipPortal}>
+      <>{button}</>
+    </Tooltip>
   );
 });
 IconButton.displayName = "IconButton";
@@ -1400,10 +1567,72 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "
    *  wrap and centre as one row), kastlan's "Create a rule". Buttons or links the
    *  caller renders; the box only places them. */
   action?: ReactNode;
+  /**
+   * `box` (default): the dashed, padded card that stands in for a whole section.
+   * `inline`: one quiet line with no box — for the empty state INSIDE something that
+   * already has its own frame, where a dashed card would be a box in a box. keksdose
+   * writes that line by hand five times as a muted `<p className="py-6 text-center">`:
+   * the notification inbox (notification-inbox:140), a support thread
+   * (support-thread:144), the assistant (assistant-page:321), the admin support panel
+   * (support-panel:265) and the funding dialog (funding-dialog:89). The icon shrinks
+   * to the text's size and sits before the title, the hint follows on the same line,
+   * and the row wraps only when it must. Centred like the box; `className="justify-start"`
+   * for a list that reads from the start edge (funding-dialog).
+   */
+  variant?: "box" | "inline";
+  /**
+   * Colour the icon and the title: `danger` for an error standing where the content
+   * should be — kastlan's ErrorState (shared/components/feedback/error-state.tsx) and
+   * its error boundary's fallback (error-boundary.tsx:16), both a red triangle over a
+   * message — and `success` for an empty state that is GOOD news, kastlan's "No defects
+   * recorded for this room" (handover defects-step.tsx:142, a green check). Left out,
+   * both stay muted. The hint stays muted either way: it is the explanation, not the
+   * verdict.
+   */
+  tone?: "danger" | "success";
 }
 
-export function EmptyState({ title, hint, icon, action, headingAs, className, ...rest }: EmptyStateProps) {
+const EMPTY_STATE_TONE: Record<"danger" | "success", string> = {
+  danger: "text-[var(--danger)]",
+  success: "text-[var(--success)]",
+};
+
+export function EmptyState({
+  title,
+  hint,
+  icon,
+  action,
+  headingAs,
+  variant = "box",
+  tone,
+  className,
+  ...rest
+}: EmptyStateProps) {
   const Title = headingAs ?? "div";
+  const toneClass = tone ? EMPTY_STATE_TONE[tone] : undefined;
+  const hasHint = hint != null && hint !== false && hint !== "";
+  if (variant === "inline") {
+    return (
+      <div
+        {...rest}
+        className={cn(
+          "flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-4 text-center text-sm text-[var(--text-muted)]",
+          className,
+        )}
+      >
+        {icon != null && (
+          <span aria-hidden className={cn("flex text-[var(--text-placeholder)] [&_svg]:size-4", toneClass)}>
+            {icon}
+          </span>
+        )}
+        {/* No weight of its own: one muted line is what these sites were, and a
+            bold title would turn a quiet "nothing here" into a heading. */}
+        <Title className={cn("text-sm", toneClass)}>{title}</Title>
+        {hasHint && <span className="text-xs">{hint}</span>}
+        {action != null && <span className="flex flex-wrap items-center gap-2">{action}</span>}
+      </div>
+    );
+  }
   return (
     <div
       {...rest}
@@ -1413,13 +1642,13 @@ export function EmptyState({ title, hint, icon, action, headingAs, className, ..
       )}
     >
       {icon != null && (
-        <div aria-hidden className="mb-3 text-[var(--text-placeholder)] [&_svg]:size-8">
+        <div aria-hidden className={cn("mb-3 text-[var(--text-placeholder)] [&_svg]:size-8", toneClass)}>
           {icon}
         </div>
       )}
       {/* `text-sm`: a heading keeps the box's size, not whatever a stylesheet gives h2. */}
-      <Title className="text-sm font-medium text-[var(--text-secondary)]">{title}</Title>
-      {hint != null && hint !== false && hint !== "" && <div className="mt-1 text-xs">{hint}</div>}
+      <Title className={cn("text-sm font-medium text-[var(--text-secondary)]", toneClass)}>{title}</Title>
+      {hasHint && <div className="mt-1 text-xs">{hint}</div>}
       {action != null && (
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>
       )}

@@ -1,5 +1,6 @@
 import { Pencil } from "lucide-react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle, IconButton } from "../components/ui";
+import { Tooltip } from "../components/tooltip";
 import type { SummarySection, WizardLabels } from "./types";
 import { DEFAULT_WIZARD_LABELS } from "./types";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -44,16 +45,19 @@ export function WizardSummary({
             <CardTitle className="text-base">{section.label}</CardTitle>
             {section.stepIndex !== undefined && onEditStep && (
               <CardAction>
-                <IconButton
-                  size="sm"
-                  variant="ghost"
-                  aria-label={l.edit}
-                  title={l.edit}
-                  disabled={disabled}
-                  onClick={() => onEditStep(section.stepIndex as number)}
-                >
-                  <Pencil />
-                </IconButton>
+                {/* The kit Tooltip, not a native `title`: it shows on keyboard focus too,
+                    and an app with a one-tooltip rule (keksdose dev#523) sees one. */}
+                <Tooltip label={l.edit}>
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    aria-label={l.edit}
+                    disabled={disabled}
+                    onClick={() => onEditStep(section.stepIndex as number)}
+                  >
+                    <Pencil />
+                  </IconButton>
+                </Tooltip>
               </CardAction>
             )}
           </CardHeader>

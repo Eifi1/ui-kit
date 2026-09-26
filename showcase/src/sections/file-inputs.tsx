@@ -104,8 +104,8 @@ export function FileInputs() {
           an English one (that button does exactly this). All seven shipped locales carry it.
         </Note>
         <Note>
-          With no <code className="font-mono">onInvalid</code>, a rejection does{" "}
-          <code className="font-mono">await import("sonner")</code> and toasts. The static
+          With no <code className="font-mono">onInvalid</code>, a rejection calls the kit&apos;s{" "}
+          <code className="font-mono">toast.error</code>, which loads sonner lazily. The static
           import is avoided on purpose: sonner is an OPTIONAL peer, and the barrel re-exports
           this module — so importing it at the top would have broken{" "}
           <code className="font-mono">import {"{"} Button {"}"}</code> for any app that never
@@ -568,7 +568,7 @@ function DropzoneFeedback() {
         ]}
       />
       <Note>
-        <code className="font-mono">"toast"</code> goes through sonner;{" "}
+        <code className="font-mono">"toast"</code> goes through the kit&apos;s <code className="font-mono">toast</code>;{" "}
         <code className="font-mono">"inline"</code> prints under the zone in the danger colour
         and ties it to the zone with <code className="font-mono">aria-describedby</code>;{" "}
         <code className="font-mono">"none"</code> shows nothing and leaves it to the caller — the

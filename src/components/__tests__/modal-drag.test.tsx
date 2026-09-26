@@ -33,6 +33,11 @@ const POINTER_EVENTS = new Set([
  * mid-test and the tracker would stop seeing removals.
  */
 function trackWindowListeners() {
+  // Warm jsdom up first. Its selector engine (@asamuzakjp/dom-selector) lazily adds a
+  // `mouseup` listener of its own to `window` the first time styles are computed; under
+  // vitest 5's per-file isolation that first time fell inside this tracker and read as a
+  // leak of the Modal's. Only listeners added AFTER this line are the component's.
+  window.getComputedStyle(document.body);
   let live: Array<[string, unknown]> = [];
   const realAdd = window.addEventListener;
   const realRemove = window.removeEventListener;

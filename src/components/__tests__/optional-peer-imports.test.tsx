@@ -64,8 +64,14 @@ describe("FileDropzone's rejection path", () => {
     const { toast } = await import("sonner");
     renderDropzone();
     drop(target(), ZIP());
-    // The import is dynamic now, so the toast lands a microtask later.
-    await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Nur .zip-Dateien"));
+    // Through the kit's `toast`, which loads sonner dynamically — so the toast lands a
+    // microtask later, carrying the id the kit chose.
+    await vi.waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Nur .zip-Dateien",
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
+    );
   });
 
   it("still accepts a valid file", () => {

@@ -3,21 +3,13 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "../lib/cn";
+// Read at the moment of closing, as `useCloseTransition` does: the setting can change
+// under a long-lived page.
+import { prefersReducedMotion } from "../hooks/use-close-transition";
 
 /** How long the fold takes, in ms. The same number as the `duration-200` below and as
  *  the unmount timer, because they are the same movement. */
 const COLLAPSE_MS = 200;
-
-/** Read at the moment of closing, like `useCloseTransition` does: the setting can
- *  change under a long-lived page, and jsdom/SSR have no `matchMedia` — where "no
- *  animation" is also the only correct answer, since nothing is painting. */
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window === "undefined" ||
-    typeof window.matchMedia !== "function" ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 /**
  * `extends` the div's props so an `id` (what a trigger's `aria-controls` points at), a
@@ -163,8 +155,14 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * after the flag, like every other menu row with a sub-list. With `trailing`, the
    * chevron follows it, as on a card. A `card` always has it at the end, so this is
    * ignored there. A `menu` defaults to `end`, like the menu rows around it.
+   *
+   * `after-title` sits it right after the title's text, pointing down and turning up —
+   * "Net profit ⌄ ······ 1,234.50", Lenkbank's result rows, where the far end of the
+   * row belongs to a figure (see {@link trailingInTrigger}) and a leading chevron
+   * would push every label off the column the non-expandable rows' labels start on.
+   * Not a card's: its chevron keeps the end.
    */
-  chevronPosition?: "start" | "end";
+  chevronPosition?: "start" | "end" | "after-title";
   /**
    * Wrap the header button in a heading of this level. The WAI-ARIA disclosure pattern
    * puts the button INSIDE the heading when the disclosure titles a section, so the
@@ -203,8 +201,26 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * the row under it (a stretched hit area), so clicking the empty space or the
    * card's chevron still toggles, while whatever sits in `trailing` gets its own
    * clicks. With `trailing`, the card's chevron moves after it, to the row's end.
+   *
+   * Unless {@link trailingInTrigger} is set, which moves it INTO the button.
    */
   trailing?: ReactNode;
+  /**
+   * Render {@link trailing} inside the header button instead of beside it, so the
+   * whole row — figure included — is one click target and the figure is part of the
+   * button's accessible name: "Net profit 1,234.50, collapsed" rather than a button
+   * called "Net profit" next to an unexplained number.
+   *
+   * Lenkbank's result rows (features/steering/results-panel.tsx) are the case: label,
+   * chevron, and the value at the far end, all one `<button>`, because a result row
+   * has nothing else it could mean.
+   *
+   * ⚠️ Only for NON-interactive content — a count, a figure, a status chip. A button
+   * may not contain another interactive element; an action belongs in the default,
+   * sibling `trailing`. The content is rendered in a `<span>`, so keep it phrasing
+   * content too (no `div`s).
+   */
+  trailingInTrigger?: boolean;
   /**
    * Trigger-only mode: the id of an element the CALLER renders elsewhere — the hidden
    * rows of a table, a panel in another column — which this header shows and hides.
@@ -212,6 +228,37 @@ export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * its own (`children`, `bodyClassName` and `keepMounted` are ignored). Pair it with
    * `open` / `onOpenChange`: the caller owns the state, since the caller renders what
    * it governs.
+   *
+   * It is an IDREF LIST, as `aria-controls` is: several space-separated ids when what
+   * folds is several elements — a budget group's category rows, each its own `<li>`,
+   * siblings of this header (keksdose's budget-mobile-list joins their ids with
+   * `" "`). It may be the EMPTY string: trigger-only mode with nothing to point at yet
+   * (a group whose rows are all filtered away, rows that are not rendered while shut).
+   * The header then carries no `aria-controls` at all rather than an empty one, and
+   * still toggles.
+   *
+   * A table's leading row — keksdose's "Upcoming" toggle over the scheduled rows of
+   * its transactions table — is this mode too: the rows it folds are the TABLE's, so
+   * the disclosure is only the header, and the table renders or drops them from the
+   * same state.
+   *
+   * ```tsx
+   * <DataTable
+   *   rows={showFuture ? [...scheduled, ...posted] : posted}
+   *   leadingRow={
+   *     <Disclosure
+   *       variant="bare"
+   *       title={upcomingLabel}
+   *       open={showFuture}
+   *       onOpenChange={setShowFuture}
+   *       // The scheduled rows' ids while they are rendered; "" while they are not.
+   *       controls={showFuture ? scheduled.map((tx) => `row-s${tx.id}`).join(" ") : ""}
+   *       headerClassName="px-3 py-2"
+   *     />
+   *   }
+   *   …
+   * />
+   * ```
    */
   controls?: string;
   /** The body. Not rendered in trigger-only mode ({@link DisclosureProps.controls}). */
@@ -247,6 +294,7 @@ export function Disclosure({
   triggerProps,
   bodyClassName,
   trailing,
+  trailingInTrigger = false,
   controls,
   className,
   children,
@@ -259,11 +307,17 @@ export function Disclosure({
   const menu = variant === "menu";
   // The card's chevron trails always; a menu row's unless asked otherwise; a bare
   // one only when asked to.
-  const chevronAtEnd = card || (chevronPosition ?? (menu ? "end" : "start")) === "end";
+  const chevronAt = card ? "end" : (chevronPosition ?? (menu ? "end" : "start"));
+  const chevronAtEnd = chevronAt === "end";
+  const chevronAfterTitle = chevronAt === "after-title";
   const triggerOnly = controls !== undefined;
   // The card's header squares its lower corners only when a body opens under it.
   const joined = open && !triggerOnly;
   const hasTrailing = trailing !== undefined && trailing !== null && trailing !== false;
+  // `trailing` beside the button, which then stretches under it; inside the button,
+  // the row is simply the button.
+  const trailingInside = hasTrailing && trailingInTrigger;
+  const trailingBeside = hasTrailing && !trailingInTrigger;
 
   const toggle = () => {
     const next = !open;
@@ -278,13 +332,14 @@ export function Disclosure({
       {...extraTriggerProps}
       type="button"
       aria-expanded={open}
-      aria-controls={triggerOnly ? controls : bodyId}
+      // `||`: an empty `controls` is trigger-only with nothing to name, not `aria-controls=""`.
+      aria-controls={triggerOnly ? controls || undefined : bodyId}
       disabled={disabled}
       onClick={toggle}
       data-disclosure-trigger=""
       className={cn(
         "flex w-full gap-2 text-start outline-none disabled:cursor-not-allowed disabled:opacity-50",
-        hasTrailing
+        trailingBeside
           ? // Stretched over the whole header row (the row is `relative`), so the space
             // round `trailing` and the card's chevron still toggle; the ring and the
             // card's hover paint on the stretched area / the row, not the text box.
@@ -297,7 +352,7 @@ export function Disclosure({
         card
           ? cn(
               "items-center justify-between rounded-lg p-4",
-              hasTrailing ? "pe-0" : "hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
+              trailingBeside ? "pe-0" : "hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
               joined && "rounded-b-none",
             )
           : menu
@@ -309,29 +364,46 @@ export function Disclosure({
         headerClassName,
       )}
     >
-      {!chevronAtEnd && <Chevron open={open} leading />}
+      {chevronAt === "start" && <Chevron open={open} leading />}
       {/* `flex-1`: the title takes the row, so whatever a caller puts at its end sits
           at the header's far edge. */}
       <span className="min-w-0 flex-1">
-        <span className={cn("block", card && "text-sm font-semibold text-[var(--text-primary)]")}>{title}</span>
+        {chevronAfterTitle ? (
+          // The chevron hugs the text, however long the translation: the text wraps
+          // before the chevron is pushed away from it.
+          <span className="flex items-center gap-1">
+            <span className="min-w-0">{title}</span>
+            <Chevron open={open} small />
+          </span>
+        ) : (
+          <span className={cn("block", card && "text-sm font-semibold text-[var(--text-primary)]")}>{title}</span>
+        )}
         {hint !== undefined && (
           <span className="mt-0.5 block text-xs font-normal text-[var(--text-muted)]">{hint}</span>
         )}
       </span>
-      {chevronAtEnd && !hasTrailing && <Chevron open={open} small={!card} />}
+      {/* The space is for the accessible name — "Net profit 1,234.50", not
+          "Net profit1,234.50"; between flex items it renders as nothing. */}
+      {trailingInside && " "}
+      {trailingInside && (
+        <span data-disclosure-trailing="" className="flex shrink-0 items-center gap-2">
+          {trailing}
+        </span>
+      )}
+      {chevronAtEnd && !trailingBeside && <Chevron open={open} small={!card} />}
     </button>
   );
 
   // Preflight already makes h1–h6 inherit size and weight, so the heading adds
   // structure and nothing visible.
-  const header = Heading ? <Heading className={hasTrailing ? "min-w-0 flex-1" : undefined}>{button}</Heading> : button;
+  const header = Heading ? <Heading className={trailingBeside ? "min-w-0 flex-1" : undefined}>{button}</Heading> : button;
 
   return (
     <div
       {...rest}
       className={cn(card && "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm", className)}
     >
-      {hasTrailing ? (
+      {trailingBeside ? (
         <div
           className={cn(
             "relative flex items-center gap-2",

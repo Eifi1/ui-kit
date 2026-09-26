@@ -11,8 +11,9 @@
    two of the three consuming apps currently render the kit unstyled.) */
 @source "../../src";
 
-/* sonner computes its z-index at runtime and can land under the kit's modal (z-50)
-   and tour (z-60). Pinned, exactly as lenkbank's app.css does. */
-[data-sonner-toaster] {
-  z-index: 2147483647 !important;
+/* The toasts demo's "demo mode": the kit's `redact` puts data-private on a toast's
+   message, and an app decides what that looks like (keksdose blurs it). The toaster's
+   z-index is the kit's own now (`--z-toast`), so the pin that used to be here went. */
+.demo-mode [data-private] {
+  filter: blur(0.35rem);
 }
