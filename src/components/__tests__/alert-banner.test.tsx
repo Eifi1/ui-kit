@@ -110,3 +110,51 @@ describe("AlertBanner 0.10.0", () => {
     expect(alertFrameClass("danger")).toBe(`rounded-md p-[11px] ${toneFrameClass("danger")}`);
   });
 });
+
+describe("AlertBanner 0.11.0 inline (keksdose)", () => {
+  it("block lays an inline banner out as a full row with the glyph on the first line", () => {
+    render(
+      <AlertBanner tone="warning" variant="inline" size="sm" block data-testid="b">
+        A hint long enough to wrap onto a second line under the total
+      </AlertBanner>,
+    );
+    const el = screen.getByTestId("b");
+    expect(el.className).toMatch(/(^| )flex( |$)/);
+    expect(el.className).not.toContain("inline-flex");
+    expect(el.className).toContain("items-start");
+    expect(el.className).not.toContain("items-center");
+    expect(el.querySelector("svg")!.getAttribute("class")).toContain("mt-px");
+    expect(el.querySelector("span")!.className).toContain("flex-1");
+    // Still frameless and still live.
+    expect(el.className).not.toContain("border");
+    expect(el).toHaveAttribute("role", "status");
+  });
+
+  it("without block, inline stays the centred inline-flex line", () => {
+    render(
+      <AlertBanner tone="warning" variant="inline" data-testid="i">
+        Radius below the minimum
+      </AlertBanner>,
+    );
+    const el = screen.getByTestId("i");
+    expect(el.className).toContain("inline-flex");
+    expect(el.className).toContain("items-center");
+    expect(el.querySelector("svg")!.getAttribute("class")).not.toContain("mt-");
+  });
+
+  it("live={false} opts out of the live region; a passed role still wins", () => {
+    render(
+      <>
+        <AlertBanner tone="danger" variant="inline" live={false} data-testid="static">
+          Unresolved rows block the import
+        </AlertBanner>
+        <AlertBanner tone="danger" variant="inline" live={false} role="note" data-testid="note">
+          Note
+        </AlertBanner>
+      </>,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByTestId("static")).not.toHaveAttribute("role");
+    expect(screen.getByTestId("note")).toHaveAttribute("role", "note");
+  });
+});

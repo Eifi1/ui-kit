@@ -129,6 +129,18 @@ export interface SeriesChartSeries {
    * `{ r }` sets its radius. Default: recharts' dot. Bars have none, and ignore it.
    */
   activeDot?: boolean | { r?: number };
+  /**
+   * The shortest a bar of this series is drawn, in px — recharts' `minPointSize`. A
+   * zero or a value too small to see keeps a visible stub, so an empty slot still reads
+   * as a slot with a value rather than a gap: keksdose's weekday pattern, where a
+   * Sunday with no spending drew a 2% stub by hand. Only the DRAWING changes: the axis
+   * is fitted to the values, and the tooltip, the keyboard stops and every accessible
+   * name still say 0. A hole (no value in the row) stays a hole. Overrides the chart's
+   * {@link SeriesChartProps.minBarLength}; `0` turns it off for this series. Meant for
+   * unstacked bars — in a `stack` the stub is drawn over the layer above it. Lines and
+   * areas ignore it.
+   */
+  minBarLength?: number;
 }
 
 /** What a series draws. See {@link SeriesChartSeries.type}. */
@@ -507,6 +519,10 @@ export interface SeriesChartProps {
   locale?: string;
   /** Onto the chart's root (`ChartContainer`) — e.g. an app's own grid ink. */
   className?: string;
+  /** The shortest bar drawn, in px, for every bar series that does not set its own
+   *  {@link SeriesChartSeries.minBarLength}. Drawing only: domain, tooltip and names
+   *  keep the real value. Default: none — a zero draws nothing. */
+  minBarLength?: number;
 }
 
 /** How much of an axis band the rotated title takes, in px. Reserved rather than
@@ -1011,6 +1027,7 @@ function SeriesPlot({
   labels: labelsProp,
   locale: localeProp,
   className,
+  minBarLength,
 }: PlotProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
@@ -1418,6 +1435,7 @@ function SeriesPlot({
           const curve = entry.step ? "stepAfter" : (entry.curve ?? "monotone");
           const width = entry.strokeWidth ?? (entry.step ? STEP_WIDTH : LINE_WIDTH);
           if (type === "bar") {
+            const stub = entry.minBarLength ?? minBarLength;
             return (
               <Bar
                 key={entry.key}
@@ -1427,6 +1445,9 @@ function SeriesPlot({
                 fill={color}
                 fillOpacity={entry.fillOpacity}
                 radius={entry.stack === undefined ? BAR_RADIUS : 0}
+                // Read off the row rather than recharts' `value`: in a stack that is the
+                // layer's running top, which a hole has too — and a hole gets no stub.
+                {...(stub ? { minPointSize: (_value: unknown, index: number) => (finite(plotted[index]?.[entry.key]) === undefined ? 0 : stub) } : {})}
                 // Only the focused stop's series swaps its shape, and only for as long
                 // as it has focus: every other bar keeps recharts' own.
                 {...(focusedStop?.key === entry.key ? { shape: focusedBarShape(focusedStop.index) } : {})}

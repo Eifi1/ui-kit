@@ -43,7 +43,17 @@ interface MenuItemBaseProps {
   icon?: LucideIcon;
   /** Anything else before the label — an avatar, a flag — when a Lucide icon will not do. */
   leading?: ReactNode;
-  /** After the label, at the row's end: a shortcut, a count, a badge. */
+  /**
+   * Right after the label text, before the gap that pushes {@link trailing} to the
+   * row's end: keksdose's budget switcher tags a budget "Guest" or "Shared" with a
+   * `Chip` that belongs to the NAME (budget-switcher.tsx:55/59), not to the row's end
+   * where a count or a check mark sits. Hand-placed inside `children` it was truncated
+   * with the name — a long budget name ate the chip first. Here the label truncates
+   * and the badge never shrinks, so it stays visible beside what is left of the name.
+   * It is part of the row's accessible name ("Household Shared"), so keep it text.
+   */
+  badge?: ReactNode;
+  /** After the label, at the row's end: a shortcut, a count. (A tag that belongs to the name is {@link badge}.) */
   trailing?: ReactNode;
   /** `danger` for the row that destroys or signs out. Colour is not the whole message:
    *  the label must still say what the row does. */
@@ -123,6 +133,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
     children,
     icon: Icon,
     leading,
+    badge,
     trailing,
     tone = "default",
     disabled = false,
@@ -151,6 +162,16 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
         {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
         {leading}
         <span className="min-w-0 truncate">{children}</span>
+        {badge != null && badge !== false && (
+          <>
+            {/* A space between the name and the badge in the accessible name ("Household
+                Shared", not "HouseholdShared"); whitespace between flex items is not
+                laid out, so it costs nothing on screen. */}{" "}
+            <span data-menu-item-badge="" className="flex shrink-0 items-center">
+              {badge}
+            </span>
+          </>
+        )}
       </span>
       {(trailing != null || on) && (
         <span className="flex shrink-0 items-center gap-2">

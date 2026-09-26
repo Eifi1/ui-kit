@@ -55,3 +55,23 @@ describe("EmptyState tone (kastlan's error state and its no-defects note)", () =
     expect(screen.getByText("Nothing here").className).toContain("text-[var(--text-secondary)]");
   });
 });
+
+describe("EmptyState inline size (keksdose's panel empty lines)", () => {
+  it("sm is 12px, start-aligned and tight", () => {
+    const { container } = render(<EmptyState variant="inline" size="sm" title="No holdings yet" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.className).toContain("text-xs");
+    expect(root.className).toContain("justify-start");
+    expect(root.className).toContain("text-start");
+    expect(root.className).not.toContain("justify-center");
+    expect(root.className).not.toContain("py-4");
+    expect(screen.getByText("No holdings yet").className).toContain("text-xs");
+  });
+
+  it("md stays the centred 14px line it was", () => {
+    const { container } = render(<EmptyState variant="inline" title="Nothing" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.className).toContain("justify-center");
+    expect(root.className).toContain("text-sm");
+  });
+});

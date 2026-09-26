@@ -150,3 +150,27 @@ describe("MenuItem", () => {
     expect(screen.getByRole("menuitem").className).toContain("text-[var(--danger)]");
   });
 });
+
+describe("MenuItem badge (keksdose's budget switcher)", () => {
+  it("sits right after the label, before the trailing slot, and never shrinks", () => {
+    render(
+      <MenuItem badge={<span>Shared</span>} trailing={<span>3</span>} checked onClick={() => {}}>
+        A very long budget name
+      </MenuItem>,
+    );
+    const row = screen.getByRole("menuitemradio", { name: /^A very long budget name Shared/ });
+    const label = screen.getByText("A very long budget name");
+    const badge = row.querySelector("[data-menu-item-badge]")!;
+    expect(label.className).toContain("truncate");
+    expect(badge.className).toContain("shrink-0");
+    // Same group as the label; the trailing slot is in the row's end group.
+    expect(badge.parentElement).toBe(label.parentElement);
+    expect(label.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText("3").parentElement).not.toBe(label.parentElement);
+  });
+
+  it("renders no badge wrapper when there is none", () => {
+    render(<MenuItem onClick={() => {}}>Plain</MenuItem>);
+    expect(document.querySelector("[data-menu-item-badge]")).toBeNull();
+  });
+});

@@ -92,3 +92,23 @@ describe("PageHeader", () => {
     expect(row.className).toContain("sm:flex-row");
   });
 });
+
+describe("SectionLabel md (keksdose's 11px figure labels)", () => {
+  it("draws 11px between xs and sm", () => {
+    expect(SECTION_LABEL_CLASS.md).toContain("text-[11px]");
+    expect(SECTION_LABEL_CLASS.md.replace("text-[11px]", "")).toBe(SECTION_LABEL_CLASS.xs.replace("text-[10px]", ""));
+    render(
+      <SectionLabel as="span" size="md">
+        Assigned
+      </SectionLabel>,
+    );
+    expect(screen.getByText("Assigned").className).toContain("text-[11px]");
+  });
+});
+
+describe("StatusDot takes Chip's hues (kastlan lease-unit-step)", () => {
+  it("fills with the hue token", () => {
+    const { container } = render(<StatusDot tone="blue" />);
+    expect(container.querySelector(".bg-\\[var\\(--hue-blue\\)\\]")).not.toBeNull();
+  });
+});

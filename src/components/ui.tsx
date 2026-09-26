@@ -508,6 +508,26 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   tooltipSide?: TooltipSide;
   /** Passed to the `label` tooltip's `portal`. Left out, Tooltip decides (see there). */
   tooltipPortal?: boolean;
+  /**
+   * Why the action is not available — {@link Button}'s `disabledReason`, on the icon
+   * button: keksdose's accounts page cannot hide an account with a balance or delete
+   * one with bookings (accounts-page:879/913 — "hide requires zero", "delete blocked"),
+   * nor its budgets page delete the only budget (budgets-page:330), and each wrapped a
+   * natively disabled IconButton in a Tooltip that swaps its label for the reason — a
+   * bubble a keyboard never opens, since `disabled` leaves the tab order, and a reason
+   * a screen reader never hears.
+   *
+   * The same contract as Button's: `aria-disabled` instead of `disabled`, so it stays
+   * focusable and hoverable; clicks (and the Enter/Space they stand for) are swallowed
+   * — `stopPropagation` still applies, so a locked action in a clickable row does not
+   * open the row either; the reason shows in the kit {@link Tooltip} and is attached
+   * through `aria-describedby` as a `hidden` copy. The NAME stays `aria-label` /
+   * `label` — "Delete", described by "The active budget cannot be deleted" — and the
+   * bubble shows the reason in place of the label, since the glyph already says what
+   * the button is and the reason is the news. Shown even with `tooltip={false}`: a
+   * reason nobody can see is not one. Wins over `disabled`, as on Button.
+   */
+  disabledReason?: ReactNode;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
@@ -525,6 +545,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     tooltip = true,
     tooltipSide,
     tooltipPortal,
+    disabledReason,
     className,
     style,
     onClick,
@@ -534,15 +555,26 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
   ref,
 ) {
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
+  const reasonId = useId();
+  const locked = hasContent(disabledReason);
+  const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
       ref={ref}
       {...rest}
+      disabled={locked ? undefined : rest.disabled}
+      aria-disabled={locked || rest["aria-disabled"]}
+      aria-describedby={locked ? (ownDescribedBy ? `${ownDescribedBy} ${reasonId}` : reasonId) : ownDescribedBy}
       aria-label={rest["aria-label"] ?? label}
       aria-pressed={pressed ?? rest["aria-pressed"]}
       style={toneColor !== undefined ? { ...style, ["--icon-button-tone" as string]: toneColor } : style}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
+        // `preventDefault` too: a locked submit must not submit its form.
+        if (locked) {
+          e.preventDefault();
+          return;
+        }
         onClick?.(e);
       }}
       onKeyDown={(e) => {
@@ -560,10 +592,31 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         ICON_BUTTON_DISABLED_REST[variant],
         iconButtonToneClass(tone, quiet),
         pressed && ICON_BUTTON_PRESSED,
+        // The disabled look for the focusable kind of disabled, as on Button.
+        locked && "cursor-not-allowed opacity-50",
         className,
       )}
     />
   );
+  if (locked) {
+    return (
+      // Button's shape: the button and the hidden reason in a FRAGMENT, so Tooltip does
+      // not add its bubble to the description as well.
+      <Tooltip
+        label={disabledReason}
+        side={tooltipSide}
+        portal={tooltipPortal}
+        className={stretch ? "self-stretch" : undefined}
+      >
+        <>
+          {button}
+          <span id={reasonId} hidden>
+            {disabledReason}
+          </span>
+        </>
+      </Tooltip>
+    );
+  }
   if (!tooltip || label === undefined || label === "") return button;
   return (
     // A fragment, so Tooltip leaves the button's description alone: the bubble says
@@ -1657,6 +1710,16 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * verdict.
    */
   tone?: "danger" | "success";
+  /**
+   * `inline` only (0.11.0). `sm`: 12px, start-aligned and tight (`py-1`) — the empty
+   * line INSIDE a detail panel, under a panel heading and among `text-xs` rows, where
+   * the default's 14px centred line with `py-4` read as a section of its own.
+   * keksdose's holdings panel (holdings-panel:563), asset-loan panel
+   * (asset-loan-panel:108) and loan-payment panel (loan-payment-panel:191) each wrote
+   * `className="justify-start py-1"` over it and still got body-size text. Default `md`,
+   * the look it had. Ignored by the box.
+   */
+  size?: "sm" | "md";
 }
 
 const EMPTY_STATE_TONE: Record<"danger" | "success", string> = {
@@ -1672,6 +1735,7 @@ export function EmptyState({
   headingAs,
   variant = "box",
   tone,
+  size = "md",
   className,
   ...rest
 }: EmptyStateProps) {
@@ -1679,22 +1743,29 @@ export function EmptyState({
   const toneClass = tone ? EMPTY_STATE_TONE[tone] : undefined;
   const hasHint = hint != null && hint !== false && hint !== "";
   if (variant === "inline") {
+    const sm = size === "sm";
     return (
       <div
         {...rest}
         className={cn(
-          "flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-4 text-center text-sm text-[var(--text-muted)]",
+          "flex flex-wrap items-center text-[var(--text-muted)]",
+          sm
+            ? "justify-start gap-x-1.5 gap-y-0.5 py-1 text-start text-xs"
+            : "justify-center gap-x-2 gap-y-1 py-4 text-center text-sm",
           className,
         )}
       >
         {icon != null && (
-          <span aria-hidden className={cn("flex text-[var(--text-placeholder)] [&_svg]:size-4", toneClass)}>
+          <span
+            aria-hidden
+            className={cn("flex text-[var(--text-placeholder)]", sm ? "[&_svg]:size-3.5" : "[&_svg]:size-4", toneClass)}
+          >
             {icon}
           </span>
         )}
         {/* No weight of its own: one muted line is what these sites were, and a
             bold title would turn a quiet "nothing here" into a heading. */}
-        <Title className={cn("text-sm", toneClass)}>{title}</Title>
+        <Title className={cn(sm ? "text-xs" : "text-sm", toneClass)}>{title}</Title>
         {hasHint && <span className="text-xs">{hint}</span>}
         {action != null && <span className="flex flex-wrap items-center gap-2">{action}</span>}
       </div>

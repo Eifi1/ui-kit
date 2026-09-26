@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { OVERLAY_EXIT_MS, prefersReducedMotion } from "../hooks/use-close-transition";
 import { Button, IconButton } from "./ui";
 
@@ -34,16 +35,89 @@ export const DEFAULT_BULK_ACTION_BAR_LABELS: BulkActionBarLabels = {
  */
 export type BulkActionBarVariant = "floating" | "sticky" | "inline";
 
+/**
+ * A variant per breakpoint, mobile first — `{ base: "floating", md: "sticky" }` is the
+ * phone's floating card below 768px and the desktop's sticky bar from there up. The
+ * breakpoints are Tailwind's (sm 640, md 768, lg 1024, xl 1280px), the ones the kit's
+ * classes already use. keksdose's payees selection bar (payees-selection-bar.tsx)
+ * computes exactly this with its own `useMediaQuery("(min-width: 768px)")`; every bar
+ * that is a card on a phone and a strip on a desktop would repeat it.
+ *
+ * Resolved in JS rather than with `md:` classes because the variants differ in more
+ * than classes: the floating bar's clear is an icon at the start, the others' a text
+ * button at the end, and the floating bar is positioned by inline style.
+ */
+export interface ResponsiveBulkActionBarVariant {
+  base: BulkActionBarVariant;
+  sm?: BulkActionBarVariant;
+  md?: BulkActionBarVariant;
+  lg?: BulkActionBarVariant;
+  xl?: BulkActionBarVariant;
+}
+
+const BREAKPOINTS = [
+  ["xl", "(min-width: 1280px)"],
+  ["lg", "(min-width: 1024px)"],
+  ["md", "(min-width: 768px)"],
+  ["sm", "(min-width: 640px)"],
+] as const;
+
+/** The variant in force: the widest breakpoint that matches AND names one, else
+ *  `base`. The four queries are subscribed unconditionally — hooks cannot be skipped —
+ *  and a plain string variant simply ignores them. Without `matchMedia` (SSR, tests)
+ *  every query is false, so the bar renders its `base`, the phone's, first. */
+function useResolvedVariant(variant: BulkActionBarVariant | ResponsiveBulkActionBarVariant): BulkActionBarVariant {
+  const matches = {
+    xl: useMediaQuery(BREAKPOINTS[0][1], false),
+    lg: useMediaQuery(BREAKPOINTS[1][1], false),
+    md: useMediaQuery(BREAKPOINTS[2][1], false),
+    sm: useMediaQuery(BREAKPOINTS[3][1], false),
+  };
+  if (typeof variant === "string") return variant;
+  for (const [key] of BREAKPOINTS) {
+    const v = variant[key];
+    if (matches[key] && v !== undefined) return v;
+  }
+  return variant.base;
+}
+
 export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "children"> {
-  /** How many items are selected. The bar shows only while this is above zero. */
+  /** How many items are selected. The bar shows only while this is above zero —
+   *  unless {@link open} says otherwise. */
   count: number;
+  /**
+   * Show the bar regardless of `count` — `true` for SELECTION MODE with nothing picked
+   * yet, `false` to hide it with rows still selected. Left out, `count > 0` decides, as
+   * before.
+   *
+   * keksdose's invoice lines (invoice-lines-bulk-bar.tsx) enter selection with a
+   * "Select" button, and the bar must be there at "0 selected" to hold the way out and
+   * a "Select all" (pass it as a child); gated on the count, the bar appeared only at
+   * the first tick, and the user who pressed "Select" saw nothing happen. The exit plays
+   * when it closes either way, and the count is still announced on every change.
+   */
+  open?: boolean;
   /** Clear the selection / leave selection mode. */
   onClear: () => void;
   /** The actions: buttons (`IconButton size="lg"` on a phone, `Button` from md up),
    *  in the caller's order. They are the toolbar's arrow-key stops, after the clear. */
   children?: ReactNode;
-  /** Default `floating`. See {@link BulkActionBarVariant}. */
-  variant?: BulkActionBarVariant;
+  /** Default `floating`. See {@link BulkActionBarVariant}; an object picks one per
+   *  breakpoint, see {@link ResponsiveBulkActionBarVariant}. */
+  variant?: BulkActionBarVariant | ResponsiveBulkActionBarVariant;
+  /**
+   * Content BELOW the toolbar row, inside the same surface — the same floating card or
+   * sticky tinted strip — but OUTSIDE the toolbar: its fields keep their own Tab stops
+   * and arrow keys, and the toolbar's roving focus never walks into it. keksdose's
+   * desktop receipt-line bar (invoice-lines-bulk-bar.tsx) shows its `BulkFields` form —
+   * a category picker, an exclude checkbox, Apply — under the count and the clear; a
+   * form is not a toolbar's content (`role="toolbar"` promises one arrow-key widget),
+   * and set beside the bar it lost the sticky tint and scrolled away from it.
+   *
+   * On the floating variant the panel scrolls within 60% of the viewport's height, so a
+   * long form on a phone cannot push the bar off the top of the screen.
+   */
+  panel?: ReactNode;
   /** Default: `bulkActionBar` from the {@link UiKitProvider}, else English. */
   labels?: Partial<BulkActionBarLabels>;
 }
@@ -105,7 +179,9 @@ export function BulkActionBar({
   count,
   onClear,
   children,
-  variant = "floating",
+  variant: variantProp = "floating",
+  open,
+  panel,
   labels: labelsProp,
   className,
   style,
@@ -116,21 +192,22 @@ export function BulkActionBar({
   const labels = useKitLabels("bulkActionBar", DEFAULT_BULK_ACTION_BAR_LABELS, labelsProp);
   const { announce, regionProps } = useAnnounce();
   const barRef = useRef<HTMLDivElement>(null);
-  const shown = count > 0;
+  const variant = useResolvedVariant(variantProp);
+  const shown = open ?? count > 0;
 
   // The count the bar last SHOWED, so a bar lowering itself after "clear" still reads
   // "3 selected" on its way out rather than "0 selected". Adjusted during render
   // (`Collapse`'s pattern), as is the exit below.
   const [shownCount, setShownCount] = useState(count);
   const [leaving, setLeaving] = useState(false);
-  const [prevCount, setPrevCount] = useState(count);
-  if (count !== prevCount) {
-    setPrevCount(count);
+  const [prev, setPrev] = useState({ count, shown });
+  if (count !== prev.count || shown !== prev.shown) {
+    setPrev({ count, shown });
     if (shown) {
       setShownCount(count);
       setLeaving(false);
-    } else {
-      setLeaving(prevCount > 0 && !prefersReducedMotion());
+    } else if (prev.shown) {
+      setLeaving(!prefersReducedMotion());
     }
   }
   useEffect(() => {
@@ -145,8 +222,9 @@ export function BulkActionBar({
   useEffect(() => {
     if (spoken.current === count) return;
     spoken.current = count;
-    announce(count > 0 ? labels.selected(count) : labels.cleared);
-  }, [count, labels, announce]);
+    // In selection mode the bar stays at zero, so zero is a count like any other.
+    announce(count > 0 || shown ? labels.selected(count) : labels.cleared);
+  }, [count, shown, labels, announce]);
 
   // Roving tab stop. The controls are the caller's, so the stop is kept on the DOM
   // rather than through props: after every render the remembered control (or the
@@ -191,54 +269,82 @@ export function BulkActionBar({
     </Button>
   );
 
+  const hasPanel = panel !== undefined && panel !== null && panel !== false;
+  // The surface — where the bar sits and what it looks like — and the toolbar row's
+  // own layout. Without a panel they are one element, exactly as before 0.11.0; with
+  // one the surface wraps the row and the panel, so both share its tint and position.
+  const surfaceClass = floating
+    ? cn(
+        "fixed z-30 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        shown ? "animate-sheet" : "animate-sheet-out",
+      )
+    : cn(
+        variant === "sticky" &&
+          "sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
+        shown ? "animate-overlay" : "animate-overlay-out",
+      );
+  const rowClass = cn("flex items-center", floating ? "gap-1 px-2 py-1" : "gap-2 px-3 py-2");
+  const surfaceStyle = floating ? { ...FLOATING_STYLE, ...style } : style;
+
+  const toolbar = (
+    <div
+      {...(hasPanel ? null : rest)}
+      ref={barRef}
+      role="toolbar"
+      aria-label={labels.selected(shownCount)}
+      aria-orientation="horizontal"
+      data-bulk-action-bar={hasPanel ? undefined : variant}
+      // Leaving: out of the tab order and the accessibility tree at once, while the
+      // bar still animates. The selection it acted on is already gone.
+      inert={(!hasPanel && !shown) || undefined}
+      onKeyDown={handleKeyDown}
+      onFocus={(e) => {
+        onFocus?.(e);
+        // Clicking a control is using it: the stop follows the pointer too.
+        const hit = itemsOf(barRef.current).find((el) => el === e.target);
+        if (hit) {
+          active.current = hit;
+          rove(barRef.current, active);
+        }
+      }}
+      style={hasPanel ? undefined : surfaceStyle}
+      className={hasPanel ? rowClass : cn(rowClass, surfaceClass, className)}
+    >
+      {floating && clear}
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-primary)]">
+        {labels.selected(shownCount)}
+      </span>
+      {/* `contents`, so the caller's controls are flex items of the bar itself. */}
+      <div className="contents">{children}</div>
+      {!floating && clear}
+    </div>
+  );
+
   return (
     <>
       <span {...regionProps} />
-      <div
-        {...rest}
-        ref={barRef}
-        role="toolbar"
-        aria-label={labels.selected(shownCount)}
-        aria-orientation="horizontal"
-        data-bulk-action-bar={variant}
-        // Leaving: out of the tab order and the accessibility tree at once, while the
-        // bar still animates. The selection it acted on is already gone.
-        inert={!shown || undefined}
-        onKeyDown={handleKeyDown}
-        onFocus={(e) => {
-          onFocus?.(e);
-          // Clicking a control is using it: the stop follows the pointer too.
-          const hit = itemsOf(barRef.current).find((el) => el === e.target);
-          if (hit) {
-            active.current = hit;
-            rove(barRef.current, active);
-          }
-        }}
-        style={floating ? { ...FLOATING_STYLE, ...style } : style}
-        className={cn(
-          "flex items-center",
-          floating
-            ? cn(
-                "fixed z-30 gap-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 shadow-lg",
-                shown ? "animate-sheet" : "animate-sheet-out",
-              )
-            : cn(
-                "gap-2 px-3 py-2",
-                variant === "sticky" &&
-                  "sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
-                shown ? "animate-overlay" : "animate-overlay-out",
-              ),
-          className,
-        )}
-      >
-        {floating && clear}
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-primary)]">
-          {labels.selected(shownCount)}
-        </span>
-        {/* `contents`, so the caller's controls are flex items of the bar itself. */}
-        <div className="contents">{children}</div>
-        {!floating && clear}
-      </div>
+      {hasPanel ? (
+        <div
+          {...rest}
+          data-bulk-action-bar={variant}
+          inert={!shown || undefined}
+          style={surfaceStyle}
+          className={cn("flex flex-col", surfaceClass, className)}
+        >
+          {toolbar}
+          <div
+            data-bulk-action-bar-panel=""
+            className={cn(
+              "border-t border-[var(--border)] px-3 py-3",
+              floating && "max-h-[60dvh] overflow-y-auto",
+            )}
+          >
+            {panel}
+          </div>
+        </div>
+      ) : (
+        toolbar
+      )}
     </>
   );
 }

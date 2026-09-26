@@ -199,3 +199,74 @@ describe("Table 0.10.0", () => {
     expect(screen.getByRole("table").className).not.toMatch(/table-(fixed|auto)/);
   });
 });
+
+describe("Table 0.11.0 (keksdose's VAT summary)", () => {
+  it("TableHeaderCell takes a size and a weight; defaults unchanged", () => {
+    render(
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Default</TableHeaderCell>
+            <TableHeaderCell size="sm" weight="normal">
+              Quiet
+            </TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableHeaderCell>Row</TableHeaderCell>
+            <TableHeaderCell size="xs" weight="semibold">
+              Row xs
+            </TableHeaderCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const def = screen.getByText("Default").className;
+    expect(def).toContain("text-xs");
+    expect(def).toContain("font-medium");
+    expect(def).toContain("align-bottom");
+    const quiet = screen.getByText("Quiet").className;
+    expect(quiet).toContain("text-sm");
+    expect(quiet).not.toContain("text-xs");
+    expect(quiet).toContain("font-normal");
+    expect(quiet).not.toContain("font-medium");
+    const row = screen.getByText("Row").className;
+    expect(row).not.toMatch(/text-(xs|sm)\b/);
+    expect(row).toContain("align-top");
+    expect(row).not.toContain("align-bottom");
+    expect(screen.getByText("Row xs").className).toContain("text-xs");
+    expect(screen.getByText("Row xs").className).toContain("font-semibold");
+  });
+
+  it("valign on the row reaches its cells; a cell's own wins", () => {
+    render(
+      <Table>
+        <TableHead>
+          <TableRow valign="middle">
+            <TableHeaderCell>Rate</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow valign="middle" data-testid="row">
+            <TableHeaderCell>Label</TableHeaderCell>
+            <TableCell>Field</TableCell>
+            <TableCell valign="bottom">Own</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Plain</TableCell>
+            <TableCell valign="middle">Cell</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    expect(screen.getByTestId("row").className).toContain("align-middle");
+    for (const t of ["Rate", "Label", "Field", "Cell"]) {
+      expect(screen.getByText(t).className).toContain("align-middle");
+      expect(screen.getByText(t).className).not.toMatch(/align-(top|bottom)/);
+    }
+    expect(screen.getByText("Own").className).toContain("align-bottom");
+    expect(screen.getByText("Own").className).not.toContain("align-middle");
+    expect(screen.getByText("Plain").className).toContain("align-top");
+  });
+});

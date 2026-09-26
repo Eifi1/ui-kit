@@ -92,7 +92,7 @@ import * as i18nZh from "../i18n/locales/zh";
  * (keksdose C26, kastlan). sonner stays an optional peer: the module loads it lazily.
  * 393 -> 403 (0.11.0), all additive: `FloatingActionGroup` / `FloatingAction`,
  * `ButtonGroupLink`, `CalendarHeatmap` / `heatmapLevel` / `DEFAULT_CALENDAR_HEATMAP_LABELS`,
- * `Field`, `useOptionalWizardContext`, `ActionCard`, `NavPills`.
+ * `Field`, `useOptionalWizardContext`, `ActionCard`, `NavPills`; 403 -> 404: `CLIPS_ATTRIBUTE`.
  * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
  * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
  * 368 -> 374 (and /search 3 -> 9), all additive: `GlobalSearch` and
@@ -102,7 +102,7 @@ import * as i18nZh from "../i18n/locales/zh";
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 403],
+  ["@eifi1/ui-kit", barrel, 404],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 55],
