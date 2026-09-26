@@ -207,3 +207,34 @@ describe("ListItem", () => {
     expect(screen.getByRole("button").className).toContain("text-start");
   });
 });
+
+describe("ListItem targetProps and bordered (lenkbank segment list, profile bar)", () => {
+  it("puts drag attributes and handlers on the row's button, under the kit's own", () => {
+    const onDragStart = vi.fn();
+    const onClick = vi.fn();
+    render(
+      <List>
+        <ListItem
+          title="Segment 1"
+          onClick={onClick}
+          targetProps={{ draggable: true, onDragStart, role: "tab" }}
+        />
+      </List>,
+    );
+    const row = screen.getByRole("button", { name: /Segment 1/ });
+    expect(row).toHaveAttribute("draggable", "true");
+    fireEvent.dragStart(row);
+    expect(onDragStart).toHaveBeenCalled();
+    fireEvent.click(row);
+    expect(onClick).toHaveBeenCalled();
+  });
+
+  it("draws a visible border while unselected when bordered", () => {
+    const { container } = render(
+      <List>
+        <ListItem title="Profile" onClick={() => {}} bordered />
+      </List>,
+    );
+    expect(container.querySelector(".border-\\[var\\(--border\\)\\]")).not.toBeNull();
+  });
+});
