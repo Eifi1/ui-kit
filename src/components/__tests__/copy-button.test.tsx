@@ -85,3 +85,35 @@ describe("CopyButton", () => {
     expect(screen.getByRole("alert")).toBeEmptyDOMElement();
   });
 });
+
+describe("CopyButton size, tone and stopPropagation (keksdose C27)", () => {
+  it("forwards an explicit size to the label variant, and none by default", () => {
+    const { rerender } = render(<CopyButton text="x" variant="label" label="Copy" />);
+    const plain = screen.getByRole("button").className;
+    rerender(<CopyButton text="x" variant="label" label="Copy" size="sm" />);
+    expect(screen.getByRole("button").className).not.toBe(plain);
+    expect(screen.getByRole("button").className).toContain("text-xs");
+  });
+
+  it("passes tone to the icon variant", () => {
+    const { rerender } = render(<CopyButton text="x" label="Copy" />);
+    const plain = screen.getByRole("button", { name: "Copy" }).className;
+    rerender(<CopyButton text="x" label="Copy" tone="muted" />);
+    expect(screen.getByRole("button", { name: "Copy" }).className).not.toBe(plain);
+  });
+
+  it("keeps the click from reaching a clickable row", () => {
+    for (const variant of ["icon", "label"] as const) {
+      const row = vi.fn();
+      const { unmount } = render(
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+        <div onClick={row}>
+          <CopyButton text="x" label="Copy" variant={variant} stopPropagation />
+        </div>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+      expect(row).not.toHaveBeenCalled();
+      unmount();
+    }
+  });
+});

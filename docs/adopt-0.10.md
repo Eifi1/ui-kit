@@ -68,6 +68,7 @@ react-hook-form wizard-step bridge.
 | transaction-search | `CommandPalette density="comfortable"` | no "Searching…" for a synchronous provider, by detection |
 | budget-table phone editor on DialogFrame fullBleed | `FullBleedDialog title={…} headingAs="h2"` | the dialog is named by its heading |
 | rule-editor `optionClassName="px-2 py-1 text-xs"` | `ToggleGroup size="sm"` | |
+| CopyButton compact class, stop-propagation spans, darker ghost (C27) | `CopyButton size="sm"` (label variant), `stopPropagation`, `tone="muted"` | the copied / failed colour still wins |
 | transactions-page "Upcoming" fold | `Disclosure controls={showFuture ? ids.join(" ") : ""}` | trigger-only mode; the JSDoc shows it |
 
 Still local until a later release: FAB pill group, floating raised ButtonGroup, stacked
