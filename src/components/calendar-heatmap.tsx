@@ -159,7 +159,9 @@ function levelFill(level: number, levels: number, color: string): string {
  * the other way round, mirrored in RTL — PageUp/PageDown move a month and Home/End go
  * to the window's first/last day. Each cell is named with its whole date AND its value,
  * because the colour is not something a screen reader can say, and carries
- * `data-day="YYYY-MM-DD"` as its identity for tests and for the host.
+ * `data-day="YYYY-MM-DD"` as its identity for tests and for the host. Note that in
+ * `"weeks"` the cells are in DOM order by WEEKDAY ROW (all Mondays, then all
+ * Tuesdays…), not by date — query by `data-day`, not by position.
  *
  * The tooltip is portalled (a year of squares always sits in a sideways scroller) and
  * `data-private` unless `sensitive={false}`. Cell size in `"weeks"` is the CSS variable
