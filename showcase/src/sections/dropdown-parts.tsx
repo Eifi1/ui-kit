@@ -43,23 +43,38 @@ export function DropdownParts() {
 
   // Hand-built menu #1: open state + outside-click only.
   const [sortKey, setSortKey] = useState("date");
-  const sort = useDropdown();
+  // Destructured, not kept as one `sort` object: an object holding refs reads as a
+  // ref to the React Compiler, so `sortOpen` in JSX would count as a ref read in render.
+  const {
+    open: sortOpen,
+    setOpen: setSortOpen,
+    wrapperRef: sortWrapperRef,
+    triggerRef: sortTriggerRef,
+  } = useDropdown();
 
   // Hand-built menu #2: the same, plus a query that resets and refocuses on open.
   const [storeKey, setStoreKey] = useState<string | null>(null);
-  const store = useDropdownSearch();
+  const {
+    open: storeOpen,
+    setOpen: setStoreOpen,
+    wrapperRef: storeWrapperRef,
+    panelRef: storePanelRef,
+    query: storeQuery,
+    setQuery: setStoreQuery,
+    inputRef: storeInputRef,
+  } = useDropdownSearch();
   // The panel anchors to the TRIGGER, not to the wrapper: the wrapper can be taller
   // than the button (a grid item stretches), and the panel would then open a row
   // below where it looks like it should.
   const storeTrigger = useRef<HTMLButtonElement>(null);
   const [storeRtl, setStoreRtl] = useState(false);
   const storeHits = useMemo(() => {
-    const q = store.query.trim().toLowerCase();
+    const q = storeQuery.trim().toLowerCase();
     if (!q) return STORES;
     return STORES.filter(
       (s) => s.label.toLowerCase().includes(q) || s.hint.toLowerCase().includes(q),
     );
-  }, [store.query]);
+  }, [storeQuery]);
 
   const pickedLabel = (() => {
     if (!picked) return "Choose a category";
@@ -210,21 +225,21 @@ export function DropdownParts() {
       >
         <Stage>
           <Row>
-            <div ref={sort.wrapperRef} className="relative w-56">
+            <div ref={sortWrapperRef} className="relative w-56">
               <button
                 // `triggerRef` is what Escape hands focus back to. Leave it off and
                 // Escape still closes the list, but the caret drops to <body>.
-                ref={sort.triggerRef}
+                ref={sortTriggerRef}
                 type="button"
                 aria-haspopup="listbox"
-                aria-expanded={sort.open}
-                onClick={() => sort.setOpen((o) => !o)}
+                aria-expanded={sortOpen}
+                onClick={() => setSortOpen((o) => !o)}
                 className={cn(FIELD_TRIGGER, "pe-9")}
               >
                 <span className="truncate">{SORTS.find((s) => s.key === sortKey)?.label}</span>
                 <FieldChevron />
               </button>
-              {sort.open && (
+              {sortOpen && (
                 // No `anchorRef`, so the panel stays an ordinary absolutely-positioned
                 // child of the wrapper and the caller sizes it. Cheapest form, and the
                 // one an ancestor with `overflow` will CLIP — which is why every picker
@@ -243,7 +258,7 @@ export function DropdownParts() {
                         type="button"
                         onClick={() => {
                           setSortKey(s.key);
-                          sort.setOpen(false);
+                          setSortOpen(false);
                         }}
                         className={cn(
                           "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
@@ -274,15 +289,15 @@ export function DropdownParts() {
       >
         <Stage>
           <Row>
-            <div ref={store.wrapperRef} dir={storeRtl ? "rtl" : "ltr"} className="relative w-64">
+            <div ref={storeWrapperRef} dir={storeRtl ? "rtl" : "ltr"} className="relative w-64">
               <FieldLabel>Store</FieldLabel>
               <button
                 ref={storeTrigger}
                 type="button"
                 aria-haspopup="listbox"
-                aria-expanded={store.open}
+                aria-expanded={storeOpen}
                 aria-label={`Store: ${STORES.find((s) => s.key === storeKey)?.label ?? "none"}`}
-                onClick={() => store.setOpen((o) => !o)}
+                onClick={() => setStoreOpen((o) => !o)}
                 className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
                 <span className={cn("truncate", !storeKey && "text-[var(--text-muted)]")}>
@@ -290,14 +305,14 @@ export function DropdownParts() {
                 </span>
                 <FieldChevron />
               </button>
-              {store.open && (
+              {storeOpen && (
                 <DropdownPanel
                   anchorRef={storeTrigger}
                   // Not optional plumbing: anchored, the panel is portalled to <body>
                   // and is no longer inside `wrapperRef`, so without this the
                   // outside-click handler answers "outside" for a click on the list
                   // itself and the first row a user pressed would pick nothing.
-                  panelRef={store.panelRef}
+                  panelRef={storePanelRef}
                   // px, not a `w-*` class: the anchored form has to MEASURE the panel
                   // to clamp it against the viewport edge, and CSS cannot be measured
                   // before it is painted.
@@ -309,9 +324,9 @@ export function DropdownParts() {
                   empty={storeHits.length === 0}
                   header={
                     <DropdownSearchHeader
-                      query={store.query}
-                      onQueryChange={store.setQuery}
-                      inputRef={store.inputRef}
+                      query={storeQuery}
+                      onQueryChange={setStoreQuery}
+                      inputRef={storeInputRef}
                       placeholder="Search stores"
                     />
                   }
@@ -322,7 +337,7 @@ export function DropdownParts() {
                         type="button"
                         onClick={() => {
                           setStoreKey(s.key);
-                          store.setOpen(false);
+                          setStoreOpen(false);
                         }}
                         className={cn(
                           "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",

@@ -360,6 +360,10 @@ export function FeedbackStatusTransitions({
   className?: string;
 }) {
   return (
+    // Not a control: it only stops clicks on the buttons inside from bubbling to
+    // the row. The buttons are the keyboard path, and Enter/Space on them fires
+    // their own click, which lands here the same way.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- propagation guard around real buttons
     <div
       className={cn(variant === "icon" ? "flex items-center gap-0.5" : "flex flex-wrap gap-1.5", className)}
       // A status control inside a clickable row must not also open the row.
@@ -511,6 +515,9 @@ export function FeedbackNoteEditor({
   const root = useRef<HTMLDivElement>(null);
   const submit = () => onSave(draft, file);
   return (
+    // Not a control: a delegated Ctrl/Cmd+Enter shortcut for the textarea inside,
+    // which is what holds focus. The save button is the non-shortcut path.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- delegated keyboard shortcut for the focused field
     <div
       ref={root}
       className="space-y-2"

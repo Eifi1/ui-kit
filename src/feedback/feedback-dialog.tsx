@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
@@ -139,14 +139,17 @@ export function FeedbackDialog({
   // prop's (so a caller's `attachmentAdd` still wins) plus the resolved heading.
   const attachmentLabels = { ...labelsProp, attachment: labels.attachment };
 
-  // Reset the form whenever the dialog is (re)opened.
-  useEffect(() => {
+  // Reset the form whenever the dialog is (re)opened — during render, on the
+  // closed-to-open transition, so the old draft never paints for a frame.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setTitle("");
       setBody("");
       setAttachment(null);
     }
-  }, [open]);
+  }
 
   const canSubmit = !!title && !!body && !submitting;
   const trySubmit = () => {

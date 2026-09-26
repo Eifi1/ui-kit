@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { create } from "zustand";
@@ -293,17 +293,20 @@ function PlacementMath() {
 
 /* ── useVisualViewport ──────────────────────────────────────────────────────── */
 
+const subscribeToNothing = () => () => {};
+
 function VisualViewportReadout() {
   // `active` is true for as long as this section is mounted, so the readout is live
   // without a toggle. The hook only subscribes to events; it writes nothing.
   const box = useVisualViewport(true);
-  const [hasApi, setHasApi] = useState(false);
-  // In an effect rather than during render: `window.visualViewport` is absent in
-  // jsdom and under SSR, and this is a display detail, not something to branch the
-  // first paint on.
-  useEffect(() => {
-    setHasApi(typeof window !== "undefined" && Boolean(window.visualViewport));
-  }, []);
+  // A browser capability, read as an external store: `window.visualViewport` is
+  // absent in jsdom, and under SSR the server snapshot (`false`) is what hydrates.
+  // It never changes, so there is nothing to subscribe to.
+  const hasApi = useSyncExternalStore(
+    subscribeToNothing,
+    () => Boolean(window.visualViewport),
+    () => false,
+  );
 
   return (
     <OutTable
@@ -687,6 +690,9 @@ function ScrollLockSpecimen() {
   // Declared after both locks, so it reads the style they have just written: React
   // runs effects in declaration order within a commit.
   useEffect(() => {
+    // Mirrors what the locks just wrote to `document.body` — an external system that
+    // only holds the answer after the commit, so there is nothing to derive in render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading the DOM the lock effects wrote
     setBody({
       overflow: document.body.style.overflow,
       paddingRight: document.body.style.paddingRight,

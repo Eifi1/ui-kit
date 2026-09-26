@@ -765,7 +765,6 @@ function SidebarGroup({
   // group UNFOLDS into view on load rather than appearing already open.
   const here = subActive || onOwnPage;
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- follows the route, see above
     if (here) setOpenGroup(item.to);
   }, [here, item.to, setOpenGroup]);
   const expanded = inline && open;
@@ -931,6 +930,9 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
   );
 
   return (
+    // Not a control: hover and focus-within on the nav link inside. Focus (the
+    // keyboard path) opens it exactly as hover does, Escape closes it.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- hover/focus-within wrapper around a real link
     <div
       ref={wrapperRef}
       className="relative"
@@ -943,6 +945,9 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
       {open &&
         pos &&
         createPortal(
+          // Keeps the flyout open while the pointer crosses into it; keyboard users
+          // reach it by focus, which the wrapper above already handles.
+          // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- pointer-only hover bridge
           <div
             dir={dir}
             style={{ position: "fixed", ...pos }}
