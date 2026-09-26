@@ -15,6 +15,7 @@ import type { GlobalSearchLabels } from "../search/global-search";
 import type { MonthPickerLabels } from "../components/month-picker";
 import type { PageContentsLabels } from "../components/page-contents";
 import type { SeriesChartLabels } from "../components/series-chart-labels";
+import type { PieChartLabels } from "../components/pie-chart-labels";
 import type { SparklineLabels } from "../components/sparkline";
 import type { StatTileLabels } from "../components/stat-tile";
 import type { SignaturePadLabels } from "../components/signature-pad";
@@ -26,6 +27,9 @@ import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
+import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
+import type { FeedbackComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
+import type { AccountSettingsLabels } from "../components/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
 import type { CopyButtonLabels } from "../components/copy-button";
@@ -33,6 +37,15 @@ import type { BulkActionBarLabels } from "../components/bulk-action-bar";
 import type { ListLabels } from "../components/list";
 import type { BreadcrumbsLabels } from "../components/breadcrumbs";
 import type { ToastLabels } from "../components/toast";
+import type { FormActionsLabels } from "../components/form-actions";
+import type { DescriptionListLabels } from "../components/description-list";
+import type { LineItemsLabels } from "../components/line-items";
+import type { ProgressBarLabels } from "../components/progress-bar";
+import type { SignedAmountLabels } from "../components/signed-amount";
+import type { ErrorBoundaryLabels } from "../components/error-boundary";
+import type { AuthedImageLabels } from "../components/authed-image";
+import type { ImageGridLabels } from "../components/image-grid";
+import type { LightboxLabels } from "../components/lightbox";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -85,6 +98,9 @@ export interface CommonLabels {
   /** The × that puts away a banner or a notice (`AlertBanner onDismiss`). Not `close`:
    *  nothing opened, and "Close" on a banner reads as closing the page it sits on. */
   dismiss: string;
+  /** Read after a link that opens a new tab (`<Button href external>`, TextLink):
+   *  nothing else tells a screen reader the page is about to change tabs. */
+  opensInNewTab: string;
 }
 
 /** `DatePicker` / `DateRangePicker` chrome. The calendar inside has its own
@@ -222,6 +238,7 @@ export interface UiKitLabels {
   commandPalette: CommandPaletteLabels;
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
+  pieChart: PieChartLabels;
   sparkline: SparklineLabels;
   statTile: StatTileLabels;
   signaturePad: SignaturePadLabels;
@@ -233,6 +250,14 @@ export interface UiKitLabels {
   filePicker: FilePickerLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
+  /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `FeedbackComposer`. */
+  feedbackDialog: FeedbackDialogTextLabels;
+  feedbackThread: FeedbackThreadLabels;
+  feedbackComposer: FeedbackComposerLabels;
+  /** 0.12.0: `ProfileSetting`, `PasswordSetting`, `TwoFactorSetting`, `PasskeysSetting`
+   *  — one record per section. The provider takes a whole section record; the
+   *  components merge it key by key, as a prop. */
+  accountSettings: AccountSettingsLabels;
   confirmDialog: ConfirmDialogLabels;
   floatingPanel: FloatingPanelLabels;
   copyButton: CopyButtonLabels;
@@ -240,6 +265,15 @@ export interface UiKitLabels {
   list: ListLabels;
   breadcrumbs: BreadcrumbsLabels;
   toast: ToastLabels;
+  form: FormActionsLabels;
+  descriptionList: DescriptionListLabels;
+  lineItems: LineItemsLabels;
+  progressBar: ProgressBarLabels;
+  signedAmount: SignedAmountLabels;
+  errorBoundary: ErrorBoundaryLabels;
+  authedImage: AuthedImageLabels;
+  imageGrid: ImageGridLabels;
+  lightbox: LightboxLabels;
 }
 
 /** Any subset of the tree, one level deep — each namespace may be partial, and a
@@ -262,6 +296,7 @@ export const DEFAULT_COMMON_LABELS: CommonLabels = {
   noResults: "No results",
   fieldValue: (field, value) => `${field}: ${value}`,
   dismiss: "Dismiss",
+  opensInNewTab: "opens in a new tab",
 };
 
 export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {

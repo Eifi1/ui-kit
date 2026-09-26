@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Copy, Home } from "lucide-react";
 import { List, ListItem } from "../list";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 describe("List", () => {
   it("is a list of listitems, even with the bullets styled away", () => {
@@ -236,5 +237,31 @@ describe("ListItem targetProps and bordered (lenkbank segment list, profile bar)
       </List>,
     );
     expect(container.querySelector(".border-\\[var\\(--border\\)\\]")).not.toBeNull();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("ListItem — the provider's router link", () => {
+  it("draws an in-app row with linkComponent; its own renderLink wins; an external row stays <a>", () => {
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <List>
+          <ListItem title="Units" href="/units" />
+          <ListItem title="Own" href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+          <ListItem title="Docs" href="https://example.com" external />
+        </List>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Units" })).toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
+    const docs = screen.getByRole("link", { name: /Docs/ });
+    expect(docs).not.toHaveAttribute("data-router");
+    expect(docs).toHaveAttribute("target", "_blank");
   });
 });

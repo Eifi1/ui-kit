@@ -225,3 +225,49 @@ describe("TopBarActionMenu, the icon button", () => {
     expect(screen.queryByRole("navigation")).toBeNull();
   });
 });
+
+describe("TopBarActionMenu iconBadge", () => {
+  const renderFeedback = (badge: { label: string; tone?: "danger" | "info" } | null) =>
+    render(
+      <MemoryRouter>
+        <TopBarActionMenu
+          icon={<svg data-testid="icon" />}
+          iconBadge={badge}
+          ariaLabel="Send feedback"
+          entries={[{ key: "bug", label: "Bug", onSelect: () => {} }]}
+        />
+      </MemoryRouter>,
+    );
+
+  it("adds the badge label to the trigger's name and draws a dot on the icon", () => {
+    renderFeedback({ label: "2 unread" });
+    const btn = screen.getByRole("button", { name: "Send feedback 2 unread" });
+    // Named by its content: an aria-label would have hidden the badge.
+    expect(btn).not.toHaveAttribute("aria-label");
+    expect(btn).toHaveAttribute("aria-haspopup");
+    const dot = btn.querySelector(".rounded-full");
+    expect(dot).not.toBeNull();
+    expect(dot!.className).toMatch(/ring-2/);
+    fireEvent.click(btn);
+    expect(screen.getByRole("menu", { name: "Send feedback" })).toBeInTheDocument();
+  });
+
+  it("uses the badge tone", () => {
+    renderFeedback({ label: "New", tone: "info" });
+    const btn = screen.getByRole("button", { name: "Send feedback New" });
+    expect(btn.querySelector(".rounded-full")!.className).toContain("bg-[var(--info)]");
+  });
+
+  it("defaults to the danger tone, the unread dot", () => {
+    renderFeedback({ label: "2 unread" });
+    const btn = screen.getByRole("button", { name: "Send feedback 2 unread" });
+    expect(btn.querySelector(".rounded-full")!.className).toContain("bg-[var(--danger)]");
+  });
+
+  it("without a badge keeps the plain aria-labelled icon button", () => {
+    renderFeedback(null);
+    const btn = screen.getByRole("button", { name: "Send feedback" });
+    expect(btn).toHaveAttribute("aria-label", "Send feedback");
+    expect(btn.querySelector(".rounded-full")).toBeNull();
+  });
+});

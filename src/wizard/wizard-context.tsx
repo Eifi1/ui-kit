@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import type { ValidateResult } from "./types";
 
 export interface WizardContextValue {
@@ -35,4 +35,44 @@ export function useWizardContext(): WizardContextValue {
  */
 export function useOptionalWizardContext(): WizardContextValue | null {
   return useContext(WizardContext);
+}
+
+/**
+ * Registers a plain validator for the mounted step — the counterpart to
+ * `useRhfWizardStep` (in `@eifi1/ui-kit/rhf`) for a step that gates on its own state
+ * (a hand-managed list of lines, a sum that has to balance) rather than a form.
+ *
+ * ```tsx
+ * useWizardStepValidate(() => ({ ok: lines.length >= 2, errors: { lines: t("…") } }));
+ * ```
+ *
+ * Next (and Finish) run it with the step's other validators; a `false` or a result
+ * with `ok: false` keeps the wizard where it is. `validate` is read through a ref, so
+ * an inline closure over the latest state registers exactly once. Throws outside a
+ * `<StepperNav>`, like {@link useWizardContext}: a validator with nothing to run it is
+ * a bug to hear about.
+ */
+export function useWizardStepValidate(
+  validate: () => ValidateResult | Promise<ValidateResult>,
+): void {
+  const { registerStepValidate } = useWizardContext();
+  const ref = useRef(validate);
+  useEffect(() => {
+    ref.current = validate;
+  });
+  useEffect(() => registerStepValidate(() => ref.current()), [registerStepValidate]);
+}
+
+/**
+ * Disables the wizard's Next and Skip while `blocked` holds (tenant shares that do not
+ * add up to 100 %). Unlike {@link useWizardStepValidate}, which answers a click, this
+ * greys the button out before one. The gate is lifted again when the step unmounts, so
+ * the next step starts unblocked.
+ */
+export function useWizardNextGate(blocked: boolean): void {
+  const { setNextBlocked } = useWizardContext();
+  useEffect(() => {
+    setNextBlocked(blocked);
+    return () => setNextBlocked(false);
+  }, [blocked, setNextBlocked]);
 }

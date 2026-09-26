@@ -116,19 +116,21 @@ describe("UiKitProvider linkComponent", () => {
   it("hands the nearest provider's router link to useKitLink, inner over outer", () => {
     const outer = () => <a href="/o">o</a>;
     const inner = () => <a href="/i">i</a>;
-    let seen: unknown;
+    // Renders which link it was handed, so the assertion reads the DOM rather than a
+    // variable the component writes during render.
     function Probe() {
-      seen = useKitLink();
-      return null;
+      const link = useKitLink();
+      return <span data-testid="probe">{link === inner ? "inner" : link === outer ? "outer" : "none"}</span>;
     }
-    render(
+    const { unmount } = render(
       <UiKitProvider linkComponent={outer}>
         <UiKitProvider linkComponent={inner}>
           <Probe />
         </UiKitProvider>
       </UiKitProvider>,
     );
-    expect(seen).toBe(inner);
+    expect(screen.getByTestId("probe")).toHaveTextContent("inner");
+    unmount();
     render(
       <UiKitProvider linkComponent={outer}>
         <UiKitProvider locale="de">
@@ -136,6 +138,6 @@ describe("UiKitProvider linkComponent", () => {
         </UiKitProvider>
       </UiKitProvider>,
     );
-    expect(seen).toBe(outer);
+    expect(screen.getByTestId("probe")).toHaveTextContent("outer");
   });
 });

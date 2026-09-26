@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
@@ -237,7 +238,12 @@ export function PickerSheet({
       />
       {/* min-h-0 so the LIST scrolls rather than the dialog growing past the
           viewport — a flex child defaults to min-height:auto. */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+      {/* Marked as the scroller it is (`CLIPS_ATTRIBUTE`), so a Tooltip in a row —
+          `Combobox`'s `optionAdornment` — portals out under jsdom as it does in the
+          browser rather than joining the option's name (keksdose E8). */}
+      <div {...{ [CLIPS_ATTRIBUTE]: "" }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {children}
+      </div>
     </div>,
     document.body,
   );

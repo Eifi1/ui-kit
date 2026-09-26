@@ -1,11 +1,12 @@
 import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
-import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
+import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -172,57 +173,239 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * DangerConfirm keeps its own.
    */
   disabledReason?: ReactNode;
+  /**
+   * Busy — the save is in flight: a spinner, `aria-busy`, and no second submit.
+   *
+   * kastlan's FormActions (form-actions.tsx:50) disables its submit and swaps in a
+   * `submittingLabel`, so the button jumps width mid-click and a screen reader hears
+   * the name change instead of "busy". Here the label STAYS — it is still the
+   * accessible name and still holds the button's width — and the spinner is drawn over
+   * it in the text colour, so nothing beside the button moves.
+   *
+   * The same prop {@link FileButton} has (`pending`), with one difference: this one is
+   * `aria-disabled`, not `disabled`. The button being pressed is the one that has focus,
+   * and a native `disabled` drops that focus to `<body>` the moment the save starts;
+   * clicks, and the Enter that submits a form through it, are swallowed instead.
+   */
+  pending?: boolean;
+  /** Only on the link form — see {@link ButtonLinkProps}. */
+  href?: never;
+  renderLink?: never;
+  external?: never;
+}
+
+/**
+ * `<Button href>`: a link that looks like a button — for an action that NAVIGATES.
+ *
+ * kastlan paints `buttonClasses(…)` onto router Links by hand in six places (the
+ * invoice / lease / unit preview dialogs' "Open" at invoice-preview-dialog.tsx:36,
+ * platform-companies-page.tsx:111, verify-email-page.tsx:86's "Log in",
+ * billing-history-page.tsx:85's PDF download), and has 26 `<Button onClick={() =>
+ * navigate(…)}>` that are links in all but markup: no middle-click, no "open in new
+ * tab", no URL on hover, and a screen reader announces a button that then changes the
+ * page. With `href` it is an `<a>`: the provider's router link
+ * ({@link UiKitProvider}'s `linkComponent`), or `renderLink` if given, else a plain one.
+ *
+ * `type` and `form` are typed out: they are a `<button>`'s, and a link never submits.
+ */
+export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "type" | "href"> {
+  href: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  stretch?: boolean;
+  tone?: ButtonTone;
+  /** The in-app router link, over the provider's `linkComponent` (see
+   *  {@link KitLinkComponent}). Ignored when `external`. */
+  renderLink?: KitLinkComponent;
+  /** Leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`, never the
+   *  router link, and "(opens in a new tab)" read after the label — billing-history's
+   *  Stripe PDF. A `target="_blank"` of your own is announced the same way. */
+  external?: boolean;
+  /** A link cannot be `disabled`, so this renders an `<a>` with NO `href` —
+   *  `role="link"` and `aria-disabled`, out of the tab order like a disabled button,
+   *  with the disabled look. The router link is not used: it needs somewhere to go. */
+  disabled?: boolean;
+  ref?: Ref<HTMLAnchorElement>;
+  type?: never;
+  form?: never;
+  pending?: never;
+  pressed?: never;
+  disabledReason?: never;
 }
 
 function hasContent(node: ReactNode): boolean {
   return node !== undefined && node !== null && node !== false && node !== "";
 }
 
-export function Button({
+/** The button look shared by the `<button>` and the `<a>` form. */
+function buttonLook(variant: ButtonVariant, size: ButtonSize, stretch: boolean | undefined, tone: ButtonTone) {
+  return cn(
+    BUTTON_BASE,
+    BUTTON_SIZES[size],
+    // In a flex row next to a taller labelled field, `stretch` makes the button
+    // fill the field's height so the two line up (self-stretch overrides the row's
+    // align-items). No effect outside a flex row / when it's already the tallest.
+    stretch && "self-stretch",
+    buttonVariantClasses[variant],
+    tone !== "default" && TONED_VARIANTS.has(variant) && BUTTON_TONES[tone],
+  );
+}
+
+// Declared link-first so `<Button href>` picks the link props; the LAST signature is
+// what `ComponentProps<typeof Button>` reads, so wrappers (FileButton) still see the
+// `<button>` props they always did.
+export function Button(props: ButtonLinkProps): ReactElement;
+export function Button(props: ButtonProps): ReactElement;
+export function Button(props: ButtonProps | ButtonLinkProps): ReactElement {
+  if (props.href !== undefined) return <ButtonLink {...(props as ButtonLinkProps)} />;
+  return <ButtonElement {...(props as ButtonProps)} />;
+}
+
+/** Calls a `renderLink` / provider link as a function, as ListItem and Chip do — an
+ *  inline `renderLink` arrow would otherwise be a new component type every render. */
+function RenderedButtonLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
+  return render(props);
+}
+
+function ButtonLink({
+  href,
+  renderLink,
+  external,
+  disabled,
+  variant = "primary",
+  size = "md",
+  stretch,
+  tone = "default",
+  className,
+  children,
+  target,
+  rel,
+  onClick,
+  ...rest
+}: ButtonLinkProps) {
+  const kitLink = useKitLink();
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const Link = renderLink ?? kitLink;
+  const newTab = !disabled && (external || target === "_blank");
+  const cls = cn(
+    buttonLook(variant, size, stretch, tone),
+    // `relative` holds the sr-only note (see sr-only-containment.test).
+    newTab && "relative",
+    // BUTTON_BASE's `disabled:` classes never match an `<a>`; no pointer events also
+    // keeps the hover fill from lighting up on something that refuses the click.
+    disabled && "pointer-events-none cursor-not-allowed opacity-50",
+    className,
+  );
+  const body = (
+    <>
+      {children}
+      {/* The space OUTSIDE the sr-only span: a name computation trims each child's
+          text, so one inside it was lost ("Download(opens…"). In a flex box a bare
+          space draws nothing. */}
+      {newTab && " "}
+      {newTab && <span className="sr-only">({common.opensInNewTab})</span>}
+    </>
+  );
+  if (disabled) {
+    return (
+      <a {...rest} role="link" aria-disabled="true" className={cls}>
+        {body}
+      </a>
+    );
+  }
+  if (external || !Link) {
+    return (
+      <a
+        {...rest}
+        href={href}
+        target={external ? "_blank" : target}
+        rel={external ? (rel ?? "noopener noreferrer") : rel}
+        onClick={onClick}
+        className={cls}
+      >
+        {body}
+      </a>
+    );
+  }
+  return (
+    <RenderedButtonLink
+      render={Link}
+      {...rest}
+      href={href}
+      target={target}
+      rel={rel}
+      onClick={onClick}
+      className={cls}
+    >
+      {body}
+    </RenderedButtonLink>
+  );
+}
+
+function ButtonElement({
   variant = "primary",
   size = "md",
   stretch,
   tone = "default",
   pressed,
   disabledReason,
+  pending,
   className,
   onClick,
+  children,
+  href: _href,
+  renderLink: _renderLink,
+  external: _external,
   ...rest
 }: ButtonProps) {
   const reasonId = useId();
   const locked = hasContent(disabledReason);
+  const inert = locked || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
       {...rest}
-      disabled={locked ? undefined : rest.disabled}
-      aria-disabled={locked || rest["aria-disabled"]}
+      disabled={inert ? undefined : rest.disabled}
+      aria-disabled={inert || rest["aria-disabled"]}
+      aria-busy={pending || rest["aria-busy"]}
       aria-describedby={locked ? (ownDescribedBy ? `${ownDescribedBy} ${reasonId}` : reasonId) : ownDescribedBy}
       aria-pressed={pressed ?? rest["aria-pressed"]}
       onClick={(e) => {
         // `preventDefault` as well as not calling through: a locked submit button must
         // not submit its form, and the browser does that after this handler returns.
-        if (locked) {
+        if (inert) {
           e.preventDefault();
           return;
         }
         onClick?.(e);
       }}
       className={cn(
-        BUTTON_BASE,
-        BUTTON_SIZES[size],
-        // In a flex row next to a taller labelled field, `stretch` makes the button
-        // fill the field's height so the two line up (self-stretch overrides the row's
-        // align-items). No effect outside a flex row / when it's already the tallest.
-        stretch && "self-stretch",
-        buttonVariantClasses[variant],
-        tone !== "default" && TONED_VARIANTS.has(variant) && BUTTON_TONES[tone],
+        buttonLook(variant, size, stretch, tone),
         pressed && (variant === "link" ? BUTTON_LINK_PRESSED : ICON_BUTTON_PRESSED),
         // The disabled look for the focusable kind of disabled.
         locked && "cursor-not-allowed opacity-50",
+        // No dimming while pending: the spinner IS the state, and at half opacity it
+        // would be the faintest thing on the button. `relative` anchors it.
+        pending && "relative cursor-progress",
         className,
       )}
-    />
+    >
+      {pending ? (
+        <>
+          {/* Transparent, not hidden: it keeps the width AND stays the accessible
+              name (`visibility: hidden` would drop it from the name). `gap-[inherit]`
+              keeps an icon + text spaced as the button spaces them. */}
+          <span className="inline-flex items-center justify-center gap-[inherit] opacity-0">{children}</span>
+          {/* Decorative: `aria-busy` says it, as on FileButton. */}
+          <Spinner
+            label={null}
+            className="absolute inset-0 m-auto size-4 border-current/30 border-t-current"
+          />
+        </>
+      ) : (
+        children
+      )}
+    </button>
   );
   if (!locked) return button;
   return (
@@ -254,12 +437,15 @@ export function Button({
 const ICON_BUTTON_BASE =
   "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
-export type IconButtonSize = "xl" | "lg" | "md" | "sm" | "xs" | "2xs";
+export type IconButtonSize = "2xl" | "xl" | "lg" | "md" | "sm" | "xs" | "2xs";
 
 // Box and glyph together, so a 24px chip action cannot end up holding a 20px icon
 // that touches its edges. The two small steps are lenkbank's list-row (28px) and
 // chip (24px) actions, which it had hand-rolled beside the kit's 32/36px ones.
 const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
+  // 64px with a 28px glyph: a camera's shutter (keksdose invoices/camera-capture.tsx:248,
+  // `size-16` by hand) — the one control of a full-screen capture view, thumb-sized.
+  "2xl": "size-16 [&_svg]:size-7",
   // 48px with a 24px glyph: the one primary action of a phone screen or sheet, a step
   // past the 44px minimum rather than on it.
   xl: "size-12 [&_svg]:size-6",
@@ -276,6 +462,7 @@ const ICON_BUTTON_SIZES: Record<IconButtonSize, string> = {
 // stated — `size-*` sets a height that `self-stretch` cannot override, so the box is
 // written as a width plus a minimum height (the square it would otherwise be).
 const ICON_BUTTON_STRETCH_SIZES: Record<IconButtonSize, string> = {
+  "2xl": "w-16 min-h-16 self-stretch [&_svg]:size-7",
   xl: "w-12 min-h-12 self-stretch [&_svg]:size-6",
   lg: "w-11 min-h-11 self-stretch [&_svg]:size-5",
   md: "w-9 min-h-9 self-stretch [&_svg]:size-5",
@@ -363,7 +550,7 @@ function iconButtonToneClass(tone: IconButtonTone, quiet: boolean | undefined): 
 // and would out-rank a caller's plain `hover:` override), each variant pins its
 // RESTING look under `disabled:hover:`, which out-ranks any `hover:` by specificity
 // and only ever matches a disabled button.
-const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay", string> = {
+const ICON_BUTTON_DISABLED_REST: Record<IconButtonVariant, string> = {
   primary: "disabled:hover:bg-[var(--bg-surface-2)]",
   secondary: "disabled:hover:bg-transparent",
   ghost: "disabled:hover:bg-transparent",
@@ -371,6 +558,7 @@ const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay", string> = {
   brand: "disabled:hover:bg-[var(--brand)]",
   link: "disabled:hover:bg-transparent disabled:hover:no-underline",
   overlay: "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
+  shutter: "disabled:hover:bg-[var(--media-scrim)]",
 };
 
 // The quiet looks change the glyph on hover, so they pin their resting glyph the
@@ -393,15 +581,69 @@ const ICON_BUTTON_PRESSED =
 const ICON_BUTTON_OVERLAY =
   "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-[var(--text-inverse)] backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus:ring-[var(--text-inverse)]";
 
+// `variant="shutter"`: the camera's release — keksdose's camera-capture.tsx:248 draws
+// it by hand as a 64px circle with a thick white ring round a translucent fill. It sits
+// on a live camera picture, which is dark whatever the theme, so it uses the MEDIA
+// tokens (tokens.css), white ink on a dark scrim in both themes — the inverse pair
+// `overlay` uses would give a dark ring on a dark viewfinder in dark mode. The focus ring stands off by 2px, or it would
+// merge into the ring that is part of the look.
+const ICON_BUTTON_SHUTTER =
+  "rounded-full border-4 border-[var(--media-ink)] bg-[var(--media-scrim)] text-[var(--media-ink)] backdrop-blur-sm hover:bg-[var(--media-scrim-hover)] focus:ring-[var(--media-ink)] focus:ring-offset-2 focus:ring-offset-[var(--media-scrim-hover)]";
+
+export type IconButtonVariant = ButtonVariant | "overlay" | "shutter";
+
+/**
+ * The glyph's size in px, over the one the box size implies — see
+ * {@link IconButtonProps.glyphSize}.
+ */
+export type IconButtonGlyphSize = 12 | 14 | 16 | 20 | 24 | 28;
+
+const ICON_BUTTON_GLYPH_SIZES: Record<IconButtonGlyphSize, string> = {
+  12: "[&_svg]:size-3",
+  14: "[&_svg]:size-3.5",
+  16: "[&_svg]:size-4",
+  20: "[&_svg]:size-5",
+  24: "[&_svg]:size-6",
+  28: "[&_svg]:size-7",
+};
+
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Any {@link ButtonVariant}, or `overlay` — a round translucent disc for use over
-   *  an image (see `ICON_BUTTON_OVERLAY`). */
-  variant?: ButtonVariant | "overlay";
-  /** Box size: lg = 44px (a phone's touch target), md = 36px (matches the top bar),
+  /** Any {@link ButtonVariant}; `overlay` — a round translucent disc for use over
+   *  an image (see `ICON_BUTTON_OVERLAY`); or `shutter` — a camera's release, a ringed
+   *  disc over the viewfinder (see `ICON_BUTTON_SHUTTER`; pair it with `size="2xl"`). */
+  variant?: IconButtonVariant;
+  /** Box size: 2xl = 64px with a 28px icon (a camera shutter), xl = 48px with a 24px
+   *  icon, lg = 44px (a phone's touch target), md = 36px (matches the top bar),
    *  sm = 32px — all three with a 20px icon;
    *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
-   *  icon (an action on a chip or a tab). */
+   *  icon (an action on a chip or a tab). `glyphSize` overrides the icon. */
   size?: IconButtonSize;
+  /**
+   * The icon's size in px, when the box's own is not the one wanted. keksdose's sync
+   * chip (app/sync-status-indicator.tsx:142) is a 24px round chip round a 20px cloud —
+   * `size="2xs" glyphSize={20} shape="round"` — where `2xs` alone draws 14px. A number
+   * over a new size step because the box and the glyph are two independent choices; a
+   * step per combination (`"sm-lg"`) would have to be named for every one.
+   */
+  glyphSize?: IconButtonGlyphSize;
+  /**
+   * A small mark on the button's corner — the sync chip's 12px check over its cloud
+   * ("all good", feedback #67). Rendered OUTSIDE the `<button>`, in a wrapper beside
+   * it, so the box's `[&_svg]:size-*` rule that sizes the glyph does not blow the badge
+   * up to the glyph's size; a bare `<Check />` comes out 12px, on a
+   * `--bg-surface` disc that keeps it legible over the glyph. Decorative
+   * (`aria-hidden`): the name (`label` / `aria-label`) must already carry the state.
+   * With a badge, `className` still lands on the button; the wrapper is the flex item.
+   */
+  badge?: ReactNode;
+  /**
+   * `keep`: a disabled button keeps its full colour (no 50% drop) and an ordinary
+   * cursor. For a STATUS that is also an action — the sync chip shows "in sync" in
+   * green and refreshes on click, and is disabled while offline or syncing, when the
+   * state it shows matters most; dimmed it read as broken (keksdose wrote
+   * `disabled:cursor-default` by hand and left out the dimming). Default `dim`.
+   */
+  disabledStyle?: "dim" | "keep";
   /**
    * Fill the height of the flex row it stands in, keeping its width — the delete at
    * the end of keksdose's split line (transaction-fields:162), level with the labelled
@@ -546,6 +788,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     tooltipSide,
     tooltipPortal,
     disabledReason,
+    glyphSize,
+    badge,
+    disabledStyle = "dim",
     className,
     style,
     onClick,
@@ -555,6 +800,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
   ref,
 ) {
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
+  const keep = disabledStyle === "keep";
   const reasonId = useId();
   const locked = hasContent(disabledReason);
   const ownDescribedBy = rest["aria-describedby"];
@@ -586,17 +832,39 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       className={cn(
         ICON_BUTTON_BASE,
         stretch ? ICON_BUTTON_STRETCH_SIZES[size] : ICON_BUTTON_SIZES[size],
+        glyphSize !== undefined && ICON_BUTTON_GLYPH_SIZES[glyphSize],
         // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
-        variant === "overlay" ? ICON_BUTTON_OVERLAY : buttonVariantClasses[variant],
+        variant === "overlay"
+          ? ICON_BUTTON_OVERLAY
+          : variant === "shutter"
+            ? ICON_BUTTON_SHUTTER
+            : buttonVariantClasses[variant],
         shape === "round" && "rounded-full",
         ICON_BUTTON_DISABLED_REST[variant],
         iconButtonToneClass(tone, quiet),
         pressed && ICON_BUTTON_PRESSED,
         // The disabled look for the focusable kind of disabled, as on Button.
-        locked && "cursor-not-allowed opacity-50",
+        locked && (keep ? "cursor-default" : "cursor-not-allowed opacity-50"),
+        keep && "disabled:cursor-default disabled:opacity-100",
         className,
       )}
     />
+  );
+  // The badge beside the button, not in it — see `badge`. The wrapper is only a
+  // positioning box: the button inside it keeps its own focus ring and hit area.
+  const control = hasContent(badge) ? (
+    <span className={cn("relative inline-flex shrink-0", stretch && "self-stretch")}>
+      {button}
+      <span
+        aria-hidden
+        data-slot="icon-button-badge"
+        className="pointer-events-none absolute -end-0.5 -bottom-0.5 inline-flex rounded-full bg-[var(--bg-surface)] [&_svg]:size-3"
+      >
+        {badge}
+      </span>
+    </span>
+  ) : (
+    button
   );
   if (locked) {
     return (
@@ -609,7 +877,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         className={stretch ? "self-stretch" : undefined}
       >
         <>
-          {button}
+          {control}
           <span id={reasonId} hidden>
             {disabledReason}
           </span>
@@ -617,12 +885,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       </Tooltip>
     );
   }
-  if (!tooltip || label === undefined || label === "") return button;
+  if (!tooltip || label === undefined || label === "") return control;
   return (
     // A fragment, so Tooltip leaves the button's description alone: the bubble says
     // exactly what `aria-label` already does.
     <Tooltip label={label} side={tooltipSide} portal={tooltipPortal} className={stretch ? "self-stretch" : undefined}>
-      <>{button}</>
+      <>{control}</>
     </Tooltip>
   );
 });
@@ -1504,11 +1772,50 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
    * an inset panel never runs edge to edge.
    */
   variant?: "default" | "inset";
+  /**
+   * A card that is a WARNING (or other status) as a whole: the border in the tone's
+   * `-border` colour and the {@link CardTitle} in the tone's text colour. kastlan's
+   * dunning summary (invoice-detail-page.tsx:231-235) writes both by hand —
+   * `border-[var(--warning-border)]` on the Card, `text-[var(--warning)]` on the title
+   * — and the next status card would copy the pair. An `inset` panel has no border, so
+   * it takes the tone's quiet `-bg` fill instead. `data-tone` is set for a caller's own
+   * selectors.
+   */
+  tone?: CardTone;
 }
 
-export function Card({ className, children, flush, variant = "default", ...rest }: CardProps) {
+export type CardTone = "warning" | "danger" | "info" | "success";
+
+// The title is reached through its `data-slot`, so the tone needs no context and a
+// caller's `className` on CardTitle still wins (it is on the element itself).
+const CARD_TONES: Record<CardTone, { border: string; fill: string; title: string }> = {
+  warning: {
+    border: "border-[var(--warning-border)]",
+    fill: "bg-[var(--warning-bg)]",
+    title: "[&_[data-slot=card-title]]:text-[var(--warning)]",
+  },
+  danger: {
+    border: "border-[var(--danger-border)]",
+    fill: "bg-[var(--danger-bg)]",
+    title: "[&_[data-slot=card-title]]:text-[var(--danger)]",
+  },
+  info: {
+    border: "border-[var(--info-border)]",
+    fill: "bg-[var(--info-bg)]",
+    title: "[&_[data-slot=card-title]]:text-[var(--info)]",
+  },
+  success: {
+    border: "border-[var(--success-border)]",
+    fill: "bg-[var(--success-bg)]",
+    title: "[&_[data-slot=card-title]]:text-[var(--success)]",
+  },
+};
+
+export function Card({ className, children, flush, variant = "default", tone, ...rest }: CardProps) {
+  const toned = tone ? CARD_TONES[tone] : undefined;
   return (
     <div
+      data-tone={tone}
       {...rest}
       className={cn(
         variant === "inset"
@@ -1522,6 +1829,8 @@ export function Card({ className, children, flush, variant = "default", ...rest 
                 ? "border-y border-[var(--border)] md:rounded-lg md:border md:shadow-sm"
                 : "rounded-lg border border-[var(--border)] shadow-sm",
             ),
+        toned && (variant === "inset" ? toned.fill : toned.border),
+        toned?.title,
         className,
       )}
     >
@@ -1623,6 +1932,19 @@ export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "ch
    * one both announce).
    */
   label?: string | null;
+  /**
+   * Show the label as TEXT beside the ring, not only to a screen reader. kastlan's
+   * LoadingState (feedback/loading-state.tsx:14) builds exactly this by hand — a
+   * `role="status"` wrapper, the spinner at `label={null}`, a `<p>` of text — so it
+   * has to get the three-part aria arrangement right itself. Here the visible text IS
+   * the live region's content (the label stays the accessible name, said once), and
+   * the ring is decorative. `className` still sizes the ring; the other props go on
+   * the wrapper. Ignored with `label={null}`: there are no words to show.
+   */
+  showLabel?: boolean;
+  /** Where the shown label sits: `end` (default) — beside the ring, for a row or a
+   *  button; `below` — under it, centred, for a panel's loading state. */
+  labelPosition?: "end" | "below";
 }
 
 /**
@@ -1640,7 +1962,7 @@ export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "ch
  * `label={null}`: announcing is right for a spinner standing alone and wrong for one
  * beside text, inside a button, or inside the app's own live region.
  */
-export function Spinner({ className, label, ...rest }: SpinnerProps) {
+export function Spinner({ className, label, showLabel, labelPosition = "end", ...rest }: SpinnerProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, {
     loading: label ?? undefined,
   });
@@ -1649,6 +1971,21 @@ export function Spinner({ className, label, ...rest }: SpinnerProps) {
     className,
   );
   if (label === null) return <span aria-hidden {...rest} className={ring} />;
+  if (showLabel) {
+    return (
+      <span
+        role="status"
+        {...rest}
+        className={cn(
+          "inline-flex items-center text-sm text-[var(--text-secondary)]",
+          labelPosition === "below" ? "flex-col gap-2 text-center" : "gap-2",
+        )}
+      >
+        <span aria-hidden className={ring} />
+        <span>{common.loading}</span>
+      </span>
+    );
+  }
   return (
     <span role="status" {...rest} className={ring}>
       {/* The trailing space is a separator for the case the caller forgot `label={null}`

@@ -5,6 +5,8 @@ import { cn } from "../lib/cn";
 import { HoverMenu } from "../components/hover-menu";
 import { MenuItem } from "../components/menu-item";
 import type { MenuItemTone } from "../components/menu-item";
+import { StatusDot } from "../components/status-dot";
+import type { UserAvatarBadge } from "../components/user-avatar";
 import { TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
 
 /**
@@ -125,6 +127,7 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
  */
 export function TopBarActionMenu({
   icon,
+  iconBadge,
   trigger,
   triggerClassName,
   ariaLabel,
@@ -139,6 +142,13 @@ export function TopBarActionMenu({
 }: {
   /** The trigger's face for the usual icon button. Ignored when `trigger` is given. */
   icon?: ReactNode;
+  /**
+   * A status dot in the top-end corner of `icon` — keksdose's unread-support dot on the
+   * feedback trigger. Like `UserAvatar`'s `badge`, its `label` joins the trigger's name
+   * ("Send feedback 2 unread"), so the dot is not something only the eye is told about.
+   * Ignored with `trigger`: give the face its own badge there.
+   */
+  iconBadge?: UserAvatarBadge | null;
   /**
    * A face of your own for the trigger — the account menu's `UserAvatar`. It is drawn
    * INSIDE the kit's button, which keeps the wiring: `aria-haspopup`, `aria-expanded`,
@@ -189,6 +199,17 @@ export function TopBarActionMenu({
                 menu3 unread"); as a flex item it takes no room. */}
             {" "}
             {trigger({ open })}
+          </button>
+        ) : iconBadge ? (
+          // Named by its content, like the custom-trigger branch, so the badge label is
+          // part of the name; an `aria-label` would have hidden it.
+          <button type="button" onClick={toggle} className={cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName)}>
+            <span className="sr-only">{ariaLabel}</span>{" "}
+            <span aria-hidden className="relative inline-flex">
+              {icon}
+              <StatusDot ring tone={iconBadge.tone ?? "danger"} className="absolute -end-0.5 -top-0.5" />
+            </span>{" "}
+            <span className="sr-only">{iconBadge.label}</span>
           </button>
         ) : (
           <button

@@ -19,4 +19,13 @@ export type {
   MobileSwipeActions,
   DataTableDensity,
   DataTableChrome,
+  DataTableRowAction,
 } from "./components/data-table";
+export * from "./components/data-table-cells";
+export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
+export type {
+  TableUrlState,
+  TableUrlStateProps,
+  UseTableUrlStateOptions,
+  UseTableUrlStateReturn,
+} from "./components/use-table-state";

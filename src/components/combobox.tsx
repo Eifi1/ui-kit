@@ -113,7 +113,7 @@ function SuggestionList({
       dir={dir}
       style={{ top, left: rect.left, width: rect.width }}
     >
-      <ul id={id} role="listbox" className={LIST_CLASS} style={{ maxHeight }}>
+      <ul id={id} role="listbox" data-clips="" className={LIST_CLASS} style={{ maxHeight }}>
         {children}
       </ul>
     </div>,

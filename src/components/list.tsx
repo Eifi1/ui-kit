@@ -5,7 +5,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Spinner } from "./ui";
 import { StatusDot } from "./status-dot";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -207,8 +208,9 @@ export type ListItemProps = ListItemBaseProps &
          * cannot do.
          */
         href: string;
-        /** Your router's link for an in-app `href`. Default `<a>`. The API `Chip`,
-         *  `StatTile` and `MenuItem` share. Ignored for an `external` row. */
+        /** Your router's link for an in-app `href`. Default: the `<UiKitProvider
+         *  linkComponent>`, then `<a>`. The API `Chip`, `StatTile` and `MenuItem`
+         *  share. Ignored for an `external` row. */
         renderLink?: (props: ListItemLinkProps) => ReactElement;
         /**
          * The link leaves the app: a plain `<a target="_blank" rel="noopener
@@ -277,6 +279,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
 ) {
   const list = useContext(ListContext);
   const labels = useKitLabels("list", DEFAULT_LIST_LABELS);
+  const kitLink = useKitLink();
   const density = densityProp ?? list.density;
   const pad = PAD[density];
   const isLink = href !== undefined && !disabled;
@@ -364,8 +367,9 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       children: body,
     };
     const { children: linkBody, ...anchorProps } = linkProps;
-    main = renderLink && !external ? (
-      <RenderedLink render={renderLink} {...linkProps} />
+    const render = external ? undefined : pickLinkRenderer(renderLink, kitLink, href);
+    main = render ? (
+      <RenderedLink render={render} {...linkProps} />
     ) : (
       <a {...anchorProps} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : null)}>
         {linkBody}

@@ -8,3 +8,5 @@ export * from "./shell/app-shell";
 export * from "./shell/option-switcher-menu";
 export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
+export * from "./shell/top-bar-brand";
+export * from "./shell/auth-layout";

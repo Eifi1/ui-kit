@@ -11,6 +11,7 @@ import { cn } from "../lib/cn";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { useDialogParam, type DialogParam } from "../hooks/use-search-param-state";
 import { OVERLAY_EXIT_MS, prefersReducedMotion, useCloseTransition } from "../hooks/use-close-transition";
 
 /**
@@ -196,6 +197,50 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * suppressed there — there is nothing beside it to see.
    */
   draggable?: boolean;
+  /**
+   * Bind the open state to a URL search param (0.12.0): `"edit"` is open while
+   * `?edit` is in the query, `{ key: "dialog", value: "create-lease" }` while
+   * `?dialog=create-lease` is. The URL is then the only state — `open` is ignored —
+   * and the dialog opens from anywhere that sets the param: {@link useDialogParam}'s
+   * setter, a `<Link>`, a shared link, a reload.
+   *
+   * kastlan's `useDialogParam` did this beside the dialog, so its open state could be
+   * deep-linked and captured in a feedback report. Here it also owns the history:
+   * opening through `useDialogParam` pushes an entry, so the Back gesture closes the
+   * dialog by leaving it, and a close (Escape, the backdrop, the X) goes back over
+   * that entry rather than stacking a second one. The dialog's own Back handling
+   * ({@link useOverlayHistory}'s throwaway entry) stays off in this mode — the param's
+   * entry already is one, and two would take two Back presses to close one dialog.
+   *
+   * `onClose` still runs, after the param is cleared. Requires a react-router Router.
+   */
+  urlParam?: DialogParam;
+}
+
+/**
+ * The URL-bound dialog: the param is the open state, and closing clears it. A
+ * component of its own so the router hook is only called by a `Modal` that asked for
+ * it — a plain `Modal` must keep working with no Router above it.
+ */
+function UrlParamModal({ urlParam, onClose, ...rest }: ModalProps & { urlParam: DialogParam }) {
+  const [open, setOpen] = useDialogParam(urlParam);
+  // Closed from here the moment the dismissal is decided. Going back is a traversal
+  // the browser lands a task later, and between the two the param still says "open":
+  // without this the panel, already lowered, would pop back up for that task.
+  const [leaving, setLeaving] = useState(false);
+  if (leaving && !open) setLeaving(false);
+  return (
+    <ModalPanel
+      {...rest}
+      open={open && !leaving}
+      ownHistoryEntry={false}
+      onClose={() => {
+        setLeaving(true);
+        setOpen(false);
+        onClose();
+      }}
+    />
+  );
 }
 
 /**
@@ -206,7 +251,15 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
  * into the panel on open and back to the trigger on close, a Tab focus trap, and
  * `role="dialog"`/`aria-modal`.
  */
-export function Modal({
+export function Modal(props: ModalProps) {
+  return props.urlParam !== undefined ? (
+    <UrlParamModal {...props} urlParam={props.urlParam} />
+  ) : (
+    <ModalPanel {...props} />
+  );
+}
+
+function ModalPanel({
   onClose,
   open,
   children,
@@ -218,8 +271,13 @@ export function Modal({
   draggable,
   style,
   role = "dialog",
+  urlParam: _urlParam,
+  ownHistoryEntry = true,
   ...rest
-}: ModalProps) {
+}: ModalProps & {
+  /** False when the URL already holds an entry for this dialog — see `urlParam`. */
+  ownHistoryEntry?: boolean;
+}) {
   const panelRef = useRef<HTMLDivElement>(null);
   const drag = useDragOffset(Boolean(draggable));
   // Without `open`, mounted means open — the constant `true` every hook below used to
@@ -262,7 +320,7 @@ export function Modal({
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
   // Held only while open: a closed `open={false}` dialog must not own a history entry.
-  useOverlayHistory(active, requestClose);
+  useOverlayHistory(active && ownHistoryEntry, requestClose);
 
   // Through the shared hook and not by hand: this component's own save/restore copy
   // was one half of the pair that left the page permanently unscrollable when a dialog

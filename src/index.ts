@@ -7,6 +7,11 @@
 export * from "./lib/calc";
 export { cn } from "./lib/cn";
 export { logger, setStoreLog } from "./lib/logger";
+// Intl number / money / percent / date / relative-time formatting, and `useKitFormat()`
+// for the same bound to the provider's locale (kastlan's formatters.ts, English "5m ago").
+export * from "./lib/format";
+// localStorage that never throws (Safari private mode, blocked site data).
+export { readStored, writeStored } from "./lib/safe-storage";
 // Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
 
 // ── hooks ────────────────────────────────────────────────────────────────────
@@ -38,9 +43,19 @@ export type { UseFileDropOptions, UseFileDropReturn, FileDropProps } from "./hoo
 // kastlan's search boxes each carried a hand-rolled copy, two without the cleanup.
 export { useDebounce, useDebouncedCallback } from "./hooks/use-debounce";
 export type { DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
+// One search param as state, the active tab in `?tab=`, and a dialog's open state in the
+// URL (Modal's `urlParam`) — kastlan's and keksdose's use-search-param-state, in the kit.
+export { useSearchParamState, useTabParam, useDialogParam } from "./hooks/use-search-param-state";
+export type { SearchParamStateOptions, DialogParam } from "./hooks/use-search-param-state";
 // Copy that reports whether it worked — keksdose's copy buttons said "Copied" when it had not.
 export { useCopyToClipboard, copyToClipboard } from "./hooks/use-copy-to-clipboard";
 export type { CopyState, UseCopyToClipboardOptions, UseCopyToClipboardReturn } from "./hooks/use-copy-to-clipboard";
+// Keyboard shortcuts ("Mod+K", "Ctrl+Shift+F") that leave typing in fields alone.
+export { useHotkey, parseHotkey, matchesHotkey } from "./hooks/use-hotkey";
+export type { Hotkey, ParsedHotkey, UseHotkeyOptions } from "./hooks/use-hotkey";
+// A protected file as an object URL, fetched with the app's own auth (kastlan's AuthedImage).
+export { useAuthedSrc } from "./hooks/use-authed-src";
+export type { AuthedFetcher, AuthedSrcStatus, UseAuthedSrcOptions, UseAuthedSrcResult } from "./hooks/use-authed-src";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
 export * from "./theme/chart-palette";
@@ -125,7 +140,15 @@ export * from "./components/chart-zoom";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";
+export * from "./components/pie-chart";
+export * from "./components/pie-chart-labels";
 export * from "./components/account-settings";
+// 0.12.0: the fourth account section, and the QR code TwoFactorSetting draws its
+// otpauth URI with (encoder in lib/qr-encode.ts — no dependency, see there).
+export * from "./components/passkeys-setting";
+export * from "./components/qr-code";
+export { encodeQr } from "./lib/qr-encode";
+export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
@@ -147,11 +170,23 @@ export * from "./components/tree-view";
 export * from "./components/chart";
 // 0.8.0 layout and feedback primitives the apps hand-rolled or took from shadcn/Radix.
 export * from "./components/description-list";
+// The Save / Cancel row forms and dialogs end in, and the editable line-item repeater
+// (journal lines, lease components, invoice positions). 0.12.0.
+export * from "./components/form-actions";
+export * from "./components/line-items";
 export * from "./components/progress-bar";
 // Named: skeleton.tsx also holds SKELETON_CLASS, the look StatTile shares — internal.
 export { Skeleton } from "./components/skeleton";
 export type { SkeletonProps, SkeletonShape } from "./components/skeleton";
+// 0.12.0: a centred spinner with words, signed figures and deltas, a render-error fallback.
+export * from "./components/loading-state";
+export * from "./components/signed-amount";
+export * from "./components/error-boundary";
 export * from "./components/copy-button";
+export { AuthedImage, DEFAULT_AUTHED_IMAGE_LABELS } from "./components/authed-image";
+export type { AuthedImageProps, AuthedImageLabels } from "./components/authed-image";
+export * from "./components/image-grid";
+export * from "./components/lightbox";
 export * from "./components/button-group";
 export * from "./components/table";
 export * from "./components/separator";
@@ -165,6 +200,16 @@ export * from "./components/text";
 export * from "./components/status-dot";
 export * from "./components/page-header";
 export * from "./components/breadcrumbs";
+// The one inline link (kastlan's EntityLink / CellLink / legal and source links), through
+// `<UiKitProvider linkComponent>`. Named: the file also holds the kit's internal link picker.
+export { TextLink } from "./components/text-link";
+export type {
+  TextLinkProps,
+  TextLinkRenderProps,
+  TextLinkTone,
+  TextLinkUnderline,
+  TextLinkCurrent,
+} from "./components/text-link";
 // The toast layer over sonner (an OPTIONAL peer, loaded lazily): `toast` mirrors sonner's
 // API so apps migrate by swapping the import; `<Toaster>` carries the placement, theme,
 // tones and z-index both apps had wired by hand.
@@ -202,7 +247,17 @@ export type {
   MobileSwipeActions,
   DataTableDensity,
   DataTableChrome,
+  DataTableRowAction,
 } from "./components/data-table";
+// 0.12.0: the yes/no cell, and a server table's state held by its owner, URL-synced.
+export * from "./components/data-table-cells";
+export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
+export type {
+  TableUrlState,
+  TableUrlStateProps,
+  UseTableUrlStateOptions,
+  UseTableUrlStateReturn,
+} from "./components/use-table-state";
 
 // ── shell (composable app chrome) ────────────────────────────────────────────
 export * from "./shell/topbar-controls";
@@ -211,6 +266,8 @@ export * from "./shell/app-shell";
 export * from "./shell/option-switcher-menu";
 export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
+export * from "./shell/top-bar-brand";
+export * from "./shell/auth-layout";
 
 // ── feedback ─────────────────────────────────────────────────────────────────
 // The form somebody files a report with, and the parts an inbox is built from:
@@ -222,6 +279,7 @@ export * from "./shell/topbar-action-menu";
 export * from "./feedback/feedback-attachment";
 export * from "./feedback/feedback-dialog";
 export * from "./feedback/feedback-inbox";
+export * from "./feedback/feedback-thread";
 
 // ── multi-step wizard ────────────────────────────────────────────────────────
 // The engine (step machine, validators, collected data), the chrome around it

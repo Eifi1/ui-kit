@@ -29,10 +29,21 @@ export type TableHeaderCellSize = "xs" | "sm";
 /** The header cell's weight. Default `medium`. */
 export type TableHeaderCellWeight = "normal" | "medium" | "semibold";
 
+/**
+ * What a {@link TableRow} is in a statement-style table (0.12.0): an ordinary `row`, a
+ * `group` heading ("Current assets", a tinted full-width label row), a `subtotal` under
+ * a group, or the `total` of the whole table. kastlan's balance sheet, income statement
+ * and journal entry each spelled these as `className="font-medium"`, `"font-bold
+ * border-t-2"` and `bg-muted/50` on the cell — three pages, three sets of classes for
+ * the same four kinds of line.
+ */
+export type TableRowVariant = "row" | "group" | "subtotal" | "total";
+
 interface TableContextValue {
   density: TableDensity;
   zebra: boolean;
   hover: boolean;
+  rowDividers: boolean;
   captionId: string;
   registerCaption: () => () => void;
 }
@@ -41,12 +52,44 @@ const TableContext = createContext<TableContextValue>({
   density: "comfortable",
   zebra: false,
   hover: false,
+  rowDividers: true,
   captionId: "",
   registerCaption: () => () => {},
 });
 
-/** Which section a row sits in — zebra and hover apply to body rows only. */
-const SectionContext = createContext<"head" | "body" | "foot">("body");
+type TableSection = "head" | "body" | "foot";
+
+/** Which section a row sits in — zebra and hover apply to body rows only. `undefined`
+ *  outside the kit's section parts: a raw `<thead>` / `<tbody>`, which
+ *  {@link useSection} then reads off the DOM. */
+const SectionContext = createContext<TableSection | undefined>(undefined);
+
+const SECTION_OF_TAG: Record<string, TableSection> = { THEAD: "head", TBODY: "body", TFOOT: "foot" };
+
+/**
+ * The section a row or cell sits in: the kit part's context where there is one, else the
+ * nearest `<thead>` / `<tbody>` / `<tfoot>` in the DOM.
+ *
+ * keksdose's VAT summary writes a raw `<thead>` round kit cells in places, and a
+ * `TableHeaderCell` there took itself for a BODY cell — `scope="row"`, body type — with
+ * nothing on the page to say why. React cannot see an ancestor's tag, so the fallback
+ * reads it after mount; a layout effect, so the corrected cell is what gets painted.
+ */
+function useSection<E extends HTMLElement>(): [TableSection, ((el: E | null) => void) | undefined] {
+  const fromContext = useContext(SectionContext);
+  const [node, setNode] = useState<E | null>(null);
+  const [detected, setDetected] = useState<TableSection | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (fromContext !== undefined || !node) return;
+    const section = node.closest("thead, tbody, tfoot");
+    const found = section ? SECTION_OF_TAG[section.tagName] : undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read off the DOM, which only exists after mount
+    if (found !== detected) setDetected(found);
+  }, [fromContext, node, detected]);
+  // No ref at all under a kit section: holding the node would cost every row and cell
+  // a second render on mount for an answer the context already gave.
+  return [fromContext ?? detected ?? "body", fromContext === undefined ? setNode : undefined];
+}
 
 /** A {@link TableRow}'s `valign`, which its cells take unless they set their own. It
  *  cannot be left to CSS inheritance: every cell states its own default alignment,
@@ -102,6 +145,22 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   wrapperClassName?: string;
   /** See {@link TableLayout}. Unset leaves the browser's `auto` and adds no class. */
   layout?: TableLayout;
+  /**
+   * A rounded border round the whole table (0.12.0) — for a table standing on the page
+   * or in a dialog rather than inside a card. kastlan wraps six of them in
+   * `<div className="rounded-md border">` by hand (payment allocation, the new-budget
+   * lines, the meter readings, the deposit transactions, the unit values editor, the
+   * maintenance detail), and a hand-made frame outside the scroll wrapper does not clip
+   * the rows' tint to its corners.
+   */
+  framed?: boolean;
+  /**
+   * The rule between body rows. Default true. `false` for a small table whose rows are
+   * spaced by their own content — keksdose's VAT summary, a block of three quiet
+   * columns inside a card — which otherwise had to drop to raw `<tr>`s to lose it. One
+   * row can still say otherwise with {@link TableRowProps.bordered}.
+   */
+  rowDividers?: boolean;
 }
 
 /**
@@ -127,6 +186,8 @@ export function Table({
   hover = false,
   wrapperClassName,
   layout,
+  framed = false,
+  rowDividers = true,
   className,
   "aria-label": ariaLabel,
   ...rest
@@ -141,13 +202,14 @@ export function Table({
       density,
       zebra,
       hover,
+      rowDividers,
       captionId,
       registerCaption: () => {
         setCaptions((n) => n + 1);
         return () => setCaptions((n) => n - 1);
       },
     }),
-    [density, zebra, hover, captionId],
+    [density, zebra, hover, rowDividers, captionId],
   );
 
   const regionName = captions > 0 ? { "aria-labelledby": captionId } : ariaLabel ? { "aria-label": ariaLabel } : null;
@@ -163,9 +225,13 @@ export function Table({
         tabIndex={overflowing ? 0 : undefined}
         data-overflowing={overflowing || undefined}
         data-clips=""
+        data-framed={framed || undefined}
         className={cn(
           // `relative`: the containing block for an `sr-only` caption.
           "relative w-full overflow-x-auto",
+          // On the scroll wrapper itself, so its clipping keeps the rows inside the
+          // rounded corners.
+          framed && "rounded-md border border-[var(--border)]",
           THIN_SCROLLBAR_CLASS,
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
           wrapperClassName,
@@ -187,12 +253,16 @@ export function Table({
   );
 }
 
-export type TableHeadProps = ComponentPropsWithoutRef<"thead">;
+export interface TableHeadProps extends ComponentPropsWithoutRef<"thead"> {
+  /** The rule under the head. Default true; `false` for a quiet header over a small
+   *  table (keksdose's VAT summary wrote `className="border-b-0"` to lose it). */
+  bordered?: boolean;
+}
 
-export function TableHead({ className, ...rest }: TableHeadProps) {
+export function TableHead({ bordered = true, className, ...rest }: TableHeadProps) {
   return (
     <SectionContext.Provider value="head">
-      <thead {...rest} className={cn("border-b border-[var(--border)]", className)} />
+      <thead {...rest} className={cn(bordered && "border-b border-[var(--border)]", className)} />
     </SectionContext.Provider>
   );
 }
@@ -290,24 +360,42 @@ export function TableFoot({ className, ...rest }: TableFootProps) {
   );
 }
 
+const ROW_VARIANT: Record<TableRowVariant, string | false> = {
+  row: false,
+  group: "bg-[var(--bg-surface-2)] font-semibold",
+  subtotal: "font-medium",
+  // A 2px rule over the 1px divider the row above draws on its bottom: collapsed
+  // borders meet on one line, the wider wins, and the heavier rule is what says "sum".
+  total: "border-t-2 border-t-[var(--border-strong)] font-semibold",
+};
+
 /** The deprecated HTML `valign` attribute is replaced by a class-backed one. */
 export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
   /** Vertical alignment for every cell of the row that does not set its own. See
    *  {@link TableVAlign}. Left out, each cell keeps its default. */
   valign?: TableVAlign;
+  /** See {@link TableRowVariant}. Default `row`. Zebra and hover tint ordinary rows
+   *  only: a group heading or a total is not one more record. */
+  variant?: TableRowVariant;
+  /** The rule under this body row. Default: the table's `rowDividers`. */
+  bordered?: boolean;
 }
 
-export function TableRow({ valign, className, ...rest }: TableRowProps) {
-  const { zebra, hover } = useContext(TableContext);
-  const section = useContext(SectionContext);
+export function TableRow({ valign, variant = "row", bordered, className, ...rest }: TableRowProps) {
+  const { zebra, hover, rowDividers } = useContext(TableContext);
+  const [section, ref] = useSection<HTMLTableRowElement>();
   const body = section === "body";
+  const record = body && variant === "row";
   const row = (
     <tr
+      ref={ref}
       {...rest}
+      data-variant={variant === "row" ? undefined : variant}
       className={cn(
-        body && "border-b border-[var(--border)]",
-        body && zebra && "even:bg-[var(--bg-surface-2)]",
-        body && hover && "transition-colors hover:bg-[var(--bg-hover)]",
+        body && (bordered ?? rowDividers) && "border-b border-[var(--border)]",
+        record && zebra && "even:bg-[var(--bg-surface-2)]",
+        record && hover && "transition-colors hover:bg-[var(--bg-hover)]",
+        ROW_VARIANT[variant],
         // On the row as well, for a raw `<td>` of the caller's, which inherits it.
         valign && VALIGN[valign],
         className,
@@ -356,12 +444,13 @@ export function TableHeaderCell({
   ...rest
 }: TableHeaderCellProps) {
   const { density } = useContext(TableContext);
-  const section = useContext(SectionContext);
+  const [section, ref] = useSection<HTMLTableCellElement>();
   const rowVAlign = useContext(RowVAlignContext);
   const head = section === "head";
   const textSize = size ?? (head ? "xs" : undefined);
   return (
     <th
+      ref={ref}
       {...rest}
       scope={scope ?? (section === "head" ? "col" : "row")}
       className={cn(

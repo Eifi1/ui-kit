@@ -10,6 +10,7 @@ import type {
 } from "react";
 import { Check, Plus } from "lucide-react";
 import { cn } from "../lib/cn";
+import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -636,6 +637,10 @@ export function ComboboxPanel<V extends string | number>({
       // The rows are provisional while a lookup is in flight — whether or not the
       // previous query's are still showing.
       aria-busy={busy || undefined}
+      // It scrolls, and says so where jsdom can see it (see `CLIPS_ATTRIBUTE`): a
+      // Tooltip in a row then portals out in a test exactly as it does in the
+      // browser, instead of joining the option's accessible name (keksdose E8).
+      {...{ [CLIPS_ATTRIBUTE]: "" }}
       className={cn("min-h-0 flex-1 overflow-y-auto py-1", isPhone && "flex-none")}
     >
       {results.map((o, i) => {

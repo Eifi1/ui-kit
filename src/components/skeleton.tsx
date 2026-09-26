@@ -21,6 +21,13 @@ export interface SkeletonProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
   shape?: SkeletonShape;
   /** For `line`: this many lines, the last one shorter — a paragraph's outline. */
   lines?: number;
+  /**
+   * Say what is loading, once: wraps the placeholder in a `role="status"` region with
+   * this as its (visually hidden) text — kastlan's activity feed (activity-feed:52)
+   * built exactly that by hand around `<Skeleton lines={5} />`. The placeholder itself
+   * stays hidden. Left out, nothing is announced, as before.
+   */
+  label?: string;
 }
 
 const SHAPE: Record<SkeletonShape, string> = {
@@ -37,10 +44,21 @@ const SHAPE: Record<SkeletonShape, string> = {
  *
  * ALWAYS `aria-hidden`. A placeholder is not content, and a reader that met twelve
  * unnamed grey boxes would have learned nothing. Say "loading" once, where it
- * belongs: `aria-busy` on the region being filled, or a `Spinner` / sr-only line
- * beside the skeletons.
+ * belongs: `aria-busy` on the region being filled, a `Spinner` / sr-only line
+ * beside the skeletons, or this component's own `label`.
  */
-export function Skeleton({ shape = "line", lines, className, ...rest }: SkeletonProps) {
+export function Skeleton({ label, ...props }: SkeletonProps) {
+  if (!label) return <SkeletonFill {...props} />;
+  return (
+    // `relative`: the containing block for the sr-only text (sr-only-containment.test).
+    <div role="status" className="relative" data-skeleton-status="">
+      <span className="sr-only">{label}</span>
+      <SkeletonFill {...props} />
+    </div>
+  );
+}
+
+function SkeletonFill({ shape = "line", lines, className, ...rest }: Omit<SkeletonProps, "label">) {
   if (shape === "line" && lines !== undefined && lines > 1) {
     return (
       <div {...rest} aria-hidden className={cn("flex flex-col gap-2", className)} data-skeleton="lines">

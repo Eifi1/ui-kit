@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
 import { Modal } from "../components/modal";
 import { useMediaQuery } from "../hooks/use-media-query";
+import { useKitLabels } from "../i18n/kit-labels";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -39,6 +40,38 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
   save: string;
 }
 
+/**
+ * The dialog's own strings — the `feedbackDialog` namespace of `<UiKitProvider
+ * labels>` (0.12.0). The attachment keys are not repeated here: they are the
+ * `feedbackAttachment` namespace's, which the field inside already reads.
+ *
+ * Before, every key was required at the call site, so each app restated ten strings
+ * wherever it mounted the dialog (kastlan feedback-button.tsx built the object inline).
+ */
+export interface FeedbackDialogTextLabels {
+  title: string;
+  category: string;
+  subject: string;
+  body: string;
+  /** The heading over the attachment buttons. */
+  attachment: string;
+  /** The line beside the buttons naming the shortcut. */
+  submitHint: string;
+  cancel: string;
+  save: string;
+}
+
+export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
+  title: "Send feedback",
+  category: "Category",
+  subject: "Subject",
+  body: "What happened?",
+  attachment: "Screenshot",
+  submitHint: "Ctrl/⌘ + Enter to send",
+  cancel: "Cancel",
+  save: "Send",
+};
+
 export interface FeedbackSubmission {
   title: string;
   body: string;
@@ -67,7 +100,7 @@ export function FeedbackDialog({
   categories,
   category,
   onCategoryChange,
-  labels,
+  labels: labelsProp,
   onSubmit,
   submitting = false,
   contextSlot,
@@ -81,7 +114,9 @@ export function FeedbackDialog({
   categories: FeedbackCategoryOption[];
   category: string;
   onCategoryChange: (value: string) => void;
-  labels: FeedbackDialogLabels;
+  /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
+   *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
+  labels?: Partial<FeedbackDialogLabels>;
   onSubmit: (data: FeedbackSubmission) => void | Promise<void>;
   submitting?: boolean;
   contextSlot?: ReactNode;
@@ -99,6 +134,10 @@ export function FeedbackDialog({
   const [body, setBody] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const isMobile = useMediaQuery(PHONE_QUERY, false);
+  const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
+  // The attachment field resolves its own keys from `feedbackAttachment`; it gets the
+  // prop's (so a caller's `attachmentAdd` still wins) plus the resolved heading.
+  const attachmentLabels = { ...labelsProp, attachment: labels.attachment };
 
   // Reset the form whenever the dialog is (re)opened.
   useEffect(() => {
@@ -138,7 +177,7 @@ export function FeedbackDialog({
     <FeedbackAttachmentField
       value={attachment}
       onChange={setAttachment}
-      labels={labels}
+      labels={attachmentLabels}
       accept={attachmentAccept}
       maxBytes={maxAttachmentBytes}
       onError={onAttachmentError}

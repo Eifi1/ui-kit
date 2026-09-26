@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { KeyRound } from "lucide-react";
 import { ActionCard } from "../choice-card";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 describe("ActionCard (keksdose CustodyOption)", () => {
   it("is a button named by the title and described by body and meta", () => {
@@ -35,5 +37,44 @@ describe("ActionCard (keksdose CustodyOption)", () => {
   it("with only a title it has no description", () => {
     render(<ActionCard title="Go" />);
     expect(screen.getByRole("button")).not.toHaveAttribute("aria-describedby");
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("ActionCard — link card and icon tone", () => {
+  it("with href is a link named by the title and described by the rest", () => {
+    render(<ActionCard href="/units" title="Units" description="All units" icon={KeyRound} />);
+    const link = screen.getByRole("link", { name: "Units" });
+    expect(link).toHaveAttribute("href", "/units");
+    expect(link).toHaveAccessibleDescription("All units");
+    expect(link).not.toHaveAttribute("type");
+  });
+
+  it("draws the link with linkComponent; its own renderLink wins; a disabled card is the inert button", () => {
+    const { unmount } = render(
+      <UiKitProvider linkComponent={routerLink}>
+        <ActionCard href="/units" title="Units" />
+        <ActionCard href="/own" title="Own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+        <ActionCard href="/off" title="Off" disabled />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Units" })).toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
+    expect(screen.getByRole("button", { name: "Off" })).toBeDisabled();
+    unmount();
+  });
+
+  it("tints the icon with iconTone and takes iconClassName", () => {
+    render(<ActionCard title="Go" icon={KeyRound} iconTone="brand" iconClassName="size-6" />);
+    const icon = screen.getByRole("button").querySelector("svg")!;
+    expect(icon.getAttribute("class")).toContain("text-[var(--brand)]");
+    expect(icon.getAttribute("class")).toContain("size-6");
+    expect(icon.getAttribute("class")).not.toContain("text-[var(--text-secondary)]");
   });
 });

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Breadcrumbs } from "../breadcrumbs";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 const TRAIL = [
   { label: "Home", href: "/" },
@@ -100,5 +101,36 @@ describe("Breadcrumbs", () => {
   it("renders nothing for an empty trail", () => {
     const { container } = render(<Breadcrumbs items={[]} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("Breadcrumbs — the provider's router link", () => {
+  it("draws in-app crumbs with linkComponent, an absolute URL as <a>, and its own renderLink wins", () => {
+    const items = [
+      { label: "Site", href: "https://example.com" },
+      { label: "Home", href: "/" },
+      { label: "Here" },
+    ];
+    const { unmount } = render(
+      <UiKitProvider linkComponent={routerLink}>
+        <Breadcrumbs items={items} collapse={false} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Site" })).not.toHaveAttribute("data-router");
+    unmount();
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <Breadcrumbs items={items} collapse={false} renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute("data-router");
   });
 });

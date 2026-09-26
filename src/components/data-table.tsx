@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -8,9 +8,11 @@ import {
   ChevronDown,
   ChevronRight,
   Filter,
+  Pencil,
+  Trash2,
   X,
 } from "lucide-react";
-import { Card, Spinner } from "./ui";
+import { Card, IconButton, Spinner } from "./ui";
 import { cn } from "../lib/cn";
 import {
   defaultFilterState,
@@ -431,6 +433,98 @@ export interface DataTableProps<T> {
   /** Extra classes for the table's root element (the card, or with `frame={false}`
    *  the plain wrapper). Merged last, so a caller's margin or width wins. */
   className?: string;
+  /**
+   * Per-row actions: an actions column of icon buttons at the row's end on desktop,
+   * and the same actions as swipe actions on a phone card (where the column is not
+   * shown). kastlan's `ResourceListPage` appended this column by hand to every CRUD
+   * list — the edit pencil, the delete bin, a `useConfirm` before the delete, and a
+   * `stopPropagation` on each so a press did not also open the row.
+   *
+   * `kind: "edit"` / `"delete"` bring the icon, the label (`labels.edit` /
+   * `labels.delete`), the tone and the swipe side; any other action states its own
+   * `label` and `icon`. `confirm` is the hook-in for a confirmation: pass the kit's
+   * `useConfirm()` (or anything answering a boolean) and the action runs only on a yes.
+   *
+   *     const confirm = useConfirm();
+   *     rowActions={[
+   *       { kind: "edit", onAction: openEditor },
+   *       { kind: "delete", onAction: (r) => remove(r.id),
+   *         confirm: (r) => confirm({ title: t("delete", { name: r.name }), tone: "danger" }) },
+   *     ]}
+   *
+   * A function receives the row, for actions that differ per row. An explicit
+   * `mobileSwipeActions` wins over the swipes derived from here.
+   */
+  rowActions?: DataTableRowAction<T>[] | ((row: T) => DataTableRowAction<T>[]);
+  /**
+   * The bar above the table — a search field, filter chips, a create button. Inside
+   * the table's frame, above the header, on desktop and phone alike (resource-list
+   * pages set a search box in a `div` above the card, outside the frame it filters).
+   */
+  toolbar?: ReactNode;
+}
+
+/** One entry of {@link DataTableProps.rowActions}. */
+export interface DataTableRowAction<T> {
+  /** A preset: `"edit"` (pencil, `labels.edit`, swipes toward the END) or `"delete"`
+   *  (bin, `labels.delete`, danger tone, swipes toward the START). */
+  kind?: "edit" | "delete";
+  /** The action's name — its tooltip, accessible name and swipe label. Required
+   *  without a `kind`. */
+  label?: string;
+  /** The glyph. Required without a `kind`. */
+  icon?: ReactNode;
+  /** Runs after `confirm` (when given) has said yes. */
+  onAction: (row: T) => void;
+  /** Asked before `onAction`; a `false` (or a promise of one) cancels. */
+  confirm?: (row: T) => boolean | Promise<boolean>;
+  /** Default: `"danger"` for `kind: "delete"`, else `"default"`. */
+  tone?: "default" | "danger";
+  /** Leave the action out for this row. */
+  hidden?: (row: T) => boolean;
+  /** Why the action is locked for this row — the button stays focusable and says so,
+   *  and the row gets no swipe for it. See `IconButton`'s `disabledReason`. */
+  disabledReason?: (row: T) => ReactNode;
+  /** Which way the phone card is dragged to commit it, or `false` for no swipe.
+   *  Default: `"start"` for a danger action, `"end"` otherwise. */
+  swipe?: "start" | "end" | false;
+}
+
+/** The actions column's key. Not a column a caller declares, so it is kept out of the
+ *  column-settings panel. */
+const ROW_ACTIONS_KEY = "__rowActions";
+
+interface ResolvedRowAction<T> {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  tone: "default" | "danger";
+  swipe: "start" | "end" | false;
+  action: DataTableRowAction<T>;
+}
+
+function resolveRowAction<T>(
+  action: DataTableRowAction<T>,
+  index: number,
+  labels: DataTableLabels,
+): ResolvedRowAction<T> {
+  const tone = action.tone ?? (action.kind === "delete" ? "danger" : "default");
+  return {
+    key: action.kind ?? `${index}:${action.label ?? ""}`,
+    label: action.label ?? (action.kind === "edit" ? labels.edit : action.kind === "delete" ? labels.delete : ""),
+    icon:
+      action.icon ??
+      (action.kind === "edit" ? <Pencil /> : action.kind === "delete" ? <Trash2 /> : null),
+    tone,
+    swipe: action.swipe ?? (tone === "danger" ? "start" : "end"),
+    action,
+  };
+}
+
+/** Ask, then act. */
+async function runRowAction<T>(action: DataTableRowAction<T>, row: T): Promise<void> {
+  if (action.confirm && !(await action.confirm(row))) return;
+  action.onAction(row);
 }
 
 /** See {@link DataTableProps.chrome}. */
@@ -516,7 +610,8 @@ function cleanAttrs(
  * header is not a string and whose key is not human-readable is a call site that
  * should pass a string header, and that is visible in what gets announced.
  */
-function columnLabel<T>(col: DataTableColumn<T>): string {
+function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): string {
+  if (col.key === ROW_ACTIONS_KEY && labels) return labels.actions;
   return typeof col.header === "string" ? col.header : col.key;
 }
 
@@ -527,6 +622,20 @@ function columnLabel<T>(col: DataTableColumn<T>): string {
  */
 const OWN_CONTROL =
   'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"],[role="switch"],[role="menuitem"],[role="option"],[contenteditable=""],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
+
+/**
+ * Whether a click that reached `row`'s handler did not start in the row's own DOM.
+ *
+ * React bubbles an event through the COMPONENT tree, portals included: a popover, a
+ * menu or a dialog a cell (or the expansion under it) opens renders at `<body>` but
+ * still reports its clicks to every React ancestor — the row among them. So a click
+ * in a cell's portalled date picker opened the row it came from, and a page wrapped
+ * such content in `<div onClick={(e) => e.stopPropagation()}>` to stop it (kastlan's
+ * feedback page did, round its comments). The row owns the clicks on the row.
+ */
+function fromOutside(target: EventTarget | null, row: HTMLElement): boolean {
+  return !(target instanceof Node) || !row.contains(target);
+}
 
 /** Whether an event on `row` started on a control nested inside it. */
 function fromOwnControl(target: EventTarget | null, row: HTMLElement): boolean {
@@ -617,9 +726,13 @@ function RowLink({
       // here happens before any descendant can silence the event; `stopPropagation`
       // does not undo a `preventDefault`.
       onClickCapture={(e) => {
+        // A click in a portal a descendant opened is not a click on the link: leave
+        // it (and a link inside it) alone. See `fromOutside`.
+        if (fromOutside(e.target, e.currentTarget)) return;
         if (isPlainLeftClick(e)) e.preventDefault();
       }}
       onClick={(e) => {
+        if (fromOutside(e.target, e.currentTarget)) return;
         if (!isPlainLeftClick(e)) {
           e.stopPropagation();
           return;
@@ -644,7 +757,7 @@ import { useMobileReveal } from "./use-mobile-reveal";
 
 export function DataTable<T>({
   rows,
-  columns,
+  columns: columnsProp,
   rowKey,
   defaultPageSize = 25,
   onRowClick,
@@ -682,6 +795,8 @@ export function DataTable<T>({
   multiSort: multiSortProp,
   frame = true,
   className,
+  rowActions,
+  toolbar,
 }: DataTableProps<T>) {
   const compact = density === "compact";
   const minimal = chrome === "minimal";
@@ -711,6 +826,74 @@ export function DataTable<T>({
     [labelOverrides, labelsProp],
   );
   const locale = useKitLocale(localeProp);
+
+  // ---- Row actions ----
+  // The actions column is appended to the caller's columns rather than drawn as a
+  // second special case beside the selection column: it then gets the cell padding,
+  // the widths and the phone rules (`mobileHidden`) every other column gets.
+  const rowActionsFor = useCallback(
+    (row: T): ResolvedRowAction<T>[] =>
+      rowActions
+        ? (typeof rowActions === "function" ? rowActions(row) : rowActions)
+            .filter((a) => !a.hidden?.(row))
+            .map((a, i) => resolveRowAction(a, i, labels))
+        : [],
+    [rowActions, labels],
+  );
+  const columns = useMemo<DataTableColumn<T>[]>(
+    () =>
+      rowActions
+        ? [
+            ...columnsProp,
+            {
+              key: ROW_ACTIONS_KEY,
+              header: <span className="sr-only">{labels.actions}</span>,
+              cell: (row) => (
+                <div className="flex items-center justify-end gap-0.5">
+                  {rowActionsFor(row).map((a) => (
+                    <IconButton
+                      key={a.key}
+                      size={density === "compact" ? "2xs" : "xs"}
+                      label={a.label}
+                      tone={a.tone === "danger" ? "danger" : undefined}
+                      disabledReason={a.action.disabledReason?.(row)}
+                      // The row's click handler already skips its own controls; this is for
+                      // the caller who wraps the table in a clickable element of their own.
+                      stopPropagation
+                      onClick={() => void runRowAction(a.action, row)}
+                    >
+                      {a.icon}
+                    </IconButton>
+                  ))}
+                </div>
+              ),
+              className: "w-px whitespace-nowrap text-end",
+              headClassName: "w-px",
+              // On a phone the same actions are the card's swipes.
+              mobileHidden: true,
+              noRowLink: true,
+            },
+          ]
+        : columnsProp,
+    [columnsProp, rowActions, rowActionsFor, labels.actions, density],
+  );
+  const swipesFromActions = (row: T): MobileSwipeActions | null => {
+    const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
+    if (!swipes.length) return null;
+    const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
+      label: a.label,
+      icon: a.icon,
+      onCommit: () => void runRowAction(a.action, row),
+      className: a.tone === "danger" ? "bg-[var(--danger)]" : "bg-[var(--brand)]",
+      armedClassName: a.tone === "danger" ? "bg-[var(--danger-hover)]" : "bg-[var(--brand-hover)]",
+    });
+    return {
+      start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
+      end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
+    };
+  };
+  const swipeActionsFor = mobileSwipeActions ?? (rowActions ? swipesFromActions : undefined);
+
   // Sorting, filtering and paging all change WHICH rows are on screen without
   // moving focus — the header button the user pressed is still the header button
   // they are on — so there is no other channel to say it on. See use-announce.ts.
@@ -875,7 +1058,7 @@ export function DataTable<T>({
     // criterion BEHIND the existing one, and answering "Sorted by Date" to a click on
     // Name misreports what the click did. The third click drops the column entirely,
     // which is the state a user is most likely to have reached by accident.
-    const name = col ? columnLabel(col) : key;
+    const name = col ? columnLabel(col, labels) : key;
     const entry = next.find((s) => s.key === key);
     announce(
       !entry
@@ -1122,7 +1305,10 @@ export function DataTable<T>({
   const totalCount = columns.length;
   // Spans the full row width including the optional leading selection column.
   const totalColSpan = visibleCount + (selection ? 1 : 0);
-  const columnsCountLabel = labels.columnsCount(visibleCount, totalCount);
+  // The actions column is the table's own, not one the user can hide: out of the count.
+  const columnsCountLabel = rowActions
+    ? labels.columnsCount(visibleCount - 1, totalCount - 1)
+    : labels.columnsCount(visibleCount, totalCount);
   // Match Tailwind's `md` breakpoint: we render either the table or the card
   // list — never both — so we don't double up DOM nodes that screen readers and
   // integration tests would have to disambiguate.
@@ -1252,7 +1438,7 @@ export function DataTable<T>({
     // uses for exactly this, and it points the way the row actually opens: right into
     // a sheet, or down into an inline panel that flips it when expanded.
     const opensDetail = interactive && !!expandedRow;
-    const swipeActions = mobileSwipeActions?.(row);
+    const swipeActions = swipeActionsFor?.(row);
     const swipe = swipeActions ? physicalSwipe(swipeActions, mobileDir) : null;
     // An expanded row never swipes: the editor below it owns the horizontal space,
     // and dragging the header away from its own form reads as a glitch.
@@ -1362,7 +1548,14 @@ export function DataTable<T>({
         <div
           role={interactive ? "button" : undefined}
           tabIndex={interactive ? 0 : undefined}
-          onClick={interactive ? () => onRowClick!(row) : undefined}
+          onClick={
+            interactive
+              ? (e) => {
+                  if (fromOutside(e.target, e.currentTarget)) return;
+                  onRowClick!(row);
+                }
+              : undefined
+          }
           onKeyDown={
             interactive
               ? (e) => {
@@ -1445,6 +1638,19 @@ export function DataTable<T>({
           card list for the table wholesale, which would remount a region living
           inside either one. */}
       <span {...regionProps} />
+      {toolbar != null && toolbar !== false && (
+        <div
+          data-table-toolbar=""
+          className={cn(
+            "flex flex-wrap items-center gap-2",
+            frame
+              ? cn("border-b border-[var(--border)]", compact ? "px-2 py-1.5" : "px-3 py-2")
+              : "pb-3",
+          )}
+        >
+          {toolbar}
+        </div>
+      )}
       {!isMdUp && (
       <div ref={mobileRootRef}>
         {/* Mobile filter access (feedback #299): the per-column filter popovers
@@ -1489,7 +1695,7 @@ export function DataTable<T>({
                 compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
               )}
             >
-              {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
+              {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
             </li>
           )}
           {/* Endless-scroll sentinel: observed by IntersectionObserver to pull in
@@ -1708,7 +1914,7 @@ export function DataTable<T>({
                         </Popover>
                       )}
                     </div>
-                    {resizable && (
+                    {resizable && col.key !== ROW_ACTIONS_KEY && (
                     <span
                       role="separator"
                       aria-orientation="vertical"
@@ -1800,6 +2006,7 @@ export function DataTable<T>({
                             // not also open the row. Cells no longer have to
                             // `stopPropagation` to get that.
                             if (fromOwnControl(e.target, e.currentTarget)) return;
+                            if (fromOutside(e.target, e.currentTarget)) return;
                             // Modifier-clicks anywhere in the row drive
                             // selection instead of expanding it (feedback #289):
                             // Ctrl/Cmd toggles a single row, Shift selects the
@@ -1935,7 +2142,7 @@ export function DataTable<T>({
                 >
                   {/* Nothing is not the same as not-yet: "no results" while the first
                       page is still in flight is a claim the table cannot make. */}
-                  {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? "—")}
+                  {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
                 </td>
               </tr>
             )}
@@ -2018,6 +2225,7 @@ export function DataTable<T>({
             </button>
             <div className="flex flex-col gap-0.5">
               {columns.map((col) => {
+                if (col.key === ROW_ACTIONS_KEY) return null;
                 const checked = !hiddenCols.has(col.key);
                 const headerLabel = columnLabel(col);
                 return (

@@ -6,3 +6,4 @@
 export * from "./feedback/feedback-attachment";
 export * from "./feedback/feedback-dialog";
 export * from "./feedback/feedback-inbox";
+export * from "./feedback/feedback-thread";

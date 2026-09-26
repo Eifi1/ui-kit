@@ -11,6 +11,7 @@ import {
   type FloatingActionLinkProps,
 } from "../floating-panel";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import type { KitLinkComponent } from "../../i18n/kit-labels";
 
 const PHYSICAL = /(?:^|\s|:)(?:rounded-(?:l|r|tl|tr|bl|br)|border-(?:l|r)|divide-x|ml|mr|pl|pr|left|right)-?/;
 
@@ -282,5 +283,50 @@ describe("FloatingActionGroup", () => {
     expect(button.parentElement).toBe(screen.getByRole("group"));
     act(() => button.focus());
     expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+});
+
+const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
+  <a {...p} href={href} data-router="">
+    {children}
+  </a>
+);
+
+describe("FloatingAction — the provider's router link and pressedStyle", () => {
+  it("draws an in-app link with linkComponent; its own renderLink wins", () => {
+    render(
+      <UiKitProvider linkComponent={routerLink}>
+        <FloatingActionGroup aria-label="Actions">
+          <FloatingAction label="Invoices" icon="▤" href="/invoices" tooltip={false} />
+          <FloatingAction
+            label="Own"
+            icon="▤"
+            href="/own"
+            tooltip={false}
+            renderLink={(p: FloatingActionLinkProps) => <a {...p} data-own="">{p.children}</a>}
+          />
+        </FloatingActionGroup>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Invoices" })).toHaveAttribute("data-router");
+    expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
+    expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
+  });
+
+  it('pressedStyle="plain" keeps aria-pressed but not the tint (keksdose /transactions "Upcoming")', () => {
+    render(
+      <FloatingActionGroup aria-label="Actions">
+        <FloatingAction label="Tinted" icon="◉" pressed tooltip={false} />
+        <FloatingAction label="Plain" icon="◉" pressed pressedStyle="plain" tooltip={false} />
+        <FloatingAction label="Passed" icon="◉" aria-pressed tooltip={false} />
+      </FloatingActionGroup>,
+    );
+    expect(screen.getByRole("button", { name: "Tinted" }).className).toContain("bg-[var(--brand-bg)]");
+    const plain = screen.getByRole("button", { name: "Plain" });
+    expect(plain).toHaveAttribute("aria-pressed", "true");
+    expect(plain.className).not.toContain("bg-[var(--brand-bg)]");
+    const passed = screen.getByRole("button", { name: "Passed" });
+    expect(passed).toHaveAttribute("aria-pressed", "true");
+    expect(passed.className).not.toContain("bg-[var(--brand-bg)]");
   });
 });

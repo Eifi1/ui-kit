@@ -93,6 +93,15 @@ import * as i18nZh from "../i18n/locales/zh";
  * 393 -> 403 (0.11.0), all additive: `FloatingActionGroup` / `FloatingAction`,
  * `ButtonGroupLink`, `CalendarHeatmap` / `heatmapLevel` / `DEFAULT_CALENDAR_HEATMAP_LABELS`,
  * `Field`, `useOptionalWizardContext`, `ActionCard`, `NavPills`; 403 -> 404: `CLIPS_ATTRIBUTE`.
+ * 405 -> 471 (0.12.0), all additive — kastlan's final audit and keksdose's 0.11 notes:
+ * TextLink; FormActions, LineItems; SignedAmount / Delta / Tone, LoadingState,
+ * ErrorBoundary; formatNumber / formatMoney / formatPercent / formatDate /
+ * formatRelativeTime / useKitFormat; useHotkey; readStored / writeStored; PieChart,
+ * StaticLegend; ImageGrid, Lightbox, AuthedImage / useAuthedSrc; QrCode / encodeQr,
+ * PasskeysSetting; FeedbackThread / FeedbackComposer; AuthLayout, TopBarBrand;
+ * BooleanMark / booleanColumn, filter builders, useTableUrlState, useSearchParamState /
+ * useTabParam / useDialogParam; the wizard gate hooks; and their DEFAULT_*_LABELS.
+ * /chart 55 -> 58 (PieChart, its labels, StaticLegend), /data-table 18 -> 27, /shell 10 -> 12.
  * 0.8.0: `/i18n/de-informal` (the "du" German: `UI_KIT_LABELS_DE_INFORMAL` +
  * `uiKitLabelsDeInformal`) and its Swiss derivative `/i18n/de-CH-informal` (constant only).
  * 368 -> 374 (and /search 3 -> 9), all additive: `GlobalSearch` and
@@ -102,20 +111,27 @@ import * as i18nZh from "../i18n/locales/zh";
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 405],
+  ["@eifi1/ui-kit", barrel, 471],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
-  ["@eifi1/ui-kit/chart", chart, 55],
-  ["@eifi1/ui-kit/data-table", dataTable, 18],
-  ["@eifi1/ui-kit/feedback", feedback, 21],
+  ["@eifi1/ui-kit/chart", chart, 58],
+  ["@eifi1/ui-kit/data-table", dataTable, 27],
+  // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
+  // namespaces and of `feedbackDialog` (+5 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 26],
   ["@eifi1/ui-kit/search", search, 9],
-  ["@eifi1/ui-kit/shell", shell, 10],
+  ["@eifi1/ui-kit/shell", shell, 12],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
-  ["@eifi1/ui-kit/wizard", wizard, 10],
+  // 0.12.0: `useWizardStepValidate` and `useWizardNextGate` (+2 here and in the barrel),
+  // the non-form step hooks kastlan kept in shared/components/wizard.
+  ["@eifi1/ui-kit/wizard", wizard, 12],
   // 0.11.0: `useRhfWizardStep`, the react-hook-form bridge to the wizard's Next gate.
-  ["@eifi1/ui-kit/rhf", rhf, 9],
+  // 0.12.0: the bound fields — `RhfField`, `RhfTextField`, `RhfTextarea`,
+  // `RhfNumberField`, `RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCheckbox`,
+  // `RhfCombobox`, `RhfTextCombobox` — and `RhfLineItems` (+11).
+  ["@eifi1/ui-kit/rhf", rhf, 20],
   ["@eifi1/ui-kit/table-text", tableText, 5],
   ["@eifi1/ui-kit/i18n/de", i18nDe, 2],
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],
