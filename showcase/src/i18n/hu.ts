@@ -232,6 +232,12 @@ export const hu: Dictionary = {
       blurb:
         "Tények bármiféle gépezet nélkül elrendezve: fogalmak és részleteik listája, egy egyszerű statikus táblázat, valamint az elválasztó és a görgethető terület, amelyek a kettő között állnak.",
     },
+    "lists-menus": {
+      title: "Listák és menük",
+      short: "Listák, menük",
+      blurb:
+        "A sor, amelyet minden alkalmazás kézzel rajzol meg — gomb, hivatkozás vagy rekord, mellette a műveleteivel —, egy menü sora, és a sáv, amely sorok kijelölésekor jelenik meg.",
+    },
     "tree-view": {
       title: "Fanézet",
       short: "Fa",
@@ -342,6 +348,12 @@ export const hu: Dictionary = {
       title: "Alkalmazáskeret",
       blurb:
         "A keret, amelyben egy alkalmazás él, és a folyamatok, amelyeket minden alkalmazás megismétel: beállítások, többlépéses űrlapok, visszajelzés.",
+    },
+    "page-structure": {
+      title: "Oldalfejléc és morzsanavigáció",
+      short: "Oldalfejléc",
+      blurb:
+        "Egy oldal azon részei, amelyek nem a tartalma: a fejléc az útvonallal és a műveletekkel, a morzsanavigáció önmagában, valamint a szakaszcímke, a magyarázó szöveg és az állapotjelző pont.",
     },
     shell: {
       title: "Váz",
@@ -624,6 +636,18 @@ export const hu: Dictionary = {
       "görgethető terület",
       "számok jobbra igazítása táblázatban",
     ],
+    "lists-menus": [
+      "elemek listája",
+      "kattintható listasor",
+      "sor műveletekkel",
+      "olvasatlan jelölés",
+      "beérkező üzenetek listája",
+      "pipával jelölt menüpont",
+      "veszélyes menüpont",
+      "több sor kijelölése",
+      "tömeges műveletek a kijelölt sorokon",
+      "kijelölési eszköztár",
+    ],
     "tree-view": [
       "hierarchikus adatok",
       "mappafa",
@@ -781,6 +805,18 @@ export const hu: Dictionary = {
       "beállítások oldal",
       "többlépéses űrlap",
       "felhasználói visszajelzés gyűjtése",
+    ],
+    "page-structure": [
+      "oldalcím műveletekkel",
+      "oldalfejléc",
+      "morzsanavigáció",
+      "morzsanavigáció telefonon",
+      "kis nagybetűs szakaszcímke",
+      "magyarázó szöveg egy mező alatt",
+      "állapotjelző pont",
+      "online jelző",
+      "olvasatlan pont az avataron",
+      "jelmagyarázat színe",
     ],
     shell: [
       "alkalmazás elrendezése oldalsávval",

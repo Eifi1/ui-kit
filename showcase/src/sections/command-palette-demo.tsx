@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { ReactNode } from "react";
 import { Command, FileText, Layers, Moon, Palette, Plus, Receipt, Table2, User } from "lucide-react";
-import { Button, CommandPalette, GlobalSearch, Input, useCommandKey } from "@eifi1/ui-kit";
+import { Button, CommandPalette, GlobalSearch, Input, ToggleGroup, useCommandKey } from "@eifi1/ui-kit";
 import type { CommandItem, GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
@@ -75,6 +75,20 @@ export function CommandPaletteDemo() {
         hint="the whole ⌘K search an app puts in its top bar; the one in THIS top bar is the same component"
       >
         <GlobalSearchDemo />
+      </Example>
+
+      <Example
+        label="CommandPalette — density and a synchronous provider"
+        hint='comfortable rows are the 44px touch target; a provider that returns an array never shows "Searching…"'
+      >
+        <DensitySyncDemo />
+      </Example>
+
+      <Example
+        label="GlobalSearch — suggestionsKeepGroups, triggerIconSize, triggerName and density"
+        hint="suggestions under their own groups; a 20px magnifier; the shortcut in the trigger's name; phone-sized rows"
+      >
+        <GlobalSearchGroupsDemo />
       </Example>
     </>
   );
@@ -600,6 +614,163 @@ function GlobalSearchDemo() {
         on is aborted. <code className="font-mono">navigate</code> is passed here so choosing a row only reports
         it; inside a router the default is the router&apos;s own, and every row is still a real link for a
         middle-click.
+      </Note>
+    </div>
+  );
+}
+
+/* ── 0.10.0: density, sync providers, suggestion groups, the trigger's icon ───── */
+
+type Density = "compact" | "comfortable";
+
+function DensitySyncDemo() {
+  const [open, setOpen] = useState(false);
+  const [density, setDensity] = useState<Density>("comfortable");
+  const [sync, setSync] = useState(true);
+  const [chosen, setChosen] = useState<string | null>(null);
+
+  const rows = (query: string): CommandItem[] => {
+    const needle = query.trim().toLowerCase();
+    return PALETTE_INDEX.filter((e) => !needle || e.label.toLowerCase().includes(needle)).map((e) => ({
+      ...e,
+      onSelect: () => setChosen(e.label),
+    }));
+  };
+  // The palette tells the two apart by what the provider RETURNS: an array is
+  // already the answer, a promise is something to wait for.
+  const search = sync
+    ? rows
+    : (query: string) => new Promise<CommandItem[]>((resolve) => setTimeout(() => resolve(rows(query)), 500));
+
+  return (
+    <div className="space-y-3">
+      <Row>
+        <ToggleGroup<Density>
+          aria-label="density"
+          value={density}
+          onChange={setDensity}
+          options={[
+            { value: "compact", label: "compact" },
+            { value: "comfortable", label: "comfortable" },
+          ]}
+        />
+        <ToggleGroup<"sync" | "async">
+          aria-label="provider"
+          value={sync ? "sync" : "async"}
+          onChange={(v) => setSync(v === "sync")}
+          options={[
+            { value: "sync", label: "returns an array" },
+            { value: "async", label: "returns a promise (500ms)" },
+          ]}
+        />
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the palette
+        </Button>
+        <span className={READOUT}>last chosen: {chosen ?? "—"}</span>
+      </Row>
+      <CommandPalette
+        open={open}
+        onClose={() => setOpen(false)}
+        search={search}
+        revision={sync}
+        density={density}
+        labels={{ placeholder: "Filter a list already in memory…", loading: "Searching…" }}
+      />
+      <Note>
+        Type into each: the array-returning provider answers at once and the &ldquo;Searching…&rdquo; line never
+        flashes through the debounce; the promise-returning one shows it from its first answer on. There is no
+        prop to keep in step — the palette looks at what the provider returns, call by call.{" "}
+        <code className="font-mono">density=&quot;comfortable&quot;</code> gives every row{" "}
+        <code className="font-mono">min-h-11</code> and body-size text, for a thumb; the default{" "}
+        <code className="font-mono">compact</code> is the 36px desktop list.
+      </Note>
+    </div>
+  );
+}
+
+function GlobalSearchGroupsDemo() {
+  const [went, setWent] = useState<string | null>(null);
+  const [keepGroups, setKeepGroups] = useState(true);
+  const [big, setBig] = useState(true);
+  const [density, setDensity] = useState<Density>("compact");
+  const [withShortcut, setWithShortcut] = useState(true);
+  // The trigger's accessible name, read back from the DOM — the thing `triggerName`
+  // changes, and a thing no one sees.
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    const button = wrapRef.current?.querySelector("button");
+    if (!button) return;
+    const read = () => setName(button.getAttribute("aria-label"));
+    const frame = requestAnimationFrame(read);
+    const observer = new MutationObserver(read);
+    observer.observe(button, { attributes: true, attributeFilter: ["aria-label"] });
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+  return (
+    <div className="space-y-3">
+      <Row>
+        <span ref={wrapRef} className="inline-flex">
+          <GlobalSearch
+            entries={APP_ENTRIES}
+            suggestions={["budget", "reports", "new-transaction", "dark-mode", { query: "rent" }]}
+            suggestionsKeepGroups={keepGroups}
+            groupOrder={["Actions", "Pages"]}
+            triggerIconSize={big ? 20 : undefined}
+            triggerName={withShortcut ? "withShortcut" : "plain"}
+            density={density}
+            navigate={setWent}
+            hrefFor={(href) => href}
+            shortcut={false}
+            triggerClassName="border border-[var(--border)]"
+          />
+        </span>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={keepGroups} onChange={(e) => setKeepGroups(e.target.checked)} />
+          <code className="font-mono">suggestionsKeepGroups</code>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={big} onChange={(e) => setBig(e.target.checked)} />
+          <code className="font-mono">triggerIconSize={"{20}"}</code>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <input type="checkbox" checked={withShortcut} onChange={(e) => setWithShortcut(e.target.checked)} />
+          <code className="font-mono">triggerName=&quot;withShortcut&quot;</code>
+        </label>
+        <ToggleGroup<Density>
+          aria-label="density"
+          size="sm"
+          value={density}
+          onChange={setDensity}
+          options={[
+            { value: "compact", label: "compact" },
+            { value: "comfortable", label: "comfortable" },
+          ]}
+        />
+      </Row>
+      <OutTable
+        rows={[
+          ["the trigger's accessible name", <span className={READOUT}>{name === null ? "—" : `"${name}"`}</span>],
+          ["navigate(href)", <span className={READOUT}>{went ?? "—"}</span>],
+        ]}
+      />
+      <Note>
+        Open it with the field empty. With <code className="font-mono">suggestionsKeepGroups</code> each
+        suggested entry stands under its own <code className="font-mono">group</code> — Actions, then Pages,
+        then Settings, ordered by <code className="font-mono">groupOrder</code> as results are — and the query
+        suggestion (&ldquo;rent&rdquo;) stays under the one <em>Suggestions</em> heading; off, all of them share
+        that heading. <code className="font-mono">triggerIconSize</code> is the magnifier in px — 20 matches the
+        kit&apos;s other top-bar triggers, the default 16 is what it always was.{" "}
+        <code className="font-mono">triggerName=&quot;withShortcut&quot;</code> names the trigger by{" "}
+        <code className="font-mono">globalSearch.shortcut(keys)</code> — &ldquo;Search (⌘K)&rdquo; on Apple
+        platforms, &ldquo;Search (Ctrl K)&rdquo; elsewhere — instead of the plain &ldquo;Search&rdquo;, so a
+        screen-reader user meets the shortcut in the name itself (<code className="font-mono">aria-keyshortcuts</code>{" "}
+        is set either way); the readout shows the name. It belongs with a live shortcut: this specimen leaves ⌘K to
+        the first one on the page, but the top bar&apos;s own search uses it on every other page.{" "}
+        <code className="font-mono">density</code> is handed to the palette.
       </Note>
     </div>
   );

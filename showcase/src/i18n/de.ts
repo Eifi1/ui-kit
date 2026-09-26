@@ -234,6 +234,12 @@ export const de: Dictionary = {
       blurb:
         "Fakten ohne jede Mechanik angeordnet: eine Liste aus Begriffen und Angaben, eine schlichte statische Tabelle sowie Trennlinie und Scrollbereich, die zwischen beiden stehen.",
     },
+    "lists-menus": {
+      title: "Listen & Menüs",
+      short: "Listen & Menüs",
+      blurb:
+        "Die Zeile, die jede App von Hand zeichnet — eine Schaltfläche, ein Link oder ein Datensatz, mit ihren Aktionen daneben —, die Zeile eines Menüs und die Leiste, die eine Auswahl von Zeilen einblendet.",
+    },
     "tree-view": {
       title: "Baumansicht",
       short: "Baum",
@@ -344,6 +350,12 @@ export const de: Dictionary = {
       title: "App-Rahmen",
       blurb:
         "Der Rahmen, in dem eine App lebt, und die Abläufe, die jede App wiederholt: Einstellungen, mehrstufige Formulare, Feedback.",
+    },
+    "page-structure": {
+      title: "Seitenkopf & Pfadnavigation",
+      short: "Seitenkopf",
+      blurb:
+        "Die Teile einer Seite, die nicht ihr Inhalt sind: der Kopf mit Pfad und Aktionen, die Pfadnavigation für sich allein sowie Abschnittsbezeichnung, Hinweiszeile und Statuspunkt.",
     },
     shell: {
       title: "Grundgerüst",
@@ -626,6 +638,18 @@ export const de: Dictionary = {
       "scrollbarer Bereich",
       "Zahlen in der Tabelle rechtsbündig",
     ],
+    "lists-menus": [
+      "Liste von Einträgen",
+      "klickbare Listenzeile",
+      "Zeile mit Aktionen",
+      "Ungelesen-Markierung",
+      "Posteingang als Liste",
+      "Menüeintrag mit Häkchen",
+      "gefährlicher Menüeintrag",
+      "mehrere Zeilen auswählen",
+      "Sammelaktionen für ausgewählte Zeilen",
+      "Auswahl-Werkzeugleiste",
+    ],
     "tree-view": [
       "hierarchische Daten anzeigen",
       "Ordnerbaum",
@@ -783,6 +807,18 @@ export const de: Dictionary = {
       "Einstellungsseite",
       "mehrstufiges Formular",
       "Feedback von Nutzern sammeln",
+    ],
+    "page-structure": [
+      "Seitentitel mit Aktionen",
+      "Seitenkopf",
+      "Pfadnavigation",
+      "Pfadnavigation auf dem Handy",
+      "kleine Abschnittsüberschrift in Großbuchstaben",
+      "Hinweistext unter einem Feld",
+      "Statuspunkt",
+      "Online-Anzeige",
+      "Ungelesen-Punkt am Avatar",
+      "Legendenfarbe",
     ],
     shell: [
       "App-Layout mit Seitenleiste",

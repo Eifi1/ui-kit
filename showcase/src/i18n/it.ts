@@ -225,6 +225,12 @@ export const it: Dictionary = {
       blurb:
         "Fatti disposti senza alcun meccanismo: un elenco di termini e dettagli, una semplice tabella statica, e il separatore e l’area di scorrimento che stanno tra i due.",
     },
+    "lists-menus": {
+      title: "Elenchi e menu",
+      short: "Elenchi e menu",
+      blurb:
+        "La riga che ogni app disegna a mano — un pulsante, un link o un record, con le sue azioni accanto —, la riga di un menu e la barra che compare quando si selezionano delle righe.",
+    },
     "tree-view": {
       title: "Vista ad albero",
       short: "Albero",
@@ -335,6 +341,12 @@ export const it: Dictionary = {
       title: "Struttura dell’app",
       blurb:
         "La cornice in cui vive un’app e i flussi che ogni app ripete: impostazioni, moduli a più passaggi, feedback.",
+    },
+    "page-structure": {
+      title: "Intestazione di pagina e percorso",
+      short: "Intestazione",
+      blurb:
+        "Le parti di una pagina che non sono il suo contenuto: l’intestazione con il percorso e le azioni, il percorso di navigazione da solo, e l’etichetta di sezione, la didascalia e il punto di stato.",
     },
     shell: {
       title: "Shell",
@@ -617,6 +629,18 @@ export const it: Dictionary = {
       "area scorrevole",
       "allineare i numeri a destra in tabella",
     ],
+    "lists-menus": [
+      "elenco di elementi",
+      "riga cliccabile",
+      "riga con azioni",
+      "indicatore non letto",
+      "elenco della posta in arrivo",
+      "voce di menu con spunta",
+      "voce di menu pericolosa",
+      "selezionare più righe",
+      "azioni di gruppo sulle righe selezionate",
+      "barra degli strumenti della selezione",
+    ],
     "tree-view": [
       "mostrare dati gerarchici",
       "albero di cartelle",
@@ -774,6 +798,18 @@ export const it: Dictionary = {
       "pagina delle impostazioni",
       "modulo in più passaggi",
       "raccogliere il feedback degli utenti",
+    ],
+    "page-structure": [
+      "titolo di pagina con azioni",
+      "intestazione di pagina",
+      "percorso di navigazione",
+      "percorso su telefono",
+      "piccola etichetta di sezione in maiuscolo",
+      "testo di aiuto sotto un campo",
+      "punto di stato",
+      "indicatore online",
+      "punto non letto sull’avatar",
+      "colore della legenda",
     ],
     shell: [
       "layout dell’app con barra laterale",

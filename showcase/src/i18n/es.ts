@@ -226,6 +226,12 @@ export const es: Dictionary = {
       blurb:
         "Datos presentados sin ninguna maquinaria: una lista de términos y detalles, una tabla estática sencilla, y el separador y el área de desplazamiento que quedan entre ambas.",
     },
+    "lists-menus": {
+      title: "Listas y menús",
+      short: "Listas y menús",
+      blurb:
+        "La fila que cada aplicación dibuja a mano — un botón, un enlace o un registro, con sus acciones al lado —, la fila de un menú y la barra que aparece al seleccionar filas.",
+    },
     "tree-view": {
       title: "Vista de árbol",
       short: "Árbol",
@@ -336,6 +342,12 @@ export const es: Dictionary = {
       title: "Marco de la aplicación",
       blurb:
         "El marco en el que vive una aplicación y los flujos que toda aplicación repite: ajustes, formularios de varios pasos, comentarios.",
+    },
+    "page-structure": {
+      title: "Encabezado de página y ruta de navegación",
+      short: "Encabezado",
+      blurb:
+        "Las partes de una página que no son su contenido: el encabezado con su ruta y sus acciones, la ruta de navegación por sí sola, y la etiqueta de sección, el texto auxiliar y el punto de estado.",
     },
     shell: {
       title: "Estructura",
@@ -618,6 +630,18 @@ export const es: Dictionary = {
       "zona con desplazamiento",
       "alinear números a la derecha en una tabla",
     ],
+    "lists-menus": [
+      "lista de elementos",
+      "fila de lista clicable",
+      "fila con acciones",
+      "marca de no leído",
+      "lista de bandeja de entrada",
+      "elemento de menú con marca",
+      "elemento de menú peligroso",
+      "seleccionar varias filas",
+      "acciones en lote sobre la selección",
+      "barra de herramientas de selección",
+    ],
     "tree-view": [
       "mostrar datos jerárquicos",
       "árbol de carpetas",
@@ -775,6 +799,18 @@ export const es: Dictionary = {
       "página de ajustes",
       "formulario en varios pasos",
       "recoger opiniones de los usuarios",
+    ],
+    "page-structure": [
+      "título de página con acciones",
+      "encabezado de página",
+      "ruta de navegación",
+      "ruta de navegación en el móvil",
+      "etiqueta de sección pequeña en mayúsculas",
+      "texto auxiliar bajo un campo",
+      "punto de estado",
+      "indicador de en línea",
+      "punto de no leído en el avatar",
+      "color de leyenda",
     ],
     shell: [
       "estructura de la aplicación con barra lateral",
