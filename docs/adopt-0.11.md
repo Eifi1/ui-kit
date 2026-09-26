@@ -48,4 +48,6 @@ the release notes, and the showcase (⌘K) has every prop live.
 
 | Replace | With | Notes |
 |---|---|---|
-| ToggleField's per-option caption (gear/common.tsx) | `ToggleGroup label caption={(v) => …}` | announced when the choice changes |
+| ToggleField's per-option caption (gear/common.tsx) | `ToggleGroup label caption={(v) => …}` | announced when the choice changes; the ToggleField wrapper can go |
+| segment list (setpoint/segment-list.tsx:165), whole row as drag source | `ListItem targetProps={handleProps}` | the whole 44px row stays the drag target; keep the fixed height for `useWindowedRows` via `className` (`subtitleLines` defaults to 1) |
+| profile strip rows with a className border | `ListItem bordered` | |
