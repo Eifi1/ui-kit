@@ -56,6 +56,8 @@ export * from "./theme/palette-store";
 
 // ── components ───────────────────────────────────────────────────────────────
 export * from "./components/ui";
+// The label-ABOVE field group (label, hint, error, required), inside wizards or out.
+export * from "./components/field";
 export * from "./components/search-field";
 export * from "./components/dropdown";
 export * from "./components/popover";
@@ -126,6 +128,8 @@ export * from "./components/series-chart-labels";
 export * from "./components/account-settings";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
+// A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
+export * from "./components/nav-pills";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".
@@ -137,6 +141,7 @@ export * from "./components/full-bleed-dialog";
 export * from "./components/grouped-picker";
 export * from "./components/file-dropzone";
 export * from "./components/mini-calendar";
+export * from "./components/calendar-heatmap";
 export * from "./components/date-picker";
 export * from "./components/tree-view";
 export * from "./components/chart";

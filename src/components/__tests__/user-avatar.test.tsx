@@ -48,3 +48,42 @@ describe("avatarInitials", () => {
     expect(screen.getByText("MA")).toBeInTheDocument();
   });
 });
+
+/** keksdose's unread dot (account-menu ~385, top-bar :152), drawn by hand in rose with a
+ *  ring — as a prop, with the meaning a screen reader can hear. */
+describe("UserAvatar badge", () => {
+  it("draws a ringed status dot in the top-end corner", () => {
+    const { container } = render(<UserAvatar name="Marcel Eifert" badge={{ label: "3 unread" }} />);
+    const dot = container.querySelector(".absolute")!;
+    expect(dot.className).toContain("ring-2");
+    expect(dot.className).toContain("-end-0.5");
+    expect(dot.className).toContain("bg-[var(--danger)]");
+    expect(dot).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("reads its label, and still hides the initials", () => {
+    render(
+      <button type="button">
+        <UserAvatar name="Marcel Eifert" badge={{ label: "3 unread", tone: "info" }} />
+      </button>,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("3 unread");
+    expect(screen.getByText("ME")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("keeps className on the circle and the other attributes on the wrapper", () => {
+    const { container } = render(
+      <UserAvatar name="Marcel Eifert" size="lg" className="size-10" data-testid="av" badge={{ label: "Online", tone: "success" }} />,
+    );
+    const wrapper = screen.getByTestId("av");
+    expect(wrapper).toBe(container.firstChild);
+    expect(screen.getByText("ME").className).toContain("size-10");
+    expect(container.querySelector(".absolute")!.className).toContain("size-3");
+  });
+
+  it("renders exactly as before without a badge", () => {
+    const { container } = render(<UserAvatar name="Marcel Eifert" badge={null} />);
+    expect(container.firstChild).toBe(screen.getByText("ME"));
+    expect(container.querySelector(".absolute")).toBeNull();
+  });
+});

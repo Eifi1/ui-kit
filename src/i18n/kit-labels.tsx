@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
 import type { MiniCalendarLabels, WeekDay } from "../components/mini-calendar";
+import type { CalendarHeatmapLabels } from "../components/calendar-heatmap";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
 import type { FieldSyncLabels } from "../components/field-sync";
@@ -197,6 +198,7 @@ export interface UiKitLabels {
   common: CommonLabels;
   dataTable: DataTableLabels;
   miniCalendar: MiniCalendarLabels;
+  calendarHeatmap: CalendarHeatmapLabels;
   datePicker: DatePickerLabels;
   monthPicker: MonthPickerLabels;
   popover: PopoverLabels;

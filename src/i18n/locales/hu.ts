@@ -121,6 +121,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       panel: "Hónap kiválasztása",
       month: (monthYear) => monthYear,
     },
+    calendarHeatmap: {
+      grid: "Napi értékek",
+      day: (date, value) => `${date}: ${value}`,
+      less: "Kevesebb",
+      more: "Több",
+      truncated: (count) =>
+        `A legutóbbi napok láthatók; ${n(count)} korábbi nap nem látható.`,
+    },
     datePicker: {
       apply: "Alkalmaz",
       cancel: "Mégse",
@@ -386,6 +394,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     floatingPanel: {
       close: "Bezárás",
+      badge: (count) => `${n(count)} új`,
     },
     copyButton: {
       copy: "Másolás",

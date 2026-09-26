@@ -125,6 +125,14 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       panel: "Elegir un mes",
       month: (monthYear) => monthYear,
     },
+    calendarHeatmap: {
+      grid: "Valores diarios",
+      day: (date, value) => `${date}: ${value}`,
+      less: "Menos",
+      more: "Más",
+      truncated: (count) =>
+        `Se muestran los días más recientes; ${count === 1 ? "no se muestra 1 día anterior" : `no se muestran ${n(count)} días anteriores`}.`,
+    },
     datePicker: {
       apply: "Aplicar",
       cancel: "Cancelar",
@@ -385,6 +393,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     floatingPanel: {
       close: "Cerrar",
+      badge: (count) => `${n(count)} ${plural(count, "nuevo", "nuevos")}`,
     },
     copyButton: {
       copy: "Copiar",

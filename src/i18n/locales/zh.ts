@@ -120,6 +120,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       panel: "选择月份",
       month: (monthYear) => monthYear,
     },
+    calendarHeatmap: {
+      grid: "每日数值",
+      day: (date, value) => `${date}：${value}`,
+      less: "较少",
+      more: "较多",
+      truncated: (count) =>
+        `仅显示最近的日期；另有 ${n(count)} 天未显示。`,
+    },
     datePicker: {
       apply: "应用",
       cancel: "取消",
@@ -375,6 +383,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     floatingPanel: {
       close: "关闭",
+      badge: (count) => `${n(count)} 条新内容`,
     },
     copyButton: {
       copy: "复制",

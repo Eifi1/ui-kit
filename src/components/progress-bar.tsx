@@ -41,6 +41,44 @@ const FILL: Record<ProgressBarTone, string> = {
 
 const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5", md: "h-2", lg: "h-3" };
 
+// A segment with no tone of its own takes the next categorical chart colour, so a
+// stacked bar of unnamed parts is still a set of tellable parts rather than one fill.
+const SERIES_FILL = [
+  "bg-[var(--chart-1)]",
+  "bg-[var(--chart-2)]",
+  "bg-[var(--chart-3)]",
+  "bg-[var(--chart-4)]",
+  "bg-[var(--chart-5)]",
+  "bg-[var(--chart-6)]",
+  "bg-[var(--chart-7)]",
+  "bg-[var(--chart-8)]",
+  "bg-[var(--chart-9)]",
+];
+
+/** A segment's fill classes: its own classes, else its tone, else (with no `color`)
+ *  the next chart colour. */
+function segmentFill(seg: ProgressBarSegment, index: number): string | undefined {
+  if (seg.className) return seg.className;
+  if (seg.tone) return FILL[seg.tone];
+  return seg.color ? undefined : SERIES_FILL[index % SERIES_FILL.length];
+}
+
+/** One part of a stacked bar. See {@link ProgressBarProps.segments}. */
+export interface ProgressBarSegment {
+  /** Its size, on the bar's own `min`–`max` scale. */
+  value: number;
+  /** A kit tone. Left out (and no `color`/`className`), the next `--chart-N` colour. */
+  tone?: ProgressBarTone;
+  /** Any CSS colour (`var(--token)`), for a palette the tones do not cover. Wins over `tone`. */
+  color?: string;
+  /** Classes for the segment's fill — keksdose's `STEP_CLASS` ramp. Wins over `tone`. */
+  className?: string;
+  /** The part's name: said in the bar's `aria-valuetext` and shown in the legend. */
+  label?: ReactNode;
+  /** A stable React key, when `label` is not a string. */
+  key?: string;
+}
+
 export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
   /** Where it stands. Leave it undefined for an INDETERMINATE bar — work is under way
    *  and nobody knows how much is left (an import that reports no count). */
@@ -69,6 +107,20 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
   tone?: ProgressBarTone;
   size?: ProgressBarSize;
   locale?: string;
+  /**
+   * Draw a METER OF PARTS: one bar, several fills side by side in order, a 2px gap
+   * between them — keksdose's discretionary-spending bar (cut-card:133), a whole
+   * split into the steps of a scale. Forces `variant="meter"`: parts of a whole are
+   * never "busy". `aria-valuenow` is the sum; `aria-valuetext` names every part
+   * ("Rent: 40%, Food: 25%"), each part's value through `formatValue` and joined in the
+   * kit's locale — the words keksdose's hand-drawn bar had to hide from a reader
+   * altogether, leaving the legend as the only way in. The sum is clamped to `max`,
+   * and parts past it are cut off at the track's end.
+   */
+  segments?: ProgressBarSegment[];
+  /** With `segments`: a list under the bar naming each part with its swatch and value
+   *  — the table view of the bar, in text tokens rather than the segment colour. */
+  legend?: boolean;
 }
 
 /**
@@ -99,6 +151,8 @@ export function ProgressBar({
   tone = "brand",
   size = "md",
   locale,
+  segments,
+  legend = false,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
@@ -108,19 +162,36 @@ export function ProgressBar({
   const kitLocale = useKitLocale(locale);
   const labelId = useId();
 
-  const meter = variant === "meter";
-  const current = value === undefined || !Number.isFinite(value) ? (meter ? min : undefined) : value;
-  const indeterminate = current === undefined;
+  const stacked = segments !== undefined;
+  const meter = stacked || variant === "meter";
   const span = max - min;
+  const partValue = (v: number) => (Number.isFinite(v) ? Math.max(0, v - min) : 0);
+  const partTotal = stacked ? min + segments.reduce((sum, seg) => sum + partValue(seg.value), 0) : undefined;
+  const format = (v: number) =>
+    formatValue
+      ? formatValue(v, max, min)
+      : new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(
+          span <= 0 ? 0 : (Math.min(max, Math.max(min, v)) - min) / span,
+        );
+  const partTexts = stacked
+    ? segments.map((seg) => {
+        const text = format(min + partValue(seg.value));
+        return typeof seg.label === "string" || typeof seg.label === "number"
+          ? common.fieldValue(String(seg.label), text)
+          : text;
+      })
+    : [];
+  const current =
+    partTotal ?? (value === undefined || !Number.isFinite(value) ? (meter ? min : undefined) : value);
+  const indeterminate = current === undefined;
   const clamped = indeterminate ? undefined : Math.min(max, Math.max(min, current));
   const fraction = clamped === undefined || span <= 0 ? 0 : (clamped - min) / span;
 
-  const valueText =
-    clamped === undefined
-      ? undefined
-      : formatValue
-        ? formatValue(clamped, max, min)
-        : new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(fraction);
+  const valueText = clamped === undefined ? undefined : format(clamped);
+  const ariaValueText =
+    stacked && partTexts.length > 0
+      ? new Intl.ListFormat(kitLocale, { style: "short", type: "unit" }).format(partTexts)
+      : valueText;
 
   const labelledBy = ariaLabelledBy ?? (label != null ? labelId : undefined);
   const name = labelledBy ? undefined : (ariaLabel ?? (indeterminate ? common.loading : undefined));
@@ -151,13 +222,32 @@ export function ProgressBar({
         aria-valuemin={indeterminate ? undefined : min}
         aria-valuemax={indeterminate ? undefined : max}
         aria-valuenow={clamped}
-        aria-valuetext={valueText}
+        aria-valuetext={ariaValueText}
         aria-busy={!meter && indeterminate ? true : undefined}
         // `relative` + `overflow-hidden`: the indeterminate segment is positioned in
         // here and must not paint past the rounded ends.
         className={cn("relative w-full overflow-hidden rounded-full bg-[var(--bg-active)]", TRACK_HEIGHT[size])}
       >
-        {indeterminate ? (
+        {stacked ? (
+          // The parts in a flex row with a 2px gap, so two neighbouring steps of one
+          // hue are parted by the track rather than by their difference in lightness.
+          <div className="flex h-full w-full gap-0.5">
+            {segments.map((seg, i) => (
+              <div
+                key={seg.key ?? i}
+                data-part="segment"
+                className={cn(
+                  "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+                  segmentFill(seg, i),
+                )}
+                style={{
+                  width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
+                  backgroundColor: seg.className ? undefined : seg.color,
+                }}
+              />
+            ))}
+          </div>
+        ) : indeterminate ? (
           <div
             data-part="fill"
             className={cn(
@@ -182,6 +272,28 @@ export function ProgressBar({
           />
         )}
       </div>
+      {stacked && legend && segments.length > 0 && (
+        <ul className="mt-2 space-y-1 text-sm" data-part="legend">
+          {segments.map((seg, i) => (
+            <li key={seg.key ?? i} className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "size-2.5 shrink-0 rounded-sm",
+                  segmentFill(seg, i),
+                )}
+                style={{ backgroundColor: seg.className ? undefined : seg.color }}
+              />
+              {seg.label != null && (
+                <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
+              )}
+              <span className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]">
+                {format(min + partValue(seg.value))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

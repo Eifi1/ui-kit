@@ -7,3 +7,5 @@
 // the barrel dropped its last react-hook-form import (see the wizard section of
 // src/index.ts). The packaging contract test holds that line.
 export * from "./rhf/form";
+// The react-hook-form bridge to the wizard's Next gate (useWizard lives in /wizard).
+export * from "./rhf/use-rhf-wizard-step";

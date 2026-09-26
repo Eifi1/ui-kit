@@ -76,11 +76,25 @@ export interface ToggleGroupBaseProps<T extends string>
   error?: ReactNode;
 }
 
+/**
+ * A line under the group saying what the CHOSEN option means — lenkbank's ToggleField
+ * `hint` (features/gear/common.tsx:97): not help behind a "?" but a caption, and one
+ * that changes as the choice does. Pass a function of the value for that; it is
+ * attached with `aria-describedby`, and a function caption is also a polite live
+ * region, because a description is read when the group is entered and not again when
+ * an arrow key changes the choice underneath it.
+ *
+ * In muted 11px text under the field (or the bare group), above an `error`.
+ */
+type ToggleGroupCaption<V> = ReactNode | ((value: V) => ReactNode);
+
 /** The group as it has always been: one option is always the answer. */
 export interface ToggleGroupRequiredProps<T extends string> extends ToggleGroupBaseProps<T> {
   allowEmpty?: false;
   value: T;
   onChange: (value: T) => void;
+  /** See {@link ToggleGroupCaption}. */
+  caption?: ToggleGroupCaption<T>;
 }
 
 /**
@@ -97,6 +111,8 @@ export interface ToggleGroupClearableProps<T extends string> extends ToggleGroup
   allowEmpty: true;
   value: T | null;
   onChange: (value: T | null) => void;
+  /** See {@link ToggleGroupCaption}. `null` while nothing is chosen. */
+  caption?: ToggleGroupCaption<T | null>;
 }
 
 /** `allowEmpty` picks the shape, so `onChange` is typed `(T) => void` unless the group
@@ -138,7 +154,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const hasError = field && error !== undefined && error !== null && error !== false && error !== "";
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
-  const { allowEmpty: _allowEmpty, onChange: _onChange, ...rest } = restWithMode;
+  const { allowEmpty: _allowEmpty, onChange: _onChange, caption, ...rest } = restWithMode;
+  const captionId = useId();
+  const captionIsLive = typeof caption === "function";
+  const captionNode = captionIsLive ? (caption as (v: T | null) => ReactNode)(value) : caption;
+  const hasCaption = captionNode !== undefined && captionNode !== null && captionNode !== false && captionNode !== "";
   const choose = (next: T) => {
     if (props.allowEmpty) props.onChange(next === value ? null : next);
     else props.onChange(next);
@@ -185,7 +205,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       aria-labelledby={field && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
-        hasError ? (rest["aria-describedby"] ? `${rest["aria-describedby"]} ${errorId}` : errorId) : rest["aria-describedby"]
+        [rest["aria-describedby"], hasCaption && captionId, hasError && errorId].filter(Boolean).join(" ") || undefined
       }
       // `aria-disabled` on the group as well as `disabled` on each button: a radio
       // group is what the user is being refused, and a screen reader announcing
@@ -273,7 +293,31 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       })}
     </div>
   );
-  if (!field) return group;
+  // Rendered whenever the caption is — `aria-live` must be on the element BEFORE its
+  // text changes, or the change is not announced — but empty (no height, no margin)
+  // when there is nothing to say, so a function caption that returns null for some
+  // options leaves no gap. Empty rather than `hidden`: some readers do not announce
+  // text that appears inside an element coming back from `display: none`.
+  const captionEl =
+    hasCaption || captionIsLive ? (
+      <p
+        id={captionId}
+        aria-live={captionIsLive ? "polite" : undefined}
+        className={cn("text-[11px] leading-snug text-[var(--text-muted)]", hasCaption && "mt-1")}
+      >
+        {hasCaption ? captionNode : null}
+      </p>
+    ) : null;
+  if (!field) {
+    if (!captionEl) return group;
+    // The group keeps its `className`, as without a caption; the wrapper only stacks.
+    return (
+      <div className="min-w-0">
+        {group}
+        {captionEl}
+      </div>
+    );
+  }
   return (
     // `h-full` + `flex-1`: the chrome fills a grid or stretched flex row, which is what
     // levels it with a select beside it whatever the browser makes of the select.
@@ -294,6 +338,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           {group}
         </div>
       </FloatingField>
+      {captionEl}
       {hasError && (
         <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
           {error}
