@@ -64,7 +64,7 @@ react-hook-form wizard-step bridge.
 | metrics-panel wholeTicks, cash-buffer wholeDayTicks | automatic whole-number y ticks; force with `integerTicks: true` on an axis | |
 | spending-tab weekday bar buttons | `SeriesChart onPointClick` | bars become keyboard stops (arrows, Enter); names like "Mon — Spent: €12" |
 | report-range-field "Custom · from – to" | `DateRangePicker commit="apply" renderDraftSummary={…}` | the last blocker for the kit picker |
-| GlobalSearch groups in suggestions, `[&_svg]:size-5` | `suggestionsKeepGroups`, `triggerIconSize={20}` | |
+| GlobalSearch groups in suggestions, `[&_svg]:size-5`, "Search (⌘K)" as the name (C25) | `suggestionsKeepGroups`, `triggerIconSize={20}`, `triggerName="withShortcut"` | `aria-keyshortcuts` stays either way |
 | transaction-search | `CommandPalette density="comfortable"` | no "Searching…" for a synchronous provider, by detection |
 | budget-table phone editor on DialogFrame fullBleed | `FullBleedDialog title={…} headingAs="h2"` | the dialog is named by its heading |
 | rule-editor `optionClassName="px-2 py-1 text-xs"` | `ToggleGroup size="sm"` | |
