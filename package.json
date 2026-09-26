@@ -89,7 +89,8 @@
     "prepublishOnly": "npm run build",
     "release": "commit-and-tag-version",
     "release:dry": "commit-and-tag-version --dry-run",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "deps:outdated": "npm outdated || true"
   },
   "peerDependencies": {
     "lucide-react": ">=0.400.0 <2",

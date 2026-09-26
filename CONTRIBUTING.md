@@ -286,6 +286,22 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 
 No dead-code check: `ts-prune` reports every public export of a library as unused.
 
+## Dependencies
+
+Updated **locally first**, like everything else, and pushed once, proven. There is no
+Dependabot version-update config: its PRs each cost a CI run, and every major it proposed
+broke the build. GitHub's security alerts stay on for advisories published after the fact.
+
+1. `npm update`: every dependency within its range (lockfile only), then `npm run check`.
+2. `npm run deps:outdated` lists what is left: the majors. Take them one GROUP at a time
+   (vitest + coverage-v8 + jest-dom; vite + plugin-react; eslint + @eslint/js) and run
+   `npm run check` after each, so a failure names its cause. Commit per group
+   (`build(deps): …`).
+3. Blocked majors wait, with the reason recorded in the commit or in `_overrides`:
+   TypeScript 7 (typescript-eslint supports < 6.1), and `@types/node` follows the Node
+   in `.nvmrc`.
+4. GitHub Actions versions (`uses: …@vN`) get the same pass by hand, in the same batch.
+
 ## Releasing
 
 Consumers pin `^0.x`, which npm treats as minor-locked below 1.0, so a minor does not reach
