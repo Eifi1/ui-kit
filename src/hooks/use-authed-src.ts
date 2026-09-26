@@ -113,16 +113,23 @@ export function useAuthedSrc(
     const controller = new AbortController();
     let created: string | null = null;
     let active = true;
+    // Settled: the response is in (or failed). Aborting then would signal a request
+    // that is long over — a fetcher that listens for `abort` (to log, to cancel a
+    // retry it scheduled, to count cancellations) would see a cancellation that
+    // never happened on every URL change and unmount.
+    let settled = false;
     // No "loading" state is set here: a key the state does not describe yet already
     // reads as loading (see the end of the hook).
     fetchFn(url, { signal: controller.signal })
       .then(toBlob)
       .then((blob) => {
+        settled = true;
         if (!active) return;
         created = URL.createObjectURL(blob);
         setState({ key, src: created, status: "ready", error: undefined, type: blob.type });
       })
       .catch((error: unknown) => {
+        settled = true;
         if (!active) return;
         setState({ key, src: null, status: "error", error, type: undefined });
       });
@@ -130,7 +137,9 @@ export function useAuthedSrc(
       // `active` first: an in-flight response that lands after this must neither set
       // state on an unmounted component nor create a blob nobody will revoke.
       active = false;
-      controller.abort();
+      // Only a request still in flight is aborted; `active` above is the stale-response
+      // guard either way.
+      if (!settled) controller.abort();
       if (created) URL.revokeObjectURL(created);
     };
   }, [key, url]);

@@ -254,6 +254,7 @@ export * from "./components/data-table-cells";
 export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
 export type {
   TableUrlState,
+  TableUrlSync,
   TableUrlStateProps,
   UseTableUrlStateOptions,
   UseTableUrlStateReturn,

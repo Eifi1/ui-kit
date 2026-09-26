@@ -204,3 +204,18 @@ describe("the shared tooltip it uses", () => {
     expect(screen.getByText("—")).toBeInTheDocument();
   });
 });
+
+describe("PieChart shape props", () => {
+  it("does not spread recharts' `key` into the sector (no React key warning)", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      render(<PieChart data={DATA} />);
+      const keyWarnings = error.mock.calls.filter((args) =>
+        args.some((a) => typeof a === "string" && a.includes('"key" prop is being spread')),
+      );
+      expect(keyWarnings).toEqual([]);
+    } finally {
+      error.mockRestore();
+    }
+  });
+});

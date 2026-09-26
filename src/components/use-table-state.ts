@@ -55,6 +55,40 @@ const URL_PAGE_SIZE_KEY = "ps";
  *  it is asked to (`search: true`); a plain `urlSync` table leaves a `q` alone. */
 const URL_SEARCH_KEY = "q";
 
+/**
+ * How a table is mirrored into the URL: `true`, or `{ prefix }` for a table that shares
+ * its page with another URL-synced one. The prefix is put verbatim in front of EVERY key
+ * the table writes and reads — `{ prefix: "inv." }` gives `inv.f.<column>`, `inv.sort`,
+ * `inv.p`, `inv.ps` (and `inv.q`) — so two tables on one page stop sharing a sort and a
+ * page. Without one the keys are unprefixed, as they always were.
+ */
+export type TableUrlSync = boolean | { prefix?: string };
+
+/** The query keys of one table, with its prefix applied. */
+interface UrlKeys {
+  filter: string;
+  sort: string;
+  page: string;
+  pageSize: string;
+  search: string;
+}
+
+function urlKeys(prefix = ""): UrlKeys {
+  return {
+    filter: prefix + URL_FILTER_PREFIX,
+    sort: prefix + URL_SORT_KEY,
+    page: prefix + URL_PAGE_KEY,
+    pageSize: prefix + URL_PAGE_SIZE_KEY,
+    search: prefix + URL_SEARCH_KEY,
+  };
+}
+
+/** `urlSync` split into "is it on" and "under which prefix". */
+function resolveTableUrlSync(urlSync: TableUrlSync | undefined): { enabled: boolean; prefix: string } {
+  if (!urlSync) return { enabled: false, prefix: "" };
+  return { enabled: true, prefix: urlSync === true ? "" : (urlSync.prefix ?? "") };
+}
+
 /** What {@link readTableUrlState} found in a query string. */
 export interface TableUrlState {
   sorts?: SortState[];
@@ -72,7 +106,8 @@ export interface TableUrlState {
  * on mount, exported for an owner that keeps the state itself — see
  * {@link useTableUrlState}.
  *
- * Pass the ROUTER's query string — the one `setSearchParams` writes.
+ * Pass the ROUTER's query string — the one `setSearchParams` writes — and the table's
+ * `prefix` when it has one (see {@link TableUrlSync}).
  *
  * This read `window.location.search` until 0.7.0, which is the same string only under a
  * BrowserRouter. Under a HashRouter the router's query lives after the `#`
@@ -84,30 +119,32 @@ export interface TableUrlState {
 export function readTableUrlState<T>(
   sp: URLSearchParams,
   columns: DataTableColumn<T>[],
+  prefix?: string,
 ): TableUrlState {
+  const keys = urlKeys(prefix);
   const out: TableUrlState = {};
 
   const filters: FilterState = {};
   for (const col of columns) {
     const filter = resolveFilter(col);
     if (!filter) continue;
-    const raw = sp.get(URL_FILTER_PREFIX + col.key);
+    const raw = sp.get(keys.filter + col.key);
     if (raw == null) continue;
     filters[col.key] = decodeFilterValue(filter, raw);
   }
   if (Object.keys(filters).length) out.filters = filters;
 
-  const sortRaw = sp.get(URL_SORT_KEY);
+  const sortRaw = sp.get(keys.sort);
   if (sortRaw) {
     const decoded = decodeSorts(sortRaw, new Set(columns.map((c) => c.key)));
     if (decoded.length) out.sorts = decoded;
   }
 
-  const psRaw = sp.get(URL_PAGE_SIZE_KEY);
+  const psRaw = sp.get(keys.pageSize);
   if (psRaw === "all") out.pageSize = Infinity;
   else if (psRaw && Number(psRaw) > 0) out.pageSize = Number(psRaw);
 
-  const pRaw = sp.get(URL_PAGE_KEY);
+  const pRaw = sp.get(keys.page);
   if (pRaw && Number(pRaw) >= 1) out.page = Number(pRaw) - 1;
 
   return out;
@@ -129,21 +166,22 @@ function urlSignature<T>(
   pageSize: number,
   page: number,
   defaultPageSize: number,
+  keys: UrlKeys,
 ): string {
   const parts: string[] = [];
   for (const col of columns) {
     const state = filters[col.key];
     if (!state || !isFilterActive(state)) continue;
     const enc = encodeFilterValue(state);
-    if (enc != null) parts.push(`${URL_FILTER_PREFIX}${col.key}=${enc}`);
+    if (enc != null) parts.push(`${keys.filter}${col.key}=${enc}`);
   }
-  parts.push(`${URL_SORT_KEY}=${encodeSorts(sorts)}`);
+  parts.push(`${keys.sort}=${encodeSorts(sorts)}`);
   parts.push(
-    `${URL_PAGE_SIZE_KEY}=${
+    `${keys.pageSize}=${
       pageSize === Infinity ? "all" : pageSize === defaultPageSize ? "" : String(pageSize)
     }`,
   );
-  parts.push(`${URL_PAGE_KEY}=${page > 0 ? String(page + 1) : ""}`);
+  parts.push(`${keys.page}=${page > 0 ? String(page + 1) : ""}`);
   return parts.join("&");
 }
 
@@ -161,34 +199,35 @@ function writeUrlState<T>(
   // a navigation, and dropping the state would, for one, lose the mark a URL-bound
   // dialog's opener leaves there (see useDialogParam).
   state: unknown,
+  keys: UrlKeys,
 ): void {
   setSearchParams(
     (prev) => {
       const next = new URLSearchParams(prev);
       // clear managed keys
-      for (const col of columns) next.delete(URL_FILTER_PREFIX + col.key);
-      next.delete(URL_SORT_KEY);
-      next.delete(URL_PAGE_KEY);
-      next.delete(URL_PAGE_SIZE_KEY);
+      for (const col of columns) next.delete(keys.filter + col.key);
+      next.delete(keys.sort);
+      next.delete(keys.page);
+      next.delete(keys.pageSize);
       if (search !== undefined) {
-        next.delete(URL_SEARCH_KEY);
-        if (search.trim()) next.set(URL_SEARCH_KEY, search);
+        next.delete(keys.search);
+        if (search.trim()) next.set(keys.search, search);
       }
       // write filters
       for (const col of columns) {
         const state = filters[col.key];
         if (!state || !isFilterActive(state)) continue;
         const enc = encodeFilterValue(state);
-        if (enc != null) next.set(URL_FILTER_PREFIX + col.key, enc);
+        if (enc != null) next.set(keys.filter + col.key, enc);
       }
       // write sort
       const sortEnc = encodeSorts(sorts);
-      if (sortEnc) next.set(URL_SORT_KEY, sortEnc);
+      if (sortEnc) next.set(keys.sort, sortEnc);
       // write page size if non-default
-      if (pageSize === Infinity) next.set(URL_PAGE_SIZE_KEY, "all");
-      else if (pageSize !== defaultPageSize) next.set(URL_PAGE_SIZE_KEY, String(pageSize));
+      if (pageSize === Infinity) next.set(keys.pageSize, "all");
+      else if (pageSize !== defaultPageSize) next.set(keys.pageSize, String(pageSize));
       // write page if not first
-      if (page > 0) next.set(URL_PAGE_KEY, String(page + 1));
+      if (page > 0) next.set(keys.page, String(page + 1));
       return next;
     },
     { replace: true, state },
@@ -219,7 +258,7 @@ export function useTableState<T>({
   columns,
   storageKey,
   storageKeyPrefix,
-  urlSync,
+  urlSync: urlSyncOption,
   defaultPageSize,
   sortsProp,
   filtersProp,
@@ -227,11 +266,13 @@ export function useTableState<T>({
   columns: DataTableColumn<T>[];
   storageKey?: string;
   storageKeyPrefix: string;
-  urlSync?: boolean;
+  urlSync?: TableUrlSync;
   defaultPageSize: number;
   sortsProp?: SortState[];
   filtersProp?: FilterState;
 }) {
+  const { enabled: urlSync, prefix: urlPrefix } = resolveTableUrlSync(urlSyncOption);
+  const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
   // Called unconditionally (a Router is required either way — see src/data-table.ts),
   // and the SAME pair is used to read and to write; see `readTableUrlState`.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -239,7 +280,7 @@ export function useTableState<T>({
   // Read URL once on mount so URL-encoded views (e.g. shared links, deep links from
   // other pages) populate initial state. After mount, state is local.
   const [urlInitial] = useState<TableUrlState>(() =>
-    urlSync ? readTableUrlState(searchParams, columns) : {},
+    urlSync ? readTableUrlState(searchParams, columns, urlPrefix) : {},
   );
   const initial = useMemo(
     () => loadPersisted(storageKey, storageKeyPrefix),
@@ -325,7 +366,7 @@ export function useTableState<T>({
 
   const lastUrl = useRef<string | null>(null);
   const urlSig = urlSync
-    ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize)
+    ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize, keys)
     : "";
   useEffect(() => {
     if (!urlSync) return;
@@ -334,7 +375,7 @@ export function useTableState<T>({
     // `columns` is deliberately not a dependency and does not need to be: the
     // signature above is computed from it, so a column set that would produce a
     // different address produces a different signature first.
-    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize, undefined, location.state);
+    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize, undefined, location.state, keys);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSync, urlSig]);
 
@@ -364,8 +405,12 @@ export interface UseTableUrlStateOptions<T> {
   columns: DataTableColumn<T>[];
   /** Default 25. A page size equal to it is left out of the URL. */
   defaultPageSize?: number;
-  /** Mirror the state into the URL and seed it from there on mount. Default true. */
-  urlSync?: boolean;
+  /** Mirror the state into the URL and seed it from there on mount. Default true.
+   *  `{ prefix }` puts a prefix in front of every key, for a page with two URL-synced
+   *  tables — see {@link TableUrlSync}. */
+  urlSync?: TableUrlSync;
+  /** Shorthand for `urlSync: { prefix }`; wins over a prefix given there. */
+  urlPrefix?: string;
   /** Also hold a free-text search term, under `q`. Off by default, so a `q` that
    *  belongs to someone else on the page is never touched. */
   search?: boolean;
@@ -435,26 +480,31 @@ interface OwnedState {
 export function useTableUrlState<T>({
   columns,
   defaultPageSize = 25,
-  urlSync = true,
+  urlSync: urlSyncOption = true,
+  urlPrefix: urlPrefixOption,
   search: manageSearch = false,
 }: UseTableUrlStateOptions<T>): UseTableUrlStateReturn {
+  const resolved = resolveTableUrlSync(urlSyncOption);
+  const urlSync = resolved.enabled;
+  const urlPrefix = urlPrefixOption ?? resolved.prefix;
+  const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [state, setState] = useState<OwnedState>(() => {
-    const url = urlSync ? readTableUrlState(searchParams, columns) : {};
+    const url = urlSync ? readTableUrlState(searchParams, columns, urlPrefix) : {};
     return {
       sorts: url.sorts ?? [],
       filters: url.filters ?? {},
       pageSize: url.pageSize ?? defaultPageSize,
       page: url.page ?? 0,
-      search: urlSync && manageSearch ? (searchParams.get(URL_SEARCH_KEY) ?? "") : "",
+      search: urlSync && manageSearch ? (searchParams.get(keys.search) ?? "") : "",
     };
   });
 
   const lastUrl = useRef<string | null>(null);
   const urlSig = urlSync
-    ? urlSignature(columns, state.sorts, state.filters, state.pageSize, state.page, defaultPageSize) +
-      (manageSearch ? `&${URL_SEARCH_KEY}=${state.search.trim() ? state.search : ""}` : "")
+    ? urlSignature(columns, state.sorts, state.filters, state.pageSize, state.page, defaultPageSize, keys) +
+      (manageSearch ? `&${keys.search}=${state.search.trim() ? state.search : ""}` : "")
     : "";
   useEffect(() => {
     if (!urlSync) return;
@@ -472,6 +522,7 @@ export function useTableUrlState<T>({
       defaultPageSize,
       manageSearch ? state.search : undefined,
       location.state,
+      keys,
     );
     // Keyed on the signature, which is computed from everything the write reads — see
     // the same effect in useTableState.

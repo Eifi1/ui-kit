@@ -11,25 +11,52 @@ import type { KitLinkComponent } from "../i18n/kit-labels";
  * An `href` that leaves the app: a scheme (`https:`, `mailto:`, `tel:`) or a
  * protocol-relative `//host`. A router's link is for paths inside the app, so the
  * provider's `linkComponent` is never handed one of these — they stay a plain `<a>`.
+ *
+ * NOT external, and so handed to the router link: a path (`/x`, `x`, `?q=1`) and the
+ * hash-router form `#/x` — that IS a route in a `HashRouter` app, which maps it to
+ * `to="/x"`. A plain in-page anchor (`#section`) is not external either, but it is not
+ * a route: see {@link isInPageAnchor}.
  */
 export function isExternalHref(href: string): boolean {
   return /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href);
 }
 
 /**
+ * An `href` that only scrolls the current page: `#section` (or a bare `#`). The
+ * hash-router form `#/x` is a ROUTE, not an anchor, and is not one of these. A router
+ * link must not get an anchor — under a `HashRouter` `#section` would navigate to the
+ * path `/section` — so every kit link draws it as a plain `<a>`.
+ */
+export function isInPageAnchor(href: string): boolean {
+  return href.startsWith("#") && !href.startsWith("#/");
+}
+
+/**
+ * Whether the provider's `linkComponent` (or a kit component's router fallback) draws
+ * `href`: an in-app path, `#/x` included — not an external `href`
+ * ({@link isExternalHref}) and not an in-page `#anchor` ({@link isInPageAnchor}).
+ */
+export function isRoutableHref(href: string): boolean {
+  return !isExternalHref(href) && !isInPageAnchor(href);
+}
+
+/**
  * What draws a kit link to `href`: the component's own `renderLink` when it was given
- * one (it always wins), else the `<UiKitProvider linkComponent>` for an in-app `href`,
- * else `undefined` — a plain `<a>`. Every kit link props type is a subset of the anchor
+ * one (it always wins — the caller asked for it by name), else the
+ * `<UiKitProvider linkComponent>` for a routable `href` ({@link isRoutableHref}), else
+ * `undefined` — a plain `<a>`. The one rule every kit link follows: `https:` /
+ * `mailto:` / `//host` and `#section` stay plain anchors; `/x`, `x` and a hash-router
+ * `#/x` go to the router link. Every kit link props type is a subset of the anchor
  * attributes `KitLinkProps` describes, which is what makes the cast sound.
  * @internal Shared by the kit's link-bearing components; not part of the barrel.
  */
 export function pickLinkRenderer<P>(
   own: ((props: P) => ReactElement) | undefined,
   kitLink: KitLinkComponent | undefined,
-  href: string,
+  href: string | undefined,
 ): ((props: P) => ReactElement) | undefined {
   if (own) return own;
-  if (!kitLink || isExternalHref(href)) return undefined;
+  if (!kitLink || href === undefined || !isRoutableHref(href)) return undefined;
   return kitLink as unknown as (props: P) => ReactElement;
 }
 

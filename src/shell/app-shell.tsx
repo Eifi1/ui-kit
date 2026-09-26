@@ -8,6 +8,7 @@ import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
+import { pickLinkRenderer } from "../components/text-link";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -449,6 +450,7 @@ export function AppShell({
 }
 
 const routerLink: KitLinkComponent = ({ href, ...p }) => <Link to={href} {...p} />;
+const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}</a>;
 
 const FOOTER_ICON_LINK =
   "flex min-h-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]";
@@ -469,9 +471,11 @@ function SidebarFooterItems({
   renderLink?: KitLinkComponent;
 }) {
   const kitLink = useKitLink();
-  const InApp = renderLink ?? kitLink ?? routerLink;
-  const linkTo = (to: string, external: boolean | undefined, { children, ...props }: Omit<KitLinkProps, "href">) =>
-    external ? (
+  const linkTo = (to: string, external: boolean | undefined, { children, ...props }: Omit<KitLinkProps, "href">) => {
+    // The kit's one link rule (`pickLinkRenderer`): an external `to` or an in-page
+    // `#anchor` is a plain `<a>` even without `external`; only `external` opens a tab.
+    const InApp = pickLinkRenderer(renderLink, kitLink ?? routerLink, to) ?? plainLink;
+    return external ? (
       <a href={to} target="_blank" rel="noopener noreferrer" {...props}>
         {children}
       </a>
@@ -480,6 +484,7 @@ function SidebarFooterItems({
         {children}
       </RenderedLink>
     );
+  };
 
   return (
     <div data-slot="sidebar-footer-items" className={cn("px-2 py-1", collapsed ? "space-y-1" : "space-y-1.5")}>

@@ -247,14 +247,19 @@ export function PieChart({
         animationElapsedTime: _elapsed,
         isAnimating: _animating,
         isEntrance: _entrance,
+        // recharts hands the shape its own React `key` among the props. Spread into
+        // JSX, a `key` inside a props object is a warning on every render (React 19),
+        // so it is lifted out here and passed on its own.
+        key,
         ...sector
       } = props as PieSectorShapeProps & {
         animationElapsedTime?: number;
         isAnimating?: boolean;
         isEntrance?: boolean;
+        key?: string | number | null;
       };
       const d = drawn[index];
-      if (!d) return <Sector {...sector} />;
+      if (!d) return <Sector key={key ?? undefined} {...sector} />;
       const onKeyDown = (event: KeyboardEvent<SVGGElement>) => {
         const step = horizontalStep(event.key, event.currentTarget);
         let target: number | undefined;
@@ -292,7 +297,7 @@ export function PieChart({
           // stroke for as long as it has keyboard focus.
           className="outline-none [&:focus-visible>path]:stroke-[var(--text-primary)]"
         >
-          <Sector {...sector} />
+          <Sector key={key ?? undefined} {...sector} />
         </g>
       );
     },

@@ -108,6 +108,10 @@ function AuthLayoutSpecimen() {
         <AuthLayout
           className="min-h-full"
           data-demo="auth-layout"
+          // Embedded in the showcase's own page: no second <main>/<footer>, and a
+          // heading under the example's <h3> rather than a second <h1>.
+          landmark={false}
+          headingAs="h4"
           width={wide ? "wide" : "narrow"}
           card={card}
           logoTile={logoTile}
@@ -169,14 +173,15 @@ function AuthLayoutSpecimen() {
       </p>
       <div className="mt-3 space-y-2">
         <Note>
-          The corner, the {code("<main>")} and the footer are rows of one column that grows with its content —
+          The corner, the content column and the footer are rows of one column that grows with its content —
           shrink the box or open the imprint and the page scrolls instead of the footer landing on the card, which
           is what the absolutely placed footers it replaces did on a short phone screen. The footer&apos;s links
           are a {code("<nav>")} named by {code("footerLabel")}. Padding follows the safe-area insets.
         </Note>
         <Note>
-          Here inside the showcase&apos;s own page, AuthLayout&apos;s {code("<main>")} and {code("<h1>")} are nested
-          in the page&apos;s — in an app it is the whole page, outside the shell, and they are the only ones.
+          On its own route it draws {code("<main>")}, {code("<footer>")} and an {code("<h1>")}. Embedded here, in
+          the showcase&apos;s own page, it takes {code("landmark={false}")} (plain {code("<div>")}s) and{" "}
+          {code('headingAs="h4"')}, so nothing nests inside the page&apos;s own landmarks and headings.
         </Note>
       </div>
     </Example>
@@ -390,15 +395,14 @@ function PasskeysSpecimen() {
 /**
  * The provider merges a section key by key at run time (the resolver spreads English,
  * then the provider's section, then the prop), so a partial SECTION is what an app
- * writes. `UiKitLabelOverrides` is only partial one level down, though — per namespace
- * — so the type asks for every key of `passkeys`; hence the cast (reported upstream).
+ * writes — and `UiKitLabelOverrides` is partial at every depth, so no cast is needed.
  */
-const HOUSE_WORDING = {
+const HOUSE_WORDING: UiKitLabelOverrides = {
   accountSettings: {
     passkeys: { title: "Security keys", add: "Register a key", empty: "No security keys registered" },
     twoFactor: { enable: "Turn on the authenticator app" },
   },
-} as UiKitLabelOverrides;
+};
 
 const GERMAN: UiKitLabelOverrides = { accountSettings: UI_KIT_LABELS_DE.accountSettings };
 

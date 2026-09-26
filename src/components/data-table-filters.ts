@@ -227,7 +227,14 @@ export function numberFilter<T>(getValue: (row: T) => number | null | undefined)
  *
  *     filterHref("/units", "status", ["vacant"]) // "/units?f.status=vacant"
  */
-export function filterHref(path: string, column: string, value: string | string[] | FilterValue): string {
+export function filterHref(
+  path: string,
+  column: string,
+  value: string | string[] | FilterValue,
+  /** The target table's `urlSync` prefix, if it has one (`{ prefix: "inv." }` →
+   *  `inv.f.<column>`). */
+  options?: { prefix?: string },
+): string {
   const state: FilterValue =
     typeof value === "string"
       ? { type: "text", q: value }
@@ -241,6 +248,6 @@ export function filterHref(path: string, column: string, value: string | string[
   const hash = hashAt >= 0 ? path.slice(hashAt) : "";
   const queryAt = base.indexOf("?");
   const params = new URLSearchParams(queryAt >= 0 ? base.slice(queryAt + 1) : "");
-  params.set(`f.${column}`, encoded);
+  params.set(`${options?.prefix ?? ""}f.${column}`, encoded);
   return `${queryAt >= 0 ? base.slice(0, queryAt) : base}?${params.toString()}${hash}`;
 }

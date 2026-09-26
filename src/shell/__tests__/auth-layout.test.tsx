@@ -124,3 +124,33 @@ describe("AuthLayout", () => {
     expect(within(card as HTMLElement).getByRole("heading", { name: "Verify email" })).toBeInTheDocument();
   });
 });
+
+describe("AuthLayout embedded (landmark / headingAs)", () => {
+  it("landmark={false} and headingAs draw no <main>/<footer> landmark and no <h1>", () => {
+    const { container } = render(
+      <main>
+        <AuthLayout title="Sign in" footer={<a href="/terms">Terms</a>} landmark={false} headingAs="h3">
+          <p>form</p>
+        </AuthLayout>
+      </main>,
+    );
+    // Only the host page's own <main>.
+    expect(container.querySelectorAll("main")).toHaveLength(1);
+    expect(container.querySelector("footer")).toBeNull();
+    expect(screen.getByRole("heading", { level: 3, name: "Sign in" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByText("form")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Terms" })).toBeInTheDocument();
+  });
+
+  it("defaults are unchanged: <main>, <footer> and an <h1>", () => {
+    render(
+      <AuthLayout title="Sign in" footer={<a href="/terms">Terms</a>}>
+        <p>form</p>
+      </AuthLayout>,
+    );
+    expect(screen.getByRole("main")).toBeInTheDocument();
+    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+  });
+});

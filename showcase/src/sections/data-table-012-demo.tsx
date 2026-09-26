@@ -304,8 +304,16 @@ function queryUnits(state: ReturnType<typeof useTableUrlState>) {
 
 /** The table and its owner. Keyed by the parent so a `filterHref` link remounts it —
  *  the URL is read once, on mount, exactly as with `urlSync`. */
+/** The `urlSync` table above uses the unprefixed keys; this one keeps its own. */
+const UNITS_PREFIX = "units.";
+
 function UnitsTable() {
-  const state = useTableUrlState<Unit>({ columns: UNIT_COLUMNS, defaultPageSize: 5, search: true });
+  const state = useTableUrlState<Unit>({
+    columns: UNIT_COLUMNS,
+    defaultPageSize: 5,
+    search: true,
+    urlPrefix: UNITS_PREFIX,
+  });
   const { rows, total } = queryUnits(state);
   return (
     <>
@@ -318,7 +326,7 @@ function UnitsTable() {
           <SearchField
             variant="inline"
             aria-label="Search units"
-            placeholder="Search units (q)"
+            placeholder="Search units (units.q)"
             value={state.search}
             onChange={state.setSearch}
             className="min-w-0 flex-1 basis-40"
@@ -347,12 +355,12 @@ export function DataTableUrlFiltersDemo() {
   // carries the route state over its own `replace` writes, so the key holds still.
   const seed = (location.state as { unitsSeed?: number } | null)?.unitsSeed ?? 0;
   const links: Array<[string, string]> = [
-    ["Vacant units", filterHref(pathname, "occupancy", ["vacant"])],
-    ["Vacant or under notice", filterHref(pathname, "occupancy", ["vacant", "notice"])],
-    ["Furnished", filterHref(pathname, "furnished", ["true"])],
-    ["Tenant “Kiss”", filterHref(pathname, "tenant", "Kiss")],
-    ["Rent €1,000–1,400", filterHref(pathname, "rent", { type: "number", min: "1000", max: "1400", abs: false })],
-    ["Free in the first half of 2026", filterHref(pathname, "free", { type: "date", from: "2026-01-01", to: "2026-06-30" })],
+    ["Vacant units", filterHref(pathname, "occupancy", ["vacant"], { prefix: UNITS_PREFIX })],
+    ["Vacant or under notice", filterHref(pathname, "occupancy", ["vacant", "notice"], { prefix: UNITS_PREFIX })],
+    ["Furnished", filterHref(pathname, "furnished", ["true"], { prefix: UNITS_PREFIX })],
+    ["Tenant “Kiss”", filterHref(pathname, "tenant", "Kiss", { prefix: UNITS_PREFIX })],
+    ["Rent €1,000–1,400", filterHref(pathname, "rent", { type: "number", min: "1000", max: "1400", abs: false }, { prefix: UNITS_PREFIX })],
+    ["Free in the first half of 2026", filterHref(pathname, "free", { type: "date", from: "2026-01-01", to: "2026-06-30" }, { prefix: UNITS_PREFIX })],
   ];
   return (
     <Example
@@ -390,11 +398,12 @@ export function DataTableUrlFiltersDemo() {
           that filters with {code("rowMatches")}. Any change but the page itself goes back to page 1.
         </Note>
         <Note>
-          The links are {code("filterHref(path, column, value)")}: a string is a text filter, an array a
-          select filter, and any {code("FilterValue")} works for dates and numbers — the link a dashboard
-          tile or another page would write to open this list pre-filtered. This page has a second
-          URL-synced table above; both use {code("sort")}, {code("p")} and {code("ps")}, which is why an app
-          keeps one synced list per page.
+          The links are {code("filterHref(path, column, value, { prefix })")}: a string is a text filter, an
+          array a select filter, and any {code("FilterValue")} works for dates and numbers — the link a
+          dashboard tile or another page would write to open this list pre-filtered. This page has a second
+          URL-synced table above, so this one is namespaced with {code('urlPrefix: "units."')}: its keys
+          are {code("units.f.<column>")}, {code("units.sort")}, {code("units.p")}, {code("units.ps")} and{" "}
+          {code("units.q")}, and the two tables no longer share a sort or a page.
         </Note>
       </div>
     </Example>

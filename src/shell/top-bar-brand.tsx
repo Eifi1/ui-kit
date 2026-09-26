@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 import { cn } from "../lib/cn";
 import { useKitLink } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "../components/text-link";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 
 const routerLink: KitLinkComponent = ({ href, ...p }) => <RouterLink to={href} {...p} />;
+const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}</a>;
 
 /** Below which width only the logo shows. The name stays in the link's accessible
  *  name at every width. */
@@ -49,7 +51,9 @@ export function TopBarBrand({
   const kitLink = useKitLink();
   return (
     <RenderedLink
-      render={renderLink ?? kitLink ?? routerLink}
+      // The kit's one link rule (`pickLinkRenderer`): an external `to` or an in-page
+      // `#anchor` is a plain `<a>`, never the router's link.
+      render={pickLinkRenderer(renderLink, kitLink ?? routerLink, to) ?? plainLink}
       {...rest}
       href={to}
       className={cn(

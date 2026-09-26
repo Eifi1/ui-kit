@@ -241,8 +241,11 @@ export interface DataTableProps<T> {
    * shareable and bookmarkable. URL params used: `f.<column>`, `sort`, `p`, `ps`.
    * URL state takes precedence over localStorage on initial load. Requires the
    * consuming app to render inside a react-router Router.
+   *
+   * `{ prefix }` namespaces them, for two URL-synced tables on one page:
+   * `urlSync={{ prefix: "inv." }}` uses `inv.f.<column>`, `inv.sort`, `inv.p`, `inv.ps`.
    */
-  urlSync?: boolean;
+  urlSync?: TableUrlSync;
   /**
    * When true (desktop only), the table fills its parent's height and scrolls
    * INTERNALLY, with the header pinned — so the page itself doesn't add a second,
@@ -752,7 +755,7 @@ function RowLink({
 
 
 
-import { DEFAULT_PERSIST_PREFIX, useTableState } from "./use-table-state";
+import { DEFAULT_PERSIST_PREFIX, useTableState, type TableUrlSync } from "./use-table-state";
 import { useMobileReveal } from "./use-mobile-reveal";
 
 export function DataTable<T>({

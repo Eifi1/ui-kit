@@ -256,25 +256,14 @@ export function Showcase() {
  * then routes inside the HashRouter instead of reloading the page. The kit decides the
  * href and the attributes; this only maps `href` to react-router's `to`.
  *
- * Only app paths route: "/buttons" and the hash-router form "#/buttons" a demo may
- * write by hand. Anything else — an in-page "#anchor", a `mailto:` — stays a plain
- * anchor (the kit already keeps external links plain).
+ * The kit only hands it an in-app href: "/buttons", or the hash-router form "#/buttons"
+ * a demo may write by hand (mapped to the route "/buttons" here). An external href and
+ * an in-page "#anchor" never get here — every kit link draws those as a plain `<a>`
+ * (`pickLinkRenderer`).
  */
-const RouterLink: KitLinkComponent = ({ href, children, ...rest }) => {
-  const to = href.startsWith("#/") ? href.slice(1) : href;
-  if (!to.startsWith("/")) {
-    return (
-      <a href={href} {...rest}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <Link to={to} {...rest}>
-      {children}
-    </Link>
-  );
-};
+const RouterLink: KitLinkComponent = ({ href, ...rest }) => (
+  <Link to={href.startsWith("#/") ? href.slice(1) : href} {...rest} />
+);
 
 /**
  * Flyout ⇄ inline. The icon shows what a click switches TO, and the tooltip says it in

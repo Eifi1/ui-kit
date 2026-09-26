@@ -12,7 +12,8 @@ export interface AuthLayoutProps extends Omit<ComponentPropsWithoutRef<"div">, "
   logo?: ReactNode;
   /** `false` draws `logo` as it is, without the tile — for a full-colour logo image. */
   logoTile?: boolean;
-  /** The page's `<h1>`: the product name on sign-in, "Verify email", "Imprint". */
+  /** The page's `<h1>` (see `headingAs`): the product name on sign-in, "Verify email",
+   *  "Imprint". */
   title?: ReactNode;
   /** The muted line under the title. */
   description?: ReactNode;
@@ -43,6 +44,16 @@ export interface AuthLayoutProps extends Omit<ComponentPropsWithoutRef<"div">, "
   card?: boolean;
   /** Extra classes for the card (or, with `card={false}`, the content column). */
   cardClassName?: string;
+  /**
+   * `false` draws the content column and the footer as plain `<div>`s instead of
+   * `<main>` and `<footer>` — for an AuthLayout embedded in a page that already has its
+   * landmarks (a preview, a docs page, a dialog), where a second `<main>` would nest
+   * one inside the other. Default `true`: on its own route it IS the page.
+   */
+  landmark?: boolean;
+  /** The title's element. Default `h1` — the page's heading; an embedded layout takes
+   *  the level of where it sits (`h2`, `h3`). */
+  headingAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
 /** Keeps the page clear of a notch, the rounded corners and the home indicator on a
@@ -87,10 +98,14 @@ export function AuthLayout({
   width = "narrow",
   card = true,
   cardClassName,
+  landmark = true,
+  headingAs: Heading = "h1",
   className,
   style,
   ...rest
 }: AuthLayoutProps) {
+  const Main = landmark ? "main" : "div";
+  const Footer = landmark ? "footer" : "div";
   const wide = width === "wide";
   const hasCorner = languageMenu != null || themeToggle != null;
   const hasHeader = logo != null || title != null || description != null;
@@ -109,14 +124,14 @@ export function AuthLayout({
           <div className="mb-2">{logo}</div>
         ))}
       {title != null && (
-        <h1
+        <Heading
           className={cn(
             "font-semibold leading-tight text-[var(--text-primary)]",
             wide ? "text-2xl md:text-3xl" : "text-2xl",
           )}
         >
           {title}
-        </h1>
+        </Heading>
       )}
       {description != null && <p className="text-sm text-[var(--text-muted)]">{description}</p>}
     </div>
@@ -142,7 +157,8 @@ export function AuthLayout({
           {languageMenu}
         </div>
       )}
-      <main
+      <Main
+        data-slot="auth-layout-main"
         className={cn(
           // `relative` contains any `sr-only` child (see AppShell's <main>).
           "relative flex w-full flex-1 flex-col",
@@ -157,9 +173,9 @@ export function AuthLayout({
             <div className={cardClassName}>{body}</div>
           )}
         </div>
-      </main>
+      </Main>
       {footer != null && footer !== false && (
-        <footer className="pt-4">
+        <Footer data-slot="auth-layout-footer" className="pt-4">
           {footerLabel ? (
             <nav aria-label={footerLabel} className={FOOTER_CLASS}>
               {footer}
@@ -167,7 +183,7 @@ export function AuthLayout({
           ) : (
             <div className={FOOTER_CLASS}>{footer}</div>
           )}
-        </footer>
+        </Footer>
       )}
     </div>
   );

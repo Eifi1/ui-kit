@@ -53,6 +53,38 @@ describe("ErrorBoundary", () => {
     expect(screen.getByText("fine")).toBeInTheDocument();
   });
 
+  it("a resetKeys change in the update that throws does not reset; a later change does", () => {
+    const onReset = vi.fn();
+    let renders = 0;
+    function Page({ path }: { path: string }) {
+      renders++;
+      if (path === "/broken") throw new Error("kaputt");
+      return <p>{path}</p>;
+    }
+    const at = (path: string) => (
+      <ErrorBoundary resetKeys={[path]} onReset={onReset}>
+        <Page path={path} />
+      </ErrorBoundary>
+    );
+    const { rerender } = render(at("/a"));
+    expect(screen.getByText("/a")).toBeInTheDocument();
+    // Navigate to a page that throws: the key changes in the same update.
+    renders = 0;
+    rerender(at("/broken"));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(onReset).not.toHaveBeenCalled();
+    const brokenRenders = renders;
+    // An unrelated re-render with the same keys keeps the error.
+    rerender(at("/broken"));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(onReset).not.toHaveBeenCalled();
+    expect(renders).toBe(brokenRenders);
+    // Navigating away clears it, once.
+    rerender(at("/b"));
+    expect(screen.getByText("/b")).toBeInTheDocument();
+    expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
   it("translates through the provider and shows details on request", () => {
     render(
       <UiKitProvider labels={{ errorBoundary: { title: "Etwas ist schiefgelaufen", details: "Fehlerdetails" } }}>

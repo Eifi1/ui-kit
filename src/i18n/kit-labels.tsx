@@ -276,9 +276,25 @@ export interface UiKitLabels {
   lightbox: LightboxLabels;
 }
 
-/** Any subset of the tree, one level deep — each namespace may be partial, and a
- *  namespace that holds a record (`dataTable.presets`) is merged key by key. */
-export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: Partial<UiKitLabels[K]> };
+/**
+ * A label override, as deep as the labels go: an object of labels (a namespace, or a
+ * record inside one such as `accountSettings.passkeys` or `dataTable.presets`) may be
+ * partial at every level, because the provider merges it key by key at every level.
+ * A leaf stays as it is: a string, a function-valued label (`(n) => …`), and anything
+ * that is not purely an object (a `ReactNode` union) is given whole.
+ */
+export type LabelOverride<T> = [T] extends [(...args: never[]) => unknown]
+  ? T
+  : [T] extends [readonly unknown[]]
+    ? T
+    : [T] extends [object]
+      ? { [K in keyof T]?: LabelOverride<T[K]> }
+      : T;
+
+/** Any subset of the tree — each namespace may be partial, and so may any record
+ *  inside one (`accountSettings.passkeys`, `dataTable.presets`): they are merged key
+ *  by key, at every depth. */
+export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: LabelOverride<UiKitLabels[K]> };
 
 /* ── English defaults for the namespaces defined here ────────────────────── */
 
@@ -439,7 +455,8 @@ export interface UiKitProviderProps {
    * The app's router link, used by every kit component that renders an in-app link
    * and was not handed its own `renderLink` — so `renderLink` stops being repeated on
    * each ListItem, Breadcrumbs, StatTile, Chip… (kastlan). A component's own
-   * `renderLink` wins; external links stay plain `<a>`.
+   * `renderLink` wins; external links and in-page `#anchor`s stay plain `<a>`, and a
+   * hash-router `#/path` is handed to it like `/path` (see `pickLinkRenderer`).
    */
   linkComponent?: KitLinkComponent;
   children: ReactNode;
@@ -477,14 +494,23 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-/** Two levels: namespaces, and inside a namespace a record-valued key (presets). */
-function mergeNamespace<T extends object>(base: T, over: Partial<T> | undefined): T {
+/** A record of labels to merge into — not a React element, which is an object too but
+ *  is a label given whole. */
+function isLabelRecord(v: unknown): v is Record<string, unknown> {
+  return isRecord(v) && !("$$typeof" in v);
+}
+
+/** Merged key by key at EVERY depth — a namespace, a record inside it
+ *  (`accountSettings.passkeys`, `dataTable.presets`), and so on down — to match
+ *  {@link LabelOverride}. An `undefined` is skipped at every depth, so it never blanks
+ *  out what is under it. */
+function mergeNamespace<T extends object>(base: T, over: LabelOverride<T> | Partial<T> | undefined): T {
   if (!over) return base;
   const out = { ...base } as Record<string, unknown>;
   for (const [k, v] of Object.entries(over)) {
     if (v === undefined) continue;
     const prev = out[k];
-    out[k] = isRecord(prev) && isRecord(v) ? { ...prev, ...v } : v;
+    out[k] = isLabelRecord(prev) && isLabelRecord(v) ? mergeNamespace(prev, v) : v;
   }
   return out as T;
 }

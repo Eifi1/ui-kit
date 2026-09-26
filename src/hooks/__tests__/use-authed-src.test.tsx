@@ -59,7 +59,7 @@ describe("useAuthedSrc", () => {
     expect(calls).toHaveBeenCalledTimes(1);
   });
 
-  it("revokes the object URL when the URL changes and on unmount, and aborts a superseded fetch", async () => {
+  it("revokes the object URL when the URL changes and on unmount, and aborts only a fetch in flight", async () => {
     const signals: AbortSignal[] = [];
     const fetcher: AuthedFetcher = async (_url, { signal }) => {
       signals.push(signal);
@@ -74,10 +74,28 @@ describe("useAuthedSrc", () => {
     expect(result.current.src).toBeNull();
     expect(result.current.status).toBe("loading");
     expect(revoked).toEqual(["blob:test/1"]);
-    expect(signals[0].aborted).toBe(true);
+    // The first request had finished: there is nothing to cancel, so no abort is sent.
+    expect(signals[0].aborted).toBe(false);
     await waitFor(() => expect(result.current.src).toBe("blob:test/2"));
     unmount();
     expect(revoked).toEqual(["blob:test/1", "blob:test/2"]);
+    expect(signals[1].aborted).toBe(false);
+  });
+
+  it("aborts a request still in flight when the URL changes or the hook unmounts", async () => {
+    const signals: AbortSignal[] = [];
+    const fetcher: AuthedFetcher = (_url, { signal }) => {
+      signals.push(signal);
+      return new Promise<Blob>(() => {});
+    };
+    const { rerender, unmount } = renderHook(({ url }) => useAuthedSrc(url, { fetcher }), {
+      initialProps: { url: "/a.png" },
+    });
+    rerender({ url: "/b.png" });
+    expect(signals[0].aborted).toBe(true);
+    expect(signals[1].aborted).toBe(false);
+    unmount();
+    expect(signals[1].aborted).toBe(true);
   });
 
   it("a response that lands after the URL changed creates nothing and sets nothing", async () => {

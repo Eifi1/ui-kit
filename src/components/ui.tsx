@@ -7,6 +7,7 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -307,7 +308,10 @@ function ButtonLink({
 }: ButtonLinkProps) {
   const kitLink = useKitLink();
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const Link = renderLink ?? kitLink;
+  // The same rule as every kit link (`pickLinkRenderer`): an external `href` or an
+  // in-page `#anchor` is never handed to the provider's router link, even without
+  // `external`.
+  const Link = pickLinkRenderer<KitLinkProps>(renderLink, kitLink, href);
   const newTab = !disabled && (external || target === "_blank");
   const cls = cn(
     buttonLook(variant, size, stretch, tone),

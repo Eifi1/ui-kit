@@ -81,8 +81,9 @@ export interface ErrorBoundaryProps {
    *  drop a cache, refetch. */
   onReset?: () => void;
   /**
-   * When any of these changes (compared with `Object.is`), a shown error is cleared and
-   * the children render again — pass the route path so leaving a broken page does not
+   * When any of these changes (compared with `Object.is`) AFTER an error was caught, the
+   * error is cleared and the children render again — a change in the same update that
+   * threw does not count (it is what the error was shown under) — pass the route path so leaving a broken page does not
    * carry its fallback to the next one (keksdose's `resetKey`).
    */
   resetKeys?: ReadonlyArray<unknown>;
@@ -134,8 +135,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.props.onError?.(error, info);
   }
 
-  componentDidUpdate(prev: ErrorBoundaryProps): void {
-    if (this.state.failed && keysChanged(prev.resetKeys, this.props.resetKeys)) this.reset();
+  componentDidUpdate(prev: ErrorBoundaryProps, prevState: ErrorBoundaryState): void {
+    // Only a change AFTER the error was caught clears it (react-error-boundary's rule).
+    // `prevState.failed` is false in the update that caught it: that update may well be
+    // the one that changed the keys too — a navigation to a page that throws, with
+    // `resetKeys={[pathname]}` — and resetting then would fire `onReset` for nothing and
+    // render the failing child a second time. From then on `prev.resetKeys` are the
+    // keys the error was shown under, so any change clears it.
+    if (this.state.failed && prevState.failed && keysChanged(prev.resetKeys, this.props.resetKeys)) {
+      this.reset();
+    }
   }
 
   reset = (): void => {
