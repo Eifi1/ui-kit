@@ -353,6 +353,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Table — empty, TableEmpty, density none and layout",
     "Table — header size and weight, valign on a table of inputs",
     "Table — framed, group, subtotal and total rows, dividers",
+    "Table — stack=\"phone\", a table of prose on a phone",
     "DescriptionItem — placeholder for a missing value",
   ],
   "tree-view": [

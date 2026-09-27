@@ -156,3 +156,41 @@ export function DescriptionPlaceholderDemo() {
     </Example>
   );
 }
+
+const TERMS: Array<[term: string, raises: string, costs: string]> = [
+  ["P — proportional", "A faster, firmer answer to every error", "Overshoot, and oscillation past a point"],
+  ["I — integral", "No steady offset left over time", "Slower settling, and wind-up after a saturated stretch"],
+  ["D — derivative", "Damping: it brakes before the target", "Noise amplified straight into the output"],
+];
+
+/** lenkbank L5 (0.15.2): a table of sentences stacks into labelled blocks on a phone. */
+export function TableStackDemo() {
+  return (
+    <Example label={'Table — stack="phone", a table of prose on a phone'} hint="narrow the window below 640px: each row becomes a labelled block">
+      <Table stack="phone" density="compact" aria-label="Controller terms">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Term</TableHeaderCell>
+            <TableHeaderCell>What raising it does</TableHeaderCell>
+            <TableHeaderCell>What it costs</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {TERMS.map(([term, raises, costs]) => (
+            <TableRow key={term}>
+              <TableCell>{term}</TableCell>
+              <TableCell>{raises}</TableCell>
+              <TableCell>{costs}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <Note>
+        Three columns of sentences leave each about 110px on a phone, two words a line. With{" "}
+        <code>stack=&quot;phone&quot;</code> each row is a block there: the first cell is its title and every
+        further cell sits under its column&apos;s header, read from the head row. The head is only visually
+        hidden. A table of figures should keep scrolling sideways, so it is opt-in.
+      </Note>
+    </Example>
+  );
+}

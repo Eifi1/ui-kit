@@ -89,3 +89,7 @@ Picked up by `^0.15.0`.
 - **ToggleGroup `overflow="wrap"`** (opt-in): when the options don't fit, the segments
   flow onto a second row and every label stays whole. The default `"truncate"` keeps
   one row with ellipses, as before (lenkbank L4).
+- **Table `stack="phone"`** (opt-in): below `sm` each body row becomes a block. The first
+  cell is its title, and every other cell sits under its column's header as a small label,
+  read from the head row. The head is visually hidden but still read by screen readers.
+  Use it for tables of prose; tables of figures should keep scrolling (lenkbank L5).
