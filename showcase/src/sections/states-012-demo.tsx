@@ -168,8 +168,8 @@ function ErrorBoundaryDemo() {
       <div className="mt-3">
         <Note>
           The default fallback is {code('EmptyState tone="danger"')} with {code('role="alert"')}, its words from{" "}
-          {code("errorBoundary.*")}. {code("showDetails")} adds a disclosure with the name, message and stack — for an
-          internal tool; a user learns nothing from a stack. A change in {code("resetKeys")} clears a shown error
+          {code("errorBoundary.*")}. {code("showDetails")} is the disclosure with the full report (on by default since 0.13 — see
+          the crash-screen examples below). A change in {code("resetKeys")} clears a shown error
           (pass the route path so a broken page does not carry its fallback to the next). The browser console logs
           the throw too — that is React, not a second failure.
         </Note>
