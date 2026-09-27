@@ -24,4 +24,4 @@ coverage/
 
 # Pages build of the showcase, made in CI only (base /ui-kit/)
 showcase/dist-pages
-.artifacts
+ci-artifacts
