@@ -147,3 +147,40 @@ describe("AuthedImage", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 });
+
+describe("ImageGrid file names and actions", () => {
+  it("splits a file name into stem and extension", async () => {
+    const { splitFileName } = await import("../image-grid");
+    expect(splitFileName("floor-plan-level-2.pdf")).toEqual(["floor-plan-level-2", ".pdf"]);
+    expect(splitFileName("archive.tar.gz")).toEqual(["archive.tar", ".gz"]);
+    expect(splitFileName(".env")).toEqual([".env", ""]);
+    expect(splitFileName("README")).toEqual(["README", ""]);
+    expect(splitFileName("notes.markdown-draft")).toEqual(["notes.markdown-draft", ""]);
+  });
+
+  it("truncates a file tile's stem and never its extension", () => {
+    render(<ImageGrid items={[{ key: 1, src: "/p.pdf", alt: "Plan", fileName: "floor-plan-level-2.pdf" }]} />);
+    const tile = screen.getByRole("button", { name: "Plan" });
+    const stem = within(tile).getByText("floor-plan-level-2");
+    const ext = within(tile).getByText(".pdf");
+    expect(stem).toHaveClass("truncate");
+    expect(ext).toHaveClass("shrink-0");
+    expect(ext).not.toHaveClass("truncate");
+  });
+
+  it("puts the actions on a backdrop of their own", () => {
+    render(
+      <ImageGrid
+        items={ITEMS.slice(0, 1)}
+        renderActions={() => (
+          <IconButton variant="overlay" aria-label="Delete">
+            <Trash2 />
+          </IconButton>
+        )}
+      />,
+    );
+    const group = screen.getByRole("group", { name: "Actions for Kitchen" });
+    expect(group.className).toContain("var(--bg-inverse)");
+    expect(group).toHaveClass("rounded-full");
+  });
+});

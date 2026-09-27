@@ -516,12 +516,17 @@ function FigureRow({
 }) {
   const own = figure.tone ?? (tileTone === "neutral" ? undefined : tileTone);
   const svTone = own === "none" ? undefined : own;
+  // The LABEL gives way, never the figure. This row used to wrap, so on a narrow tile a
+  // long label ("AUG (SIGNED)") dropped its amount onto a line of its own while the
+  // next row stayed on one — two layouts in one list, and a figure no longer beside
+  // the period it belongs to. Now the label breaks within itself and the amount stays
+  // on the label's first line, end-aligned like every other row.
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 text-xs tabular-nums text-[var(--text-muted)]">
-      <dt className="uppercase tracking-wide">{figure.label}</dt>
+    <div className="flex items-baseline gap-x-2 text-xs tabular-nums text-[var(--text-muted)]">
+      <dt className="min-w-0 uppercase tracking-wide [overflow-wrap:anywhere]">{figure.label}</dt>
       <dd
         data-private={priv}
-        className={cn("ms-auto whitespace-nowrap", svTone && [toneClass(svTone, figure.value), "opacity-75"])}
+        className={cn("ms-auto shrink-0 whitespace-nowrap", svTone && [toneClass(svTone, figure.value), "opacity-75"])}
       >
         {show(figure.value)}
       </dd>

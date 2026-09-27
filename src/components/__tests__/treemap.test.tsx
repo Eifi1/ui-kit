@@ -3,7 +3,7 @@ import { cloneElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, within } from "@testing-library/react";
 import { ChartContainer } from "../chart";
-import { PALETTE_HEX } from "../../theme/chart-palette";
+import { PALETTE_HEX, textOn } from "../../theme/chart-palette";
 
 /**
  * The tile chart, ported from keksdose's `category-treemap` suites.
@@ -105,9 +105,32 @@ describe("TreemapCell", () => {
     expect(container.querySelector("text")!.getAttribute("fill")).toBe(LIGHT_INK);
   });
 
-  it("inherits the ink for a fill it cannot measure", () => {
-    const { container } = renderCell({ width: 200, height: 60, name: "Groceries", fill: "var(--chart-3)" });
-    expect(container.querySelector("text")!.getAttribute("fill")).toBe("currentColor");
+  it("inherits the ink for a fill it cannot measure, and draws no halo in it", () => {
+    const { container } = renderCell({ width: 200, height: 60, name: "Groceries", fill: "var(--brand)" });
+    const text = container.querySelector("text")!;
+    expect(text.getAttribute("fill")).toBe("currentColor");
+    // Still overrides the inherited chart stroke, just without a tile-coloured ring.
+    expect(text.getAttribute("stroke")).toBe("none");
+  });
+
+  it("measures a bare chart token — what paletteFor hands a hand-built map", () => {
+    // jsdom resolves no custom properties, so the token reads as the built-in ramp.
+    const { container } = renderCell({ width: 200, height: 60, name: "Rent", fill: "var(--chart-1)" });
+    const text = container.querySelector("text")!;
+    expect(text.getAttribute("fill")).toBe(textOn(PALETTE_HEX.light[0]));
+    expect(text.getAttribute("fill")).not.toBe("currentColor");
+    expect(text.getAttribute("stroke")).toBe("var(--chart-1)");
+  });
+
+  it("draws no halo on a translucent fill, which would double the glyph edges", () => {
+    const { container } = renderCell({
+      width: 200,
+      height: 60,
+      name: "Gifts",
+      fill: "color-mix(in srgb, var(--chart-1) 20%, transparent)",
+      labelColor: "var(--text-primary)",
+    });
+    expect(container.querySelector("text")!.getAttribute("stroke")).toBe("none");
   });
 
   it("takes the caller's labelColor for a fill it cannot measure (keksdose B13)", () => {

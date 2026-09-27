@@ -36,8 +36,9 @@ export interface TreemapNode {
   value: number;
   /** Overrides the by-index palette colour for this tile — e.g. to paint every child
    *  in its parent group's colour, so the groups stay legible in one picture. A
-   *  concrete `#rrggbb` keeps the label ink measured; anything else (a CSS var) gets
-   *  `currentColor` ink, because there is nothing to measure — set `labelColor` then. */
+   *  concrete `#rrggbb` or a bare `var(--chart-N)` keeps the label ink measured;
+   *  anything else (another var, a `color-mix()`) gets `currentColor` ink, because
+   *  there is nothing to measure — set `labelColor` then. */
   fill?: string;
   /** The label's ink, for a `fill` the kit cannot measure (a `var()` or `color-mix()`):
    *  keksdose's recency plot fills with `color-mix(in srgb, var(--chart-1) N%,
@@ -146,6 +147,22 @@ function useChartTokenHex(): string[] {
   return joined.split(",");
 }
 
+const CHART_TOKEN_REF = /^var\(\s*--chart-(\d+)\s*\)$/;
+
+/**
+ * The hex a tile fill measures as: the fill itself when it is hex, the live token when
+ * it is a bare `var(--chart-N)` (what `paletteFor` returns), otherwise null. Without
+ * the token case a hand-built recharts map coloured with the kit's own `paletteFor`
+ * got `currentColor` ink — dark page text on dark indigo in the light theme.
+ */
+function measurableFill(fill: string, tokens: readonly string[]): string | null {
+  if (parseHex(fill)) return fill;
+  const m = CHART_TOKEN_REF.exec(fill.trim());
+  if (!m) return null;
+  const hex = tokens[Number(m[1]) - 1];
+  return hex && parseHex(hex) ? hex : null;
+}
+
 // ── Tile ──────────────────────────────────────────────────────────────────
 
 const LABEL_FONT_SIZE = 12;
@@ -214,6 +231,8 @@ export function TreemapCell({
   nodeNote,
   dir = "ltr",
 }: TreemapCellProps) {
+  // Before the early return: a hook has to run on every render of the cell.
+  const tokenHex = useChartTokenHex();
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -223,7 +242,13 @@ export function TreemapCell({
   const pw = Math.round(width);
   const ph = Math.round(height);
   const tileFill = fill ?? "var(--chart-1)";
-  const ink = labelColor ?? textOn(tileFill);
+  const measured = measurableFill(tileFill, tokenHex);
+  const ink = labelColor ?? (measured ? textOn(measured) : "currentColor");
+  // The halo only on an OPAQUE fill we could measure. A translucent fill (a
+  // `color-mix(… transparent)`) composited twice — once as the tile, once as the halo
+  // over it — draws a darker ring round every glyph, which read as doubled text on the
+  // faded tiles. `none` still overrides the inherited chart `stroke`.
+  const halo = measured ? tileFill : "none";
   // Below ~44x20 there is no room for a readable word, so no label at all rather than
   // a one-letter stub bleeding over the tile edge.
   const label = pw >= 44 && ph >= 20 ? fitLabel(name ?? "", pw, LABEL_FONT_SIZE) : null;
@@ -284,7 +309,7 @@ export function TreemapCell({
           y={py + 15}
           direction={dir}
           fill={ink}
-          stroke={tileFill}
+          stroke={halo}
           strokeWidth={2.5}
           strokeLinejoin="round"
           paintOrder="stroke"
@@ -302,7 +327,7 @@ export function TreemapCell({
           direction={dir}
           fill={ink}
           fillOpacity={0.85}
-          stroke={tileFill}
+          stroke={halo}
           strokeWidth={2.5}
           strokeLinejoin="round"
           paintOrder="stroke"

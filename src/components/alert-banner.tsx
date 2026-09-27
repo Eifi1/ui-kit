@@ -271,6 +271,13 @@ export function AlertBanner({
     inlineRow ? "inline-flex items-center" : strip ? "flex flex-wrap items-center gap-y-1" : "flex items-start",
     sm ? "gap-1.5 text-xs" : inline ? "gap-1.5 text-sm" : "gap-2 text-sm",
   );
+  // The strip's message claims 12rem before anything shrinks. `flex-1` is a 0 basis,
+  // which never makes a wrapping row wrap — the action and the × squeezed the message
+  // into a three-word column on a phone instead. With a real basis the action drops to
+  // a second line once message + action no longer fit, and the message keeps the width.
+  const grow = strip ? "flex-[1_1_12rem]" : "flex-1";
+  // Inside a whole-row banner's button or link, which then carries `grow` itself.
+  const nested = interactive && (onDismiss !== undefined || (action !== undefined && action !== null));
   const frame = inline
     ? ""
     : cn(
@@ -283,7 +290,7 @@ export function AlertBanner({
   const content = (
     <>
       {glyph}
-      <span className={cn(!inlineRow && "flex-1", "min-w-0 text-start")}>{children}</span>
+      <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>{children}</span>
       {interactive && (
         <ChevronRight
           aria-hidden
@@ -346,7 +353,8 @@ export function AlertBanner({
   const split = dismiss !== null || trailing !== null;
   const actionClass = split
     ? cn(
-        "flex min-w-0 flex-1 text-start",
+        "flex min-w-0 text-start",
+        grow,
         sm ? "gap-1.5" : "gap-2",
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",

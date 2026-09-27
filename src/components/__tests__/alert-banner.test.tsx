@@ -62,6 +62,31 @@ describe("AlertBanner 0.10.0", () => {
     expect(onUpdate).toHaveBeenCalledOnce();
   });
 
+  it("gives a strip's message a real basis, so a crowded row wraps the action instead of crushing the text", () => {
+    render(
+      <AlertBanner tone="warning" variant="strip" data-testid="strip" action={<button>Update</button>} onDismiss={() => {}}>
+        Your trial ends in 3 days.
+      </AlertBanner>,
+    );
+    const strip = screen.getByTestId("strip");
+    expect(strip).toHaveClass("flex-wrap");
+    const message = screen.getByText("Your trial ends in 3 days.");
+    // `flex-1` is a zero basis, which never makes a wrapping row wrap.
+    expect(message).toHaveClass("flex-[1_1_12rem]");
+    expect(message).not.toHaveClass("flex-1");
+  });
+
+  it("gives a whole-row strip's button the basis, not the text inside it", () => {
+    render(
+      <AlertBanner tone="info" variant="strip" onClick={() => {}} action={<button>Exit</button>}>
+        Tour mode
+      </AlertBanner>,
+    );
+    const row = screen.getByRole("button", { name: /Tour mode/ });
+    expect(row).toHaveClass("flex-[1_1_12rem]");
+    expect(screen.getByText("Tour mode")).toHaveClass("flex-1");
+  });
+
   it("puts the action beside a whole-row button rather than inside it", () => {
     const onRow = vi.fn();
     const onAction = vi.fn();

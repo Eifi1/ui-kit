@@ -113,7 +113,7 @@ import * as i18nZh from "../i18n/locales/zh";
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.13.0: the crash screen's report helpers — `isChunkLoadError`, `formatCrashReport`,
   // `crashFingerprint` (+3).
-  ["@eifi1/ui-kit", barrel, 476],
+  ["@eifi1/ui-kit", barrel, 477],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 58],
@@ -126,7 +126,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
-  // kastlan 51/52: `IntegerField` and `MoneyField` (+2).
+  // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).
   // 0.12.0: `useWizardStepValidate` and `useWizardNextGate` (+2 here and in the barrel),
   // the non-form step hooks kastlan kept in shared/components/wizard.
   ["@eifi1/ui-kit/wizard", wizard, 12],

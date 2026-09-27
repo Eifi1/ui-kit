@@ -376,3 +376,25 @@ describe("heatmapWindowEnd", () => {
     expect(heatmapWindowEnd("2026-01-01", "2026-12-31", "not a date", "", "2026-06-01")).toBe("2026-12-31");
   });
 });
+
+describe("CalendarHeatmap weekday labels", () => {
+  it("keeps the short names where they fit the label column", () => {
+    render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} />);
+    const tue = screen.getByRole("rowheader", { name: "Tuesday" });
+    expect(tue).toHaveTextContent("Tue");
+  });
+
+  it("falls back to the narrow form, for all seven, when a short name would not fit", () => {
+    // Arabic has no abbreviated weekday: its "short" Thursday is the full "الخميس",
+    // which overran the 2rem column.
+    const thursday = new Date(2024, 0, 11);
+    expect(thursday.toLocaleDateString("ar-EG", { weekday: "short" }).length).toBeGreaterThan(4);
+    render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale="ar-EG" />);
+    const printed = screen.getAllByRole("rowheader").map((h) => h.textContent ?? "").filter(Boolean);
+    expect(printed.length).toBeGreaterThan(0);
+    for (const text of printed) expect([...text].length).toBeLessThanOrEqual(4);
+    // The full name is still each row's accessible name.
+    const long = thursday.toLocaleDateString("ar-EG", { weekday: "long" });
+    expect(screen.getByRole("rowheader", { name: long })).toBeInTheDocument();
+  });
+});
