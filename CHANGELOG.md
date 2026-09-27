@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.14.1](https://github.com/Eifi1/ui-kit/compare/v0.14.0...v0.14.1) (2026-09-27)
+
+### Fixed
+
+* **page-header:** keep the title's words in inline, align the whole row ([fba2c5b](https://github.com/Eifi1/ui-kit/commit/fba2c5bf667b423619fba6bbd991da09284509f4))
+
 ## [0.14.0](https://github.com/Eifi1/ui-kit/compare/v0.13.1...v0.14.0) (2026-09-27)
 
 ### Added
