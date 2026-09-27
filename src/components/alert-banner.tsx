@@ -267,8 +267,17 @@ export function AlertBanner({
   // phone a long message plus an action would otherwise squeeze the text into a narrow
   // column, so the action drops under it instead. A box may wrap its text, so it
   // top-aligns and nudges the glyph onto the first line.
+  // A BOX with an action wraps too, below sm only (kastlan 53): the verify-email box
+  // squeezed "Please confirm your email address…" into a ~100px column beside a
+  // "Resend verification email" button. There the action takes a line of its own under
+  // the message, and the × stays at the top end; from sm up the box is one row as before.
+  const boxWraps = !inline && !strip && action !== undefined && action !== null;
   const row = cn(
-    inlineRow ? "inline-flex items-center" : strip ? "flex flex-wrap items-center gap-y-1" : "flex items-start",
+    inlineRow
+      ? "inline-flex items-center"
+      : strip
+        ? "flex flex-wrap items-center gap-y-1"
+        : cn("flex items-start", boxWraps && "max-sm:flex-wrap max-sm:gap-y-2"),
     sm ? "gap-1.5 text-xs" : inline ? "gap-1.5 text-sm" : "gap-2 text-sm",
   );
   // The strip's message claims 12rem before anything shrinks. `flex-1` is a 0 basis,
@@ -324,7 +333,15 @@ export function AlertBanner({
   // `relative z-10` so it stays clickable over a whole-row banner's stretched target.
   const trailing =
     action !== undefined && action !== null ? (
-      <div className={cn("relative z-10 flex shrink-0 items-center gap-2", !strip && !inlineRow && "self-center", strip && "ms-auto")}>
+      <div
+        className={cn(
+          "relative z-10 flex shrink-0 items-center gap-2",
+          !strip && !inlineRow && "self-center",
+          strip && "ms-auto",
+          // Last, on a line of its own, lined up with the message (past the glyph).
+          boxWraps && cn("max-sm:order-last max-sm:basis-full", glyph && (sm ? "max-sm:ps-5" : "max-sm:ps-6")),
+        )}
+      >
         {action}
       </div>
     ) : null;
