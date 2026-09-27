@@ -20,6 +20,17 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.14.2](https://github.com/Eifi1/ui-kit/compare/v0.14.1...v0.14.2) (2026-09-27)
+
+### Added
+
+* IntegerField, MoneyField and AmountInput onCommit (kastlan 51, 52) ([054e159](https://github.com/Eifi1/ui-kit/commit/054e1590fcec5674105806768d5bd9da00a0205b))
+
+### Fixed
+
+* **feedback-dialog:** requireBody={false} for title-only reports; blank subjects never send ([661dc57](https://github.com/Eifi1/ui-kit/commit/661dc574d31168b4cb1bb5815fe51c3a8076b56c))
+* **page-header:** secondaryActions share the actions' wrapped row on a phone ([7f72813](https://github.com/Eifi1/ui-kit/commit/7f72813df7199811ffccb82272c230931e569adc))
+
 ## [0.14.1](https://github.com/Eifi1/ui-kit/compare/v0.14.0...v0.14.1) (2026-09-27)
 
 ### Fixed
