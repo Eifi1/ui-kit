@@ -50,8 +50,11 @@ function physicalSide(side: TooltipSide, dir: Direction): PhysicalSide {
  *  the viewport as well, for narrow screens where 20rem is already most of it.
  *  `side` is a preference rather than an instruction for the PORTALLED variant,
  *  which measures the bubble and turns it round when it would not fit
- *  (Steering Design feedback #126). The CSS-only one never learns its own size,
- *  so there `side` is still the whole of the placement. */
+ *  (Steering Design feedback #126). The CSS-placed one never turns round, so there
+ *  `side` is still the whole of which side it is on — but since 0.14 it is slid back
+ *  along the cross axis when it would cross the viewport edge (keksdose G7), which the
+ *  viewport term in this cap is what makes possible: a bubble never wider than the glass
+ *  minus the margins always fits once slid. */
 const TOOLTIP_SURFACE =
   "w-max max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
 
@@ -220,6 +223,37 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy"> & { si
  * existing app tests find without a hover (see above): flipping it would turn every
  * `getByRole("tooltip")` written against 0.12 into a failure in all three apps at once.
  * Reach for `lazy` wherever a `portal` was pinned only to keep a test's DOM clean.
+ *
+ * ⚠️ **The in-place bubble is clamped to the viewport when it opens (keksdose G7).** The
+ * portalled bubble has always measured itself and been pushed back onto the glass
+ * ({@link placeTooltip}); the in-place one never learnt its own size, so `side` was the
+ * whole of its placement and a `top` / `bottom` bubble sat centred on its trigger
+ * whatever that cost. The cost shows on a phone: long labels live at a row's START edge
+ * — a gcloud command in keksdose's jobs panel, a canned reply in a support thread — and
+ * a 20rem bubble centred on a trigger 16px from the edge hangs half its text off the
+ * screen. keksdose pinned `portal` on those sites for that alone, which gave up `lazy`'s
+ * point (the cheap, in-place bubble) to buy a placement.
+ *
+ * So now, when an in-place bubble goes up (default or `lazy`), a layout effect measures
+ * it and, if it crosses the viewport edge minus the same margin the portalled bubble
+ * keeps, slides it back along its CROSS axis only — sideways for `top` / `bottom`, up or
+ * down for the four side placements — with an inline `transform`, which composes with the
+ * placement classes' own `translate`. The main axis is left alone on purpose: sliding a
+ * `start` bubble along the main axis would slide it over its own trigger, and turning it
+ * round is a measured-placement decision this CSS-placed bubble does not make (pass
+ * `portal` for that). The width is already capped to the viewport (see
+ * `TOOLTIP_SURFACE`), so a bubble can always fit once slid, and a long label wraps
+ * instead of growing past the glass.
+ *
+ * Why on by default, with no prop? Because it is a no-op for every bubble that already
+ * fits — the shift is zero unless the bubble would overflow — so the only placements it
+ * changes are ones that were broken. The maths is in physical viewport pixels, so it
+ * needs no `dir`: an RTL row puts its long label at the RIGHT edge and gets slid left by
+ * the same code. Under jsdom there is no layout — every rect is zero-sized — and a
+ * zero-sized bubble is taken to be unmeasured, so tests see no transform at all. It is
+ * measured on open (and when the label or side changes while open), not on every scroll:
+ * an in-place bubble follows its trigger for free, and a page that scrolls sideways under
+ * an open tooltip is not a case worth a listener per tooltip.
  */
 export function Tooltip({
   label,
@@ -300,6 +334,10 @@ function InPlaceTooltip({
   const [dir, setDir] = useState<Direction>("ltr");
   const open = (hovered || focused) && !dismissed;
   useEscapeKey(() => setDismissed(true), open);
+  // keksdose G7: slide an open in-place bubble back onto the screen. See "The in-place
+  // bubble is clamped" on {@link Tooltip}.
+  const bubbleRef = useRef<HTMLSpanElement | null>(null);
+  const shift = useViewportClamp(bubbleRef, open && !clipped, side, label);
   // At mount, before the first paint: the in-place bubble inside a scroller is the
   // phantom-scroll bug whether or not anyone opens it.
   useLayoutEffect(() => {
@@ -353,9 +391,11 @@ function InPlaceTooltip({
         // CSS that shows it) that can disagree for a frame after Escape.
         open && (
           <span
+            ref={bubbleRef}
             id={id}
             role="tooltip"
             data-private={redact ? "" : undefined}
+            style={shiftStyle(shift)}
             className={cn(TOOLTIP_SURFACE, "pointer-events-none absolute z-50 opacity-100", sidePositionClass[side])}
           >
             {label}
@@ -363,8 +403,10 @@ function InPlaceTooltip({
         )
       ) : (
         <span
+          ref={bubbleRef}
           id={id}
           role="tooltip"
+          style={shiftStyle(shift)}
           // The `hidden` ATTRIBUTE, not an opacity class: dismissing has to take the
           // bubble out of the accessibility tree as well as off the screen, or a screen
           // reader still reads out the description of a bubble the user just closed.
@@ -412,6 +454,71 @@ const TOOLTIP_GAP = 4;
 /** How close to the viewport edge a bubble may sit. Not zero: a label flush
  *  against the glass reads as clipped even when every character is on screen. */
 const TOOLTIP_MARGIN = 4;
+
+/** A cross-axis slide, in viewport pixels, for an in-place bubble. */
+interface Shift {
+  x: number;
+  y: number;
+}
+
+const NO_SHIFT: Shift = { x: 0, y: 0 };
+
+/** How far to slide the span `[low, high]` so it sits inside `[TOOLTIP_MARGIN,
+ *  extent - TOOLTIP_MARGIN]`. Zero when it already does. The start edge wins when the
+ *  span is wider than the room — as in {@link clamp}, the start of a label is the half
+ *  worth keeping (and the width cap means that only happens on a viewport narrower than
+ *  twice the margin). */
+function slideInto(low: number, high: number, extent: number): number {
+  if (low < TOOLTIP_MARGIN) return TOOLTIP_MARGIN - low;
+  if (high > extent - TOOLTIP_MARGIN) return Math.max(extent - TOOLTIP_MARGIN - high, TOOLTIP_MARGIN - low);
+  return 0;
+}
+
+/**
+ * The in-place bubble's viewport clamp (keksdose G7): while `active`, measure the bubble
+ * in a LAYOUT effect — before paint, so there is no frame with the label off the screen —
+ * and return the cross-axis slide that brings it inside the viewport minus
+ * `TOOLTIP_MARGIN`. `top` / `bottom` slide along x; `left` / `right` / `start` / `end`
+ * along y. {@link NO_SHIFT} while closed, so the next open measures the bubble where the
+ * CSS alone puts it.
+ *
+ * The rect it reads already includes the slide it applied last time (a label that
+ * changed while open), so that slide is taken back out before deciding the new one.
+ * A zero-sized rect means no layout (jsdom, `display: none`) and leaves the bubble put.
+ */
+function useViewportClamp(
+  bubbleRef: RefObject<HTMLSpanElement | null>,
+  active: boolean,
+  side: TooltipSide,
+  label: ReactNode,
+): Shift {
+  const [shift, setShift] = useState<Shift>(NO_SHIFT);
+  useLayoutEffect(() => {
+    const el = bubbleRef.current;
+    if (!active || !el) {
+      setShift(NO_SHIFT);
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return;
+    const horizontal = side === "top" || side === "bottom";
+    setShift((previous) => {
+      const next = horizontal
+        ? { x: slideInto(r.left - previous.x, r.right - previous.x, window.innerWidth), y: 0 }
+        : { x: 0, y: slideInto(r.top - previous.y, r.bottom - previous.y, window.innerHeight) };
+      return next.x === previous.x && next.y === previous.y ? previous : next;
+    });
+  }, [bubbleRef, active, side, label]);
+  return shift;
+}
+
+/** The inline style for a slide: none at all when there is nothing to slide, so a bubble
+ *  that fits renders exactly as it did before G7. `transform` rather than `translate`
+ *  because the placement classes own the `translate` property (Tailwind v4's
+ *  `-translate-x-1/2`); the two compose instead of one replacing the other. */
+function shiftStyle(shift: Shift) {
+  return shift.x === 0 && shift.y === 0 ? undefined : { transform: `translate(${shift.x}px, ${shift.y}px)` };
+}
 
 const portalTransformBySide: Record<PhysicalSide, string> = {
   right: "translate(0, -50%)",
