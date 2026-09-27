@@ -16,6 +16,14 @@ import { cn } from "../lib/cn";
  * (support-thread:153/223) at `text-[11px]` by hand — 10px read as a footnote under a
  * figure that size, 12px competed with it. Named `md` rather than slotted in order
  * because `sm` was already the default and renaming it would move every caller.
+ *
+ * `md` is also the heading over a CHART COLUMN (lenkbank P9): the small label centred
+ * over each of a pair of facing charts, or over each column of a small-multiples grid.
+ * There the label names a plot, not a section of the page, so `sm` (12px, the page's
+ * section heading) out-ranks the card title above it, and `xs` (10px, a legend's
+ * title) sinks below the axis ticks it sits beside. Rule of thumb: `xs` inside a
+ * control (legend, menu), `md` over a figure or a plot, `sm` over a block of page
+ * content.
  */
 export type SectionLabelSize = "xs" | "md" | "sm";
 
@@ -34,6 +42,31 @@ export const SECTION_LABEL_CLASS: Record<SectionLabelSize, string> = {
   sm: "text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]",
 };
 
+/**
+ * `plain` (default): the label alone, as above.
+ *
+ * `band` (0.13, keksdose F5): the label on a full-width `surface-2` bar with a bottom
+ * border — the day-group header of keksdose's mobile transaction list
+ * (mobile-transaction-list.tsx:171), which separates one day's rows from the next.
+ * Its type is kept as keksdose drew it — `font-medium` in the SECONDARY text colour,
+ * not the plain label's semibold muted — so adopting the kit does not restyle a live
+ * list: the bar already sets the label apart, and needs no extra weight. The padding (`px-4 py-2`) lines the text up with a
+ * `ListItem density="comfortable"` row below it; override it with `className` for a
+ * list at another density. A sticky header is the caller's: add `sticky top-0`.
+ */
+export type SectionLabelVariant = "plain" | "band";
+
+/** The band's own type and box, per size — spelled out rather than merged over
+ *  {@link SECTION_LABEL_CLASS}, so the result does not hang on tailwind-merge telling
+ *  a font-size `text-[…]` from a colour `text-[var(…)]`. */
+const SECTION_LABEL_BAND_CLASS: Record<SectionLabelSize, string> = {
+  xs: "text-[10px]",
+  md: "text-[11px]",
+  sm: "text-xs",
+};
+const BAND =
+  "block border-b border-[var(--border)] bg-[var(--bg-surface-2)] px-4 py-2 font-medium uppercase tracking-wide text-[var(--text-secondary)]";
+
 type SectionLabelElement = "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div" | "legend";
 
 export interface SectionLabelProps extends ComponentPropsWithoutRef<"h3"> {
@@ -45,6 +78,9 @@ export interface SectionLabelProps extends ComponentPropsWithoutRef<"h3"> {
    */
   as?: SectionLabelElement;
   size?: SectionLabelSize;
+  /** `band` draws the label on a `surface-2` bar with a bottom border — a list's group
+   *  header. See {@link SectionLabelVariant}. */
+  variant?: SectionLabelVariant;
   children: ReactNode;
 }
 
@@ -55,10 +91,18 @@ export interface SectionLabelProps extends ComponentPropsWithoutRef<"h3"> {
  * 10px version on a menu row. One component, the token colour, and the level chosen
  * where the outline is known.
  */
-export function SectionLabel({ as = "h3", size = "sm", className, children, ...rest }: SectionLabelProps) {
+export function SectionLabel({
+  as = "h3",
+  size = "sm",
+  variant = "plain",
+  className,
+  children,
+  ...rest
+}: SectionLabelProps) {
   const Tag = as as ElementType;
+  const type = variant === "band" ? cn(SECTION_LABEL_BAND_CLASS[size], BAND) : SECTION_LABEL_CLASS[size];
   return (
-    <Tag {...rest} className={cn(SECTION_LABEL_CLASS[size], className)}>
+    <Tag {...rest} className={cn(type, className)}>
       {children}
     </Tag>
   );
