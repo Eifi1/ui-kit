@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
+import { formatRelativeTime } from "../lib/format";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
@@ -195,7 +196,13 @@ export function FeedbackThread({
                   // (keksdose F0 / dev#523).
                   <Tooltip label={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}>
                     <time dateTime={date.toISOString()} className="tabular-nums">
-                      {formatRelativeTime(date, reference, locale)}
+                      {formatRelativeTime(date, {
+                        now: reference,
+                        locale,
+                        // Past the kit's day steps it is a date: "2 weeks ago" makes
+                        // the reader do arithmetic the date already did.
+                        absoluteAfterDays: 6.5,
+                      })}
                     </time>
                   </Tooltip>
                 )}
@@ -286,27 +293,6 @@ function useMinuteClock(active: boolean): number {
 function toDate(value: Date | string | number): Date | null {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
-}
-
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-
-/**
- * "just now", "5 minutes ago", "yesterday", "3 days ago" — `Intl.RelativeTimeFormat`
- * in `locale`, so the grammar is the language's. Past a week it is a date: "12 days
- * ago" makes the reader do arithmetic that the date already did. The full date and
- * time are in the `<time>`'s Tooltip.
- */
-function formatRelativeTime(date: Date, now: number, locale: string | undefined): string {
-  const diff = date.getTime() - now;
-  const abs = Math.abs(diff);
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  if (abs < 45_000) return rtf.format(0, "second");
-  if (abs < 45 * MINUTE) return rtf.format(Math.round(diff / MINUTE), "minute");
-  if (abs < 22 * HOUR) return rtf.format(Math.round(diff / HOUR), "hour");
-  if (abs < 7 * DAY) return rtf.format(Math.round(diff / DAY), "day");
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
 }
 
 /* ── Composer ─────────────────────────────────────────────────────────────── */
