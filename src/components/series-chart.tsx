@@ -744,10 +744,16 @@ export function visibleSeries(
     .filter((entry) => !hidden.has(entry.key));
 }
 
-/** A series' name with its unit after it: "Velocity (mm/s)". */
+/** A series' name with its unit after it: "Velocity (mm/s)" — unless the name already
+ *  ends with it. lenkbank's motion series carry "(mm/s)" in their label for the desktop
+ *  tooltip, where every axis is drawn; the budget then read "… (mm/s) (mm/s)" (0.15.1).
+ *  A label that says its unit keeps saying it once, whichever of the two an app chose. */
 function withUnit(label: ReactNode, unit: string | undefined): ReactNode {
   if (!unit) return label;
-  if (typeof label === "string" || typeof label === "number") return `${label} (${unit})`;
+  if (typeof label === "string" || typeof label === "number") {
+    const text = String(label);
+    return text.trimEnd().endsWith(`(${unit})`) ? label : `${text} (${unit})`;
+  }
   return (
     <>
       {label} ({unit})

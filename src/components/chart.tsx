@@ -297,7 +297,11 @@ export function ChartTooltipContent({
     <div
       ref={tipRef}
       style={boundaryRef ? { transform: flip ? "translateX(calc(-100% - 12px))" : "translateX(12px)" } : undefined}
-      className="min-w-[9rem] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-2 text-xs shadow-xl"
+      // Capped at the viewport: six long series names (lenkbank's German motion
+      // labels) made the box wider than a 390px chart, and recharts, which keeps a box
+      // inside the plot only when it fits, let it run off the edge with the values cut.
+      // Names wrap inside the cap; the values never do.
+      className="min-w-[9rem] max-w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-2 text-xs shadow-xl"
     >
       {!hideLabel && label != null && (
         <div className="mb-1.5 font-medium text-[var(--text-primary)]">
@@ -333,8 +337,11 @@ export function ChartTooltipContent({
                 )}
                 style={{ backgroundColor: color }}
               />
-              <span className="text-[var(--text-muted)]">{name}</span>
-              <span data-private className="ms-auto font-mono font-medium tabular-nums text-[var(--text-primary)]">
+              <span className="min-w-0 break-words text-[var(--text-muted)]">{name}</span>
+              <span
+                data-private
+                className="ms-auto shrink-0 whitespace-nowrap font-mono font-medium tabular-nums text-[var(--text-primary)]"
+              >
                 {shown}
               </span>
             </div>

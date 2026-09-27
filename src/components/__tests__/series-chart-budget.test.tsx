@@ -118,6 +118,19 @@ describe("seriesLegendEntries — units of the axes not drawn", () => {
   });
 });
 
+describe("a label that already says its unit (lenkbank, 0.15.1)", () => {
+  it("is not given the unit a second time", () => {
+    const labelled: SeriesChartSeries[] = [
+      { key: "pos", label: "Zahnstangengeschwindigkeit (mm)", axis: "pos" },
+      { key: "acc", label: "Beschleunigung (mm/s²) ", axis: "acc" },
+      { key: "load", label: "Rack load", axis: "load" },
+    ];
+    expect(
+      seriesLegendEntries(labelled, { axes: AXES, budgeted: ["pos", "acc", "load"] }).map((entry) => entry.label),
+    ).toEqual(["Zahnstangengeschwindigkeit (mm)", "Beschleunigung (mm/s²) ", "Rack load (N)"]);
+  });
+});
+
 describe("SeriesChart — maxVisibleAxes", () => {
   const titles = () => ["Velocity (mm/s)", "Position (mm)", "Acceleration", "Load (N)"].filter((t) => screen.queryByText(t));
 
