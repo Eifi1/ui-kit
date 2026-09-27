@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PageHeader } from "../page-header";
 
 const classes = (el: Element) => el.className.split(/\s+/);
@@ -127,5 +127,70 @@ describe("PageHeader inline keeps whole words in the title (keksdose H1)", () =>
     render(<PageHeader title="Payees" truncateTitle mobileLayout="inline" actions={<button type="button">Add</button>} />);
     expect(classes(screen.getByRole("heading", { level: 1 }).parentElement!)).toContain("min-w-0");
     expect(classes(group("Add").parentElement!)).not.toContain("flex-wrap");
+  });
+});
+
+describe("PageHeader secondaryActions share the actions' wrapped row (keksdose, after H1)", () => {
+  type Callback = () => void;
+  let callbacks: Callback[] = [];
+  const rects = new Map<Element, { top: number; bottom: number; height: number }>();
+
+  beforeEach(() => {
+    callbacks = [];
+    rects.clear();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private cb: Callback) {
+          callbacks.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const r = rects.get(this) ?? { top: 0, bottom: 0, height: 0 };
+      return { ...r, left: 0, right: 0, width: 0, x: 0, y: r.top, toJSON: () => ({}) } as DOMRect;
+    });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const budget = () =>
+    render(
+      <PageHeader
+        title="Monatsbudget"
+        size="compact"
+        mobileLayout="inline"
+        actions={<button type="button">Next month</button>}
+        secondaryActions={<button type="button">Collapse all</button>}
+      />,
+    );
+  const layout = (actionsTop: number) => {
+    const title = screen.getByRole("heading", { level: 1 }).parentElement!;
+    rects.set(title, { top: 0, bottom: 28, height: 28 });
+    rects.set(group("Next month"), { top: actionsTop, bottom: actionsTop + 32, height: 32 });
+    act(() => callbacks.forEach((cb) => cb()));
+  };
+
+  it("drops the full-width basis once the actions sit below the title", () => {
+    budget();
+    layout(36);
+    expect(classes(group("Collapse all"))).not.toContain("basis-full");
+    expect(classes(group("Collapse all"))).toContain("sm:basis-auto");
+  });
+
+  it("keeps its own row while the actions share the title's row", () => {
+    budget();
+    layout(0);
+    expect(classes(group("Collapse all"))).toContain("basis-full");
+  });
+
+  it("keeps the 0.14.0 layout without layout (jsdom)", () => {
+    budget();
+    act(() => callbacks.forEach((cb) => cb()));
+    expect(classes(group("Collapse all"))).toContain("basis-full");
   });
 });

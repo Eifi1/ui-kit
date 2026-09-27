@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { SECTION_LABEL_CLASS } from "./text";
@@ -168,6 +169,37 @@ export function PageHeader({
   // wraps instead: actions that do not fit go to a line of their own, as the app's old
   // `flex-wrap` header did.
   const keepsWords = mobileLayout === "inline" && !truncateTitle;
+  // keksdose, after H1: once the actions have wrapped below the title, the phone's
+  // header was THREE rows — title / actions / secondary — where the app's old header
+  // shared the second row between the month nav and the toggles (~48px of phone
+  // height). So the secondary group's full-width basis (G6b: a row of its own) is
+  // dropped exactly when the actions already sit below the title; then it joins their
+  // row if it fits, and wraps under them if not. While the actions share the title's
+  // row, nothing changes: the secondary group never climbs onto the title's row.
+  //
+  // CSS cannot see "the previous item wrapped", so it is measured — by a
+  // ResizeObserver, whose first callback runs on `observe`. It is stable: the
+  // secondary group comes after the actions, so its basis cannot move them. No
+  // ResizeObserver (jsdom) or no layout keeps the basis, the 0.14.0 layout.
+  const measuresWrap = keepsWords && hasSecondary && actions != null;
+  const titleRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const [actionsWrapped, setActionsWrapped] = useState(false);
+  useLayoutEffect(() => {
+    const titleBox = titleRef.current;
+    const actionsBox = actionsRef.current;
+    if (!measuresWrap || !titleBox || !actionsBox || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      const t = titleBox.getBoundingClientRect();
+      const a = actionsBox.getBoundingClientRect();
+      // Unmeasured (display: none, no layout): keep the full-width basis.
+      setActionsWrapped(t.height > 0 && a.height > 0 && a.top >= t.bottom - 1);
+    });
+    observer.observe(titleBox);
+    observer.observe(actionsBox);
+    if (titleBox.parentElement) observer.observe(titleBox.parentElement);
+    return () => observer.disconnect();
+  }, [measuresWrap]);
   return (
     <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
       {breadcrumbs}
@@ -184,7 +216,7 @@ export function PageHeader({
           align,
         )}
       >
-        <div className={cn("flex-1", keepsWords ? "min-w-min" : "min-w-0")}>
+        <div ref={titleRef} className={cn("flex-1", keepsWords ? "min-w-min" : "min-w-0")}>
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
           <Heading
             className={cn(
@@ -198,7 +230,10 @@ export function PageHeader({
           {description != null && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
         </div>
         {actions != null && (
-          <div className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2")}>
+          <div
+            ref={actionsRef}
+            className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2")}
+          >
             {actions}
           </div>
         )}
@@ -206,7 +241,7 @@ export function PageHeader({
           <div
             className={cn(
               "flex flex-wrap items-center gap-2 sm:order-1 sm:shrink-0",
-              wrapsSecondary && "basis-full sm:basis-auto",
+              wrapsSecondary && (measuresWrap && actionsWrapped ? "sm:basis-auto" : "basis-full sm:basis-auto"),
             )}
           >
             {secondaryActions}
