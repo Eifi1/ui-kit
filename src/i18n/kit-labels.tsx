@@ -423,10 +423,26 @@ interface KitI18n {
  * What every kit link receives: the anchor attributes the kit decided (href, class,
  * aria-current, handlers, children, ref). An app's router link maps them —
  * `({ href, ...p }) => <Link to={href} {...p} />` — ONCE, on the provider.
+ *
+ * `replace` is the one prop that is not an anchor attribute: see there. Map it
+ * explicitly if your router link is not react-router's —
+ * `({ href, replace, ...p }) => <Link to={href} replace={replace} {...p} />` — and never
+ * spread it onto a DOM `<a>`, where React warns about an unknown attribute.
  */
 export type KitLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
   ref?: Ref<HTMLAnchorElement>;
+  /**
+   * Navigate by REPLACING the current history entry, so Back skips it — keksdose F1:
+   * a one-shot URL (a magic-link landing, `?checkout=done`, a wizard's "finish" hop)
+   * that must not come back when the user presses Back. Present ONLY when the kit link
+   * was given `replace` (`true`), so a provider link that spreads its props onto a
+   * plain `<a>` keeps working for every link that never asks for it. react-router's
+   * `<Link>` takes the same prop, so `({ href, ...p }) => <Link to={href} {...p} />`
+   * honours it with no change; any other router maps it to its own replace option.
+   * The kit never puts it on a DOM element itself.
+   */
+  replace?: boolean;
 };
 export type KitLinkComponent = (props: KitLinkProps) => ReactElement;
 

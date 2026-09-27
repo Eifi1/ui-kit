@@ -60,6 +60,58 @@ export function pickLinkRenderer<P>(
   return kitLink as unknown as (props: P) => ReactElement;
 }
 
+/** The plain primary click a page navigates on — not a middle click, not ⌘ / Ctrl /
+ *  Shift / Alt (new tab, new window, download), and not one a handler already took. */
+function isPlainNavigationClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
+/**
+ * The `onClick` of a PLAIN `<a>` whose kit link was asked to `replace` (keksdose F1).
+ *
+ * A router link replaces the history entry itself (it is handed `replace`, see
+ * {@link routerLinkNavigation}); a plain `<a>` has no attribute that says so, and the
+ * browser's own navigation always pushes. So a plain click is taken over — the caller's
+ * `onClick` runs first and may still `preventDefault` — and becomes
+ * `location.replace(href)`: the same document load, with Back skipping the one-shot URL.
+ * That is the case of `replace` together with `reloadDocument`, or an app with no
+ * `linkComponent`. A modified click (new tab) and a `target` other than `_self` are left
+ * to the browser: they do not navigate THIS history. Without `replace`, `onClick` comes
+ * back untouched.
+ * @internal
+ */
+export function replacingClick(
+  onClick: ((event: MouseEvent<HTMLAnchorElement>) => void) | undefined,
+  href: string,
+  replace: boolean | undefined,
+  target?: string,
+): ((event: MouseEvent<HTMLAnchorElement>) => void) | undefined {
+  if (!replace || (target !== undefined && target !== "" && target !== "_self")) return onClick;
+  return (event) => {
+    onClick?.(event);
+    if (!isPlainNavigationClick(event)) return;
+    event.preventDefault();
+    window.location.replace(href);
+  };
+}
+
+/**
+ * What a ROUTER link is handed for `replace`: `{ replace: true }` when asked, else
+ * nothing at all — so a provider link that spreads its props onto a DOM `<a>` never
+ * receives an unknown attribute from a link that did not ask (see `KitLinkProps.replace`).
+ * @internal
+ */
+export function routerLinkNavigation(replace: boolean | undefined): { replace?: true } {
+  return replace ? { replace: true } : {};
+}
+
 /**
  * Draws `props` through `render` as a component of its own, so a router link's hooks
  * belong to it and not to the kit component calling it — for the kit components that
@@ -72,14 +124,33 @@ export function RenderedKitLink<P>({ render, props }: { render: (props: P) => Re
 
 /* ── TextLink ─────────────────────────────────────────────────────────────── */
 
-/** `brand` (default) for a link in running text, `muted` for footer and meta links
- *  that should not compete with the content, `danger` for a destructive one ("Leave
- *  group"), `inherit` for a link that takes its surroundings' colour. */
-export type TextLinkTone = "brand" | "muted" | "danger" | "inherit";
+/**
+ * `brand` (default) for a link in running text, `muted` for footer and meta links
+ * that should not compete with the content, `danger` for a destructive one ("Leave
+ * group"), `inherit` for a link that takes its surroundings' colour.
+ *
+ * `primary` and `secondary` are the body and the secondary text colour, UNDERLINED
+ * (keksdose F3): a link that must read as part of the text around it — a name in a
+ * list row, a reference in a card's meta line — where `brand` repaints it in the accent
+ * and `muted` is a step too light to read as content. `secondary` darkens to the body
+ * colour under the pointer, as `muted` does; `primary` has nowhere darker to go, so its
+ * underline thickens instead.
+ *
+ * `warning` is the kit's `--warning` text colour, underlined (kastlan 46): a link inside
+ * a `<Tone tone="warning">` sentence or a warning banner, which `brand` would paint in a
+ * second hue and `inherit` would leave indistinguishable from the sentence. Like
+ * `primary`, it keeps its colour on hover and thickens the underline.
+ *
+ * The three colours that sit IN the text default to `underline="always"`: with the
+ * colour of their surroundings, the underline is the only thing that says "link"
+ * (WCAG 1.4.1). An explicit `underline` still wins.
+ */
+export type TextLinkTone = "brand" | "muted" | "danger" | "inherit" | "primary" | "secondary" | "warning";
 
-/** `hover` (default): underlined under the pointer — the idiom all three apps draw.
- *  `always` for a link inside prose, where colour alone must not be the only mark
- *  (WCAG 1.4.1). `none` where the context already says "link" (a footer nav). */
+/** `hover` (the default for `brand`, `muted`, `danger`, `inherit`): underlined under
+ *  the pointer — the idiom all three apps draw. `always` (the default for `primary`,
+ *  `secondary`, `warning`) for a link inside prose, where colour alone must not be the
+ *  only mark (WCAG 1.4.1). `none` where the context already says "link" (a footer nav). */
 export type TextLinkUnderline = "hover" | "always" | "none";
 
 /** The `aria-current` token. `true` on {@link TextLinkProps.current} means `page`. */
@@ -98,6 +169,9 @@ export interface TextLinkRenderProps {
   "aria-current"?: TextLinkCurrent;
   id?: string;
   title?: string;
+  /** Present, as `true`, only when the link was given `replace` — see
+   *  `KitLinkProps.replace`. Map it to your router's replace; never onto a DOM `<a>`. */
+  replace?: boolean;
   [key: `aria-${string}`]: string | boolean | number | undefined;
   [key: `data-${string}`]: unknown;
 }
@@ -108,8 +182,24 @@ export interface TextLinkProps
   children: ReactNode;
   /** Default `brand`. */
   tone?: TextLinkTone;
-  /** Default `hover`. */
+  /** Default `always` for `primary`, `secondary` and `warning`, else `hover`. */
   underline?: TextLinkUnderline;
+  /**
+   * Navigate by replacing the current history entry, so Back does not return to this
+   * URL — keksdose F1, a one-shot URL (a confirmation landing, a `?done=1` hop). Handed
+   * to the router link as `replace` (see `KitLinkProps.replace` for mapping it); on a
+   * plain `<a>` (no `linkComponent`, or `reloadDocument`) a plain click becomes
+   * `location.replace(href)`. Ignored on an `external` link, which opens a new tab.
+   */
+  replace?: boolean;
+  /**
+   * A plain `<a>` for an in-app `href`: the browser loads the whole document instead of
+   * the router swapping the view — keksdose F1, a route served outside the SPA (a file
+   * download, a server-rendered page, a logout that must drop every in-memory cache).
+   * Wins over `renderLink` and the provider's `linkComponent`: it is the caller saying
+   * "not the router" for this one link.
+   */
+  reloadDocument?: boolean;
   /**
    * The link leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`
    * (never the router's), an external-link mark after the text (mirrored in RTL), and
@@ -141,7 +231,14 @@ const TONE: Record<TextLinkTone, string> = {
   muted: "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
   danger: "text-[var(--danger)] hover:text-[var(--danger-hover)]",
   inherit: "",
+  primary: "text-[var(--text-primary)] hover:decoration-2",
+  secondary: "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+  warning: "text-[var(--warning)] hover:decoration-2",
 };
+
+/** The tones whose colour is their surroundings' — underlined by default; see
+ *  {@link TextLinkTone}. */
+const UNDERLINED_BY_DEFAULT = new Set<TextLinkTone>(["primary", "secondary", "warning"]);
 
 const UNDERLINE: Record<TextLinkUnderline, string> = {
   hover: "no-underline hover:underline",
@@ -168,8 +265,10 @@ export function TextLink({
   href,
   children,
   tone = "brand",
-  underline = "hover",
+  underline: underlineProp,
   external = false,
+  replace,
+  reloadDocument = false,
   stopPropagation = false,
   current,
   icon: Icon,
@@ -182,6 +281,7 @@ export function TextLink({
 }: TextLinkProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const kitLink = useKitLink();
+  const underline = underlineProp ?? (UNDERLINED_BY_DEFAULT.has(tone) ? "always" : "hover");
   const ariaCurrent: TextLinkCurrent | undefined =
     current === true ? "page" : current === false ? undefined : current;
 
@@ -208,18 +308,19 @@ export function TextLink({
     </>
   );
 
+  const handleClick: TextLinkRenderProps["onClick"] = stopPropagation
+    ? (event) => {
+        event.stopPropagation();
+        onClick?.(event);
+      }
+    : onClick;
   const props: TextLinkRenderProps = {
     ...(rest as Partial<TextLinkRenderProps>),
     ref,
     href,
     className: look,
     "aria-current": ariaCurrent,
-    onClick: stopPropagation
-      ? (event) => {
-          event.stopPropagation();
-          onClick?.(event);
-        }
-      : onClick,
+    onClick: handleClick,
     onKeyDown: stopPropagation
       ? (event) => {
           if (event.key === "Enter") event.stopPropagation();
@@ -229,11 +330,18 @@ export function TextLink({
     children: body,
   };
 
-  const render = external ? undefined : pickLinkRenderer(renderLink, kitLink, href);
-  if (render) return <RenderedTextLink render={render} {...props} />;
+  const render = external || reloadDocument ? undefined : pickLinkRenderer(renderLink, kitLink, href);
+  if (render) return <RenderedTextLink render={render} {...props} {...routerLinkNavigation(replace)} />;
+  // A plain `<a>` never gets `replace` as an attribute; asked for, it takes the click.
+  const plainClick = external ? handleClick : replacingClick(handleClick, href, replace, rest.target);
   const { children: content, ...anchor } = props;
   return (
-    <a {...anchor} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : null)}>
+    <a
+      {...anchor}
+      href={href}
+      onClick={plainClick}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : null)}
+    >
       {content}
     </a>
   );
