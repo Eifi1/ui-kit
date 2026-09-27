@@ -26,7 +26,13 @@
 // "category"`) or real dates (`x.type: "time"`) instead of a number the app had to
 // invent. What each of those does to the zoom is decided in one place,
 // `defaultZoomAxes` in `chart-zoom.tsx`.
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+//
+// **An axis budget (0.15.1).** Every visible axis reserves its band, and four of them
+// leave a phone nothing to plot. A chart draws at most `maxVisibleAxes`, and — on its
+// own, when it is too narrow for the ones it has — one a side; the rest go hidden,
+// still scaling their lines, and their series say the unit the title no longer does.
+// The rule is `series-chart-budget.ts`.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
@@ -58,6 +64,9 @@ import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-ch
 import { categoryTicks, integerTicks, niceTicks, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
 // The tick module stays internal; the one type of it a public prop names is re-exported.
 export type { TimeTickUnit } from "./series-chart-ticks";
+import { autoAxisBudget, axisUnit, budgetedAxes, type SeriesChartAxisBudget } from "./series-chart-budget";
+// The rule stays internal, like the ticks; the one type a public prop names is re-exported.
+export type { SeriesChartAxisBudget } from "./series-chart-budget";
 import { paletteFor } from "../theme/chart-palette";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -193,6 +202,15 @@ interface SeriesChartAxisShape {
   color?: string;
   /** What the TICKS need, in px. The title's strip is added on top. Default 48. */
   width?: number;
+  /**
+   * The unit, bare — `"mm/s"`. The title says it while the axis is drawn; when it is not
+   * (`hide`, or over the chart's axis budget — see {@link SeriesChartProps.maxVisibleAxes})
+   * the series on it say it instead, as "Velocity (mm/s)": in the tooltip of a chart
+   * whose budget hid the axis, and in the legend {@link seriesLegendEntries} builds when
+   * handed the axes. Default: the parenthesised tail of `title` ("Load (N)" → "N").
+   * `""` for a quantity with no unit whose title merely ends in brackets.
+   */
+  unit?: string;
   /**
    * Pin the scale instead of fitting it to this chart's data. For a ROW of charts
    * read against each other: auto-fitted, a 200 N loop and a 2000 N one draw the
@@ -511,6 +529,37 @@ export interface SeriesChartProps {
   /** Where the tooltip may go: for a chart inside a scroll wrapper. See
    *  {@link SeriesChartTooltip}. */
   tooltip?: SeriesChartTooltip;
+  /**
+   * The most y axes the chart DRAWS: a total, or `{ left, right }` per side. Axes over it
+   * are drawn as `hide: true` ones are — they still scale their lines and the zoom still
+   * refits them, but they draw no ticks or title and reserve no width — in declaration
+   * order, so the first axis of each side is the last to go (`series-chart-budget.ts`).
+   * The series on a hidden axis say its unit instead (see {@link SeriesChartAxis.unit}).
+   * Default: no cap — only the automatic one of `axisBudget`.
+   */
+  maxVisibleAxes?: SeriesChartAxisBudget;
+  /**
+   * `"auto"` (the default): a chart so narrow that its axes' bands would leave the plot
+   * under 160 px (`MIN_PLOT_WIDTH`) draws ONE axis a side — lenkbank's four-axis curve
+   * plot on a phone, whose plot was 10 px wide. Measured on the chart's own box
+   * (`ResizeObserver`), and applied on top of `maxVisibleAxes`.
+   *
+   * On by default because it cannot touch a layout that works: it needs a side with two
+   * or more axes AND a plot that would otherwise be under 160 px — a four-axis chart
+   * below about 440 px, a two-left-axis one below about 300. A chart with at most one
+   * axis a side (every facing pair, every single-axis chart) is never budgeted, at any
+   * width. `"off"` keeps every declared axis whatever the width: for a stack of
+   * multi-axis charts that must keep identical bands, or a caller budgeting itself.
+   * Without layout (jsdom, SSR) nothing is measured and nothing is hidden.
+   */
+  axisBudget?: "auto" | "off";
+  /**
+   * The ids of the axes the budget hid (not those declared `hide`), every time that set
+   * changes — for a legend that says their units: pass it to {@link seriesLegendEntries}
+   * as `budgeted`. Called after the render that hid them; empty once the chart is wide
+   * again.
+   */
+  onAxisBudget?: (hidden: readonly string[]) => void;
   /** Supplied by `withChartZoom` and by nothing else. */
   zoom?: ZoomBinding;
   /** Per-chart strings over `<UiKitProvider labels={{ seriesChart }}>`. */
@@ -695,13 +744,43 @@ export function visibleSeries(
     .filter((entry) => !hidden.has(entry.key));
 }
 
+/** A series' name with its unit after it: "Velocity (mm/s)". */
+function withUnit(label: ReactNode, unit: string | undefined): ReactNode {
+  if (!unit) return label;
+  if (typeof label === "string" || typeof label === "number") return `${label} (${unit})`;
+  return (
+    <>
+      {label} ({unit})
+    </>
+  );
+}
+
+/** Where a legend learns which axes are not drawn — see {@link seriesLegendEntries}. */
+export interface SeriesLegendAxes {
+  /** The chart's axes. A series on one that is `hide`, or `budgeted`, says its unit. */
+  axes?: readonly SeriesChartAxis[];
+  /** What the chart's `onAxisBudget` last said. */
+  budgeted?: readonly string[];
+}
+
 /**
  * The `ToggleLegend` entries for a chart's FULL series list — colours resolved the way
  * the chart resolves them, and a stroke mark for a line drawn in a pattern (dashed,
  * step) so the key promises the stroke the plot draws. A bar or an area is a swatch.
  * Pair with {@link visibleSeries} for the chart itself.
+ *
+ * Handed the chart's `axes` (and the `budgeted` ids its `onAxisBudget` reports), a
+ * series whose axis is not drawn says the unit that axis would have: "Velocity (mm/s)"
+ * — see {@link SeriesChartAxis.unit}. Without them, the labels are as given.
  */
-export function seriesLegendEntries(series: readonly SeriesChartSeries[]): LegendEntry[] {
+export function seriesLegendEntries(
+  series: readonly SeriesChartSeries[],
+  { axes, budgeted }: SeriesLegendAxes = {},
+): LegendEntry[] {
+  const undrawn = new Map<string, string | undefined>();
+  for (const axis of axes ?? []) {
+    if (axis.hide || budgeted?.includes(axis.id)) undrawn.set(axis.id, axisUnit(axis));
+  }
   return series.map((entry, index) => {
     // A custom dash array goes to the legend as it is, so the swatch draws what the plot does.
     const own = entry.dash ?? (entry.dashed ? 1 : 0);
@@ -709,7 +788,7 @@ export function seriesLegendEntries(series: readonly SeriesChartSeries[]): Legen
     const line = (entry.type ?? "line") === "line";
     return {
       key: entry.key,
-      label: entry.label,
+      label: withUnit(entry.label, undrawn.get(entry.axis ?? DEFAULT_Y_AXIS)),
       color: entry.color ?? paletteFor(index),
       ...(line && dash !== 0 ? { marker: "stroke" as const, dash } : {}),
     };
@@ -1077,6 +1156,9 @@ function SeriesPlot({
   locale: localeProp,
   className,
   minBarLength,
+  maxVisibleAxes,
+  axisBudget = "auto",
+  onAxisBudget,
 }: PlotProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
@@ -1085,6 +1167,44 @@ function SeriesPlot({
   // Up here, above the empty state's early return, like every hook.
   const [keyStop, setKeyStop] = useState(0);
   const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
+
+  // The chart's own width, for the automatic axis budget. Its box, not the plot's: the
+  // box does not change when an axis is hidden, so the rule cannot oscillate. Nothing
+  // measured (jsdom, the first frame) is no automatic budget.
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!box || axisBudget === "off" || typeof ResizeObserver === "undefined") return;
+    const measure = () => setWidth(box.getBoundingClientRect().width || undefined);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [box, axisBudget]);
+  // The caller's cap first, then — on what is left — the automatic one.
+  const capped = budgetedAxes(axes, maxVisibleAxes);
+  const afterCap = capped.length
+    ? axes.map((axis) => (capped.includes(axis.id) ? { ...axis, hide: true as const } : axis))
+    : axes;
+  const auto =
+    axisBudget === "off"
+      ? []
+      : budgetedAxes(
+          afterCap,
+          autoAxisBudget(afterCap, width, (axis) =>
+            axisBandWidth(axis.width, Boolean(axis.title)),
+          ),
+        );
+  const budgeted = [...capped, ...auto];
+  const budgetKey = budgeted.join("\n");
+  // Reported when the SET changes, not on every render — an inline callback is a new
+  // function each time, and the guard keeps it from being called again for nothing.
+  const reported = useRef("");
+  useEffect(() => {
+    if (budgetKey === reported.current) return;
+    reported.current = budgetKey;
+    onAxisBudget?.(budgetKey ? budgetKey.split("\n") : []);
+  }, [budgetKey, onAxisBudget]);
 
   // A number is pixels, set inline; a string is a class. Either way the one value
   // sizes both the chart and its empty state.
@@ -1113,18 +1233,30 @@ function SeriesPlot({
   const xKey = model.plotKey;
   const plotted = model.rows;
   const rows = model.source;
+  // What the budget took off the chart: an axis drawn as `hide` — and its unit, which
+  // the tooltip names now that no title says it. Axes the caller hid keep their series'
+  // labels as given, as they always did.
+  const drawnAxes = budgeted.length
+    ? axes.map((axis) => (budgeted.includes(axis.id) ? { ...axis, hide: true as const } : axis))
+    : axes;
+  const lostUnit = new Map(
+    axes.filter((axis) => budgeted.includes(axis.id)).map((axis) => [axis.id, axisUnit(axis)]),
+  );
   const config: ChartConfig = Object.fromEntries(
     series.map((entry, index) => [
       entry.key,
-      { label: entry.label, color: entry.color ?? paletteFor(index) },
+      {
+        label: withUnit(entry.label, lostUnit.get(entry.axis ?? DEFAULT_Y_AXIS)),
+        color: entry.color ?? paletteFor(index),
+      },
     ]),
   );
-  const visible = axes.filter((axis) => !axis.hide);
+  const visible = drawnAxes.filter((axis) => !axis.hide);
   // The grid hangs its horizontal rules off ONE y axis, and recharts looks for the one
   // whose id is its own default (`0`). Every axis here is named, so without saying
   // which, it finds none and draws no horizontal rules at all. The first visible axis,
   // because those are the ticks a reader puts a ruler on.
-  const gridAxis = (visible[0] ?? axes[0])?.id ?? DEFAULT_Y_AXIS;
+  const gridAxis = (visible[0] ?? drawnAxes[0])?.id ?? DEFAULT_Y_AXIS;
   const onLeft = visible.some((axis) => (axis.orientation ?? "left") === "left");
   const onRight = visible.some((axis) => axis.orientation === "right");
   // The margins are what is left once the axes have their bands: an axis band IS the
@@ -1359,6 +1491,8 @@ function SeriesPlot({
 
   return (
     <ChartContainer
+      ref={setBox}
+      data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       config={config}
       className={cn("w-full", heightClass, className, onPointClick && "cursor-pointer")}
       style={heightStyle}
@@ -1422,7 +1556,7 @@ function SeriesPlot({
             />
           )}
         </XAxis>
-        {axes.map((axis) => {
+        {drawnAxes.map((axis) => {
           const domain = fittedY(axis);
           const zoomed = anchored(axis)
             ? zoom?.xDomain !== undefined
@@ -1439,7 +1573,11 @@ function SeriesPlot({
               }
               allowDataOverflow={zoomed}
               orientation={axis.orientation ?? "left"}
-              width={axisBandWidth(axis.width, Boolean(axis.title) && !axis.hide)}
+              // Nothing for a hidden axis. An axis that turns hidden on a MOUNTED chart —
+              // what the budget does on every resize across its threshold — kept its old
+              // width in recharts' stacking of that side, and pushed the axes still drawn
+              // off the chart's edge. A zero width leaves nothing stale to count.
+              width={axis.hide ? 0 : axisBandWidth(axis.width, Boolean(axis.title))}
               tickLine={false}
               axisLine={false}
               tickFormatter={axis.format ?? number}
