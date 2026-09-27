@@ -103,22 +103,24 @@ export function HoverMenu({
   // close what was just opened (feedback #19). Toggling closed on click stays
   // for keyboard/touch activation, which reaches "open" without going through
   // the hover path.
-  const openedByHoverRef = useRef(false);
+  //
+  // State rather than a ref: `close` is handed to the caller's render prop, and a
+  // function that writes a ref must not be reachable from render.
+  const [openedByHover, setOpenedByHover] = useState(false);
 
   const close = useCallback(() => {
-    openedByHoverRef.current = false;
+    setOpenedByHover(false);
     setPhase("closed");
   }, []);
 
-  const toggle = useCallback(
-    () =>
-      setPhase((p) => {
-        if (p === "open" || p === "closing") return openedByHoverRef.current ? p : "closed";
-        openedByHoverRef.current = false;
-        return "open";
-      }),
-    [],
-  );
+  const toggle = useCallback(() => {
+    if (open) {
+      if (!openedByHover) setPhase("closed");
+      return;
+    }
+    setOpenedByHover(false);
+    setPhase("open");
+  }, [open, openedByHover]);
 
   const handleMouseEnter = useCallback(
     () => setPhase((p) => (p === "closing" ? "open" : p === "closed" ? "opening" : p)),
@@ -134,7 +136,7 @@ export function HoverMenu({
   useEffect(() => {
     if (phase === "opening") {
       const id = setTimeout(() => {
-        openedByHoverRef.current = true;
+        setOpenedByHover(true);
         setPhase("open");
       }, OPEN_DELAY_MS);
       return () => clearTimeout(id);
@@ -217,7 +219,7 @@ export function HoverMenu({
           (edge === "last" ? list[list.length - 1] : list[0])?.focus();
         } else {
           focusOnOpenRef.current = edge;
-          openedByHoverRef.current = false;
+          setOpenedByHover(false);
           setPhase("open");
         }
       }
@@ -247,11 +249,14 @@ export function HoverMenu({
   // subtracted first so the measurement is against the natural position.
   const panelRef = useRef<HTMLDivElement>(null);
   const [shiftX, setShiftX] = useState(0);
+  // Back to 0 on close, adjusted while rendering against the previous `open`.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) setShiftX(0);
+  }
   useLayoutEffect(() => {
-    if (!open) {
-      setShiftX(0);
-      return;
-    }
+    if (!open) return;
     const el = panelRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -267,6 +272,10 @@ export function HoverMenu({
   }, [open]);
 
   return (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
+       itself: the mouse handlers are the hover-to-open convenience, and `onKeyDown`
+       catches keys bubbling from the caller's trigger button and the menuitems, which
+       are the keyboard path (Enter/Space/arrows open, arrows move, Escape closes). */
     <div
       // `...rest` first: the hover handlers below are the whole component, and a caller
       // passing one of its own must not silently replace them.

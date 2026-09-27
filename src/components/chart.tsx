@@ -8,7 +8,7 @@
 // The value on show is the *structure*: config-driven colors injected as CSS
 // vars, muted axis/grid styling, and a polished tooltip/legend — the things
 // that make shadcn charts read as "designed" rather than "default Recharts".
-import { createContext, useContext, useId, useRef } from "react";
+import { createContext, useContext, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, CSSProperties, ReactNode, RefObject } from "react";
 import {
   Legend as RechartsLegend,
@@ -263,7 +263,7 @@ export function ChartTooltipContent({
   // `ChartTooltip` keeps null values (so they can print "—"), which also keeps the
   // series a legend toggle switched off with `hide`; those go here instead.
   const items = includeHidden ? payload : payload?.filter((item) => item.hide !== true);
-  if (!active || !items?.length) return null;
+  const visible = Boolean(active && items?.length);
   // Recharts anchors the tooltip at coordinate.x inside the full (scrolled) chart
   // width; subtract the container's scrollLeft to get its on-screen x, then flip
   // left if the tooltip's own width would run past the visible right edge.
@@ -272,16 +272,27 @@ export function ChartTooltipContent({
   // `ChartContainer`), but an RTL scroller counts `scrollLeft` from its right edge —
   // 0 at the start, negative going left — so there the content's left edge sits
   // `scrollWidth - clientWidth + scrollLeft` px to the left of the visible one.
-  let flip = false;
-  const boundary = boundaryRef?.current;
-  if (boundary && coordinate?.x != null) {
+  //
+  // Measured in a layout effect (the DOM is not readable during render), so it commits
+  // before paint. `payload` and `label` are deps because they change the tooltip's own
+  // width, and recharts hands a fresh `payload` on every tooltip render, so a scroll
+  // followed by any re-render is re-measured just as it was when this ran in render.
+  const [flip, setFlip] = useState(false);
+  const x = coordinate?.x;
+  useLayoutEffect(() => {
+    const boundary = boundaryRef?.current;
+    if (!visible || !boundary || x == null) {
+      setFlip(false);
+      return;
+    }
     const offset = isRtl(boundary)
       ? boundary.scrollWidth - boundary.clientWidth + boundary.scrollLeft
       : boundary.scrollLeft;
-    const visibleX = coordinate.x - offset;
+    const visibleX = x - offset;
     const tipWidth = tipRef.current?.offsetWidth ?? 160;
-    flip = visibleX + tipWidth + 12 > boundary.clientWidth;
-  }
+    setFlip(visibleX + tipWidth + 12 > boundary.clientWidth);
+  }, [visible, x, boundaryRef, payload, label]);
+  if (!visible || !items) return null;
   return (
     <div
       ref={tipRef}

@@ -370,6 +370,10 @@ function ModalPanel({
       )}
       {...backdropClose}
     >
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- always
+          role="dialog" or "alertdialog" (the ternary hides that from the rule): `onKeyDown`
+          is Escape-to-close per the APG dialog pattern, and the drag handlers are
+          swipe-to-dismiss, whose keyboard path is that same Escape. */}
       <div
         // `...rest` FIRST, everything the dialog needs to be a dialog after it. A
         // wrapper that spreads its own props through to this one cannot then take away

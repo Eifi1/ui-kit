@@ -263,6 +263,9 @@ function InPlaceTooltip({
     setClipped(hasClippingAncestor(el));
   };
   return (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers track
+       whether the bubble is up and activate nothing; the caller's child is the
+       interactive element, keeps its own handlers, and its focus shows the bubble too. */
     <span
       // `...rest` first: the four handlers below are what decides whether a bubble is
       // up, and a caller passing an `onFocus` of its own must not replace them.
@@ -272,10 +275,6 @@ function InPlaceTooltip({
       // These four track WHETHER A BUBBLE IS UP. They activate nothing — the only thing
       // here that can be activated is the caller's child, which keeps every handler it
       // arrived with — so this wrapper needs no role and no key handling of its own.
-      // `jsx-a11y/no-static-element-interactions` warns about it all the same, as it
-      // already does about the portal variant's identical trigger below; both are left
-      // visible rather than silenced, because a rule this package ratchets should be
-      // argued with in the backlog and not in a disable comment.
       onMouseEnter={(e) => {
         setHovered(true);
         arm(e.currentTarget);
@@ -506,6 +505,9 @@ function PortalTooltip({
 
   return (
     <>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- as in
+          `InPlaceTooltip`: the handlers only show and hide the bubble; the caller's child
+          is the interactive element, and focusing it shows the bubble. */}
       <span
         // As in `InPlaceTooltip`: the caller's attributes first, the four handlers that
         // run this component after them. The BUBBLE is deliberately not given them — it

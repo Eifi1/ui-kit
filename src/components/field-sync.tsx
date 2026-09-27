@@ -146,35 +146,40 @@ export function useFieldSync<T>({
     };
   }, []);
 
-  const flush = useCallback(async () => {
-    if (inFlightRef.current) return; // the settle path below picks the new draft up
-    const next = draftRef.current;
-    if (equalsRef.current(next, savedRef.current)) return;
+  // A named inner function so the settle path can start the next round by calling it
+  // again; a `useCallback` cannot refer to its own binding while it is being built.
+  const flush = useCallback(() => {
+    const run = async (): Promise<void> => {
+      if (inFlightRef.current) return; // the settle path below picks the new draft up
+      const next = draftRef.current;
+      if (equalsRef.current(next, savedRef.current)) return;
 
-    inFlightRef.current = true;
-    setState("pending");
-    setError(null);
-    try {
-      await onSaveRef.current(next);
-      savedRef.current = next;
-      inFlightRef.current = false;
-      if (!mountedRef.current) return;
-      // The draft may have moved while this was in the air. Compare against what is
-      // on screen NOW, not against what was sent.
-      if (equalsRef.current(draftRef.current, next)) {
-        setState("synced");
-      } else {
-        setState("edited");
-        void flush();
+      inFlightRef.current = true;
+      setState("pending");
+      setError(null);
+      try {
+        await onSaveRef.current(next);
+        savedRef.current = next;
+        inFlightRef.current = false;
+        if (!mountedRef.current) return;
+        // The draft may have moved while this was in the air. Compare against what is
+        // on screen NOW, not against what was sent.
+        if (equalsRef.current(draftRef.current, next)) {
+          setState("synced");
+        } else {
+          setState("edited");
+          void run();
+        }
+      } catch (cause) {
+        inFlightRef.current = false;
+        const err = toError(cause);
+        onErrorRef.current?.(err);
+        if (!mountedRef.current) return;
+        setState("error");
+        setError(err);
       }
-    } catch (cause) {
-      inFlightRef.current = false;
-      const err = toError(cause);
-      onErrorRef.current?.(err);
-      if (!mountedRef.current) return;
-      setState("error");
-      setError(err);
-    }
+    };
+    return run();
   }, []);
 
   const setValue = useCallback(
@@ -396,23 +401,26 @@ export function FieldSyncRow<T>({
   const retry = onRetry ?? sync.retry;
 
   // The saved confirmation: on only for the moment after a save lands. Keyed on the
-  // TRANSITION pending → synced, so a field that starts synced shows nothing.
-  const previous = useRef(state);
+  // TRANSITION pending → synced, so a field that starts synced shows nothing. The
+  // transition is seen while rendering, against the previous state; the effect only
+  // owns the timer that turns it off again.
+  const [previous, setPrevious] = useState(state);
   const [justSaved, setJustSaved] = useState(false);
+  if (state !== previous) {
+    setPrevious(state);
+    setJustSaved(state === "synced" && previous === "pending");
+  }
   useEffect(() => {
-    const was = previous.current;
-    previous.current = state;
-    if (state === "synced" && was === "pending") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reacts to the save landing
-      setJustSaved(true);
-      const t = setTimeout(() => setJustSaved(false), savedMs);
-      return () => clearTimeout(t);
-    }
-    if (state !== "synced") setJustSaved(false);
-  }, [state, savedMs]);
+    if (!justSaved) return;
+    const t = setTimeout(() => setJustSaved(false), savedMs);
+    return () => clearTimeout(t);
+  }, [justSaved, savedMs]);
   const shown: FieldSyncState | null = state === "synced" ? (justSaved ? "synced" : null) : state;
 
   return (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- not an interaction:
+       `onBlur` listens for focus leaving the row's own controls (which are the
+       interactive elements) to save; the wrapper itself is never focused. */
     <div
       data-field-sync={state}
       className={cn(

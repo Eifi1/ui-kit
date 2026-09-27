@@ -261,7 +261,9 @@ export interface ComboboxCore<V extends string | number> {
   rect: AnchorRect | null;
   /** Where the dropdown goes, clamped to the visible viewport (feedback #135). */
   placement: AnchoredPanel;
-  cacheRef: RefObject<Map<V, ComboOption<V>>>;
+  /** Put an option in the label cache, so {@link ComboboxCore.resolve} still knows a
+   *  value the caller just chose after the result list has moved on. */
+  rememberOption: (o: ComboOption<V>) => void;
   resolve: (v: V) => ComboOption<V> | null;
   /** Close and hand focus back to the trigger — the keyboard paths only. See
    *  {@link useDropdown} for why a pointer dismissal must not do this. */
@@ -319,10 +321,23 @@ export function useComboboxCore<V extends string | number>({
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
   useEscapeKey(closeToTrigger, open);
 
-  // Reset the query + focus the search box each time the panel opens.
+  // Reset the query each time the panel opens, and the highlighted row whenever the
+  // visible set changes (a new query, or the panel opening or closing). Adjusted while
+  // rendering against the previous values rather than in an effect, so the render that
+  // opens the panel already searches for "" and highlights the first row.
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (open !== prevOpen || query !== prevQuery) {
+    const opened = open && !prevOpen;
+    setPrevOpen(open);
+    setPrevQuery(opened ? "" : query);
+    if (opened) setQuery("");
+    setActive(0);
+  }
+
+  // Focus the search box each time the panel opens.
   useEffect(() => {
     if (!open) return;
-    setQuery("");
     const id = requestAnimationFrame(() => inputRef.current?.focus());
     return () => cancelAnimationFrame(id);
   }, [open]);
@@ -346,11 +361,9 @@ export function useComboboxCore<V extends string | number>({
   }, [options, results]);
   const resolve = (v: V): ComboOption<V> | null =>
     options?.find((o) => o.value === v) ?? cacheRef.current.get(v) ?? null;
-
-  // Reset the highlighted row whenever the visible set changes.
-  useEffect(() => {
-    setActive(0);
-  }, [query, open]);
+  const rememberOption = (o: ComboOption<V>) => {
+    cacheRef.current.set(o.value, o);
+  };
 
   return {
     triggerRef,
@@ -369,7 +382,7 @@ export function useComboboxCore<V extends string | number>({
     minChars,
     rect,
     placement,
-    cacheRef,
+    rememberOption,
     resolve,
     closeToTrigger,
   };
@@ -777,6 +790,9 @@ export function ComboboxPanel<V extends string | number>({
         inputRef={inputRef}
         closeLabel={closeLabel}
       >
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
+            itself: it catches the listbox keys bubbling from the sheet's search <input>,
+            which holds focus while the list is up. */}
         <div onKeyDown={onKeyDown} className="relative">
           {list}
           {announcement}
@@ -796,6 +812,9 @@ export function ComboboxPanel<V extends string | number>({
       : { left: rect.left };
 
   return createPortal(
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
+       itself: it catches the listbox keys bubbling from the search <input> inside it,
+       which holds focus while the panel is open. */
     <div
       // Spread FIRST: `onKeyDown` below is the listbox keyboard (Up/Down/Home/End/
       // Enter/Tab) and the placement is measured rather than chosen, so neither is a

@@ -621,6 +621,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   }
 
   return (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers are
+       the roving-focus hooks, live only when the container passes `role` and `tabIndex`
+       (ChipInput does); the role is a prop, so the rule cannot see it. */
     <span
       ref={ref as React.Ref<HTMLSpanElement>}
       className={look}
@@ -893,6 +896,9 @@ export function ChipInput({
           {label}
         </label>
       )}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a
+          pointer convenience that widens the input's hit area to the whole field; the
+          keyboard path is the <input> itself, which is in the tab order. */}
       <div
         // `relative` so the live region below can be `sr-only` without escaping to the
         // initial containing block and inflating the document height.

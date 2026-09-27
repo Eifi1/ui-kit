@@ -169,6 +169,10 @@ export function FullBleedDialog({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
+    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the dialog
+       container, per the APG dialog pattern: `onKeyDown` is Escape-to-close for whatever
+       inside it holds focus, and the mouse handlers are the backdrop press (Escape and the
+       close button are its keyboard path). */
     <div
       // `animate-overlay` on the backdrop and `animate-sheet` on the panel (live #320):
       // the backdrop fades, the panel rises from the bottom edge it is anchored to.

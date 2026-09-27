@@ -164,13 +164,13 @@ export function SwipeableRow({
   // painted the RIGHT action's colour into the gap. With no left action at all that
   // colour was the only thing the gesture ever showed.
   //
-  // Written during render rather than in an effect: an effect would repaint a frame
-  // later (visibly, at 150ms) and `setState` in an effect body is an eslint error in
-  // the consuming app. The value is derived from this render's own dx, so a
-  // concurrent re-render recomputes it identically.
-  const lastSide = useRef<"left" | "right">("right");
-  if (dx !== 0) lastSide.current = dx < 0 ? "left" : "right";
-  const draggingLeft = dx !== 0 ? dx < 0 : lastSide.current === "left";
+  // Adjusted during render rather than in an effect: an effect would repaint a frame
+  // later (visibly, at 150ms). State set while rendering re-renders this component
+  // before anything is committed, so the released frame already has the right side.
+  const [lastSide, setLastSide] = useState<"left" | "right">("right");
+  const side = dx === 0 ? null : dx < 0 ? "left" : "right";
+  if (side && side !== lastSide) setLastSide(side);
+  const draggingLeft = side ? side === "left" : lastSide === "left";
   const shown = draggingLeft
     ? leftActions[Math.max(0, swipe.armedLeftIndex)]
     : rightActions[Math.max(0, swipe.armedRightIndex)];
