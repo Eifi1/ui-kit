@@ -522,6 +522,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "placeTooltip",
     "Tooltip — auto-portal inside a scroll container",
     "Tooltip — lazy: in place, mounted only while up",
+    "Tooltip — in-place bubble clamped to the viewport",
     "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [
@@ -578,6 +579,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SectionLabel — variant band",
     "SectionLabel — md over a chart column",
     "ListItem — titleLines",
+    "PageHeader — truncateTitle",
+    "PageHeader — secondaryActions",
+    "PageHeader — actionsAlign",
     "StatusDot — hues beside matching Chips",
   ],
   "links": [
@@ -643,6 +647,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackThread — own, staff, attachments, redact and RTL",
     "FeedbackComposer — pending, Ctrl/⌘+Enter and an attachment",
     "FeedbackComposer — canned replies and a custom placeholder",
+    "FeedbackThread + FeedbackComposer — a support chat",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",
