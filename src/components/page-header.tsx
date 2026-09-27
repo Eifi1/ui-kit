@@ -34,6 +34,21 @@ const ROW: Record<PageHeaderMobileLayout, string> = {
   inline: "flex-row items-center justify-between gap-2 sm:gap-4",
 };
 
+/**
+ * Where the actions sit on the title block's height, in the one row the header is from
+ * `sm` up (and on a phone too when {@link PageHeaderMobileLayout} is `inline`, the only
+ * layout that has a row there). Unset keeps each layout's own: `start` for `stacked`,
+ * `center` for `inline`.
+ */
+export type PageHeaderActionsAlign = "start" | "center" | "end";
+
+/** Per layout, because `stacked` is a column on a phone — a `self-center` there would
+ *  centre the actions HORIZONTALLY — so it only aligns from `sm` up. */
+const ACTIONS_ALIGN: Record<PageHeaderMobileLayout, Record<PageHeaderActionsAlign, string>> = {
+  stacked: { start: "sm:self-start", center: "sm:self-center", end: "sm:self-end" },
+  inline: { start: "self-start", center: "self-center", end: "self-end" },
+};
+
 export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
   title: ReactNode;
   /** A sentence under the title. */
@@ -63,6 +78,52 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * button, a month picker); a long title wraps to make room for them instead.
    */
   mobileLayout?: PageHeaderMobileLayout;
+  /**
+   * A second group of actions that gets its OWN full-width row under the header on a
+   * phone, and joins the actions' row from `sm` up, between the title and
+   * {@link actions}.
+   *
+   * keksdose's budget page (budget-page.tsx, feedback #60) is the case: title and month
+   * navigation on row 1, the fold/unfold toggles on row 2 on a phone — "two tidy rows
+   * instead of the old ragged justify-between overflow" — and one row, title | toggles |
+   * month nav, on a wider screen. It builds that by hand with a wrapping flex row and
+   * swapped order utilities; adopting `PageHeader` (keksdose G6b) must not lose it.
+   * There: `actions` is the month navigation, this is the toggles.
+   *
+   * The DOM order is title, `actions`, `secondaryActions` — the phone's visual order,
+   * and the one a screen reader and the Tab key follow at every width. From `sm` up the
+   * two groups swap places visually only, which keeps the page's primary control (the
+   * month) at the row's end, where keksdose had it, and first in reading order. The
+   * breakpoint is `sm`, the one {@link mobileLayout} switches at, not keksdose's `md`:
+   * one header, one breakpoint.
+   */
+  secondaryActions?: ReactNode;
+  /**
+   * The actions' vertical alignment against the title block — see
+   * {@link PageHeaderActionsAlign}. Unset keeps the layout's own.
+   *
+   * keksdose's reports page (reports-page.tsx, keksdose G8) carries a LABELLED
+   * `CurrencySelect` as its action: a field with its label on top is taller than the
+   * title, and `stacked`'s default top alignment hangs it from the title's cap height
+   * with its control well below the title's line. `center` sets it on the title's
+   * middle, as that page's hand-written `items-center` row did.
+   */
+  actionsAlign?: PageHeaderActionsAlign;
+  /**
+   * One line, cut with an ellipsis, instead of the default breaking of a long word onto
+   * as many lines as it needs.
+   *
+   * keksdose's payees page (payees-page.tsx, live #263, keksdose G6a) wraps its title in
+   * its own truncating span so a long name gives way to the `inline` header's actions
+   * instead of pushing them. This is that span's behaviour on the heading itself; the
+   * title block is already allowed to shrink below its content, which is what lets the
+   * cut happen inside a flex row.
+   *
+   * The full title stays in the DOM as the heading's text, so a screen reader and the
+   * document outline read all of it. There is deliberately no native `title` tooltip:
+   * the kit does not use them (not on touch, not on keyboard focus, not styled).
+   */
+  truncateTitle?: boolean;
 }
 
 /**
@@ -85,20 +146,54 @@ export function PageHeader({
   as = "h1",
   size = "md",
   mobileLayout = "stacked",
+  secondaryActions,
+  actionsAlign,
+  truncateTitle = false,
   className,
   ...rest
 }: PageHeaderProps) {
   const Heading = as as ElementType;
+  const hasSecondary = secondaryActions != null;
+  const wrapsSecondary = hasSecondary && mobileLayout === "inline";
+  const align = actionsAlign != null ? ACTIONS_ALIGN[mobileLayout][actionsAlign] : undefined;
   return (
     <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
       {breadcrumbs}
-      <div className={cn("flex min-w-0", ROW[mobileLayout])}>
+      {/* With a second group, `inline` wraps so that group's full-width basis puts it
+          on a row of its own on a phone (`stacked` is a column there already, and a
+          basis would size a column item's HEIGHT); from `sm` up the row stops wrapping
+          and the order utilities seat it between the title and the actions. Without
+          one, nothing changes. */}
+      <div className={cn("flex min-w-0", ROW[mobileLayout], wrapsSecondary && "flex-wrap sm:flex-nowrap")}>
         <div className="min-w-0 flex-1">
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
-          <Heading className={cn("break-words text-[var(--text-primary)]", TITLE[size])}>{title}</Heading>
+          <Heading
+            className={cn(
+              truncateTitle ? "truncate" : "break-words",
+              "text-[var(--text-primary)]",
+              TITLE[size],
+            )}
+          >
+            {title}
+          </Heading>
           {description != null && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
         </div>
-        {actions != null && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+        {actions != null && (
+          <div className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2", align)}>
+            {actions}
+          </div>
+        )}
+        {hasSecondary && (
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-2 sm:order-1 sm:shrink-0",
+              wrapsSecondary && "basis-full sm:basis-auto",
+              align,
+            )}
+          >
+            {secondaryActions}
+          </div>
+        )}
       </div>
     </div>
   );
