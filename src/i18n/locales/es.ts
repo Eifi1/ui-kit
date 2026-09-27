@@ -45,6 +45,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       placeholder: "Escribe un comentario…",
       send: "Enviar",
       sendHint: (modifier) => `${modifier} + Intro para enviar`,
+      sendHintEnter: "Intro para enviar, Mayús + Intro para una nueva línea",
     },
     accountSettings: {
       profile: {

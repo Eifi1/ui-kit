@@ -151,6 +151,9 @@ export interface CrashReport {
   userAgent: string;
   /** The boundary's `appVersion` prop. */
   appVersion?: string;
+  /** The boundary's `placement` prop ("app", "page", "widget"): which boundary caught
+   *  it, so triage can tell a whole-app crash from one page's (keksdose G3b). */
+  placement?: string;
   /** `navigator.onLine` at the moment of the crash; left out where there is none. */
   online?: boolean;
   /** {@link isChunkLoadError} of the thrown value. Such a crash is never handed to
@@ -177,6 +180,7 @@ export function formatCrashReport(report: CrashReport): string {
     `User agent: ${report.userAgent}`,
   ];
   if (report.appVersion) lines.push(`App version: ${report.appVersion}`);
+  if (report.placement) lines.push(`Placement: ${report.placement}`);
   if (report.online === false) lines.push("Online: no");
   for (const [key, value] of Object.entries(report.extras)) lines.push(`${key}: ${value}`);
   if (report.stack) lines.push("", "Stack:", report.stack.trim());
@@ -194,9 +198,14 @@ export function formatCrashReport(report: CrashReport): string {
  * times a second. The page and the time are left out on purpose: the same bug on two
  * routes is still one bug.
  */
-export function crashFingerprint(report: Pick<CrashReport, "name" | "message" | "stack">): string {
+export function crashFingerprint(
+  report: Pick<CrashReport, "name" | "message" | "stack"> & Pick<Partial<CrashReport>, "placement">,
+): string {
   const frames = (report.stack ?? "").split("\n").slice(0, 4).join("|");
-  return `${report.name}::${report.message}::${frames}`;
+  // The placement is part of it (keksdose G3b): the same error caught by the page
+  // boundary and, after Try again fails, by the app boundary is two facts for triage.
+  const where = report.placement ? `${report.placement}::` : "";
+  return `${where}${report.name}::${report.message}::${frames}`;
 }
 
 /**
@@ -321,6 +330,10 @@ export interface ErrorBoundaryProps {
   copyReport?: boolean;
   /** The app's version, printed in the report — the first question on every crash. */
   appVersion?: string;
+  /** Which boundary this is — "app" at the root, "page" in the layout — carried into
+   *  the report (`placement`) and its fingerprint, so `onReport` needs no closure to say
+   *  where the crash was caught (keksdose G3b). */
+  placement?: string;
   /** More `key: value` lines for the report, read when the boundary catches (a tenant
    *  id, the feature flags). A throw from it is swallowed and the lines are left out. */
   reportExtras?: () => Record<string, string>;
@@ -427,6 +440,7 @@ function buildReport(details: ErrorBoundaryDetails, componentStack: string | und
     time: new Date().toISOString(),
     userAgent,
     appVersion: props.appVersion,
+    placement: props.placement,
     online,
     chunkLoad: isChunkLoadError(details),
     extras,

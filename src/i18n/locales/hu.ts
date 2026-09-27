@@ -44,6 +44,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       placeholder: "Hozzászólás írása…",
       send: "Küldés",
       sendHint: (modifier) => `${modifier} + Enter a küldéshez`,
+      sendHintEnter: "Enter: küldés, Shift + Enter: új sor",
     },
     accountSettings: {
       profile: {

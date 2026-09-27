@@ -45,6 +45,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       placeholder: "Scrivi un commento…",
       send: "Invia",
       sendHint: (modifier) => `${modifier} + Invio per inviare`,
+      sendHintEnter: "Invio per inviare, Maiusc + Invio per andare a capo",
     },
     accountSettings: {
       profile: {

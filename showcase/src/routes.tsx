@@ -135,6 +135,7 @@ const KeyboardPointsDemo = lazySection(() => import("./sections/series-chart-tic
 const DialogOpenDemo = lazySection(() => import("./sections/dialog-open-demo"), "DialogOpenDemo");
 const TooltipAutoPortal = lazySection(() => import("./sections/tooltip-auto-portal-demo"), "TooltipAutoPortal");
 const TooltipLazyDemo = lazySection(() => import("./sections/tooltip-013-demo"), "TooltipLazyDemo");
+const TooltipClampDemo = lazySection(() => import("./sections/tooltip-014-demo"), "TooltipClampDemo");
 const FloatingActions = lazySection(() => import("./sections/floating-actions-demo"), "FloatingActions");
 const CalendarHeatmapDemo = lazySection(() => import("./sections/calendar-heatmap-demo"), "CalendarHeatmapDemo");
 const MonthViewDemo = lazySection(() => import("./sections/month-view-demo"), "MonthViewDemo");
@@ -156,6 +157,7 @@ const MenuItemBadgeDemo = lazySection(() => import("./sections/props-011-demo"),
 const MinBarLengthDemo = lazySection(() => import("./sections/props-011-demo"), "MinBarLengthDemo");
 const SectionLabelMdDemo = lazySection(() => import("./sections/props-011-demo"), "SectionLabelMdDemo");
 const Layout013Demo = lazySection(() => import("./sections/layout-013-demo"), "Layout013Demo");
+const PageHeader014Demo = lazySection(() => import("./sections/page-header-014-demo"), "PageHeader014Demo");
 const StatusDotHuesDemo = lazySection(() => import("./sections/props-011-demo"), "StatusDotHuesDemo");
 const TableHeaderValignDemo = lazySection(() => import("./sections/props-011-demo"), "TableHeaderValignDemo");
 const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo");
@@ -187,6 +189,7 @@ const FeedbackThreadDemo = lazySection(() => import("./sections/feedback-thread-
 const ShellBrandDemo = lazySection(() => import("./sections/shell-012-demo"), "ShellBrandDemo");
 const AccountHeaderLinkDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "AccountHeaderLinkDemo");
 const ComposerCannedRepliesDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "ComposerCannedRepliesDemo");
+const Feedback014Demo = lazySection(() => import("./sections/feedback-014-demo"), "Feedback014Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -853,6 +856,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <PopoversMenusTooltips />
             <TooltipAutoPortal />
             <TooltipLazyDemo />
+            <TooltipClampDemo />
             <ClipsMarkerDemo />
           </>
         ),
@@ -927,6 +931,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <NavPillsDemo />
             <SectionLabelMdDemo />
             <Layout013Demo />
+            <PageHeader014Demo />
             <StatusDotHuesDemo />
           </>
         ),
@@ -1000,6 +1005,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackInbox />
             <FeedbackThreadDemo />
             <ComposerCannedRepliesDemo />
+            <Feedback014Demo />
           </>
         ),
       },
