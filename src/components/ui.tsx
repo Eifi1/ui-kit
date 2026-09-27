@@ -2,6 +2,7 @@ import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
+import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
@@ -1290,9 +1291,20 @@ export const FIELD_DISPLAY =
 // adjacent controls). Pair the labelled case with a static FieldLabel.
 // `relative` so the trigger can host an absolutely-centred FieldChevron / clear
 // button the way the native Select does.
+//
+// `[&>:first-child]:min-h-[1lh]` holds one line box open whatever the value is. A
+// trigger with nothing chosen and no placeholder renders an EMPTY value span, an
+// empty span has no line box, and the trigger collapsed to its padding — 18px
+// tall in a stack of 38px fields (an RhfCombobox without a placeholder; DatePicker
+// and MonthPicker had met the same thing as Keksdose live #294 and patched their
+// own span with a U+00A0). Here, on the shared class, it covers every trigger
+// built on it, including a `renderTrigger` one. `1lh` rather than a fixed height
+// so it tracks whatever type the trigger is set in; the first child is the value
+// in every trigger here (the chevron and the clear button are absolute).
 export const FIELD_TRIGGER = cn(
   FIELD_BASE,
   "relative flex items-center justify-between gap-2 text-start hover:bg-[var(--bg-hover)]",
+  "[&>:first-child]:min-h-[1lh]",
 );
 
 /** An alias rather than an interface: the chevron adds nothing of its own to an
@@ -1871,7 +1883,11 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   invalid?: boolean;
   /** See {@link Input}'s `error`. */
   error?: ReactNode;
-  /** A {@link FieldHint} for the label line — see {@link FloatingField}. */
+  /** A {@link FieldHint} for the label line — see {@link FloatingField}. Plain
+   *  TEXT (a string or a number) is a caption instead, and goes UNDER the field
+   *  like every other field's hint, attached through `aria-describedby`: the label
+   *  line is 11px of strip shared with the label, and a sentence placed there was
+   *  set in the value's type on top of both the label and the value. */
   hint?: ReactNode;
   /**
    * `"sm"`: a 28px, 12px-type select for a toolbar or a table header, where the
@@ -1911,12 +1927,33 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const listBox = (nativeSize !== undefined && nativeSize > 1) || Boolean(rest.multiple);
   const small = size === "sm" && label === undefined;
   const fieldId = id ?? generated;
+  const hintId = useId();
+  // Text is a caption under the field; anything else (a FieldHint) rides the label
+  // line. See `hint` above. An empty string is no caption at all.
+  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
-    rest["aria-describedby"],
+    // The caption goes in BEFORE the error — the standing advice first, the news
+    // second, the order useFieldError keeps for a caller's own description.
+    textHint
+      ? rest["aria-describedby"]
+        ? `${rest["aria-describedby"]} ${hintId}`
+        : hintId
+      : rest["aria-describedby"],
     rest["aria-invalid"],
   );
+  const below =
+    textHint || errorEl !== null ? (
+      <>
+        {textHint && (
+          <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+            {hint}
+          </p>
+        )}
+        {errorEl}
+      </>
+    ) : null;
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
   // in from the end border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
@@ -1927,10 +1964,17 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />
     );
   // `pe-9` is the room the chevron takes; a list box has none to make room for.
-  const dress = listBox ? "overflow-y-auto" : "appearance-none pe-9";
+  //
+  // A list box's height is `size` rows plus its padding, but its rows are clipped at
+  // the PADDING edge, not the content edge — so FIELD_BASE's `pb-2` showed the next
+  // row through the bottom padding: `size={4}` drew four and a half. The vertical room
+  // moves onto the rows instead (option padding counts toward the row height the
+  // browser sizes the box by), and the box keeps no bottom padding: exactly `size`
+  // whole rows, at any width.
+  const dress = listBox ? "overflow-y-auto [&_option]:py-1" : "appearance-none pe-9";
   if (label === undefined) {
     return (
-      <FieldGroup errorEl={errorEl}>
+      <FieldGroup errorEl={below}>
         <div className={cn("relative", className)}>
           <select
             ref={ref}
@@ -1953,6 +1997,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             className={cn(
               FIELD_BASE,
               dress,
+              listBox && "py-0",
               small && SELECT_SM,
               selectClassName,
               isInvalid && FIELD_INVALID,
@@ -1966,8 +2011,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     );
   }
   return (
-    <FieldGroup errorEl={errorEl}>
-      <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={hint}>
+    <FieldGroup errorEl={below}>
+      <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={textHint ? undefined : hint}>
         <select
           ref={ref}
           id={fieldId}
@@ -1978,8 +2023,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           className={cn(
             FIELD_BASE,
             // The floated label takes the top strip of a list box too, so its first
-            // row starts under the label rather than behind it.
-            listBox ? "pt-5 pb-1" : FIELD_FLOATING_PAD,
+            // row starts under the label rather than behind it. No bottom padding — see
+            // `dress`.
+            listBox ? "pt-5 pb-0" : FIELD_FLOATING_PAD,
             "peer",
             dress,
             selectClassName,
@@ -2695,6 +2741,10 @@ const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-[var(--bo
 const TAB_ADD_CLASSES =
   "inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
 const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
+// `relative`: the phone's visually hidden label needs a positioned ancestor (see the
+// sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
+const TAB_ADD_PHONE_CLASSES = "relative max-md:px-2";
+
 
 export function Tabs<T extends string>({
   tabs,
@@ -2719,6 +2769,18 @@ export function Tabs<T extends string>({
   const phone = useMediaQuery(PHONE_QUERY, false);
   const vertical = orientation === "vertical" && !phone;
   const stripRef = useRef<HTMLDivElement>(null);
+  const fade = useStripFade(stripRef);
+  // The OPEN tab is scrolled into the strip whenever it changes — on mount too, for a
+  // deep link to the seventh report. A selection behind the cut edge was the worst
+  // case of the overflow above: the one tab the panel below belongs to, sliced to
+  // "80 km," under the add button. Only the strip scrolls (`scrollBy` on it, not
+  // `scrollIntoView`, which would scroll the page as well), and only as far as needed
+  // to clear the fade.
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    const tab = strip?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (strip && tab) scrollIntoStrip(strip, tab);
+  }, [active]);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
   // Whether Delete reaches this tab: every removable tab, or only the open one.
   const deletesOnKey = (tab: TabItem<T>) =>
@@ -2821,6 +2883,11 @@ export function Tabs<T extends string>({
       // Only when vertical: `horizontal` is the tablist's implicit value, and the
       // attribute on every existing strip would be noise in every snapshot of them.
       aria-orientation={vertical ? "vertical" : undefined}
+      // Merged over a caller's own style rather than replacing it; see useStripFade.
+      // `data-overflow` names the cut ends in reading-direction terms, for a caller's
+      // own affordance (a scroll button) and for tests, which cannot read the mask.
+      style={fade.mask ? { ...rest.style, maskImage: fade.mask, WebkitMaskImage: fade.mask } : rest.style}
+      data-overflow={fade.overflow}
       // With an add button the strip gains an outer box, and `className` goes there
       // — it is the box a caller's margin or width is meant for.
       className={cn(
@@ -2892,7 +2959,16 @@ export function Tabs<T extends string>({
                 {/* A separator for the NAME only — whitespace between flex items is
                     not drawn, and without it the two lines ran together into one
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
-                <span className="text-[11px] font-normal leading-tight text-[var(--text-muted)]">
+                <span
+                  className={cn(
+                    "text-[11px] font-normal leading-tight text-[var(--text-muted)]",
+                    // On a wrapped strip's filled chip (below `md`) the muted grey
+                    // was dark text on the brand fill — "loop 2" all but vanished
+                    // under the one label that most needed reading. It takes the
+                    // chip's own ink instead, as the label and the × already do.
+                    wrap && isActive && !vertical && "text-[var(--brand-contrast)] md:text-[var(--text-muted)]",
+                  )}
+                >
                   {tab.detail}
                 </span>
               </span>
@@ -3013,10 +3089,14 @@ export function Tabs<T extends string>({
           type="button"
           onClick={onAdd}
           disabled={busy}
-          className={cn(TAB_ADD_CLASSES, wrap && TAB_ADD_WRAP_CLASSES)}
+          className={cn(TAB_ADD_CLASSES, wrap ? TAB_ADD_WRAP_CLASSES : TAB_ADD_PHONE_CLASSES)}
         >
           <Plus aria-hidden />
-          {addLabel ?? text.add}
+          {/* Below md a scrolling strip keeps the room for tabs: the label is visually
+              hidden and the "+" carries it as its name. Beside "+ Add loop" a 390px strip
+              showed the open tab and a sliver of the next (showcase audit). A wrapping
+              strip has its own row there, so it keeps the label. */}
+          <span className={wrap ? undefined : "max-md:sr-only"}>{addLabel ?? text.add}</span>
         </button>
       </div>
     </div>

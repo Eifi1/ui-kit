@@ -771,7 +771,8 @@ function CellGrid({
           <Eraser aria-hidden className="size-3.5" /> {labels.clear}
         </Button>
         <span className="text-[11px] tabular-nums text-[var(--text-muted)]">
-          {labels.points(filled.length)}
+          {/* bdi: an LTR label ("3 points") in an RTL grid would reorder to "points 3". */}
+          <bdi>{labels.points(filled.length)}</bdi>
         </span>
         {problems > 0 && (
           <span className="text-[11px] text-[var(--danger)]">{labels.problems(problems)}</span>
@@ -845,7 +846,7 @@ function TextView({ columns, cells, onCells, disabled, mark, labels, labelledBy,
       <p className="mt-1 px-1 text-[11px] text-[var(--text-muted)]">
         {columns.map((column) => column.label).join(" · ")}
         {" — "}
-        {labels.points(lines)}
+        <bdi>{labels.points(lines)}</bdi>
       </p>
     </div>
   );

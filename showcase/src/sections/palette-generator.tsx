@@ -211,17 +211,21 @@ function AuditSummary({ label, report }: { label: string; report: ContrastReport
 function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastReport }) {
   const darkByPair = useMemo(() => new Map(dark.checks.map((c) => [c.pair, c])), [dark]);
   return (
-    <table className="w-full text-left text-xs">
-      <thead>
-        <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
+    // Below `sm` the five columns do not fit a phone: the Rule prose was squeezed to one
+    // word per line and cut at the card edge. There every row becomes a fixed-track grid —
+    // the pair and its three numbers on one line, the rule underneath across the full
+    // width — so the columns still line up row to row and nothing needs a sideways scroll.
+    <table className="w-full text-left text-xs max-sm:block">
+      <thead className="max-sm:block">
+        <tr className={cn("border-b border-[var(--border)] text-[var(--text-muted)]", AUDIT_ROW)}>
           <th scope="col" className="py-1.5 pr-3 font-medium">Pair</th>
           <th scope="col" className="py-1.5 pr-3 font-medium">Needs</th>
           <th scope="col" className="py-1.5 pr-3 font-medium">Light</th>
           <th scope="col" className="py-1.5 pr-3 font-medium">Dark</th>
-          <th scope="col" className="py-1.5 font-medium">Rule</th>
+          <th scope="col" className="py-1.5 font-medium max-sm:hidden">Rule</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className="max-sm:block">
         {light.checks.map((check) => {
           const other = darkByPair.get(check.pair);
           const failed = !check.passes || (other ? !other.passes : false);
@@ -232,14 +236,15 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
               // you are scrolling past rather than reading it.
               className={cn(
                 "border-b border-[var(--border)] last:border-b-0",
+                AUDIT_ROW,
                 failed && "bg-[var(--danger-bg)]",
               )}
             >
-              <td className="py-1.5 pr-3 align-top font-mono text-[var(--text-primary)]">{check.pair}</td>
+              <td className="py-1.5 pr-3 align-top font-mono text-[var(--text-primary)] max-sm:break-words">{check.pair}</td>
               <td className="py-1.5 pr-3 align-top font-mono text-[var(--text-muted)]">{check.required}:1</td>
               <td className="py-1.5 pr-3 align-top"><Verdict check={check} /></td>
               <td className="py-1.5 pr-3 align-top"><Verdict check={other} /></td>
-              <td className="py-1.5 align-top text-[var(--text-muted)]">{check.rule}</td>
+              <td className="py-1.5 align-top text-[var(--text-muted)] max-sm:col-span-full max-sm:pt-0">{check.rule}</td>
             </tr>
           );
         })}
@@ -247,6 +252,10 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
     </table>
   );
 }
+
+/** The phone layout of one audit row: fixed tracks so Pair / Needs / Light / Dark line up
+ *  from row to row once the table is no longer doing the aligning. */
+const AUDIT_ROW = "max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_3rem_4rem_4rem]";
 
 /**
  * One anchor: a picker and a hex field for the same value.
@@ -291,7 +300,10 @@ function AnchorField({
             style={auto ? { background: auto } : undefined}
           />
           <span className="font-mono text-xs text-[var(--text-muted)]">
-            {auto ? `auto · ${auto}` : "auto · not derived unless pinned"}
+            {/* "none" and not a sentence: the long "not derived unless pinned" pushed
+                accent's Pin onto a line of its own, so its row broke unlike its siblings.
+                The hint under it already says the role exists only when pinned. */}
+            {auto ? `auto · ${auto}` : "auto · none"}
           </span>
           <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => onChange(auto ?? seed)}>
             Pin
@@ -330,7 +342,9 @@ function AnchorField({
           )}
         </>
       )}
-      <span className="text-xs text-[var(--text-muted)]">{hint}</span>
+      {/* On a phone the hint always takes its own line: left to wrap, the short ones
+          ("amber") stayed on the row and the long ones dropped, so the rows looked ragged. */}
+      <span className="text-xs text-[var(--text-muted)] max-sm:basis-full">{hint}</span>
     </div>
   );
 }
@@ -930,6 +944,9 @@ export function PaletteGenerator() {
 const fmt = (n: number, digits = 3) => n.toFixed(digits);
 const lch = (v: { l: number; c: number; h: number } | null) =>
   v ? `{ l: ${fmt(v.l)}, c: ${fmt(v.c)}, h: ${fmt(v.h, 1)} }` : "null";
+/** Rounded like the other rows: the raw round trip printed `79.00000202059144`. */
+const rgbText = (v: { r: number; g: number; b: number }) =>
+  `{ r: ${fmt(v.r)}, g: ${fmt(v.g)}, b: ${fmt(v.b)} }`;
 const CVD_TYPES: CvdType[] = ["protanopia", "deuteranopia", "tritanopia"];
 
 function Chip({ hex }: { hex: string }) {
@@ -965,7 +982,7 @@ function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
           [`describe("${brand}")`, lch(describe(brand))],
           [`hexToOklch("${brand}")`, lch(hexToOklch(brand))],
           ["rgbToOklch(parseHex(brand))", lch(asLch)],
-          ["oklchToRgb(rgbToOklch(rgb))", JSON.stringify(oklchToRgb(asLch))],
+          ["oklchToRgb(rgbToOklch(rgb))", rgbText(oklchToRgb(asLch))],
           ["oklchToHex(rgbToOklch(rgb))", <Chip hex={oklchToHex(asLch)} />],
           ["luminance(rgb)", fmt(luminance(rgb), 4)],
           [`contrast("${brand}", "#ffffff")`, `${fmt(contrast(brand, "#ffffff"), 2)} : 1`],

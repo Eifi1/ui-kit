@@ -319,7 +319,9 @@ function ImportWizardDemo() {
         </label>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
-          write lock (<code className="font-mono">finishDisabled</code>)
+          <span>
+            write lock (<code className="font-mono">finishDisabled</code>)
+          </span>
         </label>
         <Button size="sm" variant="ghost" onClick={() => setRun((n) => n + 1)}>
           Start over
@@ -702,17 +704,26 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             <code className="font-mono">StepperNav</code> get populated. A rejection with no
             readable message shows <code className="font-mono">genericError</code>.
           </p>
-          <Row>
+          <Row className="items-start">
             <ToggleGroup<"succeed" | "fail" | "opaque">
               value={outcome}
               onChange={setOutcome}
               ariaLabel="Submit outcome"
               className="w-full sm:w-auto"
+              // Short option words, the detail in the caption: the full sentences were each
+              // cut to "onComplet…" / "rejects wit…" on a phone, two of them identically.
               options={[
-                { value: "succeed", label: "onComplete resolves" },
-                { value: "fail", label: "rejects with an Error" },
-                { value: "opaque", label: "rejects with a non-Error" },
+                { value: "succeed", label: "resolves" },
+                { value: "fail", label: "Error" },
+                { value: "opaque", label: "non-Error" },
               ]}
+              caption={(v) =>
+                v === "succeed"
+                  ? "onComplete resolves"
+                  : v === "fail"
+                    ? "onComplete rejects with an Error"
+                    : "onComplete rejects with a non-Error (no readable message)"
+              }
             />
             <Button
               type="button"

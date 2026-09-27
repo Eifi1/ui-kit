@@ -142,7 +142,12 @@ export interface Dictionary {
   /** Sidebar group names, keyed by the English label in routes.tsx. */
   groups: Record<string, string>;
   /** The phone bottom bar's shorter group names, keyed like `groups` — one entry for
-   *  each group that has a `shortLabel` in routes.tsx ("App chrome" → "Chrome"). */
+   *  each group that has a `shortLabel` in routes.tsx ("App chrome" → "Chrome").
+   *
+   *  The budget is PIXELS, not letters: nine groups share a 390px phone, so a cell is
+   *  43px and the kit truncates an 11px label past about seven narrow letters. Every
+   *  translation is measured against that — "Superposiciones" became "Capas", not an
+   *  ellipsis — so a new entry is checked on a phone, not in the dictionary. */
   groupShort: Record<string, string>;
   /**
    * Page titles and blurbs, keyed by slug. A missing key falls back to English.

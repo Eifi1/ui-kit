@@ -84,7 +84,10 @@ export const de: Dictionary = {
     Foundations: "Tokens",
     "Pickers & entry": "Picker",
     "Data display": "Anzeige",
-    "App chrome": "Rahmen",
+    "App chrome": "Layout",
+    Inputs: "Felder",
+    Charts: "Charts",
+    Overlays: "Popups",
   },
 
   pages: {

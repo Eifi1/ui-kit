@@ -284,3 +284,23 @@ describe("StatTile — the provider's router link", () => {
     expect(screen.getByRole("link", { name: "Units" })).not.toHaveAttribute("data-router");
   });
 });
+
+describe("StatTile history rows", () => {
+  it("keeps a row's figure on its label's line: the label wraps, the figure never moves", () => {
+    render(
+      <StatTile
+        label="Net"
+        value={-182.4}
+        subValues={[
+          { label: "AUG (signed)", value: 310 },
+          { label: "JUL", value: -45 },
+        ]}
+      />,
+    );
+    const label = screen.getByText("AUG (signed)");
+    const row = label.parentElement!;
+    expect(row).not.toHaveClass("flex-wrap");
+    expect(label).toHaveClass("min-w-0");
+    expect(row.querySelector("dd")).toHaveClass("shrink-0", "whitespace-nowrap");
+  });
+});

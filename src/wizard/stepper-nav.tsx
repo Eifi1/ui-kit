@@ -1,4 +1,4 @@
-import { useId, useMemo } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -87,6 +87,25 @@ export function StepperNav<TData extends Record<string, unknown>>({
 }) {
   const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
   const cancelTitleId = useId();
+
+  // The step area never shrinks below the tallest step shown so far, so the button
+  // bar does not jump up and down as Next and Back move between a long step and a
+  // short one. This replaces a fixed `min-h-[300px]` (carried over from Kastlan,
+  // whose steps are all long forms), which did the same for steps under 300px but
+  // left a short wizard — two fields a step — with a ~200px hole above its buttons.
+  // Measured rather than guessed: the floor is whatever the app's own steps need.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentFloor, setContentFloor] = useState(0);
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      const h = el.offsetHeight;
+      setContentFloor((floor) => (h > floor ? h : floor));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const contextValue = useMemo(
     () => ({
@@ -235,7 +254,9 @@ export function StepperNav<TData extends Record<string, unknown>>({
 
       {/* Step content */}
       <WizardContextProvider value={contextValue}>
-        <div className="min-h-[300px]">{children}</div>
+        <div style={contentFloor > 0 ? { minHeight: contentFloor } : undefined}>
+          <div ref={contentRef}>{children}</div>
+        </div>
       </WizardContextProvider>
 
       {/* Submit error */}

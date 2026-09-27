@@ -428,7 +428,9 @@ function RedactPaletteDemo() {
         </label>
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
-          demo mode (blur <code className="font-mono">[data-private]</code>)
+          <span>
+            demo mode (blur <code className="font-mono">[data-private]</code>)
+          </span>
         </label>
       </Row>
       {/* The host's own rule — the kit only sets the attribute. Scoped to the open
@@ -645,8 +647,12 @@ function DensitySyncDemo() {
   return (
     <div className="space-y-3">
       <Row>
+        {/* Both groups content-sized. At the kit's default full width each took a row of
+            its own and split it by label length — even halves for compact/comfortable,
+            uneven for the longer provider labels — so the pair never looked alike. */}
         <ToggleGroup<Density>
           aria-label="density"
+          className="w-auto"
           value={density}
           onChange={setDensity}
           options={[
@@ -656,6 +662,7 @@ function DensitySyncDemo() {
         />
         <ToggleGroup<"sync" | "async">
           aria-label="provider"
+          className="w-auto"
           value={sync ? "sync" : "async"}
           onChange={(v) => setSync(v === "sync")}
           options={[

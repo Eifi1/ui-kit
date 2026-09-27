@@ -314,6 +314,7 @@ export const GROUPS: ShowcaseGroup[] = [
   {
     slug: "inputs",
     label: "Inputs",
+    shortLabel: "Inputs",
     icon: TextCursorInput,
     blurb:
       "Every way to type or set a value: text, choices, numbers, dates, files, and the form adapter around them. They share one anatomy — a floating label, the value, a helper line below — so a form reads as one thing.",
@@ -706,6 +707,7 @@ export const GROUPS: ShowcaseGroup[] = [
   {
     slug: "charts",
     label: "Charts",
+    shortLabel: "Charts",
     icon: ChartArea,
     blurb:
       "Values as pictures: the themed shell over Recharts, the tile chart, the zoomable series chart with its bars and areas, and the KPI tile.",
@@ -806,6 +808,8 @@ export const GROUPS: ShowcaseGroup[] = [
   {
     slug: "overlays",
     label: "Overlays",
+    // Nine groups share a 390px bar: a cell is 43px, and "Overlays" at 11px is 46.
+    shortLabel: "Popups",
     icon: MousePointerClick,
     blurb:
       "Everything that floats above the page, and the one timing they all share on the way out.",

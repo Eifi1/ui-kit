@@ -179,6 +179,34 @@ describe("references and markers", () => {
   });
 });
 
+describe("marker labels at the plot's edge", () => {
+  it("keeps a label over the last point inside the plot instead of centring it past the edge", () => {
+    const { container } = draw({
+      axes: [{ id: "y", title: "", format: String }],
+      markers: [{ key: "end", x: 3, y: 4, label: "over the cap, and then some" }],
+    });
+    const dot = container.querySelector(".recharts-reference-dot circle, .recharts-reference-dot-dot")!;
+    const label = screen.getByText("over the cap, and then some").closest("text")!;
+    const cx = Number(dot.getAttribute("cx"));
+    const x = Number(label.getAttribute("x"));
+    expect(label.getAttribute("text-anchor")).toBe("middle");
+    // Shifted towards the plot, so its right half no longer hangs off the end.
+    expect(x).toBeLessThan(cx);
+    const half = ("over the cap, and then some".length * 11 * 0.6) / 2;
+    expect(x + half).toBeLessThanOrEqual(800);
+  });
+
+  it("leaves a label with room on both sides centred on its point", () => {
+    const { container } = draw({
+      axes: [{ id: "y", title: "", format: String }],
+      markers: [{ key: "mid", x: 1.5, y: 2, label: "mid" }],
+    });
+    const dot = container.querySelector(".recharts-reference-dot circle, .recharts-reference-dot-dot")!;
+    const label = screen.getByText("mid").closest("text")!;
+    expect(Number(label.getAttribute("x"))).toBeCloseTo(Number(dot.getAttribute("cx")), 5);
+  });
+});
+
 describe("explicit ticks", () => {
   it("ticks a y axis on the caller's grid instead of the round one, inside the domain", () => {
     const { container } = draw({

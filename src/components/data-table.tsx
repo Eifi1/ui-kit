@@ -247,9 +247,10 @@ export interface DataTableProps<T> {
    */
   urlSync?: TableUrlSync;
   /**
-   * When true (desktop only), the table fills its parent's height and scrolls
-   * INTERNALLY, with the header pinned — so the page itself doesn't add a second,
-   * outer scrollbar. The parent must give it a bounded height (e.g. a flex
+   * When true, the table fills its parent's height and scrolls INTERNALLY, with the
+   * header pinned — so the page itself doesn't add a second, outer scrollbar. On a
+   * phone the card list is the scroller instead, with the filter button pinned above
+   * it; an unbounded parent simply lets either layout grow to its content. The parent must give it a bounded height (e.g. a flex
    * column inside the viewport-locked app shell). See feedback #207.
    */
   fillHeight?: boolean;
@@ -1634,7 +1635,10 @@ export function DataTable<T>({
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
-        fillHeight && "md:flex md:flex-1 md:flex-col md:min-h-0",
+        // Both layouts, not just the table: the phone card list overflowing a bounded
+        // pane drew itself over whatever followed it, and in a viewport-locked shell
+        // the rows below the fold could not be reached at all.
+        fillHeight && "flex flex-1 flex-col min-h-0",
         className,
       )}
     >
@@ -1658,7 +1662,7 @@ export function DataTable<T>({
         </div>
       )}
       {!isMdUp && (
-      <div ref={mobileRootRef}>
+      <div ref={mobileRootRef} className={cn(fillHeight && "flex min-h-0 flex-1 flex-col")}>
         {/* Mobile filter access (feedback #299): the per-column filter popovers
             live in the desktop header, which the card list doesn't render — so
             expose the same filters through a bottom sheet here. */}
@@ -1679,6 +1683,11 @@ export function DataTable<T>({
         <ul
           className={cn(
             "divide-y divide-[var(--border)]",
+            // Under `fillHeight` the list is the scroller, as the table body is on a
+            // wide screen: the filter button stays above it and a server pager below.
+            // The endless-scroll sentinel still fires in here — an
+            // IntersectionObserver on the viewport sees through the clipping ancestor.
+            fillHeight && "min-h-0 flex-1 overflow-y-auto overscroll-contain",
             // Same busy treatment as the desktop body; see `isLoading` below.
             isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
           )}
@@ -1711,7 +1720,8 @@ export function DataTable<T>({
               ref={loadMoreRef}
               className="px-4 py-4 text-center text-xs text-[var(--text-placeholder)]"
             >
-              {labels.loading}
+              {/* Isolated for the reason spelled out on LoadingText. */}
+              <bdi>{labels.loading}</bdi>
             </li>
           )}
         </ul>
@@ -2287,10 +2297,14 @@ function PlainRoot(props: React.HTMLAttributes<HTMLDivElement>) {
 
 /** The loading row's content: a spinner beside the word, the word for everyone. */
 function LoadingText({ label }: { label: string }) {
+  // `<bdi>`: the label takes its direction from its own letters, not the table's. The
+  // English default inside a `dir="rtl"` table otherwise had its trailing "…" — a
+  // neutral with no letter after it — resolved right-to-left and drawn in front of
+  // the word: "…Loading". An Arabic or Hebrew label still reads right-to-left.
   return (
     <span className="inline-flex items-center gap-2">
       <Spinner label={null} className="size-4" />
-      {label}
+      <bdi>{label}</bdi>
     </span>
   );
 }

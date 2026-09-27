@@ -150,7 +150,10 @@ export function Field({
     <div
       data-slot="field"
       className={cn(
-        "grid gap-1.5",
+        // `content-start`: in a grid row next to a taller item (one with a hint), a
+        // stretched Field would hand the extra height to its rows — the label grew,
+        // and the control sat lower than its neighbour's (showcase audit, #/forms).
+        "grid content-start gap-1.5",
         // A hidden label is `position: absolute`; `relative` keeps its containing
         // block here rather than the page's (see sr-only-containment.test).
         labelVisibility !== "visible" && "relative",

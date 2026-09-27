@@ -354,14 +354,19 @@ export function CalendarHeatmap({
 
   const weekdayLabels = useMemo(() => {
     const ref = new Date(2024, 0, 7 + weekStart); // 7 January 2024 was a Sunday
-    return Array.from({ length: 7 }, (_, i) => {
+    const week = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(ref);
       d.setDate(ref.getDate() + i);
-      return {
-        short: d.toLocaleDateString(locale, { weekday: "short" }),
-        long: d.toLocaleDateString(locale, { weekday: "long" }),
-      };
+      return d;
     });
+    const name = (d: Date, weekday: "short" | "narrow" | "long") => d.toLocaleDateString(locale, { weekday });
+    // The label column is 2rem at 10px type, room for about four characters. Most
+    // locales' "short" is three or four ("Thu", "jeu.", "czw."), but some have no
+    // abbreviation at all — Arabic's short Thursday IS "الخميس", which overran the box
+    // and was cut. Such a locale takes the "narrow" form ("خ") for ALL seven, so the
+    // column never mixes two forms; the full name is on the aria-label either way.
+    const tooLong = week.some((d) => [...name(d, "short")].length > 4);
+    return week.map((d) => ({ short: name(d, tooLong ? "narrow" : "short"), long: name(d, "long") }));
   }, [locale, weekStart]);
 
   const lead = days.length ? weekdayIndex(days[0], weekStart) : 0;

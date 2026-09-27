@@ -71,11 +71,11 @@ export function Comboboxes() {
           />
         </Stage>
         <Current label="value" value={payee ? `"${payee}"` : "(empty)"} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <Note>
           Type a few letters, then clear them and click the field again: the list comes back WHOLE.
           The text filters only while it is being typed, so a field holding “Rewe” does not reopen
           as a one-row filter of its own answer.
-        </p>
+        </Note>
       </Example>
 
       <Example
@@ -130,12 +130,12 @@ export function Comboboxes() {
           </div>
         </Stage>
         <Current label="last" value={editLog} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <Note>
           Click a cell: it becomes the field, focused, with its list open. In the payee cell, type
           and press Enter (<code className="font-mono">onSubmit</code>) or click elsewhere (
           <code className="font-mono">onBlur</code>); picking a row keeps the editor, because the
           rows never take focus from the input.
-        </p>
+        </Note>
       </Example>
     </>
   );

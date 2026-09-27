@@ -86,16 +86,19 @@ function ButtonTones() {
       <div className="space-y-3">
         {(["link", "ghost"] as const).map((variant) => (
           <Row key={variant}>
-            <span className="w-12 font-mono text-xs text-[var(--text-muted)]">{variant}</span>
+            {/* On a phone the variant name takes its own line and the buttons say only the
+                tone: with `tone="…"` on each they wrapped two-and-one, a different break
+                in each row, so the columns stopped lining up. */}
+            <span className="w-12 font-mono text-xs text-[var(--text-muted)] max-sm:w-full">{variant}</span>
             {TONES.map((tone) => (
               <Button key={tone} variant={variant} tone={tone} onClick={() => setLog(`${variant} ${tone}`)}>
-                tone=&quot;{tone}&quot;
+                {tone}
               </Button>
             ))}
           </Row>
         ))}
         <Row>
-          <span className="w-12 font-mono text-xs text-[var(--text-muted)]">in use</span>
+          <span className="w-12 font-mono text-xs text-[var(--text-muted)] max-sm:w-full">in use</span>
           <span className="text-sm text-[var(--text-secondary)]">Split 2 of 3</span>
           <Button variant="link" onClick={() => setLog("add line")}>
             Add line

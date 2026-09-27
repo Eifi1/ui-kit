@@ -1,10 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, matchPath, useLocation } from "react-router";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
@@ -141,6 +142,15 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    *  `false` keeps the single bar, where a group entry only links to its own `to`. */
   mobileSubNav?: boolean;
   /**
+   * How the phone sub-nav lays out a group with more pages than fit on one row.
+   * `"wrap"` (default): every page in view, on as many rows as it takes — the bar
+   * grows. `"scroll"`: one row that scrolls sideways, faded at a cut edge, with the
+   * current page scrolled into view. A long group took four rows (~130px) of a 390px
+   * screen above the bottom bar (showcase audit); scrolling gives that back at the
+   * price of pages hidden past the edge, so it is the app's call, per shell.
+   */
+  mobileSubNavLayout?: "wrap" | "scroll";
+  /**
    * Lay the shell out inside its PARENT'S box instead of the viewport: `h-full` rather
    * than `h-dvh`, its own scroll container at every width, a bottom bar pinned to the
    * shell rather than the window, `--app-nav-h` published on the shell alone, and no
@@ -255,6 +265,7 @@ export function AppShell({
   expandLabel,
   subNav = "flyout",
   mobileSubNav = true,
+  mobileSubNavLayout = "wrap",
   toggleGroupLabel,
   embedded: embeddedProp,
   className,
@@ -433,7 +444,7 @@ export function AppShell({
           ref={navRef}
           className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)]"
         >
-          {mobileSubNav && <MobileSubNav nav={nav} />}
+          {mobileSubNav && <MobileSubNav nav={nav} layout={mobileSubNavLayout} />}
           <nav
             data-tour="nav"
             className="grid"
@@ -586,8 +597,17 @@ function MobileNavItem({ item }: { item: AppShellNavItem }) {
  * It slides in over 200ms (fade only under reduced motion) and wraps onto more rows
  * rather than scrolling, so every page of the group is in view at once.
  */
-function MobileSubNav({ nav }: { nav: AppShellNavItem[] }) {
+function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" | "scroll" }) {
   const { pathname } = useLocation();
+  const scroll = layout === "scroll";
+  const listRef = useRef<HTMLUListElement>(null);
+  const fade = useStripFade(listRef);
+  // The current page into view — the row only, never the page.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const current = list?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (scroll && list && current) scrollIntoStrip(list, current);
+  }, [scroll, pathname]);
   const group = nav.find(
     (item) =>
       !!item.items?.length &&
@@ -604,10 +624,17 @@ function MobileSubNav({ nav }: { nav: AppShellNavItem[] }) {
       className="animate-subnav border-b border-[var(--border)]"
     >
       <ul
-        // Wraps onto as many rows as the group needs rather than scrolling sideways: a
-        // sideways row hides pages past the edge, and every page of the group in view
-        // is the point of the row. The bar grows with it — `--app-nav-h` measures it.
-        className="flex flex-wrap gap-1.5 px-3 py-2"
+        ref={listRef}
+        // `wrap` (default) takes as many rows as the group needs: a sideways row hides
+        // pages past the edge, and every page of the group in view is the point of the
+        // row. The bar grows with it — `--app-nav-h` measures it. `scroll` is the app's
+        // opt-in trade: one row, the cut edge faded (see mobileSubNavLayout).
+        className={cn(
+          "flex gap-1.5 px-3 py-2",
+          scroll ? "overflow-x-auto overscroll-x-contain [scrollbar-width:none]" : "flex-wrap",
+        )}
+        data-overflow={scroll ? fade.overflow : undefined}
+        style={scroll && fade.mask ? { maskImage: fade.mask, WebkitMaskImage: fade.mask } : undefined}
       >
         {group.items!.map((sub) => (
           <li key={sub.to} className="shrink-0">

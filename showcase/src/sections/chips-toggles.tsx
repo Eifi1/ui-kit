@@ -161,7 +161,10 @@ function ToggleGroups() {
           a reader who can no longer see which option is chosen has been told less than before
           you disabled it. As a radio group it is ONE tab stop (the pressed segment) and the
           arrows move the choice, mirrored in RTL — tab in and press →. The 2px moat between segments is deliberate too — flush segments made
-          a hovered neighbour and the selected chip read as one smeared shape.
+          a hovered neighbour and the selected chip read as one smeared shape. So is the mixed
+          casing: <code className="font-mono">optionClassName=&quot;uppercase&quot;</code> dresses every
+          segment, and &ldquo;Calendar&rdquo;&apos;s own <code className="font-mono">className</code> is merged
+          after it and wins.
         </Note>
       </div>
     </Example>
@@ -466,7 +469,9 @@ function ChipLinksAndRemove() {
         ))}
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={removeLocked} onChange={(e) => setRemoveLocked(e.target.checked)} />
-          <code className="font-mono">removeDisabled</code> on the first
+          <span>
+            <code className="font-mono">removeDisabled</code> on the first
+          </span>
         </label>
         {filters.length < 3 && (
           <Button variant="ghost" onClick={() => setFilters(["Account: Main", "2026", "Category: Food"])}>

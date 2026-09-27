@@ -457,10 +457,15 @@ function LineItemsDemo() {
       <Row className="mb-3">
         <ToggleGroup
           ariaLabel="Remove confirmation"
+          // The prop name lives in the caption, not in both options: repeated there it was
+          // all a phone showed of either, cut to "confirmRem…" twice.
           options={[
-            { value: "press", label: "confirmRemove: true" },
-            { value: "dialog", label: "confirmRemove: useConfirm" },
+            { value: "press", label: "true" },
+            { value: "dialog", label: "useConfirm" },
           ]}
+          caption={(v) =>
+            v === "press" ? "confirmRemove: true — a second press" : "confirmRemove: useConfirm — a dialog"
+          }
           value={mode}
           onChange={setMode}
         />

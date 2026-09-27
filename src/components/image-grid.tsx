@@ -71,6 +71,18 @@ const ASPECT_CLASS = {
 } as const;
 
 /**
+ * A file name as stem and extension, so a tile can cut the stem and keep the
+ * extension whole: "floor-plan-level-2.p / df" (a break inside the extension) told the
+ * reader less than "floor-plan-le….pdf" does. A leading dot (".env") or an
+ * "extension" longer than five characters is not treated as one.
+ */
+export function splitFileName(name: string): [stem: string, ext: string] {
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0 || name.length - dot > 6) return [name, ""];
+  return [name.slice(0, dot), name.slice(dot)];
+}
+
+/**
  * A grid of thumbnails that open in a {@link Lightbox} — kastlan's room and defect
  * photos (room-inspector, unit-rooms-tab) and its floor plans (unit-floor-plan), each
  * of which drew its own `grid grid-cols-N` of `<img>` that nothing could open, with no
@@ -134,7 +146,7 @@ export function ImageGrid({
                 {kind === "file" ? (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-[var(--text-secondary)]">
                     <FileText aria-hidden className="size-6 shrink-0 text-[var(--text-muted)]" />
-                    <span aria-hidden className="line-clamp-2 break-all">{item.fileName ?? item.alt}</span>
+                    <FileNameLabel name={item.fileName ?? item.alt ?? ""} />
                   </span>
                 ) : (
                   <AuthedImage
@@ -153,7 +165,12 @@ export function ImageGrid({
                 <div
                   role="group"
                   aria-label={labels.actions(name)}
-                  className="absolute end-1 top-1 flex gap-1"
+                  // A backdrop behind the whole group, in the inverse token the overlay
+                  // buttons use: a translucent disc alone took most of its colour from
+                  // the picture, and on a pale photo or the light file tile the glyphs
+                  // washed out. Two layers of the inverse keep them readable over any
+                  // picture, in both themes.
+                  className="absolute end-1 top-1 flex gap-1 rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_40%,transparent)] p-0.5 backdrop-blur-sm"
                 >
                   {actions}
                 </div>
@@ -177,5 +194,16 @@ export function ImageGrid({
         />
       )}
     </>
+  );
+}
+
+/** One line: the stem truncates, the extension never does. */
+function FileNameLabel({ name }: { name: string }) {
+  const [stem, ext] = splitFileName(name);
+  return (
+    <span aria-hidden className="flex max-w-full min-w-0">
+      <span className="min-w-0 truncate">{stem}</span>
+      {ext && <span className="shrink-0">{ext}</span>}
+    </span>
   );
 }

@@ -216,7 +216,7 @@ function BreadcrumbVariants() {
           />
         </div>
         <div dir="rtl">
-          <p className={`mb-1 ${READOUT}`}>dir=&quot;rtl&quot;</p>
+          <p className={`mb-1 ${READOUT}`} dir="ltr">dir=&quot;rtl&quot;</p>
           <Breadcrumbs
             renderLink={routerCrumb}
             items={[

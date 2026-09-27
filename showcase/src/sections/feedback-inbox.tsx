@@ -283,7 +283,7 @@ export function FeedbackInbox() {
         <OutTable
           rows={FEEDBACK_STATUS_ORDER.map((status): [string, ReactNode] => [
             `visibleFeedbackStatuses("${status}")`,
-            visibleFeedbackStatuses(status).join(", "),
+            <StatusTokens statuses={visibleFeedbackStatuses(status)} />,
           ])}
         />
         <p className="mt-3 text-xs text-[var(--text-secondary)]">
@@ -302,10 +302,10 @@ export function FeedbackInbox() {
         <OutTable
           rows={[
             ["selectableFeedbackStatuses(…).length", String(selectableFeedbackStatuses("OPEN").length)],
-            ['visibleFeedbackStatuses("WONT_DO")', visibleFeedbackStatuses("WONT_DO").join(", ")],
+            ['visibleFeedbackStatuses("WONT_DO")', <StatusTokens statuses={visibleFeedbackStatuses("WONT_DO")} />],
             [
               'selectableFeedbackStatuses("WONT_DO")',
-              selectableFeedbackStatuses("WONT_DO").join(", "),
+              <StatusTokens statuses={selectableFeedbackStatuses("WONT_DO")} />,
             ],
           ]}
         />
@@ -633,5 +633,23 @@ function DetailPanel() {
         <FeedbackProse empty="Nothing back yet — the row is waiting on them, which is what IN_EVALUATION means." />
       </FeedbackDetailSection>
     </FeedbackDetail>
+  );
+}
+
+/** A status list as tokens that never break. Joined into one string, the readout's soft
+ *  breaks split the enum values at their underscores — "NEEDS_ / LIVE_TEST" — and a
+ *  value broken in two reads as two values. */
+function StatusTokens({ statuses }: { statuses: readonly string[] }) {
+  return (
+    <span className="flex flex-wrap gap-1">
+      {statuses.map((s) => (
+        <span
+          key={s}
+          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 whitespace-nowrap"
+        >
+          {s}
+        </span>
+      ))}
+    </span>
   );
 }

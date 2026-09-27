@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode, Ref } from "react";
-import { Paperclip, Send } from "lucide-react";
+import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
@@ -336,18 +336,7 @@ function DefaultAttachment({
   size: (bytes: number) => string;
 }) {
   const { name, url, type } = attachment;
-  if (url && type?.startsWith("image/")) {
-    return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="block">
-        <img
-          src={url}
-          alt={name}
-          loading="lazy"
-          className="h-20 w-20 rounded border border-[var(--border)] object-cover"
-        />
-      </a>
-    );
-  }
+  if (url && type?.startsWith("image/")) return <ImageThumbnail url={url} name={name} />;
   const content = (
     <>
       <Paperclip className="size-3.5 shrink-0" aria-hidden />
@@ -365,6 +354,40 @@ function DefaultAttachment({
     </a>
   ) : (
     <span className={chip}>{content}</span>
+  );
+}
+
+/** An image attachment's thumbnail. The box is drawn before the picture arrives —
+ *  `loading="lazy"` leaves it empty until it nears the viewport, and a URL that has
+ *  expired never fills it — and an empty bordered square read as a broken layout, not
+ *  as a picture. So the box carries an image glyph underneath until the picture
+ *  covers it, and swaps it for a broken-image glyph when the load fails. */
+function ImageThumbnail({ url, name }: { url: string; name: string }) {
+  // Keyed on the URL, so a message whose attachment is replaced tries the new one.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const failed = failedUrl === url;
+  const Glyph = failed ? ImageOff : ImageIcon;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="relative block h-20 w-20 overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-surface-2)]"
+    >
+      <Glyph aria-hidden className="absolute inset-0 m-auto size-6 text-[var(--text-muted)]" />
+      {!failed && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- load/error are resource events, not interactions
+        <img
+          src={url}
+          alt={name}
+          loading="lazy"
+          onError={() => setFailedUrl(url)}
+          className="relative h-full w-full object-cover"
+        />
+      )}
+      {/* The <img> and its alt are gone once it failed; the link still needs a name. */}
+      {failed && <span className="sr-only">{name}</span>}
+    </a>
   );
 }
 

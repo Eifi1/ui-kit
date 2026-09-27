@@ -26,7 +26,7 @@
 // "category"`) or real dates (`x.type: "time"`) instead of a number the app had to
 // invent. What each of those does to the zoom is decided in one place,
 // `defaultZoomAxes` in `chart-zoom.tsx`.
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
@@ -884,6 +884,55 @@ function focusedBarShape(index: number) {
   };
 }
 
+/** A marker label's size and weight — the one place both the text and its width
+ *  estimate read them from. */
+const MARKER_LABEL_SIZE = 11;
+
+/**
+ * A marker's label, centred over its point but clamped inside the plot. recharts'
+ * `position: "top"` centres on the point no matter where it is, so a marker near the
+ * plot's end (the last sample, a projection's end point) had half its label cut off by
+ * the card — "over the c" on a phone. The width is measured once drawn; the first
+ * frame (and a DOM without layout) uses a 0.6em-per-character estimate, which errs wide.
+ */
+function MarkerLabel({
+  viewBox,
+  value,
+}: {
+  viewBox?: { x?: number; y?: number; width?: number };
+  value?: ReactNode;
+}) {
+  const plot = usePlotArea();
+  const ref = useRef<SVGTextElement>(null);
+  const [measured, setMeasured] = useState<number>();
+  const text = value == null ? "" : String(value);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof el.getComputedTextLength !== "function") return;
+    const w = el.getComputedTextLength();
+    if (w > 0 && w !== measured) setMeasured(w);
+  }, [text, measured]);
+  if (!viewBox || viewBox.x == null || viewBox.y == null || text === "") return null;
+  const cx = viewBox.x + (viewBox.width ?? 0) / 2;
+  const half = (measured ?? text.length * MARKER_LABEL_SIZE * 0.6) / 2;
+  // The start clamp applied last: a label wider than the plot keeps its start on screen.
+  const x = plot ? Math.max(plot.x + half, Math.min(cx, plot.x + plot.width - half)) : cx;
+  return (
+    <text
+      ref={ref}
+      x={x}
+      y={viewBox.y - 5}
+      textAnchor="middle"
+      fontSize={MARKER_LABEL_SIZE}
+      fontWeight={600}
+      fill="var(--text-primary)"
+      className="recharts-label"
+    >
+      {text}
+    </text>
+  );
+}
+
 /**
  * The keyboard's way onto a clickable chart (`onPointClick`): one focusable `<rect>` per
  * bar, or per slot when there are no bars, laid over the plot INSIDE the recharts chart,
@@ -1350,6 +1399,11 @@ function SeriesPlot({
           tickLine={false}
           axisLine={false}
           minTickGap={32}
+          // Where the ticks crowd, drop every Nth rather than recharts' default
+          // `preserveEnd`, which drops whichever single tick collides: a phone's whole-week
+          // axis came out 2 4 6 8 _ 12, a doubled gap that reads as a missing week. Every
+          // other tick, keeping the last, gives 4 8 12 — still an even ruler.
+          interval="equidistantPreserveEnd"
           tick={x.ticks === false ? false : undefined}
           {...(tickAngle
             ? { angle: tickAngle, textAnchor: tickAngle < 0 ? "end" : "start" }
@@ -1563,13 +1617,7 @@ function SeriesPlot({
               ifOverflow="discard"
               label={
                 marker.label
-                  ? {
-                      value: marker.label,
-                      position: "top",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      fill: "var(--text-primary)",
-                    }
+                  ? { value: marker.label, position: "top", content: <MarkerLabel /> }
                   : undefined
               }
             />

@@ -859,9 +859,12 @@ function RangeTriggerExample() {
       hint="your own trigger button, wearing the kit's attributes: here it names the active preset and joins a ToggleGroup flush"
     >
       <Stage>
-        <div data-stage="wide" className="mx-auto flex w-full max-w-lg items-stretch">
+        {/* Stacked below `sm`: side by side, the shrink-0 group left the trigger about
+            290px at phone width, too little for a preset name and its dates. Stacked, the
+            two still join flush — along the top edge instead of the end edge. */}
+        <div data-stage="wide" className="mx-auto flex w-full max-w-lg flex-col sm:flex-row sm:items-stretch">
           <DateRangePicker
-            className="min-w-0 flex-1"
+            className="min-w-0 sm:flex-1"
             from={range.from}
             to={range.to}
             locale={LOCALE}
@@ -872,7 +875,10 @@ function RangeTriggerExample() {
             formatOptions={{ dateStyle: "medium" }}
             onChange={(from, to, presetId) => setRange({ from, to, preset: presetId ?? null })}
             renderTrigger={({ triggerProps, valueProps, preset, text }) => (
-              <button {...triggerProps} className={cn(triggerProps.className, "rounded-e-none")}>
+              <button
+                {...triggerProps}
+                className={cn(triggerProps.className, "rounded-b-none sm:rounded-b-md sm:rounded-e-none")}
+              >
                 <span {...valueProps} className="min-w-0 truncate">
                   {preset ? (
                     <>
@@ -891,7 +897,7 @@ function RangeTriggerExample() {
             value={granularity}
             onChange={setGranularity}
             options={GRANULARITY_OPTIONS}
-            className="w-auto shrink-0 rounded-s-none border-s-0"
+            className="rounded-t-none border-t-0 sm:w-auto sm:shrink-0 sm:rounded-md sm:rounded-s-none sm:border-t sm:border-s-0"
           />
         </div>
       </Stage>

@@ -91,7 +91,9 @@ export function Fields() {
         label="Input — unlabelled and labelled"
         hint="the label is not a sibling <label> but a float inside the field's top strip"
       >
-        <Row>
+        {/* Bottoms aligned: a labelled Input is 42px and an unlabelled one 38px (the
+            label strip), so centred side by side the pair sat 2px off at both edges. */}
+        <Row className="items-end">
           <Input
             className="w-56"
             placeholder="Payee reference"
@@ -116,7 +118,8 @@ export function Fields() {
       </Example>
 
       <Example label="Input — invalid" hint="type something without an @ to raise the ring">
-        <Stage>
+        {/* items-end: labelled (42px) and unlabelled (38px) fields share a baseline. */}
+        <Stage className="items-end">
           <Input
             className="w-56"
             label="Email"
@@ -146,7 +149,8 @@ export function Fields() {
         label="Input — password reveal"
         hint="type=password gets an eye toggle — a real tab stop with aria-pressed, named by passwordLabels"
       >
-        <Stage>
+        {/* items-end: labelled (42px) and unlabelled (38px) fields share a baseline. */}
+        <Stage className="items-end">
           <Input
             className="w-56"
             label="Passphrase"

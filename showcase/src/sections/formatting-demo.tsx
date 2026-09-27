@@ -99,8 +99,27 @@ function FormatterTable() {
           onChange={(e) => setRaw(e.target.value)}
         />
       </div>
-      {/* The table is wider than a phone: it scrolls inside its card rather than the page. */}
-      <div className="overflow-x-auto">
+      {/* On a phone the call and its five results are stacked instead: as a sideways-scrolling
+          table only the en-GB column was ever on screen, cut at the card edge, with nothing to
+          say four more locales were off to the right — and the side-by-side is the point. */}
+      <ul className="space-y-3 sm:hidden">
+        {SPECIMENS.map((s) => (
+          <li key={s.expr} className="border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0">
+            <p className="break-words font-mono text-xs text-[var(--text-secondary)]">{s.expr}</p>
+            <dl className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
+              {LOCALES.map((l) => (
+                <div key={l} className="contents">
+                  <dt className="font-mono text-[var(--text-muted)]">{l}</dt>
+                  <dd className="break-words font-mono font-medium text-[var(--text-primary)]">{s.run(l, value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ul>
+      {/* From `sm` up it is the table; still wider than a small tablet, so it scrolls inside
+          its card rather than the page. */}
+      <div className="overflow-x-auto max-sm:hidden">
         <table className="w-full min-w-[56rem] text-left text-xs">
           <thead>
             <tr className="border-b border-[var(--border)]">

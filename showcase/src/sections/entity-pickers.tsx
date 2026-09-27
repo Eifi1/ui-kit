@@ -279,6 +279,7 @@ export function EntityPickers() {
             label="Markets"
             options={MARKETS}
             values={stateMarkets}
+            itemLabel={(n) => `${n} market${n === 1 ? "" : "s"}`}
             onChange={setStateMarkets}
             placeholder="None chosen"
             error={stateMarkets.length === 0 ? "Sell in at least one market" : undefined}
@@ -310,6 +311,9 @@ export function EntityPickers() {
             label="Markets (disabled)"
             options={MARKETS}
             values={[MARKETS[0].value]}
+            // MultiSelect's default summary is the bare count — alone in a field, "1"
+            // did not say one of what.
+            itemLabel={(n) => `${n} market${n === 1 ? "" : "s"}`}
             onChange={() => {}}
             disabled
           />

@@ -197,7 +197,9 @@ export function FormItem({ className, ...rest }: FormItemProps) {
   const value = useMemo(() => ({ id, mounted, mark }), [id, mounted, mark]);
   return (
     <FormItemContext.Provider value={value}>
-      <div data-slot="form-item" {...rest} className={cn("grid gap-1", className)} />
+      {/* `content-start`: stretched to a taller neighbour's height in a grid row, the
+          item gave the extra to its rows and its control sat lower (showcase audit). */}
+      <div data-slot="form-item" {...rest} className={cn("grid content-start gap-1", className)} />
     </FormItemContext.Provider>
   );
 }

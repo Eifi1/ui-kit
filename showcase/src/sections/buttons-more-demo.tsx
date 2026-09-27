@@ -356,7 +356,7 @@ function AvatarBadges() {
           </Row>
         </div>
         <div className="space-y-2" dir="rtl">
-          <p className={CAPTION}>dir=&quot;rtl&quot; — the dot moves to the top-left</p>
+          <p className={CAPTION} dir="ltr">dir=&quot;rtl&quot; — the dot moves to the top-left</p>
           <Row>
             <UserAvatar name="ليلى حسن" badge={{ label: "٣ غير مقروءة" }} />
             <UserAvatar size="lg" name="ليلى حسن" badge={{ label: "متصل", tone: "success" }} />

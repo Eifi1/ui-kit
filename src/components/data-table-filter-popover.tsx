@@ -163,9 +163,12 @@ export function FilterPopover<T>({
     const set = (from: string, to: string) => onChange({ type: "date", from, to });
     const presets = dateRangePresets();
     const isActivePreset = (p: { from: string; to: string }) => v.from === p.from && v.to === p.to;
+    // Side by side, the 7rem preset column leaves a phone's calendar and its two
+    // native date inputs ~180px, which clips "mm/dd/yyyy" mid-placeholder. Below `sm`
+    // the presets wrap as a row above the calendar, which then gets the panel's width.
     return (
-      <div className="flex gap-3">
-        <ul className="flex w-28 shrink-0 flex-col gap-0.5 text-xs">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <ul className="flex flex-wrap gap-0.5 text-xs sm:w-28 sm:shrink-0 sm:flex-col sm:flex-nowrap">
           {presets.map((p) => {
             const active = isActivePreset(p);
             return (
@@ -174,7 +177,7 @@ export function FilterPopover<T>({
                   type="button"
                   onClick={() => set(p.from, p.to)}
                   className={cn(
-                    "block w-full rounded px-2 py-1 text-left transition-colors",
+                    "block rounded px-2 py-1 text-start transition-colors sm:w-full",
                     active
                       ? "bg-[var(--brand-bg)] text-[var(--brand-muted)]"
                       : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
