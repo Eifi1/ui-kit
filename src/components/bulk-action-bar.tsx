@@ -277,7 +277,8 @@ export function BulkActionBar({
       <X />
     </IconButton>
   ) : (
-    <Button type="button" variant="secondary" size="sm" onClick={onClear}>
+    // `ms-auto`: when the actions wrap, the way out still sits at the bar's end.
+    <Button type="button" variant="secondary" size="sm" onClick={onClear} className="ms-auto">
       {labels.clear}
     </Button>
   );
@@ -296,7 +297,11 @@ export function BulkActionBar({
           "sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
         shown ? "animate-overlay" : "animate-overlay-out",
       );
-  const rowClass = cn("flex items-center", floating ? "gap-1 px-2 py-1" : "gap-2 px-3 py-2");
+  // `flex-wrap`: on a phone the count, three actions and a text "Clear selection" are
+  // wider than the screen. Without wrapping the count (the one shrinkable item)
+  // collapsed to a sliver and the rest ran out of the bar; wrapped, the actions that do
+  // not fit move to a second line and every label stays whole.
+  const rowClass = cn("flex flex-wrap items-center", floating ? "gap-1 px-2 py-1" : "gap-2 px-3 py-2");
   const surfaceStyle = floating ? { ...FLOATING_STYLE, ...style } : style;
 
   const toolbar = (
@@ -324,7 +329,11 @@ export function BulkActionBar({
       className={hasPanel ? rowClass : cn(rowClass, surfaceClass, className)}
     >
       {floating && clear}
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-primary)]">
+      {/* `flex-auto`, not `flex-1`: a zero basis told the wrapping that the count needs
+          no room, so it was the item squeezed to nothing instead of a line breaking.
+          Its own width is its basis now; `truncate` is left for a label too long for a
+          line on its own. */}
+      <span className="min-w-0 flex-auto truncate text-sm font-medium text-[var(--text-primary)]">
         {labels.selected(shownCount)}
       </span>
       {/* `contents`, so the caller's controls are flex items of the bar itself. */}
