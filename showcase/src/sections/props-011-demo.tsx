@@ -521,7 +521,8 @@ export function ClipsMarkerDemo() {
       hint="CLIPS_ATTRIBUTE: counts as clipping whatever its computed overflow, so jsdom portals like the browser"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="min-w-0 space-y-1">
+        {/* space-y-2, not 1: at 4px the readout under the box read as touching it. */}
+        <div className="min-w-0 space-y-2">
           <p className={READOUT}>
             &lt;div {CLIPS_ATTRIBUTE} className=&quot;overflow-auto&quot;&gt;
           </p>

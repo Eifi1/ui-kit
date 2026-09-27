@@ -260,12 +260,17 @@ function SmallDots() {
             );
           }}
         />
-        <OutTable
-          rows={[
-            ["from", range[0] || "—"],
-            ["to", range[1] || "—"],
-          ]}
-        />
+        {/* A floor on the readout's width: beside the calendar on a phone it got the
+            leftover ~90px and printed the dates one character per line. With a 12rem
+            minimum it wraps under the calendar instead, and sits beside it on desktop. */}
+        <div className="min-w-48 flex-1">
+          <OutTable
+            rows={[
+              ["from", range[0] || "—"],
+              ["to", range[1] || "—"],
+            ]}
+          />
+        </div>
       </Row>
       <div className="mt-3">
         <Note>

@@ -129,29 +129,30 @@ export function FeedbackCompose() {
         hint="Send stays disabled until BOTH subject and body are non-empty — the category is not part of the check."
       >
         <Dialog />
+        {/* The two notes live in the card: as siblings of the Example they took the
+            page's 40px section gap and floated away from the dialog they explain. */}
+        <Note>
+          <strong>
+            <code className="font-mono">onCaptureScreenshot</code> here is a stand-in.
+          </strong>{" "}
+          The prop takes a function that snapshots the app view and returns a{" "}
+          <code className="font-mono">File</code>; both consuming apps implement it with{" "}
+          <code className="font-mono">modern-screenshot</code>, which is a dependency of theirs and
+          not of this repository — the kit stays free of a DOM-rasterising library it would
+          otherwise force on every consumer. This page draws a labelled card on a canvas instead.
+          Without the prop there is no “Capture screenshot” button at all.
+        </Note>
+
+        <Note>
+          <strong>The form resets every time it opens.</strong> An effect keyed on{" "}
+          <code className="font-mono">open</code> clears subject, body and attachment, so a report
+          abandoned with Escape is gone — and the dialog is{" "}
+          <em>rendered unconditionally with an <code className="font-mono">open</code> prop</em>,
+          unlike <code className="font-mono">Modal</code> next door, which the caller mounts and
+          unmounts. Category is the exception: it is controlled from outside, so it survives a
+          close, which is why it is the one field with a prop pair rather than internal state.
+        </Note>
       </Example>
-
-      <Note>
-        <strong>
-          <code className="font-mono">onCaptureScreenshot</code> here is a stand-in.
-        </strong>{" "}
-        The prop takes a function that snapshots the app view and returns a{" "}
-        <code className="font-mono">File</code>; both consuming apps implement it with{" "}
-        <code className="font-mono">modern-screenshot</code>, which is a dependency of theirs and
-        not of this repository — the kit stays free of a DOM-rasterising library it would
-        otherwise force on every consumer. This page draws a labelled card on a canvas instead.
-        Without the prop there is no “Capture screenshot” button at all.
-      </Note>
-
-      <Note>
-        <strong>The form resets every time it opens.</strong> An effect keyed on{" "}
-        <code className="font-mono">open</code> clears subject, body and attachment, so a report
-        abandoned with Escape is gone — and the dialog is{" "}
-        <em>rendered unconditionally with an <code className="font-mono">open</code> prop</em>,
-        unlike <code className="font-mono">Modal</code> next door, which the caller mounts and
-        unmounts. Category is the exception: it is controlled from outside, so it survives a
-        close, which is why it is the one field with a prop pair rather than internal state.
-      </Note>
 
       <Example
         label="FeedbackAttachmentField — standalone"
@@ -351,12 +352,12 @@ function Standalone() {
       />
       <RejectedLine kind={rejected} />
       <FileReadout file={file} />
-      <p className="text-xs text-[var(--text-muted)]">
+      <Note>
         Once a file is chosen the buttons are replaced by the preview, so there is no “replace”
         without removing first. A non-image would get a neutral file tile instead of the
         thumbnail — unreachable with the default accept list, and kept for a consumer that
         widens it.
-      </p>
+      </Note>
     </div>
   );
 }
@@ -403,14 +404,16 @@ function ProviderLabels() {
         </UiKitProvider>
         <FileReadout file={nested} />
       </div>
-      <p className="text-xs text-[var(--text-muted)] md:col-span-2">
-        Before 0.7.0 <code className="font-mono">labels</code> was required and the two optional
-        keys fell back to hard-coded English, so a German app relying on its provider got
-        &ldquo;Capture screenshot&rdquo; under a German form. Switch this page&apos;s language:
-        the left field follows; the right one keeps the nested provider&apos;s German. The
-        heading (<code className="font-mono">attachment</code>) is not in the namespace — a note
-        editor wants none — so it stays a prop.
-      </p>
+      <div className="md:col-span-2">
+        <Note>
+          Before 0.7.0 <code className="font-mono">labels</code> was required and the two optional
+          keys fell back to hard-coded English, so a German app relying on its provider got
+          &ldquo;Capture screenshot&rdquo; under a German form. Switch this page&apos;s language:
+          the left field follows; the right one keeps the nested provider&apos;s German. The
+          heading (<code className="font-mono">attachment</code>) is not in the namespace — a note
+          editor wants none — so it stays a prop.
+        </Note>
+      </div>
     </div>
   );
 }
@@ -435,11 +438,11 @@ function Validation() {
       />
       <RejectedLine kind={rejected} />
       <FileReadout file={file} />
-      <p className="text-xs text-[var(--text-muted)]">
+      <Note>
         Both checks run on the picked file, the captured screenshot and the pasted image alike —
         one <code className="font-mono">pick()</code> behind all three ways in, which is the
         point of the field being one component rather than three handlers.
-      </p>
+      </Note>
     </div>
   );
 }
@@ -477,10 +480,10 @@ function DocumentPaste() {
       />
       <RejectedLine kind={rejected} />
       <FileReadout file={file} />
-      <p className="text-xs text-[var(--text-muted)]">
+      <Note>
         Leave the switch off when the field is inline on a page with other fields: a paste meant
         for one of them would otherwise land here.
-      </p>
+      </Note>
     </div>
   );
 }
@@ -518,11 +521,11 @@ function PasteFrom() {
       />
       <RejectedLine kind={rejected} />
       <FileReadout file={file} />
-      <p className="text-xs text-[var(--text-muted)]">
+      <Note>
         A clipboard carrying both text and an image still pastes its text into the textarea: the
         field calls <code className="font-mono">preventDefault()</code> only once it has actually
         found an image, so an ordinary copy is left where it was aimed.
-      </p>
+      </Note>
     </div>
   );
 }

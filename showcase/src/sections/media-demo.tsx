@@ -140,7 +140,9 @@ function ImageGridSpecimen() {
         <ImageGrid
           items={items}
           aspect={aspect}
-          minTileSize={112}
+          // 96, the default: at 112 three tiles and their gaps need ~350px and a phone's
+          // card has ~320, so the "three across on a phone" the Note promises was two.
+          minTileSize={96}
           renderActions={(item) => {
             const key = String(item.key);
             return (
@@ -204,8 +206,8 @@ function ImageGridSpecimen() {
           viewer and the viewer clamps to the set that is left.
         </Note>
         <Note>
-          Responsive by default: {code("repeat(auto-fill, minmax(min(112px, 100%), 1fr))")} — three across
-          on a phone, six on a desktop, no breakpoint chosen. {code("columns")} fixes the count instead.
+          Responsive by default: {code("repeat(auto-fill, minmax(min(96px, 100%), 1fr))")} — three across
+          on a phone, as many as fit on a desktop, no breakpoint chosen. {code("columns")} fixes the count instead.
         </Note>
       </div>
     </Example>

@@ -300,7 +300,10 @@ function AnchorField({
             style={auto ? { background: auto } : undefined}
           />
           <span className="font-mono text-xs text-[var(--text-muted)]">
-            {auto ? `auto · ${auto}` : "auto · not derived unless pinned"}
+            {/* "none" and not a sentence: the long "not derived unless pinned" pushed
+                accent's Pin onto a line of its own, so its row broke unlike its siblings.
+                The hint under it already says the role exists only when pinned. */}
+            {auto ? `auto · ${auto}` : "auto · none"}
           </span>
           <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => onChange(auto ?? seed)}>
             Pin
@@ -941,6 +944,9 @@ export function PaletteGenerator() {
 const fmt = (n: number, digits = 3) => n.toFixed(digits);
 const lch = (v: { l: number; c: number; h: number } | null) =>
   v ? `{ l: ${fmt(v.l)}, c: ${fmt(v.c)}, h: ${fmt(v.h, 1)} }` : "null";
+/** Rounded like the other rows: the raw round trip printed `79.00000202059144`. */
+const rgbText = (v: { r: number; g: number; b: number }) =>
+  `{ r: ${fmt(v.r)}, g: ${fmt(v.g)}, b: ${fmt(v.b)} }`;
 const CVD_TYPES: CvdType[] = ["protanopia", "deuteranopia", "tritanopia"];
 
 function Chip({ hex }: { hex: string }) {
@@ -976,7 +982,7 @@ function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
           [`describe("${brand}")`, lch(describe(brand))],
           [`hexToOklch("${brand}")`, lch(hexToOklch(brand))],
           ["rgbToOklch(parseHex(brand))", lch(asLch)],
-          ["oklchToRgb(rgbToOklch(rgb))", JSON.stringify(oklchToRgb(asLch))],
+          ["oklchToRgb(rgbToOklch(rgb))", rgbText(oklchToRgb(asLch))],
           ["oklchToHex(rgbToOklch(rgb))", <Chip hex={oklchToHex(asLch)} />],
           ["luminance(rgb)", fmt(luminance(rgb), 4)],
           [`contrast("${brand}", "#ffffff")`, `${fmt(contrast(brand, "#ffffff"), 2)} : 1`],

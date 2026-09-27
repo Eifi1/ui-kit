@@ -432,8 +432,13 @@ function TriggerOnlySpecimen() {
         controls={rowsId}
         open={open}
         onOpenChange={setOpen}
-        trailing={<span className="text-xs text-[var(--text-muted)]">aria-controls → the table&apos;s rows</span>}
+        trailing={
+          <span className="text-xs text-[var(--text-muted)] max-sm:hidden">aria-controls → the table&apos;s rows</span>
+        }
       />
+      {/* On a phone the caption beside the title pushed "Show 3 hidden accounts" onto
+          two lines; there it goes under the header instead (only one is ever shown). */}
+      <p className="text-xs text-[var(--text-muted)] sm:hidden">aria-controls → the table&apos;s rows</p>
       <table className="w-full overflow-hidden rounded-lg border border-[var(--border)] text-sm">
         <tbody className="divide-y divide-[var(--border)]">
           {visible.map((a) => (

@@ -94,9 +94,27 @@ function ProgressIndeterminate() {
       hint="value undefined: work under way, amount unknown; aria-busy, and still under reduced motion"
     >
       <Stage>
-        <ProgressBar label="Waiting for the bank" />
-        <ProgressBar aria-label="Re-indexing" tone="info" size="sm" />
-        <ProgressBar />
+        {/* One column, each bar under a caption. Left to the Stage's wrapping rows, the
+            labelled bar, the sm one (no visible label, so its track sat at the label's
+            height) and the unnamed one landed in three different places. The captions
+            are the showcase's, hidden from the tree: each bar already has its name. */}
+        <div data-stage="wide">
+          <div className="mx-auto grid max-w-md gap-5">
+            <ProgressBar label="Waiting for the bank" />
+            <div className="space-y-1.5">
+              <p aria-hidden className="font-mono text-xs text-[var(--text-muted)]">
+                aria-label=&quot;Re-indexing&quot; · tone=&quot;info&quot; · size=&quot;sm&quot;
+              </p>
+              <ProgressBar aria-label="Re-indexing" tone="info" size="sm" />
+            </div>
+            <div className="space-y-1.5">
+              <p aria-hidden className="font-mono text-xs text-[var(--text-muted)]">
+                no label, no aria-label
+              </p>
+              <ProgressBar />
+            </div>
+          </div>
+        </div>
       </Stage>
       <Note>
         The third has neither a <code className="font-mono">label</code> nor an{" "}

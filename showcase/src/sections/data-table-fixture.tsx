@@ -123,7 +123,9 @@ export function Amount({ value }: { value: number }) {
     <span
       className={value < 0 ? "text-[var(--money-expense)]" : "text-[var(--money-income)]"}
     >
-      {AMOUNT_FMT.format(value)}
+      {/* <bdi dir="ltr">: a figure reads left to right in every script. Inside the RTL
+          table the bidi algorithm otherwise moved the minus to the far end — "320.50-". */}
+      <bdi dir="ltr">{AMOUNT_FMT.format(value)}</bdi>
     </span>
   );
 }

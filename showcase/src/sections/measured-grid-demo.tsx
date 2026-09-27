@@ -192,15 +192,20 @@ export function MeasuredGridDemo() {
               label="Right-to-left"
               columns={[{ label: "x" }, { label: "y" }]}
               views={["cells"]}
+              // The English count inside a right-to-left table: the bidi algorithm puts
+              // the number at the start of an RTL run, so "3 points" read "points 3".
+              // FSI…PDI isolate it as its own left-to-right phrase — what <bdi> does, in
+              // a string. An Arabic dictionary's own words would not need it.
+              labels={{ points: (n) => `\u2068${n === 1 ? "1 point" : `${n} points`}\u2069` }}
               {...rtl.props}
             />
           </div>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           Click the first cell (on the right) and press ←: the caret moves to the next column, which
           is further left. Left and Right are visual directions, not &quot;previous&quot; and
           &quot;next&quot;.
-        </p>
+        </Note>
       </Example>
 
       <Example label="useWindowedRows — a list of your own" hint="10,000 fixed-height rows; only the visible ones and a few either side are mounted">

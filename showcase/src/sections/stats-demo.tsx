@@ -38,14 +38,15 @@ export function StatsDemo() {
         <div className="mt-4 max-w-sm">
           <Sparkline data={VISITS} fluid height={32} variant="area" label="Visits (fluid)" />
         </div>
+        {/* Inside the card: as a sibling of the Example it took the page's 40px
+            section gap and floated away from the sparklines it explains. */}
+        <Note>
+          The scale is tight by default — the price above moved from 9.75 to 12.40 and the
+          line uses the whole box. Bars include zero; pass <code>min</code>/<code>max</code>{" "}
+          to pin the scale, and <code>referenceValue</code> for a zero or target line. A gap
+          (<code>null</code>) breaks the line rather than bridging it.
+        </Note>
       </Example>
-
-      <Note>
-        The scale is tight by default — the price above moved from 9.75 to 12.40 and the
-        line uses the whole box. Bars include zero; pass <code>min</code>/<code>max</code>{" "}
-        to pin the scale, and <code>referenceValue</code> for a zero or target line. A gap
-        (<code>null</code>) breaks the line rather than bridging it.
-      </Note>
 
       <Example label="KPI row" hint="StatTileGrid fits columns to its own width">
         <StatTileGrid>

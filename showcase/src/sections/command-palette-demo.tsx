@@ -647,8 +647,12 @@ function DensitySyncDemo() {
   return (
     <div className="space-y-3">
       <Row>
+        {/* Both groups content-sized. At the kit's default full width each took a row of
+            its own and split it by label length — even halves for compact/comfortable,
+            uneven for the longer provider labels — so the pair never looked alike. */}
         <ToggleGroup<Density>
           aria-label="density"
+          className="w-auto"
           value={density}
           onChange={setDensity}
           options={[
@@ -658,6 +662,7 @@ function DensitySyncDemo() {
         />
         <ToggleGroup<"sync" | "async">
           aria-label="provider"
+          className="w-auto"
           value={sync ? "sync" : "async"}
           onChange={(v) => setSync(v === "sync")}
           options={[

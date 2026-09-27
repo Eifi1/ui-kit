@@ -264,7 +264,9 @@ function SignatureViews() {
         <SignatureView
           label="Framed"
           value={png}
-          frameClassName="border-2 border-dashed border-[var(--brand)] bg-[var(--brand-muted)]"
+          // brand-bg, the brand's tint for a surface — not brand-muted, a text colour the
+          // ink could not be read on.
+          frameClassName="border-2 border-dashed border-[var(--brand)] bg-[var(--brand-bg)]"
         />
         <SignatureView
           label="Unterschrift"

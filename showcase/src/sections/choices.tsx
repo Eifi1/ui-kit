@@ -87,7 +87,16 @@ export function Choices() {
             {/* `invalid` alone: painted and announced, with the message living
                 elsewhere (a summary at the top of a form). */}
             <Checkbox label="Invalid, no message" invalid />
-            <Checkbox aria-label="Bare box, named by aria-label" defaultChecked />
+            {/* A bare box has no visible label by design, so the caption beside it is
+                the showcase's, not the checkbox's: without it the box read as an
+                orphan left over from the row above. `aria-hidden` — the box already has
+                its name from aria-label, and the caption would say it twice. */}
+            <div className="flex items-center gap-2">
+              <Checkbox aria-label="Bare box, named by aria-label" defaultChecked />
+              <span aria-hidden className="text-xs text-[var(--text-muted)]">
+                No visible label — named by <code className="font-mono">aria-label</code>
+              </span>
+            </div>
           </div>
         </Stage>
       </Example>

@@ -591,6 +591,11 @@ const TRI_OPTIONS: { value: Tri; label: string }[] = [
   { value: "on", label: "on" },
   { value: "off", label: "off" },
 ];
+/** The control rows' prop names. On a phone each control wraps to a line of its own,
+ *  and a label only as wide as its word started every group at a different x; a fixed
+ *  column (wide enough for "columnSettings") lines the groups up. From `sm` they sit
+ *  inline, where a column would only be a gap. */
+const TRI_LABEL = "font-mono max-sm:w-28 max-sm:shrink-0";
 const tri = (v: Tri) => (v === "preset" ? undefined : v === "on");
 
 function ReportTable() {
@@ -608,7 +613,7 @@ function ReportTable() {
     >
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
         <span className="flex items-center gap-2">
-          chrome
+          <code className={TRI_LABEL}>chrome</code>
           <ToggleGroup<DataTableChrome>
             aria-label="chrome"
             value={chrome}
@@ -620,7 +625,7 @@ function ReportTable() {
           />
         </span>
         <span className="flex items-center gap-2">
-          sortCycle
+          <code className={TRI_LABEL}>sortCycle</code>
           <ToggleGroup<SortCycle>
             aria-label="sortCycle"
             value={cycle}
@@ -645,7 +650,7 @@ function ReportTable() {
           ] as const
         ).map(([name, value, set]) => (
           <span key={name} className="flex items-center gap-2">
-            <code className="font-mono">{name}</code>
+            <code className={TRI_LABEL}>{name}</code>
             <ToggleGroup<Tri> aria-label={name} value={value} onChange={set} options={TRI_OPTIONS} />
           </span>
         ))}
@@ -814,15 +819,18 @@ function FillHeightTable() {
           rows={ROWS}
           columns={SMALL_COLUMNS}
           rowKey={(r) => r.id}
-          defaultPageSize={25}
+          // Ten, not 25: with every row on one page there is no pager, and the Note's
+          // "the pager stays pinned to the bottom" had nothing to point at.
+          defaultPageSize={10}
           fillHeight
           labels={{ table: "Fill-height table" }}
         />
       </div>
       <div className="mt-3">
         <Note>
-          The pager stays pinned to the bottom of the pane and the header to the top (on a
-          phone the card list scrolls between the toolbar and the pager), and
+          The pager stays pinned to the bottom of the pane and the header to the top. On a
+          phone a client-side table has no pager — it reveals more cards as the list scrolls —
+          so there the card list fills the pane under the toolbar and scrolls inside it. And
           <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}

@@ -583,13 +583,13 @@ export function Numbers() {
             />
           </div>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           Open the currency list on the first two and search &quot;Franken&quot;: the filter matches
           the <em>shown</em>, translated name. The calculator names are screen-reader names — inspect
           the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
           last field is unlabelled: <code className="font-mono">ariaLabel</code> names it and{" "}
           <code className="font-mono">placeholder</code> fills it while empty.
-        </p>
+        </Note>
       </Example>
 
       <Example
@@ -617,14 +617,14 @@ export function Numbers() {
           </div>
         </Stage>
         <State rows={[["amount", rtlAmount], ["currency", rtlCurrency], ["units", rtlUnits]]} />
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           The currency chip, the calculator trigger and the unit suffix are the figure&apos;s
           trailing controls, so they sit at the logical END — the left here — with the padding
           reserved on that side; the currency list opens from the end edge too. The figures
           themselves and the calculator stay left-to-right (<code className="font-mono">dir=&quot;ltr&quot;</code>{" "}
           on its display and on the phone number pad&apos;s): arithmetic reads the same way in
           every script.
-        </p>
+        </Note>
       </Example>
 
       <Example

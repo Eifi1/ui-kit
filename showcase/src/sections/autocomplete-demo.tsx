@@ -141,10 +141,10 @@ export function AutocompleteDemo() {
           />
         </div>
         <StateLine>{`value = "${address}"   onSelect → ${picked ?? "—"}`}</StateLine>
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           Type &quot;xyz&quot; for <code>emptyLabel</code>; tick the outage and type again for{" "}
           <code>loadErrorLabel</code>. The text you typed survives both.
-        </p>
+        </Note>
       </Example>
 
       <Example
@@ -184,13 +184,13 @@ export function AutocompleteDemo() {
           onChange={(e) => setPinOpen(e.target.checked)}
         />
         <StateLine>{`town = "${town}"   street = "${street}"   loading = ${streetLoading}`}</StateLine>
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           The town list is narrowed by the text (label or sublabel). The street list is fetched by
           the page itself — 500&nbsp;ms per keystroke — and shown exactly as the pretend server
           ranked it, so &quot;Rue&quot; still lists two Bahnhofstrasse rows the server thought
           close enough. While the page&apos;s fetch is out, <code>loading</code> puts a
           spinner in the field — and the loading line in the list while it has no rows yet.
-        </p>
+        </Note>
       </Example>
 
       <Example
@@ -256,13 +256,13 @@ export function AutocompleteDemo() {
           </div>
         </Stage>
         <StateLine>{`query = "${search}"   onOpenChange → ${lastOpen ?? "—"}   pinned → ${pinned ?? "—"}`}</StateLine>
-        <p className="text-xs text-[var(--text-muted)]">
+        <Note>
           Seeded with a query: focusing the field looks it up (no request on mount, none below
           <code> minChars</code>, one per pause in typing), and the text is never reset. Rows in
           Bern are <code>disabled</code>: listed with their reason, skipped by ↑/↓, and a click
           takes nothing. Taking a row opens a confirm step, and <code>open={"{false}"}</code> keeps
           the list shut under it even while the field has focus.
-        </p>
+        </Note>
       </Example>
 
       <Example label="Autocomplete — error and disabled" hint="the same contract as Input">

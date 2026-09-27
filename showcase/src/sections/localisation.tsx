@@ -365,13 +365,25 @@ function TreeExample() {
           return (
             <section key={ns}>
               <h4 className="font-mono text-xs font-semibold text-[var(--text-primary)]">{ns}</h4>
-              <table className="mt-1 w-full table-fixed text-xs">
-                <tbody>
+              {/* On a phone a quarter of the card is ~75px: every key truncated to
+                  "fieldVal…", and the keys a namespace shares a prefix for read the
+                  same. There each row becomes a grid — the key on a line of its own at
+                  full width, English and the active language side by side under it. */}
+              <table className="mt-1 w-full table-fixed text-xs max-sm:block">
+                <tbody className="max-sm:block">
                   {Object.keys(en).map((key) => (
-                    <tr key={key} className="border-b border-[var(--border)] last:border-b-0">
-                      <td className="w-1/4 truncate py-1 pe-3 align-top font-mono text-[var(--text-muted)]">{key}</td>
-                      <td className="w-3/8 py-1 pe-3 align-top text-[var(--text-secondary)]">{sample(en[key])}</td>
-                      <td className="w-3/8 py-1 align-top text-[var(--text-primary)]">{sample(here?.[key])}</td>
+                    <tr
+                      key={key}
+                      className="border-b border-[var(--border)] last:border-b-0 max-sm:grid max-sm:grid-cols-2 max-sm:py-1"
+                    >
+                      <td
+                        title={key}
+                        className="w-1/4 py-1 pe-3 align-top font-mono break-words text-[var(--text-muted)] max-sm:col-span-2 max-sm:w-auto max-sm:py-0 sm:truncate"
+                      >
+                        {key}
+                      </td>
+                      <td className="w-3/8 py-1 pe-3 align-top text-[var(--text-secondary)] max-sm:w-auto max-sm:pb-0">{sample(en[key])}</td>
+                      <td className="w-3/8 py-1 align-top text-[var(--text-primary)] max-sm:w-auto max-sm:pb-0">{sample(here?.[key])}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -396,16 +408,19 @@ function HookProbe({ prop }: { prop?: string }) {
   const locale = useKitLocale();
   const weekStart = useKitWeekStart();
   const file = useKitFileLabels();
+  // `JSON.stringify(undefined)` is `undefined`, not a string — an unset value printed an
+  // empty cell that read as a rendering bug. Say "undefined" instead.
+  const show = (v: unknown) => (v === undefined ? "undefined" : JSON.stringify(v));
   return (
     <OutTable
       rows={[
-        ["useKitLocale()", JSON.stringify(locale)],
-        ["useKitWeekStart()", JSON.stringify(weekStart)],
+        ["useKitLocale()", show(locale)],
+        ["useKitWeekStart()", show(weekStart)],
         [
           `useKitLabels("common", DEFAULT_COMMON_LABELS${prop ? `, { clear: "${prop}" }` : ""}).clear`,
           common.clear,
         ],
-        ['useKitLabelOverrides("common")?.clear', JSON.stringify(overrides?.clear)],
+        ['useKitLabelOverrides("common")?.clear', show(overrides?.clear)],
         ["useKitFileLabels().size(1_234_567)", file.size(1_234_567)],
         ['common.fieldValue("Status", "open")', common.fieldValue("Status", "open")],
       ]}
