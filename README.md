@@ -377,14 +377,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1005 names from 159 modules** — 474 values and 531 types. _Italic_ is a type-only export.
+**1008 names from 160 modules** — 476 values and 532 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1005 |
+| `@eifi1/ui-kit` | 1008 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -469,6 +469,7 @@ re-slicing of it, never a second API.
 | `components/number-input` | `NumberInput`, `stepNumber` |
 | `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyFlagProps`_, _`CurrencyOption`_, _`CurrencySelectProps`_ |
 | `components/amount-input` | `AmountInput` |
+| `components/money-field` | `MoneyField`, _`MoneyFieldProps`_ |
 | `components/combobox` | `Combobox`, `InlineEntityCombobox`, _`ComboboxProps`_, _`InlineEntityComboboxProps`_ |
 | `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS`, _`PickerSheetProps`_ |
 | `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
@@ -483,7 +484,7 @@ re-slicing of it, never a second API.
 | `components/switch` | `Switch`, _`SwitchProps`_, _`SwitchSize`_ |
 | `components/slider` | `fromLogPosition`, `Slider`, `toLogPosition`, _`SliderMark`_, _`SliderProps`_ |
 | `components/time-input` | `isTimeInRange`, `normalizeTime`, `TimeInput`, _`TimeInputProps`_ |
-| `components/number-field` | `NumberField`, _`NumberFieldProps`_ |
+| `components/number-field` | `IntegerField`, `NumberField`, _`NumberFieldProps`_ |
 | `components/sparkline` | `DEFAULT_SPARKLINE_LABELS`, `Sparkline`, `sparklineSummary`, _`SparklineLabels`_, _`SparklineProps`_, _`SparklineTone`_ |
 | `components/stat-tile` | `DEFAULT_STAT_TILE_LABELS`, `StatTile`, `StatTileGrid`, _`StatTileDelta`_, _`StatTileGridProps`_, _`StatTileLabels`_, _`StatTileLinkProps`_, _`StatTileProps`_, _`StatTileSubValue`_, _`StatTileTone`_ |
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
