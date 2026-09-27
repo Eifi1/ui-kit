@@ -228,3 +228,23 @@ describe("Slider — the element", () => {
     expect(container.firstElementChild).toHaveClass("opacity-60");
   });
 });
+
+describe("Slider header on a narrow screen (lenkbank L1)", () => {
+  it("wraps the readout onto its own line instead of over the label", () => {
+    render(
+      <Slider
+        label="Fahrgeschwindigkeit"
+        value={60}
+        min={0}
+        max={120}
+        onChange={() => {}}
+        readout={<span>0 / 60 / 120 km/h · Alle Geschwindigkeiten</span>}
+      />,
+    );
+    const row = screen.getByText("Fahrgeschwindigkeit").parentElement!;
+    expect(row.className).toContain("flex-wrap");
+    const readout = screen.getByText(/km\/h/).parentElement!;
+    expect(readout.className).not.toContain("shrink-0");
+    expect(readout.className).toContain("max-w-full");
+  });
+});

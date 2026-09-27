@@ -50,3 +50,24 @@ has the release notes.
 In app tests: the Tabs add button's label is now inside a `span`, so a text query still
 finds it. Nothing else changes for jsdom, because the fades and clamps are measured and
 do nothing without layout.
+
+## 0.15.1
+
+Everything here is picked up by `^0.15.0`; there is nothing to bump.
+
+- **Slider:** the header row wraps. A readout wider than the room beside the label (a
+  value plus a link button) drops to its own line under the label instead of printing
+  over it (lenkbank L1).
+- **SeriesChart axis budget** (lenkbank L2):
+  - **`axisBudget="auto"` is the default.** When one side draws two or more axes and the
+    plot would drop under 160px, the chart keeps one axis per side and hides the rest.
+    Hidden axes still scale their lines and zoom, but draw no ticks and reserve no width.
+    A chart with at most one axis per side is never touched, and neither is any chart at
+    desktop widths. `axisBudget="off"` opts out, e.g. for a stack whose bands must match.
+  - **`maxVisibleAxes`** (`number | { left, right }`) caps the visible axes explicitly.
+  - **Units:** the tooltip names a hidden axis's series "Label (unit)". For the legend, feed
+    `onAxisBudget` into state and pass it to `seriesLegendEntries(series, { axes, budgeted })`.
+    The unit comes from `SeriesChartAxis.unit`, or from the title's "(…)" ending. Series
+    labels must not already carry the unit, or it shows twice.
+  - **Fixed along the way:** an axis switched to `hide` on a mounted chart kept its width,
+    which pushed the remaining axes off the chart's edge.

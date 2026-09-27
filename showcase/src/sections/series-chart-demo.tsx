@@ -7,6 +7,7 @@ import {
   STEP_DASH,
   SharedXZoom,
   StaticSeriesChart,
+  ToggleGroup,
   ToggleLegend,
   axisBandWidth,
   facingAxes,
@@ -18,9 +19,11 @@ import {
   paddedDomain,
   paletteFor,
   seriesKey,
+  seriesLegendEntries,
   soleSeriesColor,
   strokeDash,
   toggleHidden,
+  visibleSeries,
   zoomAxesFor,
 } from "@eifi1/ui-kit";
 import type { LegendEntry, SeriesChartAxis, SeriesChartSeries } from "@eifi1/ui-kit";
@@ -52,6 +55,32 @@ const SWEEP = Array.from({ length: 121 }, (_, i) => {
     segment: Math.floor(t / 1.5),
   };
 });
+
+/** lenkbank's curve plot: three kinematic channels and a load, four units. */
+const CURVE = SWEEP.map((row) => ({
+  x: row.x,
+  velocity: row.velocity,
+  position: row.position,
+  accel: -60 * Math.sin(row.x),
+  load: row.load,
+}));
+
+const CURVE_SERIES: SeriesChartSeries[] = [
+  { key: "velocity", label: "Velocity", axis: "vel", color: paletteFor(2) },
+  { key: "position", label: "Position", axis: "pos", color: paletteFor(0) },
+  { key: "accel", label: "Acceleration", axis: "acc", color: paletteFor(4) },
+  { key: "load", label: "Rack load", axis: "load", color: paletteFor(6) },
+];
+
+/** Three axes on the left, one on the right — every one titled, so every one has a band. */
+const CURVE_AXES: SeriesChartAxis[] = [
+  { id: "vel", title: "Velocity (mm/s)", color: paletteFor(2), format: (v) => WHOLE.format(v), width: 36 },
+  { id: "pos", title: "Position (mm)", color: paletteFor(0), format: (v) => WHOLE.format(v), width: 36 },
+  { id: "acc", title: "Accel. (mm/s²)", color: paletteFor(4), format: (v) => WHOLE.format(v), width: 36 },
+  { id: "load", title: "Load (N)", orientation: "right", color: paletteFor(6), format: (v) => WHOLE.format(v), width: 44 },
+];
+
+type BudgetMode = "off" | "auto" | "one";
 
 /** Five channels of one measurement, for the dash patterns. */
 const ANGLES = Array.from({ length: 81 }, (_, i) => {
@@ -114,6 +143,9 @@ export function SeriesChartDemo() {
   const [hiddenAngles, setHiddenAngles] = useState<ReadonlySet<string>>(new Set(["d"]));
   const [hiddenTemp, setHiddenTemp] = useState<ReadonlySet<string>>(new Set());
   const [bridged, setBridged] = useState(false);
+  const [budgetMode, setBudgetMode] = useState<BudgetMode>("auto");
+  const [budgeted, setBudgeted] = useState<readonly string[]>([]);
+  const [hiddenCurve, setHiddenCurve] = useState<ReadonlySet<string>>(new Set());
 
   const channels: (SeriesChartSeries & { unit: string })[] = [
     { key: "position", label: "Position", axis: "mm", unit: "mm", color: paletteFor(0) },
@@ -183,6 +215,54 @@ export function SeriesChartDemo() {
             zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for when a line
             comes back). A switched-off stroke in the legend dims with its button, once — it no
             longer fades twice to near-invisible.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="SeriesChart — an axis budget"
+        hint="four axes, three on the left: below a 160 px plot the chart draws one a side, and the series whose axis went say its unit in the legend and the tooltip"
+      >
+        <div className="mb-2">
+          <ToggleGroup<BudgetMode>
+            aria-label="Axis budget"
+            value={budgetMode}
+            onChange={setBudgetMode}
+            options={[
+              { value: "off", label: "every axis" },
+              { value: "auto", label: "auto" },
+              { value: "one", label: "one a side" },
+            ]}
+          />
+        </div>
+        <SeriesChart
+          rows={CURVE}
+          series={visibleSeries(CURVE_SERIES, hiddenCurve)}
+          axes={CURVE_AXES}
+          x={SWEEP_X}
+          axisBudget={budgetMode === "off" ? "off" : "auto"}
+          maxVisibleAxes={budgetMode === "one" ? { left: 1, right: 1 } : undefined}
+          onAxisBudget={setBudgeted}
+          valueFormat={(v) => ONE.format(v)}
+        />
+        <ToggleLegend
+          entries={seriesLegendEntries(CURVE_SERIES, { axes: CURVE_AXES, budgeted })}
+          hidden={hiddenCurve}
+          onToggle={(key) => setHiddenCurve(toggleHidden(hiddenCurve, key))}
+        />
+        <p className="mt-2 font-mono text-[11px] text-[var(--text-muted)]">
+          onAxisBudget: [{budgeted.map((id) => `"${id}"`).join(", ")}]
+        </p>
+        <div className="mt-3">
+          <Note>
+            <em>every axis</em> is <code className="font-mono">axisBudget="off"</code>, the chart before
+            0.15.1: on a phone the four bands leave the curves a sliver. <em>auto</em> is the default —
+            it changes nothing on a desktop and draws one axis a side once the plot would drop under
+            160 px. <em>one a side</em> is{" "}
+            <code className="font-mono">maxVisibleAxes=&#123;&#123; left: 1, right: 1 &#125;&#125;</code>{" "}
+            at every width. An axis over budget still scales its line (drag to zoom: it refits), and its
+            unit — <code className="font-mono">unit</code>, or the bracket at the end of its title —
+            moves to the legend entry and the tooltip.
           </Note>
         </div>
       </Example>
