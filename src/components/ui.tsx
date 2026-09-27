@@ -1,7 +1,8 @@
 import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, RefObject, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
+import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
@@ -2740,66 +2741,10 @@ const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-[var(--bo
 const TAB_ADD_CLASSES =
   "inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
 const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
+// `relative`: the phone's visually hidden label needs a positioned ancestor (see the
+// sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
+const TAB_ADD_PHONE_CLASSES = "relative max-md:px-2";
 
-// How far the fade at a scrolled strip's cut edge reaches, and how much room a tab
-// brought into view keeps from that edge so the fade never lies on top of it.
-const TAB_FADE_PX = 24;
-
-/**
- * Which ends of a sideways-scrolling strip have tabs cut off behind them, as the
- * `mask-image` that fades those ends out — or `undefined` while everything fits.
- *
- * A strip that overflowed used to stop dead at its edge: the last tab sliced through
- * mid-word, and nothing on a phone (whose scrollbars are overlays that only show
- * while you drag) said there was more to reach. A fade is the cue — the letters
- * thin out rather than end — and it is measured, not assumed, so a strip that fits
- * is painted exactly as before. Physical `left`/`right` in the gradient, because
- * `mask-image` has no logical directions; the reading direction is read from the
- * element, and `scrollLeft` is a magnitude here because an RTL strip counts it
- * negative from the start edge.
- */
-function useStripFade(
-  ref: RefObject<HTMLElement | null>,
-): { mask: string | undefined; overflow: "start" | "end" | "both" | undefined } {
-  const [edges, setEdges] = useState({ left: false, right: false, rtl: false });
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const measure = () => {
-      const hidden = el.scrollWidth - el.clientWidth;
-      const scrolled = Math.abs(el.scrollLeft);
-      const rtl = getComputedStyle(el).direction === "rtl";
-      const atStart = scrolled > 1;
-      const atEnd = hidden - scrolled > 1;
-      const left = rtl ? atEnd : atStart;
-      const right = rtl ? atStart : atEnd;
-      setEdges((prev) =>
-        prev.left === left && prev.right === right && prev.rtl === rtl ? prev : { left, right, rtl },
-      );
-    };
-    measure();
-    el.addEventListener("scroll", measure, { passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
-    observer?.observe(el);
-    // The tabs, too: a label or a badge that grows changes the overflow without
-    // resizing the strip's own box.
-    for (const child of Array.from(el.children)) observer?.observe(child);
-    return () => {
-      el.removeEventListener("scroll", measure);
-      observer?.disconnect();
-    };
-  });
-  if (!edges.left && !edges.right) return { mask: undefined, overflow: undefined };
-  const l = edges.left ? `transparent, #000 ${TAB_FADE_PX}px` : "#000";
-  const r = edges.right ? `#000 calc(100% - ${TAB_FADE_PX}px), transparent` : "#000";
-  const rtl = edges.rtl;
-  const start = rtl ? edges.right : edges.left;
-  const end = rtl ? edges.left : edges.right;
-  return {
-    mask: `linear-gradient(to right, ${l}, ${r})`,
-    overflow: start && end ? "both" : start ? "start" : "end",
-  };
-}
 
 export function Tabs<T extends string>({
   tabs,
@@ -2833,18 +2778,8 @@ export function Tabs<T extends string>({
   // to clear the fade.
   useLayoutEffect(() => {
     const strip = stripRef.current;
-    if (!strip || strip.scrollWidth <= strip.clientWidth) return;
-    const tab = strip.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
-    if (!tab) return;
-    const s = strip.getBoundingClientRect();
-    const t = tab.getBoundingClientRect();
-    const delta =
-      t.left < s.left + TAB_FADE_PX
-        ? t.left - s.left - TAB_FADE_PX
-        : t.right > s.right - TAB_FADE_PX
-          ? t.right - s.right + TAB_FADE_PX
-          : 0;
-    if (delta !== 0) strip.scrollBy({ left: delta });
+    const tab = strip?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (strip && tab) scrollIntoStrip(strip, tab);
   }, [active]);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
   // Whether Delete reaches this tab: every removable tab, or only the open one.
@@ -3154,10 +3089,14 @@ export function Tabs<T extends string>({
           type="button"
           onClick={onAdd}
           disabled={busy}
-          className={cn(TAB_ADD_CLASSES, wrap && TAB_ADD_WRAP_CLASSES)}
+          className={cn(TAB_ADD_CLASSES, wrap ? TAB_ADD_WRAP_CLASSES : TAB_ADD_PHONE_CLASSES)}
         >
           <Plus aria-hidden />
-          {addLabel ?? text.add}
+          {/* Below md a scrolling strip keeps the room for tabs: the label is visually
+              hidden and the "+" carries it as its name. Beside "+ Add loop" a 390px strip
+              showed the open tab and a sliver of the next (showcase audit). A wrapping
+              strip has its own row there, so it keeps the label. */}
+          <span className={wrap ? undefined : "max-md:sr-only"}>{addLabel ?? text.add}</span>
         </button>
       </div>
     </div>
