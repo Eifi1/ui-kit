@@ -104,6 +104,25 @@ type ToggleGroupCaption<V> = ReactNode | ((value: V) => ReactNode);
 /** The group as it has always been: one option is always the answer. */
 export interface ToggleGroupRequiredProps<T extends string> extends ToggleGroupBaseProps<T> {
   allowEmpty?: false;
+  /**
+   * What the options ARE to a screen reader, separately from whether the group can be
+   * emptied (kastlan feedback #47).
+   *
+   *  - `"radio"` (default) — a `radiogroup` of radios: one Tab stop, arrow keys MOVE the
+   *    choice. Right for a choice between answers ("Monthly / Yearly").
+   *  - `"pressed"` — a `group` of toggle buttons (`aria-pressed`), each its own Tab stop,
+   *    Space/Enter to press; still one option always pressed. Right for a row that reads
+   *    as a set of switches — a view mode, a toolbar-like filter — where arrows moving the
+   *    selection on focus would be a surprise.
+   *
+   * Before this the only way to `aria-pressed` was `allowEmpty`, which also let a second
+   * press clear the choice — so kastlan took the clearable shape and threw the `null`
+   * away in `onChange` (`(v) => v && setMode(v)`), a group announcing that a press would
+   * unpress what it would not. Here a press on the pressed option re-sends its value, as
+   * the radio shape does, and nothing is ever unpressed. A clearable group
+   * (`allowEmpty`) is always `"pressed"`: a radio cannot be unchecked by activating it.
+   */
+  semantics?: "radio" | "pressed";
   value: T;
   onChange: (value: T) => void;
   /** See {@link ToggleGroupCaption}. */
@@ -122,6 +141,9 @@ export interface ToggleGroupRequiredProps<T extends string> extends ToggleGroupB
  */
 export interface ToggleGroupClearableProps<T extends string> extends ToggleGroupBaseProps<T> {
   allowEmpty: true;
+  /** Always toggle buttons — see {@link ToggleGroupRequiredProps.semantics}. Accepted so
+   *  a wrapper can forward one `semantics` to either shape. */
+  semantics?: "pressed";
   value: T | null;
   onChange: (value: T | null) => void;
   /** See {@link ToggleGroupCaption}. `null` while nothing is chosen. */
@@ -171,7 +193,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const hasError = labelled && error !== undefined && error !== null && error !== false && error !== "";
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
-  const { allowEmpty: _allowEmpty, onChange: _onChange, caption, ...rest } = restWithMode;
+  const { allowEmpty: _allowEmpty, onChange: _onChange, caption, semantics: _semantics, ...rest } = restWithMode;
   // Invalid from outside too: a `Field` hands the bare group `aria-invalid`, and the
   // border has to say what the attribute says.
   const outsideInvalid = rest["aria-invalid"] === true || rest["aria-invalid"] === "true";
@@ -183,11 +205,14 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     if (props.allowEmpty) props.onChange(next === value ? null : next);
     else props.onChange(next);
   };
-  const clearable = props.allowEmpty === true;
+  // `pressed`: toggle buttons. Every clearable group is; a required one is when it asks
+  // (kastlan #47) — the role, and not whether a second press clears, is what this flag
+  // decides from here on, so `choose` above still keys off `allowEmpty` alone.
+  const pressed = props.allowEmpty === true || props.semantics === "pressed";
   // A radio group is ONE tab stop (the checked radio, else the first) and arrows move
   // the choice — the pattern `role="radiogroup"` promises a screen-reader user. Before
-  // 0.7.0 each segment was its own tab stop with no arrow keys. The clearable mode is a
-  // row of toggle buttons, where separate tab stops are the pattern.
+  // 0.7.0 each segment was its own tab stop with no arrow keys. The toggle-button shape
+  // is a row of buttons, where separate tab stops are the pattern.
   const tabStop = options.some((o) => o.value === value) ? value : options[0]?.value;
   const onRadioKey = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const last = options.length - 1;
@@ -218,7 +243,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // radiogroup role or the disabled state by accident. `className` is destructured
       // out entirely and merged through `cn`, so it is never in here.
       {...rest}
-      role={clearable ? "group" : "radiogroup"}
+      role={pressed ? "group" : "radiogroup"}
       // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
       // have not moved yet.
       aria-label={ariaLabelAttr ?? ariaLabel}
@@ -263,12 +288,12 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           <button
             key={opt.value}
             type="button"
-            role={clearable ? undefined : "radio"}
-            aria-checked={clearable ? undefined : active}
-            aria-pressed={clearable ? active : undefined}
+            role={pressed ? undefined : "radio"}
+            aria-checked={pressed ? undefined : active}
+            aria-pressed={pressed ? active : undefined}
             disabled={disabled}
-            tabIndex={clearable ? undefined : opt.value === tabStop ? 0 : -1}
-            onKeyDown={clearable ? undefined : (e) => onRadioKey(e, index)}
+            tabIndex={pressed ? undefined : opt.value === tabStop ? 0 : -1}
+            onKeyDown={pressed ? undefined : (e) => onRadioKey(e, index)}
             onClick={() => choose(opt.value)}
             className={cn(
               // `truncate` (which carries whitespace-nowrap) rather than letting a

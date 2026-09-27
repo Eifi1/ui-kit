@@ -99,8 +99,16 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">
   open?: boolean;
   /** Clear the selection / leave selection mode. */
   onClear: () => void;
-  /** The actions: buttons (`IconButton size="lg"` on a phone, `Button` from md up),
-   *  in the caller's order. They are the toolbar's arrow-key stops, after the clear. */
+  /**
+   * The actions: buttons (`IconButton size="lg"` on a phone, `Button` from md up),
+   * in the caller's order. They are the toolbar's arrow-key stops, after the clear.
+   *
+   * LINKS rove too (keksdose F8): a `<Button href>` — "View report", which navigates
+   * rather than acts — is an `<a href>`, and it is one more arrow-key stop in its place
+   * among the buttons, not a second Tab stop beside the toolbar's one. A disabled
+   * `<Button href disabled>` has no `href` and is skipped, as a disabled button is. Any
+   * other focusable of your own joins with `data-toolbar-item`.
+   */
   children?: ReactNode;
   /** Default `floating`. See {@link BulkActionBarVariant}; an object picks one per
    *  breakpoint, see {@link ResponsiveBulkActionBarVariant}. */
@@ -135,7 +143,12 @@ const FLOATING_STYLE: CSSProperties = {
 
 /** What the arrow keys walk: the toolbar's enabled controls. Matched by element, not by
  *  `tabindex`, because the roving below sets every one but the current to `-1` — a
- *  custom control joins with `data-toolbar-item`. */
+ *  custom control joins with `data-toolbar-item`.
+ *
+ *  `a[href]` is here on purpose (keksdose F8, a "View report" `Button href` in the bar):
+ *  a link in a toolbar is a toolbar item like any other, and left out it would keep its
+ *  own Tab stop, so Tab would stop twice in a bar that promises one. `[href]` rather than `a`: the kit's disabled link is an `<a>`
+ *  WITHOUT one, and is skipped as a disabled button is. */
 const ITEMS =
   "button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[data-toolbar-item]";
 

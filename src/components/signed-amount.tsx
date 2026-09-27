@@ -223,7 +223,8 @@ export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithou
   goodDirection?: GoodDirection;
   /** What it is measured against, after it: "vs last month". */
   label?: ReactNode;
-  /** Hide the arrow (shown by default, as on a StatTile). */
+  /** Hide the arrow (shown by default, as on a StatTile). At zero the arrow is a flat
+   *  dash BESIDE the figure ("– 0.00 %"), never in place of it. */
   arrow?: boolean;
   sensitive?: boolean;
   /** The `statTile` namespace's direction words — a delta says the same as a tile's. */
@@ -276,8 +277,16 @@ export function Delta({
     >
       <span data-private={sensitive ? "" : undefined} className={cn("inline-flex items-center gap-0.5 font-medium", tone)}>
         {arrow && <Icon className="size-[1em] shrink-0" aria-hidden />}
-        {/* Flat with an arrow is the dash alone, as on a tile; without one, the zero. */}
-        <span aria-hidden>{dir === "flat" && arrow ? null : amount}</span>
+        {/* The figure at zero too, beside the flat dash (kastlan feedback #48). Before
+            this a flat delta with an arrow drew the dash ALONE, as a StatTile does — so
+            a rent-change column that printed "0.00 %" for an unchanged lease showed a
+            bare "–" in its place, and a bare dash is what a table prints for a MISSING
+            value: "unchanged" and "not known" looked the same. The Minus icon is the
+            neutral indicator, the muted tone the neutral colour, and the figure says
+            how much (none) in the column's own digits. A value that is missing never
+            reaches here — a non-finite one renders nothing, above. Visible change for
+            every `<Delta value={0}>` with the default arrow: "–" became "– 0 %". */}
+        <span aria-hidden>{amount}</span>
         <span className="sr-only">{spoken}</span>
       </span>
       {label != null && <span className="text-[var(--text-muted)]">{label}</span>}
