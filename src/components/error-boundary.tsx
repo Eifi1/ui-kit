@@ -73,13 +73,29 @@ function read(get: () => unknown): string | undefined {
   }
 }
 
+/** `JSON.stringify` that never throws (a cycle, a BigInt, a hostile getter) and never
+ *  returns more than 500 characters. "" when there is nothing to say. */
+function safeJson(value: unknown): string {
+  try {
+    const json = JSON.stringify(value);
+    if (!json || json === "{}") return "";
+    return json.length > 500 ? `${json.slice(0, 499)}…` : json;
+  } catch {
+    return "";
+  }
+}
+
 /** {@link ErrorBoundaryDetails} of any thrown value, without ever throwing. */
 export function describeThrown(error: unknown): ErrorBoundaryDetails {
   if (typeof error === "object" && error !== null) {
     const e = error as { name?: unknown; message?: unknown; stack?: unknown };
+    const message = read(() => e.message) ?? "";
     return {
       name: read(() => e.name) ?? "Error",
-      message: read(() => e.message) ?? "",
+      // `throw { code: 500 }` has no message, and an empty line leaves crash triage with
+      // nothing (keksdose G3a; its old reporter filed `{"code":500}`). Such a value is
+      // quoted as JSON instead, capped, and never at the cost of a throw.
+      message: message || (error instanceof Error ? "" : safeJson(error)),
       stack: read(() => e.stack),
     };
   }
