@@ -81,7 +81,9 @@ jobs:
         id: pkg
         run: |
           set -euo pipefail
-          tgz="$(ls pkg/*.tgz)"
+          # "./": a bare "pkg/x.tgz" is read by npm as the GitHub shorthand user/repo
+          # (the first 0.13.0 run tried `git ls-remote github.com/pkg/…`).
+          tgz="./$(ls pkg/*.tgz)"
           PKG="$(tar -xOzf "$tgz" package/package.json | jq -r .version)"
           TAG="${GITHUB_REF_NAME#v}"
           if [ "$PKG" != "$TAG" ]; then
