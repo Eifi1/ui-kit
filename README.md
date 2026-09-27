@@ -377,20 +377,20 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1002 names from 159 modules** — 474 values and 528 types. _Italic_ is a type-only export.
+**1005 names from 159 modules** — 474 values and 531 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1002 |
+| `@eifi1/ui-kit` | 1005 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
-| `@eifi1/ui-kit/feedback` | 43 |
+| `@eifi1/ui-kit/feedback` | 45 |
 | `@eifi1/ui-kit/search` | 22 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 8 |
@@ -544,7 +544,7 @@ re-slicing of it, never a second API.
 | `components/menu-item` | `MenuItem`, _`MenuItemLinkProps`_, _`MenuItemProps`_, _`MenuItemTone`_ |
 | `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_, _`SectionLabelVariant`_ |
 | `components/status-dot` | `StatusDot`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |
-| `components/page-header` | `PageHeader`, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
+| `components/page-header` | `PageHeader`, _`PageHeaderActionsAlign`_, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
 | `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
@@ -580,7 +580,7 @@ re-slicing of it, never a second API.
 | `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentFieldLabels`_ |
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogTextLabels`_, _`FeedbackSubmission`_ |
 | `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
-| `feedback/feedback-thread` | `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
+| `feedback/feedback-thread` | `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 
 ### wizard
 
