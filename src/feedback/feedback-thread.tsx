@@ -4,6 +4,7 @@ import { Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
+import { Tooltip } from "../components/tooltip";
 import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
@@ -190,13 +191,13 @@ export function FeedbackThread({
                   </span>
                 )}
                 {date && (
-                  <time
-                    dateTime={date.toISOString()}
-                    title={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}
-                    className="tabular-nums"
-                  >
-                    {formatRelativeTime(date, reference, locale)}
-                  </time>
+                  // The kit's Tooltip, not a native title: one tooltip look app-wide
+                  // (keksdose F0 / dev#523).
+                  <Tooltip label={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}>
+                    <time dateTime={date.toISOString()} className="tabular-nums">
+                      {formatRelativeTime(date, reference, locale)}
+                    </time>
+                  </Tooltip>
                 )}
               </header>
               {message.body && (
@@ -295,7 +296,7 @@ const DAY = 24 * HOUR;
  * "just now", "5 minutes ago", "yesterday", "3 days ago" — `Intl.RelativeTimeFormat`
  * in `locale`, so the grammar is the language's. Past a week it is a date: "12 days
  * ago" makes the reader do arithmetic that the date already did. The full date and
- * time are on the `<time>`'s title.
+ * time are in the `<time>`'s Tooltip.
  */
 function formatRelativeTime(date: Date, now: number, locale: string | undefined): string {
   const diff = date.getTime() - now;
