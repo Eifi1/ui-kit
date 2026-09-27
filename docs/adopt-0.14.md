@@ -28,4 +28,5 @@ and the showcase (⌘K) has every prop live.
 | G6a payees-page truncating span | `PageHeader truncateTitle` | |
 | G6b budget-page two phone rows | `PageHeader secondaryActions={toggles} actions={monthNav}` | a row of its own below `sm` (640px), joining the actions row from `sm` up. Your page switched at `md`, so between 640 and 767px it is now one row |
 | G7 `portal` pins for long labels at a row's edge (jobs-panel gcloud command, canned replies) | drop them | in-place bubbles clamp to the viewport |
-| G8 reports-page centred CurrencySelect | `PageHeader actionsAlign="center"` | |
+| G8 reports-page centred CurrencySelect | `PageHeader actionsAlign="center"` | from 0.14.1 it aligns the whole row, title included (H2) |
+| H1 (0.14.1) budget header split "Monatsbudg" / "et" at 390px | nothing to do | in `inline` without `truncateTitle`, the title keeps its longest word and the actions wrap to their own line instead |
