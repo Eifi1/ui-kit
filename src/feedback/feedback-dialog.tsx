@@ -53,6 +53,9 @@ export interface FeedbackDialogTextLabels {
   category: string;
   subject: string;
   body: string;
+  /** The body's label when `requireBody={false}`: "What happened? (optional)".
+   *  Optional, so a complete `UiKitLabels` typed before 0.14.2 still compiles. */
+  bodyOptional?: string;
   /** The heading over the attachment buttons. */
   attachment: string;
   /** The line beside the buttons naming the shortcut. */
@@ -66,6 +69,7 @@ export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   category: "Category",
   subject: "Subject",
   body: "What happened?",
+  bodyOptional: "What happened? (optional)",
   attachment: "Screenshot",
   submitHint: "Ctrl/⌘ + Enter to send",
   cancel: "Cancel",
@@ -108,6 +112,7 @@ export function FeedbackDialog({
   maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
   onAttachmentError,
   onCaptureScreenshot,
+  requireBody = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -129,6 +134,12 @@ export function FeedbackDialog({
    * attachment"; the returned file is fed through the same validation + preview.
    */
   onCaptureScreenshot?: () => Promise<File | null>;
+  /**
+   * `false`: a report with only a subject can be sent, and the body's label says it is
+   * optional (`bodyOptional`, unless `labels.body` is passed). Default `true`, the
+   * dialog's behaviour until 0.14.2 (keksdose K1: its backend takes title-only reports).
+   */
+  requireBody?: boolean;
 }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -151,7 +162,9 @@ export function FeedbackDialog({
     }
   }
 
-  const canSubmit = !!title && !!body && !submitting;
+  // Trimmed: a subject or body of spaces is empty (keksdose's API answers a blank title
+  // with a 422, and a blank report is no report).
+  const canSubmit = !!title.trim() && (!requireBody || !!body.trim()) && !submitting;
   const trySubmit = () => {
     if (canSubmit) void onSubmit({ title, body, category, attachment });
   };
@@ -174,7 +187,12 @@ export function FeedbackDialog({
     <Input label={labels.subject} value={title} onChange={(e) => setTitle(e.target.value)} variant="display" />
   );
   const bodyField = (
-    <Textarea rows={5} label={labels.body} value={body} onChange={(e) => setBody(e.target.value)} />
+    <Textarea
+      rows={5}
+      label={requireBody ? labels.body : (labelsProp?.body ?? labels.bodyOptional ?? labels.body)}
+      value={body}
+      onChange={(e) => setBody(e.target.value)}
+    />
   );
   const attachmentField = (
     <FeedbackAttachmentField

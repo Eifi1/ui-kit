@@ -172,6 +172,14 @@ interface AmountInputProps {
   /** The largest amount the field settles on (a deposit release capped at the
    *  balance). A higher figure is lowered to it when it settles. */
   max?: number;
+  /**
+   * The SETTLED figure, dot-decimal, sign included — fired on blur, on Enter, on the
+   * numpad's "=" and on every result the calculator writes back, never on a keystroke
+   * ("1200+" is not a figure yet). `onChange` still reports every keystroke; this is
+   * for a host that stores a number and must not see drafts (kastlan 52; see
+   * {@link MoneyField}, which is built on it).
+   */
+  onCommit?: (value: string) => void;
 }
 
 /** The currency's minor unit (CHF 2, JPY 0), or `undefined` for no currency or a code
@@ -295,7 +303,7 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
@@ -399,7 +407,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     };
     const commit = () => {
       setDraft(null);
-      handleText(settle(commitExpression(shown)));
+      const settled = settle(commitExpression(shown));
+      handleText(settled);
+      onCommit?.(settled);
     };
     const typed = (raw: string) => {
       setDraft(raw);
@@ -533,7 +543,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               value={display}
               onChange={(result, expression) => {
                 setDraft(null);
-                handleText(settle(result), expression);
+                const settled = settle(result);
+                handleText(settled, expression);
+                onCommit?.(settled);
               }}
               className="px-1.5"
               ariaLabel={labels?.calculatorTrigger}
@@ -622,7 +634,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             onChange={typed}
             onResult={(result) => {
               setDraft(null);
-              handleText(result);
+              const settled = settle(result);
+              handleText(settled);
+              onCommit?.(settled);
             }}
             onDone={() => innerRef.current?.blur()}
             label={label}

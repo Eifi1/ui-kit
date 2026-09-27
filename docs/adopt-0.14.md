@@ -29,4 +29,14 @@ and the showcase (⌘K) has every prop live.
 | G6b budget-page two phone rows | `PageHeader secondaryActions={toggles} actions={monthNav}` | a row of its own below `sm` (640px), joining the actions row from `sm` up. Your page switched at `md`, so between 640 and 767px it is now one row |
 | G7 `portal` pins for long labels at a row's edge (jobs-panel gcloud command, canned replies) | drop them | in-place bubbles clamp to the viewport |
 | G8 reports-page centred CurrencySelect | `PageHeader actionsAlign="center"` | from 0.14.1 it aligns the whole row, title included (H2) |
+| K1 (0.14.2) title-only feedback reports | `FeedbackDialog requireBody={false}` | the body's label becomes `feedbackDialog.bodyOptional` ("What happened? (optional)") unless you pass `labels.body`; a subject of spaces is never sendable |
+| (0.14.2) budget header three rows at 390px | nothing to do | once the actions have wrapped below the title, `secondaryActions` shares their row if it fits; while the actions sit beside the title, it keeps a row of its own |
 | H1 (0.14.1) budget header split "Monatsbudg" / "et" at 390px | nothing to do | in `inline` without `truncateTitle`, the title keeps its longest word and the actions wrap to their own line instead |
+
+## kastlan
+
+| Gap | Use | Notes |
+|---|---|---|
+| 51 building-step construction year, document-upload entity id: `NumberField digits={0} calculator={false}` | `IntegerField` | the plain preset `RhfIntegerField` applies to a form field; each default overridable |
+| 52 new-budget-page per-row CHF amount on `NumberField` | `MoneyField value={row.amount} onCommit={(amount) => …} currency="CHF"` | number in, number out; `onCommit` only on a settled figure (blur, Enter, calculator result), rounded to the minor unit and clamped to `min`/`max`, never twice for the same amount |
+| any AmountInput host that needs settled figures only | `AmountInput onCommit={(text) => …}` | the settled dot-decimal text; `onChange` still reports every keystroke |

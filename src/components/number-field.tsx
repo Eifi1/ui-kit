@@ -304,3 +304,17 @@ export function NumberField({
     </div>
   );
 }
+
+/**
+ * A {@link NumberField} for whole numbers: `digits={0}` and `calculator={false}` as
+ * defaults, each overridable — the preset `RhfIntegerField` (`@eifi1/ui-kit/rhf`) applies to a
+ * form-bound field, for the plain one (kastlan 51: a building's construction year in a
+ * wizard's local state, an entity id in the document upload spelled the two props out
+ * by hand).
+ *
+ * `??` rather than a spread over the defaults, so a wrapper forwarding its own optional
+ * `digits={props.digits}` still gets the preset.
+ */
+export function IntegerField(props: NumberFieldProps) {
+  return <NumberField {...props} digits={props.digits ?? 0} calculator={props.calculator ?? false} />;
+}

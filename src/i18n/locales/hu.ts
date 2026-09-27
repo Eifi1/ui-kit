@@ -26,6 +26,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       category: "Kategória",
       subject: "Tárgy",
       body: "Mi történt?",
+      bodyOptional: "Mi történt? (nem kötelező)",
       attachment: "Képernyőkép",
       submitHint: "Ctrl/⌘ + Enter a küldéshez",
       cancel: "Mégse",

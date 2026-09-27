@@ -166,6 +166,7 @@ const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "But
 const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
 const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
 const Forms013Demo = lazySection(() => import("./sections/forms-013-demo"), "Forms013Demo");
+const Forms0142Demo = lazySection(() => import("./sections/forms-0142-demo"), "Forms0142Demo");
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
@@ -347,6 +348,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <RhfFieldsDemo />
             <FormLayoutDemo />
             <Forms013Demo />
+            <Forms0142Demo />
           </>
         ),
       },

@@ -26,6 +26,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       category: "类别",
       subject: "主题",
       body: "发生了什么？",
+      bodyOptional: "发生了什么？（可选）",
       attachment: "截图",
       submitHint: "Ctrl/⌘ + Enter 发送",
       cancel: "取消",
