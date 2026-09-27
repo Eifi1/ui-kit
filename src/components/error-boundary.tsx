@@ -5,6 +5,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { Button, EmptyState } from "./ui";
 import { CopyButton } from "./copy-button";
 import { Disclosure } from "./disclosure";
+import { documentNavigation } from "../lib/document-navigation";
 
 /** The words of the default fallback. */
 export interface ErrorBoundaryLabels {
@@ -277,7 +278,7 @@ function isOffline(): boolean {
 
 function reloadPage(): void {
   try {
-    window.location.reload();
+    documentNavigation.reload();
   } catch {
     /* nothing left to do from here */
   }

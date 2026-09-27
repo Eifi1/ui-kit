@@ -9,6 +9,7 @@ import {
 import type { CrashReport } from "../error-boundary";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { documentNavigation } from "../../lib/document-navigation";
 
 /**
  * The 0.13 crash screen: the quoted message, Reload beside Try again, the copy-report
@@ -74,8 +75,7 @@ describe("ErrorBoundary crash screen", () => {
   });
 
   it("Reload reloads the page", () => {
-    const reload = vi.fn();
-    vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, reload } as Location);
+    const reload = vi.spyOn(documentNavigation, "reload").mockImplementation(() => {});
     render(
       <ErrorBoundary>
         <Boom error={new Error("reload me")} />

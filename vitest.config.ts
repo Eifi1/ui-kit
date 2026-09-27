@@ -37,13 +37,23 @@ export default defineConfig({
     // against the bug.
     env: { TZ: "Europe/Berlin" },
     clearMocks: true,
-    // Vitest 5 closes a run with hints about per-file isolation — "jsdom was created 233
-    // times … use pool: 'vmThreads'", "233 workers spawned … faster with isolate: false"
-    // (which of the two appears varies run to run). Known, and a deliberate trade: a
-    // fresh worker and jsdom per file is what keeps the suite's global stubs (matchMedia,
-    // ResizeObserver, <html dir>, localStorage) from leaking between files, and
-    // vmThreads' own caveats (instanceof across contexts, memory) have not been weighed
-    // here. As a standing hint on every run it was only noise. The import and transform
+    // Each test file runs in its own VM context inside a reused worker thread
+    // (`vmThreads`), not in a fresh worker with a fresh jsdom. Measured 2026-09-27 on
+    // the whole suite: 181s with the default pool, 69s with this one — two fifths of
+    // the old time was creating environments. Each file still gets its own context, so
+    // the suite's global stubs (matchMedia, ResizeObserver, <html dir>, localStorage)
+    // still cannot leak between files; turning isolation off instead (55s) did leak
+    // them, and 1–21 tests failed depending on the order.
+    //
+    // Its one caveat that bit here: jsdom's `window.location` cannot be redefined in a
+    // VM context, so a test stubs `documentNavigation` (lib/document-navigation.ts)
+    // instead of `location`. The other known caveats (instanceof across contexts, a
+    // worker's memory growing) have not shown up; `vmMemoryLimit` recycles a worker
+    // that grows past a fifth of the machine's memory.
+    pool: "vmThreads",
+    vmMemoryLimit: 0.2,
+    // Vitest's per-file isolation hints ("jsdom was created N times …") no longer
+    // apply; kept off so a standing hint does not come back. The import and transform
     // diagnostics stay on, so a NEW slow spot still shows.
     experimental: { diagnostics: { environment: false, isolate: false } },
     // Vitest stubs every stylesheet with an EMPTY STRING by default, and it does so
