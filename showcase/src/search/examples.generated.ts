@@ -79,6 +79,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "RhfIntegerField and RhfTextField inputClassName",
     "WizardStep actions — a button in the step header",
     "formatNumber unit — a narrow no-break space before the unit",
+    "MoneyField — a number per row",
+    "IntegerField — whole numbers",
   ],
   "choices": [
     "Checkbox — states",

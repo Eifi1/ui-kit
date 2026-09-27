@@ -83,6 +83,7 @@ export * from "./components/numpad-sheet";
 export * from "./components/number-input";
 export * from "./components/currency-select";
 export * from "./components/amount-input";
+export * from "./components/money-field";
 export * from "./components/combobox";
 export * from "./components/picker-sheet";
 export * from "./components/entity-combobox";
