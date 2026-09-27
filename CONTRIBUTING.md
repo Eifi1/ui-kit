@@ -205,10 +205,10 @@ Say so in the commit message: which test, and what it printed against the unfixe
 Where a new test earns the most is still `lib/`, `theme/` and the data-table's pure
 helpers: highest return per line, no DOM needed.
 
-## Lint, and the ratchet policy
+## Lint: zero warnings
 
 ```bash
-npm run lint
+npm run lint   # eslint . --max-warnings 0
 ```
 
 Two rule families are the reason `eslint.config.js` exists rather than taste:
@@ -216,25 +216,13 @@ Two rule families are the reason `eslint.config.js` exists rather than taste:
 cannot see, and `jsx-a11y/*`, because the kit ships ~20 interactive components to three
 apps, where one accessibility regression multiplies by three.
 
-**`warn` versus `error` is a ratchet, not an opinion:**
-
-- A rule is **`error`** when `src/` is already clean under it, so it can never regress.
-- A rule with a real backlog is **`warn`**, with the remaining count recorded in a comment
-  beside it, so CI stays green while the backlog is worked down.
-- **Every `warn` that reaches zero is promoted to `error` in the commit that empties it.**
-  Not in a follow-up, not in a cleanup ticket. A rule left at `warn` after its count hits
-  zero silently refills, and you have bought nothing.
-
-If you empty one, move it out of the ratchet block and leave a comment saying what the last
-instance was and how it was fixed — the two promoted rules in the config are written that
-way and are the pattern to copy.
-
-The `react-hooks` compiler rules (`refs`, `preserve-manual-memoization`,
-`set-state-in-effect`, `immutability`) are **React Compiler readiness, not correctness**.
-They flag patterns this package uses deliberately and documents, chiefly the latest-ref
-pattern in `use-dismiss` / `use-close-transition` / `use-row-swipe`. Kept visible, not
-enforced. The classic rules (`rules-of-hooks`, `exhaustive-deps`) stay errors: those are
-the ones that catch stale closures.
+**Every rule is an error, and a warning fails the build.** Until 0.12 the config was a
+ratchet: rules with a backlog were `warn` and carried a count. The last 85 warnings were
+cleared before 0.13, so every rule is now `error`, including the React Compiler rules
+(`refs`, `preserve-manual-memoization`, `set-state-in-effect`, `immutability`). If a
+preset update brings a new rule with a backlog, it fails `--max-warnings 0` straight away.
+Fix the backlog, or record it as `warn` with its count in the config and clear it before
+the next release.
 
 There were once seven inert `eslint-disable` comments in `src/`, fossils of the origin
 repository's config, suppressing rules nothing was running. Do not add a disable comment
@@ -273,7 +261,7 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 | Script | What it is actually defending |
 |---|---|
 | `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since tsup's declaration build reads it). |
-| `lint` | The ratchet policy above: warnings are allowed to exist, not to grow. |
+| `lint` | Zero warnings (see above): every rule is an error. |
 | `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
 | `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. |
 | `build` | — |

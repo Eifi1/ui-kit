@@ -69,7 +69,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "check:tokens": "node scripts/check-token-discipline.mjs",
     "test:coverage": "vitest run --coverage",
     "check:graph": "node scripts/check-module-graph.mjs",
