@@ -585,8 +585,13 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
   }, [wizard.data]);
 
   // The generic message is not attached to a field, so it would otherwise linger
-  // on a step the reader has already left.
-  useEffect(() => setBlockMessage(null), [wizard.currentStepIndex]);
+  // on a step the reader has already left. Cleared during render when the step
+  // changes, rather than in an effect that would paint it on the new step first.
+  const [messageStep, setMessageStep] = useState(wizard.currentStepIndex);
+  if (messageStep !== wizard.currentStepIndex) {
+    setMessageStep(wizard.currentStepIndex);
+    setBlockMessage(null);
+  }
 
   const summarySections: SummarySection[] = [
     {

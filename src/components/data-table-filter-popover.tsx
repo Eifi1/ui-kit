@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { MiniCalendar } from "./mini-calendar";
@@ -53,6 +54,15 @@ export function FilterPopover<T>({
   // No `"en"` fallback any more: that pinned the calendar to English in a table that
   // was never handed a locale, under a provider that had one.
   const locale = useKitLocale(localeProp);
+  // What `autoFocus` did, done by hand: a callback ref runs in the same commit phase
+  // React's own autofocus does, once when the input mounts (it is stable across
+  // renders, so a re-render does not re-take focus).
+  const focusOnMount = useCallback(
+    (el: HTMLInputElement | null) => {
+      if (el && autoFocus) el.focus();
+    },
+    [autoFocus],
+  );
   const filter = resolveFilter(column);
   if (!filter) return null;
 
@@ -80,11 +90,9 @@ export function FilterPopover<T>({
         <input
           type="text"
           // A prop now, defaulting to what the popover needs; see `autoFocus` on the
-          // props above. Deliberately NOT an eslint-disable: `jsx-a11y/no-autofocus` is
-          // one of the config's ratcheted warnings and this is still one of the four it
-          // counts, because the default here is still to take focus. Silencing it would
-          // shrink the backlog without emptying it.
-          autoFocus={autoFocus}
+          // props above. Focused by `focusOnMount` rather than the `autoFocus`
+          // attribute, because here taking focus is the default, not an opt-in.
+          ref={focusOnMount}
           value={v.q}
           onChange={(e) => onChange({ type: "text", q: e.target.value })}
           placeholder={labels.filterPlaceholder}

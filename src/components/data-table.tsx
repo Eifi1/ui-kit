@@ -1548,6 +1548,9 @@ export function DataTable<T>({
           {cardInner}
         </RowLink>
       ) : (
+        /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers are
+           only attached when `interactive`, and then so are role="button", tabIndex 0 and the
+           Enter/Space handler below; the rule cannot follow the conditional role. */
         <div
           role={interactive ? "button" : undefined}
           tabIndex={interactive ? 0 : undefined}
@@ -1918,6 +1921,9 @@ export function DataTable<T>({
                       )}
                     </div>
                     {resizable && col.key !== ROW_ACTIONS_KEY && (
+                    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
+                       pointer-only drag handle for a visual preference (column width); it is
+                       deliberately not a tab stop, and no content or action depends on it. */
                     <span
                       role="separator"
                       aria-orientation="vertical"

@@ -4,6 +4,7 @@ import { DEFAULT_UI_KIT_LABELS, TourProvider, missingKitLabels } from "@eifi1/ui
 import { Showcase } from "../showcase";
 import { GROUPS, NAV, PAGES, RETIRED_SLUGS, hasOverview } from "../routes";
 import { LOCALES, LOCALE_STORAGE_KEY, LocaleProvider, de, en, es, fr, hu } from "../i18n";
+import { preloadAllSections } from "../lib/lazy-section";
 
 /**
  * The showcase is the only place in this repository where the components are rendered
@@ -24,6 +25,11 @@ class ResizeObserverStub {
   disconnect() {}
 }
 
+// Every section is lazy (lib/lazy-section.ts). Loaded up front, a page renders in one
+// synchronous pass, exactly as it did before the split — so these tests keep asserting on
+// the page right after render() instead of on a Suspense fallback. The lazy path itself
+// is covered by lazy-section.test.tsx.
+beforeAll(() => preloadAllSections(), 60_000);
 beforeAll(() => {
   vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   // recharts' ResponsiveContainer measures 0x0 in jsdom and warns on every chart. That

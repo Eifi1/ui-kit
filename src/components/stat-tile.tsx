@@ -379,7 +379,9 @@ export function StatTile({
       <div className="relative mt-1 flex flex-wrap items-center gap-x-1.5 text-xs tabular-nums">
         <span id={deltaId} data-private={priv} className={cn("inline-flex items-center gap-0.5 font-medium", deltaTone)}>
           <Icon className="size-3 shrink-0" aria-hidden />
-          <span aria-hidden>{dir === "flat" ? null : amount}</span>
+          {/* The figure at zero too, like Delta (kastlan 48): "0 %" says the change was
+              measured; a bare dash reads like a missing value. */}
+          <span aria-hidden>{amount}</span>
           <span className="sr-only">{spoken}</span>
         </span>
         {d.label != null && <span className="text-[var(--text-muted)]">{d.label}</span>}

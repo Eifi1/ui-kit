@@ -1,0 +1,31 @@
+{
+  // The build-tool configs, typechecked apart from the package and the showcase.
+  //
+  // They are loaded by Node itself rather than by a bundler: Vite's `configLoader:
+  // "native"` (its planned default) and Node 24's type stripping import them as-is,
+  // and Node resolves a relative specifier only with its extension. So these files
+  // write `./alias.ts`, which tsc accepts only under `allowImportingTsExtensions` —
+  // and that flag must NOT reach tsconfig.json: tsup's declaration build reads it,
+  // and a `.ts` specifier in src/ would ship verbatim into dist/ and break every
+  // consumer. Here nothing is emitted, so it is safe.
+  //
+  // `erasableSyntaxOnly` for the same reason: Node strips types but does not
+  // transform, so an enum or a parameter property in a config would load under the
+  // bundling loader and crash under the native one.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["showcase/vite.config.ts", "showcase/alias.ts", "vitest.config.ts", "tsup.config.ts"]
+}

@@ -106,8 +106,20 @@ const TARGET_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]";
 
 interface ListItemBaseProps {
-  /** The row's name: one line, truncated. */
+  /** The row's name: one line, truncated — unless {@link titleLines} says otherwise. */
   title: ReactNode;
+  /**
+   * How many lines the title may take. `1` (default) truncates with an ellipsis, which
+   * is right for a name the app chose — a unit number, a user, a file — where the
+   * cut-off end is still recognisable and every row keeps one height.
+   *
+   * `2` clamps at two lines; `"all"` shows every line, breaking inside a long word
+   * rather than overflowing. For rows whose only name is free text a person typed
+   * (kastlan 44): a defect or a note titled by its description, where the first 30
+   * characters on a phone say nothing and there is no other field to tell two rows
+   * apart. Pair it with `align="start"` so the icon stays by the first line.
+   */
+  titleLines?: 1 | 2 | "all";
   /** The line under it: one line, truncated — or two, with `subtitleLines={2}`. */
   subtitle?: ReactNode;
   /** `2` for a line that is a body rather than a label (keksdose's notification text). */
@@ -256,7 +268,7 @@ export type ListItemProps = ListItemBaseProps &
 
 /**
  * One row of a {@link List}: leading icon or avatar, title and subtitle (both
- * truncating), a trailing slot, and — beside the row, not inside it — its actions.
+ * truncating by default), a trailing slot, and — beside the row, not inside it — its actions.
  *
  * All three apps draw this row by hand, a dozen times: kastlan's units
  * (building-detail-page.tsx:402), open tickets (group-overview-page.tsx:160), activity
@@ -269,6 +281,7 @@ export type ListItemProps = ListItemBaseProps &
 export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem(
   {
     title,
+    titleLines = 1,
     subtitle,
     subtitleLines = 1,
     meta,
@@ -329,7 +342,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           // Names the body's group; harmless without one.
           id={hasBody ? titleId : undefined}
           className={cn(
-            "block truncate text-sm text-[var(--text-primary)]",
+            "block text-sm text-[var(--text-primary)]",
+            titleLines === 1 ? "truncate" : titleLines === 2 ? "line-clamp-2 break-words" : "break-words",
             unread ? "font-semibold" : "font-medium",
           )}
         >

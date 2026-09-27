@@ -154,6 +154,9 @@ export function PickerSheet({
 
   if (!open || typeof document === "undefined") return null;
   return createPortal(
+    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the dialog
+       container, per the APG dialog pattern: `onKeyDown` is Escape-to-close for whatever
+       inside it holds focus, and `onMouseDown` only stops propagation (live #328). */
     <div
       // Spread FIRST, and every attribute below it deliberately wins: `style`,
       // `onMouseDown` and `onKeyDown` here are not styling choices, they are live

@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorBoundary, describeThrown } from "../error-boundary";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
+/** The fallback's own alert. The copy button inside it (0.13) carries an empty
+ *  assertive live region of its own, also `role="alert"`, so the query is scoped. */
+const crashScreen = () => document.querySelector('[role="alert"]:not(:empty)');
+
 let shouldThrow = true;
 function Boom({ value }: { value?: unknown }): React.ReactNode {
   if (shouldThrow) throw value ?? new Error("kaputt");
@@ -26,7 +30,7 @@ describe("ErrorBoundary", () => {
         <Boom />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(crashScreen()).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Something went wrong" })).toBeInTheDocument();
     expect(onError).toHaveBeenCalledTimes(1);
     expect((onError.mock.calls[0][0] as Error).message).toBe("kaputt");
@@ -43,7 +47,7 @@ describe("ErrorBoundary", () => {
         <Boom />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(crashScreen()).toBeInTheDocument();
     shouldThrow = false;
     rerender(
       <ErrorBoundary resetKeys={["/b"]}>
@@ -71,12 +75,12 @@ describe("ErrorBoundary", () => {
     // Navigate to a page that throws: the key changes in the same update.
     renders = 0;
     rerender(at("/broken"));
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(crashScreen()).toBeInTheDocument();
     expect(onReset).not.toHaveBeenCalled();
     const brokenRenders = renders;
     // An unrelated re-render with the same keys keeps the error.
     rerender(at("/broken"));
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(crashScreen()).toBeInTheDocument();
     expect(onReset).not.toHaveBeenCalled();
     expect(renders).toBe(brokenRenders);
     // Navigating away clears it, once.
@@ -95,7 +99,8 @@ describe("ErrorBoundary", () => {
     );
     expect(screen.getByText("Etwas ist schiefgelaufen")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Fehlerdetails/ }));
-    expect(screen.getByText(/Error: kaputt/)).toBeInTheDocument();
+    // The quoted message box, and the report inside the disclosure.
+    expect(screen.getAllByText(/Error: kaputt/)).toHaveLength(2);
   });
 
   it("takes a render-prop fallback with reset", () => {
@@ -122,7 +127,7 @@ describe("ErrorBoundary", () => {
         <Boom value={hostile} />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(crashScreen()).toBeInTheDocument();
     expect(describeThrown(undefined)).toEqual({ name: "Error", message: "" });
     expect(describeThrown("plain")).toEqual({ name: "Error", message: "plain" });
   });

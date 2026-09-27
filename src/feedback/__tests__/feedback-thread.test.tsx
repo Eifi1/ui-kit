@@ -22,6 +22,14 @@ const MESSAGES: FeedbackThreadMessage[] = [
 ];
 
 describe("FeedbackThread", () => {
+  it("shows the full date in the kit Tooltip, not a native title (keksdose F0)", () => {
+    const { container } = render(<FeedbackThread messages={MESSAGES} now={NOW} locale="en" />);
+    expect(container.querySelector("[title]")).toBeNull();
+    const time = screen.getByText("5 minutes ago");
+    const tip = document.getElementById(time.getAttribute("aria-describedby") ?? "");
+    expect(tip).toHaveTextContent(/Saturday, September 26, 2026/);
+  });
+
   it("renders author, relative time, body and attachments per message", () => {
     render(<FeedbackThread messages={MESSAGES} now={NOW} locale="en" />);
     const [first, second, third] = within(screen.getByRole("list", { name: "Comments" })).getAllByRole(

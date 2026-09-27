@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { SHOWCASE_ALIAS } from "./showcase/alias";
+import { SHOWCASE_ALIAS } from "./showcase/alias.ts";
 
 /**
  * The first test harness this package has ever had (refactor plan 2026-08-24, U-1).
@@ -37,6 +37,15 @@ export default defineConfig({
     // against the bug.
     env: { TZ: "Europe/Berlin" },
     clearMocks: true,
+    // Vitest 5 closes a run with hints about per-file isolation — "jsdom was created 233
+    // times … use pool: 'vmThreads'", "233 workers spawned … faster with isolate: false"
+    // (which of the two appears varies run to run). Known, and a deliberate trade: a
+    // fresh worker and jsdom per file is what keeps the suite's global stubs (matchMedia,
+    // ResizeObserver, <html dir>, localStorage) from leaking between files, and
+    // vmThreads' own caveats (instanceof across contexts, memory) have not been weighed
+    // here. As a standing hint on every run it was only noise. The import and transform
+    // diagnostics stay on, so a NEW slow spot still shows.
+    experimental: { diagnostics: { environment: false, isolate: false } },
     // Vitest stubs every stylesheet with an EMPTY STRING by default, and it does so
     // by file extension — `tokens.css?raw` is stubbed too, so a test that reads the
     // token sheet as text gets "" and happily reports no drift. Narrowed to the one

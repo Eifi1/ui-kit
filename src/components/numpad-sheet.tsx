@@ -99,11 +99,16 @@ export function NumberPadSheet({
   onDone,
   label,
   labels,
+  decimalMark = ".",
 }: {
   value: string;
   /** Fired with the raw (sanitised) field text on every key — same contract as
    * the host field's own `onChange`. */
   onChange: (value: string) => void;
+  /** The glyph on the decimal key — "," where the host shows a comma (AmountInput
+   *  in fr-CH, kastlan 40). The key still inserts a dot; the host's text is dot-form
+   *  underneath and `sanitizeLive` reads either. */
+  decimalMark?: "." | ",";
   /** Fired on "Done": the host blurs the input, which commits (evaluates) and
    * unmounts the sheet via its existing blur handler. */
   onDone: () => void;
@@ -231,7 +236,7 @@ export function NumberPadSheet({
               onClick={() => insert(key.ins)}
               className={cn(PAD_BTN, key.accent ? PAD_ACCENT : PAD_DIGIT)}
             >
-              {key.label}
+              {key.kind === "ins" && key.name === "decimal" ? decimalMark : key.label}
             </button>
           ),
         )}

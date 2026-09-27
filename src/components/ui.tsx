@@ -1,13 +1,13 @@
 import { forwardRef, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
-import { pickLinkRenderer } from "./text-link";
+import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -214,6 +214,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   href?: never;
   renderLink?: never;
   external?: never;
+  replace?: never;
+  reloadDocument?: never;
 }
 
 /**
@@ -243,6 +245,21 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
    *  router link, and "(opens in a new tab)" read after the label — billing-history's
    *  Stripe PDF. A `target="_blank"` of your own is announced the same way. */
   external?: boolean;
+  /**
+   * Navigate by replacing the current history entry, so Back does not return here —
+   * keksdose F1: the "Continue" out of a one-shot page (an emailed confirmation link, a
+   * payment return URL) that must not be landed on again. Handed to the router link as
+   * `replace` (see `KitLinkProps.replace` for mapping it); on a plain `<a>` a plain click
+   * becomes `location.replace(href)`. Ignored when `external`.
+   */
+  replace?: boolean;
+  /**
+   * A plain `<a>` for an in-app `href`, so the browser loads the whole document instead
+   * of the router swapping the view — keksdose F1: a route the SPA does not own (a
+   * server-rendered export, a logout that must drop every in-memory cache). Wins over
+   * `renderLink` and the provider's `linkComponent`.
+   */
+  reloadDocument?: boolean;
   /** A link cannot be `disabled`, so this renders an `<a>` with NO `href` —
    *  `role="link"` and `aria-disabled`, out of the tab order like a disabled button,
    *  with the disabled look. The router link is not used: it needs somewhere to go. */
@@ -294,6 +311,8 @@ function ButtonLink({
   href,
   renderLink,
   external,
+  replace,
+  reloadDocument,
   disabled,
   variant = "primary",
   size = "md",
@@ -311,7 +330,8 @@ function ButtonLink({
   // The same rule as every kit link (`pickLinkRenderer`): an external `href` or an
   // in-page `#anchor` is never handed to the provider's router link, even without
   // `external`.
-  const Link = pickLinkRenderer<KitLinkProps>(renderLink, kitLink, href);
+  // `reloadDocument` is the caller saying "not the router" for this one link.
+  const Link = reloadDocument ? undefined : pickLinkRenderer<KitLinkProps>(renderLink, kitLink, href);
   const newTab = !disabled && (external || target === "_blank");
   const cls = cn(
     buttonLook(variant, size, stretch, tone),
@@ -346,7 +366,7 @@ function ButtonLink({
         href={href}
         target={external ? "_blank" : target}
         rel={external ? (rel ?? "noopener noreferrer") : rel}
-        onClick={onClick}
+        onClick={external ? onClick : replacingClick(onClick, href, replace, target)}
         className={cls}
       >
         {body}
@@ -357,6 +377,7 @@ function ButtonLink({
     <RenderedButtonLink
       render={Link}
       {...rest}
+      {...routerLinkNavigation(replace)}
       href={href}
       target={target}
       rel={rel}
@@ -382,6 +403,8 @@ function ButtonElement({
   href: _href,
   renderLink: _renderLink,
   external: _external,
+  replace: _replace,
+  reloadDocument: _reloadDocument,
   ...rest
 }: ButtonProps) {
   const reasonId = useId();
@@ -687,8 +710,12 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * state re-colours the glyph, its hover fill and its focus ring together. Passing it
    * implies `tone="custom"`. Or leave it out and set the variable yourself from a class
    * (`className="[--icon-button-tone:var(--success)]"`).
+   *
+   * Or a `{ light, dark }` pair, one colour per theme — keksdose: a raw colour that reads
+   * on the light surface (`#be123c`) is too dark on the dark one, and an inline style
+   * cannot say "in dark mode". See {@link IconButtonToneColor}.
    */
-  toneColor?: string;
+  toneColor?: IconButtonToneColor;
   /** Glyph colour over the variant. `muted`: placeholder grey, full text colour on
    *  hover. `danger`: the same grey at rest, `--danger` on hover and focus — for a
    *  remove/delete that repeats down a list. `warning`: amber at rest — a flag that
@@ -796,9 +823,272 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * reason nobody can see is not one. Wins over `disabled`, as on Button.
    */
   disabledReason?: ReactNode;
+  /** The `<button>` element — a prop in React 19, as on {@link Button}. */
+  ref?: Ref<HTMLButtonElement>;
+  /** Only on the link form — see {@link IconButtonLinkProps}. */
+  href?: never;
+  renderLink?: never;
+  external?: never;
+  replace?: never;
+  reloadDocument?: never;
 }
 
-export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+/**
+ * `<IconButton href>`: an icon-only LINK — keksdose F2 and kastlan 45, whose icon
+ * actions that navigate (a row's "open", a card's "edit" that goes to the edit page, a
+ * top bar's settings cog) were `<IconButton onClick={() => navigate(…)}>`: a button that
+ * changes the page, with no middle click, no "open in new tab" and no URL on hover.
+ *
+ * The same rule as {@link Button}'s `href` (see {@link ButtonLinkProps}): an in-app
+ * `href` goes through `renderLink`, else the provider's `linkComponent`; an external one
+ * or an in-page `#anchor` stays a plain `<a>`; `external` opens a new tab and says so to
+ * a screen reader; `replace` and `reloadDocument` as on Button. The look, the `label` →
+ * `aria-label` + Tooltip, the badge, `toneColor` and `stopPropagation` are the button's.
+ *
+ * `disabled` renders an inert `<a>` with no `href` — `role="link"`, `aria-disabled`, out
+ * of the tab order, dimmed — like Button's disabled link. `pressed`, `disabledReason` and
+ * `disabledStyle` are a button's and are typed out: a link is not a toggle, and a link
+ * that explains why it cannot be followed is a job for a disabled BUTTON.
+ */
+export interface IconButtonLinkProps
+  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "type" | "href">,
+    Pick<
+      IconButtonProps,
+      | "variant"
+      | "size"
+      | "glyphSize"
+      | "badge"
+      | "stretch"
+      | "shape"
+      | "toneColor"
+      | "tone"
+      | "quiet"
+      | "stopPropagation"
+      | "label"
+      | "tooltip"
+      | "tooltipSide"
+      | "tooltipPortal"
+    > {
+  href: string;
+  /** See {@link ButtonLinkProps.renderLink}. */
+  renderLink?: KitLinkComponent;
+  /** See {@link ButtonLinkProps.external}. */
+  external?: boolean;
+  /** See {@link ButtonLinkProps.replace}. */
+  replace?: boolean;
+  /** See {@link ButtonLinkProps.reloadDocument}. */
+  reloadDocument?: boolean;
+  /** See {@link ButtonLinkProps.disabled}. */
+  disabled?: boolean;
+  ref?: Ref<HTMLAnchorElement>;
+  type?: never;
+  form?: never;
+  pressed?: never;
+  disabledReason?: never;
+  disabledStyle?: never;
+}
+
+/**
+ * `toneColor`: one CSS colour, or one per theme.
+ *
+ * The pair is two custom properties on the element — `--icon-button-tone-light` and
+ * `--icon-button-tone-dark` — and a class that points `--icon-button-tone` at one or the
+ * other by the kit's `dark` variant (`.dark` on an ancestor, tokens.css), so the colour
+ * follows a theme switch in CSS alone, with no re-render and no JS reading the theme.
+ * Both values are any CSS colour; a token that already flips (`var(--warning)`) needs no
+ * pair.
+ */
+export type IconButtonToneColor = string | { light: string; dark: string };
+
+const ICON_BUTTON_TONE_PAIR =
+  "[--icon-button-tone:var(--icon-button-tone-light)] dark:[--icon-button-tone:var(--icon-button-tone-dark)]";
+
+/** The inline custom properties `toneColor` sets over the caller's `style`. */
+function toneColorStyle(toneColor: IconButtonToneColor | undefined, style: CSSProperties | undefined) {
+  if (toneColor === undefined) return style;
+  const vars: Record<string, string> =
+    typeof toneColor === "string"
+      ? { "--icon-button-tone": toneColor }
+      : { "--icon-button-tone-light": toneColor.light, "--icon-button-tone-dark": toneColor.dark };
+  return { ...style, ...vars } as CSSProperties;
+}
+
+/** Everything but the element: the look both forms of IconButton share. */
+function iconButtonLook({
+  variant,
+  size,
+  stretch,
+  glyphSize,
+  shape,
+  tone,
+  quiet,
+  toneColor,
+}: {
+  variant: IconButtonVariant;
+  size: IconButtonSize;
+  stretch: boolean | undefined;
+  glyphSize: IconButtonGlyphSize | undefined;
+  shape: "square" | "round";
+  tone: IconButtonTone;
+  quiet: boolean | undefined;
+  toneColor: IconButtonToneColor | undefined;
+}) {
+  return cn(
+    ICON_BUTTON_BASE,
+    stretch ? ICON_BUTTON_STRETCH_SIZES[size] : ICON_BUTTON_SIZES[size],
+    glyphSize !== undefined && ICON_BUTTON_GLYPH_SIZES[glyphSize],
+    // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
+    variant === "overlay"
+      ? ICON_BUTTON_OVERLAY
+      : variant === "shutter"
+        ? ICON_BUTTON_SHUTTER
+        : buttonVariantClasses[variant],
+    shape === "round" && "rounded-full",
+    ICON_BUTTON_DISABLED_REST[variant],
+    iconButtonToneClass(tone, quiet),
+    toneColor !== undefined && typeof toneColor !== "string" && ICON_BUTTON_TONE_PAIR,
+  );
+}
+
+/** The badge beside the control, not in it — see `badge`. The wrapper is only a
+ *  positioning box: the control inside it keeps its own focus ring and hit area. */
+function withIconButtonBadge(control: ReactElement, badge: ReactNode, stretch: boolean | undefined) {
+  if (!hasContent(badge)) return control;
+  return (
+    <span className={cn("relative inline-flex shrink-0", stretch && "self-stretch")}>
+      {control}
+      <span
+        aria-hidden
+        data-slot="icon-button-badge"
+        className="pointer-events-none absolute -end-0.5 -bottom-0.5 inline-flex rounded-full bg-[var(--bg-surface)] [&_svg]:size-3"
+      >
+        {badge}
+      </span>
+    </span>
+  );
+}
+
+// Declared link-first, as Button is, so `<IconButton href>` picks the link props and
+// `ComponentProps<typeof IconButton>` (the LAST signature) is still the button's.
+export function IconButton(props: IconButtonLinkProps): ReactElement;
+export function IconButton(props: IconButtonProps): ReactElement;
+export function IconButton(props: IconButtonProps | IconButtonLinkProps): ReactElement {
+  if (props.href !== undefined) return <IconButtonLink {...(props as IconButtonLinkProps)} />;
+  return <IconButtonElement {...(props as IconButtonProps)} />;
+}
+IconButton.displayName = "IconButton";
+
+function IconButtonLink({
+  href,
+  renderLink,
+  external,
+  replace,
+  reloadDocument,
+  disabled,
+  variant = "ghost",
+  size = "md",
+  tone: toneProp,
+  quiet,
+  stopPropagation,
+  stretch,
+  shape = "square",
+  toneColor,
+  label,
+  tooltip = true,
+  tooltipSide,
+  tooltipPortal,
+  glyphSize,
+  badge,
+  className,
+  style,
+  target,
+  rel,
+  onClick,
+  onKeyDown,
+  children,
+  ref,
+  ...rest
+}: IconButtonLinkProps) {
+  const kitLink = useKitLink();
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
+  // Button's rule, word for word: `reloadDocument` bypasses the router, an external
+  // href or an in-page `#anchor` never reaches it.
+  const Link = reloadDocument ? undefined : pickLinkRenderer<KitLinkProps>(renderLink, kitLink, href);
+  const newTab = !disabled && (external || target === "_blank");
+  const name = rest["aria-label"] ?? label;
+  // "(opens in a new tab)" joins the NAME here, not the body: an icon link has no text
+  // for an sr-only span to follow, and `aria-label` would override one anyway.
+  const ariaLabel = name !== undefined && newTab ? `${name} (${common.opensInNewTab})` : name;
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (stopPropagation) e.stopPropagation();
+    onClick?.(e);
+  };
+  const handleKeyDown = (e: KeyboardEvent<HTMLAnchorElement>) => {
+    // A link activates on Enter only; that key still bubbles to a clickable row.
+    if (stopPropagation && e.key === "Enter") e.stopPropagation();
+    onKeyDown?.(e);
+  };
+  const cls = cn(
+    iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor }),
+    // BASE's `disabled:` classes never match an `<a>` — Button's disabled link look.
+    disabled && "pointer-events-none cursor-not-allowed opacity-50",
+    className,
+  );
+  const look = { style: toneColorStyle(toneColor, style), className: cls };
+  let control: ReactElement;
+  if (disabled) {
+    control = (
+      <a {...rest} {...look} ref={ref} role="link" aria-disabled="true" aria-label={ariaLabel}>
+        {children}
+      </a>
+    );
+  } else if (external || !Link) {
+    control = (
+      <a
+        {...rest}
+        {...look}
+        ref={ref}
+        href={href}
+        aria-label={ariaLabel}
+        target={external ? "_blank" : target}
+        rel={external ? (rel ?? "noopener noreferrer") : rel}
+        onClick={external ? handleClick : replacingClick(handleClick, href, replace, target)}
+        onKeyDown={handleKeyDown}
+      >
+        {children}
+      </a>
+    );
+  } else {
+    control = (
+      <RenderedButtonLink
+        render={Link}
+        {...rest}
+        {...look}
+        {...routerLinkNavigation(replace)}
+        ref={ref}
+        href={href}
+        aria-label={ariaLabel}
+        target={target}
+        rel={rel}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+      >
+        {children}
+      </RenderedButtonLink>
+    );
+  }
+  control = withIconButtonBadge(control, badge, stretch);
+  if (!tooltip || label === undefined || label === "") return control;
+  return (
+    // A fragment, as on the button: the bubble says what `aria-label` already does.
+    <Tooltip label={label} side={tooltipSide} portal={tooltipPortal} className={stretch ? "self-stretch" : undefined}>
+      <>{control}</>
+    </Tooltip>
+  );
+}
+
+function IconButtonElement(
   {
     variant = "ghost",
     size = "md",
@@ -821,9 +1111,14 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     style,
     onClick,
     onKeyDown,
+    href: _href,
+    renderLink: _renderLink,
+    external: _external,
+    replace: _replace,
+    reloadDocument: _reloadDocument,
+    ref,
     ...rest
-  },
-  ref,
+  }: IconButtonProps,
 ) {
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
@@ -839,7 +1134,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-describedby={locked ? (ownDescribedBy ? `${ownDescribedBy} ${reasonId}` : reasonId) : ownDescribedBy}
       aria-label={rest["aria-label"] ?? label}
       aria-pressed={pressed ?? rest["aria-pressed"]}
-      style={toneColor !== undefined ? { ...style, ["--icon-button-tone" as string]: toneColor } : style}
+      style={toneColorStyle(toneColor, style)}
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
         // `preventDefault` too: a locked submit must not submit its form.
@@ -856,18 +1151,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         onKeyDown?.(e);
       }}
       className={cn(
-        ICON_BUTTON_BASE,
-        stretch ? ICON_BUTTON_STRETCH_SIZES[size] : ICON_BUTTON_SIZES[size],
-        glyphSize !== undefined && ICON_BUTTON_GLYPH_SIZES[glyphSize],
-        // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
-        variant === "overlay"
-          ? ICON_BUTTON_OVERLAY
-          : variant === "shutter"
-            ? ICON_BUTTON_SHUTTER
-            : buttonVariantClasses[variant],
-        shape === "round" && "rounded-full",
-        ICON_BUTTON_DISABLED_REST[variant],
-        iconButtonToneClass(tone, quiet),
+        iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor }),
         pressed && ICON_BUTTON_PRESSED,
         // The disabled look for the focusable kind of disabled, as on Button.
         locked && (keep ? "cursor-default" : "cursor-not-allowed opacity-50"),
@@ -876,22 +1160,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       )}
     />
   );
-  // The badge beside the button, not in it — see `badge`. The wrapper is only a
-  // positioning box: the button inside it keeps its own focus ring and hit area.
-  const control = hasContent(badge) ? (
-    <span className={cn("relative inline-flex shrink-0", stretch && "self-stretch")}>
-      {button}
-      <span
-        aria-hidden
-        data-slot="icon-button-badge"
-        className="pointer-events-none absolute -end-0.5 -bottom-0.5 inline-flex rounded-full bg-[var(--bg-surface)] [&_svg]:size-3"
-      >
-        {badge}
-      </span>
-    </span>
-  ) : (
-    button
-  );
+  const control = withIconButtonBadge(button, badge, stretch);
   if (locked) {
     return (
       // Button's shape: the button and the hidden reason in a FRAGMENT, so Tooltip does
@@ -919,8 +1188,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       <>{control}</>
     </Tooltip>
   );
-});
-IconButton.displayName = "IconButton";
+}
 
 export const FIELD_BASE =
   "block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:ring-[var(--brand)] " +

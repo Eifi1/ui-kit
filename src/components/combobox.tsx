@@ -420,6 +420,7 @@ export function Combobox({
           aria-required={ariaRequired}
           autoComplete="off"
           disabled={disabled}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
           autoFocus={autoFocus}
           onBlur={onBlur}
           onMouseDown={primaryOnly.onMouseDown}
@@ -913,6 +914,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
           aria-required={ariaRequired}
           autoComplete="off"
           disabled={disabled}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
           autoFocus={autoFocus}
           // `inputMode="none"` rather than readOnly, for the same reason Combobox
           // above gives: the sheet carries the keyboard, and a readOnly field would

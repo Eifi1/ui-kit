@@ -150,6 +150,72 @@ interface AmountInputProps {
    * it left a 36px figure 16px to live in.
    */
   align?: "start" | "center";
+  /**
+   * Decimals the committed amount is rounded to (kastlan 0.12: "12.345" and a
+   * calculator's "100/3" reached a `Numeric(10,2)` column unrounded and failed with a
+   * 422). Default: the currency's minor unit, from `Intl` (CHF and EUR 2, JPY 0). With
+   * no `currency`, nothing is rounded unless this is set. Rounding is half away from
+   * zero (12.345 → 12.35, -12.345 → -12.35) and happens when the figure settles: on
+   * blur, on Enter, and on every result the calculator writes back. Keystrokes are left
+   * alone, so "12.3" can still become "12.34".
+   */
+  digits?: number;
+  /** The smallest amount the field settles on. A lower figure is raised to it when it
+   *  settles, like `digits`. Compared with the signed figure. */
+  min?: number;
+  /** The largest amount the field settles on (a deposit release capped at the
+   *  balance). A higher figure is lowered to it when it settles. */
+  max?: number;
+}
+
+/** The currency's minor unit (CHF 2, JPY 0), or `undefined` for no currency or a code
+ *  `Intl` does not accept. */
+function currencyDigits(code: string | undefined): number | undefined {
+  if (!code) return undefined;
+  try {
+    return new Intl.NumberFormat("en", { style: "currency", currency: code }).resolvedOptions()
+      .maximumFractionDigits;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * A settled figure, rounded to `digits` (half away from zero) and clamped to
+ * `min`/`max`. Only a plain number is touched. A half-typed draft or an expression
+ * comes back as it was. Rounding works in decimal exponent notation, because
+ * `Math.round(1.005 * 100)` is 100 (1.005 is 1.00499… in binary).
+ */
+function settleAmount(text: string, digits: number | undefined, min?: number, max?: number): string {
+  const t = text.trim();
+  if (!/^-?\d*\.?\d*$/.test(t) || !/\d/.test(t)) return text;
+  let n = Number(t);
+  if (!Number.isFinite(n)) return text;
+  if (digits !== undefined) {
+    const magnitude = Number(`${Math.round(Number(`${Math.abs(n)}e${digits}`))}e-${digits}`);
+    n = n < 0 ? -magnitude : magnitude;
+  }
+  if (min !== undefined && n < min) n = min;
+  if (max !== undefined && n > max) n = max;
+  const out = formatResult(n);
+  // Unchanged figures keep their own spelling ("12.50" stays "12.50").
+  return Number(out) === Number(t) ? text : out;
+}
+
+/**
+ * The locale's decimal mark, as far as this field can type it: "," or "." (kastlan 40).
+ * The same answer `NumberField` gives, for the same reason: a mark outside those two
+ * (Arabic's "٫") is not one {@link sanitizeLive} lets through, so those locales keep
+ * the dot rather than get a field that eats the key it shows.
+ */
+function decimalMark(locale: string | undefined): "," | "." {
+  try {
+    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
+    return part?.value === "," ? "," : ".";
+  } catch {
+    // An invalid tag throws a RangeError; a typo in a locale must not take the form down.
+    return ".";
+  }
 }
 
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
@@ -186,13 +252,14 @@ const DISPLAY_INPUT_CLASS = cn(
  * sum that comes out positive still takes the chip with it; "-20+50" → "7" is not,
  * and "-20+" evaluates to nothing at all.
  */
-function isResultOf(previous: string, text: string): boolean {
+function isResultOf(previous: string, text: string, settle: (text: string) => string): boolean {
   const n = evaluateExpression(previous);
-  return n !== null && formatResult(n) === text.trim();
+  // Compared settled, since the field rounds what the calculator hands it.
+  return n !== null && settle(formatResult(n)) === text.trim();
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
@@ -230,6 +297,20 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // minus and has to survive keystroke-for-keystroke.
     const signOwned = onNegativeChange !== undefined;
     const shown = signOwned && negative && isBareAmount(value) ? `-${value}` : value;
+    // What the user SEES is `shown` with the locale's decimal mark (kastlan 40: a
+    // fr-CH user typed "1,5" and watched it turn into "1.5" under their fingers). Display only — `value`, `onChange`, the sign split and the settle all
+    // stay dot-decimal, because that string is the contract: RhfMoneyField's
+    // `parseAmount`, every app's `Number(value)` and the calculator's evaluator read
+    // it. The way back is free: {@link sanitizeLive} already folds a typed "," into
+    // ".", so a comma typed, pasted or tapped on the numpad lands as a dot.
+    //
+    // One character for one character, and no digit grouping: the caret stays where
+    // the typist put it, and "1.000" cannot be read back as a thousand in one locale
+    // and as one in the other. de-CH and it-CH are "." — CLDR says so, and this
+    // follows `Intl` rather than a guess about a country.
+    const locale = useKitLocale();
+    const mark = decimalMark(locale);
+    const display = mark === "," ? shown.replace(/\./g, ",") : shown;
     // Every route into the field — typing, the numpad sheet, the desktop
     // calculator, the blur/Enter commit — funnels through here, so the split is
     // written once and the four entry paths cannot drift.
@@ -239,6 +320,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // edit the field's own text that is simply what the field was showing; the
     // desktop calculator keeps its expression in a popover the field never sees,
     // so it passes it in (see `CalculatorButton`'s `onChange`).
+    const digits = digitsProp ?? currencyDigits(currency);
+    const settle = (text: string) => settleAmount(text, digits, min, max);
     const handleText = (raw: string, previous: string = shown) => {
       const text = sanitizeLive(raw);
       if (!signOwned) {
@@ -249,7 +332,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       if (sign) {
         // SET, not flip: re-reporting the same sign on every keystroke is a no-op.
         onNegativeChange(sign === "-");
-      } else if (looksLikeExpression(previous) && isBareAmount(text) && isResultOf(previous, text)) {
+      } else if (looksLikeExpression(previous) && isBareAmount(text) && isResultOf(previous, text, settle)) {
         // A calculation that just RESOLVED states its sign in both directions. The
         // figure it ran on is the SIGNED one the user could see — "-12+30" is +18 —
         // so a positive result has to move the chip too, or the field would answer
@@ -262,7 +345,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       }
       onChange(sign ? rest : text);
     };
-    const commit = () => handleText(commitExpression(shown));
+    const commit = () => handleText(settle(commitExpression(shown)));
     const { open, setOpen, wrapperRef, panelRef, query, setQuery, inputRef } = useDropdownSearch();
     // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
     // the panel needs a real trigger rect rather than a relative parent — see
@@ -281,7 +364,6 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     }, [labels?.currency, labels?.currencySearch]);
     const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
     const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-    const locale = useKitLocale();
 
     const selected = getCurrency(currency);
     const filtered = useMemo(() => {
@@ -321,7 +403,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // needs: a zero to aim at, at full size. The caller supplies it because
           // only the app knows the locale's decimal separator.
           placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
-          value={shown}
+          value={display}
           onChange={(e) => handleText(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => {
@@ -387,8 +469,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         >
           {showCalc && (
             <CalculatorButton
-              value={shown}
-              onChange={handleText}
+              // The mark the field shows, as NumberInput hands its calculator; the
+              // evaluator reads either, and its result comes back dot-decimal.
+              value={display}
+              onChange={(result, expression) => handleText(settle(result), expression)}
               className="px-1.5"
               ariaLabel={labels?.calculatorTrigger}
               labels={labels?.calculator}
@@ -470,11 +554,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         </div>
         {showNumpad && (
           <NumberPadSheet
-            value={shown}
+            // Localised like the field it mirrors; its keys come back through
+            // `sanitizeLive`, so the "." key and a "," both land as a dot.
+            value={display}
             onChange={handleText}
             onDone={() => innerRef.current?.blur()}
             label={label}
             labels={labels?.pad}
+            decimalMark={mark}
           />
         )}
       </div>

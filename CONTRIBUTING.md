@@ -205,10 +205,10 @@ Say so in the commit message: which test, and what it printed against the unfixe
 Where a new test earns the most is still `lib/`, `theme/` and the data-table's pure
 helpers: highest return per line, no DOM needed.
 
-## Lint, and the ratchet policy
+## Lint: zero warnings
 
 ```bash
-npm run lint
+npm run lint   # eslint . --max-warnings 0
 ```
 
 Two rule families are the reason `eslint.config.js` exists rather than taste:
@@ -216,25 +216,13 @@ Two rule families are the reason `eslint.config.js` exists rather than taste:
 cannot see, and `jsx-a11y/*`, because the kit ships ~20 interactive components to three
 apps, where one accessibility regression multiplies by three.
 
-**`warn` versus `error` is a ratchet, not an opinion:**
-
-- A rule is **`error`** when `src/` is already clean under it, so it can never regress.
-- A rule with a real backlog is **`warn`**, with the remaining count recorded in a comment
-  beside it, so CI stays green while the backlog is worked down.
-- **Every `warn` that reaches zero is promoted to `error` in the commit that empties it.**
-  Not in a follow-up, not in a cleanup ticket. A rule left at `warn` after its count hits
-  zero silently refills, and you have bought nothing.
-
-If you empty one, move it out of the ratchet block and leave a comment saying what the last
-instance was and how it was fixed — the two promoted rules in the config are written that
-way and are the pattern to copy.
-
-The `react-hooks` compiler rules (`refs`, `preserve-manual-memoization`,
-`set-state-in-effect`, `immutability`) are **React Compiler readiness, not correctness**.
-They flag patterns this package uses deliberately and documents, chiefly the latest-ref
-pattern in `use-dismiss` / `use-close-transition` / `use-row-swipe`. Kept visible, not
-enforced. The classic rules (`rules-of-hooks`, `exhaustive-deps`) stay errors: those are
-the ones that catch stale closures.
+**Every rule is an error, and a warning fails the build.** Until 0.12 the config was a
+ratchet: rules with a backlog were `warn` and carried a count. The last 85 warnings were
+cleared before 0.13, so every rule is now `error`, including the React Compiler rules
+(`refs`, `preserve-manual-memoization`, `set-state-in-effect`, `immutability`). If a
+preset update brings a new rule with a backlog, it fails `--max-warnings 0` straight away.
+Fix the backlog, or record it as `warn` with its count in the config and clear it before
+the next release.
 
 There were once seven inert `eslint-disable` comments in `src/`, fossils of the origin
 repository's config, suppressing rules nothing was running. Do not add a disable comment
@@ -272,8 +260,8 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 
 | Script | What it is actually defending |
 |---|---|
-| `typecheck` | — |
-| `lint` | The ratchet policy above: warnings are allowed to exist, not to grow. |
+| `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since tsup's declaration build reads it). |
+| `lint` | Zero warnings (see above): every rule is an error. |
 | `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
 | `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. |
 | `build` | — |
@@ -283,6 +271,12 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
+
+A passing check prints a line, not an inventory: `build` drops tsup's per-file listing
+(`scripts/tsup-quiet.mjs`; `npx tsup` shows it), `build:showcase` runs at `--logLevel warn`,
+`check:package --quiet` holds its walk back unless a step fails. So anything more than that
+in the output — a warning, an act() complaint, a jsdom "Not implemented" — is new and is
+the thing to read.
 
 No dead-code check: `ts-prune` reports every public export of a library as unused.
 
@@ -339,6 +333,13 @@ just the symptom, because a reader upgrading needs to know whether it could have
    confirms. Pushes wait until the work is done and go out in one batch.
 5. Tag the MERGE commit on main:
    `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
+
+**Build once, ship that.** CI is the only workflow that installs, tests and builds. On a
+push to `main` it uploads two artifacts: `npm-package` (the tarball packed from the dist
+`npm run check` verified) and `showcase` (built for Pages). `pages.yml` deploys the showcase
+only after that CI run is green, and `release.yml` stages exactly that tarball, so nothing is
+rebuilt. Tag the MERGE commit: the release looks up the CI run of the tagged commit on
+`main`, waits up to 20 minutes for it, and refuses a red one.
 
 Pushing a `v*` tag triggers `.github/workflows/release.yml`, which STAGES the version on npm
 through trusted publishing (OIDC, no token) with provenance. A maintainer approves it with

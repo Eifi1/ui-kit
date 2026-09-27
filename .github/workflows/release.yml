@@ -3,9 +3,15 @@ name: Release
 # STAGES @eifi1/ui-kit on npmjs.com when a v* tag is pushed; a maintainer then
 # approves the staged version with their 2FA before it goes live:
 #
-#   npm version patch|minor|major && git push --follow-tags
+#   merge the release PR → tag the merge commit → git push origin vX.Y.Z
 #   → this workflow stages it →  npm stage list @eifi1/ui-kit
 #                                npm stage approve <stage-id>   (or on npmjs.com)
+#
+# BUILD ONCE, SHIP THAT: this workflow installs, tests and builds NOTHING. It finds the
+# CI run for the tagged commit (the push to main that the merge made), waits for it,
+# requires it to be green, downloads the `npm-package` tarball that run packed from
+# the dist it built and verified, and stages exactly that file. The package on npm is
+# byte for byte the one CI checked — it used to be a third, separate build.
 #
 # Authentication is npm TRUSTED PUBLISHING (OIDC), configured on npmjs.com for
 # Eifi1/ui-kit + release.yml with direct publishing NOT allowed — so no npm token
@@ -19,57 +25,74 @@ on:
   push:
     tags: ["v*"]
   # Re-run a release without re-tagging: "Run workflow", then pick the TAG (not a
-  # branch) — the version check below compares the ref name with package.json.
+  # branch) — the version check below compares the ref name with the tarball.
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read # find the CI run and download its artifact
   id-token: write # trusted publishing (OIDC) and provenance
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Stage the package CI tested
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
+      # First, because checkout cleans the workspace. Only .nvmrc, for the Node version
+      # the apps pin — nothing is built from source here.
       - uses: actions/checkout@v7
-      # Node 24, not 20, and not by preference: jsdom 30 pulls undici, which calls
-      # `webidl.util.markAsUncloneable` — added to Node in 20.18. On plain 20 every
-      # test file dies before it runs with "Failed to start forks worker" and a
-      # TypeError from inside CacheStorage, which names neither jsdom nor the Node
-      # version. It is also what all four consumers build this package with (their
-      # .nvmrc is 24.19.0), so testing it on anything else tests something nobody
-      # ships.
+        with:
+          sparse-checkout: .nvmrc
+          sparse-checkout-cone-mode: false
+      # The CI run of the tagged commit, on its push to main. A tag is pushed right
+      # after the merge, so that run is usually still going: wait for it (20 min cap).
+      - name: Find the green CI run for this commit
+        id: ci
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 80); do
+            run="$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" \
+              --event push --json databaseId,status,conclusion --jq '.[0] // empty')"
+            if [ -n "$run" ]; then
+              status="$(jq -r .status <<<"$run")"
+              if [ "$status" = "completed" ]; then
+                conclusion="$(jq -r .conclusion <<<"$run")"
+                if [ "$conclusion" != "success" ]; then
+                  echo "::error::CI for $GITHUB_SHA finished with '$conclusion' — not releasing a commit CI rejected"
+                  exit 1
+                fi
+                echo "id=$(jq -r .databaseId <<<"$run")" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+            sleep 15
+          done
+          echo "::error::no finished CI run on main for $GITHUB_SHA — tag the MERGE commit on main"
+          exit 1
+      - uses: actions/download-artifact@v8
+        with:
+          name: npm-package
+          path: pkg
+          run-id: ${{ steps.ci.outputs.id }}
+          github-token: ${{ github.token }}
+      - name: Tag must match the tarball's version
+        id: pkg
+        run: |
+          set -euo pipefail
+          tgz="$(ls pkg/*.tgz)"
+          PKG="$(tar -xOzf "$tgz" package/package.json | jq -r .version)"
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::tag v$TAG does not match the tested package $PKG"
+            exit 1
+          fi
+          echo "tgz=$tgz" >> "$GITHUB_OUTPUT"
+          echo "staging $PKG from CI run ${{ steps.ci.outputs.id }}"
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: npm
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-
-      # Refuse to publish a tag that disagrees with package.json, which is the
-      # easiest way to ship 0.4.0 under the v0.4.1 tag and never notice.
-      - name: Tag must match package.json version
-        run: |
-          set -euo pipefail
-          PKG="$(node -p "require('./package.json').version")"
-          TAG="${GITHUB_REF_NAME#v}"
-          if [ "$PKG" != "$TAG" ]; then
-            echo "::error::tag v$TAG does not match package.json $PKG"
-            exit 1
-          fi
-          echo "publishing $PKG"
-
-      # Trusted publishing needs npm >= 11.5.1 and `npm stage` a later 11.x; pinned to
-      # the line this was verified with rather than whatever the runner's Node ships.
       - run: npm install -g npm@11.17.0
-
-      # No NODE_AUTH_TOKEN, on purpose: with a token in the environment npm
-      # authenticated with it instead of OIDC, and a token cannot satisfy 2FA.
-      # `--loglevel verbose` is what makes the OIDC exchange explain itself: npm reports
-      # why trusted publishing failed (no id-token, a rejected exchange, …) ONLY at
-      # verbose, and at the default level falls back to a token silently and fails with
-      # an unrelated "token seems to be invalid".
-      - run: npm stage publish . --provenance --access public --loglevel verbose
+      - run: npm stage publish "${{ steps.pkg.outputs.tgz }}" --provenance --access public

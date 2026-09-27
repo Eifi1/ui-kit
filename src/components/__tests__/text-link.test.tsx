@@ -85,7 +85,7 @@ describe("TextLink", () => {
     const onRowKey = vi.fn();
     const onClick = vi.fn();
     render(
-      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- fixture: a consumer's clickable row, only here to observe what bubbles.
       <div onClick={onRow} onKeyDown={onRowKey}>
         <TextLink href="#x" stopPropagation onClick={onClick}>
           Cell

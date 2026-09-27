@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { ReactNode, Ref } from "react";
 import { Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
+import { formatRelativeTime } from "../lib/format";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
+import { Tooltip } from "../components/tooltip";
 import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
@@ -190,13 +192,19 @@ export function FeedbackThread({
                   </span>
                 )}
                 {date && (
-                  <time
-                    dateTime={date.toISOString()}
-                    title={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}
-                    className="tabular-nums"
-                  >
-                    {formatRelativeTime(date, reference, locale)}
-                  </time>
+                  // The kit's Tooltip, not a native title: one tooltip look app-wide
+                  // (keksdose F0 / dev#523).
+                  <Tooltip label={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}>
+                    <time dateTime={date.toISOString()} className="tabular-nums">
+                      {formatRelativeTime(date, {
+                        now: reference,
+                        locale,
+                        // Past the kit's day steps it is a date: "2 weeks ago" makes
+                        // the reader do arithmetic the date already did.
+                        absoluteAfterDays: 6.5,
+                      })}
+                    </time>
+                  </Tooltip>
                 )}
               </header>
               {message.body && (
@@ -287,27 +295,6 @@ function toDate(value: Date | string | number): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-
-/**
- * "just now", "5 minutes ago", "yesterday", "3 days ago" — `Intl.RelativeTimeFormat`
- * in `locale`, so the grammar is the language's. Past a week it is a date: "12 days
- * ago" makes the reader do arithmetic that the date already did. The full date and
- * time are on the `<time>`'s title.
- */
-function formatRelativeTime(date: Date, now: number, locale: string | undefined): string {
-  const diff = date.getTime() - now;
-  const abs = Math.abs(diff);
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  if (abs < 45_000) return rtf.format(0, "second");
-  if (abs < 45 * MINUTE) return rtf.format(Math.round(diff / MINUTE), "minute");
-  if (abs < 22 * HOUR) return rtf.format(Math.round(diff / HOUR), "hour");
-  if (abs < 7 * DAY) return rtf.format(Math.round(diff / DAY), "day");
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
-}
-
 /* ── Composer ─────────────────────────────────────────────────────────────── */
 
 /** What the composer's attach control takes — {@link FeedbackNoteAttachment} with the
@@ -332,8 +319,49 @@ export interface FeedbackComposerProps {
    *  reader. */
   disabledReason?: ReactNode;
   rows?: number;
+  /**
+   * The box's hint, over the `placeholder` label — keksdose F9: an admin answering a
+   * support ticket is asked something else ("Reply to Anna…") than a member adding to
+   * their own report, and one provider-wide label cannot say both.
+   */
+  placeholder?: string;
+  /**
+   * The draft, controlled — for a host that keeps it itself (saves it per ticket,
+   * prefills a template). Left out, the composer keeps its own. Either way a send
+   * that resolves clears only what was sent: controlled, that is an
+   * `onValueChange("")` the host receives like any keystroke, and only if the draft
+   * is still the one that went out.
+   */
+  value?: string;
+  /** Every change to the draft — typing, {@link FeedbackComposerHandle.insertText}, the
+   *  clear after a send. Required to change a controlled `value`. */
+  onValueChange?: (value: string) => void;
+  /** {@link FeedbackComposerHandle}: put text into the draft from outside (canned-reply
+   *  chips) or focus the box. */
+  ref?: Ref<FeedbackComposerHandle>;
   labels?: Partial<FeedbackComposerLabels>;
   className?: string;
+}
+
+/**
+ * What a {@link FeedbackComposer} `ref` holds.
+ *
+ * keksdose F9: the support admin answers the same five questions all day and wants
+ * chips above the box ("Thanks, fixed in the next release") that drop their text in
+ * where the caret is. A controlled `value` alone cannot do that well — the host sees
+ * the string, not the caret, so it could only append — so the composer, which owns
+ * the textarea, does the splice.
+ */
+export interface FeedbackComposerHandle {
+  /**
+   * Insert `text` at the caret, replacing any selection (the caret the box last had:
+   * a click on a chip blurs it, and the selection survives the blur), then focus the
+   * box with the caret after the inserted text so the reply can go on. Nothing is
+   * added around it — put a space or a newline in `text` if the reply needs one. A
+   * no-op while `disabledReason` replaces the box.
+   */
+  insertText: (text: string) => void;
+  focus: () => void;
 }
 
 const noSubscribe = () => () => {};
@@ -352,13 +380,60 @@ export function FeedbackComposer({
   attachment,
   disabledReason,
   rows = 3,
+  placeholder,
+  value,
+  onValueChange,
+  ref,
   labels: labelsProp,
   className,
 }: FeedbackComposerProps) {
   const labels = useKitLabels("feedbackComposer", DEFAULT_FEEDBACK_COMPOSER_LABELS, labelsProp);
-  const [draft, setDraft] = useState("");
+  const [ownDraft, setOwnDraft] = useState("");
+  const controlled = value !== undefined;
+  const draft = controlled ? value : ownDraft;
   const [file, setFile] = useState<File | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLTextAreaElement>(null);
+  // The draft as of the last commit. The send's `.then` and `insertText` run after
+  // renders their closure did not see — text typed while the send was in flight, a
+  // second chip clicked before the first one's render — and must not act on a stale
+  // string (for a controlled draft there is no updater function to lean on).
+  const latest = useRef(draft);
+  useLayoutEffect(() => {
+    latest.current = draft;
+  });
+  // Where the caret goes once an inserted text has rendered.
+  const caret = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (caret.current === null || !el) return;
+    el.focus();
+    el.setSelectionRange(caret.current, caret.current);
+    caret.current = null;
+  });
+
+  const setDraft = (next: string) => {
+    latest.current = next;
+    if (!controlled) setOwnDraft(next);
+    onValueChange?.(next);
+  };
+
+  useImperativeHandle(ref, () => ({
+    insertText: (text) => {
+      const el = box.current;
+      if (!el) return;
+      const current = latest.current;
+      // A second insert before the first has rendered goes after the first, not at the
+      // textarea's not-yet-moved caret. Otherwise the textarea's selection, which may
+      // be past the end of a controlled value the host has just shortened: clamp it.
+      const pending = caret.current;
+      const start = Math.min(pending ?? el.selectionStart ?? current.length, current.length);
+      const end = pending ?? Math.max(start, Math.min(el.selectionEnd ?? start, current.length));
+      caret.current = start + text.length;
+      setDraft(current.slice(0, start) + text + current.slice(end));
+    },
+    focus: () => box.current?.focus(),
+  }));
   // The server snapshot is "Ctrl"; the client corrects it after hydration.
   const modifier = useSyncExternalStore(
     noSubscribe,
@@ -377,7 +452,7 @@ export function FeedbackComposer({
     const sentFile = file;
     Promise.resolve(onSend(draft.trim(), file))
       .then(() => {
-        setDraft((current) => (current === sentDraft ? "" : current));
+        if (latest.current === sentDraft) setDraft("");
         setFile((current) => (current === sentFile ? null : current));
       })
       .catch(() => {});
@@ -391,7 +466,8 @@ export function FeedbackComposer({
         rows={rows}
         dir="auto"
         aria-label={labels.field}
-        placeholder={labels.placeholder}
+        ref={box}
+        placeholder={placeholder ?? labels.placeholder}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {

@@ -16,10 +16,9 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
  *   - `jsx-a11y/*`, because the kit ships ~20 interactive components to three apps, and
  *     an accessibility regression here multiplies by three.
  *
- * WARN vs ERROR is a ratchet, not an opinion. A rule is `error` when `src/` is already
- * clean under it, so it can never regress. A rule with a real backlog is `warn` with the
- * count recorded, so CI stays green while the backlog is worked down — and every `warn`
- * that reaches zero should be promoted to `error` in the same commit that empties it.
+ * No warnings. Every rule is `error` and `npm run lint` runs with `--max-warnings 0`.
+ * If a new rule arrives with a backlog, record the count here as a `warn` and clear it
+ * before the next release. Don't let warnings accumulate.
  */
 export default tseslint.config(
   { ignores: ["dist/**", "node_modules/**", "showcase/dist/**", "coverage/**"] },
@@ -78,38 +77,24 @@ export default tseslint.config(
       // satisfied by the component being right rather than by a tabIndex on a div.
       "jsx-a11y/interactive-supports-focus": "error", // 0 in src/
 
-      // ── Ratchet ──────────────────────────────────────────────────────────────────
-      // Backlog recorded in docs/module-audit-2026-09-22.md. Each of these is `warn`
-      // ONLY because src/ is not clean under it yet; the count is the work item. When a
-      // count reaches zero, promote the rule to "error" in the same commit that empties
-      // it, or it silently refills.
+      // ── Emptied ratchet ──────────────────────────────────────────────────────────
+      // These were `warn` with a backlog (docs/module-audit-2026-09-22.md). The last 85
+      // warnings were cleared on chore/quiet-output, so every one is an error now, and
+      // `npm run lint` passes `--max-warnings 0`: a rule a preset adds as `warn` later
+      // fails the build too, instead of starting a new backlog nobody reads.
+      "jsx-a11y/role-supports-aria-props": "error",
+      "jsx-a11y/no-autofocus": "error",
+      "jsx-a11y/click-events-have-key-events": "error",
+      "jsx-a11y/no-static-element-interactions": "error",
+      "jsx-a11y/no-noninteractive-element-interactions": "error",
 
-      // Accessibility — the audit's §a11y. `role="combobox"` without its required
-      // attributes and `aria-invalid` on `role="button"` (which does not support it) are
-      // the same underlying defect: field triggers wearing a role that does not describe
-      // them. Fixing them properly means giving those triggers real combobox semantics,
-      // not deleting the attribute — which is what the six pickers got, taking this from
-      // 5 to 2 and emptying `role-has-required-aria-props` (promoted above).
-      //
-      // The two left are a different shape and belong to a different wave: a currency
-      // trigger and a date trigger, neither of which is a combobox.
-      "jsx-a11y/role-supports-aria-props": "error", // 0 in src/
-      "jsx-a11y/no-autofocus": "warn", // 4 — incl. data-table-filter-popover.tsx:58
-      "jsx-a11y/click-events-have-key-events": "warn",
-      "jsx-a11y/no-static-element-interactions": "warn",
-      "jsx-a11y/no-noninteractive-element-interactions": "warn",
-
-      // React Compiler readiness, NOT correctness. eslint-plugin-react-hooks v7 ships the
-      // compiler's rules, and they flag patterns this package uses deliberately and
-      // documents — the latest-ref pattern in use-dismiss / use-close-transition /
-      // use-row-swipe is the biggest group. Those are not bugs today; they are what the
-      // kit would have to change to adopt the Compiler. Kept visible, not enforced.
-      // The CLASSIC rules (`rules-of-hooks`, `exhaustive-deps`) stay errors above — they
-      // are the ones that catch stale closures, and src/ is already clean under them.
-      "react-hooks/refs": "warn", // 30 in src/
-      "react-hooks/preserve-manual-memoization": "warn", // 11 in src/
-      "react-hooks/set-state-in-effect": "warn", // 10 in src/
-      "react-hooks/immutability": "warn", // 1 in src/
+      // React Compiler readiness. eslint-plugin-react-hooks v7 ships the compiler's
+      // rules and src/ is clean under them. The classic rules-of-hooks / exhaustive-deps
+      // are errors as well.
+      "react-hooks/refs": "error",
+      "react-hooks/preserve-manual-memoization": "error",
+      "react-hooks/set-state-in-effect": "error",
+      "react-hooks/immutability": "error",
     },
   },
 

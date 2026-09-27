@@ -11,6 +11,7 @@ import { Chip } from "../chip";
 import { StatTile } from "../stat-tile";
 import { Disclosure } from "../disclosure";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { clickLeftToBrowser } from "../../test/browser-click";
 
 /**
  * The 0.8.0 extensions to the existing surfaces — the app requests from keksdose,
@@ -490,7 +491,7 @@ describe("Tabs orientation=vertical", () => {
     expect(fireEvent.click(billing)).toBe(false); // default prevented
     expect(onChange).toHaveBeenCalledWith("billing");
     onChange.mockClear();
-    expect(fireEvent.click(billing, { ctrlKey: true })).toBe(true);
+    expect(clickLeftToBrowser(billing, { ctrlKey: true })).toBe(true);
     expect(onChange).not.toHaveBeenCalled();
   });
 

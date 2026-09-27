@@ -232,6 +232,7 @@ export function NumberInput({
         // keeps focus/caret); desktop keeps the native decimal keypad.
         inputMode={isMobile ? "none" : "decimal"}
         autoComplete="off"
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
         autoFocus={autoFocus}
         disabled={disabled}
         // Display mode has no floating label to feed the blank-placeholder trick,

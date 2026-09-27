@@ -244,6 +244,8 @@ describe("Chip — what a caller can hand it (0.5.1)", () => {
   it("hands onClick the event, so a chip in a clickable row can stop it", () => {
     const row = vi.fn();
     render(
+      /* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- fixture:
+         a consumer's clickable row, only here to observe whether the click bubbles. */
       <div onClick={row}>
         <Chip onClick={(e) => e.stopPropagation()}>Filter</Chip>
       </div>,
@@ -457,7 +459,9 @@ describe("Chip link onClick (0.8.x)", () => {
   });
 
   it("keeps the onClick on the link body when the chip also has a ×", () => {
-    const onClick = vi.fn();
+    // preventDefault: the click is a real one on a real `/f` link, and jsdom cannot
+    // navigate — it prints "Not implemented: navigation" instead.
+    const onClick = vi.fn((e: MouseEvent) => e.preventDefault());
     const onRemove = vi.fn();
     render(
       <Chip href="/f" onClick={onClick} onRemove={onRemove}>

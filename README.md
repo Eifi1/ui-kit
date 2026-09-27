@@ -377,24 +377,24 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**991 names from 159 modules** — 471 values and 520 types. _Italic_ is a type-only export.
+**1002 names from 159 modules** — 474 values and 528 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 991 |
+| `@eifi1/ui-kit` | 1002 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
-| `@eifi1/ui-kit/feedback` | 42 |
+| `@eifi1/ui-kit/feedback` | 43 |
 | `@eifi1/ui-kit/search` | 22 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 8 |
-| `@eifi1/ui-kit/rhf` | 42 |
+| `@eifi1/ui-kit/rhf` | 44 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
 re-slicing of it, never a second API.
@@ -406,7 +406,7 @@ re-slicing of it, never a second API.
 | `lib/calc` | `commitExpression`, `evaluateExpression`, `formatResult`, `isBareAmount`, `looksLikeExpression`, `sanitizeLive`, `splitLeadingSign` |
 | `lib/cn` | `cn` |
 | `lib/logger` | `logger`, `setStoreLog` |
-| `lib/format` | `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_ |
+| `lib/format` | `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_ |
 | `lib/safe-storage` | `readStored`, `writeStored` |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
@@ -455,7 +455,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`CardTone`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`CardTone`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 | `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_ |
@@ -532,7 +532,7 @@ re-slicing of it, never a second API.
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
 | `components/loading-state` | `LoadingState`, _`LoadingStateProps`_, _`LoadingStateSize`_ |
 | `components/signed-amount` | `DEFAULT_SIGNED_AMOUNT_LABELS`, `Delta`, `SignedAmount`, `Tone`, `toneTextClass`, _`DeltaProps`_, _`GoodDirection`_, _`SignedAmountLabels`_, _`SignedAmountProps`_, _`SignedAmountTone`_, _`TextTone`_, _`ToneProps`_ |
-| `components/error-boundary` | `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
+| `components/error-boundary` | `crashFingerprint`, `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, `formatCrashReport`, `isChunkLoadError`, _`CrashReport`_, _`CrashReportResult`_, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
 | `components/authed-image` | `AuthedImage`, `DEFAULT_AUTHED_IMAGE_LABELS`, _`AuthedImageLabels`_, _`AuthedImageProps`_ |
 | `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, _`ImageGridLabels`_, _`ImageGridProps`_ |
 | `components/lightbox` | `DEFAULT_LIGHTBOX_LABELS`, `imageItemKind`, `Lightbox`, _`ImageItem`_, _`ImageItemKind`_, _`LightboxLabels`_, _`LightboxProps`_ |
@@ -542,9 +542,9 @@ re-slicing of it, never a second API.
 | `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
 | `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
 | `components/menu-item` | `MenuItem`, _`MenuItemLinkProps`_, _`MenuItemProps`_, _`MenuItemTone`_ |
-| `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_ |
+| `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_, _`SectionLabelVariant`_ |
 | `components/status-dot` | `StatusDot`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |
-| `components/page-header` | `PageHeader`, _`PageHeaderProps`_, _`PageHeaderSize`_ |
+| `components/page-header` | `PageHeader`, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
 | `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
@@ -580,7 +580,7 @@ re-slicing of it, never a second API.
 | `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentFieldLabels`_ |
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogTextLabels`_, _`FeedbackSubmission`_ |
 | `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
-| `feedback/feedback-thread` | `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`FeedbackComposerAttachment`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
+| `feedback/feedback-thread` | `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 
 ### wizard
 

@@ -83,6 +83,23 @@ export interface LegendEntry {
    * "today"). Decorative: it is wrapped `aria-hidden`, and the label is the name.
    */
   icon?: ReactNode;
+  /**
+   * `"end"`: push this entry to the legend's inline END — the far right in LTR, the far
+   * left in RTL — with everything before it kept at the start. kastlan's lease gantt
+   * (feedback #49) keys its bars at the start and its "today" hairline at the end, over
+   * the time axis whose end "today" is nearest, and wrote it as
+   * `className="[&>li:last-child]:ms-auto"` — a selector that breaks the moment the
+   * entries are reordered and that reaches into the legend's markup.
+   *
+   * An auto inline-start margin, so it is logical (RTL mirrors it) and it takes only the
+   * row's LEFTOVER space: on a narrow screen where the row wraps, the entry wraps with it
+   * and sits at the end of its own line rather than overflowing. Give it to the LAST
+   * entry — auto margins push everything after them too, so an end entry in the middle
+   * drags the rest over with it (which is also how to end-align a GROUP: mark its first).
+   * In a vertical legend it sits at the column's inline end. Honoured by both
+   * {@link StaticLegend} and {@link ToggleLegend}, which share this entry type.
+   */
+  align?: "start" | "end";
 }
 
 export interface ToggleLegendProps {
@@ -159,6 +176,7 @@ export function ToggleLegend({
               "flex items-center gap-1.5 rounded text-start text-[11px] text-[var(--text-secondary)] transition-opacity hover:opacity-80",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
               off && "opacity-35",
+              entry.align === "end" && "ms-auto",
             )}
           >
             <LegendMark entry={entry} off={off} />
@@ -219,7 +237,10 @@ export function StaticLegend({
       {entries.map((entry) => (
         <li
           key={entry.key}
-          className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]"
+          className={cn(
+            "flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]",
+            entry.align === "end" && "ms-auto",
+          )}
         >
           <LegendMark entry={entry} off={false} />
           {entry.label}

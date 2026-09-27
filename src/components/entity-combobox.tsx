@@ -137,7 +137,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     create: createLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const { open, results, resolve, setOpen } = core;
+  const { open, results, resolve, setOpen, rememberOption, query, triggerRef } = core;
   // One id per instance, generated here rather than in the core: `aria-controls` on
   // the trigger has to name the list while the list is still closed, so the id
   // belongs to whoever renders both ends of it.
@@ -146,7 +146,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   // The clear value is "nothing selected" too, whichever one the caller picked.
   const chosen: V | null = value == null || value === clearValue ? null : (value as V);
   const selectedOption = chosen == null ? null : resolve(chosen);
-  const q = core.query.trim();
+  const q = query.trim();
   const showCreate =
     Boolean(onCreate) && q.length > 0 && !results.some((o) => o.label.toLowerCase() === q.toLowerCase());
   const showClear = Boolean(clearable && chosen != null && !disabled);
@@ -154,7 +154,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   const triggerText = selectedOption?.label ?? placeholder ?? "";
 
   const choose = (o: ComboOption<V>) => {
-    core.cacheRef.current.set(o.value, o);
+    rememberOption(o);
     onChange(o.value);
     // Back to the trigger, not to <body>: the panel that held focus is about to
     // unmount, and a keyboard user who just answered this field should be standing
@@ -170,7 +170,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     <div {...rest} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <button
-        ref={core.triggerRef}
+        ref={triggerRef}
         id={id}
         type="button"
         // A combobox, not a button. The distinction is not pedantry: this control
@@ -237,6 +237,9 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
           </span>
         </span>
         {showClear ? (
+          /* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- tabIndex -1 inside
+              the trigger <button>, so it never holds focus and a key handler here could
+              never fire; the keys go to the trigger. A pointer shortcut only. */
           <span
             role="button"
             tabIndex={-1}

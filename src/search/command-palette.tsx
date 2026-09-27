@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CornerDownLeft, Search, X } from "lucide-react";
@@ -54,9 +54,12 @@ function groupItems(items: CommandItem[]) {
     }
     byGroup.get(item.group)!.push(item);
   }
+  const flat = order.flatMap((g) => byGroup.get(g)!).filter((item) => item.kind !== "status");
   return {
     groups: order.map((g) => ({ group: g, items: byGroup.get(g)! })),
-    flat: order.flatMap((g) => byGroup.get(g)!).filter((item) => item.kind !== "status"),
+    flat,
+    /** Each selectable item's position in `flat` — its `data-index` and keyboard slot. */
+    flatIndex: new Map(flat.map((item, index) => [item, index])),
   };
 }
 
@@ -279,8 +282,9 @@ export function CommandPalette({
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-  const searchRef = useRef(search);
-  searchRef.current = search;
+  // The latest `search`, callable from the debounced effect without being one of its
+  // dependencies — `revision` is what re-runs it (see the prop's docstring).
+  const runSearch = useEffectEvent((q: string) => search(q));
   const reqId = useRef(0);
   /** What the provider's last answer was: a promise (`false`), an array (`true`), or
    *  not known yet. Only a provider known to be async shows "Searching…" while the
@@ -305,17 +309,24 @@ export function CommandPalette({
   useBodyScrollLock(open);
 
   // Reset when opened — the palette's OWN text only; a controlled query belongs to
-  // its owner (see the prop).
+  // its owner (see the prop). Adjusted during render on the closed-to-open transition
+  // (starting from "closed", so a palette mounted open resets too). `controlled` is
+  // read at the open, not watched: a caller switching modes while the palette is open
+  // is not a reason to wipe what is typed.
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      if (!controlled) setOwnQuery("");
+      // An uncommitted draft does not outlive the open it was typed in.
+      setDraft(controlled ? query : "");
+      setActive(0);
+    }
+  }
+  // The ref half of that reset: results from a previous open do not carry a
+  // highlight into this one.
   useEffect(() => {
-    if (!open) return;
-    if (!controlled) setOwnQuery("");
-    // An uncommitted draft does not outlive the open it was typed in.
-    setDraft(controlled ? query : "");
-    setActive(0);
-    shownQuery.current = null;
-    // `controlled` is read at the open, not watched: a caller switching modes while
-    // the palette is open is not a reason to wipe what is typed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) shownQuery.current = null;
   }, [open]);
 
   // Debounced, race-safe search.
@@ -325,7 +336,7 @@ export function CommandPalette({
     if (syncRef.current === false) setLoading(true);
     const run = async () => {
       try {
-        const answer = searchRef.current(query);
+        const answer = runSearch(query);
         syncRef.current = !isThenable(answer);
         if (!syncRef.current) setLoading(true);
         const r = await answer;
@@ -359,7 +370,7 @@ export function CommandPalette({
   }, [query, open, revision]);
 
   // Group results, preserving first-seen group order; keep a flat list for nav.
-  const { groups, flat } = useMemo(() => groupItems(results), [results]);
+  const { groups, flat, flatIndex } = useMemo(() => groupItems(results), [results]);
   useEffect(() => {
     activeIdRef.current = flat[active]?.id;
   });
@@ -404,8 +415,8 @@ export function CommandPalette({
   if (!open) return null;
 
   const comfortable = density === "comfortable";
-  let flatIndex = -1;
   return createPortal(
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- pointer-only backdrop dismiss; Escape is the keyboard path
     <div
       className={cn(
         "fixed inset-0 z-[70] flex items-start justify-center bg-black/40",
@@ -546,8 +557,7 @@ export function CommandPalette({
                       </li>
                     );
                   }
-                  flatIndex += 1;
-                  const idx = flatIndex;
+                  const idx = flatIndex.get(item) ?? -1;
                   const isActive = idx === active;
                   const redact = item.redact ?? redactLabels;
                   // Written once and worn by either tag below, so the anchor and the

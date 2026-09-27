@@ -14,7 +14,7 @@
  * The committing step is the last one unless a step says `commits: true`; the
  * steps after that one are post-commit steps (see `WizardStepConfig.commits`).
  */
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_WIZARD_LABELS } from "./types";
@@ -163,8 +163,12 @@ export function useWizard<TData extends Record<string, unknown>>(
     missingRequiredMessage,
     onValidationFailed,
   } = options;
+  // The latest `steps`, for the stable callbacks below. Synced after commit (before
+  // paint, and before any handler can run) rather than written during render.
   const stepsRef = useRef<WizardStepConfig[]>(steps);
-  stepsRef.current = steps;
+  useLayoutEffect(() => {
+    stepsRef.current = steps;
+  }, [steps]);
   // A hook, not a component, but it produces two sentences of its own — the
   // "fill in the required fields" toast and the fallback submit error — and both
   // reach the user. So it reads the provider like any component does; only the two
@@ -239,8 +243,8 @@ export function useWizard<TData extends Record<string, unknown>>(
   // it back.
   const clearStepUrl = useStepUrl(urlParam, state.currentStepIndex);
 
-  // `steps`, not `stepsRef.current`: during render the two are the same array, and
-  // reading a ref in render is what the hooks linter (rightly) objects to.
+  // `steps`, not `stepsRef.current`: reading a ref in render is what the hooks
+  // linter (rightly) objects to, and the ref only catches up after the commit.
   const currentStep = steps[state.currentStepIndex];
   const isFirstStep = state.currentStepIndex === 0;
   const isLastStep = state.currentStepIndex === steps.length - 1;

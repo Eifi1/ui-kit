@@ -169,6 +169,9 @@ export function Popover({
       {trigger({ open, toggle, ref: triggerRef })}
       {open && pos &&
         createPortal(
+          /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the
+             dialog container, per the APG dialog pattern: `onKeyDown` is Escape-to-close for
+             whatever inside it holds focus. */
           <div
             // `...rest` first: the role, the id the trigger's `aria-controls` points at,
             // the `tabIndex` the trap needs and the measured position are what make this

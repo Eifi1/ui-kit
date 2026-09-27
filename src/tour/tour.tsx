@@ -157,11 +157,15 @@ export function TourProvider({
   const [activeId, setActiveId] = useState<string | null>(null);
   const optsRef = useRef<StartOptions>({});
   // Live mirrors so the step-control callbacks can stay stable (identity-safe for
-  // consumers) while still reading the current steps/index.
+  // consumers) while still reading the current steps/index. Synced in a layout
+  // effect — after the commit, before paint and before any passive effect or event
+  // can call them — rather than written during render.
   const stepsRef = useRef<TourStep[] | null>(null);
-  stepsRef.current = steps;
   const indexRef = useRef(0);
-  indexRef.current = index;
+  useLayoutEffect(() => {
+    stepsRef.current = steps;
+    indexRef.current = index;
+  }, [steps, index]);
   const active = !!steps && steps.length > 0;
   const total = steps?.length ?? 0;
 
@@ -277,6 +281,15 @@ function TourOverlay({
   const isLast = index === steps.length - 1;
   const [rect, setRect] = useState<Rect | null>(null);
   const [ready, setReady] = useState(false);
+  // A new step starts unlocated: reset during render when the step changes, so the
+  // previous step's spotlight never paints over the new one. The effect below then
+  // locates it.
+  const [locating, setLocating] = useState({ index, step });
+  if (locating.index !== index || locating.step !== step) {
+    setLocating({ index, step });
+    setReady(false);
+    setRect(null);
+  }
   // The overlay is portalled to <body>, out of whatever `dir` subtree the app set, so it
   // takes the direction of the element it spotlights (the document's for a centered
   // step). Arrow keys and start/end placement read it.
@@ -287,8 +300,6 @@ function TourOverlay({
   useEffect(() => {
     let cancelled = false;
     let raf = 0;
-    setReady(false);
-    setRect(null);
     void (async () => {
       await step.beforeStep?.();
       if (cancelled) return;

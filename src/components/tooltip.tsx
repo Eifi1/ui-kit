@@ -87,6 +87,19 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
    * what they were before the default existed.
    */
   portal?: boolean;
+  /**
+   * Mount the IN-PLACE bubble only while it is up (hovered or focused, not dismissed),
+   * instead of always. It still sits next to its trigger and is still placed by CSS
+   * alone; what changes is that, while closed, it is not in the DOM — so it is not in
+   * `getAllByRole("tooltip")`, not in an ancestor's `textContent` and not in an
+   * ancestor's accessible name. The trigger is described (`aria-describedby`) while
+   * the bubble is up, exactly as a portalled one is. See "Lazy in place" on
+   * {@link Tooltip} for why this exists (keksdose F6) and why it is not the default.
+   *
+   * Has no effect on a bubble that is portalled (`portal`, or auto-portalled inside a
+   * clipping container) — that one is already mounted only while up.
+   */
+  lazy?: boolean;
   /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
   redact?: boolean;
   children: ReactNode;
@@ -94,7 +107,7 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
 
 /** What each variant below takes: the resolved `side`, and every span attribute the
  *  caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
-type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: TooltipSide };
+type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy"> & { side: TooltipSide };
 
 /**
  * Hover/focus label for a control.
@@ -170,12 +183,50 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal"> & { side: Toolt
  * Why not simply portal everything? Because the in-place bubble is the one existing
  * app tests rely on (it is in the DOM without a hover), and because it follows its
  * trigger through a scroll or an animation for free — the portalled one re-measures.
+ *
+ * ⚠️ **Lazy in place: `lazy` keeps the bubble next to its trigger but out of the DOM
+ * until it is up (keksdose F6).** `data-clips` cured the doubled text for tooltips
+ * inside a table; it did nothing for the ones outside any clipping container, where the
+ * always-mounted bubble is still a real `role="tooltip"` node full of text. About seven
+ * keksdose sites — column-header tooltips, a direction toggle, an fx-estimate row, a
+ * FlagBadge, a toast inside a `<button>` — still pinned `portal` for that alone: their
+ * tests found two tooltips with `getAllByRole("tooltip")`, read the label twice in a
+ * `textContent`, or got a button whose accessible name had the bubble's sentence glued
+ * on. `portal` fixed the test and cost the browser the measured, re-positioning bubble
+ * for no reason. `lazy` is the in-place bubble with the portalled one's lifetime: it is
+ * rendered only while hovered or focused (and not dismissed), in the same slot, with the
+ * same classes, so it looks and sits exactly as the default one does when it is up.
+ *
+ * Why unmount rather than hide? Hiding was the other option — keep the bubble mounted
+ * with `hidden` (or `aria-hidden` plus `display: none` until `:hover` / `:focus-within`)
+ * and let `aria-describedby` go on pointing at it, which the accname algorithm allows:
+ * a node referenced directly by `aria-describedby` contributes its text even while
+ * hidden. That would take the bubble out of the role queries and out of an ancestor's
+ * accessible name — but NOT out of `textContent`, which is plain DOM and counts hidden
+ * text too, and `textContent` is one of the three things F6 lists. Only a bubble that
+ * is not there solves all three. The cost is the portalled variant's: the trigger is
+ * described while the bubble is up rather than always. Focusing the trigger IS what
+ * puts it up, and React commits the `aria-describedby` in the same task as that focus
+ * event, so a screen reader landing on the control still hears it; what goes is the description
+ * of a trigger that is read in browse mode without ever being focused.
+ *
+ * Escape still dismisses it — here by unmounting it, which takes it off the screen and
+ * out of the accessibility tree at once — and the next hover or focus brings it back.
+ * There is no fade to lose: neither in-place bubble has ever had a transition, only the
+ * `opacity` switch, so appearing on a state change looks the same as appearing on
+ * `:hover`.
+ *
+ * Why opt-in rather than the new default? Because the always-mounted bubble is the one
+ * existing app tests find without a hover (see above): flipping it would turn every
+ * `getByRole("tooltip")` written against 0.12 into a failure in all three apps at once.
+ * Reach for `lazy` wherever a `portal` was pinned only to keep a test's DOM clean.
  */
 export function Tooltip({
   label,
   side = "top",
   className,
   portal,
+  lazy = false,
   redact = false,
   children,
   ...rest
@@ -208,6 +259,7 @@ export function Tooltip({
       className={className}
       redact={redact}
       detect={portal === undefined}
+      lazy={lazy}
       {...rest}
     >
       {children}
@@ -235,9 +287,10 @@ function InPlaceTooltip({
   className,
   redact,
   detect,
+  lazy,
   children,
   ...rest
-}: TooltipVariantProps & { detect: boolean }) {
+}: TooltipVariantProps & { detect: boolean; lazy: boolean }) {
   const id = useId();
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const [clipped, setClipped] = useState(false);
@@ -263,6 +316,9 @@ function InPlaceTooltip({
     setClipped(hasClippingAncestor(el));
   };
   return (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers track
+       whether the bubble is up and activate nothing; the caller's child is the
+       interactive element, keeps its own handlers, and its focus shows the bubble too. */
     <span
       // `...rest` first: the four handlers below are what decides whether a bubble is
       // up, and a caller passing an `onFocus` of its own must not replace them.
@@ -272,10 +328,6 @@ function InPlaceTooltip({
       // These four track WHETHER A BUBBLE IS UP. They activate nothing — the only thing
       // here that can be activated is the caller's child, which keeps every handler it
       // arrived with — so this wrapper needs no role and no key handling of its own.
-      // `jsx-a11y/no-static-element-interactions` warns about it all the same, as it
-      // already does about the portal variant's identical trigger below; both are left
-      // visible rather than silenced, because a rule this package ratchets should be
-      // argued with in the backlog and not in a disable comment.
       onMouseEnter={(e) => {
         setHovered(true);
         arm(e.currentTarget);
@@ -287,11 +339,27 @@ function InPlaceTooltip({
       }}
       onBlur={() => setFocused(false)}
     >
-      {/* In place the bubble is always there to point at; portalled, only while up. */}
-      {describedBy(children, clipped ? (open ? id : undefined) : dismissed ? undefined : id)}
+      {/* In place the bubble is always there to point at; portalled or lazy, only while up. */}
+      {describedBy(children, clipped || lazy ? (open ? id : undefined) : dismissed ? undefined : id)}
       {clipped ? (
         open && (
           <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
+        )
+      ) : lazy ? (
+        // keksdose F6: the in-place slot and classes, the portalled lifetime. Mounted only
+        // while up, so it is visible whenever it exists — `opacity-100` outright rather
+        // than the `group-hover` switch, which would also be right but would make the
+        // bubble's visibility depend on two sources (the state that mounted it and the
+        // CSS that shows it) that can disagree for a frame after Escape.
+        open && (
+          <span
+            id={id}
+            role="tooltip"
+            data-private={redact ? "" : undefined}
+            className={cn(TOOLTIP_SURFACE, "pointer-events-none absolute z-50 opacity-100", sidePositionClass[side])}
+          >
+            {label}
+          </span>
         )
       ) : (
         <span
@@ -506,6 +574,9 @@ function PortalTooltip({
 
   return (
     <>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- as in
+          `InPlaceTooltip`: the handlers only show and hide the bubble; the caller's child
+          is the interactive element, and focusing it shows the bubble. */}
       <span
         // As in `InPlaceTooltip`: the caller's attributes first, the four handlers that
         // run this component after them. The BUBBLE is deliberately not given them — it

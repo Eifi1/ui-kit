@@ -50,6 +50,11 @@ describe("StatTile", () => {
     expect(screen.getByText("Up 2 (worse)").parentElement!.className).toContain("--danger");
   });
 
+  it("shows the figure at zero, like Delta (kastlan 48)", () => {
+    render(<StatTile label="Rate" value="4%" delta={{ value: 0, unit: "percent" }} locale="en-US" />);
+    expect(screen.getByText("0%")).toHaveAttribute("aria-hidden");
+  });
+
   it("reads a percent delta as a ratio", () => {
     render(<StatTile label="Rate" value="4%" delta={{ value: -0.125, unit: "percent" }} locale="en-US" />);
     expect(screen.getByText("Down 12.5%")).toBeInTheDocument();

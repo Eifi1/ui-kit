@@ -94,7 +94,10 @@ export function FeedbackAttachmentField({
   pasteFrom?: RefObject<HTMLElement | null>;
   className?: string;
 }) {
-  const [preview, setPreview] = useState<string | null>(null);
+  // The object URL is keyed to the file it was made for, so a stale one (from the
+  // previous file, or after `value` is cleared) is never shown — no reset needed.
+  const [previewFor, setPreviewFor] = useState<{ file: File; url: string } | null>(null);
+  const preview = value && previewFor?.file === value ? previewFor.url : null;
   const [capturing, setCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // `file.size` from `<UiKitProvider labels>`, formatted in its locale — see FileDropzone.
@@ -103,12 +106,13 @@ export function FeedbackAttachmentField({
 
   // Object-URL preview lifecycle (create on change, revoke on cleanup).
   useEffect(() => {
-    if (!value) {
-      setPreview(null);
-      return;
-    }
+    if (!value) return;
     const url = URL.createObjectURL(value);
-    setPreview(url);
+    // The URL is an external resource that must be created and revoked in step
+    // with the effect (a render-time `createObjectURL` would leak, and StrictMode's
+    // remount would revoke a memoised one out from under the <img>).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- publishing an external resource's handle
+    setPreviewFor({ file: value, url });
     return () => URL.revokeObjectURL(url);
   }, [value]);
 
@@ -161,7 +165,6 @@ export function FeedbackAttachmentField({
     };
     target.addEventListener("paste", onPaste);
     return () => target.removeEventListener("paste", onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- takeImage reads `latest`, which is a ref
   }, [documentPaste, pasteFrom]);
   const listensElsewhere = documentPaste || pasteFrom !== undefined;
 

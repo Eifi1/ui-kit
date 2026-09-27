@@ -127,7 +127,7 @@ export function MultiEntityCombobox<V extends string | number>({
     create: createLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const { open, results, resolve, setOpen } = core;
+  const { open, results, resolve, setOpen, query, triggerRef } = core;
   // One id per instance, generated here rather than in the core: `aria-controls` on
   // the trigger has to name the list while the list is still closed, so the id
   // belongs to whoever renders both ends of it.
@@ -154,13 +154,13 @@ export function MultiEntityCombobox<V extends string | number>({
       : labels.selectedCount(value.length);
   })();
 
-  const q = core.query.trim();
+  const q = query.trim();
   const showCreate =
     Boolean(onCreate) && q.length > 0 && !results.some((o) => o.label.toLowerCase() === q.toLowerCase());
   const showClear = Boolean(clearable && value.length > 0 && !disabled);
 
   const toggle = (o: ComboOption<V>) => {
-    core.cacheRef.current.set(o.value, o);
+    core.rememberOption(o);
     if (valueSet.has(o.value)) onChange(value.filter((v) => v !== o.value));
     else onChange([...value, o.value]);
     // Stay open — multi-select keeps adding.
@@ -174,7 +174,7 @@ export function MultiEntityCombobox<V extends string | number>({
     <div {...rest} className={cn("relative", className)}>
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <button
-        ref={core.triggerRef}
+        ref={triggerRef}
         id={id}
         type="button"
         // A combobox, not a button. The distinction is not pedantry: this control
@@ -234,6 +234,10 @@ export function MultiEntityCombobox<V extends string | number>({
           {summary}
         </span>
         {showClear ? (
+          /* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- tabIndex -1 inside
+              the trigger <button>, so it never holds focus and a key handler here could
+              never fire. A pointer shortcut; the keyboard path is unticking the options
+              in the open list. */
           <span
             role="button"
             tabIndex={-1}

@@ -1,6 +1,9 @@
 name: Showcase
 
-# Publishes the component showcase to GitHub Pages on every push to main.
+# Publishes the component showcase to GitHub Pages — the showcase CI already BUILT for
+# this commit, once CI is green. Nothing is installed or built here, and a commit whose
+# CI failed is never deployed (this used to rebuild in parallel with CI and deploy
+# regardless of its result).
 #
 # A design system that three apps derive from should be readable without a
 # checkout: ADOPTING.md is handed to a new consumer's agent, and "see the
@@ -10,43 +13,50 @@ name: Showcase
 #   repo Settings → Pages → Source: "GitHub Actions"
 # Until that is set, the deploy step fails with a 404 from the Pages API.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      run_id:
+        description: "A successful CI run on main whose showcase artifact to deploy"
+        required: true
 
 permissions:
   contents: read
+  actions: read # download the artifact from the CI run
   pages: write
   id-token: write
 
 # Never cancel an in-flight deploy — a cancelled one can leave the site half
-# published. Separate from ci.yml's concurrency group, which DOES cancel.
+# published.
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build and deploy the showcase
+    name: Deploy the showcase CI built
+    # A workflow_run fires for every completed CI run; only a green push to main deploys.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      # Node 24 for the same reason ci.yml pins it — see the note there.
-      - uses: actions/setup-node@v7
+      - uses: actions/download-artifact@v8
         with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      # A project site is served from /<repo>/, so every asset must be requested
-      # from there. Passed on the CLI rather than baked into showcase/vite.config.ts,
-      # which stays base-less so `npm run dev:showcase` serves from / locally.
-      - run: npx vite build --config showcase/vite.config.ts --base=/ui-kit/
+          name: showcase
+          path: site
+          run-id: ${{ github.event.workflow_run.id || inputs.run_id }}
+          github-token: ${{ github.token }}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: showcase/dist
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v5
