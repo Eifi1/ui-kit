@@ -30,19 +30,39 @@ const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const run = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
+// `--quiet` (how `npm run check` calls it): the ~40-line walk is held back and a passing
+// run prints one line. The first failure prints everything held so far, and the rest of
+// the run is verbose — a failure always arrives with the steps that led to it.
+let quiet = process.argv.includes("--quiet");
+const held = [];
+const log = (msg) => (quiet ? held.push(msg) : console.log(msg));
+
 let failures = 0;
+let passed = 0;
 const fail = (msg) => {
   failures++;
+  if (quiet) {
+    quiet = false;
+    for (const line of held) console.log(line);
+  }
   console.error(`  ✗ ${msg}`);
 };
-const ok = (msg) => console.log(`  ✓ ${msg}`);
+// A step that throws (npm install failing, say) exits without reaching fail(): the held
+// steps still say how far it got.
+process.on("exit", (code) => {
+  if (code !== 0 && quiet) for (const line of held) console.log(line);
+});
+const ok = (msg) => {
+  passed++;
+  log(`  ✓ ${msg}`);
+};
 
-console.log("• packing");
+log("• packing");
 const packed = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", tmpdir()], root));
 const tarball = join(tmpdir(), packed[0].filename);
 const shipped = new Set(packed[0].files.map((f) => f.path));
 
-console.log("• the tarball contains what the docs promise");
+log("• the tarball contains what the docs promise");
 for (const need of ["LICENSE", "tokens.css", "dist/index.js", "dist/index.d.ts"]) {
   if (shipped.has(need)) ok(need);
   else fail(`${need} is missing from the tarball`);
@@ -54,7 +74,7 @@ for (const dir of ["dist", "src"]) {
   else fail(`${dir}/ is not in the tarball, but the docs name it as an @source target`);
 }
 
-console.log("• installing into a scratch project with ONLY the required peers");
+log("• installing into a scratch project with ONLY the required peers");
 const required = Object.keys(pkg.peerDependencies ?? {}).filter(
   (p) => !pkg.peerDependenciesMeta?.[p]?.optional,
 );
@@ -65,11 +85,11 @@ try {
     JSON.stringify({ name: "scratch", private: true, version: "1.0.0", type: "module" }, null, 2),
   );
   const deps = required.map((p) => `${p}@${(pkg.devDependencies ?? {})[p] ?? "latest"}`);
-  console.log(`  required peers: ${required.join(", ") || "(none)"}`);
+  log(`  required peers: ${required.join(", ") || "(none)"}`);
   run("npm", ["install", "--no-audit", "--no-fund", "--silent", tarball, ...deps], scratch);
   ok("npm install succeeded");
 
-  console.log("• every exports entry resolves BY PACKAGE NAME");
+  log("• every exports entry resolves BY PACKAGE NAME");
   // A pattern entry ("./i18n/*") is expanded to every file it matches in the INSTALLED
   // package, so each translation is imported by the name an app writes.
   const installed = join(scratch, "node_modules", pkg.name);
@@ -112,7 +132,7 @@ try {
     else fail(line.slice(4));
   }
 
-  console.log("• an optional peer's entry needs that peer, and nothing else does");
+  log("• an optional peer's entry needs that peer, and nothing else does");
   for (const [entry, peer] of Object.entries(optionalEntries)) {
     const [line] = runProbe(probeLines([entry]));
     // Resolution failure names the package it could not find. Anything else — a load
@@ -138,7 +158,7 @@ try {
     else fail(line.slice(4));
   }
 
-  console.log("• table-text is pure and reads what it promises");
+  log("• table-text is pure and reads what it promises");
   const tableText = join(scratch, "node_modules", pkg.name, "dist", "lib", "table-text.js");
   const bare = [...readFileSync(tableText, "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)].map(
     (m) => m[1],
@@ -153,7 +173,7 @@ try {
   if (parsed === expected) ok("parseTable reads a German export by package name");
   else fail(`parseTable by package name answered ${parsed}`);
 
-  console.log("• the CSS entry is reachable as a file");
+  log("• the CSS entry is reachable as a file");
   const css = join(scratch, "node_modules", pkg.name, "tokens.css");
   if (existsSync(css)) ok("tokens.css");
   else fail("tokens.css is not installed");
@@ -166,4 +186,5 @@ if (failures) {
   console.error(`\n${failures} check(s) failed.`);
   process.exit(1);
 }
-console.log("\nPackage artifact verified.");
+if (quiet) console.log(`✓ package artifact verified: ${passed} checks on the packed, installed tarball`);
+else console.log("\nPackage artifact verified.");

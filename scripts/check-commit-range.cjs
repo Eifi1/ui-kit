@@ -43,8 +43,6 @@ for (const sha of shas) {
   if (error) {
     failed++;
     console.error(`✖ ${sha.slice(0, 8)} ${subject}\n  ${error.replace(/\n/g, "\n  ")}\n`);
-  } else {
-    console.log(`✓ ${sha.slice(0, 8)} ${subject}`);
   }
 }
 
@@ -52,4 +50,5 @@ if (failed) {
   console.error(`\n${failed} commit message(s) violate Conventional Commits.`);
   process.exit(1);
 }
-console.log(`\nAll ${shas.length} commit message(s) OK.`);
+// A passing run is one line; a failing one lists only the offenders, above.
+console.log(`✓ ${shas.length} commit message(s) follow Conventional Commits`);

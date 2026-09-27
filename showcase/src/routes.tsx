@@ -64,115 +64,121 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
+import { lazySection } from "./lib/lazy-section";
 
-import { Foundations } from "./sections/foundations";
-import { PaletteGenerator } from "./sections/palette-generator";
-import { ButtonsSurfaces } from "./sections/buttons-surfaces";
-import { ChipsToggles } from "./sections/chips-toggles";
-import { Fields } from "./sections/fields";
-import { FormsRhf } from "./sections/forms-rhf";
-import { Choices } from "./sections/choices";
-import { TimeInputDemo } from "./sections/number-time-demo";
-import { FileInputs } from "./sections/file-inputs";
-import { AutocompleteDemo } from "./sections/autocomplete-demo";
-import { FieldAnatomyDemo } from "./sections/field-anatomy-demo";
-import { SelectionDemo } from "./sections/selection-demo";
-import { LayoutDemo } from "./sections/layout-demo";
-import { MeasuredGridDemo } from "./sections/measured-grid-demo";
-import { TableTextDemo } from "./sections/table-text-demo";
-import {
-  DangerConfirmDemo,
-  NumberStepsDemo,
-  SignatureViewDemo,
-  WeekStartDemo,
-} from "./sections/numbers-more-demo";
-import { SignaturePasswordDemo } from "./sections/signature-password-demo";
-import { StatsDemo } from "./sections/stats-demo";
-import { SeriesChartDemo } from "./sections/series-chart-demo";
-import { FieldSync } from "./sections/field-sync";
-import { Numbers } from "./sections/numbers";
-import { Comboboxes } from "./sections/comboboxes";
-import { EntityPickers } from "./sections/entity-pickers";
-import { DropdownParts } from "./sections/dropdown-parts";
-import { Dialogs, PopoversMenusTooltips } from "./sections/overlays";
-import { Dates } from "./sections/dates";
-import { MonthPickerDemo } from "./sections/month-picker-demo";
-import { DataTableSection } from "./sections/data-table";
-import { DataTableServerSection } from "./sections/data-table-server";
-import { DataTablePartsSection } from "./sections/data-table-parts";
-import { Charts } from "./sections/charts";
-import { TreemapDemo } from "./sections/treemap-demo";
-import { ChartDrilldowns } from "./sections/chart-drilldowns";
-import { ShellSection } from "./sections/shell";
-import { Settings } from "./sections/settings";
-import { FeedbackCompose } from "./sections/feedback-compose";
-import { FeedbackInbox } from "./sections/feedback-inbox";
-import { Wizard } from "./sections/wizard";
-import { GuidedTour } from "./sections/tour";
-import { CommandPaletteDemo } from "./sections/command-palette-demo";
-import { SwipeableRowDemo } from "./sections/swipeable-row-demo";
-import { HooksLib } from "./sections/hooks-lib";
-import { Helpers } from "./sections/helpers";
-import { GettingStarted, GroupOverview } from "./sections/overview";
-import { FeedbackProgress } from "./sections/feedback-progress";
-import { DescriptionTable } from "./sections/description-table";
-import { TreeViewDemo } from "./sections/tree-view-demo";
-import { ConfirmFloating } from "./sections/confirm-floating";
-import { ClipboardTiming } from "./sections/clipboard-timing";
-import { SeriesChartMarks } from "./sections/series-chart-marks";
-import { Localisation } from "./sections/localisation";
-import { ListsMenus } from "./sections/lists-menus";
-import { PageStructure } from "./sections/page-structure";
-import { ButtonLabelsTones } from "./sections/button-labels-demo";
-import { ChipHuesToggleField } from "./sections/chip-hues-demo";
-import { FeedbackMore } from "./sections/feedback-more-demo";
-import { ToastsDemo } from "./sections/toast-demo";
-import { DescriptionTableMore } from "./sections/description-table-more";
-import { DisclosureMore } from "./sections/disclosure-more-demo";
-import { IntegerTicksDemo, KeyboardPointsDemo } from "./sections/series-chart-ticks-keys";
-import { DialogOpenDemo } from "./sections/dialog-open-demo";
-import { TooltipAutoPortal } from "./sections/tooltip-auto-portal-demo";
-import { FloatingActions } from "./sections/floating-actions-demo";
-import { CalendarHeatmapDemo } from "./sections/calendar-heatmap-demo";
-import { MonthViewDemo } from "./sections/month-view-demo";
-import { ButtonsMore } from "./sections/buttons-more-demo";
-import { AccountMenuDemo } from "./sections/account-menu-demo";
-import { ToggleCaptionDemo } from "./sections/toggle-caption-demo";
-import { ActionCardDemo } from "./sections/action-card-demo";
-import { NavPillsDemo } from "./sections/nav-pills-demo";
-import { ProgressSegmentsDemo } from "./sections/progress-segments-demo";
-import { FieldDemo } from "./sections/field-demo";
-import { RhfWizardDemo } from "./sections/rhf-wizard-demo";
-import { ListDragDemo } from "./sections/list-drag-demo";
-import {
-  AlertBannerBlockDemo,
-  BulkActionBarPanelDemo,
-  ClipsMarkerDemo,
-  EmptyStateSmallDemo,
-  IconButtonDisabledReasonDemo,
-  MenuItemBadgeDemo,
-  MinBarLengthDemo,
-  SectionLabelMdDemo,
-  StatusDotHuesDemo,
-  TableHeaderValignDemo,
-} from "./sections/props-011-demo";
-import { LinksDemo } from "./sections/links-demo";
-import { Buttons012 } from "./sections/buttons-012-demo";
-import { FormLayoutDemo, RhfFieldsDemo } from "./sections/forms-012-demo";
-import { WizardStepHooksDemo } from "./sections/wizard-012-demo";
-import { DescriptionPlaceholderDemo, TableVariantsDemo } from "./sections/table-012-demo";
-import { DataTableActionsDemo, DataTableUrlFiltersDemo } from "./sections/data-table-012-demo";
-import { UrlStateDemo } from "./sections/url-state-demo";
-import { FormattingDemo } from "./sections/formatting-demo";
-import { HotkeyDemo, StatesDemo } from "./sections/states-012-demo";
-import { PieChartDemo } from "./sections/pie-chart-demo";
-import { HeatmapRampDemo } from "./sections/heatmap-012-demo";
-import { MonthStepperDemo, OutsideDaysDemo } from "./sections/calendars-012-demo";
-import { ComboboxClipsDemo, PickerSheetClipsDemo } from "./sections/clips-012-demo";
-import { MediaDemo } from "./sections/media-demo";
-import { AuthAccountDemo } from "./sections/auth-account-demo";
-import { FeedbackThreadDemo } from "./sections/feedback-thread-demo";
-import { ShellBrandDemo } from "./sections/shell-012-demo";
+const Foundations = lazySection(() => import("./sections/foundations"), "Foundations");
+const PaletteGenerator = lazySection(() => import("./sections/palette-generator"), "PaletteGenerator");
+const ButtonsSurfaces = lazySection(() => import("./sections/buttons-surfaces"), "ButtonsSurfaces");
+const ChipsToggles = lazySection(() => import("./sections/chips-toggles"), "ChipsToggles");
+const Fields = lazySection(() => import("./sections/fields"), "Fields");
+const FormsRhf = lazySection(() => import("./sections/forms-rhf"), "FormsRhf");
+const Choices = lazySection(() => import("./sections/choices"), "Choices");
+const TimeInputDemo = lazySection(() => import("./sections/number-time-demo"), "TimeInputDemo");
+const FileInputs = lazySection(() => import("./sections/file-inputs"), "FileInputs");
+const AutocompleteDemo = lazySection(() => import("./sections/autocomplete-demo"), "AutocompleteDemo");
+const FieldAnatomyDemo = lazySection(() => import("./sections/field-anatomy-demo"), "FieldAnatomyDemo");
+const SelectionDemo = lazySection(() => import("./sections/selection-demo"), "SelectionDemo");
+const LayoutDemo = lazySection(() => import("./sections/layout-demo"), "LayoutDemo");
+const MeasuredGridDemo = lazySection(() => import("./sections/measured-grid-demo"), "MeasuredGridDemo");
+const TableTextDemo = lazySection(() => import("./sections/table-text-demo"), "TableTextDemo");
+const DangerConfirmDemo = lazySection(() => import("./sections/numbers-more-demo"), "DangerConfirmDemo");
+const NumberStepsDemo = lazySection(() => import("./sections/numbers-more-demo"), "NumberStepsDemo");
+const SignatureViewDemo = lazySection(() => import("./sections/numbers-more-demo"), "SignatureViewDemo");
+const WeekStartDemo = lazySection(() => import("./sections/numbers-more-demo"), "WeekStartDemo");
+const SignaturePasswordDemo = lazySection(() => import("./sections/signature-password-demo"), "SignaturePasswordDemo");
+const StatsDemo = lazySection(() => import("./sections/stats-demo"), "StatsDemo");
+const SeriesChartDemo = lazySection(() => import("./sections/series-chart-demo"), "SeriesChartDemo");
+const FieldSync = lazySection(() => import("./sections/field-sync"), "FieldSync");
+const Numbers = lazySection(() => import("./sections/numbers"), "Numbers");
+const Comboboxes = lazySection(() => import("./sections/comboboxes"), "Comboboxes");
+const EntityPickers = lazySection(() => import("./sections/entity-pickers"), "EntityPickers");
+const DropdownParts = lazySection(() => import("./sections/dropdown-parts"), "DropdownParts");
+const Dialogs = lazySection(() => import("./sections/overlays"), "Dialogs");
+const PopoversMenusTooltips = lazySection(() => import("./sections/overlays"), "PopoversMenusTooltips");
+const Dates = lazySection(() => import("./sections/dates"), "Dates");
+const MonthPickerDemo = lazySection(() => import("./sections/month-picker-demo"), "MonthPickerDemo");
+const DataTableSection = lazySection(() => import("./sections/data-table"), "DataTableSection");
+const DataTableServerSection = lazySection(() => import("./sections/data-table-server"), "DataTableServerSection");
+const DataTablePartsSection = lazySection(() => import("./sections/data-table-parts"), "DataTablePartsSection");
+const Charts = lazySection(() => import("./sections/charts"), "Charts");
+const TreemapDemo = lazySection(() => import("./sections/treemap-demo"), "TreemapDemo");
+const ChartDrilldowns = lazySection(() => import("./sections/chart-drilldowns"), "ChartDrilldowns");
+const ShellSection = lazySection(() => import("./sections/shell"), "ShellSection");
+const Settings = lazySection(() => import("./sections/settings"), "Settings");
+const FeedbackCompose = lazySection(() => import("./sections/feedback-compose"), "FeedbackCompose");
+const FeedbackInbox = lazySection(() => import("./sections/feedback-inbox"), "FeedbackInbox");
+const Wizard = lazySection(() => import("./sections/wizard"), "Wizard");
+const GuidedTour = lazySection(() => import("./sections/tour"), "GuidedTour");
+const CommandPaletteDemo = lazySection(() => import("./sections/command-palette-demo"), "CommandPaletteDemo");
+const SwipeableRowDemo = lazySection(() => import("./sections/swipeable-row-demo"), "SwipeableRowDemo");
+const HooksLib = lazySection(() => import("./sections/hooks-lib"), "HooksLib");
+const Helpers = lazySection(() => import("./sections/helpers"), "Helpers");
+const GettingStarted = lazySection(() => import("./sections/overview"), "GettingStarted");
+const GroupOverview = lazySection(() => import("./sections/overview"), "GroupOverview");
+const FeedbackProgress = lazySection(() => import("./sections/feedback-progress"), "FeedbackProgress");
+const DescriptionTable = lazySection(() => import("./sections/description-table"), "DescriptionTable");
+const TreeViewDemo = lazySection(() => import("./sections/tree-view-demo"), "TreeViewDemo");
+const ConfirmFloating = lazySection(() => import("./sections/confirm-floating"), "ConfirmFloating");
+const ClipboardTiming = lazySection(() => import("./sections/clipboard-timing"), "ClipboardTiming");
+const SeriesChartMarks = lazySection(() => import("./sections/series-chart-marks"), "SeriesChartMarks");
+const Localisation = lazySection(() => import("./sections/localisation"), "Localisation");
+const ListsMenus = lazySection(() => import("./sections/lists-menus"), "ListsMenus");
+const PageStructure = lazySection(() => import("./sections/page-structure"), "PageStructure");
+const ButtonLabelsTones = lazySection(() => import("./sections/button-labels-demo"), "ButtonLabelsTones");
+const ChipHuesToggleField = lazySection(() => import("./sections/chip-hues-demo"), "ChipHuesToggleField");
+const FeedbackMore = lazySection(() => import("./sections/feedback-more-demo"), "FeedbackMore");
+const ToastsDemo = lazySection(() => import("./sections/toast-demo"), "ToastsDemo");
+const DescriptionTableMore = lazySection(() => import("./sections/description-table-more"), "DescriptionTableMore");
+const DisclosureMore = lazySection(() => import("./sections/disclosure-more-demo"), "DisclosureMore");
+const IntegerTicksDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "IntegerTicksDemo");
+const KeyboardPointsDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "KeyboardPointsDemo");
+const DialogOpenDemo = lazySection(() => import("./sections/dialog-open-demo"), "DialogOpenDemo");
+const TooltipAutoPortal = lazySection(() => import("./sections/tooltip-auto-portal-demo"), "TooltipAutoPortal");
+const FloatingActions = lazySection(() => import("./sections/floating-actions-demo"), "FloatingActions");
+const CalendarHeatmapDemo = lazySection(() => import("./sections/calendar-heatmap-demo"), "CalendarHeatmapDemo");
+const MonthViewDemo = lazySection(() => import("./sections/month-view-demo"), "MonthViewDemo");
+const ButtonsMore = lazySection(() => import("./sections/buttons-more-demo"), "ButtonsMore");
+const AccountMenuDemo = lazySection(() => import("./sections/account-menu-demo"), "AccountMenuDemo");
+const ToggleCaptionDemo = lazySection(() => import("./sections/toggle-caption-demo"), "ToggleCaptionDemo");
+const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), "ActionCardDemo");
+const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
+const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
+const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
+const RhfWizardDemo = lazySection(() => import("./sections/rhf-wizard-demo"), "RhfWizardDemo");
+const ListDragDemo = lazySection(() => import("./sections/list-drag-demo"), "ListDragDemo");
+const AlertBannerBlockDemo = lazySection(() => import("./sections/props-011-demo"), "AlertBannerBlockDemo");
+const BulkActionBarPanelDemo = lazySection(() => import("./sections/props-011-demo"), "BulkActionBarPanelDemo");
+const ClipsMarkerDemo = lazySection(() => import("./sections/props-011-demo"), "ClipsMarkerDemo");
+const EmptyStateSmallDemo = lazySection(() => import("./sections/props-011-demo"), "EmptyStateSmallDemo");
+const IconButtonDisabledReasonDemo = lazySection(() => import("./sections/props-011-demo"), "IconButtonDisabledReasonDemo");
+const MenuItemBadgeDemo = lazySection(() => import("./sections/props-011-demo"), "MenuItemBadgeDemo");
+const MinBarLengthDemo = lazySection(() => import("./sections/props-011-demo"), "MinBarLengthDemo");
+const SectionLabelMdDemo = lazySection(() => import("./sections/props-011-demo"), "SectionLabelMdDemo");
+const StatusDotHuesDemo = lazySection(() => import("./sections/props-011-demo"), "StatusDotHuesDemo");
+const TableHeaderValignDemo = lazySection(() => import("./sections/props-011-demo"), "TableHeaderValignDemo");
+const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo");
+const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "Buttons012");
+const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
+const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
+const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
+const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
+const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
+const DataTableActionsDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableActionsDemo");
+const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableUrlFiltersDemo");
+const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
+const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
+const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
+const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
+const PieChartDemo = lazySection(() => import("./sections/pie-chart-demo"), "PieChartDemo");
+const HeatmapRampDemo = lazySection(() => import("./sections/heatmap-012-demo"), "HeatmapRampDemo");
+const MonthStepperDemo = lazySection(() => import("./sections/calendars-012-demo"), "MonthStepperDemo");
+const OutsideDaysDemo = lazySection(() => import("./sections/calendars-012-demo"), "OutsideDaysDemo");
+const ComboboxClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "ComboboxClipsDemo");
+const PickerSheetClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "PickerSheetClipsDemo");
+const MediaDemo = lazySection(() => import("./sections/media-demo"), "MediaDemo");
+const AuthAccountDemo = lazySection(() => import("./sections/auth-account-demo"), "AuthAccountDemo");
+const FeedbackThreadDemo = lazySection(() => import("./sections/feedback-thread-demo"), "FeedbackThreadDemo");
+const ShellBrandDemo = lazySection(() => import("./sections/shell-012-demo"), "ShellBrandDemo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -217,7 +223,9 @@ export interface ShowcasePage {
   /** The exported components a page demonstrates — the group overview lists them,
    *  so a reader looking for `MultiSelect` finds which page it lives on. */
   components?: string[];
-  Body: () => React.ReactElement;
+  /** The page's sections. Each one it renders is a `lazySection`, fetched as its own
+   *  chunk when the page first opens (showcase.tsx suspends on it). */
+  Body: React.ComponentType;
 }
 
 export interface ShowcaseGroup {

@@ -7,6 +7,7 @@ import type { GlobalSearchProps, GlobalSearchSource } from "../global-search";
 import type { SearchEntry } from "../search-index";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { clickLeftToBrowser } from "../../test/browser-click";
 
 /**
  * `GlobalSearch` is what kastlan's and keksdose's hand-built ⌘K wrappers become, so these
@@ -134,8 +135,7 @@ describe("GlobalSearch: results", () => {
     expect(option).toHaveAttribute("href", "/settings#theme");
 
     // A ⌘-click belongs to the browser: nothing runs, the palette stays.
-    const cmdClick = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, metaKey: true });
-    expect(fireEvent(option, cmdClick)).toBe(true);
+    expect(clickLeftToBrowser(option, { button: 0, metaKey: true })).toBe(true);
     expect(screen.getByTestId("where")).toHaveTextContent(/^\/$/);
 
     fireEvent.click(option);

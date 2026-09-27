@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
-import { SHOWCASE_ALIAS } from "./alias";
+import { SHOWCASE_ALIAS } from "./alias.ts";
 
 /**
  * The showcase renders this repository's SOURCE, not `dist/`.
@@ -45,6 +45,33 @@ export default defineConfig({
   plugins: [tailwindcss(), react()],
   resolve: { alias: SHOWCASE_ALIAS },
   server: { port: DEV_PORT, strictPort: true },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Rolldown already gives every lazy section (routes.tsx) and every set of
+        // modules they share a chunk of its own. What is left in the entry is what the
+        // first paint needs, and two groups keep that under Vite's 500 kB warning
+        // without raising it — both are eager, so they cut no request, but they are
+        // parallel downloads that change far less often than the page code:
+        //   react — the vendor floor, ~220 kB of react-dom;
+        //   i18n  — the six non-English dictionaries of the chrome and the kit's
+        //           locale bundles, ~200 kB of strings. en.ts stays in the entry: it
+        //           spreads DEFAULT_UI_KIT_LABELS from the barrel, and a group must not
+        //           hold a module that imports back into the entry (the chunks would
+        //           import each other, and the first to evaluate reads the other's
+        //           bindings before they exist).
+        codeSplitting: {
+          groups: [
+            { name: "react", test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            {
+              name: "i18n",
+              test: /[\\/](showcase[\\/]src[\\/]i18n[\\/](de|es|fr|hu|it|zh)\.ts|src[\\/]i18n[\\/]locales[\\/])/,
+            },
+          ],
+        },
+      },
+    },
+  },
   // A separate port so the dev server and the built preview can run side by side —
   // which is how you check that a production build still paints what dev did.
   preview: { port: PREVIEW_PORT, strictPort: true },

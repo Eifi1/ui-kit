@@ -14,7 +14,8 @@
  * a page's `Body` in routes.tsx composes several. Answering that needs the syntax tree:
  *
  *   1. routes.tsx: each page object's `slug` and the section components its `Body` renders,
- *      resolved through the file's `import { X } from "./sections/…"` lines;
+ *      resolved through the file's `lazySection(() => import("./sections/…"), "X")`
+ *      declarations (or plain `import { X } from "./sections/…"` lines);
  *   2. each section file: the `<Example>` labels inside every top-level function, and the
  *      local (or imported sibling-section) components that function renders, followed
  *      transitively — so a label inside a helper component lands on the page that renders
@@ -69,6 +70,30 @@ function localImports(sf) {
     if (!file || !bindings || !ts.isNamedImports(bindings)) continue;
     for (const el of bindings.elements) {
       map.set(el.name.text, { file, name: (el.propertyName ?? el.name).text });
+    }
+  }
+  // routes.tsx loads its sections lazily (showcase/src/lib/lazy-section.ts):
+  //   const Fields = lazySection(() => import("./sections/fields"), "Fields");
+  // which is the same binding as `import { Fields } from "./sections/fields"`.
+  for (const stmt of sf.statements) {
+    if (!ts.isVariableStatement(stmt)) continue;
+    for (const decl of stmt.declarationList.declarations) {
+      const call = decl.initializer;
+      if (!ts.isIdentifier(decl.name) || !call || !ts.isCallExpression(call)) continue;
+      if (!ts.isIdentifier(call.expression) || call.expression.text !== "lazySection") continue;
+      const [loader, name] = call.arguments;
+      const dyn = loader && ts.isArrowFunction(loader) ? loader.body : undefined;
+      const spec =
+        dyn && ts.isCallExpression(dyn) && dyn.expression.kind === ts.SyntaxKind.ImportKeyword
+          ? dyn.arguments[0]
+          : undefined;
+      const file = spec && ts.isStringLiteral(spec) ? resolveLocal(sf.fileName, spec.text) : undefined;
+      if (!file || !name || !ts.isStringLiteral(name)) {
+        const { line } = sf.getLineAndCharacterOfPosition(stmt.getStart());
+        errors.push(`${sf.fileName.slice(ROOT.length + 1)}:${line + 1}: lazySection() the index cannot read`);
+        continue;
+      }
+      map.set(decl.name.text, { file, name: name.text });
     }
   }
   return map;

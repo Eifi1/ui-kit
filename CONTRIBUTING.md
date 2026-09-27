@@ -272,7 +272,7 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 
 | Script | What it is actually defending |
 |---|---|
-| `typecheck` | — |
+| `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since tsup's declaration build reads it). |
 | `lint` | The ratchet policy above: warnings are allowed to exist, not to grow. |
 | `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
 | `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. |
@@ -283,6 +283,12 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
+
+A passing check prints a line, not an inventory: `build` drops tsup's per-file listing
+(`scripts/tsup-quiet.mjs`; `npx tsup` shows it), `build:showcase` runs at `--logLevel warn`,
+`check:package --quiet` holds its walk back unless a step fails. So anything more than that
+in the output — a warning, an act() complaint, a jsdom "Not implemented" — is new and is
+the thing to read.
 
 No dead-code check: `ts-prune` reports every public export of a library as unused.
 

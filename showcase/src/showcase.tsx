@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
 import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
@@ -8,6 +8,7 @@ import {
   EmptyState,
   IconButton,
   LanguageMenu,
+  LoadingState,
   OptionSwitcherMenu,
   PALETTES,
   PHONE_QUERY,
@@ -402,7 +403,11 @@ function PageView({
           sentence on the left. The chrome around it stays in the document direction. */}
       <div className="mt-8 space-y-10" dir="ltr">
         <SectionBoundary title={title}>
-          <page.Body />
+          {/* Every section is its own chunk (lib/lazy-section.ts). Inside the boundary,
+              so a chunk that fails to load is a red box naming the page, not a blank. */}
+          <Suspense fallback={<LoadingState size="lg" data-page-loading="" />}>
+            <page.Body />
+          </Suspense>
         </SectionBoundary>
       </div>
 

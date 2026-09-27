@@ -105,10 +105,11 @@ for (const file of walk(SRC)) {
 }
 
 perFile.sort((a, b) => b[1] - a[1]);
-for (const [file, n] of perFile) console.log(`  ${String(n).padStart(4)}  ${file}`);
-console.log(`\nhardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
 
 if (total > BUDGET) {
+  // The per-file tally is the lead for a failure; a passing run is one line.
+  for (const [file, n] of perFile) console.error(`  ${String(n).padStart(4)}  ${file}`);
+  console.error(`\nhardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
   console.error(
     `\n::error::${total - BUDGET} new hardcoded colour utilit${total - BUDGET === 1 ? "y" : "ies"}.\n` +
       `Use a token from tokens.css instead — --text-muted, --bg-hover, --border, --danger, …\n` +
@@ -116,6 +117,7 @@ if (total > BUDGET) {
   );
   process.exit(1);
 }
+console.log(`✓ hardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
 if (total < BUDGET) {
-  console.log(`\nBudget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
+  console.log(`  Budget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
 }

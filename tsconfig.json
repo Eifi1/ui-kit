@@ -13,7 +13,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     // vitest's `globals: true` (see vitest.config.ts) — describe/it/expect without imports.
-    "types": ["vitest/globals"],
+    // `node` for the tests that read files and spawn scripts (packaging-contract,
+    // search). It used to arrive implicitly, through the vite config this file once
+    // included; see the note on `include` below.
+    "types": ["vitest/globals", "node"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -35,5 +38,10 @@
   // the barrel then becomes a compile error instead of a silently missing demo.
   // It never ships — tsup's entry is an explicit src/** glob and `files` lists only
   // dist + tokens.css.
-  "include": ["src", "showcase/src", "showcase/vite.config.ts", "showcase/alias.ts"]
+  //
+  // The build-tool configs (vite, vitest, tsup, showcase/alias.ts) are NOT here: Node
+  // loads them natively, so they import with a `.ts` extension, which needs
+  // `allowImportingTsExtensions` — a flag this file must not carry, because tsup's
+  // declaration build reads it. They are typechecked by tsconfig.node.json instead.
+  "include": ["src", "showcase/src"]
 }

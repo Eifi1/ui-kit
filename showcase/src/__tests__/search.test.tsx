@@ -8,6 +8,7 @@ import { LOCALES, LocaleProvider, de, en } from "../i18n";
 import { slugify } from "../lib/section";
 import { PAGE_EXAMPLE_LABELS } from "../search/examples.generated";
 import { SEARCH_SUGGESTIONS, buildSearchEntries } from "../search/showcase-search";
+import { preloadAllSections } from "../lib/lazy-section";
 
 /**
  * The top-bar search. Its index is derived — routes.tsx, the dictionaries, and the
@@ -24,6 +25,11 @@ class ResizeObserverStub {
 }
 const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
 const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
+// Every section is lazy (lib/lazy-section.ts). Loaded up front, a page renders in one
+// synchronous pass, exactly as it did before the split — so these tests keep asserting on
+// the page right after render() instead of on a Suspense fallback. The lazy path itself
+// is covered by lazy-section.test.tsx.
+beforeAll(() => preloadAllSections(), 60_000);
 beforeAll(() => {
   vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   vi.spyOn(console, "warn").mockImplementation(() => {});
