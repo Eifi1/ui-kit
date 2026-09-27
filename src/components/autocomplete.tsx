@@ -251,8 +251,17 @@ function AutocompleteInner<V extends string | number = string>(
           <span
             aria-hidden
             className={cn(
-              "pointer-events-none absolute top-1/2 flex -translate-y-1/2 text-[var(--text-muted)]",
+              "pointer-events-none absolute flex text-[var(--text-muted)]",
               small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
+              // Labelled, the icon sits on the VALUE's line — the one line box below
+              // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
+              // the box. Centred on the box it rose into the top strip and sat on the
+              // label's first letters, which float at the same start inset. On the
+              // value line it is beside what it describes, and the label keeps the
+              // start edge every other label in the form's column shares.
+              hasLabel
+                ? "top-[calc(1rem+1px)] h-5 items-center"
+                : "top-1/2 -translate-y-1/2",
             )}
           >
             {icon}

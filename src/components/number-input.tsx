@@ -53,7 +53,10 @@ interface NumberInputProps {
   /** A {@link FieldHint} "?" on the label's own line, beside the label rather
    *  than at the far end of the strip — the far end is where the calculator
    *  lives, and a hint placed there landed on top of it (steering-design
-   *  feedback #48). */
+   *  feedback #48). Plain TEXT (a string or a number) is a caption instead, UNDER
+   *  the field and attached through `aria-describedby` after the caller's own —
+   *  the same rule as {@link Select}'s `hint`: the label line has no room for a
+   *  sentence, and one placed there ran over the label and into the value. */
   hint?: ReactNode;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
@@ -176,6 +179,10 @@ export function NumberInput({
 }: NumberInputProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
+  const hintId = useId();
+  // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
+  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
+  const describedBy = textHint ? (ariaDescribedBy ? `${ariaDescribedBy} ${hintId}` : hintId) : ariaDescribedBy;
   const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
@@ -215,13 +222,13 @@ export function NumberInput({
     stepBy(count);
   };
 
-  return (
+  const field = (
     <FloatingField
       className={cn("w-full", className)}
       htmlFor={fieldId}
       label={label}
       srOnlyLabel={asDisplay}
-      hint={hint}
+      hint={textHint ? undefined : hint}
     >
       <input
         ref={inputRef}
@@ -248,7 +255,7 @@ export function NumberInput({
         }}
         onKeyDown={onKeyDown}
         aria-invalid={invalid || undefined}
-        aria-describedby={ariaDescribedBy}
+        aria-describedby={describedBy}
         aria-required={ariaRequired}
         // The end padding sits last so it always wins over an inputClassName that
         // sets its own px. Both trailing controls can be on at once, so the room
@@ -300,5 +307,17 @@ export function NumberInput({
         />
       )}
     </FloatingField>
+  );
+  if (!textHint) return field;
+  // Outside the field's own `relative` box, as Select's caption is: the calculator
+  // and the unit are `inset-y-0` in it and would stretch down over a second line.
+  // `className` stays on the field, so adding a caption cannot change what it styles.
+  return (
+    <div>
+      {field}
+      <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+        {hint}
+      </p>
+    </div>
   );
 }

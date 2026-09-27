@@ -210,6 +210,9 @@ export function MultiSelect({
           label !== undefined && FIELD_FLOATING_PAD,
           // FIELD_TRIGGER's hover would still light a trigger nothing can open.
           "disabled:hover:bg-[var(--bg-surface-2)]",
+          // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
+          // only the label was, so a disabled MultiSelect read as live (showcase audit).
+          "disabled:cursor-not-allowed disabled:opacity-50",
           field.isInvalid && FIELD_INVALID,
         )}
       >
