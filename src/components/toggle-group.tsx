@@ -27,6 +27,15 @@ export interface ToggleGroupBaseProps<T extends string>
    *  adjacent fields). Per-option `className` still wins over this. */
   optionClassName?: string;
   /**
+   * What happens when the options do not fit the group's width. `"truncate"`
+   * (default): one row, and the labels that do not fit end in an ellipsis — the height
+   * never changes. `"wrap"`: the segments flow onto a second row and every label stays
+   * whole ("Bewegung", not "Beweg…"), at the price of a taller group on a narrow
+   * screen (lenkbank L4: five signal types on a 390px control page). From the width
+   * where they fit, both look the same.
+   */
+  overflow?: "truncate" | "wrap";
+  /**
    * @deprecated Pass `aria-label` instead — the DOM spelling, which every other
    * control in this kit now answers to. Kept working because three applications ship
    * this one today; it names the group only when `aria-label` is absent.
@@ -174,6 +183,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     options,
     className,
     optionClassName,
+    overflow = "truncate",
     ariaLabel,
     disabled = false,
     size = "md",
@@ -270,6 +280,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
         "inline-flex w-full gap-0.5 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5 shadow-sm",
+        overflow === "wrap" && "flex-wrap",
         // The whole group fades, the way every other disabled control in this
         // package does; `cursor-not-allowed` is on the buttons, which is what a
         // pointer is actually over.
@@ -318,7 +329,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
               // overlaying the selected segment's boundary. Inset keeps the ring
               // inside the segment it belongs to; focus-visible keeps it for the
               // keyboard, which is the only input that needs it.
-              "min-w-0 flex-1 basis-auto truncate rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+              overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate",
+              "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
               size === "sm" && "px-2 py-1 text-xs",
               // In a field: no vertical padding and a 20px line — a `text-sm` line, the
               // same line a labelled Select holds under its label strip — so the field's

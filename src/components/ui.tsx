@@ -2712,8 +2712,12 @@ const TAB_VERTICAL_INACTIVE_CLASSES =
 const TABLIST_WRAP_CLASSES =
   "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-[var(--border)]";
 
+// `max-w-full`: no tab outgrows its strip. A sheet's `detail` line ("Spurstangenkraft
+// links · … · 31 Punkte") made one tab 448px wide in a 390px strip, and a tab wider
+// than the strip cannot be scrolled into view — its end was simply off screen
+// (lenkbank L3). The label and detail truncate inside it instead; see `inner`.
 const TAB_CLASSES =
-  "whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+  "max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
 const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-[var(--text-primary)]";
 const TAB_INACTIVE_CLASSES =
   "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--border-strong)]";
@@ -2727,7 +2731,7 @@ const TAB_INACTIVE_CLASSES =
 // all ten have to stay readable; it is the FILL, not the text weight, that says
 // which one is open.
 const TAB_WRAP_CLASSES =
-  "whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
+  "max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
 const TAB_WRAP_ACTIVE_CLASSES =
   "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-[var(--text-primary)] md:text-[var(--text-primary)]";
 const TAB_WRAP_INACTIVE_CLASSES =
@@ -2944,7 +2948,7 @@ export function Tabs<T extends string>({
             className={cn(
               // In a side nav the row is the full width, so the label takes it and a
               // badge lands at the row's end, where a column of counts lines up.
-              vertical ? "flex min-w-0 flex-1 items-center gap-1.5" : "inline-flex items-center gap-1.5",
+              vertical ? "flex min-w-0 flex-1 items-center gap-1.5" : "inline-flex max-w-full min-w-0 items-center gap-1.5",
               tab.empty && TAB_EMPTY_CLASSES,
             )}
           >
@@ -2954,14 +2958,16 @@ export function Tabs<T extends string>({
               </span>
             )}
             {tab.detail != null ? (
-              <span className="flex flex-col items-start text-start">
-                <span>{tab.label}</span>
+              // `min-w-0` + `truncate` on each line: capped by the tab's `max-w-full`, a
+              // long detail ends in an ellipsis. The whole text stays the tab's name.
+              <span className="flex min-w-0 flex-col items-start text-start">
+                <span className="max-w-full truncate">{tab.label}</span>
                 {/* A separator for the NAME only — whitespace between flex items is
                     not drawn, and without it the two lines ran together into one
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
                 <span
                   className={cn(
-                    "text-[11px] font-normal leading-tight text-[var(--text-muted)]",
+                    "max-w-full truncate text-[11px] font-normal leading-tight text-[var(--text-muted)]",
                     // On a wrapped strip's filled chip (below `md`) the muted grey
                     // was dark text on the brand fill — "loop 2" all but vanished
                     // under the one label that most needed reading. It takes the
@@ -3025,7 +3031,7 @@ export function Tabs<T extends string>({
           // The × cannot go INSIDE the tab: a button in a button is invalid HTML, and
           // a tab's children are presentational, so a reader would flatten it into the
           // tab's name. It sits beside the tab, over the gutter the tab reserves.
-          <div key={tab.id} className={cn("relative flex", !vertical && "shrink-0")}>
+          <div key={tab.id} className={cn("relative flex max-w-full", !vertical && "shrink-0")}>
             {element}
             {isActive && (
               <IconButton
