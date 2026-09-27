@@ -20,6 +20,15 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.14.0](https://github.com/Eifi1/ui-kit/compare/v0.13.1...v0.14.0) (2026-09-27)
+
+### Added
+
+* **error-boundary:** placement — which boundary caught it, in the report and fingerprint ([36f5065](https://github.com/Eifi1/ui-kit/commit/36f5065a890152c5ecd7ca220a87e9fb9e22d0e0))
+* **feedback:** event rows, day separators, clock times; sendOn, attachmentSlot, canSend ([eb93608](https://github.com/Eifi1/ui-kit/commit/eb936087f9c999cf371728b3d3beb4a034c278ba))
+* **page-header:** truncateTitle, secondaryActions row, actionsAlign (keksdose G6, G8) ([2395783](https://github.com/Eifi1/ui-kit/commit/2395783fe8a1f5d50ff4a65dcc328a724dd2fd00))
+* **tooltip:** clamp the in-place bubble to the viewport when it opens (keksdose G7) ([7ab6eb1](https://github.com/Eifi1/ui-kit/commit/7ab6eb130e15959c500009b28b29586546594bff))
+
 ## [0.13.1](https://github.com/Eifi1/ui-kit/compare/v0.13.0...v0.13.1) (2026-09-27)
 
 ### Fixed
