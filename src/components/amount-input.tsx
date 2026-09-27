@@ -218,6 +218,36 @@ function decimalMark(locale: string | undefined): "," | "." {
   }
 }
 
+/**
+ * Which typed mark is the decimal one (keksdose G1). {@link sanitizeLive} folds every
+ * "," into ".", so on its own it read the German "1.234,56" as 1.23456 — and the
+ * settle then made that 1.23, final. This decides per operand, from the typist's own
+ * text, before that fold:
+ *
+ * - both marks present: the one that is not the locale's is grouping, and goes;
+ * - in a "," locale, only "." present: grouping when it cannot be a decimal as a
+ *   German reader writes it — twice ("1.234.567"), or in thousands shape ("1.234",
+ *   "12.500") — otherwise a decimal ("1.5", typed by a dot-decimal habit);
+ * - in a "." locale, only "," present: grouping when it appears twice ("1,234,567");
+ *   once it stays a decimal, because Swiss and German typists write "1,5" in a
+ *   de-CH form (kastlan 40) and a unit price "1,789" is a decimal.
+ *
+ * Only a keystroke's text comes through here. A calculator result is dot-decimal
+ * already, and "1.234" from `100/81.03…` is never a thousand.
+ */
+function normalizeTypedMarks(raw: string, mark: "," | "."): string {
+  const other = mark === "," ? "." : ",";
+  return raw.replace(/[0-9.,]+/g, (operand) => {
+    const hasMark = operand.includes(mark);
+    const count = operand.split(other).length - 1;
+    if (count === 0) return operand;
+    const grouping = hasMark
+      ? true
+      : count > 1 || (mark === "," && /^\d{1,3}(\.\d{3})+$/.test(operand));
+    return grouping ? operand.split(other).join("") : operand;
+  });
+}
+
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
 // not a bespoke rose/emerald pairing: a figure being typed has to wear the same
 // colour the same figure will wear once it is a row in the table behind the form
@@ -310,7 +340,23 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // follows `Intl` rather than a guess about a country.
     const locale = useKitLocale();
     const mark = decimalMark(locale);
-    const display = mark === "," ? shown.replace(/\./g, ",") : shown;
+    // While the typist is typing, the field shows THEIR text ("1.234,5" stays exactly
+    // that), not the value re-spelt: re-spelling turned a grouping "." into a "," under
+    // their fingers, after which no rule could tell the two apart (keksdose G1). The
+    // draft is shown only while it still spells what the field holds; a value set from
+    // outside, a calculator result or a commit falls back to the derived spelling.
+    const [draft, setDraft] = useState<string | null>(null);
+    const derived = mark === "," ? shown.replace(/\./g, ",") : shown;
+    const draftAs = draft === null ? "" : sanitizeLive(normalizeTypedMarks(draft, mark));
+    const display =
+      draft === null
+        ? derived
+        : draftAs === shown
+          ? draft
+          : // The caller owns the sign: the typed "12" is shown as the "-12" it is.
+            signOwned && negative && `-${draftAs}` === shown
+            ? `-${draft}`
+            : derived;
     // Every route into the field — typing, the numpad sheet, the desktop
     // calculator, the blur/Enter commit — funnels through here, so the split is
     // written once and the four entry paths cannot drift.
@@ -345,7 +391,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       }
       onChange(sign ? rest : text);
     };
-    const commit = () => handleText(settle(commitExpression(shown)));
+    const commit = () => {
+      setDraft(null);
+      handleText(settle(commitExpression(shown)));
+    };
+    const typed = (raw: string) => {
+      setDraft(raw);
+      handleText(normalizeTypedMarks(raw, mark));
+    };
     const { open, setOpen, wrapperRef, panelRef, query, setQuery, inputRef } = useDropdownSearch();
     // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
     // the panel needs a real trigger rect rather than a relative parent — see
@@ -404,7 +457,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // only the app knows the locale's decimal separator.
           placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
           value={display}
-          onChange={(e) => handleText(e.target.value)}
+          onChange={(e) => typed(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             commit();
@@ -472,7 +525,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               // The mark the field shows, as NumberInput hands its calculator; the
               // evaluator reads either, and its result comes back dot-decimal.
               value={display}
-              onChange={(result, expression) => handleText(settle(result), expression)}
+              onChange={(result, expression) => {
+                setDraft(null);
+                handleText(settle(result), expression);
+              }}
               className="px-1.5"
               ariaLabel={labels?.calculatorTrigger}
               labels={labels?.calculator}
@@ -554,10 +610,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         </div>
         {showNumpad && (
           <NumberPadSheet
-            // Localised like the field it mirrors; its keys come back through
-            // `sanitizeLive`, so the "." key and a "," both land as a dot.
+            // Localised like the field it mirrors. Keys are typing, read by the
+            // locale's marks like the keyboard's; "=" is a result, dot-decimal.
             value={display}
-            onChange={handleText}
+            onChange={typed}
+            onResult={(result) => {
+              setDraft(null);
+              handleText(result);
+            }}
             onDone={() => innerRef.current?.blur()}
             label={label}
             labels={labels?.pad}
