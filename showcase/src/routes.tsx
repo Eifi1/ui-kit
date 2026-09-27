@@ -134,6 +134,7 @@ const IntegerTicksDemo = lazySection(() => import("./sections/series-chart-ticks
 const KeyboardPointsDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "KeyboardPointsDemo");
 const DialogOpenDemo = lazySection(() => import("./sections/dialog-open-demo"), "DialogOpenDemo");
 const TooltipAutoPortal = lazySection(() => import("./sections/tooltip-auto-portal-demo"), "TooltipAutoPortal");
+const TooltipLazyDemo = lazySection(() => import("./sections/tooltip-013-demo"), "TooltipLazyDemo");
 const FloatingActions = lazySection(() => import("./sections/floating-actions-demo"), "FloatingActions");
 const CalendarHeatmapDemo = lazySection(() => import("./sections/calendar-heatmap-demo"), "CalendarHeatmapDemo");
 const MonthViewDemo = lazySection(() => import("./sections/month-view-demo"), "MonthViewDemo");
@@ -154,12 +155,15 @@ const IconButtonDisabledReasonDemo = lazySection(() => import("./sections/props-
 const MenuItemBadgeDemo = lazySection(() => import("./sections/props-011-demo"), "MenuItemBadgeDemo");
 const MinBarLengthDemo = lazySection(() => import("./sections/props-011-demo"), "MinBarLengthDemo");
 const SectionLabelMdDemo = lazySection(() => import("./sections/props-011-demo"), "SectionLabelMdDemo");
+const Layout013Demo = lazySection(() => import("./sections/layout-013-demo"), "Layout013Demo");
 const StatusDotHuesDemo = lazySection(() => import("./sections/props-011-demo"), "StatusDotHuesDemo");
 const TableHeaderValignDemo = lazySection(() => import("./sections/props-011-demo"), "TableHeaderValignDemo");
 const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo");
+const Links013Demo = lazySection(() => import("./sections/links-013-demo"), "Links013Demo");
 const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "Buttons012");
 const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
 const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
+const Forms013Demo = lazySection(() => import("./sections/forms-013-demo"), "Forms013Demo");
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
@@ -169,9 +173,11 @@ const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "Url
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
 const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
 const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
+const ErrorBoundary013Demo = lazySection(() => import("./sections/error-boundary-013-demo"), "ErrorBoundary013Demo");
 const PieChartDemo = lazySection(() => import("./sections/pie-chart-demo"), "PieChartDemo");
 const HeatmapRampDemo = lazySection(() => import("./sections/heatmap-012-demo"), "HeatmapRampDemo");
 const MonthStepperDemo = lazySection(() => import("./sections/calendars-012-demo"), "MonthStepperDemo");
+const Display013Demo = lazySection(() => import("./sections/display-013-demo"), "Display013Demo");
 const OutsideDaysDemo = lazySection(() => import("./sections/calendars-012-demo"), "OutsideDaysDemo");
 const ComboboxClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "ComboboxClipsDemo");
 const PickerSheetClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "PickerSheetClipsDemo");
@@ -179,6 +185,8 @@ const MediaDemo = lazySection(() => import("./sections/media-demo"), "MediaDemo"
 const AuthAccountDemo = lazySection(() => import("./sections/auth-account-demo"), "AuthAccountDemo");
 const FeedbackThreadDemo = lazySection(() => import("./sections/feedback-thread-demo"), "FeedbackThreadDemo");
 const ShellBrandDemo = lazySection(() => import("./sections/shell-012-demo"), "ShellBrandDemo");
+const AccountHeaderLinkDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "AccountHeaderLinkDemo");
+const ComposerCannedRepliesDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "ComposerCannedRepliesDemo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -328,13 +336,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems"],
         Body: () => (
           <>
             <FormsRhf />
             <RhfWizardDemo />
             <RhfFieldsDemo />
             <FormLayoutDemo />
+            <Forms013Demo />
           </>
         ),
       },
@@ -563,6 +572,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ChipsToggles />
             <ChipHuesToggleField />
             <ToggleCaptionDemo />
+            <Display013Demo />
           </>
         ),
       },
@@ -583,6 +593,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <EmptyStateSmallDemo />
             <ToastsDemo />
             <StatesDemo />
+            <ErrorBoundary013Demo />
           </>
         ),
       },
@@ -841,6 +852,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <PopoversMenusTooltips />
             <TooltipAutoPortal />
+            <TooltipLazyDemo />
             <ClipsMarkerDemo />
           </>
         ),
@@ -897,6 +909,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ShellSection />
             <AccountMenuDemo />
             <ShellBrandDemo />
+            <AccountHeaderLinkDemo />
           </>
         ),
       },
@@ -913,6 +926,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <PageStructure />
             <NavPillsDemo />
             <SectionLabelMdDemo />
+            <Layout013Demo />
             <StatusDotHuesDemo />
           </>
         ),
@@ -925,7 +939,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
         icon: Link2,
         components: ["TextLink", "UiKitProvider", "useKitLink", "Button", "ActionCard"],
-        Body: LinksDemo,
+        Body: () => (
+          <>
+            <LinksDemo />
+            <Links013Demo />
+          </>
+        ),
       },
       {
         slug: "settings",
@@ -980,6 +999,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackInbox />
             <FeedbackThreadDemo />
+            <ComposerCannedRepliesDemo />
           </>
         ),
       },

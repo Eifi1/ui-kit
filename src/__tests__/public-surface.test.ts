@@ -111,7 +111,9 @@ import * as i18nZh from "../i18n/locales/zh";
  */
 
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
-  ["@eifi1/ui-kit", barrel, 471],
+  // 0.13.0: the crash screen's report helpers — `isChunkLoadError`, `formatCrashReport`,
+  // `crashFingerprint` (+3).
+  ["@eifi1/ui-kit", barrel, 474],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   ["@eifi1/ui-kit/chart", chart, 58],
@@ -131,7 +133,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.12.0: the bound fields — `RhfField`, `RhfTextField`, `RhfTextarea`,
   // `RhfNumberField`, `RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCheckbox`,
   // `RhfCombobox`, `RhfTextCombobox` — and `RhfLineItems` (+11).
-  ["@eifi1/ui-kit/rhf", rhf, 20],
+  // 0.13.0: `RhfIntegerField`, the digits={0} calculator={false} emptyValue="" preset
+  // (kastlan 41) (+1).
+  ["@eifi1/ui-kit/rhf", rhf, 21],
   ["@eifi1/ui-kit/table-text", tableText, 5],
   ["@eifi1/ui-kit/i18n/de", i18nDe, 2],
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],

@@ -75,6 +75,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Rhf* bound fields — every field in one form, with errors",
     "FormActions — inline, sticky, dialog, destructive and pending",
     "LineItems — totals, a minimum, and remove confirmation",
+    "AmountInput — the locale's decimal mark",
+    "RhfIntegerField and RhfTextField inputClassName",
+    "WizardStep actions — a button in the step header",
+    "formatNumber unit — a narrow no-break space before the unit",
   ],
   "choices": [
     "Checkbox — states",
@@ -300,6 +304,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Chip — xs, checkbox mode and the dot variant",
     "ToggleGroup — size sm, and label, hint and error in a form row",
     "ToggleGroup — caption, static and as a function of the value",
+    "ToggleGroup — semantics=\"pressed\"",
+    "Delta at zero",
+    "StaticLegend — entry align: \"end\"",
+    "BulkActionBar — a link among the actions",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -326,6 +334,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Skeleton — label announces the load once",
     "ErrorBoundary — Retry, details and a fallback of your own",
     "ProgressBar — unlimited, hint, overage and legend values",
+    "ErrorBoundary 0.13 — the one crash screen",
+    "onReport — filed once per page load, the reference on screen",
+    "A lazy chunk that did not load — a new version, or offline",
   ],
   "description-list": [
     "DescriptionList — rows and cards, comfortable and compact",
@@ -510,6 +521,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Right-to-left — which placements flip",
     "placeTooltip",
     "Tooltip — auto-portal inside a scroll container",
+    "Tooltip — lazy: in place, mounted only while up",
     "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [
@@ -549,6 +561,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — an account menu",
     "TopBarBrand — logo and name, the name hidden on a phone",
     "TopBarActionMenu — iconBadge",
+    "TopBarActionMenu — a link in the header that closes the menu",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
@@ -560,6 +573,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "NavPills — links through renderLink",
     "NavPills — buttons with onSelect, icons, disabled, sizes and landmark={false}",
     "SectionLabel — size md",
+    "PageHeader — size compact",
+    "PageHeader — mobileLayout inline",
+    "SectionLabel — variant band",
+    "SectionLabel — md over a chart column",
+    "ListItem — titleLines",
     "StatusDot — hues beside matching Chips",
   ],
   "links": [
@@ -568,6 +586,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TextLink — external, stopPropagation, current and icon",
     "Button — href",
     "ActionCard — href and iconTone",
+    "replace and reloadDocument",
+    "IconButton — href",
+    "TextLink — primary, secondary, warning",
+    "IconButton — toneColor per theme",
   ],
   "settings": [
     "ThemeSetting",
@@ -620,6 +642,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "feedbackCategoryRank(category)",
     "FeedbackThread — own, staff, attachments, redact and RTL",
     "FeedbackComposer — pending, Ctrl/⌘+Enter and an attachment",
+    "FeedbackComposer — canned replies and a custom placeholder",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",
