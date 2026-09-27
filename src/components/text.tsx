@@ -58,7 +58,8 @@ export type SectionLabelVariant = "plain" | "band";
 
 /** The band's own type and box, per size — spelled out rather than merged over
  *  {@link SECTION_LABEL_CLASS}, so the result does not hang on tailwind-merge telling
- *  a font-size `text-[…]` from a colour `text-[var(…)]`. */
+ *  a font-size arbitrary `text-` value from a colour one. (Not spelt out as class
+ *  names here: Tailwind scans comments, and a literal one broke the showcase CSS.) */
 const SECTION_LABEL_BAND_CLASS: Record<SectionLabelSize, string> = {
   xs: "text-[10px]",
   md: "text-[11px]",

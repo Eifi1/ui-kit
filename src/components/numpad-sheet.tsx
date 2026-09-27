@@ -100,15 +100,20 @@ export function NumberPadSheet({
   label,
   labels,
   decimalMark = ".",
+  onResult,
 }: {
   value: string;
   /** Fired with the raw (sanitised) field text on every key — same contract as
    * the host field's own `onChange`. */
   onChange: (value: string) => void;
   /** The glyph on the decimal key — "," where the host shows a comma (AmountInput
-   *  in fr-CH, kastlan 40). The key still inserts a dot; the host's text is dot-form
-   *  underneath and `sanitizeLive` reads either. */
+   *  in fr-CH, kastlan 40). With "," the key inserts a comma and the text is handed
+   *  back unsanitized, for the host to read by its locale (keksdose G1). */
   decimalMark?: "." | ",";
+  /** "=": the evaluated result, dot-decimal. Default `onChange`. A host that reads
+   *  typed text by the locale's marks takes it apart from keystrokes, since a result
+   *  like "1.234" is a decimal and never a grouped thousand. */
+  onResult?: (value: string) => void;
   /** Fired on "Done": the host blurs the input, which commits (evaluates) and
    * unmounts the sheet via its existing blur handler. */
   onDone: () => void;
@@ -185,11 +190,15 @@ export function NumberPadSheet({
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";
 
-  const insert = (ch: string) => onChange(sanitizeLive(value + ch));
+  // With a "," mark the host keeps the typist's own text (AmountInput, keksdose G1):
+  // the key inserts the comma it shows, and the host, not this pad, decides which mark
+  // is the decimal one — sanitizing here would fold a grouping "." into a decimal.
+  const insert = (ch: string) =>
+    onChange(decimalMark === "," ? value + (ch === "." ? "," : ch) : sanitizeLive(value + ch));
   const backspace = () => onChange(value.slice(0, -1));
   const clearAll = () => onChange("");
   const equals = () => {
-    if (result !== null) onChange(formatResult(result));
+    if (result !== null) (onResult ?? onChange)(formatResult(result));
   };
 
   const sheet = (

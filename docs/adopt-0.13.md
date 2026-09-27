@@ -14,6 +14,14 @@ has every prop live.
      result: 2 decimals for CHF/EUR, 0 for JPY, rounding half away from zero. "12.345"
      becomes 12.35, and `100/3` becomes 33.33. `digits` overrides the rounding and
      `min` / `max` clamp the value. A field without `currency` is not rounded.
+     ⚠️ **A unit price or a rate with a `currency` needs `digits`** (the column's scale:
+     `digits={4}` for 1.789 €/l, `digits={6}` for a NAV). Without it the value is stored
+     rounded to cents, and no test fails (keksdose G2 found two such fields).
+   - **0.13.1: grouping marks are read by locale.** In 0.13.0 a German "1.234,56" was
+     read as 1.23456 and settled to 1.23. From 0.13.1, when both marks appear the
+     non-locale one is grouping, a lone "." in a comma locale is grouping when repeated
+     or in thousands shape ("1.234" → 1234), and a lone "," in a dot locale stays a
+     decimal unless repeated. The field shows what was typed until it settles.
    - **The decimal mark follows the locale** in `AmountInput`, on its numpad key too. Only
      locales whose `Intl` mark is "," (fr-CH, de-DE, …) change; de-CH and it-CH keep ".".
      `value` / `onChange` stay dot-form.

@@ -131,4 +131,14 @@ describe("ErrorBoundary", () => {
     expect(describeThrown(undefined)).toEqual({ name: "Error", message: "" });
     expect(describeThrown("plain")).toEqual({ name: "Error", message: "plain" });
   });
+
+  it("quotes a thrown plain object as JSON when it has no message (keksdose G3a)", () => {
+    expect(describeThrown({ code: 500 }).message).toBe('{"code":500}');
+    expect(describeThrown({ code: 500, message: "Down" }).message).toBe("Down");
+    expect(describeThrown(new Error("")).message).toBe("");
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    expect(describeThrown(cyclic).message).toBe("");
+    expect(describeThrown({ blob: "x".repeat(900) }).message).toHaveLength(500);
+  });
 });

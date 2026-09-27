@@ -20,6 +20,15 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.13.1](https://github.com/Eifi1/ui-kit/compare/v0.13.0...v0.13.1) (2026-09-27)
+
+### Fixed
+
+* **amount-input:** read grouping marks by locale — 1.234,56 is 1234.56, not 1.23 ([8e18f1c](https://github.com/Eifi1/ui-kit/commit/8e18f1c2634e16fde22cf770deb7146b86157b23))
+* **error-boundary:** quote a thrown plain object as JSON when it has no message ([38239f4](https://github.com/Eifi1/ui-kit/commit/38239f40e135d66e8edc2c9ed3f329139db9f19c))
+* **format:** ±Infinity prints the missing placeholder, not ∞ (lenkbank) ([9a08ceb](https://github.com/Eifi1/ui-kit/commit/9a08ceb791b2b83ec451f99cc97e67cee44cbb69))
+* **section-label:** no literal class names in a comment — Tailwind scanned them ([95afc55](https://github.com/Eifi1/ui-kit/commit/95afc559e752367510fbc2a02c8384f273b22093))
+
 ## [0.13.0](https://github.com/Eifi1/ui-kit/compare/v0.12.0...v0.13.0) (2026-09-27)
 
 ### Added
