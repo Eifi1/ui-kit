@@ -50,8 +50,9 @@ describe("PageHeader secondaryActions (keksdose G6b)", () => {
 
   it("inline: wraps the secondary group to its own full-width row on a phone, joins the row from sm", () => {
     header("inline");
+    // Without truncateTitle the inline row wraps at every width (keksdose H1).
     const row = classes(group("Next month").parentElement!);
-    expect(row).toEqual(expect.arrayContaining(["flex-wrap", "sm:flex-nowrap"]));
+    expect(row).toContain("flex-wrap");
     expect(classes(group("Collapse all"))).toEqual(
       expect.arrayContaining(["basis-full", "sm:basis-auto", "sm:order-1"]),
     );
@@ -65,27 +66,28 @@ describe("PageHeader secondaryActions (keksdose G6b)", () => {
     expect(classes(group("Collapse all"))).toContain("sm:order-1");
   });
 
-  it("leaves the header untouched without one", () => {
+  it("leaves the order untouched without one", () => {
     render(<PageHeader title="Budget" mobileLayout="inline" actions={<button type="button">Next month</button>} />);
     expect(classes(group("Next month"))).not.toContain("sm:order-2");
-    expect(classes(group("Next month").parentElement!)).not.toContain("flex-wrap");
   });
 });
 
 describe("PageHeader actionsAlign (keksdose G8)", () => {
   it("adds no alignment by default", () => {
     render(<PageHeader title="Reports" actions={<button type="button">EUR</button>} />);
+    expect(classes(group("EUR").parentElement!)).toContain("sm:items-start");
     expect(classes(group("EUR")).some((c) => c.includes("self-"))).toBe(false);
   });
 
-  it("stacked: aligns from sm up only (a phone's column would centre horizontally)", () => {
+  it("stacked: aligns the ROW from sm up, so title and actions centre on each other (keksdose H2)", () => {
     render(<PageHeader title="Reports" actionsAlign="center" actions={<button type="button">EUR</button>} />);
-    const cls = classes(group("EUR"));
-    expect(cls).toContain("sm:self-center");
-    expect(cls).not.toContain("self-center");
+    const row = classes(group("EUR").parentElement!);
+    expect(row).toContain("sm:items-center");
+    expect(row).not.toContain("sm:items-start");
+    expect(row).not.toContain("items-center");
   });
 
-  it("inline: aligns at every width, and the secondary group with it", () => {
+  it("inline: aligns the row at every width, the secondary group with it", () => {
     render(
       <PageHeader
         title="Reports"
@@ -95,7 +97,35 @@ describe("PageHeader actionsAlign (keksdose G8)", () => {
         secondaryActions={<button type="button">Export</button>}
       />,
     );
-    expect(classes(group("EUR"))).toContain("self-end");
-    expect(classes(group("Export"))).toContain("self-end");
+    const row = classes(group("EUR").parentElement!);
+    expect(row).toContain("items-end");
+    expect(row).not.toContain("items-center");
+    expect(group("Export").parentElement).toBe(group("EUR").parentElement);
+  });
+});
+
+describe("PageHeader inline keeps whole words in the title (keksdose H1)", () => {
+  it("never shrinks the title below its longest word, and wraps the actions instead", () => {
+    render(
+      <PageHeader
+        title="Monatsbudget"
+        size="compact"
+        mobileLayout="inline"
+        actions={<button type="button">Next month</button>}
+        secondaryActions={<button type="button">Collapse all</button>}
+      />,
+    );
+    const block = classes(screen.getByRole("heading", { level: 1 }).parentElement!);
+    expect(block).toContain("min-w-min");
+    expect(block).not.toContain("min-w-0");
+    const row = classes(group("Next month").parentElement!);
+    expect(row).toContain("flex-wrap");
+    expect(row).not.toContain("sm:flex-nowrap");
+  });
+
+  it("truncateTitle keeps the shrinking block — that is the point of truncating", () => {
+    render(<PageHeader title="Payees" truncateTitle mobileLayout="inline" actions={<button type="button">Add</button>} />);
+    expect(classes(screen.getByRole("heading", { level: 1 }).parentElement!)).toContain("min-w-0");
+    expect(classes(group("Add").parentElement!)).not.toContain("flex-wrap");
   });
 });
