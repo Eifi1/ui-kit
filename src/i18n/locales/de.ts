@@ -47,6 +47,8 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       send: "Senden",
       // German keyboards label the key "Strg".
       sendHint: (modifier) => `${modifier === "Ctrl" ? "Strg" : modifier} + Enter zum Senden`,
+      // "Umschalt", the German key label, as in the table's sort hint.
+      sendHintEnter: "Enter zum Senden, Umschalt + Enter für neue Zeile",
     },
     accountSettings: {
       profile: {

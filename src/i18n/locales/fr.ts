@@ -45,6 +45,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       placeholder: "Écrire un commentaire…",
       send: "Envoyer",
       sendHint: (modifier) => `${modifier} + Entrée pour envoyer`,
+      sendHintEnter: "Entrée pour envoyer, Maj + Entrée pour aller à la ligne",
     },
     accountSettings: {
       profile: {

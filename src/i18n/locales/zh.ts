@@ -44,6 +44,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       placeholder: "撰写评论…",
       send: "发送",
       sendHint: (modifier) => `${modifier} + Enter 发送`,
+      sendHintEnter: "Enter 发送，Shift + Enter 换行",
     },
     accountSettings: {
       profile: {
