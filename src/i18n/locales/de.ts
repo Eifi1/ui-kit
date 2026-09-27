@@ -26,6 +26,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       category: "Kategorie",
       subject: "Betreff",
       body: "Was ist passiert?",
+      bodyOptional: "Was ist passiert? (optional)",
       attachment: "Screenshot",
       submitHint: "Strg/⌘ + Enter zum Senden",
       cancel: "Abbrechen",

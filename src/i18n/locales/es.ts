@@ -27,6 +27,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       category: "Categoría",
       subject: "Asunto",
       body: "¿Qué ha pasado?",
+      bodyOptional: "¿Qué ha pasado? (opcional)",
       attachment: "Captura de pantalla",
       submitHint: "Ctrl/⌘ + Intro para enviar",
       cancel: "Cancelar",
