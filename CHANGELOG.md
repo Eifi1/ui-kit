@@ -20,6 +20,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.0](https://github.com/Eifi1/ui-kit/compare/v0.14.2...v0.15.0) (2026-09-27)
+
+### Added
+
+* AppShell mobileSubNavLayout="scroll"; Tabs' add button is a lone + on phones ([b84c021](https://github.com/Eifi1/ui-kit/commit/b84c021a6ac42e9f70678be26b04fa1c943678dd))
+
+### Fixed
+
+* **charts,media,wizard:** treemap ink, edge labels, strip wrap, heatmap weekdays, file names ([8f4385e](https://github.com/Eifi1/ui-kit/commit/8f4385e720b6fe9ca4602fbab13b07ef71086e7f))
+* **data-table,bulk-action-bar:** fillHeight bounds phone cards; the bar wraps, not crushes ([17825d0](https://github.com/Eifi1/ui-kit/commit/17825d0bc0ec96be49442a40a5e8c3ef34bd51a3))
+* **fields:** picker triggers keep their height; text hints are captions; tabs fade and follow ([6f554fb](https://github.com/Eifi1/ui-kit/commit/6f554fbbecf412329c1b5cd2eb22e3f06a81df65))
+* filter date panel on phones, select rows, even ticks, image fallback, bidi isolation ([0441dd0](https://github.com/Eifi1/ui-kit/commit/0441dd072cc8d48c84b1b8f5b066168b0c4ac3db))
+
 ## [0.14.2](https://github.com/Eifi1/ui-kit/compare/v0.14.1...v0.14.2) (2026-09-27)
 
 ### Added
