@@ -141,7 +141,7 @@ describe("PageHeader secondaryActions share the actions' wrapped row (keksdose, 
     vi.stubGlobal(
       "ResizeObserver",
       class {
-        constructor(private cb: Callback) {
+        constructor(cb: Callback) {
           callbacks.push(cb);
         }
         observe() {}
