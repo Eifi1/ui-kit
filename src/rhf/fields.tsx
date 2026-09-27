@@ -34,7 +34,9 @@
  * omitted, none — then give the field an `aria-label`), `hint` (standing advice under
  * the field, attached to it with `aria-describedby`), `required` (the label's mark,
  * and `aria-required` where the control takes it — validation is `rules`' or the
- * resolver's), `rules`, `disabled`, and `className` for the item's box.
+ * resolver's), `rules`, `disabled` (the control only — the value is still submitted;
+ * `excludeWhenDisabled` for react-hook-form's drop-the-value semantics), and
+ * `className` for the item's box.
  *
  * {@link RhfField} is the shell they are all built on, for a control the kit does not
  * ship (an address autocomplete): it takes a `render` and wires the rest.
@@ -80,9 +82,17 @@ export interface RhfFieldBaseProps<
   /** Draws the label's required mark and sets `aria-required` where the control
    *  takes it. Whether the field IS required is `rules`' or the resolver's to say. */
   required?: boolean;
-  /** Disables the field — through react-hook-form, so its value is left out of the
-   *  submitted values as a disabled input's would be. */
+  /** Disables the control and KEEPS the value: a field locked to a preset (a lease's
+   *  preselected unit, a fixed period) still submits it, and `rules` still run.
+   *  react-hook-form's own Controller `disabled` drops the value from `handleSubmit`'s
+   *  data instead, which a locked preset must never do (kastlan, 0.12). To get that,
+   *  add `excludeWhenDisabled`. A form-wide `useForm({ disabled })` still disables
+   *  every field the RHF way. */
   disabled?: boolean;
+  /** With `disabled`: disable through react-hook-form, so the value is left out of
+   *  the submitted data and validation skips it, like a disabled native input in a
+   *  plain form post. Default `false`. */
+  excludeWhenDisabled?: boolean;
   /** Classes for the item's box (a `grid gap-1`). */
   className?: string;
 }
@@ -187,6 +197,7 @@ export function RhfField<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   render,
   asControl = true,
@@ -198,11 +209,16 @@ export function RhfField<
       control={control}
       name={name}
       rules={rules}
-      disabled={disabled}
+      disabled={excludeWhenDisabled ? disabled : undefined}
       render={({ field, fieldState }) => (
         <FormItem className={className}>
           {showLabel && hasContent(label) && <RhfLabel required={required}>{label}</RhfLabel>}
-          <ControlSlot field={field} fieldState={fieldState} render={render} asControl={asControl} />
+          <ControlSlot
+            field={disabled && !field.disabled ? { ...field, disabled: true } : field}
+            fieldState={fieldState}
+            render={render}
+            asControl={asControl}
+          />
           {hasContent(hint) && <FormDescription>{hint}</FormDescription>}
           {message && <FormMessage />}
         </FormItem>
@@ -252,12 +268,13 @@ export function RhfTextField<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   ...inputProps
 }: RhfTextFieldProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       render={({ field, invalid }) => (
         <Input
           aria-required={required || undefined}
@@ -302,13 +319,14 @@ export function RhfTextarea<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   inputClassName,
   ...areaProps
 }: RhfTextareaProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       render={({ field, invalid }) => (
         <Textarea
           aria-required={required || undefined}
@@ -382,6 +400,7 @@ export function RhfNumberField<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   emptyValue = null,
   nullable = true,
@@ -389,7 +408,7 @@ export function RhfNumberField<
 }: RhfNumberFieldProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       render={({ field, invalid, id }) => (
         // FormControl clones this element with `id` / `aria-describedby` /
         // `aria-invalid`, which NumberControl hands on to the field.
@@ -573,12 +592,13 @@ export function RhfMoneyField<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   ...amountProps
 }: RhfMoneyFieldProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       asControl={false}
       render={({ field, invalid, id, describedBy }) => (
         <MoneyControl
@@ -662,6 +682,7 @@ export function RhfDateField<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   inputClassName,
   emptyValue = "",
@@ -669,7 +690,7 @@ export function RhfDateField<
 }: RhfDateFieldProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       render={({ field, invalid, id }) => (
         // FormControl clones this element with `aria-describedby` / `aria-invalid`,
         // which DateControl hands on to the picker's trigger.
@@ -726,6 +747,7 @@ export function RhfSelect<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   options,
   children,
@@ -736,7 +758,7 @@ export function RhfSelect<
 }: RhfSelectProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       render={({ field, invalid }) => (
         <Select
           aria-required={required || undefined}
@@ -793,12 +815,13 @@ export function RhfCheckbox<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   ...boxProps
 }: RhfCheckboxProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, required, disabled, className }}
+      {...{ name, control, rules, required, disabled, excludeWhenDisabled, className }}
       showLabel={false}
       render={({ field, invalid }) => (
         <Checkbox
@@ -923,6 +946,7 @@ export function RhfCombobox<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   clearValue = null,
   comboClassName,
@@ -930,7 +954,7 @@ export function RhfCombobox<
 }: RhfComboboxProps<TFieldValues, TName, V, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       asControl={false}
       message={false}
       render={({ field, invalid, error, id, describedBy }) => (
@@ -987,13 +1011,14 @@ export function RhfTextCombobox<
   hint,
   required,
   disabled,
+  excludeWhenDisabled,
   className,
   comboClassName,
   ...comboProps
 }: RhfTextComboboxProps<TFieldValues, TName, TTransformed>) {
   return (
     <RhfField
-      {...{ name, control, rules, label, hint, required, disabled, className }}
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
       asControl={false}
       message={false}
       render={({ field, invalid, error, id, describedBy }) => (

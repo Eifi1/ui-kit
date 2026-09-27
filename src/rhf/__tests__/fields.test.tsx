@@ -138,8 +138,49 @@ describe("RhfTextField", () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: "Alice" }), expect.anything());
   });
 
-  it("is disabled through react-hook-form", () => {
-    render(<Harness>{() => <RhfTextField name="name" label="Name" disabled />}</Harness>);
+  it("disables the control and still submits a locked preset (kastlan 0.12)", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <Harness onSubmit={onSubmit} defaults={{ ...DEFAULTS, name: "Unit 4", type: "fixed" }}>
+        {() => (
+          <>
+            <RhfTextField name="name" label="Name" disabled />
+            <RhfSelect name="type" label="Type" options={[{ value: "fixed", label: "Fixed" }]} disabled />
+          </>
+        )}
+      </Harness>,
+    );
+    expect(screen.getByRole("textbox", { name: "Name" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Type" })).toBeDisabled();
+    await submit();
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Unit 4", type: "fixed" }),
+      expect.anything(),
+    );
+  });
+
+  it("drops the value the react-hook-form way with excludeWhenDisabled", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <Harness onSubmit={onSubmit} defaults={{ ...DEFAULTS, name: "Unit 4" }}>
+        {() => <RhfTextField name="name" label="Name" disabled excludeWhenDisabled />}
+      </Harness>,
+    );
+    expect(screen.getByRole("textbox", { name: "Name" })).toBeDisabled();
+    await submit();
+    expect(onSubmit.mock.calls[0]![0].name).toBeUndefined();
+  });
+
+  it("is disabled by a form-wide useForm({ disabled }) as well", () => {
+    function Locked() {
+      const form = useForm<Values>({ defaultValues: DEFAULTS, disabled: true });
+      return (
+        <Form {...form}>
+          <RhfTextField name="name" label="Name" />
+        </Form>
+      );
+    }
+    render(<Locked />);
     expect(screen.getByRole("textbox", { name: "Name" })).toBeDisabled();
   });
 });
