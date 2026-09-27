@@ -68,8 +68,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json",
-    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/app.tsbuildinfo && tsc -p tsconfig.node.json --incremental --tsBuildInfoFile node_modules/.cache/tsc/node.tsbuildinfo",
+    "lint": "eslint . --max-warnings 0 --cache --cache-location node_modules/.cache/eslint/",
     "check:tokens": "node scripts/check-token-discipline.mjs",
     "test:coverage": "vitest run --coverage",
     "check:graph": "node scripts/check-module-graph.mjs",
@@ -77,7 +77,10 @@
     "check:tailwind": "node scripts/check-tailwind-scan.mjs",
     "check:security": "npm audit --audit-level=high",
     "check:commits": "node scripts/check-commit-range.cjs",
-    "check": "npm run typecheck && npm run lint && npm run check:tokens && npm run test:coverage && npm run build && npm run check:graph && npm run check:package && npm run build:showcase && npm run check:tailwind && npm run check:security && npm run check:commits",
+    "check:static": "npm run typecheck && npm run lint && npm run check:tokens && npm run check:security && npm run check:commits",
+    "check:test": "npm run test:coverage",
+    "check:build": "npm run build && npm run check:graph && npm run check:package && npm run build:showcase && npm run check:tailwind",
+    "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs",
