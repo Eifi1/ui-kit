@@ -243,7 +243,11 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         // cursor turns to no-drop and the thumb stops following the pointer for the
         // rest of the gesture. The readout is only made unselectable when it is plain
         // text — a NumberInput in that slot has to stay selectable to be editable.
-        <div className="flex items-center gap-2">
+        // `flex-wrap`: a readout wider than the room beside the label (a value plus a
+        // link button, "0 / 60 / 120 km/h · Alle Geschwindigkeiten") used to print on
+        // top of it at 390px (lenkbank L1). Each keeps its own width, so the readout
+        // drops to a line of its own, still at the end, only when the two don't fit.
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {label !== undefined && (
             <label
               htmlFor={inputId}
@@ -256,7 +260,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           {readout !== undefined && (
             <span
               className={cn(
-                "ms-auto shrink-0 text-xs tabular-nums text-[var(--text-primary)]",
+                "ms-auto max-w-full text-xs tabular-nums text-[var(--text-primary)]",
                 plainReadout && "select-none",
               )}
             >
