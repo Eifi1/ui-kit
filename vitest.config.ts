@@ -15,6 +15,12 @@ import { SHOWCASE_ALIAS } from "./showcase/alias.ts";
  * Deliberately a copy of the lead consumer's config rather than a new dialect, so a
  * test can move between the two repositories unchanged.
  */
+// The suite's timezone, set on THIS process before any worker starts. Under
+// `vmThreads` the workers are threads of this process and share its timezone, and
+// `test.env.TZ` (which reached each forked worker before) no longer moves it: CI's UTC
+// runner then failed the local-day test that a Berlin laptop passed. See `env` below.
+process.env.TZ = "Europe/Berlin";
+
 export default defineConfig({
   plugins: [react()],
   // Vitest does NOT read showcase/vite.config.ts, so the alias has to be repeated
