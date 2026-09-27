@@ -325,7 +325,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "toneFrameClass() / alertFrameClass()",
     "ProgressBar — segments, legend and showValue",
     "EmptyState — inline variant and the danger and success tones",
-    "AlertBanner — success, size sm, strip with an action, elevated",
+    "AlertBanner — success, a box with an action, size sm, strip with an action, elevated",
     "AlertBanner — inline block and live={false}",
     "EmptyState — inline size sm",
     "Toasts — every tone, with and without a description",
