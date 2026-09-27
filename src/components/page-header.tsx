@@ -42,11 +42,15 @@ const ROW: Record<PageHeaderMobileLayout, string> = {
  */
 export type PageHeaderActionsAlign = "start" | "center" | "end";
 
-/** Per layout, because `stacked` is a column on a phone — a `self-center` there would
- *  centre the actions HORIZONTALLY — so it only aligns from `sm` up. */
-const ACTIONS_ALIGN: Record<PageHeaderMobileLayout, Record<PageHeaderActionsAlign, string>> = {
-  stacked: { start: "sm:self-start", center: "sm:self-center", end: "sm:self-end" },
-  inline: { start: "self-start", center: "self-center", end: "self-end" },
+/** Applied to the ROW, so the title block and the actions are aligned against each
+ *  other on one cross axis. 0.14.0 put `self-*` on the actions box alone, which moved
+ *  nothing when the actions were the taller item — they already filled the row, and
+ *  the title stayed at the top (keksdose H2, reports-page's two-line labelled
+ *  CurrencySelect). Per layout, because `stacked` is a column on a phone, where
+ *  `items-center` would centre everything HORIZONTALLY — so it aligns from `sm` up. */
+const ROW_ALIGN: Record<PageHeaderMobileLayout, Record<PageHeaderActionsAlign, string>> = {
+  stacked: { start: "sm:items-start", center: "sm:items-center", end: "sm:items-end" },
+  inline: { start: "items-start", center: "items-center", end: "items-end" },
 };
 
 export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
@@ -106,7 +110,9 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * `CurrencySelect` as its action: a field with its label on top is taller than the
    * title, and `stacked`'s default top alignment hangs it from the title's cap height
    * with its control well below the title's line. `center` sets it on the title's
-   * middle, as that page's hand-written `items-center` row did.
+   * middle, as that page's hand-written `items-center` row did. It aligns the whole row
+   * (title block and actions against each other), since 0.14.1: 0.14.0 moved only the
+   * actions box, which did nothing when the actions were the taller item (keksdose H2).
    */
   actionsAlign?: PageHeaderActionsAlign;
   /**
@@ -155,7 +161,13 @@ export function PageHeader({
   const Heading = as as ElementType;
   const hasSecondary = secondaryActions != null;
   const wrapsSecondary = hasSecondary && mobileLayout === "inline";
-  const align = actionsAlign != null ? ACTIONS_ALIGN[mobileLayout][actionsAlign] : undefined;
+  const align = actionsAlign != null ? ROW_ALIGN[mobileLayout][actionsAlign] : undefined;
+  // keksdose H1: in `inline` the title block could shrink below its longest word, and
+  // `break-words` then split "Monatsbudget" into "Monatsbudg" / "et" beside the actions.
+  // Unless it truncates, the title keeps its longest word (min-content) and the ROW
+  // wraps instead: actions that do not fit go to a line of their own, as the app's old
+  // `flex-wrap` header did.
+  const keepsWords = mobileLayout === "inline" && !truncateTitle;
   return (
     <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
       {breadcrumbs}
@@ -164,8 +176,15 @@ export function PageHeader({
           basis would size a column item's HEIGHT); from `sm` up the row stops wrapping
           and the order utilities seat it between the title and the actions. Without
           one, nothing changes. */}
-      <div className={cn("flex min-w-0", ROW[mobileLayout], wrapsSecondary && "flex-wrap sm:flex-nowrap")}>
-        <div className="min-w-0 flex-1">
+      <div
+        className={cn(
+          "flex min-w-0",
+          ROW[mobileLayout],
+          keepsWords ? "flex-wrap" : wrapsSecondary && "flex-wrap sm:flex-nowrap",
+          align,
+        )}
+      >
+        <div className={cn("flex-1", keepsWords ? "min-w-min" : "min-w-0")}>
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
           <Heading
             className={cn(
@@ -179,7 +198,7 @@ export function PageHeader({
           {description != null && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
         </div>
         {actions != null && (
-          <div className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2", align)}>
+          <div className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2")}>
             {actions}
           </div>
         )}
@@ -188,7 +207,6 @@ export function PageHeader({
             className={cn(
               "flex flex-wrap items-center gap-2 sm:order-1 sm:shrink-0",
               wrapsSecondary && "basis-full sm:basis-auto",
-              align,
             )}
           >
             {secondaryActions}
