@@ -246,8 +246,17 @@ function useFocusHandle(ref: ControllerRenderProps["ref"], find: () => HTMLEleme
 
 type OwnInputProps = Omit<
   InputProps,
-  "name" | "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "label" | "error" | "invalid" | "className" | "disabled" | "required"
->;
+  "name" | "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "label" | "error" | "invalid" | "className" | "disabled" | "required" | "inputClassName"
+> & {
+  /**
+   * Classes for the `<input>` — `className` is the item's box (kastlan 42: a
+   * `font-mono` IBAN, a `tabular-nums` reference number). {@link RhfTextarea} and
+   * {@link RhfNumberField} had it; this one only reached `Input`'s prop of the same
+   * name by accident of the rest-spread, undocumented and one refactor from being
+   * dropped. Declared, it is part of the contract the three share.
+   */
+  inputClassName?: string;
+};
 
 export type RhfTextFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -464,6 +473,46 @@ function NumberControl({
       nullable={nullable}
       disabled={field.disabled}
       invalid={invalid}
+    />
+  );
+}
+
+export type RhfIntegerFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfNumberFieldProps<TFieldValues, TName, TTransformed>;
+
+/**
+ * {@link RhfNumberField} for a whole number — a floor, a room count, a year, a
+ * notice period in months. Every such call site in kastlan (item 41) spelled out the
+ * same three props, `digits={0} calculator={false} emptyValue=""`, and a preset
+ * written thirty times is one that is eventually written wrong once:
+ *
+ *  - `digits={0}`: rounds on commit, so "2.5" rooms settles to 3 instead of reaching
+ *    an `Integer` column and failing server-side;
+ *  - `calculator={false}`: a count is typed, not worked out — the trigger is noise
+ *    beside a two-digit field;
+ *  - `emptyValue=""`: kastlan's integer schemas are `z.coerce.number()` over `""`,
+ *    written against the native number inputs these fields replaced.
+ *
+ * Each is only a default: pass the prop to override it (`emptyValue={null}` for a
+ * nullable column). Everything else is {@link RhfNumberField}'s.
+ */
+export function RhfIntegerField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>(props: RhfIntegerFieldProps<TFieldValues, TName, TTransformed>) {
+  // `??` / `=== undefined` rather than a spread over the defaults, so a caller
+  // forwarding its own optional prop (`digits={props.digits}`) still gets the preset,
+  // while an explicit `emptyValue={null}` keeps its null.
+  return (
+    <RhfNumberField
+      {...props}
+      digits={props.digits ?? 0}
+      calculator={props.calculator ?? false}
+      emptyValue={props.emptyValue === undefined ? "" : props.emptyValue}
     />
   );
 }

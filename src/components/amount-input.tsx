@@ -202,6 +202,22 @@ function settleAmount(text: string, digits: number | undefined, min?: number, ma
   return Number(out) === Number(t) ? text : out;
 }
 
+/**
+ * The locale's decimal mark, as far as this field can type it: "," or "." (kastlan 40).
+ * The same answer `NumberField` gives, for the same reason: a mark outside those two
+ * (Arabic's "٫") is not one {@link sanitizeLive} lets through, so those locales keep
+ * the dot rather than get a field that eats the key it shows.
+ */
+function decimalMark(locale: string | undefined): "," | "." {
+  try {
+    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
+    return part?.value === "," ? "," : ".";
+  } catch {
+    // An invalid tag throws a RangeError; a typo in a locale must not take the form down.
+    return ".";
+  }
+}
+
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
 // not a bespoke rose/emerald pairing: a figure being typed has to wear the same
 // colour the same figure will wear once it is a row in the table behind the form
@@ -281,6 +297,20 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // minus and has to survive keystroke-for-keystroke.
     const signOwned = onNegativeChange !== undefined;
     const shown = signOwned && negative && isBareAmount(value) ? `-${value}` : value;
+    // What the user SEES is `shown` with the locale's decimal mark (kastlan 40: a
+    // fr-CH user typed "1,5" and watched it turn into "1.5" under their fingers). Display only — `value`, `onChange`, the sign split and the settle all
+    // stay dot-decimal, because that string is the contract: RhfMoneyField's
+    // `parseAmount`, every app's `Number(value)` and the calculator's evaluator read
+    // it. The way back is free: {@link sanitizeLive} already folds a typed "," into
+    // ".", so a comma typed, pasted or tapped on the numpad lands as a dot.
+    //
+    // One character for one character, and no digit grouping: the caret stays where
+    // the typist put it, and "1.000" cannot be read back as a thousand in one locale
+    // and as one in the other. de-CH and it-CH are "." — CLDR says so, and this
+    // follows `Intl` rather than a guess about a country.
+    const locale = useKitLocale();
+    const mark = decimalMark(locale);
+    const display = mark === "," ? shown.replace(/\./g, ",") : shown;
     // Every route into the field — typing, the numpad sheet, the desktop
     // calculator, the blur/Enter commit — funnels through here, so the split is
     // written once and the four entry paths cannot drift.
@@ -334,7 +364,6 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     }, [labels?.currency, labels?.currencySearch]);
     const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
     const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-    const locale = useKitLocale();
 
     const selected = getCurrency(currency);
     const filtered = useMemo(() => {
@@ -374,7 +403,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // needs: a zero to aim at, at full size. The caller supplies it because
           // only the app knows the locale's decimal separator.
           placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
-          value={shown}
+          value={display}
           onChange={(e) => handleText(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => {
@@ -440,7 +469,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         >
           {showCalc && (
             <CalculatorButton
-              value={shown}
+              // The mark the field shows, as NumberInput hands its calculator; the
+              // evaluator reads either, and its result comes back dot-decimal.
+              value={display}
               onChange={(result, expression) => handleText(settle(result), expression)}
               className="px-1.5"
               ariaLabel={labels?.calculatorTrigger}
@@ -523,11 +554,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         </div>
         {showNumpad && (
           <NumberPadSheet
-            value={shown}
+            // Localised like the field it mirrors; its keys come back through
+            // `sanitizeLive`, so the "." key and a "," both land as a dot.
+            value={display}
             onChange={handleText}
             onDone={() => innerRef.current?.blur()}
             label={label}
             labels={labels?.pad}
+            decimalMark={mark}
           />
         )}
       </div>

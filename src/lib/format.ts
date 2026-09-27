@@ -37,7 +37,8 @@ interface BaseOptions {
   empty?: string;
 }
 
-export interface FormatNumberOptions extends BaseOptions {
+/** The options every number formatter shares (money and percent carry their own unit). */
+export interface FormatNumberBaseOptions extends BaseOptions {
   digits?: FormatDigits;
   /** Compact notation: 12 400 → "12K". */
   compact?: boolean;
@@ -47,12 +48,33 @@ export interface FormatNumberOptions extends BaseOptions {
   options?: Intl.NumberFormatOptions;
 }
 
-export interface FormatMoneyOptions extends FormatNumberOptions {
+/** The options {@link formatNumber} takes: the shared ones plus a free-text `unit`. */
+export interface FormatNumberOptions extends FormatNumberBaseOptions {
+  /**
+   * A unit printed after the figure, joined by a narrow no-break space (U+202F):
+   * "3.400 N", "12 kg", "4,5 m²". lenkbank (P8) prints forces, masses and lengths in
+   * every table and summary, and each call site glued `${n} N` together with a plain
+   * space — which wraps the "N" onto the next line in a narrow column and reads loose
+   * beside the digit grouping. The narrow no-break space is the SI brochure's and the
+   * Swiss typesetting rule's separator between value and unit, and it never breaks.
+   *
+   * Free text, not `Intl`'s `style: "unit"`: that one only knows the ECMA-402
+   * sanctioned units (no "N", no "kN", no "m³/h"), so an app would still be gluing.
+   * A missing value prints `empty` ALONE — "— N" says there is a newton-shaped
+   * nothing, which is noise in a column that already heads its unit.
+   */
+  unit?: string;
+}
+
+/** Narrow no-break space (U+202F): between a figure and its {@link FormatNumberOptions.unit}. */
+const UNIT_SEPARATOR = "\u202F";
+
+export interface FormatMoneyOptions extends FormatNumberBaseOptions {
   /** `"symbol"` (default), `"narrowSymbol"`, `"code"` ("CHF 12.00") or `"name"`. */
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"];
 }
 
-export interface FormatPercentOptions extends FormatNumberOptions {
+export interface FormatPercentOptions extends FormatNumberBaseOptions {
   /**
    * `true` (default): `value` is a RATIO, as `Intl` and `StatTile`'s percent delta read
    * it — `0.12` is 12 %. `false`: it is already a percentage — `12` is 12 %
@@ -83,7 +105,7 @@ function digitOptions(digits: FormatDigits | undefined): Intl.NumberFormatOption
   };
 }
 
-function numberOptions(o: FormatNumberOptions): Intl.NumberFormatOptions {
+function numberOptions(o: FormatNumberBaseOptions): Intl.NumberFormatOptions {
   return {
     ...digitOptions(o.digits),
     ...(o.compact ? { notation: "compact" } : null),
@@ -96,10 +118,11 @@ function isMissing(value: number | null | undefined): value is null | undefined 
   return value === null || value === undefined || Number.isNaN(value);
 }
 
-/** A number in `locale`: "1,234.5", "1.234,5", "1’234.5". */
+/** A number in `locale`: "1,234.5", "1.234,5", "1’234.5" — with `unit`, "3.400 N". */
 export function formatNumber(value: number | null | undefined, options: FormatNumberOptions = {}): string {
   if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  return numberFormatter(options.locale, numberOptions(options)).format(value);
+  const figure = numberFormatter(options.locale, numberOptions(options)).format(value);
+  return options.unit ? `${figure}${UNIT_SEPARATOR}${options.unit}` : figure;
 }
 
 /** An amount of `currency` (ISO 4217) in `locale`: "CHF 1’234.50", "1.234,50 €". */
