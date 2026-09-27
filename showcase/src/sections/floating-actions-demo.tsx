@@ -207,7 +207,9 @@ function TooltipFab({ active, setActive }: { active: Which; setActive: (w: Which
         <ToggleGroup<TooltipSide> aria-label="Tooltip side" size="sm" value={side} onChange={setSide} options={SIDES} />
         <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <input type="checkbox" checked={custom} onChange={(e) => setCustom(e.target.checked)} />
-          tooltip content of its own (not <code className="font-mono">true</code>)
+          <span>
+            tooltip content of its own (not <code className="font-mono">true</code>)
+          </span>
         </label>
       </Row>
       <OutTable

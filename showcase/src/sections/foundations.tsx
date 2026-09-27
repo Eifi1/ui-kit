@@ -355,7 +355,9 @@ export function Foundations() {
               checked={reconciled}
               onChange={(e) => setReconciled(e.target.checked)}
             />
-            Reconciled — inherits <code className="font-mono">accent-color: var(--brand)</code>
+            <span>
+              Reconciled — inherits <code className="font-mono">accent-color: var(--brand)</code>
+            </span>
           </label>
           <label className="flex items-center gap-2">
             <input

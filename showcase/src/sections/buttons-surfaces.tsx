@@ -104,12 +104,15 @@ function ButtonStretch() {
           exists to override. A hand-rolled items-start row is what makes the
           difference between the two buttons show at all. */}
       <div className="flex flex-wrap items-start gap-3">
-        <div className="flex h-16 min-w-40 items-center rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 text-xs text-[var(--text-muted)]">
+        {/* Narrow enough, with short enough labels, that all three share one line at phone
+            width: once "with stretch" wrapped away from the field it had nothing taller to
+            stretch to, and the specimen showed two identical buttons. */}
+        <div className="flex h-16 w-24 items-center rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 text-xs text-[var(--text-muted)] sm:w-auto sm:min-w-40">
           a 64px-tall field
         </div>
-        <Button variant="secondary">without stretch</Button>
+        <Button variant="secondary">no stretch</Button>
         <Button variant="secondary" stretch>
-          with stretch
+          stretch
         </Button>
       </div>
       <div className="mt-3">
@@ -633,7 +636,7 @@ function ButtonGroups() {
           </ButtonGroup>
         </div>
         <div dir="rtl" className="space-y-2">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">dir=&quot;rtl&quot;</p>
+          <p className="font-mono text-[11px] text-[var(--text-muted)]" dir="ltr">dir=&quot;rtl&quot;</p>
           <ButtonGroup aria-label="التنقل">
             <Button variant="secondary">الأول</Button>
             <Button variant="secondary">الثاني</Button>

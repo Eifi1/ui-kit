@@ -82,6 +82,9 @@ export const zh: Dictionary = {
     "Pickers & entry": "选择器",
     "Data display": "展示",
     "App chrome": "框架",
+    Inputs: "输入",
+    Charts: "图表",
+    Overlays: "浮层",
   },
 
   pages: {

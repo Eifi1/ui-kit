@@ -77,7 +77,7 @@ export function MeasuredGridDemo() {
 
       <Example label="MeasuredGrid — paste a block" hint="from any cell; extra columns and one header line dropped">
         <Stage>
-          <div data-stage="wide" className="grid gap-4 md:grid-cols-2">
+          <div data-stage="wide" className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <MeasuredGrid
                 label="Pasted table"
@@ -107,7 +107,7 @@ export function MeasuredGridDemo() {
 
       <Example label="MeasuredGrid — locale, text view, read-only" hint="de-DE decimal comma">
         <Stage>
-          <div data-stage="wide" className="grid gap-4 md:grid-cols-2">
+          <div data-stage="wide" className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <UiKitProvider locale="de-DE">
               <div>
                 <MeasuredGrid

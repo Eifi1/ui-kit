@@ -73,9 +73,12 @@ export const it: Dictionary = {
   groupShort: {
     "Getting started": "Inizio",
     Foundations: "Token",
-    "Pickers & entry": "Selettori",
+    "Pickers & entry": "Scelta",
     "Data display": "Dati",
-    "App chrome": "Struttura",
+    "App chrome": "Cornice",
+    Inputs: "Input",
+    Charts: "Grafici",
+    Overlays: "Overlay",
   },
 
   pages: {

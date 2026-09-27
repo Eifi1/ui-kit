@@ -79,10 +79,13 @@ export const hu: Dictionary = {
 
   groupShort: {
     "Getting started": "Kezdés",
-    Foundations: "Tokenek",
-    "Pickers & entry": "Választók",
+    Foundations: "Alapok",
+    "Pickers & entry": "Picker",
     "Data display": "Adatok",
     "App chrome": "Keret",
+    Inputs: "Bevitel",
+    Charts: "Ábrák",
+    Overlays: "Felugró",
   },
 
   pages: {

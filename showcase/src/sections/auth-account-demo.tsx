@@ -214,7 +214,10 @@ function TwoFactorOtpauthSpecimen() {
       label="TwoFactorSetting — from an otpauth URI"
       hint="the URI an authenticator backend hands out; the kit draws the QR itself and reads the secret out of it"
     >
-      <Row>
+      {/* The same grid as the AuthLayout switches above: in a wrapping Row each switch was
+          only as wide as its text, so on a phone the toggles sat mid-row instead of at the
+          end edge where the ones above them are. */}
+      <div className="grid gap-3 sm:grid-cols-2">
         <Switch
           label="secret given too"
           description="Off: parsed from the URI's secret="
@@ -222,7 +225,7 @@ function TwoFactorOtpauthSpecimen() {
           onCheckedChange={setExplicitSecret}
         />
         <Switch label="renderQr" description="Draw the code yourself" checked={customQr} onCheckedChange={setCustomQr} />
-      </Row>
+      </div>
       <div className="mt-4 max-w-md">
         <TwoFactorSetting
           enabled={enabled}
@@ -423,11 +426,20 @@ function AccountLabelsSpecimen() {
         ariaLabel="label source"
         value={source}
         onChange={setSource}
+        // Short option words, the detail in the caption: at phone width three long labels
+        // were each cut to "the page's la…", "house w…", and could not be told apart.
         options={[
-          { value: "page", label: "the page's language" },
-          { value: "house", label: "house wording" },
-          { value: "de", label: "UI_KIT_LABELS_DE" },
+          { value: "page", label: "page" },
+          { value: "house", label: "house" },
+          { value: "de", label: "German" },
         ]}
+        caption={(v) =>
+          v === "page"
+            ? "the page's language — the showcase's own provider"
+            : v === "house"
+              ? "house wording — a nested provider overriding three strings"
+              : "UI_KIT_LABELS_DE.accountSettings in a nested provider"
+        }
       />
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Scoped source={source}>

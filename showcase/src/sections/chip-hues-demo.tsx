@@ -25,14 +25,17 @@ function ChipHues() {
       label="Chip — the five categorical hues × every variant"
       hint="colour that only says “a different value”: blue, indigo, purple, teal, orange — each a token triple with a dark value"
     >
+      {/* Five hues side by side are wider than a phone, and a sideways scroll hid the fifth
+          hue and cut the fourth mid-word with nothing to say more was there. Below `sm` each
+          variant is its own block instead — its name on top, the five chips wrapping under it. */}
       <div className="overflow-x-auto">
-        <table className="text-xs text-[var(--text-secondary)]">
-          <tbody>
+        <table className="text-xs text-[var(--text-secondary)] max-sm:block">
+          <tbody className="max-sm:block max-sm:space-y-3">
             {HUE_VARIANTS.map((variant) => (
-              <tr key={variant}>
-                <td className="pe-3 py-1 font-mono">{variant}</td>
+              <tr key={variant} className="max-sm:flex max-sm:flex-wrap max-sm:gap-1">
+                <td className="pe-3 py-1 font-mono max-sm:basis-full max-sm:py-0">{variant}</td>
                 {HUES.map((hue) => (
-                  <td key={hue} className="px-1 py-1">
+                  <td key={hue} className="px-1 py-1 max-sm:p-0">
                     <Chip tone={hue} variant={variant} size="sm">
                       {QUOTE_STATES[hue]}
                     </Chip>
@@ -212,7 +215,9 @@ function ToggleGroupSmallAndField() {
         </div>
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={error} onChange={(e) => setError(e.target.checked)} />
-          show the Gear field&apos;s <code className="font-mono">error</code>
+          <span>
+            show the Gear field&apos;s <code className="font-mono">error</code>
+          </span>
         </label>
       </div>
       <div className="mt-3">

@@ -163,12 +163,16 @@ function FloatingPanels() {
         </label>
         <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <input type="checkbox" checked={startOpen} onChange={(e) => setStartOpen(e.target.checked)} />
-          assistant <code className="font-mono">defaultOpen</code>
+          <span>
+            assistant <code className="font-mono">defaultOpen</code>
+          </span>
         </label>
-        <label className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex min-w-0 items-center gap-2 text-sm text-[var(--text-secondary)]">
           <input type="checkbox" checked={nativeTitles} onChange={(e) => setNativeTitles(e.target.checked)} />
-          native <code className="font-mono">title</code> (<code className="font-mono">nativeTitle</code> /{" "}
-          <code className="font-mono">fabNativeTitle</code>)
+          <span>
+            native <code className="font-mono">title</code> (<code className="font-mono">nativeTitle</code> /{" "}
+            <code className="font-mono">fabNativeTitle</code>)
+          </span>
         </label>
       </Row>
       <Row className="mt-3">

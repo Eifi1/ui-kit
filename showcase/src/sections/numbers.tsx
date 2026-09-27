@@ -324,18 +324,22 @@ export function Numbers() {
         <Stage>
           <div className="space-y-3">
             <Row>
+              {/* `pressed`, not a primary/secondary swap: those two differ only by a
+                  surface-2 fill, which on this stage's surface-2 is no difference at all —
+                  the chosen direction was invisible. `pressed` sets aria-pressed AND
+                  draws the quiet brand "on" fill. */}
               <Button
                 type="button"
-                variant={outflow ? "primary" : "secondary"}
-                aria-pressed={outflow}
+                variant="secondary"
+                pressed={outflow}
                 onClick={() => setDirection("outflow")}
               >
                 Outflow
               </Button>
               <Button
                 type="button"
-                variant={outflow ? "secondary" : "primary"}
-                aria-pressed={!outflow}
+                variant="secondary"
+                pressed={!outflow}
                 onClick={() => setDirection("inflow")}
               >
                 Inflow

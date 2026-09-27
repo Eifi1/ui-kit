@@ -428,7 +428,9 @@ function RedactPaletteDemo() {
         </label>
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
-          demo mode (blur <code className="font-mono">[data-private]</code>)
+          <span>
+            demo mode (blur <code className="font-mono">[data-private]</code>)
+          </span>
         </label>
       </Row>
       {/* The host's own rule — the kit only sets the attribute. Scoped to the open

@@ -242,14 +242,14 @@ function PlacementTour() {
     },
     {
       target: '[data-tour="showcase-place-rtl"]',
-      title: 'placement: "end" in dir="rtl"',
-      body: "The same placement on a target inside dir=\"rtl\": its end is the LEFT. The card takes the target's direction too — and so do the keys: ← advances here and → goes back.",
+      title: 'placement: "end" in \u2066dir="rtl"\u2069',
+      body: "The same placement on a target inside \u2066dir=\"rtl\"\u2069: its end is the LEFT. The card takes the target's direction too — and so do the keys: ← advances here and → goes back.",
       placement: "end",
       padding: 4,
     },
     {
       target: '[data-tour="showcase-place-rtl"]',
-      title: 'placement: "start" in dir="rtl"',
+      title: 'placement: "start" in \u2066dir="rtl"\u2069',
       body: "And its start is the right. A translated app writes start/end once and gets the mirror for free; left/right stay for a step that really means a side of the screen.",
       placement: "start",
       padding: 4,
@@ -326,7 +326,7 @@ function PlacementTour() {
           data-tour="showcase-place-rtl"
           className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
         >
-          الهدف د — Target D, dir=&quot;rtl&quot;
+          الهدف د — <bdi dir="ltr">Target D, dir=&quot;rtl&quot;</bdi>
         </span>
       </div>
       <Row>

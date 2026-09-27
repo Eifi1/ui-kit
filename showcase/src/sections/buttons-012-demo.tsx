@@ -54,9 +54,15 @@ function ButtonPending() {
           <Button type="button" variant="secondary" pending={pending} onClick={save}>
             Secondary
           </Button>
-          <Button type="button" variant="ghost" pending>
-            Always pending
-          </Button>
+          {/* A ghost button has no box, and pending hides its label under the spinner — alone,
+              and wrapped onto a line of its own on a phone, it was a spinner floating in the
+              card. The caption travels with it and says what it is. */}
+          <span className="inline-flex items-center gap-2">
+            <span className="text-xs text-[var(--text-muted)]">ghost, always pending:</span>
+            <Button type="button" variant="ghost" pending>
+              Always pending
+            </Button>
+          </span>
         </Row>
       </form>
       <OutTable

@@ -761,7 +761,10 @@ function PrivateCellsTable() {
     >
       <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
         <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
-        demo mode (the page&apos;s own <code className="font-mono">[data-private]</code> blur rule)
+        {/* One span: bare text beside the <code> made three flex items, three ragged columns. */}
+        <span>
+          demo mode (the page&apos;s own <code className="font-mono">[data-private]</code> blur rule)
+        </span>
       </label>
       <div ref={box} className={demo ? "[&_[data-private]]:blur-[5px]" : undefined}>
         <DataTable
@@ -803,7 +806,7 @@ function FillHeightTable() {
   return (
     <Example
       label="fillHeight — a table in a bounded pane"
-      hint="desktop only · the dashed box is a fixed 18rem flex column; the table fills it and scrolls inside"
+      hint="the dashed box is a fixed 18rem flex column; the table — or the card list on a phone — fills it and scrolls inside"
     >
       <div className="flex h-72 flex-col rounded-md border border-dashed border-[var(--border)] p-2">
         <div className="pb-2 text-xs text-[var(--text-muted)]">A toolbar above the table</div>
@@ -818,7 +821,8 @@ function FillHeightTable() {
       </div>
       <div className="mt-3">
         <Note>
-          The pager stays pinned to the bottom of the pane and the header to the top, and
+          The pager stays pinned to the bottom of the pane and the header to the top (on a
+          phone the card list scrolls between the toolbar and the pager), and
           <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}

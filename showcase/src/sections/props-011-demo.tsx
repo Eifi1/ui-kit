@@ -132,6 +132,11 @@ export function MenuItemBadgeDemo() {
             </ul>
           )}
         </HoverMenu>
+        {/* The badges live in the panel, so closed the example showed only a truncated
+            button and nothing of what it is about — say where to look. */}
+        <span className="text-xs text-[var(--text-muted)]">
+          Open it: the last two rows carry the &ldquo;Shared&rdquo; and &ldquo;Guest&rdquo; badges.
+        </span>
       </Row>
       <div className="mt-3">
         <Note>

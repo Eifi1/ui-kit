@@ -87,6 +87,9 @@ export const en: Dictionary = {
     "Pickers & entry": "Pickers",
     "Data display": "Display",
     "App chrome": "Chrome",
+    Inputs: "Inputs",
+    Charts: "Charts",
+    Overlays: "Popups",
   },
 
   // Copied verbatim from showcase/src/routes.tsx, keyed by slug. A group's overview

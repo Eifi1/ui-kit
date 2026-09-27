@@ -42,12 +42,20 @@ function activity(from: string, to: string, seed: number): CalendarHeatmapDatum[
 const MONTH_DATA = activity("2026-09-01", "2026-09-30", 11);
 
 type Ramp = "levels" | "hex" | "var" | "fill";
+// Short option words, the props in the caption: four long labels in one group were each
+// cut to "levels (co…" / "colorFrom/To…" on a phone, two of them identically.
 const RAMPS: { value: Ramp; label: string }[] = [
-  { value: "levels", label: "levels (color)" },
-  { value: "hex", label: "colorFrom/To hex" },
-  { value: "var", label: "colorFrom/To var()" },
+  { value: "levels", label: "levels" },
+  { value: "hex", label: "hex" },
+  { value: "var", label: "var()" },
   { value: "fill", label: "fill()" },
 ];
+const RAMP_CAPTION: Record<Ramp, string> = {
+  levels: "levels steps of color",
+  hex: 'colorFrom="#fde68a" colorTo="#9a3412"',
+  var: 'colorFrom="var(--bg-surface)" colorTo="var(--brand)"',
+  fill: "fill(value) — a threshold",
+};
 
 const RAMP_PROPS: Record<Ramp, Partial<CalendarHeatmapProps>> = {
   levels: {},
@@ -65,11 +73,21 @@ function ColourRamp() {
       label="CalendarHeatmap — colorFrom/colorTo, fill and emptyColor"
       hint="a continuous ramp instead of steps; the day number's ink is measured against the fill"
     >
-      <Row className="mb-3">
-        <ToggleGroup<Ramp> aria-label="Ramp" size="sm" value={ramp} onChange={setRamp} options={RAMPS} />
+      <Row className="mb-3 items-start">
+        <ToggleGroup<Ramp>
+          aria-label="Ramp"
+          size="sm"
+          value={ramp}
+          onChange={setRamp}
+          options={RAMPS}
+          caption={(v) => RAMP_CAPTION[v]}
+        />
         <ToggleGroup<"default" | "custom">
           aria-label="Empty colour"
           size="sm"
+          // Content-sized like the ramp group beside it, whose caption wrapper sizes it to
+          // its options; left at the default w-full this one alone spanned the card.
+          className="w-auto"
           value={empty}
           onChange={setEmpty}
           options={[

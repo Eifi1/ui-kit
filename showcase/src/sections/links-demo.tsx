@@ -40,7 +40,6 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 /** The `?via=` of the current location — which link was last followed. */
 function useVia(): string {
@@ -396,12 +395,14 @@ function ActionCardLinks() {
 export function LinksDemo() {
   return (
     <>
+      {/* A page-wide remark, so a Note at the top where it is read first — as a bare
+          monospace line after the last card it floated between two examples. */}
+      <Note>Links on this page route inside the showcase; external ones open a new tab.</Note>
       <ProviderLink />
       <TextLinkTones />
       <TextLinkKinds />
       <ButtonHref />
       <ActionCardLinks />
-      <p className={READOUT}>Links on this page route inside the showcase; external ones open a new tab.</p>
     </>
   );
 }

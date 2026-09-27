@@ -300,7 +300,9 @@ function LabelColorTreemaps() {
       <Row className="mb-2">
         <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={withInk} onChange={(e) => setWithInk(e.target.checked)} />
-          <code className="font-mono">labelColor</code> per node
+          <span>
+            <code className="font-mono">labelColor</code> per node
+          </span>
         </label>
       </Row>
       <Treemap data={data} valueFormatter={moneyAndShare} height={260} />

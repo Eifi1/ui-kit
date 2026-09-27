@@ -82,7 +82,11 @@ export function NavPillsDemo() {
         </div>
         <div className="mt-3 flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-sm text-[var(--text-secondary)]">
           <Hand className="size-4 shrink-0" aria-hidden />
-          Swipe actions for <strong className="text-[var(--text-primary)]">{surface}</strong> would be set up here.
+          {/* One span, so the sentence is one flex item that wraps as text rather than three
+              items that each wrap in their own column. */}
+          <span>
+            Swipe actions for <strong className="text-[var(--text-primary)]">{surface}</strong> would be set up here.
+          </span>
         </div>
         <div className="mt-3">
           <Note>

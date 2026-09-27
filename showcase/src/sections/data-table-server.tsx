@@ -394,7 +394,9 @@ function PhoneTable() {
       <Row className="mb-3 justify-between">
         <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} />
-          custom <code className="font-mono">mobileCard</code>
+          <span>
+            custom <code className="font-mono">mobileCard</code>
+          </span>
         </label>
         <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <input type="checkbox" checked={rtl} onChange={(e) => setRtl(e.target.checked)} />

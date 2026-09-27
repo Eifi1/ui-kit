@@ -413,7 +413,10 @@ function PageView({
 
       <nav
         aria-label={t.chrome.pagination}
-        className="mt-12 flex items-center justify-between gap-4 border-t border-[var(--border)] pt-6"
+        // Two equal columns, not `justify-between`: in a flex row the two links shrank
+        // together and both titles truncated ("Buttons & surf…") with the room between
+        // them unused. Each side now owns half the row and wraps inside it.
+        className="mt-12 grid grid-cols-2 items-center gap-4 border-t border-[var(--border)] pt-6"
       >
         {prev ? (
           <PagerLink
@@ -458,7 +461,9 @@ function PagerLink({
   const label = (
     <span className="min-w-0">
       <span className="block text-[11px] text-[var(--text-muted)]">{kicker}</span>
-      <span className="block truncate">{title}</span>
+      {/* Two lines before an ellipsis: a title is a few words, and half a phone row is
+          about fifteen characters. */}
+      <span className="line-clamp-2">{title}</span>
     </span>
   );
   return (
@@ -467,7 +472,7 @@ function PagerLink({
       // `text-end`, not `text-right`: the trailing side of the pager is the right in
       // English and the left in Arabic, and only the logical property knows which.
       className={`group flex min-w-0 items-center gap-2 text-sm text-[var(--brand)] hover:underline${
-        arrowFirst ? "" : " text-end"
+        arrowFirst ? " justify-self-start" : " justify-self-end text-end"
       }`}
     >
       {arrowFirst ? arrow : label}

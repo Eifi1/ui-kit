@@ -74,9 +74,12 @@ export const es: Dictionary = {
   groupShort: {
     "Getting started": "Inicio",
     Foundations: "Tokens",
-    "Pickers & entry": "Selectores",
+    "Pickers & entry": "Elegir",
     "Data display": "Datos",
     "App chrome": "Marco",
+    Inputs: "Entrada",
+    Charts: "Gráfico",
+    Overlays: "Capas",
   },
 
   pages: {
