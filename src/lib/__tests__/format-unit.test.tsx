@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import { formatNumber, useKitFormat } from "../format";
+import { formatMoney, formatNumber, formatPercent, useKitFormat } from "../format";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /** lenkbank P8: a figure with its unit, joined by a narrow no-break space. */
@@ -28,5 +28,13 @@ describe("formatNumber unit", () => {
     const { result } = renderHook(() => useKitFormat(), { wrapper });
     expect(result.current.formatNumber(3400, { unit: "N" })).toBe("3.400 N");
     expect(result.current.formatNumber(undefined, { unit: "N" })).toBe("—");
+  });
+});
+
+describe("non-finite numbers are missing (lenkbank, 0.13)", () => {
+  it("prints the placeholder for ±Infinity, not ∞", () => {
+    expect(formatNumber(Infinity, { locale: "de-DE", unit: "N" })).toBe("—");
+    expect(formatMoney(-Infinity, "CHF", { locale: "de-CH" })).toBe("—");
+    expect(formatPercent(Infinity, { locale: "en-US" })).toBe("—");
   });
 });

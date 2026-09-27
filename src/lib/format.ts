@@ -115,7 +115,9 @@ function numberOptions(o: FormatNumberBaseOptions): Intl.NumberFormatOptions {
 }
 
 function isMissing(value: number | null | undefined): value is null | undefined {
-  return value === null || value === undefined || Number.isNaN(value);
+  // ±Infinity too (lenkbank, adopting 0.13): a division by zero upstream is a missing
+  // figure, and "∞" printed in a money or measurement column reads like data.
+  return value === null || value === undefined || !Number.isFinite(value);
 }
 
 /** A number in `locale`: "1,234.5", "1.234,5", "1’234.5" — with `unit`, "3.400 N". */
