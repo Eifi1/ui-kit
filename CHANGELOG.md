@@ -20,6 +20,30 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.13.0](https://github.com/Eifi1/ui-kit/compare/v0.12.0...v0.13.0) (2026-09-27)
+
+### Added
+
+* **display:** ToggleGroup pressed semantics, zero deltas, end legend entry, bar links ([64fd784](https://github.com/Eifi1/ui-kit/commit/64fd7847513ac1cce1f5824a779fbdf2bc701a8b))
+* **error-boundary:** one crash screen — message, copy report, onReport, chunk/offline ([2e27c3f](https://github.com/Eifi1/ui-kit/commit/2e27c3f671cb7b93d3455792b83ee248f71b9d8d))
+* **forms:** locale decimal mark, RhfIntegerField, inputClassName, WizardStep actions, unit ([a47e2ac](https://github.com/Eifi1/ui-kit/commit/a47e2ac570573ca5aa1fbdb15d9ad7c5c829b743))
+* **layout:** PageHeader compact + mobileLayout, SectionLabel band, ListItem titleLines ([8faef61](https://github.com/Eifi1/ui-kit/commit/8faef615e17de7af870c3448ed56aa6486f8846a))
+* **links:** replace, reloadDocument, IconButton href, TextLink tones, toneColor pair ([813534b](https://github.com/Eifi1/ui-kit/commit/813534b365dfb7e3a3916c5a999167f52a109ed5))
+* **shell,feedback:** header.extra(close), FeedbackComposer insertText and placeholder ([c3f4a6f](https://github.com/Eifi1/ui-kit/commit/c3f4a6ffaa3c2bd045c27f019e84be2d51fc7c38))
+* **tooltip:** lazy — in place, but absent until hover or focus (keksdose F6) ([eee4705](https://github.com/Eifi1/ui-kit/commit/eee4705b06b06a79c7ff60bd2df774a41f471c70))
+
+### Fixed
+
+* **amount-input:** settle money to the currency's minor unit; digits, min, max ([b988420](https://github.com/Eifi1/ui-kit/commit/b9884207bbd3c2840d8a7389daf240804a196fa0))
+* **feedback-thread:** full date in the kit Tooltip instead of a native title ([ffea4a0](https://github.com/Eifi1/ui-kit/commit/ffea4a005a2a74c4abfe844b0714d3ba78f70128)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+* **rhf:** disabled keeps the value; excludeWhenDisabled opts into RHF's drop ([d72b886](https://github.com/Eifi1/ui-kit/commit/d72b8867745312d82f81e165d5a4aec1ffe365ef))
+
+### Changed
+
+* clear every lint warning in feedback, search, shell, tour, wizard, showcase ([21a97ad](https://github.com/Eifi1/ui-kit/commit/21a97ad83ecc47e63c688c3acc575fb8cff261a3))
+* clear every lint warning in src/components ([f139b22](https://github.com/Eifi1/ui-kit/commit/f139b2207b6d7aa4d6031e581d7ba71a03c6c469))
+* **feedback-thread:** use the kit's formatRelativeTime ([7e37a39](https://github.com/Eifi1/ui-kit/commit/7e37a39b9749ce45309ec46266b1370476f34109))
+
 ## [0.12.0](https://github.com/Eifi1/ui-kit/compare/v0.11.0...v0.12.0) (2026-09-26)
 
 ### Added
