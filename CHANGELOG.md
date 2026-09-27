@@ -20,6 +20,13 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.1](https://github.com/Eifi1/ui-kit/compare/v0.15.0...v0.15.1) (2026-09-27)
+
+### Fixed
+
+* **series-chart:** an axis budget — one axis a side when the plot would be crushed ([14f31ae](https://github.com/Eifi1/ui-kit/commit/14f31ae4bb6fd448fffa24fa80b6e5f935c6b105))
+* **slider:** the header wraps, so a wide readout drops below the label, not over it ([69f6984](https://github.com/Eifi1/ui-kit/commit/69f6984475fc0404a0c7268d90e07fb4bab50d1f))
+
 ## [0.15.0](https://github.com/Eifi1/ui-kit/compare/v0.14.2...v0.15.0) (2026-09-27)
 
 ### Added
