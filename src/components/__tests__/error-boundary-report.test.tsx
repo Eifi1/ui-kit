@@ -106,6 +106,28 @@ describe("ErrorBoundary crash screen", () => {
     expect(screen.queryByRole("button", { name: "Copy error report" })).toBeNull();
   });
 
+  it("carries placement into the report, its text and its fingerprint (keksdose G3b)", async () => {
+    const onReport = vi.fn(async (_report: CrashReport) => ({ reference: "#1" }));
+    const error = new Error("twice");
+    render(
+      <>
+        <ErrorBoundary onReport={onReport} placement="page">
+          <Boom error={error} />
+        </ErrorBoundary>
+        <ErrorBoundary onReport={onReport} placement="app">
+          <Boom error={error} />
+        </ErrorBoundary>
+      </>,
+    );
+    await settle();
+    // Two placements are two facts for triage, not one duplicate.
+    expect(onReport.mock.calls.map(([r]) => r.placement)).toEqual(["page", "app"]);
+    expect(formatCrashReport(onReport.mock.calls[0][0])).toContain("Placement: page");
+    const base = { name: "Error", message: "x", stack: "at a" };
+    expect(crashFingerprint({ ...base, placement: "app" })).not.toBe(crashFingerprint({ ...base, placement: "page" }));
+    expect(crashFingerprint(base)).toBe(crashFingerprint({ ...base }));
+  });
+
   it("files the same crash once per page load, and a second boundary shows the same reference", async () => {
     const onReport = vi.fn(async () => ({ reference: "abc" }));
     const error = new Error("twice");
