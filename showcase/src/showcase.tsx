@@ -134,6 +134,9 @@ export function Showcase() {
     <AppShell
       nav={nav}
       subNav={sidebarStyle}
+      // One scrolling row of section chips on a phone: the wrapped bar took ~130px of a
+      // 390px screen on the long groups (showcase audit, decided 2026-09-27).
+      mobileSubNavLayout="scroll"
       footer={
         <footer className="border-t border-[var(--border)] px-6 py-3 text-xs text-[var(--text-muted)]">
           {/* One translated sentence, not three fragments with markup between them. The
