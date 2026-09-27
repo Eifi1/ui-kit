@@ -161,7 +161,32 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
    * row can still say otherwise with {@link TableRowProps.bordered}.
    */
   rowDividers?: boolean;
+  /**
+   * `"phone"`: below `sm` each body row becomes a block — its first cell the row's
+   * title, every further cell under its column's header as a small label — and the
+   * head row is visually hidden (still read by screen readers). For tables of PROSE,
+   * not figures (lenkbank L5: a PID-terms table of three sentence columns wrapped into
+   * two-word slivers at 390px and ran its third column off the screen). A table of
+   * numbers should keep scrolling sideways, which is why this is opt-in. The labels
+   * are the head row's cell texts, read from the DOM; a body cell spanning several
+   * columns gets none.
+   */
+  stack?: "phone";
 }
+
+/**
+ * Below `sm` on a `stack="phone"` table: rows as blocks, the head visually hidden,
+ * the first cell as a title, the others labelled by `data-label` (set by the table).
+ */
+const STACK_PHONE_CLASSES = cn(
+  "max-sm:block max-sm:[&_tbody]:block max-sm:[&_tfoot]:block",
+  "max-sm:[&_thead]:sr-only",
+  "max-sm:[&_tbody_tr]:block max-sm:[&_tbody_tr]:py-2 max-sm:[&_tfoot_tr]:block max-sm:[&_tfoot_tr]:py-2",
+  "max-sm:[&_tbody_td]:block max-sm:[&_tbody_td]:px-0 max-sm:[&_tbody_td]:py-0.5 max-sm:[&_tbody_td]:text-start",
+  "max-sm:[&_tfoot_td]:block max-sm:[&_tfoot_td]:px-0 max-sm:[&_tfoot_td]:py-0.5",
+  "max-sm:[&_tbody_td:first-child]:font-medium",
+  "max-sm:[&_td[data-label]]:before:block max-sm:[&_td[data-label]]:before:text-[11px] max-sm:[&_td[data-label]]:before:font-medium max-sm:[&_td[data-label]]:before:text-[var(--text-muted)] max-sm:[&_td[data-label]]:before:content-[attr(data-label)]",
+);
 
 /**
  * A plain, static HTML table in the kit's tokens — for the detail views that need
@@ -188,6 +213,7 @@ export function Table({
   layout,
   framed = false,
   rowDividers = true,
+  stack,
   className,
   "aria-label": ariaLabel,
   ...rest
@@ -196,6 +222,37 @@ export function Table({
   const [captions, setCaptions] = useState(0);
   const wrapper = useRef<HTMLDivElement | null>(null);
   const overflowing = useScrollOverflow(wrapper);
+  const tableRef = useRef<HTMLTableElement | null>(null);
+
+  // `stack="phone"`: label every body cell with its column's header text, and keep the
+  // table's roles explicit — `display: block` on table parts drops their table
+  // semantics in some engines. Re-run on any change to the rows, which the caller
+  // renders and this component never sees.
+  useLayoutEffect(() => {
+    const table = tableRef.current;
+    if (!stack || !table) return;
+    const label = () => {
+      const heads = Array.from(table.tHead?.rows[0]?.cells ?? []).map((cell) => cell.textContent?.trim() ?? "");
+      table.setAttribute("role", "table");
+      for (const row of Array.from(table.rows)) {
+        row.setAttribute("role", "row");
+        let column = 0;
+        for (const cell of Array.from(row.cells)) {
+          const span = cell.colSpan || 1;
+          if (cell.tagName === "TH") cell.setAttribute("role", cell.closest("thead") ? "columnheader" : "rowheader");
+          else cell.setAttribute("role", "cell");
+          const text = span === 1 && column > 0 ? heads[column] : undefined;
+          if (cell.tagName === "TD" && text) cell.setAttribute("data-label", text);
+          else cell.removeAttribute("data-label");
+          column += span;
+        }
+      }
+    };
+    label();
+    const observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(label);
+    observer?.observe(table, { childList: true, subtree: true, characterData: true });
+    return () => observer?.disconnect();
+  }, [stack]);
 
   const ctx = useMemo<TableContextValue>(
     () => ({
@@ -239,12 +296,14 @@ export function Table({
       >
         <table
           {...rest}
+          ref={tableRef}
           aria-label={ariaLabel}
           className={cn(
             "w-full caption-bottom border-collapse text-sm text-[var(--text-primary)]",
             density === "compact" && "text-xs",
             layout === "fixed" && "table-fixed",
             layout === "auto" && "table-auto",
+            stack === "phone" && STACK_PHONE_CLASSES,
             className,
           )}
         />
