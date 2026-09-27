@@ -1399,6 +1399,11 @@ function SeriesPlot({
           tickLine={false}
           axisLine={false}
           minTickGap={32}
+          // Where the ticks crowd, drop every Nth rather than recharts' default
+          // `preserveEnd`, which drops whichever single tick collides: a phone's whole-week
+          // axis came out 2 4 6 8 _ 12, a doubled gap that reads as a missing week. Every
+          // other tick, keeping the last, gives 4 8 12 — still an even ruler.
+          interval="equidistantPreserveEnd"
           tick={x.ticks === false ? false : undefined}
           {...(tickAngle
             ? { angle: tickAngle, textAnchor: tickAngle < 0 ? "end" : "start" }

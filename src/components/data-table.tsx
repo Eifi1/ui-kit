@@ -1720,7 +1720,8 @@ export function DataTable<T>({
               ref={loadMoreRef}
               className="px-4 py-4 text-center text-xs text-[var(--text-placeholder)]"
             >
-              {labels.loading}
+              {/* Isolated for the reason spelled out on LoadingText. */}
+              <bdi>{labels.loading}</bdi>
             </li>
           )}
         </ul>
@@ -2296,10 +2297,14 @@ function PlainRoot(props: React.HTMLAttributes<HTMLDivElement>) {
 
 /** The loading row's content: a spinner beside the word, the word for everyone. */
 function LoadingText({ label }: { label: string }) {
+  // `<bdi>`: the label takes its direction from its own letters, not the table's. The
+  // English default inside a `dir="rtl"` table otherwise had its trailing "…" — a
+  // neutral with no letter after it — resolved right-to-left and drawn in front of
+  // the word: "…Loading". An Arabic or Hebrew label still reads right-to-left.
   return (
     <span className="inline-flex items-center gap-2">
       <Spinner label={null} className="size-4" />
-      {label}
+      <bdi>{label}</bdi>
     </span>
   );
 }

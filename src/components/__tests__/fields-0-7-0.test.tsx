@@ -207,6 +207,25 @@ describe("Select with a numeric size (list box)", () => {
     expect(select.className).not.toContain("pe-9");
   });
 
+  it("is exactly `size` rows tall: no bottom padding for the next row to show through", () => {
+    render(
+      <>
+        <Select aria-label="Plain" size={4}>
+          <option>One</option>
+        </Select>
+        <Select label="Labelled" size={4}>
+          <option>One</option>
+        </Select>
+      </>,
+    );
+    const [plain, labelled] = screen.getAllByRole("listbox");
+    // The rows carry the vertical room instead, so the browser counts it in `size`.
+    expect(plain.className).toContain("py-0");
+    expect(plain.className).toContain("[&_option]:py-1");
+    expect(labelled.className).toContain("pb-0");
+    expect(labelled.className).toContain("pt-5");
+  });
+
   it("treats `multiple` as a list box too", () => {
     const { container } = render(
       <Select aria-label="Pick" multiple>

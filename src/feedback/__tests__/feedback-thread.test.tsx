@@ -56,6 +56,16 @@ describe("FeedbackThread", () => {
     expect(within(third).getByText("now")).toBeInTheDocument();
   });
 
+  it("swaps a failed image thumbnail for a named placeholder, not an empty box", () => {
+    render(<FeedbackThread messages={MESSAGES} now={NOW} locale="en" />);
+    const img = screen.getByRole("img", { name: "shot.png" });
+    // The glyph under the picture is there from the start, for the lazy-load wait.
+    expect(img.parentElement?.querySelector("svg")).not.toBeNull();
+    fireEvent.error(img);
+    expect(screen.queryByRole("img", { name: "shot.png" })).toBeNull();
+    expect(screen.getByRole("link", { name: "shot.png" })).toHaveAttribute("href", "https://example.com/shot.png");
+  });
+
   it("puts own messages at the end side and lets each body set its own direction", () => {
     render(<FeedbackThread messages={MESSAGES} now={NOW} />);
     const items = screen.getAllByRole("listitem").filter((li) => li.querySelector("article"));

@@ -97,6 +97,11 @@ describe("serverPagination.isLoading", () => {
     expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 
+  it("isolates the loading label, so an English one in an RTL table keeps its \"…\" at the end", () => {
+    renderTable({ rows: [], serverPagination: server(true) });
+    expect(screen.getByText("Loading…").tagName).toBe("BDI");
+  });
+
   it("is not busy once the page is in", () => {
     renderTable({ rows: [], serverPagination: server(false), empty: "No rows" });
     expect(screen.getByRole("table")).not.toHaveAttribute("aria-busy");

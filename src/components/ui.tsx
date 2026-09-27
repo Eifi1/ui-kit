@@ -1963,7 +1963,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />
     );
   // `pe-9` is the room the chevron takes; a list box has none to make room for.
-  const dress = listBox ? "overflow-y-auto" : "appearance-none pe-9";
+  //
+  // A list box's height is `size` rows plus its padding, but its rows are clipped at
+  // the PADDING edge, not the content edge — so FIELD_BASE's `pb-2` showed the next
+  // row through the bottom padding: `size={4}` drew four and a half. The vertical room
+  // moves onto the rows instead (option padding counts toward the row height the
+  // browser sizes the box by), and the box keeps no bottom padding: exactly `size`
+  // whole rows, at any width.
+  const dress = listBox ? "overflow-y-auto [&_option]:py-1" : "appearance-none pe-9";
   if (label === undefined) {
     return (
       <FieldGroup errorEl={below}>
@@ -1989,6 +1996,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             className={cn(
               FIELD_BASE,
               dress,
+              listBox && "py-0",
               small && SELECT_SM,
               selectClassName,
               isInvalid && FIELD_INVALID,
@@ -2014,8 +2022,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           className={cn(
             FIELD_BASE,
             // The floated label takes the top strip of a list box too, so its first
-            // row starts under the label rather than behind it.
-            listBox ? "pt-5 pb-1" : FIELD_FLOATING_PAD,
+            // row starts under the label rather than behind it. No bottom padding — see
+            // `dress`.
+            listBox ? "pt-5 pb-0" : FIELD_FLOATING_PAD,
             "peer",
             dress,
             selectClassName,
