@@ -58,9 +58,15 @@ export interface TopBarMenuHeader {
   title: ReactNode;
   /** The muted second line — an email, a role. */
   subtitle?: ReactNode;
-  /** Anything below — a role chip. A link or button here stays out of the arrow keys
-   *  and in the Tab order, like the footer's. */
-  extra?: ReactNode;
+  /**
+   * Anything below — a role chip. A link or button here stays out of the arrow keys
+   * and in the Tab order, like the footer's.
+   *
+   * Pass a function to get `close`, as `footer` does — keksdose F7: its admin role
+   * chip links to the admin area, and a router link does not unmount the menu, so
+   * without `close` the panel stayed open over the page it had just navigated to.
+   */
+  extra?: ReactNode | ((close: () => void) => ReactNode);
 }
 
 /** What a control is, as far as `HoverMenu` is concerned, when it lives in the header
@@ -225,6 +231,7 @@ export function TopBarActionMenu({
     >
       {(close) => {
         const footerBody = typeof footer === "function" ? footer(close) : footer;
+        const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
           "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-2 [&_a:focus-visible]:ring-[var(--brand)]";
         return (
@@ -236,7 +243,7 @@ export function TopBarActionMenu({
                 {header.subtitle != null && (
                   <div className="truncate text-xs text-[var(--text-muted)]">{header.subtitle}</div>
                 )}
-                {header.extra != null && <div className="mt-1">{header.extra}</div>}
+                {headerExtra != null && headerExtra !== false && <div className="mt-1">{headerExtra}</div>}
               </MenuSection>
             )}
             {heading && (
