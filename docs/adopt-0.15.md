@@ -84,3 +84,8 @@ Picked up by `^0.15.0`.
 - **AlertBanner box with an `action`:** below `sm` the action wraps under the message,
   lined up with its text, and the × stays at the top end (kastlan 53). The strip variant
   already did this since 0.15.0.
+- **Tabs:** no tab is wider than its strip. A long label or `detail` line ends in an
+  ellipsis, and the whole text stays the tab's accessible name (lenkbank L3).
+- **ToggleGroup `overflow="wrap"`** (opt-in): when the options don't fit, the segments
+  flow onto a second row and every label stays whole. The default `"truncate"` keeps
+  one row with ellipses, as before (lenkbank L4).

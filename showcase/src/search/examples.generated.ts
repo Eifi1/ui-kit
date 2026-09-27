@@ -307,6 +307,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ToggleGroup — size sm, and label, hint and error in a form row",
     "ToggleGroup — caption, static and as a function of the value",
     "ToggleGroup — semantics=\"pressed\"",
+    "ToggleGroup — overflow, when the options do not fit",
     "Delta at zero",
     "StaticLegend — entry align: \"end\"",
     "BulkActionBar — a link among the actions",
