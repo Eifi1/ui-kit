@@ -254,16 +254,25 @@ one maintainer. Revisit it if a second maintainer appears.
 
 ## The gates
 
-`npm run check` runs these in order, and every one blocks. The husky `pre-push` hook runs it
-locally; CI (`.github/workflows/ci.yml`) runs the SAME script on every pull request and push
-to `main`, with nothing inline and nothing `continue-on-error`, so the two cannot drift.
+`npm run check` runs these in three independent groups at the same time
+(`scripts/check.mjs`), and every one blocks:
+
+- `check:static`: typecheck · lint · check:tokens · check:security · check:commits
+- `check:test`: test:coverage
+- `check:build`: build · check:graph · check:package · build:showcase · check:tailwind
+
+The husky `pre-push` hook runs it locally. CI (`.github/workflows/ci.yml`) runs the SAME
+three scripts as three parallel jobs on every pull request and push to `main`, with nothing
+inline and nothing `continue-on-error`, so the two cannot drift. Locally a full check takes
+about 2¾ minutes (it was ~5 run one after another). Lint and typecheck keep caches in
+`node_modules/.cache`, so a repeat run only rechecks what changed; CI always starts cold.
 
 | Script | What it is actually defending |
 |---|---|
 | `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since tsup's declaration build reads it). |
 | `lint` | Zero warnings (see above): every rule is an error. |
 | `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
-| `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. |
+| `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. Each file runs in its own VM context in a reused worker (`pool: "vmThreads"`), ~2.5× faster than a fresh jsdom per file; stub full-page navigation through `lib/document-navigation.ts`, since `window.location` cannot be redefined there. |
 | `build` | — |
 | `check:graph` | That the build stayed unbundled. A bundling build fuses the modules into one chunk and `sideEffects` can no longer let a consumer drop what it does not use — the regression that dragged ~433 KB of recharts into a consumer's entry chunk. It asserts the graph, not a string. |
 | `check:package` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. |
@@ -272,7 +281,8 @@ to `main`, with nothing inline and nothing `continue-on-error`, so the two canno
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
 
-A passing check prints a line, not an inventory: `build` drops tsup's per-file listing
+A passing group prints one line with its time; a failing one prints its whole output.
+Inside a group, a passing check prints a line, not an inventory: `build` drops tsup's per-file listing
 (`scripts/tsup-quiet.mjs`; `npx tsup` shows it), `build:showcase` runs at `--logLevel warn`,
 `check:package --quiet` holds its walk back unless a step fails. So anything more than that
 in the output — a warning, an act() complaint, a jsdom "Not implemented" — is new and is
@@ -334,9 +344,16 @@ just the symptom, because a reader upgrading needs to know whether it could have
 5. Tag the MERGE commit on main:
    `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
 
-**Build once, ship that.** CI is the only workflow that installs, tests and builds. On a
-push to `main` it uploads two artifacts: `npm-package` (the tarball packed from the dist
-`npm run check` verified) and `showcase` (built for Pages). `pages.yml` deploys the showcase
+**Build once, ship that.** CI is the only workflow that installs, tests and builds. Every
+run uploads `npm-package` (the tarball packed from the dist `check:build` verified),
+`showcase` (built for Pages) and `tested-tree` (the git tree hash they came from).
+
+**Test once, too.** A merge commit is new, but when the PR branch was up to date with
+`main` its tree is exactly the one the PR's green run tested. CI on `main` then skips the
+checks and re-uploads that run's artifacts (its `reuse` job compares the recorded tree with
+the merge commit's), so Release and Pages start within a minute. A branch behind `main`, a
+direct push or a missing green run gets the full check. So: update the branch before merging
+a release PR, and the release does not wait for a second full run. `pages.yml` deploys the showcase
 only after that CI run is green, and `release.yml` stages exactly that tarball, so nothing is
 rebuilt. Tag the MERGE commit: the release looks up the CI run of the tagged commit on
 `main`, waits up to 20 minutes for it, and refuses a red one.

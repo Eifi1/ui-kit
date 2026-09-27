@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent } from "../i18n/kit-labels";
+import { documentNavigation } from "../lib/document-navigation";
 
 /* ── Choosing what draws a link ──────────────────────────────────────────── */
 
@@ -98,7 +99,7 @@ export function replacingClick(
     onClick?.(event);
     if (!isPlainNavigationClick(event)) return;
     event.preventDefault();
-    window.location.replace(href);
+    documentNavigation.replace(href);
   };
 }
 

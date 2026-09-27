@@ -5,6 +5,7 @@ import { Button, IconButton } from "../ui";
 import { TextLink } from "../text-link";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkProps } from "../../i18n/kit-labels";
+import { documentNavigation } from "../../lib/document-navigation";
 
 /**
  * 0.13's link asks: `replace` / `reloadDocument` on Button and TextLink (keksdose F1),
@@ -25,11 +26,9 @@ const withRouter = (ui: React.ReactNode) => render(<UiKitProvider linkComponent=
 
 afterEach(() => vi.restoreAllMocks());
 
-/** Stubs `location.replace`, which jsdom does not implement. */
+/** Stubs the document's `location.replace`, which jsdom does not implement. */
 function stubLocationReplace() {
-  const replace = vi.fn();
-  vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, replace } as Location);
-  return replace;
+  return vi.spyOn(documentNavigation, "replace").mockImplementation(() => {});
 }
 
 describe("replace (keksdose F1)", () => {

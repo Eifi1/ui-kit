@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
 
 // React Testing Library does not unmount between tests on its own when `globals`
@@ -9,6 +9,13 @@ import { afterEach } from "vitest";
 afterEach(() => {
   cleanup();
 });
+
+// `findBy*` / `waitFor` give up after 1s by default. The suite now runs every file at
+// once in reused workers (vmThreads, see vitest.config.ts), and a showcase test that
+// waits for a lazily loaded section plus the search dialog took longer than that
+// under full load: a pass on one run, a fail on the next. 5s absorbs the load; a real
+// hang still fails, and `testTimeout` (20s) still bounds the test.
+configure({ asyncUtilTimeout: 5000 });
 
 /**
  * jsdom has no canvas. Its `getContext` already answers `null` — which every canvas

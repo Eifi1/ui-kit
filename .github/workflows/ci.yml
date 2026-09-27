@@ -16,62 +16,154 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # LOCAL FIRST. CI only CONFIRMS what `npm run check` already proved on the machine that
-# pushed: the husky pre-push hook runs the very same script, and every check lives in
-# an npm script (see package.json → "check") rather than as an inline step here, so the
-# two cannot drift. What each check guards is documented in its script:
-#   typecheck · lint · check:tokens · test:coverage (the coverage ratchet in
-#   vitest.config.ts) · build · check:graph (one module per source file, so
-#   `sideEffects` still tree-shakes recharts) · check:package (installs the packed
-#   tarball and imports every entry point by name) · build:showcase · check:tailwind
-#   (the documented @source scan reaches the package) · check:security (npm audit,
-#   high) · check:commits (Conventional Commits over the pushed range).
+# pushed: the husky pre-push hook runs the very same scripts. `npm run check` is three
+# independent groups (scripts/check.mjs), and CI runs those same three package.json
+# scripts as three parallel jobs, so the two cannot drift:
+#   check:static  typecheck · lint · check:tokens · check:security · check:commits
+#   check:test    test:coverage (the coverage ratchet in vitest.config.ts)
+#   check:build   build · check:graph · check:package · build:showcase · check:tailwind
+# What each check guards is documented in its script.
+#
+# BUILD ONCE, SHIP THAT. The build job packs the tarball it verified and builds the
+# Pages showcase, and every run uploads them with the TREE it tested:
+#   npm-package → release.yml stage-publishes this exact tarball for a v* tag;
+#   showcase    → pages.yml deploys it once the run on main is green;
+#   tested-tree → the git tree hash these came from (see `reuse`).
+#
+# TEST ONCE, TOO. A merge to main makes a new commit, but when the PR branch was up to
+# date its TREE is exactly the one the PR's green run already tested (0.14.1: both
+# 7c5759e…) — rerunning ~5 minutes of checks on identical files proves nothing new. So on
+# a push to main, `reuse` looks for the green PR run of the merged branch and compares
+# the tree it recorded with this commit's tree. Equal: the checks are skipped and that
+# run's artifacts are re-uploaded under this run, so Release and Pages find them where
+# they always have. Anything else — a branch behind main, a direct push, no green run —
+# runs every check, as before. Only CI's own recorded result is trusted, never a file
+# from a developer machine.
 jobs:
-  check:
-    name: npm run check
+  reuse:
+    name: Reuse the PR's run?
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # list the PR's runs and read its tested-tree artifact
+    outputs:
+      run-id: ${{ steps.find.outputs.run-id }}
+    steps:
+      - uses: actions/checkout@v7
+        if: github.event_name == 'push'
+        with:
+          fetch-depth: 2 # the merge commit and its parents
+      - id: find
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # A merge commit's second parent is the PR branch's head.
+          pr_head="$(git rev-parse --verify --quiet HEAD^2 || true)"
+          if [ -z "$pr_head" ]; then echo "not a merge commit: full run"; exit 0; fi
+          run="$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$pr_head" \
+            --event pull_request --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          if [ -z "$run" ]; then echo "no green PR run for $pr_head: full run"; exit 0; fi
+          gh run download "$run" -R "$GITHUB_REPOSITORY" -n tested-tree -D tested || {
+            echo "run $run has no tested-tree: full run"; exit 0; }
+          tested="$(cat tested/tree)"
+          tree="$(git rev-parse HEAD^{tree})"
+          if [ "$tested" != "$tree" ]; then
+            echo "run $run tested tree $tested, this commit is $tree (branch was behind main): full run"
+            exit 0
+          fi
+          echo "run $run already tested tree $tree: reusing it"
+          echo "run-id=$run" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: npm run ${{ matrix.group }}
+    needs: reuse
+    if: needs.reuse.outputs.run-id == ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # one group failing says nothing about the other two
+      matrix:
+        group: [check:static, check:test, check:build]
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # the whole range, so check:commits can read every message in it
-      # Node from .nvmrc (24.19.0), the file the apps pin too. Not 20: jsdom 30 pulls
-      # undici, which calls `webidl.util.markAsUncloneable` — added in Node 20.18 — and
-      # on plain 20 every test file dies with "Failed to start forks worker".
+      # Node from .nvmrc, the file the apps pin too. Not 20: jsdom 30 pulls undici,
+      # which calls `webidl.util.markAsUncloneable` — added in Node 20.18 — and on plain
+      # 20 every test file dies with "Failed to start forks worker".
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run ${{ matrix.group }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      # BUILD ONCE, SHIP THAT. On main, the run hands on what it built and tested, so
-      # nothing downstream installs or builds again:
-      #   npm-package → release.yml stage-publishes this exact tarball for a v* tag on
-      #                 this commit (the package on npm is the one CI checked);
-      #   showcase    → pages.yml deploys it once this run is green.
-      # `npm pack` repacks the dist `npm run check` just built and verified, into a
-      # NON-hidden folder: upload-artifact skips dot paths (include-hidden-files), which
-      # is how the first run on main (0.13.0) uploaded nothing.
-      - name: Pack the tested package
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: mkdir -p ci-artifacts && npm pack --silent --pack-destination ci-artifacts
+      # The build group hands on what it built and verified. `npm pack` repacks that
+      # dist into a NON-hidden folder: upload-artifact skips dot paths, which is how the
+      # first run on main (0.13.0) uploaded nothing. The Pages build needs the /ui-kit/
+      # base; ~2s with Vite 8.
+      - name: Pack the tested package and build the Pages showcase
+        if: matrix.group == 'check:build'
+        run: |
+          mkdir -p ci-artifacts/tree
+          npm pack --silent --pack-destination ci-artifacts
+          npx vite build --config showcase/vite.config.ts --base=/ui-kit/ --outDir dist-pages --logLevel warn
+          git rev-parse HEAD^{tree} > ci-artifacts/tree/tree
       - uses: actions/upload-artifact@v7
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: matrix.group == 'check:build'
         with:
           name: npm-package
           path: ci-artifacts/*.tgz
           if-no-files-found: error
           retention-days: 30
-      # The Pages build needs the /ui-kit/ base; ~2s with Vite 8.
-      - name: Build the showcase for Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx vite build --config showcase/vite.config.ts --base=/ui-kit/ --outDir dist-pages --logLevel warn
       - uses: actions/upload-artifact@v7
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: matrix.group == 'check:build'
         with:
           name: showcase
           path: showcase/dist-pages
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        if: matrix.group == 'check:build'
+        with:
+          name: tested-tree
+          path: ci-artifacts/tree/tree
+          if-no-files-found: error
+          retention-days: 30
+
+  reused:
+    name: Hand on the PR run's artifacts
+    needs: reuse
+    if: needs.reuse.outputs.run-id != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # download from the PR's run
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ needs.reuse.outputs.run-id }}
+          github-token: ${{ github.token }}
+          path: from-pr
+      - uses: actions/upload-artifact@v7
+        with:
+          name: npm-package
+          path: from-pr/npm-package/*.tgz
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: showcase
+          path: from-pr/showcase
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tested-tree
+          path: from-pr/tested-tree/tree
           if-no-files-found: error
           retention-days: 30
