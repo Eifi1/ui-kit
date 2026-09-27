@@ -158,6 +158,12 @@ interface AmountInputProps {
    * zero (12.345 → 12.35, -12.345 → -12.35) and happens when the figure settles: on
    * blur, on Enter, and on every result the calculator writes back. Keystrokes are left
    * alone, so "12.3" can still become "12.34".
+   *
+   * ⚠️ **A unit price or a rate needs `digits`.** The default is right for an amount of
+   * money and silently wrong for a price per unit: a fund's NAV of 123.4567 or fuel at
+   * 1.789 €/l is stored as 123.46 / 1.79, and no test fails (keksdose G2, a
+   * `Numeric(18,6)` holding price and a `Numeric(18,4)` unit price). Pass the column's
+   * scale: `digits={4}`, `digits={6}`.
    */
   digits?: number;
   /** The smallest amount the field settles on. A lower figure is raised to it when it
