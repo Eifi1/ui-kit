@@ -247,6 +247,33 @@ describe("RhfNumberField", () => {
 });
 
 describe("RhfMoneyField", () => {
+  it("stores the amount rounded to the currency's minor unit and clamped (kastlan 0.12)", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <Harness onSubmit={onSubmit}>
+        {() => (
+          <>
+            <RhfMoneyField name="rent" label="Rent" currency="CHF" />
+            <RhfMoneyField name="count" label="Release" currency="CHF" max={500} />
+          </>
+        )}
+      </Harness>,
+    );
+    const rent = screen.getByRole("textbox", { name: "Rent" });
+    fireEvent.change(rent, { target: { value: "100/3" } });
+    fireEvent.blur(rent);
+    const release = screen.getByRole("textbox", { name: "Release" });
+    fireEvent.change(release, { target: { value: "612.349" } });
+    fireEvent.blur(release);
+    expect(rent).toHaveValue("33.33");
+    expect(release).toHaveValue("500");
+    await submit();
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ rent: 33.33, count: 500 }),
+      expect.anything(),
+    );
+  });
+
   it("stores a number while typing and keeps a half-typed decimal in the field", async () => {
     const formRef = { current: null as UseFormReturn<Values> | null };
     render(<Harness formRef={formRef}>{() => <RhfMoneyField name="rent" label="Rent" />}</Harness>);

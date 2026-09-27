@@ -495,6 +495,13 @@ export type RhfMoneyFieldProps<
   valueAs?: "number" | "string";
   /** What an emptied field stores when `valueAs` is `"number"`. Default `null`. */
   emptyValue?: null | "";
+  /** Decimals the amount settles to on blur, Enter or a calculator result. Default:
+   *  the currency's minor unit (CHF 2, JPY 0). See {@link AmountInput}'s `digits`. */
+  digits?: number;
+  /** Clamp the settled amount (a release capped at the deposit's balance). Validate
+   *  with `rules` as well if a clamp needs explaining. */
+  min?: number;
+  max?: number;
 };
 
 /** The amount a text reads as, or `undefined` for a draft that is not one yet. */
