@@ -71,3 +71,16 @@ Everything here is picked up by `^0.15.0`; there is nothing to bump.
     labels must not already carry the unit, or it shows twice.
   - **Fixed along the way:** an axis switched to `hide` on a mounted chart kept its width,
     which pushed the remaining axes off the chart's edge.
+
+## 0.15.2
+
+Picked up by `^0.15.0`.
+
+- **SeriesChart:** a series label that already ends with its unit ("Velocity (mm/s)") is
+  no longer given it twice when the axis budget hides its axis. This covers the tooltip
+  and `seriesLegendEntries` (lenkbank, on 0.15.1).
+- **Chart tooltip:** capped at the viewport width. Long series names wrap and values never
+  do, so a six-row tooltip on a 390px chart no longer runs off the edge.
+- **AlertBanner box with an `action`:** below `sm` the action wraps under the message,
+  lined up with its text, and the × stays at the top end (kastlan 53). The strip variant
+  already did this since 0.15.0.
