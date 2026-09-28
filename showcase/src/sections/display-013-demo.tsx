@@ -109,10 +109,31 @@ function BarWithLink() {
   );
 }
 
+const SIGNALS = ["Sprung", "Rampe", "Sinus", "Sweep", "Bewegung"].map((v) => ({ value: v, label: v }));
+
+/** lenkbank L4 (0.15.2): five signal types on a phone — truncated, or wrapped whole. */
+function ToggleGroupOverflow() {
+  const [signal, setSignal] = useState("Bewegung");
+  return (
+    <Example label="ToggleGroup — overflow, when the options do not fit" hint={'`overflow="truncate"` (default) or `"wrap"`'}>
+      <div className="max-w-xs space-y-3">
+        <ToggleGroup aria-label="Signal (truncate)" options={SIGNALS} value={signal} onChange={setSignal} />
+        <ToggleGroup aria-label="Signal (wrap)" options={SIGNALS} value={signal} onChange={setSignal} overflow="wrap" />
+      </div>
+      <Note>
+        In a narrow column the default keeps one row and ends the labels that do not fit in an ellipsis
+        (&ldquo;Beweg…&rdquo;); <code>overflow=&quot;wrap&quot;</code> lets the segments flow onto a second row
+        and every label stays whole. Where the options fit, the two look the same.
+      </Note>
+    </Example>
+  );
+}
+
 export function Display013Demo() {
   return (
     <>
       <PressedToggleGroup />
+      <ToggleGroupOverflow />
       <DeltaAtZero />
       <LegendEnd />
       <BarWithLink />

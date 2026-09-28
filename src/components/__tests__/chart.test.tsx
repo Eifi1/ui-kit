@@ -165,6 +165,18 @@ describe("ChartTooltipContent", () => {
     expect(screen.getAllByText("—")).toHaveLength(2);
   });
 
+  it("stays inside a narrow chart: capped at the viewport, names wrap, values never (lenkbank 0.15.1)", () => {
+    render(
+      <ChartContainer id="tip-narrow" config={CONFIG}>
+        <ChartTooltipContent active payload={sparse} label="March" />
+      </ChartContainer>,
+    );
+    const value = screen.getByText("120");
+    expect(value.className).toContain("whitespace-nowrap");
+    expect(value.previousElementSibling!.className).toContain("break-words");
+    expect(value.closest('[class*="max-w-"]')).not.toBeNull();
+  });
+
   it("hands formatValue the missing value rather than a substitute", () => {
     const formatValue = vi.fn((v: number | undefined) => (v == null ? "no data" : `£${v}`));
     render(

@@ -170,6 +170,7 @@ const Forms0142Demo = lazySection(() => import("./sections/forms-0142-demo"), "F
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
+const TableStackDemo = lazySection(() => import("./sections/table-012-demo"), "TableStackDemo");
 const DataTableActionsDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableActionsDemo");
 const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableUrlFiltersDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
@@ -617,6 +618,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <DescriptionTableMore />
             <TableHeaderValignDemo />
             <TableVariantsDemo />
+            <TableStackDemo />
             <DescriptionPlaceholderDemo />
           </>
         ),

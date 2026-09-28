@@ -183,3 +183,19 @@ describe("AlertBanner 0.11.0 inline (keksdose)", () => {
     expect(screen.getByTestId("note")).toHaveAttribute("role", "note");
   });
 });
+
+describe("AlertBanner box with an action on a phone (kastlan 53)", () => {
+  it("wraps below sm, the action last on a line of its own; a box without one does not", () => {
+    const { rerender } = render(
+      <AlertBanner tone="warning" action={<button type="button">Resend</button>} onDismiss={() => {}}>
+        Please confirm your email address.
+      </AlertBanner>,
+    );
+    const action = screen.getByRole("button", { name: "Resend" }).parentElement!;
+    expect(action.className).toContain("max-sm:order-last");
+    expect(action.className).toContain("max-sm:basis-full");
+    expect(action.parentElement!.className).toContain("max-sm:flex-wrap");
+    rerender(<AlertBanner tone="warning">Plain.</AlertBanner>);
+    expect(screen.getByText("Plain.").parentElement!.className).not.toContain("max-sm:flex-wrap");
+  });
+});

@@ -20,6 +20,18 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.2](https://github.com/Eifi1/ui-kit/compare/v0.15.1...v0.15.2) (2026-09-28)
+
+### Added
+
+* **table:** stack="phone" — a table of prose becomes labelled blocks on a phone ([16dcdfb](https://github.com/Eifi1/ui-kit/commit/16dcdfb8142a309e77bc95b8284ce2edae661871))
+
+### Fixed
+
+* **alert-banner:** a box with an action wraps it under the message on a phone ([d5e5b0e](https://github.com/Eifi1/ui-kit/commit/d5e5b0e79c9e7894cdfcf319058a172bacafef78))
+* **chart:** no doubled unit on a label that has it; the tooltip fits a phone ([c59f2f8](https://github.com/Eifi1/ui-kit/commit/c59f2f847ad5f5454f4d9d06f79eb42042a04fd9))
+* **tabs,toggle-group:** no tab outgrows its strip; ToggleGroup overflow="wrap" ([cf0b724](https://github.com/Eifi1/ui-kit/commit/cf0b724efce3fc0aad6b6544c745eeaf3c166625))
+
 ## [0.15.1](https://github.com/Eifi1/ui-kit/compare/v0.15.0...v0.15.1) (2026-09-27)
 
 ### Fixed

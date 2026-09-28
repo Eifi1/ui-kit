@@ -84,15 +84,32 @@ function EmptyStateInlineTones() {
 function AlertBannerMore() {
   const [elevated, setElevated] = useState(true);
   const [strip, setStrip] = useState(true);
+  const [verifyDismissed, setVerifyDismissed] = useState(false);
   const [paid, setPaid] = useState(0);
   const [rate, setRate] = useState("");
   return (
     <Example
-      label="AlertBanner — success, size sm, strip with an action, elevated"
+      label="AlertBanner — success, a box with an action, size sm, strip with an action, elevated"
       hint="the fifth tone; a hint-sized line; a band across the top of a page; an opaque, raised surface"
     >
       <div className="space-y-4">
         <AlertBanner tone="success">The import finished: 214 rows booked, 3 skipped.</AlertBanner>
+
+        {/* A box with an action and a dismiss (kastlan 53): on a phone the action takes
+            its own line under the message instead of squeezing it into a narrow column. */}
+        {!verifyDismissed && (
+          <AlertBanner
+            tone="warning"
+            action={
+              <Button size="sm" variant="secondary">
+                Resend verification email
+              </Button>
+            }
+            onDismiss={() => setVerifyDismissed(true)}
+          >
+            Please confirm your email address to secure your account.
+          </AlertBanner>
+        )}
 
         <div className="max-w-sm space-y-1.5">
           <Input label="Exchange rate" value={rate} onChange={(e) => setRate(e.target.value)} />

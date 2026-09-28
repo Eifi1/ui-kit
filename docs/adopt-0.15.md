@@ -71,3 +71,25 @@ Everything here is picked up by `^0.15.0`; there is nothing to bump.
     labels must not already carry the unit, or it shows twice.
   - **Fixed along the way:** an axis switched to `hide` on a mounted chart kept its width,
     which pushed the remaining axes off the chart's edge.
+
+## 0.15.2
+
+Picked up by `^0.15.0`.
+
+- **SeriesChart:** a series label that already ends with its unit ("Velocity (mm/s)") is
+  no longer given it twice when the axis budget hides its axis. This covers the tooltip
+  and `seriesLegendEntries` (lenkbank, on 0.15.1).
+- **Chart tooltip:** capped at the viewport width. Long series names wrap and values never
+  do, so a six-row tooltip on a 390px chart no longer runs off the edge.
+- **AlertBanner box with an `action`:** below `sm` the action wraps under the message,
+  lined up with its text, and the × stays at the top end (kastlan 53). The strip variant
+  already did this since 0.15.0.
+- **Tabs:** no tab is wider than its strip. A long label or `detail` line ends in an
+  ellipsis, and the whole text stays the tab's accessible name (lenkbank L3).
+- **ToggleGroup `overflow="wrap"`** (opt-in): when the options don't fit, the segments
+  flow onto a second row and every label stays whole. The default `"truncate"` keeps
+  one row with ellipses, as before (lenkbank L4).
+- **Table `stack="phone"`** (opt-in): below `sm` each body row becomes a block. The first
+  cell is its title, and every other cell sits under its column's header as a small label,
+  read from the head row. The head is visually hidden but still read by screen readers.
+  Use it for tables of prose; tables of figures should keep scrolling (lenkbank L5).
