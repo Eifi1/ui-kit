@@ -93,3 +93,12 @@ Picked up by `^0.15.0`.
   cell is its title, and every other cell sits under its column's header as a small label,
   read from the head row. The head is visually hidden but still read by screen readers.
   Use it for tables of prose; tables of figures should keep scrolling (lenkbank L5).
+
+## 0.15.3
+
+Picked up by `^0.15.0`.
+
+- **Chart tooltip:** after recharts places it, the tooltip shifts itself to stay 8px inside
+  the viewport. It re-measures when recharts' slide ends. The 0.15.2 width cap alone still
+  let a wide tooltip open to the right of the pointer and run its values off a 390px
+  screen (lenkbank).
