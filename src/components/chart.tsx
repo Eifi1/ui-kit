@@ -8,7 +8,7 @@
 // The value on show is the *structure*: config-driven colors injected as CSS
 // vars, muted axis/grid styling, and a polished tooltip/legend — the things
 // that make shadcn charts read as "designed" rather than "default Recharts".
-import { createContext, useContext, useId, useLayoutEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, CSSProperties, ReactNode, RefObject } from "react";
 import {
   Legend as RechartsLegend,
@@ -292,11 +292,62 @@ export function ChartTooltipContent({
     const tipWidth = tipRef.current?.offsetWidth ?? 160;
     setFlip(visibleX + tipWidth + 12 > boundary.clientWidth);
   }, [visible, x, boundaryRef, payload, label]);
+
+  // Whatever placed it — recharts' own rule or the boundary flip above — the box then
+  // clamps itself into the viewport, 8px off each edge. The width cap alone did not
+  // keep it on screen: on a 390px phone recharts opened a near-full-width tooltip to
+  // the RIGHT of a pointer 35% into the plot, and the values ran off the edge
+  // (lenkbank, on 0.15.2). Measured after placement, minus the shift it already has,
+  // so a re-measure never compounds; an unmeasured box (no layout) is left alone.
+  const [nudge, setNudge] = useState(0);
+  const nudgeRef = useRef(0);
+  // recharts slides its wrapper to each new position with a CSS transition, so the box
+  // measured on commit is still where it WAS; measure again once the slide ends.
+  const [settled, setSettled] = useState(0);
+  useEffect(() => {
+    const wrapper = tipRef.current?.closest<HTMLElement>(".recharts-tooltip-wrapper");
+    if (!visible || !wrapper) return;
+    const onEnd = () => setSettled((n) => n + 1);
+    wrapper.addEventListener("transitionend", onEnd);
+    return () => wrapper.removeEventListener("transitionend", onEnd);
+  }, [visible]);
+  useLayoutEffect(() => {
+    const el = tipRef.current;
+    if (!visible || !el) {
+      nudgeRef.current = 0;
+      setNudge(0);
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const margin = 8;
+    const viewport = document.documentElement.clientWidth || window.innerWidth;
+    const left = rect.left - nudgeRef.current;
+    const right = left + rect.width;
+    let next = 0;
+    if (right > viewport - margin) next = viewport - margin - right;
+    if (left + next < margin) next = margin - left;
+    if (next !== nudgeRef.current) {
+      nudgeRef.current = next;
+      setNudge(next);
+    }
+  }, [visible, x, payload, label, flip, settled]);
   if (!visible || !items) return null;
   return (
     <div
       ref={tipRef}
-      style={boundaryRef ? { transform: flip ? "translateX(calc(-100% - 12px))" : "translateX(12px)" } : undefined}
+      style={
+        boundaryRef || nudge
+          ? {
+              transform: [
+                boundaryRef ? (flip ? "translateX(calc(-100% - 12px))" : "translateX(12px)") : "",
+                nudge ? `translateX(${nudge}px)` : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+            }
+          : undefined
+      }
       // Capped at the viewport: six long series names (lenkbank's German motion
       // labels) made the box wider than a 390px chart, and recharts, which keeps a box
       // inside the plot only when it fits, let it run off the edge with the values cut.

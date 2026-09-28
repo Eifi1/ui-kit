@@ -177,6 +177,25 @@ describe("ChartTooltipContent", () => {
     expect(value.closest('[class*="max-w-"]')).not.toBeNull();
   });
 
+  it("clamps itself into the viewport when placed past its edge (lenkbank 0.15.2)", () => {
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      // The tooltip box: 320px wide, placed at x=108 on a 390px page.
+      if (this.className.includes("max-w-")) return { left: 108, right: 428, width: 320, top: 0, bottom: 100, height: 100, x: 108, y: 0, toJSON() {} } as DOMRect;
+      return { left: 0, right: 0, width: 0, top: 0, bottom: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
+    });
+    const width = vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(390);
+    render(
+      <ChartContainer id="tip-clamp" config={CONFIG}>
+        <ChartTooltipContent active payload={sparse} label="March" />
+      </ChartContainer>,
+    );
+    const box = screen.getByText("120").closest('[class*="max-w-"]') as HTMLElement;
+    // 428 + 8 margin past 390 → shifted 46px left.
+    expect(box.style.transform).toBe("translateX(-46px)");
+    rect.mockRestore();
+    width.mockRestore();
+  });
+
   it("hands formatValue the missing value rather than a substitute", () => {
     const formatValue = vi.fn((v: number | undefined) => (v == null ? "no data" : `£${v}`));
     render(

@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.3](https://github.com/Eifi1/ui-kit/compare/v0.15.2...v0.15.3) (2026-09-28)
+
+### Fixed
+
+* **chart:** the tooltip clamps itself into the viewport after recharts places it ([a35d3f9](https://github.com/Eifi1/ui-kit/commit/a35d3f9dc2f4d5e40354cccc3e591a5c9f49d72d))
+
 ## [0.15.2](https://github.com/Eifi1/ui-kit/compare/v0.15.1...v0.15.2) (2026-09-28)
 
 ### Added
