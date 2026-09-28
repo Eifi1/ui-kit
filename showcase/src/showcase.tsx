@@ -4,6 +4,7 @@ import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "
 import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
 import {
   AppShell,
+  Button,
   ConfirmProvider,
   EmptyState,
   IconButton,
@@ -198,17 +199,15 @@ export function Showcase() {
                 ariaLabel={t.chrome.language}
               />
               <SidebarStyleToggle style={sidebarStyle} onChange={setSidebarStyle} />
-              {/* Never inside a preview frame (it would nest), and only from `lg`: three
-                  frames side by side need the room. */}
+              {/* Never inside a preview frame (it would nest), and only from `md`: on a
+                  phone the reader already sees the phone layout. A labelled button, not
+                  a bare icon — readers who never resize a window are who this is for. */}
               {!embedded && (
-                <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden lg:block">
-                  <IconButton
-                    aria-label={t.chrome.devicePreview}
-                    aria-pressed={preview}
-                    onClick={() => setPreview((v) => !v)}
-                  >
-                    <MonitorSmartphone className="size-4" />
-                  </IconButton>
+                <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden md:block">
+                  <Button variant={preview ? "primary" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
+                    <MonitorSmartphone aria-hidden className="size-4" />
+                    <span className="max-lg:sr-only">{t.chrome.previewShort}</span>
+                  </Button>
                 </Tooltip>
               )}
               {/* Desktop-wide only, like the rail it moves. */}
@@ -237,7 +236,7 @@ export function Showcase() {
           path="/:slug"
           element={
             <RetiredSlugRedirect>
-              {preview ? <PreviewRoute /> : <PageRoute contentsPosition={contentsPosition} />}
+              {preview ? <PreviewRoute onExit={() => setPreview(false)} /> : <PageRoute contentsPosition={contentsPosition} />}
             </RetiredSlugRedirect>
           }
         />
@@ -320,13 +319,13 @@ function RetiredSlugRedirect({ children }: { children: ReactNode }) {
 }
 
 /** The preview replaces the page: the frames ARE the page, three times over. */
-function PreviewRoute() {
+function PreviewRoute({ onExit }: { onExit: () => void }) {
   const { slug } = useParams();
   const { title } = usePageText(slug ?? "");
   return (
     <div className="w-full px-4 py-6 md:px-6">
       <h1 className="mb-2 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
-      <DevicePreview />
+      <DevicePreview onExit={onExit} />
     </div>
   );
 }

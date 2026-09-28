@@ -130,6 +130,11 @@ export interface Dictionary {
     phone: string;
     tablet: string;
     desktop: string;
+    /** The top bar's visible label for the preview toggle — short, it sits in the bar. */
+    previewShort: string;
+    /** The preview's fourth choice: the three frames side by side. */
+    allDevices: string;
+    previewExit: string;
     /** The top-bar search's placeholder: what can be found, in a few words. */
     searchPlaceholder: string;
     /** The search's result groups. `searchNeeds` is a question — the group lists plain
