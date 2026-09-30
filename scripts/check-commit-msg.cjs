@@ -2,18 +2,38 @@
 /**
  * Validate a commit message against the Conventional Commits format.
  *
- * The allowed types are read from .versionrc.cjs so they stay in lock-step with
- * the changelog/semver config used by commit-and-tag-version — a commit that
- * passes here is a commit the release tool can categorise. Dependency-free on
- * purpose (no commitlint), so it runs in a hook or in CI without an install.
+ * The allowed types come from the CALLING repo's commit-and-tag-version config,
+ * so a commit that passes here is one its release tool can categorise. The
+ * config is looked up in the working directory (the repo root), in whichever
+ * flavour the repo uses: .versionrc.js (kastlan), .versionrc.cjs (ui-kit, an
+ * ESM package), .versionrc.json (keksdose). A repo with no config (lenkbank)
+ * gets the standard Conventional Commits types.
+ *
+ * Dependency-free on purpose (no commitlint), so it runs without an install.
  */
 const fs = require("fs");
 const path = require("path");
 
-// .versionrc.cjs is a CommonJS module (this package is ESM; kastlan's flavour, not keksdose's
-// .versionrc.json); require it directly rather than JSON.parse.
-const versionrc = require(path.join(__dirname, "..", ".versionrc.cjs"));
-const TYPES = versionrc.types.map((t) => t.type);
+const DEFAULT_TYPES = [
+  "feat", "fix", "perf", "refactor", "revert",
+  "docs", "style", "chore", "test", "build", "ci",
+];
+
+function loadTypes(dir = process.cwd()) {
+  for (const name of [".versionrc.js", ".versionrc.cjs"]) {
+    const file = path.join(dir, name);
+    if (fs.existsSync(file)) return { types: require(file).types, source: name };
+  }
+  const json = path.join(dir, ".versionrc.json");
+  if (fs.existsSync(json)) {
+    return { types: JSON.parse(fs.readFileSync(json, "utf8")).types, source: ".versionrc.json" };
+  }
+  return { types: null, source: null };
+}
+
+const loaded = loadTypes();
+const TYPES = loaded.types ? loaded.types.map((t) => t.type) : DEFAULT_TYPES;
+const SOURCE = loaded.source ?? "the Conventional Commits defaults";
 
 // <type>(<scope>)?!?: <subject>  — scope and the breaking-change "!" are optional.
 const HEADER = new RegExp(`^(${TYPES.join("|")})(\\([\\w .,/-]+\\))?!?: .+`);
@@ -32,8 +52,8 @@ function validate(message) {
     return [
       "Commit messages must follow Conventional Commits:",
       "  <type>(<scope>)?: <subject>",
-      `  allowed types: ${TYPES.join(", ")}`,
-      '  example: "feat(chip): pressed state for action chips"',
+      `  allowed types (from ${SOURCE}): ${TYPES.join(", ")}`,
+      '  example: "feat(api): add pagination to the list endpoint"',
       `  got: "${firstLine}"`,
     ].join("\n");
   }
@@ -45,7 +65,7 @@ module.exports = { validate, TYPES };
 if (require.main === module) {
   const arg = process.argv[2];
   let message = arg ?? "";
-  // The husky commit-msg hook passes a file path; also accept a raw string.
+  // A commit-msg hook passes a file path; also accept a raw string.
   try {
     if (arg && fs.existsSync(arg)) message = fs.readFileSync(arg, "utf8");
   } catch {
