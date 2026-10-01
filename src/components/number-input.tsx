@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
@@ -191,6 +191,21 @@ export function NumberInput({
   const asDisplay = isMobile && variant === "display";
   const showCalc = calculator && !disabled && !isMobile;
   const [focused, setFocused] = useState(false);
+  // The unit and the calculator's measured width, reserved as the field's end padding.
+  const endRef = useRef<HTMLDivElement>(null);
+  const [endWidth, setEndWidth] = useState<number | null>(null);
+  const hasEnd = showCalc || suffix !== undefined;
+  useLayoutEffect(() => {
+    const el = endRef.current;
+    if (!hasEnd || !el || typeof ResizeObserver === "undefined") return;
+    // The first callback fires on `observe`; no layout (jsdom) keeps the class fallback.
+    const observer = new ResizeObserver(() => {
+      const width = el.getBoundingClientRect().width;
+      setEndWidth(width > 0 ? Math.ceil(width) : null);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasEnd]);
   // On mobile, focusing opens the numpad bottom sheet instead of the native
   // keyboard (#334); the ref lets its "Done" blur → commit + close.
   const showNumpad = isMobile && !disabled && focused;
@@ -272,12 +287,17 @@ export function NumberInput({
           showCalc && suffix !== undefined ? "pe-16" : showCalc ? "pe-9" : suffix !== undefined ? "pe-8" : undefined,
           invalid && FIELD_INVALID,
         )}
+        // The classes above are the fallback; once the end controls are measured the
+        // field reserves exactly their width (+4px). A fixed pe-8 for any unit left a
+        // "%" in a ~78px table cell 32px of padding and the digits ~32px of room
+        // (keksdose live #367); a long unit ("km/h") got too little.
+        style={hasEnd && endWidth != null ? { paddingInlineEnd: endWidth + 4 } : undefined}
       />
       {(showCalc || suffix !== undefined) && (
         // One flex track for both, so the unit and the calculator sit side by side
         // instead of stacking on the same corner — AmountInput's arrangement, which
         // has carried a chip and a calculator together since #430.
-        <div className="absolute inset-y-0 end-0 flex items-center">
+        <div ref={endRef} className="absolute inset-y-0 end-0 flex items-center">
           {showCalc && (
             <CalculatorButton
               value={value}

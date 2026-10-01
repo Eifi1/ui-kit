@@ -1,4 +1,4 @@
-import { forwardRef, useId, useRef, useState } from "react";
+import { forwardRef, isValidElement, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -307,7 +307,13 @@ interface ChipBaseProps {
    * drawn, so write it in normal case.
    */
   caps?: boolean;
-  icon?: LucideIcon;
+  /**
+   * The leading glyph: a lucide component (`icon={Check}`, drawn at the chip's size), or
+   * — since 0.15.4 — a ready element (`icon={<Check className="text-[var(--success)]" />}`)
+   * for a glyph whose colour or stroke carries a state; it is sized to the same box
+   * (keksdose live #358 built that slot by hand inside `children`).
+   */
+  icon?: LucideIcon | ReactElement;
   /**
    * Marks the chip as the current one — `aria-current` on a link, `aria-pressed` on a
    * toggle.
@@ -500,8 +506,27 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         </span>
       )}
       {dot && <span aria-hidden data-chip-dot="" className={cn("shrink-0 rounded-full", DOT_SIZE[size], DOT[tone])} />}
-      {Icon && <Icon className={cn(s.icon, "shrink-0")} aria-hidden />}
-      <span className="min-w-0 truncate">{children}</span>
+      {Icon &&
+        (isValidElement(Icon) ? (
+          <span aria-hidden className={cn(s.icon, "inline-flex shrink-0 [&>svg]:size-full")}>
+            {Icon}
+          </span>
+        ) : (
+          <Icon className={cn(s.icon, "shrink-0")} aria-hidden />
+        ))}
+      {/* Text truncates. Mixed children (an icon and a word) sit in a row instead: as a
+          plain span, the svg — a block under Tailwind's preflight — stacked above the
+          text (keksdose live #358). */}
+      <span
+        className={cn(
+          "min-w-0",
+          typeof children === "string" || typeof children === "number"
+            ? "truncate"
+            : "inline-flex items-center gap-1 [&>svg]:size-[1em] [&>svg]:shrink-0",
+        )}
+      >
+        {children}
+      </span>
     </>
   );
 
