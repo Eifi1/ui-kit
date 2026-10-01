@@ -126,3 +126,26 @@ Picked up by `^0.15.0`. keksdose's 406px round (live #356–#367).
 - **AmountInput:** a value the host sets is shown at the currency's minor unit while the
   field rests (93.4213 CHF reads 93.42); `value` itself is untouched. New exports:
   `currencyMinorDigits(currency)` and `roundToCurrency(value, currency, digits?)` (M5).
+
+## 0.15.5
+
+Picked up by `^0.15.0`. keksdose's run 68 (dev #576, #578, live #366). N1, chip content
+centring, was already closed by 0.15.4's M3.
+
+- **Tokens (N2):** in dark mode `--danger-border` is now rose-700 at 0.6 alpha, like its
+  warning/info/success siblings, so a soft danger Chip no longer sits in a louder frame.
+  The new **`--danger-border-strong`** keeps the old opaque line for what must stay
+  loud: invalid fields, checkboxes and choice cards, a failed upload, the danger banner,
+  the crash message box, and destructive focus rings. If you re-point `--danger-border`,
+  re-point `--danger-border-strong` too. Light mode is unchanged.
+- **Feedback attachments (N3), opt-in:**
+  - **`FeedbackAttachmentField multiple`:** `value: File[]`, `onChange(files)` and
+    `max` (default `DEFAULT_MAX_ATTACHMENTS` = 5). Picking and pasting add files, and
+    each file gets a removable chip. Optional `screenshot` / `onScreenshotChange` give
+    the capture its own single slot.
+  - **`FeedbackDialog attachments="multiple"`** (optionally `maxAttachments`): `onSubmit`
+    gets `{ …, screenshot: File | null, attachments: File[] }`, and the capture button
+    shows only while there's no screenshot.
+  - **Unchanged by default:** single mode, and its `attachment`.
+- **AmountInput (N4):** `negative` draws the minus on its own, so a read-only or disabled
+  signed total no longer needs a dummy `onNegativeChange`.
