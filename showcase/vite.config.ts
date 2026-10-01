@@ -22,7 +22,7 @@ import { SHOWCASE_ALIAS } from "./alias.ts";
  *   4170  @eifi1/ui-kit showcase   <- this, `npm run dev:showcase`
  *   4171  @eifi1/ui-kit showcase   <- `npm run preview:showcase` (the built page)
  *   4173  keksdose  frontend        (backend 8000)
- *   4175  lenkbank  frontend        (backend 8001)
+ *   4175  Kurvenschmiede frontend   (backend 8001)
  *   5173  kastlan   frontend        (Vite's default — no explicit port set there)
  *
  * The showcase sits at the BASE of the band because it is not one of the apps: it is

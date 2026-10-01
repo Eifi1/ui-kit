@@ -57,7 +57,7 @@ import * as i18nZh from "../i18n/locales/zh";
  * `StatTile` / `StatTileGrid`, and lenkbank's `SeriesChart` with its zoom
  * (`withChartZoom`, `SharedXZoom` and the pure zoom maths), `ToggleLegend` and the
  * facing-pair axis geometry. The chart pieces are on both entries, like the rest
- * of the chart kit; the zoom maths is exported because lenkbank's own tests use it.
+ * of the chart kit; the zoom maths is exported because Kurvenschmiede's (then lenkbank's) own tests use it.
  *
  * 298 -> 302: `PageContents`, `PageContentsLayout`, `useScrollSpy` and
  * `DEFAULT_PAGE_CONTENTS_LABELS` — the "On this page" rail, as a kit component.

@@ -9,7 +9,7 @@ coverage/
 # Editor settings are personal, EXCEPT the ones that are really project wiring:
 # what Ctrl+Shift+B starts, what Run Test Task runs, where the Tailwind extension
 # finds a stylesheet in a package that ships no tailwind.config. Those belong to
-# everyone who checks this out — the same policy lenkbank uses, with the same
+# everyone who checks this out — the same policy Kurvenschmiede uses, with the same
 # four exceptions. keksdose runs the policy with three (no settings.json, because
 # it has no extension to point at a stylesheet); kastlan ignores .vscode/ whole and
 # shares none of it, which is why a fresh kastlan clone has no Ctrl+Shift+B.

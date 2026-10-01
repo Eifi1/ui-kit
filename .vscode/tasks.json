@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "//": [
-    "Matches the task vocabulary of the consuming repos (keksdose, lenkbank, kastlan)",
+    "Matches the task vocabulary of the consuming repos (keksdose, Kurvenschmiede, kastlan)",
     "so the same two keystrokes do the same two things in every checkout:",
     "  Ctrl+Shift+B          -> start the thing you look at",
     "  Run Test Task         -> run what CI runs",
