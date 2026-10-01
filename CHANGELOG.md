@@ -20,6 +20,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.4](https://github.com/Eifi1/ui-kit/compare/v0.15.3...v0.15.4) (2026-10-01)
+
+### Added
+
+* **series-chart:** tooltip.placement — a readout row above or below the plot on phones ([8f3d891](https://github.com/Eifi1/ui-kit/commit/8f3d8910513ee7451ebe45a958e86053cefb38d9)), references [#359](https://github.com/Eifi1/ui-kit/issues/359)
+
+### Fixed
+
+* sticky FormActions on the phone nav; Chip rows; unit-sized padding; currency rounding ([013c17f](https://github.com/Eifi1/ui-kit/commit/013c17ff07b00b12f56ea1bc6fae757af18fb86b)), closes [#367](https://github.com/Eifi1/ui-kit/issues/367), references [#361](https://github.com/Eifi1/ui-kit/issues/361) [#358](https://github.com/Eifi1/ui-kit/issues/358) [#356](https://github.com/Eifi1/ui-kit/issues/356)
+
 ## [0.15.3](https://github.com/Eifi1/ui-kit/compare/v0.15.2...v0.15.3) (2026-09-28)
 
 ### Fixed
