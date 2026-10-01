@@ -138,6 +138,9 @@ describe("IconButton label", () => {
       </IconButton>,
     );
     const button = screen.getByRole("button", { name: "Delete" });
+    // Lazy since 0.16.0 (`tooltipLazy`): the bubble is mounted once it is up.
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    fireEvent.mouseEnter(button.parentElement!);
     expect(screen.getByRole("tooltip")).toHaveTextContent("Delete");
     // Visual only: the name is not repeated as the description.
     expect(button).not.toHaveAttribute("aria-describedby");
@@ -150,7 +153,8 @@ describe("IconButton label", () => {
         <svg />
       </IconButton>,
     );
-    expect(screen.getByRole("button", { name: "Delete the segment" })).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Delete the segment" });
+    fireEvent.focus(button);
     expect(screen.getByRole("tooltip")).toHaveTextContent("Delete");
   });
 
