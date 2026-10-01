@@ -306,8 +306,13 @@ showcase can run next to whatever you are testing it against:
 | **4170** | **this showcase** (`dev:showcase`) |
 | **4171** | this showcase, built (`preview:showcase`) |
 | 4173 | keksdose frontend (backend 8000) |
-| 4175 | lenkbank frontend (backend 8001) |
+| 4175 | Kurvenschmiede frontend (backend 8001) |
 | 5173 | kastlan frontend (Vite's default) |
+
+Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
+formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that
+cite its feedback ("lenkbank L2", "Lenkbank feedback #93") keep the name they were
+written with.
 
 `strictPort` is on: a collision fails loudly instead of silently moving to another port
 and printing a URL that is not the one documented here. For a throwaway instance that
