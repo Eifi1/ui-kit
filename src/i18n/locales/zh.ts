@@ -20,6 +20,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       attachmentCapture: "截取屏幕",
       attachmentPaste: "……或从剪贴板粘贴截图。",
       attachmentRemove: "移除附件",
+      attachmentList: "附件",
+      attachmentRemoveFile: (name) => `移除 ${name}`,
+      attachmentLimit: (max) => `最多 ${n(max)} 个附件，请先移除一个再添加。`,
     },
     feedbackDialog: {
       title: "发送反馈",
@@ -28,6 +31,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       body: "发生了什么？",
       bodyOptional: "发生了什么？（可选）",
       attachment: "截图",
+      attachments: "附件",
       submitHint: "Ctrl/⌘ + Enter 发送",
       cancel: "取消",
       save: "发送",

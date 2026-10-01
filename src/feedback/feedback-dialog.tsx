@@ -8,6 +8,7 @@ import {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
   FeedbackAttachmentField,
+  type FeedbackAttachmentError,
 } from "./feedback-attachment";
 
 export interface FeedbackCategoryOption {
@@ -27,6 +28,13 @@ export interface FeedbackAttachmentLabels {
    *  straight in. Optional — falls back to the provider's `feedbackAttachment`, then English. */
   attachmentPaste?: string;
   attachmentRemove: string;
+  /** `multiple` mode (0.15.5): the chip list's accessible name. Optional, as are the
+   *  two below — they fall back to the provider's `feedbackAttachment`, then English. */
+  attachmentList?: string;
+  /** `multiple` mode: one chip's remove button, given the file's name. */
+  attachmentRemoveFile?: (name: string) => string;
+  /** `multiple` mode: the line shown once `max` files are attached. */
+  attachmentLimit?: (max: number) => string;
 }
 
 export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
@@ -38,6 +46,9 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
   submitHint: string;
   cancel: string;
   save: string;
+  /** The heading over the attachments under `attachments="multiple"` (0.15.5), where
+   *  they are a screenshot AND photos. Optional; falls back to the provider, then English. */
+  attachments?: string;
 }
 
 /**
@@ -62,6 +73,9 @@ export interface FeedbackDialogTextLabels {
   submitHint: string;
   cancel: string;
   save: string;
+  /** The heading over the attachments under `attachments="multiple"` (0.15.5).
+   *  Optional, so a complete `UiKitLabels` typed before 0.15.5 still compiles. */
+  attachments?: string;
 }
 
 export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
@@ -71,6 +85,7 @@ export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   body: "What happened?",
   bodyOptional: "What happened? (optional)",
   attachment: "Screenshot",
+  attachments: "Attachments",
   submitHint: "Ctrl/⌘ + Enter to send",
   cancel: "Cancel",
   save: "Send",
@@ -82,6 +97,75 @@ export interface FeedbackSubmission {
   category: string;
   attachment: File | null;
 }
+
+/**
+ * What `onSubmit` gets under `attachments="multiple"` (0.15.5): the screenshot and
+ * the picked/pasted files apart, because an app files them differently — keksdose
+ * attaches the screenshot to the report and the photos as its evidence list. No
+ * `attachment`: there is no one file it could name.
+ */
+export interface FeedbackMultipleSubmission {
+  title: string;
+  body: string;
+  category: string;
+  /** What `onCaptureScreenshot` returned, or `null` — at most one. */
+  screenshot: File | null;
+  /** Picked and pasted files, in the order they were added; at most `maxAttachments`. */
+  attachments: File[];
+}
+
+interface FeedbackDialogBaseProps {
+  open: boolean;
+  onClose: () => void;
+  categories: FeedbackCategoryOption[];
+  category: string;
+  onCategoryChange: (value: string) => void;
+  /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
+   *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
+  labels?: Partial<FeedbackDialogLabels>;
+  submitting?: boolean;
+  contextSlot?: ReactNode;
+  attachmentAccept?: string[];
+  maxAttachmentBytes?: number;
+  /**
+   * Optional: capture a screenshot of the underlying app view and return it as a
+   * File. When provided, a "Capture screenshot" button is shown next to "Add
+   * attachment"; the returned file is fed through the same validation + preview.
+   */
+  onCaptureScreenshot?: () => Promise<File | null>;
+  /**
+   * `false`: a report with only a subject can be sent, and the body's label says it is
+   * optional (`bodyOptional`, unless `labels.body` is passed). Default `true`, the
+   * dialog's behaviour until 0.14.2 (keksdose K1: its backend takes title-only reports).
+   */
+  requireBody?: boolean;
+}
+
+/** One attachment — a screenshot, a picked or a pasted image; a second replaces
+ *  nothing, it has to wait for the first to be removed. The default. */
+export interface FeedbackDialogSingleProps extends FeedbackDialogBaseProps {
+  attachments?: "single";
+  onSubmit: (data: FeedbackSubmission) => void | Promise<void>;
+  onAttachmentError?: (kind: "type" | "size") => void;
+  /** Multiple mode only — refused here rather than silently ignored. */
+  maxAttachments?: never;
+}
+
+/**
+ * One screenshot plus up to `maxAttachments` picked or pasted files (0.15.5, keksdose
+ * dev#578: "pasted two photos, the second overwrote the first"). The capture button is
+ * offered while there is no screenshot yet; the add button while there is room.
+ */
+export interface FeedbackDialogMultipleProps extends FeedbackDialogBaseProps {
+  attachments: "multiple";
+  /** Default `DEFAULT_MAX_ATTACHMENTS` (5). The screenshot does not count. */
+  maxAttachments?: number;
+  onSubmit: (data: FeedbackMultipleSubmission) => void | Promise<void>;
+  /** `"count"`: more files arrived at once than there was room for; the surplus was dropped. */
+  onAttachmentError?: (kind: FeedbackAttachmentError) => void;
+}
+
+export type FeedbackDialogProps = FeedbackDialogSingleProps | FeedbackDialogMultipleProps;
 
 /**
  * The generic feedback form dialog: category + subject + body + an optional image
@@ -97,58 +181,46 @@ export interface FeedbackSubmission {
  * or one region of one, had to save a crop to disk first and then find it again
  * (Steering Design feedback #39). The clipboard is where a region snip already
  * is on every platform.
+ *
+ * **`attachments="multiple"`** (0.15.5) takes several: every paste and pick adds a
+ * chip, and `onSubmit` gets `{ screenshot, attachments }` ({@link
+ * FeedbackMultipleSubmission}) instead of `attachment`. Opt-in, so a caller typed
+ * against the one-file submission keeps compiling and behaving as before.
  */
-export function FeedbackDialog({
-  open,
-  onClose,
-  categories,
-  category,
-  onCategoryChange,
-  labels: labelsProp,
-  onSubmit,
-  submitting = false,
-  contextSlot,
-  attachmentAccept = DEFAULT_ATTACHMENT_ACCEPT,
-  maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
-  onAttachmentError,
-  onCaptureScreenshot,
-  requireBody = true,
-}: {
-  open: boolean;
-  onClose: () => void;
-  categories: FeedbackCategoryOption[];
-  category: string;
-  onCategoryChange: (value: string) => void;
-  /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
-   *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
-  labels?: Partial<FeedbackDialogLabels>;
-  onSubmit: (data: FeedbackSubmission) => void | Promise<void>;
-  submitting?: boolean;
-  contextSlot?: ReactNode;
-  attachmentAccept?: string[];
-  maxAttachmentBytes?: number;
-  onAttachmentError?: (kind: "type" | "size") => void;
-  /**
-   * Optional: capture a screenshot of the underlying app view and return it as a
-   * File. When provided, a "Capture screenshot" button is shown next to "Add
-   * attachment"; the returned file is fed through the same validation + preview.
-   */
-  onCaptureScreenshot?: () => Promise<File | null>;
-  /**
-   * `false`: a report with only a subject can be sent, and the body's label says it is
-   * optional (`bodyOptional`, unless `labels.body` is passed). Default `true`, the
-   * dialog's behaviour until 0.14.2 (keksdose K1: its backend takes title-only reports).
-   */
-  requireBody?: boolean;
-}) {
+export function FeedbackDialog(props: FeedbackDialogProps) {
+  const {
+    open,
+    onClose,
+    categories,
+    category,
+    onCategoryChange,
+    labels: labelsProp,
+    submitting = false,
+    contextSlot,
+    attachmentAccept = DEFAULT_ATTACHMENT_ACCEPT,
+    maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
+    onCaptureScreenshot,
+    requireBody = true,
+  } = props;
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
+  // `attachments="multiple"` only: the capture, apart from the picked/pasted files.
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const isMobile = useMediaQuery(PHONE_QUERY, false);
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   // The attachment field resolves its own keys from `feedbackAttachment`; it gets the
   // prop's (so a caller's `attachmentAdd` still wins) plus the resolved heading.
-  const attachmentLabels = { ...labelsProp, attachment: labels.attachment };
+  // Under `multiple` the heading is `attachments` — a screenshot AND photos — unless the
+  // caller named the multiple heading themselves.
+  const attachmentLabels = {
+    ...labelsProp,
+    attachment:
+      props.attachments === "multiple"
+        ? (labels.attachments ?? DEFAULT_FEEDBACK_DIALOG_LABELS.attachments)
+        : labels.attachment,
+  };
 
   // Reset the form whenever the dialog is (re)opened — during render, on the
   // closed-to-open transition, so the old draft never paints for a frame.
@@ -159,6 +231,8 @@ export function FeedbackDialog({
       setTitle("");
       setBody("");
       setAttachment(null);
+      setScreenshot(null);
+      setFiles([]);
     }
   }
 
@@ -166,7 +240,12 @@ export function FeedbackDialog({
   // with a 422, and a blank report is no report).
   const canSubmit = !!title.trim() && (!requireBody || !!body.trim()) && !submitting;
   const trySubmit = () => {
-    if (canSubmit) void onSubmit({ title, body, category, attachment });
+    if (!canSubmit) return;
+    if (props.attachments === "multiple") {
+      void props.onSubmit({ title, body, category, screenshot, attachments: files });
+    } else {
+      void props.onSubmit({ title, body, category, attachment });
+    }
   };
 
   if (!open) return null;
@@ -194,22 +273,40 @@ export function FeedbackDialog({
       onChange={(e) => setBody(e.target.value)}
     />
   );
-  const attachmentField = (
-    <FeedbackAttachmentField
-      value={attachment}
-      onChange={setAttachment}
-      labels={attachmentLabels}
-      accept={attachmentAccept}
-      maxBytes={maxAttachmentBytes}
-      onError={onAttachmentError}
-      onCaptureScreenshot={onCaptureScreenshot}
-      // On `document`, not on the panel: the Modal focuses its own panel on open
-      // and traps Tab inside it, so while this dialog is up every paste in the
-      // page is meant for it — including the one made with nothing in
-      // particular focused, which never reaches a React `onPaste` on a child.
-      documentPaste={open}
-    />
-  );
+  const fieldProps = {
+    labels: attachmentLabels,
+    accept: attachmentAccept,
+    maxBytes: maxAttachmentBytes,
+    onCaptureScreenshot,
+    // On `document`, not on the panel: the Modal focuses its own panel on open
+    // and traps Tab inside it, so while this dialog is up every paste in the
+    // page is meant for it — including the one made with nothing in
+    // particular focused, which never reaches a React `onPaste` on a child.
+    documentPaste: open,
+  };
+  const attachmentField =
+    props.attachments === "multiple" ? (
+      <FeedbackAttachmentField
+        {...fieldProps}
+        multiple
+        value={files}
+        onChange={setFiles}
+        max={props.maxAttachments}
+        // The capture goes to its own slot, so it is offered once and never crowds
+        // out a photo; a paste is a photo (a region snip is chosen evidence, not "the
+        // screenshot").
+        screenshot={screenshot}
+        onScreenshotChange={setScreenshot}
+        onError={props.onAttachmentError}
+      />
+    ) : (
+      <FeedbackAttachmentField
+        {...fieldProps}
+        value={attachment}
+        onChange={setAttachment}
+        onError={props.onAttachmentError}
+      />
+    );
 
   return (
     <Modal

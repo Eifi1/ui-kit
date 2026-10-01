@@ -20,6 +20,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       attachmentCapture: "Képernyőkép készítése",
       attachmentPaste: "…vagy illesszen be egy képernyőképet a vágólapról.",
       attachmentRemove: "Melléklet eltávolítása",
+      attachmentList: "Mellékletek",
+      attachmentRemoveFile: (name) => `${name} eltávolítása`,
+      attachmentLimit: (max) => `Legfeljebb ${n(max)} melléklet – egy újabbhoz távolítson el egyet.`,
     },
     feedbackDialog: {
       title: "Visszajelzés küldése",
@@ -28,6 +31,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       body: "Mi történt?",
       bodyOptional: "Mi történt? (nem kötelező)",
       attachment: "Képernyőkép",
+      attachments: "Mellékletek",
       submitHint: "Ctrl/⌘ + Enter a küldéshez",
       cancel: "Mégse",
       save: "Küldés",
