@@ -110,6 +110,7 @@ const FeedbackInbox = lazySection(() => import("./sections/feedback-inbox"), "Fe
 const Wizard = lazySection(() => import("./sections/wizard"), "Wizard");
 const GuidedTour = lazySection(() => import("./sections/tour"), "GuidedTour");
 const CommandPaletteDemo = lazySection(() => import("./sections/command-palette-demo"), "CommandPaletteDemo");
+const Search017Demo = lazySection(() => import("./sections/search-017-demo"), "Search017Demo");
 const SwipeableRowDemo = lazySection(() => import("./sections/swipeable-row-demo"), "SwipeableRowDemo");
 const HooksLib = lazySection(() => import("./sections/hooks-lib"), "HooksLib");
 const Helpers = lazySection(() => import("./sections/helpers"), "Helpers");
@@ -165,20 +166,26 @@ const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo"
 const Links013Demo = lazySection(() => import("./sections/links-013-demo"), "Links013Demo");
 const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "Buttons012");
 const Surfaces016Demo = lazySection(() => import("./sections/surfaces-016-demo"), "Surfaces016Demo");
+const Surfaces017Demo = lazySection(() => import("./sections/surfaces-017-demo"), "Surfaces017Demo");
 const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
 const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
 const Forms013Demo = lazySection(() => import("./sections/forms-013-demo"), "Forms013Demo");
 const Forms0142Demo = lazySection(() => import("./sections/forms-0142-demo"), "Forms0142Demo");
 const LineItems016Demo = lazySection(() => import("./sections/line-items-016-demo"), "LineItems016Demo");
+const LineItemsJournal017Demo = lazySection(() => import("./sections/line-items-017-demo"), "LineItemsJournal017Demo");
+const LineItemsSplit017Demo = lazySection(() => import("./sections/line-items-017-demo"), "LineItemsSplit017Demo");
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
 const TableStackDemo = lazySection(() => import("./sections/table-012-demo"), "TableStackDemo");
 const DataTableActionsDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableActionsDemo");
 const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableUrlFiltersDemo");
+const DataTableTotalsDemo = lazySection(() => import("./sections/data-table-017-demo"), "DataTableTotalsDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
 const Signals016Demo = lazySection(() => import("./sections/signals-016-demo"), "Signals016Demo");
+const Signals017Demo = lazySection(() => import("./sections/signals-017-demo"), "Signals017Demo");
+const FormActions017Demo = lazySection(() => import("./sections/signals-017-demo"), "FormActions017Demo");
 const FormActions016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "FormActions016Demo");
 const LoadingState016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "LoadingState016Demo");
 const Media016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Media016Demo");
@@ -365,7 +372,10 @@ export const GROUPS: ShowcaseGroup[] = [
             <Forms013Demo />
             <Forms0142Demo />
             <LineItems016Demo />
+            <LineItemsJournal017Demo />
+            <LineItemsSplit017Demo />
             <FormActions016Demo />
+            <FormActions017Demo />
           </>
         ),
       },
@@ -590,6 +600,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <IconButtonDisabledReasonDemo />
             <Buttons012 />
             <Surfaces016Demo />
+            <Surfaces017Demo />
           </>
         ),
       },
@@ -693,6 +704,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <DataTableSection />
             <DataTableActionsDemo />
+            <DataTableTotalsDemo />
           </>
         ),
       },
@@ -918,7 +930,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The ⌘K palette: a searchable list of places and actions, opened by the shortcut anywhere on the page, with results that can arrive late.",
         icon: Command,
         components: ["CommandPalette", "useCommandKey"],
-        Body: CommandPaletteDemo,
+        Body: () => (
+          <>
+            <CommandPaletteDemo />
+            <Search017Demo />
+          </>
+        ),
       },
       {
         slug: "swipeable-row",
@@ -1113,6 +1130,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FormattingDemo />
             <Signals016Demo />
+            <Signals017Demo />
           </>
         ),
       },
