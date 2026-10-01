@@ -46,7 +46,7 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
   ghost:
     "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus:ring-[var(--brand)]",
   danger:
-    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus:ring-[var(--danger-border)]",
+    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus:ring-[var(--danger-border-strong)]",
   brand:
     "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus:ring-[var(--brand)]",
   // A text link that is still a `<button>` — keksdose's six hand-rolled
@@ -92,7 +92,7 @@ const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
   muted:
     "text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:hover:text-[var(--text-secondary)]",
   danger:
-    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)] disabled:hover:text-[var(--text-secondary)]",
+    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus:ring-[var(--danger-border-strong)] disabled:hover:text-[var(--text-secondary)]",
 };
 
 /** Only the two transparent variants take every tone; see {@link ButtonTone}. */
@@ -103,9 +103,9 @@ const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
 // the neutral ones survives the merge.
 const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
   secondary:
-    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border)]",
+    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border-strong)]",
   primary:
-    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus:ring-[var(--danger-border)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
+    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus:ring-[var(--danger-border-strong)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
 };
 
 // `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
@@ -543,8 +543,8 @@ type ColouredTone = "danger" | "warning" | "info" | "success" | "custom";
 const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
   danger: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border)]",
-    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border-strong)]",
+    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border-strong)]",
   },
   warning: {
     quiet:
@@ -1250,7 +1250,7 @@ export const FIELD_FLOATING_PAD = "pt-4 pb-1";
 // stays exactly the size of a valid one and nothing beside it moves when the value
 // arrives.
 export const FIELD_INVALID =
-  "border-[var(--danger-border)] ring-1 ring-[var(--danger-border)] focus:border-[var(--danger)] focus:ring-[var(--danger)]";
+  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] focus:border-[var(--danger)] focus:ring-[var(--danger)]";
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 

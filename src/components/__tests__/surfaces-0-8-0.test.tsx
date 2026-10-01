@@ -88,7 +88,7 @@ describe("AlertBanner 0.8.0", () => {
     const box = screen.getByTestId("b");
     expect(box.tagName).toBe("DIV");
     expect(box).not.toHaveAttribute("role");
-    expect(box.className).toContain("border-[var(--danger-border)]");
+    expect(box.className).toContain("border-[var(--danger-border-strong)]");
   });
 
   it("onDismiss renders a labelled × that calls it", () => {

@@ -28,7 +28,7 @@ export type AlertSize = "sm" | "md";
  * at any offset. Callers compensate the extra pixel in their own padding so
  * switching tones never shifts the layout. */
 const TONE_FRAME: Record<AlertTone, string> = {
-  danger: "border-2 border-[var(--danger-border)] bg-[var(--danger-bg)]",
+  danger: "border-2 border-[var(--danger-border-strong)] bg-[var(--danger-bg)]",
   warning: "border-2 border-[var(--warning-border)] bg-[var(--warning-bg)]",
   info: "border-2 border-[var(--info-border)] bg-[var(--info-bg)]",
   success: "border-2 border-[var(--success-border)] bg-[var(--success-bg)]",

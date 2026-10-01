@@ -191,6 +191,10 @@
   --danger-hover: #9f1239;        /* rose-800 */
   --danger-contrast: #ffffff;
   --danger-border: #fb7185;       /* rose-400 */
+  /* The error LINE: an invalid field, a failed upload, a danger banner's frame, a focus
+     ring on a destructive control. Equal to the border in light mode; in dark the tone
+     border is soft like its siblings and this one stays loud (WCAG 1.4.11's 3:1). */
+  --danger-border-strong: #fb7185; /* rose-400 */
   --danger-bg: #fff1f2;           /* rose-50 */
 
   --warning: #b45309;             /* amber-700 */
@@ -217,7 +221,11 @@
   --danger: #fda4af;              /* rose-300 */
   --danger-hover: #fecdd3;        /* rose-200 */
   --danger-contrast: #4c0519;     /* rose-950 */
-  --danger-border: #e11d48;       /* rose-600 */
+  /* The tone family's recipe — hue at 0.6 alpha, as warning/info/success below — so a
+     soft danger Chip sits in the same weight of frame as its siblings (keksdose dev
+     #576: FAILED was visibly louder than READY and NEEDS REVIEW in dark mode). */
+  --danger-border: rgba(190, 18, 60, 0.6); /* rose-700 at the family's alpha */
+  --danger-border-strong: #e11d48; /* rose-600 */
   --danger-bg: rgba(136, 19, 55, 0.2);
 
   --warning: #fcd34d;             /* amber-300 */

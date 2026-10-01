@@ -339,7 +339,7 @@ export function FileDropzone({
               : dragOver
                 ? "cursor-pointer border-[var(--border-strong)] bg-[var(--bg-active)]"
                 : showError
-                  ? "cursor-pointer border-[var(--danger-border)]"
+                  ? "cursor-pointer border-[var(--danger-border-strong)]"
                   : "cursor-pointer border-[var(--border)] hover:border-[var(--border-strong)]",
           className,
         )}

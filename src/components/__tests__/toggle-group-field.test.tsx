@@ -63,7 +63,7 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
     const group = screen.getByRole("radiogroup", { name: "Direction" });
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Pick one");
-    expect(group.parentElement!.className).toContain("border-[var(--danger-border)]");
+    expect(group.parentElement!.className).toContain("border-[var(--danger-border-strong)]");
   });
 
   it("lets an explicit aria-label name the group instead", () => {
