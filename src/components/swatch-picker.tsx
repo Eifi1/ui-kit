@@ -21,7 +21,9 @@ export interface SwatchOption<T extends string> {
   value: T;
   /** Any CSS colour — a token (`var(--chart-3)`), a hex, an `oklch()`. Painted as an
    *  inline background, so it does not have to be a class the kit's CSS knows.
-   *  Leave it out when `swatchClassName` paints the dot instead. */
+   *  Leave it out when `swatchClassName` paints the dot instead. For a colour that
+   *  must match a `StatusDot` / `Chip` hue elsewhere, `statusDotColor("teal")` rather
+   *  than `"var(--hue-teal)"` written out — one table, so the two cannot drift. */
   color?: string;
   /** The colour's name, in the user's language. Shown in the bubble and read out;
    *  required, because a swatch with no name is a colour only some people can read. */

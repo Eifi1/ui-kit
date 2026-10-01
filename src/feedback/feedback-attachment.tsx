@@ -1,5 +1,5 @@
 import { cn } from "../lib/cn";
-import { useEffect, useRef, useState, type ClipboardEvent as ReactClipboardEvent, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent as ReactClipboardEvent, type RefObject } from "react";
 import { Camera, FileText, Paperclip, X } from "lucide-react";
 import { Button } from "../components/ui";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
@@ -23,15 +23,21 @@ export const DEFAULT_MAX_ATTACHMENTS = 5;
  * that relied on its provider got "Capture screenshot" under a German form.
  *
  * The three keys added in 0.15.5 for `multiple` mode are optional, so a complete
- * `UiKitLabels` typed before it still compiles; they fall back to English.
+ * `UiKitLabels` typed before it still compiles; they fall back to English. So is
+ * `attachmentScreenshot` (0.16.0).
  */
 export interface FeedbackAttachmentFieldLabels {
   attachmentAdd: string;
   attachmentCapture: string;
   attachmentPaste: string;
   attachmentRemove: string;
-  /** `multiple` mode: the accessible name of the list of chosen files. */
+  /** `multiple` mode: the accessible name of the list of chosen files — and, since
+   *  0.16.0, the heading `<FeedbackDialog attachments="multiple">` puts over it. */
   attachmentList?: string;
+  /** `multiple` mode (0.16.0): what the screenshot slot's chip is called — "Screenshot"
+   *  rather than the capture's file name ("screenshot.webp"), which says nothing a
+   *  reporter chose. The file name stays as the chip's second line. */
+  attachmentScreenshot?: string;
   /** `multiple` mode: one chip's remove button — "Remove photo.jpg". Named per file,
    *  because five buttons all called "Remove attachment" say nothing about which. */
   attachmentRemoveFile?: (name: string) => string;
@@ -45,6 +51,7 @@ export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels =
   attachmentPaste: "…or paste a screenshot from the clipboard.",
   attachmentRemove: "Remove attachment",
   attachmentList: "Attachments",
+  attachmentScreenshot: "Screenshot",
   attachmentRemoveFile: (name) => `Remove ${name}`,
   attachmentLimit: (max) =>
     `Up to ${max} ${max === 1 ? "attachment" : "attachments"} — remove one to add another.`,
@@ -300,6 +307,23 @@ function MultipleField({
   const text = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   const removeLabel = text.attachmentRemoveFile ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentRemoveFile!;
   const limitLabel = text.attachmentLimit ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentLimit!;
+  const screenshotLabel = text.attachmentScreenshot ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentScreenshot!;
+
+  // What an add or a remove builds on: the `value` prop, plus whatever this field has
+  // already handed to `onChange` since the parent last rendered. The field is
+  // controlled, so between an `onChange` and the re-render that brings it back, `value`
+  // is stale — and two adds in that gap (two pastes, a paste and a pick, delivered by
+  // native listeners whose updates React batches) each spread the SAME old list, and
+  // the second dropped the first. Re-synced to the prop after every commit, so a
+  // parent that refuses a change (or edits the list itself) is what wins.
+  const latest = useRef(value);
+  useLayoutEffect(() => {
+    latest.current = value;
+  });
+  const commit = (next: File[]) => {
+    latest.current = next;
+    onChange(next);
+  };
 
   const hasSlot = onScreenshotChange !== undefined;
   const room = Math.max(0, max - value.length);
@@ -308,8 +332,9 @@ function MultipleField({
   const canCapture = !!onCaptureScreenshot && (hasSlot ? !screenshot : room > 0);
 
   const add = (incoming: File[], pasted = false) => {
+    const current = latest.current;
     const accepted: File[] = [];
-    const taken = new Set([...value, ...(screenshot ? [screenshot] : [])].map((f) => f.name));
+    const taken = new Set([...current, ...(screenshot ? [screenshot] : [])].map((f) => f.name));
     for (const raw of incoming) {
       const problem = rejection(raw, accept, maxBytes);
       if (problem) {
@@ -322,12 +347,13 @@ function MultipleField({
       const file = pasted ? renamed(raw, uniqueName(pastedName(raw.type), taken)) : raw;
       taken.add(file.name);
       // The same File object twice is one file chosen twice, not two.
-      if (!value.includes(file)) accepted.push(file);
+      if (!current.includes(file)) accepted.push(file);
     }
     if (accepted.length === 0) return;
-    if (accepted.length > room) onError?.("count");
-    const kept = accepted.slice(0, room);
-    if (kept.length > 0) onChange([...value, ...kept]);
+    const space = Math.max(0, max - current.length);
+    if (accepted.length > space) onError?.("count");
+    const kept = accepted.slice(0, space);
+    if (kept.length > 0) commit([...current, ...kept]);
   };
 
   const onPaste = usePaste((images) => add(images, true), documentPaste, pasteFrom);
@@ -360,14 +386,15 @@ function MultipleField({
     target?.focus();
   }, [value, screenshot]);
 
-  const chips: Array<{ file: File; screenshot: boolean; remove: () => void }> = [
+  const chips: Array<{ file: File; screenshot: boolean; name: string; remove: () => void }> = [
     ...(hasSlot && screenshot
-      ? [{ file: screenshot, screenshot: true, remove: () => onScreenshotChange(null) }]
+      ? [{ file: screenshot, screenshot: true, name: screenshotLabel, remove: () => onScreenshotChange(null) }]
       : []),
     ...value.map((file) => ({
       file,
       screenshot: false,
-      remove: () => onChange(value.filter((f) => f !== file)),
+      name: file.name,
+      remove: () => commit(latest.current.filter((f) => f !== file)),
     })),
   ];
 
@@ -386,8 +413,12 @@ function MultipleField({
             >
               <ChipPreview file={chip.file} screenshot={chip.screenshot} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-[var(--text-secondary)]">{chip.file.name}</div>
-                <div className="text-xs text-[var(--text-muted)]">{fileText.size(chip.file.size)}</div>
+                <div className="truncate text-sm text-[var(--text-secondary)]">{chip.name}</div>
+                <div className="truncate text-xs text-[var(--text-muted)]">
+                  {/* The screenshot's file name moves down here: still there for the
+                      reporter who wants to know what will be sent, not its title. */}
+                  {chip.screenshot ? `${chip.file.name} · ${fileText.size(chip.file.size)}` : fileText.size(chip.file.size)}
+                </div>
               </div>
               <button
                 type="button"
@@ -396,7 +427,7 @@ function MultipleField({
                   pendingFocus.current = index;
                   chip.remove();
                 }}
-                aria-label={removeLabel(chip.file.name)}
+                aria-label={removeLabel(chip.name)}
                 className="shrink-0 rounded p-1.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
               >
                 <X className="size-4" />

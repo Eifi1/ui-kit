@@ -20,6 +20,20 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.16.0](https://github.com/Eifi1/ui-kit/compare/v0.15.5...v0.16.0) (2026-10-01)
+
+### Added
+
+* **forms:** FormActions start/submitProps/submitIcon/stickyWithin; LoadingState; small fields ([34cae07](https://github.com/Eifi1/ui-kit/commit/34cae071e3b71f710cfc79b73dfaa0cb2bee06e1))
+* **line-items:** a toned summary with an action, floating labels, two fields a row on phones ([a93e685](https://github.com/Eifi1/ui-kit/commit/a93e685f4643d02779f60c42382d61d8a27d7239))
+* **list:** ListItem content, overline, metaWrap, renderRow, trailingTone, expandable rows ([410bbfc](https://github.com/Eifi1/ui-kit/commit/410bbfc8612befbda4a0e68d0f971a1bbb4ea4e5))
+* **signals:** Delta money palette and flat band; statusDotColor; signed legend values ([cb21a99](https://github.com/Eifi1/ui-kit/commit/cb21a99538a1ffa10d100181563d6c5607bf3274))
+
+### Fixed
+
+* **card,stat-tile,icon-button:** parts follow Card padding; StatTile variants; IconButton pending ([8823fa1](https://github.com/Eifi1/ui-kit/commit/8823fa1f291b00fc54211e6edc996ab16762ea53))
+* **feedback,passkeys,table:** two adds in one tick; screenshot chip; refs on Table parts ([553602f](https://github.com/Eifi1/ui-kit/commit/553602f518cd700c84cb3b4b6556bc2d9607ac4f))
+
 ## [0.15.5](https://github.com/Eifi1/ui-kit/compare/v0.15.4...v0.15.5) (2026-10-01)
 
 ### Added

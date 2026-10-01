@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-select";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
 import { currencyMinorDigits } from "../lib/format";
 import { useMediaQuery } from "../hooks/use-media-query";
@@ -48,6 +48,13 @@ interface AmountInputProps {
   "aria-describedby"?: string;
   "aria-invalid"?: boolean | "true" | "false";
   "aria-required"?: boolean | "true" | "false";
+  /** {@link NumberInput}'s `hint`, the same rule: a {@link FieldHint} "?" rides the
+   *  label's own line, beside the label (not at the far end, where the calculator and
+   *  the currency chip live); plain TEXT (a string or a number) is a caption UNDER
+   *  the field, attached through `aria-describedby` after the caller's own. A phone's
+   *  `variant="display"` has no visible label, so a FieldHint is dropped there; a
+   *  caption still shows. */
+  hint?: ReactNode;
   /** Every user-facing string this component and the two it composes own, so a
    *  translating host can supply its own. Each key optional, and each a per-field
    *  override of the kit-wide translation in `<UiKitProvider labels>`: `currency`
@@ -296,9 +303,13 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
+    const hintId = useId();
+    // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
+    const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
+    const describedBy = textHint ? (ariaDescribedBy ? `${ariaDescribedBy} ${hintId}` : hintId) : ariaDescribedBy;
     const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
     const editable = !!onCurrencyChange;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
@@ -454,8 +465,17 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       <div ref={wrapperRef} className={cn("w-full", className)}>
         {/* Inner relative box holds the input + its absolutely-positioned
             trailing controls (calculator / currency), so those stay anchored to
-            the INPUT even when the mobile math bar is rendered below (#334). */}
-        <div className="relative w-full">
+            the INPUT even when the mobile math bar is rendered below (#334). It is
+            the kit's FloatingField, which draws the label — floating, or sr-only in
+            the display shape — and puts a FieldHint on the label's line, as it does
+            for NumberInput. */}
+        <FloatingField
+          className="w-full"
+          htmlFor={fieldId}
+          label={label}
+          srOnlyLabel={asDisplay}
+          hint={textHint ? undefined : hint}
+        >
         <input
           ref={setRefs}
           id={fieldId}
@@ -513,18 +533,15 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             invalid && FIELD_INVALID,
           )}
           aria-invalid={invalid || undefined}
-          aria-describedby={ariaDescribedBy}
+          aria-describedby={describedBy}
           aria-required={ariaRequired}
         />
-        {label !== undefined && (
-          // The display shape drops the label VISUALLY, not from the accessibility
-          // tree: a 36px tinted figure at the top of a transaction form is legibly
-          // the amount, but a screen reader still needs the name, and callers that
-          // pass `label` without `ariaLabel` would otherwise be left with none.
-          <label htmlFor={fieldId} className={asDisplay ? "sr-only" : FLOATING_LABEL_CLASS}>
-            {label}
-          </label>
-        )}
+        {/* The label is FloatingField's, after these children (the floating trick
+            reads the input through `peer-*`). The display shape drops it VISUALLY,
+            not from the accessibility tree: a 36px tinted figure at the top of a
+            transaction form is legibly the amount, but a screen reader still needs
+            the name, and callers that pass `label` without `ariaLabel` would
+            otherwise be left with none. */}
         {/* Trailing controls share one flex track so the calculator icon and the
             currency suffix/picker sit side by side without overlapping. */}
         {/* The display shape has no box to inset from, so the controls align to the
@@ -627,7 +644,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               })}
           </DropdownPanel>
         )}
-        </div>
+        </FloatingField>
+        {/* Outside the relative box, as NumberInput's caption is: the trailing
+            controls are `inset-y-1` in it and would stretch down over a second line. */}
+        {textHint && (
+          <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+            {hint}
+          </p>
+        )}
         {showNumpad && (
           <NumberPadSheet
             // Localised like the field it mirrors. Keys are typing, read by the

@@ -6,6 +6,7 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { useKitLabels } from "../i18n/kit-labels";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
+  DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
   DEFAULT_MAX_ATTACHMENT_BYTES,
   FeedbackAttachmentField,
   type FeedbackAttachmentError,
@@ -28,9 +29,13 @@ export interface FeedbackAttachmentLabels {
    *  straight in. Optional — falls back to the provider's `feedbackAttachment`, then English. */
   attachmentPaste?: string;
   attachmentRemove: string;
-  /** `multiple` mode (0.15.5): the chip list's accessible name. Optional, as are the
-   *  two below — they fall back to the provider's `feedbackAttachment`, then English. */
+  /** `multiple` mode (0.15.5): the chip list's accessible name — and, in
+   *  `<FeedbackDialog attachments="multiple">`, the heading over it (0.16.0). Optional,
+   *  as are the keys below — they fall back to the provider's `feedbackAttachment`,
+   *  then English. */
   attachmentList?: string;
+  /** `multiple` mode (0.16.0): the screenshot slot's chip title, in place of its file name. */
+  attachmentScreenshot?: string;
   /** `multiple` mode: one chip's remove button, given the file's name. */
   attachmentRemoveFile?: (name: string) => string;
   /** `multiple` mode: the line shown once `max` files are attached. */
@@ -46,8 +51,9 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
   submitHint: string;
   cancel: string;
   save: string;
-  /** The heading over the attachments under `attachments="multiple"` (0.15.5), where
-   *  they are a screenshot AND photos. Optional; falls back to the provider, then English. */
+  /** @deprecated since 0.16.0 — use `attachmentList`, the one key for the heading and
+   *  the chip list it names. Still honoured: set, it wins over the provider's
+   *  `attachmentList` (but not over an `attachmentList` passed beside it). */
   attachments?: string;
 }
 
@@ -73,8 +79,10 @@ export interface FeedbackDialogTextLabels {
   submitHint: string;
   cancel: string;
   save: string;
-  /** The heading over the attachments under `attachments="multiple"` (0.15.5).
-   *  Optional, so a complete `UiKitLabels` typed before 0.15.5 still compiles. */
+  /** @deprecated since 0.16.0 — use `feedbackAttachment.attachmentList`. It and this
+   *  key were two names for one heading ("Attachments" over the chips that list names
+   *  "Attachments"), and a catalogue that translated one left the other English. Still
+   *  honoured when set: it wins over `feedbackAttachment.attachmentList`. */
   attachments?: string;
 }
 
@@ -85,7 +93,8 @@ export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   body: "What happened?",
   bodyOptional: "What happened? (optional)",
   attachment: "Screenshot",
-  attachments: "Attachments",
+  // No `attachments`: the multiple-mode heading is `feedbackAttachment.attachmentList`,
+  // and a default here would shadow a provider that translated only that one.
   submitHint: "Ctrl/⌘ + Enter to send",
   cancel: "Cancel",
   save: "Send",
@@ -210,17 +219,23 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const [files, setFiles] = useState<File[]>([]);
   const isMobile = useMediaQuery(PHONE_QUERY, false);
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
+  const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
+  // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which
+  // also names the chip list beneath it: one string, so the two cannot disagree. The
+  // deprecated `feedbackDialog.attachments` (prop or provider) still wins over the
+  // provider's `attachmentList`, as it did before 0.16.0; an `attachmentList` prop wins
+  // over both.
+  const listHeading =
+    labelsProp?.attachmentList ??
+    labels.attachments ??
+    attachmentText.attachmentList ??
+    DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentList!;
   // The attachment field resolves its own keys from `feedbackAttachment`; it gets the
   // prop's (so a caller's `attachmentAdd` still wins) plus the resolved heading.
-  // Under `multiple` the heading is `attachments` — a screenshot AND photos — unless the
-  // caller named the multiple heading themselves.
-  const attachmentLabels = {
-    ...labelsProp,
-    attachment:
-      props.attachments === "multiple"
-        ? (labels.attachments ?? DEFAULT_FEEDBACK_DIALOG_LABELS.attachments)
-        : labels.attachment,
-  };
+  const attachmentLabels =
+    props.attachments === "multiple"
+      ? { ...labelsProp, attachment: listHeading, attachmentList: listHeading }
+      : { ...labelsProp, attachment: labels.attachment };
 
   // Reset the form whenever the dialog is (re)opened — during render, on the
   // closed-to-open transition, so the old draft never paints for a frame.

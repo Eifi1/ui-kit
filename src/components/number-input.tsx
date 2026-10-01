@@ -195,6 +195,14 @@ export function NumberInput({
   const endRef = useRef<HTMLDivElement>(null);
   const [endWidth, setEndWidth] = useState<number | null>(null);
   const hasEnd = showCalc || suffix !== undefined;
+  // Before the first measurement (and wherever there is no layout), a TEXT unit
+  // reserves an estimate from its length — one `ch` a character, in the input's own
+  // (larger) font, so it errs wide — plus the span's `pe-2` and the 4px gap, and the
+  // calculator's 36px. The class fallback's flat pe-8 gave a "%" 32px for a frame and
+  // "km/h" too little.
+  const suffixChars = typeof suffix === "string" || typeof suffix === "number" ? String(suffix).length : null;
+  const estimatedEnd =
+    suffixChars !== null ? `calc(${suffixChars}ch + 0.75rem${showCalc ? " + 2.25rem" : ""})` : undefined;
   useLayoutEffect(() => {
     const el = endRef.current;
     if (!hasEnd || !el || typeof ResizeObserver === "undefined") return;
@@ -291,7 +299,13 @@ export function NumberInput({
         // field reserves exactly their width (+4px). A fixed pe-8 for any unit left a
         // "%" in a ~78px table cell 32px of padding and the digits ~32px of room
         // (keksdose live #367); a long unit ("km/h") got too little.
-        style={hasEnd && endWidth != null ? { paddingInlineEnd: endWidth + 4 } : undefined}
+        style={
+          hasEnd && endWidth != null
+            ? { paddingInlineEnd: endWidth + 4 }
+            : estimatedEnd !== undefined
+              ? { paddingInlineEnd: estimatedEnd }
+              : undefined
+        }
       />
       {(showCalc || suffix !== undefined) && (
         // One flex track for both, so the unit and the calculator sit side by side
@@ -310,7 +324,9 @@ export function NumberInput({
           {suffix !== undefined && (
             <span
               aria-hidden
-              className="pointer-events-none pe-3 text-xs font-medium text-[var(--text-muted)]"
+              // pe-2, not the input's px-3: the unit is chrome at the box's edge, and
+              // with pe-3 plus the 4px gap it took ~26px of a narrow table cell.
+              className="pointer-events-none pe-2 text-xs font-medium text-[var(--text-muted)]"
             >
               {suffix}
             </span>

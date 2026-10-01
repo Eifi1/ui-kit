@@ -81,3 +81,56 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
     expect(screen.getByRole("meter", { name: "Nothing" })).toHaveAttribute("aria-valuenow", "0");
   });
 });
+
+describe("ProgressBar legend: a part's own signed value", () => {
+  it("states a negative part with its sign in the legend and the valuetext, unclamped", () => {
+    render(
+      <ProgressBar
+        segments={[
+          { value: 0.5, label: "Food" },
+          { value: -0.1, label: "Refund" },
+          { value: 1.2, label: "Over", legendOnly: true },
+        ]}
+        max={1}
+        aria-label="Net"
+        legend
+        locale="en-US"
+      />,
+    );
+    const rows = document.querySelectorAll('[data-part="legend"] li');
+    expect(rows[0]).toHaveTextContent("Food50%");
+    expect(rows[1]).toHaveTextContent("Refund-10%");
+    expect(rows[2]).toHaveTextContent("Over120%");
+    expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "Food: 50%, Refund: -10%");
+    // The bar still draws nothing for it.
+    expect(screen.getByRole("meter").querySelectorAll<HTMLElement>('[data-part="segment"]')[1]).toHaveStyle({
+      width: "0%",
+    });
+  });
+
+  it("hands formatValue and legendValue the signed value too", () => {
+    render(
+      <ProgressBar
+        segments={[{ value: -40, label: "Refund" }]}
+        max={100}
+        aria-label="x"
+        legend
+        formatValue={(v) => `${v} CHF`}
+        legendValue={(_seg, text) => `[${text}]`}
+      />,
+    );
+    expect(document.querySelector('[data-part="legend"] li')).toHaveTextContent("[-40 CHF]");
+  });
+});
+
+describe("ProgressBar as=\"span\" (valid inside a button, keksdose P2)", () => {
+  it("builds the bar from spans only", () => {
+    const { container } = render(
+      <button type="button">
+        <ProgressBar as="span" value={40} aria-label="Budget used" />
+      </button>,
+    );
+    expect(container.querySelector("button div")).toBeNull();
+    expect(screen.getByRole("progressbar", { name: "Budget used" }).tagName).toBe("SPAN");
+  });
+});

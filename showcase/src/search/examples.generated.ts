@@ -81,6 +81,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "formatNumber unit — a narrow no-break space before the unit",
     "MoneyField — a number per row",
     "IntegerField — whole numbers",
+    "LineItems — summary, floating field labels, two-up on a phone",
+    "FormActions — start slot, submitIcon and submitProps",
+    "FormActions — sticky inside a scroll container",
   ],
   "choices": [
     "Checkbox — states",
@@ -124,6 +127,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "NumberPadSheet",
     "NumberField — live mode and step keys",
     "NumberInput — step keys",
+    "AmountInput hint, a tighter unit, roundToCurrency fallbackDigits",
   ],
   "calendars": [
     "MiniCalendar — range mode (the default)",
@@ -177,12 +181,14 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FileDropzone — disabled, busy and renderBody",
     "useFileDrop — any element as a drop target",
     "All or nothing — onPick",
+    "FileButton — showFileName",
   ],
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
     "Lightbox — keys, swipe, zoom, download and a PDF card",
     "AuthedImage — a fake fetcher with a delay and an error",
     "useAuthedSrc — status, type and retry",
+    "AuthedImage — errorFallback={null} and stopPropagation",
   ],
   "comboboxes": [
     "Combobox",
@@ -282,6 +288,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Spinner — showLabel and labelPosition",
     "IconButton — glyphSize, badge and disabledStyle",
     "IconButton — size 2xl, variant shutter",
+    "Card — padded card, parts, stacked action",
+    "Card toneStrength, IconButton pending",
+    "Select — FieldHint without a label line",
+    "StatTile variant, StatTileGrid stretch and loading",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -311,6 +321,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Delta at zero",
     "StaticLegend — entry align: \"end\"",
     "BulkActionBar — a link among the actions",
+    "Chip — xs with an icon",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -337,6 +348,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Skeleton — label announces the load once",
     "ErrorBoundary — Retry, details and a fallback of your own",
     "ProgressBar — unlimited, hint, overage and legend values",
+    "LoadingState — hidden label and compact padding",
     "ErrorBoundary 0.13 — the one crash screen",
     "onReport — filed once per page load, the reference on screen",
     "A lazy chunk that did not load — a new version, or offline",
@@ -354,6 +366,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Table — header size and weight, valign on a table of inputs",
     "Table — framed, group, subtotal and total rows, dividers",
     "Table — stack=\"phone\", a table of prose on a phone",
+    "Table parts take a ref",
     "DescriptionItem — placeholder for a missing value",
   ],
   "tree-view": [
@@ -374,6 +387,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "BulkActionBar — floating, count, clear and labels",
     "ListItem — targetProps: the whole row is the drag source",
     "ListItem — bordered, in a wrapping strip",
+    "ListItem — content, overline, trailingTone",
+    "ListItem — metaWrap",
+    "ListItem — renderRow",
+    "ListItem — expandable, with leadingActions",
     "MenuItem — badge beside a long, truncating label",
     "BulkActionBar — panel, open at zero, responsive variant",
   ],
@@ -616,6 +633,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TwoFactorSetting — from an otpauth URI",
     "PasskeysSetting — add, rename, delete, empty, loading, unavailable",
     "Account-settings labels — accountSettings in the provider",
+    "PasskeysSetting — numeric ids, id, data-* and rowProps",
   ],
   "wizard": [
     "Three-step wizard",
@@ -638,6 +656,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "pasteFrom — the field beside the box you paste into",
     "DEFAULT_ATTACHMENT_ACCEPT and DEFAULT_MAX_ATTACHMENT_BYTES",
     "pastedName",
+    "FeedbackAttachmentField multiple — screenshot chip and two adds in one tick",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -697,6 +716,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SignedAmount — sign, tone, arrow and spoken words",
     "Delta — a change, judged or not",
     "Tone and toneTextClass — the kit's text colours",
+    "A price change in the money colours",
+    "A negative part in a ProgressBar legend",
+    "A swatch that matches a status dot",
+    "A legend that is not a list",
   ],
   "url-state": [
     "useSearchParamState — one param as state",

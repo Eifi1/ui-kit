@@ -44,8 +44,18 @@ export interface AuthedImageProps
   link?: boolean;
   /** Replaces the default skeleton while loading. */
   loadingFallback?: ReactNode;
-  /** Replaces the default "couldn't load" tile. */
+  /**
+   * Replaces the default "couldn't load" tile. `null` renders nothing in its place —
+   * an optional photo slot that simply stays empty; only `undefined` (left out) means
+   * the default tile.
+   */
   errorFallback?: ReactNode;
+  /**
+   * Keep a click on the image (and the Enter that follows its `link`) from reaching an
+   * ancestor — a thumbnail in a DataTable row or a clickable card opens itself instead
+   * of also running the row's action. As TextLink's and IconButton's `stopPropagation`.
+   */
+  stopPropagation?: boolean;
   labels?: Partial<AuthedImageLabels>;
 }
 
@@ -68,6 +78,7 @@ export function AuthedImage({
   link,
   loadingFallback,
   errorFallback,
+  stopPropagation,
   labels: labelsProp,
   onLoad,
   onError,
@@ -85,6 +96,7 @@ export function AuthedImage({
       link={link}
       loadingFallback={loadingFallback}
       errorFallback={errorFallback}
+      stopPropagation={stopPropagation}
       imgProps={rest}
       onLoad={onLoad}
       onError={onError}
@@ -106,6 +118,7 @@ export function ImageStates({
   link,
   loadingFallback,
   errorFallback,
+  stopPropagation,
   imgProps,
   onLoad,
   onError,
@@ -118,6 +131,7 @@ export function ImageStates({
   link?: boolean;
   loadingFallback?: ReactNode;
   errorFallback?: ReactNode;
+  stopPropagation?: boolean;
   imgProps?: Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "children" | "onLoad" | "onError">;
   onLoad?: ImgHTMLAttributes<HTMLImageElement>["onLoad"];
   onError?: ImgHTMLAttributes<HTMLImageElement>["onError"];
@@ -153,7 +167,10 @@ export function ImageStates({
   );
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- not an interaction: only fences the image's own clicks off from an ancestor's handler
     <span
+      onClick={stopPropagation ? (e) => e.stopPropagation() : undefined}
+      onKeyDown={stopPropagation ? (e) => e.key === "Enter" && e.stopPropagation() : undefined}
       data-image-state={failed ? "error" : waiting ? "loading" : fetched.status === "idle" ? "idle" : "ready"}
       className={cn("relative block overflow-hidden", wrapperClassName)}
       aria-busy={waiting || undefined}
@@ -172,7 +189,8 @@ export function ImageStates({
           </span>
         ))}
       {failed &&
-        (errorFallback ?? (
+        // `=== undefined`, not `??`: `null` is the caller asking for nothing at all.
+        (errorFallback !== undefined ? errorFallback : (
           <span
             // `role="img"` with the alt as its name: the picture that failed still
             // occupies its place in the reading order, and "couldn't be loaded" is

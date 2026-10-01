@@ -41,3 +41,31 @@ describe("Skeleton label", () => {
     expect(screen.queryByRole("status")).toBeNull();
   });
 });
+
+describe("LoadingState 0.16 (keksdose P5)", () => {
+  it("label={null} hides the words but the region still announces the default", () => {
+    render(<LoadingState label={null} />);
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Loading…");
+    expect(screen.getByText("Loading…")).toHaveClass("sr-only");
+  });
+
+  it('label="" is not a silent region', () => {
+    render(<LoadingState label="" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByText("Loading…")).toHaveClass("sr-only");
+  });
+
+  it('labelVisibility="sr-only" keeps a given label for the reader only', () => {
+    render(<LoadingState label="Loading invoices" labelVisibility="sr-only" />);
+    expect(screen.getByText("Loading invoices")).toHaveClass("sr-only");
+  });
+
+  it("compact is the middle padding step, md unchanged without it", () => {
+    const { rerender } = render(<LoadingState />);
+    expect(screen.getByRole("status")).toHaveClass("py-12");
+    rerender(<LoadingState compact />);
+    expect(screen.getByRole("status")).toHaveClass("py-8");
+    expect(screen.getByText("Loading…")).toHaveClass("text-sm");
+  });
+});

@@ -1,4 +1,4 @@
-import { isValidElement, useId, useLayoutEffect, useState } from "react";
+import { createContext, isValidElement, useContext, useId, useLayoutEffect, useState } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -217,6 +217,16 @@ export interface StatTileProps
   loading?: boolean;
   /** `"sm"` for dense grids (a metrics wall); `"md"` the default KPI. */
   size?: "sm" | "md";
+  /**
+   * The tile's frame. `"card"` (default) is the bordered, shadowed card on the page.
+   * `"inset"` is a tile INSIDE a card: {@link Card}'s `inset` — the raised
+   * `--bg-surface-2`, a small radius, no border or shadow, since the card round it
+   * already has them. `"plain"` drops the frame altogether — no fill and no padding —
+   * for figures set straight into a card's content (a summary row under a card title),
+   * where any box would be a box in a box. keksdose wrote both by hand over the card
+   * tile (`border-0 shadow-none bg-transparent p-0`) for its tiles inside a card.
+   */
+  variant?: "card" | "inset" | "plain";
   /** Makes the tile a link. See {@link renderLink} for a router. */
   href?: string;
   /** Renders the link for `href` — pass your router's `<Link>` here, since a plain
@@ -291,6 +301,7 @@ export function StatTile({
   sensitive = false,
   loading = false,
   size = "md",
+  variant = "card",
   href,
   renderLink,
   onClick,
@@ -299,6 +310,11 @@ export function StatTile({
   ...rest
 }: StatTileProps) {
   const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
+  // A loading StatTileGrid puts every tile in it into the loading state and says
+  // "Loading…" ONCE for all of them; the tile then keeps its own sentence to itself
+  // (see StatTileGrid's `loading`).
+  const gridLoading = useContext(StatTileGridLoadingContext);
+  loading = loading || gridLoading;
   const kitLink = useKitLink();
   const [labelEl, setLabelEl] = useState<HTMLElement | null>(null);
   const labelCut = useIsTruncated(truncateLabel ? labelEl : null);
@@ -398,7 +414,7 @@ export function StatTile({
   const headline = loading ? (
     <span id={valueId} className="relative block py-0.5">
       <span aria-hidden className={cn(SKELETON_CLASS, "block h-6 w-24 max-w-full")} />
-      <span className="sr-only">{text.loading}</span>
+      {!gridLoading && <span className="sr-only">{text.loading}</span>}
     </span>
   ) : hasValue ? (
     <span id={valueId} data-private={priv} className={cn(valueClass, valueLabel != null && "ms-auto")}>
@@ -432,13 +448,18 @@ export function StatTile({
   return (
     <Card
       {...rest}
+      variant={variant === "card" ? "default" : "inset"}
+      data-variant={variant === "card" ? undefined : variant}
       aria-busy={loading || undefined}
       className={cn(
         // @container: the headline sizes read the tile's width. relative: the stretched
         // link's overlay. overflow-hidden: at pathological widths a figure clips inside
         // the border instead of painting over the neighbouring tile.
         "@container relative flex min-w-0 flex-col overflow-hidden",
-        PADDING[size],
+        // `plain` is the inset card with its fill and padding taken away — the figures
+        // align with the content edge of the card they sit in. (Not `p-0` over the
+        // padding: the padding's `sm:p-4` would still win from `sm` up.)
+        variant === "plain" ? "rounded-none bg-transparent p-0" : PADDING[size],
         interactive && "transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]",
         className,
       )}
@@ -577,7 +598,29 @@ export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {
   /** The narrowest a tile may get before the grid drops a column. The default fits
    *  two tiles on a 320px phone. */
   minTileWidth?: string;
+  /**
+   * Let a row that is not full stretch its tiles across the whole width. Default
+   * `true` (CSS `auto-fit`): one or two tiles fill the row, as they always have.
+   * `false` (`auto-fill`): the empty columns are kept, so every tile is the width of
+   * a column whatever the count — a lone "Balance" tile in a card stays tile-sized
+   * instead of becoming a banner the width of the card, and the tiles of a short row
+   * line up with the columns of a full one above it.
+   */
+  stretch?: boolean;
+  /**
+   * Every tile in the grid is loading: each shows its skeleton (as with its own
+   * `loading`), and the grid says "Loading…" ONCE, in a polite status region, instead
+   * of each tile carrying its own sr-only "Loading…" — a wall of eight tiles was read
+   * as eight "Loading…"s in a row. The grid is `aria-busy` meanwhile. A tile's own
+   * `loading` inside a grid that is not loading still speaks for itself.
+   */
+  loading?: boolean;
+  /** The grid's one sentence — `loading` from {@link StatTileLabels}. */
+  labels?: Partial<Pick<StatTileLabels, "loading">>;
 }
+
+/** Set by a loading {@link StatTileGrid}; read by each tile in it. */
+const StatTileGridLoadingContext = createContext(false);
 
 /**
  * The row of tiles every dashboard in the three apps lays out by hand, each with its
@@ -586,9 +629,36 @@ export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {
  * the band where the sidebar was open. This fits as many columns as `minTileWidth`
  * allows in the space the grid actually has, and needs no breakpoint at all.
  */
-export function StatTileGrid({ minTileWidth = "9rem", className, style, ...rest }: StatTileGridProps) {
+export function StatTileGrid({
+  minTileWidth = "9rem",
+  stretch = true,
+  loading = false,
+  labels,
+  className,
+  style,
+  children,
+  ...rest
+}: StatTileGridProps) {
+  const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
   const columns: CSSProperties = {
-    gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minTileWidth}), 1fr))`,
+    gridTemplateColumns: `repeat(${stretch ? "auto-fit" : "auto-fill"}, minmax(min(100%, ${minTileWidth}), 1fr))`,
   };
-  return <div {...rest} className={cn("grid gap-3", className)} style={{ ...columns, ...style }} />;
+  return (
+    <div
+      {...rest}
+      aria-busy={loading || rest["aria-busy"] || undefined}
+      // `relative`: the containing block for the sr-only status, which is absolutely
+      // positioned and so also takes no grid cell.
+      className={cn("relative grid gap-3", className)}
+      style={{ ...columns, ...style }}
+    >
+      {/* Always mounted, filled while loading: a live region announces a CHANGE of
+          its content, so one that appeared already holding the sentence might say
+          nothing. */}
+      <span role="status" className="sr-only">
+        {loading ? text.loading : ""}
+      </span>
+      <StatTileGridLoadingContext.Provider value={loading}>{children}</StatTileGridLoadingContext.Provider>
+    </div>
+  );
 }

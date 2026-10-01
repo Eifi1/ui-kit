@@ -75,3 +75,13 @@ describe("ToggleLegend's new marks", () => {
     expect(dot.style.backgroundColor).toBe("transparent");
   });
 });
+
+describe("StaticLegend as='div'", () => {
+  it("is a named group with no list items, for a host whose listitem counts it must not join", () => {
+    render(<StaticLegend entries={ENTRIES} as="div" aria-label="Key" />);
+    expect(screen.queryByRole("list")).toBeNull();
+    expect(screen.queryAllByRole("listitem")).toHaveLength(0);
+    const group = screen.getByRole("group", { name: "Key" });
+    expect(within(group).getByText("Projection")).toBeInTheDocument();
+  });
+});

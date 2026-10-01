@@ -265,3 +265,159 @@ describe("ListItem — the provider's router link", () => {
     expect(docs).toHaveAttribute("target", "_blank");
   });
 });
+
+describe("ListItem 0.16 slots (keksdose P2)", () => {
+  it("content sits INSIDE the target, so a click on a bar is a click on the row; children stay outside", () => {
+    const onClick = vi.fn();
+    render(
+      <List>
+        <ListItem
+          title="Groceries"
+          onClick={onClick}
+          content={<span data-testid="bar" aria-hidden />}
+        >
+          <button type="button">Edit budget</button>
+        </ListItem>
+      </List>,
+    );
+    const row = screen.getByRole("button", { name: "Groceries" });
+    const bar = screen.getByTestId("bar");
+    expect(row).toContainElement(bar);
+    expect(row).not.toContainElement(screen.getByRole("button", { name: "Edit budget" }));
+    fireEvent.click(bar);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("overline is read before the title, inside the target", () => {
+    render(
+      <List>
+        <ListItem overline="Weekly" title="Groceries" onClick={() => {}} />
+      </List>,
+    );
+    expect(screen.getByRole("button", { name: /^Weekly\s*Groceries$/ })).toBeInTheDocument();
+    expect(screen.getByText("Weekly").className).toContain("truncate");
+  });
+
+  it("metaWrap turns meta into a wrapping row; the default still truncates", () => {
+    render(
+      <List>
+        <ListItem title="A" meta="one line" />
+        <ListItem title="B" metaWrap meta={<><span>tag 1</span><span>tag 2</span></>} />
+      </List>,
+    );
+    expect(screen.getByText("one line").className).toContain("truncate");
+    const wrapped = screen.getByText("tag 1").parentElement!;
+    expect(wrapped.className).toContain("flex-wrap");
+    expect(wrapped.className).not.toContain("truncate");
+  });
+
+  it("trailing is muted by default; trailingTone colours or stops colouring it", () => {
+    render(
+      <List>
+        <ListItem title="A" trailing="12 MB" />
+        <ListItem title="B" trailing="3 overdue" trailingTone="danger" />
+        <ListItem title="C" trailing={<span className="text-[var(--money-income)]">+5</span>} trailingTone="inherit" />
+      </List>,
+    );
+    expect(screen.getByText("12 MB").className).toContain("text-[var(--text-muted)]");
+    expect(screen.getByText("3 overdue").className).toContain("text-[var(--danger)]");
+    const slot = screen.getByText("+5").parentElement!;
+    expect(slot.className).not.toMatch(/text-\[var/);
+  });
+
+  it("renderRow wraps the row INSIDE the li, so the list keeps its items and dividers", () => {
+    render(
+      <List separator="divider" aria-label="Rows">
+        <ListItem title="Locked" onClick={() => {}} renderRow={(row) => <span data-testid="guard">{row}</span>} />
+        <ListItem title="Open" onClick={() => {}} />
+      </List>,
+    );
+    const list = screen.getByRole("list", { name: "Rows" });
+    const items = within(list).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0].parentElement).toBe(list);
+    expect(items[0].className).toContain("border-b");
+    const guard = screen.getByTestId("guard");
+    expect(items[0]).toContainElement(guard);
+    expect(guard).toContainElement(screen.getByRole("button", { name: "Locked" }));
+    expect((guard.firstElementChild as HTMLElement).className).toContain("w-full");
+  });
+
+  it("leadingActions sit BEFORE the target, outside it", () => {
+    const onClick = vi.fn();
+    const onCheck = vi.fn();
+    render(
+      <List>
+        <ListItem
+          title="Groceries"
+          onClick={onClick}
+          leadingActions={<input type="checkbox" aria-label="Select Groceries" onChange={onCheck} />}
+        />
+      </List>,
+    );
+    const row = screen.getByRole("button", { name: "Groceries" });
+    const box = screen.getByRole("checkbox", { name: "Select Groceries" });
+    expect(row).not.toContainElement(box);
+    expect(box.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(box);
+    expect(onCheck).toHaveBeenCalled();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("an expandable row is a disclosure: aria-expanded, aria-controls, content outside the target", () => {
+    const onExpandedChange = vi.fn();
+    render(
+      <List>
+        <ListItem
+          title="Groceries"
+          leadingActions={<input type="checkbox" aria-label="Select all Groceries" />}
+          onExpandedChange={onExpandedChange}
+          expandedContent={<button type="button">Milk</button>}
+        />
+      </List>,
+    );
+    const row = screen.getByRole("button", { name: "Groceries" });
+    expect(row).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: "Milk" })).toBeNull();
+    fireEvent.click(row);
+    expect(onExpandedChange).toHaveBeenCalledWith(true);
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    const milk = screen.getByRole("button", { name: "Milk" });
+    expect(row).not.toContainElement(milk);
+    const region = screen.getByRole("group", { name: "Groceries" });
+    expect(region).toContainElement(milk);
+    expect(row).toHaveAttribute("aria-controls", region.id);
+    // The checkbox is its own control: checking it does not toggle the row.
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select all Groceries" }));
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    expect(onExpandedChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("a controlled expandable row follows `expanded`", () => {
+    const { rerender } = render(
+      <List>
+        <ListItem title="G" expanded={false} expandedContent="inside" />
+      </List>,
+    );
+    const row = screen.getByRole("button", { name: "G" });
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-expanded", "false");
+    rerender(
+      <List>
+        <ListItem title="G" expanded expandedContent="inside" />
+      </List>,
+    );
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("inside")).toBeInTheDocument();
+  });
+
+  it("types: an expandable row takes no onClick or href", () => {
+    // @ts-expect-error — the toggle is the row's one action
+    void (<ListItem title="x" expandedContent="y" onClick={() => {}} />);
+    // @ts-expect-error — the toggle is the row's one action
+    void (<ListItem title="x" expandedContent="y" href="/x" />);
+    // @ts-expect-error — `expanded` without content means nothing
+    void (<ListItem title="x" expanded onClick={() => {}} />);
+    expect(true).toBe(true);
+  });
+});

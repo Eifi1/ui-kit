@@ -33,6 +33,37 @@ const FILL: Record<StatusDotTone, string> = {
   orange: "bg-[var(--hue-orange)]",
 };
 
+/**
+ * The colour of each tone as a CSS value — the same `var(--…)` the dot's class paints
+ * with. For a mark the kit does not draw: a `SwatchPicker` option (`color`), a chart
+ * series, an inline `style`. keksdose's category picker spelled `var(--hue-teal)` out by
+ * hand to match the dot beside the category name; a renamed token would have parted
+ * them silently. (The class table above stays literal: Tailwind finds classes by
+ * reading the source, so `bg-[${…}]` would never be generated. A test keeps the two
+ * tables agreeing.)
+ */
+const COLOR: Record<StatusDotTone, string> = {
+  brand: "var(--brand)",
+  neutral: "var(--text-muted)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger: "var(--danger)",
+  info: "var(--info)",
+  income: "var(--money-income)",
+  expense: "var(--money-expense)",
+  blue: "var(--hue-blue)",
+  indigo: "var(--hue-indigo)",
+  purple: "var(--hue-purple)",
+  teal: "var(--hue-teal)",
+  orange: "var(--hue-orange)",
+};
+
+/** The CSS colour a {@link StatusDot} of `tone` is filled with — `statusDotColor("teal")`
+ *  is `"var(--hue-teal)"`. See the table above for when to reach for it. */
+export function statusDotColor(tone: StatusDotTone): string {
+  return COLOR[tone];
+}
+
 const SIZE: Record<StatusDotSize, string> = { sm: "size-2", md: "size-2.5", lg: "size-3" };
 
 export interface StatusDotProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
