@@ -385,4 +385,19 @@ describe("FileButton showFileName (keksdose P8)", () => {
     pick(fileInput(container), pdf("a.pdf"), pdf("b.pdf"));
     expect(container.querySelector('[data-slot="file-button-name"]')).toHaveTextContent("2 files selected");
   });
+
+  it("lists the names in the kit Tooltip, not a native title (0.16.1)", () => {
+    const { container } = render(
+      <FileButton showFileName multiple onFiles={() => {}}>
+        Attach
+      </FileButton>,
+    );
+    pick(fileInput(container), pdf("a.pdf"), pdf("b.pdf"));
+    const name = container.querySelector('[data-slot="file-button-name"]') as HTMLElement;
+    expect(name).not.toHaveAttribute("title");
+    // Lazy: nothing extra in the read-out until it is hovered.
+    expect(name).toHaveTextContent(/^2 files selected$/);
+    fireEvent.mouseEnter(name.firstElementChild!);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("a.pdf, b.pdf");
+  });
 });
