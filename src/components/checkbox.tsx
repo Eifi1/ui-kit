@@ -40,7 +40,7 @@ const BOX_MIXED = "border-[var(--brand)] bg-[var(--brand)]";
 // survives fractional display scaling on every edge (see the note in ui.tsx). The
 // focus ring turns danger too, so focusing a wrong box does not repaint it as fine.
 const BOX_INVALID =
-  "border-[var(--danger-border)] ring-1 ring-[var(--danger-border)] checked:border-[var(--danger-border)] focus-visible:ring-[var(--danger)]";
+  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] checked:border-[var(--danger-border-strong)] focus-visible:ring-[var(--danger)]";
 
 const ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
 

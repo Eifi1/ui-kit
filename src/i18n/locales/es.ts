@@ -21,6 +21,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       attachmentCapture: "Capturar pantalla",
       attachmentPaste: "…o pega una captura de pantalla desde el portapapeles.",
       attachmentRemove: "Quitar adjunto",
+      attachmentList: "Adjuntos",
+      attachmentRemoveFile: (name) => `Quitar ${name}`,
+      attachmentLimit: (max) => `Máximo ${n(max)} ${max === 1 ? "adjunto" : "adjuntos"}: quita uno para añadir otro.`,
     },
     feedbackDialog: {
       title: "Enviar comentarios",
@@ -29,6 +32,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       body: "¿Qué ha pasado?",
       bodyOptional: "¿Qué ha pasado? (opcional)",
       attachment: "Captura de pantalla",
+      attachments: "Adjuntos",
       submitHint: "Ctrl/⌘ + Intro para enviar",
       cancel: "Cancelar",
       save: "Enviar",

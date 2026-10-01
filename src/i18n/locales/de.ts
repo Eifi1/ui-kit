@@ -20,6 +20,9 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       attachmentCapture: "Screenshot aufnehmen",
       attachmentPaste: "…oder einen Screenshot aus der Zwischenablage einfügen.",
       attachmentRemove: "Anhang entfernen",
+      attachmentList: "Anhänge",
+      attachmentRemoveFile: (name) => `${name} entfernen`,
+      attachmentLimit: (max) => `Maximal ${n(max)} ${max === 1 ? "Anhang" : "Anhänge"} – zum Hinzufügen erst einen entfernen.`,
     },
     feedbackDialog: {
       title: "Feedback senden",
@@ -28,6 +31,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       body: "Was ist passiert?",
       bodyOptional: "Was ist passiert? (optional)",
       attachment: "Screenshot",
+      attachments: "Anhänge",
       submitHint: "Strg/⌘ + Enter zum Senden",
       cancel: "Abbrechen",
       save: "Senden",

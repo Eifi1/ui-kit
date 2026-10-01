@@ -100,6 +100,9 @@ interface AmountInputProps {
    * Because it is rendered rather than stored it cannot be deleted (the next render
    * puts it back), a select-all-and-retype keeps the direction, and the caret needs
    * no minding.
+   *
+   * Since 0.15.5 it is drawn on its own too, for a read-only or disabled signed figure
+   * (an "Items total" of −5.18): no `onNegativeChange` needed just to show the minus.
    */
   negative?: boolean;
   /**
@@ -330,7 +333,11 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // front of a bare amount: an expression being typed ("12-30") owns its own
     // minus and has to survive keystroke-for-keystroke.
     const signOwned = onNegativeChange !== undefined;
-    const shown = signOwned && negative && isBareAmount(value) ? `-${value}` : value;
+    // The sign is DRAWN whenever `negative` says so, handler or not (keksdose live #366):
+    // a read-only or disabled total ("−5.18") used to need a dummy `onNegativeChange`
+    // just to show its minus. Without the handler there is nothing to toggle — a typed
+    // minus simply stays in the text, as in any field without a direction control.
+    const shown = negative && isBareAmount(value) ? `-${value}` : value;
     // What the user SEES is `shown` with the locale's decimal mark (kastlan 40: a
     // fr-CH user typed "1,5" and watched it turn into "1.5" under their fingers). Display only — `value`, `onChange`, the sign split and the settle all
     // stay dot-decimal, because that string is the contract: RhfMoneyField's

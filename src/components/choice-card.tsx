@@ -102,7 +102,7 @@ const CARD =
 const CARD_DISABLED = "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]";
 
 const CARD_INVALID =
-  "border-[var(--danger-border)] ring-1 ring-[var(--danger-border)] has-[:checked]:border-[var(--danger-border)] has-[:checked]:ring-[var(--danger-border)]";
+  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] has-[:checked]:border-[var(--danger-border-strong)] has-[:checked]:ring-[var(--danger-border-strong)]";
 
 const BOX =
   "peer size-4 shrink-0 appearance-none border border-[var(--border-strong)] bg-[var(--bg-surface)] transition-colors " +

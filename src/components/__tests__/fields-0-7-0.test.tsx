@@ -348,7 +348,7 @@ describe("MultiSelect error and disabled", () => {
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).toHaveAttribute("aria-invalid", "true");
     expect(trigger).toHaveAccessibleDescription("Pick any Pick at least one");
-    expect(trigger.className).toContain("ring-[var(--danger-border)]");
+    expect(trigger.className).toContain("ring-[var(--danger-border-strong)]");
   });
 
   it("renders nothing extra for an empty error", () => {

@@ -21,6 +21,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       attachmentCapture: "Capturer l’écran",
       attachmentPaste: "…ou collez une capture d’écran depuis le presse-papiers.",
       attachmentRemove: "Retirer la pièce jointe",
+      attachmentList: "Pièces jointes",
+      attachmentRemoveFile: (name) => `Retirer ${name}`,
+      attachmentLimit: (max) => `${n(max)} ${max === 1 ? "pièce jointe" : "pièces jointes"} au maximum — retirez-en une pour en ajouter une autre.`,
     },
     feedbackDialog: {
       title: "Envoyer un retour",
@@ -29,6 +32,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       body: "Que s’est-il passé\u202f?",
       bodyOptional: "Que s’est-il passé\u202f? (facultatif)",
       attachment: "Capture d’écran",
+      attachments: "Pièces jointes",
       submitHint: "Ctrl/⌘ + Entrée pour envoyer",
       cancel: "Annuler",
       save: "Envoyer",
