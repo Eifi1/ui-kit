@@ -259,7 +259,7 @@ describe("aria-invalid from a form library paints the field (0.6.0)", () => {
       </>,
     );
     for (const name of ["a", "b", "c"]) {
-      expect(screen.getByLabelText(name).className).toContain("border-[var(--danger-border)]");
+      expect(screen.getByLabelText(name).className).toContain("border-[var(--danger-border-strong)]");
     }
   });
 });

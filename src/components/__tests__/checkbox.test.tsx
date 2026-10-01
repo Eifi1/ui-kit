@@ -150,7 +150,7 @@ describe("Checkbox", () => {
       const box = screen.getByRole("checkbox", { name: "Accept the terms" });
       expect(box).toHaveAttribute("aria-invalid", "true");
       expect(descriptions(box)).toEqual(["Required to continue"]);
-      expect(box.className).toContain("border-[var(--danger-border)]");
+      expect(box.className).toContain("border-[var(--danger-border-strong)]");
     });
 
     it("merges caller → description → error, in reading order", () => {
