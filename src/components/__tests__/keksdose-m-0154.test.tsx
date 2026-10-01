@@ -9,7 +9,7 @@ import { currencyMinorDigits, roundToCurrency } from "../../lib/format";
 /** keksdose's 406px round, M2–M5 (0.15.4). */
 describe("FormActions sticky sits on the phone nav (M2)", () => {
   it("offsets by --app-nav-h", () => {
-    render(<FormActions placement="sticky" saveLabel="Save" />);
+    render(<FormActions placement="sticky" />);
     const row = document.querySelector('[data-slot="form-actions"]') as HTMLElement;
     expect(row.style.bottom).toContain("--app-nav-h");
   });
