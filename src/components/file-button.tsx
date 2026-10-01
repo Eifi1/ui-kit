@@ -4,6 +4,7 @@ import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
+import { Tooltip } from "./tooltip";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -578,17 +579,24 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   }
   return (
     // One inline row, so the name sits beside the button wherever the button sits; the
-    // name truncates (full list in its title) rather than pushing the row wider.
+    // name truncates rather than pushing the row wider, and the full list is in the
+    // kit's own Tooltip — not a native `title` (0.16.0 shipped one: the one-tooltip rule
+    // since keksdose dev#523, and a title never opens on touch). Lazy, so the closed
+    // bubble adds nothing to the read-out's text.
     <span className="inline-flex max-w-full min-w-0 items-center gap-2">
       {button}
+      {/* The live region is the OUTER span and never remounts: a Tooltip with an empty
+          label renders no wrapper, so wrapping the region itself would swap its element
+          the moment the first file arrives — and a fresh live region may not announce. */}
       <span
         id={pickedId}
         aria-live="polite"
         data-slot="file-button-name"
-        title={picked.map((f) => f.name).join(", ") || undefined}
-        className="min-w-0 truncate text-sm text-[var(--text-secondary)]"
+        className="flex min-w-0 text-sm text-[var(--text-secondary)]"
       >
-        {pickedText}
+        <Tooltip label={picked.map((f) => f.name).join(", ")} lazy className="min-w-0">
+          <span className="block truncate">{pickedText}</span>
+        </Tooltip>
       </span>
       {picker.element}
     </span>
