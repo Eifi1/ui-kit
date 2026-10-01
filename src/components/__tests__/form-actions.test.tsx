@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { Check } from "lucide-react";
 import { FormActions } from "../form-actions";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
@@ -79,5 +80,50 @@ describe("FormActions", () => {
   it("disables save for a reason of the form's own", () => {
     render(<FormActions submitDisabled />);
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+});
+
+describe("FormActions 0.16 (keksdose P7)", () => {
+  it("puts a neutral start slot at the row's start and aligns the row between", () => {
+    const { container } = render(<FormActions start={<span>Last saved 2 min ago</span>} onSubmit={() => {}} />);
+    const row = container.querySelector('[data-slot="form-actions"]')!;
+    expect(row).toHaveClass("justify-between");
+    expect(row.firstElementChild).toHaveTextContent("Last saved 2 min ago");
+  });
+
+  it("keeps the destructive action first when both are given", () => {
+    const { container } = render(
+      <FormActions destructive={{ label: "Delete", onClick: () => {} }} start={<a href="#a">View activity</a>} />,
+    );
+    const start = container.querySelector('[data-slot="form-actions"]')!.firstElementChild!;
+    expect(start.textContent).toBe("DeleteView activity");
+  });
+
+  it("passes submitProps through to the save button without overriding its own props", () => {
+    render(<FormActions onSubmit={() => {}} submitProps={{ id: "save-btn", "data-testid": "save" }} />);
+    const save = screen.getByTestId("save");
+    expect(save).toHaveAttribute("id", "save-btn");
+    expect(save).toHaveAttribute("type", "button");
+  });
+
+  it("replaces submitIcon with the spinner while pending, instead of adding one", () => {
+    const { rerender } = render(<FormActions onSubmit={() => {}} submitIcon={Check} submitLabel="Apply" />);
+    const save = screen.getByRole("button", { name: "Apply" });
+    expect(save.querySelector("svg")).not.toBeNull();
+    expect(save.querySelector(".animate-spin")).toBeNull();
+    rerender(<FormActions onSubmit={() => {}} submitIcon={Check} submitLabel="Apply" pending />);
+    expect(save.querySelector("svg")).toBeNull();
+    expect(save.querySelectorAll(".animate-spin")).toHaveLength(1);
+    expect(save).toHaveTextContent("Apply");
+  });
+
+  it("drops the nav offset when sticky within a container", () => {
+    const { container, rerender } = render(<FormActions placement="sticky" />);
+    const row = () => container.querySelector<HTMLElement>('[data-slot="form-actions"]')!;
+    expect(row().style.bottom).toContain("--app-nav-h");
+    expect(row()).toHaveAttribute("data-sticky-within", "viewport");
+    rerender(<FormActions placement="sticky" stickyWithin="container" />);
+    expect(row().style.bottom).toBe("0px");
+    expect(row()).toHaveAttribute("data-sticky-within", "container");
   });
 });

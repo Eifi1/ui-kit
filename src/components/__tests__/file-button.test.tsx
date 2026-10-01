@@ -349,3 +349,40 @@ describe("onPick — judging the whole pick", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Only .pdf files"));
   });
 });
+
+describe("FileButton showFileName (keksdose P8)", () => {
+  it("shows nothing extra by default", () => {
+    const { container } = render(<FileButton onFiles={() => {}}>Attach</FileButton>);
+    pick(fileInput(container), pdf());
+    expect(container.querySelector('[data-slot="file-button-name"]')).toBeNull();
+  });
+
+  it("reads out the accepted file's name, politely, and describes the button with it", () => {
+    const onFiles = vi.fn();
+    const { container } = render(
+      <FileButton showFileName accept=".pdf" onFiles={onFiles}>
+        Attach
+      </FileButton>,
+    );
+    const name = container.querySelector('[data-slot="file-button-name"]')!;
+    expect(name).toHaveAttribute("aria-live", "polite");
+    expect(name).toHaveTextContent("");
+    pick(fileInput(container), pdf("lease.pdf"));
+    expect(onFiles).toHaveBeenCalledTimes(1);
+    expect(name).toHaveTextContent("lease.pdf");
+    expect(screen.getByRole("button", { name: "Attach" })).toHaveAttribute("aria-describedby", name.id);
+    // A refused pick leaves the last accepted one standing.
+    pick(fileInput(container), png());
+    expect(name).toHaveTextContent("lease.pdf");
+  });
+
+  it("counts several files", () => {
+    const { container } = render(
+      <FileButton showFileName multiple onFiles={() => {}}>
+        Attach
+      </FileButton>,
+    );
+    pick(fileInput(container), pdf("a.pdf"), pdf("b.pdf"));
+    expect(container.querySelector('[data-slot="file-button-name"]')).toHaveTextContent("2 files selected");
+  });
+});

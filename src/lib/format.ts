@@ -365,15 +365,36 @@ export function currencyMinorDigits(currency: string | null | undefined): number
   }
 }
 
+/** The options form of {@link roundToCurrency}'s third argument. */
+export interface RoundToCurrencyOptions {
+  /** Decimals to round to, whatever the currency — the plain `digits` argument. */
+  digits?: number;
+  /**
+   * Decimals for a currency `Intl` cannot resolve — no code yet (`null`, `""`), or a
+   * malformed one ("EURO", "€"). Left out, such a value comes back unchanged, as
+   * before. Note that `Intl` resolves ANY well-formed three-letter code, a made-up
+   * "XYZ" included (to 2), so this is the case of a missing or broken code, not of a
+   * rare currency.
+   */
+  fallbackDigits?: number;
+}
+
 /**
  * `value` rounded to the currency's minor unit (or to `digits`), half away from zero,
  * in decimal arithmetic: 93.4213 CHF → 93.42, 1.005 EUR → 1.01 (`Math.round(1.005 *
  * 100)` is 100, since 1.005 is 1.00499… in binary). A non-finite value, or a currency
  * `Intl` does not know without `digits`, comes back unchanged (keksdose live #356: an
- * FX estimate set into an AmountInput showed four decimals).
+ * FX estimate set into an AmountInput showed four decimals) — unless the options form
+ * gives `fallbackDigits`: `roundToCurrency(v, code, { fallbackDigits: 2 })` rounds a
+ * figure whose currency is not chosen yet to cents rather than leaving 0.1 + 0.2 as is.
  */
-export function roundToCurrency(value: number, currency: string | null | undefined, digits?: number): number {
-  const places = digits ?? currencyMinorDigits(currency);
+export function roundToCurrency(
+  value: number,
+  currency: string | null | undefined,
+  digits?: number | RoundToCurrencyOptions,
+): number {
+  const options = typeof digits === "object" && digits !== null ? digits : { digits };
+  const places = options.digits ?? currencyMinorDigits(currency) ?? options.fallbackDigits;
   if (places === undefined || !Number.isFinite(value)) return value;
   const magnitude = Number(`${Math.round(Number(`${Math.abs(value)}e${places}`))}e-${places}`);
   return value < 0 ? -magnitude : magnitude;

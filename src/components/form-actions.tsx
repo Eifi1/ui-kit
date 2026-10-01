@@ -1,8 +1,9 @@
 import { isValidElement } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { Button, Spinner, type ButtonVariant } from "./ui";
+import { Button, Spinner, type ButtonProps, type ButtonVariant } from "./ui";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
 export interface FormActionsLabels {
@@ -27,6 +28,25 @@ export type FormActionsAlign = "start" | "center" | "end" | "between";
  *    FullBleedDialog's `footer`), which already pads and rules it.
  */
 export type FormActionsPlacement = "inline" | "sticky" | "dialog";
+
+/**
+ * What a `sticky` row sticks to — see {@link FormActionsProps.stickyWithin}.
+ *  - `viewport` (default): the page's (or AppShell pane's) bottom edge, lifted onto
+ *    the phone's bottom nav by `--app-nav-h`.
+ *  - `container`: the bottom of whatever scroll container it is in — a dialog body, a
+ *    side pane, a panel with `overflow-y-auto` — at `bottom: 0`, with no nav offset.
+ */
+export type FormActionsStickyWithin = "viewport" | "container";
+
+/**
+ * Extra attributes for the save button — an `id`, `data-*` hooks for tests or
+ * analytics, an `aria-describedby`. The props FormActions drives itself (type, click,
+ * disabled, variant, form, children, the busy state) are not among them.
+ */
+export type FormActionsSubmitProps = Omit<
+  ButtonProps,
+  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy"
+> & { [key: `data-${string}`]: string | number | boolean | undefined };
 
 /** The start-side action of {@link FormActionsProps.destructive}, as data. */
 export interface FormActionsDestructive {
@@ -66,9 +86,20 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** The save button's text while `pending` ("Saving…"). Default: `submitLabel`. */
   pendingLabel?: ReactNode;
   /**
+   * A Lucide icon before the save button's text. While `pending` the spinner takes
+   * ITS place rather than being added in front of it — an icon written into
+   * `submitLabel` itself stays, so the button would show the spinner AND the glyph,
+   * two statuses side by side (keksdose's crop Apply needed a `pendingLabel` copy of
+   * its text only to drop the check mark).
+   */
+  submitIcon?: LucideIcon;
+  /** Attributes passed through to the save button: `id`, `data-*`, `aria-*`, a
+   *  `className`. See {@link FormActionsSubmitProps}. */
+  submitProps?: FormActionsSubmitProps;
+  /**
    * The save is running: a spinner in the save button, `aria-busy` on it, and the
    * button disabled, so a second click cannot send the form twice. Cancel stays
-   * usable.
+   * usable. The spinner goes in front of the text, or in place of {@link submitIcon}.
    */
   pending?: boolean;
   /** Disable save for a reason of the form's own (an unbalanced entry). */
@@ -85,10 +116,39 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * is `between`-aligned unless `align` says otherwise.
    */
   destructive?: ReactNode | FormActionsDestructive;
+  /**
+   * Something neutral at the START of the row — a caption ("Last saved 2 min ago",
+   * "Drag the corners to crop"), a "View activity" link. After {@link destructive}
+   * when both are given; like it, makes the row `between`-aligned unless `align` says
+   * otherwise. `children` are for further ACTIONS, beside Cancel.
+   */
+  start?: ReactNode;
   /** Horizontal alignment. Default `end` (`between` with a `destructive` action). */
   align?: FormActionsAlign;
   /** See {@link FormActionsPlacement}. Default `inline`. */
   placement?: FormActionsPlacement;
+  /**
+   * With `placement="sticky"`: what the row sticks to. Default `viewport`.
+   *
+   * CSS sticky always sticks to the NEAREST scroll container, so the default row
+   * already holds inside a scrolling pane — but it offsets itself by `--app-nav-h`,
+   * which AppShell publishes on the document: inside a pane or a portalled dialog
+   * body on a phone it then floats a nav's height above that container's bottom,
+   * with the content scrolling through the gap. `container` drops that offset.
+   *
+   * What neither value can fix, because it is the layout, not the row:
+   *  - sticky moves only within its PARENT box. Inside a DataTable expansion row the
+   *    parent is the expansion cell, so the row pins to the table's own scroller
+   *    (`overflow-auto`, bounded by `maxBodyHeight`) and only while the cell spans
+   *    that scroller's bottom edge — not to the page.
+   *  - any `overflow` other than `visible`/`clip` between the row and the scroller
+   *    you mean (an `overflow-x-auto` wrapper, an `overflow-hidden` card) becomes the
+   *    scroll container; if THAT box does not scroll, the row never sticks.
+   *  - the offset is resolved against the scroller's content box, so a scroller with
+   *    bottom padding leaves that strip uncovered; give the row a negative `bottom`
+   *    through `style` and the same amount back as padding.
+   */
+  stickyWithin?: FormActionsStickyWithin;
   /** The `id` of the `<form>` the save button submits, when the row is rendered
    *  outside it (a dialog's footer slot). */
   form?: string;
@@ -121,13 +181,17 @@ export function FormActions({
   submitLabel,
   cancelLabel,
   pendingLabel,
+  submitIcon: SubmitIcon,
+  submitProps,
   pending = false,
   submitDisabled = false,
   submitDisabledReason,
   submitVariant = "brand",
   destructive,
+  start: startSlot,
   align,
   placement = "inline",
+  stickyWithin = "viewport",
   form,
   children,
   className,
@@ -136,8 +200,9 @@ export function FormActions({
 }: FormActionsProps) {
   const labels = useKitLabels("form", DEFAULT_FORM_ACTIONS_LABELS);
   const hasDestructive = destructive !== undefined && destructive !== null && destructive !== false;
-  const justify = align ?? (hasDestructive ? "between" : "end");
-  const start = !hasDestructive ? null : isDestructiveData(destructive) ? (
+  const hasStart = startSlot !== undefined && startSlot !== null && startSlot !== false;
+  const justify = align ?? (hasDestructive || hasStart ? "between" : "end");
+  const destructiveNode = !hasDestructive ? null : isDestructiveData(destructive) ? (
     <Button
       type="button"
       variant="ghost"
@@ -157,6 +222,7 @@ export function FormActions({
     <div
       data-slot="form-actions"
       data-placement={placement}
+      data-sticky-within={placement === "sticky" ? stickyWithin : undefined}
       {...rest}
       style={
         placement === "sticky"
@@ -165,15 +231,22 @@ export function FormActions({
               // On the phone's bottom nav, not behind it (keksdose live #361): `bottom-0`
               // pinned the row under AppShell's nav, which covers the page's last ~56px.
               // `--app-nav-h` is the nav's measured height (0px from md up, and outside an
-              // AppShell); the 1px overlaps the two top borders into one line.
-              bottom: "max(0px, calc(var(--app-nav-h, 0px) - 1px))",
+              // AppShell); the 1px overlaps the two top borders into one line. In a
+              // container the nav is not underneath: `--app-nav-h` is the document's,
+              // and would hold the row that far above the container's own edge.
+              bottom: stickyWithin === "container" ? 0 : "max(0px, calc(var(--app-nav-h, 0px) - 1px))",
               ...style,
             }
           : style
       }
       className={cn("flex flex-wrap items-center gap-2", ALIGN_CLASS[justify], PLACEMENT_CLASS[placement], className)}
     >
-      {start && <div className="me-auto flex items-center gap-2">{start}</div>}
+      {(hasDestructive || hasStart) && (
+        <div className="me-auto flex min-w-0 flex-wrap items-center gap-2">
+          {destructiveNode}
+          {hasStart && startSlot}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         {children}
         {onCancel && (
@@ -182,6 +255,7 @@ export function FormActions({
           </Button>
         )}
         <Button
+          {...submitProps}
           type={onSubmit ? "button" : "submit"}
           form={form}
           onClick={onSubmit}
@@ -190,7 +264,11 @@ export function FormActions({
           disabledReason={pending ? undefined : submitDisabledReason}
           aria-busy={pending || undefined}
         >
-          {pending && <Spinner label={null} className="size-4" />}
+          {pending ? (
+            <Spinner label={null} className="size-4" />
+          ) : (
+            SubmitIcon && <SubmitIcon aria-hidden className="size-4 shrink-0" />
+          )}
           {pending && pendingLabel !== undefined ? pendingLabel : saveLabel}
         </Button>
       </div>

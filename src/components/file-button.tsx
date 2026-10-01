@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, DragEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
@@ -418,6 +418,15 @@ export interface FileButtonProps
    *  Off by default: a button that silently takes drops is a surprise on a page that
    *  has a real drop target elsewhere. */
   droppable?: boolean;
+  /**
+   * Show what was picked beside the button: the file's name, or "3 files selected"
+   * (`filePicker.selected`) for several — a native `<input type="file">` says this,
+   * and a bare button that takes a file and says nothing leaves the user to trust it.
+   * The read-out is a polite live region and describes the button, so it is heard
+   * when it changes and again on focus. It holds the last ACCEPTED pick: a refused
+   * file leaves it as it was. Off by default, so the button's layout is unchanged.
+   */
+  showFileName?: boolean;
 }
 
 /**
@@ -447,6 +456,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     labels,
     pending,
     droppable,
+    showFileName = false,
     disabled,
     children,
     className,
@@ -460,6 +470,9 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   ref,
 ) {
   const inert = Boolean(disabled || pending);
+  const [picked, setPicked] = useState<readonly File[]>([]);
+  const pickedId = useId();
+  const pickerLabels = useKitLabels("filePicker", DEFAULT_FILE_PICKER_LABELS, labels);
   const picker = useFilePicker({
     accept,
     multiple,
@@ -468,12 +481,19 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     maxFiles,
     isValid,
     invalidMessage,
-    onFiles,
+    onFiles: showFileName
+      ? (files) => {
+          setPicked(files);
+          onFiles?.(files);
+        }
+      : onFiles,
     onPick,
     onReject,
     labels,
     disabled: inert,
   });
+  const pickedText =
+    picked.length === 0 ? "" : picked.length === 1 ? picked[0].name : pickerLabels.selected(picked.length, picked[0].name);
   const [dragOver, setDragOver] = useState(false);
 
   const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
@@ -514,34 +534,64 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   // declare it, hence the widening here rather than a second button implementation.
   const refProp = { ref } as { ref?: Ref<HTMLButtonElement> };
 
+  const button = (
+    <Button
+      {...rest}
+      {...refProp}
+      {...dropHandlers}
+      type="button"
+      disabled={inert}
+      aria-busy={pending || undefined}
+      aria-describedby={
+        showFileName && pickedText
+          ? [rest["aria-describedby"], pickedId].filter(Boolean).join(" ")
+          : rest["aria-describedby"]
+      }
+      data-drag-over={dragOver || undefined}
+      className={cn(
+        // A live drag gets the focus ring's colour as a ring: "let go here", in the
+        // same vocabulary the button already uses for "you are here".
+        dragOver && "ring-2 ring-[var(--brand)]",
+        // Beside a long file name it is the NAME that gives way, never the button.
+        showFileName && "shrink-0",
+        className,
+      )}
+      onClick={(e) => {
+        onClick?.(e);
+        if (!e.defaultPrevented) picker.open();
+      }}
+    >
+      {/* `label={null}`: the spinner is decoration here — `aria-busy` says the same
+          thing on the button, and a spoken "Loading" would run into its name. */}
+      {pending && <Spinner label={null} className="size-4" />}
+      {children}
+    </Button>
+  );
+
+  if (!showFileName) {
+    return (
+      <>
+        {button}
+        {picker.element}
+      </>
+    );
+  }
   return (
-    <>
-      <Button
-        {...rest}
-        {...refProp}
-        {...dropHandlers}
-        type="button"
-        disabled={inert}
-        aria-busy={pending || undefined}
-        data-drag-over={dragOver || undefined}
-        className={cn(
-          // A live drag gets the focus ring's colour as a ring: "let go here", in the
-          // same vocabulary the button already uses for "you are here".
-          dragOver && "ring-2 ring-[var(--brand)]",
-          className,
-        )}
-        onClick={(e) => {
-          onClick?.(e);
-          if (!e.defaultPrevented) picker.open();
-        }}
+    // One inline row, so the name sits beside the button wherever the button sits; the
+    // name truncates (full list in its title) rather than pushing the row wider.
+    <span className="inline-flex max-w-full min-w-0 items-center gap-2">
+      {button}
+      <span
+        id={pickedId}
+        aria-live="polite"
+        data-slot="file-button-name"
+        title={picked.map((f) => f.name).join(", ") || undefined}
+        className="min-w-0 truncate text-sm text-[var(--text-secondary)]"
       >
-        {/* `label={null}`: the spinner is decoration here — `aria-busy` says the same
-            thing on the button, and a spoken "Loading" would run into its name. */}
-        {pending && <Spinner label={null} className="size-4" />}
-        {children}
-      </Button>
+        {pickedText}
+      </span>
       {picker.element}
-    </>
+    </span>
   );
 });
 FileButton.displayName = "FileButton";
