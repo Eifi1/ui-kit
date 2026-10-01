@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -101,6 +101,26 @@ export interface DataTableColumn<T> {
    *  width a resize pins stay the table's, and the class list goes before
    *  `headClassName` for the same reason as in {@link cellProps}. */
   headProps?: DataTableHeadProps;
+  /**
+   * This column's cell in the table's totals row — a `<tfoot>` on a wide screen, a
+   * labelled summary card under the list on a phone. kastlan's trial balance is why
+   * it exists: it hand-built a debit/credit/balance strip in a `div` UNDER the table,
+   * which lined up with no column, dropped out of the table's semantics, and stayed
+   * put when the user hid or resized the columns it was summing.
+   *
+   * `rows` is every row that passes the current filters (in the current sort order),
+   * NOT just the page on screen: a total that changes when the user pages is not a
+   * total, and the trial balance has to balance on page 1 as much as on page 7. The
+   * page is the second argument for the rare "subtotal of this page" footer.
+   *
+   * Under `serverPagination` the table only ever holds one page, so both arguments are
+   * that page — a server-side table computes its totals on the server and returns
+   * them here (`footer: () => fmt(response.totalDebit)`), ignoring the arguments.
+   *
+   * The cell takes the column's `className` (so a `text-end` amount column totals
+   * end-aligned), its resized width, and drops out with the column when it is hidden.
+   */
+  footer?: (rows: T[], page: T[]) => ReactNode;
 }
 
 /** A `data-*` attribute, typed so `{ "data-private": "" }` needs no cast. */
@@ -466,6 +486,26 @@ export interface DataTableProps<T> {
    * pages set a search box in a `div` above the card, outside the frame it filters).
    */
   toolbar?: ReactNode;
+  /**
+   * The totals row's name — "Total", "Summe", "Totals as of 30 June". It is the row's
+   * header: rendered as a `<th scope="row">` in the first visible column that has no
+   * `footer` of its own (falling back to the first visible column if every one has a
+   * value), so a screen reader reads "Total, Debit, 12 400.00" for the cell beside it.
+   * On a phone it heads the summary card, which is also named by it.
+   *
+   * There is no built-in default word: a new kit label key is a silent English string
+   * in every translated app (see `missingDataTableLabels`), and the caller has the
+   * word in its own catalogue already. Without it the row is unlabelled on screen —
+   * pass one.
+   */
+  footerLabel?: ReactNode;
+  /**
+   * Show the totals row. Default: shown when any column declares a `footer`. Set
+   * false to drop it without touching the column definitions (a "show totals"
+   * switch). The row is also left out while there are no rows to total — a row of
+   * zeroes under "No results" says nothing the empty state has not.
+   */
+  footer?: boolean;
 }
 
 /** One entry of {@link DataTableProps.rowActions}. */
@@ -589,6 +629,15 @@ function logicalAlign(className: string | undefined): string | undefined {
         : `${lead}${variants}text-${side === "right" ? "end" : "start"}`,
   );
 }
+
+/**
+ * A totals-row cell: pinned to the scroller's bottom edge, on the header's surface.
+ * The rule above it is an inset shadow rather than a `border-t`: the table collapses
+ * its borders, and a collapsed border belongs to the TABLE, not the cell, so it stays
+ * behind at the bottom of the rows while the sticky cell rides over them.
+ */
+const FOOTER_CELL =
+  "sticky bottom-0 z-10 bg-[var(--bg-surface-2)] shadow-[inset_0_2px_0_var(--border-strong)]";
 
 /** Whether a column is end-aligned — the header then puts its filter button first. */
 const END_ALIGN = /(^|\s)text-end(?=\s|$)/;
@@ -801,6 +850,8 @@ export function DataTable<T>({
   className,
   rowActions,
   toolbar,
+  footerLabel,
+  footer: footerProp,
 }: DataTableProps<T>) {
   const compact = density === "compact";
   const minimal = chrome === "minimal";
@@ -1192,7 +1243,7 @@ export function DataTable<T>({
   // `setWidths` is called once, when the drag ends.
   const resizing = useRef<Resize | null>(null);
 
-  /** Every cell in one column, header first. `data-col` rather than a cell index:
+  /** Every cell in one column, header first, totals row included. `data-col` rather than a cell index:
    *  an expanded row holds a single `colSpan` cell, so the nth `<td>` of a row is
    *  not reliably the nth column. */
   const columnCells = (key: string): HTMLElement[] => {
@@ -1202,7 +1253,7 @@ export function DataTable<T>({
     if (!table) return [th];
     return [
       th,
-      ...Array.from(table.querySelectorAll<HTMLElement>("tbody [data-col]")).filter(
+      ...Array.from(table.querySelectorAll<HTMLElement>("tbody [data-col], tfoot [data-col]")).filter(
         (el) => el.dataset.col === key,
       ),
     ];
@@ -1309,6 +1360,21 @@ export function DataTable<T>({
   const totalCount = columns.length;
   // Spans the full row width including the optional leading selection column.
   const totalColSpan = visibleCount + (selection ? 1 : 0);
+
+  // ---- Totals row ----
+  // `sorted`, not `slice`: the totals are of everything the filters let through, so
+  // paging does not move them — see `DataTableColumn.footer`. In server mode `sorted`
+  // IS the page (the table holds nothing else), which the prop's note spells out.
+  const hasFooterColumns = columns.some((c) => c.footer);
+  const showFooter = footerProp !== false && hasFooterColumns && sorted.length > 0;
+  // The row header sits in the first visible column that has nothing of its own to
+  // show — so hiding the "Account" column moves "Total" into "Name" rather than
+  // dropping it — and on the first visible column when every one carries a value.
+  const footerLabelCol = showFooter
+    ? (visibleColumns.find((c) => !c.footer && c.key !== ROW_ACTIONS_KEY) ?? visibleColumns[0])
+    : undefined;
+  const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted, slice);
+  const footerHeadingId = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
   const columnsCountLabel = rowActions
     ? labels.columnsCount(visibleCount - 1, totalCount - 1)
@@ -1725,6 +1791,49 @@ export function DataTable<T>({
             </li>
           )}
         </ul>
+        {/* The phone's totals: a summary card after the list rather than one more
+            `<li>` in it. The list reveals rows in chunks as it is scrolled, so a last
+            item would sit mid-list until the end was reached; outside it, and under
+            `fillHeight` outside the scroller too, the totals stay in view the way the
+            sticky `<tfoot>` keeps them in view on a wide screen. Named by
+            `footerLabel` so it is announced as what it is, not as a stray list of
+            numbers; `mobileHidden` columns stay hidden here as on the cards. */}
+        {showFooter && mobileColumns.some((c) => c.footer) && (
+          <section
+            data-table-footer=""
+            aria-labelledby={footerLabel != null ? footerHeadingId : undefined}
+            className={cn(
+              "border-t-2 border-[var(--border-strong)] bg-[var(--bg-surface-2)]",
+              compact ? "px-3 py-2" : "px-4 py-3",
+              isLoading && "opacity-60 transition-opacity",
+            )}
+          >
+            {footerLabel != null && (
+              <div id={footerHeadingId} className={cn("font-semibold", compact ? "mb-1 text-sm" : "mb-2")}>
+                {footerLabel}
+              </div>
+            )}
+            <dl
+              className={cn(
+                "grid grid-cols-[auto_1fr] gap-x-3",
+                compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
+              )}
+            >
+              {mobileColumns
+                .filter((c) => c.footer)
+                .map((col) => (
+                  <Fragment key={col.key}>
+                    <dt className="self-center text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                      {col.header}
+                    </dt>
+                    <dd className="min-w-0 self-center font-semibold text-[var(--text-primary)]">
+                      {footerValue(col)}
+                    </dd>
+                  </Fragment>
+                ))}
+            </dl>
+          </section>
+        )}
         {/* Client-side mobile lists scroll endlessly (sentinel above); only
             server-paginated tables keep the pager here. */}
         {isServer && (
@@ -2166,6 +2275,59 @@ export function DataTable<T>({
               </tr>
             )}
           </tbody>
+          {showFooter && (
+            // Sticky to the scroller's bottom edge for the same reason the header is
+            // sticky to its top: the body scrolls inside a bounded wrapper, and a
+            // total that scrolls away with the last row is a total nobody sees on a
+            // 25-row page. Each cell carries its own background and its own `sticky`,
+            // as the header's do — `position: sticky` on a `<tfoot>` is not reliable.
+            <tfoot
+              data-table-footer=""
+              className={cn(
+                "font-semibold text-[var(--text-primary)]",
+                isLoading && "opacity-60 transition-opacity",
+              )}
+            >
+              <tr>
+                {/* The selection column has nothing to total: an empty cell keeps the
+                    values under their own headers. */}
+                {selection && (
+                  <td
+                    className={cn(
+                      FOOTER_CELL,
+                      compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
+                    )}
+                  />
+                )}
+                {visibleColumns.map((col) => {
+                  const width = widths[col.key];
+                  const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
+                  const isLabel = col === footerLabelCol;
+                  const Cell = isLabel ? "th" : "td";
+                  return (
+                    <Cell
+                      key={col.key}
+                      data-col={col.key}
+                      scope={isLabel ? "row" : undefined}
+                      style={pinned}
+                      className={cn(
+                        FOOTER_CELL,
+                        "align-top",
+                        compact ? "px-2 py-1" : "px-3 py-2",
+                        width && "overflow-hidden text-ellipsis",
+                        // A `<th>` centres by default; the label reads from the start
+                        // like the cells above it, unless the column says otherwise.
+                        isLabel && "text-start",
+                        logicalAlign(col.className),
+                      )}
+                    >
+                      {col.footer ? footerValue(col) : isLabel ? footerLabel : null}
+                    </Cell>
+                  );
+                })}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
           {!unpaged && (
