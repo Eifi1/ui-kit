@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-select";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FLOATING_LABEL_CLASS, PHONE_QUERY } from "./ui";
 import { cn } from "../lib/cn";
+import { currencyMinorDigits } from "../lib/format";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
@@ -182,17 +183,6 @@ interface AmountInputProps {
   onCommit?: (value: string) => void;
 }
 
-/** The currency's minor unit (CHF 2, JPY 0), or `undefined` for no currency or a code
- *  `Intl` does not accept. */
-function currencyDigits(code: string | undefined): number | undefined {
-  if (!code) return undefined;
-  try {
-    return new Intl.NumberFormat("en", { style: "currency", currency: code }).resolvedOptions()
-      .maximumFractionDigits;
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * A settled figure, rounded to `digits` (half away from zero) and clamped to
@@ -360,7 +350,12 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // draft is shown only while it still spells what the field holds; a value set from
     // outside, a calculator result or a commit falls back to the derived spelling.
     const [draft, setDraft] = useState<string | null>(null);
-    const derived = mark === "," ? shown.replace(/\./g, ",") : shown;
+    // A value the HOST set (not one typed here) is shown at the currency's minor unit
+    // while the field is not being edited: an FX estimate of 93.4213 showed four
+    // decimals (keksdose live #356). Display only — `value` is the host's, untouched.
+    const displayDigits = digitsProp ?? currencyMinorDigits(currency);
+    const resting = focused ? shown : settleAmount(shown, displayDigits);
+    const derived = mark === "," ? resting.replace(/\./g, ",") : resting;
     const draftAs = draft === null ? "" : sanitizeLive(normalizeTypedMarks(draft, mark));
     const display =
       draft === null
@@ -380,7 +375,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // edit the field's own text that is simply what the field was showing; the
     // desktop calculator keeps its expression in a popover the field never sees,
     // so it passes it in (see `CalculatorButton`'s `onChange`).
-    const digits = digitsProp ?? currencyDigits(currency);
+    const digits = digitsProp ?? currencyMinorDigits(currency);
     const settle = (text: string) => settleAmount(text, digits, min, max);
     const handleText = (raw: string, previous: string = shown) => {
       const text = sanitizeLive(raw);

@@ -102,3 +102,27 @@ Picked up by `^0.15.0`.
   the viewport. It re-measures when recharts' slide ends. The 0.15.2 width cap alone still
   let a wide tooltip open to the right of the pointer and run its values off a 390px
   screen (lenkbank).
+
+## 0.15.4
+
+Picked up by `^0.15.0`. keksdose's 406px round (live #356–#367).
+
+- **SeriesChart `tooltip.placement`** (M1, opt-in): `"cursor"` (default, as before),
+  `"above"`, `"below"` or `"auto"`.
+  - **Above / below:** the values show in a row reserved over or under the plot,
+    so a finger never covers them. The row is reserved from the first render, so
+    the plot doesn't jump on the first tap. Hover, tap, touch drag and the
+    arrow-key stops fill it.
+  - **Auto:** `"above"` below 640px and `"cursor"` from 640px up.
+  - **App-wide default:** set it once with `<UiKitProvider chartTooltipPlacement="auto">`.
+  - **Also:** the value cell gets `dir="auto"`, so an RTL negative no longer renders
+    as "26.6-".
+- **FormActions `placement="sticky"`** sits on AppShell's phone nav (offset by
+  `--app-nav-h`) instead of under it (M2).
+- **Chip:** icon-plus-text children sit in a row, and `icon` also takes a ready element
+  (`icon={<Check className="…" />}`) for a glyph whose colour carries a state (M3).
+- **NumberInput:** the end padding is the unit's (and calculator's) measured width, not a
+  fixed 32px, so a "%" no longer takes half of a narrow cell (M4).
+- **AmountInput:** a value the host sets is shown at the currency's minor unit while the
+  field rests (93.4213 CHF reads 93.42); `value` itself is untouched. New exports:
+  `currencyMinorDigits(currency)` and `roundToCurrency(value, currency, digits?)` (M5).

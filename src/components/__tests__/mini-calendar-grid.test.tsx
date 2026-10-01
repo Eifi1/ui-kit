@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MiniCalendar } from "../mini-calendar";
 import { parseIsoDate } from "../../lib/dates";
@@ -211,6 +211,15 @@ describe("what the grid says about each day", () => {
 });
 
 describe("range mode says which end the next click sets", () => {
+  // The calendar opens on TODAY's month when nothing is selected, and these clicks are
+  // September 2026 days: pinned, or the test fails every month but one (it did on
+  // 1 October 2026). Only the clock — the live region schedules a real timer.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 14, 9, 30));
+  });
+  afterEach(() => vi.useRealTimers());
+
   const hint = () => {
     const id = grid().getAttribute("aria-describedby");
     return id ? document.getElementById(id)?.textContent : null;

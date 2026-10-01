@@ -26,7 +26,12 @@ import {
   visibleSeries,
   zoomAxesFor,
 } from "@eifi1/ui-kit";
-import type { LegendEntry, SeriesChartAxis, SeriesChartSeries } from "@eifi1/ui-kit";
+import type {
+  LegendEntry,
+  SeriesChartAxis,
+  SeriesChartSeries,
+  SeriesChartTooltipPlacement,
+} from "@eifi1/ui-kit";
 import { Example, Note, OutTable } from "../lib/section";
 
 /**
@@ -146,6 +151,7 @@ export function SeriesChartDemo() {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("auto");
   const [budgeted, setBudgeted] = useState<readonly string[]>([]);
   const [hiddenCurve, setHiddenCurve] = useState<ReadonlySet<string>>(new Set());
+  const [placement, setPlacement] = useState<SeriesChartTooltipPlacement>("auto");
 
   const channels: (SeriesChartSeries & { unit: string })[] = [
     { key: "position", label: "Position", axis: "mm", unit: "mm", color: paletteFor(0) },
@@ -263,6 +269,44 @@ export function SeriesChartDemo() {
             at every width. An axis over budget still scales its line (drag to zoom: it refits), and its
             unit — <code className="font-mono">unit</code>, or the bracket at the end of its title —
             moves to the legend entry and the tooltip.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
+        label="SeriesChart — tooltip placement"
+        hint="on a phone the floating box sat under the finger, on the very data it reported: above or below, the values go to a readout row reserved outside the plot"
+      >
+        <div className="mb-2">
+          <ToggleGroup<SeriesChartTooltipPlacement>
+            aria-label="Tooltip placement"
+            value={placement}
+            onChange={setPlacement}
+            options={[
+              { value: "auto", label: "auto" },
+              { value: "cursor", label: "cursor" },
+              { value: "above", label: "above" },
+              { value: "below", label: "below" },
+            ]}
+          />
+        </div>
+        <SeriesChart
+          rows={CURVE}
+          series={CURVE_SERIES}
+          axes={CURVE_AXES}
+          x={SWEEP_X}
+          valueFormat={(v) => ONE.format(v)}
+          tooltip={{ placement }}
+        />
+        <div className="mt-3">
+          <Note>
+            <code className="font-mono">tooltip=&#123;&#123; placement &#125;&#125;</code>, or once for the
+            whole app with <code className="font-mono">&lt;UiKitProvider chartTooltipPlacement="auto"&gt;</code>{" "}
+            (a chart's own prop wins; the default stays <em>cursor</em>). <em>auto</em> is the readout
+            above the plot below 640 px and the floating box from there up. The row is there before the
+            first tap — idle it lists the series with a dash — so the plot never jumps; hover, a tap,
+            a drag along the line and the arrow keys all fill it, while the cursor line and the active
+            dots stay on the plot. Series whose axis the budget hid say their unit there, as in the box.
           </Note>
         </div>
       </Example>

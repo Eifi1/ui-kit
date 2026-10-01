@@ -160,7 +160,15 @@ export function FormActions({
       {...rest}
       style={
         placement === "sticky"
-          ? { paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))", ...style }
+          ? {
+              paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+              // On the phone's bottom nav, not behind it (keksdose live #361): `bottom-0`
+              // pinned the row under AppShell's nav, which covers the page's last ~56px.
+              // `--app-nav-h` is the nav's measured height (0px from md up, and outside an
+              // AppShell); the 1px overlaps the two top borders into one line.
+              bottom: "max(0px, calc(var(--app-nav-h, 0px) - 1px))",
+              ...style,
+            }
           : style
       }
       className={cn("flex flex-wrap items-center gap-2", ALIGN_CLASS[justify], PLACEMENT_CLASS[placement], className)}
