@@ -113,10 +113,13 @@ import * as i18nZh from "../i18n/locales/zh";
 const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.13.0: the crash screen's report helpers — `isChunkLoadError`, `formatCrashReport`,
   // `crashFingerprint` (+3).
-  ["@eifi1/ui-kit", barrel, 477],
+  // 0.15.4: `currencyMinorDigits`, `roundToCurrency` (keksdose M5);
+  // `resolveTooltipPlacement`, `useKitChartTooltipPlacement` (keksdose M1) (+4).
+  ["@eifi1/ui-kit", barrel, 481],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
-  ["@eifi1/ui-kit/chart", chart, 58],
+  // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/chart", chart, 59],
   ["@eifi1/ui-kit/data-table", dataTable, 27],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).

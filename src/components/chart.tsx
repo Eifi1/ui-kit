@@ -243,6 +243,21 @@ interface ChartTooltipContentProps {
   boundaryRef?: RefObject<HTMLElement | null>;
   /** Injected by recharts: keep series drawn with `hide` in the tooltip. */
   includeHidden?: boolean;
+  /**
+   * `"floating"` (the default): the box recharts moves with the cursor. `"readout"`: the
+   * same heading and values as a flat row for a FIXED place outside the plot — a
+   * `SeriesChart` whose `tooltip.placement` is `"above"`/`"below"` portals it there, so
+   * a finger on a phone no longer sits on the box it is trying to read (keksdose #359).
+   * No border, shadow, width cap or viewport nudge; the values flow in a grid whose
+   * column count depends on the row's width alone, so the row is the same height
+   * whatever is being pointed at — and, idle, it shows {@link idleKeys} with "—".
+   */
+  variant?: "floating" | "readout";
+  /** Readout only: the series to list while nothing is active, so the row keeps the
+   *  height it will have once something is. */
+  idleKeys?: readonly string[];
+  /** Readout only: the heading while nothing is active. Default "—". */
+  idleLabel?: ReactNode;
 }
 
 export function ChartTooltipContent({
@@ -257,13 +272,19 @@ export function ChartTooltipContent({
   coordinate,
   boundaryRef,
   includeHidden = false,
+  variant = "floating",
+  idleKeys,
+  idleLabel,
 }: ChartTooltipContentProps) {
   const config = useChart();
   const tipRef = useRef<HTMLDivElement>(null);
+  const readout = variant === "readout";
   // `ChartTooltip` keeps null values (so they can print "—"), which also keeps the
   // series a legend toggle switched off with `hide`; those go here instead.
   const items = includeHidden ? payload : payload?.filter((item) => item.hide !== true);
-  const visible = Boolean(active && items?.length);
+  const shown = Boolean(active && items?.length);
+  // Everything below that measures and moves the box is about a FLOATING one.
+  const visible = shown && !readout;
   // Recharts anchors the tooltip at coordinate.x inside the full (scrolled) chart
   // width; subtract the container's scrollLeft to get its on-screen x, then flip
   // left if the tooltip's own width would run past the visible right edge.
@@ -332,6 +353,85 @@ export function ChartTooltipContent({
       setNudge(next);
     }
   }, [visible, x, payload, label, flip, settled]);
+  // One series' line — the floating box stacks them; the readout lays them in a grid,
+  // where a long name is cut rather than wrapped so every cell stays one line high.
+  const tooltipRow = (item: TooltipPayloadItem, i: number, inRow: boolean) => {
+    // Bars/lines/areas identify a series by dataKey; pies/treemaps key off
+    // `name` (the nameKey value). Prefer whichever the config knows.
+    const dk = item.dataKey != null ? String(item.dataKey) : undefined;
+    const nm = item.name != null ? String(item.name) : undefined;
+    const cfgKey = dk && config[dk] ? dk : nm && config[nm] ? nm : (dk ?? nm ?? String(i));
+    const series = config[cfgKey];
+    const fill = typeof item.payload?.fill === "string" ? item.payload.fill : undefined;
+    // The data point's own `fill` before recharts' `item.color`: a treemap tile,
+    // or a bar with a per-cell colour, IS the colour the reader is pointing at,
+    // while `item.color` is the series-wide one — every tile's swatch came out
+    // `--chart-1` whatever colour the tile was.
+    const color = paintedColor(cfgKey, series) ?? fill ?? item.color ?? "#64748b";
+    const name = series?.label ?? nm ?? cfgKey;
+    const raw = tooltipValue(item.value);
+    let text: ReactNode;
+    // An idle readout cell has asked nothing yet, so there is no absence for
+    // `formatValue` to word — it is the bare mark.
+    if (inRow && !shown) text = NO_VALUE;
+    else if (formatValue) text = formatValue(raw);
+    else if (raw == null) text = NO_VALUE;
+    else text = valueFormatter ? valueFormatter(raw) : raw;
+    return (
+      <div
+        key={`${cfgKey}-${i}`}
+        // A readout cell is capped so a wide row does not push its value a column away
+        // from its name.
+        className={cn("flex items-center", inRow ? "min-w-0 max-w-[12rem] gap-1.5" : "gap-2")}
+      >
+        <span
+          className={cn(
+            "shrink-0 rounded-[2px]",
+            indicator === "dot" ? "h-2.5 w-2.5 rounded-full" : "h-2.5 w-1",
+          )}
+          style={{ backgroundColor: color }}
+        />
+        <span
+          className={cn("min-w-0 text-[var(--text-muted)]", inRow ? "truncate" : "break-words")}
+        >
+          {name}
+        </span>
+        <span
+          data-private
+          // Isolated, so an RTL page does not turn "-26.6" into "26.6-": a figure has no
+          // strong direction of its own, and one formatted with an RTL mark keeps it.
+          dir="auto"
+          className="ms-auto shrink-0 whitespace-nowrap font-mono font-medium tabular-nums text-[var(--text-primary)]"
+        >
+          {text}
+        </span>
+      </div>
+    );
+  };
+
+  if (readout) {
+    // Idle, the row lists every series with no value — the same cells it will have, so
+    // nothing under it moves on the first tap.
+    const rows: TooltipPayloadItem[] = shown
+      ? items!
+      : (idleKeys ?? Object.keys(config)).map((key) => ({ dataKey: key }));
+    return (
+      <div className="text-xs" data-chart-readout={shown ? "active" : "idle"}>
+        {/* A full 24 px line: the zoom's reset button sits at the top corner of a chart
+            whose row is above it, and has to fit beside the heading, not over a value. */}
+        <div data-readout-heading className="truncate font-medium leading-6 text-[var(--text-primary)]">
+          {shown && !hideLabel && label != null
+            ? labelFormatter
+              ? labelFormatter(label)
+              : label
+            : (idleLabel ?? NO_VALUE)}
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-x-4 gap-y-1">
+          {rows.map((item, i) => tooltipRow(item, i, true))}
+        </div>
+      </div>
+    );
+  }
   if (!visible || !items) return null;
   return (
     <div
@@ -359,46 +459,7 @@ export function ChartTooltipContent({
           {labelFormatter ? labelFormatter(label) : label}
         </div>
       )}
-      <div className="grid gap-1.5">
-        {items.map((item, i) => {
-          // Bars/lines/areas identify a series by dataKey; pies/treemaps key off
-          // `name` (the nameKey value). Prefer whichever the config knows.
-          const dk = item.dataKey != null ? String(item.dataKey) : undefined;
-          const nm = item.name != null ? String(item.name) : undefined;
-          const cfgKey = dk && config[dk] ? dk : nm && config[nm] ? nm : (dk ?? nm ?? String(i));
-          const series = config[cfgKey];
-          const fill = typeof item.payload?.fill === "string" ? item.payload.fill : undefined;
-          // The data point's own `fill` before recharts' `item.color`: a treemap tile,
-          // or a bar with a per-cell colour, IS the colour the reader is pointing at,
-          // while `item.color` is the series-wide one — every tile's swatch came out
-          // `--chart-1` whatever colour the tile was.
-          const color = paintedColor(cfgKey, series) ?? fill ?? item.color ?? "#64748b";
-          const name = series?.label ?? nm ?? cfgKey;
-          const raw = tooltipValue(item.value);
-          let shown: ReactNode;
-          if (formatValue) shown = formatValue(raw);
-          else if (raw == null) shown = NO_VALUE;
-          else shown = valueFormatter ? valueFormatter(raw) : raw;
-          return (
-            <div key={`${cfgKey}-${i}`} className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "shrink-0 rounded-[2px]",
-                  indicator === "dot" ? "h-2.5 w-2.5 rounded-full" : "h-2.5 w-1",
-                )}
-                style={{ backgroundColor: color }}
-              />
-              <span className="min-w-0 break-words text-[var(--text-muted)]">{name}</span>
-              <span
-                data-private
-                className="ms-auto shrink-0 whitespace-nowrap font-mono font-medium tabular-nums text-[var(--text-primary)]"
-              >
-                {shown}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <div className="grid gap-1.5">{items.map((item, i) => tooltipRow(item, i, false))}</div>
     </div>
   );
 }

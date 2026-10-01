@@ -68,7 +68,13 @@ import { autoAxisBudget, axisUnit, budgetedAxes, type SeriesChartAxisBudget } fr
 // The rule stays internal, like the ticks; the one type a public prop names is re-exported.
 export type { SeriesChartAxisBudget } from "./series-chart-budget";
 import { paletteFor } from "../theme/chart-palette";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import {
+  useKitChartTooltipPlacement,
+  useKitLabels,
+  useKitLocale,
+  type ChartTooltipPlacement,
+} from "../i18n/kit-labels";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { cn } from "../lib/cn";
 
 export interface SeriesChartSeries {
@@ -356,8 +362,49 @@ export interface SeriesChartX {
   integerTicks?: boolean;
 }
 
+/** Where the tooltip goes — see {@link SeriesChartTooltip.placement}. */
+export type SeriesChartTooltipPlacement = ChartTooltipPlacement;
+
+/** Below Tailwind's `sm` — where `"auto"` takes the tooltip off the plot. Narrower than
+ *  the kit's `PHONE_QUERY` (767 px) on purpose: a tablet's plot is wide enough that the
+ *  box beside the finger leaves the data in view; a phone's is not. */
+const TOOLTIP_READOUT_QUERY = "(max-width: 639px)";
+
+/**
+ * The placement a chart actually uses: its own, else the provider's, else `"cursor"`;
+ * `"auto"` is `"above"` on a phone (`phone`: below `sm`) and `"cursor"` from `sm` up.
+ */
+export function resolveTooltipPlacement(
+  own: SeriesChartTooltipPlacement | undefined,
+  fromProvider: SeriesChartTooltipPlacement | undefined,
+  phone: boolean,
+): "cursor" | "above" | "below" {
+  const wanted = own ?? fromProvider ?? "cursor";
+  return wanted === "auto" ? (phone ? "above" : "cursor") : wanted;
+}
+
 /** Room for the tooltip beyond the chart — see {@link SeriesChartProps.tooltip}. */
 export interface SeriesChartTooltip {
+  /**
+   * Where the values under the pointer are shown (keksdose #359: on a phone the box
+   * sat under the finger, on the very data it was reporting).
+   * - `"cursor"` (the default): the floating box that follows the pointer.
+   * - `"above"` / `"below"`: a READOUT row — the same heading and values, flat — in
+   *   room reserved over or under the plot from the first render, so nothing jumps on
+   *   the first tap. It follows hover, a tap and the keyboard's stops; the cursor line
+   *   and the active dot stay on the plot, and no box floats. Idle, it lists the series
+   *   with "—" under the x axis' title. The row is taken out of the chart's `height`
+   *   (the plot gets shorter, the page around it does not move).
+   * - `"auto"`: `"above"` below Tailwind's `sm` (640 px), `"cursor"` from there up.
+   *
+   * Default: the provider's `chartTooltipPlacement`, else `"cursor"`.
+   *
+   * The row is deliberately NOT an `aria-live` region: scrubbing a line announces a
+   * value per pixel of travel. A keyboard reader already hears each stop's name
+   * ("period — series: value") from the stop itself, and the row stays in the
+   * document for a screen reader to read on its way past.
+   */
+  placement?: SeriesChartTooltipPlacement;
   /** Let the tooltip run past the chart's own box on that axis instead of recharts
    *  clamping it inside. Default: `{ x: true }` when `boundary` is set, else neither. */
   allowEscapeViewBox?: { x?: boolean; y?: boolean };
@@ -1173,6 +1220,10 @@ function SeriesPlot({
   // Up here, above the empty state's early return, like every hook.
   const [keyStop, setKeyStop] = useState(0);
   const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
+  // Where the tooltip goes, and — off the plot — the row it is portalled into.
+  const phone = useMediaQuery(TOOLTIP_READOUT_QUERY, false);
+  const placement = resolveTooltipPlacement(tooltip?.placement, useKitChartTooltipPlacement(), phone);
+  const [readout, setReadout] = useState<HTMLDivElement | null>(null);
 
   // The chart's own width, for the automatic axis budget. Its box, not the plot's: the
   // box does not change when an axis is hidden, so the rule cannot oscillate. Nothing
@@ -1495,13 +1546,21 @@ function SeriesPlot({
     animationEasing: "ease-out" as const,
   };
 
-  return (
+  const inRow = placement !== "cursor";
+  const chart = (
     <ChartContainer
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       config={config}
-      className={cn("w-full", heightClass, className, onPointClick && "cursor-pointer")}
-      style={heightStyle}
+      className={cn(
+        "w-full",
+        // With a readout the chart's height is the whole block's, and the plot takes
+        // what the row leaves.
+        inRow ? "min-h-0 flex-1" : heightClass,
+        className,
+        onPointClick && "cursor-pointer",
+      )}
+      style={inRow ? undefined : heightStyle}
     >
       <ComposedChart
         data={plotted as Record<string, unknown>[]}
@@ -1607,23 +1666,45 @@ function SeriesPlot({
             </YAxis>
           );
         })}
-        <ChartTooltip
-          {...(tooltip?.allowEscapeViewBox || tooltip?.boundary
-            ? { allowEscapeViewBox: tooltip.allowEscapeViewBox ?? { x: true } }
-            : {})}
-          // The content shifts itself 12 px off the cursor (or flips) against the
-          // boundary; recharts' own offset on top would double it.
-          {...(tooltip?.boundary ? { offset: 0 } : {})}
-          // The keyboard's stop shows its tooltip as the pointer's would.
-          defaultIndex={focusedStop?.index}
-          content={
-            <ChartTooltipContent
-              labelFormatter={(value) => xLabel(Number(value))}
-              valueFormatter={valueFormat ?? number}
-              boundaryRef={tooltip?.boundary}
+        {inRow ? (
+          // Not before the row exists: without its own portal recharts would float this
+          // content over the plot for the first frame.
+          readout && (
+            <ChartTooltip
+              portal={readout}
+              // recharts hides an inactive tooltip; the row shows its idle state instead.
+              wrapperStyle={{ visibility: "visible" }}
+              defaultIndex={focusedStop?.index}
+              content={
+                <ChartTooltipContent
+                  variant="readout"
+                  idleKeys={series.map((entry) => entry.key)}
+                  idleLabel={x.title || undefined}
+                  labelFormatter={(value) => xLabel(Number(value))}
+                  valueFormatter={valueFormat ?? number}
+                />
+              }
             />
-          }
-        />
+          )
+        ) : (
+          <ChartTooltip
+            {...(tooltip?.allowEscapeViewBox || tooltip?.boundary
+              ? { allowEscapeViewBox: tooltip.allowEscapeViewBox ?? { x: true } }
+              : {})}
+            // The content shifts itself 12 px off the cursor (or flips) against the
+            // boundary; recharts' own offset on top would double it.
+            {...(tooltip?.boundary ? { offset: 0 } : {})}
+            // The keyboard's stop shows its tooltip as the pointer's would.
+            defaultIndex={focusedStop?.index}
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value) => xLabel(Number(value))}
+                valueFormatter={valueFormat ?? number}
+                boundaryRef={tooltip?.boundary}
+              />
+            }
+          />
+        )}
         {series.map((entry) => {
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
@@ -1786,6 +1867,27 @@ function SeriesPlot({
         {zoom?.layer}
       </ComposedChart>
     </ChartContainer>
+  );
+  if (!inRow) return chart;
+  // The row's own box, reserved from the first render: its idle state has the cells the
+  // active one will, so the first tap fills it in rather than pushing the plot down.
+  const row = (
+    <div
+      ref={setReadout}
+      data-tooltip-readout={placement}
+      className={cn(
+        "shrink-0",
+        // Above, the heading line shares the top corner with the zoom's reset button.
+        placement === "above" ? "pb-2 [&_[data-readout-heading]]:pe-32" : "pt-2",
+      )}
+    />
+  );
+  return (
+    <div className={cn("flex w-full flex-col", heightClass)} style={heightStyle}>
+      {placement === "above" && row}
+      {chart}
+      {placement === "below" && row}
+    </div>
   );
 }
 
