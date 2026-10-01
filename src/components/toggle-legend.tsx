@@ -194,6 +194,17 @@ export interface StaticLegendProps {
   orientation?: "horizontal" | "vertical";
   /** The list's accessible name. Default: the `seriesChart.legend` label. */
   "aria-label"?: string;
+  /**
+   * `ul` (default): a list — "list, 4 items", walked with the list keys. Its entries are
+   * `listitem`s, so a host test that counts `getAllByRole("listitem")` on a page with
+   * the legend on it counts the legend too: scope it (`within(...)`) or use `div`.
+   *
+   * `div`: a named `role="group"` of plain entries, for a legend set inside something
+   * that is already a list or a table row, where a list in a list reads as nesting that
+   * is not there, or where the entries are too few for "list, 2 items" to help. The
+   * entries are read in order either way; only the list framing goes.
+   */
+  as?: "ul" | "div";
   className?: string;
   /** Per-instance strings over `<UiKitProvider labels={{ seriesChart }}>`. */
   labels?: Partial<SeriesChartLabels>;
@@ -218,13 +229,19 @@ export function StaticLegend({
   entries,
   orientation = "horizontal",
   "aria-label": ariaLabel,
+  as = "ul",
   className,
   labels: labelsProp,
 }: StaticLegendProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   if (entries.length === 0) return null;
+  const List = as;
+  const Item = as === "ul" ? "li" : "div";
   return (
-    <ul
+    <List
+      // A `div` takes `group`: a name on a role-less div is one ARIA forbids and
+      // screen readers drop, and the name is what says these marks are a key.
+      role={as === "div" ? "group" : undefined}
       aria-label={ariaLabel ?? labels.legend}
       className={cn(
         "m-0 flex list-none gap-x-3 gap-y-1 p-0",
@@ -235,7 +252,7 @@ export function StaticLegend({
       )}
     >
       {entries.map((entry) => (
-        <li
+        <Item
           key={entry.key}
           className={cn(
             "flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]",
@@ -244,9 +261,9 @@ export function StaticLegend({
         >
           <LegendMark entry={entry} off={false} />
           {entry.label}
-        </li>
+        </Item>
       ))}
-    </ul>
+    </List>
   );
 }
 

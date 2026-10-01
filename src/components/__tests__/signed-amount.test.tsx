@@ -79,3 +79,45 @@ describe("Tone / toneTextClass", () => {
     expect(screen.getByText("12")).toHaveClass("text-[var(--success)]");
   });
 });
+
+describe("palette='money' and flatWithin (keksdose dev#434 price changes)", () => {
+  it("paints a verdict in the money pair: a price rise is an expense, a fall income", () => {
+    render(
+      <>
+        <SignedAmount value={0.3} goodDirection="down" palette="money" locale="en-US" data-testid="rise" />
+        <SignedAmount value={-0.3} goodDirection="down" palette="money" locale="en-US" data-testid="fall" />
+        <SignedAmount value={0.3} goodDirection="down" locale="en-US" data-testid="status" />
+      </>,
+    );
+    expect(screen.getByTestId("rise")).toHaveClass("text-[var(--money-expense)]");
+    expect(screen.getByTestId("fall")).toHaveClass("text-[var(--money-income)]");
+    // Unset, the verdict is still success / danger.
+    expect(screen.getByTestId("status")).toHaveClass("text-[var(--danger)]");
+  });
+
+  it("Delta takes the same palette, sentence unchanged", () => {
+    render(<Delta value={0.04} unit="percent" goodDirection="down" palette="money" locale="en-US" />);
+    expect(screen.getByText("Up 4% (worse)").parentElement).toHaveClass("text-[var(--money-expense)]");
+  });
+
+  it("counts |value| <= flatWithin as no change: no sign, muted, no verdict", () => {
+    render(
+      <>
+        <SignedAmount value={-0.004} digits={2} flatWithin={0.005} goodDirection="down" data-testid="tiny" locale="en-US" />
+        <SignedAmount value={0.005} flatWithin={0.005} data-testid="edge" locale="en-US" />
+        <SignedAmount value={0.006} flatWithin={0.005} digits={3} data-testid="past" locale="en-US" />
+        <Delta value={0.004} digits={2} flatWithin={0.005} goodDirection="down" palette="money" locale="en-US" />
+      </>,
+    );
+    const tiny = screen.getByTestId("tiny");
+    expect(tiny).toHaveAttribute("data-direction", "flat");
+    expect(tiny).toHaveClass("text-[var(--text-muted)]");
+    // No "−0.00": the sign that flat-by-rounding used to keep.
+    expect(tiny.querySelector("[aria-hidden]")).toHaveTextContent(/^0\.00$/);
+    expect(screen.getByTestId("edge")).toHaveAttribute("data-direction", "flat");
+    expect(screen.getByTestId("past")).toHaveAttribute("data-direction", "up");
+    const delta = screen.getByText("No change").parentElement!;
+    expect(delta).toHaveClass("text-[var(--text-muted)]");
+    expect(delta.parentElement).toHaveAttribute("data-direction", "flat");
+  });
+});

@@ -78,6 +78,17 @@ export type GoodDirection = "up" | "down";
  */
 export type SignedAmountTone = "signed" | "income" | "expense" | "neutral" | "verdict";
 
+/**
+ * The colours a VERDICT is painted in (`goodDirection` set, or `tone="verdict"`):
+ *  - `status` (default) — `success` / `danger`: good news, bad news.
+ *  - `money` — `income` / `expense` (the `.text-money-pos` / `.text-money-neg` pair):
+ *    the app's ONE money palette (keksdose dev#434). A grocery price going UP is money
+ *    going out, so with `goodDirection="down"` it wears the expense colour every other
+ *    outflow in the app wears — not a red that says "error". keksdose coloured its
+ *    three price-change sites by hand for want of this.
+ */
+export type VerdictPalette = "status" | "money";
+
 /** What a signed figure says to a screen reader, whose readers disagree about a
  *  leading "+" (most skip it) and a "−" (some read "dash", some nothing). */
 export interface SignedAmountLabels {
@@ -117,18 +128,28 @@ function useMagnitudeFormatter({ currency, unit, compact, digits, format, locale
   };
 }
 
-function directionOf(value: number): "up" | "down" | "flat" {
-  return value > 0 ? "up" : value < 0 ? "down" : "flat";
+/** `flatWithin` widens "no change" from exactly zero to a band round it: a price that
+ *  moved by a fraction of a cent, a ratio that rounds to "0.0 %", is not a rise, and an
+ *  arrow and a colour for it claim one. Inclusive — `|value| ≤ flatWithin` is flat. */
+function directionOf(value: number, flatWithin = 0): "up" | "down" | "flat" {
+  if (Math.abs(value) <= Math.max(0, flatWithin)) return "flat";
+  return value > 0 ? "up" : "down";
+}
+
+function verdictClass(good: boolean, palette: VerdictPalette): string {
+  if (palette === "money") return good ? TEXT_TONE.income : TEXT_TONE.expense;
+  return good ? TEXT_TONE.success : TEXT_TONE.danger;
 }
 
 function signedToneClass(
   tone: SignedAmountTone,
   dir: "up" | "down" | "flat",
   goodDirection: GoodDirection | undefined,
+  palette: VerdictPalette,
 ): string {
   if (tone === "verdict" || (goodDirection && tone === "signed")) {
     if (dir === "flat" || !goodDirection) return TEXT_TONE.muted;
-    return dir === goodDirection ? TEXT_TONE.success : TEXT_TONE.danger;
+    return verdictClass(dir === goodDirection, palette);
   }
   if (tone === "signed") return dir === "flat" ? TEXT_TONE.muted : dir === "up" ? TEXT_TONE.income : TEXT_TONE.expense;
   if (tone === "neutral") return "";
@@ -143,8 +164,16 @@ export interface SignedAmountProps
   value: number;
   /** See {@link SignedAmountTone}. Default `signed`, or `verdict` with `goodDirection`. */
   tone?: SignedAmountTone;
-  /** Which way is good news — colours by verdict (`success` / `danger`). */
+  /** Which way is good news — colours by verdict (`success` / `danger`, or the money
+   *  pair with `palette="money"`). */
   goodDirection?: GoodDirection;
+  /** See {@link VerdictPalette}. Default `status`. Only a verdict reads it. */
+  palette?: VerdictPalette;
+  /** A magnitude up to which the figure counts as NO change: no sign, no arrow but the
+   *  flat dash, muted, spoken without "plus"/"minus" (inclusive; default 0). The digits
+   *  still print `|value|` — use a band below the display precision, where they round
+   *  to zero anyway (`flatWithin={0.005}` at two digits). */
+  flatWithin?: number;
   /** Print "+" before a positive figure (default `true`). A negative always shows its
    *  minus; zero shows neither. */
   showPlus?: boolean;
@@ -177,6 +206,8 @@ export function SignedAmount({
   locale,
   tone = "signed",
   goodDirection,
+  palette = "status",
+  flatWithin,
   showPlus = true,
   arrow = false,
   sensitive = false,
@@ -187,7 +218,7 @@ export function SignedAmount({
   const text = useKitLabels("signedAmount", DEFAULT_SIGNED_AMOUNT_LABELS, labels);
   const fmt = useMagnitudeFormatter({ currency, unit, compact, digits, format, locale });
   const finite = Number.isFinite(value);
-  const dir = finite ? directionOf(value) : "flat";
+  const dir = finite ? directionOf(value, flatWithin) : "flat";
   const amount = finite ? fmt(Math.abs(value)) : "—";
   // U+2212, the typographic minus: the same width as "+", so a column of signed figures
   // lines up under `tabular-nums`.
@@ -201,7 +232,7 @@ export function SignedAmount({
       data-direction={dir}
       className={cn(
         "relative inline-flex items-center gap-0.5 whitespace-nowrap tabular-nums",
-        signedToneClass(tone, dir, goodDirection),
+        signedToneClass(tone, dir, goodDirection, palette),
         className,
       )}
     >
@@ -221,6 +252,12 @@ export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithou
   /** Which way is good news. Unset, the change is stated and not judged (muted); set,
    *  it is coloured `success` / `danger` and its sentence says "(better)" / "(worse)". */
   goodDirection?: GoodDirection;
+  /** See {@link VerdictPalette}: `money` paints good news `income` and bad news
+   *  `expense` instead of `success` / `danger`. Default `status`. */
+  palette?: VerdictPalette;
+  /** See {@link SignedAmountProps.flatWithin}: up to this magnitude the change is
+   *  "unchanged" — flat dash, muted, no verdict. Default 0. */
+  flatWithin?: number;
   /** What it is measured against, after it: "vs last month". */
   label?: ReactNode;
   /** Hide the arrow (shown by default, as on a StatTile). At zero the arrow is a flat
@@ -249,6 +286,8 @@ export function Delta({
   format,
   locale,
   goodDirection,
+  palette = "status",
+  flatWithin,
   label,
   arrow = true,
   sensitive = false,
@@ -260,14 +299,14 @@ export function Delta({
   const fmt = useMagnitudeFormatter({ currency, unit, compact, digits, format, locale });
   if (!Number.isFinite(value)) return null;
   const amount = fmt(Math.abs(value));
-  const dir = directionOf(value);
+  const dir = directionOf(value, flatWithin);
   const Icon = ARROW[dir];
   let spoken = dir === "up" ? text.increase(amount) : dir === "down" ? text.decrease(amount) : text.unchanged;
   let tone = TEXT_TONE.muted;
   if (goodDirection && dir !== "flat") {
     const good = dir === goodDirection;
     spoken = good ? text.better(spoken) : text.worse(spoken);
-    tone = good ? TEXT_TONE.success : TEXT_TONE.danger;
+    tone = verdictClass(good, palette);
   }
   return (
     <span
