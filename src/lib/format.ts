@@ -348,3 +348,33 @@ export function useKitFormat(locale?: string): KitFormat {
     [kitLocale],
   );
 }
+
+/* ── Currency minor units ──────────────────────────────────────────────────── */
+
+/**
+ * The decimals a currency is written with — its minor unit: CHF and EUR 2, JPY 0,
+ * KWD 3 — from `Intl`, or `undefined` for a code `Intl` does not accept. The rule
+ * AmountInput settles a typed figure by, for a host that needs it outside the field.
+ */
+export function currencyMinorDigits(currency: string | null | undefined): number | undefined {
+  if (!currency) return undefined;
+  try {
+    return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * `value` rounded to the currency's minor unit (or to `digits`), half away from zero,
+ * in decimal arithmetic: 93.4213 CHF → 93.42, 1.005 EUR → 1.01 (`Math.round(1.005 *
+ * 100)` is 100, since 1.005 is 1.00499… in binary). A non-finite value, or a currency
+ * `Intl` does not know without `digits`, comes back unchanged (keksdose live #356: an
+ * FX estimate set into an AmountInput showed four decimals).
+ */
+export function roundToCurrency(value: number, currency: string | null | undefined, digits?: number): number {
+  const places = digits ?? currencyMinorDigits(currency);
+  if (places === undefined || !Number.isFinite(value)) return value;
+  const magnitude = Number(`${Math.round(Number(`${Math.abs(value)}e${places}`))}e-${places}`);
+  return value < 0 ? -magnitude : magnitude;
+}

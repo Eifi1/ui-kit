@@ -417,7 +417,11 @@ interface KitI18n {
   locale?: string;
   weekStartsOn?: WeekDay;
   linkComponent?: KitLinkComponent;
+  chartTooltipPlacement?: ChartTooltipPlacement;
 }
+
+/** Where a chart shows the values under the pointer — see `SeriesChartTooltip.placement`. */
+export type ChartTooltipPlacement = "cursor" | "above" | "below" | "auto";
 
 /**
  * What every kit link receives: the anchor attributes the kit decided (href, class,
@@ -475,6 +479,13 @@ export interface UiKitProviderProps {
    * hash-router `#/path` is handed to it like `/path` (see `pickLinkRenderer`).
    */
   linkComponent?: KitLinkComponent;
+  /**
+   * Where every `SeriesChart` below shows its tooltip when it does not say so itself
+   * (`tooltip.placement`) — set once so an app's phone charts stop putting the box under
+   * the reader's finger (keksdose #359). Default: `"cursor"`, the box that follows the
+   * pointer, as before.
+   */
+  chartTooltipPlacement?: ChartTooltipPlacement;
   children: ReactNode;
 }
 
@@ -491,6 +502,7 @@ export function UiKitProvider({
   locale,
   weekStartsOn,
   linkComponent,
+  chartTooltipPlacement,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -500,8 +512,9 @@ export function UiKitProvider({
       weekStartsOn: weekStartsOn ?? outer.weekStartsOn,
       labels: mergeOverrides(outer.labels, labels),
       linkComponent: linkComponent ?? outer.linkComponent,
+      chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent],
+    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -587,6 +600,11 @@ export function useKitLink(): KitLinkComponent | undefined {
 
 export function useKitWeekStart(): WeekDay | undefined {
   return useContext(KitI18nContext).weekStartsOn;
+}
+
+/** The provider's `chartTooltipPlacement`, or `undefined` — a chart's own prop wins. */
+export function useKitChartTooltipPlacement(): ChartTooltipPlacement | undefined {
+  return useContext(KitI18nContext).chartTooltipPlacement;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

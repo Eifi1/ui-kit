@@ -447,6 +447,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "series-chart": [
     "SeriesChart — an axis per unit, and a legend of switches",
     "SeriesChart — an axis budget",
+    "SeriesChart — tooltip placement",
     "SeriesChart — five strokes for five channels",
     "SharedXZoom — one x window for a stack",
     "SeriesChart — spans close a loop, connectNulls bridges two grids",
