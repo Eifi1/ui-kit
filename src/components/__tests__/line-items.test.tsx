@@ -236,4 +236,126 @@ describe("LineItems", () => {
       for (const cell of Array.from(row.children)) expect(cell.className).not.toContain("col-span");
     });
   });
+
+  describe("0.17: summary status, money tones, a toned state line, link action, remove placement and alignment", () => {
+    const summaryBox = (c: HTMLElement) => c.querySelector("[data-line-items-summary]") as HTMLElement;
+
+    it("summary.status renders beside the value, before the action", () => {
+      const { container } = render(
+        <Lines
+          summary={{
+            label: "Difference",
+            value: "0.00",
+            tone: "success",
+            status: <span>Balanced</span>,
+            action: { label: "Fix", onClick: () => {} },
+          }}
+        />,
+      );
+      const box = summaryBox(container);
+      const status = box.querySelector("[data-line-items-summary-status]") as HTMLElement;
+      expect(status).toHaveTextContent("Balanced");
+      const value = within(box).getByText("0.00");
+      expect(value.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      const action = within(box).getByRole("button", { name: "Fix" });
+      expect(status.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("no status, no status slot", () => {
+      const { container } = render(<Lines summary={{ label: "Left", value: "0.00" }} />);
+      expect(container.querySelector("[data-line-items-summary-status]")).toBeNull();
+    });
+
+    it("summary.tone income / expense take the money palette", () => {
+      const { rerender } = render(<Lines summary={{ label: "Left", value: "12.00", tone: "income" }} />);
+      expect(screen.getByText("12.00").className).toContain("text-[var(--money-income)]");
+      rerender(<Lines summary={{ label: "Left", value: "12.00", tone: "expense" }} />);
+      expect(screen.getByText("12.00").className).toContain("text-[var(--money-expense)]");
+    });
+
+    it("with no value the tone colours the label; with a value the label stays neutral", () => {
+      const { rerender } = render(<Lines summary={{ label: "Waiting for the total", tone: "muted" }} />);
+      const label = screen.getByText("Waiting for the total");
+      expect(label).toHaveAttribute("data-tone", "muted");
+      expect(label.className).toContain("text-[var(--text-muted)]");
+      rerender(<Lines summary={{ label: "Left", value: "1.00", tone: "danger" }} />);
+      expect(screen.getByText("Left")).not.toHaveAttribute("data-tone");
+      expect(screen.getByText("Left").className).not.toContain("text-[var(--danger)]");
+    });
+
+    it("summary.action variant link: a muted link button; secondary by default", () => {
+      const onClick = vi.fn();
+      const { rerender } = render(<Lines summary={{ label: "Left", action: { label: "Settle", onClick } }} />);
+      expect(screen.getByRole("button", { name: "Settle" }).className).toContain("border");
+      rerender(<Lines summary={{ label: "Left", action: { label: "Settle", onClick, variant: "link" } }} />);
+      const link = screen.getByRole("button", { name: "Settle" });
+      expect(link.className).toContain("p-0");
+      expect(link.className).toContain("text-[var(--text-secondary)]");
+      fireEvent.click(link);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("removePlacement=inline: the remove button shares the last field's cell; wide, the wrapper dissolves", () => {
+      const cols: LineItemsColumn<Line>[] = [COLUMNS[0], COLUMNS[1], { ...COLUMNS[0], key: "memo", header: "Memo" }];
+      render(<LineItems items={[blank()]} columns={cols} narrowColumns={2} removePlacement="inline" onRemove={() => {}} />);
+      const row = rows()[0];
+      const cells = Array.from(row.children) as HTMLElement[];
+      // Three children: two cells and the wrapper — no remove cell of its own.
+      expect(cells).toHaveLength(3);
+      const wrapper = cells[2];
+      expect(wrapper).toHaveAttribute("data-line-items-inline");
+      expect(wrapper.className).toContain("@lg:contents");
+      expect(wrapper.className).toContain("items-end");
+      expect(within(wrapper).getByRole("textbox", { name: "Memo, row 1" })).toBeInTheDocument();
+      const remove = within(wrapper).getByRole("button", { name: "Remove row 1" });
+      expect((remove.closest("[data-line-items-remove-cell]") as HTMLElement).className).not.toContain("col-span-2");
+      expect((remove.closest("[data-line-items-remove-cell]") as HTMLElement).className).toContain("shrink-0");
+    });
+
+    it("removePlacement=inline keeps the last column's narrowSpan on the wrapper; floating centres it", () => {
+      const cols: LineItemsColumn<Line>[] = [COLUMNS[0], { ...COLUMNS[1], narrowSpan: 2 }];
+      render(
+        <LineItems
+          items={[blank()]}
+          columns={cols}
+          narrowColumns={2}
+          fieldLabels="floating"
+          removePlacement="inline"
+          onRemove={() => {}}
+        />,
+      );
+      const wrapper = rows()[0].querySelector("[data-line-items-inline]") as HTMLElement;
+      expect(wrapper.className).toContain("@2xs:col-span-2");
+      expect(wrapper.className).toContain("items-center");
+    });
+
+    it("removePlacement defaults to row: the remove button is a cell of its own", () => {
+      render(<LineItems items={[blank()]} columns={COLUMNS} onRemove={() => {}} />);
+      const row = rows()[0];
+      expect(row.querySelector("[data-line-items-inline]")).toBeNull();
+      expect(row.children).toHaveLength(3);
+    });
+
+    it("removeAlign: start by default, center when fields float, and as asked", () => {
+      const cell = () =>
+        within(rows()[0]).getByRole("button", { name: "Remove row 1" }).closest("[data-line-items-remove-cell]") as HTMLElement;
+      const { rerender } = render(<LineItems items={[blank()]} columns={COLUMNS} onRemove={() => {}} />);
+      expect(cell().className).toContain("@lg:self-start");
+      rerender(<LineItems items={[blank()]} columns={COLUMNS} fieldLabels="floating" onRemove={() => {}} />);
+      expect(cell().className).toContain("@lg:self-center");
+      rerender(
+        <LineItems items={[blank()]} columns={COLUMNS} fieldLabels="floating" removeAlign="start" onRemove={() => {}} />,
+      );
+      expect(cell().className).toContain("@lg:self-start");
+      rerender(<LineItems items={[blank()]} columns={COLUMNS} removeAlign="end" onRemove={() => {}} />);
+      expect(cell().className).toContain("@lg:self-end");
+    });
+
+    it("inline remove still moves focus to the row that took the removed one's place", async () => {
+      render(<Lines removePlacement="inline" initial={[blank(), blank(), blank()]} />);
+      await userEvent.click(screen.getByRole("button", { name: "Remove row 2" }));
+      expect(rows()).toHaveLength(2);
+      expect(screen.getByRole("button", { name: "Remove row 2" })).toHaveFocus();
+    });
+  });
 });
