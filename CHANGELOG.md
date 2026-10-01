@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.16.1](https://github.com/Eifi1/ui-kit/compare/v0.16.0...v0.16.1) (2026-10-01)
+
+### Fixed
+
+* **file-button:** the picked names in the kit Tooltip, not a native title; guard the rule ([047e105](https://github.com/Eifi1/ui-kit/commit/047e10595159c9d239bfd0db00444d7ccbc3d4b0)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+
 ## [0.16.0](https://github.com/Eifi1/ui-kit/compare/v0.15.5...v0.16.0) (2026-10-01)
 
 ### Added
