@@ -1,10 +1,13 @@
-import { createContext, forwardRef, useContext, useId } from "react";
+import { createContext, forwardRef, useContext, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Spinner } from "./ui";
 import { StatusDot } from "./status-dot";
+import { Collapse } from "./disclosure";
+import { toneTextClass } from "./signed-amount";
+import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 
@@ -96,11 +99,18 @@ export interface ListItemLinkProps {
   [key: `data-${string}`]: unknown;
 }
 
-const PAD: Record<ListDensity, { target: string; actions: string; gap: string; body: string }> = {
-  compact: { target: "gap-2 px-2 py-1.5", actions: "pe-1.5", gap: "gap-0.5", body: "px-2 pb-1.5" },
-  default: { target: "gap-3 px-3 py-2.5", actions: "pe-2", gap: "gap-1", body: "px-3 pb-2.5" },
-  comfortable: { target: "gap-3 px-4 py-3", actions: "pe-3", gap: "gap-1", body: "px-4 pb-3" },
+const PAD: Record<
+  ListDensity,
+  { target: string; actions: string; leadingActions: string; gap: string; body: string }
+> = {
+  compact: { target: "gap-2 px-2 py-1.5", actions: "pe-1.5", leadingActions: "ps-1.5", gap: "gap-0.5", body: "px-2 pb-1.5" },
+  default: { target: "gap-3 px-3 py-2.5", actions: "pe-2", leadingActions: "ps-2", gap: "gap-1", body: "px-3 pb-2.5" },
+  comfortable: { target: "gap-3 px-4 py-3", actions: "pe-3", leadingActions: "ps-3", gap: "gap-1", body: "px-4 pb-3" },
 };
+
+/** {@link ListItemBaseProps.trailingTone}: a {@link TextTone}, or `inherit` — no
+ *  colour of the slot's own, so an element's colour (or the row's) stands. */
+export type ListItemTrailingTone = TextTone | "inherit";
 
 const TARGET_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]";
@@ -124,8 +134,37 @@ interface ListItemBaseProps {
   subtitle?: ReactNode;
   /** `2` for a line that is a body rather than a label (keksdose's notification text). */
   subtitleLines?: 1 | 2;
+  /**
+   * A small line ABOVE the title, in the caption type: the group a row belongs to, a
+   * date heading, a category ("Groceries · weekly"). Part of the target and of its
+   * name, read before the title. One line, truncated.
+   */
+  overline?: ReactNode;
   /** A third line in the caption type: a timestamp, "Updated …" (lenkbank's projects). */
   meta?: ReactNode;
+  /**
+   * Let {@link meta} wrap: it becomes a wrapping row (`flex-wrap`, a small gap)
+   * instead of one truncated line — for a run of chips (keksdose's payee-backfill
+   * tags), which otherwise had nowhere to go but the body, outside the target. Still
+   * inside the target, so still no controls: chips that only show, not ones that
+   * remove themselves.
+   */
+  metaWrap?: boolean;
+  /**
+   * Content INSIDE the main target, under the title, subtitle and meta: a progress or
+   * budget bar, a sparkline, a strip of figures (keksdose's food-group bars). Unlike
+   * {@link children}, which sits outside the target, a click on it is a click on the
+   * row, and its hover fill covers it.
+   *
+   * Because it is inside the button or link it obeys the {@link trailing} rule: shown,
+   * never operated — no buttons, links or inputs (invalid HTML in a button, and folded
+   * into its name). Its text joins the row's accessible name, so give a bar that only
+   * repeats a figure already in the row `aria-hidden`. Rendered in a block `<span>`,
+   * full width of the text column. Strictly a button holds phrasing content only; the
+   * kit's `ProgressBar` draws `<div>`s, which every browser lays out and reads fine
+   * there but an HTML validator flags.
+   */
+  content?: ReactNode;
   /** A Lucide icon before the text, muted, at 16px. */
   icon?: LucideIcon;
   /** Anything else before the text — an avatar, a file-type badge, a drag handle. */
@@ -137,6 +176,13 @@ interface ListItemBaseProps {
    */
   trailing?: ReactNode;
   /**
+   * The colour of the {@link trailing} slot. Default `muted` — today's look, right for
+   * a size or a count in plain text. `inherit` sets none, so an element's own colour
+   * (an amount coloured by its sign) stands without a second override; any
+   * {@link TextTone} colours a plain-text figure (`"danger"` for an overdue count).
+   */
+  trailingTone?: ListItemTrailingTone;
+  /**
    * Controls BESIDE the main target, never inside it: copy, delete, "Open".
    *
    * A button inside a button (or a link) is invalid HTML, and a screen reader folds the
@@ -147,6 +193,15 @@ interface ListItemBaseProps {
    * on "Copy" from selecting the row.
    */
   actions?: ReactNode;
+  /**
+   * Controls BEFORE the main target, never inside it: a selection checkbox, a drag
+   * handle that is a button. The mirror of {@link actions} at the start edge — a
+   * sibling of the target, so checking the box does not activate (or expand) the row
+   * and the checkbox keeps its own name. Give the control an `aria-label` naming the
+   * row ("Select Groceries"), since it is not inside the row's name. Anything that only
+   * shows goes in {@link leading}, inside the target.
+   */
+  leadingActions?: ReactNode;
   /**
    * Rich content UNDER the title row and outside its target: photos, per-row buttons,
    * form fields — kastlan's handover room inspector (room-inspector.tsx), the handover
@@ -213,6 +268,20 @@ interface ListItemBaseProps {
   bordered?: boolean;
   /** `div` for a single row outside a {@link List}; an `<li>` must sit in a list. */
   as?: "li" | "div";
+  /**
+   * Wraps the visible row (the bordered box: target, actions and body) in an element
+   * of your own, INSIDE the `<li>` — a `<Tooltip>` explaining why the row is disabled,
+   * an app's save guard: `renderRow={(row) => <Tooltip label="Locked">{row}</Tooltip>}`.
+   *
+   * The wrapper otherwise had to go round the whole `ListItem`, which put a `<span>`
+   * between the `<ul>` and its `<li>` (invalid; the list stops counting items), so
+   * callers wrote `<li><Wrapper><ListItem as="div" /></Wrapper></li>` — and lost the
+   * divider and its spacing, which sit on the row's own `<li>`. Here the `<li>` stays
+   * the list's child and keeps both. The `<li>` becomes a column and the row takes the
+   * full width, so an inline wrapper (the tooltip's `inline-flex` span) still stretches
+   * the row across the list.
+   */
+  renderRow?: (row: ReactElement) => ReactNode;
   /** Reaches the main target — the element with the row's name and action. */
   id?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
@@ -225,15 +294,15 @@ interface ListItemBaseProps {
  */
 export type ListItemProps = ListItemBaseProps &
   (
-    | {
+    | ({
         /** Makes the row a button — select, open, mark read. */
         onClick: (event: MouseEvent<HTMLButtonElement>) => void;
         href?: never;
         renderLink?: never;
         external?: never;
         onAuxClick?: never;
-      }
-    | {
+      } & NotExpandable)
+    | ({
         /**
          * Makes the row a link. A real `<a href>`, so a middle click opens it in a
          * background tab (keksdose feedback #451) — which a button calling `navigate`
@@ -256,8 +325,33 @@ export type ListItemProps = ListItemBaseProps &
          *  notification read here too, so a row opened into a background tab does not
          *  stay unread. */
         onAuxClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
-      }
+      } & NotExpandable)
+    | ({
+        onClick?: never;
+        href?: never;
+        renderLink?: never;
+        external?: never;
+        onAuxClick?: never;
+      } & NotExpandable)
     | {
+        /**
+         * Makes the row a disclosure: the target is a button with `aria-expanded` and a
+         * turning chevron at its end, and this opens under the row, outside the target
+         * (so it may hold controls), animated by {@link Collapse}. keksdose's collapsible
+         * groups — a group row with a select-all checkbox before it
+         * ({@link ListItemBaseProps.leadingActions}) and its members inside.
+         *
+         * The row's ONE action is the toggle, so it takes no `onClick` or `href`. The
+         * content is a `role="group"` named by the title, unmounted while shut (as a
+         * `Disclosure`'s body is).
+         */
+        expandedContent: ReactNode;
+        /** Controlled open state. Leave it out for the row to keep its own. */
+        expanded?: boolean;
+        /** The uncontrolled row's first state. Default `false`. */
+        defaultExpanded?: boolean;
+        /** Runs on every toggle with the new state. */
+        onExpandedChange?: (expanded: boolean) => void;
         onClick?: never;
         href?: never;
         renderLink?: never;
@@ -265,6 +359,13 @@ export type ListItemProps = ListItemBaseProps &
         onAuxClick?: never;
       }
   );
+
+interface NotExpandable {
+  expandedContent?: never;
+  expanded?: never;
+  defaultExpanded?: never;
+  onExpandedChange?: never;
+}
 
 /**
  * One row of a {@link List}: leading icon or avatar, title and subtitle (both
@@ -282,13 +383,18 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   {
     title,
     titleLines = 1,
+    overline,
     subtitle,
     subtitleLines = 1,
     meta,
+    metaWrap = false,
+    content,
     icon: Icon,
     leading,
     trailing,
+    trailingTone = "muted",
     actions,
+    leadingActions,
     unread = false,
     status,
     selected = false,
@@ -301,6 +407,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     targetProps,
     bordered = false,
     as = "li",
+    renderRow,
     children,
     bodyClassName,
     href,
@@ -308,6 +415,10 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     external = false,
     onClick,
     onAuxClick,
+    expandedContent,
+    expanded: expandedProp,
+    defaultExpanded = false,
+    onExpandedChange,
     ...rest
   },
   ref,
@@ -315,14 +426,27 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   const list = useContext(ListContext);
   const labels = useKitLabels("list", DEFAULT_LIST_LABELS);
   const kitLink = useKitLink();
+  const [ownExpanded, setOwnExpanded] = useState(defaultExpanded);
   const density = densityProp ?? list.density;
   const pad = PAD[density];
+  const expandable = expandedContent !== undefined;
+  const expanded = expandable && (expandedProp ?? ownExpanded);
   const isLink = href !== undefined && !disabled;
-  const isButton = !isLink && onClick !== undefined && href === undefined;
+  const isButton = !isLink && (onClick !== undefined || expandable) && href === undefined;
   const interactive = isLink || isButton;
   const inert = disabled || loading;
   const hasBody = children !== undefined && children !== null && children !== false;
+  // Anything under the row's own line: the box turns into a column, and the target
+  // takes its own corners and hover fill (see `children`).
+  const stacked = hasBody || expandable;
   const titleId = useId();
+  const expandedId = useId();
+
+  const toggle = () => {
+    const next = !expanded;
+    if (expandedProp === undefined) setOwnExpanded(next);
+    onExpandedChange?.(next);
+  };
 
   const mark =
     status ??
@@ -338,9 +462,14 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       )}
       {leading}
       <span className="flex min-w-0 flex-1 flex-col">
+        {overline != null && (
+          <span className="block truncate text-[11px] font-medium leading-snug text-[var(--text-muted)]">
+            {overline}
+          </span>
+        )}
         <span
-          // Names the body's group; harmless without one.
-          id={hasBody ? titleId : undefined}
+          // Names the body's and the expanded content's group; harmless without one.
+          id={stacked ? titleId : undefined}
           className={cn(
             "block text-sm text-[var(--text-primary)]",
             titleLines === 1 ? "truncate" : titleLines === 2 ? "line-clamp-2 break-words" : "break-words",
@@ -361,9 +490,28 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
             {subtitle}
           </span>
         )}
-        {meta != null && <span className="mt-0.5 block truncate text-[11px] leading-snug text-[var(--text-muted)]">{meta}</span>}
+        {meta != null && (
+          <span
+            className={cn(
+              "mt-0.5 text-[11px] leading-snug text-[var(--text-muted)]",
+              metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate",
+            )}
+          >
+            {meta}
+          </span>
+        )}
+        {content != null && <span className="mt-1.5 block min-w-0">{content}</span>}
       </span>
-      {trailing != null && <span className="flex shrink-0 items-center gap-2 text-xs text-[var(--text-muted)]">{trailing}</span>}
+      {trailing != null && (
+        <span
+          className={cn(
+            "flex shrink-0 items-center gap-2 text-xs",
+            trailingTone !== "inherit" && toneTextClass(trailingTone),
+          )}
+        >
+          {trailing}
+        </span>
+      )}
       {loading ? (
         <Spinner label={null} className="size-3.5 shrink-0" />
       ) : (
@@ -372,6 +520,18 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         )
       )}
       {mark}
+      {expandable && (
+        // Turned, not swapped — the Disclosure card's convention: down while shut, up
+        // while open. A rotation is its own mirror, so RTL needs nothing.
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            "size-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none",
+            align === "start" && "mt-0.5",
+            expanded && "rotate-180",
+          )}
+        />
+      )}
     </>
   );
 
@@ -379,10 +539,10 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     "flex min-w-0 flex-1 text-start",
     align === "start" ? "items-start" : "items-center",
     pad.target,
-    // With a body the target is the top of the box, not all of it, so it takes its
+    // When stacked the target is the top of the box, not all of it, so it takes its
     // own corners and its own hover fill (see `children`).
-    hasBody ? "rounded-md" : "rounded-[inherit]",
-    hasBody && interactive && !inert && !selected && "transition-colors hover:bg-[var(--bg-hover)]",
+    stacked ? "rounded-md" : "rounded-[inherit]",
+    stacked && interactive && !inert && !selected && "transition-colors hover:bg-[var(--bg-hover)]",
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
     loading && "cursor-progress",
@@ -431,7 +591,15 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         aria-disabled={loading || undefined}
         aria-busy={loading || undefined}
         aria-current={selected ? "true" : undefined}
-        onClick={loading ? undefined : (onClick as (event: MouseEvent<HTMLButtonElement>) => void)}
+        aria-expanded={expandable ? expanded : undefined}
+        aria-controls={expandable ? expandedId : undefined}
+        onClick={
+          loading
+            ? undefined
+            : expandable
+              ? toggle
+              : (onClick as (event: MouseEvent<HTMLButtonElement>) => void)
+        }
         className={target}
       >
         {body}
@@ -452,8 +620,59 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     );
   }
 
+  const leadingActionsEl =
+    leadingActions != null ? (
+      <div className={cn("flex shrink-0 items-center", pad.gap, pad.leadingActions)}>{leadingActions}</div>
+    ) : null;
   const actionsEl =
     actions != null ? <div className={cn("flex shrink-0 items-center", pad.gap, pad.actions)}>{actions}</div> : null;
+
+  const row = (
+    <div
+      className={cn(
+        "flex min-w-0 rounded-md border transition-colors",
+        stacked ? "flex-col" : "items-center",
+        // See `renderRow`: the wrapper may be inline, the row is not.
+        renderRow && "w-full",
+        selected
+          ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
+          : bordered
+            ? "border-[var(--border)]"
+            : "border-transparent",
+        !stacked && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
+        disabled && "opacity-50",
+        className,
+      )}
+    >
+      {stacked ? (
+        <>
+          <div className="flex min-w-0 items-center">
+            {leadingActionsEl}
+            {main}
+            {actionsEl}
+          </div>
+          {expandable && (
+            <Collapse open={expanded}>
+              <div id={expandedId} role="group" aria-labelledby={titleId} className={cn("min-w-0", pad.body)}>
+                {expandedContent}
+              </div>
+            </Collapse>
+          )}
+          {hasBody && (
+            <div role="group" aria-labelledby={titleId} className={cn("min-w-0", pad.body, bodyClassName)}>
+              {children}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {leadingActionsEl}
+          {main}
+          {actionsEl}
+        </>
+      )}
+    </div>
+  );
 
   const Tag = as;
   return (
@@ -461,39 +680,10 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       className={cn(
         list.separator === "divider" && "border-b border-[var(--border)] last:border-b-0",
         list.separator === "divider" && as === "li" && "py-0.5",
+        renderRow && "flex flex-col",
       )}
     >
-      <div
-        className={cn(
-          "flex min-w-0 rounded-md border transition-colors",
-          hasBody ? "flex-col" : "items-center",
-          selected
-            ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
-            : bordered
-              ? "border-[var(--border)]"
-              : "border-transparent",
-          !hasBody && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
-          disabled && "opacity-50",
-          className,
-        )}
-      >
-        {hasBody ? (
-          <>
-            <div className="flex min-w-0 items-center">
-              {main}
-              {actionsEl}
-            </div>
-            <div role="group" aria-labelledby={titleId} className={cn("min-w-0", pad.body, bodyClassName)}>
-              {children}
-            </div>
-          </>
-        ) : (
-          <>
-            {main}
-            {actionsEl}
-          </>
-        )}
-      </div>
+      {renderRow ? renderRow(row) : row}
     </Tag>
   );
 });

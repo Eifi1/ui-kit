@@ -105,6 +105,12 @@ export interface ProgressBarSegment {
 }
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
+  /**
+   * `"span"` builds the bar from spans, for a place only phrasing content may go: inside
+   * a button or a link (ListItem's `content`). The `legend` stays a list, so leave it off
+   * there. Default `"div"`.
+   */
+  as?: "div" | "span";
   /** Where it stands. Leave it undefined for an INDETERMINATE bar — work is under way
    *  and nobody knows how much is left (an import that reports no count). */
   value?: number;
@@ -155,8 +161,11 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
   legend?: boolean;
   /**
    * What a legend row shows at its end, in place of the part's formatted value — which
-   * it is handed, with the segment and its index. keksdose's cut card shows the share
-   * AND a private outflow amount per bucket (cut-card:150), which one figure could not:
+   * it is handed, with the segment and its index. That value is the part's OWN, signed
+   * and unclamped (`formatValue`, or a percentage of the scale): a part of −40 on a
+   * 0–100 scale says "-40%" though the bar draws nothing for it. keksdose's cut card
+   * shows the share AND a private outflow amount per bucket (cut-card:150), which one
+   * figure could not:
    * `legendValue={(seg, share) => <>{share} <Amount … /></>}`.
    */
   legendValue?: (segment: ProgressBarSegment, formatted: string, index: number) => ReactNode;
@@ -209,11 +218,17 @@ export function ProgressBar({
   overage,
   labels,
   className,
+  as = "div",
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
   ...rest
 }: ProgressBarProps) {
+  // `as="span"`: the same bar from phrasing elements only, so it is valid inside a
+  // <button> or <a> — ListItem's `content` puts a budget bar inside the row's target
+  // (keksdose P2). Every span is made a block except those already laid out as flex.
+  const Tag = as;
+  const inlineClass = as === "span" ? "block [&_span:not(.flex):not(.inline-flex)]:block" : undefined;
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const text = useKitLabels("progressBar", DEFAULT_PROGRESS_BAR_LABELS, labels);
   const kitLocale = useKitLocale(locale);
@@ -236,8 +251,8 @@ export function ProgressBar({
           ? formatValue(value, Infinity, min)
           : new Intl.NumberFormat(kitLocale).format(value);
     return (
-      <div {...rest} className={cn("min-w-0", className)} data-state="unlimited">
-        <div className="flex items-baseline gap-2 text-sm">
+      <Tag {...rest} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
+        <Tag className="flex items-baseline gap-2 text-sm">
           {label != null && (
             <span id={labelId} className="min-w-0 text-[var(--text-secondary)]">
               {label}
@@ -247,9 +262,9 @@ export function ProgressBar({
             {shown !== undefined && `${shown} · `}
             {text.unlimited}
           </span>
-        </div>
+        </Tag>
         {hintNode}
-      </div>
+      </Tag>
     );
   }
   const max = maxProp;
@@ -269,9 +284,21 @@ export function ProgressBar({
       : new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(
           span <= 0 ? 0 : (Math.min(max, Math.max(min, v)) - min) / span,
         );
+  // A PART is stated as its own value, sign and all — not as the slice of track it
+  // draws. The bar cannot draw a negative part (a refund inside a month's spending) or
+  // one past `max`, but the legend and the reader can still say it: before 0.16 a
+  // −CHF 40 part read "0 %" in both, and keksdose had to pass `legendValue` just to get
+  // the minus back. For a part inside `min`–`max` this is the same text as before.
+  const formatPart = (v: number) => {
+    if (!Number.isFinite(v)) return format(min);
+    if (formatValue) return formatValue(v, max, min);
+    return new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(
+      span <= 0 ? 0 : (v - min) / span,
+    );
+  };
   const partTexts = stacked
     ? barParts.map((seg) => {
-        const text = format(min + partValue(seg.value));
+        const text = formatPart(seg.value);
         return typeof seg.label === "string" || typeof seg.label === "number"
           ? common.fieldValue(String(seg.label), text)
           : text;
@@ -306,9 +333,9 @@ export function ProgressBar({
   const name = labelledBy ? undefined : (ariaLabel ?? (indeterminate ? common.loading : undefined));
 
   return (
-    <div className={cn("min-w-0", className)} data-state={indeterminate ? "indeterminate" : "determinate"}>
+    <Tag className={cn("min-w-0", inlineClass, className)} data-state={indeterminate ? "indeterminate" : "determinate"}>
       {(label != null || (showValue && valueText !== undefined)) && (
-        <div className="mb-1 flex items-baseline gap-2 text-sm">
+        <Tag className="mb-1 flex items-baseline gap-2 text-sm">
           {label != null && (
             <span id={labelId} className="min-w-0 text-[var(--text-secondary)]">
               {label}
@@ -321,9 +348,9 @@ export function ProgressBar({
               {valueText}
             </span>
           )}
-        </div>
+        </Tag>
       )}
-      <div
+      <Tag
         {...rest}
         role={meter ? "meter" : "progressbar"}
         aria-label={name}
@@ -341,10 +368,10 @@ export function ProgressBar({
         {stacked ? (
           // The parts in a flex row with a 2px gap, so two neighbouring steps of one
           // hue are parted by the track rather than by their difference in lightness.
-          <div className="flex h-full w-full gap-0.5">
+          <Tag className="flex h-full w-full gap-0.5">
             {segments.map((seg, i) =>
               seg.legendOnly ? null : (
-                <div
+                <Tag
                   key={seg.key ?? i}
                   data-part="segment"
                   className={cn(
@@ -358,9 +385,9 @@ export function ProgressBar({
                 />
               ),
             )}
-          </div>
+          </Tag>
         ) : indeterminate ? (
-          <div
+          <Tag
             data-part="fill"
             className={cn(
               // `left-0`, deliberately physical: the keyframes (tokens.css
@@ -375,7 +402,7 @@ export function ProgressBar({
             )}
           />
         ) : (
-          <div
+          <Tag
             data-part="fill"
             // Block flow starts at the inline start, so a plain width fills from the
             // right under `dir="rtl"` with nothing extra.
@@ -383,7 +410,7 @@ export function ProgressBar({
             style={{ width: `${fraction * 100}%` }}
           />
         )}
-      </div>
+      </Tag>
       {stacked && legend && segments.length > 0 && (
         <ul className="mt-2 space-y-1 text-sm" data-part="legend">
           {segments.map((seg, i) => (
@@ -400,9 +427,7 @@ export function ProgressBar({
                 <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
               )}
               <span className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]">
-                {legendValue
-                  ? legendValue(seg, format(min + partValue(seg.value)), i)
-                  : format(min + partValue(seg.value))}
+                {legendValue ? legendValue(seg, formatPart(seg.value), i) : formatPart(seg.value)}
               </span>
             </li>
           ))}
@@ -410,6 +435,6 @@ export function ProgressBar({
       )}
       {overageNode}
       {hintNode}
-    </div>
+    </Tag>
   );
 }
