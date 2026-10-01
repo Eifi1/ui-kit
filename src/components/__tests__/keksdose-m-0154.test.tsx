@@ -83,3 +83,10 @@ describe("NumberInput reserves the unit's own width (M4)", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("AmountInput draws `negative` without a handler (N4, 0.15.5)", () => {
+  it("shows the minus on a read-only total", () => {
+    render(<AmountInput ariaLabel="Total" value="5.18" onChange={() => {}} negative disabled currency="CHF" />);
+    expect(screen.getByRole("textbox", { name: "Total" })).toHaveValue("-5.18");
+  });
+});
