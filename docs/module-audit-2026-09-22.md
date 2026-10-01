@@ -121,6 +121,12 @@ mount every section, by a real production build, and by asserting the emitted CS
 
 ## 7. Should the kit own charts?
 
+> **Superseded for kastlan (2026-10-01, kastlan 57).** The inventory below is as of
+> 2026-09-22. kastlan's charts no longer import recharts directly: revenue-chart,
+> charts-tab and dashboard-page use `SeriesChart`, `PieChart` and `ToggleLegend` from
+> `@eifi1/ui-kit/chart`. Kurvenschmiede (then lenkbank) moved its chart kit into
+> `@eifi1/ui-kit/chart` in 0.5. The audit is kept as written, as a dated record.
+
 **It already does, barely** — `src/components/chart.tsx` is 227 lines: the shadcn/ui shell
 (`ChartContainer`, `ChartTooltip(Content)`, `ChartLegend(Content)`, `useChart`) plus
 `theme/chart-palette.ts`. Everything *above* that shell has been invented three times.
