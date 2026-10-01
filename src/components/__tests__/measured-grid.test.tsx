@@ -220,7 +220,7 @@ describe("MeasuredGrid is an ARIA grid", () => {
     render(<Harness />);
     fireEvent.change(cell("x", 1), { target: { value: "abc" } });
     expect(cell("x", 1)).toHaveAttribute("aria-invalid", "true");
-    expect(cell("x", 1).className).toContain("ring-[var(--danger-border)]");
+    expect(cell("x", 1).className).toContain("ring-[var(--danger-border-strong)]");
     expect(screen.getByText("1 cell is not a number")).toBeInTheDocument();
 
     fireEvent.change(cell("x", 1), { target: { value: "1,5" } });

@@ -64,6 +64,9 @@ export interface SemanticTokens {
   dangerHover: string;
   dangerContrast: string;
   dangerBorder: string;
+  /** The error line (invalid field, danger banner, destructive focus ring): as loud as
+   *  `dangerBorder` was before 0.15.5, so it keeps 3:1 against the surface. */
+  dangerBorderStrong: string;
   dangerBg: string;
   warning: string;
   warningBorder: string;
@@ -374,7 +377,14 @@ export function derivePalette({
       l: mode === "light" ? dangerLch.l - 0.06 : dangerLch.l + 0.06,
     }),
     dangerContrast: contrastOn(danger),
+    // The tone border follows its siblings' lightness in dark mode (warning 0.44, info
+    // and success 0.45) — a soft frame; the strong line keeps the old, louder recipe.
     dangerBorder: oklchToHex({
+      l: mode === "light" ? dangerLch.l + 0.22 : 0.45,
+      c: semanticChroma.danger,
+      h: semanticHue.danger,
+    }),
+    dangerBorderStrong: oklchToHex({
       l: mode === "light" ? dangerLch.l + 0.22 : dangerLch.l - 0.22,
       c: semanticChroma.danger,
       h: semanticHue.danger,

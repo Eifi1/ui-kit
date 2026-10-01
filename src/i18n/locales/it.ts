@@ -21,6 +21,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       attachmentCapture: "Cattura schermata",
       attachmentPaste: "…oppure incolla uno screenshot dagli appunti.",
       attachmentRemove: "Rimuovi allegato",
+      attachmentList: "Allegati",
+      attachmentRemoveFile: (name) => `Rimuovi ${name}`,
+      attachmentLimit: (max) => `Massimo ${n(max)} ${max === 1 ? "allegato" : "allegati"}: rimuovine uno per aggiungerne un altro.`,
     },
     feedbackDialog: {
       title: "Invia feedback",
@@ -29,6 +32,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       body: "Cosa è successo?",
       bodyOptional: "Cosa è successo? (facoltativo)",
       attachment: "Screenshot",
+      attachments: "Allegati",
       submitHint: "Ctrl/⌘ + Invio per inviare",
       cancel: "Annulla",
       save: "Invia",

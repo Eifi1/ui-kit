@@ -115,7 +115,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `crashFingerprint` (+3).
   // 0.15.4: `currencyMinorDigits`, `roundToCurrency` (keksdose M5);
   // `resolveTooltipPlacement`, `useKitChartTooltipPlacement` (keksdose M1) (+4).
-  ["@eifi1/ui-kit", barrel, 481],
+  // 0.15.5: `DEFAULT_MAX_ATTACHMENTS`, the default `max` of
+  // `<FeedbackAttachmentField multiple>` (keksdose N3) (+1 here and in /feedback).
+  ["@eifi1/ui-kit", barrel, 482],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -123,7 +125,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/data-table", dataTable, 27],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 26],
+  // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 27],
   ["@eifi1/ui-kit/search", search, 9],
   ["@eifi1/ui-kit/shell", shell, 12],
   ["@eifi1/ui-kit/tour", tour, 4],

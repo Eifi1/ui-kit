@@ -124,7 +124,7 @@ describe("ToggleGroup label placement and Field wiring", () => {
     const group = screen.getByRole("radiogroup", { name: "Cap" });
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Pick one");
-    expect(group.className).toContain("border-[var(--danger-border)]");
+    expect(group.className).toContain("border-[var(--danger-border-strong)]");
   });
 
   it("takes Field's id, description, invalid and label id as a bare group", () => {
@@ -140,7 +140,7 @@ describe("ToggleGroup label placement and Field wiring", () => {
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Tight markets: 15% Required");
     // The border says what the attribute says.
-    expect(group.className).toContain("border-[var(--danger-border)]");
+    expect(group.className).toContain("border-[var(--danger-border-strong)]");
   });
 });
 

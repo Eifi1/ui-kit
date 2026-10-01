@@ -20,6 +20,17 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.15.5](https://github.com/Eifi1/ui-kit/compare/v0.15.4...v0.15.5) (2026-10-01)
+
+### Added
+
+* **feedback:** several attachments — a multiple field and a multiple dialog ([becf6bd](https://github.com/Eifi1/ui-kit/commit/becf6bd24825bac7e938834341284c1fff95cff9))
+
+### Fixed
+
+* **amount-input:** draw `negative` without onNegativeChange ([d4ad7b6](https://github.com/Eifi1/ui-kit/commit/d4ad7b64140d2b6a9b35a6261e45c318a5b7d323))
+* **tokens:** dark --danger-border joins its family; --danger-border-strong keeps the error line ([c23560d](https://github.com/Eifi1/ui-kit/commit/c23560dcac53ee0010384d9f2b1aa964ed5a8414))
+
 ## [0.15.4](https://github.com/Eifi1/ui-kit/compare/v0.15.3...v0.15.4) (2026-10-01)
 
 ### Added

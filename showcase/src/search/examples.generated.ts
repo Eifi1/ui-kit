@@ -630,6 +630,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "feedback-compose": [
     "FeedbackDialog",
+    "Several attachments — multiple",
     "FeedbackAttachmentField — standalone",
     "FeedbackAttachmentField — provider labels",
     "accept + maxBytes → onError",

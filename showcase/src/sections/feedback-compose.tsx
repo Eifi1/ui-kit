@@ -3,6 +3,7 @@ import {
   Button,
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
+  DEFAULT_MAX_ATTACHMENTS,
   FeedbackAttachmentField,
   FeedbackDialog,
   Switch,
@@ -13,7 +14,9 @@ import {
 import type {
   FeedbackAttachmentLabels,
   FeedbackCategoryOption,
+  FeedbackAttachmentError,
   FeedbackDialogLabels,
+  FeedbackMultipleSubmission,
   FeedbackSubmission,
 } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
@@ -152,6 +155,19 @@ export function FeedbackCompose() {
           unmounts. Category is the exception: it is controlled from outside, so it survives a
           close, which is why it is the one field with a prop pair rather than internal state.
         </Note>
+      </Example>
+
+      <Example
+        label="Several attachments — multiple"
+        hint={
+          <>
+            <code className="font-mono">&lt;FeedbackAttachmentField multiple&gt;</code> and{" "}
+            <code className="font-mono">&lt;FeedbackDialog attachments=&quot;multiple&quot;&gt;</code>:
+            every pick and paste adds a chip; the capture fills its own slot, once.
+          </>
+        }
+      >
+        <Multiple />
       </Example>
 
       <Example
@@ -326,6 +342,100 @@ function Dialog() {
           </div>
         }
       />
+    </div>
+  );
+}
+
+/* ── multiple ─────────────────────────────────────────────────────────────── */
+
+// Widened past the image-only default so the file chip (glyph, name, size) shows
+// next to the thumbnails; capped at three so the limit line is reachable in a demo.
+const MULTI_ACCEPT = [...DEFAULT_ATTACHMENT_ACCEPT, "application/pdf"];
+const MULTI_MAX = 3;
+
+function Multiple() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [rejected, setRejected] = useState<FeedbackAttachmentError | null>(null);
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState(CATEGORIES[0].value);
+  const [last, setLast] = useState<FeedbackMultipleSubmission | null>(null);
+  const shortName = (f: File) => `"${f.name}"`;
+
+  return (
+    <div className="space-y-3">
+      <div className="max-w-xl space-y-2">
+        {/* The parts, as an app that builds its own form wires them: the photos in
+            `value`, the capture in `screenshot` — the same split the dialog makes. */}
+        <FeedbackAttachmentField
+          multiple
+          value={files}
+          onChange={(next) => {
+            setRejected(null);
+            setFiles(next);
+          }}
+          max={MULTI_MAX}
+          screenshot={screenshot}
+          onScreenshotChange={setScreenshot}
+          onCaptureScreenshot={fakeCapture}
+          accept={MULTI_ACCEPT}
+          onError={setRejected}
+          labels={{ attachment: "Screenshot and photos", attachmentAdd: "Add a photo or PDF" }}
+        />
+        {rejected === "count" ? (
+          <p className="text-xs text-[var(--text-secondary)]">
+            onError(&quot;count&quot;) — more files than the {MULTI_MAX} slots had room for; the
+            surplus was dropped.
+          </p>
+        ) : (
+          <RejectedLine kind={rejected} />
+        )}
+        <p className={READOUT}>
+          {`screenshot: ${screenshot ? shortName(screenshot) : "null"} · value: [${files.map(shortName).join(", ")}]`}
+        </p>
+      </div>
+      <Row>
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          Open the dialog with attachments=&quot;multiple&quot;
+        </Button>
+      </Row>
+      <p className={READOUT}>
+        {last
+          ? `onSubmit({ title: "${last.title}", screenshot: ${last.screenshot ? shortName(last.screenshot) : "null"}, attachments: [${last.attachments.map(shortName).join(", ")}] })`
+          : "onSubmit: not called yet"}
+      </p>
+      <FeedbackDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        categories={CATEGORIES}
+        category={category}
+        onCategoryChange={setCategory}
+        labels={DIALOG_LABELS}
+        attachments="multiple"
+        maxAttachments={MULTI_MAX}
+        attachmentAccept={MULTI_ACCEPT}
+        onCaptureScreenshot={fakeCapture}
+        requireBody={false}
+        onSubmit={(data) => {
+          setLast(data);
+          setOpen(false);
+        }}
+      />
+      <Note>
+        <strong>Opt-in, so nothing that exists changes.</strong> Without{" "}
+        <code className="font-mono">multiple</code> the field holds one{" "}
+        <code className="font-mono">File | null</code> and the dialog submits{" "}
+        <code className="font-mono">attachment</code>, as before. With it,{" "}
+        <code className="font-mono">onSubmit</code> is typed{" "}
+        <code className="font-mono">FeedbackMultipleSubmission</code>:{" "}
+        <code className="font-mono">screenshot</code> (what the capture returned, at most one —
+        a second snapshot of the same view is no more evidence) apart from{" "}
+        <code className="font-mono">attachments</code> (picked and pasted, up to{" "}
+        <code className="font-mono">maxAttachments</code>, default {DEFAULT_MAX_ATTACHMENTS}).
+        Two pastes are two files: the second is named{" "}
+        <code className="font-mono">pasted-2.png</code>, because a backend that stores by name
+        would otherwise keep only one of them — the loss keksdose reported (dev#578).
+      </Note>
     </div>
   );
 }
