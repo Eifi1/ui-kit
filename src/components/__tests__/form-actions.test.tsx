@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Check } from "lucide-react";
 import { FormActions } from "../form-actions";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -125,5 +125,67 @@ describe("FormActions 0.16 (keksdose P7)", () => {
     rerender(<FormActions placement="sticky" stickyWithin="container" />);
     expect(row().style.bottom).toBe("0px");
     expect(row()).toHaveAttribute("data-sticky-within", "container");
+  });
+});
+
+describe("FormActions per-breakpoint placement and bleed (keksdose 0.17 Q7)", () => {
+  const viewport = (width: number) =>
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: (query: string) => {
+        const min = /min-width:\s*(\d+)px/.exec(query);
+        return {
+          matches: min ? width >= Number(min[1]) : false,
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        };
+      },
+    });
+  afterEach(() => {
+    Reflect.deleteProperty(window, "matchMedia");
+  });
+
+  it("is sticky on a phone and inline from md up", () => {
+    viewport(390);
+    const { container, unmount } = render(<FormActions placement={{ base: "sticky", md: "inline" }} />);
+    let row = container.firstElementChild as HTMLElement;
+    expect(row).toHaveAttribute("data-placement", "sticky");
+    expect(row).toHaveClass("sticky");
+    unmount();
+    viewport(1280);
+    const desk = render(<FormActions placement={{ base: "sticky", md: "inline" }} />);
+    row = desk.container.firstElementChild as HTMLElement;
+    expect(row).toHaveAttribute("data-placement", "inline");
+    expect(row).not.toHaveClass("sticky");
+    expect(row.style.bottom).toBe("");
+  });
+
+  it("renders the base placement without matchMedia", () => {
+    const { container } = render(<FormActions placement={{ base: "sticky", lg: "inline" }} />);
+    expect(container.firstElementChild).toHaveAttribute("data-placement", "sticky");
+  });
+
+  it("bleeds over the container's padding only while sticky", () => {
+    viewport(390);
+    const { container, unmount } = render(
+      <FormActions placement={{ base: "sticky", md: "inline" }} stickyWithin="container" bleed="0.75rem" />,
+    );
+    const row = container.firstElementChild as HTMLElement;
+    expect(row.style.marginInline).toBe("calc(-0.75rem)");
+    expect(row.style.paddingInline).toBe("0.75rem");
+    unmount();
+    viewport(1280);
+    const desk = render(<FormActions placement={{ base: "sticky", md: "inline" }} bleed={12} />);
+    const inline = desk.container.firstElementChild as HTMLElement;
+    expect(inline.style.marginInline).toBe("");
+    expect(inline.style.paddingInline).toBe("");
+  });
+
+  it("takes a number as px, and a caller's style still wins", () => {
+    const { container } = render(<FormActions placement="sticky" bleed={12} style={{ paddingInline: 4 }} />);
+    const row = container.firstElementChild as HTMLElement;
+    expect(row.style.marginInline).toBe("calc(-12px)");
+    expect(row.style.paddingInline).toBe("4px");
   });
 });

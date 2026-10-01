@@ -107,3 +107,18 @@ describe("AmountInput settles to the currency's minor unit", () => {
     expect(screen.getByTestId("state")).toHaveTextContent("-12.35");
   });
 });
+
+describe("a sub-currency scale (keksdose 0.17 Q8, live #240)", () => {
+  it("rounds a host's 4dp split line to the currency unless digits says otherwise", () => {
+    const input = () => screen.getByRole("textbox", { name: "Amount" });
+    const { unmount } = render(<Harness initial="12.3456" currency="CHF" />);
+    fireEvent.focus(input());
+    fireEvent.blur(input());
+    expect(screen.getByTestId("state").textContent).toBe("12.35");
+    unmount();
+    render(<Harness initial="12.3456" currency="CHF" digits={4} />);
+    fireEvent.focus(input());
+    fireEvent.blur(input());
+    expect(screen.getByTestId("state").textContent).toBe("12.3456");
+  });
+});

@@ -175,6 +175,14 @@ interface AmountInputProps {
    * 1.789 €/l is stored as 123.46 / 1.79, and no test fails (keksdose G2, a
    * `Numeric(18,6)` holding price and a `Numeric(18,4)` unit price). Pass the column's
    * scale: `digits={4}`, `digits={6}`.
+   *
+   * **Set `digits` for any sub-currency scale** — not only a price: any field whose
+   * column holds more decimals than the currency's minor unit. A split line stored at
+   * the ledger's 4dp (`Numeric(18,4)`) and loaded as 12.3456 is SHOWN as 12.35, and
+   * committed as 12.35 as soon as the user tabs through it (blur settles) — so the form
+   * no longer equals what the server holds: the lines stop summing to the 4dp total,
+   * and Save is held (keksdose live #240). With a `currency`, every commit rounds to that currency's
+   * minor unit unless `digits` says otherwise: pass the column's scale (`digits={4}`).
    */
   digits?: number;
   /** The smallest amount the field settles on. A lower figure is raised to it when it

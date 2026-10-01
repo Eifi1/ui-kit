@@ -82,3 +82,38 @@ describe("ProgressBar legend extras", () => {
     expect(container.querySelectorAll('[data-part="legend"] li')).toHaveLength(3);
   });
 });
+
+describe("ProgressBar sensitive (keksdose 0.17 Q6)", () => {
+  const segments = [
+    { value: 40, label: "Rent" },
+    { value: 25, label: "Food" },
+  ];
+
+  it("tags the printed figures data-private and leaves names and the track readable", () => {
+    const { container } = render(
+      <ProgressBar sensitive segments={segments} legend label="Spending" showValue aria-label="x" />,
+    );
+    const values = container.querySelectorAll('[data-part="legend-value"]');
+    expect(values).toHaveLength(2);
+    values.forEach((v) => expect(v).toHaveAttribute("data-private", ""));
+    expect(container.querySelector('[data-part="value"]')).toHaveAttribute("data-private", "");
+    expect(screen.getByText("Rent")).not.toHaveAttribute("data-private");
+    expect(screen.getByRole("meter")).not.toHaveAttribute("data-private");
+  });
+
+  it("tags a legendValue's own node, the unlimited figure and the overage line", () => {
+    const { container, rerender } = render(
+      <ProgressBar sensitive segments={segments} legend legendValue={(_s, f) => <b>{f}!</b>} aria-label="x" />,
+    );
+    expect(screen.getByText("40%!").closest("[data-private]")).not.toBeNull();
+    rerender(<ProgressBar sensitive value={7} max={null} label="Seats" />);
+    expect(container.querySelector('[data-part="unlimited"]')).toHaveAttribute("data-private", "");
+    rerender(<ProgressBar sensitive value={120} overage aria-label="Usage" />);
+    expect(container.querySelector('[data-part="overage"]')).toHaveAttribute("data-private", "");
+  });
+
+  it("tags nothing by default", () => {
+    const { container } = render(<ProgressBar segments={segments} legend showValue label="S" />);
+    expect(container.querySelector("[data-private]")).toBeNull();
+  });
+});

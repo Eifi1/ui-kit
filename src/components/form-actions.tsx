@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { Button, Spinner, type ButtonProps, type ButtonVariant } from "./ui";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
@@ -28,6 +29,56 @@ export type FormActionsAlign = "start" | "center" | "end" | "between";
  *    FullBleedDialog's `footer`), which already pads and rules it.
  */
 export type FormActionsPlacement = "inline" | "sticky" | "dialog";
+
+/**
+ * A placement per breakpoint, mobile first — `{ base: "sticky", md: "inline" }` is a
+ * Save row stuck to the bottom of a phone's long form and in the flow under the last
+ * field from 768px up, where the form fits. The breakpoints are Tailwind's (sm 640,
+ * md 768, lg 1024, xl 1280px), as `BulkActionBar`'s `variant` breakpoints are, and
+ * resolved the same way, in JS: the sticky row is positioned by inline style, which a
+ * `md:` class cannot reach. keksdose switched `placement` on its own media query at
+ * every long form for want of this.
+ */
+export interface ResponsiveFormActionsPlacement {
+  base: FormActionsPlacement;
+  sm?: FormActionsPlacement;
+  md?: FormActionsPlacement;
+  lg?: FormActionsPlacement;
+  xl?: FormActionsPlacement;
+}
+
+const BREAKPOINTS = [
+  ["xl", "(min-width: 1280px)"],
+  ["lg", "(min-width: 1024px)"],
+  ["md", "(min-width: 768px)"],
+  ["sm", "(min-width: 640px)"],
+] as const;
+
+/** The placement in force: the widest breakpoint that matches AND names one, else
+ *  `base`. The queries are subscribed unconditionally (hooks cannot be skipped); a
+ *  plain string ignores them. Without `matchMedia` (SSR, tests) none match, so the row
+ *  renders its `base`, the phone's. The same resolution as BulkActionBar's variant. */
+function useResolvedPlacement(
+  placement: FormActionsPlacement | ResponsiveFormActionsPlacement,
+): FormActionsPlacement {
+  const matches = {
+    xl: useMediaQuery(BREAKPOINTS[0][1], false),
+    lg: useMediaQuery(BREAKPOINTS[1][1], false),
+    md: useMediaQuery(BREAKPOINTS[2][1], false),
+    sm: useMediaQuery(BREAKPOINTS[3][1], false),
+  };
+  if (typeof placement === "string") return placement;
+  for (const [key] of BREAKPOINTS) {
+    const p = placement[key];
+    if (matches[key] && p !== undefined) return p;
+  }
+  return placement.base;
+}
+
+/** A CSS length: a number is pixels. */
+function cssLength(value: string | number): string {
+  return typeof value === "number" ? `${value}px` : value;
+}
 
 /**
  * What a `sticky` row sticks to — see {@link FormActionsProps.stickyWithin}.
@@ -125,8 +176,20 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   start?: ReactNode;
   /** Horizontal alignment. Default `end` (`between` with a `destructive` action). */
   align?: FormActionsAlign;
-  /** See {@link FormActionsPlacement}. Default `inline`. */
-  placement?: FormActionsPlacement;
+  /** See {@link FormActionsPlacement}, or one per breakpoint — see
+   *  {@link ResponsiveFormActionsPlacement}. Default `inline`. */
+  placement?: FormActionsPlacement | ResponsiveFormActionsPlacement;
+  /**
+   * While the row is `sticky`: pull it out over its container's inline padding by this
+   * much (a CSS length, a number in px) and give the same back as padding — so the
+   * rule above it and its surface run edge to edge, while the buttons stay on the
+   * content's line. Without it a sticky row in a padded card or pane is a strip inset
+   * from both sides, with the content scrolling past it in the gutters (keksdose wrote
+   * `@max-md:-mx-3 @max-md:px-3` by hand). Pass the container's padding (`"0.75rem"`,
+   * `12`, `"var(--pane-px)"`). Applied only while the resolved placement is sticky, so
+   * `placement={{ base: "sticky", md: "inline" }}` bleeds on the phone alone.
+   */
+  bleed?: string | number;
   /**
    * With `placement="sticky"`: what the row sticks to. Default `viewport`.
    *
@@ -190,8 +253,9 @@ export function FormActions({
   destructive,
   start: startSlot,
   align,
-  placement = "inline",
+  placement: placementProp = "inline",
   stickyWithin = "viewport",
+  bleed,
   form,
   children,
   className,
@@ -199,6 +263,8 @@ export function FormActions({
   ...rest
 }: FormActionsProps) {
   const labels = useKitLabels("form", DEFAULT_FORM_ACTIONS_LABELS);
+  const placement = useResolvedPlacement(placementProp);
+  const bleedLength = bleed === undefined || bleed === "" ? undefined : cssLength(bleed);
   const hasDestructive = destructive !== undefined && destructive !== null && destructive !== false;
   const hasStart = startSlot !== undefined && startSlot !== null && startSlot !== false;
   const justify = align ?? (hasDestructive || hasStart ? "between" : "end");
@@ -235,6 +301,10 @@ export function FormActions({
               // container the nav is not underneath: `--app-nav-h` is the document's,
               // and would hold the row that far above the container's own edge.
               bottom: stickyWithin === "container" ? 0 : "max(0px, calc(var(--app-nav-h, 0px) - 1px))",
+              ...(bleedLength !== undefined && {
+                marginInline: `calc(-1 * ${bleedLength})`,
+                paddingInline: bleedLength,
+              }),
               ...style,
             }
           : style
