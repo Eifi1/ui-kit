@@ -48,3 +48,14 @@ the release notes, and the showcase (⌘K) has every prop live.
 | Others (P9) | `statusDotColor(tone)`; `StaticLegend as="div"`; `ProgressBar as="span"`; refs on every Table part; `PasskeysSetting` generic ids, `id` / `data-*`, `rowProps` |
 
 Not changed: Chip's xs icon stays `size-3`. Side by side, 3.5 crowded the xs pill.
+
+## 0.16.1
+
+Picked up by `^0.16.0`.
+
+- **FileButton `showFileName`:** the full list of picked names is in the kit's Tooltip
+  (lazy) instead of a native `title`. 0.16.0 broke the one-tooltip rule (dev#523), and
+  keksdose's guard caught it. The read-out stays one stable live region.
+- **The kit now guards this itself:** `src/__tests__/no-native-title.test.ts` fails on any
+  native `title` attribute on a DOM element in the kit's source, except the explicit
+  `nativeTitle` opt-in.
