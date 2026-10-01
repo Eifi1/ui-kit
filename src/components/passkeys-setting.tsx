@@ -8,9 +8,18 @@ import { Skeleton } from "./skeleton";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import type { PasskeysSettingLabels } from "./account-settings-labels";
 
-/** One registered passkey, as the app's API lists it. */
-export interface PasskeyItem {
-  id: string | number;
+/** What a passkey's `id` may be: the app's own key type, string or numeric. */
+export type PasskeyId = string | number;
+
+/**
+ * One registered passkey, as the app's API lists it.
+ *
+ * Generic in its `id` (0.16.0): `PasskeysSetting` infers `Id` from `passkeys`, so an
+ * app whose ids are numbers gets numbers back in `onRename` / `onDelete` — keksdose
+ * cast `id as number` in both. Left unparameterised it is the old `string | number`.
+ */
+export interface PasskeyItem<Id extends PasskeyId = PasskeyId> {
+  id: Id;
   name: string;
   /** A `Date`, an ISO string or epoch ms. */
   createdAt?: Date | string | number | null;
@@ -18,9 +27,12 @@ export interface PasskeyItem {
   lastUsedAt?: Date | string | number | null;
 }
 
-export interface PasskeysSettingProps {
+/** `data-*` attributes, passed through to the element they are given for. */
+export type PasskeyDataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined };
+
+export interface PasskeysSettingProps<Id extends PasskeyId = PasskeyId> extends PasskeyDataAttributes {
   /** `undefined` while the first load is in flight (or pass `loading`). */
-  passkeys: readonly PasskeyItem[] | undefined;
+  passkeys: readonly PasskeyItem<Id>[] | undefined;
   loading?: boolean;
   /**
    * Run the WebAuthn ceremony and register the passkey — app-side, since the options
@@ -33,11 +45,11 @@ export interface PasskeysSettingProps {
   /** The ceremony is running. The add button says so and does not start a second one. */
   adding?: boolean;
   /** Offer "Rename" on each row. Return a promise to leave edit mode only on success. */
-  onRename?: (id: PasskeyItem["id"], name: string) => void | Promise<unknown>;
+  onRename?: (id: Id, name: string) => void | Promise<unknown>;
   /** Offer "Delete" on each row — always behind an inline confirmation. */
-  onDelete?: (id: PasskeyItem["id"]) => void | Promise<unknown>;
+  onDelete?: (id: Id) => void | Promise<unknown>;
   /** A row whose rename or delete is in flight; its buttons are disabled. */
-  busyId?: PasskeyItem["id"] | null;
+  busyId?: Id | null;
   /** Show the name field above the add button. Default true. */
   nameField?: boolean;
   /**
@@ -53,6 +65,12 @@ export interface PasskeysSettingProps {
   /** Prop > `<UiKitProvider labels={{ accountSettings: { passkeys } }}>` > English. */
   labels?: Partial<PasskeysSettingLabels>;
   className?: string;
+  /** On the card (0.16.0), for an in-page link (`#passkeys`) or a test hook. `data-*`
+   *  attributes go there too. */
+  id?: string;
+  /** Extra attributes for one row's `<li>` (0.16.0) — an `id` to scroll a just-added
+   *  key into view, `data-*` for a test. Every row also carries `data-passkey-id`. */
+  rowProps?: (item: PasskeyItem<Id>) => ({ id?: string } & PasskeyDataAttributes) | undefined;
 }
 
 /**
@@ -70,7 +88,7 @@ export interface PasskeysSettingProps {
  * the passkey it names. Focus moves to Cancel, as in every destructive confirm in the
  * kit, so the Enter that pressed Delete cannot also answer it.
  */
-export function PasskeysSetting({
+export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   passkeys,
   loading,
   onAdd,
@@ -84,7 +102,9 @@ export function PasskeysSetting({
   locale: localeProp,
   labels: labelsProp,
   className,
-}: PasskeysSettingProps) {
+  rowProps,
+  ...rest
+}: PasskeysSettingProps<Id>) {
   const labels = useAccountSettingsLabels("passkeys", labelsProp);
   const locale = useKitLocale(localeProp);
   const [name, setName] = useState("");
@@ -126,6 +146,7 @@ export function PasskeysSetting({
                 item={item}
                 created={date(item.createdAt)}
                 lastUsed={date(item.lastUsedAt)}
+                attributes={rowProps?.(item)}
                 busy={busyId !== undefined && busyId !== null && busyId === item.id}
                 onRename={onRename}
                 onDelete={onDelete}
@@ -160,7 +181,8 @@ export function PasskeysSetting({
   })();
 
   return (
-    <Card className={cn("p-4 space-y-3", className)}>
+    // `rest` is only `id` and `data-*`: everything else the props name is destructured.
+    <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div>
         <div className="text-sm font-medium">{labels.title}</div>
         <div className="text-xs text-[var(--text-muted)]">
@@ -174,21 +196,23 @@ export function PasskeysSetting({
 
 type RowMode = "view" | "rename" | "delete";
 
-function PasskeyRow({
+function PasskeyRow<Id extends PasskeyId>({
   item,
   created,
   lastUsed,
+  attributes,
   busy,
   onRename,
   onDelete,
   labels,
 }: {
-  item: PasskeyItem;
+  item: PasskeyItem<Id>;
   created: string | null;
   lastUsed: string | null;
+  attributes?: { id?: string } & PasskeyDataAttributes;
   busy: boolean;
-  onRename?: PasskeysSettingProps["onRename"];
-  onDelete?: PasskeysSettingProps["onDelete"];
+  onRename?: PasskeysSettingProps<Id>["onRename"];
+  onDelete?: PasskeysSettingProps<Id>["onDelete"];
   labels: PasskeysSettingLabels;
 }) {
   const [mode, setMode] = useState<RowMode>("view");
@@ -241,13 +265,16 @@ function PasskeyRow({
       .catch(() => {});
   };
 
+  // On every mode's <li>, so an id the app scrolls to survives a rename or a confirm.
+  const li = { ...attributes, "data-passkey-id": String(item.id) };
+
   const meta = [created && labels.created(created), lastUsed ? labels.lastUsed(lastUsed) : labels.neverUsed]
     .filter(Boolean)
     .join(" · ");
 
   if (mode === "rename") {
     return (
-      <li className="flex flex-wrap items-center gap-2 py-2">
+      <li {...li} className="flex flex-wrap items-center gap-2 py-2">
         <Input
           ref={renameRef}
           aria-label={labels.renameField(item.name)}
@@ -278,7 +305,7 @@ function PasskeyRow({
 
   if (mode === "delete") {
     return (
-      <li className="space-y-2 py-2">
+      <li {...li} className="space-y-2 py-2">
         <p role="alert" className="text-sm">
           {labels.deleteConfirm(item.name)}
         </p>
@@ -295,7 +322,7 @@ function PasskeyRow({
   }
 
   return (
-    <li className="flex items-center gap-3 py-2">
+    <li {...li} className="flex items-center gap-3 py-2">
       <KeyRound className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{item.name}</div>

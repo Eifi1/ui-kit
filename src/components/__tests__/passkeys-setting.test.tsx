@@ -116,4 +116,36 @@ describe("PasskeysSetting", () => {
     expect(screen.getByText("Noch keine Passkeys")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Passkey hinzufügen/ })).toBeInTheDocument();
   });
+
+  it("hands callbacks the app's own id type (0.16.0)", () => {
+    // Numeric ids in, numbers out — typed, so keksdose's `id as number` casts can go.
+    const numeric: PasskeyItem<number>[] = [{ id: 7, name: "Laptop" }];
+    const onDelete = vi.fn((id: number) => void id.toFixed());
+    render(<PasskeysSetting passkeys={numeric} onAdd={vi.fn()} onDelete={onDelete} busyId={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Delete Laptop" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete passkey" }));
+    expect(onDelete).toHaveBeenCalledWith(7);
+    // A callback for string ids does not fit numeric passkeys.
+    // @ts-expect-error -- Id is inferred as number from `passkeys`
+    void (<PasskeysSetting passkeys={numeric} onAdd={vi.fn()} onDelete={(id: string) => id} />);
+  });
+
+  it("passes id and data-* to the card, and rowProps to each row (0.16.0)", () => {
+    const { container } = render(
+      <PasskeysSetting
+        id="passkeys"
+        data-testid="passkeys-card"
+        passkeys={KEYS}
+        onAdd={vi.fn()}
+        rowProps={(item) => ({ id: `passkey-${item.id}`, "data-kind": "key" })}
+      />,
+    );
+    const card = screen.getByTestId("passkeys-card");
+    expect(card).toHaveAttribute("id", "passkeys");
+    const row = container.querySelector("#passkey-2");
+    expect(row?.tagName).toBe("LI");
+    expect(row).toHaveAttribute("data-kind", "key");
+    expect(row).toHaveAttribute("data-passkey-id", "2");
+    expect(row).toHaveTextContent("Phone");
+  });
 });

@@ -1,6 +1,7 @@
-import { Children, createContext, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { Children, createContext, useCallback, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { assignRef } from "./choice-parts";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
 /** `none` (0.10.0): no cell padding at all — keksdose's VAT summary, a table set
@@ -91,6 +92,22 @@ function useSection<E extends HTMLElement>(): [TableSection, ((el: E | null) => 
   return [fromContext ?? detected ?? "body", fromContext === undefined ? setNode : undefined];
 }
 
+/**
+ * One callback ref for the caller's `ref` and the part's own (0.16.0). Every part takes
+ * a `ref` to its DOM element — React 19 hands it to a function component as a prop —
+ * and the parts that hold the node themselves (the table, a row or a head cell reading
+ * its section off the DOM) must still get it when the caller passes one too.
+ */
+function useMergedRef<E>(own: ((el: E | null) => void) | { current: E | null } | undefined, ref: Ref<E> | undefined) {
+  return useCallback(
+    (node: E | null) => {
+      assignRef(own as Ref<E> | undefined, node);
+      assignRef(ref, node);
+    },
+    [own, ref],
+  );
+}
+
 /** A {@link TableRow}'s `valign`, which its cells take unless they set their own. It
  *  cannot be left to CSS inheritance: every cell states its own default alignment,
  *  and a class on the cell beats one on the row. */
@@ -133,7 +150,12 @@ const ALIGN: Record<TableAlign, string> = {
  */
 export const NUMERIC_CELL_CLASS = "text-end tabular-nums";
 
-export interface TableProps extends ComponentPropsWithoutRef<"table"> {
+/**
+ * Every part's props are `ComponentPropsWithRef` (0.16.0), so `ref` reaches the DOM
+ * element: keksdose scrolled a budget row into view through `useId` + `getElementById`
+ * because `<TableRow ref>` did not type-check.
+ */
+export interface TableProps extends ComponentPropsWithRef<"table"> {
   /** `compact` for a dense detail view (a ledger, a spec sheet). */
   density?: TableDensity;
   /** Tint every other body row. */
@@ -216,6 +238,7 @@ export function Table({
   stack,
   className,
   "aria-label": ariaLabel,
+  ref,
   ...rest
 }: TableProps) {
   const captionId = useId();
@@ -223,6 +246,7 @@ export function Table({
   const wrapper = useRef<HTMLDivElement | null>(null);
   const overflowing = useScrollOverflow(wrapper);
   const tableRef = useRef<HTMLTableElement | null>(null);
+  const setTableRef = useMergedRef(tableRef, ref);
 
   // `stack="phone"`: label every body cell with its column's header text, and keep the
   // table's roles explicit — `display: block` on table parts drops their table
@@ -296,7 +320,7 @@ export function Table({
       >
         <table
           {...rest}
-          ref={tableRef}
+          ref={setTableRef}
           aria-label={ariaLabel}
           className={cn(
             "w-full caption-bottom border-collapse text-sm text-[var(--text-primary)]",
@@ -312,7 +336,7 @@ export function Table({
   );
 }
 
-export interface TableHeadProps extends ComponentPropsWithoutRef<"thead"> {
+export interface TableHeadProps extends ComponentPropsWithRef<"thead"> {
   /** The rule under the head. Default true; `false` for a quiet header over a small
    *  table (keksdose's VAT summary wrote `className="border-b-0"` to lose it). */
   bordered?: boolean;
@@ -326,7 +350,7 @@ export function TableHead({ bordered = true, className, ...rest }: TableHeadProp
   );
 }
 
-export interface TableBodyProps extends ComponentPropsWithoutRef<"tbody"> {
+export interface TableBodyProps extends ComponentPropsWithRef<"tbody"> {
   /**
    * Shown as ONE full-width row (a {@link TableEmpty}) when the body has no rows —
    * `children` that render nothing: an empty `.map`, a `false`, `null`. kastlan hand-
@@ -354,7 +378,7 @@ export function TableBody({ className, empty, children, ...rest }: TableBodyProp
   );
 }
 
-export interface TableEmptyProps extends Omit<ComponentPropsWithoutRef<"tr">, "children"> {
+export interface TableEmptyProps extends Omit<ComponentPropsWithRef<"tr">, "children"> {
   children: ReactNode;
   /** Columns to span. Default: MEASURED — the widest row of the table it renders in,
    *  counted after mount, so the row stays full width when a column is added. */
@@ -407,7 +431,7 @@ export function TableEmpty({ children, colSpan, cellClassName, className, ...res
   );
 }
 
-export type TableFootProps = ComponentPropsWithoutRef<"tfoot">;
+export type TableFootProps = ComponentPropsWithRef<"tfoot">;
 
 /** The totals row. Not in the brief, but every ledger view has one and a `<tfoot>`
  *  is what tells a reader it is a total rather than one more row. */
@@ -429,7 +453,7 @@ const ROW_VARIANT: Record<TableRowVariant, string | false> = {
 };
 
 /** The deprecated HTML `valign` attribute is replaced by a class-backed one. */
-export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
+export interface TableRowProps extends ComponentPropsWithRef<"tr"> {
   /** Vertical alignment for every cell of the row that does not set its own. See
    *  {@link TableVAlign}. Left out, each cell keeps its default. */
   valign?: TableVAlign;
@@ -440,9 +464,10 @@ export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
   bordered?: boolean;
 }
 
-export function TableRow({ valign, variant = "row", bordered, className, ...rest }: TableRowProps) {
+export function TableRow({ valign, variant = "row", bordered, className, ref: refProp, ...rest }: TableRowProps) {
   const { zebra, hover, rowDividers } = useContext(TableContext);
-  const [section, ref] = useSection<HTMLTableRowElement>();
+  const [section, sectionRef] = useSection<HTMLTableRowElement>();
+  const ref = useMergedRef(sectionRef, refProp);
   const body = section === "body";
   const record = body && variant === "row";
   const row = (
@@ -475,7 +500,7 @@ interface CellAlignProps {
 }
 
 /** The deprecated HTML `align` and `valign` attributes are replaced by class-backed ones. */
-export interface TableHeaderCellProps extends Omit<ComponentPropsWithoutRef<"th">, "align" | "valign">, CellAlignProps {
+export interface TableHeaderCellProps extends Omit<ComponentPropsWithRef<"th">, "align" | "valign">, CellAlignProps {
   /**
    * Type size. Left out: `xs` in the head, the table's own size in the body — as
    * before. keksdose's VAT summary heads its columns at the body size and normal weight
@@ -500,10 +525,12 @@ export function TableHeaderCell({
   weight = "medium",
   scope,
   className,
+  ref: refProp,
   ...rest
 }: TableHeaderCellProps) {
   const { density } = useContext(TableContext);
-  const [section, ref] = useSection<HTMLTableCellElement>();
+  const [section, sectionRef] = useSection<HTMLTableCellElement>();
+  const ref = useMergedRef(sectionRef, refProp);
   const rowVAlign = useContext(RowVAlignContext);
   const head = section === "head";
   const textSize = size ?? (head ? "xs" : undefined);
@@ -526,7 +553,7 @@ export function TableHeaderCell({
   );
 }
 
-export interface TableCellProps extends Omit<ComponentPropsWithoutRef<"td">, "align" | "valign">, CellAlignProps {}
+export interface TableCellProps extends Omit<ComponentPropsWithRef<"td">, "align" | "valign">, CellAlignProps {}
 
 export function TableCell({ numeric = false, align, valign, className, ...rest }: TableCellProps) {
   const { density } = useContext(TableContext);
@@ -545,7 +572,7 @@ export function TableCell({ numeric = false, align, valign, className, ...rest }
   );
 }
 
-export type TableCaptionProps = ComponentPropsWithoutRef<"caption">;
+export type TableCaptionProps = ComponentPropsWithRef<"caption">;
 
 /**
  * The table's title. Beneath the table by default (`caption-bottom`, the shadcn

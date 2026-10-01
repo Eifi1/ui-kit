@@ -169,7 +169,7 @@ describe("FeedbackDialog attachments", () => {
     );
     expect(screen.getByText("Attachments")).toBeInTheDocument();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
-    expect(screen.getByRole("button", { name: "Remove screenshot.png" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Screenshot" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Capture screenshot/ })).not.toBeInTheDocument();
 
     fireEvent.paste(document, clipboard(png("image.png")));
