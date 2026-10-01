@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1026 names from 161 modules** — 482 values and 544 types. _Italic_ is a type-only export.
+**1039 names from 161 modules** — 483 values and 556 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1026 |
+| `@eifi1/ui-kit` | 1039 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -411,7 +411,7 @@ re-slicing of it, never a second API.
 | `lib/calc` | `commitExpression`, `evaluateExpression`, `formatResult`, `isBareAmount`, `looksLikeExpression`, `sanitizeLive`, `splitLeadingSign` |
 | `lib/cn` | `cn` |
 | `lib/logger` | `logger`, `setStoreLog` |
-| `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_ |
+| `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readStored`, `writeStored` |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
@@ -460,10 +460,10 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleProps`_, _`CardTone`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FieldLabel`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FLOATING_LABEL_STATIC`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
-| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_ |
+| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_ |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
 | `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
@@ -515,7 +515,7 @@ re-slicing of it, never a second API.
 | `components/pie-chart` | `PieChart`, _`PieChartProps`_, _`PieChartSlice`_ |
 | `components/pie-chart-labels` | `DEFAULT_PIE_CHART_LABELS`, _`PieChartLabels`_ |
 | `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`TwoFactorSetupData`_ |
-| `components/passkeys-setting` | `PasskeysSetting`, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
+| `components/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
@@ -533,11 +533,11 @@ re-slicing of it, never a second API.
 | `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
-| `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsLabels`_, _`LineItemsProps`_ |
+| `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
 | `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
-| `components/loading-state` | `LoadingState`, _`LoadingStateProps`_, _`LoadingStateSize`_ |
-| `components/signed-amount` | `DEFAULT_SIGNED_AMOUNT_LABELS`, `Delta`, `SignedAmount`, `Tone`, `toneTextClass`, _`DeltaProps`_, _`GoodDirection`_, _`SignedAmountLabels`_, _`SignedAmountProps`_, _`SignedAmountTone`_, _`TextTone`_, _`ToneProps`_ |
+| `components/loading-state` | `LoadingState`, _`LoadingStateLabelVisibility`_, _`LoadingStateProps`_, _`LoadingStateSize`_ |
+| `components/signed-amount` | `DEFAULT_SIGNED_AMOUNT_LABELS`, `Delta`, `SignedAmount`, `Tone`, `toneTextClass`, _`DeltaProps`_, _`GoodDirection`_, _`SignedAmountLabels`_, _`SignedAmountProps`_, _`SignedAmountTone`_, _`TextTone`_, _`ToneProps`_, _`VerdictPalette`_ |
 | `components/error-boundary` | `crashFingerprint`, `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, `formatCrashReport`, `isChunkLoadError`, _`CrashReport`_, _`CrashReportResult`_, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
 | `components/authed-image` | `AuthedImage`, `DEFAULT_AUTHED_IMAGE_LABELS`, _`AuthedImageLabels`_, _`AuthedImageProps`_ |
 | `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, `splitFileName`, _`ImageGridLabels`_, _`ImageGridProps`_ |
@@ -546,10 +546,10 @@ re-slicing of it, never a second API.
 | `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
 | `components/separator` | `Separator`, _`SeparatorProps`_ |
 | `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
-| `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
+| `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListItemTrailingTone`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
 | `components/menu-item` | `MenuItem`, _`MenuItemLinkProps`_, _`MenuItemProps`_, _`MenuItemTone`_ |
 | `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_, _`SectionLabelVariant`_ |
-| `components/status-dot` | `StatusDot`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |
+| `components/status-dot` | `StatusDot`, `statusDotColor`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |
 | `components/page-header` | `PageHeader`, _`PageHeaderActionsAlign`_, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |

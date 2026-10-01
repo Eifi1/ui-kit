@@ -148,6 +148,7 @@ const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segme
 const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
 const RhfWizardDemo = lazySection(() => import("./sections/rhf-wizard-demo"), "RhfWizardDemo");
 const ListDragDemo = lazySection(() => import("./sections/list-drag-demo"), "ListDragDemo");
+const List016Demo = lazySection(() => import("./sections/list-016-demo"), "List016Demo");
 const AlertBannerBlockDemo = lazySection(() => import("./sections/props-011-demo"), "AlertBannerBlockDemo");
 const BulkActionBarPanelDemo = lazySection(() => import("./sections/props-011-demo"), "BulkActionBarPanelDemo");
 const ClipsMarkerDemo = lazySection(() => import("./sections/props-011-demo"), "ClipsMarkerDemo");
@@ -163,10 +164,12 @@ const TableHeaderValignDemo = lazySection(() => import("./sections/props-011-dem
 const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo");
 const Links013Demo = lazySection(() => import("./sections/links-013-demo"), "Links013Demo");
 const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "Buttons012");
+const Surfaces016Demo = lazySection(() => import("./sections/surfaces-016-demo"), "Surfaces016Demo");
 const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
 const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
 const Forms013Demo = lazySection(() => import("./sections/forms-013-demo"), "Forms013Demo");
 const Forms0142Demo = lazySection(() => import("./sections/forms-0142-demo"), "Forms0142Demo");
+const LineItems016Demo = lazySection(() => import("./sections/line-items-016-demo"), "LineItems016Demo");
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
@@ -175,6 +178,13 @@ const DataTableActionsDemo = lazySection(() => import("./sections/data-table-012
 const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableUrlFiltersDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
+const Signals016Demo = lazySection(() => import("./sections/signals-016-demo"), "Signals016Demo");
+const FormActions016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "FormActions016Demo");
+const LoadingState016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "LoadingState016Demo");
+const Media016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Media016Demo");
+const Numbers016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Numbers016Demo");
+const Files016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Files016Demo");
+const Chips016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Chips016Demo");
 const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
 const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
 const ErrorBoundary013Demo = lazySection(() => import("./sections/error-boundary-013-demo"), "ErrorBoundary013Demo");
@@ -192,6 +202,9 @@ const ShellBrandDemo = lazySection(() => import("./sections/shell-012-demo"), "S
 const AccountHeaderLinkDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "AccountHeaderLinkDemo");
 const ComposerCannedRepliesDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "ComposerCannedRepliesDemo");
 const Feedback014Demo = lazySection(() => import("./sections/feedback-014-demo"), "Feedback014Demo");
+const FeedbackAttachment016Demo = lazySection(() => import("./sections/feedback-016-demo"), "FeedbackAttachment016Demo");
+const Passkeys016Demo = lazySection(() => import("./sections/feedback-016-demo"), "Passkeys016Demo");
+const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -351,6 +364,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <FormLayoutDemo />
             <Forms013Demo />
             <Forms0142Demo />
+            <LineItems016Demo />
+            <FormActions016Demo />
           </>
         ),
       },
@@ -381,6 +396,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <Numbers />
             <NumberStepsDemo />
+            <Numbers016Demo />
           </>
         ),
       },
@@ -434,7 +450,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
         icon: FileUp,
         components: ["FileButton", "useFilePicker", "FileDropzone", "useFileDrop"],
-        Body: FileInputs,
+        Body: () => (
+          <>
+            <FileInputs />
+            <Files016Demo />
+          </>
+        ),
       },
       {
         slug: "media",
@@ -444,7 +465,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, and images that need a signed-in fetch.",
         icon: Images,
         components: ["ImageGrid", "Lightbox", "AuthedImage", "useAuthedSrc"],
-        Body: MediaDemo,
+        Body: () => (
+          <>
+            <MediaDemo />
+            <Media016Demo />
+          </>
+        ),
       },
     ],
   },
@@ -563,6 +589,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ButtonsMore />
             <IconButtonDisabledReasonDemo />
             <Buttons012 />
+            <Surfaces016Demo />
           </>
         ),
       },
@@ -580,6 +607,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ChipHuesToggleField />
             <ToggleCaptionDemo />
             <Display013Demo />
+            <Chips016Demo />
           </>
         ),
       },
@@ -600,6 +628,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <EmptyStateSmallDemo />
             <ToastsDemo />
             <StatesDemo />
+            <LoadingState016Demo />
             <ErrorBoundary013Demo />
           </>
         ),
@@ -619,6 +648,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TableHeaderValignDemo />
             <TableVariantsDemo />
             <TableStackDemo />
+            <TableRefs016Demo />
             <DescriptionPlaceholderDemo />
           </>
         ),
@@ -645,6 +675,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <ListsMenus />
             <ListDragDemo />
+            <List016Demo />
             <MenuItemBadgeDemo />
             <BulkActionBarPanelDemo />
           </>
@@ -976,7 +1007,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
         components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS"],
-        Body: AuthAccountDemo,
+        Body: () => (
+          <>
+            <AuthAccountDemo />
+            <Passkeys016Demo />
+          </>
+        ),
       },
       {
         slug: "wizard",
@@ -999,7 +1035,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb: "The report form and its attachment field.",
         icon: MessageSquarePlus,
         components: ["FeedbackDialog", "FeedbackAttachmentField"],
-        Body: FeedbackCompose,
+        Body: () => (
+          <>
+            <FeedbackCompose />
+            <FeedbackAttachment016Demo />
+          </>
+        ),
       },
       {
         slug: "feedback-inbox",
@@ -1068,7 +1109,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "Numbers, money, percentages, dates and relative times in the reader's locale — as input → output in several languages — and the signed amount and change that colour themselves.",
         icon: Percent,
         components: ["formatNumber", "formatMoney", "formatPercent", "formatDate", "formatRelativeTime", "useKitFormat", "SignedAmount", "Delta", "Tone", "toneTextClass"],
-        Body: FormattingDemo,
+        Body: () => (
+          <>
+            <FormattingDemo />
+            <Signals016Demo />
+          </>
+        ),
       },
       {
         slug: "url-state",

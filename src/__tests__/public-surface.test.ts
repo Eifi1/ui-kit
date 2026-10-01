@@ -117,7 +117,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `resolveTooltipPlacement`, `useKitChartTooltipPlacement` (keksdose M1) (+4).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS`, the default `max` of
   // `<FeedbackAttachmentField multiple>` (keksdose N3) (+1 here and in /feedback).
-  ["@eifi1/ui-kit", barrel, 482],
+  // 0.16.0: `statusDotColor` (+1).
+  ["@eifi1/ui-kit", barrel, 483],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
