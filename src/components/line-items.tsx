@@ -39,6 +39,37 @@ export interface LineItemCellContext<T> {
    *  hidden from assistive tech (each row repeats it), so the field has to carry it:
    *  `<Input aria-label={label} … />`. */
   label: string;
+  /** The column's own name ("Debit") for the field's VISIBLE label — set only when the
+   *  cell's labels are `"floating"` (see {@link LineItemsProps.fieldLabels}), so one
+   *  render serves both modes: `<Input label={fieldLabel} aria-label={label} … />`.
+   *  Undefined there, the Input stays a bare compact control; set, it floats "Debit"
+   *  while `aria-label` still says which row. */
+  fieldLabel?: string;
+}
+
+/** How a cell's field is labelled. `aria`: the field is a bare control named by
+ *  `aria-label`, under a header row (stacked: a small copy of the header over it).
+ *  `floating`: the field shows its own floating label ({@link LineItemCellContext.fieldLabel}),
+ *  so the list draws no header for it. */
+export type LineItemsFieldLabels = "aria" | "floating";
+
+/** The colour of a {@link LineItemsSummary}'s value. */
+export type LineItemsSummaryTone = "neutral" | "success" | "danger" | "muted";
+
+/**
+ * A line under the lines that says where they stand — a split's remainder ("Left to
+ * assign  CHF 0.00", green at zero, red otherwise, muted while the total is not known
+ * yet), with an optional action that settles it ("Set amount to total").
+ */
+export interface LineItemsSummary {
+  label: ReactNode;
+  value?: ReactNode;
+  /** The value's colour. Default `neutral`. The label stays neutral: the colour is a
+   *  second signal, never the only one — the value and label carry the meaning. */
+  tone?: LineItemsSummaryTone;
+  /** A small button at the end of the line. Disabled along with the list's
+   *  `disabled`. */
+  action?: { label: ReactNode; onClick: () => void; disabled?: boolean };
 }
 
 export interface LineItemsColumn<T> {
@@ -54,6 +85,13 @@ export interface LineItemsColumn<T> {
   width?: string;
   /** `end` for figures: the header and the totals cell end-align with the field. */
   align?: "start" | "end";
+  /** This column's labelling, over the list's {@link LineItemsProps.fieldLabels} — a
+   *  read-only "Sum" cell in a floating list keeps its header with `"aria"`. */
+  fieldLabels?: LineItemsFieldLabels;
+  /** With {@link LineItemsProps.narrowColumns} `2`: `2` gives the cell a whole row of
+   *  the stacked card (a description), where short fields pair up two to a row.
+   *  Default `1`. No effect on the wide grid. */
+  narrowSpan?: 1 | 2;
   render: (ctx: LineItemCellContext<T>) => ReactNode;
 }
 
@@ -93,12 +131,30 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">,
   empty?: ReactNode;
   /** A message about the list as a whole ("The entry does not balance"). */
   error?: ReactNode;
+  /** A line under the lines and totals — the remainder of a split, say. See
+   *  {@link LineItemsSummary}. */
+  summary?: LineItemsSummary;
+  /** How the cells' fields are labelled. Default `aria` (compact bare controls under a
+   *  header row); `floating` hands each cell its column's name as
+   *  {@link LineItemCellContext.fieldLabel} for a visible floating label, and drops the
+   *  header for those columns. A column's own `fieldLabels` wins. */
+  fieldLabels?: LineItemsFieldLabels;
+  /** Stacked (a narrow pane), how many fields share a row of a line's card: `2` pairs
+   *  them up (a column's `narrowSpan={2}` takes a whole row), once the pane is wide
+   *  enough for two fields (18rem); narrower still, one. Default `1`. */
+  narrowColumns?: 1 | 2;
   /** Disables add and remove (the fields are the caller's to disable). */
   disabled?: boolean;
   labels?: Partial<LineItemsLabels>;
 }
 
 const REMOVE_TRACK = "2.25rem";
+const SUMMARY_TONE: Record<LineItemsSummaryTone, string> = {
+  neutral: "text-[var(--text-primary)]",
+  success: "text-[var(--success)]",
+  danger: "text-[var(--danger)]",
+  muted: "text-[var(--text-muted)]",
+};
 const FOCUSABLE =
   "input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
@@ -158,6 +214,9 @@ export function LineItems<T>({
   totalsLabel,
   empty,
   error,
+  summary,
+  fieldLabels = "aria",
+  narrowColumns = 1,
   disabled = false,
   labels: labelsProp,
   className,
@@ -228,6 +287,11 @@ export function LineItems<T>({
 
   const columnName = (column: LineItemsColumn<T>) =>
     column.label ?? (typeof column.header === "string" ? column.header : column.key);
+  const floats = (column: LineItemsColumn<T>) => (column.fieldLabels ?? fieldLabels) === "floating";
+  // A header row only for the columns that still need one: with every field floating
+  // its own label, a row of headers would say each name twice.
+  const showHeader = columns.some((c) => !floats(c));
+  const pairs = narrowColumns === 2;
 
   const headerCell = (column: LineItemsColumn<T>) => (
     <span
@@ -237,7 +301,7 @@ export function LineItems<T>({
         column.align === "end" && "text-end",
       )}
     >
-      {column.header}
+      {floats(column) ? null : column.header}
     </span>
   );
 
@@ -251,10 +315,12 @@ export function LineItems<T>({
       style={{ ...gridStyle, ...style }}
       className={cn("@container space-y-2", className)}
     >
-      <div aria-hidden className="hidden gap-2 @lg:grid @lg:grid-cols-[var(--line-items-cols)]">
-        {columns.map(headerCell)}
-        {onRemove && <span />}
-      </div>
+      {showHeader && (
+        <div aria-hidden className="hidden gap-2 @lg:grid @lg:grid-cols-[var(--line-items-cols)]">
+          {columns.map(headerCell)}
+          {onRemove && <span />}
+        </div>
+      )}
 
       {items.length === 0 && hasContent(empty) && (
         <div className="rounded-md border border-dashed border-[var(--border)] px-3 py-4 text-center text-sm text-[var(--text-muted)]">
@@ -280,20 +346,42 @@ export function LineItems<T>({
             onKeyDown={onRowKeyDown}
             className={cn(
               "grid grid-cols-1 gap-2 @lg:grid-cols-[var(--line-items-cols)] @lg:items-start",
+              // Two short fields to a row of the card — from 18rem, where two fields
+              // still fit a figure each; on anything narrower they stack after all.
+              pairs && "@2xs:grid-cols-2",
               // Stacked, each row is a card of its own so the rows stay apart.
               "@max-lg:rounded-md @max-lg:border @max-lg:border-[var(--border)] @max-lg:p-3",
             )}
           >
-            {columns.map((column) => (
-              <div key={column.key} className="min-w-0 space-y-1 @lg:space-y-0">
-                <span aria-hidden className="block text-xs font-medium text-[var(--text-muted)] @lg:hidden">
-                  {column.header}
-                </span>
-                {column.render({ item, index, label: labels.cell(columnName(column), row) })}
-              </div>
-            ))}
+            {columns.map((column) => {
+              const floating = floats(column);
+              return (
+                <div
+                  key={column.key}
+                  className={cn(
+                    "min-w-0 space-y-1 @lg:space-y-0",
+                    // The wide grid places every cell in its own track again.
+                    pairs && column.narrowSpan === 2 && "@2xs:col-span-2 @lg:col-span-1",
+                  )}
+                >
+                  {!floating && (
+                    <span aria-hidden className="block text-xs font-medium text-[var(--text-muted)] @lg:hidden">
+                      {column.header}
+                    </span>
+                  )}
+                  {column.render({
+                    item,
+                    index,
+                    label: labels.cell(columnName(column), row),
+                    fieldLabel: floating ? columnName(column) : undefined,
+                  })}
+                </div>
+              );
+            })}
             {onRemove && (
-              <div className="flex justify-end @lg:justify-center">
+              // Paired, the remove button keeps a row of its own at the card's end
+              // rather than squeezing in beside the last field.
+              <div className={cn("flex justify-end @lg:justify-center", pairs && "@2xs:col-span-2 @lg:col-span-1")}>
                 <IconButton
                   type="button"
                   data-line-items-remove=""
@@ -358,6 +446,35 @@ export function LineItems<T>({
             );
           })}
           {onRemove && <span className="@max-lg:hidden" />}
+        </div>
+      )}
+
+      {summary && (
+        <div
+          data-line-items-summary=""
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--text-primary)]"
+        >
+          <span className="min-w-0">{summary.label}</span>
+          {hasContent(summary.value) && (
+            <span
+              data-tone={summary.tone ?? "neutral"}
+              className={cn("font-semibold tabular-nums", SUMMARY_TONE[summary.tone ?? "neutral"])}
+            >
+              {summary.value}
+            </span>
+          )}
+          {summary.action && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="ms-auto"
+              disabled={disabled || summary.action.disabled}
+              onClick={summary.action.onClick}
+            >
+              {summary.action.label}
+            </Button>
+          )}
         </div>
       )}
 

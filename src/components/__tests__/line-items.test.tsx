@@ -136,4 +136,104 @@ describe("LineItems", () => {
     expect(rows()[0]).toHaveAccessibleName("Line 1");
     expect(screen.getByRole("button", { name: "Add line" })).toBeInTheDocument();
   });
+
+  describe("0.16: summary, floating field labels, two-up stacking", () => {
+    const FLOATING: LineItemsColumn<Line>[] = COLUMNS.map((c) => ({
+      ...c,
+      render: ({ item, label, fieldLabel }) => (
+        <Input label={fieldLabel} aria-label={label} defaultValue={item.account} />
+      ),
+    }));
+
+    it("summary: label, a toned value and an action, disabled with the list", async () => {
+      const onClick = vi.fn();
+      const summary = {
+        label: "Left to assign",
+        value: "CHF 12.00",
+        tone: "danger" as const,
+        action: { label: "Set amount to total", onClick },
+      };
+      const { container, rerender } = render(<Lines summary={summary} />);
+      const box = container.querySelector("[data-line-items-summary]") as HTMLElement;
+      expect(box).toHaveTextContent("Left to assign");
+      const value = within(box).getByText("CHF 12.00");
+      expect(value).toHaveAttribute("data-tone", "danger");
+      expect(value.className).toContain("text-[var(--danger)]");
+      await userEvent.click(within(box).getByRole("button", { name: "Set amount to total" }));
+      expect(onClick).toHaveBeenCalledTimes(1);
+      // Under the lines: after the last row, before the add button.
+      const add = screen.getByRole("button", { name: "Add row" });
+      expect(rows()[1].compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(box.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+      rerender(<Lines summary={{ ...summary, tone: "success" }} disabled />);
+      const after = container.querySelector("[data-line-items-summary]") as HTMLElement;
+      expect(within(after).getByText("CHF 12.00").className).toContain("text-[var(--success)]");
+      expect(within(after).getByRole("button", { name: "Set amount to total" })).toBeDisabled();
+    });
+
+    it("summary: tone defaults to neutral; muted while unknown; no summary, no box", () => {
+      const { container, rerender } = render(<Lines summary={{ label: "Left", value: "0.00" }} />);
+      expect(screen.getByText("0.00")).toHaveAttribute("data-tone", "neutral");
+      rerender(<Lines summary={{ label: "Left", value: "—", tone: "muted" }} />);
+      expect(screen.getByText("—").className).toContain("text-[var(--text-muted)]");
+      rerender(<Lines />);
+      expect(container.querySelector("[data-line-items-summary]")).toBeNull();
+    });
+
+    it("fieldLabels: aria by default — no fieldLabel, header row and stacked headers drawn", () => {
+      const seen: Array<string | undefined> = [];
+      const cols = COLUMNS.map((c) => ({
+        ...c,
+        render: (ctx: Parameters<typeof c.render>[0]) => {
+          seen.push(ctx.fieldLabel);
+          return c.render(ctx);
+        },
+      }));
+      const { container } = render(<LineItems items={[blank()]} columns={cols} />);
+      expect(seen.every((v) => v === undefined)).toBe(true);
+      expect(container.querySelector("[aria-hidden].hidden")).toHaveTextContent("AccountAmount");
+      expect(within(rows()[0]).getAllByText("Account", { selector: "span[aria-hidden]" })).toHaveLength(1);
+    });
+
+    it("fieldLabels=floating: each field floats its column's name, the row stays in its accessible name, no headers", () => {
+      const { container } = render(<Lines fieldLabels="floating" columns={FLOATING} />);
+      const field = screen.getByRole("textbox", { name: "Amount, row 2" });
+      // The visible label is the column's name, on a <label> for the field.
+      expect(container.querySelector(`label[for="${field.id}"]`)).toHaveTextContent(/^Amount$/);
+      expect(container.querySelector("[aria-hidden].hidden")).toBeNull();
+      expect(within(rows()[0]).queryByText("Account", { selector: "span[aria-hidden]" })).toBeNull();
+    });
+
+    it("a column's fieldLabels wins over the list's: a read-only column keeps its header", () => {
+      const cols: LineItemsColumn<Line>[] = [
+        FLOATING[0],
+        { key: "sum", header: "Sum", fieldLabels: "aria", render: () => <span>1.00</span> },
+      ];
+      const { container } = render(<LineItems items={[blank()]} columns={cols} fieldLabels="floating" />);
+      const header = container.querySelector("[aria-hidden].hidden") as HTMLElement;
+      expect(header).toHaveTextContent(/^Sum$/);
+      expect(within(rows()[0]).getByText("Sum", { selector: "span[aria-hidden]" })).toBeInTheDocument();
+      expect(container.querySelector("label")).toHaveTextContent("Account");
+    });
+
+    it("narrowColumns=2 pairs the stacked fields; narrowSpan=2 and the remove button take a whole row", () => {
+      const cols: LineItemsColumn<Line>[] = [{ ...COLUMNS[0], narrowSpan: 2 }, COLUMNS[1], { ...COLUMNS[1], key: "tax" }];
+      render(<LineItems items={[blank()]} columns={cols} narrowColumns={2} onRemove={() => {}} />);
+      const row = rows()[0];
+      expect(row.className).toContain("@2xs:grid-cols-2");
+      const cells = Array.from(row.children) as HTMLElement[];
+      expect(cells[0].className).toContain("@2xs:col-span-2");
+      expect(cells[0].className).toContain("@lg:col-span-1");
+      expect(cells[1].className).not.toContain("col-span");
+      expect(cells[3].className).toContain("@2xs:col-span-2");
+    });
+
+    it("narrowColumns defaults to 1: no pairing classes", () => {
+      render(<LineItems items={[blank()]} columns={[{ ...COLUMNS[0], narrowSpan: 2 }]} onRemove={() => {}} />);
+      const row = rows()[0];
+      expect(row.className).not.toContain("@2xs");
+      for (const cell of Array.from(row.children)) expect(cell.className).not.toContain("col-span");
+    });
+  });
 });
