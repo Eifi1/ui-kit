@@ -12,6 +12,7 @@ import * as i18nDe from "../i18n/locales/de";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nDeInformal from "../i18n/locales/de-informal";
 import * as i18nDeChInformal from "../i18n/locales/de-CH-informal";
+import * as i18nEn from "../i18n/locales/en";
 import * as i18nEs from "../i18n/locales/es";
 import * as i18nFr from "../i18n/locales/fr";
 import * as i18nHu from "../i18n/locales/hu";
@@ -149,6 +150,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 1],
   ["@eifi1/ui-kit/i18n/de-informal", i18nDeInformal, 2],
   ["@eifi1/ui-kit/i18n/de-CH-informal", i18nDeChInformal, 1],
+  // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts
+  // (kastlan 58). Runtime only: a constant would read as the raw-count defaults.
+  ["@eifi1/ui-kit/i18n/en", i18nEn, 1],
   ["@eifi1/ui-kit/i18n/es", i18nEs, 2],
   ["@eifi1/ui-kit/i18n/fr", i18nFr, 2],
   ["@eifi1/ui-kit/i18n/hu", i18nHu, 2],

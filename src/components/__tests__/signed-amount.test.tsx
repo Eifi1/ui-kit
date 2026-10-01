@@ -121,3 +121,31 @@ describe("palette='money' and flatWithin (keksdose dev#434 price changes)", () =
     expect(delta.parentElement).toHaveAttribute("data-direction", "flat");
   });
 });
+
+describe("ratio={false}: percent POINTS (keksdose 0.17 Q4)", () => {
+  it("reads value and flatWithin in points, with the ratio default unchanged", () => {
+    render(
+      <>
+        <Delta value={12.5} unit="percent" ratio={false} goodDirection="down" locale="en-US" data-testid="pts" />
+        <Delta value={0.4} unit="percent" ratio={false} flatWithin={0.5} goodDirection="down" locale="en-US" data-testid="flat" />
+        <Delta value={0.125} unit="percent" locale="en-US" data-testid="default" />
+        <SignedAmount value={-3} unit="percent" ratio={false} locale="en-US" data-testid="sa" />
+      </>,
+    );
+    const pts = screen.getByTestId("pts");
+    expect(pts).toHaveAttribute("data-direction", "up");
+    expect(pts).toHaveTextContent("12.5%");
+    expect(pts.querySelector(".text-\\[var\\(--danger\\)\\]")).not.toBeNull();
+    // 0.4 points is inside the half-point band: no change, no verdict.
+    expect(screen.getByTestId("flat")).toHaveAttribute("data-direction", "flat");
+    expect(screen.getByTestId("default")).toHaveTextContent("12.5%");
+    const sa = screen.getByTestId("sa");
+    expect(sa.querySelector("[aria-hidden]")).toHaveTextContent("−3%");
+    expect(screen.getByText("minus 3%")).toHaveClass("sr-only");
+  });
+
+  it("ignores ratio for a non-percent unit", () => {
+    render(<SignedAmount value={12} ratio={false} locale="en-US" data-testid="n" />);
+    expect(screen.getByTestId("n").querySelector("[aria-hidden]")).toHaveTextContent("+12");
+  });
+});

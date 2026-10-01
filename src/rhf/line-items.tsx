@@ -24,7 +24,8 @@
  * list's `error`. Each cell's `render` gets `name`, the row's path
  * (`"components.2"`), to bind its field to.
  *
- * `summary`, `fieldLabels` and `narrowColumns` pass through to {@link LineItems}. With
+ * `summary`, `fieldLabels`, `narrowColumns`, `removePlacement` and `removeAlign` pass
+ * through to {@link LineItems}. With
  * `fieldLabels="floating"` a cell's `fieldLabel` is the column's name; the bound
  * fields' own `label` is a `FormLabel` ABOVE the control, so for the floating
  * one render the kit field through `RhfField`:

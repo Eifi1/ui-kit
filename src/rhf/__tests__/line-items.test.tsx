@@ -93,7 +93,7 @@ describe("RhfLineItems", () => {
     expect(screen.getByText("Account is required")).toBeInTheDocument();
   });
 
-  it("passes summary, fieldLabels and narrowColumns through, with fieldLabel in the cell context", () => {
+  it("passes summary, fieldLabels, narrowColumns, removePlacement and removeAlign through, with fieldLabel in the cell context", () => {
     function Floating() {
       const form = useForm<Values>({ defaultValues: { lines: [{ account: "1000" }] } });
       return (
@@ -103,7 +103,9 @@ describe("RhfLineItems", () => {
             name="lines"
             fieldLabels="floating"
             narrowColumns={2}
-            summary={{ label: "Left to assign", value: "0.00", tone: "success" }}
+            summary={{ label: "Left to assign", value: "0.00", tone: "success", status: <span>Balanced</span> }}
+            removePlacement="inline"
+            removeAlign="end"
             columns={[
               {
                 key: "account",
@@ -138,5 +140,9 @@ describe("RhfLineItems", () => {
     expect(container.querySelector(`label[for="${field.id}"]`)).toHaveTextContent(/^Account$/);
     expect(screen.getByText("0.00")).toHaveAttribute("data-tone", "success");
     expect(container.querySelector("[data-line-items-row]")?.className).toContain("@2xs:grid-cols-2");
+    expect(container.querySelector("[data-line-items-summary-status]")).toHaveTextContent("Balanced");
+    const remove = screen.getByRole("button", { name: "Remove row 1" });
+    expect(remove.closest("[data-line-items-inline]")).not.toBeNull();
+    expect((remove.closest("[data-line-items-remove-cell]") as HTMLElement).className).toContain("@lg:self-end");
   });
 });

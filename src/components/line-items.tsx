@@ -53,8 +53,10 @@ export interface LineItemCellContext<T> {
  *  so the list draws no header for it. */
 export type LineItemsFieldLabels = "aria" | "floating";
 
-/** The colour of a {@link LineItemsSummary}'s value. */
-export type LineItemsSummaryTone = "neutral" | "success" | "danger" | "muted";
+/** The colour of a {@link LineItemsSummary}'s value — a verdict (`success` /
+ *  `danger`), quiet (`muted`), or the money pair (`income` / `expense`, the colours
+ *  `SignedAmount` draws a figure in) for a remainder that reads as the row it settles. */
+export type LineItemsSummaryTone = "neutral" | "success" | "danger" | "muted" | "income" | "expense";
 
 /**
  * A line under the lines that says where they stand — a split's remainder ("Left to
@@ -65,12 +67,27 @@ export interface LineItemsSummary {
   label: ReactNode;
   value?: ReactNode;
   /** The value's colour. Default `neutral`. The label stays neutral: the colour is a
-   *  second signal, never the only one — the value and label carry the meaning. */
+   *  second signal, never the only one — the value and label carry the meaning.
+   *  With no `value` the line is a state on its own ("Waiting for the total"), and
+   *  the tone colours the label instead — `muted` quiets the whole line. */
   tone?: LineItemsSummaryTone;
+  /** Beside the value: a chip or badge that names the state ("Balanced" next to a
+   *  journal entry's zero difference). */
+  status?: ReactNode;
   /** A small button at the end of the line. Disabled along with the list's
-   *  `disabled`. */
-  action?: { label: ReactNode; onClick: () => void; disabled?: boolean };
+   *  `disabled`. `variant`: `secondary` (default) is a boxed button; `link` a muted
+   *  text link, for an action that is an aside rather than the way to settle it. */
+  action?: { label: ReactNode; onClick: () => void; disabled?: boolean; variant?: "secondary" | "link" };
 }
+
+/** Where a row's remove button sits. `row` (default): stacked, a row of the card to
+ *  itself (paired, the whole width); wide, its own track. `inline`: stacked, beside
+ *  the row's last field ("category + amount" over "memo + delete"); wide, unchanged. */
+export type LineItemsRemovePlacement = "row" | "inline";
+
+/** How the remove button sits in the height of a wide row: at its top, centred, or at
+ *  its foot. */
+export type LineItemsRemoveAlign = "start" | "center" | "end";
 
 export interface LineItemsColumn<T> {
   /** Stable id: the React key, and the key into `totals`. */
@@ -143,6 +160,14 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">,
    *  them up (a column's `narrowSpan={2}` takes a whole row), once the pane is wide
    *  enough for two fields (18rem); narrower still, one. Default `1`. */
   narrowColumns?: 1 | 2;
+  /** Stacked, where the remove button goes: a row of its own (`row`, default) or
+   *  beside the last field (`inline`). See {@link LineItemsRemovePlacement}. */
+  removePlacement?: LineItemsRemovePlacement;
+  /** On the wide grid, the remove button's place in the row's height. Default `start`
+   *  — or `center` when a column floats its label (`fieldLabels="floating"`): a
+   *  floating field is taller than the button, and centred is level with its control.
+   *  A field that shows a message under itself grows the row; pin `start` then. */
+  removeAlign?: LineItemsRemoveAlign;
   /** Disables add and remove (the fields are the caller's to disable). */
   disabled?: boolean;
   labels?: Partial<LineItemsLabels>;
@@ -154,6 +179,14 @@ const SUMMARY_TONE: Record<LineItemsSummaryTone, string> = {
   success: "text-[var(--success)]",
   danger: "text-[var(--danger)]",
   muted: "text-[var(--text-muted)]",
+  // SignedAmount's money palette (toneTextClass "income" / "expense").
+  income: "text-[var(--money-income)]",
+  expense: "text-[var(--money-expense)]",
+};
+const REMOVE_ALIGN: Record<LineItemsRemoveAlign, string> = {
+  start: "@lg:self-start",
+  center: "@lg:self-center",
+  end: "@lg:self-end",
 };
 const FOCUSABLE =
   "input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])";
@@ -217,6 +250,8 @@ export function LineItems<T>({
   summary,
   fieldLabels = "aria",
   narrowColumns = 1,
+  removePlacement = "row",
+  removeAlign: removeAlignProp,
   disabled = false,
   labels: labelsProp,
   className,
@@ -292,6 +327,9 @@ export function LineItems<T>({
   // its own label, a row of headers would say each name twice.
   const showHeader = columns.some((c) => !floats(c));
   const pairs = narrowColumns === 2;
+  const removeAlign = removeAlignProp ?? (columns.some(floats) ? "center" : "start");
+  const inline = removePlacement === "inline" && Boolean(onRemove) && columns.length > 0;
+  const lastColumn = columns[columns.length - 1];
 
   const headerCell = (column: LineItemsColumn<T>) => (
     <span
@@ -305,7 +343,43 @@ export function LineItems<T>({
     </span>
   );
 
+  const removeCell = (index: number, row: number, isConfirming: boolean) => (
+    <div
+      data-line-items-remove-cell=""
+      className={cn(
+        "flex justify-end @lg:justify-center",
+        REMOVE_ALIGN[removeAlign],
+        // Paired, the remove button keeps a row of its own at the card's end rather
+        // than squeezing in beside the last field — unless asked to go `inline`.
+        inline ? "shrink-0" : pairs && "@2xs:col-span-2 @lg:col-span-1",
+      )}
+    >
+      <IconButton
+        type="button"
+        data-line-items-remove=""
+        variant={isConfirming ? "danger" : "ghost"}
+        tone={isConfirming ? undefined : "danger"}
+        label={isConfirming ? labels.confirmRemove(row) : labels.remove(row)}
+        disabled={!canRemove}
+        onClick={() => void removeAt(index)}
+        onBlur={() => {
+          if (isConfirming) setConfirming(null);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && isConfirming) {
+            e.stopPropagation();
+            setConfirming(null);
+          }
+        }}
+      >
+        <Trash2 />
+      </IconButton>
+    </div>
+  );
+
   const showTotals = totals !== undefined;
+  const summaryTone = summary?.tone ?? "neutral";
+  const summaryHasValue = hasContent(summary?.value);
   const labelColumn = showTotals ? columns.find((c) => !hasContent(totals[c.key]))?.key : undefined;
 
   return (
@@ -355,13 +429,15 @@ export function LineItems<T>({
           >
             {columns.map((column) => {
               const floating = floats(column);
-              return (
+              const isLast = inline && column === lastColumn;
+              const span = pairs && column.narrowSpan === 2 && "@2xs:col-span-2 @lg:col-span-1";
+              const cell = (
                 <div
                   key={column.key}
                   className={cn(
                     "min-w-0 space-y-1 @lg:space-y-0",
                     // The wide grid places every cell in its own track again.
-                    pairs && column.narrowSpan === 2 && "@2xs:col-span-2 @lg:col-span-1",
+                    isLast ? "flex-1" : span,
                   )}
                 >
                   {!floating && (
@@ -377,33 +453,23 @@ export function LineItems<T>({
                   })}
                 </div>
               );
-            })}
-            {onRemove && (
-              // Paired, the remove button keeps a row of its own at the card's end
-              // rather than squeezing in beside the last field.
-              <div className={cn("flex justify-end @lg:justify-center", pairs && "@2xs:col-span-2 @lg:col-span-1")}>
-                <IconButton
-                  type="button"
-                  data-line-items-remove=""
-                  variant={isConfirming ? "danger" : "ghost"}
-                  tone={isConfirming ? undefined : "danger"}
-                  label={isConfirming ? labels.confirmRemove(row) : labels.remove(row)}
-                  disabled={!canRemove}
-                  onClick={() => void removeAt(index)}
-                  onBlur={() => {
-                    if (isConfirming) setConfirming(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape" && isConfirming) {
-                      e.stopPropagation();
-                      setConfirming(null);
-                    }
-                  }}
+              if (!isLast) return cell;
+              // Inline, the last field and the remove button share one cell of the
+              // card; on the wide grid the wrapper dissolves (`contents`) and each is a
+              // track of its own again. Level with the field's control: its foot under
+              // a header copy, its middle when it floats its own label.
+              return (
+                <div
+                  key={column.key}
+                  data-line-items-inline=""
+                  className={cn("flex min-w-0 gap-2 @lg:contents", floating ? "items-center" : "items-end", span)}
                 >
-                  <Trash2 />
-                </IconButton>
-              </div>
-            )}
+                  {cell}
+                  {removeCell(index, row, isConfirming)}
+                </div>
+              );
+            })}
+            {onRemove && !inline && removeCell(index, row, isConfirming)}
           </div>
         );
       })}
@@ -454,19 +520,29 @@ export function LineItems<T>({
           data-line-items-summary=""
           className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--text-primary)]"
         >
-          <span className="min-w-0">{summary.label}</span>
-          {hasContent(summary.value) && (
-            <span
-              data-tone={summary.tone ?? "neutral"}
-              className={cn("font-semibold tabular-nums", SUMMARY_TONE[summary.tone ?? "neutral"])}
-            >
+          {/* With no value the line is a state of its own, and the label takes the
+              tone — the only place left to carry it. */}
+          <span
+            data-tone={summaryHasValue ? undefined : summaryTone}
+            className={cn("min-w-0", !summaryHasValue && SUMMARY_TONE[summaryTone])}
+          >
+            {summary.label}
+          </span>
+          {summaryHasValue && (
+            <span data-tone={summaryTone} className={cn("font-semibold tabular-nums", SUMMARY_TONE[summaryTone])}>
               {summary.value}
+            </span>
+          )}
+          {hasContent(summary.status) && (
+            <span data-line-items-summary-status="" className="inline-flex">
+              {summary.status}
             </span>
           )}
           {summary.action && (
             <Button
               type="button"
-              variant="secondary"
+              variant={summary.action.variant === "link" ? "link" : "secondary"}
+              tone={summary.action.variant === "link" ? "muted" : undefined}
               size="sm"
               className="ms-auto"
               disabled={disabled || summary.action.disabled}

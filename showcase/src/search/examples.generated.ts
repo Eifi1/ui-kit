@@ -82,8 +82,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "MoneyField — a number per row",
     "IntegerField — whole numbers",
     "LineItems — summary, floating field labels, two-up on a phone",
+    "LineItems — a status chip beside the summary",
+    "LineItems — money tones, a state line, inline remove",
     "FormActions — start slot, submitIcon and submitProps",
     "FormActions — sticky inside a scroll container",
+    "FormActions — sticky on a phone, inline from md up, bled to the pane's edges",
   ],
   "choices": [
     "Checkbox — states",
@@ -292,6 +295,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Card toneStrength, IconButton pending",
     "Select — FieldHint without a label line",
     "StatTile variant, StatTileGrid stretch and loading",
+    "Card density, toneFill",
   ],
   "chips-toggles": [
     "Chip — the three shapes",
@@ -404,6 +408,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "fillHeight — a table in a bounded pane",
     "Right-to-left",
     "rowActions, toolbar and the empty label",
+    "Totals row: a trial balance",
   ],
   "data-table-server": [
     "urlSync — the view lives in the address",
@@ -563,6 +568,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "GlobalSearch — ranked index, async source and suggestions",
     "CommandPalette — density and a synchronous provider",
     "GlobalSearch — suggestionsKeepGroups, triggerIconSize, triggerName and density",
+    "GlobalSearch — one source, several groups",
   ],
   "swipeable-row": [
     "SwipeableRow",
@@ -720,6 +726,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "A negative part in a ProgressBar legend",
     "A swatch that matches a status dot",
     "A legend that is not a list",
+    "A percent change in points",
+    "ProgressBar figures under a demo-mode blur",
   ],
   "url-state": [
     "useSearchParamState — one param as state",

@@ -180,6 +180,16 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * `tone="danger"` if it should read as over. Ignored for `segments` and `max={null}`.
    */
   overage?: boolean | ((over: number) => ReactNode);
+  /**
+   * Tag every figure the bar PRINTS `data-private`, so the host's demo-mode rule blurs
+   * it — the attribute `StatTile sensitive` and `Tooltip redact` carry: the `showValue`
+   * text, each `legend` row's value (yours from `legendValue` too), the unlimited
+   * figure and the `overage` line. The track, the swatches and the part names stay
+   * readable — a blurred bar is no picture at all. Before this an app with a demo-mode
+   * blur had to pass `legendValue` only to wrap the figure in a tagged span (keksdose).
+   * The `aria-valuetext` is not touched: a screen reader is not a screen-share.
+   */
+  sensitive?: boolean;
   labels?: Partial<ProgressBarLabels>;
 }
 
@@ -216,6 +226,7 @@ export function ProgressBar({
   legendValue,
   hint,
   overage,
+  sensitive = false,
   labels,
   className,
   as = "div",
@@ -233,6 +244,7 @@ export function ProgressBar({
   const text = useKitLabels("progressBar", DEFAULT_PROGRESS_BAR_LABELS, labels);
   const kitLocale = useKitLocale(locale);
   const labelId = useId();
+  const priv = sensitive ? "" : undefined;
   const hintId = useId();
   const hintNode =
     hint != null ? (
@@ -258,7 +270,7 @@ export function ProgressBar({
               {label}
             </span>
           )}
-          <span data-part="unlimited" className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
+          <span data-part="unlimited" data-private={priv} className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
             {shown !== undefined && `${shown} · `}
             {text.unlimited}
           </span>
@@ -320,7 +332,7 @@ export function ProgressBar({
     overage && !stacked && value !== undefined && Number.isFinite(value) && value > max ? value - max : 0;
   const overageNode =
     over > 0 ? (
-      <p id={`${hintId}-over`} data-part="overage" className="mt-1 text-xs text-[var(--danger)]">
+      <p id={`${hintId}-over`} data-part="overage" data-private={priv} className="mt-1 text-xs text-[var(--danger)]">
         {typeof overage === "function"
           ? overage(over)
           : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
@@ -344,7 +356,7 @@ export function ProgressBar({
           {showValue && valueText !== undefined && (
             // Hidden: the same words are the bar's aria-valuetext, and reading them
             // twice in a row is noise.
-            <span aria-hidden className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
+            <span aria-hidden data-part="value" data-private={priv} className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
               {valueText}
             </span>
           )}
@@ -426,7 +438,11 @@ export function ProgressBar({
               {seg.label != null && (
                 <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
               )}
-              <span className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]">
+              <span
+                data-part="legend-value"
+                data-private={priv}
+                className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]"
+              >
                 {legendValue ? legendValue(seg, formatPart(seg.value), i) : formatPart(seg.value)}
               </span>
             </li>

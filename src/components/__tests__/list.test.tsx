@@ -421,3 +421,29 @@ describe("ListItem 0.16 slots (keksdose P2)", () => {
     expect(true).toBe(true);
   });
 });
+
+describe("ListItem docs guards (keksdose 0.17 Q5)", () => {
+  it("hands renderRow the row box, not the target: disabled must be passed to the row", () => {
+    let received: React.ReactElement | undefined;
+    render(
+      <ListItem
+        title="Guarded"
+        onClick={() => {}}
+        disabled
+        renderRow={(row) => {
+          received = row;
+          return row;
+        }}
+      />,
+    );
+    expect(received?.type).toBe("div");
+    expect(screen.getByRole("button", { name: /Guarded/ })).toBeDisabled();
+  });
+
+  it("puts content in the text column, beside the trailing figure rather than under it", () => {
+    render(<ListItem title="Food" trailing={<span>CHF 40</span>} content={<span data-testid="meter" />} onClick={() => {}} />);
+    const column = screen.getByTestId("meter").parentElement!.parentElement!;
+    expect(column).toHaveTextContent("Food");
+    expect(column).not.toHaveTextContent("CHF 40");
+  });
+});

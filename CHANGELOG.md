@@ -20,6 +20,17 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.17.0](https://github.com/Eifi1/ui-kit/compare/v0.16.1...v0.17.0) (2026-10-01)
+
+### Added
+
+* **card:** density="compact" and toneFill (keksdose Q3) ([d4bef60](https://github.com/Eifi1/ui-kit/commit/d4bef6070f927e048c29504863b06944c3cadbfb))
+* **data-table:** a totals row — column footer, footerLabel; a summary card on phones (kastlan 54) ([10a9e96](https://github.com/Eifi1/ui-kit/commit/10a9e96206094564695001360d18d79ad1cf3c1b))
+* Delta ratio, ProgressBar sensitive, FormActions per-breakpoint placement and bleed (Q4–Q8) ([1fbe113](https://github.com/Eifi1/ui-kit/commit/1fbe11325d5d6ef390919a20a91a903c5fc859fb))
+* **global-search:** one source fills several typed groups from one request (kastlan 56) ([d31589d](https://github.com/Eifi1/ui-kit/commit/d31589de4192674157571aa83fd1533f2cbff8b7))
+* **i18n:** @eifi1/ui-kit/i18n/en — uiKitLabelsEn(numberLocale), grouped counts (kastlan 58) ([94a5701](https://github.com/Eifi1/ui-kit/commit/94a57013b549587142d5388528464ee2e3d318de))
+* **line-items:** summary status, money tones, link action, inline remove (kastlan 55, Q1, Q2) ([ec5b766](https://github.com/Eifi1/ui-kit/commit/ec5b766de5c204f5f5ce486d84102f3012b5203f))
+
 ## [0.16.1](https://github.com/Eifi1/ui-kit/compare/v0.16.0...v0.16.1) (2026-10-01)
 
 ### Fixed

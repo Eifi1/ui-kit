@@ -160,7 +160,12 @@ interface ListItemBaseProps {
    * never operated — no buttons, links or inputs (invalid HTML in a button, and folded
    * into its name). Its text joins the row's accessible name, so give a bar that only
    * repeats a figure already in the row `aria-hidden`. Rendered in a block `<span>`,
-   * full width of the text column. Strictly a button holds phrasing content only; the
+   * full width of the TEXT COLUMN only — the column the title and subtitle are in, not
+   * the whole row: it starts after the {@link icon} / {@link leading} and stops where
+   * {@link trailing} begins, so a meter under a row with a trailing figure is as wide as
+   * the title, not run on under the figure (keksdose's budget rows). For a bar across
+   * the full row, put it in {@link children} (outside the target) or leave `trailing`
+   * off and show the figure in `meta`. Strictly a button holds phrasing content only; the
    * kit's `ProgressBar` draws `<div>`s, which every browser lays out and reads fine
    * there but an HTML validator flags.
    */
@@ -280,6 +285,13 @@ interface ListItemBaseProps {
    * the list's child and keeps both. The `<li>` becomes a column and the row takes the
    * full width, so an inline wrapper (the tooltip's `inline-flex` span) still stretches
    * the row across the list.
+   *
+   * `row` is the row BOX (a `<div>`), not the target: a wrapper that forces a prop onto
+   * its child with `cloneElement` — a save guard that injects `disabled` while a form is
+   * dirty (keksdose's SaveGuard) — sets it on that div, where it does nothing, and the
+   * button inside stays live. Pass `disabled` (or `loading`) to the ListItem yourself,
+   * from the same state the guard reads, and let the wrapper only explain it:
+   * `<ListItem disabled={dirty} renderRow={(row) => <Tooltip label="Save first">{row}</Tooltip>} />`.
    */
   renderRow?: (row: ReactElement) => ReactNode;
   /** Reaches the main target — the element with the row's name and action. */

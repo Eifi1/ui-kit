@@ -42,8 +42,20 @@ export const DEFAULT_GLOBAL_SEARCH_LABELS: GlobalSearchLabels = {
 export interface GlobalSearchSource {
   /** Stable key — the effect that runs the source is keyed by it, not by identity. */
   id: string;
-  /** The group its results are shown under (an entry's own `group` is ignored). */
+  /** The group its results are shown under (an entry's own `group` is ignored) — unless
+   *  `groups` is set, where it is only the home of entries that name no declared group. */
   group: string;
+  /**
+   * Split ONE request into several groups — kastlan's record search answers with
+   * properties, units, contacts, leases and invoices at once, and one source per group
+   * meant a dedupe layer so the network still saw one request. Each entry is then shown
+   * under the group its own `group` names: a declared `key` (shown by its `label`) or a
+   * plain string (key and heading at once). The groups appear in THIS order whatever the
+   * answer's order, each kept to `limit` rows; an entry naming no declared group falls
+   * under `group`. While the request runs, or when it fails, the source shows one status
+   * line under its first group, not one per group. Unset: one group, as before.
+   */
+  groups?: readonly (string | GlobalSearchSourceGroup)[];
   /** Called with the trimmed query. Its results are shown AS GIVEN — the source ranked
    *  them — and never re-filtered by the index's matcher. `signal` aborts when the query
    *  moves on or the palette closes; a stale answer is dropped either way. */
@@ -52,7 +64,7 @@ export interface GlobalSearchSource {
   minChars?: number;
   /** Quiet period after the last keystroke before it is asked. Default 200ms. */
   debounceMs?: number;
-  /** Rows kept. Default: `indexOptions.groupLimit` (8). */
+  /** Rows kept — per group, when `groups` is set. Default: `indexOptions.groupLimit` (8). */
   limit?: number;
   /** Mask every row of this source for session replay, hints (amounts) included. An
    *  entry's own `redact` still wins. */
@@ -60,6 +72,13 @@ export interface GlobalSearchSource {
   /** Told when `search` throws or rejects (not when it is aborted). The group then
    *  shows the palette's `error` line instead of rows. */
   onError?: (error: unknown) => void;
+}
+
+/** One of a multi-group source's groups: the `key` its entries name in `group`, and the
+ *  heading shown — so a server's type ("unit") need not be translated per entry. */
+export interface GlobalSearchSourceGroup {
+  key: string;
+  label: string;
 }
 
 /** What a custom trigger gets: everything the default button uses. */
@@ -90,7 +109,7 @@ export interface GlobalSearchProps {
    * neither re-indexes nor loops, and the icons and handlers used are always the latest.
    */
   entries?: readonly SearchEntry[];
-  /** The async sources, each streamed into its own group. */
+  /** The async sources, each streamed into its own group — or several (`groups`). */
   sources?: readonly GlobalSearchSource[];
   /** What the empty query shows, under the `suggestions` heading. */
   suggestions?: readonly GlobalSearchSuggestion[];
@@ -311,7 +330,17 @@ function GlobalSearchImpl({
   const byId = useMemo(() => new Map(list.map((e) => [e.id, e])), [sig]);
 
   const sourceKey = (sources ?? [])
-    .map((s) => [s.id, s.group, s.minChars ?? 2, s.debounceMs ?? 200, s.limit, s.redact].join("\u0001"))
+    .map((s) =>
+      [
+        s.id,
+        s.group,
+        (s.groups ?? []).map((g) => (typeof g === "string" ? g : `${g.key}\u0003${g.label}`)).join("\u0004"),
+        s.minChars ?? 2,
+        s.debounceMs ?? 200,
+        s.limit,
+        s.redact,
+      ].join("\u0001"),
+    )
     .join("\u0002");
   const sourceList = useMemo(() => sources ?? [], [sourceKey]);
 
@@ -434,10 +463,12 @@ function GlobalSearchImpl({
     for (const source of sourceList) {
       if (q.length < (source.minChars ?? 2)) continue;
       const result = sourceResults[source.id];
+      const declared = (source.groups ?? []).map((g) => (typeof g === "string" ? { key: g, label: g } : g));
       const status = (label: string, icon: ReactNode): CommandItem => ({
         id: `src:${source.id}:status`,
         label,
-        group: source.group,
+        // One line for the one request, under the group that will head its answer.
+        group: declared[0]?.label ?? source.group,
         icon,
         kind: "status",
         onSelect: noop,
@@ -448,10 +479,30 @@ function GlobalSearchImpl({
         out.push(status(pl.loading, <Loader2 className="size-3.5 animate-spin" />));
       } else if (result.status === "error") {
         out.push(status(pl.error ?? DEFAULT_COMMAND_PALETTE_LABELS.error!, <AlertCircle className="size-3.5" />));
-      } else {
+      } else if (!declared.length) {
         for (const entry of result.entries.slice(0, source.limit ?? groupLimit)) {
           out.push(toItem(`src:${source.id}:`, entry, source.group, source.redact ?? redactLabels));
         }
+      } else {
+        // Bucket by the entry's own group, then emit in the DECLARED order — the answer's
+        // order must not reshuffle the headings between keystrokes. Within a group the
+        // source's ranking stands. The group key is in the row id: two record types may
+        // share an id ("1"), and the palette keys rows by it.
+        const buckets = new Map<string, { label: string; entries: SearchEntry[] }>();
+        for (const g of declared) buckets.set(g.key, { label: g.label, entries: [] });
+        const rest: SearchEntry[] = [];
+        for (const entry of result.entries) {
+          const bucket = entry.group === undefined ? undefined : buckets.get(entry.group);
+          (bucket ? bucket.entries : rest).push(entry);
+        }
+        const limit = source.limit ?? groupLimit;
+        const emit = (key: string, label: string, list: SearchEntry[]) => {
+          for (const entry of list.slice(0, limit)) {
+            out.push(toItem(`src:${source.id}:${key}:`, entry, label, source.redact ?? redactLabels));
+          }
+        };
+        for (const [key, { label, entries: list }] of buckets) emit(key, label, list);
+        emit("~", source.group, rest);
       }
     }
 

@@ -106,8 +106,17 @@ export const DEFAULT_SIGNED_AMOUNT_LABELS: SignedAmountLabels = {
 interface SignedFormatProps {
   /** ISO 4217 code: format as money. */
   currency?: string;
-  /** `"percent"` reads `value` as a RATIO (`0.12` → 12 %), as `StatTile`'s delta does. */
+  /** `"percent"` reads `value` as a RATIO (`0.12` → 12 %), as `StatTile`'s delta does
+   *  — or as percent POINTS with `ratio={false}`. */
   unit?: "value" | "percent";
+  /** With `unit="percent"`: `true` (default) — `value` is a ratio, `0.12` is 12 %.
+   *  `false` — `value` is already in percent POINTS, `12` is 12 %, as `formatPercent`'s
+   *  `ratio` option reads it. Backends send points (keksdose's price changes, kastlan's
+   *  `change_pct`), and without this every site divided by 100 — and wrote its
+   *  `flatWithin` as a ratio (`0.005`) beside a value it had to convert. With
+   *  `ratio={false}` the value AND `flatWithin` are in points (`flatWithin={0.5}` is
+   *  half a point). Ignored for any other unit. */
+  ratio?: boolean;
   /** Compact notation: 12 400 → "12K". */
   compact?: boolean;
   /** Fraction digits, as `formatNumber`'s `digits`. */
@@ -118,11 +127,11 @@ interface SignedFormatProps {
   locale?: string;
 }
 
-function useMagnitudeFormatter({ currency, unit, compact, digits, format, locale }: SignedFormatProps) {
+function useMagnitudeFormatter({ currency, unit, ratio, compact, digits, format, locale }: SignedFormatProps) {
   const kitLocale = useKitLocale(locale);
   return (magnitude: number): string => {
     if (format) return format(magnitude);
-    if (unit === "percent") return formatPercent(magnitude, { locale: kitLocale, compact, digits });
+    if (unit === "percent") return formatPercent(magnitude, { locale: kitLocale, compact, digits, ratio });
     if (currency) return formatMoney(magnitude, currency, { locale: kitLocale, compact, digits });
     return formatNumber(magnitude, { locale: kitLocale, compact, digits });
   };
@@ -200,6 +209,7 @@ export function SignedAmount({
   value,
   currency,
   unit,
+  ratio,
   compact,
   digits,
   format,
@@ -216,7 +226,7 @@ export function SignedAmount({
   ...rest
 }: SignedAmountProps) {
   const text = useKitLabels("signedAmount", DEFAULT_SIGNED_AMOUNT_LABELS, labels);
-  const fmt = useMagnitudeFormatter({ currency, unit, compact, digits, format, locale });
+  const fmt = useMagnitudeFormatter({ currency, unit, ratio, compact, digits, format, locale });
   const finite = Number.isFinite(value);
   const dir = finite ? directionOf(value, flatWithin) : "flat";
   const amount = finite ? fmt(Math.abs(value)) : "—";
@@ -281,6 +291,7 @@ export function Delta({
   value,
   currency,
   unit,
+  ratio,
   compact,
   digits,
   format,
@@ -296,7 +307,7 @@ export function Delta({
   ...rest
 }: DeltaProps) {
   const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
-  const fmt = useMagnitudeFormatter({ currency, unit, compact, digits, format, locale });
+  const fmt = useMagnitudeFormatter({ currency, unit, ratio, compact, digits, format, locale });
   if (!Number.isFinite(value)) return null;
   const amount = fmt(Math.abs(value));
   const dir = directionOf(value, flatWithin);
