@@ -257,7 +257,7 @@ one maintainer. Revisit it if a second maintainer appears.
 `npm run check` runs these in three independent groups at the same time
 (`scripts/check.mjs`), and every one blocks:
 
-- `check:static`: typecheck · lint · check:tokens · check:security · check:commits
+- `check:static`: typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
 - `check:test`: test:coverage
 - `check:build`: build · check:graph · check:package · build:showcase · check:tailwind
 
@@ -280,6 +280,7 @@ about 2¾ minutes (it was ~5 run one after another). Lint and typecheck keep cac
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
+| `check:commit-rules` | The commit rules are the apps' SHARED ones: `scripts/check-commit-msg.cjs` is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned in `scripts/shared-commit-rules.json`. It fails when the copy drifts from the pin; offline it says so and passes (CI always verifies). A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
 
 A passing group prints one line with its time; a failing one prints its whole output.
 Inside a group, a passing check prints a line, not an inventory: `build` drops tsup's per-file listing
