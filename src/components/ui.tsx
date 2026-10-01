@@ -2269,7 +2269,32 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
    * nor on `inset`, which has no border to make louder (its tone is a fill).
    */
   toneStrength?: "soft" | "strong";
+  /**
+   * Wash the card in the tone's quiet `-bg` surface as well as framing it. A toned
+   * card is a border and a title colour, at either strength — the wash belongs to
+   * `AlertBanner`, the message, not to a card that holds a form — so it stays
+   * off by default. Some tiles want both: keksdose's password / delete-account tile
+   * was `toneFrameClass(tone)` (border AND wash) before 0.16, and after moving to
+   * `toneStrength="strong"` it re-added `bg-[var(--danger-bg)]` by hand. The wash is
+   * layered OVER the card's own `--bg-surface` (as AlertBanner's `elevated` does), so
+   * the dark theme's translucent tints stay a card, not a hole to the page below.
+   *
+   * No effect without `tone`, nor on `inset`, whose tone is already the fill.
+   */
+  toneFill?: boolean;
+  /**
+   * The parts' type scale. `"compact"`: CardTitle `text-sm font-medium`,
+   * CardDescription `text-xs` and the CardHeader's title-to-description gap
+   * `gap-0.5` — the small settings / admin card. keksdose wrote those three classes by
+   * hand on ~25 cards. Set here, they reach the parts through context; a class on a
+   * part still wins, and a Card nested inside starts again from its own density.
+   *
+   * Default `"comfortable"`: the parts as they have always been.
+   */
+  density?: CardDensity;
 }
+
+export type CardDensity = "comfortable" | "compact";
 
 export type CardTone = "warning" | "danger" | "info" | "success";
 
@@ -2312,6 +2337,16 @@ const CARD_PADDING_STRONG: Record<NonNullable<CardProps["padding"]>, string> = {
   md: "p-[15px]",
 };
 
+// The wash as a background IMAGE over the card's opaque `--bg-surface` — see
+// `toneFill`. A plain `bg-[var(--danger-bg)]` would REPLACE the surface, and the dark
+// theme's washes are a translucent tint.
+const CARD_TONE_WASH: Record<CardTone, string> = {
+  warning: "bg-[image:linear-gradient(var(--warning-bg),var(--warning-bg))]",
+  danger: "bg-[image:linear-gradient(var(--danger-bg),var(--danger-bg))]",
+  info: "bg-[image:linear-gradient(var(--info-bg),var(--info-bg))]",
+  success: "bg-[image:linear-gradient(var(--success-bg),var(--success-bg))]",
+};
+
 const CARD_TONES_STRONG: Record<CardTone, string> = {
   warning: "border-2 border-[var(--warning)]",
   danger: "border-2 border-[var(--danger-border-strong)]",
@@ -2326,6 +2361,9 @@ const CARD_TONES_STRONG: Record<CardTone, string> = {
  */
 const CardPaddedContext = createContext(false);
 
+/** The {@link CardProps.density} of the nearest Card — the parts' type scale. */
+const CardDensityContext = createContext<CardDensity>("comfortable");
+
 export function Card({
   className,
   children,
@@ -2333,6 +2371,8 @@ export function Card({
   variant = "default",
   tone,
   toneStrength = "soft",
+  toneFill = false,
+  density = "comfortable",
   padding,
   ...rest
 }: CardProps) {
@@ -2347,6 +2387,7 @@ export function Card({
     <div
       data-tone={tone}
       data-tone-strength={strong ? "strong" : undefined}
+      data-density={density === "compact" ? "compact" : undefined}
       {...rest}
       className={cn(
         variant === "inset"
@@ -2365,12 +2406,15 @@ export function Card({
             ),
         toned && (bordered ? toned.border : toned.fill),
         strong && tone && CARD_TONES_STRONG[tone],
+        toneFill && bordered && tone && CARD_TONE_WASH[tone],
         toned?.title,
         ownPadding && (strong ? CARD_PADDING_STRONG : CARD_PADDING)[ownPadding],
         className,
       )}
     >
-      <CardPaddedContext.Provider value={ownPadding !== undefined}>{children}</CardPaddedContext.Provider>
+      <CardPaddedContext.Provider value={ownPadding !== undefined}>
+        <CardDensityContext.Provider value={density}>{children}</CardDensityContext.Provider>
+      </CardPaddedContext.Provider>
     </div>
   );
 }
@@ -2415,6 +2459,7 @@ export type CardFooterProps = ComponentPropsWithoutRef<"div">;
 
 export function CardHeader({ className, stackAction = false, ...props }: CardHeaderProps) {
   const padded = useContext(CardPaddedContext);
+  const compact = useContext(CardDensityContext) === "compact";
   return (
     <div
       data-slot="card-header"
@@ -2433,6 +2478,7 @@ export function CardHeader({ className, stackAction = false, ...props }: CardHea
         // never inherits an ancestor header's two columns.
         "grid auto-rows-min items-start gap-1.5 [--card-header-cols:1fr] has-data-[slot=card-action]:[--card-header-cols:1fr_auto] grid-cols-[var(--card-header-cols,1fr)]",
         padded ? "px-0 pt-0" : "px-6 pt-6",
+        compact && "gap-0.5",
         // One column under `sm`, and the action back into the flow (DOM order, so
         // after the description when it is written after it), at the start edge.
         // The descendant selector outranks CardAction's own placement classes.
@@ -2446,10 +2492,18 @@ export function CardHeader({ className, stackAction = false, ...props }: CardHea
 }
 
 export function CardTitle({ className, as: Tag = "div", ...props }: CardTitleProps) {
-  return <Tag data-slot="card-title" className={cn("font-semibold leading-none", className)} {...props} />;
+  const compact = useContext(CardDensityContext) === "compact";
+  return (
+    <Tag
+      data-slot="card-title"
+      className={cn(compact ? "text-sm font-medium" : "font-semibold", "leading-none", className)}
+      {...props}
+    />
+  );
 }
 
 export function CardDescription({ className, ...props }: CardDescriptionProps) {
+  const compact = useContext(CardDensityContext) === "compact";
   return (
     <div
       data-slot="card-description"
@@ -2457,7 +2511,7 @@ export function CardDescription({ className, ...props }: CardDescriptionProps) {
       // field captions). It was `--money-neutral`, a MONEY token that happened to be
       // a similar grey — and a palette that re-tunes the money colours moved every
       // card's description with them.
-      className={cn("text-sm text-[var(--text-muted)]", className)}
+      className={cn(compact ? "text-xs" : "text-sm", "text-[var(--text-muted)]", className)}
       {...props}
     />
   );
