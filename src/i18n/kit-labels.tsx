@@ -634,17 +634,24 @@ export function useKitFileLabels(prop?: Partial<FileLabels>): FileLabels {
  * The dot paths of every key `labels` does NOT supply — the ones a translated app is
  * still showing in English. Assert on it in the app's own test:
  *
- *     expect(missingKitLabels(de)).toEqual([]);
+ *     expect(missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)).toEqual([]);
  *
  * `reference` is the complete tree to check against — pass
  * {@link DEFAULT_UI_KIT_LABELS} (src/i18n/defaults.ts). It is a parameter rather than an import
  * because the defaults live beside their components, and this module is imported BY
- * those components.
+ * those components. Left out (a test file is not type-checked), it throws saying so
+ * rather than "Cannot convert undefined or null to object" (keksdose, 0.18).
  */
 export function missingKitLabels(
   labels: UiKitLabelOverrides | undefined,
   reference: UiKitLabels,
 ): string[] {
+  if (!isRecord(reference)) {
+    throw new TypeError(
+      "missingKitLabels(labels, reference): pass DEFAULT_UI_KIT_LABELS as the reference — " +
+        "it is the tree the labels are checked against.",
+    );
+  }
   const missing: string[] = [];
   for (const [ns, keys] of Object.entries(reference)) {
     const given = (labels as Record<string, Record<string, unknown> | undefined> | undefined)?.[ns];

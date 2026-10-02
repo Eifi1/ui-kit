@@ -85,6 +85,12 @@ describe("UiKitProvider", () => {
 });
 
 describe("missingKitLabels", () => {
+  it("names the missing reference instead of failing inside Object.entries", () => {
+    // keksdose called it with one argument, as the doc example then showed.
+    const call = missingKitLabels as unknown as (labels: unknown) => string[];
+    expect(() => call({})).toThrow(/DEFAULT_UI_KIT_LABELS/);
+  });
+
   it("lists every key of the reference when nothing is supplied", () => {
     const all = missingKitLabels(undefined, DEFAULT_UI_KIT_LABELS);
     expect(all).toContain("common.close");
