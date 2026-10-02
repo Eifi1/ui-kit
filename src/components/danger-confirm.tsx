@@ -1,9 +1,111 @@
-import { useEffect, useId, useRef, useState } from "react";
-import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, Input, Label, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
+
+/**
+ * How typed text is compared with the text it has to repeat — shared by
+ * `DangerConfirm`'s `phraseMatch` and `useConfirm`'s `typedMatch`.
+ *
+ * - `"trim"` ignores spaces around the typed text — a phone keyboard's autocomplete
+ *   likes to add one. Case counts: "delete" is not "DELETE".
+ * - `"exact"` compares character for character, spaces included.
+ * - `"caseless"` trims AND ignores case: for an e-mail address, whose domain is
+ *   case-insensitive and whose local part every real mail server treats so. Both apps'
+ *   "type the account's address" rules (keksdose's `TYPE_EMAIL`, Kurvenschmiede's
+ *   `TypedConfirm`) compared `trim().toLowerCase()`, and a capital the user's keyboard
+ *   put at the start must not make the right row look like the wrong one.
+ */
+export type TypedMatch = "trim" | "exact" | "caseless";
+
+/** Whether `typed` repeats `target` under `mode` — see {@link TypedMatch}. Exported for
+ *  a caller that draws its own field (a dialog that also picks a recipient) and wants
+ *  the same rule as the kit's. */
+export function typedMatches(typed: string, target: string, mode: TypedMatch = "trim"): boolean {
+  if (mode === "exact") return typed === target;
+  if (mode === "trim") return typed.trim() === target;
+  // `toLowerCase`, not `toLocaleLowerCase`: the comparison must not change with the
+  // reader's locale (a Turkish dotless i would otherwise fail an ASCII address).
+  return typed.trim().toLowerCase() === target.trim().toLowerCase();
+}
+
+/**
+ * Busy-while-a-promise-runs, for an action that MAY return one: `run(result, onResolved)`
+ * marks the caller pending until `result` settles, calls `onResolved` if it fulfilled,
+ * and only clears the flag if it rejected — the caller shows why and the user retries.
+ * Nothing runs after unmount. Shared by `DangerConfirm` and `ReauthDialog`, whose
+ * contract is the same: resolve = done, reject = stay put.
+ *
+ * @internal
+ */
+export function usePromisePending() {
+  const [pending, setPending] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const run = useCallback((result: unknown, onResolved: () => void): boolean => {
+    if (!result || typeof (result as Promise<unknown>).then !== "function") return false;
+    setPending(true);
+    (result as Promise<unknown>).then(
+      () => {
+        if (!mounted.current) return;
+        setPending(false);
+        onResolved();
+      },
+      () => {
+        if (mounted.current) setPending(false);
+      },
+    );
+    return true;
+  }, []);
+  return { pending, run };
+}
+
+/**
+ * The "prove it is you" field: a password input the browser's password manager fills
+ * with the CURRENT password (`autocomplete="current-password"`), never offers to
+ * generate a new one for. `readOnly` rather than `disabled` while busy: disabling the
+ * field that has focus (Enter was pressed in it) drops focus to <body>.
+ *
+ * @internal shared by `DangerConfirm` and `ReauthDialog`.
+ */
+export function CurrentPasswordInput({
+  inputRef,
+  label,
+  value,
+  onValueChange,
+  busy,
+  invalid,
+  describedBy,
+}: {
+  inputRef?: Ref<HTMLInputElement>;
+  label: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  busy: boolean;
+  invalid?: boolean;
+  describedBy?: string;
+}) {
+  return (
+    <Input
+      ref={inputRef}
+      type="password"
+      autoComplete="current-password"
+      label={label}
+      value={value}
+      readOnly={busy}
+      invalid={invalid}
+      aria-describedby={describedBy}
+      onChange={(e) => onValueChange(e.target.value)}
+    />
+  );
+}
 
 /**
  * Every string the tile renders — the `dangerConfirm` namespace of
@@ -65,9 +167,11 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
    * How the typed text is compared with `phrase`. `"trim"` (default) ignores spaces
    * around it — a phone keyboard's autocomplete likes to add one. `"exact"` compares
    * character for character, spaces included, for an app whose contract is "type
-   * exactly this".
+   * exactly this". `"caseless"` (0.18) also ignores case — for a phrase that is an
+   * e-mail address (keksdose's "type the user's address" admin rule). See
+   * {@link TypedMatch}.
    */
-  phraseMatch?: "trim" | "exact";
+  phraseMatch?: TypedMatch;
   /** The warning above the fields. Defaults to `labels.prompt`. */
   prompt?: ReactNode;
   /** `"danger"` (default) for what cannot be undone; `"warning"` for what can, at a
@@ -140,7 +244,7 @@ export function DangerConfirm({
   const armed = armedProp ?? armedState;
   const [password, setPassword] = useState("");
   const [typed, setTyped] = useState("");
-  const [pending, setPending] = useState(false);
+  const { pending, run } = usePromisePending();
   const busy = Boolean(busyProp) || pending;
   // `readOnly` rather than `disabled` on the fields while busy: disabling the field
   // that has focus (Enter was pressed in it) drops focus to <body>.
@@ -155,13 +259,6 @@ export function DangerConfirm({
   // Focus moves only after a transition — never on mount, so a tile that renders armed
   // (controlled) does not take the page's focus merely by existing.
   const moveFocus = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
 
   // A disarm from anywhere (cancel, a resolved confirm, the parent) wipes the fields.
   // During render, like NumberField's draft, so no frame shows a collapsed tile that
@@ -200,26 +297,15 @@ export function DangerConfirm({
 
   const locked = lockedReason !== undefined && lockedReason !== null && lockedReason !== false && lockedReason !== "";
   const passwordOk = !requirePassword || password !== "";
-  const phraseOk = phrase === undefined || (phraseMatch === "exact" ? typed : typed.trim()) === phrase;
+  const phraseOk = phrase === undefined || typedMatches(typed, phrase, phraseMatch);
   const canConfirm = passwordOk && phraseOk && !busy;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canConfirm) return;
-    const result = onConfirm(requirePassword ? password : undefined);
-    if (!result || typeof (result as Promise<unknown>).then !== "function") return;
-    setPending(true);
-    (result as Promise<unknown>).then(
-      () => {
-        if (!mounted.current) return;
-        setPending(false);
-        setArmed(false);
-      },
-      () => {
-        // Stays armed, fields kept: the caller shows why, the user retries.
-        if (mounted.current) setPending(false);
-      },
-    );
+    // Disarms when it resolves; a rejection leaves it armed, fields kept: the caller
+    // shows why, the user retries.
+    run(onConfirm(requirePassword ? password : undefined), () => setArmed(false));
   };
 
   const phrasePlaceholder =
@@ -309,15 +395,13 @@ export function DangerConfirm({
             <Input label={phraseLabel} {...phraseFieldProps} />
           ))}
         {requirePassword && (
-          <Input
+          <CurrentPasswordInput
             // The phrase field takes the ref when both are there — it comes first.
-            ref={phrase === undefined ? firstFieldRef : undefined}
-            type="password"
-            autoComplete="current-password"
+            inputRef={phrase === undefined ? firstFieldRef : undefined}
             label={labels.password}
             value={password}
-            readOnly={busy}
-            onChange={(e) => setPassword(e.target.value)}
+            busy={busy}
+            onValueChange={setPassword}
           />
         )}
         <div className="flex flex-wrap gap-2">

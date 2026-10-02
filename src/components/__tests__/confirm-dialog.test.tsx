@@ -205,6 +205,71 @@ describe("useConfirm", () => {
   });
 });
 
+describe("useConfirm — requireTyped (0.18)", () => {
+  it("holds confirm until the address is typed, in any case, and starts in the field", async () => {
+    const { confirm } = setup();
+    const { answer } = await ask(confirm(), {
+      title: "Deactivate anna@example.org?",
+      tone: "danger",
+      confirmLabel: "Deactivate",
+      requireTyped: "anna@example.org",
+    });
+    const dialog = await screen.findByRole("alertdialog");
+    const field = screen.getByLabelText("Type “anna@example.org” to confirm");
+    // The field, not Cancel: typing is what the dialog waits for, and a reflexive Enter
+    // cannot confirm a field that does not match.
+    expect(field).toHaveFocus();
+    const go = within(dialog, "Deactivate");
+    expect(go).toBeDisabled();
+    fireEvent.change(field, { target: { value: "anna@example.or" } });
+    expect(go).toBeDisabled();
+    // Enter while it does not match does nothing.
+    fireEvent.submit(field.closest("form")!);
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: " Anna@Example.ORG " } });
+    expect(go).toBeEnabled();
+    fireEvent.submit(field.closest("form")!);
+    expect(await answer).toBe(true);
+  });
+
+  it("typedMatch=\"exact\" and a per-call label", async () => {
+    const { confirm } = setup();
+    const { answer } = await ask(confirm(), {
+      title: "Wipe?",
+      requireTyped: "DELETE",
+      typedMatch: "exact",
+      typedLabel: "Type DELETE",
+    });
+    const dialog = await screen.findByRole("alertdialog");
+    const field = screen.getByLabelText("Type DELETE");
+    fireEvent.change(field, { target: { value: "delete" } });
+    expect(within(dialog, "Confirm")).toBeDisabled();
+    fireEvent.change(field, { target: { value: "DELETE " } });
+    expect(within(dialog, "Confirm")).toBeDisabled();
+    fireEvent.change(field, { target: { value: "DELETE" } });
+    fireEvent.click(within(dialog, "Confirm"));
+    expect(await answer).toBe(true);
+  });
+
+  it("takes the field label from the provider, and Cancel still answers false", async () => {
+    const { confirm } = setup((tree) => (
+      <UiKitProvider labels={{ confirmDialog: { typed: (t) => `Tippe ${t}` } }}>{tree}</UiKitProvider>
+    ));
+    const { answer } = await ask(confirm(), { title: "Weg?", requireTyped: "a@b.c" });
+    const dialog = await screen.findByRole("alertdialog");
+    expect(screen.getByLabelText("Tippe a@b.c")).toBeInTheDocument();
+    fireEvent.click(within(dialog, "Cancel"));
+    expect(await answer).toBe(false);
+  });
+
+  it("a plain confirm still renders no field", async () => {
+    const { confirm } = setup();
+    await ask(confirm(), { title: "Mark all read?" });
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog.querySelector("input")).toBeNull();
+  });
+});
+
 /** The dialog's own button by name — the page's trigger can share it ("Remove"). */
 function within(dialog: HTMLElement, name: string): HTMLElement {
   const match = Array.from(dialog.querySelectorAll("button")).find((b) => b.textContent === name);
