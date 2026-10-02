@@ -120,6 +120,8 @@ const FeedbackProgress = lazySection(() => import("./sections/feedback-progress"
 const DescriptionTable = lazySection(() => import("./sections/description-table"), "DescriptionTable");
 const TreeViewDemo = lazySection(() => import("./sections/tree-view-demo"), "TreeViewDemo");
 const ConfirmFloating = lazySection(() => import("./sections/confirm-floating"), "ConfirmFloating");
+const TypedConfirm018Demo = lazySection(() => import("./sections/confirm-018-demo"), "TypedConfirm018Demo");
+const Reauth018Demo = lazySection(() => import("./sections/confirm-018-demo"), "Reauth018Demo");
 const ClipboardTiming = lazySection(() => import("./sections/clipboard-timing"), "ClipboardTiming");
 const SeriesChartMarks = lazySection(() => import("./sections/series-chart-marks"), "SeriesChartMarks");
 const Localisation = lazySection(() => import("./sections/localisation"), "Localisation");
@@ -146,6 +148,7 @@ const ToggleCaptionDemo = lazySection(() => import("./sections/toggle-caption-de
 const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), "ActionCardDemo");
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
+const ProgressLegendTone018Demo = lazySection(() => import("./sections/progress-018-demo"), "ProgressLegendTone018Demo");
 const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
 const RhfWizardDemo = lazySection(() => import("./sections/rhf-wizard-demo"), "RhfWizardDemo");
 const ListDragDemo = lazySection(() => import("./sections/list-drag-demo"), "ListDragDemo");
@@ -186,12 +189,15 @@ const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "
 const Signals016Demo = lazySection(() => import("./sections/signals-016-demo"), "Signals016Demo");
 const Signals017Demo = lazySection(() => import("./sections/signals-017-demo"), "Signals017Demo");
 const FormActions017Demo = lazySection(() => import("./sections/signals-017-demo"), "FormActions017Demo");
+const WriteLock018Demo = lazySection(() => import("./sections/write-lock-018-demo"), "WriteLock018Demo");
 const FormActions016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "FormActions016Demo");
 const LoadingState016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "LoadingState016Demo");
 const Media016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Media016Demo");
 const Numbers016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Numbers016Demo");
 const Files016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Files016Demo");
 const Chips016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Chips016Demo");
+const ChipSnapEdges018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ChipSnapEdges018Demo");
+const ToastMiddleClick018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ToastMiddleClick018Demo");
 const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
 const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
 const ErrorBoundary013Demo = lazySection(() => import("./sections/error-boundary-013-demo"), "ErrorBoundary013Demo");
@@ -211,6 +217,9 @@ const ComposerCannedRepliesDemo = lazySection(() => import("./sections/shell-fee
 const Feedback014Demo = lazySection(() => import("./sections/feedback-014-demo"), "Feedback014Demo");
 const FeedbackAttachment016Demo = lazySection(() => import("./sections/feedback-016-demo"), "FeedbackAttachment016Demo");
 const Passkeys016Demo = lazySection(() => import("./sections/feedback-016-demo"), "Passkeys016Demo");
+const Passkeys018Demo = lazySection(() => import("./sections/account-018-demo"), "Passkeys018Demo");
+const AccountRoster018Demo = lazySection(() => import("./sections/account-018-demo"), "AccountRoster018Demo");
+const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Share018Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 
 /**
@@ -362,7 +371,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider"],
         Body: () => (
           <>
             <FormsRhf />
@@ -376,6 +385,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <LineItemsSplit017Demo />
             <FormActions016Demo />
             <FormActions017Demo />
+            <WriteLock018Demo />
           </>
         ),
       },
@@ -619,6 +629,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ToggleCaptionDemo />
             <Display013Demo />
             <Chips016Demo />
+            <ChipSnapEdges018Demo />
           </>
         ),
       },
@@ -634,10 +645,12 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackProgress />
             <ProgressSegmentsDemo />
+            <ProgressLegendTone018Demo />
             <FeedbackMore />
             <AlertBannerBlockDemo />
             <EmptyStateSmallDemo />
             <ToastsDemo />
+            <ToastMiddleClick018Demo />
             <StatesDemo />
             <LoadingState016Demo />
             <ErrorBoundary013Demo />
@@ -881,8 +894,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The promise that replaces window.confirm — with tones, its own words and a queue — and the non-modal panel docked in a corner behind a floating button.",
         icon: MessageCircleQuestion,
-        components: ["ConfirmProvider", "useConfirm", "FloatingPanel", "FloatingActionButton"],
-        Body: ConfirmFloating,
+        components: ["ConfirmProvider", "useConfirm", "FloatingPanel", "FloatingActionButton", "ReauthDialog"],
+        Body: () => (
+          <>
+            <ConfirmFloating />
+            <TypedConfirm018Demo />
+            <Reauth018Demo />
+          </>
+        ),
       },
       {
         slug: "floating-actions",
@@ -1023,11 +1042,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn"],
         Body: () => (
           <>
             <AuthAccountDemo />
             <Passkeys016Demo />
+            <Passkeys018Demo />
+            <AccountRoster018Demo />
+            <Share018Demo />
           </>
         ),
       },

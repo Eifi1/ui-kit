@@ -109,7 +109,13 @@ export * from "./components/password-strength";
 export * from "./components/page-contents";
 export * from "./components/disclosure";
 export * from "./components/dialog-frame";
-export * from "./components/danger-confirm";
+// Named, not `*`: danger-confirm also holds the password field and pending hook that
+// ReauthDialog shares with it, which are kit-internal.
+export { DangerConfirm, DEFAULT_DANGER_CONFIRM_LABELS, typedMatches } from "./components/danger-confirm";
+export type { DangerConfirmLabels, DangerConfirmProps, TypedMatch } from "./components/danger-confirm";
+// 0.18: re-authentication before a sensitive action (Kurvenschmiede 4).
+export { ReauthDialog, DEFAULT_REAUTH_DIALOG_LABELS } from "./components/reauth-dialog";
+export type { ReauthDialogProps, ReauthDialogLabels } from "./components/reauth-dialog";
 // `useConfirm()` — the promise-based replacement for `window.confirm`, one host per app.
 export * from "./components/confirm-dialog";
 // A non-modal corner panel and its round trigger (keksdose's assistant launcher).
@@ -174,6 +180,16 @@ export * from "./components/description-list";
 // The Save / Cancel row forms and dialogs end in, and the editable line-item repeater
 // (journal lines, lease components, invoice positions). 0.12.0.
 export * from "./components/form-actions";
+// 0.18: lock every opted-in commit under one provider, the reason in its tooltip
+// (Kurvenschmiede 2). `useCommitReason` stays internal.
+export { WriteLockProvider, useWriteLock, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
+export type { WriteLock, WriteLockLabels, WriteLockProviderProps } from "./components/write-lock";
+// 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
+export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
+export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
+// 0.18: sharing — grantees, roles, pending grants, candidates (Kurvenschmiede 1).
+export { ShareCard, ShareDialog, SharePanel, DEFAULT_SHARE_CARD_LABELS } from "./components/share-card";
+export type { ShareCardProps, ShareDialogProps, SharePanelProps, ShareCardLabels, ShareRole, ShareGrantee, SharePendingGrant, ShareCandidate, ShareAddRequest } from "./components/share-card";
 export * from "./components/line-items";
 export * from "./components/progress-bar";
 // Named: skeleton.tsx also holds SKELETON_CLASS, the look StatTile shares — internal.
