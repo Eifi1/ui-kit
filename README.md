@@ -764,6 +764,38 @@ import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">…</UiKitProvider>
 ```
 
+### Language registry
+
+The kit's seven languages, and the three questions every app asked about them on its own
+(docs/i18n-harmonization.md, H2): `KIT_LANGUAGES` (code, native and English name, the
+`Intl` tag it formats in, the flag-icons country), `resolveLanguage(candidates, offered,
+fallback?)`, `formatLocaleOf(code)` and `loadUiKitLabels(code)`. An app offers a subset
+and keeps its own i18n library for its own words:
+
+```tsx
+import { formatLocaleOf, languageOptions, loadUiKitLabels, resolveLanguage, type KitLanguageCode } from "@eifi1/ui-kit";
+
+const OFFERED: KitLanguageCode[] = ["de-CH", "en", "fr", "it"];
+// Precedence (H5): chosen on this device → the account's → the browser's list → de-CH.
+const code = resolveLanguage([localStorage.getItem("myapp-lang"), user?.locale, ...navigator.languages], OFFERED);
+await i18n.init({ lng: code, supportedLngs: OFFERED, fallbackLng: "de-CH" }); // the app's words
+const labels = await loadUiKitLabels(code); // the kit's, fetched on demand, grouped like the language
+document.documentElement.lang = formatLocaleOf(code); // "en-GB", not "en"
+
+<UiKitProvider labels={labels} locale={formatLocaleOf(code)}>
+  <LanguageMenu options={languageOptions(OFFERED)} current={code} onChange={switchLanguage} />
+</UiKitProvider>
+```
+
+Every German (`de`, `de-AT`, a stored `de-informal`) resolves to `de-CH`; every Chinese
+(`zh-TW`, `zh-Hant`) to `zh`, which is **Simplified** — there is no Traditional catalogue.
+Other regional tags take their base language (`fr-CA` → `fr`), and a candidate the app
+does not offer passes to the next. Each language formats like its home — `de-CH`, `en-GB`,
+`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region. The loader is
+asynchronous only: a synchronous one would have to bundle all seven catalogues into every
+app. `languageOptions` feeds `LanguageMenu` (which draws `fi fi-<country>` — the app loads
+the flag CSS) and `LanguageSetting` (a native select: names only).
+
 ### The worked example
 
 `showcase/src/i18n/` runs the whole showcase in seven locales — English, German, French,

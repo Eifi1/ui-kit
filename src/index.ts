@@ -343,3 +343,5 @@ export * from "./i18n/kit-labels";
 export * from "./i18n/defaults";
 // The kit's words as `key → text` rows for an app's translation review (keksdose).
 export { kitLabelStrings } from "./i18n/review";
+// The seven languages, how an app resolves one, and the kit catalogue loader for it.
+export * from "./i18n/languages";
