@@ -20,6 +20,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.20.0](https://github.com/Eifi1/ui-kit/compare/v0.19.0...v0.20.0) (2026-10-02)
+
+### Added
+
+* **i18n:** useUiKitLabels, peekUiKitLabels, withAllPlurals (kastlan) ([0f2087e](https://github.com/Eifi1/ui-kit/commit/0f2087e06e4cec4a2cb28f68c0ed6150a908cc1d))
+
+### Fixed
+
+* **i18n:** formatLocaleOf keeps a tag of a language the kit does not ship (keksdose) ([d0182b0](https://github.com/Eifi1/ui-kit/commit/d0182b0160386875eb091889facca1de71f2ec4a))
+
 ## [0.19.0](https://github.com/Eifi1/ui-kit/compare/v0.18.0...v0.19.0) (2026-10-02)
 
 ### Added
