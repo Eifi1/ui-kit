@@ -29,7 +29,10 @@ has the release notes, and the showcase (⌘K) has every new part live.
      MonthPicker, NumberInput and OneTimeCodeInput; a test covers 15 fields. As with
      `error`, the field then sits in one plain `<div>` and `className` stays on the field
      itself: a field with `hint` and `className="flex-1"` in a flex row takes `flex-1` on
-     a wrapper of yours.
+     a wrapper of yours. A field WRAPPER that forwards an optional hint as
+     `hint={x ? <FieldHint … /> : undefined}` now boxes every field it wraps — forward it
+     as `{...(x ? { hint } : {})}` so the prop is absent when there is no hint
+     (Kurvenschmiede's NumberField wrapper sized its fields with `className` in flex rows).
    - **Write lock:** an armed `DangerConfirm` under a lock no longer confirms; a droppable
      `FileButton` under `commit` / `disabledReason` no longer takes drops.
    - **TwoFactorSetting:** its code fields are `OneTimeCodeInput`s — digits only, so a
