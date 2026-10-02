@@ -197,6 +197,22 @@ describe("RhfMonthPicker (kastlan)", () => {
   });
 });
 
+// ── aria-required on the date triggers ───────────────────────────────────────
+
+describe("RhfDateField / RhfDateRangePicker: required reaches the trigger", () => {
+  it("marks the date trigger and both range triggers aria-required", () => {
+    render(
+      <Harness defaults={{ due: "", from: "", to: "" }}>
+        <RhfDateField name="due" label="Due" locale="en-GB" required />
+        <RhfDateRangePicker fromName="from" toName="to" label="Period" locale="en-GB" required />
+      </Harness>,
+    );
+    const triggers = screen.getAllByRole("combobox");
+    expect(triggers.length).toBeGreaterThanOrEqual(2);
+    for (const trigger of triggers) expect(trigger).toHaveAttribute("aria-required", "true");
+  });
+});
+
 // ── focus on error, every binding ────────────────────────────────────────────
 
 /** A field per binding, each required and empty, and the element focus-on-error must

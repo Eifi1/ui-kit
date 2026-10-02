@@ -788,7 +788,6 @@ export function RhfDateField<
           emptyValue={emptyValue}
           inputClassName={inputClassName}
           pickerProps={pickerProps}
-          required={required}
         />
       )}
     />
