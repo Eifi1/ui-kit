@@ -48,3 +48,12 @@ polish. Everything is additive except one behaviour change, listed first.
   families from the ordinal rules).
 - Optional: `useUiKitLabels` in the provider instead of your own state around
   `loadUiKitLabels`.
+
+## 0.20.1
+
+Picked up by `^0.20.0`.
+
+- **`withAllPlurals` with a locale `Intl` cannot read (kastlan):** `""` or `"x"` (a
+  backend `parse` called without a language) threw a `RangeError` and failed the whole
+  namespace load; now the catalogue comes back unchanged. kastlan's `String(lng ||
+  "de-CH")` guard can go.

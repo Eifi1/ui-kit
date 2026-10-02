@@ -37,6 +37,14 @@ describe("withAllPlurals", () => {
     expect(written.a_many).toBe("beaucoup");
   });
 
+  it("adds nothing for a locale Intl cannot read, instead of throwing (kastlan)", () => {
+    for (const locale of ["", "x", "not a tag"]) {
+      const out = withAllPlurals(catalogue, locale);
+      expect(out).toEqual(catalogue);
+      expect(out).not.toBe(catalogue);
+    }
+  });
+
   it("returns a new tree and leaves the input and arrays alone", () => {
     const before = JSON.stringify(catalogue);
     const out = withAllPlurals(catalogue, "it");
