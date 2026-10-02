@@ -261,6 +261,43 @@ function sameRect(a: Rect | null, b: Rect | null): boolean {
   return a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
 }
 
+function rectOf(el: Element): Rect {
+  const r = el.getBoundingClientRect();
+  return { top: r.top, left: r.left, width: r.width, height: r.height };
+}
+
+/**
+ * What the finder established for ONE step: where its target is (`null` = no target,
+ * or not on the page), and the reading direction the card takes from it.
+ *
+ * It carries the step it was found for, and the overlay only believes it for that
+ * step — which is the whole fix for keksdose's tours audit 2026-10-02, §1.0 A ("stale
+ * spotlight on the step after a spotlighted one", 15 steps in 16 tours, desktop and
+ * phone, mouse and keyboard). When step N spotlit a target and step N+1 had none (or
+ * its anchor was missing), N+1 kept N's hole and parked its card beside it, so a
+ * centred "You're all set" read as pointing at the Import & Export link; Back→Next kept
+ * it for as long as anyone watched.
+ *
+ * The overlay used to hold `rect` and `ready` as separate states and reset them
+ * DURING RENDER when the step changed. React 19 does not keep a render-phase update
+ * while an earlier, lower-priority update to the same hook is still queued — it only
+ * writes the result to the base state "unless the queue is empty" — and the follow
+ * interval below queues exactly such an update every 250 ms (eagerly bailed out because
+ * the rect had not moved, but left in the queue for rebasing). So the click's render
+ * showed the reset, and the very next render (the finder saying "ready") re-based on
+ * the old rect. A deep link was fine because nothing had queued anything yet.
+ *
+ * Keying the result to its step does not depend on any of that ordering: a rect found
+ * for another step is not this step's rect, whatever the queue does with it, and a
+ * missing anchor reads as "no target" instead of as the last thing that was lit.
+ */
+interface Located {
+  index: number;
+  step: TourStep;
+  rect: Rect | null;
+  dir: Direction;
+}
+
 function TourOverlay({
   steps,
   index,
@@ -279,33 +316,31 @@ function TourOverlay({
   const step = steps[index];
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;
-  const [rect, setRect] = useState<Rect | null>(null);
-  const [ready, setReady] = useState(false);
-  // A new step starts unlocated: reset during render when the step changes, so the
-  // previous step's spotlight never paints over the new one. The effect below then
-  // locates it.
-  const [locating, setLocating] = useState({ index, step });
-  if (locating.index !== index || locating.step !== step) {
-    setLocating({ index, step });
-    setReady(false);
-    setRect(null);
-  }
+  // A new step starts unlocated: whatever was found for another step (see `Located`)
+  // is ignored, so the overlay renders nothing until the effect below has located THIS
+  // step, and never the previous step's spotlight.
+  const [located, setLocated] = useState<Located | null>(null);
+  const current = located !== null && located.index === index && located.step === step ? located : null;
+  const ready = current !== null;
+  const rect = current?.rect ?? null;
   // The overlay is portalled to <body>, out of whatever `dir` subtree the app set, so it
   // takes the direction of the element it spotlights (the document's for a centered
   // step). Arrow keys and start/end placement read it.
-  const [dir, setDir] = useState<Direction>(() => dirOf(null));
+  const dir: Direction = current?.dir ?? "ltr";
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Run beforeStep, then locate the target (retrying across route/render lag).
   useEffect(() => {
     let cancelled = false;
     let raf = 0;
+    // `null` = untargeted, or the finder gave up → the card centres, with no hole.
+    const settle = (el: Element | null) =>
+      setLocated({ index, step, rect: el ? rectOf(el) : null, dir: dirOf(el) });
     void (async () => {
       await step.beforeStep?.();
       if (cancelled) return;
       if (!step.target) {
-        setDir(dirOf(null));
-        setReady(true);
+        settle(null);
         return;
       }
       let tries = 0;
@@ -314,17 +349,11 @@ function TourOverlay({
         const el = queryVisibleTarget(step.target!);
         if (el) {
           el.scrollIntoView({ block: "center", behavior: "smooth" });
-          const r = el.getBoundingClientRect();
-          setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-          setDir(dirOf(el));
-          setReady(true);
+          settle(el);
           return;
         }
         if (tries++ < 45) raf = requestAnimationFrame(find);
-        else {
-          setDir(dirOf(null));
-          setReady(true); // give up → render centered
-        }
+        else settle(null); // give up → render centered
       };
       find();
     })();
@@ -334,15 +363,19 @@ function TourOverlay({
     };
   }, [index, step]);
 
-  // Follow the target as the page scrolls / reflows.
+  // Follow the target as the page scrolls / reflows — only once THIS step is located,
+  // and only into this step's result.
   useEffect(() => {
     if (!step.target) return;
     const update = () => {
       const el = queryVisibleTarget(step.target!);
       if (el) {
-        const r = el.getBoundingClientRect();
-        const next = { top: r.top, left: r.left, width: r.width, height: r.height };
-        setRect((prev) => (sameRect(prev, next) ? prev : next));
+        const next = rectOf(el);
+        setLocated((prev) =>
+          prev && prev.index === index && prev.step === step && !sameRect(prev.rect, next)
+            ? { ...prev, rect: next }
+            : prev,
+        );
       }
     };
     window.addEventListener("scroll", update, true);
@@ -358,14 +391,19 @@ function TourOverlay({
   // awaitClick: advance when the *real* target is clicked. The spotlight hole is
   // click-through (see the shields in the render below) so the element's own
   // handler runs first; we step forward on the next macrotask.
+  //
+  // Re-armed when the target turns up after the finder gave up (the follow effect
+  // lights it late): the card swaps Next for the "click the highlighted element" hint
+  // as soon as there is a rect, so the click must work from that moment too.
+  const spotted = rect !== null;
   useEffect(() => {
-    if (!ready || !step.awaitClick || !step.target) return;
+    if (!ready || !spotted || !step.awaitClick || !step.target) return;
     const el = queryVisibleTarget(step.target);
     if (!el) return;
     const onClick = () => window.setTimeout(() => onNext(), 0);
     el.addEventListener("click", onClick, { once: true });
     return () => el.removeEventListener("click", onClick);
-  }, [ready, index, step, onNext]);
+  }, [ready, spotted, index, step, onNext]);
 
   // Keyboard: Esc skips, Enter and the reading-direction arrow advance (→ in LTR,
   // ← in RTL), the other arrow goes back. On awaitClick steps Enter is ignored (it
