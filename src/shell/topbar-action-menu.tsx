@@ -136,6 +136,7 @@ export function TopBarActionMenu({
   iconBadge,
   trigger,
   triggerClassName,
+  href,
   ariaLabel,
   heading,
   header,
@@ -169,6 +170,18 @@ export function TopBarActionMenu({
   trigger?: (state: { open: boolean }) => ReactNode;
   /** Extra classes for the trigger button — `rounded-full` round an avatar. */
   triggerClassName?: string;
+  /**
+   * Make the trigger a LINK to this route (keksdose dev #585, Marcel: "clicking on the
+   * guided tours icon shall lead to the tours page like the all tours element does").
+   * A click or Enter follows it and shuts the panel; hover still opens the panel after
+   * the usual delay, and ↓/↑ on the focused trigger still open it onto the first/last
+   * row, so the rows stay reachable by keyboard. A tap on a touch screen follows the
+   * link — so use it where the destination offers everything the menu does. Rendered as
+   * an `<a>` (the router's `Link`) with `aria-haspopup="menu"` and `aria-expanded`,
+   * named by `ariaLabel`: a link inside the kit's button would be interactive content
+   * inside interactive content.
+   */
+  href?: string;
   /** Names the trigger and the menu. */
   ariaLabel: string;
   heading?: string;
@@ -197,37 +210,48 @@ export function TopBarActionMenu({
     <HoverMenu
       ariaLabel={ariaLabel}
       align={align}
-      trigger={({ open, toggle }) =>
-        trigger ? (
-          <button type="button" onClick={toggle} className={cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName)}>
-            <span className="sr-only">{ariaLabel}</span>
-            {/* The space keeps the name from running into the face's text ("Account
-                menu3 unread"); as a flex item it takes no room. */}
-            {" "}
-            {trigger({ open })}
-          </button>
-        ) : iconBadge ? (
+      trigger={({ open, toggle, close }) => {
+        // One element for both kinds: the router's link when `href` is set, else the
+        // kit's button. Same classes and face either way.
+        const control = (className: string, children: ReactNode, label?: string) =>
+          href ? (
+            <Link to={href} onClick={close} aria-label={label} className={className}>
+              {children}
+            </Link>
+          ) : (
+            <button type="button" onClick={toggle} aria-label={label} className={className}>
+              {children}
+            </button>
+          );
+        if (trigger) {
+          return control(
+            cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName),
+            <>
+              <span className="sr-only">{ariaLabel}</span>
+              {/* The space keeps the name from running into the face's text ("Account
+                  menu3 unread"); as a flex item it takes no room. */}
+              {" "}
+              {trigger({ open })}
+            </>,
+          );
+        }
+        if (iconBadge) {
           // Named by its content, like the custom-trigger branch, so the badge label is
           // part of the name; an `aria-label` would have hidden it.
-          <button type="button" onClick={toggle} className={cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName)}>
-            <span className="sr-only">{ariaLabel}</span>{" "}
-            <span aria-hidden className="relative inline-flex">
-              {icon}
-              <StatusDot ring tone={iconBadge.tone ?? "danger"} className="absolute -end-0.5 -top-0.5" />
-            </span>{" "}
-            <span className="sr-only">{iconBadge.label}</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={ariaLabel}
-            className={cn(TOPBAR_TRIGGER_CLASS, triggerClassName)}
-          >
-            {icon}
-          </button>
-        )
-      }
+          return control(
+            cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName),
+            <>
+              <span className="sr-only">{ariaLabel}</span>{" "}
+              <span aria-hidden className="relative inline-flex">
+                {icon}
+                <StatusDot ring tone={iconBadge.tone ?? "danger"} className="absolute -end-0.5 -top-0.5" />
+              </span>{" "}
+              <span className="sr-only">{iconBadge.label}</span>
+            </>,
+          );
+        }
+        return control(cn(TOPBAR_TRIGGER_CLASS, triggerClassName), icon, ariaLabel);
+      }}
     >
       {(close) => {
         const footerBody = typeof footer === "function" ? footer(close) : footer;

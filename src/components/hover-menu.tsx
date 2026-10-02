@@ -12,7 +12,9 @@ import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
  * the panel's `close`, not a `ReactNode`.
  */
 export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
-  trigger: (state: { open: boolean; toggle: () => void }) => ReactNode;
+  /** The trigger. `toggle` for a button's click; `close` for a trigger that is a LINK —
+   *  following it should shut a panel hover opened (TopBarActionMenu `href`). */
+  trigger: (state: { open: boolean; toggle: () => void; close: () => void }) => ReactNode;
   children: (close: () => void) => ReactNode;
   /**
    * Which edge of the trigger the panel lines up with. `start`/`end` follow the
@@ -209,8 +211,9 @@ export function HoverMenu({
       if (target !== triggerEl()) return;
       if (e.key === "Enter" || e.key === " ") {
         // The trigger's own click handler does the toggling; this only records that
-        // the press came from a keyboard.
-        if (!open) focusOnOpenRef.current = "first";
+        // the press came from a keyboard. Not for a link trigger: Enter follows it, and
+        // a mark left here would pull focus into the panel the next time hover opens it.
+        if (!open && !target.matches("a[href]")) focusOnOpenRef.current = "first";
       } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
         const edge = e.key === "ArrowDown" ? "first" : "last";
@@ -289,7 +292,7 @@ export function HoverMenu({
         onKeyDown(e);
       }}
     >
-      {trigger({ open, toggle })}
+      {trigger({ open, toggle, close })}
       {open && (
         <div
           ref={panelRef}

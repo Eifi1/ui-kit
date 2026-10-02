@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.21.0](https://github.com/Eifi1/ui-kit/compare/v0.20.1...v0.21.0) (2026-10-02)
+
+### Added
+
+* **topbar:** TopBarActionMenu href — the trigger is also a link (keksdose dev [#585](https://github.com/Eifi1/ui-kit/issues/585)) ([9b60254](https://github.com/Eifi1/ui-kit/commit/9b6025492316096194242dfd4ef31f7d7f9baf82))
+
 ## [0.20.1](https://github.com/Eifi1/ui-kit/compare/v0.20.0...v0.20.1) (2026-10-02)
 
 ### Fixed

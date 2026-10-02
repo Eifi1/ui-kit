@@ -17,6 +17,7 @@ import {
   Sparkles,
   Upload,
   Wallet,
+  Compass,
 } from "lucide-react";
 import {
   AppShell,
@@ -161,6 +162,36 @@ export function ShellSection() {
         hint="Rows as data: actions, react-router links and dividers. Needs a Router."
       >
         <ActionMenu />
+      </Example>
+
+      <Example
+        label="TopBarActionMenu href — the icon is a link too"
+        hint="hover opens the list; a click goes where the menu's last row goes (keksdose dev #585)"
+      >
+        <div className="space-y-3">
+          <Row>
+            <TopBarActionMenu
+              icon={<Compass className="size-5" />}
+              ariaLabel="Guided tours"
+              heading="Tours"
+              href="/shell"
+              entries={[
+                { key: "budget", label: "Budget tour", onSelect: () => {} },
+                { key: "reports", label: "Reports tour", onSelect: () => {} },
+                { kind: "divider", key: "sep" },
+                { kind: "link", key: "all", label: "All tours", to: "/shell" },
+              ]}
+              panelClassName="w-56"
+            />
+          </Row>
+          <Note>
+            With <code className="font-mono">href</code> the trigger is the router&apos;s link, with{" "}
+            <code className="font-mono">aria-haspopup=&quot;menu&quot;</code>: a click or Enter follows it and
+            shuts the panel, hover still opens the list, and ↓/↑ on the focused icon open it onto the first or
+            last row. A tap on a phone follows the link, so point it where everything in the menu is reachable
+            (here the page itself, so the demo stays put).
+          </Note>
+        </div>
       </Example>
 
       <Example

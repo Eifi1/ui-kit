@@ -592,6 +592,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "OptionSwitcherMenu",
     "RoleSwitcher",
     "TopBarActionMenu",
+    "TopBarActionMenu href — the icon is a link too",
     "Top-bar class constants",
     "AppShellNavItem — a real list",
     "AppShellNavItem — field by field",
