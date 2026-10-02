@@ -20,6 +20,33 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.23.0](https://github.com/Eifi1/ui-kit/compare/v0.22.0...v0.23.0) (2026-10-02)
+
+### Added
+
+* **combobox:** Autocomplete takes the write lock like the rest of the family ([e7e4f2a](https://github.com/Eifi1/ui-kit/commit/e7e4f2a211fe1dc608c68cc2528e2654817825a5))
+* **combobox:** write lock across the family; a create row; StepperNav finish lock ([550e43e](https://github.com/Eifi1/ui-kit/commit/550e43e3fd4e893c5e9d84b99e0e0363c3f447d4))
+* **date-picker:** monthJump — the panel caption opens a month grid for long ranges ([bb9b228](https://github.com/Eifi1/ui-kit/commit/bb9b228c873c09f4e38758b9163c3c9e38c0a1fb))
+* export the 0.23 parts; showcase pages for every new demo ([9630c59](https://github.com/Eifi1/ui-kit/commit/9630c598fb8eade36c7d29847f33bb9a3eb67fbc))
+* **feedback:** FeedbackDialog and FeedbackNoteEditor type onError's info argument ([df2e103](https://github.com/Eifi1/ui-kit/commit/df2e103fd2ce7233d8dc349c05d01845e2f42f96))
+* **feedback:** onError names the refused file; disabled; composer maxLength and showCount ([39c0503](https://github.com/Eifi1/ui-kit/commit/39c0503eb37336b92455ed6effae3a72576c896c))
+* **fields:** FieldStrip labels custom content; a lock reason per swatch, icon and tile ([a5c8fa5](https://github.com/Eifi1/ui-kit/commit/a5c8fa5c15b9cd7623874878abc61ed3eb5fd3d7))
+* **fields:** RhfCountrySelect, RhfMonthPicker; CountrySelect ref and clearable ([490bd22](https://github.com/Eifi1/ui-kit/commit/490bd22ea00e01d9c617bd572f1464355fc91391))
+* **forms:** FormActions cancelVariant and size; DangerConfirm names the open guard ([c37c30b](https://github.com/Eifi1/ui-kit/commit/c37c30b718e43f5eebe4fb9a1280ca181d43e1cc))
+* **i18n:** columnMapper, the held-confirm reasons and the upload refusal in every language ([403d746](https://github.com/Eifi1/ui-kit/commit/403d746be3722a3c4ac8e4a249ce84770e8bb2b8))
+* **shell:** TopBarActionMenu heading rows group a long menu by topic (keksdose) ([2266910](https://github.com/Eifi1/ui-kit/commit/22669104164265fc32d5f3a5f0a5ba665f30885f))
+* **table-text:** ColumnMapper — paste or drop a table, give each column a role ([b94eeab](https://github.com/Eifi1/ui-kit/commit/b94eeab638184c1f5dddd337e531eb331e1e7515))
+
+### Fixed
+
+* **column-mapper:** English wording — "either …", "What does column … hold?", one row ([aa26235](https://github.com/Eifi1/ui-kit/commit/aa262358d5452e6cfd5357a61fca16cee585652a))
+* **month-picker:** aria-required reaches the trigger; RhfMonthPicker announces required ([fc8dbd8](https://github.com/Eifi1/ui-kit/commit/fc8dbd8572690e4af648150e868b6ce60d704578))
+* **rhf:** RhfDateField passes required once; date triggers' aria-required tested ([ad7b258](https://github.com/Eifi1/ui-kit/commit/ad7b258a4f28ba3375aa6e648f20b63065bfddf3))
+
+### Changed
+
+* **fields:** one field-parts module — field-anatomy merged in, FieldLabel with it ([f2e1117](https://github.com/Eifi1/ui-kit/commit/f2e1117c151a5eafe37ad5cefdf66c99498d518d))
+
 ## [0.22.0](https://github.com/Eifi1/ui-kit/compare/v0.21.0...v0.22.0) (2026-10-02)
 
 ### Added
