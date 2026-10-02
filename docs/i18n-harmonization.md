@@ -59,6 +59,24 @@ as they are (`ns:key` in kastlan, dotted in keksdose), the kit's under `kit.`
 (`kit.combobox.resultCount(3)`), kastlan's server texts under `doc_text.<module>:` via
 its extra `GET /translations/documents` — an optional extension of the contract.
 
+Extended the same day (keksdose, at Marcel's request): an **area scope** on the reviewer
+role — `users.translation_review_areas` (JSON, NULL = every area; today only `legal`),
+a key is inside an area when it equals it or starts with `area.` (`area:` for kastlan's
+`ns:key`). `GET` also returns `areas` and lists only verdicts inside them; `PUT` and
+`clear` refuse a key outside with 403. The assignment endpoint takes `{ locales, areas }`
+and answers `{ user_id, role, locales, areas }`; its path is app-specific
+(`/admin/users/{id}/reviewer` in keksdose, `/platform/users/{id}/reviewer` in kastlan).
+For a lawyer who reviews the Imprint, Privacy Policy and Terms and nothing else.
+
+What the kit parts take from the app (kastlan's and keksdose's needs together): the
+reference locale (kastlan reads fr/it/en against de, de against en; keksdose reads
+everything against en, en against de-CH); a fifth status **missing** (no text in the
+locale; stored as NEEDS_CHANGE with text ""); the locales the viewer may review, and
+the area scope, as input — never derived from a role name; a row **source**
+(kastlan: screen | documents) beside the namespace; placeholders `{{x}}`, `<tag>`,
+`$t(…)` and Python `{field}`. kastlan's own page (built before this was agreed) stays
+as a stopgap until the kit parts ship (Marcel).
+
 **H2 — One language registry (kit).** Every app hand-rolls its list, its region
 mapping and its kit bridge, and they disagree (zh-TW → de in kastlan, → zh in
 Kurvenschmiede; keksdose's English gets the raw-count defaults). Kit:
@@ -111,6 +129,13 @@ from H2's registry; the two hand-built account-menu disclosures (keksdose,
 Kurvenschmiede) become the kit's (an account-menu language section if LanguageMenu
 does not fit).
 
+**H10 — Legal pages (decided).** Marcel wants Imprint, Privacy Policy and Terms in every
+app. keksdose and kastlan carry the same shell twice (`LegalLayout` + `LegalSection`,
+kastlan's `LegalLinks` footer); Kurvenschmiede has none. Kit: `LegalLayout` (a content
+column: back link, title, notice, sections — each app keeps its own page chrome around
+it), `LegalSection`, `LegalLinks` (the three pages, the current one marked). The legal
+texts stay in each app, under the `legal` review area.
+
 **Not proposed:** renaming keys across apps (camelCase in kastlan, snake_case
 elsewhere) — costly, invisible to users. Translating API error `detail`s — real, but a
 separate round (error codes + frontend catalogues).
@@ -130,8 +155,9 @@ H2 registry with H3, then H4–H9 per app as each finds time.
 ## 4. Per repo
 
 - **ui-kit:** `kitLabelStrings` (done, 0.19); review-page parts (H1); language registry
-  with `resolveLanguage` / `loadUiKitLabels` / per-language format tags (H2); switcher
-  with flags from the registry (H9).
+  with `resolveLanguage` / `loadUiKitLabels` / per-language format tags (H2, done);
+  switcher options with flags from the registry (H9, `languageOptions`, done); legal
+  shell (H10).
 - **kastlan:** H1 backend on the contract, no own page (kit parts); H3 `de` → `de-CH`
   (files, `supportedLngs`, `DocLang`, Contact enum, stored values); H4 Italian UI tu →
   Lei, `de/legal.json` du → Sie; H5 `users.locale` + read back on sign-in, storage key
@@ -142,6 +168,7 @@ H2 registry with H3, then H4–H9 per app as each finds time.
   pin and the push texts' own grouping; H7 `language_of` falls back to de-CH (not en),
   invite mail in the invitee's language; H8 placeholder parity, plural test that loads
   fr/it; H9 account-menu disclosure → kit.
-- **Kurvenschmiede:** H1 when it wants the page; H4 a Sie/ß check on `de-CH.json`; H5
+- **Kurvenschmiede:** H10 Imprint, Privacy Policy and Terms on the kit shell; H1 when
+  it wants the page; H4 a Sie/ß check on `de-CH.json`; H5
   read the account language back, a switcher for signed-out visitors, `index.html` lang;
   H6 `en-US` → `en-GB`; H7 invite mail language; H9 account-menu disclosure → kit.
