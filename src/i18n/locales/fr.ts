@@ -26,6 +26,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       attachmentRemoveFile: (name) => `Retirer ${name}`,
       attachmentLimit: (max) => `${n(max)} ${max === 1 ? "pièce jointe" : "pièces jointes"} au maximum — retirez-en une pour en ajouter une autre.`,
       attachmentUploading: "Envoi en cours…",
+      attachmentUploadFailed: (name) => `«\u202f${name}\u202f» n’a pas pu être envoyé`,
     },
     feedbackDialog: {
       title: "Envoyer un retour",
@@ -339,6 +340,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       password: "Mot de passe",
       phrase: (phrase) => `Saisissez «\u202f${phrase}\u202f» pour confirmer`,
       acknowledge: "J’ai lu ce que fait cette action et je souhaite continuer.",
+      needsPhrase: (phrase) => `Saisissez «\u202f${phrase}\u202f» pour confirmer`,
+      needsAcknowledge: "Cochez la case pour confirmer",
+      needsPassword: "Saisissez votre mot de passe pour confirmer",
     },
     tabs: {
       add: "Ajouter un onglet",
@@ -695,6 +699,44 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       outflow: "Sortie",
       inflow: "Entrée",
       direction: (current, next) => `Sens\u00a0: ${current} — passer à ${next}`,
+    },
+    columnMapper: {
+      paste: "Coller un tableau",
+      pasteHint:
+        "Copiez les lignes d’un tableur et collez-les ici, ou déposez un fichier CSV ou texte.",
+      chooseFile: "Choisir un fichier",
+      readError: (name) => `«\u202f${name}\u202f» n’a pas pu être lu`,
+      headerRow: "La première ligne contient les noms des colonnes",
+      summary: (columns, rows) =>
+        `${n(columns)} ${plural(columns, "colonne", "colonnes")}, ${n(rows)} ${plural(rows, "ligne", "lignes")}`,
+      // Fragments of the summary line. "Séparé par…" would have to agree with a noun the
+      // line does not name, so the separator is stated as a value.
+      separatorSemicolon: "séparateur\u00a0: point-virgule",
+      separatorComma: "séparateur\u00a0: virgule",
+      separatorTab: "séparateur\u00a0: tabulation",
+      separatorSpace: "séparateur\u00a0: espace",
+      // The examples stay as written: they show the convention, not the reader's locale.
+      decimalComma: "virgule décimale (1,5)",
+      decimalPoint: "point décimal (1.5)",
+      unreadCount: (count) =>
+        count < 2
+          ? `${n(count)} ligne n’a pas pu être lue`
+          : `${n(count)} lignes n’ont pas pu être lues`,
+      unreadLine: (line) => `La ligne ${line} n\u2019a pas pu être lue`,
+      unreadMore: (count) => `…et ${n(count)} ${plural(count, "autre", "autres")}`,
+      noRows: "Aucune ligne de ce texte ne se lit comme une ligne du tableau.",
+      table: "Colonnes et leurs rôles",
+      columnN: (column) => `Colonne ${column}`,
+      roleOf: (column) => `Que contient la colonne «\u202f${column}\u202f»\u202f?`,
+      ignore: "Ignorer",
+      requiredRole: (role) => `${role} (obligatoire)`,
+      previewOf: (shown, total) =>
+        shown < 2
+          ? `La première ligne sur ${n(total)}`
+          : `Les ${n(shown)} premières lignes sur ${n(total)}`,
+      // `roles` arrives joined with "ou" ("Débit ou Crédit").
+      oneOf: (roles) => `${roles} (au choix)`,
+      missing: (roles) => `Il manque encore\u00a0: ${roles}.`,
     },
     translationReview: {
       statusMissing: "Manquant",

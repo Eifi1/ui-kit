@@ -130,5 +130,14 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       length: (actual, expected) =>
         `An IBAN from this country has ${n(expected)} characters — this one has ${n(actual)}.`,
     },
+    columnMapper: {
+      ...d.columnMapper,
+      summary: (columns, rows) =>
+        `${n(columns)} ${columns === 1 ? "column" : "columns"}, ${n(rows)} ${rows === 1 ? "row" : "rows"}`,
+      unreadCount: (count) =>
+        count === 1 ? "1 line could not be read" : `${n(count)} lines could not be read`,
+      unreadMore: (count) => `…and ${n(count)} more`,
+      previewOf: (shown, total) => `The first ${n(shown)} of ${n(total)} rows`,
+    },
   };
 }

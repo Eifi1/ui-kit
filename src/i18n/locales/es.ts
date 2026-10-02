@@ -26,6 +26,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       attachmentRemoveFile: (name) => `Quitar ${name}`,
       attachmentLimit: (max) => `Máximo ${n(max)} ${max === 1 ? "adjunto" : "adjuntos"}: quite uno para añadir otro.`,
       attachmentUploading: "Subiendo…",
+      attachmentUploadFailed: (name) => `No se ha podido subir «${name}»`,
     },
     feedbackDialog: {
       title: "Enviar comentarios",
@@ -330,6 +331,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       password: "Contraseña",
       phrase: (phrase) => `Escriba «${phrase}» para confirmar`,
       acknowledge: "He leído lo que hace esta acción y deseo continuar.",
+      needsPhrase: (phrase) => `Escriba «${phrase}» para confirmar`,
+      needsAcknowledge: "Marque la casilla para confirmar",
+      needsPassword: "Introduzca su contraseña para confirmar",
     },
     tabs: {
       add: "Añadir pestaña",
@@ -679,6 +683,43 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       outflow: "Salida",
       inflow: "Entrada",
       direction: (current, next) => `Dirección: ${current} — cambiar a ${next}`,
+    },
+    columnMapper: {
+      paste: "Pegar una tabla",
+      pasteHint:
+        "Copie las filas de una hoja de cálculo y péguelas aquí, o suelte un archivo CSV o de texto.",
+      chooseFile: "Elegir un archivo",
+      readError: (name) => `No se ha podido leer «${name}»`,
+      headerRow: "La primera línea contiene los nombres de las columnas",
+      summary: (columns, rows) =>
+        `${n(columns)} ${plural(columns, "columna", "columnas")}, ${n(rows)} ${plural(rows, "fila", "filas")}`,
+      // Fragments of the summary line. "Separado por…" would have to agree with a noun the
+      // line does not name, so the separator is stated as a value.
+      separatorSemicolon: "separador: punto y coma",
+      separatorComma: "separador: coma",
+      separatorTab: "separador: tabulación",
+      separatorSpace: "separador: espacio",
+      // The examples stay as written: they show the convention, not the reader's locale.
+      decimalComma: "coma decimal (1,5)",
+      decimalPoint: "punto decimal (1.5)",
+      unreadCount: (count) =>
+        count === 1 ? "No se ha podido leer 1 línea" : `No se han podido leer ${n(count)} líneas`,
+      unreadLine: (line) => `No se pudo leer la línea ${line}`,
+      unreadMore: (count) => `…y ${n(count)} más`,
+      noRows: "Ninguna línea de este texto se puede leer como una fila de la tabla.",
+      table: "Columnas y sus funciones",
+      columnN: (column) => `Columna ${column}`,
+      roleOf: (column) => `¿Qué contiene la columna «${column}»?`,
+      ignore: "Ignorar",
+      requiredRole: (role) => `${role} (obligatorio)`,
+      previewOf: (shown, total) =>
+        shown === 1
+          ? `La primera de ${n(total)} filas`
+          : `Las primeras ${n(shown)} de ${n(total)} filas`,
+      // `roles` arrives joined with "o" ("Debe o Haber").
+      oneOf: (roles) => `${roles} (a elegir)`,
+      // "Falta" + infinitive: no verb to agree with however many roles follow.
+      missing: (roles) => `Falta asignar: ${roles}.`,
     },
     translationReview: {
       statusMissing: "Falta",

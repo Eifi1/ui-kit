@@ -62,6 +62,7 @@ import { DEFAULT_INLINE_EDIT_LABELS } from "../components/inline-edit-field";
 import { DEFAULT_IBAN_INPUT_LABELS } from "../components/iban-input";
 import { DEFAULT_PHONE_INPUT_LABELS } from "../components/phone-input";
 import { DEFAULT_SIGN_CHIP_LABELS } from "../components/sign-chip";
+import { DEFAULT_COLUMN_MAPPER_LABELS } from "../components/column-mapper";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -157,4 +158,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   ibanInput: DEFAULT_IBAN_INPUT_LABELS,
   phoneInput: DEFAULT_PHONE_INPUT_LABELS,
   signChip: DEFAULT_SIGN_CHIP_LABELS,
+  columnMapper: DEFAULT_COLUMN_MAPPER_LABELS,
 };

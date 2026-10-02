@@ -58,6 +58,7 @@ import type { InlineEditLabels } from "../components/inline-edit-field";
 import type { IbanInputLabels } from "../components/iban-input";
 import type { PhoneInputLabels } from "../components/phone-input";
 import type { SignChipLabels } from "../components/sign-chip";
+import type { ColumnMapperLabels } from "../components/column-mapper";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -311,6 +312,9 @@ export interface UiKitLabels {
   phoneInput: PhoneInputLabels;
   /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount. */
   signChip: SignChipLabels;
+  /** 0.23.0: `ColumnMapper` / `ColumnRoleTable` — a pasted or dropped table, a role per
+   *  column. */
+  columnMapper: ColumnMapperLabels;
 }
 
 /**

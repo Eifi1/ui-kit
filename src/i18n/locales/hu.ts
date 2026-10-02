@@ -25,6 +25,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       attachmentRemoveFile: (name) => `${name} eltávolítása`,
       attachmentLimit: (max) => `Legfeljebb ${n(max)} melléklet – egy újabbhoz távolítson el egyet.`,
       attachmentUploading: "Feltöltés…",
+      // Opens with the quoted name, as `filePicker`'s refusals: no a/az has to agree with it.
+      attachmentUploadFailed: (name) => `„${name}”: a feltöltés nem sikerült`,
     },
     feedbackDialog: {
       title: "Visszajelzés küldése",
@@ -330,6 +332,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Phrase after a colon, so no article has to agree with it.
       phrase: (phrase) => `A megerősítéshez írja be: „${phrase}”`,
       acknowledge: "Elolvastam, mit eredményez ez a művelet, és folytatni szeretném.",
+      needsPhrase: (phrase) => `A megerősítéshez írja be: „${phrase}”`,
+      needsAcknowledge: "A megerősítéshez jelölje be a négyzetet",
+      needsPassword: "A megerősítéshez adja meg a jelszavát",
     },
     tabs: {
       add: "Lap hozzáadása",
@@ -685,6 +690,38 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       outflow: "Kiadás",
       inflow: "Bevétel",
       direction: (current, next) => `Irány: ${current} – váltás erre: ${next}`,
+    },
+    columnMapper: {
+      paste: "Táblázat beillesztése",
+      pasteHint:
+        "Másolja ki a sorokat egy táblázatkezelőből, és illessze be ide, vagy húzzon ide egy CSV- vagy szövegfájlt.",
+      chooseFile: "Fájl kiválasztása",
+      readError: (name) => `„${name}”: a fájl nem olvasható`,
+      headerRow: "Az első sor az oszlopok nevét tartalmazza",
+      // No plural after a numeral (convention 2).
+      summary: (columns, rows) => `${n(columns)} oszlop, ${n(rows)} sor`,
+      separatorSemicolon: "pontosvesszővel elválasztva",
+      separatorComma: "vesszővel elválasztva",
+      separatorTab: "tabulátorral elválasztva",
+      separatorSpace: "szóközzel elválasztva",
+      // The examples stay as written: they show the convention, not the reader's locale.
+      decimalComma: "tizedesvessző (1,5)",
+      decimalPoint: "tizedespont (1.5)",
+      unreadCount: (count) => `${n(count)} sor nem olvasható`,
+      unreadLine: (line) => `A(z) ${line}. sor nem olvasható`,
+      unreadMore: (count) => `…és még ${n(count)}`,
+      noRows: "A szöveg egyetlen sora sem olvasható a táblázat soraként.",
+      table: "Oszlopok és szerepük",
+      columnN: (column) => `${column}. oszlop`,
+      // The name after a colon, so no article or case ending has to agree with it.
+      roleOf: (column) => `Mit tartalmaz ez az oszlop: „${column}”?`,
+      ignore: "Kihagyás",
+      requiredRole: (role) => `${role} (kötelező)`,
+      // "(összesen N)", as `dataTable.pageChanged`: both numerals stay bare (convention 3).
+      previewOf: (shown, total) => `Az első ${n(shown)} sor (összesen ${n(total)})`,
+      // `roles` arrives joined with "vagy" ("Tartozik vagy Követel").
+      oneOf: (roles) => `${roles} (valamelyik)`,
+      missing: (roles) => `Még hiányzik: ${roles}.`,
     },
     translationReview: {
       statusMissing: "Hiányzik",

@@ -29,6 +29,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       attachmentRemoveFile: (name) => `${name} entfernen`,
       attachmentLimit: (max) => `Maximal ${n(max)} ${max === 1 ? "Anhang" : "Anhänge"} – zum Hinzufügen erst einen entfernen.`,
       attachmentUploading: "Wird hochgeladen…",
+      attachmentUploadFailed: (name) => `„${name}“ konnte nicht hochgeladen werden`,
     },
     feedbackDialog: {
       title: "Feedback senden",
@@ -340,6 +341,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       password: "Passwort",
       phrase: (phrase) => `Geben Sie zur Bestätigung „${phrase}“ ein`,
       acknowledge: "Ich habe gelesen, was dies bewirkt, und möchte fortfahren.",
+      needsPhrase: (phrase) => `Geben Sie zur Bestätigung „${phrase}“ ein`,
+      needsAcknowledge: "Setzen Sie zur Bestätigung das Häkchen",
+      needsPassword: "Geben Sie zur Bestätigung Ihr Passwort ein",
     },
     tabs: {
       // "Tab" is what German UIs say; "Registerkarte" reads like a 1990s manual.
@@ -697,6 +701,44 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       outflow: "Ausgabe",
       inflow: "Einnahme",
       direction: (current, next) => `Richtung: ${current} – zu ${next} wechseln`,
+    },
+    columnMapper: {
+      paste: "Tabelle einfügen",
+      pasteHint:
+        "Die Zeilen aus einer Tabellenkalkulation kopieren und hier einfügen – oder eine CSV- oder Textdatei hier ablegen.",
+      chooseFile: "Datei auswählen",
+      readError: (name) => `„${name}“ konnte nicht gelesen werden`,
+      headerRow: "Die erste Zeile enthält die Spaltennamen",
+      summary: (columns, rows) =>
+        `${n(columns)} ${columns === 1 ? "Spalte" : "Spalten"}, ${n(rows)} ${rows === 1 ? "Zeile" : "Zeilen"}`,
+      // Fragments of the summary line ("3 Spalten, 120 Zeilen · durch Semikolons getrennt").
+      separatorSemicolon: "durch Semikolons getrennt",
+      separatorComma: "durch Kommas getrennt",
+      separatorTab: "durch Tabulatoren getrennt",
+      separatorSpace: "durch Leerzeichen getrennt",
+      // The examples stay as written: they show the convention, not the reader's locale.
+      decimalComma: "Dezimalkomma (1,5)",
+      decimalPoint: "Dezimalpunkt (1.5)",
+      unreadCount: (count) =>
+        count === 1
+          ? "1 Zeile konnte nicht gelesen werden"
+          : `${n(count)} Zeilen konnten nicht gelesen werden`,
+      // A line number is a position, not a count: unformatted, as `measuredGrid.lineError`.
+      unreadLine: (line) => `Zeile ${line} konnte nicht gelesen werden`,
+      unreadMore: (count) => `…und ${n(count)} weitere`,
+      noRows: "Keine Zeile dieses Textes lässt sich als Tabellenzeile lesen.",
+      table: "Spaltenzuordnung",
+      columnN: (column) => `Spalte ${column}`,
+      roleOf: (column) => `Was enthält die Spalte „${column}“?`,
+      ignore: "Ignorieren",
+      requiredRole: (role) => `${role} (erforderlich)`,
+      previewOf: (shown, total) =>
+        shown === 1
+          ? `Die erste von ${n(total)} Zeilen`
+          : `Die ersten ${n(shown)} von ${n(total)} Zeilen`,
+      // `roles` arrives joined with "oder" ("Soll oder Haben").
+      oneOf: (roles) => `entweder ${roles}`,
+      missing: (roles) => `Noch erforderlich: ${roles}.`,
     },
     translationReview: {
       statusMissing: "Fehlt",
