@@ -1,7 +1,12 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_MAX_ATTACHMENTS, FeedbackAttachmentField, type FeedbackAttachmentError } from "../feedback-attachment";
+import {
+  DEFAULT_MAX_ATTACHMENTS,
+  FeedbackAttachmentField,
+  type FeedbackAttachmentError,
+  type FeedbackAttachmentErrorInfo,
+} from "../feedback-attachment";
 import { FeedbackDialog, type FeedbackMultipleSubmission, type FeedbackSubmission } from "../feedback-dialog";
 
 /**
@@ -30,7 +35,7 @@ function Harness({
 }: {
   initial?: File[];
   max?: number;
-  onError?: (kind: FeedbackAttachmentError) => void;
+  onError?: (kind: FeedbackAttachmentError, info: FeedbackAttachmentErrorInfo) => void;
   accept?: string[];
 }) {
   const [files, setFiles] = useState<File[]>(initial);
@@ -72,7 +77,7 @@ describe("FeedbackAttachmentField multiple", () => {
     const { container } = render(<Harness max={3} initial={[png("a.png")]} onError={onError} />);
     pick(container, [png("b.png"), png("c.png"), png("d.png")]);
     expect(names()).toBe("a.png,b.png,c.png");
-    expect(onError).toHaveBeenCalledWith("count");
+    expect(onError).toHaveBeenCalledWith("count", expect.objectContaining({ max: 3 }));
     // Full: no add button, no paste hint, the limit said instead.
     expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
     expect(screen.queryByText(/paste a screenshot/)).not.toBeInTheDocument();
@@ -84,7 +89,7 @@ describe("FeedbackAttachmentField multiple", () => {
     const onError = vi.fn();
     const { container } = render(<Harness onError={onError} />);
     pick(container, [pdf("no.pdf"), png("big.png", 11 * 1024 * 1024), png("ok.png")]);
-    expect(onError.mock.calls).toEqual([["type"], ["size"]]);
+    expect(onError.mock.calls.map(([kind]) => kind)).toEqual(["type", "size"]);
     expect(names()).toBe("ok.png");
   });
 

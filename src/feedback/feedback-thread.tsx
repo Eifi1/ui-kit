@@ -4,10 +4,12 @@ import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
+import type { CharacterCountLabels } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
 import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
+import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
@@ -463,9 +465,12 @@ function toDate(value: Date | string | number): Date | null {
 /* ── Composer ─────────────────────────────────────────────────────────────── */
 
 /** What the composer's attach control takes — {@link FeedbackNoteAttachment} with the
- *  labels optional, since the field reads `feedbackAttachment` from the provider. */
-export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels"> & {
+ *  labels optional, since the field reads `feedbackAttachment` from the provider, and
+ *  `onError` the field's own (0.23.0): it is handed the refused file and the limit too
+ *  (`FeedbackAttachmentErrorInfo`), and a `(kind) => …` handler still fits. */
+export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" | "onError"> & {
   labels?: Partial<FeedbackAttachmentLabels>;
+  onError?: FeedbackAttachmentFieldSingleProps["onError"];
 };
 
 export interface FeedbackComposerProps {
@@ -498,7 +503,7 @@ export interface FeedbackComposerProps {
    * for state the composer cannot see, i.e. `attachmentSlot`'s (keksdose G5): `true`
    * with files ready makes an empty draft sendable (`onSend("", null)`), `false` while
    * an upload is still running holds even a written reply back. Left out, the text
-   * decides. `pending` blocks a send either way.
+   * decides. `pending` blocks a send either way, as does a draft past `maxLength`.
    */
   canSend?: boolean;
   /**
@@ -513,6 +518,31 @@ export interface FeedbackComposerProps {
    *  reader. */
   disabledReason?: ReactNode;
   rows?: number;
+  /**
+   * The longest draft the box takes, in UTF-16 code units as the browser counts — the
+   * server's limit, so a reply too long for it is cut off while it is typed rather than
+   * refused by a 422 after the press (keksdose G6: its support replies are capped at
+   * 4,000 on the server, and its other text fields already count against that with
+   * Textarea's `maxLength` + `showCount` since 0.22; the reply box, a composer, could
+   * not). The box's own `maxLength`, so typing and pasting stop at it.
+   *
+   * {@link FeedbackComposerHandle.insertText} is not stopped by it — the browser limits
+   * typing, not a script — and a canned reply is not cut mid-sentence to fit. A draft
+   * past the limit therefore holds Send back (whatever `canSend` says, as `pending`
+   * does) until it is trimmed; with `showCount` the counter, red at the limit, says by
+   * how much.
+   */
+  maxLength?: number;
+  /**
+   * A live "12/4000" under the box, with `maxLength` — Textarea's `showCount`, the same
+   * counter (keksdose G6): the count is part of the box's description, read with it on
+   * focus, and a polite live region speaks only on entering the last stretch and at the
+   * limit, never per keystroke. Under `size="sm"` the hidden send hint stays the box's
+   * description too, before the count. Ignored without `maxLength`.
+   */
+  showCount?: boolean;
+  /** The counter's words — the `characterCount` namespace, as on Textarea. */
+  countLabels?: Partial<CharacterCountLabels>;
   /**
    * The box's hint, over the `placeholder` label — keksdose F9: an admin answering a
    * support ticket is asked something else ("Reply to Anna…") than a member adding to
@@ -594,6 +624,9 @@ export function FeedbackComposer({
   sendOn = "mod-enter",
   disabledReason,
   rows = 3,
+  maxLength,
+  showCount,
+  countLabels,
   placeholder,
   value,
   onValueChange,
@@ -668,7 +701,10 @@ export function FeedbackComposer({
     );
   }
 
-  const canSend = (canSendProp ?? draft.trim().length > 0) && !pending;
+  // Longer than `maxLength` only through `insertText` or a controlled value (typing
+  // stops at it): the server would refuse it, so it does not go.
+  const tooLong = maxLength !== undefined && draft.length > maxLength;
+  const canSend = (canSendProp ?? draft.trim().length > 0) && !pending && !tooLong;
   const send = () => {
     if (!canSend) return;
     const sentDraft = draft;
@@ -689,7 +725,14 @@ export function FeedbackComposer({
         rows={rows}
         dir="auto"
         aria-label={labels.field}
+        // Textarea puts the counter's description after this one, so under "sm" the box
+        // reads "Enter to send… 12 of 4000 characters".
         aria-describedby={size === "sm" ? hintId : undefined}
+        maxLength={maxLength}
+        // Passed only when given: Textarea keeps a wrapper for a `showCount` it was
+        // handed at all, and a composer without one keeps the DOM it had.
+        {...(showCount !== undefined ? { showCount } : null)}
+        countLabels={countLabels}
         ref={box}
         placeholder={placeholder ?? labels.placeholder}
         value={draft}
