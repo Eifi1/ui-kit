@@ -6,7 +6,7 @@ import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-anatomy";
+import { hasContent, LabelStrip } from "./field-parts";
 
 export interface SwatchPickerLabels {
   /** The "no colour" tile's name, when `allowNone` is set. */

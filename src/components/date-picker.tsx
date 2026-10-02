@@ -16,7 +16,7 @@ import {
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
-import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-anatomy";
+import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";

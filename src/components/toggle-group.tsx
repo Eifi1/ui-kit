@@ -5,7 +5,7 @@ import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-anatomy";
+import { hasContent, LabelStrip } from "./field-parts";
 
 export interface ToggleOption<T extends string> {
   value: T;

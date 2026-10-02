@@ -5,7 +5,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-l
 import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
-import { hasContent, LabelStrip } from "./field-anatomy";
+import { hasContent, LabelStrip } from "./field-parts";
 
 export interface IconPickerLabels {
   /** The "no icon" tile's name, when `allowNone` is set. */

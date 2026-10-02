@@ -17,8 +17,15 @@ import {
   LockedReason,
   useFieldHint,
   useLockReason,
+  FLOATING_LABEL_STATIC,
+  STATIC_LABEL_TYPE,
   type FieldHintParts,
 } from "./field-parts";
+
+// The static label lives in field-parts since 0.23 (it is what the field anatomy
+// there draws, and field-parts must not import this file); public from here as before.
+export { FieldLabel, FLOATING_LABEL_STATIC } from "./field-parts";
+export type { FieldLabelProps } from "./field-parts";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -1483,22 +1490,6 @@ const FLOATING_ROW_CLASS = cn(
   "peer-disabled:opacity-50",
 );
 
-// The TYPE of the small static label, without any placement. Split out so the
-// label and anything sharing its line (see `hint` on {@link FloatingField}) are
-// laid out by one flex row instead of by two absolute offsets guessing at the
-// same baseline — which is what put dev#468's "?" three pixels above the word it
-// belongs to.
-const STATIC_LABEL_TYPE =
-  "text-[11px] leading-tight text-[var(--text-muted)] peer-disabled:opacity-50";
-
-// A field that always has a value (select / dropdown trigger) keeps the label
-// permanently in the floated position — small, in the top strip, value below.
-export const FLOATING_LABEL_STATIC = cn(
-  "pointer-events-none absolute start-3 top-1",
-  STATIC_LABEL_TYPE,
-  "max-w-[calc(100%-1.5rem)] truncate",
-);
-
 /**
  * The one place that assembles a labelled field: a `relative` wrapper around the
  * control (`children`) plus a floating label inside the top strip. Pass `staticLabel`
@@ -1647,23 +1638,6 @@ export function FieldHint({
         <HelpCircle className="size-3.5" />
       </button>
     </Tooltip>
-  );
-}
-
-/**
- * The floating label for a custom-dropdown trigger (a `<span>`, since the trigger is a
- * button not a labelable input). Same placement as {@link FloatingField}'s static label,
- * so every labelled field lines up. Render inside a `relative` wrapper, before the trigger.
- */
-export interface FieldLabelProps extends ComponentPropsWithoutRef<"span"> {
-  children: ReactNode;
-}
-
-export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
-  return (
-    <span {...rest} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
-      {children}
-    </span>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { LabelStrip, useFieldMessages } from "./field-anatomy";
+import { LabelStrip, useFieldMessages } from "./field-parts";
 
 /**
  * How far down the content starts, under the 11px label — see {@link FieldStripProps.pad}.
