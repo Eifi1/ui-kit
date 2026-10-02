@@ -1,6 +1,6 @@
 import { StrictMode, useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router";
 import { useOverlayHistory } from "../use-overlay-history";
 
 /**
@@ -257,6 +257,11 @@ describe("useOverlayHistory", () => {
   // overlay opened from such a table was then standing on an entry this module
   // could no longer recognise as its own.
 
+  /** The user starts a press (the close button's pointerdown). */
+  function userPresses() {
+    fireEvent.pointerDown(document.body);
+  }
+
   /** What `setSearchParams(next, { replace: true })` does to the current entry. */
   function routerReplace(search: string) {
     window.history.replaceState({ usr: undefined, key: "rk" + search, idx: 1 }, "", search);
@@ -270,6 +275,10 @@ describe("useOverlayHistory", () => {
     routerReplace("?f.status=open");
     expect(liveSentinel()).toBeNull(); // the tag is gone — that is the defect
 
+    // The sheet is closed LATER, by a press of its own — that is what makes the
+    // filter an address the overlay lived through rather than the owner's close
+    // (dev #584, below).
+    userPresses();
     view.unmount();
     await settle();
 
@@ -291,6 +300,7 @@ describe("useOverlayHistory", () => {
     for (let round = 0; round < 3; round += 1) {
       view.rerender(<Nested outer inner={false} />);
       routerReplace(`?f.status=r${round}`);
+      userPresses();
       view.rerender(<Nested outer={false} inner={false} />);
       await settle();
       expect(window.location.search).toBe("");
@@ -515,5 +525,103 @@ describe("useOverlayHistory under a router, navigating from inside the overlay",
     await expectBackReachesHome();
     view.unmount();
     await settle();
+  });
+});
+
+// ── the owner closes the overlay by rewriting the address (keksdose dev #584) ──
+//
+// A page opens its row editor by PUSHING `?row=x` and closes it by REPLACING the clean
+// URL (`useSearchParamState(…, { history: "replace-on-clear" })`). The editor's dialog
+// pushed its sentinel ABOVE `?row=x`, so Cancel's replace rewrote the SENTINEL's entry,
+// and the dialog unmounted because of it. The cleanup read "same page, same idx — still
+// mine" and went back one entry: onto `?row=x`, and the router reopened the editor.
+describe("useOverlayHistory when the owner's address change is what closed it", () => {
+  function RowPage() {
+    const [params, setParams] = useSearchParams();
+    const row = params.get("row");
+    return (
+      <div>
+        <button onClick={() => setParams({ row: "x" })}>open row</button>
+        {row ? (
+          <div>
+            <p>editing {row}</p>
+            <Overlay onClose={() => setParams({}, { replace: true })} />
+            <button onClick={() => setParams({}, { replace: true })}>cancel</button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  it("does not go back onto the ?row= entry after Cancel replaced it away", async () => {
+    window.history.replaceState(null, "", "/rows");
+    const go = vi.spyOn(window.history, "go");
+    const view = render(
+      <BrowserRouter>
+        <Routes>
+          <Route path="/rows" element={<RowPage />} />
+        </Routes>
+      </BrowserRouter>,
+    );
+    await settle();
+    fireEvent.click(screen.getByText("open row"));
+    await settle();
+    expect(window.location.search).toBe("?row=x");
+    expect(liveSentinel()).not.toBeNull();
+
+    // A real press: pointerdown, then the click whose handler replaces the URL.
+    fireEvent.pointerDown(screen.getByText("cancel"));
+    fireEvent.click(screen.getByText("cancel"));
+    await settle();
+    await new Promise((r) => setTimeout(r, 30));
+    await settle();
+
+    expect(go).not.toHaveBeenCalled();
+    expect(window.location.search).toBe("");
+    expect(screen.queryByText("editing x")).toBeNull();
+    go.mockRestore();
+    view.unmount();
+    await settle();
+  });
+
+  it("the raw history shape: push ?row=x, mount, replaceState the clean URL, unmount", async () => {
+    window.history.replaceState(null, "", "/raw");
+    window.history.pushState(null, "", "/raw?row=x");
+    const go = vi.spyOn(window.history, "go");
+    const view = render(<Overlay />);
+    fireEvent.pointerDown(document.body);
+    // The owner's replace wipes the state too, as a router's does.
+    window.history.replaceState(null, "", "/raw");
+    view.unmount();
+    await settle();
+    expect(go).not.toHaveBeenCalled();
+    expect(window.location.search).toBe("");
+    go.mockRestore();
+  });
+
+  it("still unwinds when the address it was opened at is unchanged", async () => {
+    window.history.replaceState(null, "", "/raw2?row=x");
+    const go = vi.spyOn(window.history, "go");
+    const view = render(<Overlay />);
+    fireEvent.pointerDown(document.body);
+    view.unmount();
+    await settle();
+    expect(go).toHaveBeenCalledWith(-1);
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.search).toBe("?row=x");
+    go.mockRestore();
+  });
+
+  it("works the same under a hash router, where the query lives in the hash", async () => {
+    window.history.replaceState(null, "", "/#/table");
+    window.history.pushState(null, "", "/#/table?row=x");
+    const go = vi.spyOn(window.history, "go");
+    const view = render(<Overlay />);
+    window.history.replaceState(null, "", "/#/table");
+    view.unmount();
+    await settle();
+    expect(go).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("#/table");
+    go.mockRestore();
   });
 });

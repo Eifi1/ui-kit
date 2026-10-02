@@ -356,6 +356,24 @@ export interface DataTableProps<T> {
    */
   mobileExpandAsDialog?: boolean;
   /**
+   * The phone row dialog's `backCloses` ({@link FullBleedDialog}): whether it pushes
+   * its own history entry so Back dismisses it. On by default — right for a row whose
+   * expansion is component state, where nothing else would answer Back.
+   *
+   * **Set it `false` when the open row is in the URL** and opening it PUSHES (a
+   * `?row=` written with `useSearchParamState(…, { history: "replace-on-clear" })` or
+   * `"push"`): Back already closes the row through the router, and a second entry on
+   * top of the page's is two owners of one Back press (keksdose dev #584). Keep it on
+   * when opening the row REPLACES the URL — then nothing was pushed, and the dialog's
+   * own entry is the only thing Back can pop.
+   *
+   * The table cannot decide this for you: `isExpanded` is a predicate, and neither it
+   * nor `rowHref` says whether opening pushed or replaced (keksdose's feedback page
+   * has `rowHref` with a REPLACING `?row=`, and needs the entry). Ignored unless
+   * `mobileExpandAsDialog`.
+   */
+  mobileDialogBackCloses?: boolean;
+  /**
    * Group the mobile card list into sections, each with a sticky header — the
    * "assistance"-style list (like the transactions list grouped by date, but by
    * whatever key you return, e.g. a name's first letter). The returned string is
@@ -835,6 +853,7 @@ export function DataTable<T>({
   locale: localeProp,
   storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
   mobileExpandAsDialog = false,
+  mobileDialogBackCloses = true,
   mobileGroupBy,
   mobileGroupLabel,
   mobileCard,
@@ -1856,6 +1875,7 @@ export function DataTable<T>({
           onClose={closeDialog}
           closeLabel={labels.close}
           header={mobileDialogRow ? mobilePrimaryCol?.cell(mobileDialogRow) : null}
+          backCloses={mobileDialogBackCloses}
         >
           {mobileDialogContent}
         </FullBleedDialog>
