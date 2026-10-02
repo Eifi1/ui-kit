@@ -656,6 +656,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ShareDialog — the same panel in a dialog",
     "ShareCard — read-only",
     "ShareCard — under a write lock",
+    "LegalLayout — Imprint, Privacy Policy, Terms",
   ],
   "wizard": [
     "Three-step wizard",

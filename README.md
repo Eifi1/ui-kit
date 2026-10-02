@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1164 names from 175 modules** — 544 values and 620 types. _Italic_ is a type-only export.
+**1167 names from 176 modules** — 547 values and 620 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1164 |
+| `@eifi1/ui-kit` | 1167 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -458,7 +458,8 @@ re-slicing of it, never a second API.
 | `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings` |
-| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `resolveLanguage`, _`KitLanguage`_, _`KitLanguageCode`_ |
+| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
+| `i18n/plurals` | `withAllPlurals` |
 
 ### components
 
@@ -798,9 +799,15 @@ Every German (`de`, `de-AT`, a stored `de-informal`) resolves to `de-CH`; every 
 (`zh-TW`, `zh-Hant`) to `zh`, which is **Simplified** — there is no Traditional catalogue.
 Other regional tags take their base language (`fr-CA` → `fr`), and a candidate the app
 does not offer passes to the next. Each language formats like its home — `de-CH`, `en-GB`,
-`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region. The loader is
+`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region; a tag of a
+language the kit does not ship (`sv-SE` for ISO dates) formats as itself. The loader is
 asynchronous only: a synchronous one would have to bundle all seven catalogues into every
-app. `languageOptions` feeds `LanguageMenu` (which draws `fi fi-<country>` — the app loads
+app. A provider that renders every frame reads what has arrived with
+`peekUiKitLabels(code)`, or takes `useUiKitLabels(code)`, which loads on first use and
+keeps the previous language's catalogue through a switch until the next one is in.
+`withAllPlurals(catalogue, lng)` fills the plural categories CLDR gives a language (French,
+Italian and Spanish `many`) from each `key_other`, so a catalogue written with English's
+`_one`/`_other` never falls back to another language for a million. `languageOptions` feeds `LanguageMenu` (which draws `fi fi-<country>` — the app loads
 the flag CSS) and `LanguageSetting` (a native select: names only).
 
 ### The worked example

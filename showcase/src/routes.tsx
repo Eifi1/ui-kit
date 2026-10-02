@@ -222,6 +222,7 @@ const Passkeys016Demo = lazySection(() => import("./sections/feedback-016-demo")
 const Passkeys018Demo = lazySection(() => import("./sections/account-018-demo"), "Passkeys018Demo");
 const AccountRoster018Demo = lazySection(() => import("./sections/account-018-demo"), "AccountRoster018Demo");
 const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Share018Demo");
+const Legal019Demo = lazySection(() => import("./sections/legal-019-demo"), "Legal019Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 
 /**
@@ -1050,7 +1051,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1058,6 +1059,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Passkeys018Demo />
             <AccountRoster018Demo />
             <Share018Demo />
+            <Legal019Demo />
           </>
         ),
       },

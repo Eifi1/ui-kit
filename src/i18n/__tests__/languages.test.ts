@@ -177,7 +177,13 @@ describe("formatLocaleOf", () => {
     expect(formatLocaleOf("en-AU")).toBe("en-GB");
     expect(formatLocaleOf("en-US")).toBe("en-GB");
     expect(formatLocaleOf("zh-TW")).toBe("zh-CN");
-    expect(formatLocaleOf("pt-BR")).toBe("de-CH");
+  });
+
+  it("keeps a tag of a language the kit does not ship as it is — a format preference (keksdose)", () => {
+    expect(formatLocaleOf("sv-SE")).toBe("sv-SE");
+    expect(formatLocaleOf("pt-br")).toBe("pt-BR");
+    expect(formatLocaleOf("not a tag")).toBe("de-CH");
+    expect(formatLocaleOf("")).toBe("de-CH");
   });
 });
 
