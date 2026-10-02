@@ -631,6 +631,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       waking: (appName) =>
         `El servidor se duerme cuando nadie usa ${appName ?? "la aplicación"}, así que la primera solicitud tras una pausa tiene que volver a arrancarlo. Puede tardar un momento; no se pierde nada y la página se completará sola.`,
     },
+    legal: {
+      navLabel: "Información legal",
+    },
     translationReview: {
       statusMissing: "Falta",
       statusUnreviewed: "Sin revisar",

@@ -637,6 +637,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       waking: (appName) =>
         `A szerver elalszik, ha senki sem használja ${appName ? `a(z) ${appName} alkalmazást` : "az alkalmazást"}, ezért egy szünet utáni első kérésnek újra el kell indítania. Ez eltarthat egy ideig – semmi sem vész el, az oldal magától betöltődik.`,
     },
+    legal: {
+      navLabel: "Jogi információk",
+    },
     translationReview: {
       statusMissing: "Hiányzik",
       statusUnreviewed: "Nincs ellenőrizve",

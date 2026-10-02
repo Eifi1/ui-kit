@@ -401,3 +401,6 @@ export type {
   TranslationExportButtonProps,
   TranslationReviewLabels,
 } from "./components/translation-review";
+// The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
+export { LegalLayout, LegalSection, LegalLinks, DEFAULT_LEGAL_LABELS } from "./components/legal";
+export type { LegalLabels, LegalLink, LegalLinksProps, LegalSectionProps, LegalLayoutProps } from "./components/legal";

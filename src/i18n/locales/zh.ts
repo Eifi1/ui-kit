@@ -620,6 +620,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       waking: (appName) =>
         `无人使用${appName ? ` ${appName} ` : "本应用"}时，服务器会进入休眠，因此暂停后的第一个请求需要重新启动它。这可能需要一点时间——不会丢失任何内容，页面会自动加载完成。`,
     },
+    legal: {
+      navLabel: "法律信息",
+    },
     translationReview: {
       statusMissing: "缺失",
       statusUnreviewed: "未审校",

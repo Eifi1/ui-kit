@@ -634,6 +634,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       waking: (appName) =>
         `Il server va in sospensione quando nessuno usa ${appName ?? "l’app"}, quindi la prima richiesta dopo una pausa deve riavviarlo. Può volerci un momento: non si perde nulla, la pagina si completa da sola.`,
     },
+    legal: {
+      navLabel: "Note legali",
+    },
     translationReview: {
       statusMissing: "Mancante",
       statusUnreviewed: "Non rivisto",

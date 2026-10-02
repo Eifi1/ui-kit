@@ -132,8 +132,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (`translationRows`, `placeholderMismatch`, `keyInArea`, `fromApiReview`, …) and
   // `TranslationReviewPanel`, `TranslationReviewEditor`, `ReviewStatusChip`,
   // `TranslationProgress`, `TranslationLocaleTabs`, `TranslationExportButton`,
-  // `REVIEW_STATUS_TONES`, `DEFAULT_TRANSLATION_REVIEW_LABELS` (+26).
-  ["@eifi1/ui-kit", barrel, 540],
+  // `REVIEW_STATUS_TONES`, `DEFAULT_TRANSLATION_REVIEW_LABELS` (+26); the legal pages'
+  // shell `LegalLayout`, `LegalSection`, `LegalLinks`, `DEFAULT_LEGAL_LABELS` (+4).
+  ["@eifi1/ui-kit", barrel, 544],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

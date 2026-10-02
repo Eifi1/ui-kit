@@ -47,6 +47,7 @@ import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image";
 import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid";
 import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox";
 import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock";
+import { DEFAULT_LEGAL_LABELS } from "../components/legal";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
@@ -140,4 +141,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   reauthDialog: DEFAULT_REAUTH_DIALOG_LABELS,
   serverWake: DEFAULT_SERVER_WAKE_LABELS,
   translationReview: DEFAULT_TRANSLATION_REVIEW_LABELS,
+  legal: DEFAULT_LEGAL_LABELS,
 };

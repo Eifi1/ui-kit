@@ -648,6 +648,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       waking: (appName) =>
         `Le serveur se met en veille quand personne n’utilise ${appName ?? "l’application"}, donc la première requête après une pause doit le redémarrer. Cela peut prendre un moment — rien n’est perdu, la page se remplira d’elle-même.`,
     },
+    legal: {
+      navLabel: "Informations légales",
+    },
     translationReview: {
       statusMissing: "Manquant",
       statusUnreviewed: "Non relu",

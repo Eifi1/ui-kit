@@ -648,6 +648,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       waking: (appName) =>
         `Der Server schläft ein, wenn ${appName ?? "die App"} gerade niemand benutzt. Die erste Anfrage nach einer Pause muss ihn erst wieder starten. Das kann einen Moment dauern – es geht nichts verloren, die Seite füllt sich von selbst.`,
     },
+    legal: {
+      navLabel: "Rechtliches",
+    },
     translationReview: {
       statusMissing: "Fehlt",
       statusUnreviewed: "Ungeprüft",
