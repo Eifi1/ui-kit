@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Autocomplete,
   Combobox,
   EntityCombobox,
   FieldHint,
@@ -18,8 +19,8 @@ import { Example, Note } from "../lib/section";
  * 0.23 for the Combobox family and the wizard (keksdose G1, G2, G9 and the kit's later
  * list). Three parts, three pages:
  *
- *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all four
- *     pickers, and MultiEntityCombobox's `hint`;
+ *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all five
+ *     pickers (Autocomplete included), and MultiEntityCombobox's `hint`;
  *   - {@link InlineCreateRow023Demo} — Entity pickers: the create row;
  *   - {@link StepperNavFinishLock023Demo} — Wizard: `finishCommit` on Finish.
  *
@@ -37,7 +38,13 @@ const ACCOUNTS: ComboOption<string>[] = [
 
 const PAYEES = ["Example Ltd", "Sample Bakery", "Demo Utilities"];
 
-/** The four pickers as a read-only page renders them: everything shown, only the
+const ADDRESSES: ComboOption<string>[] = [
+  { value: "1", label: "Example Street 1, 0000 Sampletown" },
+  { value: "2", label: "Example Street 12, 0000 Sampletown" },
+  { value: "3", label: "Sample Road 3, 0000 Demoville" },
+];
+
+/** The five pickers as a read-only page renders them: everything shown, only the
  *  pickers that save on change (`commit`) locked. */
 export function ComboboxFamilyLock023Demo() {
   const [locked, setLocked] = useState(true);
@@ -45,6 +52,7 @@ export function ComboboxFamilyLock023Demo() {
   const [account, setAccount] = useState<string | null>("chk");
   const [panelAccount, setPanelAccount] = useState<string | null>("sav");
   const [several, setSeveral] = useState<string[]>(["chk", "cash"]);
+  const [address, setAddress] = useState("Example Street 1");
   return (
     <Example
       label="The write lock on the Combobox family"
@@ -87,12 +95,20 @@ export function ComboboxFamilyLock023Demo() {
               onChange={setPayee}
               options={PAYEES}
             />
+            <Autocomplete<string>
+              commit
+              label="Delivery address"
+              value={address}
+              onChange={setAddress}
+              options={ADDRESSES}
+              className="sm:col-span-2"
+            />
           </div>
         </WriteLockProvider>
         <Note>
           Locked, each picker is still a tab stop — {code("aria-disabled")}, never {code("disabled")} — with the
           lock&apos;s sentence in the kit Tooltip and on {code("aria-describedby")}; no list opens, the clear
-          &quot;×&quot; is gone and nothing reaches {code("onChange")}. The two typed fields are{" "}
+          &quot;×&quot; is gone and nothing reaches {code("onChange")}. The three typed fields are{" "}
           {code("readOnly")} and swallow Enter. A picker inside a form with its own Save leaves {code("commit")}{" "}
           off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")} now,
           like the rest of the family since 0.22.
