@@ -224,6 +224,32 @@ const AccountRoster018Demo = lazySection(() => import("./sections/account-018-de
 const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Share018Demo");
 const Legal019Demo = lazySection(() => import("./sections/legal-019-demo"), "Legal019Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
+const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
+const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
+const Guards022Demo = lazySection(() => import("./sections/guards-022-demo"), "Guards022Demo");
+const FileLock022Demo = lazySection(() => import("./sections/guards-022-demo"), "FileLock022Demo");
+const InlineEdit022Demo = lazySection(() => import("./sections/guards-022-demo"), "InlineEdit022Demo");
+const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCode022Demo");
+const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
+const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
+const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
+const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
+const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
+const ToggleGroup022Demo = lazySection(() => import("./sections/pickers-022-demo"), "ToggleGroup022Demo");
+const Choices022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Choices022Demo");
+const Dates022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Dates022Demo");
+const Month022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Month022Demo");
+const Numbers022Demo = lazySection(() => import("./sections/numbers-022-demo"), "Numbers022Demo");
+const DataTableMobileSort022Demo = lazySection(() => import("./sections/misc-022-demo"), "DataTableMobileSort022Demo");
+const FormActionsShortcut022Demo = lazySection(() => import("./sections/misc-022-demo"), "FormActionsShortcut022Demo");
+const LineItemsRowProps022Demo = lazySection(() => import("./sections/misc-022-demo"), "LineItemsRowProps022Demo");
+const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/misc-022-demo"), "FeedbackAttachmentRefs022Demo");
+const ChatComposer022Demo = lazySection(() => import("./sections/misc-022-demo"), "ChatComposer022Demo");
+const TourStaleSpotlight022Demo = lazySection(() => import("./sections/misc-022-demo"), "TourStaleSpotlight022Demo");
+const Fields022Demo = lazySection(() => import("./sections/fields-022-demo"), "Fields022Demo");
+const PickerHints022Demo = lazySection(() => import("./sections/fields-022-demo"), "PickerHints022Demo");
+const CheckboxGroup022Demo = lazySection(() => import("./sections/fields-022-demo"), "CheckboxGroup022Demo");
+const CommitControls022Demo = lazySection(() => import("./sections/fields-022-demo"), "CommitControls022Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -363,12 +389,14 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field"],
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field", "IbanInput", "PhoneInput"],
         Body: () => (
           <>
             <Fields />
             <FieldAnatomyDemo />
             <FieldDemo />
+            <Fields022Demo />
+            <AccountNumbers022Demo />
           </>
         ),
       },
@@ -379,7 +407,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput"],
         Body: () => (
           <>
             <FormsRhf />
@@ -394,6 +422,10 @@ export const GROUPS: ShowcaseGroup[] = [
             <FormActions016Demo />
             <FormActions017Demo />
             <WriteLock018Demo />
+            <Rhf022Demo />
+            <FormActionsShortcut022Demo />
+            <LineItemsRowProps022Demo />
+            <CommitControls022Demo />
           </>
         ),
       },
@@ -403,12 +435,15 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Choices",
         blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
-        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ActionCard"],
+        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ActionCard", "TileRadioGroup", "CheckboxGroup"],
         Body: () => (
           <>
             <Choices />
             <SelectionDemo />
             <ActionCardDemo />
+            <TileRadioGroup022Demo />
+            <Choices022Demo />
+            <CheckboxGroup022Demo />
           </>
         ),
       },
@@ -419,12 +454,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The numeric stack: a calculator-backed number field, a field whose value is a number, the money field and its tones, and the currency picker.",
         icon: Sigma,
-        components: ["NumberInput", "NumberField", "AmountInput", "CurrencySelect", "NumberPadSheet"],
+        components: ["NumberInput", "NumberField", "AmountInput", "CurrencySelect", "NumberPadSheet", "SignChip"],
         Body: () => (
           <>
             <Numbers />
             <NumberStepsDemo />
             <Numbers016Demo />
+            <Numbers022Demo />
           </>
         ),
       },
@@ -435,12 +471,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
         icon: CalendarDays,
-        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "calendarMonthPresets", "UiKitProvider"],
+        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "calendarMonthPresets", "UiKitProvider", "useKitDateFormatter"],
         Body: () => (
           <>
             <Dates />
             <WeekStartDemo />
             <OutsideDaysDemo />
+            <Dates022Demo />
           </>
         ),
       },
@@ -467,6 +504,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <MonthPickerDemo />
             <MonthStepperDemo />
             <TimeInputDemo />
+            <Month022Demo />
           </>
         ),
       },
@@ -482,6 +520,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FileInputs />
             <Files016Demo />
+            <FileLock022Demo />
           </>
         ),
       },
@@ -523,6 +562,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Comboboxes />
             <AutocompleteDemo />
             <ComboboxClipsDemo />
+            <PickerHints022Demo />
           </>
         ),
       },
@@ -533,8 +573,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking a record by its id: inline and button-shaped pickers, static and loaded options, several at once, and the invalid, error and disabled states they share.",
         icon: Contact,
-        components: ["InlineEntityCombobox", "EntityCombobox", "MultiEntityCombobox"],
-        Body: EntityPickers,
+        components: ["InlineEntityCombobox", "EntityCombobox", "MultiEntityCombobox", "CountrySelect"],
+        Body: () => (
+          <>
+            <EntityPickers />
+            <Country022Demo />
+          </>
+        ),
       },
       {
         slug: "dropdown-parts",
@@ -558,11 +603,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
         icon: Grid3x3,
-        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows"],
+        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows", "InlineEditField"],
         Body: () => (
           <>
             <MeasuredGridDemo />
             <TableTextDemo />
+            <InlineEdit022Demo />
           </>
         ),
       },
@@ -583,12 +629,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Capturing a signature — and showing a saved one — telling a user how strong their password is, and confirming a destructive action.",
         icon: PenLine,
-        components: ["SignaturePad", "SignatureView", "PasswordStrengthMeter", "DangerConfirm"],
+        components: ["SignaturePad", "SignatureView", "PasswordStrengthMeter", "DangerConfirm", "TypedConfirmField", "CurrentPasswordInput"],
         Body: () => (
           <>
             <SignaturePasswordDemo />
             <SignatureViewDemo />
             <DangerConfirmDemo />
+            <Guards022Demo />
           </>
         ),
       },
@@ -638,6 +685,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Display013Demo />
             <Chips016Demo />
             <ChipSnapEdges018Demo />
+            <ToggleGroup022Demo />
           </>
         ),
       },
@@ -727,6 +775,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <DataTableSection />
             <DataTableActionsDemo />
             <DataTableTotalsDemo />
+            <DataTableMobileSort022Demo />
           </>
         ),
       },
@@ -948,7 +997,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "A spotlight tour over the real page: steps that point at any element by selector, wait for a click, run code first, and survive a missing target.",
         icon: Footprints,
         components: ["TourProvider", "useTour", "useTourOptional", "TourStep"],
-        Body: GuidedTour,
+        Body: () => (
+          <>
+            <GuidedTour />
+            <TourStaleSpotlight022Demo />
+          </>
+        ),
       },
       {
         slug: "command-palette",
@@ -1041,8 +1095,14 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Settings",
         blurb: "The account-settings rows: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting"],
-        Body: Settings,
+        components: ["ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting", "LanguageSelect"],
+        Body: () => (
+          <>
+            <Settings />
+            <PasswordStrength022Demo />
+            <LanguageSelect022Demo />
+          </>
+        ),
       },
       {
         slug: "auth-account",
@@ -1051,7 +1111,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "OneTimeCodeInput"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1060,6 +1120,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <AccountRoster018Demo />
             <Share018Demo />
             <Legal019Demo />
+            <OneTimeCode022Demo />
+            <OneTimeCodeUnlabelled022Demo />
           </>
         ),
       },
@@ -1088,6 +1150,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackCompose />
             <FeedbackAttachment016Demo />
+            <FeedbackAttachmentRefs022Demo />
           </>
         ),
       },
@@ -1097,13 +1160,14 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer"],
+        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer", "ChatComposer"],
         Body: () => (
           <>
             <FeedbackInbox />
             <FeedbackThreadDemo />
             <ComposerCannedRepliesDemo />
             <Feedback014Demo />
+            <ChatComposer022Demo />
           </>
         ),
       },

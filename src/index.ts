@@ -111,8 +111,25 @@ export * from "./components/disclosure";
 export * from "./components/dialog-frame";
 // Named, not `*`: danger-confirm also holds the password field and pending hook that
 // ReauthDialog shares with it, which are kit-internal.
-export { DangerConfirm, DEFAULT_DANGER_CONFIRM_LABELS, typedMatches } from "./components/danger-confirm";
-export type { DangerConfirmLabels, DangerConfirmProps, TypedMatch } from "./components/danger-confirm";
+export {
+  DangerConfirm,
+  DEFAULT_DANGER_CONFIRM_LABELS,
+  typedMatches,
+  // 0.22.0: the typed-confirmation field on its own (keksdose K7) and the current-password
+  // field kastlan wants for sign-in and re-authentication (kastlan 1).
+  TypedConfirmField,
+  CurrentPasswordInput,
+} from "./components/danger-confirm";
+export type {
+  DangerConfirmLabels,
+  DangerConfirmProps,
+  TypedMatch,
+  DangerConsequence,
+  TypedConfirmFieldProps,
+  TypedConfirmFieldLabels,
+  CurrentPasswordInputProps,
+  CurrentPasswordInputLabels,
+} from "./components/danger-confirm";
 // 0.18: re-authentication before a sensitive action (Kurvenschmiede 4).
 export { ReauthDialog, DEFAULT_REAUTH_DIALOG_LABELS } from "./components/reauth-dialog";
 export type { ReauthDialogProps, ReauthDialogLabels } from "./components/reauth-dialog";
@@ -259,8 +276,9 @@ export * from "./components/data-table-pagination";
 export { FilterPopover } from "./components/data-table-filter-popover";
 // data-table re-exports SortState internally; export the rest explicitly to
 // avoid a duplicate SortState star-export (it comes from data-table-sort).
-export { DataTable } from "./components/data-table";
+export { DataTable, DEFAULT_DATA_TABLE_SORT_LABELS } from "./components/data-table";
 export type {
+  DataTableSortLabels,
   DataTableColumn,
   DataTableCellProps,
   DataTableHeadProps,
@@ -406,3 +424,35 @@ export type {
 // The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
 export { LegalLayout, LegalSection, LegalLinks, DEFAULT_LEGAL_LABELS } from "./components/legal";
 export type { LegalLabels, LegalLink, LegalLinksProps, LegalSectionProps, LegalLayoutProps } from "./components/legal";
+
+// ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
+export * from "./components/checkbox-group";
+export * from "./components/one-time-code-input";
+export * from "./components/language-select";
+export * from "./components/tile-radio";
+export * from "./components/inline-edit-field";
+export * from "./components/sign-chip";
+export * from "./components/country-select";
+export { COUNTRY_CODES, countryName } from "./lib/countries";
+export * from "./components/iban-input";
+export {
+  IBAN_LENGTHS,
+  compactIban,
+  formatIban,
+  ibanCheckDigits,
+  ibanProblem,
+  isValidIban,
+  isQrIban,
+} from "./lib/iban";
+export type { IbanKind, IbanProblem } from "./lib/iban";
+export { formatIsin, isinCheckDigit, isValidIsin } from "./lib/isin";
+export * from "./components/phone-input";
+export {
+  PHONE_DIAL_CODES,
+  PHONE_COUNTRIES,
+  parsePhone,
+  formatNationalPhone,
+  formatPhone,
+  isE164,
+} from "./lib/phone";
+export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
