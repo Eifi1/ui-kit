@@ -66,8 +66,8 @@ export function ServerWake018Demo() {
           {code("wrapFetch(fetch)")}) and {code("<ServerWakeNotice appName=\"…\" />")} next to the router. GETs only by
           default; {code("createServerWake({ shouldWatch: watchReadsAnd(/\\/auth\\/login\\b/) })")} adds the login POST.
           Never while offline, never an upload, never a download ({code("responseType")} {code("blob")},{" "}
-          {code("arraybuffer")} or {code("stream")}; 0.18.1). A visible FloatingActionButton under it — kastlan&apos;s
-          offline pill — lifts it above (0.18.1): show the pill, then simulate a request.
+          {code("arraybuffer")} or {code("stream")}; 0.19.0). A visible FloatingActionButton under it — kastlan&apos;s
+          offline pill — lifts it above (0.19.0): show the pill, then simulate a request.
         </Note>
       </div>
     </Example>

@@ -758,7 +758,7 @@ and changes only how counts and file sizes are written. Codes: `de-CH`, `fr`, `i
 `hu`, `zh`, and `en` (factory only — the constant is `DEFAULT_UI_KIT_LABELS`).
 
 Every catalogue addresses the reader formally: German "Sie", French "vous", Italian "Lei",
-Spanish "usted", Hungarian "Ön" (Italian and Spanish since 0.18.1). An app that says "du",
+Spanish "usted", Hungarian "Ön" (Italian and Spanish since 0.19.0). An app that says "du",
 "tu" or "tú" overrides the few sentences that address the reader in its own provider; the
 kit does not ship a second register.
 
