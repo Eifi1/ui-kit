@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { FileButton, matchesAccept, useFilePicker } from "../file-button";
 import type { FileRejection } from "../file-button";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { WriteLockProvider } from "../write-lock";
 
 const pdf = (name = "lease.pdf", bytes = 10) =>
   new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
@@ -399,5 +400,82 @@ describe("FileButton showFileName (keksdose P8)", () => {
     expect(name).toHaveTextContent(/^2 files selected$/);
     fireEvent.mouseEnter(name.firstElementChild!);
     expect(screen.getByRole("tooltip")).toHaveTextContent("a.pdf, b.pdf");
+  });
+});
+
+/** keksdose K3: a picker that commits (uploads on pick) takes the write lock. */
+describe("FileButton disabledReason / commit (0.22)", () => {
+  const dt = (files: File[]) => ({ dataTransfer: { files, types: ["Files"], dropEffect: "none" } });
+
+  it("stays focusable, says why, opens no picker and takes no drop", () => {
+    const onFiles = vi.fn();
+    const { container } = render(
+      <FileButton droppable disabledReason="Shared with you to read." onFiles={onFiles}>
+        Upload
+      </FileButton>,
+    );
+    const button = screen.getByRole("button", { name: "Upload" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAccessibleDescription("Shared with you to read.");
+    button.focus();
+    expect(button).toHaveFocus();
+    const input = fileInput(container);
+    const click = vi.spyOn(input, "click");
+    fireEvent.click(button);
+    expect(click).not.toHaveBeenCalled();
+    // The drag is still cancelled — an uncancelled drop navigates to the file.
+    expect(fireEvent.dragOver(button, dt([pdf()]))).toBe(false);
+    fireEvent.dragEnter(button, dt([pdf()]));
+    expect(button).not.toHaveAttribute("data-drag-over");
+    fireEvent.drop(button, dt([pdf()]));
+    // …and a pick that reaches the input anyway (a stale dialog) is not taken either.
+    pick(input, pdf());
+    expect(onFiles).not.toHaveBeenCalled();
+  });
+
+  it("shows the reason in the kit Tooltip", async () => {
+    render(
+      <FileButton disabledReason="Locked" onFiles={vi.fn()}>
+        Upload
+      </FileButton>,
+    );
+    fireEvent.focus(screen.getByRole("button", { name: "Upload" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Locked");
+  });
+
+  it("takes the lock's reason under a locked provider with `commit`, and only then", () => {
+    const onFiles = vi.fn();
+    const tree = (locked: boolean, commit = true) => (
+      <WriteLockProvider locked={locked} reason="Read-only demo — saving is disabled.">
+        <FileButton commit={commit} disabledReason="Own reason" droppable onFiles={onFiles}>
+          Upload
+        </FileButton>
+      </WriteLockProvider>
+    );
+    const { rerender } = render(tree(true));
+    const button = () => screen.getByRole("button", { name: "Upload" });
+    expect(button()).toHaveAccessibleDescription("Read-only demo — saving is disabled.");
+    fireEvent.drop(button(), dt([pdf()]));
+    expect(onFiles).not.toHaveBeenCalled();
+    rerender(tree(false));
+    // Unlocked: its own reason is still its own.
+    expect(button()).toHaveAccessibleDescription("Own reason");
+  });
+
+  it("is untouched by a locked provider without `commit`", () => {
+    const onFiles = vi.fn();
+    render(
+      <WriteLockProvider locked reason="Locked">
+        <FileButton droppable onFiles={onFiles}>
+          Upload
+        </FileButton>
+      </WriteLockProvider>,
+    );
+    const button = screen.getByRole("button", { name: "Upload" });
+    expect(button).not.toHaveAttribute("aria-disabled");
+    const file = pdf();
+    fireEvent.drop(button, dt([file]));
+    expect(onFiles).toHaveBeenCalledWith([file]);
   });
 });

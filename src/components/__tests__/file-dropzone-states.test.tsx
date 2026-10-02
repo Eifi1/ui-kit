@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { FileDropzone } from "../file-dropzone";
 import type { FileDropzoneProps } from "../file-dropzone";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { WriteLockProvider } from "../write-lock";
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
@@ -117,5 +118,76 @@ describe("FileDropzone body strings", () => {
     expect(within(group).getByText("Dateien hierher ziehen")).toBeInTheDocument();
     expect(within(group).getByText("Erlaubt: .pdf")).toBeInTheDocument();
     expect(within(group).getByRole("button", { name: "Wählen" })).toBeInTheDocument();
+  });
+});
+
+/** keksdose K3: a zone that uploads on drop takes the write lock, and says so. */
+describe("FileDropzone disabledReason / commit (0.22)", () => {
+  it("takes no drop, click or pick, and says why on the zone and on Browse", () => {
+    const onFileSelected = vi.fn();
+    const { container } = zone({ disabledReason: "Shared with you to read.", onFileSelected });
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const click = vi.spyOn(input, "click");
+    expect(root()).toHaveAttribute("aria-disabled", "true");
+    expect(root()).toHaveAccessibleDescription("Shared with you to read.");
+    // The reason takes the hint's place in the body.
+    expect(within(root()).getByText("Shared with you to read.", { selector: "[data-slot='file-dropzone-reason']" })).toBeVisible();
+    const browse = screen.getByRole("button", { name: "Browse" });
+    expect(browse).toHaveAttribute("aria-disabled", "true");
+    expect(browse).not.toBeDisabled();
+    expect(browse).toHaveAccessibleDescription("Shared with you to read.");
+    fireEvent.click(browse);
+    fireEvent.click(root());
+    expect(click).not.toHaveBeenCalled();
+    expect(fireEvent.dragOver(root(), files(pdf()))).toBe(false);
+    fireEvent.drop(root(), files(pdf()));
+    expect(root()).not.toHaveAttribute("data-drag-over");
+    expect(onFileSelected).not.toHaveBeenCalled();
+  });
+
+  it("keeps the chosen file readable, and its remove button says why instead of removing", () => {
+    const onClear = vi.fn();
+    zone({ disabledReason: "Locked", file: pdf("kept.pdf"), onClear });
+    expect(within(root()).getByText("kept.pdf")).toBeInTheDocument();
+    const remove = screen.getByRole("button", { name: "Remove “kept.pdf”" });
+    expect(remove).toHaveAttribute("aria-disabled", "true");
+    expect(remove).toHaveAccessibleDescription("Locked");
+    fireEvent.click(remove);
+    expect(onClear).not.toHaveBeenCalled();
+  });
+
+  it("takes the lock's reason under a locked provider with `commit`", () => {
+    const onFileSelected = vi.fn();
+    render(
+      <WriteLockProvider locked reason="Read-only demo — saving is disabled.">
+        <FileDropzone accept=".pdf" onReject={() => {}} dropLabel="Invoice" commit onFileSelected={onFileSelected} />
+      </WriteLockProvider>,
+    );
+    expect(root()).toHaveAccessibleDescription("Read-only demo — saving is disabled.");
+    fireEvent.drop(root(), files(pdf()));
+    expect(onFileSelected).not.toHaveBeenCalled();
+  });
+
+  it("is untouched by a locked provider without `commit`", () => {
+    const onFileSelected = vi.fn();
+    render(
+      <WriteLockProvider locked reason="Locked">
+        <FileDropzone accept=".pdf" onReject={() => {}} dropLabel="Invoice" onFileSelected={onFileSelected} />
+      </WriteLockProvider>,
+    );
+    expect(root()).not.toHaveAttribute("aria-disabled");
+    const file = pdf();
+    fireEvent.drop(root(), files(file));
+    expect(onFileSelected).toHaveBeenCalledWith(file);
+  });
+
+  it("hands a custom body the lock and its reason", () => {
+    const renderBody = vi.fn(({ locked, disabledReason }: { locked: boolean; disabledReason: unknown }) => (
+      <p>{locked ? String(disabledReason) : "open"}</p>
+    ));
+    zone({ renderBody, disabledReason: "Closed period" });
+    expect(within(root()).getByText("Closed period", { selector: "p" })).toBeInTheDocument();
+    // Described by its own copy, whatever the body shows.
+    expect(root()).toHaveAccessibleDescription("Closed period");
   });
 });
