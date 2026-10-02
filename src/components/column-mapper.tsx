@@ -12,14 +12,25 @@ import {
   readTextFile,
   roleOfColumn,
 } from "../lib/column-mapping";
-import type { ColumnMapperResult, ColumnMapping, ColumnRole } from "../lib/column-mapping";
+import type {
+  ColumnMapperResult,
+  ColumnMapping,
+  ColumnRole,
+} from "../lib/column-mapping";
 import { parseTextTable } from "../lib/table-text";
 import type { TableSeparator, TextTable } from "../lib/table-text";
 import { AlertBanner } from "./alert-banner";
 import { Checkbox } from "./checkbox";
 import { Disclosure } from "./disclosure";
 import { FileButton, useFilePicker } from "./file-button";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "./table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "./table";
 import { Select, Textarea } from "./ui";
 
 /**
@@ -101,7 +112,8 @@ export interface ColumnMapperLabels {
 
 export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   paste: "Paste a table",
-  pasteHint: "Copy the rows out of a spreadsheet and paste them here, or drop a CSV or text file.",
+  pasteHint:
+    "Copy the rows out of a spreadsheet and paste them here, or drop a CSV or text file.",
   chooseFile: "Choose a file",
   readError: (name) => `“${name}” could not be read`,
   headerRow: "The first line names the columns",
@@ -113,17 +125,23 @@ export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   separatorSpace: "separated by spaces",
   decimalComma: "decimal comma (1,5)",
   decimalPoint: "decimal point (1.5)",
-  unreadCount: (count) => (count === 1 ? "1 line could not be read" : `${count} lines could not be read`),
+  unreadCount: (count) =>
+    count === 1
+      ? "1 line could not be read"
+      : `${count} lines could not be read`,
   unreadLine: (line) => `Line ${line} could not be read`,
   unreadMore: (count) => `…and ${count} more`,
   noRows: "No line of this text reads as a row of the table.",
   table: "Columns and their roles",
   columnN: (n) => `Column ${n}`,
-  roleOf: (column) => `What is the column “${column}”?`,
+  roleOf: (column) => `What does column “${column}” hold?`,
   ignore: "Ignore",
   requiredRole: (role) => `${role} (required)`,
-  previewOf: (shown, total) => `The first ${shown} of ${total} rows`,
-  oneOf: (roles) => `one of ${roles}`,
+  previewOf: (shown, total) =>
+    shown === 1
+      ? `The first of ${total} rows`
+      : `The first ${shown} of ${total} rows`,
+  oneOf: (roles) => `either ${roles}`,
   missing: (roles) => `Still needed: ${roles}.`,
 };
 
@@ -144,7 +162,11 @@ const UNREAD_LISTED = 100;
  *  .tsv, … files" rather than a list of MIME types; the parse is the real check. */
 const DEFAULT_ACCEPT = ".csv,.tsv,.txt,.dat,.asc";
 
-function formatList(items: string[], type: "conjunction" | "disjunction", locale: string | undefined): string {
+function formatList(
+  items: string[],
+  type: "conjunction" | "disjunction",
+  locale: string | undefined,
+): string {
   try {
     return new Intl.ListFormat(locale, { type, style: "long" }).format(items);
   } catch {
@@ -154,7 +176,10 @@ function formatList(items: string[], type: "conjunction" | "disjunction", locale
 
 // ── ColumnRoleTable ───────────────────────────────────────────────────────────
 
-export interface ColumnRoleTableProps<R extends string, M extends ColumnMapping<R> = ColumnMapping<R>> {
+export interface ColumnRoleTableProps<
+  R extends string,
+  M extends ColumnMapping<R> = ColumnMapping<R>,
+> {
   /** The columns' names — the file's header line — or `null` for a table without one
    *  (each column is then "Column 1", "Column 2", …). */
   header: readonly string[] | null;
@@ -194,13 +219,16 @@ export interface ColumnRoleTableProps<R extends string, M extends ColumnMapping<
  *
  * Picking a role another column holds MOVES it ({@link assignColumnRole}). Required
  * roles say so in the list, and what the table still needs is named under it — a
- * required group as "one of Amount, Debit or Credit".
+ * required group as "either Amount, Debit or Credit".
  *
  * The table scrolls sideways inside its own box (the kit {@link Table}'s wrapper, a
  * named, keyboard-reachable region while it overflows), so a wide export never widens
  * the page at 390px.
  */
-export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = ColumnMapping<R>>({
+export function ColumnRoleTable<
+  R extends string,
+  M extends ColumnMapping<R> = ColumnMapping<R>,
+>({
   header,
   rows,
   width: widthProp,
@@ -213,21 +241,36 @@ export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = C
   labels: labelsProp,
   className,
 }: ColumnRoleTableProps<R, M>) {
-  const labels: ColumnMapperLabels = useKitLabels("columnMapper", DEFAULT_COLUMN_MAPPER_LABELS, labelsProp);
+  const labels: ColumnMapperLabels = useKitLabels(
+    "columnMapper",
+    DEFAULT_COLUMN_MAPPER_LABELS,
+    labelsProp,
+  );
   const locale = useKitLocale();
   const shown = rows.slice(0, previewRows);
   const width =
-    widthProp ?? shown.reduce((widest, row) => Math.max(widest, row.length), header?.length ?? 0);
+    widthProp ??
+    shown.reduce(
+      (widest, row) => Math.max(widest, row.length),
+      header?.length ?? 0,
+    );
   const columns = Array.from({ length: width }, (_, index) => index);
   const total = totalRows ?? rows.length;
-  const nameOf = (column: number) => header?.[column] || labels.columnN(column + 1);
-  const labelOf = (value: R) => roles.find((role) => role.value === value)?.label ?? value;
+  const nameOf = (column: number) =>
+    header?.[column] || labels.columnN(column + 1);
+  const labelOf = (value: R) =>
+    roles.find((role) => role.value === value)?.label ?? value;
   const gaps = missingRoles(roles, mapping, width).map((gap) =>
-    gap.length === 1 ? labelOf(gap[0]) : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
+    gap.length === 1
+      ? labelOf(gap[0])
+      : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
   );
 
   return (
-    <div className={cn("min-w-0 space-y-1.5", className)} data-slot="column-role-table">
+    <div
+      className={cn("min-w-0 space-y-1.5", className)}
+      data-slot="column-role-table"
+    >
       <Table density="compact" framed aria-label={labels.table}>
         <TableHead>
           <TableRow>
@@ -235,7 +278,11 @@ export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = C
               const role = roleOfColumn(roles, mapping, column);
               const name = nameOf(column);
               return (
-                <TableHeaderCell key={column} scope="col" className="min-w-36 py-2 align-top">
+                <TableHeaderCell
+                  key={column}
+                  scope="col"
+                  className="min-w-36 py-2 align-top"
+                >
                   <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
                     {name}
                   </span>
@@ -247,14 +294,23 @@ export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = C
                     disabled={disabled}
                     onChange={(event) =>
                       onMappingChange(
-                        assignColumnRole(roles, mapping, column, event.target.value === "" ? null : (event.target.value as R)),
+                        assignColumnRole(
+                          roles,
+                          mapping,
+                          column,
+                          event.target.value === ""
+                            ? null
+                            : (event.target.value as R),
+                        ),
                       )
                     }
                   >
                     <option value="">{labels.ignore}</option>
                     {roles.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.required === true ? labels.requiredRole(option.label) : option.label}
+                        {option.required === true
+                          ? labels.requiredRole(option.label)
+                          : option.label}
                       </option>
                     ))}
                   </Select>
@@ -269,15 +325,20 @@ export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = C
               {columns.map((column) => (
                 <TableCell
                   key={column}
-                  data-ignored={roleOfColumn(roles, mapping, column) === null || undefined}
+                  data-ignored={
+                    roleOfColumn(roles, mapping, column) === null || undefined
+                  }
                   className={cn(
                     "font-mono whitespace-nowrap",
                     // Dimmed, not hidden: its values are what tell you whether ignoring
                     // it was right.
-                    roleOfColumn(roles, mapping, column) === null && "text-[var(--text-muted)]",
+                    roleOfColumn(roles, mapping, column) === null &&
+                      "text-[var(--text-muted)]",
                   )}
                 >
-                  <span className="block max-w-56 truncate">{row[column] ?? ""}</span>
+                  <span className="block max-w-56 truncate">
+                    {row[column] ?? ""}
+                  </span>
                 </TableCell>
               ))}
             </TableRow>
@@ -285,7 +346,9 @@ export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = C
         </TableBody>
       </Table>
       {total > shown.length && (
-        <p className="text-xs text-[var(--text-muted)]">{labels.previewOf(shown.length, total)}</p>
+        <p className="text-xs text-[var(--text-muted)]">
+          {labels.previewOf(shown.length, total)}
+        </p>
       )}
       {gaps.length > 0 && (
         <AlertBanner tone="warning" variant="inline" size="sm" block>
@@ -342,7 +405,8 @@ interface MapperState<R extends string> {
   mapping: ColumnMapping<R>;
 }
 
-const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes("Files");
+const hasFiles = (event: DragEvent) =>
+  Array.from(event.dataTransfer?.types ?? []).includes("Files");
 
 /**
  * Paste, drop or choose a table, see what it was read as, and say which column is
@@ -378,12 +442,21 @@ export function ColumnMapper<R extends string>({
   labels: labelsProp,
   className,
 }: ColumnMapperProps<R>) {
-  const labels: ColumnMapperLabels = useKitLabels("columnMapper", DEFAULT_COLUMN_MAPPER_LABELS, labelsProp);
+  const labels: ColumnMapperLabels = useKitLabels(
+    "columnMapper",
+    DEFAULT_COLUMN_MAPPER_LABELS,
+    labelsProp,
+  );
   const firstMapping = (table: TextTable) =>
     guess ? guess(table) : guessMapping(roles, table.header, table.width);
   const [state, setState] = useState<MapperState<R>>(() => {
     const table = parseTextTable(defaultText);
-    return { text: defaultText, header: null, table, mapping: firstMapping(table) };
+    return {
+      text: defaultText,
+      header: null,
+      table,
+      mapping: firstMapping(table),
+    };
   });
   const [reading, setReading] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
@@ -396,15 +469,25 @@ export function ColumnMapper<R extends string>({
 
   const commit = (next: MapperState<R>) => {
     setState(next);
-    onChange(next.table.width === 0 ? null : readMappedTable(next.table, roles, next.mapping));
+    onChange(
+      next.table.width === 0
+        ? null
+        : readMappedTable(next.table, roles, next.mapping),
+    );
   };
 
   /** New text. `fresh` (a file): the reader's header answer and the mapping start over. */
   const take = (text: string, fresh: boolean) => {
     const header = fresh ? null : state.header;
     const table = parseTextTable(text, header === null ? {} : { header });
-    const keep = !fresh && table.width === state.table.width && state.table.width > 0;
-    commit({ text, header, table, mapping: keep ? state.mapping : firstMapping(table) });
+    const keep =
+      !fresh && table.width === state.table.width && state.table.width > 0;
+    commit({
+      text,
+      header,
+      table,
+      mapping: keep ? state.mapping : firstMapping(table),
+    });
   };
 
   const load = (file: File) => {
@@ -419,10 +502,17 @@ export function ColumnMapper<R extends string>({
       .finally(() => setReading(false));
   };
 
-  const refuse = (rejections: { message: string }[]) => setRefusal(rejections[0]?.message ?? null);
+  const refuse = (rejections: { message: string }[]) =>
+    setRefusal(rejections[0]?.message ?? null);
 
   // A file dropped on the paste box. The same screening as the button's.
-  const drop = useFilePicker({ accept, maxSize, disabled, onFiles: ([file]) => load(file), onReject: refuse });
+  const drop = useFilePicker({
+    accept,
+    maxSize,
+    disabled,
+    onFiles: ([file]) => load(file),
+    onReject: refuse,
+  });
 
   const seeded = useEffectEvent(() => {
     if (state.table.width > 0) onChange(result);
@@ -436,7 +526,10 @@ export function ColumnMapper<R extends string>({
   const unread = result.unread;
 
   return (
-    <div className={cn("min-w-0 space-y-3", className)} data-slot="column-mapper">
+    <div
+      className={cn("min-w-0 space-y-3", className)}
+      data-slot="column-mapper"
+    >
       <Textarea
         label={label ?? labels.paste}
         hint={hint ?? labels.pasteHint}
@@ -447,7 +540,10 @@ export function ColumnMapper<R extends string>({
         autoCorrect="off"
         value={state.text}
         disabled={disabled}
-        className={cn("font-mono text-xs", dragOver && "rounded-md ring-2 ring-[var(--brand)]")}
+        className={cn(
+          "font-mono text-xs",
+          dragOver && "rounded-md ring-2 ring-[var(--brand)]",
+        )}
         data-drag-over={dragOver || undefined}
         onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
           setRefusal(null);
@@ -512,7 +608,10 @@ export function ColumnMapper<R extends string>({
 
       {table.width > 0 && (
         <>
-          <p className="text-xs text-[var(--text-secondary)]" data-slot="column-mapper-summary">
+          <p
+            className="text-xs text-[var(--text-secondary)]"
+            data-slot="column-mapper-summary"
+          >
             {[
               labels.summary(table.width, result.rows.length),
               separator,
@@ -536,16 +635,26 @@ export function ColumnMapper<R extends string>({
             labels={labelsProp}
           />
           {unread.length > 0 && (
-            <Disclosure variant="bare" title={labels.unreadCount(unread.length)} data-slot="column-mapper-unread">
+            <Disclosure
+              variant="bare"
+              title={labels.unreadCount(unread.length)}
+              data-slot="column-mapper-unread"
+            >
               <ul className="space-y-1 text-xs">
                 {unread.slice(0, UNREAD_LISTED).map((line) => (
                   <li key={line.line} className="min-w-0">
-                    <span className="block text-[var(--text-secondary)]">{labels.unreadLine(line.line)}</span>
-                    <code className="block truncate font-mono text-[var(--text-muted)]">{line.text}</code>
+                    <span className="block text-[var(--text-secondary)]">
+                      {labels.unreadLine(line.line)}
+                    </span>
+                    <code className="block truncate font-mono text-[var(--text-muted)]">
+                      {line.text}
+                    </code>
                   </li>
                 ))}
                 {unread.length > UNREAD_LISTED && (
-                  <li className="text-[var(--text-muted)]">{labels.unreadMore(unread.length - UNREAD_LISTED)}</li>
+                  <li className="text-[var(--text-muted)]">
+                    {labels.unreadMore(unread.length - UNREAD_LISTED)}
+                  </li>
                 )}
               </ul>
             </Disclosure>

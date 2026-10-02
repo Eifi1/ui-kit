@@ -71,11 +71,11 @@ describe("ColumnMapper", () => {
     render(<ColumnMapper roles={CURVE} onChange={onChange} />);
     paste(RECORDING);
     // The first column takes "Actual": it leaves the third, which falls back to Ignore.
-    fireEvent.change(screen.getByRole("combobox", { name: "What is the column “t”?" }), {
+    fireEvent.change(screen.getByRole("combobox", { name: "What does column “t” hold?" }), {
       target: { value: "actual" },
     });
     expect(lastResult<CurveRole>(onChange)!.mapping).toEqual({ time: null, setpoint: 1, actual: 0 });
-    expect(screen.getByRole("combobox", { name: "What is the column “ist”?" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "What does column “ist” hold?" })).toHaveValue("");
     expect(screen.getByText("Still needed: Time.")).toBeInTheDocument();
     expect(lastResult(onChange)!.complete).toBe(false);
   });
@@ -83,7 +83,7 @@ describe("ColumnMapper", () => {
   it("flags required roles in the role list", () => {
     render(<ColumnMapper roles={CURVE} onChange={vi.fn()} />);
     paste(RECORDING);
-    const select = screen.getByRole("combobox", { name: "What is the column “t”?" });
+    const select = screen.getByRole("combobox", { name: "What does column “t” hold?" });
     expect(within(select).getByRole("option", { name: "Time (required)" })).toBeInTheDocument();
     expect(within(select).getByRole("option", { name: "Ignore" })).toBeInTheDocument();
   });
@@ -92,7 +92,7 @@ describe("ColumnMapper", () => {
     const onChange = vi.fn();
     render(<ColumnMapper roles={CURVE} onChange={onChange} />);
     paste("0;1;2;3\n1;2;3;4");
-    fireEvent.change(screen.getByRole("combobox", { name: "What is the column “Column 4”?" }), {
+    fireEvent.change(screen.getByRole("combobox", { name: "What does column “Column 4” hold?" }), {
       target: { value: "time" },
     });
     expect(lastResult<CurveRole>(onChange)!.mapping.time).toBe(3);
@@ -245,8 +245,8 @@ describe("ColumnRoleTable", () => {
   it("names a required group as one of its roles until one is placed", () => {
     const onMapping = vi.fn();
     render(<Bank onMapping={onMapping} />);
-    expect(screen.getByText("Still needed: one of Amount, Debit, or Credit.")).toBeInTheDocument();
-    fireEvent.change(screen.getByRole("combobox", { name: "What is the column “Soll”?" }), {
+    expect(screen.getByText("Still needed: either Amount, Debit, or Credit.")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("combobox", { name: "What does column “Soll” hold?" }), {
       target: { value: "debit" },
     });
     expect(onMapping).toHaveBeenLastCalledWith(expect.objectContaining({ debit: 2, date: 0 }));
@@ -264,7 +264,7 @@ describe("ColumnRoleTable", () => {
     render(
       <ColumnRoleTable header={null} rows={[["1", "2"]]} roles={CURVE} mapping={{}} onMappingChange={vi.fn()} />,
     );
-    expect(screen.getByRole("combobox", { name: "What is the column “Column 2”?" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "What does column “Column 2” hold?" })).toBeInTheDocument();
     expect(screen.getByText("Still needed: Time, Setpoint, and Actual.")).toBeInTheDocument();
   });
 
