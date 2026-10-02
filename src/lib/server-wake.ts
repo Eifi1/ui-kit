@@ -25,6 +25,13 @@
  * simply be false. With the default that holds by itself (an upload is a POST);
  * an app widening `shouldWatch` keeps its upload routes out of it.
  *
+ * Nor a DOWNLOAD, for the same reason (kastlan 0.18): axios answers only once the
+ * whole body is in, so a generated PDF or a large photo — a GET — ran past both
+ * thresholds on a warm server, and held the count for every read beside it. The
+ * default filter skips a request whose `responseType` is `"blob"`, `"arraybuffer"` or
+ * `"stream"`; a custom filter gets the request as its third argument to do the same.
+ * (`wrapFetch` ends the wait at the headers, so a download through it is harmless.)
+ *
  * It never arms while the browser is offline, whatever `shouldWatch` says: that state
  * has its own, truthful indicator, and a request that never left the device is not
  * evidence of anything about the server.
@@ -35,8 +42,10 @@
 export type ServerWakeStage = "idle" | "slow" | "waking";
 
 /** Decides which requests count. `method` arrives lower-cased (`"get"` when the
- *  request named none — axios's and fetch's default); `url` as the client had it. */
-export type ServerWakeFilter = (method: string, url: string) => boolean;
+ *  request named none — axios's and fetch's default); `url` as the client had it;
+ *  `request` is what the adapter saw — for axios the request config itself, so
+ *  `responseType` or the app's own fields can decide. */
+export type ServerWakeFilter = (method: string, url: string, request: ServerWakeRequest) => boolean;
 
 export interface ServerWakeOptions {
   /** Past this, a warm round trip is out of the question (a cold database query on a
@@ -44,15 +53,18 @@ export interface ServerWakeOptions {
   slowMs?: number;
   /** Past this, the container was almost certainly scaled to zero. Default 7000 ms. */
   wakingMs?: number;
-  /** Which requests count. Default {@link watchReadsAnd}`()` — GETs only. The offline
-   *  guard runs before it and cannot be overridden. */
+  /** Which requests count. Default {@link watchReadsAnd}`()` — GETs only, downloads
+   *  excluded. The offline guard runs before it and cannot be overridden. */
   shouldWatch?: ServerWakeFilter;
 }
 
-/** What a request is, for {@link ServerWakeWatcher.track}. */
+/** What a request is, for {@link ServerWakeWatcher.track} and a {@link ServerWakeFilter}. */
 export interface ServerWakeRequest {
   method?: string;
   url?: string;
+  /** axios's `responseType`. `"blob"`, `"arraybuffer"` and `"stream"` mark a download,
+   *  which the default filter does not count. */
+  responseType?: string;
 }
 
 export interface ServerWakeWatcher {
@@ -61,8 +73,9 @@ export interface ServerWakeWatcher {
    * Returns whether it was counted — the caller MUST call {@link end} exactly once
    * for every `true`, or the counter never returns to zero and the notice sticks.
    * (The axios adapter stashes it on the request config for that reason.)
+   * `request` reaches the filter as its third argument; default `{ method, url }`.
    */
-  start(method?: string, url?: string): boolean;
+  start(method?: string, url?: string, request?: ServerWakeRequest): boolean;
   /** A counted request settled — either way: an error still proves the server
    *  answered or gave up. When the last one does, the notice goes away. Never takes
    *  the counter below zero. */
@@ -79,13 +92,19 @@ export interface ServerWakeWatcher {
   getInFlight(): number;
 }
 
+/** Response types that make a request a download — see the module comment. */
+const DOWNLOAD_RESPONSE_TYPES = new Set(["blob", "arraybuffer", "stream"]);
+
 /**
  * The usual filter: every GET, plus any other request whose URL matches `writes` —
- * keksdose's `/\/auth\/(login|register|demo-session)\b/`. Keep upload routes out of
+ * keksdose's `/\/auth\/(login|register|demo-session)\b/` — but never a download
+ * (`responseType` `"blob"`, `"arraybuffer"` or `"stream"`). Keep upload routes out of
  * the pattern (see the module comment).
  */
 export function watchReadsAnd(writes?: RegExp): ServerWakeFilter {
-  return (method, url) => method === "get" || (writes !== undefined && writes.test(url));
+  return (method, url, request) =>
+    !DOWNLOAD_RESPONSE_TYPES.has(request?.responseType ?? "") &&
+    (method === "get" || (writes !== undefined && writes.test(url)));
 }
 
 function isOffline(): boolean {
@@ -116,9 +135,9 @@ export function createServerWake({
     wakingTimer = null;
   };
 
-  const start = (method?: string, url?: string): boolean => {
+  const start = (method?: string, url?: string, request: ServerWakeRequest = { method, url }): boolean => {
     if (isOffline()) return false;
-    if (!shouldWatch((method ?? "get").toLowerCase(), url ?? "")) return false;
+    if (!shouldWatch((method ?? "get").toLowerCase(), url ?? "", request)) return false;
     inFlight += 1;
     // The clock runs from the FIRST outstanding request: a page firing a second read
     // at 1.9 s is still waiting on the same sleeping server, not starting afresh.
@@ -141,7 +160,7 @@ export function createServerWake({
     start,
     end,
     track<T>(work: PromiseLike<T> | (() => PromiseLike<T>), request: ServerWakeRequest = {}) {
-      const counted = start(request.method, request.url);
+      const counted = start(request.method, request.url, request);
       let promise: Promise<T>;
       try {
         promise = Promise.resolve(typeof work === "function" ? work() : work);
@@ -177,10 +196,12 @@ export const serverWake: ServerWakeWatcher = createServerWake();
 
 // ── axios ─────────────────────────────────────────────────────────────────────
 
-/** The two config fields the watchdog reads — what axios's request config has. */
+/** The config fields the watchdog reads — what axios's request config has. The whole
+ *  config reaches the filter, so an app's filter can read the rest of it. */
 export interface ServerWakeAxiosConfig {
   method?: string;
   url?: string;
+  responseType?: string;
 }
 
 /** The slice of an interceptor manager the adapter uses. A method (not a function
@@ -229,7 +250,7 @@ export function attachServerWake<C extends ServerWakeAxiosConfig, R extends { co
   };
   const request = instance.interceptors.request.use(
     (config) => {
-      (config as C & Marked)[COUNTED] = watcher.start(config.method, config.url);
+      (config as C & Marked)[COUNTED] = watcher.start(config.method, config.url, config);
       return config;
     },
     (error) => Promise.reject(error),

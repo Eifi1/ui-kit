@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { CloudOff } from "lucide-react";
 import { Button, Input } from "../../../src/components/ui";
 import { Field } from "../../../src/components/field";
+import { FloatingActionButton } from "../../../src/components/floating-panel";
 import { ServerWakeNotice, useServerWakeStage } from "../../../src/components/server-wake";
 import { createServerWake } from "../../../src/lib/server-wake";
 import { Example, Note } from "../lib/section";
@@ -21,6 +23,7 @@ const simulate = (ms: number) =>
 export function ServerWake018Demo() {
   const stage = useServerWakeStage(demo);
   const [appName, setAppName] = useState("Keksdose");
+  const [pill, setPill] = useState(false);
   return (
     <Example
       label="ServerWakeNotice — cold start"
@@ -37,6 +40,9 @@ export function ServerWake018Demo() {
           <Button variant="ghost" onClick={() => demo.reset()}>
             Reset
           </Button>
+          <Button variant="ghost" aria-pressed={pill} onClick={() => setPill((on) => !on)}>
+            {pill ? "Hide the offline pill" : "Show an offline pill"}
+          </Button>
           <Field label="App name" className="w-40">
             <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
           </Field>
@@ -45,12 +51,23 @@ export function ServerWake018Demo() {
           Stage: <span className="font-mono">{stage}</span>
         </p>
         <ServerWakeNotice watcher={demo} appName={appName || undefined} />
+        {pill && (
+          <FloatingActionButton
+            label="Offline — 2 photos queued"
+            icon={<CloudOff />}
+            corner="bottom-start"
+            extended
+            variant="surface"
+          />
+        )}
         <Note>
           The notice is fixed in the start corner, above AppShell&apos;s bottom nav ({code("--app-nav-h")}, or{" "}
           {code("navOffset")}). Wire it once: {code("attachServerWake(api)")} on the axios instance (or{" "}
           {code("wrapFetch(fetch)")}) and {code("<ServerWakeNotice appName=\"…\" />")} next to the router. GETs only by
           default; {code("createServerWake({ shouldWatch: watchReadsAnd(/\\/auth\\/login\\b/) })")} adds the login POST.
-          Never while offline, never an upload.
+          Never while offline, never an upload, never a download ({code("responseType")} {code("blob")},{" "}
+          {code("arraybuffer")} or {code("stream")}; 0.19.0). A visible FloatingActionButton under it — kastlan&apos;s
+          offline pill — lifts it above (0.19.0): show the pill, then simulate a request.
         </Note>
       </div>
     </Example>

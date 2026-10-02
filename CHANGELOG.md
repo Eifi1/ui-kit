@@ -20,6 +20,22 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.19.0](https://github.com/Eifi1/ui-kit/compare/v0.18.0...v0.19.0) (2026-10-02)
+
+### Added
+
+* **i18n:** kitLabelStrings — the kit's words as rows for an app's translation review (keksdose) ([24fb9d6](https://github.com/Eifi1/ui-kit/commit/24fb9d645fa23c459cace17e02457896486c39c7))
+* **i18n:** language registry — resolveLanguage, loadUiKitLabels, formatLocaleOf ([a8caaae](https://github.com/Eifi1/ui-kit/commit/a8caaae2d6ca745147947227e278fabb85da0ce1))
+* LegalLayout, LegalSection, LegalLinks — the legal pages' shell for every app (H10) ([2e40e9e](https://github.com/Eifi1/ui-kit/commit/2e40e9ef8e79dbe4a508221a7b3b63f22ce10c89))
+* translation review parts — one contract for kastlan's and keksdose's review pages ([1554dec](https://github.com/Eifi1/ui-kit/commit/1554decaaf7da152ca54593d74d124f8c97a3870))
+
+### Fixed
+
+* **i18n:** Spanish and Italian address the reader formally — usted, Lei (Kurvenschmiede) ([9de7d1a](https://github.com/Eifi1/ui-kit/commit/9de7d1aa945061493bc73ec4b891e4092649e299))
+* **server-wake:** a download never arms the watchdog; the filter gets the request (kastlan) ([22f1945](https://github.com/Eifi1/ui-kit/commit/22f1945b2dcb93f76476ac19f37e12a1f21d5ddc))
+* **server-wake:** the notice rises above a FloatingActionButton under it (kastlan) ([b289c77](https://github.com/Eifi1/ui-kit/commit/b289c770a6a708710f3bd7c4126e14de3eeb0e49))
+* **translation-review:** the selected locale tab's count stays readable on the brand fill ([79554c2](https://github.com/Eifi1/ui-kit/commit/79554c2a9ac716e87a3a7339cf8c21a391583a07))
+
 ## [0.18.0](https://github.com/Eifi1/ui-kit/compare/v0.17.0...v0.18.0) (2026-10-02)
 
 ### ⚠ BREAKING CHANGES

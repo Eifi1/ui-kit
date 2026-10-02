@@ -125,6 +125,7 @@ const Reauth018Demo = lazySection(() => import("./sections/confirm-018-demo"), "
 const ClipboardTiming = lazySection(() => import("./sections/clipboard-timing"), "ClipboardTiming");
 const SeriesChartMarks = lazySection(() => import("./sections/series-chart-marks"), "SeriesChartMarks");
 const Localisation = lazySection(() => import("./sections/localisation"), "Localisation");
+const TranslationReviewDemo = lazySection(() => import("./sections/translation-review-demo"), "TranslationReviewDemo");
 const ListsMenus = lazySection(() => import("./sections/lists-menus"), "ListsMenus");
 const PageStructure = lazySection(() => import("./sections/page-structure"), "PageStructure");
 const ButtonLabelsTones = lazySection(() => import("./sections/button-labels-demo"), "ButtonLabelsTones");
@@ -337,8 +338,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh"],
-        Body: Localisation,
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel"],
+        Body: () => (
+          <>
+            <Localisation />
+            <TranslationReviewDemo />
+          </>
+        ),
       },
     ],
   },

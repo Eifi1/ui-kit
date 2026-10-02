@@ -121,3 +121,8 @@ only while a message showed. None of the three apps has such a field.
   interceptor:
   `export const serverWake = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|login\/2fa|register)\b/) }); attachServerWake(apiClient, serverWake);`
   In `providers.tsx`, next to `<Toaster />`: `<ServerWakeNotice watcher={serverWake} appName="Kastlan" />`.
+
+
+## Afterwards
+
+The fixes once queued as 0.18.1 shipped in 0.19.0 — see `docs/adopt-0.19.md`.

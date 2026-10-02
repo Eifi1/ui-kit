@@ -124,6 +124,25 @@ describe("createServerWake", () => {
     expect(w.start("post", "/statements/upload")).toBe(false);
   });
 
+  it("never counts a download by default — a warm server streaming a big file is not waking (kastlan 0.18)", () => {
+    const w = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/login\b/) });
+    for (const responseType of ["blob", "arraybuffer", "stream"]) {
+      expect(w.start("get", "/invoices/7/pdf", { responseType })).toBe(false);
+      expect(w.start("post", "/auth/login", { responseType })).toBe(false);
+    }
+    expect(w.start("get", "/invoices/7", { responseType: "json" })).toBe(true);
+    expect(w.getInFlight()).toBe(1);
+  });
+
+  it("hands the request to a custom filter as its third argument", () => {
+    const shouldWatch = vi.fn((_method: string, _url: string, request: { responseType?: string }) => request.responseType === "text");
+    const w = createServerWake({ shouldWatch });
+    expect(w.start("get", "/a", { responseType: "text" })).toBe(true);
+    // Without a request, the filter still gets the method and URL in one.
+    expect(w.start("GET", "/b")).toBe(false);
+    expect(shouldWatch).toHaveBeenLastCalledWith("get", "/b", { method: "GET", url: "/b" });
+  });
+
   it("notifies subscribers on stage changes only, and unsubscribes", () => {
     const w = createServerWake();
     const listener = vi.fn();
@@ -245,6 +264,32 @@ describe("attachServerWake (axios)", () => {
     let answer!: () => void;
     const sent = api.send({ method: "get", url: "/budgets" }, "ok", new Promise<void>((r) => (answer = r)));
     await vi.waitFor(() => expect(w.getInFlight()).toBe(1));
+    answer();
+    await sent;
+    expect(w.getInFlight()).toBe(0);
+  });
+
+  it("leaves a download alone, and passes the whole config to the filter", async () => {
+    const seen: unknown[] = [];
+    const w = createServerWake({
+      shouldWatch: (method, url, request) => {
+        seen.push(request);
+        return watchReadsAnd()(method, url, request);
+      },
+    });
+    const api = fakeAxios();
+    attachServerWake(api, w);
+    let answer!: () => void;
+    const sent = api.send(
+      { method: "get", url: "/documents/3/download", responseType: "blob", tenant: "a" },
+      "ok",
+      new Promise<void>((r) => (answer = r)),
+    );
+    await vi.waitFor(() => expect(seen).toHaveLength(1));
+    expect(seen[0]).toMatchObject({ responseType: "blob", tenant: "a" });
+    vi.advanceTimersByTime(7000);
+    expect(w.getStage()).toBe("idle");
+    expect(w.getInFlight()).toBe(0);
     answer();
     await sent;
     expect(w.getInFlight()).toBe(0);

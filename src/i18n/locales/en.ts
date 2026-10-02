@@ -112,5 +112,13 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       counter: (index, count) => `${n(index)} / ${n(count)}`,
       position: (index, count) => `Image ${n(index)} of ${n(count)}`,
     },
+    translationReview: {
+      ...d.translationReview,
+      filterCount: (label, count) => `${label} · ${n(count)}`,
+      placeholdersOnly: (count) => `Only placeholder problems (${n(count)})`,
+      progress: (approved, total) => `${n(approved)} of ${n(total)} approved`,
+      localeProgress: (approved, total) => `${n(approved)}/${n(total)}`,
+      exportCorrections: (count) => `Export corrections (${n(count)})`,
+    },
   };
 }

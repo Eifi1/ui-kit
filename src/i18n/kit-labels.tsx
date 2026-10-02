@@ -47,10 +47,12 @@ import type { AuthedImageLabels } from "../components/authed-image";
 import type { ImageGridLabels } from "../components/image-grid";
 import type { LightboxLabels } from "../components/lightbox";
 import type { WriteLockLabels } from "../components/write-lock";
+import type { LegalLabels } from "../components/legal";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
 import type { ServerWakeLabels } from "../components/server-wake";
+import type { TranslationReviewLabels } from "../components/translation-review-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -287,6 +289,11 @@ export interface UiKitLabels {
   reauthDialog: ReauthDialogLabels;
   /** 0.18.0: `ServerWakeNotice` — keksdose's cold-start notice, for every app. */
   serverWake: ServerWakeLabels;
+  /** 0.19.0: the translation-review parts (`TranslationReviewPanel`, its editor, chip,
+   *  progress, locale tabs and export) — keksdose's /translations, for every app. */
+  translationReview: TranslationReviewLabels;
+  /** 0.19.0: `LegalLinks`' navigation name — the legal pages' shell, for every app. */
+  legal: LegalLabels;
 }
 
 /**

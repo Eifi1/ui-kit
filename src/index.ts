@@ -341,3 +341,66 @@ export * from "./search/global-search";
 // prop > the provider > the English default. See src/i18n/kit-labels.tsx.
 export * from "./i18n/kit-labels";
 export * from "./i18n/defaults";
+// The kit's words as `key → text` rows for an app's translation review (keksdose).
+export { kitLabelStrings } from "./i18n/review";
+// The seven languages, how an app resolves one, and the kit catalogue loader for it.
+export * from "./i18n/languages";
+// Translation review (0.19): one contract for kastlan's and keksdose's review pages —
+// the pure rows/status/placeholder logic and the presentational page parts.
+export {
+  REVIEW_STATUSES,
+  fromApiReview,
+  toApiWrite,
+  flattenStrings,
+  keyNamespace,
+  placeholderTokens,
+  placeholderMismatch,
+  reviewStatus,
+  keyInArea,
+  keyInAreas,
+  translationRows,
+  summariseRows,
+  DEFAULT_TRANSLATION_REVIEW_FILTER,
+  filterTranslationRows,
+  reviewWrite,
+  mergeReviews,
+  dropReviews,
+  translationCorrections,
+} from "./lib/translation-review";
+export type {
+  TranslationVerdict,
+  TranslationReview,
+  TranslationReviewWrite,
+  TranslationReviewKey,
+  ReviewStatus,
+  TranslationRow,
+  ApiTranslationReview,
+  ApiTranslationReviewWrite,
+  TranslationRowsInput,
+  TranslationSummary,
+  TranslationReviewFilter,
+  TranslationCorrection,
+} from "./lib/translation-review";
+export {
+  TranslationReviewPanel,
+  TranslationReviewEditor,
+  ReviewStatusChip,
+  TranslationProgress,
+  TranslationLocaleTabs,
+  TranslationExportButton,
+  REVIEW_STATUS_TONES,
+  DEFAULT_TRANSLATION_REVIEW_LABELS,
+} from "./components/translation-review";
+export type {
+  TranslationReviewPanelProps,
+  TranslationReviewEditorProps,
+  ReviewStatusChipProps,
+  TranslationProgressProps,
+  TranslationLocaleTab,
+  TranslationLocaleTabsProps,
+  TranslationExportButtonProps,
+  TranslationReviewLabels,
+} from "./components/translation-review";
+// The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
+export { LegalLayout, LegalSection, LegalLinks, DEFAULT_LEGAL_LABELS } from "./components/legal";
+export type { LegalLabels, LegalLink, LegalLinksProps, LegalSectionProps, LegalLayoutProps } from "./components/legal";

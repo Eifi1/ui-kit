@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1101 names from 167 modules** — 508 values and 593 types. _Italic_ is a type-only export.
+**1164 names from 175 modules** — 544 values and 620 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1101 |
+| `@eifi1/ui-kit` | 1164 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -415,6 +415,7 @@ re-slicing of it, never a second API.
 | `lib/safe-storage` | `readStored`, `writeStored` |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
+| `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewStatus`, `reviewWrite`, `summariseRows`, `toApiWrite`, `translationCorrections`, `translationRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 
 ### hooks
@@ -456,6 +457,8 @@ re-slicing of it, never a second API.
 |---|---|
 | `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
+| `i18n/review` | `kitLabelStrings` |
+| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `resolveLanguage`, _`KitLanguage`_, _`KitLanguageCode`_ |
 
 ### components
 
@@ -568,10 +571,15 @@ re-slicing of it, never a second API.
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
+| `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewPanelProps`_ |
+| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LegalLayout`, `LegalLinks`, `LegalSection`, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalSectionProps`_ |
 | `components/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
 | `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
+| `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
+| `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
 | `components/series-chart-ticks` | _`TimeTickUnit`_ |
+| `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 
 ### shell
 
@@ -707,6 +715,17 @@ translation built at runtime, assert in the app's own test:
 expect(missingKitLabels(de, DEFAULT_UI_KIT_LABELS)).toEqual([]);
 ```
 
+**Reviewing the kit's words in an app.** A missing key is a machine's question; whether
+a sentence reads right is a person's. `kitLabelStrings(labels)` turns a label tree into
+`key → text` rows for an app's translation review (keksdose's /translations): string
+labels under their dot path, function labels called with fixed samples — text arguments
+as `{{name}}` placeholders, counts as 1 and 3 — under a key that names the sample
+(`combobox.resultCount(3)`, `shareCard.removeConfirm(name)`). The keys never depend on
+the locale, so `kitLabelStrings(UI_KIT_LABELS_DE_CH)` and the reference
+`kitLabelStrings(DEFAULT_UI_KIT_LABELS)` join one to one. Pass the tree the app gives
+`UiKitProvider`, overrides included. The kit's own test keeps every catalogue on the
+reference's keys and placeholders.
+
 The provider's `locale` reaches every `Intl` formatter in the kit that is not handed a
 `locale` prop of its own: calendar month and weekday names, day numbers, the data table's
 counts, file sizes.
@@ -738,16 +757,51 @@ bundles only the language it imports: `@eifi1/ui-kit/i18n/<code>` exports
 and changes only how counts and file sizes are written. Codes: `de-CH`, `fr`, `it`, `es`,
 `hu`, `zh`, and `en` (factory only — the constant is `DEFAULT_UI_KIT_LABELS`).
 
-There is ONE German: `de-CH`, Swiss Standard German, formal ("Sie"), with "ss" for every
-"ß" — `uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits. An app that
-addresses its users with "du" overrides the few sentences that address the reader in its
-own provider; the kit does not ship a second register.
+Every catalogue addresses the reader formally: German "Sie", French "vous", Italian "Lei",
+Spanish "usted", Hungarian "Ön" (Italian and Spanish since 0.19.0). An app that says "du",
+"tu" or "tú" overrides the few sentences that address the reader in its own provider; the
+kit does not ship a second register.
+
+There is ONE German: `de-CH`, Swiss Standard German, with "ss" for every "ß" —
+`uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits.
 
 ```tsx
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 
 <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">…</UiKitProvider>
 ```
+
+### Language registry
+
+The kit's seven languages, and the three questions every app asked about them on its own
+(docs/i18n-harmonization.md, H2): `KIT_LANGUAGES` (code, native and English name, the
+`Intl` tag it formats in, the flag-icons country), `resolveLanguage(candidates, offered,
+fallback?)`, `formatLocaleOf(code)` and `loadUiKitLabels(code)`. An app offers a subset
+and keeps its own i18n library for its own words:
+
+```tsx
+import { formatLocaleOf, languageOptions, loadUiKitLabels, resolveLanguage, type KitLanguageCode } from "@eifi1/ui-kit";
+
+const OFFERED: KitLanguageCode[] = ["de-CH", "en", "fr", "it"];
+// Precedence (H5): chosen on this device → the account's → the browser's list → de-CH.
+const code = resolveLanguage([localStorage.getItem("myapp-lang"), user?.locale, ...navigator.languages], OFFERED);
+await i18n.init({ lng: code, supportedLngs: OFFERED, fallbackLng: "de-CH" }); // the app's words
+const labels = await loadUiKitLabels(code); // the kit's, fetched on demand, grouped like the language
+document.documentElement.lang = formatLocaleOf(code); // "en-GB", not "en"
+
+<UiKitProvider labels={labels} locale={formatLocaleOf(code)}>
+  <LanguageMenu options={languageOptions(OFFERED)} current={code} onChange={switchLanguage} />
+</UiKitProvider>
+```
+
+Every German (`de`, `de-AT`, a stored `de-informal`) resolves to `de-CH`; every Chinese
+(`zh-TW`, `zh-Hant`) to `zh`, which is **Simplified** — there is no Traditional catalogue.
+Other regional tags take their base language (`fr-CA` → `fr`), and a candidate the app
+does not offer passes to the next. Each language formats like its home — `de-CH`, `en-GB`,
+`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region. The loader is
+asynchronous only: a synchronous one would have to bundle all seven catalogues into every
+app. `languageOptions` feeds `LanguageMenu` (which draws `fi fi-<country>` — the app loads
+the flag CSS) and `LanguageSetting` (a native select: names only).
 
 ### The worked example
 

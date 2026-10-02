@@ -92,6 +92,11 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "passwordStrength.ruleLength",
       "passwordStrength.tooLong",
       "tour.step",
+      "translationReview.exportCorrections",
+      "translationReview.filterCount",
+      "translationReview.localeProgress",
+      "translationReview.placeholdersOnly",
+      "translationReview.progress",
       "wizard.step",
     ]);
   });

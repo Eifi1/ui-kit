@@ -1,8 +1,9 @@
-import { useSyncExternalStore } from "react";
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, RefObject } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { clearanceAbove, subscribeFloating } from "../lib/floating-stack";
 import { serverWake } from "../lib/server-wake";
 import type { ServerWakeStage, ServerWakeWatcher } from "../lib/server-wake";
 import { AlertBanner } from "./alert-banner";
@@ -17,7 +18,8 @@ import { Spinner } from "./ui";
  * Corner-anchored and non-blocking on purpose. The pages underneath already show their
  * own skeletons; what was missing is the explanation, not another overlay. Start
  * corner, above the phone's bottom nav, so it collides with neither the centred toasts
- * nor the nav bar.
+ * nor the nav bar — and above any FloatingActionButton it would otherwise cover
+ * (kastlan's offline pill shares the corner; on a phone the notice spans both).
  *
  * Mount it next to the router, not inside the app layout, so it also covers the login
  * screen and the landing page — a cold start is at its most confusing exactly there,
@@ -67,11 +69,37 @@ export interface ServerWakeNoticeProps {
    */
   navOffset?: string | number;
   /** Extra classes on the fixed anchor — a different width or `start-*`. The bottom
-   *  offset is an inline style, so move it vertically with {@link navOffset}. */
+   *  offset is an inline style, so move it vertically with {@link navOffset}. Either
+   *  way it rises above a visible FloatingActionButton under it. */
   className?: string;
 }
 
 const px = (v: string | number) => (typeof v === "number" ? `${v}px` : v);
+
+/** Gap between the notice and a floating control it stacks above. */
+const STACK_GAP = "0.5rem";
+
+/**
+ * How far off the bottom the notice must sit to clear the FloatingActionButtons under
+ * it (`lib/floating-stack.ts`), re-measured when one appears, goes, resizes or the
+ * viewport does — or `null` while it is idle or nothing is under it. kastlan 0.18.
+ */
+function useFloatingClearance(anchor: RefObject<HTMLDivElement | null>, stage: ServerWakeStage): number | null {
+  const [clearance, setClearance] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (stage === "idle") return;
+    const measure = () => setClearance(clearanceAbove(anchor.current));
+    measure();
+    const unsubscribe = subscribeFloating(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("resize", measure);
+    };
+  }, [anchor, stage]);
+  // Idle, the last measurement is stale and nothing shows anyway.
+  return stage === "idle" ? null : clearance;
+}
 
 /**
  * Renders nothing visible while idle. The LIVE REGION, though, is always mounted: a
@@ -84,12 +112,16 @@ export function ServerWakeNotice({ watcher, appName, labels: labelsProp, navOffs
   const labels = useKitLabels("serverWake", DEFAULT_SERVER_WAKE_LABELS, labelsProp);
   const stage = useServerWakeStage(watcher);
   const waking = stage === "waking";
+  const anchor = useRef<HTMLDivElement>(null);
+  const clearance = useFloatingClearance(anchor, stage);
+  const base = `calc(max(${navOffset === undefined ? "var(--app-nav-h, 0px)" : px(navOffset)}, env(safe-area-inset-bottom, 0px)) + 1rem)`;
   const style: CSSProperties = {
-    bottom: `calc(max(${navOffset === undefined ? "var(--app-nav-h, 0px)" : px(navOffset)}, env(safe-area-inset-bottom, 0px)) + 1rem)`,
+    bottom: clearance === null ? base : `max(${base}, calc(${clearance}px + ${STACK_GAP}))`,
   };
 
   return (
     <div
+      ref={anchor}
       role="status"
       aria-live="polite"
       data-stage={stage}

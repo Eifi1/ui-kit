@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   AnchorHTMLAttributes,
@@ -15,7 +15,9 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
+import { registerFloating } from "../lib/floating-stack";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { assignRef } from "./choice-parts";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
 
@@ -172,6 +174,9 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
  *
  * Portalled, because `position: fixed` inside any transformed ancestor (an animated
  * page transition) is fixed to that ancestor, not to the screen.
+ *
+ * While mounted it reports its box (`lib/floating-stack.ts`), so `ServerWakeNotice`
+ * stacks above it rather than over it.
  */
 export function FloatingActionButton({
   label,
@@ -189,18 +194,30 @@ export function FloatingActionButton({
   style,
   type = "button",
   title,
+  ref,
   ...rest
 }: FloatingActionButtonProps) {
   const [marker, dir] = usePortalDir();
   const toggle = pressed !== undefined;
   const tip = tooltip === true ? label : tooltip === false || tooltip === "" ? undefined : tooltip;
   const wrapped = tip !== undefined && tip !== null;
+  // The fixed element — the button, or the wrapper when there is a tooltip.
+  const [fixed, setFixed] = useState<HTMLElement | null>(null);
+  useEffect(() => (fixed ? registerFloating(fixed) : undefined), [fixed]);
+  const buttonRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      assignRef(ref, node);
+      if (!wrapped) setFixed(node);
+    },
+    [ref, wrapped],
+  );
   // An empty title is "no tooltip", not an attribute with nothing in it. The kit
   // tooltip replaces it outright.
   const nativeTip = !wrapped && nativeTitle && title !== "" ? (title ?? label) : undefined;
   const button = (
           <button
             {...rest}
+            ref={buttonRef}
             type={type}
             dir={dir}
             aria-label={label}
@@ -248,6 +265,7 @@ export function FloatingActionButton({
           <>
             {wrapped ? (
               <div
+                ref={setFixed}
                 dir={dir}
                 hidden={rest.hidden}
                 style={cornerStyle(corner, offset)}

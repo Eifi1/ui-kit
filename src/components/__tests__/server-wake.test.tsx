@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { createServerWake, serverWake } from "../../lib/server-wake";
+import { FloatingActionButton } from "../floating-panel";
 import { DEFAULT_SERVER_WAKE_LABELS, ServerWakeNotice, useServerWakeStage } from "../server-wake";
 import type { ServerWakeWatcher } from "../../lib/server-wake";
 
@@ -108,6 +109,105 @@ describe("ServerWakeNotice", () => {
       </UiKitProvider>,
     );
     expect(screen.getByRole("status")).toHaveTextContent("Kastlan wacht auf.");
+  });
+});
+
+describe("ServerWakeNotice over a FloatingActionButton (kastlan 0.18)", () => {
+  // jsdom lays nothing out: give the notice and the FAB the boxes a 390 × 844 phone
+  // would. The notice spans the width; the pill sits 16px in, 48px tall, 64px up.
+  const VIEWPORT_H = 844;
+  type Box = { left: number; right: number; top: number; height: number };
+  let fabBox: Box;
+
+  function rect({ left, right, top, height }: Box): DOMRect {
+    const r = { x: left, y: top, left, right, top, height, width: right - left, bottom: top + height };
+    return { ...r, toJSON: () => r } as DOMRect;
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal("innerHeight", VIEWPORT_H);
+    fabBox = { left: 16, right: 196, top: VIEWPORT_H - 64 - 48, height: 48 };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute("role") === "status" && this.hasAttribute("data-stage")) {
+        return rect({ left: 16, right: 374, top: 700, height: 60 });
+      }
+      if (this.getAttribute("aria-label") === "Offline") {
+        return this.hidden ? rect({ left: 0, right: 0, top: 0, height: 0 }) : rect(fabBox);
+      }
+      return rect({ left: 0, right: 0, top: 0, height: 0 });
+    });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const notice = () => document.querySelector<HTMLElement>("[data-stage]")!;
+
+  function wake(w: ServerWakeWatcher) {
+    act(() => {
+      w.start("get", "/x");
+    });
+    advance(2000);
+  }
+
+  it("rises above a visible FAB under it, and settles back when the FAB goes", () => {
+    const w = createServerWake();
+    const { rerender } = render(
+      <>
+        <FloatingActionButton label="Offline" icon={null} corner="bottom-start" extended />
+        <ServerWakeNotice watcher={w} />
+      </>,
+    );
+    expect(notice().style.bottom).not.toContain("max(calc(max(");
+    wake(w);
+    // 844 − 732 = 112px from the bottom to the pill's top, plus the gap.
+    expect(notice().style.bottom).toContain("calc(112px + 0.5rem)");
+    rerender(<ServerWakeNotice watcher={w} />);
+    expect(notice().style.bottom).not.toContain("112px");
+  });
+
+  it("ignores a FAB in other columns and a hidden one", () => {
+    const w = createServerWake();
+    fabBox = { left: 380, right: 428, top: 732, height: 48 };
+    const { rerender } = render(
+      <>
+        <FloatingActionButton label="Offline" icon={null} corner="bottom-end" />
+        <ServerWakeNotice watcher={w} />
+      </>,
+    );
+    wake(w);
+    expect(notice().style.bottom).not.toContain("0.5rem");
+    fabBox = { left: 16, right: 196, top: 732, height: 48 };
+    rerender(
+      <>
+        <FloatingActionButton label="Offline" icon={null} corner="bottom-start" hidden />
+        <ServerWakeNotice watcher={w} />
+      </>,
+    );
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(notice().style.bottom).not.toContain("0.5rem");
+  });
+
+  it("measures the tooltip wrapper when the FAB has one — the wrapper is what is fixed", () => {
+    const w = createServerWake();
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute("data-stage")) return rect({ left: 16, right: 374, top: 700, height: 60 });
+      if (this.tagName === "DIV" && this.classList.contains("fixed") && this.classList.contains("z-40")) {
+        return rect({ left: 16, right: 64, top: 732, height: 48 });
+      }
+      return rect({ left: 0, right: 0, top: 0, height: 0 });
+    });
+    render(
+      <>
+        <FloatingActionButton label="Assistant" icon={null} corner="bottom-start" tooltip />
+        <ServerWakeNotice watcher={w} />
+      </>,
+    );
+    wake(w);
+    expect(notice().style.bottom).toContain("calc(112px + 0.5rem)");
   });
 });
 
