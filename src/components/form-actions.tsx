@@ -97,7 +97,7 @@ export type FormActionsStickyWithin = "viewport" | "container";
  */
 export type FormActionsSubmitProps = Omit<
   ButtonProps,
-  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy"
+  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy" | "commit"
 > & { [key: `data-${string}`]: string | number | boolean | undefined };
 
 /** The start-side action of {@link FormActionsProps.destructive}, as data. */
@@ -158,6 +158,18 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   submitDisabled?: boolean;
   /** Why save is disabled — see Button's `disabledReason`. Keeps it focusable. */
   submitDisabledReason?: ReactNode;
+  /**
+   * Save is a commit: under a locked {@link WriteLockProvider} it is disabled with the
+   * lock's reason (over `submitDisabledReason`), focusable, the reason in its tooltip —
+   * Button's `commit`. The `{ label, onClick }` form of {@link destructive} is a
+   * commit too and is locked with it; Cancel and `children` are not (closing a form
+   * writes nothing). No provider, or an unlocked one: no effect. Default `false`.
+   *
+   * keksdose wrote `submitDisabled={lock.locked || …}` and
+   * `submitDisabledReason={lock.locked ? lock.reason : undefined}` at each form; this is
+   * that pair, read from the provider.
+   */
+  commit?: boolean;
   /** The save button's variant. Default `brand`; `danger` for a save that destroys
    *  (kastlan's `destructive` flag on its own FormActions). */
   submitVariant?: ButtonVariant;
@@ -251,6 +263,7 @@ export function FormActions({
   pending = false,
   submitDisabled = false,
   submitDisabledReason,
+  commit = false,
   submitVariant = "brand",
   destructive,
   start: startSlot,
@@ -278,6 +291,7 @@ export function FormActions({
       onClick={destructive.onClick}
       disabled={destructive.disabled}
       disabledReason={destructive.disabledReason}
+      commit={commit}
     >
       {destructive.label}
     </Button>
@@ -334,6 +348,9 @@ export function FormActions({
           variant={submitVariant}
           disabled={pending || submitDisabled}
           disabledReason={pending ? undefined : submitDisabledReason}
+          // Not while pending: the save already left, and the lock's look over the
+          // spinner would say it had not.
+          commit={commit && !pending}
           aria-busy={pending || undefined}
         >
           {pending ? (

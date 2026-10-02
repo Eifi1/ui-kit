@@ -28,6 +28,7 @@ describe("Card density", () => {
     const title = slot(container, "card-title").className;
     expect(title).toContain("font-semibold");
     expect(title).not.toContain("text-sm");
+    expect(title).toContain("leading-none");
     expect(slot(container, "card-description").className).toContain("text-sm");
     expect(slot(container, "card-header").className).toContain("gap-1.5");
     expect(container.firstElementChild).not.toHaveAttribute("data-density");
@@ -39,6 +40,10 @@ describe("Card density", () => {
     expect(title).toContain("text-sm");
     expect(title).toContain("font-medium");
     expect(title).not.toContain("font-semibold");
+    // 0.18 (keksdose): a line box, not the cap height, so the 12px hint below does not
+    // hug the title — every keksdose admin card added `leading-normal` by hand.
+    expect(title).toContain("leading-snug");
+    expect(title).not.toContain("leading-none");
     const description = slot(container, "card-description").className;
     expect(description).toContain("text-xs");
     expect(description).not.toMatch(/\btext-sm\b/);

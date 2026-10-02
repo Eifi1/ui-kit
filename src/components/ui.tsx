@@ -9,6 +9,7 @@ import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
+import { useCommitReason } from "./write-lock";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -197,6 +198,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    */
   disabledReason?: ReactNode;
   /**
+   * This button COMMITS — it saves, creates, deletes. Under a locked
+   * {@link WriteLockProvider} it is disabled the `disabledReason` way, with the lock's
+   * reason (which wins over a `disabledReason` of its own). No provider, or an
+   * unlocked one: no effect. See {@link WriteLockProvider}.
+   */
+  commit?: boolean;
+  /**
    * Busy — the save is in flight: a spinner, `aria-busy`, and no second submit.
    *
    * kastlan's FormActions (form-actions.tsx:50) disables its submit and swaps in a
@@ -271,6 +279,7 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   pending?: never;
   pressed?: never;
   disabledReason?: never;
+  commit?: never;
 }
 
 function hasContent(node: ReactNode): boolean {
@@ -396,7 +405,8 @@ function ButtonElement({
   stretch,
   tone = "default",
   pressed,
-  disabledReason,
+  disabledReason: ownDisabledReason,
+  commit,
   pending,
   className,
   onClick,
@@ -409,6 +419,7 @@ function ButtonElement({
   ...rest
 }: ButtonProps) {
   const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   const inert = locked || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
@@ -874,6 +885,10 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * reason nobody can see is not one. Wins over `disabled`, as on Button.
    */
   disabledReason?: ReactNode;
+  /** This action COMMITS — {@link Button}'s `commit`: under a locked
+   *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
+   *  reason. No effect without a lock. */
+  commit?: boolean;
   /** The `<button>` element — a prop in React 19, as on {@link Button}. */
   ref?: Ref<HTMLButtonElement>;
   /** Only on the link form — see {@link IconButtonLinkProps}. */
@@ -937,6 +952,7 @@ export interface IconButtonLinkProps
   form?: never;
   pressed?: never;
   disabledReason?: never;
+  commit?: never;
   disabledStyle?: never;
   pending?: never;
 }
@@ -1164,7 +1180,8 @@ function IconButtonElement(
     tooltipSide,
     tooltipPortal,
     tooltipLazy = true,
-    disabledReason,
+    disabledReason: ownDisabledReason,
+    commit,
     pending,
     glyphSize,
     badge,
@@ -1186,6 +1203,7 @@ function IconButtonElement(
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   // Pending is inert like a locked button — focusable, every activation swallowed —
   // without the locked look: the spinner is the state.
@@ -2496,7 +2514,12 @@ export function CardTitle({ className, as: Tag = "div", ...props }: CardTitlePro
   return (
     <Tag
       data-slot="card-title"
-      className={cn(compact ? "text-sm font-medium" : "font-semibold", "leading-none", className)}
+      // Compact is `leading-snug`, not `leading-none`: there the title sits on a
+      // 12px description `gap-0.5` below, and a line box exactly the cap height left
+      // the hint hugging the title's descenders (every keksdose admin card added
+      // `leading-normal` by hand). Comfortable keeps `leading-none` — its 14px
+      // description is `gap-1.5` away and has always read right.
+      className={cn(compact ? "text-sm font-medium leading-snug" : "font-semibold leading-none", className)}
       {...props}
     />
   );
