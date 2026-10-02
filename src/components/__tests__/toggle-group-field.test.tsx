@@ -34,7 +34,10 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
     expect(group.className).toContain("border-0");
     const chrome = group.parentElement!;
     expect(chrome.className).toContain("border-[var(--border)]");
-    expect(chrome.className).toContain("pt-4");
+    // pt-5, not pt-4: the strip clears the 11px label (keksdose K1, feedback #117) —
+    // the geometry itself is asserted in toggle-group-022.test.tsx.
+    expect(chrome.className).toContain("pt-5");
+    expect(chrome.className).not.toContain("pt-4");
     // className goes to the wrapper, as on a labelled Select.
     expect((container.firstElementChild as HTMLElement).className).toContain("w-40");
     expect(group.className).not.toContain("w-40");

@@ -7,6 +7,8 @@ import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID } from "./ui";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
+import { Tooltip } from "./tooltip";
+import { useCommitReason } from "./write-lock";
 
 /**
  * A chip: a compact pill carrying one value.
@@ -623,6 +625,8 @@ export type ChipProps = ChipBaseProps &
          * href, whichever element draws it.
          */
         renderLink?: (props: ChipLinkProps) => ReactElement;
+        commit?: never;
+        disabledReason?: never;
       }
     | {
         /** The link shape again, with an `onClick`. `href` is a required string here,
@@ -636,6 +640,8 @@ export type ChipProps = ChipBaseProps &
         onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
         /** See the link shape above. */
         renderLink?: (props: ChipLinkProps) => ReactElement;
+        commit?: never;
+        disabledReason?: never;
       }
     | {
         href?: never;
@@ -643,6 +649,20 @@ export type ChipProps = ChipBaseProps &
         /** Renders the chip as a toggle button. Mutually exclusive with `href`. Receives
          *  the click, so a chip inside a clickable row can `stopPropagation()`. */
         onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+        /**
+         * Why the toggle cannot be pressed right now — {@link Button}'s
+         * `disabledReason`, on the chip's button shape (keksdose K3: a filter or flag
+         * chip that saves on press, under a read-only lock). The chip stays focusable
+         * and `aria-disabled`, a press (and its `onRemove` ×) does nothing, and the
+         * reason shows in the kit {@link Tooltip} and describes the chip. Wins over
+         * `disabled`. A link chip navigates rather than commits, so it takes neither
+         * this nor `commit`; an inert chip has nothing to refuse.
+         */
+        disabledReason?: ReactNode;
+        /** This chip COMMITS — pressing it saves. Under a locked
+         *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
+         *  reason, as {@link Button}'s `commit` does. */
+        commit?: boolean;
       }
   );
 
@@ -678,11 +698,17 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     onKeyDown,
     onFocus,
     snapEdges = false,
+    disabledReason: ownDisabledReason,
+    commit,
     ...rest
   },
   ref,
 ) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
+  const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
+  // Only the BUTTON shape commits: a link navigates, an inert chip does nothing.
+  const locked = Boolean(onClick) && !href && hasReason(disabledReason);
   const kitLink = useKitLink();
   const s = SIZE[size];
   const interactive = !!href || !!onClick;
@@ -694,7 +720,10 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const type = cn(caps && CAPS[size], variant === "solid" && "justify-center tabular-nums");
   const surface = cn(
     surfaceOf(tone, variant, selected),
-    disabled && "cursor-default opacity-50",
+    // A reason wins over `disabled`: the focusable kind of disabled, with the cursor
+    // that says "refused" rather than "nothing here".
+    disabled && !locked && "cursor-default opacity-50",
+    locked && "cursor-not-allowed opacity-50",
   );
   const snap = snapEdges && !dot;
   const snapRef = useSnapEdges(snap);
@@ -713,7 +742,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     type,
     radius,
     surface,
-    interactive && !disabled && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
+    interactive && !disabled && !locked && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
     // An inert dot chip is text in a column: no inset, so it aligns with the header.
     dot && !interactive && "px-0",
     // The under-4px a snap adds is split between the two sides, not stacked at the end.
@@ -781,15 +810,21 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         // The chip may itself be a link; removing it must not also follow it.
         e.preventDefault();
         e.stopPropagation();
+        // Removing a value from a chip that commits is a commit too.
+        if (locked) return;
         onRemove();
       }}
-      disabled={disabled || removeDisabled}
+      disabled={(disabled && !locked) || removeDisabled}
+      aria-disabled={locked || undefined}
+      aria-describedby={locked ? reasonId : undefined}
       className={cn(
         // Logical margins: the × sits at the END of the pill, which is the left in RTL.
         "-me-0.5 ms-0.5 shrink-0 p-0.5 transition-colors",
         shape === "square" ? "rounded-sm" : "rounded-full",
-        "hover:bg-[var(--bg-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
-        (disabled || removeDisabled) && "pointer-events-none",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        !locked && "hover:bg-[var(--bg-active)]",
+        locked && "cursor-not-allowed",
+        ((disabled && !locked) || removeDisabled) && "pointer-events-none",
         // A disabled chip is already dimmed as a whole; dimming the × again on top
         // would take it to a quarter. `removeDisabled` alone dims just the ×.
         removeDisabled && !disabled && "opacity-40",
@@ -814,8 +849,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     CHIP_RING,
     s.split,
     type,
-    !disabled && "cursor-pointer hover:bg-current/10",
-    disabled && "cursor-default",
+    !disabled && !locked && "cursor-pointer hover:bg-current/10",
+    disabled && !locked && "cursor-default",
+    locked && "cursor-not-allowed",
   );
 
   // ── The three shapes.
@@ -855,12 +891,21 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   // turn it into a button instead — it falls through to the inert span, as before.
   if (onClick && !href) {
     const onButtonClick = onClick as (event: MouseEvent<HTMLButtonElement>) => void;
+    const ownDescribedBy = rest["aria-describedby"];
     const button = (
       <button
         ref={(remove ? ref : ownRef) as React.Ref<HTMLButtonElement>}
         type="button"
-        onClick={onButtonClick}
-        disabled={disabled}
+        onClick={(e) => {
+          // Locked: the press is swallowed — the chip saves on press, and a lock that
+          // let it through would toggle a state that is never stored.
+          if (locked) {
+            e.preventDefault();
+            return;
+          }
+          onButtonClick(e);
+        }}
+        disabled={disabled && !locked}
         // Only when `selected` is PASSED: a chip with `onClick` and no `selected` is an
         // action button (it does something), not a toggle (it is on or off), and
         // announcing it "not pressed" would claim a state it does not have.
@@ -871,11 +916,30 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         aria-checked={isCheckbox ? !!selected : undefined}
         className={remove ? inner : look}
         {...rest}
+        // After the spread, merged with it: the lock's state and reason are not the
+        // caller's to drop by passing an `aria-describedby` of their own.
+        aria-disabled={locked || (rest["aria-disabled"] as boolean | "true" | "false" | undefined)}
+        aria-describedby={
+          locked ? [ownDescribedBy, reasonId].filter(Boolean).join(" ") : (ownDescribedBy as string | undefined)
+        }
       >
         {body}
       </button>
     );
-    return remove ? pill(button) : button;
+    const shaped = remove ? pill(button) : button;
+    if (!locked) return shaped;
+    return (
+      // The chip in a FRAGMENT, as a locked Button is: the bubble is visual, and the
+      // hidden copy beside it is what the chip (and its ×) is described by.
+      <Tooltip label={disabledReason}>
+        <>
+          {shaped}
+          <span id={reasonId} hidden>
+            {disabledReason}
+          </span>
+        </>
+      </Tooltip>
+    );
   }
 
   return (
@@ -896,6 +960,12 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     </span>
   );
 });
+
+/** `null`, `false` and `""` are what a `cond && reason` gives on the happy path — no
+ *  reason, so no lock. */
+function hasReason(node: ReactNode): boolean {
+  return node !== undefined && node !== null && node !== false && node !== "";
+}
 
 /** Calls a chip's `renderLink` with the props it was given — see its call site. */
 function RenderedLink({

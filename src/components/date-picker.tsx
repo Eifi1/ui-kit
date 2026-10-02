@@ -7,13 +7,16 @@ import { addDaysIso, parseIsoDate } from "../lib/dates";
 import {
   DEFAULT_DATE_PICKER_LABELS,
   DEFAULT_PICKER_SHEET_LABELS,
+  useKitDateFormatter,
   useKitLabels,
   useKitLocale,
   type DatePickerLabels,
+  type KitDateFormatContext,
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { Button, FieldLabel, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-anatomy";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
@@ -47,13 +50,33 @@ interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onC
   disabled?: boolean;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
+  /**
+   * Standing advice for the field (keksdose K4, "uniform field anatomy"), as on a
+   * {@link Select}: plain TEXT is a caption under the field, attached with
+   * `aria-describedby`; a {@link FieldHint} rides the label line (or, unlabelled, sits
+   * at the field's end, outside the box).
+   */
+  hint?: ReactNode;
+  /**
+   * What is wrong with the date, in the caller's words ("The due date is before the
+   * invoice date") — {@link Input}'s `error` (keksdose K4: DateField errors had no slot).
+   * Rendered under the field (under the whole row, with `step` / `today`), attached to
+   * the trigger with `aria-describedby` — merged with any the caller passed, after the
+   * caption — and implies `invalid`. Passing the key at all keeps the field's box while
+   * there is no message, so the trigger is never remounted as one comes and goes.
+   */
+  error?: ReactNode;
   className?: string;
-  /** Intl options for the trigger's formatted date (default: locale short date). */
+  /** Intl options for the trigger's formatted date (default: locale short date). Win
+   *  over the provider's `formatDate`. */
   formatOptions?: Intl.DateTimeFormatOptions;
-  /** Render the trigger's text for an ISO date yourself; wins over `formatOptions`.
+  /** Render the trigger's text for an ISO date yourself; wins over `formatOptions` and
+   *  over the provider's `formatDate`.
    *  For a host whose date rendering is more than one `Intl` call can say — Keksdose
    *  puts the weekday's name in the UI language beside digits ordered by a separate
-   *  format preference, two locales in one string. `locale` still drives the calendar. */
+   *  format preference, two locales in one string. `locale` still drives the calendar.
+   *  Set that rendering once with `<UiKitProvider formatDate>` (keksdose K12) and this
+   *  is for the one field that differs. */
   formatValue?: (iso: string) => string;
   /** Passed through to the {@link MiniCalendar} this opens. Its month arrows are
    *  icon-only, so their `aria-label` is the only name they have — and the package
@@ -67,6 +90,30 @@ interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onC
  *  as "the runtime's default", as every other kit formatter does. */
 function formatDate(iso: string, locale: string | undefined, options?: Intl.DateTimeFormatOptions) {
   return parseIsoDate(iso)?.toLocaleDateString(locale, options) ?? "";
+}
+
+/**
+ * The trigger's date renderer, in the kit's order of precedence: the picker's own
+ * `formatValue`, then its `formatOptions` (an explicit `Intl` look for this field),
+ * then the provider's `formatDate` (keksdose K12), then the locale's short date. A
+ * provider formatter that answers `""` falls through to the default for that date.
+ */
+function useTriggerFormat(
+  source: KitDateFormatContext["source"],
+  locale: string | undefined,
+  formatOptions: Intl.DateTimeFormatOptions | undefined,
+  formatValue: ((iso: string) => string) | undefined,
+): (iso: string) => string {
+  const fromProvider = useKitDateFormatter();
+  if (formatValue) return formatValue;
+  return (iso) => {
+    if (formatOptions === undefined && fromProvider) {
+      // A single date stands alone, where the weekday helps; a range's two ends do not.
+      const text = fromProvider(iso, { unit: "day", source, locale, weekday: source === "datePicker" });
+      if (text) return text;
+    }
+    return formatDate(iso, locale, formatOptions);
+  };
 }
 
 /**
@@ -285,6 +332,7 @@ function DateField({
   sheet = false,
   sheetBackCloses = true,
   renderTrigger,
+  labelHint,
   children,
   // The trigger's, not the wrapper's: `Field`'s render-prop spreads it with the id
   // pair, and a required date read as optional while it sat on the role-less div.
@@ -295,6 +343,8 @@ function DateField({
   triggerText: string;
   hasValue: boolean;
   label?: ReactNode;
+  /** A `FieldHint` for the label line, beside the label. */
+  labelHint?: ReactNode;
   disabled?: boolean;
   clearable?: boolean;
   /** Already resolved by the picker (prop > provider > English). */
@@ -412,7 +462,7 @@ function DateField({
     // The caller's attributes land here, on the field's own box — the trigger inside is
     // named by `aria-labelledby` and must keep the id pair it is given.
     <div {...wrapperRest} ref={rootRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
+      {label !== undefined && <FieldLabelLine label={label} hint={labelHint} />}
       {/* The visible FieldLabel is a plain span, not a `<label htmlFor>`, so it names
           nothing on its own — this hidden twin is what the trigger is named by.
           `aria-hidden` because a name reference reads a hidden element deliberately
@@ -568,35 +618,61 @@ function useDatePickerLabels(
   return useKitLabels("datePicker", DEFAULT_DATE_PICKER_LABELS, fromProps);
 }
 
+/**
+ * The caller's `hint` when it has no label line to ride: at the end of the field,
+ * outside the box, as an unlabelled {@link Select} places its FieldHint (0.15.5 P8).
+ */
+function withEndHint(field: ReactNode, hint: ReactNode): ReactNode {
+  if (hint === undefined) return field;
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="min-w-0 flex-1">{field}</div>
+      <span className="flex shrink-0 items-center">{hint}</span>
+    </div>
+  );
+}
+
 /** Single-date picker: a field showing the formatted date, opening a calendar. */
-export function DatePicker({
-  value,
-  onChange,
-  locale: localeProp,
-  placeholder,
-  min,
-  max,
-  formatOptions,
-  formatValue,
-  step,
-  stepLabels,
-  today,
-  todayLabel,
-  className,
-  calendarLabels,
-  label,
-  clearable,
-  clearLabel,
-  disabled,
-  invalid,
-  // Named so it reaches the field (and so its trigger) when a step/today row is the
-  // root and takes the rest of the caller's props.
-  "aria-required": ariaRequired,
-  ...rest
-}: DatePickerProps) {
+export function DatePicker(props: DatePickerProps) {
+  const {
+    value,
+    onChange,
+    locale: localeProp,
+    placeholder,
+    min,
+    max,
+    formatOptions,
+    formatValue,
+    step,
+    stepLabels,
+    today,
+    todayLabel,
+    className,
+    calendarLabels,
+    label,
+    clearable,
+    clearLabel,
+    disabled,
+    invalid,
+    hint,
+    error,
+    // Named so it reaches the field (and so its trigger) when a step/today row is the
+    // root and takes the rest of the caller's props.
+    "aria-required": ariaRequired,
+    ...rest
+  } = props;
   const locale = useKitLocale(localeProp);
   const text = useDatePickerLabels(clearLabel, stepLabels, todayLabel);
-  const render = formatValue ?? ((iso: string) => formatDate(iso, locale, formatOptions));
+  const render = useTriggerFormat("datePicker", locale, formatOptions, formatValue);
+  // keksdose K4: the caption and the error under the field, attached to the TRIGGER
+  // (the element a screen reader is on) after any description of the caller's own.
+  const messages = useFieldMessages({
+    hint,
+    error,
+    invalid,
+    describedBy: rest["aria-describedby"],
+    ariaInvalid: rest["aria-invalid"],
+  });
   // With a step or a today button beside it the field is no longer the outermost
   // element — the flex row at the bottom is, and a caller's attributes belong on
   // whichever of the two is actually the root. Naming the shared props rather than
@@ -608,13 +684,15 @@ export function DatePicker({
       // With step/today buttons the flex row is the root and takes the caller's props —
       // except the ones that name the field, which still belong on its trigger.
       {...(wrapped ? triggerAria : rest)}
+      aria-describedby={messages.describedBy}
       aria-required={ariaRequired}
       label={label}
+      labelHint={messages.labelHint}
       clearable={clearable}
       clearLabel={text.clear}
       panelLabel={text.panel}
       disabled={disabled}
-      invalid={invalid}
+      invalid={messages.isInvalid}
       className={step ? "min-w-0 flex-1" : className}
       hasValue={Boolean(value)}
       triggerText={value ? render(value) : (placeholder ?? "")}
@@ -638,7 +716,16 @@ export function DatePicker({
       )}
     </DateField>
   );
-  if (!wrapped) return field;
+  // Passed at all — even as `undefined` — the field keeps its box; see FieldBox.
+  const reserve = "error" in props;
+  const endHint = label === undefined ? messages.labelHint : undefined;
+  if (!wrapped) {
+    return (
+      <FieldBox below={messages.below} reserve={reserve}>
+        {withEndHint(field, endHint)}
+      </FieldBox>
+    );
+  }
 
   // An empty field has nothing to step from, so both buttons are dead until a date
   // is picked. Bounds are compared as strings: "YYYY-MM-DD" sorts chronologically.
@@ -649,7 +736,7 @@ export function DatePicker({
     if (!next || disabled) return true;
     return outOfBounds(next);
   };
-  return (
+  const row = (
     // ONE joined control, not three boxes in a row: the buttons and the field share
     // their borders (each piece overlaps the previous by a pixel) and only the outer
     // ends are rounded — the button-group shape, so ‹ date › reads as one field with
@@ -700,6 +787,13 @@ export function DatePicker({
         />
       )}
     </div>
+  );
+  // Under the whole row, not under the field between the buttons: the message is about
+  // the date, and the steppers are part of how it is entered.
+  return (
+    <FieldBox below={messages.below} reserve={reserve}>
+      {withEndHint(row, endHint)}
+    </FieldBox>
   );
 }
 
@@ -1052,34 +1146,44 @@ function RangePanel({
 /** Two-date range picker: click a start then an end; closes once both are set.
  *  With `presets`, a column of named ranges is shown beside the calendar; with
  *  `commit="apply"` the panel drafts and commits on Apply (see {@link DateRangeCommit}). */
-export function DateRangePicker({
-  from,
-  to,
-  onChange,
-  locale: localeProp,
-  placeholder,
-  min,
-  max,
-  formatOptions,
-  formatValue,
-  separator = " – ",
-  presets,
-  preset,
-  commit = "immediate",
-  renderTrigger,
-  sheetBackCloses,
-  renderDraftSummary,
-  calendarLabels,
-  label,
-  clearable,
-  clearLabel,
-  disabled,
-  invalid,
-  ...rest
-}: DateRangePickerProps) {
+export function DateRangePicker(props: DateRangePickerProps) {
+  const {
+    from,
+    to,
+    onChange,
+    locale: localeProp,
+    placeholder,
+    min,
+    max,
+    formatOptions,
+    formatValue,
+    separator = " – ",
+    presets,
+    preset,
+    commit = "immediate",
+    renderTrigger,
+    sheetBackCloses,
+    renderDraftSummary,
+    calendarLabels,
+    label,
+    clearable,
+    clearLabel,
+    disabled,
+    invalid,
+    hint,
+    error,
+    ...rest
+  } = props;
   const locale = useKitLocale(localeProp);
   const text = useDatePickerLabels(clearLabel, undefined, undefined);
-  const render = formatValue ?? ((iso: string) => formatDate(iso, locale, formatOptions));
+  const render = useTriggerFormat("dateRangePicker", locale, formatOptions, formatValue);
+  const messages = useFieldMessages({
+    hint,
+    error,
+    invalid,
+    describedBy: rest["aria-describedby"],
+    ariaInvalid: rest["aria-invalid"],
+  });
   // The preset this picker committed itself, for a caller that does not control
   // `preset`. Cleared by a hand-picked range or a clear.
   const [ownPreset, setOwnPreset] = useState<string | undefined>(undefined);
@@ -1101,15 +1205,17 @@ export function DateRangePicker({
     if (presetId === undefined) onChange(f, t);
     else onChange(f, t, presetId);
   };
-  return (
+  const field = (
     <DateField
       {...rest}
+      aria-describedby={messages.describedBy}
       label={label}
+      labelHint={messages.labelHint}
       clearable={clearable}
       clearLabel={text.clear}
       panelLabel={text.rangePanel}
       disabled={disabled}
-      invalid={invalid}
+      invalid={messages.isInvalid}
       // Widen so the preset column sits beside the calendar (default otherwise).
       width={hasPresets ? 440 : undefined}
       hasValue={Boolean(from || to)}
@@ -1149,5 +1255,10 @@ export function DateRangePicker({
         />
       )}
     </DateField>
+  );
+  return (
+    <FieldBox below={messages.below} reserve={"error" in props}>
+      {withEndHint(field, label === undefined ? messages.labelHint : undefined)}
+    </FieldBox>
   );
 }

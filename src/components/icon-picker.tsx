@@ -1,10 +1,11 @@
 import { useId, useMemo, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentType } from "react";
+import type { ComponentPropsWithoutRef, ComponentType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
+import { hasContent, LabelStrip } from "./field-anatomy";
 
 export interface IconPickerLabels {
   /** The "no icon" tile's name, when `allowNone` is set. */
@@ -76,6 +77,16 @@ export interface IconPickerProps<T extends string>
   tileClassName?: string;
   disabled?: boolean;
   labels?: Partial<IconPickerLabels>;
+  /**
+   * An 11px static label in a strip over the picker, naming the grid — keksdose K2,
+   * {@link SwatchPickerProps.label}'s twin: a symbol picker standing in a form row
+   * beside labelled fields, with its label on their line. With `searchable` the strip
+   * is over the search box too, which keeps its own name. With a label, `className`
+   * styles the wrapper.
+   */
+  label?: ReactNode;
+  /** A {@link FieldHint} beside the label. Only with `label`. */
+  hint?: ReactNode;
 }
 
 /** Case- and accent-insensitive, so "cafe" finds "Café". */
@@ -105,6 +116,8 @@ export function IconPicker<T extends string>({
   tileClassName,
   disabled = false,
   labels,
+  label,
+  hint,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
@@ -115,6 +128,8 @@ export function IconPicker<T extends string>({
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale();
   const mixedId = useId();
+  const labelId = useId();
+  const labelled = hasContent(label);
   const [query, setQuery] = useState("");
   const needle = fold(query.trim(), locale);
 
@@ -135,8 +150,8 @@ export function IconPicker<T extends string>({
     ...visible.map((o) => ({ key: o.value, label: o.label, note: o.note, disabled: o.disabled })),
   ];
 
-  return (
-    <div {...rest} className={cn("space-y-2", className)}>
+  const picker = (
+    <div {...rest} className={cn("space-y-2", !labelled && className)}>
       {searchable && (
         <SearchField
           value={query}
@@ -149,7 +164,8 @@ export function IconPicker<T extends string>({
       <div
         role="radiogroup"
         aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledBy}
+        // The strip's label names the GRID, unless the caller named it already.
+        aria-labelledby={labelled && ariaLabel === undefined && ariaLabelledBy === undefined ? labelId : ariaLabelledBy}
         aria-describedby={[ariaDescribedBy, mixed && mixedId].filter(Boolean).join(" ") || undefined}
         aria-disabled={disabled || undefined}
         className="flex flex-wrap items-center gap-1.5"
@@ -190,5 +206,11 @@ export function IconPicker<T extends string>({
         </span>
       )}
     </div>
+  );
+  if (!labelled) return picker;
+  return (
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} pad="tiles" className={className}>
+      {picker}
+    </LabelStrip>
   );
 }

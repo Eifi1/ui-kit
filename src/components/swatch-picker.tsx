@@ -1,9 +1,12 @@
 import { useId, useMemo } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
+import { Tooltip } from "./tooltip";
+import { useCommitReason } from "./write-lock";
+import { hasContent, LabelStrip } from "./field-anatomy";
 
 export interface SwatchPickerLabels {
   /** The "no colour" tile's name, when `allowNone` is set. */
@@ -72,6 +75,31 @@ export interface SwatchPickerProps<T extends string>
   tileClassName?: string;
   disabled?: boolean;
   labels?: Partial<SwatchPickerLabels>;
+  /**
+   * An 11px static label in a strip over the swatches, named by it (keksdose K2): the
+   * transaction row's flag picker stands between labelled fields and hand-builds this
+   * (`FieldLabel` + `pt-5`, transaction-flags.tsx:155) because the picker had no label.
+   * The label sits on the same line as a field's own (`top-1`, `inset-x-3`); the
+   * swatches start 20px down, below its whole line box — see `LABEL_STRIP_PAD`. With a
+   * label, `className` styles the wrapper, as on a labelled {@link ToggleGroup}; an
+   * explicit `aria-label` / `aria-labelledby` still names the group instead.
+   */
+  label?: ReactNode;
+  /** A {@link FieldHint} beside the label. Only with `label`. */
+  hint?: ReactNode;
+  /**
+   * Why the colour cannot be changed right now — {@link Button}'s `disabledReason`, for
+   * a picker that saves itself on change (keksdose K3, the flag picker in a row a
+   * read-only viewer may see). The swatches stay reachable and the arrow keys still
+   * walk them, but nothing reaches `onChange`; the reason is shown in the kit
+   * {@link Tooltip} under the row (each swatch's own name bubble sits above it) and
+   * describes the group. Wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /** This picker COMMITS — choosing a colour saves it. Under a locked
+   *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
+   *  reason, as {@link Button}'s `commit` does. */
+  commit?: boolean;
 }
 
 /**
@@ -97,51 +125,105 @@ export function SwatchPicker<T extends string>({
   tileClassName,
   disabled = false,
   labels,
+  label,
+  hint,
+  disabledReason: ownDisabledReason,
+  commit,
   className,
   ...rest
 }: SwatchPickerProps<T>) {
   const text = useKitLabels("swatchPicker", DEFAULT_SWATCH_PICKER_LABELS, labels);
   const mixedId = useId();
+  const labelId = useId();
+  const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
+  const locked = hasContent(disabledReason);
+  const labelled = hasContent(label);
   const byValue = useMemo(() => new Map(options.map((o) => [o.value, o])), [options]);
   const items: TileItem<T>[] = [
     ...(allowNone ? [{ key: null, label: text.none }] : []),
     ...options.map((o) => ({ key: o.value, label: o.label, note: o.note, disabled: o.disabled })),
   ];
-  return (
+  const tiles = (
+    <TileRadioGroup
+      items={items}
+      checked={mixed ? undefined : value}
+      // A locked picker saves on change, so the change is swallowed — the arrow keys
+      // still move the focus (and, automatic, would choose), and nothing is chosen.
+      onSelect={(next) => {
+        if (!locked) onChange(next);
+      }}
+      activation={activation}
+      // A reason wins over `disabled`: the tiles stay in the tab order.
+      disabled={disabled && !locked}
+      size={size}
+      tileClassName={
+        tileClassName || locked
+          ? (_item, selected) =>
+              cn(
+                // The disabled tile's look, without its `disabled`: dimmed, a
+                // not-allowed cursor, and no hover offer on a tile that cannot be
+                // chosen. Not on the selected tile, whose frame IS its state.
+                locked && "cursor-not-allowed opacity-50",
+                locked && !selected && "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]",
+                tileClassName,
+              )
+          : undefined
+      }
+      renderTile={(item) => {
+        const opt = item.key === null ? undefined : byValue.get(item.key);
+        return (
+          <span
+            aria-hidden
+            // A hairline round the dot, drawn over whatever colour it is: a pale
+            // yellow swatch on a white surface is otherwise a hole in the row.
+            className={cn(
+              "rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/15",
+              TILE_SIZE[size].swatch,
+              opt?.swatchClassName,
+            )}
+            style={{ background: opt?.color }}
+          />
+        );
+      }}
+    />
+  );
+  const group = (
     <div
       {...rest}
       role="radiogroup"
-      aria-disabled={disabled || undefined}
-      aria-describedby={
-        [rest["aria-describedby"], mixed && mixedId].filter(Boolean).join(" ") || undefined
+      aria-labelledby={
+        labelled && rest["aria-label"] === undefined && rest["aria-labelledby"] === undefined
+          ? labelId
+          : rest["aria-labelledby"]
       }
-      className={cn("flex flex-wrap items-center gap-1.5", className)}
+      aria-disabled={disabled || locked || undefined}
+      aria-describedby={
+        [rest["aria-describedby"], mixed && mixedId, locked && reasonId].filter(Boolean).join(" ") ||
+        undefined
+      }
+      className={cn("flex flex-wrap items-center gap-1.5", !labelled && className)}
     >
-      <TileRadioGroup
-        items={items}
-        checked={mixed ? undefined : value}
-        onSelect={onChange}
-        activation={activation}
-        disabled={disabled}
-        size={size}
-        tileClassName={tileClassName ? () => tileClassName : undefined}
-        renderTile={(item) => {
-          const opt = item.key === null ? undefined : byValue.get(item.key);
-          return (
-            <span
-              aria-hidden
-              // A hairline round the dot, drawn over whatever colour it is: a pale
-              // yellow swatch on a white surface is otherwise a hole in the row.
-              className={cn(
-                "rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/15",
-                TILE_SIZE[size].swatch,
-                opt?.swatchClassName,
-              )}
-              style={{ background: opt?.color }}
-            />
-          );
-        }}
-      />
+      {locked ? (
+        // Inside the group, round the tiles — not round the group, whose box is the
+        // caller's row item. This row inherits the group's gap, wrap and alignment, so
+        // the tiles sit exactly where they sit unlocked. Below the row: each tile's own
+        // bubble (its colour's name) is above it.
+        <Tooltip
+          label={disabledReason}
+          side="bottom"
+          className="flex min-w-0 flex-1 gap-[inherit] [align-items:inherit] [flex-wrap:inherit] [justify-content:inherit]"
+        >
+          <>
+            {tiles}
+            <span id={reasonId} hidden>
+              {disabledReason}
+            </span>
+          </>
+        </Tooltip>
+      ) : (
+        tiles
+      )}
       {/* `hidden`, not `sr-only`: a description is read from hidden text, and this
           way it takes no room in the row. */}
       {mixed && (
@@ -150,5 +232,11 @@ export function SwatchPicker<T extends string>({
         </span>
       )}
     </div>
+  );
+  if (!labelled) return group;
+  return (
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} pad="tiles" className={className}>
+      {group}
+    </LabelStrip>
   );
 }

@@ -3,7 +3,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime, toDate, EMPTY_FORMATTED_VALUE } from "../lib/format";
 import type { DateInput, FormatDateStyle, FormatRelativeTimeOptions } from "../lib/format";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
 import { Tooltip } from "./tooltip";
@@ -201,7 +202,8 @@ export interface DateMarkProps {
    */
   display?: "date" | "relative";
   /** Default `medium`. Under `"relative"`, the style of the tooltip's date (default
-   *  `dateTime`) and of the date `relative.absoluteAfterDays` switches to. */
+   *  `dateTime`) and of the date `relative.absoluteAfterDays` switches to. Given, it wins
+   *  over the provider's `formatDate`. */
   dateStyle?: FormatDateStyle | Intl.DateTimeFormatOptions;
   /** `formatRelativeTime` options: `numeric`, `style`, `absoluteAfterDays`, `now`. */
   relative?: Omit<FormatRelativeTimeOptions, "locale" | "empty" | "absoluteStyle">;
@@ -216,6 +218,13 @@ export interface DateMarkProps {
 /**
  * A date in a table cell: a `<time>` with a machine-readable `dateTime`, nowrap and
  * tabular figures, in the provider's locale — or `empty` when there is none.
+ *
+ * `display="date"` without a `dateStyle` is written by `<UiKitProvider formatDate>` when
+ * the app set one (keksdose K12: its `DateCell` exists to put every column's date in the
+ * app's date-format preference, weekday and all — dev#546), called with the LOCAL
+ * calendar day of the value as `"YYYY-MM-DD"` and `weekday: true`. Without one, or for
+ * an empty answer, it is `Intl`'s `medium` date as before. The relative display is not
+ * a calendar day and keeps `formatRelativeTime`.
  */
 export function DateMark({
   value,
@@ -227,13 +236,18 @@ export function DateMark({
   className,
 }: DateMarkProps) {
   const locale = useKitLocale(localeProp);
+  const fromProvider = useKitDateFormatter();
   const date = toDate(value);
   const cls = cn("whitespace-nowrap tabular-nums", className);
   if (!date) return <span className={cn(cls, "text-[var(--text-muted)]")}>{empty}</span>;
   if (display === "date") {
+    const own =
+      dateStyle === undefined && fromProvider
+        ? fromProvider(toLocalIso(date), { unit: "day", source: "dateMark", locale, weekday: true })
+        : "";
     return (
       <time dateTime={date.toISOString()} className={cls}>
-        {formatDate(date, dateStyle ?? "medium", { locale })}
+        {own || formatDate(date, dateStyle ?? "medium", { locale })}
       </time>
     );
   }
