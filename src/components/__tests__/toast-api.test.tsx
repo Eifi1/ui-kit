@@ -38,7 +38,8 @@ describe("toast — the pass-through to sonner", () => {
     const id = toast.success("Saved", { description: "Two rows" });
     const [message, data] = await lastCall(sonner.toast.success);
     expect(message).toBe("Saved");
-    expect(data).toEqual({ id, description: "Two rows" });
+    // The className is the id stamp `<Toaster dismissOnMiddleClick>` reads back.
+    expect(data).toEqual({ id, description: "Two rows", className: `kit-toast-id-s-${id}` });
     expect(typeof id).toBe("string");
   });
 
@@ -67,13 +68,21 @@ describe("toast — the pass-through to sonner", () => {
     expect(data.id).toBe("save");
   });
 
-  it("passes cancel, callbacks, className and style through untouched", async () => {
+  it("passes cancel, callbacks, className and style through, the className after the id stamp", async () => {
     const onDismiss = vi.fn();
     const onAutoClose = vi.fn();
     const cancel = { label: "No", onClick: vi.fn() };
     toast.info("x", { cancel, onDismiss, onAutoClose, className: "c", style: { color: "red" } });
     const [, data] = await lastCall(sonner.toast.info);
-    expect(data).toMatchObject({ cancel, onDismiss, onAutoClose, className: "c", style: { color: "red" } });
+    expect(data).toMatchObject({ cancel, onDismiss, onAutoClose, style: { color: "red" } });
+    expect(String(data.className).split(" ")).toEqual([`kit-toast-id-s-${String(data.id)}`, "c"]);
+  });
+
+  it("stamps a number id and an odd string id as one class token each, type kept", async () => {
+    toast.info("n", { id: 7 });
+    expect((await lastCall(sonner.toast.info))[1].className).toBe("kit-toast-id-n-7");
+    toast.info("s", { id: "row 7/ä" });
+    expect((await lastCall(sonner.toast.info))[1].className).toBe("kit-toast-id-s-row%207%2F%C3%A4");
   });
 
   it("dismisses one toast or all of them", async () => {

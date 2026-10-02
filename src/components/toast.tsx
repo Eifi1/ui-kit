@@ -135,9 +135,33 @@ type Kind = "default" | "success" | "error" | "warning" | "info" | "loading";
 
 const privately = (node: ReactNode) => <span data-private="">{node}</span>;
 
+/**
+ * The toast's id, written onto its `<li>` as a class — the one per-toast attribute
+ * sonner passes through untouched besides `testId`, which is the app's (sonner keeps the
+ * id in React state only). `<Toaster dismissOnMiddleClick>` reads it back to dismiss
+ * the toast under the pointer, close button or not. The type is kept (`s`/`n`) because
+ * sonner matches ids with `===`, and the value is URI-encoded so any string id is one
+ * whitespace-free class token.
+ */
+const ID_CLASS = "kit-toast-id-";
+const idClass = (id: ToastId) =>
+  `${ID_CLASS}${typeof id === "number" ? "n" : "s"}-${encodeURIComponent(String(id))}`;
+
+/** The id {@link idClass} stamped on a toast element, or null for a toast the kit did
+ *  not make (an app still calling sonner directly). */
+function readToastId(el: Element): ToastId | null {
+  for (const token of el.classList) {
+    if (!token.startsWith(ID_CLASS)) continue;
+    const kind = token.charAt(ID_CLASS.length);
+    const raw = decodeURIComponent(token.slice(ID_CLASS.length + 2));
+    return kind === "n" ? Number(raw) : raw;
+  }
+  return null;
+}
+
 function toSonnerData(opts: ToastOptions | undefined, id: ToastId): SonnerData {
-  const { redact, description, duration, action, ...rest } = opts ?? {};
-  const data: SonnerData = { ...rest, id };
+  const { redact, description, duration, action, className, ...rest } = opts ?? {};
+  const data: SonnerData = { ...rest, id, className: className ? `${idClass(id)} ${className}` : idClass(id) };
   if (description !== undefined) data.description = redact ? privately(description) : description;
   if (action) data.action = action;
   const resolved = duration ?? (action ? TOAST_ACTION_DURATION : undefined);
@@ -312,6 +336,15 @@ export interface ToasterProps {
   hotkey?: string[];
   gap?: number;
   dir?: "ltr" | "rtl" | "auto";
+  /**
+   * A middle click on a toast dismisses it (0.18.0) — the gesture that closes a tab,
+   * which is what keksdose's users reached for (dev #583). By id, so it works on a
+   * toast with `closeButton: false` too; it counts as the user closing it, so
+   * `onDismiss` runs. Not on a link or a button inside the toast — a middle click on a
+   * link still opens it in a new tab — and not on a `dismissible: false` toast.
+   * Default true.
+   */
+  dismissOnMiddleClick?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -385,6 +418,7 @@ export function Toaster({
   swipeDirections = ALL_DIRECTIONS,
   offset,
   mobileOffset,
+  dismissOnMiddleClick = true,
   className,
   style,
   ...rest
@@ -408,6 +442,42 @@ export function Toaster({
       if (activeLabels === labels) activeLabels = DEFAULT_TOAST_LABELS;
     };
   }, [labels]);
+
+  useEffect(() => {
+    if (!dismissOnMiddleClick || !mod) return;
+    // On the document rather than the toaster: sonner owns the `<ol>`, and a listener
+    // there would have to be re-attached whenever it remounts it.
+    const toastUnder = (e: globalThis.MouseEvent) => {
+      if (e.button !== 1 || !(e.target instanceof Element)) return null;
+      const li = e.target.closest<HTMLElement>("[data-sonner-toast]");
+      if (!li || li.dataset.dismissible === "false") return null;
+      // A link keeps its middle click (open in a new tab); a button or a field inside
+      // the toast is the app's, not a background to click.
+      const control = e.target.closest("a[href], button, input, select, textarea, [role='button'], [role='link']");
+      if (control && li.contains(control)) return null;
+      return li;
+    };
+    // `mousedown`: the middle button starts autoscroll (Windows) before any click.
+    const onDown = (e: globalThis.MouseEvent) => {
+      if (toastUnder(e)) e.preventDefault();
+    };
+    const onAux = (e: globalThis.MouseEvent) => {
+      const li = toastUnder(e);
+      if (!li) return;
+      // No paste of the primary selection on Linux, no other handler's idea of it.
+      e.preventDefault();
+      const id = readToastId(li);
+      if (id !== null) mod.toast.dismiss(id);
+      // A toast made by sonner directly carries no id: its close button, if any.
+      else li.querySelector<HTMLButtonElement>("[data-close-button]")?.click();
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("auxclick", onAux);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("auxclick", onAux);
+    };
+  }, [dismissOnMiddleClick, mod]);
 
   const documentTheme = useSyncExternalStore(subscribeDocumentTheme, readDocumentTheme, () => "light" as const);
   const phone = useMediaQuery(PHONE_QUERY, false);

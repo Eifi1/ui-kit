@@ -201,3 +201,91 @@ describe("<Toaster> — placement and paint", () => {
     expect(el.style.getPropertyValue("--offset-bottom")).toContain("72px");
   });
 });
+
+describe("<Toaster> — dismissOnMiddleClick (0.18.0)", () => {
+  const middle = (el: Element, type: "auxclick" | "mousedown" = "auxclick", button = 1) => {
+    const e = new MouseEvent(type, { bubbles: true, cancelable: true, button });
+    el.dispatchEvent(e);
+    return e;
+  };
+  const gone = (text: string) => waitFor(() => expect(screen.queryByText(text)).toBeNull());
+
+  it("dismisses the toast under a middle click by id — with no close button — and reports it as the user's", async () => {
+    await mount();
+    const onDismiss = vi.fn();
+    act(() => {
+      toast.success("No close button", { closeButton: false, onDismiss });
+    });
+    const title = await screen.findByText("No close button");
+    expect(title.closest("[data-sonner-toast]")?.querySelector("[data-close-button]")).toBeNull();
+    // The mousedown is taken too: the middle button would start autoscroll.
+    expect(middle(title, "mousedown").defaultPrevented).toBe(true);
+    let e!: MouseEvent;
+    act(() => {
+      e = middle(title);
+    });
+    expect(e.defaultPrevented).toBe(true);
+    await gone("No close button");
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
+  it("dismisses only the toast that was clicked, with a number id too", async () => {
+    await mount();
+    act(() => {
+      toast("Keep me", { id: 1 });
+      toast("Close me", { id: 2 });
+    });
+    const target = await screen.findByText("Close me");
+    act(() => {
+      middle(target);
+    });
+    await gone("Close me");
+    expect(screen.getByText("Keep me")).toBeInTheDocument();
+  });
+
+  it("leaves a link's middle click alone (open in a new tab), and buttons inside the toast", async () => {
+    await mount();
+    act(() => {
+      toast("Report ready", {
+        description: <a href="/reports/7">Open report</a>,
+        action: { label: "Share", onClick: () => {} },
+      });
+    });
+    const link = await screen.findByRole("link", { name: "Open report" });
+    expect(middle(link, "mousedown").defaultPrevented).toBe(false);
+    expect(middle(link).defaultPrevented).toBe(false);
+    expect(middle(screen.getByRole("button", { name: "Share" })).defaultPrevented).toBe(false);
+    await new Promise((r) => setTimeout(r, 250));
+    expect(screen.getByText("Report ready")).toBeInTheDocument();
+  });
+
+  it("ignores other buttons, `dismissible: false` and dismissOnMiddleClick={false}", async () => {
+    const view = await mount();
+    act(() => {
+      toast("Right click", { id: "r" });
+      toast("Pinned", { id: "p", dismissible: false });
+    });
+    expect(middle(await screen.findByText("Right click"), "auxclick", 2).defaultPrevented).toBe(false);
+    expect(middle(screen.getByText("Pinned")).defaultPrevented).toBe(false);
+    view.rerender(<Toaster dismissOnMiddleClick={false} />);
+    expect(middle(screen.getByText("Right click")).defaultPrevented).toBe(false);
+    await new Promise((r) => setTimeout(r, 250));
+    expect(screen.getByText("Right click")).toBeInTheDocument();
+    expect(screen.getByText("Pinned")).toBeInTheDocument();
+  });
+
+  it("falls back to the close button for a toast sonner made without the kit", async () => {
+    await mount();
+    const { toast: raw } = await import("sonner");
+    const onDismiss = vi.fn();
+    act(() => {
+      raw("From sonner", { onDismiss });
+    });
+    const title = await screen.findByText("From sonner");
+    act(() => {
+      middle(title);
+    });
+    await gone("From sonner");
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+});

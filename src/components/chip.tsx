@@ -1,4 +1,4 @@
-import { forwardRef, isValidElement, useId, useRef, useState } from "react";
+import { forwardRef, isValidElement, useCallback, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -282,6 +282,208 @@ const SIZE: Record<
   },
 };
 
+/* ── Edge snapping (fractional device-pixel ratios) ──────────────────────────
+ *
+ * WHY. At a device-pixel ratio of 1.25 (a 125 % Windows display, or 125 % browser
+ * zoom) Chrome snaps a box to whole CSS pixels and only then scales it, so a 1px
+ * border is 1.25 device pixels wide and starts at a quarter-pixel phase that depends
+ * on where the edge lands. A chip's left edge follows whatever stands before it, its
+ * right edge follows its own text, so the two land on unrelated phases: one rasterises
+ * as a crisp pixel, the other as a two-pixel smear at half strength — and a 60 %-alpha
+ * border (`--danger-border`) makes the smeared side read as a THINNER line (keksdose
+ * dev #576).
+ *
+ * WHAT FIXES IT. The two edges rasterise as mirror images exactly when their device
+ * positions sum to a whole number: `(2·left + width) · dpr` integral, `left` being the
+ * edge's snapped CSS x. Rounding the WIDTH alone to the ratio's grid (4px at 1.25)
+ * makes the phases EQUAL, which is not the same thing: measured with keksdose's
+ * playwright harness across every left phase at 1.25, width-only rounding mirrored the
+ * edges at two of the four phases and left the other two as lopsided as before (mean
+ * peak asymmetry 16.5, worse than the unsnapped 10.9 a random width gets by luck); the
+ * position-aware width below took it to 0 at every phase. Inset rings, whole-pixel
+ * starts, compositing hints and fractional border widths were measured by keksdose
+ * and do not help — Chrome rounds a sub-pixel border back up to 1px.
+ *
+ * So the fix needs the chip's position, which is why it is opt-in (`snapEdges`): it
+ * reads layout. Cheaply — every snapped chip on the page shares one ResizeObserver,
+ * one `resize` listener and one resolution media query, and a pass is batched into a
+ * frame as read-all / write-all, not a forced layout per chip. At an integer ratio,
+ * and at a half one (1.5, 2.5: grid 2 — measured symmetric already, both edges a
+ * pixel and a half on the same pattern), there is nothing to fix and a pass
+ * writes nothing.
+ */
+
+/** The smallest whole CSS-pixel count `n` with `n × dpr` whole — 4 at 1.25, 2 at 1.5,
+ *  1 at an integer ratio. 0 for a ratio no step up to 4px fits (110 % zoom wants 10px;
+ *  a chip growing by up to 9px is a layout change, not a hairline fix). */
+function chipEdgeGrid(dpr: number): number {
+  for (let n = 1; n <= 4; n++) if (Math.abs(n * dpr - Math.round(n * dpr)) < 1e-3) return n;
+  return 0;
+}
+
+/**
+ * The width (whole CSS px, at least `natural`) that mirrors a box's two edges at
+ * `dpr`, for a box whose left edge sits at CSS x `left`. `natural` back when the ratio
+ * needs nothing.
+ */
+function snappedChipEdgeWidth(natural: number, left: number, dpr: number): number {
+  const n = chipEdgeGrid(dpr);
+  if (n <= 2) return natural;
+  const l = Math.round(left);
+  // A hair under a whole pixel is that pixel: 59.999 is a 60px chip, not a 61px one.
+  let w = Math.ceil(natural - 0.01);
+  while ((((2 * l + w) % n) + n) % n !== 0) w++;
+  return w;
+}
+
+const snapped = new Set<HTMLElement>();
+/** The min-width each chip was given by a pass — so a pass only ever clears its own. */
+const written = new WeakMap<HTMLElement, string>();
+let snapFrame = 0;
+let snapObserver: ResizeObserver | null = null;
+let ratioQuery: MediaQueryList | null = null;
+
+function clearOwn(el: HTMLElement) {
+  const own = written.get(el);
+  if (own !== undefined && el.style.minWidth === own) el.style.minWidth = "";
+  written.delete(el);
+}
+
+/**
+ * Re-snap every chip rendered with `snapEdges`, now. The kit already re-snaps when a
+ * chip renders, resizes, or the window or the ratio changes; call this after moving
+ * chips some other way (a side panel sliding in beside a table of status chips),
+ * since a move is not something an observer can see.
+ */
+export function refreshChipEdges(): void {
+  if (snapFrame) {
+    cancelAnimationFrame(snapFrame);
+    snapFrame = 0;
+  }
+  if (typeof window === "undefined" || !snapped.size) return;
+  const dpr = window.devicePixelRatio || 1;
+  const els = [...snapped];
+  // Write: back to the natural width, so what is read below is the chip, not our pin.
+  for (const el of els) clearOwn(el);
+  const n = chipEdgeGrid(dpr);
+  if (n <= 2) return;
+  // A chip whose own end decides where it starts (RTL, `justify-end`) moves when it
+  // grows, so a pass re-reads what it wrote and steps on by a pixel until the edges
+  // agree — `n` steps cover every residue. Each pass is ONE layout for every chip
+  // together. A chip that never agrees (a centred one moves both edges at once) is
+  // given its natural width back rather than kept wider for nothing.
+  let pending = els;
+  for (let pass = 0; pass <= n && pending.length; pass++) {
+    const reads = pending.map((el) => {
+      const r = el.getBoundingClientRect();
+      const label = el.querySelector<HTMLElement>(".truncate");
+      // Not laid out (a hidden ancestor, jsdom), or truncated at its container's edge,
+      // where a wider chip would overflow: leave it alone.
+      if (!r.width || (label && label.scrollWidth > label.clientWidth)) return null;
+      const width = Math.round(r.width * 64) / 64;
+      const target = snappedChipEdgeWidth(width, r.left + window.scrollX, dpr);
+      return target === width ? null : target;
+    });
+    const next: HTMLElement[] = [];
+    pending.forEach((el, i) => {
+      const target = reads[i];
+      if (target == null) return;
+      if (pass === n) {
+        clearOwn(el);
+        return;
+      }
+      const own = written.get(el);
+      const value = `${pass > 0 && own !== undefined ? parseFloat(own) + 1 : target}px`;
+      el.style.minWidth = value;
+      written.set(el, value);
+      next.push(el);
+    });
+    pending = next;
+  }
+}
+
+function scheduleChipEdges() {
+  if (snapFrame || typeof requestAnimationFrame === "undefined") return;
+  snapFrame = requestAnimationFrame(() => {
+    snapFrame = 0;
+    refreshChipEdges();
+  });
+}
+
+/** The resolution query for the CURRENT ratio: it stops matching when the ratio
+ *  changes (a window dragged to another display), which a `resize` need not fire. */
+function watchRatio() {
+  ratioQuery?.removeEventListener("change", onRatioChange);
+  ratioQuery =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+      : null;
+  ratioQuery?.addEventListener("change", onRatioChange);
+}
+
+function onRatioChange() {
+  watchRatio();
+  scheduleChipEdges();
+}
+
+function registerSnap(el: HTMLElement) {
+  if (snapped.has(el)) return;
+  if (!snapped.size) {
+    if (typeof ResizeObserver !== "undefined") snapObserver = new ResizeObserver(scheduleChipEdges);
+    window.addEventListener("resize", scheduleChipEdges);
+    watchRatio();
+  }
+  snapped.add(el);
+  snapObserver?.observe(el);
+  scheduleChipEdges();
+}
+
+function unregisterSnap(el: HTMLElement) {
+  if (!snapped.delete(el)) return;
+  snapObserver?.unobserve(el);
+  clearOwn(el);
+  if (snapped.size) return;
+  snapObserver?.disconnect();
+  snapObserver = null;
+  window.removeEventListener("resize", scheduleChipEdges);
+  ratioQuery?.removeEventListener("change", onRatioChange);
+  ratioQuery = null;
+}
+
+/** The ref a chip hangs on its visible pill, plus a re-snap after every render (its
+ *  label or its neighbours may have changed). */
+function useSnapEdges(on: boolean) {
+  const node = useRef<HTMLElement | null>(null);
+  const ref = useCallback(
+    (el: HTMLElement | null) => {
+      if (el === node.current) return;
+      const prev = node.current;
+      node.current = el;
+      // React detaches and re-attaches a ref whose callback changed identity (a
+      // consumer's inline ref) — the same element, a moment apart. Unregistering on
+      // the detach would clear the pin and paint one frame unsnapped, so the drop
+      // waits a microtask and is skipped if the element came straight back.
+      if (prev) queueMicrotask(() => node.current !== prev && unregisterSnap(prev));
+      if (el && on) registerSnap(el);
+    },
+    [on],
+  );
+  useLayoutEffect(() => {
+    const el = node.current;
+    if (!el) return;
+    if (on) {
+      registerSnap(el);
+      scheduleChipEdges();
+    } else unregisterSnap(el);
+  });
+  return ref;
+}
+
+function assignRef<T>(target: Ref<T> | undefined, value: T | null) {
+  if (typeof target === "function") target(value);
+  else if (target) (target as { current: T | null }).current = value;
+}
+
 const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border transition-colors";
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
@@ -372,6 +574,23 @@ interface ChipBaseProps {
   id?: string;
   /** A native tooltip. For anything a user must read, prefer the kit's `Tooltip`. */
   title?: string;
+  /**
+   * Even hairlines on fractional-ratio displays (0.18.0). At a device-pixel ratio of
+   * 1.25 — a 125 % Windows display, or 125 % zoom — Chrome draws a chip's two 1px
+   * side borders on different sub-pixel phases, one crisp and one a half-strength
+   * smear that reads as a thinner line (worst on the 60 %-alpha `danger` border).
+   * `snapEdges` widens the chip by under 4px, from where it sits, so the two edges
+   * rasterise as mirror images, and centres its content in the extra.
+   *
+   * Off by default: it reads the chip's position (batched for every snapped chip into
+   * one pass a frame, through one shared observer), and the fix is only as fresh as the
+   * last pass — it re-snaps on render, resize, zoom and ratio change, but not when
+   * something else moves the chip; call {@link refreshChipEdges} then. At an integer
+   * ratio, and at 1.5, it writes nothing. Turn it on for status chips that sit in a
+   * column and are compared side by side; a chip with no visible border (`dot`) has
+   * nothing to snap.
+   */
+  snapEdges?: boolean;
 }
 
 /**
@@ -458,6 +677,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     role,
     onKeyDown,
     onFocus,
+    snapEdges = false,
     ...rest
   },
   ref,
@@ -476,6 +696,17 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     surfaceOf(tone, variant, selected),
     disabled && "cursor-default opacity-50",
   );
+  const snap = snapEdges && !dot;
+  const snapRef = useSnapEdges(snap);
+  // The visible pill carries the snap: the whole chip, or the wrapper of a split one
+  // (whose body gets the forwarded ref instead).
+  const ownRef = useCallback(
+    (el: HTMLElement | null) => {
+      snapRef(el);
+      assignRef(ref, el);
+    },
+    [snapRef, ref],
+  );
   const look = cn(
     CHIP_BASE,
     s.body,
@@ -485,6 +716,8 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     interactive && !disabled && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
     // An inert dot chip is text in a column: no inset, so it aligns with the header.
     dot && !interactive && "px-0",
+    // The under-4px a snap adds is split between the two sides, not stacked at the end.
+    snap && "justify-center",
     className,
   );
 
@@ -568,7 +801,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 
   // ── The combined shape: one pill, two interactive siblings inside it.
   const pill = (inner: ReactNode) => (
-    <span className={cn(CHIP_PILL, s.tail, radius, surface, className)}>
+    <span ref={snap ? snapRef : undefined} className={cn(CHIP_PILL, s.tail, radius, surface, snap && "justify-center", className)}>
       {inner}
       {remove}
     </span>
@@ -591,7 +824,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const onLinkClick = onClick as ChipLinkProps["onClick"];
     const linkProps: ChipLinkProps = {
       ...rest,
-      ref: ref as Ref<HTMLAnchorElement>,
+      ref: (remove ? ref : ownRef) as Ref<HTMLAnchorElement>,
       href,
       onClick: onLinkClick,
       "aria-current": selected ? "true" : undefined,
@@ -605,7 +838,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       <RenderedLink render={render} {...linkProps} />
     ) : (
       <a
-        ref={ref as React.Ref<HTMLAnchorElement>}
+        ref={(remove ? ref : ownRef) as React.Ref<HTMLAnchorElement>}
         href={href}
         aria-current={selected ? "true" : undefined}
         onClick={onLinkClick}
@@ -624,7 +857,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const onButtonClick = onClick as (event: MouseEvent<HTMLButtonElement>) => void;
     const button = (
       <button
-        ref={ref as React.Ref<HTMLButtonElement>}
+        ref={(remove ? ref : ownRef) as React.Ref<HTMLButtonElement>}
         type="button"
         onClick={onButtonClick}
         disabled={disabled}
@@ -650,7 +883,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
        the roving-focus hooks, live only when the container passes `role` and `tabIndex`
        (ChipInput does); the role is a prop, so the rule cannot see it. */
     <span
-      ref={ref as React.Ref<HTMLSpanElement>}
+      ref={ownRef as React.Ref<HTMLSpanElement>}
       className={look}
       tabIndex={tabIndex}
       role={role}
