@@ -37,7 +37,8 @@ export type FormActionsPlacement = "inline" | "sticky" | "dialog";
  * md 768, lg 1024, xl 1280px), as `BulkActionBar`'s `variant` breakpoints are, and
  * resolved the same way, in JS: the sticky row is positioned by inline style, which a
  * `md:` class cannot reach. keksdose switched `placement` on its own media query at
- * every long form for want of this.
+ * every long form for want of this. The breakpoints are the VIEWPORT's, not the
+ * container's: a form in a narrow pane on a wide screen resolves to `md`.
  */
 export interface ResponsiveFormActionsPlacement {
   base: FormActionsPlacement;
@@ -187,7 +188,8 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * from both sides, with the content scrolling past it in the gutters (keksdose wrote
    * `@max-md:-mx-3 @max-md:px-3` by hand). Pass the container's padding (`"0.75rem"`,
    * `12`, `"var(--pane-px)"`). Applied only while the resolved placement is sticky, so
-   * `placement={{ base: "sticky", md: "inline" }}` bleeds on the phone alone.
+   * `placement={{ base: "sticky", md: "inline" }}` bleeds on the phone alone. The margin
+   * is `calc(-1 * X)`; jsdom folds that to `calc(-X)`, so match it loosely in tests.
    */
   bleed?: string | number;
   /**
