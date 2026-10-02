@@ -1,9 +1,16 @@
 import { useId, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { Button, Card, FIELD_WRITABLE_LOOK, Input } from "./ui";
+import { Button, Card, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
 import { CopyButton } from "./copy-button";
 import { QrCode } from "./qr-code";
+import { OneTimeCodeInput } from "./one-time-code-input";
+import {
+  DEFAULT_PASSWORD_STRENGTH_LABELS,
+  passwordByteLength,
+  PasswordStrengthMeter,
+} from "./password-strength";
+import type { PasswordStrengthMeterProps } from "./password-strength";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import type {
@@ -95,28 +102,71 @@ export function ProfileSetting({
   );
 }
 
+/**
+ * What {@link PasswordSetting}'s `strength` takes besides `true`: the meter's own options,
+ * minus the ones the card owns — `value` (the new password), `minLength` (the card's, so
+ * the checklist's length rule and the submit's check are one number) and `maxBytes`
+ * (the card's own prop, which the submit enforces as well).
+ */
+export type PasswordSettingStrength = Pick<PasswordStrengthMeterProps, "score" | "showRequirements" | "labels">;
+
 export function PasswordSetting({
   onSubmit,
   pending,
   minLength = 8,
+  strength,
+  maxBytes,
   labels: labelsProp,
 }: {
   /** Called with the validated (current, new) pair; return a promise to auto-clear on success. */
   onSubmit: (currentPassword: string, newPassword: string) => void | Promise<unknown>;
   pending?: boolean;
+  /** The shortest new password the card submits, in characters as a person counts them
+   *  (an emoji is one). Keep it in step with the server's own minimum. Default 8. */
   minLength?: number;
+  /**
+   * Show the {@link PasswordStrengthMeter} under the new-password field (0.22.0,
+   * kastlan's input audit): the bar, the level in words and the checklist, with the
+   * length rule drawn from `minLength`. `true` for the meter as it comes; an object for
+   * its `score` (zxcvbn's, say), `showRequirements` or `labels`.
+   *
+   * Off by default, so a card that never asked for it does not grow one. The meter is
+   * advisory, as everywhere in the kit: it blocks nothing — the card's own checks do
+   * (`minLength`, the confirmation, `maxBytes`).
+   */
+  strength?: boolean | PasswordSettingStrength;
+  /**
+   * A byte ceiling on the new password — bcrypt reads at most 72 BYTES and ignores the
+   * rest, which is kastlan's case: `maxBytes={72}`. A new password over it is refused
+   * on submit with the meter's own "too long" sentence (the `passwordStrength`
+   * namespace's `tooLong`), and the meter, when shown, warns while it is typed.
+   *
+   * Unset by default, and leave it unset for a secret with no ceiling: an invented one
+   * talks people out of the long passphrase they chose.
+   */
+  maxBytes?: number;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { password } }}>` > English. */
   labels?: Partial<PasswordSettingLabels>;
 }) {
   const labels = useAccountSettingsLabels("password", labelsProp);
+  const strengthOptions = typeof strength === "object" ? strength : undefined;
+  // Only for `tooLong`: the sentence the meter shows is the one the refusal says.
+  const strengthLabels = useKitLabels("passwordStrength", DEFAULT_PASSWORD_STRENGTH_LABELS, strengthOptions?.labels);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    if (next.length < minLength) {
+    // Code points, not UTF-16 units — the count the meter's checklist and a server's
+    // `len()` use. `next.length` counted an emoji as two, so four of them passed a
+    // minimum of eight that the meter beside the field said they missed.
+    if ([...next].length < minLength) {
       setError(labels.tooShort);
+      return;
+    }
+    if (maxBytes !== undefined && passwordByteLength(next) > maxBytes) {
+      setError(strengthLabels.tooLong(maxBytes));
       return;
     }
     if (next !== confirm) {
@@ -134,11 +184,31 @@ export function PasswordSetting({
     }
   };
 
+  const nextField = (
+    <Input type="password" autoComplete="new-password" label={labels.next} value={next} onChange={(e) => setNext(e.target.value)} />
+  );
+
   return (
     <Card className="p-4 space-y-3">
       <div className="text-sm font-medium">{labels.title}</div>
       <Input type="password" autoComplete="current-password" label={labels.current} value={current} onChange={(e) => setCurrent(e.target.value)} />
-      <Input type="password" autoComplete="new-password" label={labels.next} value={next} onChange={(e) => setNext(e.target.value)} />
+      {strength ? (
+        // One box for the field and its meter, so the card's `space-y-3` spaces the pair
+        // from its neighbours and the meter keeps its own small gap under the field.
+        <div>
+          {nextField}
+          <PasswordStrengthMeter
+            value={next}
+            minLength={minLength}
+            maxBytes={maxBytes}
+            score={strengthOptions?.score}
+            showRequirements={strengthOptions?.showRequirements}
+            labels={strengthOptions?.labels}
+          />
+        </div>
+      ) : (
+        nextField
+      )}
       <Input type="password" autoComplete="new-password" label={labels.confirm} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
       <Button onClick={() => void submit()} disabled={!current || !next || !confirm || pending}>
@@ -204,13 +274,17 @@ export function TwoFactorSetting({
   const labels = useAccountSettingsLabels("twoFactor", labelsProp);
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
-  // Browsers autofill one-time-code fields with the saved username; keep the
-  // field readOnly until focus to block that. It therefore has to keep the LOOK of
-  // an editable field (FIELD_WRITABLE_LOOK): this is the one place where readOnly
-  // does not mean "you may not type here", and without the opt-out the field would
-  // sit there greyed until the moment it is focused.
-  const [otpReadonly, setOtpReadonly] = useState(true);
-  const onOtpFocus = () => setOtpReadonly(false);
+  // Both code fields are a OneTimeCodeInput (0.22.0) — the field this card wrote by hand
+  // twice — and keep what they did:
+  //  - `readOnlyUntilFocus`: browsers autofill a one-time-code field with the saved
+  //    username (the disable form has a current-password field right above it), and a
+  //    read-only field is never autofilled. The guard drops on focus, and the field
+  //    keeps the look of an editable one meanwhile (FIELD_WRITABLE_LOOK) — see the prop.
+  //  - `length={8}`: the `maxLength={8}` they had, so an authenticator issuing eight
+  //    digits still fits. What changed is that they now take digits only: "123 456"
+  //    pasted from an authenticator that groups its digits used to reach `onEnable`
+  //    with the space in it.
+  //  - one `code` state for both, as before.
   // Only for the "Status: Enabled" composition — the punctuation between a field's
   // name and its value is the language's (see `CommonLabels.fieldValue`).
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
@@ -272,16 +346,12 @@ export function TwoFactorSetting({
               </div>
             </div>
           )}
-          <Input
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            readOnly={otpReadonly}
-            inputClassName={FIELD_WRITABLE_LOOK}
-            onFocus={onOtpFocus}
-            maxLength={8}
+          <OneTimeCodeInput
+            readOnlyUntilFocus
+            length={8}
             label={labels.codeLabel}
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={setCode}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter" && code && !busy) {
                 e.preventDefault();
@@ -299,16 +369,12 @@ export function TwoFactorSetting({
         <div className="space-y-3 border-t border-[var(--border)] pt-3">
           <div className="text-sm font-medium">{labels.disableSection}</div>
           <Input type="password" autoComplete="current-password" label={labels.password} value={password} onChange={(e) => setPassword(e.target.value)} />
-          <Input
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            readOnly={otpReadonly}
-            inputClassName={FIELD_WRITABLE_LOOK}
-            onFocus={onOtpFocus}
-            maxLength={8}
+          <OneTimeCodeInput
+            readOnlyUntilFocus
+            length={8}
             label={labels.codeLabel}
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={setCode}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter" && password && code && !busy) {
                 e.preventDefault();
