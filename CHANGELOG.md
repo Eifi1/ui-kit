@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.20.1](https://github.com/Eifi1/ui-kit/compare/v0.20.0...v0.20.1) (2026-10-02)
+
+### Fixed
+
+* **i18n:** withAllPlurals returns the catalogue unchanged for a locale Intl cannot read (kastlan) ([b38cd99](https://github.com/Eifi1/ui-kit/commit/b38cd99b83a236db85dc9a2370a81f7159291710))
+
 ## [0.20.0](https://github.com/Eifi1/ui-kit/compare/v0.19.0...v0.20.0) (2026-10-02)
 
 ### Added

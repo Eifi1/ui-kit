@@ -13,14 +13,16 @@
  * `_other` is the right stand-in: CLDR's `many` shares its wording with `other` in all
  * three. An ordinal family (`key_ordinal_one`, `…_ordinal_other`) is filled from the
  * language's ORDINAL categories. A category the catalogue already has is left alone, and
- * the input is not changed: a new tree comes back.
+ * the input is not changed: a new tree comes back. A locale `Intl` cannot read (`""`,
+ * `"x"` — a backend `parse` called without a language) adds nothing rather than throwing,
+ * so one odd call cannot fail a whole namespace load (kastlan, 0.20 adoption).
  *
  *     i18n.addResourceBundle(lng, "translation", withAllPlurals(catalogue, lng));
  *     // i18next-http-backend: { parse: (data, lng) => withAllPlurals(JSON.parse(data), lng) }
  */
 export function withAllPlurals<T extends Record<string, unknown>>(catalogue: T, locale: string): T & Record<string, unknown> {
-  const cardinal = new Intl.PluralRules(locale).resolvedOptions().pluralCategories;
-  const ordinal = new Intl.PluralRules(locale, { type: "ordinal" }).resolvedOptions().pluralCategories;
+  const cardinal = pluralCategories(locale, "cardinal");
+  const ordinal = pluralCategories(locale, "ordinal");
   const fill = (tree: Record<string, unknown>): Record<string, unknown> => {
     const out: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(tree)) {
@@ -41,4 +43,12 @@ export function withAllPlurals<T extends Record<string, unknown>>(catalogue: T, 
     return out;
   };
   return fill(catalogue) as T & Record<string, unknown>;
+}
+
+function pluralCategories(locale: string, type: Intl.PluralRuleType): readonly string[] {
+  try {
+    return new Intl.PluralRules(locale, { type }).resolvedOptions().pluralCategories;
+  } catch {
+    return [];
+  }
 }
