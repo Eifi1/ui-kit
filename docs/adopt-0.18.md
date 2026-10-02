@@ -121,3 +121,25 @@ only while a message showed. None of the three apps has such a field.
   interceptor:
   `export const serverWake = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|login\/2fa|register)\b/) }); attachServerWake(apiClient, serverWake);`
   In `providers.tsx`, next to `<Toaster />`: `<ServerWakeNotice watcher={serverWake} appName="Kastlan" />`.
+
+## 0.18.1
+
+Picked up by `^0.18.0`. Built from kastlan's and Kurvenschmiede's 0.18 adoption.
+
+- **Cold-start notice ignores downloads (kastlan):** axios answers only once the whole
+  body is in, so a generated PDF or a large photo — a GET — said "the server is waking"
+  on a warm server, and kept the notice up for every read beside it. `watchReadsAnd`
+  (the default filter) now skips `responseType` `"blob"`, `"arraybuffer"` and `"stream"`.
+  A custom `shouldWatch` gets the request (for axios, the config itself) as a third
+  argument. kastlan's URL list (`/pdf`, `/download`, `/qr-bill`, `/file`,
+  `/attachments/`) can go if those calls set `responseType`; Kurvenschmiede's blob curve
+  exports are covered as they are.
+- **Cold-start notice stacks above a FloatingActionButton (kastlan):** while showing, it
+  sits above any visible FAB under it — kastlan's `bottom-start` offline pill, or a FAB
+  in either corner on a phone, where the notice spans the width. A `hidden` FAB does not
+  lift it. Nothing to pass.
+- **Spanish and Italian are formal (Kurvenschmiede):** `es` says "usted" and `it` says
+  "Lei", like `de-CH`, `fr` and `hu`. 33 Spanish and 40 Italian strings change; standard
+  Italian command labels ("Salva", "Riprova", "Scegli una data") stay. An app whose own
+  Italian or Spanish says "tu"/"tú" either moves to "Lei"/"usted" or overrides the
+  addressing keys. keksdose's `it.json` says "tu".

@@ -738,10 +738,13 @@ bundles only the language it imports: `@eifi1/ui-kit/i18n/<code>` exports
 and changes only how counts and file sizes are written. Codes: `de-CH`, `fr`, `it`, `es`,
 `hu`, `zh`, and `en` (factory only — the constant is `DEFAULT_UI_KIT_LABELS`).
 
-There is ONE German: `de-CH`, Swiss Standard German, formal ("Sie"), with "ss" for every
-"ß" — `uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits. An app that
-addresses its users with "du" overrides the few sentences that address the reader in its
-own provider; the kit does not ship a second register.
+Every catalogue addresses the reader formally: German "Sie", French "vous", Italian "Lei",
+Spanish "usted", Hungarian "Ön" (Italian and Spanish since 0.18.1). An app that says "du",
+"tu" or "tú" overrides the few sentences that address the reader in its own provider; the
+kit does not ship a second register.
+
+There is ONE German: `de-CH`, Swiss Standard German, with "ss" for every "ß" —
+`uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits.
 
 ```tsx
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
