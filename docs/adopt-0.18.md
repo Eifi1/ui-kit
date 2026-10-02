@@ -2,13 +2,28 @@
 
 Built from Kurvenschmiede's user-management and sharing round (items 1–6) and from
 keksdose's notes on 0.17 (dev #583, #584, #576). Everything is opt-in except the fixes
-listed first. `CHANGELOG.md` → `0.18.0` has the release notes, and the showcase (⌘K) has
+listed first and the removal of three German catalogues (Everyone, item 2). `CHANGELOG.md` → `0.18.0` has the release notes, and the showcase (⌘K) has
 every prop live.
 
 ## Everyone
 
 1. Bump to `^0.18.0` by hand; a caret below 1.0 locks the minor version.
-2. **Fixes and visible changes:**
+2. ⚠ **Breaking — one German.** The kit now ships ONE German catalogue: `de-CH`, Swiss
+   Standard German, formal ("Sie"). The subpaths `@eifi1/ui-kit/i18n/de`,
+   `@eifi1/ui-kit/i18n/de-informal` and `@eifi1/ui-kit/i18n/de-CH-informal` are gone;
+   importing one fails the build. Migration:
+   - `UI_KIT_LABELS_DE` → `UI_KIT_LABELS_DE_CH`; `uiKitLabelsDe(n)` → `uiKitLabelsDeCh(n)`
+     (new in `/i18n/de-CH`, like `uiKitLabelsFr(n)`: Swiss words, `n`'s digits — so
+     `uiKitLabelsDeCh("de-DE")` writes 1.234). The words now use "ss" for "ß".
+   - `UI_KIT_LABELS_DE_INFORMAL` / `uiKitLabelsDeInformal(n)` / `UI_KIT_LABELS_DE_CH_INFORMAL`
+     → `UI_KIT_LABELS_DE_CH` / `uiKitLabelsDeCh(n)`. The kit's words then say "Sie": an
+     app that said "du" either rewrites its own text to "Sie" and Swiss "ss", or
+     overrides the keys that address the reader in its own provider —
+     `miniCalendar.startSelected`, `miniCalendar.rangeSelected`, `dangerConfirm.phrase`,
+     `confirmDialog.typed`, `wizard.confirmCancel`, `wizard.missingRequired`,
+     `tour.awaitClickHint`, `signaturePad.instructions`, `signaturePad.typedFallbackHint`.
+   - `UI_KIT_LABELS_DE_CH` itself is unchanged, byte for byte.
+3. **Fixes and visible changes:**
    - **Overlay history (keksdose #584):** a dialog with `backCloses` no longer reopens a
      row editor after Cancel. The hook now leaves alone an address change made by the
      same press that closes the overlay. One edge case: if the URL changed while an
@@ -24,10 +39,13 @@ every prop live.
      its label disappeared on hover.
    - **Card `density="compact"`:** CardTitle is `leading-snug`, so the hint no longer
      touches the title. Drop any `leading-normal` overrides you added for this.
-3. **New label namespaces:** `writeLock`, `accountState`, `shareCard`, `reauthDialog`, `serverWake`.
+   - **`missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)`:** the reference is required.
+     The doc example showed a one-argument call; that call now throws an error that
+     names `DEFAULT_UI_KIT_LABELS` instead of "Cannot convert undefined or null to object".
+4. **New label namespaces:** `writeLock`, `accountState`, `shareCard`, `reauthDialog`, `serverWake`.
    **New keys:** `confirmDialog.typed` and `accountSettings.passkeys.descriptionAlongside`.
-   Every catalogue has them. The German texts are impersonal, so they read the same in
-   both registers. The Hungarian sentences that contain a name, and es/fr/it gender
+   Every catalogue has them. The German texts are impersonal, so an app that overrides
+   the addressing keys for "du" has nothing more to override. The Hungarian sentences that contain a name, and es/fr/it gender
    agreement in `accountState`, want a native speaker's look.
 
 ## New, opt-in
@@ -74,6 +92,10 @@ only while a message showed. None of the three apps has such a field.
   `boot.waking` keys can go, or be passed as `labels`.
 - **SaveGuard:** can become `WriteLockProvider` plus `commit`, which keeps locked
   controls in the tab order.
+- **One German (breaking):** `shared/i18n/kit-labels.tsx` and its test still import
+  `/i18n/de-informal` on the committed branch; the working tree's switch to
+  `UI_KIT_LABELS_DE_CH` is the migration. The "a constant, not a factory" note there can
+  go: `uiKitLabelsDeCh(locale)` exists now, though the constant is what `de-CH` wants.
 
 ## Kurvenschmiede
 
@@ -88,6 +110,10 @@ only while a message showed. None of the three apps has such a field.
   interceptor:
   `export const serverWake = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|register)\b/) }); attachServerWake(api, serverWake);`
   In `main.tsx`, beside `<Toaster>`: `<ServerWakeNotice watcher={serverWake} appName="Kurvenschmiede" />`.
+- **One German (breaking):** `shared/i18n/kit-labels.ts` imports `uiKitLabelsDe` from
+  `/i18n/de`. Use `uiKitLabelsDeCh(tagOf(FALLBACK_LOCALE))` from `/i18n/de-CH`; the
+  `"de-CH"` loader stays `UI_KIT_LABELS_DE_CH`. The kit's words for `de` then say "ss",
+  so either the app's own `de` text follows, or the app keeps one German as well.
 
 ## kastlan
 
