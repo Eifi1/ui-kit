@@ -25,6 +25,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       attachmentScreenshot: "Captura de pantalla",
       attachmentRemoveFile: (name) => `Quitar ${name}`,
       attachmentLimit: (max) => `Máximo ${n(max)} ${max === 1 ? "adjunto" : "adjuntos"}: quite uno para añadir otro.`,
+      attachmentUploading: "Subiendo…",
     },
     feedbackDialog: {
       title: "Enviar comentarios",
@@ -201,6 +202,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       booleanTrue: "Sí",
       booleanFalse: "No",
       booleanUnset: "Sin definir",
+      sortBy: "Ordenar por",
+      sortDefault: "Orden predeterminado",
+      sortAscending: "Ascendente",
+      sortDescending: "Descendente",
     },
     miniCalendar: {
       previousMonth: "Mes anterior",
@@ -223,6 +228,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       previousMonth: "Mes anterior",
       nextMonth: "Mes siguiente",
       today: "Hoy",
+      yearPanel: "Elegir un año",
+      earlierYears: "Años anteriores",
+      laterYears: "Años posteriores",
+      thisYear: "Este año",
     },
     calendarHeatmap: {
       grid: "Valores diarios",
@@ -320,6 +329,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       prompt: "Esta acción no se puede deshacer.",
       password: "Contraseña",
       phrase: (phrase) => `Escriba «${phrase}» para confirmar`,
+      acknowledge: "He leído lo que hace esta acción y deseo continuar.",
     },
     tabs: {
       add: "Añadir pestaña",
@@ -526,6 +536,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     form: {
       save: "Guardar",
       cancel: "Cancelar",
+      submitShortcut: (apple) => (apple ? "⌘ Intro" : "Ctrl+Intro"),
     },
     descriptionList: {
       empty: "—",
@@ -633,6 +644,41 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     legal: {
       navLabel: "Información legal",
+    },
+    characterCount: {
+      count: (used, max) => `${n(used)} de ${n(max)} ${plural(max, "carácter", "caracteres")}`,
+      remaining: (left) =>
+        left === 1 ? "Queda 1 carácter" : `Quedan ${n(left)} caracteres`,
+      limitReached: "Límite de caracteres alcanzado",
+    },
+    countrySelect: {
+      country: "País",
+      search: "Buscar país",
+      others: "Otros países",
+    },
+    inlineEdit: {
+      edit: (label) => `Editar ${label}`,
+      failed: "No se ha podido guardar el cambio.",
+      empty: "Vacío",
+    },
+    ibanInput: {
+      format: "Un IBAN empieza por un código de país de dos letras y dos dígitos de control.",
+      country: (code) => `«${code}» no es el código de país de un IBAN.`,
+      length: (actual, expected) =>
+        `Un IBAN de este país tiene ${n(expected)} caracteres; este tiene ${n(actual)}.`,
+      checksum: "Los dígitos de control no coinciden: probablemente hay un carácter mal escrito.",
+      qrRequired: "Este es un IBAN normal. Una factura QR requiere el QR-IBAN de la cuenta.",
+      qrNotAllowed:
+        "Este es un QR-IBAN, que solo recibe pagos de facturas QR. Introduzca el IBAN normal de la cuenta.",
+    },
+    phoneInput: {
+      countryCode: "Prefijo del país",
+      other: "Otro",
+    },
+    signChip: {
+      outflow: "Salida",
+      inflow: "Entrada",
+      direction: (current, next) => `Dirección: ${current} — cambiar a ${next}`,
     },
     translationReview: {
       statusMissing: "Falta",

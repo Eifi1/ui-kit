@@ -7,7 +7,7 @@ import type { CalendarHeatmapLabels } from "../components/calendar-heatmap";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
 import type { FieldSyncLabels } from "../components/field-sync";
-import type { PasswordRevealLabels, TabsLabels } from "../components/ui";
+import type { CharacterCountLabels, PasswordRevealLabels, TabsLabels } from "../components/ui";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { CommandPaletteLabels } from "../search/command-palette";
@@ -53,6 +53,11 @@ import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
 import type { ServerWakeLabels } from "../components/server-wake";
 import type { TranslationReviewLabels } from "../components/translation-review-labels";
+import type { CountrySelectLabels } from "../components/country-select";
+import type { InlineEditLabels } from "../components/inline-edit-field";
+import type { IbanInputLabels } from "../components/iban-input";
+import type { PhoneInputLabels } from "../components/phone-input";
+import type { SignChipLabels } from "../components/sign-chip";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -294,6 +299,18 @@ export interface UiKitLabels {
   translationReview: TranslationReviewLabels;
   /** 0.19.0: `LegalLinks`' navigation name — the legal pages' shell, for every app. */
   legal: LegalLabels;
+  /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
+  characterCount: CharacterCountLabels;
+  /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */
+  countrySelect: CountrySelectLabels;
+  /** 0.22.0: `InlineEditField` — keksdose K9. */
+  inlineEdit: InlineEditLabels;
+  /** 0.22.0: `IbanInput`'s messages, one per problem. */
+  ibanInput: IbanInputLabels;
+  /** 0.22.0: `PhoneInput`'s country-code select. */
+  phoneInput: PhoneInputLabels;
+  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount. */
+  signChip: SignChipLabels;
 }
 
 /**
@@ -438,7 +455,39 @@ interface KitI18n {
   weekStartsOn?: WeekDay;
   linkComponent?: KitLinkComponent;
   chartTooltipPlacement?: ChartTooltipPlacement;
+  formatDate?: KitDateFormatter;
 }
+
+/** What a {@link KitDateFormatter} is told about the date it is formatting. */
+export interface KitDateFormatContext {
+  /**
+   * How much of a date the string is: `"day"` — the `iso` is `"YYYY-MM-DD"`; `"month"` —
+   * `"YYYY-MM"` (a `MonthPicker`); `"year"` — `"YYYY"` (`MonthPicker mode="year"`).
+   */
+  unit: "day" | "month" | "year";
+  /** Which kit surface asks: the trigger of a `DatePicker`, of a `DateRangePicker`
+   *  (called once per end), of a `MonthPicker`, or a `DateMark`. */
+  source: "datePicker" | "dateRangePicker" | "monthPicker" | "dateMark";
+  /** The locale the kit would have formatted in — the component's `locale` prop, else
+   *  the provider's — or `undefined` for the runtime's. */
+  locale: string | undefined;
+  /**
+   * The kit's suggestion: whether this date stands alone where the day of the week
+   * helps — `true` for a `DatePicker`'s trigger and a `DateMark`, `false` for the two
+   * ends of a range (twice the width, in a sentence-like "from – to") and for a month
+   * or a year. keksdose's rule, which this follows: *"A date in a COLUMN carries the
+   * weekday. A date in a SENTENCE does not."* (date-cell.tsx, dev#546). A formatter
+   * is free to ignore it.
+   */
+  weekday: boolean;
+}
+
+/**
+ * The app's ONE answer to "what does a date look like here" — keksdose K12. Returns the
+ * text for an ISO date (see {@link KitDateFormatContext.unit} for the three shapes).
+ * Return `""` to fall back to the kit's own formatting for that date.
+ */
+export type KitDateFormatter = (iso: string, context: KitDateFormatContext) => string;
 
 /** Where a chart shows the values under the pointer — see `SeriesChartTooltip.placement`. */
 export type ChartTooltipPlacement = "cursor" | "above" | "below" | "auto";
@@ -506,6 +555,25 @@ export interface UiKitProviderProps {
    * pointer, as before.
    */
   chartTooltipPlacement?: ChartTooltipPlacement;
+  /**
+   * How every kit date below is written, when the component is not told otherwise —
+   * keksdose K12. keksdose has a date-format preference (Settings ▸ date format, feedback
+   * #180) that is not the UI language, and a weekday in the UI language beside digits
+   * in the preference's order (live #246, dev#546): two locales in one string, which
+   * no `locale` + `Intl` options can say. Its `DateField` wraps every `DatePicker` to
+   * pass `formatValue`, and its report range field formats both ends by hand; with this
+   * set once on the provider, those wrappers thin to nothing.
+   *
+   * Used for the trigger text of `DatePicker`, `DateRangePicker` and `MonthPicker`
+   * (month and year mode), and for `DateMark display="date"`. A component's own
+   * `formatValue` or `formatOptions` (`dateStyle` on a DateMark) wins: prop >
+   * provider > the kit's `Intl` default, the order every kit setting resolves in. Left
+   * out (or returning `""`), everything formats exactly as before.
+   *
+   * Keep it stable (`useCallback`, or a module function): it is in the provider's
+   * context value, so a new function every render re-renders every consumer.
+   */
+  formatDate?: KitDateFormatter;
   children: ReactNode;
 }
 
@@ -523,6 +591,7 @@ export function UiKitProvider({
   weekStartsOn,
   linkComponent,
   chartTooltipPlacement,
+  formatDate,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -533,8 +602,9 @@ export function UiKitProvider({
       labels: mergeOverrides(outer.labels, labels),
       linkComponent: linkComponent ?? outer.linkComponent,
       chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
+      formatDate: formatDate ?? outer.formatDate,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement],
+    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -625,6 +695,12 @@ export function useKitWeekStart(): WeekDay | undefined {
 /** The provider's `chartTooltipPlacement`, or `undefined` — a chart's own prop wins. */
 export function useKitChartTooltipPlacement(): ChartTooltipPlacement | undefined {
   return useContext(KitI18nContext).chartTooltipPlacement;
+}
+
+/** The nearest provider's `formatDate`, or `undefined` — a component's own
+ *  `formatValue` / `formatOptions` wins over it. See {@link KitDateFormatter}. */
+export function useKitDateFormatter(): KitDateFormatter | undefined {
+  return useContext(KitI18nContext).formatDate;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

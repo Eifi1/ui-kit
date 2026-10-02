@@ -24,6 +24,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       attachmentScreenshot: "Képernyőkép",
       attachmentRemoveFile: (name) => `${name} eltávolítása`,
       attachmentLimit: (max) => `Legfeljebb ${n(max)} melléklet – egy újabbhoz távolítson el egyet.`,
+      attachmentUploading: "Feltöltés…",
     },
     feedbackDialog: {
       title: "Visszajelzés küldése",
@@ -201,6 +202,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       booleanTrue: "Igen",
       booleanFalse: "Nem",
       booleanUnset: "Nincs megadva",
+      sortBy: "Rendezés alapja",
+      sortDefault: "Alapértelmezett sorrend",
+      sortAscending: "Növekvő",
+      sortDescending: "Csökkenő",
     },
     miniCalendar: {
       previousMonth: "Előző hónap",
@@ -221,6 +226,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       previousMonth: "Előző hónap",
       nextMonth: "Következő hónap",
       today: "Ma",
+      yearPanel: "Év kiválasztása",
+      earlierYears: "Korábbi évek",
+      laterYears: "Későbbi évek",
+      thisYear: "Ez az év",
     },
     calendarHeatmap: {
       grid: "Napi értékek",
@@ -320,6 +329,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       password: "Jelszó",
       // Phrase after a colon, so no article has to agree with it.
       phrase: (phrase) => `A megerősítéshez írja be: „${phrase}”`,
+      acknowledge: "Elolvastam, mit eredményez ez a művelet, és folytatni szeretném.",
     },
     tabs: {
       add: "Lap hozzáadása",
@@ -529,6 +539,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     form: {
       save: "Mentés",
       cancel: "Mégse",
+      submitShortcut: (apple) => (apple ? "⌘ Enter" : "Ctrl+Enter"),
     },
     descriptionList: {
       empty: "—",
@@ -639,6 +650,41 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     legal: {
       navLabel: "Jogi információk",
+    },
+    characterCount: {
+      // A noun after a numeral stays singular: "80 karakter".
+      count: (used, max) => `${n(used)} / ${n(max)} karakter`,
+      remaining: (left) => `Még ${n(left)} karakter írható`,
+      limitReached: "Elérte a karakterkorlátot",
+    },
+    countrySelect: {
+      country: "Ország",
+      search: "Ország keresése",
+      others: "További országok",
+    },
+    inlineEdit: {
+      edit: (label) => `${label} szerkesztése`,
+      failed: "A módosítást nem sikerült menteni.",
+      empty: "Üres",
+    },
+    ibanInput: {
+      format: "Az IBAN kétbetűs országkóddal és két ellenőrző számjeggyel kezdődik.",
+      country: (code) => `„${code}” nem IBAN-országkód.`,
+      length: (actual, expected) =>
+        `Ebben az országban az IBAN ${n(expected)} karakterből áll, ez ${n(actual)} karakterből.`,
+      checksum: "Az ellenőrző számjegyek nem egyeznek – valószínűleg elgépelt egy karaktert.",
+      qrRequired: "Ez egy normál IBAN. QR-számlához a bankszámla QR-IBAN-ja kell.",
+      qrNotAllowed:
+        "Ez egy QR-IBAN, amelyre csak QR-számlás befizetés érkezhet. Adja meg a bankszámla normál IBAN-ját.",
+    },
+    phoneInput: {
+      countryCode: "Országhívó szám",
+      other: "Egyéb",
+    },
+    signChip: {
+      outflow: "Kiadás",
+      inflow: "Bevétel",
+      direction: (current, next) => `Irány: ${current} – váltás erre: ${next}`,
     },
     translationReview: {
       statusMissing: "Hiányzik",

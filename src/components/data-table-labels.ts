@@ -3,7 +3,14 @@
 // ships no translations; the English defaults below make the table usable with no
 // wiring.
 
-export interface DataTableLabels {
+// A type-only import: erased at build time, so this module stays free of the table
+// itself (and of react-router), which `i18n/defaults` relies on.
+import type { DataTableSortLabels } from "./data-table";
+
+/** The phone sort control's four keys (`sortBy`, `sortDefault`, `sortAscending`,
+ *  `sortDescending`, 0.22.0) are {@link DataTableSortLabels}', declared beside the
+ *  control and part of this namespace like every other key. */
+export interface DataTableLabels extends DataTableSortLabels {
   // Table chrome
   columns: string;
   selectAllRows: string;
@@ -143,6 +150,14 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   booleanTrue: "Yes",
   booleanFalse: "No",
   booleanUnset: "Not set",
+  // The phone sort control (0.22.0). The same words as `DEFAULT_DATA_TABLE_SORT_LABELS`
+  // in data-table.tsx, written out rather than spread in: importing that VALUE here
+  // would make data-table.tsx and this module import each other (data-table.tsx reads
+  // its resolver from here), and would pull the whole table into `i18n/defaults`.
+  sortBy: "Sort by",
+  sortDefault: "Default order",
+  sortAscending: "Ascending",
+  sortDescending: "Descending",
 };
 
 /**

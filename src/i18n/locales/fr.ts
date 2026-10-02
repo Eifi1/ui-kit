@@ -25,6 +25,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       attachmentScreenshot: "Capture d’écran",
       attachmentRemoveFile: (name) => `Retirer ${name}`,
       attachmentLimit: (max) => `${n(max)} ${max === 1 ? "pièce jointe" : "pièces jointes"} au maximum — retirez-en une pour en ajouter une autre.`,
+      attachmentUploading: "Envoi en cours…",
     },
     feedbackDialog: {
       title: "Envoyer un retour",
@@ -208,6 +209,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       booleanTrue: "Oui",
       booleanFalse: "Non",
       booleanUnset: "Non défini",
+      sortBy: "Trier par",
+      sortDefault: "Ordre par défaut",
+      sortAscending: "Croissant",
+      sortDescending: "Décroissant",
     },
     miniCalendar: {
       previousMonth: "Mois précédent",
@@ -249,6 +254,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       previousMonth: "Mois précédent",
       nextMonth: "Mois suivant",
       today: "Aujourd’hui",
+      yearPanel: "Choisir une année",
+      earlierYears: "Années précédentes",
+      laterYears: "Années suivantes",
+      thisYear: "Cette année",
     },
     popover: {
       panel: "Fenêtre contextuelle",
@@ -329,6 +338,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       prompt: "Cette action est irréversible.",
       password: "Mot de passe",
       phrase: (phrase) => `Saisissez «\u202f${phrase}\u202f» pour confirmer`,
+      acknowledge: "J’ai lu ce que fait cette action et je souhaite continuer.",
     },
     tabs: {
       add: "Ajouter un onglet",
@@ -543,6 +553,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     form: {
       save: "Enregistrer",
       cancel: "Annuler",
+      submitShortcut: (apple) => (apple ? "⌘ Entrée" : "Ctrl+Entrée"),
     },
     descriptionList: {
       empty: "—",
@@ -650,6 +661,40 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     legal: {
       navLabel: "Informations légales",
+    },
+    characterCount: {
+      count: (used, max) => `${n(used)} sur ${n(max)} ${plural(max, "caractère", "caractères")}`,
+      remaining: (left) => `${n(left)} ${plural(left, "caractère restant", "caractères restants")}`,
+      limitReached: "Limite de caractères atteinte",
+    },
+    countrySelect: {
+      country: "Pays",
+      search: "Rechercher un pays",
+      others: "Autres pays",
+    },
+    inlineEdit: {
+      edit: (label) => `Modifier ${label}`,
+      failed: "La modification n’a pas pu être enregistrée.",
+      empty: "Vide",
+    },
+    ibanInput: {
+      format: "Un IBAN commence par un code pays de deux lettres et deux chiffres de contrôle.",
+      country: (code) => `«\u202f${code}\u202f» n’est pas le code pays d’un IBAN.`,
+      length: (actual, expected) =>
+        `Un IBAN de ce pays compte ${n(expected)} caractères — celui-ci en compte ${n(actual)}.`,
+      checksum: "Les chiffres de contrôle ne correspondent pas — un caractère est sans doute mal saisi.",
+      qrRequired: "Ceci est un IBAN ordinaire. Une QR-facture exige le QR-IBAN du compte.",
+      qrNotAllowed:
+        "Ceci est un QR-IBAN, qui ne reçoit que des paiements par QR-facture. Saisissez l’IBAN ordinaire du compte.",
+    },
+    phoneInput: {
+      countryCode: "Indicatif du pays",
+      other: "Autre",
+    },
+    signChip: {
+      outflow: "Sortie",
+      inflow: "Entrée",
+      direction: (current, next) => `Sens\u00a0: ${current} — passer à ${next}`,
     },
     translationReview: {
       statusMissing: "Manquant",
