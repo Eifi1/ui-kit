@@ -1,5 +1,6 @@
-import { useId, useMemo } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useCallback, useId, useMemo } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./ui";
@@ -11,9 +12,14 @@ import {
   useComboboxFieldError,
   type ComboOption,
 } from "./combobox-core";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason } from "./write-lock";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import {
+  DEFAULT_COMBOBOX_LABELS,
+  DEFAULT_COMMON_LABELS,
+  useKitLabels,
+  useKitLocale,
+} from "../i18n/kit-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -44,15 +50,46 @@ export const DEFAULT_COUNTRY_SELECT_LABELS: CountrySelectLabels = {
  * `onChange` is the kit's — "a country was picked", carrying its code — rather than
  * the div's form event. `id` and the `aria-*` wiring below go to the TRIGGER, which is
  * the control a reader meets; everything else in `rest` dresses the wrapper.
+ *
+ * `Clearable` follows `clearable`, the way {@link EntityCombobox}'s `C` follows its
+ * `clearValue`: it is inferred from the prop, so `onChange` is `(code: string) => void`
+ * for the field as it always was (`onChange={setCountry}` over a `string` state still
+ * type-checks), and `(code: string | null) => void` once `clearable` is set — the
+ * `null` of a clear cannot reach a handler that was never told about it.
  */
-export interface CountrySelectProps
+export interface CountrySelectProps<Clearable extends boolean = false>
   extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "defaultValue"> {
   /** The chosen country as an ISO 3166-1 alpha-2 code ("CH"), in either case;
    *  `null`, `undefined` or `""` when none is. A code outside the list still shows
    *  its name — the list restricts what can be PICKED, not what can be shown. */
   value: string | null | undefined;
-  /** A country was picked: its alpha-2 code, always upper-case. */
-  onChange: (code: string) => void;
+  /** A country was picked: its alpha-2 code, always upper-case. With `clearable`,
+   *  also `null`: the "×" (or Delete on the trigger) emptied the field. */
+  onChange: (code: Clearable extends true ? string | null : string) => void;
+  /**
+   * Offer a clear "×" in place of the chevron while a country is chosen; it hands
+   * `onChange` `null` (the kit's later list: an optional country — a contact's
+   * nationality, a bank filter's "any country" — could be set but never unset again).
+   *
+   * The combobox family's clear, as {@link EntityCombobox} draws it: a pointer
+   * shortcut inside the trigger, out of the tab order so it is not a second stop
+   * between this field and the next, named by `clearLabel` (default: the
+   * `combobox.clear` label every picker in the family shares). The keyboard way is
+   * Delete or Backspace on the closed trigger. Not offered while `disabled` or locked
+   * (`commit` / `disabledReason`): a clear is a change like any other.
+   */
+  clearable?: Clearable;
+  /** The clear "×"'s accessible name. Wins over `combobox.clear` from the
+   *  {@link UiKitProvider}, as {@link EntityCombobox}'s `clearLabel` does. */
+  clearLabel?: string;
+  /**
+   * The TRIGGER — the focusable `<button>` a reader meets — as a React 19 ref prop,
+   * the way {@link MoneyField} takes its input's (kastlan: react-hook-form's
+   * focus-on-error calls `focus()` on whatever `field.ref` was handed, and without a
+   * ref the first field in error on an address form was never focused). See
+   * `RhfCountrySelect`, which passes it.
+   */
+  ref?: Ref<HTMLButtonElement>;
   /**
    * Offer only these codes (any case; duplicates and malformed entries dropped).
    * Default: every ISO 3166-1 country, {@link COUNTRY_CODES}. Sorted by name either
@@ -92,8 +129,8 @@ export interface CountrySelectProps
   error?: ReactNode;
   /** Required and unanswered — {@link FIELD_INVALID}, as on every field. */
   invalid?: boolean;
-  /** The empty trigger's text. Default: nothing when the field has a `label` (the
-   *  label already says what goes here), else `labels.country`. */
+  /** The empty trigger's text. Default: nothing when the field has a `label` or an
+   *  `aria-labelledby` (the label already says what goes here), else `labels.country`. */
   placeholder?: string;
   /** As on the other pickers: no focus, no list, the settled look. */
   disabled?: boolean;
@@ -117,6 +154,15 @@ export interface CountrySelectProps
   /** Per-instance overrides of {@link CountrySelectLabels}, over the provider's
    *  `countrySelect` namespace, over English. */
   labels?: Partial<CountrySelectLabels>;
+  /**
+   * Name the trigger by an element of the caller's — a form's own label above the
+   * field, which is how `RhfCountrySelect` names it. The trigger is then named by
+   * that element AND the chosen country (two references, as {@link DatePicker}'s
+   * trigger is named, so "Country Switzerland" needs no punctuation to translate),
+   * instead of the composed "label: country". An `aria-label` still wins. Before
+   * 0.23 this landed on the wrapper `<div>`, which has no role to be named.
+   */
+  "aria-labelledby"?: string;
 }
 
 /** Fold a name for search: no case, no accents — "osterreich" finds Österreich, "cote"
@@ -192,8 +238,11 @@ function collator(locale: string): Intl.Collator {
  *
  * Field anatomy as on every field: floating `label`, `hint`, `error`, `invalid`; the
  * trigger is named "label: value" as the other trigger pickers are.
+ *
+ * Since 0.23 it takes a `ref` to the trigger (react-hook-form's focus-on-error, kastlan)
+ * and `clearable`, which hands `onChange` `null`.
  */
-export function CountrySelect({
+export function CountrySelect<Clearable extends boolean = false>({
   value,
   onChange,
   countries,
@@ -207,18 +256,25 @@ export function CountrySelect({
   disabled,
   disabledReason: ownReason,
   commit,
+  clearable,
+  clearLabel,
   locale: localeProp,
   labels: labelsProp,
   className,
   id,
+  ref,
   "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
   "aria-required": ariaRequired,
   ...rest
-}: CountrySelectProps) {
+}: CountrySelectProps<Clearable>) {
   const text = useKitLabels("countrySelect", DEFAULT_COUNTRY_SELECT_LABELS, labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  // The clear's name is the family's (`combobox.clear`), as on EntityCombobox; a prop
+  // left `undefined` falls through to the provider rather than masking it.
+  const comboText = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, { clear: clearLabel });
   // English without a locale — see `countryName`.
   const locale = useKitLocale(localeProp) ?? "en";
 
@@ -268,6 +324,15 @@ export function CountrySelect({
   );
   const core = useComboboxCore<string>({ options: allOptions, filter: false });
   const { open, setOpen, query, triggerRef, closeToTrigger } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
 
   const q = fold(query.trim());
   const results = useMemo(() => {
@@ -306,19 +371,40 @@ export function CountrySelect({
 
   const code = normalizeCountryCode(value);
   const selectedName = code ? countryName(code, locale) : undefined;
-  const emptyText = placeholder ?? (label === undefined ? text.country : "");
+  // A field named by a label of the caller's (`aria-labelledby`) is a labelled field too:
+  // the label already says what goes here.
+  const emptyText = placeholder ?? (label === undefined && !ariaLabelledBy ? text.country : "");
   const fieldName = typeof label === "string" ? label : text.country;
+  const valueId = `${generated}-value`;
+  // Named by the caller's element (a form's label) — then the shown text is the second
+  // reference, as the composed name below has the value second; but only when it IS a
+  // value or the caller's placeholder, never the `country` fallback word.
+  const labelledBy =
+    ariaLabel === undefined && ariaLabelledBy
+      ? mergeDescribedBy(ariaLabelledBy, (selectedName !== undefined || Boolean(placeholder)) && valueId)
+      : undefined;
   const name =
-    ariaLabel ??
-    (selectedName !== undefined
-      ? common.fieldValue(fieldName, selectedName)
-      : placeholder
-        ? common.fieldValue(fieldName, placeholder)
-        : fieldName);
+    labelledBy !== undefined
+      ? undefined
+      : (ariaLabel ??
+        (selectedName !== undefined
+          ? common.fieldValue(fieldName, selectedName)
+          : placeholder
+            ? common.fieldValue(fieldName, placeholder)
+            : fieldName));
+
+  const showClear = Boolean(clearable && code && !inert);
+  // `onChange` widened to take the clear's `null` — its type says so once `clearable`
+  // is set, and the clear is only ever offered then.
+  const emit = onChange as (code: string | null) => void;
+  const clear = () => {
+    if (!showClear) return;
+    emit(null);
+  };
 
   const choose = (o: ComboOption<string>) => {
     if (inert) return;
-    onChange(o.value);
+    emit(o.value);
     // Back to the trigger: the panel holding focus is about to unmount, and a keyboard
     // user who has answered this field should stand on it, ready to Tab on.
     closeToTrigger();
@@ -326,7 +412,7 @@ export function CountrySelect({
 
   const trigger = (
     <button
-      ref={triggerRef}
+      ref={setTrigger}
       id={triggerId}
       type="button"
       // A closed choice that expands into the list below — the role every trigger
@@ -337,6 +423,7 @@ export function CountrySelect({
       aria-controls={listboxId}
       aria-expanded={open}
       aria-label={name}
+      aria-labelledby={labelledBy}
       aria-invalid={field.isInvalid || undefined}
       aria-required={ariaRequired}
       aria-describedby={mergeDescribedBy(field.describedBy, locked && reasonId)}
@@ -358,6 +445,10 @@ export function CountrySelect({
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
           setOpen(true);
+        } else if (showClear && !open && (e.key === "Delete" || e.key === "Backspace")) {
+          // The keyboard's clear: the "×" is out of the tab order (see `clearable`).
+          e.preventDefault();
+          clear();
         }
       }}
       className={cn(
@@ -373,11 +464,33 @@ export function CountrySelect({
         {flags && code && <CurrencyFlag country={code.toLowerCase()} />}
         {/* A long name ("Saint Vincent and the Grenadines") truncates rather than
             widening the field: the kit is checked at 390px. */}
-        <span className={cn("truncate", selectedName === undefined && "text-[var(--text-placeholder)]")}>
+        <span
+          id={valueId}
+          className={cn("truncate", selectedName === undefined && "text-[var(--text-placeholder)]")}
+        >
           {selectedName ?? emptyText}
         </span>
       </span>
-      <FieldChevron />
+      {showClear ? (
+        /* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- tabIndex -1 inside
+            the trigger <button>, so it never holds focus and a key handler here could never
+            fire; the keys go to the trigger, where Delete and Backspace clear. A pointer
+            shortcut, as on EntityCombobox. */
+        <span
+          role="button"
+          tabIndex={-1}
+          aria-label={comboText.clear}
+          onClick={(e) => {
+            e.stopPropagation();
+            clear();
+          }}
+          className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+        >
+          <X aria-hidden className="size-4" />
+        </span>
+      ) : (
+        <FieldChevron />
+      )}
     </button>
   );
 

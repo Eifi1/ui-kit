@@ -45,6 +45,9 @@ function parseSettled(text: string): number | null | undefined {
  * blurs the field and tears the editor down before the popover can open (typed
  * calculations still evaluate).
  *
+ * `inputClassName` (0.23, keksdose G7) styles the `<input>` itself — `text-end` for a
+ * money column — where `className` sizes the wrapper; see {@link AmountInput}'s.
+ *
  * This, not a `NumberField` with `digits={2}`, is the number-valued field for money:
  * it settles to the CURRENCY's minor unit (JPY 0, CHF 2) and `digits` takes a unit
  * price's finer scale (kastlan 5).
