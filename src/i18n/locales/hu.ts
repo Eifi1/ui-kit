@@ -630,6 +630,13 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       submit: "Folytatás",
       cancel: "Mégse",
     },
+    serverWake: {
+      slow: "Még tölt – ez a szokásosnál tovább tart.",
+      // The name stays in the nominative behind "a(z) … alkalmazást", as in
+      // `confirmRemove`: a Hungarian case ending on an arbitrary product name is a guess.
+      waking: (appName) =>
+        `A szerver elalszik, ha senki sem használja ${appName ? `a(z) ${appName} alkalmazást` : "az alkalmazást"}, ezért egy szünet utáni első kérésnek újra el kell indítania. Ez eltarthat egy ideig – semmi sem vész el, az oldal magától betöltődik.`,
+    },
   };
 }
 

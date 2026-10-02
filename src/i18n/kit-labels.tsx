@@ -50,6 +50,7 @@ import type { WriteLockLabels } from "../components/write-lock";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
+import type { ServerWakeLabels } from "../components/server-wake";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -284,6 +285,8 @@ export interface UiKitLabels {
   accountState: AccountStateLabels;
   shareCard: ShareCardLabels;
   reauthDialog: ReauthDialogLabels;
+  /** 0.18.0: `ServerWakeNotice` — keksdose's cold-start notice, for every app. */
+  serverWake: ServerWakeLabels;
 }
 
 /**

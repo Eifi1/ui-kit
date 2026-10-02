@@ -614,6 +614,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       submit: "继续",
       cancel: "取消",
     },
+    serverWake: {
+      slow: "仍在加载，比平时耗时更长。",
+      // A Latin product name gets a space either side, as everywhere in this catalogue.
+      waking: (appName) =>
+        `无人使用${appName ? ` ${appName} ` : "本应用"}时，服务器会进入休眠，因此暂停后的第一个请求需要重新启动它。这可能需要一点时间——不会丢失任何内容，页面会自动加载完成。`,
+    },
   };
 }
 
