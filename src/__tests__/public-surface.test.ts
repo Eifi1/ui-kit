@@ -128,8 +128,12 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_SERVER_WAKE_LABELS` (keksdose's cold-start notice for every app).
   // 0.19.0: `kitLabelStrings`, the kit's words as review rows (keksdose) (+1); the
   // language registry `KIT_LANGUAGES`, `resolveLanguage`, `formatLocaleOf`,
-  // `loadUiKitLabels`, `languageOptions` (+5).
-  ["@eifi1/ui-kit", barrel, 514],
+  // `loadUiKitLabels`, `languageOptions` (+5); translation review — 18 pure helpers
+  // (`translationRows`, `placeholderMismatch`, `keyInArea`, `fromApiReview`, …) and
+  // `TranslationReviewPanel`, `TranslationReviewEditor`, `ReviewStatusChip`,
+  // `TranslationProgress`, `TranslationLocaleTabs`, `TranslationExportButton`,
+  // `REVIEW_STATUS_TONES`, `DEFAULT_TRANSLATION_REVIEW_LABELS` (+26).
+  ["@eifi1/ui-kit", barrel, 540],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

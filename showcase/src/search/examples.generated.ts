@@ -46,6 +46,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Completeness per language",
     "One DEFAULT_*_LABELS per namespace, and the resolvers",
     "The key tree",
+    "TranslationReviewPanel — one locale at a time",
+    "ReviewStatusChip — the vocabulary",
   ],
   "fields": [
     "Input — unlabelled and labelled",

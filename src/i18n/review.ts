@@ -175,4 +175,19 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "shareCard.removeConfirm": [["{{name}}"]],
   "shareCard.revokePendingConfirm": [["{{name}}"]],
   "serverWake.waking": [["{{appName}}"], [undefined]],
+  "translationReview.filterCount": [
+    ["{{status}}", 1],
+    ["{{status}}", 3],
+  ],
+  "translationReview.placeholdersOnly": one,
+  "translationReview.progress": [
+    [1, 1],
+    [3, 12],
+  ],
+  "translationReview.localeProgress": [[3, 12]],
+  "translationReview.placeholderMismatch": [["{{reference}}", "{{text}}"]],
+  "translationReview.lastApproved": [["{{name}}", "{{date}}"]],
+  "translationReview.lastFlagged": [["{{name}}", "{{date}}"]],
+  "translationReview.scope": [["{{areas}}"]],
+  "translationReview.exportCorrections": [[0], [1], [3]],
 };

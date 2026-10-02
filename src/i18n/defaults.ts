@@ -51,6 +51,7 @@ import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake";
+import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "../components/translation-review-labels";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -138,4 +139,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   shareCard: DEFAULT_SHARE_CARD_LABELS,
   reauthDialog: DEFAULT_REAUTH_DIALOG_LABELS,
   serverWake: DEFAULT_SERVER_WAKE_LABELS,
+  translationReview: DEFAULT_TRANSLATION_REVIEW_LABELS,
 };
