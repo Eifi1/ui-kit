@@ -87,6 +87,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       passkeys: {
         title: "通行密钥",
         description: "使用指纹、面容或设备 PIN 登录，无需密码。",
+        descriptionAlongside: "使用指纹、面容或设备 PIN 登录，密码仍可照常使用。",
         empty: "暂无通行密钥",
         loading: "正在加载通行密钥…",
         list: "已注册的通行密钥",
@@ -485,6 +486,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     confirmDialog: {
       confirm: "确认",
       cancel: "取消",
+      typed: (text) => `输入“${text}”以确认`,
     },
     floatingPanel: {
       close: "关闭",
@@ -569,6 +571,54 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       zoom: "缩放",
       noPreview: "此文件无法预览",
       openInNewTab: "在新标签页中打开",
+    },
+    writeLock: {
+      reason: "仅可查看，无法修改。",
+    },
+    accountState: {
+      active: "已启用",
+      inactive: "已停用",
+      invited: "已邀请",
+      registered: "已注册",
+      unverified: "未验证",
+      passwordChange: "需修改密码",
+    },
+    shareCard: {
+      dialogTitle: "共享",
+      close: "关闭",
+      email: "电子邮箱地址",
+      emailOptional: "电子邮箱地址（可选）",
+      emailPlaceholder: "name@example.com",
+      invalidEmail: "请输入完整的电子邮箱地址。",
+      role: "角色",
+      roleOf: (name) => `${name} 的角色`,
+      add: "共享",
+      whoHasAccess: "有权访问的人",
+      nobodyYet: "目前还没有其他人有权访问。",
+      pending: "待接受",
+      openInvite: "公开邀请链接",
+      copyLink: "复制链接",
+      team: "团队",
+      teamHint: (name) => `${name} 的所有成员都将获得访问权限。`,
+      remove: "移除访问权限",
+      removeConfirm: (name) => `移除 ${name} 的访问权限？`,
+      revokePending: "撤回邀请",
+      revokePendingConfirm: (name) => `撤回对 ${name} 的邀请？`,
+      failed: "操作未成功，请重试。",
+      loading: "加载中…",
+    },
+    reauthDialog: {
+      title: "验证身份",
+      description: "请输入当前密码以继续。",
+      password: "当前密码",
+      submit: "继续",
+      cancel: "取消",
+    },
+    serverWake: {
+      slow: "仍在加载，比平时耗时更长。",
+      // A Latin product name gets a space either side, as everywhere in this catalogue.
+      waking: (appName) =>
+        `无人使用${appName ? ` ${appName} ` : "本应用"}时，服务器会进入休眠，因此暂停后的第一个请求需要重新启动它。这可能需要一点时间——不会丢失任何内容，页面会自动加载完成。`,
     },
   };
 }

@@ -542,7 +542,6 @@ export const es: Dictionary = {
       "traducir la interfaz",
       "cambiar el idioma",
       "traducción al alemán",
-      "alemán informal con du",
       "ortografía del alemán de Suiza",
       "encontrar textos sin traducir",
       "configurar el idioma de fechas y números",

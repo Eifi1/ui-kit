@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { PasskeysSetting } from "../passkeys-setting";
 import type { PasskeyItem } from "../passkeys-setting";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 const KEYS: PasskeyItem[] = [
   { id: 1, name: "Laptop", createdAt: "2026-01-05T10:00:00Z", lastUsedAt: "2026-09-01T08:00:00Z" },
@@ -109,7 +109,7 @@ describe("PasskeysSetting", () => {
 
   it("speaks the provider's language", () => {
     render(
-      <UiKitProvider labels={{ accountSettings: UI_KIT_LABELS_DE.accountSettings }}>
+      <UiKitProvider labels={{ accountSettings: UI_KIT_LABELS_DE_CH.accountSettings }}>
         <PasskeysSetting passkeys={[]} onAdd={vi.fn()} />
       </UiKitProvider>,
     );

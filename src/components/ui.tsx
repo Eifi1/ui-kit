@@ -9,6 +9,7 @@ import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
+import { useCommitReason } from "./write-lock";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -197,6 +198,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    */
   disabledReason?: ReactNode;
   /**
+   * This button COMMITS — it saves, creates, deletes. Under a locked
+   * {@link WriteLockProvider} it is disabled the `disabledReason` way, with the lock's
+   * reason (which wins over a `disabledReason` of its own). No provider, or an
+   * unlocked one: no effect. See {@link WriteLockProvider}.
+   */
+  commit?: boolean;
+  /**
    * Busy — the save is in flight: a spinner, `aria-busy`, and no second submit.
    *
    * kastlan's FormActions (form-actions.tsx:50) disables its submit and swaps in a
@@ -271,6 +279,7 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   pending?: never;
   pressed?: never;
   disabledReason?: never;
+  commit?: never;
 }
 
 function hasContent(node: ReactNode): boolean {
@@ -396,7 +405,8 @@ function ButtonElement({
   stretch,
   tone = "default",
   pressed,
-  disabledReason,
+  disabledReason: ownDisabledReason,
+  commit,
   pending,
   className,
   onClick,
@@ -409,6 +419,7 @@ function ButtonElement({
   ...rest
 }: ButtonProps) {
   const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   const inert = locked || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
@@ -874,6 +885,10 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * reason nobody can see is not one. Wins over `disabled`, as on Button.
    */
   disabledReason?: ReactNode;
+  /** This action COMMITS — {@link Button}'s `commit`: under a locked
+   *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
+   *  reason. No effect without a lock. */
+  commit?: boolean;
   /** The `<button>` element — a prop in React 19, as on {@link Button}. */
   ref?: Ref<HTMLButtonElement>;
   /** Only on the link form — see {@link IconButtonLinkProps}. */
@@ -937,6 +952,7 @@ export interface IconButtonLinkProps
   form?: never;
   pressed?: never;
   disabledReason?: never;
+  commit?: never;
   disabledStyle?: never;
   pending?: never;
 }
@@ -1164,7 +1180,8 @@ function IconButtonElement(
     tooltipSide,
     tooltipPortal,
     tooltipLazy = true,
-    disabledReason,
+    disabledReason: ownDisabledReason,
+    commit,
     pending,
     glyphSize,
     badge,
@@ -1186,6 +1203,7 @@ function IconButtonElement(
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const reasonId = useId();
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   // Pending is inert like a locked button — focusable, every activation swallowed —
   // without the locked look: the spinner is the state.
@@ -1750,15 +1768,48 @@ function useFieldError(
  * down out of the field, between the value and the text. So the field keeps its box
  * and this wraps the pair.
  *
- * It renders nothing of its own when there is no message, which is what keeps `error`
- * additive: a field without one is exactly the DOM it was before the prop existed,
- * down to the bare `<input>` an unlabelled {@link Input} drops straight into a
- * caller's flex row. For the same reason `className` is NOT moved out here — it goes
- * on the field, as it always has, so adding a message cannot silently change what
- * that prop styles.
+ * WHEN IT WRAPS. A field that never takes `error` renders nothing of its own here,
+ * which is what keeps the prop additive: it is exactly the DOM it was before the prop
+ * existed, down to the bare `<input>` an unlabelled {@link Input} drops straight into a
+ * caller's flex row. A field that DOES take `error` — the key is passed, whatever its
+ * value — is wrapped for as long as it is mounted, message or not (`reserve`).
+ *
+ * It used to wrap only while a message showed, and that cost the control its
+ * identity: a fragment and a `<div>` are different elements at the same spot in the
+ * tree, so React threw the `<input>` away and mounted a new one every time the message
+ * came or went. Focus fell to `<body>`, the caret went with it, and an uncontrolled
+ * field lost what had been typed — Kurvenschmiede's confirm-password dialog clears its
+ * "Wrong password" on change, so the first keystroke of the retry dropped the user out
+ * of the field. Keeping the box stops that; the field is never reparented.
+ *
+ * The other ways to keep it stable were worse. A box on EVERY field changes what every
+ * flex row and grid in three apps lays out (`flex-1`, `w-56`, `col-span-2` on the
+ * field would land on a child of the item instead of the item). A `display: contents`
+ * box would keep the flex/grid item, but a contents box takes no margin, so a parent's
+ * `space-y-*` stops spacing the field — the shape of Kurvenschmiede's reset-password
+ * form and gear wizard, both `space-y-*` stacks of fields with `error` — and it moves
+ * `first:`/`last:`/`> *` matches. A field passing `error` already took this plain box
+ * whenever its message showed, so what changes is only that it keeps it while none
+ * does; every such call site in the three apps sits in a block or a `space-y`/grid
+ * stack where a full-width block box is the field's own size. The case it does change
+ * is a field passing `error` whose `className` sizes it as a flex item (`flex-1` in a
+ * row): that caller already lost the sizing while a message showed, and now sees the
+ * same box without one. Pass `error` only where a message can actually appear.
+ *
+ * `className` is NOT moved out here, for the same reason — it goes on the field, as it
+ * always has, so the box cannot silently change what that prop styles.
  */
-function FieldGroup({ errorEl, children }: { errorEl: ReactNode; children: ReactNode }) {
-  if (errorEl === null) return <>{children}</>;
+function FieldGroup({
+  errorEl,
+  reserve = false,
+  children,
+}: {
+  errorEl: ReactNode;
+  /** The caller passed `error`: keep the box even while there is no message. */
+  reserve?: boolean;
+  children: ReactNode;
+}) {
+  if (errorEl === null && !reserve) return <>{children}</>;
   return (
     <div>
       {children}
@@ -1829,8 +1880,8 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   passwordLabels?: Partial<PasswordRevealLabels>;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
+  const {
     className,
     inputClassName,
     label,
@@ -1842,9 +1893,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     error,
     passwordLabels,
     ...rest
-  },
-  ref,
-) {
+  } = props;
+  // Passed at all — even as `undefined` — the field keeps its box; see FieldGroup.
+  const reserve = "error" in props;
   const generated = useId();
   const fieldId = id ?? generated;
   const { isInvalid, describedBy, errorEl } = useFieldError(
@@ -1894,7 +1945,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   if (label === undefined) {
     if (!isPassword) {
       return (
-        <FieldGroup errorEl={errorEl}>
+        <FieldGroup errorEl={errorEl} reserve={reserve}>
           <input
             ref={ref}
             id={id}
@@ -1915,7 +1966,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       );
     }
     return (
-      <FieldGroup errorEl={errorEl}>
+      <FieldGroup errorEl={errorEl} reserve={reserve}>
         <div className={cn("relative", className)}>
           <input
             ref={ref}
@@ -1933,7 +1984,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     );
   }
   return (
-    <FieldGroup errorEl={errorEl}>
+    <FieldGroup errorEl={errorEl} reserve={reserve}>
       <FloatingField className={className} htmlFor={fieldId} label={label} srOnlyLabel={asDisplay}>
         <input
           ref={ref}
@@ -2001,10 +2052,11 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
 // height the caller's type brings with it.
 const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { className, label, id, children, invalid, error, hint, size, selectClassName, ...rest },
-  ref,
-) {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
+  const { className, label, id, children, invalid, error, hint, size, selectClassName, ...rest } =
+    props;
+  // See Input's `reserve`.
+  const reserve = "error" in props;
   const generated = useId();
   // Only a number reaches the DOM; the two words are this component's own.
   const nativeSize = typeof size === "number" ? size : undefined;
@@ -2100,7 +2152,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     // box, as the label line's own hint goes at the end of the label.
     if (hasContent(hint) && !textHint) {
       return (
-        <FieldGroup errorEl={below}>
+        <FieldGroup errorEl={below} reserve={reserve}>
           <div className={cn("flex items-center gap-1.5", className)}>
             <div className="relative min-w-0 flex-1">
               {select}
@@ -2112,7 +2164,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       );
     }
     return (
-      <FieldGroup errorEl={below}>
+      <FieldGroup errorEl={below} reserve={reserve}>
         <div className={cn("relative", className)}>
           {select}
           {chevron}
@@ -2121,7 +2173,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     );
   }
   return (
-    <FieldGroup errorEl={below}>
+    <FieldGroup errorEl={below} reserve={reserve}>
       <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={textHint ? undefined : hint}>
         <select
           ref={ref}
@@ -2159,10 +2211,10 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   error?: ReactNode;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, label, id, placeholder, invalid, error, ...rest },
-  ref,
-) {
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
+  const { className, label, id, placeholder, invalid, error, ...rest } = props;
+  // See Input's `reserve`.
+  const reserve = "error" in props;
   const generated = useId();
   const fieldId = id ?? generated;
   const { isInvalid, describedBy, errorEl } = useFieldError(
@@ -2173,7 +2225,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   );
   if (label === undefined) {
     return (
-      <FieldGroup errorEl={errorEl}>
+      <FieldGroup errorEl={errorEl} reserve={reserve}>
         <textarea
           ref={ref}
           id={id}
@@ -2187,7 +2239,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     );
   }
   return (
-    <FieldGroup errorEl={errorEl}>
+    <FieldGroup errorEl={errorEl} reserve={reserve}>
       <FloatingField className={className} htmlFor={fieldId} label={label}>
         <textarea
           ref={ref}
@@ -2496,7 +2548,12 @@ export function CardTitle({ className, as: Tag = "div", ...props }: CardTitlePro
   return (
     <Tag
       data-slot="card-title"
-      className={cn(compact ? "text-sm font-medium" : "font-semibold", "leading-none", className)}
+      // Compact is `leading-snug`, not `leading-none`: there the title sits on a
+      // 12px description `gap-0.5` below, and a line box exactly the cap height left
+      // the hint hugging the title's descenders (every keksdose admin card added
+      // `leading-normal` by hand). Comfortable keeps `leading-none` — its 14px
+      // description is `gap-1.5` away and has always read right.
+      className={cn(compact ? "text-sm font-medium leading-snug" : "font-semibold leading-none", className)}
       {...props}
     />
   );

@@ -20,6 +20,35 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.18.0](https://github.com/Eifi1/ui-kit/compare/v0.17.0...v0.18.0) (2026-10-02)
+
+### ⚠ BREAKING CHANGES
+
+* **i18n:** @eifi1/ui-kit/i18n/de, /i18n/de-informal and /i18n/de-CH-informal
+  are gone. UI_KIT_LABELS_DE / uiKitLabelsDe(n) become UI_KIT_LABELS_DE_CH /
+  uiKitLabelsDeCh(n); the informal catalogues become UI_KIT_LABELS_DE_CH (an app
+  that said "du" moves its own text to "Sie"). See docs/adopt-0.18.md.
+
+### Added
+
+* Chip snapEdges for fractional-DPR hairlines; Toaster dismissOnMiddleClick (keksdose R1, R2) ([3ff5225](https://github.com/Eifi1/ui-kit/commit/3ff52258cf4e8d4b96a02d616ec46203891c47b0))
+* createServerWake and ServerWakeNotice — keksdose's cold-start notice for every app ([9ed3ee1](https://github.com/Eifi1/ui-kit/commit/9ed3ee1e0dae999342eec0be9f7161db3033989b))
+* export the 0.18 components; showcase demos, search index, README inventory ([d63efed](https://github.com/Eifi1/ui-kit/commit/d63efedcd626335f2c85873f0af61fa583fb3e83))
+* **i18n:** one German, de-CH — the de, de-informal and de-CH-informal catalogues are removed ([52e3301](https://github.com/Eifi1/ui-kit/commit/52e3301a0556f7618e4f2807023cec8f8b54f99a))
+* **i18n:** the 0.18 labels through UiKitProvider, translated in every locale ([d466023](https://github.com/Eifi1/ui-kit/commit/d466023aa78899f00182942c5c77c721670b03c3))
+* PasskeysSetting mode and beforeAdd; RoleChip, AccountStateChip, DateMark, dateColumn ([fb91e99](https://github.com/Eifi1/ui-kit/commit/fb91e999cd3f15e514a9ad3c052ca07fc33d6190))
+* **progress-bar:** legendTone — the legend figures in a text tone (keksdose) ([217858e](https://github.com/Eifi1/ui-kit/commit/217858e79e3ad4edcb5f34e91f6e72079bf03f23))
+* ShareCard, ShareDialog, SharePanel — sharing, presentational (Kurvenschmiede 1) ([10d6e10](https://github.com/Eifi1/ui-kit/commit/10d6e106dc990de5e348315ea75ebbd32bb8a4b6))
+* typed confirmation in useConfirm (requireTyped); ReauthDialog (Kurvenschmiede 3, 4) ([1761dc0](https://github.com/Eifi1/ui-kit/commit/1761dc0a96b3a769685addf6a7073240fdc323b0))
+* WriteLockProvider and commit on Button, IconButton, FormActions; CardTitle compact leading ([f828815](https://github.com/Eifi1/ui-kit/commit/f828815822d45b0bea4d5810595da4bc881ecdb3))
+
+### Fixed
+
+* **fields:** the control survives its error message coming and going — focus, caret, value ([3c7ff78](https://github.com/Eifi1/ui-kit/commit/3c7ff78f88d13f17071005f58259cfd342ea580d))
+* **i18n:** missingKitLabels names the missing reference; the doc example passes it (keksdose) ([6fc97c7](https://github.com/Eifi1/ui-kit/commit/6fc97c77820ea0d98953b9928bba6d7b8a14cba8))
+* **overlay-history:** an owner's URL rewrite that closes the overlay is not unwound (keksdose [#584](https://github.com/Eifi1/ui-kit/issues/584)) ([c66c7c8](https://github.com/Eifi1/ui-kit/commit/c66c7c813860ffd133179940c682121403a17a82))
+* **toggle-group:** a disabled group keeps the chosen segment's fill under the pointer ([abe857d](https://github.com/Eifi1/ui-kit/commit/abe857d1507028b778b04a42f4f6c9e4b1a90900))
+
 ## [0.17.0](https://github.com/Eifi1/ui-kit/compare/v0.16.1...v0.17.0) (2026-10-01)
 
 ### Added

@@ -43,7 +43,9 @@ export interface GlobalSearchSource {
   /** Stable key — the effect that runs the source is keyed by it, not by identity. */
   id: string;
   /** The group its results are shown under (an entry's own `group` is ignored) — unless
-   *  `groups` is set, where it is only the home of entries that name no declared group. */
+   *  `groups` is set, where it is only the home of entries that name no declared group.
+   *  If every entry names a declared group, it is never shown: a catch-all heading such
+   *  as "Other" is the honest value, so a stray type would still surface, labelled. */
   group: string;
   /**
    * Split ONE request into several groups — kastlan's record search answers with

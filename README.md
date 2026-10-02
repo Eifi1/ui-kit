@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1044 names from 161 modules** — 483 values and 561 types. _Italic_ is a type-only export.
+**1101 names from 167 modules** — 508 values and 593 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1044 |
+| `@eifi1/ui-kit` | 1101 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -414,6 +414,7 @@ re-slicing of it, never a second API.
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readStored`, `writeStored` |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
+| `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 
 ### hooks
@@ -464,6 +465,7 @@ re-slicing of it, never a second API.
 | `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 | `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`ResponsiveFormActionsPlacement`_ |
+| `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
 | `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
@@ -497,7 +499,8 @@ re-slicing of it, never a second API.
 | `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
 | `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_, _`DisclosureTriggerProps`_ |
 | `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
-| `components/danger-confirm` | `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, _`DangerConfirmLabels`_, _`DangerConfirmProps`_ |
+| `components/danger-confirm` | `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `typedMatches`, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`TypedMatch`_ |
+| `components/reauth-dialog` | `DEFAULT_REAUTH_DIALOG_LABELS`, `ReauthDialog`, _`ReauthDialogLabels`_, _`ReauthDialogProps`_ |
 | `components/confirm-dialog` | `ConfirmProvider`, `DEFAULT_CONFIRM_DIALOG_LABELS`, `useConfirm`, _`ConfirmDialogLabels`_, _`ConfirmFn`_, _`ConfirmOptions`_, _`ConfirmProviderProps`_, _`ConfirmTone`_ |
 | `components/floating-panel` | `DEFAULT_FLOATING_PANEL_LABELS`, `FloatingAction`, `FloatingActionButton`, `FloatingActionGroup`, `FloatingPanel`, _`FloatingActionButtonProps`_, _`FloatingActionGroupProps`_, _`FloatingActionLinkProps`_, _`FloatingActionProps`_, _`FloatingCorner`_, _`FloatingPanelLabels`_, _`FloatingPanelProps`_ |
 | `components/bulk-action-bar` | `BulkActionBar`, `DEFAULT_BULK_ACTION_BAR_LABELS`, _`BulkActionBarLabels`_, _`BulkActionBarProps`_, _`BulkActionBarVariant`_, _`ResponsiveBulkActionBarVariant`_ |
@@ -520,7 +523,7 @@ re-slicing of it, never a second API.
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
-| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipHue`_, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
+| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `refreshChipEdges`, `resolveChipInputLabels`, _`ChipHue`_, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
@@ -533,6 +536,9 @@ re-slicing of it, never a second API.
 | `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
+| `components/write-lock` | `DEFAULT_WRITE_LOCK_LABELS`, `useWriteLock`, `WriteLockProvider`, _`WriteLock`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
+| `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
+| `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
 | `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsRemoveAlign`_, _`LineItemsRemovePlacement`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
 | `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
@@ -722,6 +728,25 @@ with a `{count}` hole in it decides all three on their behalf:
 pageChanged: (page: number, totalPages: number) => string;
 // UiKitLabels["common"] — even "Label: value" is not universal punctuation
 fieldValue: (field: string, value: string) => string;
+```
+
+### Shipped catalogues
+
+The kit's own words come translated, one standalone subpath per language, so an app
+bundles only the language it imports: `@eifi1/ui-kit/i18n/<code>` exports
+`UI_KIT_LABELS_<CODE>` and a factory `uiKitLabels<Code>(numberLocale)` that keeps the words
+and changes only how counts and file sizes are written. Codes: `de-CH`, `fr`, `it`, `es`,
+`hu`, `zh`, and `en` (factory only — the constant is `DEFAULT_UI_KIT_LABELS`).
+
+There is ONE German: `de-CH`, Swiss Standard German, formal ("Sie"), with "ss" for every
+"ß" — `uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits. An app that
+addresses its users with "du" overrides the few sentences that address the reader in its
+own provider; the kit does not ship a second register.
+
+```tsx
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+
+<UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">…</UiKitProvider>
 ```
 
 ### The worked example

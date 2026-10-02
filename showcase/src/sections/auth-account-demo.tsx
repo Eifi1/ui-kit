@@ -14,7 +14,7 @@ import {
   UiKitProvider,
 } from "@eifi1/ui-kit";
 import type { PasskeyItem, TwoFactorSetupData, UiKitLabelOverrides } from "@eifi1/ui-kit";
-import { UI_KIT_LABELS_DE } from "@eifi1/ui-kit/i18n/de";
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -407,7 +407,7 @@ const HOUSE_WORDING: UiKitLabelOverrides = {
   },
 };
 
-const GERMAN: UiKitLabelOverrides = { accountSettings: UI_KIT_LABELS_DE.accountSettings };
+const GERMAN: UiKitLabelOverrides = { accountSettings: UI_KIT_LABELS_DE_CH.accountSettings };
 
 function Scoped({ source, children }: { source: "page" | "house" | "de"; children: ReactNode }) {
   if (source === "page") return <>{children}</>;
@@ -438,7 +438,7 @@ function AccountLabelsSpecimen() {
             ? "the page's language — the showcase's own provider"
             : v === "house"
               ? "house wording — a nested provider overriding three strings"
-              : "UI_KIT_LABELS_DE.accountSettings in a nested provider"
+              : "UI_KIT_LABELS_DE_CH.accountSettings in a nested provider"
         }
       />
       <div className="mt-4 grid gap-4 lg:grid-cols-2">

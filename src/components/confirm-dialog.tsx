@@ -2,8 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
+import { typedMatches } from "./danger-confirm";
+import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
-import { Button } from "./ui";
+import { Button, Input } from "./ui";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -13,12 +15,25 @@ import { Button } from "./ui";
 export interface ConfirmDialogLabels {
   confirm: string;
   cancel: string;
+  /**
+   * 0.18: label of the field a `requireTyped` confirm shows. A FUNCTION of the text to
+   * type by default — where the address sits in the sentence moves with the language —
+   * or a finished STRING. A call's own `typedLabel` wins over it.
+   *
+   * Required, like every key of a namespace: the shipped catalogues
+   * (`@eifi1/ui-kit/i18n/<code>`) translate it, and an app's own full catalogue should
+   * hear about the new string from the compiler rather than show it in English.
+   */
+  typed: string | ((text: string) => string);
 }
 
-export const DEFAULT_CONFIRM_DIALOG_LABELS: ConfirmDialogLabels = {
+/** `satisfies` rather than a type annotation, so `.typed` stays known-callable for a
+ *  caller composing its own label from it. */
+export const DEFAULT_CONFIRM_DIALOG_LABELS = {
   confirm: "Confirm",
   cancel: "Cancel",
-};
+  typed: (text: string) => `Type “${text}” to confirm`,
+} satisfies ConfirmDialogLabels;
 
 export type ConfirmTone = "danger" | "warning" | "neutral";
 
@@ -37,6 +52,30 @@ export interface ConfirmOptions {
    * the confirm. See {@link ConfirmProvider} for why the two differ.
    */
   tone?: ConfirmTone;
+  /**
+   * 0.18: make the user TYPE this before confirm is enabled — the target account's
+   * e-mail address, a budget's name. For the action whose risk is not "did you mean
+   * it" but "is this the right row": an admin who deactivates somebody has already
+   * proven who THEY are (they passed the admin gate); typing the address is what
+   * proves they read which account they are on. Both keksdose (`TYPE_EMAIL`) and
+   * Kurvenschmiede (`TypedConfirm`) built this beside `useConfirm` because it had no
+   * field.
+   *
+   * The dialog then shows one text field under the body and focuses it (whatever the
+   * tone: a reflexive Enter cannot confirm a field that does not match yet). Confirm
+   * stays disabled until the text matches; Enter in the field confirms once it does.
+   * The answer is still `true` / `false` — the text matched what you passed, so send
+   * that to the server if it asks for the address too, not the user's spelling.
+   */
+  requireTyped?: string;
+  /** Label of that field. Default: `confirmDialog.typed` — `Type “a@b.c” to confirm`. */
+  typedLabel?: string;
+  /**
+   * How the typed text is compared. Default `"caseless"`: surrounding spaces and case
+   * ignored, the rule both apps applied to an address. `"trim"` keeps case, `"exact"`
+   * keeps spaces too — for a phrase like "DELETE" whose contract is "exactly this".
+   */
+  typedMatch?: TypedMatch;
 }
 
 export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -201,15 +240,26 @@ function ConfirmDialogView({
   // Set by the confirm button, read once the panel has finished lowering. Everything
   // else that ends in `onClose` — Escape, the backdrop, Back, Cancel — leaves it false.
   const accepted = useRef(false);
+  const typedRef = useRef<HTMLInputElement>(null);
+  const [typed, setTyped] = useState("");
+  const target = request.requireTyped;
+  const matches = target === undefined || typedMatches(typed, target, request.typedMatch ?? "caseless");
 
   // In THIS component's effect, which runs after `Modal`'s own (a parent's effects run
   // after its children's). `Modal` engages its focus trap on the panel first — and
   // records the page's focused element as the restore target — and only then does
   // focus move to the button. Focusing it from inside the panel would run first and
-  // make the button the restore target.
+  // make the button the restore target. A typed confirm starts in its field: typing is
+  // the one thing the dialog is waiting for.
   useEffect(() => {
-    (tone === "danger" ? cancelRef : confirmRef).current?.focus();
-  }, [tone]);
+    (target !== undefined ? typedRef : tone === "danger" ? cancelRef : confirmRef).current?.focus();
+  }, [tone, target]);
+
+  const typedLabel =
+    target === undefined
+      ? ""
+      : (request.typedLabel ??
+        (typeof labels.typed === "string" ? labels.typed : labels.typed(target)));
 
   return (
     <DialogFrame
@@ -228,6 +278,7 @@ function ConfirmDialogView({
             ref={confirmRef}
             type="button"
             variant={tone === "danger" ? "danger" : "primary"}
+            disabled={!matches}
             onClick={() => {
               accepted.current = true;
               close();
@@ -237,6 +288,30 @@ function ConfirmDialogView({
           </Button>
         </>
       )}
-    />
+    >
+      {/* The field, when there is one, is the body; a plain confirm keeps having none. */}
+      {target !== undefined && (
+        <form
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            // Through the button, so Enter and a click are one path — and a disabled
+            // (not yet matching) confirm ignores the click.
+            confirmRef.current?.click();
+          }}
+        >
+          <Input
+            ref={typedRef}
+            label={typedLabel}
+            value={typed}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            onChange={(e) => setTyped(e.target.value)}
+          />
+        </form>
+      )}
+    </DialogFrame>
   );
 }

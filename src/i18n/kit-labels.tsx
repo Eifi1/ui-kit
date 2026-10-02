@@ -46,6 +46,11 @@ import type { ErrorBoundaryLabels } from "../components/error-boundary";
 import type { AuthedImageLabels } from "../components/authed-image";
 import type { ImageGridLabels } from "../components/image-grid";
 import type { LightboxLabels } from "../components/lightbox";
+import type { WriteLockLabels } from "../components/write-lock";
+import type { AccountStateLabels } from "../components/account-chips";
+import type { ShareCardLabels } from "../components/share-card";
+import type { ReauthDialogLabels } from "../components/reauth-dialog";
+import type { ServerWakeLabels } from "../components/server-wake";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -274,6 +279,14 @@ export interface UiKitLabels {
   authedImage: AuthedImageLabels;
   imageGrid: ImageGridLabels;
   lightbox: LightboxLabels;
+  /** 0.18.0: `WriteLockProvider`'s fallback reason, `AccountStateChip`, `SharePanel` /
+   *  `ShareCard` / `ShareDialog`, `ReauthDialog`. */
+  writeLock: WriteLockLabels;
+  accountState: AccountStateLabels;
+  shareCard: ShareCardLabels;
+  reauthDialog: ReauthDialogLabels;
+  /** 0.18.0: `ServerWakeNotice` — keksdose's cold-start notice, for every app. */
+  serverWake: ServerWakeLabels;
 }
 
 /**
@@ -621,17 +634,24 @@ export function useKitFileLabels(prop?: Partial<FileLabels>): FileLabels {
  * The dot paths of every key `labels` does NOT supply — the ones a translated app is
  * still showing in English. Assert on it in the app's own test:
  *
- *     expect(missingKitLabels(de)).toEqual([]);
+ *     expect(missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)).toEqual([]);
  *
  * `reference` is the complete tree to check against — pass
  * {@link DEFAULT_UI_KIT_LABELS} (src/i18n/defaults.ts). It is a parameter rather than an import
  * because the defaults live beside their components, and this module is imported BY
- * those components.
+ * those components. Left out (a test file is not type-checked), it throws saying so
+ * rather than "Cannot convert undefined or null to object" (keksdose, 0.18).
  */
 export function missingKitLabels(
   labels: UiKitLabelOverrides | undefined,
   reference: UiKitLabels,
 ): string[] {
+  if (!isRecord(reference)) {
+    throw new TypeError(
+      "missingKitLabels(labels, reference): pass DEFAULT_UI_KIT_LABELS as the reference — " +
+        "it is the tree the labels are checked against.",
+    );
+  }
   const missing: string[] = [];
   for (const [ns, keys] of Object.entries(reference)) {
     const given = (labels as Record<string, Record<string, unknown> | undefined> | undefined)?.[ns];

@@ -1,8 +1,8 @@
-import { UI_KIT_LABELS_DE } from "@eifi1/ui-kit/i18n/de";
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 import type { Dictionary } from "./types";
 
 /**
- * German.
+ * German — Swiss Standard German, formal, the kit's one German (`@eifi1/ui-kit/i18n/de-CH`).
  *
  * The language the kit is actually shipped in — both consuming apps render a German UI —
  * so this is the dictionary that proves the contract against a real consumer rather than
@@ -13,21 +13,23 @@ import type { Dictionary } from "./types";
  *  1. APIs STAY ENGLISH. `TokenSet`, `PickerSheet`, `Recharts`, `Hooks`, `Tokens` — a
  *     developer types those. The same goes for the loanwords German front-end work
  *     genuinely uses: `Overlay`, `Dropdown`, `Tooltip`, `Theme`, `Popover`.
- *  2. BUTTONS ARE INFINITIVES. Speichern, Abbrechen, Schließen, Erneut versuchen — never
+ *  2. BUTTONS ARE INFINITIVES. Speichern, Abbrechen, Schliessen, Erneut versuchen — never
  *     "Speichern Sie". A German UI labels an action; it does not address the user.
  *  3. PROSE AND ANNOUNCEMENTS SAY "SIE" — the standard register for a developer audience.
  *  4. QUOTES ARE „…“, written literally (low-opening, high-closing, no inner space).
- *  5. NUMBERS go through `Intl.NumberFormat("de-DE")`, so a footer says "1.234" rather
+ *  5. NUMBERS go through `Intl.NumberFormat("de-CH")`, so a footer says "1’234" rather
  *     than "1234"; counted nouns agree with their number ("1 Zeile", "2 Zeilen").
+ *  6. SWISS SPELLING: "ss" for every "ß" (Schliessen, Grösse), as in the kit's catalogue,
+ *     so the showcase's own words and the components' words never disagree.
  *
  * German is also the LONGEST of the seven ("Nicht gespeicherte Änderungen" is 29
  * characters where English has 15), so it is the locale that breaks a layout first.
  */
 
 export const de: Dictionary = {
-  tag: "de-DE",
+  tag: "de-CH",
   name: "Deutsch",
-  country: "de",
+  country: "ch",
   dir: "ltr",
 
   chrome: {
@@ -52,9 +54,9 @@ export const de: Dictionary = {
     contentsPosition: "Position des Inhaltsverzeichnisses",
     positionStart: "Links",
     positionEnd: "Rechts",
-    devicePreview: "Vorschau in Bildschirmgrößen",
+    devicePreview: "Vorschau in Bildschirmgrössen",
     previewHint:
-      "Wählen Sie eine Bildschirmgröße: Die Seite erscheint live in dieser Breite – im Rahmen kann gescrollt und geklickt werden. Design, Palette und Sprache folgen der oberen Leiste.",
+      "Wählen Sie eine Bildschirmgrösse: Die Seite erscheint live in dieser Breite – im Rahmen kann gescrollt und geklickt werden. Design, Palette und Sprache folgen der oberen Leiste.",
     phone: "Smartphone",
     tablet: "Tablet",
     desktop: "Desktop",
@@ -292,13 +294,13 @@ export const de: Dictionary = {
       title: "Baumansicht",
       short: "Baum",
       blurb:
-        "Eine Hierarchie, die man mit der Tastatur durchläuft — ein einziger Tab-Stopp, Pfeiltasten zum Auf- und Zuklappen, Sprung per Tippen — mit nachgeladenen Kindknoten, von außen gesteuert, von rechts nach links und mit ihrer Zeile für sich allein.",
+        "Eine Hierarchie, die man mit der Tastatur durchläuft — ein einziger Tab-Stopp, Pfeiltasten zum Auf- und Zuklappen, Sprung per Tippen — mit nachgeladenen Kindknoten, von aussen gesteuert, von rechts nach links und mit ihrer Zeile für sich allein.",
     },
     "data-table": {
       title: "Datentabelle",
       short: "Tabelle",
       blurb:
-        "Die größte Komponente des Kits, vollständig: Sortierung, Filter, Auswahl und Aufklappen, von außen gesteuert, kurz und ohne Seitenaufteilung, in einem begrenzten Bereich und von rechts nach links.",
+        "Die grösste Komponente des Kits, vollständig: Sortierung, Filter, Auswahl und Aufklappen, von aussen gesteuert, kurz und ohne Seitenaufteilung, in einem begrenzten Bereich und von rechts nach links.",
     },
     "data-table-server": {
       title: "Datentabelle: Server, URL & Smartphone",
@@ -362,13 +364,13 @@ export const de: Dictionary = {
     overlays: {
       title: "Overlays",
       blurb:
-        "Alles, was über der Seite schwebt, und das eine Timing, das sie alle beim Schließen teilen.",
+        "Alles, was über der Seite schwebt, und das eine Timing, das sie alle beim Schliessen teilen.",
     },
     dialogs: {
       title: "Dialoge",
       short: "Dialoge",
       blurb:
-        "Modal und Vollbild-Dialog, der Klick auf den Hintergrund, der sie schließt, und das Timing des Schließens, das alle Overlays teilen.",
+        "Modal und Vollbild-Dialog, der Klick auf den Hintergrund, der sie schliesst, und das Timing des Schliessens, das alle Overlays teilen.",
     },
     "confirm-floating": {
       title: "Bestätigungsdialog & schwebendes Panel",
@@ -512,7 +514,7 @@ export const de: Dictionary = {
       "Filter in der URL behalten",
       "offenen Tab beim Neuladen merken",
       "Dialog über einen Link öffnen",
-      "Dialog mit Zurück schließen",
+      "Dialog mit Zurück schliessen",
       "Link auf die aktuelle Ansicht teilen",
     ],
     overview: [
@@ -550,7 +552,6 @@ export const de: Dictionary = {
       "Oberfläche übersetzen",
       "Sprache wechseln",
       "deutsche Übersetzung",
-      "Deutsch mit du",
       "Schweizer Rechtschreibung",
       "nicht übersetzte Texte finden",
       "Gebietsschema für Datum und Zahlen",
@@ -638,7 +639,7 @@ export const de: Dictionary = {
       "Foto mit der Kamera aufnehmen",
       "mehrere Dateien auswählen",
       "nur Bilder oder PDFs erlauben",
-      "zu große Dateien ablehnen",
+      "zu grosse Dateien ablehnen",
       "zeigen, warum eine Datei abgelehnt wurde",
     ],
     pickers: [
@@ -802,7 +803,7 @@ export const de: Dictionary = {
       "Hilfsfunktionen zum Sortieren",
       "Zeilen gegen einen Filter prüfen",
       "Tabellenbeschriftungen übersetzen",
-      "Auswahl der Seitengröße",
+      "Auswahl der Seitengrösse",
     ],
     layout: [
       "Abschnitt einklappen",
@@ -880,8 +881,8 @@ export const de: Dictionary = {
     dialogs: [
       "modalen Dialog öffnen",
       "Vollbild-Dialog",
-      "beim Klick auf den Hintergrund schließen",
-      "Schließen animieren",
+      "beim Klick auf den Hintergrund schliessen",
+      "Schliessen animieren",
       "Popup-Fenster",
       "Dialog auf dem Smartphone",
     ],
@@ -947,7 +948,7 @@ export const de: Dictionary = {
       "Seitenkopf",
       "Pfadnavigation",
       "Pfadnavigation auf dem Handy",
-      "kleine Abschnittsüberschrift in Großbuchstaben",
+      "kleine Abschnittsüberschrift in Grossbuchstaben",
       "Hinweistext unter einem Feld",
       "Statuspunkt",
       "Online-Anzeige",
@@ -1005,9 +1006,9 @@ export const de: Dictionary = {
       "Datums-Hilfsfunktionen",
     ],
     "hooks-lib": [
-      "auf Bildschirmgröße reagieren",
+      "auf Bildschirmgrösse reagieren",
       "Hook für Media Queries",
-      "Overlay mit der Zurück-Taste schließen",
+      "Overlay mit der Zurück-Taste schliessen",
       "Panel neben dem Auslöser positionieren",
       "Klassennamen zusammenführen",
       "Smartphone erkennen",
@@ -1033,5 +1034,5 @@ export const de: Dictionary = {
 
 
   // The kit's own words ship with the package — the same import an app writes.
-  kit: UI_KIT_LABELS_DE,
+  kit: UI_KIT_LABELS_DE_CH,
 };

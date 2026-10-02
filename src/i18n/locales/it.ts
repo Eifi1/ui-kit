@@ -89,6 +89,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       passkeys: {
         title: "Passkey",
         description: "Accedi con impronta, volto o PIN del dispositivo invece che con una password.",
+        descriptionAlongside: "Accedi con impronta, volto o PIN del dispositivo. La tua password continua a funzionare.",
         empty: "Ancora nessuna passkey",
         loading: "Caricamento delle passkey…",
         list: "Le tue passkey",
@@ -498,6 +499,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     confirmDialog: {
       confirm: "Conferma",
       cancel: "Annulla",
+      typed: (text) => `Digita «${text}» per confermare`,
     },
     floatingPanel: {
       close: "Chiudi",
@@ -582,6 +584,55 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       zoom: "Ingrandisci",
       noPreview: "Nessuna anteprima disponibile per questo file",
       openInNewTab: "Apri in una nuova scheda",
+    },
+    writeLock: {
+      reason: "Puoi visualizzarlo, ma non modificarlo.",
+    },
+    accountState: {
+      // Agreeing with "account" (masculine): the chip is the state of an account.
+      active: "Attivo",
+      inactive: "Non attivo",
+      invited: "Invitato",
+      registered: "Registrato",
+      unverified: "Non verificato",
+      passwordChange: "Deve cambiare la password",
+    },
+    shareCard: {
+      dialogTitle: "Condividi",
+      close: "Chiudi",
+      email: "Indirizzo email",
+      emailOptional: "Indirizzo email (facoltativo)",
+      // example.com is reserved for examples (RFC 2606); a localised domain is real.
+      emailPlaceholder: "nome@example.com",
+      invalidEmail: "Inserisci un indirizzo email completo.",
+      role: "Ruolo",
+      roleOf: (name) => `Ruolo di ${name}`,
+      add: "Condividi",
+      whoHasAccess: "Chi ha accesso",
+      nobodyYet: "Nessun altro ha ancora accesso.",
+      pending: "In attesa",
+      openInvite: "Link di invito aperto",
+      copyLink: "Copia link",
+      team: "Team",
+      teamHint: (name) => `Tutti i membri di ${name} avranno accesso.`,
+      remove: "Rimuovi accesso",
+      removeConfirm: (name) => `Rimuovere l’accesso di ${name}?`,
+      revokePending: "Ritira invito",
+      revokePendingConfirm: (name) => `Ritirare l’invito per ${name}?`,
+      failed: "Non ha funzionato. Riprova.",
+      loading: "Caricamento…",
+    },
+    reauthDialog: {
+      title: "Conferma la tua identità",
+      description: "Inserisci la password attuale per continuare.",
+      password: "Password attuale",
+      submit: "Continua",
+      cancel: "Annulla",
+    },
+    serverWake: {
+      slow: "Caricamento in corso: ci vuole più del solito.",
+      waking: (appName) =>
+        `Il server va in sospensione quando nessuno usa ${appName ?? "l’app"}, quindi la prima richiesta dopo una pausa deve riavviarlo. Può volerci un momento: non si perde nulla, la pagina si completa da sola.`,
     },
   };
 }

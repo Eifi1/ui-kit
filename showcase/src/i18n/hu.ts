@@ -548,7 +548,6 @@ export const hu: Dictionary = {
       "felület fordítása",
       "nyelv váltása",
       "német fordítás",
-      "tegező német fordítás",
       "svájci német helyesírás",
       "lefordítatlan feliratok keresése",
       "területi beállítás dátumokhoz és számokhoz",

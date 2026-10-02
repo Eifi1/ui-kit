@@ -37,7 +37,8 @@ export type FormActionsPlacement = "inline" | "sticky" | "dialog";
  * md 768, lg 1024, xl 1280px), as `BulkActionBar`'s `variant` breakpoints are, and
  * resolved the same way, in JS: the sticky row is positioned by inline style, which a
  * `md:` class cannot reach. keksdose switched `placement` on its own media query at
- * every long form for want of this.
+ * every long form for want of this. The breakpoints are the VIEWPORT's, not the
+ * container's: a form in a narrow pane on a wide screen resolves to `md`.
  */
 export interface ResponsiveFormActionsPlacement {
   base: FormActionsPlacement;
@@ -96,7 +97,7 @@ export type FormActionsStickyWithin = "viewport" | "container";
  */
 export type FormActionsSubmitProps = Omit<
   ButtonProps,
-  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy"
+  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy" | "commit"
 > & { [key: `data-${string}`]: string | number | boolean | undefined };
 
 /** The start-side action of {@link FormActionsProps.destructive}, as data. */
@@ -157,6 +158,18 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   submitDisabled?: boolean;
   /** Why save is disabled — see Button's `disabledReason`. Keeps it focusable. */
   submitDisabledReason?: ReactNode;
+  /**
+   * Save is a commit: under a locked {@link WriteLockProvider} it is disabled with the
+   * lock's reason (over `submitDisabledReason`), focusable, the reason in its tooltip —
+   * Button's `commit`. The `{ label, onClick }` form of {@link destructive} is a
+   * commit too and is locked with it; Cancel and `children` are not (closing a form
+   * writes nothing). No provider, or an unlocked one: no effect. Default `false`.
+   *
+   * keksdose wrote `submitDisabled={lock.locked || …}` and
+   * `submitDisabledReason={lock.locked ? lock.reason : undefined}` at each form; this is
+   * that pair, read from the provider.
+   */
+  commit?: boolean;
   /** The save button's variant. Default `brand`; `danger` for a save that destroys
    *  (kastlan's `destructive` flag on its own FormActions). */
   submitVariant?: ButtonVariant;
@@ -187,7 +200,8 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * from both sides, with the content scrolling past it in the gutters (keksdose wrote
    * `@max-md:-mx-3 @max-md:px-3` by hand). Pass the container's padding (`"0.75rem"`,
    * `12`, `"var(--pane-px)"`). Applied only while the resolved placement is sticky, so
-   * `placement={{ base: "sticky", md: "inline" }}` bleeds on the phone alone.
+   * `placement={{ base: "sticky", md: "inline" }}` bleeds on the phone alone. The margin
+   * is `calc(-1 * X)`; jsdom folds that to `calc(-X)`, so match it loosely in tests.
    */
   bleed?: string | number;
   /**
@@ -249,6 +263,7 @@ export function FormActions({
   pending = false,
   submitDisabled = false,
   submitDisabledReason,
+  commit = false,
   submitVariant = "brand",
   destructive,
   start: startSlot,
@@ -276,6 +291,7 @@ export function FormActions({
       onClick={destructive.onClick}
       disabled={destructive.disabled}
       disabledReason={destructive.disabledReason}
+      commit={commit}
     >
       {destructive.label}
     </Button>
@@ -332,6 +348,9 @@ export function FormActions({
           variant={submitVariant}
           disabled={pending || submitDisabled}
           disabledReason={pending ? undefined : submitDisabledReason}
+          // Not while pending: the save already left, and the lock's look over the
+          // spinner would say it had not.
+          commit={commit && !pending}
           aria-busy={pending || undefined}
         >
           {pending ? (

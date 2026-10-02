@@ -1,16 +1,20 @@
-import { formatFileSize } from "../kit-labels";
-import type { UiKitLabels } from "../kit-labels";
+import { formatFileSize } from "./kit-labels";
+import type { UiKitLabels } from "./kit-labels";
 
 /**
- * The kit's words in German: every namespace of {@link UiKitLabels}, for
- * `<UiKitProvider labels={UI_KIT_LABELS_DE}>`.
+ * The kit's German, formal ("Sie"), written in standard spelling with "ß" — the SOURCE
+ * the public `de-CH` catalogue is derived from (via `swiss()`), not a catalogue itself.
  *
- * Self-contained on purpose — nothing but the kit's own `formatFileSize` — so it works
- * as a starting point to copy and adjust. Counts and sizes are formatted with
- * `de-DE` digits; {@link uiKitLabelsDe} takes another number locale
- * (e.g. `"de-CH"` for 1’234) without touching the words.
+ * Internal on purpose: it lives outside `src/i18n/locales/` because every file there is
+ * a public `@eifi1/ui-kit/i18n/<code>` subpath, and the kit ships ONE German — Swiss,
+ * formal (0.18.0 removed `/i18n/de`, `/i18n/de-informal` and `/i18n/de-CH-informal`).
+ * The text stays written with "ß" because `swiss()` respells at runtime, so a Swiss app
+ * also gets an argument it passes in (a file name, a phrase to type) respelled; writing
+ * "ss" here instead would change that behaviour for every function label.
+ *
+ * Counts and sizes are formatted with `numberLocale`'s digits; the words never change.
  */
-export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
+export function germanLabels(numberLocale: string): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
 
@@ -40,8 +44,8 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       thread: "Kommentare",
       empty: "Noch keine Kommentare",
       loading: "Kommentare werden geladen…",
-      // The reader's own messages. "Ich" rather than "Sie"/"Du": it is the same word in
-      // both registers, so the informal catalogue inherits it unchanged.
+      // The reader's own messages. "Ich" rather than "Sie": it reads the same whether
+      // the app addresses its users with "Sie" or "du", so neither has to override it.
       you: "Ich",
       staff: "Team",
       attachments: "Anhänge",
@@ -91,6 +95,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       passkeys: {
         title: "Passkeys",
         description: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN statt Passwort anmelden.",
+        descriptionAlongside: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN anmelden. Das Passwort funktioniert weiterhin.",
         empty: "Noch keine Passkeys",
         loading: "Passkeys werden geladen…",
         list: "Registrierte Passkeys",
@@ -506,6 +511,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     confirmDialog: {
       confirm: "Bestätigen",
       cancel: "Abbrechen",
+      typed: (text) => `Geben Sie zur Bestätigung „${text}“ ein`,
     },
     floatingPanel: {
       close: "Schließen",
@@ -591,7 +597,56 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       noPreview: "Für diese Datei ist keine Vorschau verfügbar",
       openInNewTab: "In neuem Tab öffnen",
     },
+    writeLock: {
+      // Impersonal, like the rest of this catalogue where it can be: an app that
+      // addresses its users with "du" then has fewer keys to override.
+      reason: "Nur zum Ansehen – Änderungen sind hier nicht möglich.",
+    },
+    accountState: {
+      active: "Aktiv",
+      inactive: "Inaktiv",
+      invited: "Eingeladen",
+      registered: "Registriert",
+      unverified: "Nicht bestätigt",
+      passwordChange: "Passwortänderung erforderlich",
+    },
+    shareCard: {
+      dialogTitle: "Teilen",
+      close: "Schließen",
+      email: "E-Mail-Adresse",
+      emailOptional: "E-Mail-Adresse (optional)",
+      // example.com is reserved for examples (RFC 2606); a German-looking domain is
+      // somebody's real one.
+      emailPlaceholder: "name@example.com",
+      invalidEmail: "Bitte eine vollständige E-Mail-Adresse eingeben.",
+      role: "Rolle",
+      roleOf: (name) => `Rolle von ${name}`,
+      add: "Teilen",
+      whoHasAccess: "Wer hat Zugriff",
+      nobodyYet: "Bisher hat niemand sonst Zugriff.",
+      pending: "Ausstehend",
+      openInvite: "Offener Einladungslink",
+      copyLink: "Link kopieren",
+      team: "Team",
+      teamHint: (name) => `Alle in ${name} erhalten Zugriff.`,
+      remove: "Zugriff entfernen",
+      removeConfirm: (name) => `Zugriff für ${name} entfernen?`,
+      revokePending: "Einladung zurückziehen",
+      revokePendingConfirm: (name) => `Einladung für ${name} zurückziehen?`,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+      loading: "Wird geladen…",
+    },
+    reauthDialog: {
+      title: "Identität bestätigen",
+      description: "Zum Fortfahren das aktuelle Passwort eingeben.",
+      password: "Aktuelles Passwort",
+      submit: "Weiter",
+      cancel: "Abbrechen",
+    },
+    serverWake: {
+      slow: "Lädt noch – das dauert länger als sonst.",
+      waking: (appName) =>
+        `Der Server schläft ein, wenn ${appName ?? "die App"} gerade niemand benutzt. Die erste Anfrage nach einer Pause muss ihn erst wieder starten. Das kann einen Moment dauern – es geht nichts verloren, die Seite füllt sich von selbst.`,
+    },
   };
 }
-
-export const UI_KIT_LABELS_DE: UiKitLabels = uiKitLabelsDe();

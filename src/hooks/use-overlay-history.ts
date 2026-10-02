@@ -38,6 +38,16 @@ import { useEffect, useRef } from "react";
  * link while the overlay was open, the router has pushed on top of us, and a blind
  * `history.back()` there would undo their navigation.
  *
+ * ## Not undoing the owner's own close
+ *
+ * Nor when the address under the entry changed in the same breath as the close
+ * (keksdose dev #584). A page that opens its editor by PUSHING `?row=x` and closes it
+ * by REPLACING the clean URL over the top entry rewrites OUR entry — the overlay sits
+ * above `?row=x` — and that rewrite is what unmounts the overlay. Going back from there
+ * lands on `?row=x` and the router opens the editor that was just closed. See
+ * {@link noteAddress}: an address the overlay LIVED THROUGH (a filter the table wrote
+ * while its sheet was up) is still unwound, because the user has acted since.
+ *
  * ## The traversal is deferred
  *
  * And it is *scheduled* rather than issued, because `history.go()` lands a task
@@ -78,6 +88,8 @@ const stack: OverlayEntry[] = [];
  */
 interface PushedEntry {
   id: string;
+  /** The full address of the entry (query and hash included) as of the last time the
+   *  user acted while it was current — see {@link noteAddress}. */
   href: string;
   /** Its overlay is gone but the entry is not — someone above owes this pop. */
   dead: boolean;
@@ -383,6 +395,30 @@ function currentSentinel(): string | null {
   return standing;
 }
 
+/**
+ * The user is about to act: what the current entry's address is NOW is what the
+ * overlay standing on it has lived through.
+ *
+ * The cleanup needs to tell two same-page query rewrites apart, and the address alone
+ * cannot. A `DataTable` with `urlSync` replaces `f.*` over the entry while its filter
+ * sheet is up, and the sheet is closed LATER, by a press of its own — that entry is
+ * still the sheet's and must be unwound (the audit's drift fix, below). A page whose
+ * `?row=` drives the overlay replaces the clean URL over the entry and the overlay
+ * unmounts BECAUSE of it (keksdose dev #584) — that entry is the owner's now, and
+ * unwinding lands on `?row=` beneath and reopens what was just closed. What separates
+ * them is whether the user acted in between: the rewrite that closes an overlay is
+ * made by the very press that closes it, so it postdates this snapshot.
+ *
+ * Capture phase, so the snapshot is taken before any handler of the press runs.
+ */
+function noteAddress(): void {
+  const top = pushed[pushed.length - 1];
+  if (!top || top.dead || !stack.some((e) => e.id === top.id)) return;
+  const tag = taggedSentinel();
+  // Read without `currentSentinel`'s repair: an observation must not write history.
+  if (tag === top.id || (tag === null && standing === top.id && isStillOn(top))) top.href = currentHref();
+}
+
 function handlePop() {
   // A pop MOVES us, so the belief is stale by definition: re-read it from the
   // entry we have landed on before anything below consults it, or the repair in
@@ -422,6 +458,8 @@ function closeOnPop() {
 function ensureListening() {
   if (listening || typeof window === "undefined") return;
   window.addEventListener("popstate", handlePop);
+  window.addEventListener("pointerdown", noteAddress, true);
+  window.addEventListener("keydown", noteAddress, true);
   listening = true;
 }
 
@@ -489,6 +527,19 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       if (consumed.delete(id)) return;
 
       const mine = pushed.findIndex((p) => p.id === id);
+      // Still our entry — same page, same router `idx` — but its address is not the one
+      // the user last acted on: the owner rewrote it as part of closing us (see
+      // {@link noteAddress}). The entry is the owner's page now, and the one beneath is
+      // the address it replaced — going back would restore exactly what was closed.
+      // Nothing to unwind; forget the record rather than re-stamp a page we left.
+      if (mine >= 0 && currentHref() !== pushed[mine].href) {
+        const tag = taggedSentinel();
+        if (tag === id || (tag === null && standing === id && isStillOn(pushed[mine]))) {
+          pushed.splice(mine, 1);
+          if (standing === id) standing = null;
+          return;
+        }
+      }
       // Only unwind an entry that is still THE current one. If a router push landed
       // on top of it, going back would undo the user's navigation instead — and if
       // a SIBLING overlay's sentinel landed on top, that overlay is about to unwind

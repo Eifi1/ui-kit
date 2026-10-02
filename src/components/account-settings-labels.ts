@@ -63,8 +63,16 @@ export interface TwoFactorSettingLabels {
 
 export interface PasskeysSettingLabels {
   title: string;
-  /** The line under the title saying what a passkey is for. */
+  /** The line under the title saying what a passkey is for — `mode="instead"` (the
+   *  default): the passkey stands in for the password. */
   description: string;
+  /**
+   * The same line for `mode="alongside"` (0.18.0): the password keeps working and the
+   * passkey is a second way in. OPTIONAL for the reason `TwoFactorSettingLabels.qrAlt`
+   * is — this interface is annotated at call sites — and filled from the provider's
+   * `accountSettings.passkeys`, then English.
+   */
+  descriptionAlongside?: string;
   empty: string;
   loading: string;
   /** Accessible name of the list. */
@@ -98,8 +106,11 @@ export interface PasskeysSettingLabels {
 export interface AccountSettingsLabels {
   profile: ProfileSettingLabels;
   password: PasswordSettingLabels;
+  // `Required` here, optional on the section interfaces: the namespace is what a full
+  // catalogue (`@eifi1/ui-kit/i18n/<code>`, `missingKitLabels`) is written against, so
+  // it must name the late keys; the section interfaces are annotated at call sites.
   twoFactor: Required<TwoFactorSettingLabels>;
-  passkeys: PasskeysSettingLabels;
+  passkeys: Required<PasskeysSettingLabels>;
 }
 
 export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
@@ -139,6 +150,9 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
   passkeys: {
     title: "Passkeys",
     description: "Sign in with your fingerprint, face or device PIN instead of a password.",
+    // Kurvenschmiede overrode `description` because "instead of" is false where the
+    // password stays; this is the sentence for those apps, picked by `mode`.
+    descriptionAlongside: "Sign in with your fingerprint, face or device PIN. Your password keeps working too.",
     empty: "No passkeys yet",
     loading: "Loading passkeys…",
     list: "Your passkeys",

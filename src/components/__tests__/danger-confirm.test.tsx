@@ -201,4 +201,14 @@ describe("DangerConfirm", () => {
     // The floating field's own single space, which drives its label — not text.
     expect(field.getAttribute("placeholder")?.trim() ?? "").toBe("");
   });
+
+  it("phraseMatch=\"caseless\" takes an address in any case, still not a different one", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm phrase="Anna@Example.org" phraseMatch="caseless" armed onConfirm={() => {}} />);
+    const field = screen.getByLabelText("Type “Anna@Example.org” to confirm");
+    await user.type(field, " anna@example.ORG ");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    await user.type(field, "x");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+  });
 });

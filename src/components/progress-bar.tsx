@@ -2,6 +2,8 @@ import { useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { toneTextClass } from "./signed-amount";
+import type { TextTone } from "./signed-amount";
 
 /** The words a progress bar adds of its own. */
 export interface ProgressBarLabels {
@@ -169,6 +171,18 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * `legendValue={(seg, share) => <>{share} <Amount … /></>}`.
    */
   legendValue?: (segment: ProgressBarSegment, formatted: string, index: number) => ReactNode;
+  /**
+   * The colour of each legend row's figure, as a {@link TextTone} — `toneTextClass`'s
+   * palette, the money pair included. Default `"muted"`: the legend explains the bar and
+   * should not outshout the headline above it. One tone for every row, or a function
+   * per row. A tone and not the segment's own `tone`: keksdose's tax card fills its
+   * three parts with one bucket's certainty ramp (`className`), while the FIGURES carry
+   * the bucket's money direction — `legendTone="expense"` for the tax owed — which it
+   * could only say before through `legendValue` and an app-side `Amount`. A function
+   * returning `undefined` keeps that row muted. Applies to `legendValue`'s node too
+   * (it inherits the colour unless it sets its own).
+   */
+  legendTone?: TextTone | ((segment: ProgressBarSegment, index: number) => TextTone | undefined);
   /** A muted line under the bar — the plan's reset date, "3 of 5 seats in use". It
    *  describes the bar (`aria-describedby`). */
   hint?: ReactNode;
@@ -224,6 +238,7 @@ export function ProgressBar({
   segments,
   legend = false,
   legendValue,
+  legendTone = "muted",
   hint,
   overage,
   sensitive = false,
@@ -441,7 +456,12 @@ export function ProgressBar({
               <span
                 data-part="legend-value"
                 data-private={priv}
-                className="ms-auto shrink-0 text-xs tabular-nums text-[var(--text-muted)]"
+                className={cn(
+                  "ms-auto shrink-0 text-xs tabular-nums",
+                  toneTextClass(
+                    (typeof legendTone === "function" ? legendTone(seg, i) : legendTone) ?? "muted",
+                  ),
+                )}
               >
                 {legendValue ? legendValue(seg, formatPart(seg.value), i) : formatPart(seg.value)}
               </span>

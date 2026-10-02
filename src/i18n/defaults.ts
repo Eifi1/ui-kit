@@ -46,6 +46,11 @@ import { DEFAULT_ERROR_BOUNDARY_LABELS } from "../components/error-boundary";
 import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image";
 import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid";
 import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox";
+import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock";
+import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
+import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
+import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
+import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -128,4 +133,9 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   authedImage: DEFAULT_AUTHED_IMAGE_LABELS,
   imageGrid: DEFAULT_IMAGE_GRID_LABELS,
   lightbox: DEFAULT_LIGHTBOX_LABELS,
+  writeLock: DEFAULT_WRITE_LOCK_LABELS,
+  accountState: DEFAULT_ACCOUNT_STATE_LABELS,
+  shareCard: DEFAULT_SHARE_CARD_LABELS,
+  reauthDialog: DEFAULT_REAUTH_DIALOG_LABELS,
+  serverWake: DEFAULT_SERVER_WAKE_LABELS,
 };
