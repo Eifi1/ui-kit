@@ -194,10 +194,20 @@ describe("NumberField", () => {
       expect(input).toHaveAccessibleDescription("Too long");
     });
 
-    it("renders no wrapper and no description for a falsy error", () => {
+    it("renders no message and no description for a falsy error", () => {
       const { view } = setup({ error: false });
       expect(screen.getByLabelText("Wheelbase")).not.toHaveAttribute("aria-invalid");
       expect(screen.getByLabelText("Wheelbase")).not.toHaveAttribute("aria-describedby");
+      // A field that takes `error` keeps its plain box with no message in it, so the
+      // message coming later does not remount the input (field-error-identity.test).
+      const box = view.container.firstElementChild!;
+      expect(box.getAttribute("class")).toBeNull();
+      expect(box.children).toHaveLength(1);
+      expect(box.firstElementChild).toHaveClass("relative");
+    });
+
+    it("renders no wrapper at all when `error` is never passed", () => {
+      const { view } = setup();
       // FloatingField's own `relative` div is the root.
       expect(view.container.firstElementChild).toHaveClass("relative");
     });

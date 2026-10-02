@@ -74,6 +74,27 @@ describe("ReauthDialog", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("the message comes and goes on the SAME field: no remount, and a repeat failure shows it again", async () => {
+    const user = userEvent.setup();
+    render(<Harness check={() => Promise.reject(new Error("400"))} />);
+    const field = await screen.findByLabelText<HTMLInputElement>("Current password");
+    await user.type(field, "one{Enter}");
+    await screen.findByText("Wrong password");
+    // The field's own `error`: under it, and its description.
+    expect(field).toHaveAccessibleDescription("Wrong password");
+    await user.keyboard("t");
+    // Hidden by the edit — and the <input> under the typist is the one it was.
+    expect(screen.queryByText("Wrong password")).toBeNull();
+    expect(screen.getByLabelText("Current password")).toBe(field);
+    expect(field).toHaveFocus();
+    expect(field).not.toHaveAttribute("aria-describedby");
+    await user.keyboard("wo{Enter}");
+    // The app's error is the same string as before; the new failure shows it again.
+    expect(await screen.findByText("Wrong password")).toBeInTheDocument();
+    expect(screen.getByLabelText("Current password")).toBe(field);
+    expect(field).toHaveAccessibleDescription("Wrong password");
+  });
+
   it("is busy while the check runs: read-only field, Cancel disabled, Escape held", async () => {
     const user = userEvent.setup();
     let resolve!: () => void;

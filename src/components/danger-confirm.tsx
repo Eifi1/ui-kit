@@ -73,7 +73,8 @@ export function usePromisePending() {
  * generate a new one for. `readOnly` rather than `disabled` while busy: disabling the
  * field that has focus (Enter was pressed in it) drops focus to <body>.
  *
- * @internal shared by `DangerConfirm` and `ReauthDialog`.
+ * @internal DangerConfirm's field. ReauthDialog spells it out with the field's own
+ * `error`, which keeps the `<input>` mounted while its message comes and goes.
  */
 export function CurrentPasswordInput({
   inputRef,

@@ -2,10 +2,10 @@ import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
-import { CurrentPasswordInput, usePromisePending } from "./danger-confirm";
+import { usePromisePending } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
 import { ModalCloseContext } from "./modal";
-import { Button, Spinner } from "./ui";
+import { Button, Input, Spinner } from "./ui";
 
 /**
  * Every string the dialog renders — the `reauthDialog` namespace of
@@ -84,9 +84,9 @@ export interface ReauthDialogProps {
  * dialog of its own; keksdose asks for it inline in `DangerConfirm`'s
  * `requirePassword` tile. Both are the same three facts — the field is the CURRENT
  * password (the password manager fills it, never generates one), a wrong one stays in
- * the dialog with its error, and the APP verifies it — so the field and the
- * promise handling are `DangerConfirm`'s own, shared, and this is the modal form of
- * them.
+ * the dialog with its error, and the APP verifies it — so the promise handling is
+ * `DangerConfirm`'s own, shared, the field is its `CurrentPasswordInput` spelled out
+ * with an `error`, and this is the modal form of them.
  *
  * A component rather than a `useReauth()` promise: the step that follows the check
  * (Kurvenschmiede's WebAuthn ceremony) needs what the server answered, and the error
@@ -169,8 +169,6 @@ export function ReauthDialog({
   }, [pending, done]);
 
   const shownError = edited ? undefined : error;
-  const hasError = shownError !== undefined && shownError !== null && shownError !== false && shownError !== "";
-  const errorId = useId();
 
   return (
     <DialogFrame
@@ -203,29 +201,27 @@ export function ReauthDialog({
           submit();
         }}
       >
-        <CurrentPasswordInput
-          inputRef={inputRef}
+        {/* CurrentPasswordInput's field — the password manager fills it with the CURRENT
+            password and never offers to generate one; `readOnly`, not `disabled`, while
+            busy, because disabling the field that has focus drops focus to <body> —
+            plus `Input`'s own `error`, which that helper does not take. The message
+            paints the field, sits under it and is its `aria-describedby`; passing the
+            prop on every render keeps the field's box steady, so the message going away
+            on the first keystroke of a retry no longer remounts the <input> under the
+            typist (it did, which is why this used to draw its own message). */}
+        <Input
+          ref={inputRef}
+          type="password"
+          autoComplete="current-password"
           label={labels.password}
           value={password}
-          busy={busy}
-          // `invalid` + a message of our own rather than `Input`'s `error`: `Input`
-          // wraps itself in an extra box only while it HAS an error, so a message that
-          // comes and goes remounts the <input> — and the user typing in it loses focus
-          // on the first keystroke after a failed attempt. `invalid` paints the same
-          // `--danger-border-strong` frame and sets `aria-invalid` without that box.
-          invalid={hasError}
-          describedBy={hasError ? errorId : undefined}
-          onValueChange={(value) => {
-            setPassword(value);
+          readOnly={busy}
+          error={shownError}
+          onChange={(e) => {
+            setPassword(e.target.value);
             setEdited(true);
           }}
         />
-        {hasError && (
-          // `Input`'s own error line (FIELD_ERROR_CLASS), drawn here — see above.
-          <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
-            {shownError}
-          </p>
-        )}
       </form>
     </DialogFrame>
   );

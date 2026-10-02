@@ -154,26 +154,27 @@ const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
  * digit grouping — "1.000" would read as a thousand in German and as one in English,
  * and a field that parses its own display back must not have that ambiguity.
  */
-export function NumberField({
-  value,
-  onCommit,
-  onValueChange,
-  digits,
-  min,
-  max,
-  nullable = false,
-  unit,
-  unitPlacement = "suffix",
-  locale: localeProp,
-  label,
-  invalid,
-  error,
-  id,
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-  "aria-required": ariaRequired,
-  ...rest
-}: NumberFieldProps) {
+export function NumberField(props: NumberFieldProps) {
+  const {
+    value,
+    onCommit,
+    onValueChange,
+    digits,
+    min,
+    max,
+    nullable = false,
+    unit,
+    unitPlacement = "suffix",
+    locale: localeProp,
+    label,
+    invalid,
+    error,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    "aria-required": ariaRequired,
+    ...rest
+  } = props;
   const locale = useKitLocale(localeProp);
   const mark = decimalMark(locale);
   const localize = (text: string) => (mark === "," ? text.replace(/\./g, ",") : text);
@@ -292,15 +293,20 @@ export function NumberField({
       invalid={invalid || hasError || ariaInvalid === true || ariaInvalid === "true"}
     />
   );
-  // Same shape as Input's FieldGroup: no wrapper at all without a message, so adding
-  // `error` support changed nothing about the DOM a flex row lays out.
-  if (!hasError) return field;
+  // Input's FieldGroup, restated: no wrapper for a field that never takes `error`, so
+  // the prop changed nothing about the DOM a flex row lays out — and a STEADY one for a
+  // field that does, message or not. Wrapping only while a message showed swapped the
+  // element above the <input>, which remounted it: focus, caret and the half-typed
+  // draft's keystrokes were lost the moment the message came or went.
+  if (!hasError && !("error" in props)) return field;
   return (
     <div>
       {field}
-      <p id={errorId} className={FIELD_ERROR_CLASS}>
-        {error}
-      </p>
+      {hasError && (
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
