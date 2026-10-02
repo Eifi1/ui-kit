@@ -142,7 +142,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // countryName; IbanInput, DEFAULT_IBAN_INPUT_LABELS + 7 IBAN and 3 ISIN helpers;
   // PhoneInput, DEFAULT_PHONE_INPUT_LABELS + 6 phone helpers; DEFAULT_DATA_TABLE_SORT_LABELS;
   // useKitDateFormatter; ChatComposer (FeedbackComposer's neutral name).
-  ["@eifi1/ui-kit", barrel, 586],
+  // 0.23.0, the apps' 0.22 adoption round (+10): FieldStrip (keksdose G8); ColumnMapper,
+  // ColumnRoleTable, DEFAULT_COLUMN_MAPPER_LABELS and the six column-mapping helpers
+  // (assignColumnRole, guessMapping, missingRoles, readMappedTable, readTextFile,
+  // roleOfColumn) — Kurvenschmiede's columns input, keksdose's import map step.
+  ["@eifi1/ui-kit", barrel, 596],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -171,8 +175,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (kastlan 41) (+1).
   // 0.22.0: RhfTimeInput, RhfDateRangePicker, RhfToggleGroup (kastlan 4), RhfIbanInput,
   // RhfPhoneInput (+5).
-  ["@eifi1/ui-kit/rhf", rhf, 26],
-  ["@eifi1/ui-kit/table-text", tableText, 5],
+  // 0.23.0: RhfCountrySelect, RhfMonthPicker (kastlan) (+2).
+  ["@eifi1/ui-kit/rhf", rhf, 28],
+  // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
+  ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],
   // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts
