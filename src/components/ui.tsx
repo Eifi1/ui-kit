@@ -2079,8 +2079,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     passwordLabels,
     ...rest
   } = props;
-  // Passed at all — even as `undefined` — the field keeps its box; see FieldGroup.
-  const reserve = "error" in props;
+  // Passed at all — even as `undefined` — the field keeps its box; see FieldGroup. The
+  // same for `hint` and `showCount` (keksdose, 0.22): a caption coming and going under
+  // the control must not rebuild it, or focus and the caret are lost mid-edit.
+  const reserve = "error" in props || "hint" in props || "showCount" in props;
   const generated = useId();
   const fieldId = id ?? generated;
   const countId = useId();
@@ -2336,7 +2338,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     ...rest
   } = props;
   // See Input's `reserve`.
-  const reserve = "error" in props;
+  const reserve = "error" in props || "hint" in props || "showCount" in props;
   const generated = useId();
   const lock = useLockReason(commit, disabledReason);
   const locked = lock.locked;
@@ -2544,7 +2546,7 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
   const { className, label, id, placeholder, invalid, error, hint, showCount, countLabels, ...rest } = props;
   // See Input's `reserve`.
-  const reserve = "error" in props;
+  const reserve = "error" in props || "hint" in props || "showCount" in props;
   const generated = useId();
   const fieldId = id ?? generated;
   const countId = useId();

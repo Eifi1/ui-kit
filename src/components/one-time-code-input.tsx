@@ -152,7 +152,7 @@ export const OneTimeCodeInput = forwardRef<HTMLInputElement, OneTimeCodeInputPro
     // Passed at all — even as `undefined` — the field keeps its box, so the `<input>` is
     // never re-parented (and never loses focus) when a message comes or goes. See
     // `FieldGroup` in ui.tsx.
-    const reserve = "error" in props;
+    const reserve = "error" in props || "hint" in props;
     const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
     const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
     const labelled = label !== undefined;

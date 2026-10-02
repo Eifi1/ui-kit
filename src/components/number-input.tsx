@@ -295,7 +295,7 @@ export function NumberInput(props: NumberInputProps) {
   const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
   const hasError = hasMessage(error);
   // Passed at all — even as `undefined` — the field keeps its box; see `error`.
-  const reserve = "error" in props;
+  const reserve = "error" in props || "hint" in props;
   // The standing advice first, the news second: the caller's ids, the caption, the error.
   const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
   const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";

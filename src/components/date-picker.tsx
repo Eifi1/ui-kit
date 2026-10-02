@@ -717,7 +717,7 @@ export function DatePicker(props: DatePickerProps) {
     </DateField>
   );
   // Passed at all — even as `undefined` — the field keeps its box; see FieldBox.
-  const reserve = "error" in props;
+  const reserve = "error" in props || "hint" in props;
   const endHint = label === undefined ? messages.labelHint : undefined;
   if (!wrapped) {
     return (
@@ -1257,7 +1257,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
     </DateField>
   );
   return (
-    <FieldBox below={messages.below} reserve={"error" in props}>
+    <FieldBox below={messages.below} reserve={"error" in props || "hint" in props}>
       {withEndHint(field, label === undefined ? messages.labelHint : undefined)}
     </FieldBox>
   );

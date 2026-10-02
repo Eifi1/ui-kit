@@ -1051,7 +1051,7 @@ export function MonthPicker(props: MonthPickerProps) {
   // box, as on an unlabelled Select.
   const endHint = label === undefined ? messages.labelHint : undefined;
   return (
-    <FieldBox below={messages.below} reserve={"error" in props}>
+    <FieldBox below={messages.below} reserve={"error" in props || "hint" in props}>
       {endHint === undefined ? (
         field
       ) : (
