@@ -46,6 +46,10 @@ import type { ErrorBoundaryLabels } from "../components/error-boundary";
 import type { AuthedImageLabels } from "../components/authed-image";
 import type { ImageGridLabels } from "../components/image-grid";
 import type { LightboxLabels } from "../components/lightbox";
+import type { WriteLockLabels } from "../components/write-lock";
+import type { AccountStateLabels } from "../components/account-chips";
+import type { ShareCardLabels } from "../components/share-card";
+import type { ReauthDialogLabels } from "../components/reauth-dialog";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -274,6 +278,12 @@ export interface UiKitLabels {
   authedImage: AuthedImageLabels;
   imageGrid: ImageGridLabels;
   lightbox: LightboxLabels;
+  /** 0.18.0: `WriteLockProvider`'s fallback reason, `AccountStateChip`, `SharePanel` /
+   *  `ShareCard` / `ShareDialog`, `ReauthDialog`. */
+  writeLock: WriteLockLabels;
+  accountState: AccountStateLabels;
+  shareCard: ShareCardLabels;
+  reauthDialog: ReauthDialogLabels;
 }
 
 /**

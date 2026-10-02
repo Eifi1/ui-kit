@@ -90,6 +90,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         title: "Clés d’accès",
         description:
           "Connectez-vous avec votre empreinte, votre visage ou le code PIN de l’appareil plutôt qu’avec un mot de passe.",
+        descriptionAlongside:
+          "Connectez-vous avec votre empreinte, votre visage ou le code PIN de l’appareil. Votre mot de passe reste valable.",
         empty: "Aucune clé d’accès pour l’instant",
         loading: "Chargement des clés d’accès…",
         list: "Vos clés d’accès",
@@ -511,6 +513,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     confirmDialog: {
       confirm: "Confirmer",
       cancel: "Annuler",
+      typed: (text) => `Saisissez «\u202f${text}\u202f» pour confirmer`,
     },
     floatingPanel: {
       close: "Fermer",
@@ -595,6 +598,50 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       zoom: "Agrandir",
       noPreview: "Aucun aperçu disponible pour ce fichier",
       openInNewTab: "Ouvrir dans un nouvel onglet",
+    },
+    writeLock: {
+      reason: "Vous pouvez consulter ceci, mais pas le modifier.",
+    },
+    accountState: {
+      // Agreeing with "compte" (masculine): the chip is the state of an account.
+      active: "Actif",
+      inactive: "Inactif",
+      invited: "Invité",
+      registered: "Inscrit",
+      unverified: "Non vérifié",
+      passwordChange: "Doit changer de mot de passe",
+    },
+    shareCard: {
+      dialogTitle: "Partager",
+      close: "Fermer",
+      email: "Adresse e-mail",
+      emailOptional: "Adresse e-mail (facultatif)",
+      // example.com is reserved for examples (RFC 2606); a localised domain is real.
+      emailPlaceholder: "nom@example.com",
+      invalidEmail: "Saisissez une adresse e-mail complète.",
+      role: "Rôle",
+      roleOf: (name) => `Rôle de ${name}`,
+      add: "Partager",
+      whoHasAccess: "Qui a accès",
+      nobodyYet: "Personne d’autre n’y a encore accès.",
+      pending: "En attente",
+      openInvite: "Lien d’invitation ouvert",
+      copyLink: "Copier le lien",
+      team: "Équipe",
+      teamHint: (name) => `Tous les membres de ${name} y auront accès.`,
+      remove: "Retirer l’accès",
+      removeConfirm: (name) => `Retirer l’accès de ${name}\u202f?`,
+      revokePending: "Révoquer l’invitation",
+      revokePendingConfirm: (name) => `Révoquer l’invitation de ${name}\u202f?`,
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+      loading: "Chargement…",
+    },
+    reauthDialog: {
+      title: "Confirmez votre identité",
+      description: "Saisissez votre mot de passe actuel pour continuer.",
+      password: "Mot de passe actuel",
+      submit: "Continuer",
+      cancel: "Annuler",
     },
   };
 }

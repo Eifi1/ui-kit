@@ -88,6 +88,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       passkeys: {
         title: "Llaves de acceso",
         description: "Inicia sesión con tu huella, tu cara o el PIN del dispositivo en lugar de una contraseña.",
+        descriptionAlongside: "Inicia sesión con tu huella, tu cara o el PIN del dispositivo. Tu contraseña sigue funcionando.",
         empty: "Aún no hay llaves de acceso",
         loading: "Cargando llaves de acceso…",
         list: "Tus llaves de acceso",
@@ -495,6 +496,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     confirmDialog: {
       confirm: "Confirmar",
       cancel: "Cancelar",
+      typed: (text) => `Escribe «${text}» para confirmar`,
     },
     floatingPanel: {
       close: "Cerrar",
@@ -579,6 +581,50 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       zoom: "Ampliar",
       noPreview: "No hay vista previa disponible para este archivo",
       openInNewTab: "Abrir en una pestaña nueva",
+    },
+    writeLock: {
+      reason: "Puedes verlo, pero no modificarlo.",
+    },
+    accountState: {
+      // Agreeing with "cuenta" (feminine): the chip is the state of an account.
+      active: "Activa",
+      inactive: "Inactiva",
+      invited: "Invitación enviada",
+      registered: "Registrada",
+      unverified: "Sin verificar",
+      passwordChange: "Debe cambiar la contraseña",
+    },
+    shareCard: {
+      dialogTitle: "Compartir",
+      close: "Cerrar",
+      email: "Correo electrónico",
+      emailOptional: "Correo electrónico (opcional)",
+      // example.com is reserved for examples (RFC 2606); a localised domain is real.
+      emailPlaceholder: "nombre@example.com",
+      invalidEmail: "Introduce una dirección de correo completa.",
+      role: "Rol",
+      roleOf: (name) => `Rol de ${name}`,
+      add: "Compartir",
+      whoHasAccess: "Quién tiene acceso",
+      nobodyYet: "Nadie más tiene acceso todavía.",
+      pending: "Pendiente",
+      openInvite: "Enlace de invitación abierto",
+      copyLink: "Copiar enlace",
+      team: "Equipo",
+      teamHint: (name) => `Todos los miembros de ${name} tendrán acceso.`,
+      remove: "Quitar acceso",
+      removeConfirm: (name) => `¿Quitar el acceso a ${name}?`,
+      revokePending: "Retirar invitación",
+      revokePendingConfirm: (name) => `¿Retirar la invitación para ${name}?`,
+      failed: "No ha funcionado. Inténtalo de nuevo.",
+      loading: "Cargando…",
+    },
+    reauthDialog: {
+      title: "Confirma que eres tú",
+      description: "Introduce tu contraseña actual para continuar.",
+      password: "Contraseña actual",
+      submit: "Continuar",
+      cancel: "Cancelar",
     },
   };
 }

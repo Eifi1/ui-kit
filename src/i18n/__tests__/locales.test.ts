@@ -98,6 +98,7 @@ describe("de-informal", () => {
       .map(([k]) => k);
     expect(changed.sort()).toEqual(
       [
+        "confirmDialog.typed",
         "dangerConfirm.phrase",
         "miniCalendar.rangeSelected",
         "miniCalendar.startSelected",

@@ -16,7 +16,7 @@ import { uiKitLabelsDe } from "./de";
  * Every key of `de.ts` was reviewed. The overridden ones — the complete list of
  * sentences that say "Sie" / "Ihr" / a Sie-imperative in the formal catalogue:
  *  - `miniCalendar.startSelected`, `miniCalendar.rangeSelected`
- *  - `dangerConfirm.phrase`
+ *  - `dangerConfirm.phrase`, `confirmDialog.typed`
  *  - `wizard.confirmCancel`, `wizard.missingRequired`
  *  - `tour.awaitClickHint`
  *  - `signaturePad.instructions`, `signaturePad.typedFallbackHint`
@@ -40,6 +40,10 @@ export function uiKitLabelsDeInformal(numberLocale = "de-DE"): UiKitLabels {
     dangerConfirm: {
       ...de.dangerConfirm,
       phrase: (phrase) => `Gib zur Bestätigung „${phrase}“ ein`,
+    },
+    confirmDialog: {
+      ...de.confirmDialog,
+      typed: (text) => `Gib zur Bestätigung „${text}“ ein`,
     },
     wizard: {
       ...de.wizard,

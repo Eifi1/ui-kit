@@ -88,6 +88,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         title: "Hozzáférési kulcsok",
         description:
           "Jelentkezzen be ujjlenyomattal, arcfelismeréssel vagy az eszköz PIN-kódjával jelszó helyett.",
+        descriptionAlongside:
+          "Jelentkezzen be ujjlenyomattal, arcfelismeréssel vagy az eszköz PIN-kódjával. A jelszava továbbra is működik.",
         empty: "Még nincs hozzáférési kulcs",
         loading: "Hozzáférési kulcsok betöltése…",
         list: "Az Ön hozzáférési kulcsai",
@@ -497,6 +499,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     confirmDialog: {
       confirm: "Megerősítés",
       cancel: "Mégse",
+      typed: (text) => `A megerősítéshez írja be: „${text}”`,
     },
     floatingPanel: {
       close: "Bezárás",
@@ -581,6 +584,51 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       zoom: "Nagyítás",
       noPreview: "Ehhez a fájlhoz nincs előnézet",
       openInNewTab: "Megnyitás új lapon",
+    },
+    writeLock: {
+      reason: "Ezt megtekintheti, de nem módosíthatja.",
+    },
+    accountState: {
+      active: "Aktív",
+      inactive: "Inaktív",
+      invited: "Meghívva",
+      registered: "Regisztrált",
+      unverified: "Nincs megerősítve",
+      passwordChange: "Jelszócsere szükséges",
+    },
+    shareCard: {
+      dialogTitle: "Megosztás",
+      close: "Bezárás",
+      email: "E-mail-cím",
+      emailOptional: "E-mail-cím (nem kötelező)",
+      // example.com is reserved for examples (RFC 2606); a localised domain is real.
+      emailPlaceholder: "nev@example.com",
+      invalidEmail: "Adjon meg egy teljes e-mail-címet.",
+      role: "Szerepkör",
+      // The name after a colon, never inflected: the article before it (a/az) and a
+      // possessive suffix on it both depend on how the name sounds. As `deleteConfirm`.
+      roleOf: (name) => `Szerepkör (${name})`,
+      add: "Megosztás",
+      whoHasAccess: "Hozzáféréssel rendelkezők",
+      nobodyYet: "Még senki más nem fér hozzá.",
+      pending: "Függőben",
+      openInvite: "Nyitott meghívólink",
+      copyLink: "Link másolása",
+      team: "Csapat",
+      teamHint: (name) => `A(z) ${name} minden tagja hozzáférést kap.`,
+      remove: "Hozzáférés megvonása",
+      removeConfirm: (name) => `Megvonja a hozzáférést: ${name}?`,
+      revokePending: "Meghívás visszavonása",
+      revokePendingConfirm: (name) => `Visszavonja a meghívást: ${name}?`,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+      loading: "Betöltés…",
+    },
+    reauthDialog: {
+      title: "Személyazonosság megerősítése",
+      description: "A folytatáshoz adja meg jelenlegi jelszavát.",
+      password: "Jelenlegi jelszó",
+      submit: "Folytatás",
+      cancel: "Mégse",
     },
   };
 }

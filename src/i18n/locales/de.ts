@@ -91,6 +91,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       passkeys: {
         title: "Passkeys",
         description: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN statt Passwort anmelden.",
+        descriptionAlongside: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN anmelden. Das Passwort funktioniert weiterhin.",
         empty: "Noch keine Passkeys",
         loading: "Passkeys werden geladen…",
         list: "Registrierte Passkeys",
@@ -506,6 +507,7 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     confirmDialog: {
       confirm: "Bestätigen",
       cancel: "Abbrechen",
+      typed: (text) => `Geben Sie zur Bestätigung „${text}“ ein`,
     },
     floatingPanel: {
       close: "Schließen",
@@ -590,6 +592,52 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       zoom: "Zoomen",
       noPreview: "Für diese Datei ist keine Vorschau verfügbar",
       openInNewTab: "In neuem Tab öffnen",
+    },
+    writeLock: {
+      // Impersonal, like the rest of this catalogue where it can be: the same sentence
+      // then serves the informal catalogue unchanged.
+      reason: "Nur zum Ansehen – Änderungen sind hier nicht möglich.",
+    },
+    accountState: {
+      active: "Aktiv",
+      inactive: "Inaktiv",
+      invited: "Eingeladen",
+      registered: "Registriert",
+      unverified: "Nicht bestätigt",
+      passwordChange: "Passwortänderung erforderlich",
+    },
+    shareCard: {
+      dialogTitle: "Teilen",
+      close: "Schließen",
+      email: "E-Mail-Adresse",
+      emailOptional: "E-Mail-Adresse (optional)",
+      // example.com is reserved for examples (RFC 2606); a German-looking domain is
+      // somebody's real one.
+      emailPlaceholder: "name@example.com",
+      invalidEmail: "Bitte eine vollständige E-Mail-Adresse eingeben.",
+      role: "Rolle",
+      roleOf: (name) => `Rolle von ${name}`,
+      add: "Teilen",
+      whoHasAccess: "Wer hat Zugriff",
+      nobodyYet: "Bisher hat niemand sonst Zugriff.",
+      pending: "Ausstehend",
+      openInvite: "Offener Einladungslink",
+      copyLink: "Link kopieren",
+      team: "Team",
+      teamHint: (name) => `Alle in ${name} erhalten Zugriff.`,
+      remove: "Zugriff entfernen",
+      removeConfirm: (name) => `Zugriff für ${name} entfernen?`,
+      revokePending: "Einladung zurückziehen",
+      revokePendingConfirm: (name) => `Einladung für ${name} zurückziehen?`,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+      loading: "Wird geladen…",
+    },
+    reauthDialog: {
+      title: "Identität bestätigen",
+      description: "Zum Fortfahren das aktuelle Passwort eingeben.",
+      password: "Aktuelles Passwort",
+      submit: "Weiter",
+      cancel: "Abbrechen",
     },
   };
 }
