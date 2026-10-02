@@ -545,7 +545,6 @@ export const fr: Dictionary = {
       "traduire l’interface",
       "changer de langue",
       "traduction allemande",
-      "allemand informel avec du",
       "orthographe suisse allemande",
       "trouver les libellés non traduits",
       "régler la locale des dates et des nombres",

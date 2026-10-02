@@ -730,6 +730,25 @@ pageChanged: (page: number, totalPages: number) => string;
 fieldValue: (field: string, value: string) => string;
 ```
 
+### Shipped catalogues
+
+The kit's own words come translated, one standalone subpath per language, so an app
+bundles only the language it imports: `@eifi1/ui-kit/i18n/<code>` exports
+`UI_KIT_LABELS_<CODE>` and a factory `uiKitLabels<Code>(numberLocale)` that keeps the words
+and changes only how counts and file sizes are written. Codes: `de-CH`, `fr`, `it`, `es`,
+`hu`, `zh`, and `en` (factory only — the constant is `DEFAULT_UI_KIT_LABELS`).
+
+There is ONE German: `de-CH`, Swiss Standard German, formal ("Sie"), with "ss" for every
+"ß" — `uiKitLabelsDeCh("de-DE")` keeps that text and writes German digits. An app that
+addresses its users with "du" overrides the few sentences that address the reader in its
+own provider; the kit does not ship a second register.
+
+```tsx
+import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
+
+<UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">…</UiKitProvider>
+```
+
 ### The worked example
 
 `showcase/src/i18n/` runs the whole showcase in seven locales — English, German, French,

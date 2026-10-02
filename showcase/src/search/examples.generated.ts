@@ -40,8 +40,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "localisation": [
     "One provider, once",
-    "Shipped translations — de vs de-CH",
-    "Formal and informal German — Sie and du",
+    "Shipped translations — de-CH and fr",
     "Nested providers — a merge, not a replacement",
     "formatFileSize(bytes, locale)",
     "Completeness per language",

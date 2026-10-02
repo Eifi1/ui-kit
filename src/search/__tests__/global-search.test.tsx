@@ -6,7 +6,7 @@ import { GlobalSearch } from "../global-search";
 import type { GlobalSearchProps, GlobalSearchSource } from "../global-search";
 import type { SearchEntry } from "../search-index";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { clickLeftToBrowser } from "../../test/browser-click";
 
 /**
@@ -218,7 +218,7 @@ describe("GlobalSearch: results", () => {
 
   it("speaks the provider's language", async () => {
     render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE}>
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
         <MemoryRouter>
           <GlobalSearch entries={ENTRIES} suggestions={["budget"]} />
         </MemoryRouter>

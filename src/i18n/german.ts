@@ -1,16 +1,20 @@
-import { formatFileSize } from "../kit-labels";
-import type { UiKitLabels } from "../kit-labels";
+import { formatFileSize } from "./kit-labels";
+import type { UiKitLabels } from "./kit-labels";
 
 /**
- * The kit's words in German: every namespace of {@link UiKitLabels}, for
- * `<UiKitProvider labels={UI_KIT_LABELS_DE}>`.
+ * The kit's German, formal ("Sie"), written in standard spelling with "ß" — the SOURCE
+ * the public `de-CH` catalogue is derived from (via `swiss()`), not a catalogue itself.
  *
- * Self-contained on purpose — nothing but the kit's own `formatFileSize` — so it works
- * as a starting point to copy and adjust. Counts and sizes are formatted with
- * `de-DE` digits; {@link uiKitLabelsDe} takes another number locale
- * (e.g. `"de-CH"` for 1’234) without touching the words.
+ * Internal on purpose: it lives outside `src/i18n/locales/` because every file there is
+ * a public `@eifi1/ui-kit/i18n/<code>` subpath, and the kit ships ONE German — Swiss,
+ * formal (0.18.0 removed `/i18n/de`, `/i18n/de-informal` and `/i18n/de-CH-informal`).
+ * The text stays written with "ß" because `swiss()` respells at runtime, so a Swiss app
+ * also gets an argument it passes in (a file name, a phrase to type) respelled; writing
+ * "ss" here instead would change that behaviour for every function label.
+ *
+ * Counts and sizes are formatted with `numberLocale`'s digits; the words never change.
  */
-export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
+export function germanLabels(numberLocale: string): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
 
@@ -40,8 +44,8 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       thread: "Kommentare",
       empty: "Noch keine Kommentare",
       loading: "Kommentare werden geladen…",
-      // The reader's own messages. "Ich" rather than "Sie"/"Du": it is the same word in
-      // both registers, so the informal catalogue inherits it unchanged.
+      // The reader's own messages. "Ich" rather than "Sie": it reads the same whether
+      // the app addresses its users with "Sie" or "du", so neither has to override it.
       you: "Ich",
       staff: "Team",
       attachments: "Anhänge",
@@ -594,8 +598,8 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
       openInNewTab: "In neuem Tab öffnen",
     },
     writeLock: {
-      // Impersonal, like the rest of this catalogue where it can be: the same sentence
-      // then serves the informal catalogue unchanged.
+      // Impersonal, like the rest of this catalogue where it can be: an app that
+      // addresses its users with "du" then has fewer keys to override.
       reason: "Nur zum Ansehen – Änderungen sind hier nicht möglich.",
     },
     accountState: {
@@ -646,5 +650,3 @@ export function uiKitLabelsDe(numberLocale = "de-DE"): UiKitLabels {
     },
   };
 }
-
-export const UI_KIT_LABELS_DE: UiKitLabels = uiKitLabelsDe();

@@ -3,7 +3,7 @@ import { FeedbackComposer, FeedbackThread } from "../feedback-thread";
 import type { FeedbackThreadMessage } from "../feedback-thread";
 import { FeedbackDialog } from "../feedback-dialog";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 const NOW = new Date("2026-09-26T12:00:00Z");
 const MESSAGES: FeedbackThreadMessage[] = [
@@ -100,7 +100,7 @@ describe("FeedbackThread", () => {
     const { rerender } = render(<FeedbackThread messages={[]} loading />);
     expect(screen.getByRole("status")).toHaveTextContent("Loading comments…");
     rerender(
-      <UiKitProvider labels={{ feedbackThread: UI_KIT_LABELS_DE.feedbackThread }}>
+      <UiKitProvider labels={{ feedbackThread: UI_KIT_LABELS_DE_CH.feedbackThread }}>
         <FeedbackThread messages={[]} />
       </UiKitProvider>,
     );
@@ -179,7 +179,7 @@ describe("FeedbackComposer", () => {
 
   it("names the shortcut with the platform's modifier, translated", () => {
     render(
-      <UiKitProvider labels={{ feedbackComposer: UI_KIT_LABELS_DE.feedbackComposer }}>
+      <UiKitProvider labels={{ feedbackComposer: UI_KIT_LABELS_DE_CH.feedbackComposer }}>
         <FeedbackComposer onSend={vi.fn()} />
       </UiKitProvider>,
     );
@@ -209,8 +209,8 @@ describe("FeedbackDialog labels (0.12.0)", () => {
     render(
       <UiKitProvider
         labels={{
-          feedbackDialog: UI_KIT_LABELS_DE.feedbackDialog,
-          feedbackAttachment: UI_KIT_LABELS_DE.feedbackAttachment,
+          feedbackDialog: UI_KIT_LABELS_DE_CH.feedbackDialog,
+          feedbackAttachment: UI_KIT_LABELS_DE_CH.feedbackAttachment,
         }}
       >
         <FeedbackDialog {...base} labels={{ save: "Abschicken" }} />

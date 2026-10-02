@@ -337,7 +337,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE", "UI_KIT_LABELS_DE_CH", "UI_KIT_LABELS_DE_INFORMAL", "uiKitLabelsDe"],
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh"],
         Body: Localisation,
       },
     ],

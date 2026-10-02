@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { FeedbackDialog } from "../feedback-dialog";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
  * keksdose K1: a report with only a subject must be sendable where the app says so
@@ -54,7 +54,7 @@ describe("FeedbackDialog body requirement (keksdose K1)", () => {
     expect(screen.getByLabelText("Details (optional)")).toBeInTheDocument();
     unmount();
     render(
-      <UiKitProvider labels={{ feedbackDialog: UI_KIT_LABELS_DE.feedbackDialog }}>
+      <UiKitProvider labels={{ feedbackDialog: UI_KIT_LABELS_DE_CH.feedbackDialog }}>
         <FeedbackDialog {...base} onSubmit={() => {}} requireBody={false} labels={{ save: "Send" }} />
       </UiKitProvider>,
     );

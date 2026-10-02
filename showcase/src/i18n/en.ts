@@ -549,7 +549,6 @@ export const en: Dictionary = {
       "translate the interface",
       "change the language",
       "German translation",
-      "informal German with du",
       "Swiss German spelling",
       "find untranslated labels",
       "set the locale for dates and numbers",

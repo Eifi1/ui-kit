@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MonthPicker, type MonthPickerProps } from "../month-picker";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
  * `variant="stepper"`: the header of a month page — kastlan's calendar page built it
@@ -113,7 +113,7 @@ describe("MonthPicker variant='stepper'", () => {
 
   it("speaks the provider's language", () => {
     render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE} locale="de-DE">
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
         <MonthPicker variant="stepper" value="2026-08" onChange={() => {}} currentMonth="2026-09" />
       </UiKitProvider>,
     );

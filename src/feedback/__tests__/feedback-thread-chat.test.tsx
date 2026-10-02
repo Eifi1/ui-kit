@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { FeedbackComposer, FeedbackThread } from "../feedback-thread";
 import type { FeedbackThreadItem } from "../feedback-thread";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 // keksdose G4/G5: the support chat on FeedbackThread + FeedbackComposer. Times are
 // local (vitest pins TZ=Europe/Berlin), so the calendar days below are Berlin's.
@@ -59,7 +59,7 @@ describe("FeedbackThread — chat rows (keksdose G4)", () => {
   it("words the day line in the kit locale, capitalised, with the year when not this one", () => {
     const old: FeedbackThreadItem = { id: 0, author: "Ada", createdAt: new Date(2025, 11, 31, 8), body: "Hi" };
     const { container } = render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE} locale="de-DE">
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
         <FeedbackThread messages={[old, ...CHAT]} now={NOW} daySeparators />
       </UiKitProvider>,
     );
@@ -107,7 +107,7 @@ describe("FeedbackComposer — chat sending (keksdose G5)", () => {
 
   it("translates the Enter hint", () => {
     render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE}>
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
         <FeedbackComposer onSend={() => {}} sendOn="enter" />
       </UiKitProvider>,
     );

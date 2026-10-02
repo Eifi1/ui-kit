@@ -541,7 +541,6 @@ export const it: Dictionary = {
       "tradurre l’interfaccia",
       "cambiare lingua",
       "traduzione in tedesco",
-      "tedesco informale con il du",
       "ortografia svizzero-tedesca",
       "trovare le etichette non tradotte",
       "impostare la lingua per date e numeri",

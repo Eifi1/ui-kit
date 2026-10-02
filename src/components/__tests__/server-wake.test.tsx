@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { createServerWake, serverWake } from "../../lib/server-wake";
 import { DEFAULT_SERVER_WAKE_LABELS, ServerWakeNotice, useServerWakeStage } from "../server-wake";
 import type { ServerWakeWatcher } from "../../lib/server-wake";
@@ -91,7 +91,7 @@ describe("ServerWakeNotice", () => {
   it("takes its words from UiKitProvider, and a labels prop over those", () => {
     const w = createServerWake();
     const { rerender } = render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE}>
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
         <ServerWakeNotice watcher={w} appName="Kastlan" />
       </UiKitProvider>,
     );
@@ -103,7 +103,7 @@ describe("ServerWakeNotice", () => {
     advance(5000);
     expect(screen.getByRole("status")).toHaveTextContent("wenn Kastlan gerade niemand benutzt");
     rerender(
-      <UiKitProvider labels={UI_KIT_LABELS_DE}>
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
         <ServerWakeNotice watcher={w} appName="Kastlan" labels={{ waking: (name) => `${name} wacht auf.` }} />
       </UiKitProvider>,
     );

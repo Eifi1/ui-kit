@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarHeatmap, heatmapLevel } from "../calendar-heatmap";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
  * The contribution-style day grid keksdose hand-built for its spending report
@@ -170,7 +170,7 @@ describe("CalendarHeatmap", () => {
 
   it("speaks the provider's language", () => {
     render(
-      <UiKitProvider labels={UI_KIT_LABELS_DE} locale="de-DE">
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
         <CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" />
       </UiKitProvider>,
     );

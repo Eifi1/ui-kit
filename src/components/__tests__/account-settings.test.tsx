@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS, PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account-settings";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { UI_KIT_LABELS_DE } from "../../i18n/locales/de";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 const LABELS = {
   title: "Profile",
@@ -41,7 +41,7 @@ describe("account settings labels (0.12.0)", () => {
 
     render(
       <UiKitProvider
-        labels={{ accountSettings: { ...DEFAULT_ACCOUNT_SETTINGS_LABELS, profile: UI_KIT_LABELS_DE.accountSettings.profile } }}
+        labels={{ accountSettings: { ...DEFAULT_ACCOUNT_SETTINGS_LABELS, profile: UI_KIT_LABELS_DE_CH.accountSettings.profile } }}
       >
         <ProfileSetting email="ada@example.com" value="" onChange={() => {}} onSave={() => {}} labels={{ save: "Übernehmen" }} />
       </UiKitProvider>,
