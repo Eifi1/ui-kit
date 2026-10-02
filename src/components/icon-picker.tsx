@@ -41,7 +41,16 @@ export interface IconOption<T extends string> {
   /** A remark read after the name and shown under it in the bubble ("used by
    *  Leisure"). The tile wears a dot while it has one. */
   note?: string;
+  /** Out of the choice and out of reach — skipped by the arrow keys and Tab. With a
+   *  `disabledReason` the tile stays reachable instead and says why. */
   disabled?: boolean;
+  /**
+   * Why THIS symbol cannot be chosen right now — {@link SwatchOption.disabledReason}'s
+   * twin: the tile is `aria-disabled` but reachable by Tab and the arrow keys, the reason
+   * shows in its bubble under its name and describes it, and choosing it does nothing.
+   * Wins over `disabled`. Kept through a search like any other tile.
+   */
+  disabledReason?: ReactNode;
 }
 
 export interface IconPickerProps<T extends string>
@@ -147,7 +156,13 @@ export function IconPicker<T extends string>({
     // "None" stays through a search: it is the way back to no icon, and it matches
     // no word anybody would type for it.
     ...(allowNone ? [{ key: null, label: text.none }] : []),
-    ...visible.map((o) => ({ key: o.value, label: o.label, note: o.note, disabled: o.disabled })),
+    ...visible.map((o) => ({
+      key: o.value,
+      label: o.label,
+      note: o.note,
+      disabled: o.disabled,
+      disabledReason: o.disabledReason,
+    })),
   ];
 
   const picker = (
@@ -173,7 +188,11 @@ export function IconPicker<T extends string>({
         <TileRadioGroup
           items={items}
           checked={mixed ? undefined : value}
-          onSelect={onChange}
+          // A locked tile is refused by the tiles themselves; asked again here so a
+          // reason can never become a change, whatever the tiles do.
+          onSelect={(next) => {
+            if (!hasContent(next === null ? undefined : byValue.get(next)?.disabledReason)) onChange(next);
+          }}
           activation={activation}
           disabled={disabled}
           size={size}
@@ -209,7 +228,7 @@ export function IconPicker<T extends string>({
   );
   if (!labelled) return picker;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} pad="tiles" className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} pad="clear" className={className}>
       {picker}
     </LabelStrip>
   );

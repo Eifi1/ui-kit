@@ -524,7 +524,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   }
   if (strip) {
     return (
-      <LabelStrip labelId={labelId} label={label} hint={hint} disabled={dimmed} pad="toggle" className={className}>
+      <LabelStrip labelId={labelId} label={label} hint={hint} disabled={dimmed} pad="field" className={className}>
         {group}
         {captionEl}
         {errorEl}

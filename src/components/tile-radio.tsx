@@ -51,6 +51,14 @@ import { Tooltip } from "./tooltip";
  * where a tile would hide the text behind a bubble and repeat it.
  *
  * No strings of its own: every name is an item's `label`, the "none" tile's included.
+ *
+ * ## A tile that cannot be chosen
+ *
+ * `disabled` takes a tile out of the choice AND out of reach: the arrow keys skip it
+ * and Tab never lands on it, so a dimmed square says nothing about why. Give it a
+ * `disabledReason` instead and it stays reachable, `aria-disabled`, with the reason in
+ * its bubble and its description — and choosing it does nothing (0.23, the kit's later
+ * list after keksdose K3; {@link Button}'s `disabledReason`, one tile at a time).
  */
 
 /** A tile's size: 28 / 32 / 44px — see {@link TILE_SIZE}. */
@@ -73,7 +81,19 @@ export interface TileItem<T extends string> {
   /** Said after the name, and shown in the bubble under it. Marks the tile with a
    *  dot, so the note is visible without hovering every tile to find it. */
   note?: string;
+  /** Out of the choice and out of reach: natively disabled, skipped by the arrow keys,
+   *  never the tab stop. */
   disabled?: boolean;
+  /**
+   * Why this tile cannot be chosen right now — a colour another category already wears,
+   * a symbol only an owner may set. The tile LOOKS disabled but is `aria-disabled`, not
+   * `disabled`: Tab and the arrow keys still reach it, the reason shows in its bubble
+   * under its name (and its `note`) and describes it, and a click, Space / Enter or an
+   * arrow under automatic activation chooses nothing — the focus moves, the checked
+   * tile stays. Wins over `disabled`, as on {@link Button}; the whole group's
+   * `disabled` still wins over it.
+   */
+  disabledReason?: ReactNode;
 }
 
 export interface TileRadioGroupProps<T extends string> {
@@ -119,6 +139,22 @@ const TILE_IDLE =
   "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]";
 const TILE_SELECTED =
   "border-[var(--text-primary)] bg-[var(--bg-surface)] ring-1 ring-[var(--text-primary)]";
+/** A locked tile: the disabled look without `disabled` — dimmed, a not-allowed cursor. */
+const TILE_LOCKED = "cursor-not-allowed opacity-50";
+/** …and no hover offer on an idle one, which cannot be chosen. Not on the selected
+ *  tile, whose frame IS its state. */
+const TILE_LOCKED_IDLE = "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]";
+
+/** `undefined`, `null`, `false` and `""` are no reason — what `cond && "…"` gives. */
+function isLocked(item: TileItem<string>): boolean {
+  const r = item.disabledReason;
+  return r !== undefined && r !== null && r !== false && r !== "";
+}
+
+/** Out of reach: natively disabled. A reason keeps a `disabled` tile reachable. */
+function isOff(item: TileItem<string>): boolean {
+  return Boolean(item.disabled) && !isLocked(item);
+}
 
 /**
  * The tiles of one radio group, without the group element — render them inside a
@@ -139,15 +175,17 @@ export function TileRadioGroup<T extends string>({
 }: TileRadioGroupProps<T>) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const noteId = useId();
+  const reasonId = useId();
   const s = TILE_SIZE[size];
   const checkedIndex =
     checked === undefined ? -1 : items.findIndex((it) => it.key === checked);
-  // The ONE tab stop: the checked tile, else the first that can be chosen — the APG
-  // rule, so Tab into a group with nothing checked still lands somewhere.
+  // The ONE tab stop: the checked tile, else the first that can be reached — the APG
+  // rule, so Tab into a group with nothing checked still lands somewhere. A locked
+  // tile is reachable: landing on it is how its reason is read.
   const tabStop =
-    checkedIndex >= 0 && !items[checkedIndex].disabled
+    checkedIndex >= 0 && !isOff(items[checkedIndex])
       ? checkedIndex
-      : items.findIndex((it) => !it.disabled);
+      : items.findIndex((it) => !isOff(it));
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     // Left and right are VISUAL directions: in a right-to-left page the row runs the
@@ -175,7 +213,8 @@ export function TileRadioGroup<T extends string>({
         return;
     }
     e.preventDefault();
-    const enabled = items.map((it, i) => (it.disabled ? -1 : i)).filter((i) => i >= 0);
+    // Locked tiles are in the walk; natively disabled ones are not.
+    const enabled = items.map((it, i) => (isOff(it) ? -1 : i)).filter((i) => i >= 0);
     if (!enabled.length) return;
     const at = enabled.indexOf(index);
     let target: number;
@@ -184,13 +223,17 @@ export function TileRadioGroup<T extends string>({
     // Wrapping, as a native radio group does: the last tile's "next" is the first.
     else target = enabled[(at + step + enabled.length) % enabled.length];
     refs.current[target]?.focus();
-    if (activation === "automatic") onSelect(items[target].key);
+    // Onto a locked tile the focus moves and the choice does not: the checked tile
+    // stays checked, and the next arrow walks on from here.
+    if (activation === "automatic" && !isLocked(items[target])) onSelect(items[target].key);
   };
 
   return (
     <>
       {items.map((item, i) => {
         const selected = i === checkedIndex;
+        const locked = isLocked(item);
+        const describedBy = [item.note && `${noteId}-${i}`, locked && `${reasonId}-${i}`].filter(Boolean).join(" ");
         const button = (
           <button
             ref={(el) => {
@@ -201,18 +244,25 @@ export function TileRadioGroup<T extends string>({
             aria-checked={selected}
             aria-label={item.label}
             // The note is a DESCRIPTION, read after the name and the state, not glued
-            // into the name — the punctuation between the two would be English's.
-            aria-describedby={item.note ? `${noteId}-${i}` : undefined}
+            // into the name — the punctuation between the two would be English's. So
+            // is a lock's reason, after the note.
+            aria-describedby={describedBy || undefined}
             tabIndex={i === tabStop ? 0 : -1}
-            disabled={disabled || item.disabled}
+            // A reason wins over the tile's own `disabled` (as on Button): reachable,
+            // and refusing. The whole group's `disabled` still wins over both.
+            disabled={disabled || isOff(item)}
+            aria-disabled={(locked && !disabled) || undefined}
             // Clicking the checked tile again does nothing: a radio is not a toggle.
-            // "None" is the way back to nothing, and it is a tile of its own.
-            onClick={() => !selected && onSelect(item.key)}
+            // "None" is the way back to nothing, and it is a tile of its own. A locked
+            // tile is never chosen.
+            onClick={() => !selected && !locked && onSelect(item.key)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
               TILE_BASE,
               s.tile,
               selected ? TILE_SELECTED : TILE_IDLE,
+              locked && TILE_LOCKED,
+              locked && !selected && TILE_LOCKED_IDLE,
               tileClassName?.(item, selected),
             )}
           >
@@ -236,6 +286,14 @@ export function TileRadioGroup<T extends string>({
                 </span>
               </>
             )}
+            {/* The reason's description is a `hidden` copy, as on a locked Button: the
+                bubble exists only while hovered or focused once portalled, and a
+                description that comes and goes is read inconsistently. */}
+            {locked && (
+              <span id={`${reasonId}-${i}`} hidden>
+                {item.disabledReason}
+              </span>
+            )}
             {selected && <SelectedTick />}
           </button>
         );
@@ -248,10 +306,13 @@ export function TileRadioGroup<T extends string>({
           <Tooltip
             key={item.key ?? "\u0000none"}
             label={
-              item.note ? (
+              item.note || locked ? (
                 <>
                   <span className="block">{item.label}</span>
-                  <span className="block font-normal text-[var(--text-muted)]">{item.note}</span>
+                  {item.note && <span className="block font-normal text-[var(--text-muted)]">{item.note}</span>}
+                  {/* The reason in the body colour: it is the news, the note is
+                      standing context. */}
+                  {locked && <span className="block font-normal">{item.disabledReason}</span>}
                 </>
               ) : (
                 item.label

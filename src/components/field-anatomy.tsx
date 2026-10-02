@@ -9,7 +9,7 @@
 // the same place (keksdose K4: "uniform field anatomy … today it is a patchwork").
 
 import { useId } from "react";
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FieldLabel } from "./ui";
 
@@ -132,18 +132,23 @@ export function FieldLabelLine({ label, hint }: { label: ReactNode; hint?: React
 }
 
 /**
- * How tall the strip over a bare group is.
+ * How tall the strip over a bare group is — the values {@link FieldStrip}'s `pad` takes,
+ * public since 0.23 (keksdose G8), so the names say what the CONTENT needs rather than
+ * which kit group first needed it (until 0.23 they were `toggle` and `tiles`).
  *
- *  - `"toggle"` — 16px. keksdose's `ClearedStatusPicker` (live #288 rework, #431,
+ *  - `"field"` — 16px. keksdose's `ClearedStatusPicker` (live #288 rework, #431,
  *    measured): *"16px of label strip plus a 26px group is exactly a labelled Input"*,
  *    so a status group in a row of 42px fields ends where they end. The label's line
  *    box runs into the group's top hairline, but the ACTIVE fill — the thing feedback
- *    #117 was about — starts at 19px, below the label's 17.75px.
- *  - `"tiles"` — 20px, keksdose's `FlagPicker` and location field (`pt-5`). A tile has
+ *    #117 was about — starts at 19px, below the label's 17.75px. For content with a
+ *    border and an inset of its own; ToggleGroup's `labelPlacement="strip"`.
+ *  - `"clear"` — 20px, keksdose's `FlagPicker` and location field (`pt-5`). A tile has
  *    no inset fill: its selection IS its frame, a 2px dark border-and-ring from the
- *    tile's top edge, so the tile has to start below the whole label line.
+ *    tile's top edge, so the tile has to start below the whole label line — and so does
+ *    anything else with no inset: a map, a row of buttons, a line of text. SwatchPicker,
+ *    IconPicker, and FieldStrip's default.
  */
-export const LABEL_STRIP_PAD = { toggle: "pt-4", tiles: "pt-5" } as const;
+export const LABEL_STRIP_PAD = { field: "pt-4", clear: "pt-5" } as const;
 
 /**
  * The 11px label (and its `FieldHint`) over a group that is NOT a field — keksdose K2:
@@ -154,6 +159,10 @@ export const LABEL_STRIP_PAD = { toggle: "pt-4", tiles: "pt-5" } as const;
  *
  * `relative` is load-bearing twice over: the row is positioned against it, and a
  * caller's `sr-only` label cannot escape it (sr-only-containment).
+ *
+ * Any other attribute (`rest`) lands on the wrapper — {@link FieldStrip} makes it the
+ * `role="group"` its label names. The kit's own groups pass none, so their wrapper is
+ * the bare box it was in 0.22.
  */
 export function LabelStrip({
   labelId,
@@ -163,18 +172,18 @@ export function LabelStrip({
   pad,
   className,
   children,
-}: {
+  ...rest
+}: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
   labelId: string;
   label: ReactNode;
   hint?: ReactNode;
   /** Dim the label with its group, as `peer-disabled:` dims a field's own. */
   disabled?: boolean;
   pad: keyof typeof LABEL_STRIP_PAD;
-  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], className)}>
+    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], className)}>
       <div className="pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1">
         {/* `static`: FieldLabel positions itself absolutely; here the ROW is
             positioned, so the label and its "?" are centred on one line by the flex
