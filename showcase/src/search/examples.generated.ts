@@ -352,6 +352,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Toasts — replace by id, and loading to success",
     "Toasts — redact, and where they appear on a phone",
     "Toaster — dismissOnMiddleClick",
+    "ServerWakeNotice — cold start",
     "LoadingState — sizes, inline and a label of its own",
     "Skeleton — label announces the load once",
     "ErrorBoundary — Retry, details and a fallback of your own",

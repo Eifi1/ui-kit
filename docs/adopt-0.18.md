@@ -24,7 +24,7 @@ every prop live.
      its label disappeared on hover.
    - **Card `density="compact"`:** CardTitle is `leading-snug`, so the hint no longer
      touches the title. Drop any `leading-normal` overrides you added for this.
-3. **New label namespaces:** `writeLock`, `accountState`, `shareCard`, `reauthDialog`.
+3. **New label namespaces:** `writeLock`, `accountState`, `shareCard`, `reauthDialog`, `serverWake`.
    **New keys:** `confirmDialog.typed` and `accountSettings.passkeys.descriptionAlongside`.
    Every catalogue has them. The German texts are impersonal, so they read the same in
    both registers. The Hungarian sentences that contain a name, and es/fr/it gender
@@ -41,11 +41,19 @@ every prop live.
 | PasskeysSetting (K5) | `mode="alongside"` (the password keeps working; Kurvenschmiede can drop its description override). `beforeAdd(name) => boolean \| Promise<boolean>`, e.g. a password step; `false` keeps the typed name |
 | Admin roster (K6) | `RoleChip` (a role vocabulary), `AccountStateChip` (active, inactive, invited, registered, unverified, passwordChange), `DateMark` (absolute or relative date, with the full date in a Tooltip), `dateColumn()` for DataTable (sorts newest first, empty last, optional filter) |
 | ProgressBar (keksdose) | `legendTone`: one tone, or a function per row. The default stays muted |
+| Cold-start notice (keksdose #199, for every app) | `createServerWake({ slowMs = 2000, wakingMs = 7000, shouldWatch })` is a watchdog over the app's requests: "slow" after 2 s, "waking" after 7 s, back to idle when the last one settles. It watches GETs by default; `watchReadsAnd(/\/auth\/(login\|register)\b/)` adds the POSTs that gate the app. Uploads stay out, and it never arms while offline. `attachServerWake(axiosInstance, watcher)` (no axios dependency; attach it BEFORE your refresh interceptor) or `wrapFetch(fetch, watcher)`. `<ServerWakeNotice watcher appName />` is keksdose's corner notice: opaque, above the mobile nav via `--app-nav-h`, one polite live region. Labels `serverWake.slow` / `serverWake.waking(appName)` in every catalogue |
 | Chip (keksdose R1) | `snapEdges`: at fractional device-pixel ratios (125 %) both 1px edges render the same weight. The width needed depends on where the chip sits, so the kit measures each snapped chip's position; call `refreshChipEdges()` after moving chips some other way. Opt-in, because a pass with hundreds of chips costs about 20 ms |
 
-Not in 0.18: a text field still loses focus when its error message appears or clears,
-because the field is rebuilt. The straightforward fix would shift spacing around every
-kit field, so it gets a careful round of its own. ReauthDialog works around it.
+**Fields keep focus when their message comes and goes.** Input, Select, Textarea and
+NumberField used to rebuild their control whenever `error` switched between a message
+and none, so focus, the caret and an uncontrolled field's typed text were lost (e.g.
+Kurvenschmiede's password dialog, which clears the error on the first keystroke). A
+field that passes `error` at all (even `undefined` or `false`) now always sits in one
+plain `<div>`, with the message inside it when there is one. Fields that never pass
+`error` are unchanged, and so is the look while a message shows. The one case that
+looks different: a field with `className="flex-1"` in a flex row that also passes
+`error` now keeps its natural width while no message shows. Before, it shrank like that
+only while a message showed. None of the three apps has such a field.
 
 ## keksdose
 
@@ -57,6 +65,13 @@ kit field, so it gets a careful round of its own. ReauthDialog works around it.
   where the column happens to start.
 - **Toasts:** the middle-click hook can go.
 - **Admin cards:** the compact title's `leading-normal` overrides can go.
+- **Cold-start notice:** `server-wake-store.ts` becomes
+  `createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|register|demo-session)\b/) })`.
+  Either keep calling its `start()` / `end()` from your interceptors (your interceptor
+  indexes stay put), or use `attachServerWake(api, serverWake)` before your response
+  interceptor. `app/server-wake-notice.tsx` becomes
+  `<ServerWakeNotice watcher={serverWake} appName="Keksdose" />`. The `boot.slow` /
+  `boot.waking` keys can go, or be passed as `labels`.
 - **SaveGuard:** can become `WriteLockProvider` plus `commit`, which keeps locked
   controls in the tab order.
 
@@ -69,7 +84,14 @@ kit field, so it gets a careful round of its own. ReauthDialog works around it.
 - ConfirmPasswordDialog → `ReauthDialog`, called from `PasskeysSetting beforeAdd`.
 - `mode="alongside"` instead of the description override.
 - Roster: `RoleChip`, `AccountStateChip`, `dateColumn`.
+- Cold-start notice: in `client.ts`, right after `axios.create` and before the refresh
+  interceptor:
+  `export const serverWake = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|register)\b/) }); attachServerWake(api, serverWake);`
+  In `main.tsx`, beside `<Toaster>`: `<ServerWakeNotice watcher={serverWake} appName="Kurvenschmiede" />`.
 
 ## kastlan
 
-Nothing required.
+- Cold-start notice: in `client.ts`, right after `axios.create` and before the 401
+  interceptor:
+  `export const serverWake = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|login\/2fa|register)\b/) }); attachServerWake(apiClient, serverWake);`
+  In `providers.tsx`, next to `<Toaster />`: `<ServerWakeNotice watcher={serverWake} appName="Kastlan" />`.

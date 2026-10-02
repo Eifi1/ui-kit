@@ -119,12 +119,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS`, the default `max` of
   // `<FeedbackAttachmentField multiple>` (keksdose N3) (+1 here and in /feedback).
   // 0.16.0: `statusDotColor` (+1).
-  // 0.18.0 (+17): `WriteLockProvider`, `useWriteLock`, `DEFAULT_WRITE_LOCK_LABELS`;
+  // 0.18.0 (+25): `WriteLockProvider`, `useWriteLock`, `DEFAULT_WRITE_LOCK_LABELS`;
   // `RoleChip`, `AccountStateChip`, `DateMark`, `dateColumn`, `DEFAULT_ACCOUNT_STATE_LABELS`,
   // `ACCOUNT_STATE_TONES`; `ShareCard`, `ShareDialog`, `SharePanel`,
   // `DEFAULT_SHARE_CARD_LABELS`; `ReauthDialog`, `DEFAULT_REAUTH_DIALOG_LABELS`,
-  // `typedMatches`; `refreshChipEdges`.
-  ["@eifi1/ui-kit", barrel, 500],
+  // `typedMatches`; `refreshChipEdges`; `createServerWake`, `serverWake`, `watchReadsAnd`,
+  // `attachServerWake`, `wrapFetch`, `ServerWakeNotice`, `useServerWakeStage`,
+  // `DEFAULT_SERVER_WAKE_LABELS` (keksdose's cold-start notice for every app).
+  ["@eifi1/ui-kit", barrel, 508],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

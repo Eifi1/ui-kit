@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1084 names from 165 modules** — 500 values and 584 types. _Italic_ is a type-only export.
+**1101 names from 167 modules** — 508 values and 593 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1084 |
+| `@eifi1/ui-kit` | 1101 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -414,6 +414,7 @@ re-slicing of it, never a second API.
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readStored`, `writeStored` |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
+| `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 
 ### hooks
@@ -537,6 +538,7 @@ re-slicing of it, never a second API.
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
 | `components/write-lock` | `DEFAULT_WRITE_LOCK_LABELS`, `useWriteLock`, `WriteLockProvider`, _`WriteLock`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
 | `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
+| `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
 | `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsRemoveAlign`_, _`LineItemsRemovePlacement`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
 | `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |

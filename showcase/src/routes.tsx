@@ -198,6 +198,7 @@ const Files016Demo = lazySection(() => import("./sections/harmonise-016-demo"), 
 const Chips016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Chips016Demo");
 const ChipSnapEdges018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ChipSnapEdges018Demo");
 const ToastMiddleClick018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ToastMiddleClick018Demo");
+const ServerWake018Demo = lazySection(() => import("./sections/server-wake-018-demo"), "ServerWake018Demo");
 const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
 const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
 const ErrorBoundary013Demo = lazySection(() => import("./sections/error-boundary-013-demo"), "ErrorBoundary013Demo");
@@ -640,7 +641,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary"],
+        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary", "ServerWakeNotice"],
         Body: () => (
           <>
             <FeedbackProgress />
@@ -651,6 +652,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <EmptyStateSmallDemo />
             <ToastsDemo />
             <ToastMiddleClick018Demo />
+            <ServerWake018Demo />
             <StatesDemo />
             <LoadingState016Demo />
             <ErrorBoundary013Demo />

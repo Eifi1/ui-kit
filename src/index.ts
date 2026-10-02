@@ -187,6 +187,12 @@ export type { WriteLock, WriteLockLabels, WriteLockProviderProps } from "./compo
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
 export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
+// 0.18: the cold-start notice keksdose built (#199), for every app: a framework-free
+// watchdog over the app's requests and the corner notice that explains the wait.
+export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
+export type { ServerWakeStage, ServerWakeFilter, ServerWakeOptions, ServerWakeRequest, ServerWakeWatcher, ServerWakeAxiosConfig, AxiosLikeInstance } from "./lib/server-wake";
+export { ServerWakeNotice, useServerWakeStage, DEFAULT_SERVER_WAKE_LABELS } from "./components/server-wake";
+export type { ServerWakeLabels, ServerWakeNoticeProps } from "./components/server-wake";
 // 0.18: sharing — grantees, roles, pending grants, candidates (Kurvenschmiede 1).
 export { ShareCard, ShareDialog, SharePanel, DEFAULT_SHARE_CARD_LABELS } from "./components/share-card";
 export type { ShareCardProps, ShareDialogProps, SharePanelProps, ShareCardLabels, ShareRole, ShareGrantee, SharePendingGrant, ShareCandidate, ShareAddRequest } from "./components/share-card";
