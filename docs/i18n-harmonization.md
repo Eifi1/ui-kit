@@ -1,10 +1,10 @@
 # Language handling across the kit and the three apps — harmonisation plan
 
-Status: **proposal, 2026-10-02**, led from ui-kit at Marcel's request. Built from a
-read-only survey of each app's working tree (kastlan `feat/translation-review`,
-keksdose `chore/local-first`, Kurvenschmiede `feat/curves` = `feat/languages` + 1).
-Nothing here is decided until Marcel picks the open points in §3; the decided points
-are marked **decided**.
+Status: **2026-10-02**, led from ui-kit at Marcel's request. Built from a read-only
+survey of each app's working tree (kastlan `feat/translation-review`, keksdose
+`chore/local-first`, Kurvenschmiede `feat/curves` = `feat/languages` + 1). Marcel's
+decisions are in §3; H3 and H4 follow from earlier ones (one German = de-CH, every
+language formal). The rest is proposed, scheduled per app.
 
 ## 1. Where each one stands
 
@@ -35,7 +35,7 @@ are marked **decided**.
 
 Ordered by value. "Kit" means a ui-kit change; the rest is per app.
 
-**H1 — One translation-review contract (urgent).** kastlan and keksdose are building the
+**H1 — One translation-review contract (urgent; decided).** kastlan and keksdose are building the
 same feature independently, both uncommitted: a `translation_reviews` table (locale,
 key, shown text, reference text, verdict APPROVED / NEEDS_CHANGE, note, suggestion,
 reviewer, time), a per-locale reviewer grant, `GET`/`PUT /translations/reviews` and
@@ -47,6 +47,18 @@ the second and third app get the page without writing it. `kitLabelStrings` (0.1
 adds the kit's own words to every app's review as a `kit.` namespace. Kurvenschmiede
 adopts the same backend contract when it wants the page.
 
+The contract is keksdose's, which kastlan's already matches field for field:
+`translation_reviews` unique on (`locale`, `key`) with `text`, `reference_text`,
+`verdict` (`APPROVED` | `NEEDS_CHANGE`), `note`, `suggestion`, `reviewer_id` (SET NULL),
+`reviewed_at`; `GET /translations/reviews` → `{ locales, reviews[] }` (each review with
+`reviewer_name`); `PUT /translations/reviews` with `{ items[] }`; `POST
+/translations/reviews/clear` with `{ items: [{ locale, key }] }` → `{ cleared }`; the
+`REVIEWER` role scoped by `users.translation_review_locales`, admins review every
+locale. The id type may differ per app (it never leaves the server). Keys: the app's own
+as they are (`ns:key` in kastlan, dotted in keksdose), the kit's under `kit.`
+(`kit.combobox.resultCount(3)`), kastlan's server texts under `doc_text.<module>:` via
+its extra `GET /translations/documents` — an optional extension of the contract.
+
 **H2 — One language registry (kit).** Every app hand-rolls its list, its region
 mapping and its kit bridge, and they disagree (zh-TW → de in kastlan, → zh in
 Kurvenschmiede; keksdose's English gets the raw-count defaults). Kit:
@@ -55,11 +67,12 @@ Kurvenschmiede; keksdose's English gets the raw-count defaults). Kit:
 to de-CH → zh-* to zh → fallback), and `loadUiKitLabels(code, formatLocale)` that
 lazy-loads the right subpath and calls its factory. Apps keep their own subset.
 
-**H3 — German is `de-CH` everywhere.** kastlan's code is still `de` (its text is
+**H3 — German is `de-CH` everywhere (follows from "one German").** kastlan's code is still `de` (its text is
 already Swiss). Rename the code (files, `supportedLngs`, backend `DocLang`, the
 Contact enum, stored values with a migration) so all four repos use the same codes.
 
-**H4 — Register (decided: formal) applied to the apps.** kastlan: Italian UI tu → Lei,
+**H4 — Register (decided: formal) applied to the apps.** English is British
+(decided): "colour", "organise", as the kit and kastlan already write. kastlan: Italian UI tu → Lei,
 `de/legal.json` du → Sie. keksdose: Italian UI and mail tu → Lei. Kurvenschmiede: done.
 Plus a check like the kit's: de-CH has no ß and no du-forms, in every app's catalogue
 (Kurvenschmiede checks only its mails).
@@ -72,10 +85,13 @@ visitor can switch (Kurvenschmiede cannot). `<html lang>` follows the language
 (kastlan, Kurvenschmiede's index.html). Storage key `<app>-lang` (kastlan uses the
 detector's default `i18nextLng`).
 
-**H6 — Formatting locale: one rule (decision needed, §3.1).** Today three rules: kastlan
-formats everything Swiss (`fr-CH`, `it-CH`, `en-CH`), Kurvenschmiede formats per
-language (`fr-FR`, `en-US`), keksdose pins money to `en-US` ("CHF 1,234.56") while its
-push texts write "1’234.50".
+**H6 — Formatting locale: per language (decided).** Each language formats like its
+home: `de-CH`, `en-GB` (British, like the spelling), `es-ES`, `fr-FR`, `it-IT`,
+`hu-HU`, `zh-CN` — the tag H2's registry gives each code. kastlan replaces
+`swissLocaleFor` (`fr-CH`, `en-CH` everywhere), keksdose drops the `en-US` money pin
+("CHF 1,234.56") and its push texts' hand-rolled "1’234.50", Kurvenschmiede moves
+English from `en-US` to `en-GB`. Formats fixed by a standard stay as the standard says
+(kastlan's QR-bill fields, per the SIX spec).
 
 **H7 — Server text.** Same small helper shape in the three backends: `pick(locale,
 {…})`, `language_of()` with the same fallback (keksdose falls back to **en**, the others
@@ -99,18 +115,33 @@ does not fit).
 elsewhere) — costly, invisible to users. Translating API error `detail`s — real, but a
 separate round (error codes + frontend catalogues).
 
-## 3. Open decisions (Marcel)
+## 3. Decisions (Marcel, 2026-10-02)
 
-1. **Formatting locale (H6):** (a) Swiss formats in every language (`fr-CH`, `en-CH`:
-   1’234.50, CHF first) — the apps serve Swiss users and money is CHF; (b) per language
-   (`fr-FR`, `en-US`), as Kurvenschmiede does today; (c) per app. Recommended: (a) for
-   kastlan and keksdose (CHF money), and Kurvenschmiede decides for itself only if its
-   users are not Swiss.
-2. **English spelling:** British — kastlan writes "organise" and the kit already writes
-   "colour" — or American. Recommended: British everywhere, matching the kit and the GB
-   flag the apps show; Kurvenschmiede's `en-US` formatting tag is a separate question
-   (§3.1).
-3. **Review page in the kit (H1):** build the presentational parts in the kit now
-   (from keksdose's page) so kastlan does not write a second one. Recommended: yes.
-4. **Order:** H1 first (two apps are about to commit diverging schemas), then H2 + H3,
-   then H4–H9 per app as each finds time.
+1. **Formatting locale (H6): per language** — `de-CH`, `en-GB`, `es-ES`, `fr-FR`,
+   `it-IT`, `hu-HU`, `zh-CN`.
+2. **English spelling: British.**
+3. **Translation review (H1): one contract + kit parts.** The kit builds the review
+   page's presentational parts from keksdose's page; kastlan uses them instead of a
+   second page; both include the kit's words via `kitLabelStrings`.
+
+Order: H1 first (two apps were about to commit the same feature twice), then the kit's
+H2 registry with H3, then H4–H9 per app as each finds time.
+
+## 4. Per repo
+
+- **ui-kit:** `kitLabelStrings` (done, 0.19); review-page parts (H1); language registry
+  with `resolveLanguage` / `loadUiKitLabels` / per-language format tags (H2); switcher
+  with flags from the registry (H9).
+- **kastlan:** H1 backend on the contract, no own page (kit parts); H3 `de` → `de-CH`
+  (files, `supportedLngs`, `DocLang`, Contact enum, stored values); H4 Italian UI tu →
+  Lei, `de/legal.json` du → Sie; H5 `users.locale` + read back on sign-in, storage key
+  `kastlan-lang`, `<html lang>`; H6 per-language tags instead of `swissLocaleFor`; H7 one
+  language list with a drift test; H8 `_one`/`_other`, placeholder parity.
+- **keksdose:** H1 contract base, page as the model for the kit parts; H4 Italian UI and
+  mail tu → Lei; H5 read the account language back on sign-in; H6 drop the `en-US` money
+  pin and the push texts' own grouping; H7 `language_of` falls back to de-CH (not en),
+  invite mail in the invitee's language; H8 placeholder parity, plural test that loads
+  fr/it; H9 account-menu disclosure → kit.
+- **Kurvenschmiede:** H1 when it wants the page; H4 a Sie/ß check on `de-CH.json`; H5
+  read the account language back, a switcher for signed-out visitors, `index.html` lang;
+  H6 `en-US` → `en-GB`; H7 invite mail language; H9 account-menu disclosure → kit.
