@@ -340,8 +340,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
                 ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
               // No hover fill on a group that cannot be changed — a segment that
-              // lights up under the pointer is an offer, and there is none here.
-              disabled && "cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent",
+              // lights up under the pointer is an offer, and there is none here. Not on
+              // the chosen segment: its fill IS its state, and its inverse text would
+              // vanish on a transparent hover.
+              disabled && "cursor-not-allowed",
+              disabled && !active && "hover:bg-transparent dark:hover:bg-transparent",
               optionClassName,
               opt.className,
             )}

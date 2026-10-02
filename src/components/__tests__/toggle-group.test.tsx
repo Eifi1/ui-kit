@@ -31,6 +31,13 @@ describe("ToggleGroup", () => {
     expect(screen.getByRole("radio", { name: "B" })).toHaveAttribute("aria-checked", "false");
   });
 
+  it("keeps the chosen segment's fill under the pointer when disabled", () => {
+    // A transparent hover on the chosen segment left its inverse text on nothing.
+    render(<ToggleGroup value="a" onChange={vi.fn()} options={OPTIONS} disabled />);
+    expect(screen.getByRole("radio", { name: "A" }).className).not.toContain("hover:bg-transparent");
+    expect(screen.getByRole("radio", { name: "B" }).className).toContain("hover:bg-transparent");
+  });
+
   it("refuses the click and says so to a screen reader", () => {
     const onChange = vi.fn();
     render(
