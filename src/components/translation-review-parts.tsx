@@ -185,7 +185,9 @@ export function TranslationLocaleTabs({ locales, active, onChange, className, la
           label: locale.label,
           name: typeof locale.label === "string" ? locale.label : locale.value,
           badge: (
-            <span className="text-xs tabular-nums text-[var(--text-muted)]">
+            // The tab's own colour, dimmed — a fixed muted grey vanished on the selected
+            // tab's brand fill (390px browser check).
+            <span className="text-xs tabular-nums opacity-75">
               {labels.localeProgress(summary.approved, summary.total)}
             </span>
           ),
