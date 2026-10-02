@@ -26,7 +26,10 @@ has the release notes, and the showcase (⌘K) has every new part live.
    - **A hint coming and going no longer rebuilds the field (keksdose):** passed at all,
      even as `undefined`, `hint` (and `showCount`) keeps the field's box, as `error` does
      since 0.18 — Select lost focus when its caption appeared. Same in DatePicker,
-     MonthPicker, NumberInput and OneTimeCodeInput; a test covers 15 fields.
+     MonthPicker, NumberInput and OneTimeCodeInput; a test covers 15 fields. As with
+     `error`, the field then sits in one plain `<div>` and `className` stays on the field
+     itself: a field with `hint` and `className="flex-1"` in a flex row takes `flex-1` on
+     a wrapper of yours.
    - **Write lock:** an armed `DangerConfirm` under a lock no longer confirms; a droppable
      `FileButton` under `commit` / `disabledReason` no longer takes drops.
    - **TwoFactorSetting:** its code fields are `OneTimeCodeInput`s — digits only, so a

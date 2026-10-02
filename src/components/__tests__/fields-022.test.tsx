@@ -88,7 +88,12 @@ describe("keksdose K4: hint on Input and Textarea", () => {
       <Input aria-label="Code" className="w-40" hint={<FieldHint label="From the letter" />} />,
     );
     const input = screen.getByRole("textbox", { name: "Code" });
-    const row = container.firstElementChild as HTMLElement;
+    // Passing `hint` keeps the field's plain box (so a hint coming and going never
+    // rebuilds the control — keksdose 0.22); the row with className is inside it.
+    const box = container.firstElementChild as HTMLElement;
+    expect(box.tagName).toBe("DIV");
+    expect(box.className).toBe("");
+    const row = box.firstElementChild as HTMLElement;
     expect(row).toHaveClass("flex", "w-40");
     expect(input).not.toHaveClass("w-40");
     expect(within(row).getByRole("button", { name: "From the letter" })).toBeInTheDocument();
