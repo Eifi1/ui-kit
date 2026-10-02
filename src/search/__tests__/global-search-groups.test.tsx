@@ -183,7 +183,38 @@ describe("GlobalSearch: one source, several groups", () => {
     });
     open();
     type("müller");
-    const tx = await screen.findByRole("group", { name: "Transactions" });
-    expect(within(tx).getByRole("option", { name: "Müller rent" })).toBeInTheDocument();
+    // Wait for the ROW, not the group. The group exists before the answer does: it heads
+    // the source's "Searching…" line from the palette's first paint of this query. This
+    // test used to find the group and then look for the row synchronously, which held
+    // only while the source's answer (a 0 ms debounce) rendered before the palette's own
+    // 150 ms debounce fired. A worker starved for over 150 ms — the parallel coverage run
+    // at load ~10 — runs both overdue timers in one pass, the palette paints the loading
+    // state first, and the row came 150 ms after the assertion. See the next test.
+    const row = await screen.findByRole("option", { name: "Müller rent" });
+    expect(screen.getByRole("group", { name: "Transactions" })).toContainElement(row);
+    // The entry's own `group: "unit"` names nothing.
+    expect(screen.queryByRole("group", { name: "unit" })).toBeNull();
+  });
+
+  it("still puts the answer under its group when the palette's debounce fires before the source's answer renders", async () => {
+    // The order a starved worker produces, made on purpose: after the keystroke the
+    // thread is busy for longer than the palette's 150 ms debounce, so the source's
+    // timer and the palette's are overdue together. The palette then paints this query
+    // from the rows it had — the "Searching…" line — and the answer must still replace
+    // it (the `revision` re-run), not be lost behind it.
+    renderSearch({
+      sources: [
+        { id: "tx", group: "Transactions", debounceMs: 0, search: async () => [{ id: "t", title: "Müller rent" }] },
+      ],
+    });
+    open();
+    type("müller");
+    const until = Date.now() + 200;
+    while (Date.now() < until) {
+      // busy: the worker gets no turn of its event loop
+    }
+    const row = await screen.findByRole("option", { name: "Müller rent" });
+    expect(screen.getByRole("group", { name: "Transactions" })).toContainElement(row);
+    expect(screen.queryByText("Searching…")).toBeNull();
   });
 });
