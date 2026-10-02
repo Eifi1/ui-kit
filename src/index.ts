@@ -129,6 +129,8 @@ export type {
   TypedConfirmFieldLabels,
   CurrentPasswordInputProps,
   CurrentPasswordInputLabels,
+  // 0.23.0: onConfirm's second argument — the guards' values (keksdose G4b).
+  DangerConfirmValues,
 } from "./components/danger-confirm";
 // 0.18: re-authentication before a sensitive action (Kurvenschmiede 4).
 export { ReauthDialog, DEFAULT_REAUTH_DIALOG_LABELS } from "./components/reauth-dialog";
@@ -456,3 +458,19 @@ export {
   isE164,
 } from "./lib/phone";
 export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
+
+// ── 0.23.0: the apps' 0.22 adoption round (kastlan, keksdose, Kurvenschmiede) ──
+// The label strip over custom content (keksdose G8).
+export * from "./components/field-strip";
+// Paste or drop a table, give each column a role (Kurvenschmiede's columns input,
+// keksdose's import map step). The lexer itself stays in `@eifi1/ui-kit/table-text`.
+export * from "./components/column-mapper";
+export {
+  assignColumnRole,
+  guessMapping,
+  missingRoles,
+  readMappedTable,
+  readTextFile,
+  roleOfColumn,
+} from "./lib/column-mapping";
+export type { ColumnMapperResult, ColumnMapping, ColumnRole } from "./lib/column-mapping";

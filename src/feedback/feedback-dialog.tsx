@@ -10,6 +10,7 @@ import {
   DEFAULT_MAX_ATTACHMENT_BYTES,
   FeedbackAttachmentField,
   type FeedbackAttachmentError,
+  type FeedbackAttachmentErrorInfo,
 } from "./feedback-attachment";
 
 export interface FeedbackCategoryOption {
@@ -157,7 +158,9 @@ interface FeedbackDialogBaseProps {
 export interface FeedbackDialogSingleProps extends FeedbackDialogBaseProps {
   attachments?: "single";
   onSubmit: (data: FeedbackSubmission) => void | Promise<void>;
-  onAttachmentError?: (kind: "type" | "size") => void;
+  /** `info` (0.23.0) names the refused file and the limit — see
+   *  {@link FeedbackAttachmentErrorInfo}. */
+  onAttachmentError?: (kind: "type" | "size", info: FeedbackAttachmentErrorInfo) => void;
   /** Multiple mode only — refused here rather than silently ignored. */
   maxAttachments?: never;
 }
@@ -172,8 +175,9 @@ export interface FeedbackDialogMultipleProps extends FeedbackDialogBaseProps {
   /** Default `DEFAULT_MAX_ATTACHMENTS` (5). The screenshot does not count. */
   maxAttachments?: number;
   onSubmit: (data: FeedbackMultipleSubmission) => void | Promise<void>;
-  /** `"count"`: more files arrived at once than there was room for; the surplus was dropped. */
-  onAttachmentError?: (kind: FeedbackAttachmentError) => void;
+  /** `"count"`: more files arrived at once than there was room for; the surplus was
+   *  dropped. `info` (0.23.0) names the refused file(s) and the limit. */
+  onAttachmentError?: (kind: FeedbackAttachmentError, info: FeedbackAttachmentErrorInfo) => void;
 }
 
 export type FeedbackDialogProps = FeedbackDialogSingleProps | FeedbackDialogMultipleProps;

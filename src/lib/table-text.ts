@@ -46,6 +46,11 @@
  * * **Quoted fields.** No `"a;b"` escaping. These are numbers; the only text in them
  *   is the header line, and a header field with a separator in it costs a column
  *   name, not a measurement.
+ *
+ * Both of those are the NUMERIC lexer's limits. A table whose cells are text — a bank
+ * export, read for a column mapper — needs both, and {@link parseTextTable} (0.23) is
+ * that door: empty cells held in place, quoted cells, and the same separator and comma
+ * rules underneath.
  */
 
 /** A digit, a comma, a digit — a comma that can only be a decimal mark or a
@@ -263,3 +268,269 @@ function fieldsOf(line: string, separator: Separator): string[] {
  *  field with two of them is a grouped number and this module does not read
  *  those — it reports the line instead. */
 const point = (field: string) => field.replace(",", ".");
+
+// ── A table of text ────────────────────────────────────────────────────────────
+
+/**
+ * What separates the columns of a {@link TextTable}, named. `" "` is a run of
+ * whitespace — one separator however many spaces or tabs it is made of — as in a
+ * printed or MATLAB-dumped table.
+ */
+export type TableSeparator = "\t" | ";" | "," | " ";
+
+/** One line of the text as it was handed over: its 1-based number (blank lines
+ *  counted, so a reader can count to it in the box they pasted into) and its text,
+ *  trimmed. */
+export interface TableLine {
+  line: number;
+  text: string;
+}
+
+export interface ParseTextTableOptions {
+  /** The separator, decided by the caller — a "separated by" override, a format
+   *  the app already knows. Default: detected (see {@link parseTextTable}). */
+  separator?: TableSeparator;
+  /** Whether a comma between two digits is a decimal mark. Default: the
+   *  `"whole-text"` rule, decided once for the file. */
+  decimalComma?: boolean;
+  /** Whether the table's first line names its columns. Default: detected — a
+   *  word over a column of values ("Amount" over `-12,50`) is a header. */
+  header?: boolean;
+}
+
+/**
+ * A table read as text: every cell a string, as written.
+ *
+ * The *file* door's decisions, for a table that is not only numbers. Everything a
+ * reader has to know to trust it is in the answer — the separator and the decimal
+ * mark that were assumed, and the lines that were not read, with their number and
+ * their text — because a guess nobody can see is a guess nobody can correct.
+ */
+export interface TextTable {
+  /** The first line's cells, when it names the columns; `null` when it is data. */
+  header: string[] | null;
+  /** Each read row, `width` cells long. An empty cell is `""`, kept in its place. */
+  rows: string[][];
+  /** Where each row came from — row-aligned with `rows`. */
+  lines: TableLine[];
+  /** How many columns the table has. */
+  width: number;
+  separator: TableSeparator;
+  /** Whether a comma is this table's decimal mark — the convention its numbers are
+   *  written in, to read them with {@link tableNumber} and to say back to the reader. */
+  decimalComma: boolean;
+  /** Lines that are not a row of this table: a title above it, a total under it, a
+   *  row with a cell too many or too few. */
+  unread: TableLine[];
+}
+
+/**
+ * A pasted or dropped table, read as text — the lexer's file door for a table whose
+ * cells are not all numbers (a bank export: a date, a payee, an amount), and the
+ * parse under {@link ColumnMapper}.
+ *
+ * Moved under the same roof as {@link parseTable} because it has the same three
+ * questions — what separates the columns, what the comma is, whether the first
+ * line is a header — and answering them a second time somewhere else is how the
+ * three readers this module replaced came to disagree. Kurvenschmiede's columns
+ * input and keksdose's bank-file import both read a table whose columns the reader
+ * then assigns, and both state what was assumed; this is that reading, once.
+ *
+ * Where it differs from {@link parseTable}, and why:
+ *
+ * * **Cells stay text.** Which cell is a number is the caller's question (its
+ *   column roles), so nothing here converts. {@link tableNumber} reads one in the
+ *   table's own convention.
+ * * **An empty cell keeps its place.** A bank row with no memo has `;;` in it, and
+ *   dropping that field — which the numeric lexer does — would move the amount into
+ *   the memo's column. A trailing separator that ends most lines (`1;2;3;`, which
+ *   spreadsheets write) is a line ending, not a column.
+ * * **Quoted cells.** `"Example Ltd; branch 2"` is one cell, and `""` inside quotes
+ *   is a quote. Text has separators in it where numbers never do. A quoted cell that
+ *   runs over a line break is not joined — the line then has the wrong number of
+ *   cells and is reported.
+ * * **The width is the file's.** The column count most lines share. A line with
+ *   another count is reported in `unread` rather than padded or cut: a row with a
+ *   cell too many is a row whose columns have slid, and reading it would put a payee
+ *   in the amount.
+ * * **The separator is voted on**, over the first lines, rather than taken from the
+ *   second: an export that opens with a title block (a bank's account name and
+ *   period over the table) would otherwise be read with the title's separator.
+ * * **The header is detected by its words.** The numeric lexer's rule — "a line
+ *   that is not numbers" — cannot work where the rows are text too. A first line is
+ *   a header when one of its cells is a word and every cell under it, as far as the
+ *   first rows go, is a value (digits and the marks numbers and dates are written
+ *   with): "Amount" over `-12,50`, "Date" over `01.02.2026`. A table of words only
+ *   is read without one; `options.header` says otherwise.
+ *
+ * Blank lines and `#` banners are skipped, as by the numeric lexer.
+ */
+export function parseTextTable(text: string, options: ParseTextTableOptions = {}): TextTable {
+  const content = textLines(text);
+  if (!content.length) {
+    return { header: null, rows: [], lines: [], width: 0, separator: options.separator ?? ",", decimalComma: false, unread: [] };
+  }
+  const separator = options.separator ?? votedSeparator(content);
+  const decimalComma =
+    options.decimalComma ?? (separator !== "," && DECIMAL_COMMA.test(content.map((entry) => entry.line).join("\n")));
+
+  // A trailing separator is a line ending only where it is the file's habit: in a
+  // file where most lines end in one. Elsewhere it closes an empty last cell.
+  const trailing =
+    separator !== " " && content.filter(({ line }) => line.endsWith(separator)).length * 2 > content.length;
+  const split = content.map(({ line, number }) => {
+    const cells = cellsOf(line, separator);
+    if (trailing && line.endsWith(separator) && cells[cells.length - 1] === "") cells.pop();
+    return { cells, entry: { line: number, text: line } };
+  });
+
+  const width = commonWidth(split.map(({ cells }) => cells.length));
+  const first = split.findIndex(({ cells }) => cells.length === width);
+  const unread: TableLine[] = split.slice(0, first).map(({ entry }) => entry);
+  const body = split.slice(first);
+  const fitting = body.filter(({ cells }) => cells.length === width);
+  const header = options.header ?? looksLikeHeader(fitting[0].cells, fitting.slice(1, 21).map(({ cells }) => cells));
+
+  const rows: string[][] = [];
+  const lines: TableLine[] = [];
+  body.forEach(({ cells, entry }, index) => {
+    if (index === 0 && header) return;
+    if (cells.length !== width) {
+      unread.push(entry);
+      return;
+    }
+    rows.push(cells);
+    lines.push(entry);
+  });
+
+  return { header: header ? body[0].cells : null, rows, lines, width, separator, decimalComma, unread };
+}
+
+/**
+ * One cell of a {@link TextTable} as a number, read in the table's convention.
+ *
+ * Not {@link cellNumber}, which reads every comma as a decimal mark — right for a
+ * cell typed on its own, wrong for a cell of a file written with decimal points,
+ * where `1,234` is a grouped thousand and reading it as 1.234 would be off by a
+ * factor of a thousand without a word. Here a comma is a decimal mark only in a
+ * table whose convention it is, and a cell with both marks is `NaN` either way: the
+ * lexer does not read grouped numbers, it reports them. An empty cell is `NaN` too —
+ * a hole in the table, not a zero.
+ */
+export function tableNumber(cell: string, decimalComma: boolean): number {
+  const trimmed = cell.trim();
+  if (trimmed === "") return Number.NaN;
+  return Number(decimalComma ? point(trimmed) : trimmed);
+}
+
+const SEPARATOR_TRUST: readonly TableSeparator[] = ["\t", ";", ",", " "];
+
+/** {@link contentLines} for a table of text: spaces come off the ends, but a TAB
+ *  stays — in a tab-separated export a leading tab is an empty first cell, and
+ *  trimming it would slide the whole row one column to the left. */
+function textLines(text: string): { line: string; number: number }[] {
+  return text
+    .split(/\r?\n/)
+    .map((line, index) => ({ line: line.replace(/^ +| +$/g, ""), number: index + 1 }))
+    .filter(({ line }) => line.trim() !== "" && !line.trimStart().startsWith("#"));
+}
+
+/** The separator most of the first lines are written with — a title block above the
+ *  table loses the vote to the table under it. A tie goes to the more trusted one. */
+function votedSeparator(lines: { line: string }[]): TableSeparator {
+  const votes = new Map<TableSeparator, number>();
+  for (const { line } of lines.slice(0, 50)) {
+    const found = separatorOf(withoutQuoted(line));
+    const named: TableSeparator = typeof found === "string" ? (found as TableSeparator) : " ";
+    votes.set(named, (votes.get(named) ?? 0) + 1);
+  }
+  let best: TableSeparator = SEPARATOR_TRUST[0];
+  let bestCount = -1;
+  for (const candidate of SEPARATOR_TRUST) {
+    const count = votes.get(candidate) ?? 0;
+    if (count > bestCount) {
+      best = candidate;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+/** A line with its quoted parts emptied, so a separator inside quotes does not vote. */
+const withoutQuoted = (line: string) => line.replace(/"(?:[^"]|"")*"/g, '""');
+
+/**
+ * One line into cells: trimmed, quotes taken off, empty cells kept in their place.
+ * A run of whitespace is one separator and makes no empty cells.
+ */
+function cellsOf(line: string, separator: TableSeparator): string[] {
+  if (separator === " ") return line.split(/\s+/).filter((field) => field !== "").map(unquote);
+  const cells: string[] = [];
+  let cell = "";
+  let quoted = false;
+  let started = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (quoted) {
+      if (char === '"' && line[index + 1] === '"') {
+        cell += '"';
+        index += 1;
+      } else if (char === '"') {
+        quoted = false;
+      } else {
+        cell += char;
+      }
+    } else if (char === separator) {
+      cells.push(cell.trim());
+      cell = "";
+      started = false;
+    } else if (char === '"' && !started) {
+      quoted = true;
+      started = true;
+      cell = "";
+    } else {
+      if (char.trim() !== "") started = true;
+      cell += char;
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
+/** A whitespace-separated field with its quotes off. */
+function unquote(field: string): string {
+  return field.length >= 2 && field.startsWith('"') && field.endsWith('"') ? field.slice(1, -1).replace(/""/g, '"') : field;
+}
+
+/** The column count most lines share; a tie goes to the wider table. */
+function commonWidth(counts: number[]): number {
+  const tally = new Map<number, number>();
+  for (const count of counts) tally.set(count, (tally.get(count) ?? 0) + 1);
+  let width = 0;
+  let best = 0;
+  for (const [count, times] of tally) {
+    if (times > best || (times === best && count > width)) {
+      width = count;
+      best = times;
+    }
+  }
+  return width;
+}
+
+/** A cell with a letter in it — a name, not a value. */
+const isWord = (cell: string) => /\p{L}/u.test(cell);
+/** A cell made of digits and the marks numbers, dates and times are written with. */
+const isValue = (cell: string) => /\d/.test(cell) && !isWord(cell);
+
+/**
+ * Whether a first line names the columns under it. A word over a column of values
+ * says so; with no rows to compare against, a line of words alone does.
+ */
+function looksLikeHeader(first: string[], below: string[][]): boolean {
+  if (!below.length) return first.some((cell) => cell !== "") && first.every((cell) => cell === "" || isWord(cell));
+  return first.some((cell, column) => {
+    if (!isWord(cell)) return false;
+    const values = below.map((row) => row[column]).filter((value) => value !== "");
+    return values.length > 0 && values.every(isValue);
+  });
+}

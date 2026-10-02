@@ -26,6 +26,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       attachmentRemoveFile: (name) => `Rimuovi ${name}`,
       attachmentLimit: (max) => `Massimo ${n(max)} ${max === 1 ? "allegato" : "allegati"}: ne rimuova uno per aggiungerne un altro.`,
       attachmentUploading: "Caricamento…",
+      attachmentUploadFailed: (name) => `Impossibile caricare «${name}»`,
     },
     feedbackDialog: {
       title: "Invia feedback",
@@ -332,6 +333,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       password: "Password",
       phrase: (phrase) => `Digiti «${phrase}» per confermare`,
       acknowledge: "Ho letto cosa comporta questa operazione e desidero continuare.",
+      needsPhrase: (phrase) => `Digiti «${phrase}» per confermare`,
+      needsAcknowledge: "Spunti la casella per confermare",
+      needsPassword: "Inserisca la password per confermare",
     },
     tabs: {
       add: "Aggiungi scheda",
@@ -683,6 +687,43 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       inflow: "Entrata",
       // "premere per…": an instruction without a tu imperative, as the kit's Italian is formal.
       direction: (current, next) => `Direzione: ${current} – premere per passare a ${next}`,
+    },
+    columnMapper: {
+      paste: "Incolla una tabella",
+      pasteHint:
+        "Copi le righe da un foglio di calcolo e le incolli qui, oppure trascini un file CSV o di testo.",
+      chooseFile: "Scegli un file",
+      readError: (name) => `Impossibile leggere «${name}»`,
+      headerRow: "La prima riga contiene i nomi delle colonne",
+      summary: (columns, rows) =>
+        `${n(columns)} ${plural(columns, "colonna", "colonne")}, ${n(rows)} ${plural(rows, "riga", "righe")}`,
+      // Fragments of the summary line. "Separato da…" would have to agree with a noun the
+      // line does not name, so the separator is stated as a value.
+      separatorSemicolon: "separatore: punto e virgola",
+      separatorComma: "separatore: virgola",
+      separatorTab: "separatore: tabulazione",
+      separatorSpace: "separatore: spazio",
+      // The examples stay as written: they show the convention, not the reader's locale.
+      decimalComma: "virgola decimale (1,5)",
+      decimalPoint: "punto decimale (1.5)",
+      unreadCount: (count) =>
+        count === 1 ? "Impossibile leggere 1 riga" : `Impossibile leggere ${n(count)} righe`,
+      unreadLine: (line) => `Impossibile leggere la riga ${line}`,
+      unreadMore: (count) => (count === 1 ? "…e un’altra" : `…e altre ${n(count)}`),
+      noRows: "Nessuna riga di questo testo si può leggere come riga della tabella.",
+      table: "Colonne e relativi ruoli",
+      columnN: (column) => `Colonna ${column}`,
+      roleOf: (column) => `Che cosa contiene la colonna «${column}»?`,
+      ignore: "Ignora",
+      requiredRole: (role) => `${role} (obbligatorio)`,
+      previewOf: (shown, total) =>
+        shown === 1
+          ? `La prima di ${n(total)} righe`
+          : `Le prime ${n(shown)} di ${n(total)} righe`,
+      // `roles` arrives joined with "o" ("Dare o Avere").
+      oneOf: (roles) => `${roles} (a scelta)`,
+      // A participle phrase: no verb to agree with however many roles follow.
+      missing: (roles) => `Ancora da assegnare: ${roles}.`,
     },
     translationReview: {
       statusMissing: "Mancante",

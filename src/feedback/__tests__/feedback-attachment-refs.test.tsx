@@ -108,7 +108,7 @@ describe("FeedbackAttachmentField refs", () => {
     await settle();
     expect(uploading()).toHaveLength(0);
     expect(keys()).toBe("");
-    expect(onError).toHaveBeenCalledWith("upload", failure);
+    expect(onError).toHaveBeenCalledWith("upload", failure, expect.objectContaining({ error: failure }));
   });
 
   it("validates before uploading, as the File modes do", () => {
@@ -118,7 +118,10 @@ describe("FeedbackAttachmentField refs", () => {
     pick(container, [new File(["<svg/>"], "x.svg", { type: "image/svg+xml" })]);
     pick(container, [png("huge.png", 11 * 1024 * 1024)]);
     expect(onUpload).not.toHaveBeenCalled();
-    expect(onError.mock.calls).toEqual([["type"], ["size"]]);
+    expect(onError.mock.calls.map(([kind, error]) => [kind, error])).toEqual([
+      ["type", undefined],
+      ["size", undefined],
+    ]);
   });
 
   it("counts uploads in flight against max", async () => {
@@ -129,7 +132,7 @@ describe("FeedbackAttachmentField refs", () => {
     );
     pick(container, [png("a.png"), png("b.png"), png("c.png")]);
     expect(onUpload).toHaveBeenCalledTimes(2);
-    expect(onError).toHaveBeenCalledWith("count");
+    expect(onError).toHaveBeenCalledWith("count", undefined, expect.objectContaining({ max: 3 }));
     // Full with two uploads running: the add button gives way to the limit line.
     expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
     expect(screen.getByText("Up to 3 attachments — remove one to add another.")).toBeInTheDocument();

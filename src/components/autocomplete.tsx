@@ -22,7 +22,16 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
+import {
+  EndHintRow,
+  FieldCaption,
+  LABEL_IN_ROW,
+  LockedReason,
+  StaticLabelRow,
+  useFieldHint,
+  useLockReason,
+} from "./field-parts";
+import { mergeDescribedBy } from "./choice-parts";
 
 /**
  * `value`/`onChange` are the TEXT's, and `onSelect` is "a suggestion was taken" —
@@ -126,6 +135,27 @@ export interface AutocompleteProps<V extends string | number = string>
   loadErrorLabel?: string;
   /** Classes for the `<input>` itself; `className` styles the wrapper. */
   inputClassName?: string;
+  /**
+   * Why the field cannot be changed — {@link Button}'s `disabledReason`, the Combobox
+   * family's write lock (keksdose G2, 0.23), for a field whose pick SAVES: an address
+   * search whose taken row writes the address, a lookup that links a record.
+   *
+   * With a reason the input stays focusable and `aria-disabled`, is `readOnly` (the
+   * settled grey FIELD_BASE gives a `[readonly]` field), opens no list and asks no
+   * `loadOptions` — whatever `open` says — and nothing reaches `onChange`, `onSelect` or
+   * `onOpenChange(true)`. Enter is swallowed, so a locked field does not submit the form
+   * around it, and a caller's `onKeyDown` does not hear it; every other key still
+   * reaches the caller (an Escape that closes its panel) and the caret. The reason is in
+   * the kit {@link Tooltip} and on the input's `aria-describedby`. Wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This field COMMITS. Under a locked {@link WriteLockProvider} it is locked the
+   * `disabledReason` way with the lock's reason (which wins over its own). A search
+   * whose result is only draft state — the form's Save writes it — leaves this off and
+   * stays live under the lock. No provider, or an unlocked one: no effect.
+   */
+  commit?: boolean;
 }
 
 function AutocompleteInner<V extends string | number = string>(
@@ -155,6 +185,8 @@ function AutocompleteInner<V extends string | number = string>(
     inputClassName,
     id,
     disabled,
+    disabledReason,
+    commit,
     onKeyDown,
     onFocus,
     onBlur,
@@ -191,7 +223,11 @@ function AutocompleteInner<V extends string | number = string>(
     if (next !== open) onOpenChange?.(next);
   };
   const [active, setActive] = useState(-1);
-  const live = open && !disabled;
+  // The lock: focusable, `readOnly`, no list — see `disabledReason`. Folded into `live`,
+  // so a locked field asks nothing and shows nothing even with `open` held true.
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
+  const live = open && !disabled && !locked;
   const { results, busy, failed, tooShort } = useOptionSource<V>({
     options,
     loadOptions,
@@ -230,7 +266,7 @@ function AutocompleteInner<V extends string | number = string>(
     setActive(-1);
   };
   const take = (o: ComboOption<V>) => {
-    if (o.disabled) return;
+    if (o.disabled || locked) return;
     if (fillOnSelect) onChange(o.label);
     onSelect?.(o);
     close();
@@ -245,6 +281,16 @@ function AutocompleteInner<V extends string | number = string>(
   // label still names the field.
   const labelledBy =
     ariaLabel === undefined ? (ariaLabelledBy ?? (hasLabel ? labelId : undefined)) : undefined;
+  // While locked the field sits in the reason's Tooltip — in a fragment with a hidden
+  // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
+  const withLock = (box: ReactNode) =>
+    locked ? (
+      <LockedReason lock={lock} className="block">
+        {box}
+      </LockedReason>
+    ) : (
+      box
+    );
 
   return (
     // `relative`: the floating label and the live region's `sr-only` both need a
@@ -258,119 +304,134 @@ function AutocompleteInner<V extends string | number = string>(
         </ComboboxFieldLabel>
       )}
       <EndHintRow hint={hasLabel ? undefined : hintParts.labelHint}>
-        <div ref={fieldRef} className="relative">
-          {icon && (
-            <span
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute flex text-[var(--text-muted)]",
-                small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
-                // Labelled, the icon sits on the VALUE's line — the one line box below
-                // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
-                // the box. Centred on the box it rose into the top strip and sat on the
-                // label's first letters, which float at the same start inset. On the
-                // value line it is beside what it describes, and the label keeps the
-                // start edge every other label in the form's column shares.
-                hasLabel
-                  ? "top-[calc(1rem+1px)] h-5 items-center"
-                  : "top-1/2 -translate-y-1/2",
-              )}
-            >
-              {icon}
-            </span>
-          )}
-          <input
-            {...rest}
-            ref={ref}
-            id={fieldId}
-            size={nativeSize}
-            type="text"
-            value={value}
-            disabled={disabled}
-            role="combobox"
-            aria-autocomplete="list"
-            aria-expanded={expanded}
-            // Required by the role, and set while closed too, as on the siblings.
-            aria-controls={listboxId}
-            aria-activedescendant={activeId}
-            aria-label={ariaLabel}
-            aria-labelledby={labelledBy}
-            aria-invalid={field.isInvalid || rest["aria-invalid"] || undefined}
-            aria-describedby={field.describedBy}
-            autoComplete="off"
-            onFocus={(e) => {
-              onFocus?.(e);
-              // A seeded field (keksdose's `initialQuery`) is looked up as it is
-              // focused; an empty one asks nothing, because of `minChars`.
-              setOpen(true);
-            }}
-            onBlur={(e) => {
-              onBlur?.(e);
-              close();
-            }}
-            onChange={(e) => {
-              onChange(e.target.value);
-              setOpen(true);
-              setActive(-1);
-            }}
-            onKeyDown={(e) => {
-              // An Escape that closes the OPEN list is the list's, and is consumed before
-              // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
-              // address search) otherwise closed the whole panel when the user only meant
-              // to dismiss the suggestions — the opposite of what the docs promised.
-              if (e.key === "Escape" && expanded) {
-                e.preventDefault();
-                e.stopPropagation();
-                close();
-                return;
-              }
-              onKeyDown?.(e);
-              if (e.defaultPrevented) return;
-              // Disabled rows are passed over; at either end the highlight stays put.
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (!open) setOpen(true);
-                else setActive((i) => stepEnabled(results, i, 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                if (!open) setOpen(true);
-                // From "nothing highlighted", Up goes to the bottom, as the APG has it.
-                else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
-              } else if (e.key === "Enter") {
-                // No row highlighted: the text is the answer, and a form's own submit
-                // is left alone.
-                if (expanded && activeId) {
-                  e.preventDefault();
-                  take(results[active]);
-                }
-              } else if (e.key === "Tab") {
-                close();
-              }
-            }}
-            className={cn(
-              FIELD_BASE,
-              hasLabel && FIELD_FLOATING_PAD,
-              // Select's `SELECT_SM` box: a fixed 28px, so the caller's line height
-              // cannot grow it.
-              small && "h-7 py-0 pe-2 ps-2 text-xs",
-              icon ? (small ? "ps-7" : "ps-8") : undefined,
-              busy && (small ? "pe-7" : "pe-9"),
-              field.isInvalid && FIELD_INVALID,
-              inputClassName,
+        {withLock(
+          <div ref={fieldRef} className={cn("relative", locked && "cursor-not-allowed")}>
+            {icon && (
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute flex text-[var(--text-muted)]",
+                  small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
+                  // Labelled, the icon sits on the VALUE's line — the one line box below
+                  // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
+                  // the box. Centred on the box it rose into the top strip and sat on the
+                  // label's first letters, which float at the same start inset. On the
+                  // value line it is beside what it describes, and the label keeps the
+                  // start edge every other label in the form's column shares.
+                  hasLabel
+                    ? "top-[calc(1rem+1px)] h-5 items-center"
+                    : "top-1/2 -translate-y-1/2",
+                )}
+              >
+                {icon}
+              </span>
             )}
-          />
-          {busy && live && (
-            // Decorative: the live region below already says "Loading…".
-            <span
+            <input
+              {...rest}
+              ref={ref}
+              id={fieldId}
+              size={nativeSize}
+              type="text"
+              value={value}
+              // Locked: focusable, `readOnly`, `aria-disabled` — see `disabledReason`.
+              disabled={locked ? undefined : disabled}
+              readOnly={locked || rest.readOnly}
+              aria-disabled={locked || rest["aria-disabled"]}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={expanded}
+              // Required by the role, and set while closed too, as on the siblings.
+              aria-controls={listboxId}
+              aria-activedescendant={activeId}
+              aria-label={ariaLabel}
+              aria-labelledby={labelledBy}
+              aria-invalid={field.isInvalid || rest["aria-invalid"] || undefined}
+              aria-describedby={mergeDescribedBy(field.describedBy, locked && lock.reasonId)}
+              autoComplete="off"
+              onFocus={(e) => {
+                onFocus?.(e);
+                // A locked field takes focus to say why, and opens nothing.
+                if (locked) return;
+                // A seeded field (keksdose's `initialQuery`) is looked up as it is
+                // focused; an empty one asks nothing, because of `minChars`.
+                setOpen(true);
+              }}
+              onBlur={(e) => {
+                onBlur?.(e);
+                close();
+              }}
+              onChange={(e) => {
+                if (locked) return;
+                onChange(e.target.value);
+                setOpen(true);
+                setActive(-1);
+              }}
+              onKeyDown={(e) => {
+                // Locked: Enter is swallowed (no form submit, no caller's "search now");
+                // every other key is the caller's and the caret's. No list to drive.
+                if (locked) {
+                  if (e.key === "Enter") e.preventDefault();
+                  else onKeyDown?.(e);
+                  return;
+                }
+                // An Escape that closes the OPEN list is the list's, and is consumed before
+                // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
+                // address search) otherwise closed the whole panel when the user only meant
+                // to dismiss the suggestions — the opposite of what the docs promised.
+                if (e.key === "Escape" && expanded) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  close();
+                  return;
+                }
+                onKeyDown?.(e);
+                if (e.defaultPrevented) return;
+                // Disabled rows are passed over; at either end the highlight stays put.
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (!open) setOpen(true);
+                  else setActive((i) => stepEnabled(results, i, 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  if (!open) setOpen(true);
+                  // From "nothing highlighted", Up goes to the bottom, as the APG has it.
+                  else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
+                } else if (e.key === "Enter") {
+                  // No row highlighted: the text is the answer, and a form's own submit
+                  // is left alone.
+                  if (expanded && activeId) {
+                    e.preventDefault();
+                    take(results[active]);
+                  }
+                } else if (e.key === "Tab") {
+                  close();
+                }
+              }}
               className={cn(
-                "pointer-events-none absolute top-1/2 flex -translate-y-1/2",
-                small ? "end-2" : "end-2.5",
+                FIELD_BASE,
+                hasLabel && FIELD_FLOATING_PAD,
+                // Select's `SELECT_SM` box: a fixed 28px, so the caller's line height
+                // cannot grow it.
+                small && "h-7 py-0 pe-2 ps-2 text-xs",
+                icon ? (small ? "ps-7" : "ps-8") : undefined,
+                busy && (small ? "pe-7" : "pe-9"),
+                field.isInvalid && FIELD_INVALID,
+                inputClassName,
               )}
-            >
-              <Spinner label={null} className={small ? "h-3.5 w-3.5" : "h-4 w-4"} />
-            </span>
-          )}
-        </div>
+            />
+            {busy && live && (
+              // Decorative: the live region below already says "Loading…".
+              <span
+                className={cn(
+                  "pointer-events-none absolute top-1/2 flex -translate-y-1/2",
+                  small ? "end-2" : "end-2.5",
+                )}
+              >
+                <Spinner label={null} className={small ? "h-3.5 w-3.5" : "h-4 w-4"} />
+              </span>
+            )}
+          </div>,
+        )}
       </EndHintRow>
       {/* With a "?" the label shares the top strip with it, after the field so the "?"
           follows the control in the tab order (as on Input and Select). */}

@@ -18,7 +18,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Button, Textarea } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
-import { FeedbackAttachmentField } from "./feedback-attachment";
+import { FeedbackAttachmentField, type FeedbackAttachmentErrorInfo } from "./feedback-attachment";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
 /**
@@ -566,7 +566,8 @@ export interface FeedbackNoteAttachment {
   labels: FeedbackAttachmentLabels;
   accept?: string[];
   maxBytes?: number;
-  onError?: (kind: "type" | "size") => void;
+  /** `info` (0.23.0) names the refused file and the limit. */
+  onError?: (kind: "type" | "size", info: FeedbackAttachmentErrorInfo) => void;
   onCaptureScreenshot?: () => Promise<File | null>;
 }
 

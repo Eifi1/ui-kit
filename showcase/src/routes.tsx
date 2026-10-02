@@ -250,6 +250,22 @@ const Fields022Demo = lazySection(() => import("./sections/fields-022-demo"), "F
 const PickerHints022Demo = lazySection(() => import("./sections/fields-022-demo"), "PickerHints022Demo");
 const CheckboxGroup022Demo = lazySection(() => import("./sections/fields-022-demo"), "CheckboxGroup022Demo");
 const CommitControls022Demo = lazySection(() => import("./sections/fields-022-demo"), "CommitControls022Demo");
+// 0.23.0: the apps' 0.22 adoption round.
+const TopBarMenuHeadingsDemo = lazySection(() => import("./sections/topbar-023-demo"), "TopBarMenuHeadingsDemo");
+const FormActions023Demo = lazySection(() => import("./sections/confirm-023-demo"), "FormActions023Demo");
+const DangerConfirm023Demo = lazySection(() => import("./sections/confirm-023-demo"), "DangerConfirm023Demo");
+const Rhf023Demo = lazySection(() => import("./sections/fields-023-demo"), "Rhf023Demo");
+const CountryClear023Demo = lazySection(() => import("./sections/fields-023-demo"), "CountryClear023Demo");
+const AmountClass023Demo = lazySection(() => import("./sections/fields-023-demo"), "AmountClass023Demo");
+const FeedbackAttachment023Demo = lazySection(() => import("./sections/feedback-023-demo"), "FeedbackAttachment023Demo");
+const ChatComposerCount023Demo = lazySection(() => import("./sections/feedback-023-demo"), "ChatComposerCount023Demo");
+const FieldStrip023Demo = lazySection(() => import("./sections/strip-023-demo"), "FieldStrip023Demo");
+const TileLock023Demo = lazySection(() => import("./sections/strip-023-demo"), "TileLock023Demo");
+const ComboboxFamilyLock023Demo = lazySection(() => import("./sections/combobox-023-demo"), "ComboboxFamilyLock023Demo");
+const InlineCreateRow023Demo = lazySection(() => import("./sections/combobox-023-demo"), "InlineCreateRow023Demo");
+const StepperNavFinishLock023Demo = lazySection(() => import("./sections/combobox-023-demo"), "StepperNavFinishLock023Demo");
+const DateRange023Demo = lazySection(() => import("./sections/date-range-023-demo"), "DateRange023Demo");
+const ColumnMapper023Demo = lazySection(() => import("./sections/column-mapper-023-demo"), "ColumnMapper023Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -389,7 +405,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field", "IbanInput", "PhoneInput"],
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
         Body: () => (
           <>
             <Fields />
@@ -397,6 +413,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FieldDemo />
             <Fields022Demo />
             <AccountNumbers022Demo />
+            <FieldStrip023Demo />
           </>
         ),
       },
@@ -407,7 +424,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker"],
         Body: () => (
           <>
             <FormsRhf />
@@ -426,6 +443,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <FormActionsShortcut022Demo />
             <LineItemsRowProps022Demo />
             <CommitControls022Demo />
+            <Rhf023Demo />
+            <FormActions023Demo />
           </>
         ),
       },
@@ -444,6 +463,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TileRadioGroup022Demo />
             <Choices022Demo />
             <CheckboxGroup022Demo />
+            <TileLock023Demo />
           </>
         ),
       },
@@ -461,6 +481,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <NumberStepsDemo />
             <Numbers016Demo />
             <Numbers022Demo />
+            <AmountClass023Demo />
           </>
         ),
       },
@@ -478,6 +499,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <WeekStartDemo />
             <OutsideDaysDemo />
             <Dates022Demo />
+            <DateRange023Demo />
           </>
         ),
       },
@@ -578,6 +600,9 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <EntityPickers />
             <Country022Demo />
+            <CountryClear023Demo />
+            <ComboboxFamilyLock023Demo />
+            <InlineCreateRow023Demo />
           </>
         ),
       },
@@ -603,12 +628,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
         icon: Grid3x3,
-        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows", "InlineEditField"],
+        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows", "InlineEditField", "ColumnMapper", "ColumnRoleTable", "parseTextTable"],
         Body: () => (
           <>
             <MeasuredGridDemo />
             <TableTextDemo />
             <InlineEdit022Demo />
+            <ColumnMapper023Demo />
           </>
         ),
       },
@@ -636,6 +662,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <SignatureViewDemo />
             <DangerConfirmDemo />
             <Guards022Demo />
+            <DangerConfirm023Demo />
           </>
         ),
       },
@@ -1052,6 +1079,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <AccountMenuDemo />
             <ShellBrandDemo />
             <AccountHeaderLinkDemo />
+            <TopBarMenuHeadingsDemo />
           </>
         ),
       },
@@ -1136,6 +1164,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <Wizard />
             <WizardStepHooksDemo />
+            <StepperNavFinishLock023Demo />
           </>
         ),
       },
@@ -1151,6 +1180,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackCompose />
             <FeedbackAttachment016Demo />
             <FeedbackAttachmentRefs022Demo />
+            <FeedbackAttachment023Demo />
           </>
         ),
       },
@@ -1168,6 +1198,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ComposerCannedRepliesDemo />
             <Feedback014Demo />
             <ChatComposer022Demo />
+            <ChatComposerCount023Demo />
           </>
         ),
       },

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { Link } from "react-router";
 import { cn } from "../lib/cn";
@@ -11,9 +11,9 @@ import { TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
 
 /**
  * One row of a {@link TopBarActionMenu}. An `action` (default) runs `onSelect`, a
- * `link` navigates via react-router, and a `divider` draws a rule. Non-divider
- * rows close the menu automatically when chosen. `kind` may be omitted for
- * actions, keeping the common case terse.
+ * `link` navigates via react-router, a `divider` draws a rule, and a `heading` names
+ * the rows after it. Action and link rows close the menu automatically when chosen.
+ * `kind` may be omitted for actions, keeping the common case terse.
  *
  * The rows are {@link MenuItem}s, so they take its options: `tone: "danger"` for the
  * log-out row, `checked` (+ `checkable`) for a choice, `current` for the link to the
@@ -46,7 +46,67 @@ export type TopBarMenuEntry =
       current?: boolean;
       disabled?: boolean;
     }
-  | { kind: "divider"; key: string };
+  | { kind: "divider"; key: string }
+  | {
+      /**
+       * A group heading (0.23, keksdose's guided-tours menu): the rows after it, up to
+       * the next heading, the next `divider` or the end of `entries`, are ONE group
+       * named by `label`. keksdose files its tours by topic and separated the blocks
+       * with bare dividers — "the kit's menu has no heading row to name them with"
+       * (tour-menu.tsx) — so a sighted reader had to guess what each block was and a
+       * screen reader was told nothing at all.
+       *
+       * Not a row: it takes no focus, the arrow keys (and Home/End) pass over it, and it
+       * never closes the menu. It is announced the way the kit's other grouped lists
+       * announce theirs (`CommandPalette`): the group's rows sit in a `role="group"`
+       * whose `aria-labelledby` is this heading, so a reader says "On this page, group"
+       * when the focus enters the first row, and nothing between rows.
+       *
+       * A divider ENDS the group, so a closing row such as "All tours…" behind a rule
+       * belongs to no topic. A heading with no rows under it is not drawn — an empty
+       * group names nothing; build the list from data and it may well be empty.
+       *
+       * The menu-wide `heading` prop is the panel's title, drawn once above everything;
+       * with group headings it is usually redundant (two stacked caps lines read as one),
+       * and the trigger's `ariaLabel` already names the menu.
+       */
+      kind: "heading";
+      key: string;
+      /** The group's name, shown above its rows and announced as the group's name. Keep
+       *  it short: it is set in small caps and wraps on a narrow panel. */
+      label: ReactNode;
+    };
+
+type HeadingEntry = Extract<TopBarMenuEntry, { kind: "heading" }>;
+type DividerEntry = Extract<TopBarMenuEntry, { kind: "divider" }>;
+type RowEntry = Exclude<TopBarMenuEntry, HeadingEntry | DividerEntry>;
+
+/** What the panel draws from `entries`: loose rows and rules, and headed groups. */
+type Block = { kind: "loose"; entry: RowEntry | DividerEntry } | { kind: "group"; heading: HeadingEntry; rows: RowEntry[] };
+
+/**
+ * Cut `entries` into blocks: a heading opens a group that takes the rows after it until
+ * the next heading or divider; everything else stands alone, as it always has.
+ */
+function toBlocks(entries: readonly TopBarMenuEntry[]): Block[] {
+  const blocks: Block[] = [];
+  let group: Extract<Block, { kind: "group" }> | null = null;
+  for (const entry of entries) {
+    if (entry.kind === "heading") {
+      group = { kind: "group", heading: entry, rows: [] };
+      blocks.push(group);
+    } else if (entry.kind === "divider") {
+      group = null;
+      blocks.push({ kind: "loose", entry });
+    } else if (group) {
+      group.rows.push(entry);
+    } else {
+      blocks.push({ kind: "loose", entry });
+    }
+  }
+  // A heading with nothing under it names nothing: not drawn (see the `heading` kind).
+  return blocks.filter((block) => block.kind === "loose" || block.rows.length > 0);
+}
 
 /**
  * The non-interactive identity block at the top of an account menu — kastlan's name +
@@ -130,6 +190,11 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
  * It is also the ACCOUNT menu kastlan and keksdose each hand-build on `HoverMenu`: a
  * custom `trigger` (the avatar), a `header` (name + role / email), the rows, and a
  * free-content `footer` (the legal links).
+ *
+ * A long menu is grouped by topic with `{ kind: "heading" }` entries (0.23) — see
+ * {@link TopBarMenuEntry}. There is no separate phone layout: the panel is the same
+ * hover panel at 390px, kept inside the viewport by `HoverMenu`, and a heading wraps
+ * rather than widening it.
  */
 export function TopBarActionMenu({
   icon,
@@ -206,6 +271,10 @@ export function TopBarActionMenu({
   align?: "start" | "end" | "left" | "right";
   panelClassName?: string;
 }) {
+  // Names the groups' headings for `aria-labelledby`. Positional rather than from the
+  // entry's `key`, which is the caller's text and may hold a space — and a space in
+  // `aria-labelledby` is a list separator.
+  const uid = useId();
   return (
     <HoverMenu
       ariaLabel={ariaLabel}
@@ -258,6 +327,40 @@ export function TopBarActionMenu({
         const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
           "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-2 [&_a:focus-visible]:ring-[var(--brand)]";
+        /** One action or link row — loose, or inside a heading's group. */
+        const row = (entry: RowEntry) => (
+          <li key={entry.key}>
+            {entry.kind === "link" ? (
+              <MenuItem
+                href={entry.to}
+                renderLink={({ href, ...p }) => <Link to={href} {...p} />}
+                onClick={close}
+                leading={entry.icon}
+                trailing={entry.trailing}
+                tone={entry.tone}
+                current={entry.current}
+                disabled={entry.disabled}
+              >
+                {entry.label}
+              </MenuItem>
+            ) : (
+              <MenuItem
+                onClick={() => {
+                  entry.onSelect();
+                  close();
+                }}
+                leading={entry.icon}
+                trailing={entry.trailing}
+                tone={entry.tone}
+                checked={entry.checked}
+                checkable={entry.checkable}
+                disabled={entry.disabled}
+              >
+                {entry.label}
+              </MenuItem>
+            )}
+          </li>
+        );
         return (
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
           <ul className={cn("py-1", panelClassName)} onKeyDown={keepTabInsidePanel}>
@@ -275,41 +378,34 @@ export function TopBarActionMenu({
                 {heading}
               </li>
             )}
-            {entries.map((entry) => {
-              if (entry.kind === "divider") {
-                return <li key={entry.key} className="my-1 border-t border-[var(--border)]" />;
+            {toBlocks(entries).map((block, i, blocks) => {
+              if (block.kind === "loose") {
+                const entry = block.entry;
+                if (entry.kind === "divider") {
+                  return <li key={entry.key} className="my-1 border-t border-[var(--border)]" />;
+                }
+                return row(entry);
               }
+              const headingId = `${uid}-group-${i}`;
+              const before = blocks[i - 1];
+              // Under a rule (or at the top of the rows) the rule's margin is the gap;
+              // straight under another group's last row the heading makes its own.
+              const tight = !before || (before.kind === "loose" && before.entry.kind === "divider");
               return (
-                <li key={entry.key}>
-                  {entry.kind === "link" ? (
-                    <MenuItem
-                      href={entry.to}
-                      renderLink={({ href, ...p }) => <Link to={href} {...p} />}
-                      onClick={close}
-                      leading={entry.icon}
-                      trailing={entry.trailing}
-                      tone={entry.tone}
-                      current={entry.current}
-                      disabled={entry.disabled}
-                    >
-                      {entry.label}
-                    </MenuItem>
-                  ) : (
-                    <MenuItem
-                      onClick={() => {
-                        entry.onSelect();
-                        close();
-                      }}
-                      leading={entry.icon}
-                      trailing={entry.trailing}
-                      tone={entry.tone}
-                      checked={entry.checked}
-                      checkable={entry.checkable}
-                      disabled={entry.disabled}
-                    >
-                      {entry.label}
-                    </MenuItem>
-                  )}
+                <li key={block.heading.key} role="none">
+                  <div
+                    id={headingId}
+                    role="presentation"
+                    className={cn(
+                      "px-3 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] [overflow-wrap:anywhere]",
+                      tight ? "pt-1" : "pt-2.5",
+                    )}
+                  >
+                    {block.heading.label}
+                  </div>
+                  <ul role="group" aria-labelledby={headingId}>
+                    {block.rows.map(row)}
+                  </ul>
                 </li>
               );
             })}

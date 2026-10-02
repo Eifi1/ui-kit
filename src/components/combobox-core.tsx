@@ -102,6 +102,53 @@ export function settleEnabled(rows: readonly { disabled?: boolean }[], i: number
 export const DISABLED_ROW_CLASS = "cursor-not-allowed opacity-50 hover:bg-transparent";
 
 /**
+ * Whether an entity picker offers its create row — one rule for
+ * {@link EntityCombobox}, {@link MultiEntityCombobox} and {@link InlineEntityCombobox}.
+ *
+ * With a query: while the trimmed query names no option exactly (case-insensitive) —
+ * an exact hit is a record the list is already showing, and a second way to "make" it
+ * would mint a duplicate. With NO query: only when the caller named the row for that
+ * case (`createEmptyLabel`) — a row reading `Create “”` says nothing, and the kit cannot
+ * know the noun ("Create cash account") that would make it say something (keksdose G9).
+ *
+ * `names` is what the query is compared against: the loaded rows for a panel picker
+ * (its async list is all it knows), every option for the inline one.
+ */
+export function offersCreate(
+  onCreate: unknown,
+  query: string,
+  names: readonly string[],
+  createEmptyLabel: string | undefined,
+): boolean {
+  if (!onCreate) return false;
+  if (!query) return Boolean(createEmptyLabel);
+  const q = query.toLowerCase();
+  return !names.some((n) => n.toLowerCase() === q);
+}
+
+/**
+ * {@link EndHintRow}'s `hint` and `className` for a combobox-family field, keeping the
+ * 0.22 rule (keksdose): a field that was passed `hint` at all — even `undefined` — keeps
+ * ONE box, so a hint coming and going never rebuilds the control under the cursor.
+ *
+ * A text hint is a caption after the control and never moved it; the case this covers
+ * is the "?" (a {@link FieldHint}) on a field with no label line, which sits at the end
+ * edge in a row of its own. Without this the row existed only while the "?" did, and
+ * the control was re-parented — remounted, focus and caret lost — each time it came or
+ * went. With `hint` passed the row stays, its end slot empty and its gap closed, so
+ * nothing on screen moves either.
+ */
+export function endHintRowProps(
+  hintPassed: boolean,
+  hasLabel: boolean,
+  labelHint: ReactNode | undefined,
+): { hint: ReactNode | undefined; className?: string } {
+  if (hasLabel) return { hint: undefined };
+  if (labelHint !== undefined) return { hint: labelHint };
+  return hintPassed ? { hint: null, className: "gap-0" } : { hint: undefined };
+}
+
+/**
  * The family's floating label, as a real `<label for>` (lenkbank): the input is then
  * named the way {@link Input}'s is, so `getByLabelText` and any helper that walks
  * `<label htmlFor>` finds it. Same placement and type as {@link FieldLabel}, which
@@ -463,6 +510,13 @@ export interface ComboboxPanelProps<V extends string | number>
   showCreate: boolean;
   onCreate: () => void;
   createContent: ReactNode;
+  /**
+   * The create row is shown but not takeable, and this says why — the lock's reason
+   * when the picker's `createCommit` meets a locked {@link WriteLockProvider}. Rendered
+   * as the row's second line rather than a tooltip, as {@link ComboOption.disabled}
+   * asks of every disabled row: a hover is the one explanation a phone cannot show.
+   */
+  createDisabledReason?: ReactNode;
   /** What the sheet calls itself on a phone — the field's label. Ignored on
    *  desktop, where the panel sits under the field that already says it. */
   sheetTitle?: ReactNode;
@@ -508,6 +562,7 @@ export function ComboboxPanel<V extends string | number>({
   showCreate,
   onCreate,
   createContent,
+  createDisabledReason,
   sheetTitle,
   closeLabel,
   loadErrorLabel,
@@ -515,6 +570,7 @@ export function ComboboxPanel<V extends string | number>({
   style,
   ...rest
 }: ComboboxPanelProps<V>) {
+  const createLocked = hasMessage(createDisabledReason);
   const {
     rect,
     placement,
@@ -534,8 +590,11 @@ export function ComboboxPanel<V extends string | number>({
   // Same core, same results, same handlers — only the container differs, so the
   // two presentations cannot drift in what they offer.
   const isPhone = useMediaQuery(PHONE_QUERY, false);
-  // Every row the keyboard can land on, the create row included (never disabled).
-  const rows: readonly { disabled?: boolean }[] = showCreate ? [...results, {}] : results;
+  // Every row the keyboard can land on, the create row included — passed over, like a
+  // disabled option, while a write lock holds it.
+  const rows: readonly { disabled?: boolean }[] = showCreate
+    ? [...results, { disabled: createLocked }]
+    : results;
   const rowCount = rows.length;
   const optionId = (index: number) => `${listboxId}-option-${index}`;
   // The core opens on row 0 and knows nothing of `disabled`; the highlight is settled
@@ -575,7 +634,7 @@ export function ComboboxPanel<V extends string | number>({
       e.preventDefault();
       if (current < 0) return;
       if (current < results.length) onChoose(results[current]);
-      else if (showCreate) onCreate();
+      else if (showCreate && !createLocked) onCreate();
     } else if (e.key === "Tab") {
       // The panel is PORTALLED to <body>, so the browser's own Tab would move from
       // here to whatever follows the portal — i.e. off the end of the document. The
@@ -747,24 +806,38 @@ export function ComboboxPanel<V extends string | number>({
             // been taken. Whether the keyboard is ON it is `aria-activedescendant`'s
             // job to say.
             aria-selected={false}
+            aria-disabled={createLocked || undefined}
             tabIndex={-1}
             onMouseDown={(e) => {
               e.preventDefault();
-              onCreate();
+              if (!createLocked) onCreate();
             }}
-            onMouseEnter={() => setActive(results.length)}
+            onMouseEnter={() => {
+              if (!createLocked) setActive(results.length);
+            }}
             className={cn(
               isPhone
                 ? SHEET_ROW_CLASS
                 : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
               "text-[var(--text-secondary)]",
-              current === results.length && !isPhone
-                ? "bg-[var(--bg-active)]"
-                : !isPhone && "hover:bg-[var(--bg-hover)]",
+              createLocked
+                ? DISABLED_ROW_CLASS
+                : current === results.length && !isPhone
+                  ? "bg-[var(--bg-active)]"
+                  : !isPhone && "hover:bg-[var(--bg-hover)]",
+              // After SHEET_ROW_CLASS, so its hover is the one cancelled.
+              createLocked && isPhone && DISABLED_ROW_CLASS,
             )}
           >
             <Plus className="size-4 shrink-0" />
-            <span className="truncate">{createContent}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{createContent}</span>
+              {createLocked && (
+                <span className="block truncate text-xs text-[var(--text-placeholder)]">
+                  {createDisabledReason}
+                </span>
+              )}
+            </span>
           </button>
         </li>
       )}

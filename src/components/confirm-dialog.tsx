@@ -2,10 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
-import { typedMatches } from "./danger-confirm";
+import { TypedConfirmField, typedMatches } from "./danger-confirm";
 import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
-import { Button, Input } from "./ui";
+import { Button } from "./ui";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -300,15 +300,19 @@ function ConfirmDialogView({
             confirmRef.current?.click();
           }}
         >
-          <Input
+          {/* The kit's one typed-confirmation field (0.23), DangerConfirm's too: the
+              keyboard told to leave the text alone, `data-matched` on the input. The
+              label is this namespace's (`confirmDialog.typed`), and `placeholder=""`
+              keeps out the `dangerConfirm.phrasePlaceholder` a provider may set for
+              the tile — this field never had one. */}
+          <TypedConfirmField
             ref={typedRef}
+            target={target}
+            match={request.typedMatch ?? "caseless"}
             label={typedLabel}
+            placeholder=""
             value={typed}
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            onChange={(e) => setTyped(e.target.value)}
+            onValueChange={setTyped}
           />
         </form>
       )}

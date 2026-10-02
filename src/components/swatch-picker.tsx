@@ -6,7 +6,7 @@ import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-anatomy";
+import { hasContent, LabelStrip } from "./field-parts";
 
 export interface SwatchPickerLabels {
   /** The "no colour" tile's name, when `allowNone` is set. */
@@ -38,7 +38,23 @@ export interface SwatchOption<T extends string> {
   /** A remark read after the name and shown under it in the bubble ("used by
    *  Groceries"). The tile wears a dot while it has one. */
   note?: string;
+  /** Out of the choice and out of reach — skipped by the arrow keys and Tab. With a
+   *  `disabledReason` the tile stays reachable instead and says why. */
   disabled?: boolean;
+  /**
+   * Why THIS colour cannot be chosen right now — the whole picker's `disabledReason`,
+   * one tile at a time (the kit's later list after keksdose K3: a colour another
+   * category already wears, a flag only an owner may set). {@link Button}'s rule: a tile
+   * that is merely `disabled` is a dead square a keyboard never lands on, so nobody
+   * learns why it is dimmed.
+   *
+   * The tile looks disabled but is `aria-disabled`, not `disabled`: Tab and the arrow
+   * keys still reach it, its bubble shows the reason under its name, and the reason
+   * describes it. Choosing it — a click, Space or Enter, or an arrow under automatic
+   * activation — does nothing: the focus moves onto it and the checked colour stays
+   * where it was, as under the whole-picker lock. Wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
 }
 
 /**
@@ -142,16 +158,24 @@ export function SwatchPicker<T extends string>({
   const byValue = useMemo(() => new Map(options.map((o) => [o.value, o])), [options]);
   const items: TileItem<T>[] = [
     ...(allowNone ? [{ key: null, label: text.none }] : []),
-    ...options.map((o) => ({ key: o.value, label: o.label, note: o.note, disabled: o.disabled })),
+    ...options.map((o) => ({
+      key: o.value,
+      label: o.label,
+      note: o.note,
+      disabled: o.disabled,
+      disabledReason: o.disabledReason,
+    })),
   ];
   const tiles = (
     <TileRadioGroup
       items={items}
       checked={mixed ? undefined : value}
       // A locked picker saves on change, so the change is swallowed — the arrow keys
-      // still move the focus (and, automatic, would choose), and nothing is chosen.
+      // still move the focus (and, automatic, would choose), and nothing is chosen. A
+      // locked TILE is refused by the tiles themselves; asked again here so a reason
+      // can never become a change, whatever the tiles do.
       onSelect={(next) => {
-        if (!locked) onChange(next);
+        if (!locked && !hasContent(next === null ? undefined : byValue.get(next)?.disabledReason)) onChange(next);
       }}
       activation={activation}
       // A reason wins over `disabled`: the tiles stay in the tab order.
@@ -235,7 +259,7 @@ export function SwatchPicker<T extends string>({
   );
   if (!labelled) return group;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} pad="tiles" className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} pad="clear" className={className}>
       {group}
     </LabelStrip>
   );

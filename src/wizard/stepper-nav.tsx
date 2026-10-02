@@ -31,7 +31,7 @@ import type { UseWizardReturn, WizardLabels } from "./types";
  * `isCommitStep`), so the policy options — `cancellable`, `onExit`, `commits`,
  * `onDone` — are all set on `useWizard`. What is set HERE is how the Finish button
  * looks and what wraps it, because that is presentation and usually depends on
- * state the app holds (a "replace everything" toggle, a write lock).
+ * state the app holds (a "replace everything" toggle, a write lock — `finishCommit`).
  */
 export function StepperNav<TData extends Record<string, unknown>>({
   wizard,
@@ -42,6 +42,8 @@ export function StepperNav<TData extends Record<string, unknown>>({
   labels,
   finishVariant = "brand",
   finishDisabled = false,
+  finishCommit,
+  finishDisabledReason,
   doneDisabled = false,
   renderFinish,
 }: {
@@ -57,6 +59,30 @@ export function StepperNav<TData extends Record<string, unknown>>({
   /** Disable Finish for a reason of the app's own, on top of the kit's gates
    *  (`canFinish`, submitting, validating). */
   finishDisabled?: boolean;
+  /**
+   * Finish COMMITS — {@link Button}'s `commit`, handed to the Finish button. Under a
+   * locked {@link WriteLockProvider} it is `aria-disabled` but focusable, with the lock's
+   * reason in the kit Tooltip, and a click (or Enter) does not run `wizard.finish`.
+   * Every other button of the bar stays live: the steps before the commit write nothing,
+   * so the whole wizard can still be walked through on a read-only page.
+   *
+   * keksdose G1: its YNAB import runs the mapping wizard on the read-only demo (dev#497)
+   * and locks only the confirm step's Finish — by cloning `commit` into the element
+   * `renderFinish` hands it, because StepperNav took no `commit` of its own. That clone
+   * still works; this is the same thing without one. Named `finishCommit` beside
+   * `finishVariant` / `finishDisabled` rather than a bare `commit`, which on a component
+   * with five buttons would not say which one saves — and would read like `useWizard`'s
+   * `commits`, which is a step's policy, not a lock.
+   */
+  finishCommit?: boolean;
+  /**
+   * Why Finish is not available — {@link Button}'s `disabledReason` on the Finish button:
+   * `aria-disabled` and focusable, the reason in the kit Tooltip and on the button's
+   * `aria-describedby`, `wizard.finish` not run. The explained form of `finishDisabled`
+   * (a native `disabled` takes the button out of the tab order, so its reason never
+   * reaches a keyboard). Under a lock with `finishCommit`, the lock's reason wins.
+   */
+  finishDisabledReason?: ReactNode;
   /**
    * Disable Done — the button of the last step after a commit — while the step still
    * has work of its own running. keksdose's YNAB import ends on a recurring step whose
@@ -82,6 +108,10 @@ export function StepperNav<TData extends Record<string, unknown>>({
    * re-derive (the problem this component exists to end); `onBeforeFinish` can veto
    * a click but cannot explain a disabled button. The element is a plain `<Button>`,
    * so a wrapper that clones it with `disabled` works as expected.
+   *
+   * For the write lock itself there is no need to wrap any more: `finishCommit` (and
+   * `finishDisabledReason`) put the kit Button's own Tooltip on Finish. An element
+   * cloned with `commit` here keeps working the same way.
    */
   renderFinish?: (button: ReactElement) => ReactNode;
 }) {
@@ -134,6 +164,10 @@ export function StepperNav<TData extends Record<string, unknown>>({
         variant={finishVariant}
         data-tour="wizard-finish"
         onClick={wizard.finish}
+        // The kit Button's lock: a reason (its own or, with `commit`, the provider's)
+        // wins over `disabled` and keeps the button reachable, saying why.
+        commit={finishCommit}
+        disabledReason={finishDisabledReason}
         disabled={wizard.isSubmitting || pending || !canFinish || finishDisabled}
         aria-busy={wizard.isSubmitting || pending || undefined}
       >

@@ -55,7 +55,24 @@ interface AmountInputProps {
    * a phone keeps its numpad, exactly as {@link NumberInput}'s `calculator={false}`.
    */
   calculator?: boolean;
+  /** The field's WRAPPER — width, a margin, a flex share. The `<input>` is
+   *  `inputClassName`'s. */
   className?: string;
+  /**
+   * Classes for the `<input>` itself — {@link NumberInput}'s and {@link Input}'s prop of
+   * the same name, merged the same way: after the field's own base classes, so it can
+   * restyle the figure (`text-end` for a money column whose decimal points line up,
+   * `font-medium`, a tighter `py-1` in a table cell), and before the end padding the
+   * calculator and the currency chip reserve and before the invalid border, so neither
+   * can be taken away by accident.
+   *
+   * keksdose G7: the invoice's VAT cell right-aligns its figure, and with only
+   * `className` (the wrapper) it reached the element through `[&_input]:text-end` — a
+   * descendant selector that depends on the field's inner markup, which the kit is free
+   * to change, and that a reader of the call site has to decode. {@link MoneyField}
+   * passes it through, and `RhfMoneyField` takes it too.
+   */
+  inputClassName?: string;
   id?: string;
   ariaLabel?: string;
   /**
@@ -291,7 +308,7 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, inputClassName, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const hintId = useId();
@@ -504,6 +521,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
             // transparent-placeholder bits.
             asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
+            // The caller's, over the base and under everything below (see `inputClassName`).
+            inputClassName,
             // Room for the trailing controls. showCalc is always false on a phone,
             // so the display shape only ever has to clear the currency chip — and
             // it clears it by the chip's actual width (a text-sm code plus a

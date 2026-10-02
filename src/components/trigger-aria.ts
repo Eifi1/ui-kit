@@ -14,6 +14,9 @@ export interface TriggerAria {
   "aria-labelledby"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean | "true" | "false" | "grammar" | "spelling";
+  /** 0.23.0: a form library's `required` (RhfMonthPicker) is announced on the trigger,
+   *  not lost on the wrapper. */
+  "aria-required"?: boolean | "true" | "false";
 }
 
 /** Split a field's props into what its trigger takes and what its wrapper takes. */
@@ -26,6 +29,7 @@ export function splitTriggerAria<T extends TriggerAria>(
     "aria-labelledby": labelledBy,
     "aria-describedby": describedBy,
     "aria-invalid": invalid,
+    "aria-required": required,
     ...rest
   } = props;
   return [
@@ -35,6 +39,7 @@ export function splitTriggerAria<T extends TriggerAria>(
       "aria-labelledby": labelledBy,
       "aria-describedby": describedBy,
       "aria-invalid": invalid,
+      "aria-required": required,
     },
     rest,
   ];

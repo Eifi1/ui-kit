@@ -9,7 +9,7 @@ import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { FieldBox, FieldLabelLine, hasContent, useFieldMessages } from "./field-anatomy";
+import { FieldBox, FieldLabelLine, hasContent, useFieldMessages } from "./field-parts";
 
 /**
  * Every string the month picker can speak. The month and year names are NOT here —
@@ -348,6 +348,7 @@ function MonthFieldTrigger({
       aria-expanded={open}
       id={aria.id}
       aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
+      aria-required={aria["aria-required"]}
       aria-labelledby={aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy}
       aria-label={aria["aria-label"]}
       aria-describedby={aria["aria-describedby"]}

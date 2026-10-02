@@ -13,6 +13,8 @@
  *   <RhfTimeInput name="meetingTime" label="Time" />
  *   <RhfDateRangePicker fromName="periodFrom" toName="periodTo" label="Period" />
  *   <RhfToggleGroup name="interval" label="Interval" options={INTERVALS} />
+ *   <RhfCountrySelect name="country" label="Country" preferred={["CH", "DE"]} />
+ *   <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber />
  * </Form>
  * ```
  *
@@ -66,6 +68,8 @@ import {
 import { TimeInput, type TimeInputProps } from "../components/time-input";
 import { IbanInput, type IbanInputProps } from "../components/iban-input";
 import { PhoneInput, type PhoneInputProps } from "../components/phone-input";
+import { CountrySelect, type CountrySelectProps } from "../components/country-select";
+import { MonthPicker, type MonthPickerProps } from "../components/month-picker";
 import {
   ToggleGroup,
   type ToggleGroupBaseProps,
@@ -571,6 +575,10 @@ export type RhfMoneyFieldProps<
    *  with `rules` as well if a clamp needs explaining. */
   min?: number;
   max?: number;
+  /** Classes for the `<input>` — `className` is the item's box. {@link RhfTextField},
+   *  {@link RhfTextarea} and {@link RhfNumberField} take it; since 0.23 AmountInput
+   *  does too (keksdose G7: `text-end` for a money column). */
+  inputClassName?: string;
 };
 
 /** The amount a text reads as, or `undefined` for a draft that is not one yet. */
@@ -1193,6 +1201,252 @@ export function RhfPhoneInput<
           />
         );
       }}
+    />
+  );
+}
+
+// ── country and month (0.23) ─────────────────────────────────────────────────
+
+type OwnCountrySelectProps = Omit<
+  CountrySelectProps<boolean>,
+  | "value"
+  | "onChange"
+  | "onBlur"
+  | "label"
+  | "hint"
+  | "error"
+  | "invalid"
+  | "disabled"
+  | "className"
+  | "id"
+  | "ref"
+  | "clearable"
+>;
+
+export type RhfCountrySelectProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  OwnCountrySelectProps & {
+    /** Offer the picker's clear "×" (and Delete on the trigger) while a country is
+     *  chosen. A clear stores `clearValue`. */
+    clearable?: boolean;
+    /** What a clear stores. Default `null`; `""` for a schema that spells "no
+     *  country" as an empty string (a zod `z.string().max(2)`, kastlan's). The picker
+     *  reads either back as empty. */
+    clearValue?: ComboClearValue;
+    /** Classes for the picker — `className` is the item's box. */
+    selectClassName?: string;
+  };
+
+/**
+ * {@link CountrySelect} bound to one field, which stores the ISO 3166-1 alpha-2 code
+ * ("CH", always upper-case), or `clearValue` once cleared (`clearable`). kastlan asked
+ * for it (0.22 adoption): its address form wired a `CountrySelect` through
+ * {@link RhfField}'s render, and with no ref on the picker react-hook-form's
+ * focus-on-error had nothing to focus — the one field on the form a failed submit
+ * could not take you to.
+ *
+ * Bound the way {@link RhfIbanInput} and {@link RhfPhoneInput} are: `field.ref` reaches
+ * the trigger (the picker's `ref`, 0.23), the form's error paints the trigger and is
+ * the shell's message under it, the hint is the shell's description — so neither is
+ * ever handed to the picker, and its box never changes when one comes or goes. The
+ * form's label names the trigger together with the chosen country, and is the phone
+ * sheet's title. `commit` and `disabledReason` are the picker's own: a country that
+ * saves itself stays focusable under a lock and says why.
+ *
+ * ```tsx
+ * <RhfCountrySelect name="country" label="Country" required
+ *   preferred={["CH", "LI", "DE", "AT", "FR", "IT"]} rules={{ required: "Choose a country" }} />
+ * ```
+ */
+export function RhfCountrySelect<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  clearable,
+  clearValue = null,
+  selectClassName,
+  labels,
+  ...countryProps
+}: RhfCountrySelectProps<TFieldValues, TName, TTransformed>) {
+  const labelled = hasContent(label);
+  // A string label is also what the field IS — the picker's `country` word, which
+  // titles the phone sheet. A caller's own `labels.country` still wins.
+  const ownLabels = typeof label === "string" ? { country: label, ...labels } : labels;
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid, labelId }) => {
+        const value: unknown = field.value;
+        return (
+          // FormControl clones this element with `id` / `aria-describedby` /
+          // `aria-invalid`, which the picker routes to its trigger.
+          <CountrySelect<boolean>
+            aria-required={required || undefined}
+            // The form's label, then the country (see the picker's `aria-labelledby`).
+            aria-labelledby={labelled ? labelId : undefined}
+            {...countryProps}
+            labels={ownLabels}
+            className={selectClassName}
+            ref={field.ref}
+            value={typeof value === "string" ? value : null}
+            clearable={clearable}
+            onChange={(code) => field.onChange(code ?? clearValue)}
+            // Focus leaving the picker (the wrapper's focusout) marks the field touched.
+            onBlur={field.onBlur}
+            disabled={field.disabled}
+            invalid={invalid}
+          />
+        );
+      }}
+    />
+  );
+}
+
+type OwnMonthPickerProps = Omit<
+  MonthPickerProps,
+  "value" | "onChange" | "onBlur" | "label" | "hint" | "error" | "invalid" | "disabled" | "className" | "id" | "mode"
+>;
+
+/** `mode` picks what the form stores, and `valueAsNumber` is only offered for a year. */
+type RhfMonthPickerMode =
+  | {
+      /** A month, stored as `"YYYY-MM"` (the default). */
+      mode?: "month";
+      valueAsNumber?: undefined;
+    }
+  | {
+      /** A year, stored as `"YYYY"` — or as a number with `valueAsNumber`. */
+      mode: "year";
+      /** Store the year as a number (`2026`) rather than `"2026"` — kastlan's budget
+       *  `fiscal_year` is an integer column. A number in the form reads back as its
+       *  year. */
+      valueAsNumber?: boolean;
+    };
+
+export type RhfMonthPickerProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  OwnMonthPickerProps & {
+    /** Classes for the picker — `className` is the item's box. As {@link RhfDateField}'s. */
+    inputClassName?: string;
+  } & RhfMonthPickerMode;
+
+function MonthControl({
+  field,
+  invalid,
+  id,
+  valueAsNumber,
+  mode,
+  inputClassName,
+  pickerProps,
+  required,
+  ...aria
+}: {
+  field: ControllerRenderProps;
+  invalid: boolean;
+  id: string;
+  valueAsNumber?: boolean;
+  mode?: "month" | "year";
+  inputClassName?: string;
+  pickerProps: OwnMonthPickerProps;
+  required?: boolean;
+  "aria-describedby"?: string;
+  "aria-invalid"?: MonthPickerProps["aria-invalid"];
+}) {
+  // MonthPicker forwards no ref; it routes `id` to its trigger, where the handle finds
+  // it — RhfDateField's way.
+  useFocusHandle(field.ref, () => document.getElementById(id));
+  const value: unknown = field.value;
+  return (
+    <MonthPicker
+      {...pickerProps}
+      {...aria}
+      // MonthPicker routes `aria-required` to its trigger since 0.23.0.
+      aria-required={required || undefined}
+      id={id}
+      mode={mode}
+      value={value === null || value === undefined ? "" : String(value)}
+      onChange={(key) => {
+        field.onChange(mode === "year" && valueAsNumber ? Number(key) : key);
+        // A pick is the whole interaction — there is no text to leave — so it touches.
+        field.onBlur();
+      }}
+      disabled={field.disabled}
+      invalid={invalid}
+      className={inputClassName}
+    />
+  );
+}
+
+/**
+ * {@link MonthPicker} bound to one field: a month as `"YYYY-MM"`, or with `mode="year"` a
+ * year as `"YYYY"` (`valueAsNumber` stores `2026`). kastlan asked for it with
+ * {@link RhfCountrySelect}: its budget wizard's fiscal year was a `MonthPicker
+ * mode="year"` inside {@link RhfField}'s render — the `String()` in, the `Number()`
+ * out, `invalid` by hand — and a failed submit could not focus it, because the picker
+ * forwards no ref.
+ *
+ * Bound as {@link RhfDateField} is: a focus handle finds the trigger by its id, so
+ * focus-on-error lands there; the form's error paints the trigger and is the shell's
+ * message; the hint is the shell's description; neither is handed to the picker, so
+ * its box never changes. Picking marks the field touched.
+ *
+ * ```tsx
+ * <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber
+ *   min="2020" max="2029" rules={{ required: "Choose a year" }} />
+ * ```
+ */
+export function RhfMonthPicker<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  inputClassName,
+  mode,
+  valueAsNumber,
+  ...pickerProps
+}: RhfMonthPickerProps<TFieldValues, TName, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid, id }) => (
+        // FormControl clones this element with `aria-describedby` / `aria-invalid`,
+        // which MonthControl hands on to the picker's trigger.
+        <MonthControl
+          field={field as unknown as ControllerRenderProps}
+          invalid={invalid}
+          id={id}
+          mode={mode}
+          valueAsNumber={valueAsNumber}
+          inputClassName={inputClassName}
+          pickerProps={pickerProps}
+          required={required}
+        />
+      )}
     />
   );
 }

@@ -5,7 +5,7 @@ import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-anatomy";
+import { hasContent, LabelStrip } from "./field-parts";
 
 export interface ToggleOption<T extends string> {
   value: T;
@@ -524,7 +524,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   }
   if (strip) {
     return (
-      <LabelStrip labelId={labelId} label={label} hint={hint} disabled={dimmed} pad="toggle" className={className}>
+      <LabelStrip labelId={labelId} label={label} hint={hint} disabled={dimmed} pad="field" className={className}>
         {group}
         {captionEl}
         {errorEl}

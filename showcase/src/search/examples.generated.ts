@@ -72,6 +72,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "IbanInput — grouped in, compact out, checked but never blocked",
     "ISIN helpers — isValidIsin, formatIsin",
     "PhoneInput — E.164 when it reads, the text when it does not",
+    "FieldStrip — the strip label for content of your own",
+    "FieldStrip group={false}",
   ],
   "forms": [
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
@@ -97,6 +99,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FormActions — Ctrl/⌘+Enter saves",
     "LineItems — attributes on each row",
     "commit on the controls that save themselves",
+    "RhfCountrySelect, RhfMonthPicker",
+    "FormActions — size and cancelVariant",
   ],
   "choices": [
     "Checkbox — states",
@@ -121,6 +125,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TileRadioGroup — tiles of the app's own",
     "SwatchPicker and IconPicker with a label",
     "CheckboxGroup — a reviewer's languages",
+    "SwatchPicker / IconPicker: one option locked, with its reason",
   ],
   "numbers": [
     "NumberInput — the string contract",
@@ -149,6 +154,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AmountInput / MoneyField calculator={false}",
     "error on NumberInput, AmountInput, MoneyField, CurrencySelect; hint on CurrencySelect",
     "SignChip — the amount's direction, beside the figure",
+    "AmountInput and MoneyField — inputClassName",
   ],
   "calendars": [
     "MiniCalendar — range mode (the default)",
@@ -172,6 +178,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "MiniCalendar — showOutsideDays",
     "DatePicker hint and error",
     "<UiKitProvider formatDate>",
+    "DateRangePicker monthJump — a July-to-June period",
   ],
   "month-view": [
     "MiniCalendar size=\"lg\" — renderDay and a day panel",
@@ -240,6 +247,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CountrySelect — every ISO country, preferred on top",
     "Restricted list — keksdose's bank countries",
     "A country that saves itself, under the write lock",
+    "CountrySelect — clearable, and a ref to the trigger",
+    "The write lock on the Combobox family",
+    "A create row on InlineEntityCombobox",
   ],
   "dropdown-parts": [
     "MultiSelect",
@@ -260,6 +270,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "splitRow · cellNumber · isCellNumber",
     "InlineEditField in a DataTable",
     "InlineEditField — a rename that can fail",
+    "ColumnMapper — paste, drop or choose a recorder's export",
+    "ColumnRoleTable — rows a server already read",
   ],
   "field-sync": [
     "The four states",
@@ -289,6 +301,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DangerConfirm — commit",
     "TypedConfirmField",
     "CurrentPasswordInput",
+    "DangerConfirm — the held confirm says why",
+    "DangerConfirm — onConfirm hears the typed text",
   ],
   "buttons": [
     "Button — the six variants",
@@ -638,6 +652,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarBrand — logo and name, the name hidden on a phone",
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
+    "TopBarActionMenu — group headings",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
@@ -709,6 +724,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "resolveWizardLabels",
     "WizardStepper — the other one",
     "WizardStep title and description, useWizardNextGate and useWizardStepValidate",
+    "Finish under a write lock",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -722,6 +738,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "pastedName",
     "FeedbackAttachmentField multiple — screenshot chip and two adds in one tick",
     "FeedbackAttachmentField — uploaded on pick",
+    "FeedbackAttachmentField — refusals that name the file, and a field that holds",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -740,6 +757,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackComposer — canned replies and a custom placeholder",
     "FeedbackThread + FeedbackComposer — a support chat",
     "ChatComposer — the composer under a neutral name",
+    "ChatComposer — counted against the server's limit",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",
