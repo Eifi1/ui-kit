@@ -345,6 +345,8 @@ export * from "./i18n/defaults";
 export { kitLabelStrings } from "./i18n/review";
 // The seven languages, how an app resolves one, and the kit catalogue loader for it.
 export * from "./i18n/languages";
+// CLDR plural categories for an app's i18next catalogue, filled from `_other`.
+export { withAllPlurals } from "./i18n/plurals";
 // Translation review (0.19): one contract for kastlan's and keksdose's review pages —
 // the pure rows/status/placeholder logic and the presentational page parts.
 export {

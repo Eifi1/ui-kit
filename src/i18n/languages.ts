@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { UiKitLabels } from "./kit-labels";
 import type { LanguageOption } from "../shell/topbar-controls";
 
@@ -221,6 +222,13 @@ const LOADERS: Record<KitLanguageCode, (formatLocale: string) => Promise<UiKitLa
  *  object: the provider's context value keeps its identity, and every kit component
  *  reading it is spared a re-render on a switch back. */
 const loaded = new Map<string, Promise<UiKitLabels>>();
+/** The same catalogues once they have arrived — what {@link peekUiKitLabels} reads. */
+const ready = new Map<string, UiKitLabels>();
+
+function cacheKey(code: string, formatLocale: string): [KitLanguageCode, string] {
+  const language = resolveLanguage([code], ALL_CODES);
+  return [language, `${language}\u0000${formatLocale}`];
+}
 
 /**
  * The kit's catalogue for a language, fetched on demand and formatted in
@@ -252,15 +260,58 @@ export function loadUiKitLabels(
   code: string,
   formatLocale: string = formatLocaleOf(code),
 ): Promise<UiKitLabels> {
-  const language = resolveLanguage([code], ALL_CODES);
-  const key = `${language}\u0000${formatLocale}`;
+  const [language, key] = cacheKey(code, formatLocale);
   let labels = loaded.get(key);
   if (!labels) {
     labels = LOADERS[language](formatLocale);
     loaded.set(key, labels);
-    labels.catch(() => loaded.delete(key));
+    labels.then(
+      (done) => ready.set(key, done),
+      () => loaded.delete(key),
+    );
   }
   return labels;
+}
+
+/**
+ * The catalogue {@link loadUiKitLabels} already fetched for this language and format
+ * locale — synchronously — or `undefined` while it has not arrived. For the provider's
+ * render, which cannot await: kastlan wrapped the loader in a cache of its own
+ * (`hasKitLabels` / `kitLabelsFor`) to get exactly this, and the other apps would have
+ * written the same lines. Same object as the promise resolved to.
+ */
+export function peekUiKitLabels(code: string, formatLocale: string = formatLocaleOf(code)): UiKitLabels | undefined {
+  return ready.get(cacheKey(code, formatLocale)[1]);
+}
+
+/**
+ * The kit's catalogue for `code`, loading it on first use: `<UiKitProvider
+ * labels={useUiKitLabels(language)} locale={formatLocaleOf(language)}>`.
+ *
+ * On a switch it keeps returning the PREVIOUS language's catalogue until the next one
+ * has arrived, so the kit's words never blank out mid-switch; `undefined` only before
+ * the very first catalogue (render nothing, or the English defaults, until then — or
+ * await {@link loadUiKitLabels} before the first render, as the apps do for their own
+ * catalogue). A failed fetch keeps the previous catalogue; the next switch tries again.
+ */
+export function useUiKitLabels(code: string, formatLocale: string = formatLocaleOf(code)): UiKitLabels | undefined {
+  const current = peekUiKitLabels(code, formatLocale);
+  const [previous, setPrevious] = useState<UiKitLabels | undefined>(current);
+  useEffect(() => {
+    if (peekUiKitLabels(code, formatLocale)) return;
+    let live = true;
+    loadUiKitLabels(code, formatLocale).then(
+      (labels) => {
+        if (live) setPrevious(labels);
+      },
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [code, formatLocale]);
+  if (current && current !== previous) setPrevious(current);
+  return current ?? previous;
 }
 
 /**
