@@ -348,6 +348,7 @@ function MonthFieldTrigger({
       aria-expanded={open}
       id={aria.id}
       aria-invalid={invalid || aria["aria-invalid"] === true || aria["aria-invalid"] === "true" || undefined}
+      aria-required={aria["aria-required"]}
       aria-labelledby={aria["aria-label"] && !aria["aria-labelledby"] ? undefined : labelledBy}
       aria-label={aria["aria-label"]}
       aria-describedby={aria["aria-describedby"]}

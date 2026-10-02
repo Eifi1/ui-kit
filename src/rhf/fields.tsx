@@ -788,6 +788,7 @@ export function RhfDateField<
           emptyValue={emptyValue}
           inputClassName={inputClassName}
           pickerProps={pickerProps}
+          required={required}
         />
       )}
     />
@@ -1354,6 +1355,7 @@ function MonthControl({
   mode,
   inputClassName,
   pickerProps,
+  required,
   ...aria
 }: {
   field: ControllerRenderProps;
@@ -1363,6 +1365,7 @@ function MonthControl({
   mode?: "month" | "year";
   inputClassName?: string;
   pickerProps: OwnMonthPickerProps;
+  required?: boolean;
   "aria-describedby"?: string;
   "aria-invalid"?: MonthPickerProps["aria-invalid"];
 }) {
@@ -1374,8 +1377,8 @@ function MonthControl({
     <MonthPicker
       {...pickerProps}
       {...aria}
-      // No `aria-required`: MonthPicker does not route it to its trigger (it would land
-      // on the role-less wrapper), so the label's mark is what says it.
+      // MonthPicker routes `aria-required` to its trigger since 0.23.0.
+      aria-required={required || undefined}
       id={id}
       mode={mode}
       value={value === null || value === undefined ? "" : String(value)}
@@ -1442,6 +1445,7 @@ export function RhfMonthPicker<
           valueAsNumber={valueAsNumber}
           inputClassName={inputClassName}
           pickerProps={pickerProps}
+          required={required}
         />
       )}
     />

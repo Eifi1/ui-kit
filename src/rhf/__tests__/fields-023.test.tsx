@@ -178,11 +178,14 @@ describe("RhfMonthPicker (kastlan)", () => {
     const formRef: FormRef = { current: null };
     render(
       <Harness defaults={{ year: "", fiscal: 2025 }} formRef={formRef}>
-        <RhfMonthPicker name="year" label="Tax year" mode="year" min="2022" max="2026" locale="en-GB" />
+        <RhfMonthPicker name="year" label="Tax year" mode="year" min="2022" max="2026" locale="en-GB" required />
         <RhfMonthPicker name="fiscal" label="Fiscal year" mode="year" valueAsNumber min="2022" max="2026" locale="en-GB" />
       </Harness>,
     );
     const fiscal = screen.getByRole("combobox", { name: "Fiscal year 2025" });
+    // `required` reaches the trigger (0.23.0 routes aria-required past the wrapper).
+    expect(screen.getByRole("combobox", { name: /Tax year/ })).toHaveAttribute("aria-required", "true");
+    expect(fiscal).not.toHaveAttribute("aria-required");
     fireEvent.click(screen.getByRole("combobox", { name: /Tax year/ }));
     fireEvent.click(screen.getByRole("gridcell", { name: "2024" }));
     expect(formRef.current!.getValues("year")).toBe("2024");
