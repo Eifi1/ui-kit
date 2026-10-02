@@ -2,10 +2,10 @@ import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
-import { usePromisePending } from "./danger-confirm";
+import { CurrentPasswordInput, usePromisePending } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
 import { ModalCloseContext } from "./modal";
-import { Button, Input, Spinner } from "./ui";
+import { Button, Spinner } from "./ui";
 
 /**
  * Every string the dialog renders — the `reauthDialog` namespace of
@@ -85,8 +85,8 @@ export interface ReauthDialogProps {
  * `requirePassword` tile. Both are the same three facts — the field is the CURRENT
  * password (the password manager fills it, never generates one), a wrong one stays in
  * the dialog with its error, and the APP verifies it — so the promise handling is
- * `DangerConfirm`'s own, shared, the field is its `CurrentPasswordInput` spelled out
- * with an `error`, and this is the modal form of them.
+ * `DangerConfirm`'s own, shared, the field is its `CurrentPasswordInput` with an
+ * `error`, and this is the modal form of them.
  *
  * A component rather than a `useReauth()` promise: the step that follows the check
  * (Kurvenschmiede's WebAuthn ceremony) needs what the server answered, and the error
@@ -201,24 +201,23 @@ export function ReauthDialog({
           submit();
         }}
       >
-        {/* CurrentPasswordInput's field — the password manager fills it with the CURRENT
-            password and never offers to generate one; `readOnly`, not `disabled`, while
-            busy, because disabling the field that has focus drops focus to <body> —
-            plus `Input`'s own `error`, which that helper does not take. The message
-            paints the field, sits under it and is its `aria-describedby`; passing the
-            prop on every render keeps the field's box steady, so the message going away
-            on the first keystroke of a retry no longer remounts the <input> under the
-            typist (it did, which is why this used to draw its own message). */}
-        <Input
+        {/* The kit's CurrentPasswordInput (0.23; it drew the same field by hand until
+            then): the password manager fills it with the CURRENT password and never
+            offers to generate one; `busy` makes it `readOnly`, not `disabled`, because
+            disabling the field that has focus drops focus to <body>. Labelled by this
+            namespace's `password` ("Current password"), not `dangerConfirm.password`.
+            The `error` is Input's own: it paints the field, sits under it and is its
+            `aria-describedby`; passing the prop on every render keeps the field's box
+            steady, so the message going away on the first keystroke of a retry does not
+            remount the <input> under the typist. */}
+        <CurrentPasswordInput
           ref={inputRef}
-          type="password"
-          autoComplete="current-password"
           label={labels.password}
           value={password}
-          readOnly={busy}
+          busy={busy}
           error={shownError}
-          onChange={(e) => {
-            setPassword(e.target.value);
+          onValueChange={(next) => {
+            setPassword(next);
             setEdited(true);
           }}
         />

@@ -5,7 +5,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { isApplePlatform } from "../hooks/use-hotkey";
-import { Button, Spinner, type ButtonProps, type ButtonVariant } from "./ui";
+import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
 import { useWriteLock } from "./write-lock";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
@@ -187,6 +187,27 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  (kastlan's `destructive` flag on its own FormActions). */
   submitVariant?: ButtonVariant;
   /**
+   * The Cancel button's variant. Default `secondary` (the outlined button, as before).
+   * `ghost` for a row where Cancel should step back further than an outline — keksdose
+   * G3: a quiet inline row (a confirm under a table row, a card's own small editor)
+   * whose Cancel was a ghost button before it moved onto FormActions, which drew every
+   * Cancel outlined.
+   */
+  cancelVariant?: ButtonVariant;
+  /**
+   * The size of every button the row draws itself — Save, Cancel and the
+   * `{ label, onClick }` form of {@link destructive}: Button's `size`. Default `md`.
+   * `sm` (12px text, `px-2 py-1`) for a dense row: a confirm inside a table's expansion
+   * row, a toolbar card. keksdose G3: two such rows had small hand-built buttons and lost
+   * them on adopting FormActions, which had no size. At `sm` the spinner and
+   * {@link submitIcon} shrink with the text.
+   *
+   * Your own elements (`children`, an element passed as `destructive`, `start`) are
+   * yours to size — pass them `size="sm"` too. A `size` in {@link submitProps} still
+   * wins for Save, as it always has.
+   */
+  size?: ButtonSize;
+  /**
    * A destructive action at the START of the row, apart from Save and Cancel — the
    * "Delete" of an edit dialog. Pass `{ label, onClick }` for the kit's quiet danger
    * button, or an element of your own (a {@link DangerConfirm}, say). With it the row
@@ -328,6 +349,8 @@ export function FormActions({
   submitDisabledReason,
   commit = false,
   submitVariant = "brand",
+  cancelVariant = "secondary",
+  size = "md",
   destructive,
   start: startSlot,
   align,
@@ -386,6 +409,7 @@ export function FormActions({
       type="button"
       variant="ghost"
       tone="danger"
+      size={size}
       onClick={destructive.onClick}
       disabled={destructive.disabled}
       disabledReason={destructive.disabledReason}
@@ -397,6 +421,9 @@ export function FormActions({
     destructive
   );
   const saveLabel = submitLabel ?? labels.save;
+  // The glyphs follow the text: 16px beside `md`'s 14px text, 14px beside `sm`'s 12px.
+  const saveSize = submitProps?.size ?? size;
+  const glyphClass = saveSize === "sm" ? "size-3.5" : "size-4";
 
   return (
     <div
@@ -435,7 +462,7 @@ export function FormActions({
       <div className="flex flex-wrap items-center gap-2">
         {children}
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button type="button" variant={cancelVariant} size={size} onClick={onCancel}>
             {cancelLabel ?? labels.cancel}
           </Button>
         )}
@@ -449,6 +476,7 @@ export function FormActions({
           form={form}
           onClick={onSubmit}
           variant={submitVariant}
+          size={saveSize}
           disabled={pending || submitDisabled}
           disabledReason={pending ? undefined : submitDisabledReason}
           // Not while pending: the save already left, and the lock's look over the
@@ -457,9 +485,9 @@ export function FormActions({
           aria-busy={pending || undefined}
         >
           {pending ? (
-            <Spinner label={null} className="size-4" />
+            <Spinner label={null} className={glyphClass} />
           ) : (
-            SubmitIcon && <SubmitIcon aria-hidden className="size-4 shrink-0" />
+            SubmitIcon && <SubmitIcon aria-hidden className={cn(glyphClass, "shrink-0")} />
           )}
           {pending && pendingLabel !== undefined ? pendingLabel : saveLabel}
           {submitShortcut && submitShortcutHint && (

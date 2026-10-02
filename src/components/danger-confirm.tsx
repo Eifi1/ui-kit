@@ -324,6 +324,18 @@ export interface DangerConfirmLabels {
   /** 0.22: the checkbox `requireAcknowledge={true}` shows — "I have read what this does
    *  and want to continue" (keksdose's `admin.users.confirm_ack`). */
   acknowledge: string;
+  /**
+   * 0.23: why the armed confirm is held while the typed phrase does not match yet — in
+   * the confirm's tooltip and its description (keksdose G4a). A FUNCTION of the phrase
+   * by default ("Type “DELETE” to confirm"), or a finished STRING, as `phrase`.
+   */
+  needsPhrase: string | ((phrase: string) => string);
+  /** 0.23: why the armed confirm is held while the `requireAcknowledge` box is unticked
+   *  — "Tick the box to confirm". */
+  needsAcknowledge: string;
+  /** 0.23: why the armed confirm is held while the `requirePassword` field is empty —
+   *  "Enter your password to confirm". */
+  needsPassword: string;
 }
 
 /** `satisfies` rather than a type annotation, so `DEFAULT_DANGER_CONFIRM_LABELS.phrase`
@@ -336,7 +348,32 @@ export const DEFAULT_DANGER_CONFIRM_LABELS = {
   password: "Password",
   phrase: (phrase: string) => `Type “${phrase}” to confirm`,
   acknowledge: "I have read what this does and want to continue.",
+  needsPhrase: (phrase: string) => `Type “${phrase}” to confirm`,
+  needsAcknowledge: "Tick the box to confirm",
+  needsPassword: "Enter your password to confirm",
 } satisfies DangerConfirmLabels;
+
+/**
+ * What the guards were answered with — the second argument of
+ * {@link DangerConfirmProps.onConfirm} (0.23, keksdose G4b). A key is there only when its
+ * guard was asked for, so the object can go into a request body as it is.
+ */
+export interface DangerConfirmValues {
+  /**
+   * The text typed into the `phrase` field — as the match rule compared it: trimmed
+   * under `phraseMatch` `"trim"` and `"caseless"` (the spaces a phone keyboard adds are
+   * not part of it), exactly as typed under `"exact"`. The case is the user's, even
+   * under `"caseless"`: a server that re-checks applies its own rule to it. Absent
+   * without a `phrase`.
+   */
+  typed?: string;
+  /** The entered password — the same value as the first argument. Absent without
+   *  `requirePassword`. */
+  password?: string;
+  /** `true` when the `requireAcknowledge` box was shown — it was ticked, since the
+   *  confirm is held until it is. Absent without one. */
+  acknowledged?: true;
+}
 
 /**
  * One line of {@link DangerConfirmProps.consequences}: what the action will do. A plain
@@ -360,12 +397,25 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
    * (fields wiped) when it resolves, still armed when it rejects — so the user can
    * correct a wrong password and retry. The rejection is not swallowed for you to
    * miss: handle it (and show why) in the caller, as with any mutation.
+   *
+   * 0.23: the second argument is what every guard was answered with — the typed phrase,
+   * the password, the tick ({@link DangerConfirmValues}). keksdose G4b: its admin
+   * actions send the address the admin TYPED, and the server re-checks it against the
+   * account (`assert_confirmed`), so a client that put the wrong row's id in the request
+   * is refused rather than obeyed; the tile kept the text to itself.
+   *
+   *     onConfirm={(_password, { typed }) =>
+   *       reset.mutateAsync({ id, confirm: { acknowledged: true, confirm_email: typed ?? null } })}
+   *
+   * A second argument rather than one object in place of the password: every
+   * `(password) => …` and `() => …` handler, and a `mutation.mutate` passed as it is,
+   * keeps working unchanged, and a handler that needs one guard's answer names it.
    */
-  onConfirm: (password?: string) => void | Promise<unknown>;
-  /** Show a password field; confirm stays disabled until it is filled. */
+  onConfirm: (password: string | undefined, values: DangerConfirmValues) => void | Promise<unknown>;
+  /** Show a password field; confirm is held until it is filled. */
   requirePassword?: boolean;
   /**
-   * Show an "I understand" checkbox; confirm stays disabled until it is ticked
+   * Show an "I understand" checkbox; confirm is held until it is ticked
    * (keksdose K7). `true` words it with `labels.acknowledge`; any other node IS the
    * checkbox's label ("I understand Anna will be signed out everywhere").
    *
@@ -386,8 +436,8 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
    * who reads the same paragraph on every row stops reading it (keksdose dev#488).
    */
   consequences?: readonly (string | DangerConsequence)[];
-  /** Show a "type <phrase> to confirm" field; confirm stays disabled until the field
-   *  matches (case-sensitive; surrounding spaces ignored unless `phraseMatch="exact"`). */
+  /** Show a "type <phrase> to confirm" field; confirm is held until the field matches
+   *  (case-sensitive; surrounding spaces ignored unless `phraseMatch="exact"`). */
   phrase?: string;
   /**
    * How the typed text is compared with `phrase`. `"trim"` (default) ignores spaces
@@ -446,8 +496,17 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
 /**
  * An "arm → confirm" tile for destructive actions: one button, which expands into a
  * warning, an optional list of consequences, an optional "I understand" tick, an
- * optional type-to-confirm field, an optional password field and a confirm that stays
- * disabled until every guard is satisfied.
+ * optional type-to-confirm field, an optional password field and a confirm that is held
+ * until every guard is satisfied.
+ *
+ * A held confirm SAYS which guard is still open (0.23, keksdose G4a): it is
+ * `aria-disabled` rather than `disabled` — still focusable, so a keyboard user can land
+ * on it — with the reason in the kit {@link Tooltip} and its description ("Type
+ * “DELETE” to confirm", "Tick the box to confirm", "Enter your password to confirm";
+ * `labels.needs*`), the first open guard in the order they are drawn. FormActions'
+ * `submitDisabledReason` does the same for a form's Save. Pressing it, or Enter in a
+ * field, does nothing. A lock's reason wins over a guard's; while the action runs the
+ * confirm is plainly disabled, its spinner saying why.
  *
  * Keksdose hand-rolled it three times (load demo data, wipe everything, reset a
  * budget) and then as `shared/components/danger-confirm.tsx`; the only app-specific
@@ -549,14 +608,33 @@ export function DangerConfirm({
   const phraseOk = phrase === undefined || typedMatches(typed, phrase, phraseMatch);
   const acknowledgeOk = !asksAcknowledge || acknowledged;
   const canConfirm = passwordOk && phraseOk && acknowledgeOk && !busy;
+  // The first guard still open, in the order the fields are drawn — the one the user
+  // meets next, so the sentence points at it.
+  const guardReason: string | undefined = !acknowledgeOk
+    ? labels.needsAcknowledge
+    : !phraseOk
+      ? typeof labels.needsPhrase === "function"
+        ? labels.needsPhrase(phrase ?? "")
+        : labels.needsPhrase
+      : !passwordOk
+        ? labels.needsPassword
+        : undefined;
+  // The lock first (no guard can lift it); none while busy, when the guards were met and
+  // the spinner is the state.
+  const confirmReason: ReactNode = locked ? lockedReason : busy ? undefined : guardReason;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     // `locked` too: Enter in a field submits the form without the button's say.
     if (!canConfirm || locked) return;
+    const values: DangerConfirmValues = {
+      ...(phrase !== undefined && { typed: phraseMatch === "exact" ? typed : typed.trim() }),
+      ...(requirePassword && { password }),
+      ...(asksAcknowledge && { acknowledged: true as const }),
+    };
     // Disarms when it resolves; a rejection leaves it armed, fields kept: the caller
     // shows why, the user retries.
-    run(onConfirm(requirePassword ? password : undefined), () => setArmed(false));
+    run(onConfirm(values.password, values), () => setArmed(false));
   };
 
   // The first field takes focus on arm: the tick, then the phrase, then the password —
@@ -676,10 +754,11 @@ export function DangerConfirm({
             type="submit"
             variant={tone === "warning" ? "primary" : "danger"}
             disabled={!canConfirm}
-            // Armed, then locked (or rendered armed under a lock): the confirm says why
-            // the way Button does — focusable, `aria-disabled`, the reason in its
-            // tooltip and description — and the fields stay as typed.
-            disabledReason={locked ? lockedReason : undefined}
+            // Held by a guard, or armed and then locked (or rendered armed under a lock):
+            // the confirm says why the way Button does — focusable, `aria-disabled`, the
+            // reason in its tooltip and description, a press swallowed (the submit with
+            // it) — and the fields stay as typed. Only busy is the native `disabled`.
+            disabledReason={confirmReason}
             aria-busy={busy || undefined}
           >
             {busy && <Spinner label={null} className="h-4 w-4" />}

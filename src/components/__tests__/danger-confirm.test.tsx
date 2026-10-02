@@ -11,6 +11,26 @@ import { UiKitProvider } from "../../i18n/kit-labels";
  * write-lock hook turned into `lockedReason`.
  */
 
+/** The armed tile's confirm, looked up afresh: it is re-mounted when it turns from held
+ *  to ready (Button wraps a reasoned one in its Tooltip), so a reference kept across
+ *  the flip would be the old node. */
+const confirmButton = (name = "Delete") => screen.getByRole("button", { name });
+
+/** 0.23 (keksdose G4a): a confirm held by a guard is `aria-disabled` — focusable, and
+ *  saying why — rather than natively `disabled`. */
+function expectHeld(reason?: string) {
+  const button = confirmButton();
+  expect(button).toHaveAttribute("aria-disabled", "true");
+  expect(button).not.toBeDisabled();
+  if (reason !== undefined) expect(button).toHaveAccessibleDescription(reason);
+}
+
+function expectReady() {
+  const button = confirmButton();
+  expect(button).not.toHaveAttribute("aria-disabled");
+  expect(button).toBeEnabled();
+}
+
 describe("DangerConfirm", () => {
   it("arms, focuses the first field, and holds confirm until every guard is met", async () => {
     const user = userEvent.setup();
@@ -19,14 +39,13 @@ describe("DangerConfirm", () => {
     await user.click(screen.getByRole("button", { name: "Wipe everything" }));
     const phraseField = screen.getByLabelText("Type “wipe” to confirm");
     expect(phraseField).toHaveFocus();
-    const confirm = screen.getByRole("button", { name: "Delete" });
-    expect(confirm).toBeDisabled();
+    expectHeld("Type “wipe” to confirm");
     await user.type(phraseField, "wipe");
-    expect(confirm).toBeDisabled();
+    expectHeld("Enter your password to confirm");
     await user.type(screen.getByLabelText("Password"), "pw");
-    expect(confirm).toBeEnabled();
-    await user.click(confirm);
-    expect(onConfirm).toHaveBeenCalledExactlyOnceWith("pw");
+    expectReady();
+    await user.click(confirmButton());
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith("pw", { typed: "wipe", password: "pw" });
   });
 
   it("matches the phrase exactly, case included, ignoring surrounding spaces", async () => {
@@ -35,10 +54,10 @@ describe("DangerConfirm", () => {
     await user.click(screen.getByRole("button", { name: "Delete…" }));
     const field = screen.getByLabelText("Type “DELETE” to confirm");
     await user.type(field, "delete");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    expectHeld();
     await user.clear(field);
     await user.type(field, " DELETE ");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
   });
 
   it("confirms on Enter, calls without a password when none is asked for", async () => {
@@ -47,7 +66,7 @@ describe("DangerConfirm", () => {
     render(<DangerConfirm phrase="ok" onConfirm={onConfirm} />);
     await user.click(screen.getByRole("button", { name: "Delete…" }));
     await user.type(screen.getByLabelText("Type “ok” to confirm"), "ok{Enter}");
-    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(undefined);
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(undefined, { typed: "ok" });
   });
 
   it("with no fields, lands focus on Cancel — never on the destructive button", async () => {
@@ -91,7 +110,7 @@ describe("DangerConfirm", () => {
     await user.type(screen.getByLabelText("Password"), "wrong{Enter}");
     await act(async () => reject());
     expect(screen.getByLabelText("Password")).toHaveValue("wrong");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
   });
 
   it("can be controlled, and a parent collapse wipes the fields", async () => {
@@ -171,10 +190,10 @@ describe("DangerConfirm", () => {
     await user.click(screen.getByRole("button", { name: "Delete…" }));
     const field = screen.getByLabelText("Type “DELETE” to confirm");
     await user.type(field, " DELETE ");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    expectHeld();
     await user.clear(field);
     await user.type(field, "DELETE");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
   });
 
   it("takes a finished string as the phrase label, and a placeholder (string or function)", async () => {
@@ -193,7 +212,7 @@ describe("DangerConfirm", () => {
     );
     expect(screen.getByLabelText("Type “wipe” to confirm")).toHaveAttribute("placeholder", "e.g. wipe");
     await user.type(screen.getByLabelText("Type “wipe” to confirm"), "wipe");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
   });
 
   it("keeps the floating label, and no placeholder text, unless one is given", () => {
@@ -208,9 +227,9 @@ describe("DangerConfirm", () => {
     render(<DangerConfirm phrase="Anna@Example.org" phraseMatch="caseless" armed onConfirm={() => {}} />);
     const field = screen.getByLabelText("Type “Anna@Example.org” to confirm");
     await user.type(field, " anna@example.ORG ");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
     await user.type(field, "x");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    expectHeld();
   });
 });
 
@@ -224,22 +243,20 @@ describe("DangerConfirm — requireAcknowledge and consequences (0.22)", () => {
     await user.click(screen.getByRole("button", { name: "Delete…" }));
     const tick = screen.getByRole("checkbox", { name: "I have read what this does and want to continue." });
     expect(tick).toHaveFocus();
-    const confirm = screen.getByRole("button", { name: "Delete" });
-    expect(confirm).toBeDisabled();
+    expectHeld("Tick the box to confirm");
     await user.click(tick);
-    expect(confirm).toBeEnabled();
-    await user.click(confirm);
-    expect(onConfirm).toHaveBeenCalledOnce();
+    expectReady();
+    await user.click(confirmButton());
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(undefined, { acknowledged: true });
   });
 
   it("takes a node as the tick's own label, and combines with the phrase", async () => {
     const user = userEvent.setup();
     render(<DangerConfirm armed phrase="anna@example.org" phraseMatch="caseless" requireAcknowledge="Sign Anna out everywhere" onConfirm={() => {}} />);
-    const confirm = screen.getByRole("button", { name: "Delete" });
     await user.click(screen.getByRole("checkbox", { name: "Sign Anna out everywhere" }));
-    expect(confirm).toBeDisabled();
+    expectHeld("Type “anna@example.org” to confirm");
     await user.type(screen.getByLabelText("Type “anna@example.org” to confirm"), "Anna@Example.org");
-    expect(confirm).toBeEnabled();
+    expectReady();
   });
 
   it("is unticked again after a disarm", async () => {
@@ -257,7 +274,7 @@ describe("DangerConfirm — requireAcknowledge and consequences (0.22)", () => {
     expect(screen.queryByRole("checkbox")).toBeNull();
     rerender(<DangerConfirm armed requireAcknowledge="" onConfirm={() => {}} />);
     expect(screen.queryByRole("checkbox")).toBeNull();
-    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    expectReady();
   });
 
   it("lists the consequences once armed, a severe line in the danger colour", async () => {
