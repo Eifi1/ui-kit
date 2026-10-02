@@ -1,8 +1,9 @@
-import { forwardRef, useCallback, useEffect, useId, useRef } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
 import { Check, Minus } from "lucide-react";
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
+import { LockedReason, RequiredStarOnLegend, useLockReason } from "./field-parts";
 
 /**
  * A checkbox that is still `<input type="checkbox">`.
@@ -87,6 +88,25 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
    * label WITHOUT a literal "*". No mark without a label.
    */
   required?: boolean;
+  /**
+   * Why the box cannot be changed — {@link Button}'s `disabledReason`, for a checkbox
+   * that SAVES on change (keksdose K3: a setting ticked straight into the server, kept
+   * behind a hand-rolled `SaveGuard` that forced a native `disabled` — out of the tab
+   * order, so the reason never reached a keyboard).
+   *
+   * With a reason the box is `aria-disabled` instead: still focusable, a click or Space
+   * changes nothing and fires no `onChange` / `onCheckedChange`, the reason is in the
+   * kit {@link Tooltip} on the box and on its `aria-describedby`, and the row fades as a
+   * disabled one does. It wins over `disabled`. Changing the lock mounts the box anew (it
+   * moves in or out of the Tooltip), as a locked Button is.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This box COMMITS — ticking it saves. Under a locked {@link WriteLockProvider} it is
+   * locked the `disabledReason` way with the lock's reason (which wins over its own).
+   * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
+   */
+  commit?: boolean;
 }
 
 /**
@@ -113,12 +133,22 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     id,
     disabled,
     required,
+    disabledReason,
+    commit,
+    onClick,
     ...rest
   },
   ref,
 ) {
   const generated = useId();
   const inputId = id ?? generated;
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
+  // Locked is disabled the focusable way: the row fades and the words stop inviting a
+  // click exactly as they do for `disabled`.
+  const looksDisabled = Boolean(disabled) || locked;
+  // In a CheckboxGroup the legend carries the star; the box keeps `required` itself.
+  const starOnLegend = useContext(RequiredStarOnLegend);
   const descriptionId = `${inputId}-description`;
   const errorId = `${inputId}-error`;
   const showError = hasMessage(error);
@@ -142,29 +172,53 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     if (local.current) local.current.indeterminate = indeterminate;
   });
 
-  const box = (
-    <span className={cn("relative inline-flex shrink-0", bare && className)}>
+  const control = (
+    <span className={cn("relative inline-flex shrink-0", bare && !locked && className)}>
       <input
         ref={setRef}
         id={bare ? id : inputId}
-        disabled={disabled}
+        // A reason wins over `disabled`, as on Button: the point of giving one is that
+        // the box stays reachable.
+        disabled={locked ? undefined : disabled}
         required={required}
         {...rest}
         // After the spread, like Switch: a props object spread at a checkbox must not
         // be able to turn it into something else.
         type="checkbox"
+        aria-disabled={locked || rest["aria-disabled"] || undefined}
         // OR-ed with the spread so a caller's own `aria-invalid` survives — Input's rule.
         aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
         aria-describedby={mergeDescribedBy(
           rest["aria-describedby"],
           showDescription && descriptionId,
+          locked && lock.reasonId,
           showError && errorId,
         )}
+        // A locked box's click is swallowed, as a locked Button's is.
+        onClick={locked ? undefined : onClick}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          if (locked) {
+            // Put the tick back, and report nothing. Undone here rather than by
+            // cancelling the click: a cancelled click is reverted by the browser AFTER
+            // React has restored a controlled box, and jsdom reverts it by toggling, which
+            // turned a restored tick back over (the suites the apps run would have seen a
+            // locked box change). Setting the property also keeps React's own record of
+            // the value in step, so an uncontrolled box reports its next real change.
+            // Covers a click on the label and Space too — both arrive as a click.
+            e.currentTarget.checked = !e.currentTarget.checked;
+            e.currentTarget.indeterminate = indeterminate;
+            return;
+          }
           onChange?.(e);
           onCheckedChange?.(e.target.checked);
         }}
-        className={cn(BOX, indeterminate && BOX_MIXED, isInvalid && BOX_INVALID, inputClassName)}
+        className={cn(
+          BOX,
+          indeterminate && BOX_MIXED,
+          isInvalid && BOX_INVALID,
+          locked && "cursor-not-allowed",
+          inputClassName,
+        )}
       />
       {/* The glyph is drawn over the box, not inside it (an input has no children),
           and ignores the pointer so a click on the tick still toggles the input. The
@@ -185,6 +239,16 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       )}
     </span>
   );
+  // The reason's Tooltip goes round the BOX, not the row: the row is the caller's
+  // layout (`className`), and a wrapper round it would move that into a span. A bare
+  // box hands its `className` to the wrapper, which is then the outermost element.
+  const box = locked ? (
+    <LockedReason lock={lock} className={cn("shrink-0", bare && className)}>
+      {control}
+    </LockedReason>
+  ) : (
+    control
+  );
 
   if (bare) return box;
 
@@ -197,7 +261,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         "flex items-start gap-2",
         // The whole row fades, the way ToggleGroup and the fields do, so the label does
         // not stay at full strength beside a box you cannot change.
-        disabled && "opacity-60",
+        looksDisabled && "opacity-60",
         className,
       )}
     >
@@ -210,11 +274,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
               "block text-sm leading-5 text-[var(--text-primary)]",
               // `select-none`: a double-click to toggle twice would otherwise select the
               // words, and a drag that starts on them starts a native text drag.
-              disabled ? "cursor-not-allowed" : "cursor-pointer select-none",
+              looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
             )}
           >
             {label}
-            {required && (
+            {required && !starOnLegend && (
               <span aria-hidden className="ms-0.5 text-[var(--danger)]">
                 *
               </span>

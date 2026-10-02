@@ -10,6 +10,8 @@ import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
+import { mergeDescribedBy } from "./choice-parts";
+import { LockedReason, useLockReason } from "./field-parts";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -309,6 +311,25 @@ export type ListItemProps = ListItemBaseProps &
     | ({
         /** Makes the row a button — select, open, mark read. */
         onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+        /**
+         * Why the row's click is not available — {@link Button}'s `disabledReason`, for
+         * a row whose click WRITES (mark read, assign, toggle a grant). keksdose K3: such
+         * rows sat behind a `SaveGuard` that forced a native `disabled`, out of the tab
+         * order, so the reason never reached a keyboard; `renderRow` with a Tooltip could
+         * explain it but not keep the row reachable.
+         *
+         * With a reason the row's button is `aria-disabled` instead: still focusable, a
+         * click does nothing, the reason is in the kit {@link Tooltip} over the row and on
+         * its `aria-describedby`, and the row wears the disabled look. It wins over
+         * `disabled`. The row's `actions` are untouched — each control there is its own.
+         */
+        disabledReason?: ReactNode;
+        /**
+         * The row's click COMMITS. Under a locked {@link WriteLockProvider} it is locked
+         * the `disabledReason` way with the lock's reason (which wins over its own). No
+         * provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
+         */
+        commit?: boolean;
         href?: never;
         renderLink?: never;
         external?: never;
@@ -337,6 +358,8 @@ export type ListItemProps = ListItemBaseProps &
          *  notification read here too, so a row opened into a background tab does not
          *  stay unread. */
         onAuxClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+        disabledReason?: never;
+        commit?: never;
       } & NotExpandable)
     | ({
         onClick?: never;
@@ -344,6 +367,8 @@ export type ListItemProps = ListItemBaseProps &
         renderLink?: never;
         external?: never;
         onAuxClick?: never;
+        disabledReason?: never;
+        commit?: never;
       } & NotExpandable)
     | {
         /**
@@ -369,6 +394,8 @@ export type ListItemProps = ListItemBaseProps &
         renderLink?: never;
         external?: never;
         onAuxClick?: never;
+        disabledReason?: never;
+        commit?: never;
       }
   );
 
@@ -427,6 +454,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     external = false,
     onClick,
     onAuxClick,
+    disabledReason,
+    commit,
     expandedContent,
     expanded: expandedProp,
     defaultExpanded = false,
@@ -446,7 +475,11 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   const isLink = href !== undefined && !disabled;
   const isButton = !isLink && (onClick !== undefined || expandable) && href === undefined;
   const interactive = isLink || isButton;
-  const inert = disabled || loading;
+  // Only an onClick row takes a reason (the types allow no other); the hook runs on
+  // every row so the hook order never depends on which kind of row this is.
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked && isButton && !expandable;
+  const inert = disabled || loading || locked;
   const hasBody = children !== undefined && children !== null && children !== false;
   // Anything under the row's own line: the box turns into a column, and the target
   // takes its own corners and hover fill (see `children`).
@@ -558,6 +591,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
     loading && "cursor-progress",
+    locked && !loading && "cursor-not-allowed",
     targetClassName,
   );
 
@@ -598,15 +632,21 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         ref={ref as Ref<HTMLButtonElement>}
         type="button"
         // A disabled row is `disabled`: nothing to do there, and nothing to reach. A
-        // loading row is only `aria-disabled` — see `loading`.
-        disabled={disabled}
-        aria-disabled={loading || undefined}
+        // loading row is only `aria-disabled` — see `loading` — and so is a locked one:
+        // a reason wins over `disabled`, so the row stays reachable to say it.
+        disabled={locked ? undefined : disabled}
+        aria-disabled={loading || locked || undefined}
         aria-busy={loading || undefined}
         aria-current={selected ? "true" : undefined}
         aria-expanded={expandable ? expanded : undefined}
         aria-controls={expandable ? expandedId : undefined}
+        aria-describedby={
+          locked
+            ? mergeDescribedBy(rest["aria-describedby"] as string | undefined, lock.reasonId)
+            : (rest["aria-describedby"] as string | undefined)
+        }
         onClick={
-          loading
+          loading || locked
             ? undefined
             : expandable
               ? toggle
@@ -617,6 +657,15 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {body}
       </button>
     );
+    if (locked) {
+      // The Tooltip takes the target's place in the row, so it takes its flex sizing
+      // too; the button fills it.
+      main = (
+        <LockedReason lock={lock} className="flex min-w-0 flex-1">
+          {main}
+        </LockedReason>
+      );
+    }
   } else {
     main = (
       <div
@@ -652,7 +701,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
             ? "border-[var(--border)]"
             : "border-transparent",
         !stacked && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
-        disabled && "opacity-50",
+        (disabled || locked) && "opacity-50",
         className,
       )}
     >

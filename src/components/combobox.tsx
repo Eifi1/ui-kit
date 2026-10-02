@@ -22,6 +22,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
 
 // One look for both combobox flavors below — the suggestion list and its rows
 // must stay pixel-identical between the free-text and the id-keyed variant (and
@@ -149,6 +150,15 @@ export interface ComboboxProps
    *  field, on the `<input>`'s `aria-describedby`, and implies `invalid` (lenkbank's
    *  scope fields, which moved here off `<Input list>` + `<datalist>`). */
   error?: ReactNode;
+  /**
+   * Standing advice for the field — {@link Input}'s `hint`, so the combobox family
+   * reads like every other field (keksdose K4: the family had `error` and no `hint`, so
+   * the app's pickers carried their captions outside the component, attached to
+   * nothing). Plain TEXT is a caption under the field on the input's
+   * `aria-describedby`, before any error; a {@link FieldHint} "?" rides the label line,
+   * or with no label sits at the field's end edge, outside the box.
+   */
+  hint?: ReactNode;
   /** As `<input disabled>`: no focus, no list, the field's settled look. The chevron
    *  stops toggling with it — it is a mouse target the input's own `disabled` does
    *  not reach. */
@@ -232,6 +242,7 @@ export function Combobox({
   createLabel,
   invalid,
   error,
+  hint,
   disabled,
   optionAdornment,
   autoFocus,
@@ -246,10 +257,11 @@ export function Combobox({
   "aria-required": ariaRequired,
   ...rest
 }: ComboboxProps) {
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
   const field = useComboboxFieldError(
     error,
     invalid || ariaInvalid === true || ariaInvalid === "true",
-    ariaDescribedBy,
+    hintParts.describedBy,
   );
   const generated = useId();
   const fieldId = id ?? generated;
@@ -383,134 +395,147 @@ export function Combobox({
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       {/* A real <label for> since lenkbank's tests met a field `getByLabelText` could
           not find: it used to be a <span>, with the text copied onto `aria-label`. The
-          name a reader hears is the same words either way. */}
-      {label !== undefined && (
+          name a reader hears is the same words either way. With a "?" it moves into a
+          row after the field, below. */}
+      {label !== undefined && hintParts.labelHint === undefined && (
         <ComboboxFieldLabel htmlFor={fieldId} className={disabled ? "opacity-50" : undefined}>
           {label}
         </ComboboxFieldLabel>
       )}
-      {/* The chevron centers against this inner wrapper, which hugs the input.
-          The outer div can be taller than the input (as a grid item it
-          stretches to the row height, e.g. next to the editor's category cell
-          with its split button), which used to drag a top-1/2 chevron down to
-          the input's bottom edge (feedback #248). */}
-      {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
-          FIELD_BASE's grey alone left a disabled picker looking like a filled-in
-          one beside the pickers that do dim (the label is not the input's `peer`,
-          so it is dimmed by hand above). */}
-      <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
-        <input
-          id={fieldId}
-          value={value}
-          placeholder={placeholder}
-          // The caller's name, over the <label for> above — which is what names the
-          // field otherwise (dev#477: a field with neither announces only its text).
-          aria-label={ariaLabel}
-          role="combobox"
-          aria-expanded={open}
-          // The list this field is the mouth of. Required by the role, and the half
-          // that was missing: the field said it was expanded and never said what it
-          // had expanded, so a reader had no way from the box to the options
-          // (ESLint's `role-has-required-aria-props`, the audit's §a11y).
-          aria-controls={listboxId}
-          aria-activedescendant={activeId}
-          aria-autocomplete="list"
-          aria-invalid={field.isInvalid || undefined}
-          aria-describedby={field.describedBy}
-          aria-required={ariaRequired}
-          autoComplete="off"
-          disabled={disabled}
-          // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
-          autoFocus={autoFocus}
-          onBlur={onBlur}
-          onMouseDown={primaryOnly.onMouseDown}
-          onFocus={() => {
-            // A back/forward mouse button focuses this field on its way to
-            // navigating; it is not a request to open anything (live #309 rework).
-            if (primaryOnly.fromAuxButton()) return;
-            setOpen(true);
-            setTyping(false);
-            // The sheet carries its own input, so the field behind it must not also
-            // pull up the keyboard and scroll the page under the dialog.
-            if (isPhone) sheetInputRef.current?.focus();
-          }}
-          // A CLICK as well as focus — the other half of dev#549. Picking a suggestion
-          // closes the list without moving focus (the rows suppress `mousedown` on
-          // purpose, so the input never blurred), which means clicking the field again
-          // fires no `focus` event at all and the list stayed shut. "Does not open
-          // anything" was literally true.
-          onClick={() => {
-            setOpen(true);
-            setTyping(false);
-          }}
-          // `inputMode="none"` rather than readOnly: the field must not look
-          // uneditable (FIELD_BASE greys a read-only field since dev#468) and must
-          // still take focus — it just has no keyboard of its own, the same trick
-          // the amount field uses for the numpad.
-          inputMode={isPhone ? "none" : undefined}
-          onChange={(e) => {
-            onChange(e.target.value);
-            setOpen(true);
-            setActive(-1);
-            setTyping(true);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
+      <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
+        {/* The chevron centers against this inner wrapper, which hugs the input.
+            The outer div can be taller than the input (as a grid item it
+            stretches to the row height, e.g. next to the editor's category cell
+            with its split button), which used to drag a top-1/2 chevron down to
+            the input's bottom edge (feedback #248). */}
+        {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
+            FIELD_BASE's grey alone left a disabled picker looking like a filled-in
+            one beside the pickers that do dim (the label is not the input's `peer`,
+            so it is dimmed by hand above). */}
+        <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
+          <input
+            id={fieldId}
+            value={value}
+            placeholder={placeholder}
+            // The caller's name, over the <label for> above — which is what names the
+            // field otherwise (dev#477: a field with neither announces only its text).
+            aria-label={ariaLabel}
+            role="combobox"
+            aria-expanded={open}
+            // The list this field is the mouth of. Required by the role, and the half
+            // that was missing: the field said it was expanded and never said what it
+            // had expanded, so a reader had no way from the box to the options
+            // (ESLint's `role-has-required-aria-props`, the audit's §a11y).
+            aria-controls={listboxId}
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
+            aria-invalid={field.isInvalid || undefined}
+            aria-describedby={field.describedBy}
+            aria-required={ariaRequired}
+            autoComplete="off"
+            disabled={disabled}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
+            autoFocus={autoFocus}
+            onBlur={onBlur}
+            onMouseDown={primaryOnly.onMouseDown}
+            onFocus={() => {
+              // A back/forward mouse button focuses this field on its way to
+              // navigating; it is not a request to open anything (live #309 rework).
+              if (primaryOnly.fromAuxButton()) return;
               setOpen(true);
-              setActive((i) => Math.min(i + 1, matches.length - 1));
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setActive((i) => Math.max(i - 1, 0));
-            } else if (e.key === "Enter") {
-              if (open && active >= 0 && active < matches.length) {
+              setTyping(false);
+              // The sheet carries its own input, so the field behind it must not also
+              // pull up the keyboard and scroll the page under the dialog.
+              if (isPhone) sheetInputRef.current?.focus();
+            }}
+            // A CLICK as well as focus — the other half of dev#549. Picking a suggestion
+            // closes the list without moving focus (the rows suppress `mousedown` on
+            // purpose, so the input never blurred), which means clicking the field again
+            // fires no `focus` event at all and the list stayed shut. "Does not open
+            // anything" was literally true.
+            onClick={() => {
+              setOpen(true);
+              setTyping(false);
+            }}
+            // `inputMode="none"` rather than readOnly: the field must not look
+            // uneditable (FIELD_BASE greys a read-only field since dev#468) and must
+            // still take focus — it just has no keyboard of its own, the same trick
+            // the amount field uses for the numpad.
+            inputMode={isPhone ? "none" : undefined}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setOpen(true);
+              setActive(-1);
+              setTyping(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
                 e.preventDefault();
-                commit(matches[active]);
-              } else {
-                // No row highlighted: the typed text is the answer. `preventDefault`
-                // only when a caller is taking Enter, so a plain form submit is
-                // otherwise left alone.
-                if (onSubmit) e.preventDefault();
+                setOpen(true);
+                setActive((i) => Math.min(i + 1, matches.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActive((i) => Math.max(i - 1, 0));
+              } else if (e.key === "Enter") {
+                if (open && active >= 0 && active < matches.length) {
+                  e.preventDefault();
+                  commit(matches[active]);
+                } else {
+                  // No row highlighted: the typed text is the answer. `preventDefault`
+                  // only when a caller is taking Enter, so a plain form submit is
+                  // otherwise left alone.
+                  if (onSubmit) e.preventDefault();
+                  setOpen(false);
+                  onSubmit?.();
+                }
+              } else if (e.key === "Escape") {
                 setOpen(false);
-                onSubmit?.();
+                setActive(-1);
+              } else if (e.key === "Tab") {
+                // Closes, and lets the browser take the Tab: focus is in THIS input,
+                // which is staying, so there is nothing to catch — unlike the pickers
+                // whose focus sits inside a portalled panel.
+                setOpen(false);
+                setActive(-1);
               }
-            } else if (e.key === "Escape") {
-              setOpen(false);
-              setActive(-1);
-            } else if (e.key === "Tab") {
-              // Closes, and lets the browser take the Tab: focus is in THIS input,
-              // which is staying, so there is nothing to catch — unlike the pickers
-              // whose focus sits inside a portalled panel.
-              setOpen(false);
-              setActive(-1);
-            }
-            // Home/End are deliberately absent. The APG gives them to the list only
-            // where the combobox is not editable; here the text IS the value, a
-            // payee name is long enough to want the caret moved to its start, and
-            // the desktop list is capped at 8 rows — so jumping it would be worth
-            // almost nothing and would cost the one gesture that field is used with.
-          }}
-          className={cn(
-            FIELD_BASE,
-            label !== undefined && FIELD_FLOATING_PAD,
-            "pe-9",
-            field.isInvalid && FIELD_INVALID,
-          )}
-        />
-        <ChevronDown
-          aria-hidden
-          onMouseDown={(e) => {
-            // Toggle on the chevron without stealing focus from the input.
-            e.preventDefault();
-            if (!disabled) setOpen((o) => !o);
-          }}
-          className={cn(
-            "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
-            // The box above does the dimming; dimming here too would halve it again.
-            !disabled && "cursor-pointer",
-          )}
-        />
-      </div>
+              // Home/End are deliberately absent. The APG gives them to the list only
+              // where the combobox is not editable; here the text IS the value, a
+              // payee name is long enough to want the caret moved to its start, and
+              // the desktop list is capped at 8 rows — so jumping it would be worth
+              // almost nothing and would cost the one gesture that field is used with.
+            }}
+            className={cn(
+              FIELD_BASE,
+              label !== undefined && FIELD_FLOATING_PAD,
+              "pe-9",
+              field.isInvalid && FIELD_INVALID,
+            )}
+          />
+          <ChevronDown
+            aria-hidden
+            onMouseDown={(e) => {
+              // Toggle on the chevron without stealing focus from the input.
+              e.preventDefault();
+              if (!disabled) setOpen((o) => !o);
+            }}
+            className={cn(
+              "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+              // The box above does the dimming; dimming here too would halve it again.
+              !disabled && "cursor-pointer",
+            )}
+          />
+        </div>
+      </EndHintRow>
+      {/* The label and its "?" share the top strip — after the field in the DOM, so the
+          "?" follows the control in the tab order, as it does on Input and Select. */}
+      {label !== undefined && hintParts.labelHint !== undefined && (
+        <StaticLabelRow hint={hintParts.labelHint}>
+          <ComboboxFieldLabel htmlFor={fieldId} className={cn(LABEL_IN_ROW, disabled && "opacity-50")}>
+            {label}
+          </ComboboxFieldLabel>
+        </StaticLabelRow>
+      )}
+      <FieldCaption parts={hintParts} />
       {field.errorEl}
       {isPhone && (
         <PickerSheet
@@ -667,6 +692,8 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
   invalid?: boolean;
   /** What is wrong with the value — see {@link Combobox}'s `error`. */
   error?: ReactNode;
+  /** Standing advice — see {@link Combobox}'s `hint` (keksdose K4). */
+  hint?: ReactNode;
   /** A picked/typed option emits its id; emptying the field, or the "×", emits
    *  `clearValue`. */
   onChange: (v: V | C) => void;
@@ -740,6 +767,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   clearLabel,
   invalid,
   error,
+  hint,
   "aria-label": ariaLabel,
   // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
   // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and
@@ -752,10 +780,11 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // The clear value reads as "nothing selected", whichever one the caller picked —
   // so from here down `value` is the id or `null`, as it always was.
   const value: V | null = rawValue == null || rawValue === clearValue ? null : (rawValue as V);
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
   const field = useComboboxFieldError(
     error,
     invalid || ariaInvalid === true || ariaInvalid === "true",
-    ariaDescribedBy,
+    hintParts.describedBy,
   );
   const generated = useId();
   const fieldId = id ?? generated;
@@ -880,149 +909,159 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     // which is the combobox a reader meets. Spread FIRST, so the field's ARIA and the
     // handlers carrying live #309 and dev#549 cannot be replaced from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {/* A real <label for> — see {@link Combobox}. */}
-      {label !== undefined && (
+      {/* A real <label for> — see {@link Combobox}; with a "?", in a row after the field. */}
+      {label !== undefined && hintParts.labelHint === undefined && (
         <ComboboxFieldLabel htmlFor={fieldId} className={disabled ? "opacity-50" : undefined}>
           {label}
         </ComboboxFieldLabel>
       )}
-      {/* Inner wrapper for chevron centering — same reasoning as Combobox above.
-          It is also what the portalled list anchors to. */}
-      {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
-          FIELD_BASE's grey alone left a disabled picker looking like a filled-in
-          one beside the pickers that do dim (the label is not the input's `peer`,
-          so it is dimmed by hand above). */}
-      <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
-        <input
-          id={fieldId}
-          value={shown}
-          placeholder={placeholder}
-          // The caller's name, over the <label for> above. Just the label, never
-          // "label: value" the way a trigger button has to compose it: an input
-          // already exposes its value separately.
-          aria-label={ariaLabel}
-          role="combobox"
-          aria-expanded={open}
-          // Required by the role, and the half that was missing: the field said it
-          // was expanded and never said what it had expanded (ESLint's
-          // `role-has-required-aria-props`, the audit's §a11y).
-          aria-controls={listboxId}
-          aria-activedescendant={activeId}
-          aria-autocomplete="list"
-          aria-invalid={field.isInvalid || undefined}
-          aria-describedby={field.describedBy}
-          aria-required={ariaRequired}
-          autoComplete="off"
-          disabled={disabled}
-          // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
-          autoFocus={autoFocus}
-          // `inputMode="none"` rather than readOnly, for the same reason Combobox
-          // above gives: the sheet carries the keyboard, and a readOnly field would
-          // take FIELD_BASE's settled look on a field that is perfectly editable.
-          inputMode={isPhone ? "none" : undefined}
-          onMouseDown={primaryOnly.onMouseDown}
-          onFocus={(e) => {
-            // See {@link usePrimaryPressOnly}: a back/forward button lands here on
-            // its way to navigating, and neither the list nor the select-all is
-            // anything it asked for (live #309 rework).
-            if (primaryOnly.fromAuxButton()) return;
-            setText(shown);
-            e.currentTarget.select();
-            setOpen(true);
-            // The sheet has its own input; the field behind it must not also pull up
-            // the keyboard and scroll the page under the dialog.
-            if (isPhone) sheetInputRef.current?.focus();
-          }}
-          onBlur={() => {
-            // On a phone the blur is the SHEET taking focus, not the user leaving the
-            // field — reconciling there would close the sheet the instant it opened.
-            if (!isPhone) reconcile();
-          }}
-          onChange={(e) => {
-            setText(e.target.value);
-            setOpen(true);
-            setActive(-1);
-          }}
-          onKeyDown={(e) => {
-            // Disabled rows are passed over; Up from "nothing highlighted" lands on
-            // the first takeable row, as it always landed on row 0.
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
+      <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
+        {/* Inner wrapper for chevron centering — same reasoning as Combobox above.
+            It is also what the portalled list anchors to. */}
+        {/* Dimmed as a whole when disabled, the way EntityCombobox dims its trigger.
+            FIELD_BASE's grey alone left a disabled picker looking like a filled-in
+            one beside the pickers that do dim (the label is not the input's `peer`,
+            so it is dimmed by hand above). */}
+        <div ref={fieldRef} className={cn("relative", disabled && "cursor-not-allowed opacity-50")}>
+          <input
+            id={fieldId}
+            value={shown}
+            placeholder={placeholder}
+            // The caller's name, over the <label for> above. Just the label, never
+            // "label: value" the way a trigger button has to compose it: an input
+            // already exposes its value separately.
+            aria-label={ariaLabel}
+            role="combobox"
+            aria-expanded={open}
+            // Required by the role, and the half that was missing: the field said it
+            // was expanded and never said what it had expanded (ESLint's
+            // `role-has-required-aria-props`, the audit's §a11y).
+            aria-controls={listboxId}
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
+            aria-invalid={field.isInvalid || undefined}
+            aria-describedby={field.describedBy}
+            aria-required={ariaRequired}
+            autoComplete="off"
+            disabled={disabled}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
+            autoFocus={autoFocus}
+            // `inputMode="none"` rather than readOnly, for the same reason Combobox
+            // above gives: the sheet carries the keyboard, and a readOnly field would
+            // take FIELD_BASE's settled look on a field that is perfectly editable.
+            inputMode={isPhone ? "none" : undefined}
+            onMouseDown={primaryOnly.onMouseDown}
+            onFocus={(e) => {
+              // See {@link usePrimaryPressOnly}: a back/forward button lands here on
+              // its way to navigating, and neither the list nor the select-all is
+              // anything it asked for (live #309 rework).
+              if (primaryOnly.fromAuxButton()) return;
+              setText(shown);
+              e.currentTarget.select();
               setOpen(true);
-              setActive((i) => stepEnabled(matches, i, 1));
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setActive((i) => (i < 0 ? stepEnabled(matches, -1, 1) : stepEnabled(matches, i, -1)));
-            } else if (e.key === "Enter") {
-              if (open && isOptionEnabled(matches[active])) {
+              // The sheet has its own input; the field behind it must not also pull up
+              // the keyboard and scroll the page under the dialog.
+              if (isPhone) sheetInputRef.current?.focus();
+            }}
+            onBlur={() => {
+              // On a phone the blur is the SHEET taking focus, not the user leaving the
+              // field — reconciling there would close the sheet the instant it opened.
+              if (!isPhone) reconcile();
+            }}
+            onChange={(e) => {
+              setText(e.target.value);
+              setOpen(true);
+              setActive(-1);
+            }}
+            onKeyDown={(e) => {
+              // Disabled rows are passed over; Up from "nothing highlighted" lands on
+              // the first takeable row, as it always landed on row 0.
+              if (e.key === "ArrowDown") {
                 e.preventDefault();
-                commit(matches[active]);
-              } else {
+                setOpen(true);
+                setActive((i) => stepEnabled(matches, i, 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActive((i) => (i < 0 ? stepEnabled(matches, -1, 1) : stepEnabled(matches, i, -1)));
+              } else if (e.key === "Enter") {
+                if (open && isOptionEnabled(matches[active])) {
+                  e.preventDefault();
+                  commit(matches[active]);
+                } else {
+                  reconcile();
+                }
+              } else if (e.key === "Escape") {
+                setText(null);
+                close();
+              } else if (e.key === "Tab") {
+                // Focus is in THIS input and stays there, so the browser's own Tab is
+                // left alone; all that is needed is that the list stop covering what
+                // the user is tabbing to. `reconcile` rather than `close`, because
+                // leaving the field is exactly when loose text has to be judged.
                 reconcile();
               }
-            } else if (e.key === "Escape") {
-              setText(null);
-              close();
-            } else if (e.key === "Tab") {
-              // Focus is in THIS input and stays there, so the browser's own Tab is
-              // left alone; all that is needed is that the list stop covering what
-              // the user is tabbing to. `reconcile` rather than `close`, because
-              // leaving the field is exactly when loose text has to be judged.
-              reconcile();
-            }
-            // Home/End stay with the caret — see the note in {@link Combobox}: this
-            // field is editable, and its text is what `reconcile` judges.
-          }}
-          className={cn(
-            FIELD_BASE,
-            label !== undefined && FIELD_FLOATING_PAD,
-            "pe-9",
-            field.isInvalid && FIELD_INVALID,
-          )}
-        />
-        {showClear ? (
-          <button
-            type="button"
-            // Out of the tab order, like the clear on `EntityCombobox`: the keyboard
-            // already clears this field by selecting its text and deleting, and a
-            // second stop between every picker and the next field is a worse trade
-            // than the one gesture it saves.
-            tabIndex={-1}
-            aria-label={labels.clear}
-            // preventDefault, exactly as the chevron does: without it the press
-            // focuses the input, which on a phone opens the sheet over the field the
-            // press was clearing.
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setText(null);
-              close();
-              onChange(clearValue);
+              // Home/End stay with the caret — see the note in {@link Combobox}: this
+              // field is editable, and its text is what `reconcile` judges.
             }}
             className={cn(
-              "absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
-              "hover:text-[var(--text-secondary)]",
-            )}
-          >
-            <X aria-hidden className="size-4" />
-          </button>
-        ) : (
-          <ChevronDown
-            aria-hidden
-            onMouseDown={(e) => {
-              // Toggle on the chevron without stealing focus from the input — and
-              // not at all on a disabled field, which the input's own `disabled`
-              // does not stop from here.
-              e.preventDefault();
-              if (!disabled) setOpen((o) => !o);
-            }}
-            className={cn(
-              "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
-              // The box above does the dimming; dimming here too would halve it again.
-              !disabled && "cursor-pointer",
+              FIELD_BASE,
+              label !== undefined && FIELD_FLOATING_PAD,
+              "pe-9",
+              field.isInvalid && FIELD_INVALID,
             )}
           />
-        )}
-      </div>
+          {showClear ? (
+            <button
+              type="button"
+              // Out of the tab order, like the clear on `EntityCombobox`: the keyboard
+              // already clears this field by selecting its text and deleting, and a
+              // second stop between every picker and the next field is a worse trade
+              // than the one gesture it saves.
+              tabIndex={-1}
+              aria-label={labels.clear}
+              // preventDefault, exactly as the chevron does: without it the press
+              // focuses the input, which on a phone opens the sheet over the field the
+              // press was clearing.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setText(null);
+                close();
+                onChange(clearValue);
+              }}
+              className={cn(
+                "absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
+                "hover:text-[var(--text-secondary)]",
+              )}
+            >
+              <X aria-hidden className="size-4" />
+            </button>
+          ) : (
+            <ChevronDown
+              aria-hidden
+              onMouseDown={(e) => {
+                // Toggle on the chevron without stealing focus from the input — and
+                // not at all on a disabled field, which the input's own `disabled`
+                // does not stop from here.
+                e.preventDefault();
+                if (!disabled) setOpen((o) => !o);
+              }}
+              className={cn(
+                "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+                // The box above does the dimming; dimming here too would halve it again.
+                !disabled && "cursor-pointer",
+              )}
+            />
+          )}
+        </div>
+      </EndHintRow>
+      {label !== undefined && hintParts.labelHint !== undefined && (
+        <StaticLabelRow hint={hintParts.labelHint}>
+          <ComboboxFieldLabel htmlFor={fieldId} className={cn(LABEL_IN_ROW, disabled && "opacity-50")}>
+            {label}
+          </ComboboxFieldLabel>
+        </StaticLabelRow>
+      )}
+      <FieldCaption parts={hintParts} />
       {field.errorEl}
       {isPhone && (
         <PickerSheet

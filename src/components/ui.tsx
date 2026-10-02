@@ -1,6 +1,6 @@
 import { createContext, forwardRef, useContext, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ChangeEvent, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
@@ -10,6 +10,15 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-lab
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import { useCommitReason } from "./write-lock";
+import { mergeDescribedBy } from "./choice-parts";
+import {
+  EndHintRow,
+  FieldCaption,
+  LockedReason,
+  useFieldHint,
+  useLockReason,
+  type FieldHintParts,
+} from "./field-parts";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
@@ -1840,6 +1849,149 @@ export function resolvePasswordRevealLabels(
   return { ...DEFAULT_PASSWORD_REVEAL_LABELS, ...partial };
 }
 
+/**
+ * What the character counter of {@link Input} and {@link Textarea} (`showCount`) says.
+ * The visible "12/80" is digits and a slash and is not translated; these are the words
+ * a screen reader gets instead of it.
+ */
+export interface CharacterCountLabels {
+  /** The counter as part of the field's description, read when focus reaches the
+   *  field: "12 of 80 characters". */
+  count: (used: number, max: number) => string;
+  /** Said once, politely, on entering the last stretch before the limit: "8
+   *  characters left". */
+  remaining: (left: number) => string;
+  /** Said once, politely, on reaching the limit. */
+  limitReached: string;
+}
+
+export const DEFAULT_CHARACTER_COUNT_LABELS: CharacterCountLabels = {
+  count: (used, max) => `${used} of ${max} characters`,
+  remaining: (left) => (left === 1 ? "1 character left" : `${left} characters left`),
+  limitReached: "Character limit reached",
+};
+
+/** The length the browser's own `maxLength` counts — UTF-16 code units — so the counter
+ *  and the limit can never disagree about whether a field is full. */
+function textLength(value: unknown): number {
+  return value === undefined || value === null ? 0 : String(value).length;
+}
+
+/** The counter's length: the controlled `value`'s, else what the field has been typed
+ *  to (from `defaultValue` on). `track` is called from the field's change handler. */
+function useTypedLength(value: unknown, defaultValue: unknown) {
+  const [typed, setTyped] = useState(() => textLength(defaultValue));
+  return { used: value !== undefined ? textLength(value) : typed, track: (text: string) => setTyped(text.length) };
+}
+
+type CountZone = "ok" | "near" | "limit";
+
+/** The last stretch before the limit: a tenth of it, at least 1 and at most 20 — "8
+ *  left" of 80, and 20 of 2,000 rather than 200, which is not "near" in any sense a
+ *  person typing means. */
+function nearLimitAt(max: number): number {
+  return Math.min(20, Math.max(1, Math.ceil(max * 0.1)));
+}
+
+function countZone(used: number, max: number): CountZone {
+  if (used >= max) return "limit";
+  return max - used <= nearLimitAt(max) ? "near" : "ok";
+}
+
+/**
+ * The live "12/80" under a field with `showCount` (keksdose K11: the admin broadcast,
+ * support replies, canned replies and the handoff note each counted by hand, and one
+ * announced every keystroke).
+ *
+ * Three channels, each saying only what it should:
+ *  - the digits, `aria-hidden` — "12 slash 80" is not a sentence;
+ *  - a `hidden` "12 of 80 characters" on the field's `aria-describedby`, so the count is
+ *    read with the field when focus reaches it, and never while typing;
+ *  - a polite live region that speaks ONCE per stretch: on entering the last tenth
+ *    ("8 characters left") and on reaching the limit. A region that changed on every
+ *    keystroke would talk over the user's own typing echo for the whole message.
+ *    Nothing is said on mount: a stored note already near its limit is not news.
+ */
+function CharacterCount({
+  id,
+  used,
+  max,
+  labels,
+  caption,
+}: {
+  id: string;
+  used: number;
+  max: number;
+  labels: CharacterCountLabels;
+  caption: ReactNode;
+}) {
+  const zone = countZone(used, max);
+  // What the live region holds, re-set only when the stretch changes — the previous
+  // render's zone kept in state, the pattern React documents for "adjusting state when
+  // a prop changes", so the region's text (and so the announcement) changes at most
+  // once per crossing.
+  const [said, setSaid] = useState<{ zone: CountZone; text: string }>({ zone, text: "" });
+  if (said.zone !== zone) {
+    setSaid({
+      zone,
+      text: zone === "near" ? labels.remaining(max - used) : zone === "limit" ? labels.limitReached : "",
+    });
+  }
+  return (
+    // `relative` holds the sr-only region (see sr-only-containment.test).
+    <div className="relative mt-1 flex items-start gap-2">
+      <div className="min-w-0 flex-1">{caption}</div>
+      <span
+        aria-hidden
+        className={cn(
+          "shrink-0 text-[11px] leading-tight tabular-nums",
+          zone === "limit"
+            ? "text-[var(--danger)]"
+            : zone === "near"
+              ? "text-[var(--warning)]"
+              : "text-[var(--text-muted)]",
+        )}
+      >
+        {used}/{max}
+      </span>
+      <span id={id} hidden>
+        {labels.count(used, max)}
+      </span>
+      <span role="status" className="sr-only">
+        {said.text}
+      </span>
+    </div>
+  );
+}
+
+/** What goes under a text field: the caption (beside the counter, when there is one),
+ *  then the error. `null` when there is nothing, so a field with none keeps exactly the
+ *  DOM it had (see {@link FieldGroup}). */
+function fieldBelow(hint: FieldHintParts, counter: ReactNode, errorEl: ReactNode): ReactNode {
+  if (counter === null && hint.captionText === undefined && errorEl === null) return null;
+  return (
+    <>
+      {counter ?? <FieldCaption parts={hint} />}
+      {errorEl}
+    </>
+  );
+}
+
+/**
+ * kastlan 8: a caller's placeholder on a LABELLED field, shown once the label has
+ * floated out of its way — on focus — and transparent until then, while the label sits
+ * where the placeholder would be. Without it the field forced `placeholder=" "` for the
+ * float trick and dropped the caller's text without a word (kastlan's "note" field lost
+ * its hint). `:placeholder-shown` still drives the float: it matches an empty field
+ * whatever the placeholder's text is.
+ */
+const FLOATING_PLACEHOLDER_ON_FOCUS = "focus:placeholder:text-[var(--text-placeholder)]";
+
+/** A placeholder with something to show. `""` and blanks are the float trick's own
+ *  `" "`, never the caller's hint. */
+const hasPlaceholderText = (placeholder: string | undefined): placeholder is string =>
+  placeholder !== undefined && placeholder.trim() !== "";
+
 // Native date/time inputs only reveal the calendar via the tiny trailing icon;
 // open the picker on a click anywhere in the field instead (feedback #224).
 const PICKER_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
@@ -1874,10 +2026,40 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
    *  `invalid`, so the field paints as well as announces. `invalid` alone still
    *  covers the case where the message lives elsewhere. See {@link useFieldError}. */
   error?: ReactNode;
+  /**
+   * Standing advice for the field (keksdose K4: Input had `error` but no `hint`, so the
+   * app built the caption by hand under each field, and half of those never reached a
+   * screen reader). The {@link Select} rule, so every field reads alike:
+   *  - plain TEXT (a string or a number) is a caption UNDER the field, attached with
+   *    `aria-describedby` — after the caller's own ids, before the error's;
+   *  - anything else (a {@link FieldHint} "?") rides the label line beside the
+   *    animated label, as NumberInput's does — or, on a field with no label, sits at the
+   *    field's end edge outside the box, and `className` then styles that row.
+   */
+  hint?: ReactNode;
+  /**
+   * A live "12/80" under the field, with `maxLength` (keksdose K11 — the broadcast,
+   * support and handoff-note fields counted by hand). Read with the field as "12 of 80
+   * characters", and announced politely only on entering the last stretch and on
+   * reaching the limit — never on every keystroke. See {@link CharacterCount}. Ignored
+   * without a `maxLength`: a count with no limit is not what this answers. Counts
+   * UTF-16 code units, as `maxLength` itself does. Controlled, it counts `value`;
+   * uncontrolled, `defaultValue` and then every change event — a value written from
+   * outside without one (a form library's `reset`) shows from the next keystroke.
+   */
+  showCount?: boolean;
+  /** The counter's words. See {@link CharacterCountLabels}. */
+  countLabels?: Partial<CharacterCountLabels>;
   /** Names for the password reveal toggle, English by default — it is the one
    *  string this component renders on its own behalf, and a German form was
    *  reading it out in English. See {@link PasswordRevealLabels}. */
   passwordLabels?: Partial<PasswordRevealLabels>;
+}
+
+/** The counter's words: the `characterCount` namespace — prop > `<UiKitProvider
+ *  labels>` > English. One place, so the namespace is named once. */
+function useCharacterCountLabels(prop: Partial<CharacterCountLabels> | undefined): CharacterCountLabels {
+  return useKitLabels("characterCount", DEFAULT_CHARACTER_COUNT_LABELS, prop);
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
@@ -1891,6 +2073,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     variant = "field",
     invalid,
     error,
+    hint,
+    showCount,
+    countLabels,
     passwordLabels,
     ...rest
   } = props;
@@ -1898,12 +2083,35 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const reserve = "error" in props;
   const generated = useId();
   const fieldId = id ?? generated;
+  const countId = useId();
+  const hintParts = useFieldHint(hint, rest["aria-describedby"]);
+  const maxLength = rest.maxLength;
+  const counting = Boolean(showCount) && typeof maxLength === "number" && maxLength > 0;
+  const length = useTypedLength(rest.value, rest.defaultValue);
+  const countText = useCharacterCountLabels(countLabels);
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
-    rest["aria-describedby"],
+    // Caller's, caption, count — then the error, appended by the hook.
+    mergeDescribedBy(hintParts.describedBy, counting && countId),
     rest["aria-invalid"],
   );
+  const counter = counting ? (
+    <CharacterCount
+      id={countId}
+      used={length.used}
+      max={maxLength}
+      labels={countText}
+      caption={<FieldCaption parts={hintParts} className="mt-0" />}
+    />
+  ) : null;
+  const below = fieldBelow(hintParts, counter, errorEl);
+  const onChange = counting
+    ? (e: ChangeEvent<HTMLInputElement>) => {
+        length.track(e.target.value);
+        rest.onChange?.(e);
+      }
+    : rest.onChange;
   const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
@@ -1943,66 +2151,92 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     </button>
   ) : null;
   if (label === undefined) {
+    // A "?" with no label line to ride goes at the end edge, outside the box, and
+    // `className` moves to that row (see `hint`); without one nothing moves.
+    const endHint = hintParts.labelHint;
+    const ownClass = endHint === undefined ? className : undefined;
     if (!isPassword) {
       return (
-        <FieldGroup errorEl={errorEl} reserve={reserve}>
-          <input
-            ref={ref}
-            id={id}
-            type={type}
-            placeholder={placeholder}
-            {...rest}
-            // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
-            // carried, or setting `invalid` would have quietly deleted a caller's own
-            // `aria-invalid`. The prop is the one that also paints; a bare attribute
-            // still announces, which is all it ever did.
-            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-            // Likewise merged rather than replaced — see {@link useFieldError}.
-            aria-describedby={describedBy}
-            onClick={handleClick}
-            className={cn(FIELD_BASE, className, inputClassName, isInvalid && FIELD_INVALID)}
-          />
+        <FieldGroup errorEl={below} reserve={reserve}>
+          <EndHintRow hint={endHint} className={className}>
+            <input
+              ref={ref}
+              id={id}
+              type={type}
+              placeholder={placeholder}
+              {...rest}
+              // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
+              // carried, or setting `invalid` would have quietly deleted a caller's own
+              // `aria-invalid`. The prop is the one that also paints; a bare attribute
+              // still announces, which is all it ever did.
+              aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+              // Likewise merged rather than replaced — see {@link useFieldError}.
+              aria-describedby={describedBy}
+              onClick={handleClick}
+              onChange={onChange}
+              className={cn(FIELD_BASE, ownClass, inputClassName, isInvalid && FIELD_INVALID)}
+            />
+          </EndHintRow>
         </FieldGroup>
       );
     }
     return (
-      <FieldGroup errorEl={errorEl} reserve={reserve}>
-        <div className={cn("relative", className)}>
-          <input
-            ref={ref}
-            id={id}
-            type={effectiveType}
-            placeholder={placeholder}
-            {...rest}
-            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-            aria-describedby={describedBy}
-            className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID)}
-          />
-          {revealToggle}
-        </div>
+      <FieldGroup errorEl={below} reserve={reserve}>
+        <EndHintRow hint={endHint} className={className}>
+          <div className={cn("relative", ownClass)}>
+            <input
+              ref={ref}
+              id={id}
+              type={effectiveType}
+              placeholder={placeholder}
+              {...rest}
+              aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+              aria-describedby={describedBy}
+              onChange={onChange}
+              className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID)}
+            />
+            {revealToggle}
+          </div>
+        </EndHintRow>
       </FieldGroup>
     );
   }
+  const ownPlaceholder = hasPlaceholderText(placeholder);
   return (
-    <FieldGroup errorEl={errorEl} reserve={reserve}>
-      <FloatingField className={className} htmlFor={fieldId} label={label} srOnlyLabel={asDisplay}>
+    <FieldGroup errorEl={below} reserve={reserve}>
+      <FloatingField
+        className={className}
+        htmlFor={fieldId}
+        label={label}
+        srOnlyLabel={asDisplay}
+        hint={hintParts.labelHint}
+      >
         <input
           ref={ref}
           id={fieldId}
           type={effectiveType}
-          // A labelled field's placeholder is normally a single space, feeding the
-          // floating label's peer-placeholder-shown trick. With the label sr-only
-          // there is no float left to drive, and an empty borderless line would say
-          // nothing at all — so the label text becomes the placeholder.
-          placeholder={asDisplay ? (placeholder ?? (typeof label === "string" ? label : " ")) : " "}
+          // A labelled field with no placeholder of its own gets a single space, which
+          // feeds the floating label's peer-placeholder-shown trick. A caller's own is
+          // kept and shown on focus, once the label has floated out of its way (kastlan
+          // 8) — see FLOATING_PLACEHOLDER_ON_FOCUS. With the label sr-only there is no
+          // float left to drive, and an empty borderless line would say nothing at all
+          // — so there the label text is the placeholder when the caller gave none.
+          placeholder={
+            asDisplay
+              ? (placeholder ?? (typeof label === "string" ? label : " "))
+              : ownPlaceholder
+                ? placeholder
+                : " "
+          }
           {...rest}
           aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
           aria-describedby={describedBy}
           onClick={handleClick}
+          onChange={onChange}
           className={cn(
             asDisplay
               ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
-              : FLOATING_INPUT_CLASS,
+              : cn(FLOATING_INPUT_CLASS, ownPlaceholder && FLOATING_PLACEHOLDER_ON_FOCUS),
             isPassword && "pe-9",
             inputClassName,
             isInvalid && FIELD_INVALID,
@@ -2045,6 +2279,29 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    *  the chevron is positioned against — so it could set a width and nothing
    *  else; this is the way to the element. See {@link Input}'s `inputClassName`. */
   selectClassName?: string;
+  /**
+   * Why the choice cannot be changed — {@link Button}'s `disabledReason`, for a select
+   * that SAVES on change (a role picker in a members table, a status in a row). keksdose
+   * K3: those sat inside a hand-rolled `SaveGuard` that forced a native `disabled`, which
+   * took the field out of the tab order so the reason never reached a keyboard.
+   *
+   * With a reason the select is `aria-disabled` instead — still focusable, still showing
+   * its value — its list does not open (pointer and keys are swallowed, Tab and Escape
+   * excepted), `onChange` is never called, and the reason is in the kit {@link Tooltip}
+   * and on `aria-describedby`. It wears the settled look of a disabled field and drops
+   * its chevron, as a disabled Select does (dev#474). It wins over `disabled`.
+   *
+   * Use it CONTROLLED (`value` + `onChange`): React puts a controlled value back after
+   * the swallowed change. A touch platform's own picker may still open; nothing it picks
+   * is kept or reported.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This select COMMITS — choosing saves. Under a locked {@link WriteLockProvider} it is
+   * locked the `disabledReason` way with the lock's reason (which wins over its own).
+   * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
+   */
+  commit?: boolean;
 }
 
 // The compact select: the field's colours, a toolbar button's height. `py-0` and a
@@ -2052,12 +2309,37 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
 // height the caller's type brings with it.
 const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
 
+/** Keys a locked select still answers: leaving it, and dismissing its tooltip. Every
+ *  other key would open the list or step the value. */
+const LOCKED_SELECT_KEYS = new Set(["Tab", "Escape", "Shift"]);
+
+/** FIELD_BASE's `disabled:` look, for a select that is locked without being `disabled`
+ *  (the `:disabled` variants cannot match it). */
+const FIELD_LOCKED = "cursor-not-allowed bg-[var(--bg-surface-2)] text-[var(--text-muted)]";
+
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
-  const { className, label, id, children, invalid, error, hint, size, selectClassName, ...rest } =
-    props;
+  const {
+    className,
+    label,
+    id,
+    children,
+    invalid,
+    error,
+    hint,
+    size,
+    selectClassName,
+    disabledReason,
+    commit,
+    onMouseDown,
+    onKeyDown,
+    onChange,
+    ...rest
+  } = props;
   // See Input's `reserve`.
   const reserve = "error" in props;
   const generated = useId();
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
   // Only a number reaches the DOM; the two words are this component's own.
   const nativeSize = typeof size === "number" ? size : undefined;
   // A numeric size above 1 (or `multiple`) makes the browser draw a LIST BOX — all
@@ -2076,12 +2358,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     error,
     invalid,
     // The caption goes in BEFORE the error — the standing advice first, the news
-    // second, the order useFieldError keeps for a caller's own description.
-    textHint
-      ? rest["aria-describedby"]
-        ? `${rest["aria-describedby"]} ${hintId}`
-        : hintId
-      : rest["aria-describedby"],
+    // second, the order useFieldError keeps for a caller's own description. A lock's
+    // reason sits between the two.
+    mergeDescribedBy(rest["aria-describedby"], textHint && hintId, locked && lock.reasonId),
     rest["aria-invalid"],
   );
   const below =
@@ -2099,9 +2378,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   // in from the end border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
   // thing on the control that promises a choice (Keksdose dev#474, where the
-  // account type became read-only and still looked exactly like a picker).
+  // account type became read-only and still looked exactly like a picker). A locked
+  // one has no menu either.
   const chevron =
-    rest.disabled || listBox ? null : (
+    rest.disabled || listBox || locked ? null : (
       <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />
     );
   // `pe-9` is the room the chevron takes; a list box has none to make room for.
@@ -2113,6 +2393,32 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   // browser sizes the box by), and the box keeps no bottom padding: exactly `size`
   // whole rows, at any width.
   const dress = listBox ? "overflow-y-auto [&_option]:py-1" : "appearance-none pe-9";
+  // Locked: focusable, but nothing opens the list or moves the value, and nothing is
+  // reported. The no-op `onChange` keeps a controlled select's value where React put
+  // it (and keeps React from warning about a `value` with no handler).
+  const interaction = locked
+    ? {
+        disabled: undefined,
+        "aria-disabled": true as const,
+        onMouseDown: (e: MouseEvent<HTMLSelectElement>) => e.preventDefault(),
+        onKeyDown: (e: KeyboardEvent<HTMLSelectElement>) => {
+          if (!LOCKED_SELECT_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault();
+        },
+        onChange: () => {},
+      }
+    : { onMouseDown, onKeyDown, onChange };
+  // While locked the field sits in the reason's Tooltip, which becomes the outermost
+  // box — so `className` (a width, a grid cell) moves onto it, and the form keeps its
+  // layout. `block` so a full-width field stays full width inside it.
+  const boxClass = locked ? undefined : className;
+  const withReason = (box: ReactNode) =>
+    locked ? (
+      <LockedReason lock={lock} className={cn("block", className)}>
+        {box}
+      </LockedReason>
+    ) : (
+      box
+    );
   if (label === undefined) {
     const select = (
       <select
@@ -2126,6 +2432,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         id={id}
         size={nativeSize}
         {...rest}
+        {...interaction}
         // OR-ed with the spread for the reason spelled out on Input's copy: this
         // branch wrote `invalid || undefined`, so passing `aria-invalid` by hand
         // to a Select — which is what a caller does when the validity is
@@ -2138,6 +2445,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           dress,
           listBox && "py-0",
           small && SELECT_SM,
+          locked && FIELD_LOCKED,
           selectClassName,
           isInvalid && FIELD_INVALID,
         )}
@@ -2153,51 +2461,65 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     if (hasContent(hint) && !textHint) {
       return (
         <FieldGroup errorEl={below} reserve={reserve}>
-          <div className={cn("flex items-center gap-1.5", className)}>
-            <div className="relative min-w-0 flex-1">
-              {select}
-              {chevron}
-            </div>
-            <span className="flex shrink-0 items-center">{hint}</span>
-          </div>
+          {withReason(
+            <div className={cn("flex items-center gap-1.5", boxClass)}>
+              <div className="relative min-w-0 flex-1">
+                {select}
+                {chevron}
+              </div>
+              <span className="flex shrink-0 items-center">{hint}</span>
+            </div>,
+          )}
         </FieldGroup>
       );
     }
     return (
       <FieldGroup errorEl={below} reserve={reserve}>
-        <div className={cn("relative", className)}>
-          {select}
-          {chevron}
-        </div>
+        {withReason(
+          <div className={cn("relative", boxClass)}>
+            {select}
+            {chevron}
+          </div>,
+        )}
       </FieldGroup>
     );
   }
   return (
     <FieldGroup errorEl={below} reserve={reserve}>
-      <FloatingField className={className} htmlFor={fieldId} label={label} staticLabel hint={textHint ? undefined : hint}>
-        <select
-          ref={ref}
-          id={fieldId}
-          size={nativeSize}
-          {...rest}
-          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-          aria-describedby={describedBy}
-          className={cn(
-            FIELD_BASE,
-            // The floated label takes the top strip of a list box too, so its first
-            // row starts under the label rather than behind it. No bottom padding — see
-            // `dress`.
-            listBox ? "pt-5 pb-0" : FIELD_FLOATING_PAD,
-            "peer",
-            dress,
-            selectClassName,
-            isInvalid && FIELD_INVALID,
-          )}
+      {withReason(
+        <FloatingField
+          className={boxClass}
+          htmlFor={fieldId}
+          label={label}
+          staticLabel
+          hint={textHint ? undefined : hint}
         >
-          {children}
-        </select>
-        {chevron}
-      </FloatingField>
+          <select
+            ref={ref}
+            id={fieldId}
+            size={nativeSize}
+            {...rest}
+            {...interaction}
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={describedBy}
+            className={cn(
+              FIELD_BASE,
+              // The floated label takes the top strip of a list box too, so its first
+              // row starts under the label rather than behind it. No bottom padding — see
+              // `dress`.
+              listBox ? "pt-5 pb-0" : FIELD_FLOATING_PAD,
+              "peer",
+              dress,
+              locked && FIELD_LOCKED,
+              selectClassName,
+              isInvalid && FIELD_INVALID,
+            )}
+          >
+            {children}
+          </select>
+          {chevron}
+        </FloatingField>,
+      )}
     </FieldGroup>
   );
 });
@@ -2209,46 +2531,89 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   invalid?: boolean;
   /** See {@link Input}'s `error`. */
   error?: ReactNode;
+  /** See {@link Input}'s `hint` (keksdose K4): text is a caption under the field, a
+   *  {@link FieldHint} rides the label line (or, unlabelled, the end edge). */
+  hint?: ReactNode;
+  /** See {@link Input}'s `showCount` (keksdose K11): a live "12/80" under the field,
+   *  with `maxLength`, announced only near and at the limit. */
+  showCount?: boolean;
+  /** The counter's words. See {@link CharacterCountLabels}. */
+  countLabels?: Partial<CharacterCountLabels>;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
-  const { className, label, id, placeholder, invalid, error, ...rest } = props;
+  const { className, label, id, placeholder, invalid, error, hint, showCount, countLabels, ...rest } = props;
   // See Input's `reserve`.
   const reserve = "error" in props;
   const generated = useId();
   const fieldId = id ?? generated;
+  const countId = useId();
+  const hintParts = useFieldHint(hint, rest["aria-describedby"]);
+  const maxLength = rest.maxLength;
+  const counting = Boolean(showCount) && typeof maxLength === "number" && maxLength > 0;
+  const length = useTypedLength(rest.value, rest.defaultValue);
+  const countText = useCharacterCountLabels(countLabels);
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
-    rest["aria-describedby"],
+    mergeDescribedBy(hintParts.describedBy, counting && countId),
     rest["aria-invalid"],
   );
+  const counter = counting ? (
+    <CharacterCount
+      id={countId}
+      used={length.used}
+      max={maxLength}
+      labels={countText}
+      caption={<FieldCaption parts={hintParts} className="mt-0" />}
+    />
+  ) : null;
+  const below = fieldBelow(hintParts, counter, errorEl);
+  const onChange = counting
+    ? (e: ChangeEvent<HTMLTextAreaElement>) => {
+        length.track(e.target.value);
+        rest.onChange?.(e);
+      }
+    : rest.onChange;
   if (label === undefined) {
+    const endHint = hintParts.labelHint;
     return (
-      <FieldGroup errorEl={errorEl} reserve={reserve}>
-        <textarea
-          ref={ref}
-          id={id}
-          placeholder={placeholder}
-          {...rest}
-          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-          aria-describedby={describedBy}
-          className={cn(FIELD_BASE, className, isInvalid && FIELD_INVALID)}
-        />
+      <FieldGroup errorEl={below} reserve={reserve}>
+        <EndHintRow hint={endHint} className={className}>
+          <textarea
+            ref={ref}
+            id={id}
+            placeholder={placeholder}
+            {...rest}
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={describedBy}
+            onChange={onChange}
+            className={cn(FIELD_BASE, endHint === undefined && className, isInvalid && FIELD_INVALID)}
+          />
+        </EndHintRow>
       </FieldGroup>
     );
   }
+  const ownPlaceholder = hasPlaceholderText(placeholder);
   return (
-    <FieldGroup errorEl={errorEl} reserve={reserve}>
-      <FloatingField className={className} htmlFor={fieldId} label={label}>
+    <FieldGroup errorEl={below} reserve={reserve}>
+      <FloatingField className={className} htmlFor={fieldId} label={label} hint={hintParts.labelHint}>
         <textarea
           ref={ref}
           id={fieldId}
-          placeholder=" "
+          // The float trick's single space, unless the caller has a placeholder of its
+          // own — then that, shown on focus once the label is out of its way (kastlan
+          // 8, see FLOATING_PLACEHOLDER_ON_FOCUS).
+          placeholder={ownPlaceholder ? placeholder : " "}
           {...rest}
           aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
           aria-describedby={describedBy}
-          className={cn(FLOATING_INPUT_CLASS, isInvalid && FIELD_INVALID)}
+          onChange={onChange}
+          className={cn(
+            FLOATING_INPUT_CLASS,
+            ownPlaceholder && FLOATING_PLACEHOLDER_ON_FOCUS,
+            isInvalid && FIELD_INVALID,
+          )}
         />
       </FloatingField>
     </FieldGroup>
