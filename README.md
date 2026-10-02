@@ -799,7 +799,8 @@ Every German (`de`, `de-AT`, a stored `de-informal`) resolves to `de-CH`; every 
 (`zh-TW`, `zh-Hant`) to `zh`, which is **Simplified** — there is no Traditional catalogue.
 Other regional tags take their base language (`fr-CA` → `fr`), and a candidate the app
 does not offer passes to the next. Each language formats like its home — `de-CH`, `en-GB`,
-`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region. The loader is
+`es-ES`, `fr-FR`, `it-IT`, `hu-HU`, `zh-CN` — whatever the reader's region; a tag of a
+language the kit does not ship (`sv-SE` for ISO dates) formats as itself. The loader is
 asynchronous only: a synchronous one would have to bundle all seven catalogues into every
 app. A provider that renders every frame reads what has arrived with
 `peekUiKitLabels(code)`, or takes `useUiKitLabels(code)`, which loads on first use and

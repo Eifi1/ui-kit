@@ -181,16 +181,35 @@ export function resolveLanguage(
  * and `en` alone does not say which English) and for the app's own `Intl` calls, so
  * the kit's counts and the app's amounts group their digits the same way.
  *
- * Takes any tag, not only a {@link KitLanguageCode}, and resolves it the way
- * {@link resolveLanguage} does against all seven: `de-AT` formats as `de-CH`, `en-AU`
- * as `en-GB` (the language's home, by decision — not the reader's region), and a
- * language the kit does not ship as the home language, `de-CH`. So an app can hand it
- * i18next's `resolvedLanguage` as it comes.
+ * Takes any tag, not only a {@link KitLanguageCode}. A tag of one of the seven
+ * languages formats in that language's home, by decision — not the reader's region:
+ * `de-AT` as `de-CH`, `en-AU` and `en-US` as `en-GB`, `zh-TW` as `zh-CN`. So an app can
+ * hand it i18next's `resolvedLanguage` as it comes.
+ *
+ * A tag of a language the kit does NOT ship formats as itself (canonicalised): `sv-SE`
+ * stays `sv-SE`. That is a formatting preference, not a language — keksdose's date
+ * setting offers ISO order as `sv-SE`, and 0.19.0 turned it into a German weekday by
+ * resolving it to the home language (keksdose's 0.19 adoption). Words are another
+ * matter: {@link resolveLanguage} and {@link loadUiKitLabels} still fall back to
+ * `de-CH` for such a tag. A tag `Intl` cannot read formats as `de-CH`.
  */
 export function formatLocaleOf(code: string): string {
-  const resolved = resolveLanguage([code], ALL_CODES);
-  return KIT_LANGUAGES.find((language) => language.code === resolved)!.formatLocale;
+  const shipped = answer(code, ALL_CODES);
+  if (shipped) return homeFormat(shipped);
+  try {
+    return Intl.getCanonicalLocales(code)[0] ?? homeFormat(HOME);
+  } catch {
+    return homeFormat(HOME);
+  }
 }
+
+function homeFormat(code: KitLanguageCode): string {
+  return KIT_LANGUAGES.find((language) => language.code === code)!.formatLocale;
+}
+
+/** The format tag of the catalogue a code loads — always one of the seven languages'
+ *  own, so the words and the digits of a catalogue agree. */
+const catalogueFormat = (code: string) => homeFormat(resolveLanguage([code], ALL_CODES));
 
 /**
  * One loader per catalogue, each a LITERAL relative `import()`.
@@ -258,7 +277,7 @@ function cacheKey(code: string, formatLocale: string): [KitLanguageCode, string]
  */
 export function loadUiKitLabels(
   code: string,
-  formatLocale: string = formatLocaleOf(code),
+  formatLocale: string = catalogueFormat(code),
 ): Promise<UiKitLabels> {
   const [language, key] = cacheKey(code, formatLocale);
   let labels = loaded.get(key);
@@ -280,7 +299,7 @@ export function loadUiKitLabels(
  * (`hasKitLabels` / `kitLabelsFor`) to get exactly this, and the other apps would have
  * written the same lines. Same object as the promise resolved to.
  */
-export function peekUiKitLabels(code: string, formatLocale: string = formatLocaleOf(code)): UiKitLabels | undefined {
+export function peekUiKitLabels(code: string, formatLocale: string = catalogueFormat(code)): UiKitLabels | undefined {
   return ready.get(cacheKey(code, formatLocale)[1]);
 }
 
@@ -294,7 +313,7 @@ export function peekUiKitLabels(code: string, formatLocale: string = formatLocal
  * await {@link loadUiKitLabels} before the first render, as the apps do for their own
  * catalogue). A failed fetch keeps the previous catalogue; the next switch tries again.
  */
-export function useUiKitLabels(code: string, formatLocale: string = formatLocaleOf(code)): UiKitLabels | undefined {
+export function useUiKitLabels(code: string, formatLocale: string = catalogueFormat(code)): UiKitLabels | undefined {
   const current = peekUiKitLabels(code, formatLocale);
   const [previous, setPrevious] = useState<UiKitLabels | undefined>(current);
   useEffect(() => {
