@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Check } from "lucide-react";
 import { FormActions } from "../form-actions";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { WriteLockProvider } from "../write-lock";
 
 describe("FormActions", () => {
   it("submits the enclosing form and calls onCancel, with the default labels", () => {
@@ -187,5 +188,163 @@ describe("FormActions per-breakpoint placement and bleed (keksdose 0.17 Q7)", ()
     const row = container.firstElementChild as HTMLElement;
     expect(row.style.marginInline).toBe("calc(-12px)");
     expect(row.style.paddingInline).toBe("4px");
+  });
+});
+
+describe("FormActions submitShortcut (keksdose K14)", () => {
+  const chord = (el: Element, extra: Partial<KeyboardEventInit> = {}) =>
+    fireEvent.keyDown(el, { key: "Enter", ctrlKey: true, ...extra });
+
+  function renderForm(props: Partial<React.ComponentProps<typeof FormActions>> = {}, outside = false) {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <>
+        <form onSubmit={onSubmit}>
+          <input aria-label="Payee" />
+          <textarea aria-label="Memo" />
+          <FormActions submitShortcut="mod-enter" {...props} />
+        </form>
+        {outside && <input aria-label="Elsewhere" />}
+      </>,
+    );
+    return onSubmit;
+  }
+
+  it("Ctrl+Enter or Cmd+Enter inside the form presses Save, once", () => {
+    const onSubmit = renderForm();
+    chord(screen.getByRole("textbox", { name: "Payee" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    chord(screen.getByRole("textbox", { name: "Memo" }), { ctrlKey: false, metaKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+  });
+
+  it("is exactly the chord: not with Shift or Alt, not plain Enter, not a held key's repeat", () => {
+    const onSubmit = renderForm();
+    const field = screen.getByRole("textbox", { name: "Memo" });
+    chord(field, { shiftKey: true });
+    chord(field, { altKey: true });
+    chord(field, { ctrlKey: false });
+    chord(field, { repeat: true });
+    chord(field, { isComposing: true });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("is scoped to its own form", () => {
+    const onSubmit = renderForm({}, true);
+    chord(screen.getByRole("textbox", { name: "Elsewhere" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does nothing while Save could not be pressed: pending, submitDisabled, or a locked commit", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    const { rerender } = render(
+      <form onSubmit={onSubmit}>
+        <input aria-label="Payee" />
+        <FormActions submitShortcut="mod-enter" pending />
+      </form>,
+    );
+    const field = screen.getByRole("textbox", { name: "Payee" });
+    chord(field);
+    rerender(
+      <form onSubmit={onSubmit}>
+        <input aria-label="Payee" />
+        <FormActions submitShortcut="mod-enter" submitDisabled submitDisabledReason="Unbalanced" />
+      </form>,
+    );
+    chord(field);
+    rerender(
+      <WriteLockProvider locked reason="Read-only demo">
+        <form onSubmit={onSubmit}>
+          <input aria-label="Payee" />
+          <FormActions submitShortcut="mod-enter" commit />
+        </form>
+      </WriteLockProvider>,
+    );
+    chord(screen.getByRole("textbox", { name: "Payee" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    // The lock covers commits only: the same row without `commit` saves.
+    rerender(
+      <WriteLockProvider locked reason="Read-only demo">
+        <form onSubmit={onSubmit}>
+          <input aria-label="Payee" />
+          <FormActions submitShortcut="mod-enter" />
+        </form>
+      </WriteLockProvider>,
+    );
+    chord(screen.getByRole("textbox", { name: "Payee" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the chord to a field that handled it (keksdose live #202)", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <input aria-label="Stops it" onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()} />
+        <input aria-label="Prevents it" onKeyDown={(e) => e.key === "Enter" && e.preventDefault()} />
+        <FormActions submitShortcut="mod-enter" />
+      </form>,
+    );
+    chord(screen.getByRole("textbox", { name: "Stops it" }));
+    chord(screen.getByRole("textbox", { name: "Prevents it" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("calls onSubmit in the button mode, scoped to the row's container", () => {
+    const onSubmit = vi.fn();
+    render(
+      <>
+        <div>
+          <input aria-label="Name" />
+          <FormActions submitShortcut="mod-enter" onSubmit={onSubmit} />
+        </div>
+        <input aria-label="Elsewhere" />
+      </>,
+    );
+    chord(screen.getByRole("textbox", { name: "Elsewhere" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    chord(screen.getByRole("textbox", { name: "Name" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("follows the `form` prop to a form rendered elsewhere (a dialog footer)", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <>
+        <form id="edit-payee" onSubmit={onSubmit}>
+          <input aria-label="Payee" />
+        </form>
+        <footer>
+          <FormActions submitShortcut="mod-enter" form="edit-payee" />
+        </footer>
+      </>,
+    );
+    chord(screen.getByRole("textbox", { name: "Payee" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces the shortcut, and shows it only when asked, outside the button's name", () => {
+    const { rerender } = render(<FormActions submitShortcut="mod-enter" onSubmit={() => {}} />);
+    const save = screen.getByRole("button", { name: "Save" });
+    expect(save).toHaveAttribute("aria-keyshortcuts", "Control+Enter Meta+Enter");
+    expect(save.querySelector("kbd")).toBeNull();
+    rerender(<FormActions submitShortcut="mod-enter" submitShortcutHint onSubmit={() => {}} />);
+    const kbd = screen.getByRole("button", { name: "Save" }).querySelector("kbd")!;
+    expect(kbd).toHaveAttribute("aria-hidden", "true");
+    expect(kbd.textContent).toMatch(/^(Ctrl\+Enter|⌘ Enter)$/);
+  });
+
+  it("does nothing without submitShortcut, and keeps a caller's ref on Save", () => {
+    const onSubmit = vi.fn();
+    const ref = { current: null as HTMLButtonElement | null };
+    render(
+      <div>
+        <input aria-label="Name" />
+        <FormActions onSubmit={onSubmit} submitProps={{ ref }} />
+      </div>,
+    );
+    chord(screen.getByRole("textbox", { name: "Name" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(ref.current).toBe(screen.getByRole("button", { name: "Save" }));
+    expect(ref.current).not.toHaveAttribute("aria-keyshortcuts");
   });
 });

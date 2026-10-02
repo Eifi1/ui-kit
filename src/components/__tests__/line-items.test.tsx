@@ -359,3 +359,60 @@ describe("LineItems", () => {
     });
   });
 });
+
+describe("0.22: rowProps (keksdose K20)", () => {
+  it("puts a row's own attributes on its group: a tour anchor, a test id, a class", () => {
+    render(
+      <Lines
+        rowProps={(item, index) => ({
+          "data-tour": index === 0 ? "rule-condition" : undefined,
+          "data-testid": `line-${item.id}`,
+          className: "row-extra",
+          id: `line-row-${index}`,
+        })}
+      />,
+    );
+    const [first, second] = rows();
+    expect(first).toHaveAttribute("data-tour", "rule-condition");
+    expect(second).not.toHaveAttribute("data-tour");
+    expect(first.getAttribute("data-testid")).toMatch(/^line-l\d+$/);
+    expect(first).toHaveClass("row-extra");
+    // The row's own classes are still there.
+    expect(first).toHaveClass("grid");
+    expect(second).toHaveAttribute("id", "line-row-1");
+    expect(document.querySelector('[data-tour="rule-condition"]')).toBe(first);
+  });
+
+  it("keeps the list's own role, name and row hook over the caller's", () => {
+    render(
+      <Lines
+        rowProps={() => ({ "aria-label": "Mine", "data-line-items-row": "x" })}
+        rowLabel={(i) => `Condition ${i + 1}`}
+      />,
+    );
+    const [first] = rows();
+    expect(first).toHaveAttribute("role", "group");
+    expect(first).toHaveAccessibleName("Condition 1");
+    expect(first).toHaveAttribute("data-line-items-row", "");
+  });
+
+  it("runs the caller's onKeyDown first; preventDefault keeps Ctrl+Enter from adding a row", async () => {
+    const onKeyDown = vi.fn((e: React.KeyboardEvent) => {
+      if (e.key === "Enter") e.preventDefault();
+    });
+    render(<Lines rowProps={() => ({ onKeyDown })} />);
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Account, row 1" }), { key: "Enter", ctrlKey: true });
+    await act(async () => {});
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(rows()).toHaveLength(2);
+  });
+
+  it("without preventDefault the row still adds on Ctrl+Enter", async () => {
+    const onKeyDown = vi.fn();
+    render(<Lines rowProps={() => ({ onKeyDown })} />);
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Account, row 1" }), { key: "Enter", ctrlKey: true });
+    await act(async () => {});
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(rows()).toHaveLength(3);
+  });
+});

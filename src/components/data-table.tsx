@@ -3,8 +3,10 @@ import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } fro
 import { createPortal } from "react-dom";
 import {
   ArrowDown,
+  ArrowDownWideNarrow,
   ArrowUp,
   ArrowUpDown,
+  ArrowUpNarrowWide,
   ChevronDown,
   ChevronRight,
   Filter,
@@ -12,7 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Card, IconButton, Spinner } from "./ui";
+import { Card, IconButton, Select, Spinner } from "./ui";
 import { cn } from "../lib/cn";
 import {
   defaultFilterState,
@@ -33,7 +35,7 @@ import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { useAnnounce } from "../hooks/use-announce";
-import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
 import { Tooltip } from "./tooltip";
 import { dirOf, isRtl, type Direction } from "../lib/direction";
@@ -78,6 +80,14 @@ export interface DataTableColumn<T> {
    * Default `"asc"`.
    */
   firstSort?: SortDir;
+  /**
+   * The column's name as plain text, for the places a ReactNode `header` cannot go:
+   * the phone sort control's options ({@link DataTableProps.mobileSort}), the spoken
+   * "Sorted by …" and the column-settings checklist. Only needed when `header` is not
+   * a string (an icon, a unit suffix); without it those places fall back to the
+   * header string, then to `key`.
+   */
+  headerText?: string;
   /**
    * Extra attributes for this column's `<td>` in a given row — a `data-*` hook, a
    * `title`, an `aria-describedby`, a class. keksdose's accounts page
@@ -391,6 +401,18 @@ export interface DataTableProps<T> {
    */
   mobileCard?: (row: T) => ReactNode;
   /**
+   * A "Sort by" select and a direction button above the phone card list (keksdose
+   * K10). The card list has no header row, so without it a phone user is stuck with
+   * whatever order the table opened in. It drives the same sort state as the column
+   * headers — `sorts`/`onSortsChange` when controlled, the URL and `storageKey` when
+   * not — and offers the columns a header click could sort (those with a `sortBy`).
+   * Each option is named by the column's `headerText`, else its string `header`.
+   *
+   * Off by default, so no existing phone layout gains a row. Strings:
+   * {@link DataTableSortLabels}. Phones only; the desktop table is unchanged.
+   */
+  mobileSort?: boolean;
+  /**
    * Swipe actions for a mobile row, revealed by dragging it horizontally. Return
    * `null` (or empty sides) for rows that should not move — a locked row, one whose
    * mutation is in flight, one the user has expanded.
@@ -683,7 +705,120 @@ function cleanAttrs(
  */
 function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): string {
   if (col.key === ROW_ACTIONS_KEY && labels) return labels.actions;
-  return typeof col.header === "string" ? col.header : col.key;
+  return col.headerText ?? (typeof col.header === "string" ? col.header : col.key);
+}
+
+// ---------- Phone sort control (keksdose K10) ----------
+
+/**
+ * The phone sort control's strings (keksdose K10). They are `dataTable` strings —
+ * read from the table's resolved labels, so the `labels` prop and the provider's
+ * `dataTable` namespace reach them — and are declared here, beside the control, with
+ * English defaults until `DataTableLabels` declares them itself.
+ */
+export interface DataTableSortLabels {
+  /** The control's visible label: "Sort by". */
+  sortBy: string;
+  /** The "no sort" option — the rows in the order they were given: "Default order". */
+  sortDefault: string;
+  /** The direction button's name while the sort ascends: "Ascending". */
+  sortAscending: string;
+  /** …and while it descends: "Descending". */
+  sortDescending: string;
+}
+
+/** The phone sort control's words, as they sit in {@link DEFAULT_DATA_TABLE_LABELS}
+ *  (DataTableLabels extends DataTableSortLabels; one source for the English). */
+export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
+  sortBy: DEFAULT_DATA_TABLE_LABELS.sortBy,
+  sortDefault: DEFAULT_DATA_TABLE_LABELS.sortDefault,
+  sortAscending: DEFAULT_DATA_TABLE_LABELS.sortAscending,
+  sortDescending: DEFAULT_DATA_TABLE_LABELS.sortDescending,
+};
+
+const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
+
+/**
+ * The card list's sort control: a "Sort by" select and a direction button.
+ *
+ * keksdose K10 (inputs audit 2026-10-02 §5; its aggregated report tables, #258): a
+ * table is sorted by its header row and the phone card list has none, so the two
+ * decisions the header carries — which column, which direction — were unreachable
+ * below the breakpoint. keksdose hand-built this row over its DataTable to answer
+ * "who did I pay the most" on the device it was asked on; this is that row, driven by
+ * the SAME sort state as the headers (controlled `sorts` included), so turning the
+ * phone sideways keeps the order and a sort chosen here is the one the URL and the
+ * storage key hold.
+ *
+ * The rules are the header's: a newly picked column starts in its `firstSort`, the
+ * direction button flips the primary sort (secondary ones stay), and "Default order"
+ * — the third click of a `"tri"` cycle — is offered only under `"tri"`, since a
+ * `"toggle"` table promises it is always ranked by something. The select's label is
+ * a real `<label>` beside it, and the button sits outside that label: a click inside
+ * a label is forwarded to the control it names, so a nested button would flip AND
+ * open the select.
+ */
+function MobileSort<T>({
+  columns,
+  sorts,
+  sortCycle,
+  compact,
+  labels,
+  onPick,
+  onFlip,
+}: {
+  columns: DataTableColumn<T>[];
+  sorts: SortState[];
+  sortCycle: SortCycle;
+  compact: boolean;
+  labels: DataTableLabels;
+  onPick: (key: string | null) => void;
+  onFlip: () => void;
+}) {
+  const selectId = useId();
+  const sortLabels: DataTableSortLabels = labels;
+  if (columns.length === 0) return null;
+  // A persisted or URL sort can name a column with no `sortBy` (or a hidden one): the
+  // sort chain drops it, and so does the control rather than claiming it.
+  const primary = sorts[0] && columns.some((c) => c.key === sorts[0].key) ? sorts[0] : null;
+  const offerDefault = sortCycle === "tri" || primary === null;
+  const desc = primary?.dir === "desc";
+  return (
+    <div
+      data-table-mobile-sort=""
+      className={cn(
+        "flex items-center gap-2 border-b border-[var(--border)]",
+        compact ? "px-3 py-1.5" : "px-4 py-2",
+      )}
+    >
+      <label htmlFor={selectId} className="shrink-0 text-xs text-[var(--text-muted)]">
+        {sortLabels.sortBy}
+      </label>
+      <Select
+        id={selectId}
+        size={compact ? "sm" : "md"}
+        className="min-w-0 flex-1"
+        value={primary?.key ?? ""}
+        onChange={(e) => onPick(e.target.value || null)}
+      >
+        {offerDefault && <option value="">{sortLabels.sortDefault}</option>}
+        {columns.map((col) => (
+          <option key={col.key} value={col.key}>
+            {columnLabel(col, labels)}
+          </option>
+        ))}
+      </Select>
+      <IconButton
+        size={compact ? "xs" : "md"}
+        variant="secondary"
+        label={desc ? sortLabels.sortDescending : sortLabels.sortAscending}
+        disabled={primary === null}
+        onClick={onFlip}
+      >
+        {desc ? <ArrowDownWideNarrow /> : <ArrowUpNarrowWide />}
+      </IconButton>
+    </div>
+  );
 }
 
 /**
@@ -857,6 +992,7 @@ export function DataTable<T>({
   mobileGroupBy,
   mobileGroupLabel,
   mobileCard,
+  mobileSort = false,
   mobileSwipeActions,
   leadingRow,
   density = "comfortable",
@@ -1125,6 +1261,13 @@ export function DataTable<T>({
       firstDir: col?.firstSort,
       cycle: sortCycle,
     });
+    commitSorts(next, key);
+  };
+
+  // Header clicks and the phone sort control (`mobileSort`) land here alike, so both
+  // go through the same owner and say the same thing.
+  const commitSorts = (next: SortState[], key: string) => {
+    const col = columns.find((c) => c.key === key);
     if (onSortsChange) onSortsChange(next);
     else setInternalSorts(next);
 
@@ -1405,9 +1548,9 @@ export function DataTable<T>({
 
   // ---- Mobile card list (md:hidden) ----
   // Renders the same paged/filtered/sorted slice but as stacked cards instead
-  // of a horizontally-scrolling table. Filters / sort / column settings are
-  // intentionally hidden here — the mobile layout assumes the user wants to
-  // scan rows quickly. Switch to a wider viewport for fine-grained control.
+  // of a horizontally-scrolling table. Column settings stay desktop-only; the
+  // filters come through a bottom sheet (feedback #299) and the sort through the
+  // opt-in `mobileSort` row (keksdose K10), both on the table's own state.
   const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden);
   const mobilePrimaryCol =
     mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
@@ -1763,6 +1906,32 @@ export function DataTable<T>({
             onClearAll={clearAllFilters}
             labels={labels}
             locale={locale}
+          />
+        )}
+        {mobileSort && (
+          <MobileSort
+            columns={visibleColumns.filter((c) => (!isServer || !!onSortsChange) && !!c.sortBy)}
+            sorts={sorts}
+            sortCycle={sortCycle}
+            compact={compact}
+            labels={labels}
+            onPick={(key) => {
+              if (key === null) {
+                if (sorts.length > 0) commitSorts([], sorts[0].key);
+                return;
+              }
+              if (sorts[0]?.key === key) return;
+              // A newly picked column starts where its header's first click would.
+              const col = columns.find((c) => c.key === key);
+              commitSorts([{ key, dir: col?.firstSort ?? "asc" }], key);
+            }}
+            onFlip={() => {
+              if (sorts.length === 0) return;
+              commitSorts(
+                sorts.map((s, i) => (i === 0 ? { ...s, dir: flipDir(s.dir) } : s)),
+                sorts[0].key,
+              );
+            }}
           />
         )}
         <ul

@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, Key, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, KeyboardEvent, Key, ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -112,6 +112,15 @@ export interface LineItemsColumn<T> {
   render: (ctx: LineItemCellContext<T>) => ReactNode;
 }
 
+/**
+ * What {@link LineItemsProps.rowProps} returns for one row: `data-*` hooks, an `id`, a
+ * class, handlers. A `data-*` attribute is typed so `{ "data-tour": "rule-condition" }`
+ * needs no cast.
+ */
+export type LineItemsRowProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "dangerouslySetInnerHTML" | "role"> & {
+  [key: `data-${string}`]: string | number | boolean | undefined;
+};
+
 export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   items: readonly T[];
   columns: readonly LineItemsColumn<T>[];
@@ -170,6 +179,20 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">,
   removeAlign?: LineItemsRemoveAlign;
   /** Disables add and remove (the fields are the caller's to disable). */
   disabled?: boolean;
+  /**
+   * Extra attributes for one row's element (the `role="group"` that holds its fields) —
+   * keksdose K20: its rule editor's tour points at the first condition row with
+   * `[data-tour="rule-condition"]` (dev#495), and with nowhere to put the anchor on the
+   * row it wrapped a cell's field in a `span` instead, which the spotlight then drew
+   * around one field rather than the row. Test ids the same way.
+   *
+   * MERGED under the list's own, which win: `role`, the group's `aria-label` (that is
+   * {@link rowLabel}'s) and `data-line-items-row` stay the list's — the row's name and
+   * the hook its focus handling finds rows by. `className` is added after the row's
+   * own classes, `style` is passed through, and an `onKeyDown` runs BEFORE the row's
+   * Ctrl/⌘+Enter "add a row" (call `preventDefault()` to keep that from happening).
+   */
+  rowProps?: (item: T, index: number) => LineItemsRowProps | undefined;
   labels?: Partial<LineItemsLabels>;
 }
 
@@ -253,6 +276,7 @@ export function LineItems<T>({
   removePlacement = "row",
   removeAlign: removeAlignProp,
   disabled = false,
+  rowProps,
   labels: labelsProp,
   className,
   style,
@@ -405,11 +429,13 @@ export function LineItems<T>({
       {items.map((item, index) => {
         const row = index + 1;
         const isConfirming = confirming === index;
+        const extra = rowProps?.(item, index);
         return (
           // The row's Ctrl/⌘+Enter is a shortcut for the add button, which is itself
           // reachable by Tab; the group only listens for it bubbling from its fields.
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
           <div
+            {...extra}
             key={getKey(item, index)}
             ref={(el) => {
               rowRefs.current[index] = el;
@@ -417,7 +443,13 @@ export function LineItems<T>({
             role="group"
             aria-label={rowLabel ? rowLabel(index, item) : labels.row(row)}
             data-line-items-row=""
-            onKeyDown={onRowKeyDown}
+            onKeyDown={(e) => {
+              if (extra?.onKeyDown) {
+                extra.onKeyDown(e);
+                if (e.defaultPrevented) return;
+              }
+              onRowKeyDown(e);
+            }}
             className={cn(
               "grid grid-cols-1 gap-2 @lg:grid-cols-[var(--line-items-cols)] @lg:items-start",
               // Two short fields to a row of the card — from 18rem, where two fields
@@ -425,6 +457,7 @@ export function LineItems<T>({
               pairs && "@2xs:grid-cols-2",
               // Stacked, each row is a card of its own so the rows stay apart.
               "@max-lg:rounded-md @max-lg:border @max-lg:border-[var(--border)] @max-lg:p-3",
+              extra?.className,
             )}
           >
             {columns.map((column) => {

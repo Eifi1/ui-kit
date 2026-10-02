@@ -1,7 +1,7 @@
 import { cn } from "../lib/cn";
 import { useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent as ReactClipboardEvent, type RefObject } from "react";
-import { Camera, FileText, Paperclip, X } from "lucide-react";
-import { Button } from "../components/ui";
+import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
+import { Button, Spinner } from "../components/ui";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
@@ -43,6 +43,10 @@ export interface FeedbackAttachmentFieldLabels {
   attachmentRemoveFile?: (name: string) => string;
   /** `multiple` mode: the line shown in place of the add buttons once `max` is reached. */
   attachmentLimit?: (max: number) => string;
+  /** `refs` mode (0.22.0, keksdose K16): the second line of a chip whose upload is still
+   *  running, where an uploaded one shows its size — "Uploading…". Optional, like the
+   *  keys above, so a `UiKitLabels` typed before it still compiles. */
+  attachmentUploading?: string;
 }
 
 export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels = {
@@ -55,16 +59,36 @@ export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels =
   attachmentRemoveFile: (name) => `Remove ${name}`,
   attachmentLimit: (max) =>
     `Up to ${max} ${max === 1 ? "attachment" : "attachments"} — remove one to add another.`,
+  attachmentUploading: "Uploading…",
 };
 
-/** Why a file was turned away. `"count"` only ever comes from `multiple` mode: more
- *  files arrived at once than `max` left room for, and the surplus was dropped. */
+/** Why a file was turned away. `"count"` only ever comes from `multiple` (and `refs`)
+ *  mode: more files arrived at once than `max` left room for, and the surplus was
+ *  dropped. */
 export type FeedbackAttachmentError = "type" | "size" | "count";
+
+/** `refs` mode's reasons: {@link FeedbackAttachmentError}, or `"upload"` — `onUpload`
+ *  rejected, and what it rejected with is `onError`'s second argument. A type of its
+ *  own so a host's exhaustive switch over the File modes' reasons stays exhaustive. */
+export type FeedbackAttachmentRefsError = FeedbackAttachmentError | "upload";
+
+/**
+ * One uploaded attachment in `refs` mode: what the host's upload answered with. `key`
+ * identifies it (a storage key, an upload id) and is what a remove goes by; `name` is
+ * what the chip says. `size` (bytes) and `type` (mime) are optional — given, the chip
+ * shows the size and an image icon or a file icon accordingly.
+ */
+export interface FeedbackAttachmentRef {
+  key: string;
+  name: string;
+  size?: number;
+  type?: string;
+}
 
 interface FeedbackAttachmentFieldBaseProps {
   /** Prop > `<UiKitProvider labels={{ feedbackAttachment }}>` > English. Optional
    *  since 0.7.0; `attachment` (the heading) is only ever read from here. */
-  labels?: Partial<FeedbackAttachmentLabels>;
+  labels?: Partial<FeedbackAttachmentLabels> & Pick<Partial<FeedbackAttachmentFieldLabels>, "attachmentUploading">;
   accept?: string[];
   maxBytes?: number;
   /** Snapshot the app view behind this and return it as a File. A "Capture
@@ -84,6 +108,7 @@ interface FeedbackAttachmentFieldBaseProps {
 /** One file: choosing a second means removing the first. The field's only mode until 0.15.5. */
 export interface FeedbackAttachmentFieldSingleProps extends FeedbackAttachmentFieldBaseProps {
   multiple?: false;
+  refs?: false;
   value: File | null;
   onChange: (file: File | null) => void;
   onError?: (kind: "type" | "size") => void;
@@ -100,6 +125,7 @@ export interface FeedbackAttachmentFieldSingleProps extends FeedbackAttachmentFi
  */
 export interface FeedbackAttachmentFieldMultipleProps extends FeedbackAttachmentFieldBaseProps {
   multiple: true;
+  refs?: false;
   value: File[];
   onChange: (files: File[]) => void;
   /** How many files `value` may hold. Default {@link DEFAULT_MAX_ATTACHMENTS} (5). The
@@ -119,9 +145,51 @@ export interface FeedbackAttachmentFieldMultipleProps extends FeedbackAttachment
   onScreenshotChange?: (file: File | null) => void;
 }
 
+/**
+ * Uploaded on pick (0.22.0, keksdose K16). keksdose's support chat uploads each file
+ * the moment it is chosen and sends the message with the REFS the uploads answered —
+ * a 10 MB screenshot is refused while the reporter is still typing, not when they
+ * press Send — so its `AttachmentPicker` could not use this field, whose value is
+ * `File`s held until the form is submitted. Here the value is
+ * {@link FeedbackAttachmentRef}s: every way in (pick, paste, capture) validates the
+ * file as the other modes do, then hands it to `onUpload` and shows a chip with a
+ * spinner until it answers; the ref it resolves to joins `value` through `onChange`.
+ * A rejection drops the chip and reports `onError("upload", error)`. A chip is removed
+ * BY KEY: `onChange` gets the list without it, and `onRemove` the key, for a host that
+ * deletes the upload on the server too.
+ *
+ * Uploads still running count against `max`, so five picks in quick succession cannot
+ * overshoot it; they are not in `value` until they land, so a send that reads `value`
+ * sends only what has arrived — hold Send back while {@link onUploadingChange} says
+ * an upload is running. Several files upload side by side and join in the order they
+ * finish. The File modes are unchanged.
+ */
+export interface FeedbackAttachmentFieldRefsProps extends FeedbackAttachmentFieldBaseProps {
+  refs: true;
+  multiple?: never;
+  value: FeedbackAttachmentRef[];
+  onChange: (refs: FeedbackAttachmentRef[]) => void;
+  /** Upload one file; resolve to its ref, or reject to refuse it. Called once per
+   *  accepted file, the moment it is chosen. */
+  onUpload: (file: File) => Promise<FeedbackAttachmentRef>;
+  /** A chip was removed — after `onChange` — with its ref's key. */
+  onRemove?: (key: string) => void;
+  /** Whether any upload is running: `true` when the first starts, `false` when the
+   *  last settles — for the host's Send, which should wait. */
+  onUploadingChange?: (uploading: boolean) => void;
+  /** How many refs `value` may hold, uploads in flight included. Default
+   *  {@link DEFAULT_MAX_ATTACHMENTS} (5). */
+  max?: number;
+  /** Per file. `"upload"` carries what `onUpload` rejected with. */
+  onError?: (kind: FeedbackAttachmentRefsError, error?: unknown) => void;
+  screenshot?: never;
+  onScreenshotChange?: never;
+}
+
 export type FeedbackAttachmentFieldProps =
   | FeedbackAttachmentFieldSingleProps
-  | FeedbackAttachmentFieldMultipleProps;
+  | FeedbackAttachmentFieldMultipleProps
+  | FeedbackAttachmentFieldRefsProps;
 
 /**
  * Picking one picture: the file dialog, a capture of the app view, or a paste.
@@ -154,9 +222,10 @@ export type FeedbackAttachmentFieldProps =
  * handed in by whoever renders both the box and this field side by side.
  */
 export function FeedbackAttachmentField(props: FeedbackAttachmentFieldProps) {
-  // Two components rather than one with branches: the modes hold different state
-  // (one preview vs. one per chip), and a hook order that depends on a prop is a
-  // crash the day a caller flips it.
+  // One component per mode rather than one with branches: the modes hold different
+  // state (one preview vs. one per chip vs. uploads in flight), and a hook order that
+  // depends on a prop is a crash the day a caller flips it.
+  if (props.refs) return <RefsField {...props} />;
   return props.multiple ? <MultipleField {...props} /> : <SingleField {...props} />;
 }
 
@@ -477,6 +546,241 @@ function MultipleField({
         }}
       />
     </div>
+  );
+}
+
+/** A file `refs` mode is uploading: its own id (a ref has no key yet), and the file. */
+interface Upload {
+  id: number;
+  file: File;
+}
+
+let nextUploadId = 0;
+
+function RefsField({
+  value,
+  onChange,
+  onUpload,
+  onRemove,
+  onUploadingChange,
+  max = DEFAULT_MAX_ATTACHMENTS,
+  labels: labelsProp,
+  accept = DEFAULT_ATTACHMENT_ACCEPT,
+  maxBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
+  onError,
+  onCaptureScreenshot,
+  documentPaste = false,
+  pasteFrom,
+  className,
+}: FeedbackAttachmentFieldRefsProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileText = useKitFileLabels();
+  const text = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
+  const removeLabel = text.attachmentRemoveFile ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentRemoveFile!;
+  const limitLabel = text.attachmentLimit ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentLimit!;
+  const uploadingLabel = text.attachmentUploading ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentUploading!;
+
+  // As in `multiple` mode: `value` plus whatever has been handed to `onChange` since
+  // the parent last rendered — two uploads landing in one tick must both survive.
+  const latest = useRef(value);
+  useLayoutEffect(() => {
+    latest.current = value;
+  });
+  const commit = (next: FeedbackAttachmentRef[]) => {
+    latest.current = next;
+    onChange(next);
+  };
+
+  const [uploads, setUploads] = useState<Upload[]>([]);
+  // The uploads in flight, kept in a ref as well: `add` runs several times before a
+  // render when files arrive together, and each must see the others — their count
+  // against `max`, their names against a pasted image's.
+  const inFlight = useRef<Upload[]>([]);
+  // Unmounted (the dialog closed mid-upload): a late answer is not this field's to
+  // commit, and setting state on it would be a no-op at best.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const uploadingChange = useRef(onUploadingChange);
+  useEffect(() => {
+    uploadingChange.current = onUploadingChange;
+  });
+
+  const room = Math.max(0, max - value.length - uploads.length);
+
+  const start = (file: File) => {
+    const upload: Upload = { id: nextUploadId++, file };
+    inFlight.current = [...inFlight.current, upload];
+    if (inFlight.current.length === 1) uploadingChange.current?.(true);
+    setUploads(inFlight.current);
+    const settle = () => {
+      inFlight.current = inFlight.current.filter((u) => u.id !== upload.id);
+      if (!mounted.current) return;
+      setUploads(inFlight.current);
+      if (inFlight.current.length === 0) uploadingChange.current?.(false);
+    };
+    let answer: Promise<FeedbackAttachmentRef>;
+    try {
+      answer = Promise.resolve(onUpload(file));
+    } catch (error) {
+      answer = Promise.reject(error);
+    }
+    answer.then(
+      (ref) => {
+        settle();
+        if (mounted.current) commit([...latest.current, ref]);
+      },
+      (error: unknown) => {
+        settle();
+        if (mounted.current) onError?.("upload", error);
+      },
+    );
+  };
+
+  const add = (incoming: File[], pasted = false) => {
+    let space = Math.max(0, max - latest.current.length - inFlight.current.length);
+    const taken = new Set([...latest.current.map((r) => r.name), ...inFlight.current.map((u) => u.file.name)]);
+    let dropped = false;
+    for (const raw of incoming) {
+      const problem = rejection(raw, accept, maxBytes);
+      if (problem) {
+        onError?.(problem);
+        continue;
+      }
+      if (space === 0) {
+        dropped = true;
+        continue;
+      }
+      // Pasted images are all "image.png" to the clipboard; as in `multiple` mode,
+      // each gets a name of its own before it is uploaded under it.
+      const file = pasted ? renamed(raw, uniqueName(pastedName(raw.type), taken)) : raw;
+      taken.add(file.name);
+      space -= 1;
+      start(file);
+    }
+    if (dropped) onError?.("count");
+  };
+
+  const onPaste = usePaste((images) => add(images, true), documentPaste, pasteFrom);
+
+  // Focus after a remove, as in `multiple` mode: the next chip, else the first action.
+  const pendingFocus = useRef<number | null>(null);
+  useEffect(() => {
+    const index = pendingFocus.current;
+    if (index === null) return;
+    pendingFocus.current = null;
+    const root = rootRef.current;
+    if (!root) return;
+    const removes = root.querySelectorAll<HTMLElement>("[data-attachment-remove]");
+    const target =
+      removes[index] ?? root.querySelector<HTMLElement>("[data-attachment-action]") ?? removes[index - 1];
+    target?.focus();
+  }, [value]);
+
+  const remove = (key: string, index: number) => {
+    pendingFocus.current = index;
+    commit(latest.current.filter((r) => r.key !== key));
+    onRemove?.(key);
+  };
+
+  const hasChips = value.length > 0 || uploads.length > 0;
+
+  return (
+    <div ref={rootRef} className={cn("relative space-y-2", className)} onPaste={onPaste}>
+      <Heading text={labelsProp?.attachment} className="mb-0" />
+      {hasChips && (
+        <ul aria-label={text.attachmentList} className="flex flex-col gap-2">
+          {value.map((ref, index) => (
+            <li
+              key={`ref:${ref.key}`}
+              className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+            >
+              <RefGlyph type={ref.type} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm text-[var(--text-secondary)]">{ref.name}</div>
+                {ref.size !== undefined && (
+                  <div className="truncate text-xs text-[var(--text-muted)]">{fileText.size(ref.size)}</div>
+                )}
+              </div>
+              <button
+                type="button"
+                data-attachment-remove=""
+                onClick={() => remove(ref.key, index)}
+                aria-label={removeLabel(ref.name)}
+                className="shrink-0 rounded p-1.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+              >
+                <X className="size-4" />
+              </button>
+            </li>
+          ))}
+          {uploads.map((upload) => (
+            <li
+              key={`upload:${upload.id}`}
+              aria-busy="true"
+              data-attachment-uploading=""
+              className="flex min-w-0 items-center gap-2 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-1"
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+                <Spinner label={null} className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm text-[var(--text-secondary)]">{upload.file.name}</div>
+                <div className="truncate text-xs text-[var(--text-muted)]">{uploadingLabel}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {room > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            data-attachment-action=""
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Paperclip className="size-4" /> {text.attachmentAdd}
+          </Button>
+          {onCaptureScreenshot && (
+            <CaptureButton
+              capture={onCaptureScreenshot}
+              onFile={(file) => add([file])}
+              label={text.attachmentCapture}
+              data-attachment-action=""
+            />
+          )}
+        </div>
+      )}
+      <p className="text-xs text-[var(--text-muted)]">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple={room > 1}
+        accept={accept.join(",")}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => {
+          add(Array.from(e.target.files ?? []));
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+/** A ref chip's picture. The bytes are on the server, not here, so there is nothing to
+ *  preview: an image glyph for an image `type`, a file glyph for anything else. */
+function RefGlyph({ type }: { type?: string }) {
+  return (
+    <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+      {type?.startsWith("image/") ? <ImageIcon aria-hidden className="size-6" /> : <FileText aria-hidden className="size-6" />}
+    </span>
   );
 }
 
