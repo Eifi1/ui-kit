@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cellNumber, isCellNumber, parseRows, parseTable, splitRow } from "../table-text";
+import { cellNumber, isCellNumber, parseRows, parseTable, parseTextTable, splitRow, tableNumber } from "../table-text";
 
 /**
  * The five shapes a measuring rig actually puts on the clipboard, and the two decimal
@@ -230,5 +230,137 @@ describe("what the file rule reports back", () => {
       decimalComma: false,
       skipped: [],
     });
+  });
+});
+
+/**
+ * The text door (0.23, Kurvenschmiede and keksdose): a table whose cells stay text, for
+ * a column mapper that asks which column is which. Synthetic exports only.
+ */
+describe("parseTextTable", () => {
+  it("reads a German bank export: semicolons, quoted cells, an empty cell kept in place", () => {
+    const text = [
+      '"Date";"Payee";"Memo";"Amount"',
+      '"01.02.2026";"Example Ltd; branch 2";"";"-12,50"',
+      '"02.02.2026";"Sample Shop";"Order ""A1""";"1.234,00"',
+    ].join("\n");
+    const table = parseTextTable(text);
+    expect(table.separator).toBe(";");
+    expect(table.decimalComma).toBe(true);
+    expect(table.header).toEqual(["Date", "Payee", "Memo", "Amount"]);
+    expect(table.width).toBe(4);
+    // The separator inside quotes is part of the payee; the empty memo keeps the
+    // amount in the amount's column; a doubled quote is a quote.
+    expect(table.rows).toEqual([
+      ["01.02.2026", "Example Ltd; branch 2", "", "-12,50"],
+      ["02.02.2026", "Sample Shop", 'Order "A1"', "1.234,00"],
+    ]);
+    expect(table.lines.map((line) => line.line)).toEqual([2, 3]);
+    expect(table.unread).toEqual([]);
+  });
+
+  it("reads a recorder's export the numeric lexer reads, and agrees with it on the convention", () => {
+    for (const { text } of SHAPES) {
+      const table = parseTextTable(text);
+      expect(table.rows.map((row) => row.map((cell) => tableNumber(cell, table.decimalComma)))).toEqual(
+        parseTable(text, { decimal: "whole-text" }).rows,
+      );
+    }
+  });
+
+  it("detects the header by its words, and is told otherwise by the caller", () => {
+    expect(parseTextTable("t;soll;ist\n0;1,5;1,4").header).toEqual(["t", "soll", "ist"]);
+    // A headerless bank row: a payee over a payee is no evidence of a header.
+    const headerless = parseTextTable("01.02.2026;Example Ltd;-12,50\n02.02.2026;Sample Shop;-3,20");
+    expect(headerless.header).toBeNull();
+    expect(headerless.rows).toHaveLength(2);
+    // A table of words only says nothing either way, and the reader's checkbox decides.
+    expect(parseTextTable("alpha;beta\ngamma;delta").header).toBeNull();
+    expect(parseTextTable("alpha;beta\ngamma;delta", { header: true }).header).toEqual(["alpha", "beta"]);
+    expect(parseTextTable("t;x\n0;1", { header: false }).rows).toEqual([
+      ["t", "x"],
+      ["0", "1"],
+    ]);
+  });
+
+  it("reports a title above the table and a total under it, by line number and text", () => {
+    const text = [
+      "Account statement Example Ltd",
+      "",
+      "Date;Payee;Amount",
+      "01.02.2026;Example Ltd;-12,50",
+      "02.02.2026;Sample Shop;-3,20",
+      "Balance: 1.000,00",
+    ].join("\n");
+    const table = parseTextTable(text);
+    expect(table.header).toEqual(["Date", "Payee", "Amount"]);
+    expect(table.rows).toHaveLength(2);
+    expect(table.unread).toEqual([
+      { line: 1, text: "Account statement Example Ltd" },
+      { line: 6, text: "Balance: 1.000,00" },
+    ]);
+  });
+
+  it("does not read a row whose columns have slid", () => {
+    // An unquoted separator inside a payee makes a cell too many: reading it would put
+    // the payee's second half in the amount's column.
+    const table = parseTextTable("Date;Payee;Amount\n01.02.2026;Example Ltd;-12,50\n02.02.2026;Shop; branch;-3,20");
+    expect(table.rows).toHaveLength(1);
+    expect(table.unread).toEqual([{ line: 3, text: "02.02.2026;Shop; branch;-3,20" }]);
+  });
+
+  it("reads a trailing separator as a line ending only where it is the file's habit", () => {
+    const habit = parseTextTable("a;b;c;\n1;2;3;\n4;5;6;");
+    expect(habit.width).toBe(3);
+    expect(habit.rows).toEqual([
+      ["1", "2", "3"],
+      ["4", "5", "6"],
+    ]);
+    // Here one row ends in a separator because its last cell is empty.
+    const empty = parseTextTable("a;b;c\n1;2;3\n4;5;\n7;8;9");
+    expect(empty.rows[1]).toEqual(["4", "5", ""]);
+  });
+
+  it("keeps a leading tab as an empty first cell", () => {
+    const table = parseTextTable("a\tb\tc\n1\t2\t3\n\t5\t6");
+    expect(table.separator).toBe("\t");
+    expect(table.rows[1]).toEqual(["", "5", "6"]);
+  });
+
+  it("votes on the separator, so a title written with another one does not decide it", () => {
+    const table = parseTextTable("Export, February\nt;x\n0;1,5\n1;2,5\n2;3,5");
+    expect(table.separator).toBe(";");
+    expect(table.unread).toEqual([{ line: 1, text: "Export, February" }]);
+  });
+
+  it("reads whitespace columns with decimal commas, and honours a stated separator and convention", () => {
+    const dump = parseTextTable("0,5 1,25 2,75\n1,5 2,25 3,75");
+    expect(dump.separator).toBe(" ");
+    expect(dump.decimalComma).toBe(true);
+    expect(dump.width).toBe(3);
+    const forced = parseTextTable("1,5;2\n2,5;3", { separator: ",", decimalComma: false });
+    expect(forced.separator).toBe(",");
+    expect(forced.decimalComma).toBe(false);
+  });
+
+  it("is an empty table for text with nothing in it", () => {
+    expect(parseTextTable("  \n\n# banner")).toMatchObject({ header: null, rows: [], width: 0, unread: [] });
+  });
+});
+
+describe("tableNumber", () => {
+  it("reads a cell in its table's convention", () => {
+    expect(tableNumber("1,5", true)).toBe(1.5);
+    expect(tableNumber("1.5", true)).toBe(1.5);
+    expect(tableNumber("1.5", false)).toBe(1.5);
+    // In a decimal-point file a comma is a grouping mark, and grouped numbers are not
+    // read — never 1.234.
+    expect(tableNumber("1,234", false)).toBeNaN();
+    expect(tableNumber("1.234,5", true)).toBeNaN();
+  });
+
+  it("is not a number for an empty cell", () => {
+    expect(tableNumber("", true)).toBeNaN();
+    expect(tableNumber("  ", false)).toBeNaN();
   });
 });
