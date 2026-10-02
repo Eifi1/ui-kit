@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode, Ref } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -536,6 +536,13 @@ export interface FeedbackComposerProps {
   labels?: Partial<FeedbackComposerLabels>;
   className?: string;
   /**
+   * `"sm"` for a narrow host — keksdose's assistant launcher, a small floating panel
+   * (0.22): a small Send button, and the send hint ("Enter to send, Shift + Enter for a
+   * new line") hidden from view but kept as the box's description, so a keyboard or
+   * screen-reader user still learns the shortcut. Default `"md"`.
+   */
+  size?: "md" | "sm";
+  /**
    * On the composer's root — the box, or the `disabledReason` line in its place —
    * with any `data-*` attribute beside it (keksdose K17). keksdose's assistant tour
    * points at the chat box with `[data-tour="assistant-ask"]`, and a composer that
@@ -594,10 +601,12 @@ export function FeedbackComposer({
   labels: labelsProp,
   className,
   id,
+  size = "md",
   ...rest
 }: FeedbackComposerProps) {
   const labels = useKitLabels("feedbackComposer", DEFAULT_FEEDBACK_COMPOSER_LABELS, labelsProp);
   const rootAttributes = { id, ...dataAttributes(rest) };
+  const hintId = useId();
   const [ownDraft, setOwnDraft] = useState("");
   const controlled = value !== undefined;
   const draft = controlled ? value : ownDraft;
@@ -680,6 +689,7 @@ export function FeedbackComposer({
         rows={rows}
         dir="auto"
         aria-label={labels.field}
+        aria-describedby={size === "sm" ? hintId : undefined}
         ref={box}
         placeholder={placeholder ?? labels.placeholder}
         value={draft}
@@ -724,10 +734,18 @@ export function FeedbackComposer({
           <span />
         )}
         <div className="ms-auto flex items-center gap-2">
-          <span className="text-xs text-[var(--text-placeholder)]">
+          <span
+            id={hintId}
+            className={size === "sm" ? "sr-only" : "text-xs text-[var(--text-placeholder)]"}
+          >
             {sendOn === "enter" ? labels.sendHintEnter : labels.sendHint(modifier)}
           </span>
-          <Button onClick={send} disabled={!canSend} aria-busy={pending || undefined}>
+          <Button
+            onClick={send}
+            disabled={!canSend}
+            aria-busy={pending || undefined}
+            size={size === "sm" ? "sm" : undefined}
+          >
             {pending ? (
               <Spinner label={null} className="size-4" />
             ) : (

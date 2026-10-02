@@ -23,6 +23,10 @@ has the release notes, and the showcase (⌘K) has every new part live.
      settles.
    - **A labelled Input / Textarea keeps a caller's `placeholder` (kastlan 8):** shown once
      the label has floated; it used to be replaced by `" "`.
+   - **A hint coming and going no longer rebuilds the field (keksdose):** passed at all,
+     even as `undefined`, `hint` (and `showCount`) keeps the field's box, as `error` does
+     since 0.18 — Select lost focus when its caption appeared. Same in DatePicker,
+     MonthPicker, NumberInput and OneTimeCodeInput; a test covers 15 fields.
    - **Write lock:** an armed `DangerConfirm` under a lock no longer confirms; a droppable
      `FileButton` under `commit` / `disabledReason` no longer takes drops.
    - **TwoFactorSetting:** its code fields are `OneTimeCodeInput`s — digits only, so a
@@ -51,7 +55,7 @@ has the release notes, and the showcase (⌘K) has every new part live.
 | Guards (keksdose K7) | DangerConfirm `requireAcknowledge`, `consequences` |
 | Forms | FormActions `submitShortcut="mod-enter"` (honours pending, disabled and the lock); LineItems `rowProps(item, index)` |
 | DataTable (keksdose K10) | `mobileSort` — "Sort by" + direction on the phone cards; `column.headerText` |
-| Feedback (K16, K17) | FeedbackAttachmentField `refs` mode (`onUpload` → `{ key, name }`, remove by key); FeedbackComposer takes `id` / `data-*`; `ChatComposer` alias |
+| Feedback (K16, K17) | FeedbackAttachmentField `refs` mode (`onUpload` → `{ key, name }`, remove by key); FeedbackComposer takes `id` / `data-*` and `size="sm"` (a small Send button, the send hint hidden but kept as the box's description — keksdose's assistant panel); `ChatComposer` alias |
 | `@eifi1/ui-kit/rhf` (kastlan 4) | `RhfTimeInput`, `RhfDateRangePicker` (two fields), `RhfToggleGroup`, `RhfIbanInput`, `RhfPhoneInput` |
 
 ## kastlan
