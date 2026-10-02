@@ -341,3 +341,5 @@ export * from "./search/global-search";
 // prop > the provider > the English default. See src/i18n/kit-labels.tsx.
 export * from "./i18n/kit-labels";
 export * from "./i18n/defaults";
+// The kit's words as `key → text` rows for an app's translation review (keksdose).
+export { kitLabelStrings } from "./i18n/review";

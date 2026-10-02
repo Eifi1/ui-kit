@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1101 names from 167 modules** — 508 values and 593 types. _Italic_ is a type-only export.
+**1102 names from 168 modules** — 509 values and 593 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1101 |
+| `@eifi1/ui-kit` | 1102 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 49 |
@@ -456,6 +456,7 @@ re-slicing of it, never a second API.
 |---|---|
 | `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
+| `i18n/review` | `kitLabelStrings` |
 
 ### components
 
@@ -706,6 +707,17 @@ translation built at runtime, assert in the app's own test:
 ```ts
 expect(missingKitLabels(de, DEFAULT_UI_KIT_LABELS)).toEqual([]);
 ```
+
+**Reviewing the kit's words in an app.** A missing key is a machine's question; whether
+a sentence reads right is a person's. `kitLabelStrings(labels)` turns a label tree into
+`key → text` rows for an app's translation review (keksdose's /translations): string
+labels under their dot path, function labels called with fixed samples — text arguments
+as `{{name}}` placeholders, counts as 1 and 3 — under a key that names the sample
+(`combobox.resultCount(3)`, `shareCard.removeConfirm(name)`). The keys never depend on
+the locale, so `kitLabelStrings(UI_KIT_LABELS_DE_CH)` and the reference
+`kitLabelStrings(DEFAULT_UI_KIT_LABELS)` join one to one. Pass the tree the app gives
+`UiKitProvider`, overrides included. The kit's own test keeps every catalogue on the
+reference's keys and placeholders.
 
 The provider's `locale` reaches every `Intl` formatter in the kit that is not handed a
 `locale` prop of its own: calendar month and weekday names, day numbers, the data table's

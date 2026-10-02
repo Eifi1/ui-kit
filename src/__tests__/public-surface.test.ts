@@ -126,7 +126,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `typedMatches`; `refreshChipEdges`; `createServerWake`, `serverWake`, `watchReadsAnd`,
   // `attachServerWake`, `wrapFetch`, `ServerWakeNotice`, `useServerWakeStage`,
   // `DEFAULT_SERVER_WAKE_LABELS` (keksdose's cold-start notice for every app).
-  ["@eifi1/ui-kit", barrel, 508],
+  // 0.19.0: `kitLabelStrings`, the kit's words as review rows (keksdose) (+1).
+  ["@eifi1/ui-kit", barrel, 509],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
