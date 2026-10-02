@@ -42,6 +42,32 @@ export interface PasskeysSettingProps<Id extends PasskeyId = PasskeyId> extends 
    * the user cancelling the OS prompt) keeps what was typed.
    */
   onAdd: (name: string) => void | Promise<unknown>;
+  /**
+   * A step the app runs BEFORE `onAdd` (0.18.0) — re-asking for the current password,
+   * a policy notice, anything that may stop the add. Called with the same trimmed name;
+   * resolve `true` to go on to `onAdd`, `false` to stop quietly (nothing is said, the
+   * typed name stays). A rejection, or a throw, stops the same way: the app reports
+   * its own errors. While it runs the add button is disabled and busy, so a second
+   * click cannot start a second check.
+   *
+   * Kurvenschmiede asked for the password in its own dialog by handing `onAdd` a
+   * promise it kept open across that dialog (passkeys-card.tsx) — which still works.
+   * This is the documented place for it: open the dialog here, resolve with whether it
+   * was confirmed, and keep what it produced (the server's registration options) for
+   * `onAdd` in a ref. The ceremony then starts from the dialog's click rather than the
+   * card's, which is the user activation `navigator.credentials.create` wants.
+   *
+   * Left out, `onAdd` is called synchronously in the click, exactly as before.
+   */
+  beforeAdd?: (name: string) => boolean | Promise<boolean>;
+  /**
+   * What a passkey does to the password, which picks the line under the title (0.18.0).
+   * `"instead"` (default): it replaces it — `labels.description`, kastlan's promise.
+   * `"alongside"`: the password stays and the passkey is a second way in —
+   * `labels.descriptionAlongside`. Kurvenschmiede overrode `description` for exactly
+   * this; an app that sets `mode` needs no override.
+   */
+  mode?: "instead" | "alongside";
   /** The ceremony is running. The add button says so and does not start a second one. */
   adding?: boolean;
   /** Offer "Rename" on each row. Return a promise to leave edit mode only on success. */
@@ -92,6 +118,8 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   passkeys,
   loading,
   onAdd,
+  beforeAdd,
+  mode = "instead",
   adding = false,
   onRename,
   onDelete,
@@ -108,6 +136,10 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   const labels = useAccountSettingsLabels("passkeys", labelsProp);
   const locale = useKitLocale(localeProp);
   const [name, setName] = useState("");
+  // `beforeAdd` is running. State for the button, and a ref for the guard: two clicks
+  // in one frame both read the state from before either set it.
+  const [checking, setChecking] = useState(false);
+  const checkingRef = useRef(false);
 
   const date = (value: PasskeyItem["createdAt"]): string | null => {
     if (value === null || value === undefined || value === "") return null;
@@ -117,13 +149,40 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   };
 
   const add = () => {
-    if (adding) return;
+    if (adding || checkingRef.current) return;
     const typed = name;
-    Promise.resolve(onAdd(typed.trim()))
-      // Clear only what was sent: the field stays editable while the OS prompt is up.
-      .then(() => setName((current) => (current === typed ? "" : current)))
-      .catch(() => {});
+    const value = typed.trim();
+    const send = () =>
+      Promise.resolve(onAdd(value))
+        // Clear only what was sent: the field stays editable while the OS prompt is up.
+        .then(() => setName((current) => (current === typed ? "" : current)));
+    if (!beforeAdd) {
+      send().catch(() => {});
+      return;
+    }
+    const done = () => {
+      checkingRef.current = false;
+      setChecking(false);
+    };
+    checkingRef.current = true;
+    setChecking(true);
+    let gate: Promise<boolean>;
+    // Called in the click, not a microtask later, so a step that itself needs the
+    // user's activation (a popup, the clipboard) still has it; a throw is a "no".
+    try {
+      gate = Promise.resolve(beforeAdd(value));
+    } catch (error) {
+      gate = Promise.reject(error);
+    }
+    gate
+      .then((go) => {
+        done();
+        // Strictly `true`: an app whose step resolves `undefined` meant nothing.
+        if (go === true) return send();
+      })
+      .catch(done);
   };
+  const busy = adding || checking;
 
   const isLoading = loading || passkeys === undefined;
   const items = passkeys ?? [];
@@ -171,7 +230,7 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
               }}
             />
           )}
-          <Button onClick={add} disabled={adding} aria-busy={adding || undefined}>
+          <Button onClick={add} disabled={busy} aria-busy={busy || undefined}>
             <KeyRound className="size-4" aria-hidden />
             {adding ? labels.adding : labels.add}
           </Button>
@@ -186,7 +245,9 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
       <div>
         <div className="text-sm font-medium">{labels.title}</div>
         <div className="text-xs text-[var(--text-muted)]">
-          {labels.description}
+          {mode === "alongside"
+            ? labels.descriptionAlongside
+            : labels.description}
         </div>
       </div>
       {body}
