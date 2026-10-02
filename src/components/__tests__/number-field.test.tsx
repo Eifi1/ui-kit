@@ -152,7 +152,10 @@ describe("NumberField", () => {
       const input = screen.getByRole("textbox");
       await user.clear(input);
       await user.type(input, "1.5+1,25");
-      expect(input).toHaveValue("1,5+1,25");
+      // The typist's own text while it is typed (0.22, keksdose K5): a "." typed in a
+      // comma locale may yet turn out to be grouping ("1.234"), so it is not re-spelt
+      // under their fingers. It is read as the decimal here, and re-spelt on commit.
+      expect(input).toHaveValue("1.5+1,25");
       await user.tab();
       expect(onCommit).toHaveBeenCalledWith(2.75);
       expect(input).toHaveValue("2,75");

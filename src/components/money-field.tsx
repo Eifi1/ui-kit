@@ -39,6 +39,16 @@ function parseSettled(text: string): number | null | undefined {
  * rounding to the currency's minor unit and `min` / `max` are AmountInput's. A caller-
  * owned sign (`negative`) is not offered: the figure here carries its own minus.
  *
+ * So are two props a table cell needs (keksdose K4, K6): `error`, the message under the
+ * field that paints and describes it like {@link Input}'s, and `calculator={false}`,
+ * for an amount in a close-on-blur inline editor, where a click on the calculator icon
+ * blurs the field and tears the editor down before the popover can open (typed
+ * calculations still evaluate).
+ *
+ * This, not a `NumberField` with `digits={2}`, is the number-valued field for money:
+ * it settles to the CURRENCY's minor unit (JPY 0, CHF 2) and `digits` takes a unit
+ * price's finer scale (kastlan 5).
+ *
  * ```tsx
  * <MoneyField ariaLabel="Amount" currency="CHF" value={row.amount}
  *   onCommit={(amount) => updateRow(row.id, { amount })} />
