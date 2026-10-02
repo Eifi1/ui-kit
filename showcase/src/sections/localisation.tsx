@@ -64,6 +64,7 @@ import { UI_KIT_LABELS_IT } from "@eifi1/ui-kit/i18n/it";
 import { UI_KIT_LABELS_ES } from "@eifi1/ui-kit/i18n/es";
 import { UI_KIT_LABELS_HU } from "@eifi1/ui-kit/i18n/hu";
 import { UI_KIT_LABELS_ZH } from "@eifi1/ui-kit/i18n/zh";
+import { KIT_LABEL_SAMPLES } from "../../../src/i18n/review";
 import { Example, Note, OutTable } from "../lib/section";
 import { LOCALES, useLocale, useT } from "../i18n";
 
@@ -247,12 +248,21 @@ function CompletenessExample() {
   );
 }
 
-/** Renders a label value for the table: strings as-is, messages called with samples. */
-function sample(value: unknown): string {
+/**
+ * Renders a label value for the table: strings as-is, messages called with the samples
+ * `kitLabelStrings` uses for a translation review — `{{name}}` for a text argument, a
+ * count where the wording depends on one (the plural sample when there is one) — so a
+ * scope reads "limited to: {{areas}}", not "limited to: 3". Guessed numbers otherwise.
+ */
+function sample(value: unknown, path: string): string {
   if (typeof value === "string") return value;
   if (typeof value === "function") {
     const fn = value as (...args: unknown[]) => string;
-    const args = Array.from({ length: fn.length }, (_, i) => [3, 12, 137][i] ?? "x");
+    const samples = KIT_LABEL_SAMPLES[path];
+    const args =
+      samples?.find((s) => s.some((a) => typeof a === "number" && a !== 1)) ??
+      samples?.[0] ??
+      Array.from({ length: fn.length }, (_, i) => [3, 12, 137][i] ?? "x");
     try {
       return fn(...args);
     } catch {
@@ -292,8 +302,8 @@ function TreeExample() {
                       >
                         {key}
                       </td>
-                      <td className="w-3/8 py-1 pe-3 align-top text-[var(--text-secondary)] max-sm:w-auto max-sm:pb-0">{sample(en[key])}</td>
-                      <td className="w-3/8 py-1 align-top text-[var(--text-primary)] max-sm:w-auto max-sm:pb-0">{sample(here?.[key])}</td>
+                      <td className="w-3/8 py-1 pe-3 align-top text-[var(--text-secondary)] max-sm:w-auto max-sm:pb-0">{sample(en[key], `${ns}.${key}`)}</td>
+                      <td className="w-3/8 py-1 align-top text-[var(--text-primary)] max-sm:w-auto max-sm:pb-0">{sample(here?.[key], `${ns}.${key}`)}</td>
                     </tr>
                   ))}
                 </tbody>
