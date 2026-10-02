@@ -11,6 +11,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
 
 export type { ComboClearValue, ComboOption } from "./combobox-core";
 
@@ -61,6 +62,13 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
   /** What is wrong with the value, as {@link Input}'s `error`: rendered under the
    *  field, on the trigger's `aria-describedby`, and implies `invalid`. */
   error?: ReactNode;
+  /**
+   * Standing advice — {@link Combobox}'s `hint`, so the pickers read like every other
+   * field (keksdose K4): plain TEXT is a caption under the field on the trigger's
+   * `aria-describedby`, before any error; a {@link FieldHint} "?" rides the label line,
+   * or with no label sits at the trigger's end edge, outside the box.
+   */
+  hint?: ReactNode;
   /** Narrow `options` client-side by the query. Default `true`; `false` shows them
    *  as given (a server-ranked list). */
   filter?: boolean;
@@ -100,6 +108,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   className,
   invalid,
   error,
+  hint,
   filter,
   minChars,
   debounceMs,
@@ -123,10 +132,11 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     minChars,
     debounceMs,
   });
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
   const field = useComboboxFieldError(
     error,
     invalid || ariaInvalid === true || ariaInvalid === "true",
-    ariaDescribedBy,
+    hintParts.describedBy,
   );
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.
@@ -168,94 +178,103 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     // has one. Spread FIRST so the trigger's ARIA and the
     // handlers that open the panel cannot be clobbered from outside.
     <div {...rest} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
-      <button
-        ref={triggerRef}
-        id={id}
-        type="button"
-        // A combobox, not a button. The distinction is not pedantry: this control
-        // carried `aria-invalid`, which `button` does not support, so a required
-        // field left empty painted a rose border and told a reader nothing at all —
-        // and ESLint flagged it as exactly that (`role-supports-aria-props`). The
-        // fix the audit asked for is the role that describes what this IS: a closed
-        // choice that expands into the list named below. `combobox` supports
-        // `aria-invalid`, so the border and the announcement finally agree.
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        aria-haspopup="listbox"
-        // The label is a floating <span>, not a <label for>, so without this the
-        // trigger's accessible name is whatever value happens to be selected —
-        // "Checking" with nothing saying it is the account. The label AND the
-        // value, because `aria-label` replaces the content rather than adding to
-        // it, and a control that announces only its name has lost the answer.
-        // A caller's own name wins over the composition: two fields labelled
-        // "Account" on a transfer form are the from and the to, and only the
-        // caller knows which is which.
-        aria-label={
-          ariaLabel ??
-          (typeof label === "string" ? common.fieldValue(label, triggerText) : undefined)
-        }
-        disabled={disabled}
-        aria-invalid={field.isInvalid || undefined}
-        aria-describedby={field.describedBy}
-        aria-required={ariaRequired}
-        onClick={() => !disabled && setOpen((o) => !o)}
-        // Down/Up opens the list from the closed trigger, per the APG. Enter and
-        // Space already do it through the button's own click.
-        onKeyDown={(e) => {
-          if (disabled) return;
-          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-            e.preventDefault();
-            setOpen(true);
+      {label !== undefined && hintParts.labelHint === undefined && <FieldLabel>{label}</FieldLabel>}
+      <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
+        <button
+          ref={triggerRef}
+          id={id}
+          type="button"
+          // A combobox, not a button. The distinction is not pedantry: this control
+          // carried `aria-invalid`, which `button` does not support, so a required
+          // field left empty painted a rose border and told a reader nothing at all —
+          // and ESLint flagged it as exactly that (`role-supports-aria-props`). The
+          // fix the audit asked for is the role that describes what this IS: a closed
+          // choice that expands into the list named below. `combobox` supports
+          // `aria-invalid`, so the border and the announcement finally agree.
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-haspopup="listbox"
+          // The label is a floating <span>, not a <label for>, so without this the
+          // trigger's accessible name is whatever value happens to be selected —
+          // "Checking" with nothing saying it is the account. The label AND the
+          // value, because `aria-label` replaces the content rather than adding to
+          // it, and a control that announces only its name has lost the answer.
+          // A caller's own name wins over the composition: two fields labelled
+          // "Account" on a transfer form are the from and the to, and only the
+          // caller knows which is which.
+          aria-label={
+            ariaLabel ??
+            (typeof label === "string" ? common.fieldValue(label, triggerText) : undefined)
           }
-        }}
-        className={cn(
-          FIELD_TRIGGER,
-          "pe-9",
-          label !== undefined && FIELD_FLOATING_PAD,
-          disabled && "cursor-not-allowed opacity-50",
-          field.isInvalid && FIELD_INVALID,
-        )}
-      >
-        <span className="flex min-w-0 items-center gap-2">
-          {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
-          <span
-            className={cn(
-              "truncate",
-              // A chosen value is the field's VALUE, so it is set in the same ink an
-              // <input>'s value is — FIELD_BASE's own text colour, inherited rather
-              // than restated (Keksdose dev#477). It used to be one notch lighter
-              // than the typeahead fields beside it, which is visible when a picker
-              // and a text field share a form row. Nothing selected keeps the
-              // placeholder tone (`--text-placeholder`), which every field here
-              // agrees on.
-              !selectedOption && "text-[var(--text-placeholder)]",
-            )}
-          >
-            {selectedOption?.label ?? placeholder ?? ""}
+          disabled={disabled}
+          aria-invalid={field.isInvalid || undefined}
+          aria-describedby={field.describedBy}
+          aria-required={ariaRequired}
+          onClick={() => !disabled && setOpen((o) => !o)}
+          // Down/Up opens the list from the closed trigger, per the APG. Enter and
+          // Space already do it through the button's own click.
+          onKeyDown={(e) => {
+            if (disabled) return;
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              setOpen(true);
+            }
+          }}
+          className={cn(
+            FIELD_TRIGGER,
+            "pe-9",
+            label !== undefined && FIELD_FLOATING_PAD,
+            disabled && "cursor-not-allowed opacity-50",
+            field.isInvalid && FIELD_INVALID,
+          )}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
+            <span
+              className={cn(
+                "truncate",
+                // A chosen value is the field's VALUE, so it is set in the same ink an
+                // <input>'s value is — FIELD_BASE's own text colour, inherited rather
+                // than restated (Keksdose dev#477). It used to be one notch lighter
+                // than the typeahead fields beside it, which is visible when a picker
+                // and a text field share a form row. Nothing selected keeps the
+                // placeholder tone (`--text-placeholder`), which every field here
+                // agrees on.
+                !selectedOption && "text-[var(--text-placeholder)]",
+              )}
+            >
+              {selectedOption?.label ?? placeholder ?? ""}
+            </span>
           </span>
-        </span>
-        {showClear ? (
-          /* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- tabIndex -1 inside
-              the trigger <button>, so it never holds focus and a key handler here could
-              never fire; the keys go to the trigger. A pointer shortcut only. */
-          <span
-            role="button"
-            tabIndex={-1}
-            aria-label={labels.clear}
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange(clearValue);
-            }}
-            className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
-          >
-            <X className="size-4" />
-          </span>
-        ) : (
-          <FieldChevron />
-        )}
-      </button>
+          {showClear ? (
+            /* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- tabIndex -1 inside
+                the trigger <button>, so it never holds focus and a key handler here could
+                never fire; the keys go to the trigger. A pointer shortcut only. */
+            <span
+              role="button"
+              tabIndex={-1}
+              aria-label={labels.clear}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(clearValue);
+              }}
+              className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            >
+              <X className="size-4" />
+            </span>
+          ) : (
+            <FieldChevron />
+          )}
+        </button>
+      </EndHintRow>
+      {/* With a "?" the label shares the top strip with it — after the trigger, so the
+          "?" follows the control in the tab order, as on Input and Select. */}
+      {label !== undefined && hintParts.labelHint !== undefined && (
+        <StaticLabelRow hint={hintParts.labelHint}>
+          <FieldLabel className={LABEL_IN_ROW}>{label}</FieldLabel>
+        </StaticLabelRow>
+      )}
       <ComboboxPanel
         core={core}
         listboxId={listboxId}
@@ -275,6 +294,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
         }}
         createContent={labels.create(q)}
       />
+      <FieldCaption parts={hintParts} />
       {field.errorEl}
     </div>
   );

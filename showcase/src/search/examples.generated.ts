@@ -68,6 +68,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Search as a header",
     "Field — render-prop children with Input, Select and Textarea",
     "Field — plain children with htmlFor, labelSize and disabled",
+    "Placeholder, hint and counter on a labelled field",
+    "IbanInput — grouped in, compact out, checked but never blocked",
+    "ISIN helpers — isValidIsin, formatIsin",
+    "PhoneInput — E.164 when it reads, the text when it does not",
   ],
   "forms": [
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
@@ -89,6 +93,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FormActions — sticky inside a scroll container",
     "FormActions — sticky on a phone, inline from md up, bled to the pane's edges",
     "WriteLockProvider — commit",
+    "RhfTimeInput, RhfDateRangePicker, RhfToggleGroup",
+    "FormActions — Ctrl/⌘+Enter saves",
+    "LineItems — attributes on each row",
+    "commit on the controls that save themselves",
   ],
   "choices": [
     "Checkbox — states",
@@ -110,6 +118,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Pickers and cards, right-to-left",
     "Chip — touch size and money tones",
     "ActionCard — icon, description, meta and every metaTone",
+    "TileRadioGroup — tiles of the app's own",
+    "SwatchPicker and IconPicker with a label",
+    "CheckboxGroup — a reviewer's languages",
   ],
   "numbers": [
     "NumberInput — the string contract",
@@ -133,6 +144,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "NumberField — live mode and step keys",
     "NumberInput — step keys",
     "AmountInput hint, a tighter unit, roundToCurrency fallbackDigits",
+    "NumberInput and NumberField — the locale's decimal mark, and grouping read off",
+    "Money belongs in AmountInput or MoneyField",
+    "AmountInput / MoneyField calculator={false}",
+    "error on NumberInput, AmountInput, MoneyField, CurrencySelect; hint on CurrencySelect",
+    "SignChip — the amount's direction, beside the figure",
   ],
   "calendars": [
     "MiniCalendar — range mode (the default)",
@@ -154,6 +170,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Calendars and pickers — right-to-left",
     "UiKitProvider weekStartsOn",
     "MiniCalendar — showOutsideDays",
+    "DatePicker hint and error",
+    "<UiKitProvider formatDate>",
   ],
   "month-view": [
     "MiniCalendar size=\"lg\" — renderDay and a day panel",
@@ -172,6 +190,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TimeInput — labelled",
     "TimeInput — compact pair",
     "TimeInput — bounds and seconds",
+    "MonthPicker mode=\"year\"",
+    "MonthPicker size=\"sm\" and error",
   ],
   "files": [
     "FileButton — one file",
@@ -187,6 +207,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useFileDrop — any element as a drop target",
     "All or nothing — onPick",
     "FileButton — showFileName",
+    "FileButton, FileDropzone — commit",
   ],
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
@@ -204,6 +225,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Autocomplete — error and disabled",
     "Combobox — error and disabled",
     "Combobox — a Tooltip in optionAdornment (data-clips)",
+    "hint on the combobox family",
   ],
   "entity-pickers": [
     "InlineEntityCombobox",
@@ -215,6 +237,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "clearValue=\"\" — a schema that spells \"no choice\" as an empty string",
     "EntityCombobox — right-to-left",
     "MultiEntityCombobox",
+    "CountrySelect — every ISO country, preferred on top",
+    "Restricted list — keksdose's bank countries",
+    "A country that saves itself, under the write lock",
   ],
   "dropdown-parts": [
     "MultiSelect",
@@ -233,6 +258,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useWindowedRows — a list of your own",
     "parseTable · parseRows — live",
     "splitRow · cellNumber · isCellNumber",
+    "InlineEditField in a DataTable",
+    "InlineEditField — a rename that can fail",
   ],
   "field-sync": [
     "The four states",
@@ -258,6 +285,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SignatureView — a saved signature, read-only",
     "DangerConfirm",
     "DangerConfirm — controlled, busy, disabled, rejected",
+    "DangerConfirm — requireAcknowledge, consequences",
+    "DangerConfirm — commit",
+    "TypedConfirmField",
+    "CurrentPasswordInput",
   ],
   "buttons": [
     "Button — the six variants",
@@ -329,6 +360,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "BulkActionBar — a link among the actions",
     "Chip — xs with an icon",
     "Chip — snapEdges",
+    "ToggleGroup as a field — the label is clear of the fill",
+    "ToggleGroup labelPlacement=\"strip\"",
+    "commit / disabledReason on a group and a chip",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -415,6 +449,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Right-to-left",
     "rowActions, toolbar and the empty label",
     "Totals row: a trial balance",
+    "DataTable — a Sort by row on the phone",
   ],
   "data-table-server": [
     "urlSync — the view lives in the address",
@@ -566,6 +601,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Guided tour — useTour + TourProvider",
     "Tour — labels, placements, beforeStep and a missing target",
     "TourStep — the shape a step actually takes",
+    "Tour — the step after a spotlighted one",
   ],
   "command-palette": [
     "CommandPalette",
@@ -643,6 +679,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PasswordSetting — resolving handler",
     "PasswordSetting — rejecting handler",
     "TwoFactorSetting",
+    "PasswordSetting — strength + maxBytes",
+    "LanguageSelect — a language as a form field",
   ],
   "auth-account": [
     "AuthLayout — narrow sign-in and wide legal page",
@@ -658,6 +696,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ShareCard — read-only",
     "ShareCard — under a write lock",
     "LegalLayout — Imprint, Privacy Policy, Terms",
+    "OneTimeCodeInput — the sign-in verification code",
+    "OneTimeCodeInput — named by its prompt",
   ],
   "wizard": [
     "Three-step wizard",
@@ -681,6 +721,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DEFAULT_ATTACHMENT_ACCEPT and DEFAULT_MAX_ATTACHMENT_BYTES",
     "pastedName",
     "FeedbackAttachmentField multiple — screenshot chip and two adds in one tick",
+    "FeedbackAttachmentField — uploaded on pick",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -698,6 +739,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackComposer — pending, Ctrl/⌘+Enter and an attachment",
     "FeedbackComposer — canned replies and a custom placeholder",
     "FeedbackThread + FeedbackComposer — a support chat",
+    "ChatComposer — the composer under a neutral name",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",

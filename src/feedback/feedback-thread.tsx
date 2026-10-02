@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode, Ref } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -535,6 +535,23 @@ export interface FeedbackComposerProps {
   ref?: Ref<FeedbackComposerHandle>;
   labels?: Partial<FeedbackComposerLabels>;
   className?: string;
+  /**
+   * `"sm"` for a narrow host — keksdose's assistant launcher, a small floating panel
+   * (0.22): a small Send button, and the send hint ("Enter to send, Shift + Enter for a
+   * new line") hidden from view but kept as the box's description, so a keyboard or
+   * screen-reader user still learns the shortcut. Default `"md"`.
+   */
+  size?: "md" | "sm";
+  /**
+   * On the composer's root — the box, or the `disabledReason` line in its place —
+   * with any `data-*` attribute beside it (keksdose K17). keksdose's assistant tour
+   * points at the chat box with `[data-tour="assistant-ask"]`, and a composer that
+   * dropped every attribute it was not told about left the anchor nowhere: the
+   * assistant kept its hand-built box rather than lose the tour step.
+   */
+  id?: string;
+  /** `data-*` attributes for the root, as `id` — a tour anchor, a test id. */
+  [dataAttribute: `data-${string}`]: string | number | boolean | undefined;
 }
 
 /**
@@ -583,8 +600,13 @@ export function FeedbackComposer({
   ref,
   labels: labelsProp,
   className,
+  id,
+  size = "md",
+  ...rest
 }: FeedbackComposerProps) {
   const labels = useKitLabels("feedbackComposer", DEFAULT_FEEDBACK_COMPOSER_LABELS, labelsProp);
+  const rootAttributes = { id, ...dataAttributes(rest) };
+  const hintId = useId();
   const [ownDraft, setOwnDraft] = useState("");
   const controlled = value !== undefined;
   const draft = controlled ? value : ownDraft;
@@ -639,7 +661,11 @@ export function FeedbackComposer({
   );
 
   if (disabledReason != null && disabledReason !== false) {
-    return <p className={cn("text-xs text-[var(--text-muted)]", className)}>{disabledReason}</p>;
+    return (
+      <p {...rootAttributes} className={cn("text-xs text-[var(--text-muted)]", className)}>
+        {disabledReason}
+      </p>
+    );
   }
 
   const canSend = (canSendProp ?? draft.trim().length > 0) && !pending;
@@ -658,11 +684,12 @@ export function FeedbackComposer({
   const config = attachment === true ? {} : attachment || null;
 
   return (
-    <div ref={root} className={cn("space-y-2", className)}>
+    <div {...rootAttributes} ref={root} className={cn("space-y-2", className)}>
       <Textarea
         rows={rows}
         dir="auto"
         aria-label={labels.field}
+        aria-describedby={size === "sm" ? hintId : undefined}
         ref={box}
         placeholder={placeholder ?? labels.placeholder}
         value={draft}
@@ -707,10 +734,18 @@ export function FeedbackComposer({
           <span />
         )}
         <div className="ms-auto flex items-center gap-2">
-          <span className="text-xs text-[var(--text-placeholder)]">
+          <span
+            id={hintId}
+            className={size === "sm" ? "sr-only" : "text-xs text-[var(--text-placeholder)]"}
+          >
             {sendOn === "enter" ? labels.sendHintEnter : labels.sendHint(modifier)}
           </span>
-          <Button onClick={send} disabled={!canSend} aria-busy={pending || undefined}>
+          <Button
+            onClick={send}
+            disabled={!canSend}
+            aria-busy={pending || undefined}
+            size={size === "sm" ? "sm" : undefined}
+          >
             {pending ? (
               <Spinner label={null} className="size-4" />
             ) : (
@@ -723,3 +758,29 @@ export function FeedbackComposer({
     </div>
   );
 }
+
+/** The `data-*` entries of a rest-props object, and nothing else: whatever a caller
+ *  spread in that the composer does not know is not the root's to receive. */
+function dataAttributes(props: object): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) if (key.startsWith("data-")) out[key] = value;
+  return out;
+}
+
+/**
+ * {@link FeedbackComposer} under a name that is not about feedback (keksdose K17).
+ *
+ * The component was never feedback-specific: a textarea, an optional picture or a
+ * host's upload slot, Send, `sendOn="enter"` for the chat way. keksdose's assistant
+ * and support chat are chats, not reports, and an import of `FeedbackComposer` there
+ * reads as a mistake to the next person. The same function, not a wrapper, so the
+ * two names cannot drift.
+ */
+export const ChatComposer = FeedbackComposer;
+/** {@link FeedbackComposerProps}, for {@link ChatComposer}. */
+export type ChatComposerProps = FeedbackComposerProps;
+/** {@link FeedbackComposerHandle}, for {@link ChatComposer}. */
+export type ChatComposerHandle = FeedbackComposerHandle;
+/** {@link FeedbackComposerLabels}, for {@link ChatComposer} — still the `feedbackComposer`
+ *  namespace of the provider. */
+export type ChatComposerLabels = FeedbackComposerLabels;

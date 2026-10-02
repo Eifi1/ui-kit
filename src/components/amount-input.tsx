@@ -25,6 +25,8 @@ import {
   sanitizeLive,
   splitLeadingSign,
 } from "../lib/calc";
+import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
+import { hasMessage, mergeDescribedBy } from "./choice-parts";
 
 interface AmountInputProps {
   value: string;
@@ -36,6 +38,23 @@ interface AmountInputProps {
   disabled?: boolean;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
+  /**
+   * What is wrong with the amount, in the caller's own words — {@link Input}'s `error`
+   * (keksdose K4: "exceeds the outstanding balance" was a loose `<p>` beside the field
+   * that nothing pointed at). Rendered under the field, after a text `hint`; merged into
+   * `aria-describedby` after the caller's ids and the hint's; implies `invalid`, so the
+   * field paints as well as announces. `null`, `false` and `""` are no message.
+   * {@link MoneyField} takes it too.
+   */
+  error?: ReactNode;
+  /**
+   * Show the desktop calculator trigger (default `true`). `false` for an amount in an
+   * ephemeral close-on-blur editor — a budget's assigned cell, a VAT cell (keksdose K6)
+   * — where a click on the icon blurs the field and tears the editor down before the
+   * popover can open. Typing a calculation ("200+50", then Enter) still evaluates, and
+   * a phone keeps its numpad, exactly as {@link NumberInput}'s `calculator={false}`.
+   */
+  calculator?: boolean;
   className?: string;
   id?: string;
   ariaLabel?: string;
@@ -224,51 +243,12 @@ function settleAmount(text: string, digits: number | undefined, min?: number, ma
   return Number(out) === Number(t) ? text : out;
 }
 
-/**
- * The locale's decimal mark, as far as this field can type it: "," or "." (kastlan 40).
- * The same answer `NumberField` gives, for the same reason: a mark outside those two
- * (Arabic's "٫") is not one {@link sanitizeLive} lets through, so those locales keep
- * the dot rather than get a field that eats the key it shows.
- */
-function decimalMark(locale: string | undefined): "," | "." {
-  try {
-    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
-    return part?.value === "," ? "," : ".";
-  } catch {
-    // An invalid tag throws a RangeError; a typo in a locale must not take the form down.
-    return ".";
-  }
-}
+// The locale's decimal mark and the grouping parse (kastlan 40, keksdose G1) live in
+// `lib/decimal-marks.ts`, shared with NumberInput since 0.22 (keksdose K5).
 
-/**
- * Which typed mark is the decimal one (keksdose G1). {@link sanitizeLive} folds every
- * "," into ".", so on its own it read the German "1.234,56" as 1.23456 — and the
- * settle then made that 1.23, final. This decides per operand, from the typist's own
- * text, before that fold:
- *
- * - both marks present: the one that is not the locale's is grouping, and goes;
- * - in a "," locale, only "." present: grouping when it cannot be a decimal as a
- *   German reader writes it — twice ("1.234.567"), or in thousands shape ("1.234",
- *   "12.500") — otherwise a decimal ("1.5", typed by a dot-decimal habit);
- * - in a "." locale, only "," present: grouping when it appears twice ("1,234,567");
- *   once it stays a decimal, because Swiss and German typists write "1,5" in a
- *   de-CH form (kastlan 40) and a unit price "1,789" is a decimal.
- *
- * Only a keystroke's text comes through here. A calculator result is dot-decimal
- * already, and "1.234" from `100/81.03…` is never a thousand.
- */
-function normalizeTypedMarks(raw: string, mark: "," | "."): string {
-  const other = mark === "," ? "." : ",";
-  return raw.replace(/[0-9.,]+/g, (operand) => {
-    const hasMark = operand.includes(mark);
-    const count = operand.split(other).length - 1;
-    if (count === 0) return operand;
-    const grouping = hasMark
-      ? true
-      : count > 1 || (mark === "," && /^\d{1,3}(\.\d{3})+$/.test(operand));
-    return grouping ? operand.split(other).join("") : operand;
-  });
-}
+// The error line under a field — the type of `ui.tsx`'s (module-private) one, so an
+// AmountInput's message is indistinguishable from an Input's.
+const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
 
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
 // not a bespoke rose/emerald pairing: a figure being typed has to wear the same
@@ -311,20 +291,23 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const hintId = useId();
+    const errorId = useId();
     // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
     const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-    const describedBy = textHint ? (ariaDescribedBy ? `${ariaDescribedBy} ${hintId}` : hintId) : ariaDescribedBy;
-    const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
+    const hasError = hasMessage(error);
+    // The standing advice first, the news second: the caller's ids, the caption, the error.
+    const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
+    const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
     const editable = !!onCurrencyChange;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
     // end padding keys off showCalc, so it tightens up automatically.
     const isMobile = useMediaQuery(PHONE_QUERY, false);
-    const showCalc = !disabled && !isMobile;
+    const showCalc = calculator && !disabled && !isMobile;
     const [focused, setFocused] = useState(false);
     // On mobile, focusing the field opens the numpad bottom sheet in place of the
     // native keyboard (feedback #334) — a full calculator keypad, not just the old
@@ -381,15 +364,17 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // decimals (keksdose live #356). Display only — `value` is the host's, untouched.
     const displayDigits = digitsProp ?? currencyMinorDigits(currency);
     const resting = focused ? shown : settleAmount(shown, displayDigits);
-    const derived = mark === "," ? resting.replace(/\./g, ",") : resting;
-    const draftAs = draft === null ? "" : sanitizeLive(normalizeTypedMarks(draft, mark));
+    const derived = localizeMark(resting, mark);
+    // The draft only while it says what the field holds AND holds nothing the live
+    // sanitising would drop — a letter, a second decimal point — which would otherwise
+    // stay on screen while the value said something else (see `showsTyped`).
     const display =
       draft === null
         ? derived
-        : draftAs === shown
+        : showsTyped(draft, mark, shown)
           ? draft
           : // The caller owns the sign: the typed "12" is shown as the "-12" it is.
-            signOwned && negative && `-${draftAs}` === shown
+            signOwned && negative && shown.startsWith("-") && showsTyped(draft, mark, shown.slice(1))
             ? `-${draft}`
             : derived;
     // Every route into the field — typing, the numpad sheet, the desktop
@@ -434,7 +419,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     };
     const typed = (raw: string) => {
       setDraft(raw);
-      handleText(normalizeTypedMarks(raw, mark));
+      handleText(readTyped(raw, mark));
     };
     const { open, setOpen, wrapperRef, panelRef, query, setQuery, inputRef } = useDropdownSearch();
     // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
@@ -565,9 +550,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         >
           {showCalc && (
             <CalculatorButton
-              // The mark the field shows, as NumberInput hands its calculator; the
-              // evaluator reads either, and its result comes back dot-decimal.
-              value={display}
+              // The mark the field shows but not the typist's grouping: the evaluator
+              // reads either mark, and "1.234,5" is two of them. The result comes back
+              // dot-decimal.
+              value={derived}
               onChange={(result, expression) => {
                 setDraft(null);
                 const settled = settle(result);
@@ -658,6 +644,13 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         {textHint && (
           <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
             {hint}
+          </p>
+        )}
+        {/* The news after the standing advice, as Select orders them. The root is
+            already a steady box, so the message coming and going remounts nothing. */}
+        {hasError && (
+          <p id={errorId} className={FIELD_ERROR_CLASS}>
+            {error}
           </p>
         )}
         {showNumpad && (

@@ -5,6 +5,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
+import { useCommitReason } from "./write-lock";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -428,6 +429,27 @@ export interface FileButtonProps
    * file leaves it as it was. Off by default, so the button's layout is unchanged.
    */
   showFileName?: boolean;
+  /**
+   * Why picking is not available — {@link Button}'s `disabledReason`, with the picker's
+   * half added (keksdose K3): the button is `aria-disabled` but stays focusable, the
+   * reason is in the kit Tooltip and its description, a click opens no picker, and a
+   * `droppable` button takes no drop (the drag is still cancelled, so the browser does
+   * not navigate to the file). Wins over `disabled`, as on Button.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This pick COMMITS — an upload that starts on pick, an attachment saved at once.
+   * Under a locked {@link WriteLockProvider} it takes the `disabledReason` path with
+   * the lock's reason (which wins over one of its own). No provider, or an unlocked
+   * one: no effect. A picker that only fills a form the user saves later is not a
+   * commit, and is left live — the form's Save carries the lock.
+   */
+  commit?: boolean;
+}
+
+/** A reason that is really there — `null`, `false` and `""` are no reason. */
+function hasReason(reason: ReactNode): boolean {
+  return reason !== undefined && reason !== null && reason !== false && reason !== "";
 }
 
 /**
@@ -459,6 +481,8 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     droppable,
     showFileName = false,
     disabled,
+    disabledReason: ownDisabledReason,
+    commit,
     children,
     className,
     onClick,
@@ -470,7 +494,13 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   },
   ref,
 ) {
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
+  const locked = hasReason(disabledReason);
   const inert = Boolean(disabled || pending);
+  // What takes no files: busy, disabled, or locked with a reason. Kept apart from
+  // `inert`, which is what reaches the button's NATIVE `disabled` — a locked button
+  // stays focusable (Button's `disabledReason` path), so `locked` must not get there.
+  const refusing = inert || locked;
   const [picked, setPicked] = useState<readonly File[]>([]);
   const pickedId = useId();
   const pickerLabels = useKitLabels("filePicker", DEFAULT_FILE_PICKER_LABELS, labels);
@@ -491,7 +521,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
     onPick,
     onReject,
     labels,
-    disabled: inert,
+    disabled: refusing,
   });
   const pickedText =
     picked.length === 0 ? "" : picked.length === 1 ? picked[0].name : pickerLabels.selected(picked.length, picked[0].name);
@@ -505,7 +535,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
           onDragEnter?.(e);
           if (!hasFiles(e)) return;
           e.preventDefault();
-          if (!inert) setDragOver(true);
+          if (!refusing) setDragOver(true);
         },
         onDragOver: (e: DragEvent<HTMLButtonElement>) => {
           onDragOver?.(e);
@@ -513,7 +543,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
           // Always cancel for a file drag, busy or not: an uncancelled drop makes the
           // browser NAVIGATE to the file, which loses the page.
           e.preventDefault();
-          e.dataTransfer.dropEffect = inert ? "none" : "copy";
+          e.dataTransfer.dropEffect = refusing ? "none" : "copy";
         },
         onDragLeave: (e: DragEvent<HTMLButtonElement>) => {
           onDragLeave?.(e);
@@ -542,6 +572,9 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
       {...dropHandlers}
       type="button"
       disabled={inert}
+      // Resolved here rather than passed on as `commit`: the picker above has to know
+      // it is locked too, and one resolution keeps the two from disagreeing.
+      disabledReason={locked ? disabledReason : undefined}
       aria-busy={pending || undefined}
       aria-describedby={
         showFileName && pickedText

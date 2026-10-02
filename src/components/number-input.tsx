@@ -1,16 +1,25 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
+import { CURRENCIES } from "./currency-select";
+import { hasMessage, mergeDescribedBy } from "./choice-parts";
 import { cn } from "../lib/cn";
-import { commitExpression, formatResult, sanitizeLive } from "../lib/calc";
+import { commitExpression, formatResult } from "../lib/calc";
+import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
 import { useMediaQuery } from "../hooks/use-media-query";
+import { useKitLocale } from "../i18n/kit-labels";
 
 interface NumberInputProps {
+  /** The text, DOT-decimal ("1234.5", or a calculation being typed: "12+5"), as
+   *  `onChange` reports it — so a caller's `Number(value)` reads it. The field SHOWS it
+   *  in the locale's mark (see `locale`). A comma here is read as the decimal mark too,
+   *  never as grouping. */
   value: string;
-  /** Fired on every keystroke with the raw text (comma → dot, operators kept so
-   * a typed expression survives). */
+  /** Fired on every keystroke with the text as a number reads it: grouping marks read
+   *  off ("1.234,56" → "1234.56" for a German typist, keksdose K5), the decimal mark
+   *  folded to a dot, operators kept so a typed expression survives. */
   onChange: (value: string) => void;
   /** Fired on blur/Enter with the *evaluated* value — use this for save-on-blur
    * fields so the save always sees the resolved number, never "10+5". */
@@ -60,6 +69,29 @@ interface NumberInputProps {
   hint?: ReactNode;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
+  /**
+   * What is wrong with the value, in the caller's own words — {@link Input}'s `error`,
+   * the same anatomy (keksdose K5/K4: of the kit's fields only `Input` and
+   * `NumberField` had one, so a goal target or a rate field wrote its message as a
+   * loose `<p>` that nothing pointed at). Rendered under the field, after a text
+   * `hint`; merged into `aria-describedby` after the caller's ids and the hint's; and
+   * it implies `invalid`, so the field paints as well as announces. `null`, `false`
+   * and `""` — a `touched && errors.x` on the happy path — are no message.
+   *
+   * Passing the key at all (even `undefined`) keeps the field in a steady wrapper,
+   * message or not, so the message coming and going never remounts the `<input>` and
+   * takes the caret with it — see `Input`'s `FieldGroup`. A field that never passes
+   * `error` renders exactly the DOM it did before the prop existed.
+   */
+  error?: ReactNode;
+  /**
+   * BCP 47 tag that decides the decimal mark the field SHOWS; default the
+   * `<UiKitProvider locale>`, else the runtime's (keksdose K5). A French or Italian
+   * reader sees "3,5", a German one too, de-CH and en-US see "3.5" — `Intl`
+   * decides, not a guess about a country. Display only: `value` and `onChange` stay
+   * dot-decimal. {@link NumberField} passes its own `locale` through here.
+   */
+  locale?: string;
   /**
    * Set on the `<input>`, with `id` above. Declared so `Field`'s render-prop spread —
    * `{(ids) => <NumberInput {...ids} … />}` — is typed and reaches the input: the hint
@@ -145,45 +177,128 @@ export function stepNumber(
   return clamp(Number((origin + k * step).toFixed(places)));
 }
 
+// The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
+// NumberInput's message is indistinguishable from an Input's.
+const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+
+// ── The money guard (kastlan 5, Kurvenschmiede) ─────────────────────────────────
+
+// The codes the kit's own currency pickers offer, as whole words: "Amount (CHF)",
+// "EUR", "Kosten CHF". Not every ISO 4217 code — "ALL", "TOP" and "PEN" are codes too,
+// and an upper-case label would trip on them.
+const CURRENCY_CODE = new RegExp(`(?:^|[^A-Za-z])(?:${CURRENCIES.map((c) => c.code).join("|")})(?![A-Za-z])`);
+// Symbols no unit of measure is written with. Not "kr", "R" or "Fr": those are words
+// and units as often as they are money.
+const CURRENCY_SYMBOL = /[€$£¥₹₺₽₪₩₫฿₴₦₱]/;
+
+/** Text that names a currency and no unit to go with it. A slash makes it a rate or
+ *  a unit price ("CHF/m²", "€/kWh") — a figure whose decimals are its column's
+ *  business, not the currency's — and that is not what the guard is for. */
+function namesMoney(node: ReactNode): boolean {
+  if (typeof node !== "string" && typeof node !== "number") return false;
+  const text = String(node);
+  return (CURRENCY_CODE.test(text) || CURRENCY_SYMBOL.test(text)) && !text.includes("/") && !text.includes("%");
+}
+
+/**
+ * Is this field being used for MONEY? A currency in the unit (`suffix="CHF"`), or in
+ * the label, `ariaLabel` or placeholder of a field with no unit at all ("Estimated
+ * cost (CHF)"). Any other suffix is a unit — "%", "mm", "N·m" — and says what the
+ * digits are, whatever the label says. `digits` plays no part: NumberInput has none,
+ * and Kurvenschmiede's engineering fields at 2 and 3 decimals are exactly what this
+ * must stay quiet about.
+ */
+function looksLikeMoney(suffix: ReactNode, texts: ReactNode[]): boolean {
+  if (suffix !== undefined && suffix !== null && suffix !== "") return namesMoney(suffix);
+  return texts.some(namesMoney);
+}
+
+/**
+ * The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ * production one — the consumer's bundler replaces `import.meta.env.DEV` with `false`
+ * there, and this branch is dead code — and never under vitest, where every consumer
+ * suite would print it once per render of every field it has not migrated yet. Read
+ * per call rather than once per module, so a test can switch it on with `vi.stubEnv`.
+ * Optional-chained: `import.meta.env` is a Vite injection, absent under plain Node.
+ */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
 /**
  * A numeric text field with a built-in calculator: type a calculation straight
  * in (e.g. "12+5", evaluated on blur/Enter) or click the trailing calculator
  * icon for a keypad. String `value`/`onChange` contract, mirroring
- * {@link AmountInput} — the currency-free counterpart for budgets, goals,
- * invoice totals and split lines.
+ * {@link AmountInput} — the currency-free counterpart for quantities, rates,
+ * percentages and measurements.
+ *
+ * NOT FOR MONEY. This field never rounds: "12.345", or a calculator's "100/3", is
+ * reported exactly as typed. kastlan's journal lines, a payment allocation and a
+ * defect's estimated cost were NumberInputs, and a 3-decimal amount reached a
+ * 2-decimal Money column and failed the save with a 422 — in one wizard after the
+ * record before it had already been created (kastlan 5). Money goes in
+ * {@link AmountInput} (string value, like this one) or {@link MoneyField} (number
+ * value): both settle to the currency's minor unit on blur, Enter and every calculator
+ * result, and take `digits` for a unit price at a finer scale. In development a
+ * NumberInput that looks like money — a currency as its unit, or a currency in the
+ * label of a field with no unit — says so on the console, once per field. A unit of
+ * measure ("mm", "N·m", "%") keeps it quiet, as does any number of decimals.
+ *
+ * THE LOCALE'S MARK (keksdose K5). The field shows the `locale`'s decimal mark — "3,5"
+ * to a French, Italian or German reader — and reads what is typed the way
+ * {@link AmountInput} does (keksdose G1): "1.234,56" from a German typist is 1234.56,
+ * "1,234.56" from an English one too, and a lone mark that cannot be grouping is the
+ * decimal, whichever key typed it. Before, it always showed "3.5" and folded
+ * "1.234,56" into 1.23456. `value` and `onChange` stay dot-decimal, which is the
+ * contract every caller's `Number(value)` reads.
+ *
+ * While a figure is being typed the field shows the typist's OWN text — "1.234,5"
+ * stays exactly that — rather than the value re-spelt: re-spelling turned a grouping
+ * "." into a "," under their fingers, after which no rule could tell the two apart, and
+ * a text that changes length under the caret moves it to the end. It is re-spelt in the
+ * locale's mark, without grouping, once the figure settles (blur, Enter, a step or a
+ * calculator result) or when the value changes from outside.
  */
-export function NumberInput({
-  value,
-  onChange,
-  onCommit,
-  label,
-  ariaLabel,
-  labels,
-  placeholder,
-  disabled,
-  autoFocus,
-  className,
-  inputClassName,
-  id,
-  calculator = true,
-  variant = "field",
-  hint,
-  invalid: invalidProp,
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-  "aria-required": ariaRequired,
-  suffix,
-  step,
-  min,
-  max,
-}: NumberInputProps) {
+export function NumberInput(props: NumberInputProps) {
+  const {
+    value,
+    onChange,
+    onCommit,
+    label,
+    ariaLabel,
+    labels,
+    placeholder,
+    disabled,
+    autoFocus,
+    className,
+    inputClassName,
+    id,
+    calculator = true,
+    variant = "field",
+    hint,
+    invalid: invalidProp,
+    error,
+    locale: localeProp,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    "aria-required": ariaRequired,
+    suffix,
+    step,
+    min,
+    max,
+  } = props;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const hintId = useId();
+  const errorId = useId();
   // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
   const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-  const describedBy = textHint ? (ariaDescribedBy ? `${ariaDescribedBy} ${hintId}` : hintId) : ariaDescribedBy;
-  const invalid = Boolean(invalidProp) || ariaInvalid === true || ariaInvalid === "true";
+  const hasError = hasMessage(error);
+  // Passed at all — even as `undefined` — the field keeps its box; see `error`.
+  const reserve = "error" in props || "hint" in props;
+  // The standing advice first, the news second: the caller's ids, the caption, the error.
+  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
+  const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
@@ -219,13 +334,52 @@ export function NumberInput({
   const showNumpad = isMobile && !disabled && focused;
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // The mark is the locale's; see the component's note. `derived` is the value in that
+  // mark — one character for one, no grouping — and `draft` the typist's own text,
+  // shown only while it still says what the value says (see `showsTyped`).
+  const mark = decimalMark(useKitLocale(localeProp));
+  const [draft, setDraft] = useState<string | null>(null);
+  const derived = localizeMark(value, mark);
+  const display = draft !== null && showsTyped(draft, mark, value) ? draft : derived;
+
+  // A keystroke, a paste or a numpad key: the typist's text is kept, the value is what
+  // a number reads it as.
+  const typed = (raw: string) => {
+    setDraft(raw);
+    onChange(readTyped(raw, mark));
+  };
+  // A RESULT — the calculator's, the numpad's "=" — is dot-decimal already. It does not
+  // go through `typed`: "1.234" out of `100/81.03…` is never a thousand.
+  const result = (next: string) => {
+    setDraft(null);
+    onChange(next);
+  };
+
+  // The money guard: once per field, development only. See `looksLikeMoney`.
+  const warnedMoney = useRef(false);
+  useEffect(() => {
+    if (warnedMoney.current || !devWarnings()) return;
+    if (!looksLikeMoney(suffix, [label, ariaLabel, placeholder])) return;
+    warnedMoney.current = true;
+    const name = [label, ariaLabel, suffix].find((t) => typeof t === "string" || typeof t === "number");
+    console.warn(
+      `[ui-kit] NumberInput${name === undefined ? "" : ` "${String(name)}"`} looks like a money field: a ` +
+        `currency, and no unit. NumberInput never rounds, so "12.345" or a calculator's "100/3" is sent with ` +
+        `three or more decimals (kastlan 5: a 422 from a 2-decimal Money column). Use AmountInput (string ` +
+        `value) or MoneyField (number value) — both settle to the currency's minor unit. ` +
+        `(Development builds only; once per field.)`,
+    );
+  }, [suffix, label, ariaLabel, placeholder]);
+
   const commit = () => {
+    setDraft(null);
     const next = commitExpression(value);
     if (next !== value) onChange(next);
     onCommit?.(next);
   };
 
   const stepBy = (count: number) => {
+    setDraft(null);
     // The step starts from the text as a commit would read it, so "12+5" steps from 17.
     const resolved = commitExpression(value).trim();
     const n = resolved === "" ? NaN : Number(resolved);
@@ -269,8 +423,8 @@ export function NumberInput({
         // and an empty borderless figure shows nothing — so it keeps whatever
         // placeholder the caller gave, falling back to a zero to aim at.
         placeholder={asDisplay ? (placeholder ?? "0") : labelled ? " " : placeholder}
-        value={value}
-        onChange={(e) => onChange(sanitizeLive(e.target.value))}
+        value={display}
+        onChange={(e) => typed(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => {
           commit();
@@ -314,8 +468,10 @@ export function NumberInput({
         <div ref={endRef} className="absolute inset-y-0 end-0 flex items-center">
           {showCalc && (
             <CalculatorButton
-              value={value}
-              onChange={onChange}
+              // Seeded with the value in the field's mark but WITHOUT the typist's
+              // grouping: the evaluator reads either mark, but "1.234,5" is two of them.
+              value={derived}
+              onChange={result}
               className="self-stretch px-2.5"
               ariaLabel={labels?.calculatorTrigger}
               labels={labels?.calculator}
@@ -335,25 +491,36 @@ export function NumberInput({
       )}
       {showNumpad && (
         <NumberPadSheet
-          value={value}
-          onChange={onChange}
+          // Localised like the field it mirrors, as AmountInput's is: its keys are
+          // typing, read by the locale's marks like the keyboard's; "=" is a result.
+          value={display}
+          onChange={typed}
+          onResult={result}
           onDone={() => inputRef.current?.blur()}
           label={label}
           labels={labels?.pad}
+          decimalMark={mark}
         />
       )}
     </FloatingField>
   );
-  if (!textHint) return field;
+  if (!textHint && !hasError && !reserve) return field;
   // Outside the field's own `relative` box, as Select's caption is: the calculator
   // and the unit are `inset-y-0` in it and would stretch down over a second line.
   // `className` stays on the field, so adding a caption cannot change what it styles.
   return (
     <div>
       {field}
-      <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
-        {hint}
-      </p>
+      {textHint && (
+        <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+          {hint}
+        </p>
+      )}
+      {hasError && (
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

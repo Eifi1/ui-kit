@@ -2,6 +2,7 @@ import { forwardRef, useId } from "react";
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { LockedReason, useLockReason } from "./field-parts";
 
 /**
  * An on/off switch that is still `<input type="checkbox">`, with `role="switch"`.
@@ -79,6 +80,25 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
    * label WITHOUT a literal "*". No mark without a label.
    */
   required?: boolean;
+  /**
+   * Why the switch cannot be flipped — {@link Button}'s `disabledReason`. A switch is
+   * the control that "takes effect the moment it is flipped", so it is the first one
+   * keksdose K3 names: its settings rows sat behind a `SaveGuard` that forced a native
+   * `disabled`, out of the tab order, so the reason never reached a keyboard.
+   *
+   * With a reason the switch is `aria-disabled` instead: still focusable, a click or
+   * Space flips nothing and fires no `onChange` / `onCheckedChange`, the reason is in
+   * the kit {@link Tooltip} on the track and on its `aria-describedby`, and the row
+   * fades as a disabled one does. It wins over `disabled`. Changing the lock mounts the
+   * switch anew (it moves in or out of the Tooltip), as a locked Button is.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This switch COMMITS — flipping it saves. Under a locked {@link WriteLockProvider} it
+   * is locked the `disabledReason` way with the lock's reason (which wins over its
+   * own). No provider, or an unlocked one: no effect. Button's `commit`, for K3.
+   */
+  commit?: boolean;
 }
 
 /**
@@ -101,38 +121,69 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     id,
     disabled,
     required,
+    disabledReason,
+    commit,
+    onClick,
     ...rest
   },
   ref,
 ) {
   const generated = useId();
   const inputId = id ?? generated;
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
+  // Locked is disabled the focusable way — the row fades and the words stop inviting a
+  // click, as for `disabled`.
+  const looksDisabled = Boolean(disabled) || locked;
   const descriptionId = `${inputId}-description`;
   const showDescription = hasMessage(description);
   const bare = label === undefined && !showDescription;
   const geometry = SIZES[size];
 
-  const control = (
-    <span className={cn("relative inline-flex shrink-0", bare && className)}>
+  const track = (
+    <span className={cn("relative inline-flex shrink-0", bare && !locked && className)}>
       <input
         ref={ref}
         id={bare ? id : inputId}
-        disabled={disabled}
+        // A reason wins over `disabled`, as on Button: the switch stays reachable.
+        disabled={locked ? undefined : disabled}
         required={required}
         {...rest}
         // After the spread: a caller's props object must not be able to turn this
         // back into a plain checkbox, or into a text field.
         type="checkbox"
         role="switch"
-        aria-describedby={mergeDescribedBy(rest["aria-describedby"], showDescription && descriptionId)}
+        aria-disabled={locked || rest["aria-disabled"] || undefined}
+        aria-describedby={mergeDescribedBy(
+          rest["aria-describedby"],
+          showDescription && descriptionId,
+          locked && lock.reasonId,
+        )}
+        // A locked switch's click is swallowed, as a locked Button's is.
+        onClick={locked ? undefined : onClick}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          if (locked) {
+            // Put the thumb back and report nothing — see Checkbox for why here and not
+            // by cancelling the click. Label clicks and Space arrive as clicks too.
+            e.currentTarget.checked = !e.currentTarget.checked;
+            return;
+          }
           onChange?.(e);
           onCheckedChange?.(e.target.checked);
         }}
-        className={cn(TRACK, geometry.track, inputClassName)}
+        className={cn(TRACK, geometry.track, locked && "cursor-not-allowed", inputClassName)}
       />
       <span aria-hidden className={cn(THUMB, geometry.thumb)} />
     </span>
+  );
+  // The Tooltip goes round the track, not the row — the row is the caller's layout. A
+  // bare switch hands its `className` to the wrapper, then the outermost element.
+  const control = locked ? (
+    <LockedReason lock={lock} className={cn("shrink-0", bare && className)}>
+      {track}
+    </LockedReason>
+  ) : (
+    track
   );
 
   if (bare) return control;
@@ -148,7 +199,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           htmlFor={inputId}
           className={cn(
             "block text-sm leading-5 text-[var(--text-primary)]",
-            disabled ? "cursor-not-allowed" : "cursor-pointer select-none",
+            looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
           )}
         >
           {label}
@@ -168,7 +219,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   );
 
   return (
-    <div className={cn("flex items-start gap-3", disabled && "opacity-60", className)}>
+    <div className={cn("flex items-start gap-3", looksDisabled && "opacity-60", className)}>
       {switchPosition === "end" ? (
         <>
           {words}

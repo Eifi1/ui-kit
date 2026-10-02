@@ -2,6 +2,7 @@ import { useMemo, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Check } from "lucide-react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
+import { hasMessage, mergeDescribedBy } from "./choice-parts";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import {
@@ -117,6 +118,22 @@ export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div"
    *  this package carries it now, so a form can mark any of its fields rather than
    *  only the one that happened to have it first. */
   invalid?: boolean;
+  /**
+   * What is wrong with the choice, in the caller's own words — {@link Input}'s `error`
+   * (keksdose K4: of the kit's pickers this one had neither a message nor a caption, so
+   * "the account is in EUR" sat in a loose `<p>` beside it that nothing pointed at).
+   * Rendered under the field, after a text `hint`; merged into the trigger's
+   * `aria-describedby`; implies `invalid`. `null`, `false` and `""` are no message.
+   */
+  error?: ReactNode;
+  /**
+   * {@link Select}'s `hint`, the same rule (keksdose K4). A {@link FieldHint} "?" rides
+   * the label's line; on an unlabelled picker it sits at the field's end edge, outside
+   * the box. Plain TEXT (a string or a number) is a caption UNDER the field, attached
+   * to the trigger through `aria-describedby` — the label line has no room for a
+   * sentence.
+   */
+  hint?: ReactNode;
   /** Every user-facing string this control owns, shaped like `AmountInput`'s
    *  `labels` so the two currency pickers in the kit are configured the same way.
    *
@@ -156,9 +173,13 @@ export function CurrencySelect({
   label,
   options,
   invalid,
+  error,
+  hint,
   labels,
   currencyNames,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
   ...rest
 }: CurrencySelectProps) {
   const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
@@ -185,6 +206,18 @@ export function CurrencySelect({
   }, [query, pool, currencyNames, locale]);
 
   const listboxId = `${useId()}-listbox`;
+  const hintId = useId();
+  const errorId = useId();
+  // Text is a caption under the field; anything else (a FieldHint) rides the label
+  // line. See `hint`.
+  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
+  const labelHint = !textHint && hasMessage(hint) ? hint : undefined;
+  const hasError = hasMessage(error);
+  // On the TRIGGER, which is the control with a role: a caller's description used to
+  // land on the wrapper `<div>` through the spread, where nothing reads it. The
+  // caller's ids first, then the caption, then the error — Select's order.
+  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
+  const isInvalid = Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true";
 
   // The trigger's NAME. A combobox does not take its name from its content, and the
   // floating label is a <span>, not a <label for> — so without `aria-label` from the
@@ -194,44 +227,70 @@ export function CurrencySelect({
   const fieldName = typeof label === "string" ? label : text.currency;
   const name = ariaLabel ?? common.fieldValue(fieldName, selected ? selected.code : (placeholder ?? text.currency));
 
+  const trigger = (
+    <button
+      type="button"
+      aria-label={name}
+      onClick={() => setOpen((v) => !v)}
+      // The implicit `button` role supports neither `aria-expanded` nor
+      // `aria-invalid`, so this trigger previously wore a red border and announced
+      // nothing about being invalid or about there being a list behind it. The role
+      // that DESCRIBES it is the one that also supports the attributes — the same
+      // treatment its siblings (MultiSelect, the entity comboboxes) now carry, so a
+      // form row of pickers reads the same way throughout.
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-controls={listboxId}
+      aria-expanded={open}
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={describedBy}
+      className={cn(FIELD_TRIGGER, "pe-9", label !== undefined && FIELD_FLOATING_PAD, isInvalid && FIELD_INVALID)}
+    >
+      {/* The trigger stays COMPACT — flag + code only — so it never clips in a
+          narrow field; the full names live in the (wider) popup (feedback
+          #308). */}
+      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-[var(--text-primary)]" : "text-[var(--text-placeholder)]")}>
+        {selected ? (
+          <>
+            <CurrencyFlag country={selected.country} />
+            <span className="font-medium">{selected.code}</span>
+          </>
+        ) : (
+          placeholder ?? text.currency
+        )}
+      </span>
+      <FieldChevron />
+    </button>
+  );
+
   return (
     // The wrapper takes `rest`; the trigger takes the name. This field's label is a
     // floating <span> rather than a <label for>, so a caller who wants the control to
     // announce more than the code inside it has nowhere else to put it.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel>{label}</FieldLabel>}
-      <button
-        type="button"
-        aria-label={name}
-        onClick={() => setOpen((v) => !v)}
-        // The implicit `button` role supports neither `aria-expanded` nor
-        // `aria-invalid`, so this trigger previously wore a red border and announced
-        // nothing about being invalid or about there being a list behind it. The role
-        // that DESCRIBES it is the one that also supports the attributes — the same
-        // treatment its siblings (MultiSelect, the entity comboboxes) now carry, so a
-        // form row of pickers reads the same way throughout.
-        role="combobox"
-        aria-haspopup="listbox"
-        aria-controls={listboxId}
-        aria-expanded={open}
-        aria-invalid={invalid || undefined}
-        className={cn(FIELD_TRIGGER, "pe-9", label !== undefined && FIELD_FLOATING_PAD, invalid && FIELD_INVALID)}
-      >
-        {/* The trigger stays COMPACT — flag + code only — so it never clips in a
-            narrow field; the full names live in the (wider) popup (feedback
-            #308). */}
-        <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-[var(--text-primary)]" : "text-[var(--text-placeholder)]")}>
-          {selected ? (
-            <>
-              <CurrencyFlag country={selected.country} />
-              <span className="font-medium">{selected.code}</span>
-            </>
-          ) : (
-            placeholder ?? text.currency
-          )}
-        </span>
-        <FieldChevron />
-      </button>
+      {label !== undefined &&
+        (labelHint === undefined ? (
+          <FieldLabel>{label}</FieldLabel>
+        ) : (
+          // The label and its "?" as one row on the label's line, as FloatingField lays
+          // out a static label with a hint: the row places both, the label truncates
+          // and the hint keeps its width. `z-10` like FieldLabel's own: the trigger is
+          // `relative` and comes later, so it would paint over the strip.
+          <div className="pointer-events-none absolute inset-x-3 top-1 z-10 flex items-center gap-1">
+            <FieldLabel className="static z-auto min-w-0 max-w-none">{label}</FieldLabel>
+            <span className="pointer-events-auto flex shrink-0 items-center">{labelHint}</span>
+          </div>
+        ))}
+      {label === undefined && labelHint !== undefined ? (
+        // No label line to ride: at the field's end edge, outside the box, as an
+        // unlabelled Select places its FieldHint.
+        <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">{trigger}</div>
+          <span className="flex shrink-0 items-center">{labelHint}</span>
+        </div>
+      ) : (
+        trigger
+      )}
       {open && (
         <DropdownPanel
           // At least as wide as the trigger, but grows to fit the full currency
@@ -278,6 +337,23 @@ export function CurrencySelect({
             })}
         </DropdownPanel>
       )}
+      {/* After the panel, not before it, as MultiSelect places its message: the panel
+          is `absolute` with no `top`, so it opens at its place in the flow — under the
+          caption, had the caption come first. */}
+      {textHint && (
+        <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+          {hint}
+        </p>
+      )}
+      {hasError && (
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
+
+// The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
+// CurrencySelect's message is indistinguishable from an Input's.
+const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";

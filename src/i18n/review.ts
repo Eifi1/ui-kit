@@ -157,6 +157,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "confirmDialog.typed": [["{{text}}"]],
   "floatingPanel.badge": one,
   "bulkActionBar.selected": one,
+  "form.submitShortcut": [[true], [false]],
   "lineItems.remove": [[3]],
   "lineItems.confirmRemove": [[3]],
   "lineItems.row": [[3]],
@@ -190,4 +191,10 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "translationReview.lastFlagged": [["{{name}}", "{{date}}"]],
   "translationReview.scope": [["{{areas}}"]],
   "translationReview.exportCorrections": [[0], [1], [3]],
+  "characterCount.count": [[12, 80]],
+  "characterCount.remaining": one,
+  "inlineEdit.edit": [["{{label}}"]],
+  "ibanInput.country": [["{{code}}"]],
+  "ibanInput.length": [[20, 21]],
+  "signChip.direction": [["{{current}}", "{{next}}"]],
 };

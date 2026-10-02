@@ -40,6 +40,8 @@ export interface FeedbackAttachmentLabels {
   attachmentRemoveFile?: (name: string) => string;
   /** `multiple` mode: the line shown once `max` files are attached. */
   attachmentLimit?: (max: number) => string;
+  /** `refs` mode (0.22.0): the second line of a chip whose upload is still running. */
+  attachmentUploading?: string;
 }
 
 export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {

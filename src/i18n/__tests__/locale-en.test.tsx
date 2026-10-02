@@ -67,6 +67,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
     expect(changed.sort()).toEqual([
       "bulkActionBar.selected",
       "calendarHeatmap.truncated",
+      "characterCount.count",
+      "characterCount.remaining",
       "chipInput.atLimit",
       "combobox.minChars",
       "combobox.resultCount",
@@ -82,6 +84,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "filePicker.rejectedPick",
       "filePicker.selected",
       "floatingPanel.badge",
+      "ibanInput.length",
       "iconPicker.resultCount",
       "imageGrid.item",
       "lightbox.counter",

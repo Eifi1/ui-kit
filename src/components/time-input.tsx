@@ -31,9 +31,16 @@ import { cn } from "../lib/cn";
  *    {@link FIELD_INVALID} and `aria-invalid`. A reversed window (`min="22:00"
  *    max="06:00"`, a night shift, quiet hours) is read the way the HTML spec reads it:
  *    as wrapping past midnight.
+ *
+ * `hint` is Input's too (keksdose K4): text is a caption under the field ("Local time
+ * at the site"), a {@link FieldHint} rides the label line. `showCount` is typed out — a
+ * time has no length worth counting.
  */
 export interface TimeInputProps
-  extends Omit<InputProps, "type" | "value" | "defaultValue" | "min" | "max" | "step" | "variant"> {
+  extends Omit<
+    InputProps,
+    "type" | "value" | "defaultValue" | "min" | "max" | "step" | "variant" | "showCount" | "countLabels"
+  > {
   /** `"HH:mm"` (or `"HH:mm:ss"` with a sub-minute `step`); `""` is "no time". */
   value: string;
   /** The normalised value on every change the browser reports — which for a time

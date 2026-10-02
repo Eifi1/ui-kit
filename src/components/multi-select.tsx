@@ -9,6 +9,7 @@ import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import { useActiveOptionScroll, useComboboxFieldError } from "./combobox-core";
+import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_MULTI_SELECT_LABELS,
@@ -55,6 +56,13 @@ export interface MultiSelectProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  caller passed) and implies `invalid` — {@link Input}'s `error`, on the same
    *  rules. */
   error?: ReactNode;
+  /**
+   * Standing advice for the field — {@link Combobox}'s `hint` (keksdose K4): plain TEXT
+   * is a caption under the field on the trigger's `aria-describedby`, before any error;
+   * a {@link FieldHint} "?" rides the label line, or with no label sits at the trigger's
+   * end edge, outside the box. Not an option's `hint`, which stays on its row.
+   */
+  hint?: ReactNode;
   /** The trigger cannot be opened: FIELD_BASE's settled grey, no chevron (as a
    *  disabled {@link Select} drops its own), and a dimmed label. */
   disabled?: boolean;
@@ -75,6 +83,7 @@ export function MultiSelect({
   panelClassName,
   invalid,
   error,
+  hint,
   disabled,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
@@ -92,7 +101,8 @@ export function MultiSelect({
     selectedCount: itemLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const field = useComboboxFieldError(error, invalid, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const field = useComboboxFieldError(error, invalid, hintParts.describedBy);
   // One id per instance: `aria-controls` on the trigger names the list while the
   // list is still closed.
   const uid = useId();
@@ -163,64 +173,75 @@ export function MultiSelect({
     // the thing with a role. Spread FIRST so the ARIA the trigger composes, and the
     // handlers that open the list, cannot be replaced by accident from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && <FieldLabel className={disabled ? "opacity-50" : undefined}>{label}</FieldLabel>}
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        // A combobox, not a bare button: this trigger carried `aria-invalid`, which
-        // `button` does not support, so a required-and-empty filter painted its rose
-        // border and announced nothing (ESLint's `role-supports-aria-props`, the
-        // audit's §a11y). The role that describes it is the one that also supports
-        // the attribute.
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        aria-haspopup="listbox"
-        // The label is a floating <span>, not a <label for>, so without this the
-        // trigger announces only its summary — "3 selected", with nothing saying
-        // three of WHAT. The label AND the summary, because `aria-label` replaces
-        // the content rather than adding to it; the same composition its two
-        // siblings use, so a form row of pickers reads the same way throughout.
-        // A caller's own name wins: two filters labelled "Accounts" on one screen have
-        // to be told apart, and only the caller knows by what.
-        aria-label={
-          ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)
-        }
-        onClick={() => {
-          setOpen((v) => !v);
-          setActive(0);
-        }}
-        // Down/Up opens the list from the closed trigger, per the APG; Enter and
-        // Space already do through the button's own click.
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-            e.preventDefault();
-            setOpen(true);
-            setActive(0);
+      {label !== undefined && hintParts.labelHint === undefined && (
+        <FieldLabel className={disabled ? "opacity-50" : undefined}>{label}</FieldLabel>
+      )}
+      <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          // A combobox, not a bare button: this trigger carried `aria-invalid`, which
+          // `button` does not support, so a required-and-empty filter painted its rose
+          // border and announced nothing (ESLint's `role-supports-aria-props`, the
+          // audit's §a11y). The role that describes it is the one that also supports
+          // the attribute.
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-haspopup="listbox"
+          // The label is a floating <span>, not a <label for>, so without this the
+          // trigger announces only its summary — "3 selected", with nothing saying
+          // three of WHAT. The label AND the summary, because `aria-label` replaces
+          // the content rather than adding to it; the same composition its two
+          // siblings use, so a form row of pickers reads the same way throughout.
+          // A caller's own name wins: two filters labelled "Accounts" on one screen have
+          // to be told apart, and only the caller knows by what.
+          aria-label={
+            ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)
           }
-        }}
-        aria-invalid={field.isInvalid || undefined}
-        // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
-        // the component is taken off the wrapper for the same reason.
-        aria-describedby={field.describedBy}
-        className={cn(
-          FIELD_TRIGGER,
-          "pe-9",
-          label !== undefined && FIELD_FLOATING_PAD,
-          // FIELD_TRIGGER's hover would still light a trigger nothing can open.
-          "disabled:hover:bg-[var(--bg-surface-2)]",
-          // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
-          // only the label was, so a disabled MultiSelect read as live (showcase audit).
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          field.isInvalid && FIELD_INVALID,
-        )}
-      >
-        {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
-            than restating a lighter one (Keksdose dev#477). */}
-        <span className="truncate">{selectedSummary}</span>
-        {!disabled && <FieldChevron />}
-      </button>
+          onClick={() => {
+            setOpen((v) => !v);
+            setActive(0);
+          }}
+          // Down/Up opens the list from the closed trigger, per the APG; Enter and
+          // Space already do through the button's own click.
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              setOpen(true);
+              setActive(0);
+            }
+          }}
+          aria-invalid={field.isInvalid || undefined}
+          // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
+          // the component is taken off the wrapper for the same reason.
+          aria-describedby={field.describedBy}
+          className={cn(
+            FIELD_TRIGGER,
+            "pe-9",
+            label !== undefined && FIELD_FLOATING_PAD,
+            // FIELD_TRIGGER's hover would still light a trigger nothing can open.
+            "disabled:hover:bg-[var(--bg-surface-2)]",
+            // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
+            // only the label was, so a disabled MultiSelect read as live (showcase audit).
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            field.isInvalid && FIELD_INVALID,
+          )}
+        >
+          {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
+              than restating a lighter one (Keksdose dev#477). */}
+          <span className="truncate">{selectedSummary}</span>
+          {!disabled && <FieldChevron />}
+        </button>
+      </EndHintRow>
+      {/* With a "?" the label shares the top strip with it — after the trigger, so the
+          "?" follows the control in the tab order, as on Input and Select. */}
+      {label !== undefined && hintParts.labelHint !== undefined && (
+        <StaticLabelRow hint={hintParts.labelHint}>
+          <FieldLabel className={cn(LABEL_IN_ROW, disabled && "opacity-50")}>{label}</FieldLabel>
+        </StaticLabelRow>
+      )}
       {open && !disabled && (
         <DropdownPanel
           // 16rem by default; `panelClassName` is how a caller widens it (Keksdose
@@ -327,6 +348,7 @@ export function MultiSelect({
       {/* After the panel, not before it: the panel is `absolute` with no `top`, so it
           opens at its place in the flow — under the message, had the message come
           first. */}
+      <FieldCaption parts={hintParts} />
       {field.errorEl}
     </div>
   );

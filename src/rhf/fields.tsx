@@ -10,6 +10,9 @@
  *   <RhfSelect name="type" label="Type" options={TYPES} />
  *   <RhfCombobox name="tenantId" label="Tenant" options={tenants} clearable />
  *   <RhfCheckbox name="isDefault" label="Default account" />
+ *   <RhfTimeInput name="meetingTime" label="Time" />
+ *   <RhfDateRangePicker fromName="periodFrom" toName="periodTo" label="Period" />
+ *   <RhfToggleGroup name="interval" label="Interval" options={INTERVALS} />
  * </Form>
  * ```
  *
@@ -41,19 +44,34 @@
  * {@link RhfField} is the shell they are all built on, for a control the kit does not
  * ship (an address autocomplete): it takes a `render` and wires the rest.
  */
-import { useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
-import type {
-  ControllerFieldState,
-  ControllerProps,
-  ControllerRenderProps,
-  FieldPath,
-  FieldValues,
+import { useLayoutEffect, useRef, useState, type FocusEvent, type ReactElement, type ReactNode } from "react";
+import {
+  useController,
+  type ControllerFieldState,
+  type ControllerProps,
+  type ControllerRenderProps,
+  type FieldPath,
+  type FieldValues,
 } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form";
 import { Input, Select, Textarea, type InputProps, type SelectProps, type TextareaProps } from "../components/ui";
 import { NumberField, type NumberFieldProps } from "../components/number-field";
 import { AmountInput } from "../components/amount-input";
-import { DatePicker, type DatePickerProps } from "../components/date-picker";
+import {
+  DatePicker,
+  DateRangePicker,
+  type DatePickerProps,
+  type DateRangePickerProps,
+} from "../components/date-picker";
+import { TimeInput, type TimeInputProps } from "../components/time-input";
+import { IbanInput, type IbanInputProps } from "../components/iban-input";
+import { PhoneInput, type PhoneInputProps } from "../components/phone-input";
+import {
+  ToggleGroup,
+  type ToggleGroupBaseProps,
+  type ToggleGroupClearableProps,
+  type ToggleGroupRequiredProps,
+} from "../components/toggle-group";
 import { Checkbox, type CheckboxProps } from "../components/checkbox";
 import { EntityCombobox, type EntityComboboxProps } from "../components/entity-combobox";
 import { Combobox, type ComboboxProps } from "../components/combobox";
@@ -679,7 +697,9 @@ export type RhfDateFieldProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Omit<DatePickerProps, "value" | "onChange" | "label" | "invalid" | "disabled" | "className" | "id"> & {
+  // `error`: the form's message is shown by the binding (FormMessage); the picker's own
+  // `error` (0.22) would show it a second time.
+  Omit<DatePickerProps, "value" | "onChange" | "label" | "invalid" | "disabled" | "className" | "id" | "error"> & {
     /** Classes for the picker. Default `w-full`. */
     inputClassName?: string;
     /** What a cleared date stores. Default `""`, the empty ISO string; `null` for a
@@ -762,6 +782,417 @@ export function RhfDateField<
           pickerProps={pickerProps}
         />
       )}
+    />
+  );
+}
+
+// ── date range ───────────────────────────────────────────────────────────────
+
+type OwnDateRangeProps = Omit<
+  DateRangePickerProps,
+  "from" | "to" | "onChange" | "label" | "invalid" | "disabled" | "className" | "id" | "error"
+>;
+
+export type RhfDateRangePickerProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TFromName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TToName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = Omit<RhfFieldBaseProps<TFieldValues, TFromName, TTransformed>, "name" | "rules"> &
+  OwnDateRangeProps & {
+    /** The form field holding the range's first day, an ISO `"YYYY-MM-DD"`. */
+    fromName: TFromName;
+    /** The form field holding the range's last day. */
+    toName: TToName;
+    /** react-hook-form's `rules` for the start (`required`, a `validate` …). */
+    fromRules?: ControllerProps<TFieldValues, TFromName, TTransformed>["rules"];
+    /** react-hook-form's `rules` for the end — the place for "not before the start",
+     *  which can read the start with `getValues`: the start is always written first. */
+    toRules?: ControllerProps<TFieldValues, TToName, TTransformed>["rules"];
+    /** Classes for the picker. Default `w-full`. */
+    inputClassName?: string;
+    /** What an empty end stores — a clear, or the half-made range between the first
+     *  and second click. Default `""`, the empty ISO string; `null` for a nullable
+     *  schema. */
+    emptyValue?: "" | null;
+  };
+
+/**
+ * The kit's {@link DateRangePicker} over TWO form fields — `fromName` and `toName` —
+ * the way a period is stored: as two columns, each its own schema key, not one
+ * `{ from, to }` object (kastlan 4).
+ *
+ * ```tsx
+ * <RhfDateRangePicker fromName="periodFrom" toName="periodTo" label="Billing period"
+ *   presets={presets} clearable />
+ * ```
+ *
+ * Why it is not {@link RhfField}: a `Controller` binds one name, and the range is
+ * two. Built by hand — an `RhfField` on the start and a second `useController` for
+ * the end, which is what kastlan's period fields needed — it works until the END is
+ * the one in error: the shell's label, message and `aria-invalid` all read the
+ * start's state alone, so "End before start" (a `refine` with `path: ["periodTo"]`,
+ * where such a rule goes) never shows. Here both states are read:
+ *
+ *  - **Either field's error is shown and paints.** The label turns, the trigger is
+ *    `aria-invalid` and wears the danger border when EITHER field has an error, and
+ *    both messages are listed under the field (once, if the two say the same thing),
+ *    each pointed at by the trigger's `aria-describedby`.
+ *  - **One change writes both.** The picker reports the range whole, so the start and
+ *    then the end are written on every change — the end too when only the start
+ *    moved, so a cross-field rule on the end re-runs and an "End before start" clears
+ *    the moment the start is fixed. A clear (`clearable`'s ×) empties both.
+ *  - **Focus on error** lands on the trigger whichever of the two is in error.
+ *  - **Touched** once a range is complete or cleared — not on the first click of a
+ *    pick, which would mark (and, with `mode: "onTouched"`, validate) an end the user
+ *    is still choosing.
+ *
+ * In `commit="immediate"` mode (the picker's default) the first calendar click is
+ * reported on its own, so the form holds `(from, emptyValue)` until the second; with
+ * `commit="apply"` nothing reaches the form until Apply.
+ *
+ * The common props (`label`, `hint`, `required`, `disabled`, `excludeWhenDisabled`,
+ * `control`, `className`) apply to the pair; `rules` are per field.
+ */
+export function RhfDateRangePicker<
+  TFieldValues extends FieldValues = FieldValues,
+  TFromName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TToName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  fromName,
+  toName,
+  control,
+  fromRules,
+  toRules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  inputClassName,
+  emptyValue = "",
+  ...pickerProps
+}: RhfDateRangePickerProps<TFieldValues, TFromName, TToName, TTransformed>) {
+  const rhfDisabled = excludeWhenDisabled ? disabled : undefined;
+  // The end, read here; the start is the FormField below, which gives the label, hint
+  // and ids their context. This component re-renders on the end's state, and with it
+  // the FormField's render.
+  const to = useController<TFieldValues, TToName, TTransformed>({
+    name: toName,
+    control,
+    rules: toRules,
+    disabled: rhfDisabled,
+  });
+  return (
+    <FormField
+      control={control}
+      name={fromName}
+      rules={fromRules}
+      disabled={rhfDisabled}
+      render={({ field, fieldState }) => (
+        <FormItem className={className}>
+          <RangeBody
+            from={field as unknown as ControllerRenderProps}
+            fromState={fieldState}
+            to={to.field as unknown as ControllerRenderProps}
+            toState={to.fieldState}
+            label={label}
+            hint={hint}
+            required={required}
+            disabled={Boolean(disabled)}
+            emptyValue={emptyValue}
+            inputClassName={inputClassName}
+            pickerProps={pickerProps}
+          />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function RangeBody({
+  from,
+  fromState,
+  to,
+  toState,
+  label,
+  hint,
+  required,
+  disabled,
+  emptyValue,
+  inputClassName,
+  pickerProps,
+}: {
+  from: ControllerRenderProps;
+  fromState: ControllerFieldState;
+  to: ControllerRenderProps;
+  toState: ControllerFieldState;
+  label: ReactNode;
+  hint: ReactNode;
+  required?: boolean;
+  disabled: boolean;
+  emptyValue: "" | null;
+  inputClassName?: string;
+  pickerProps: OwnDateRangeProps;
+}) {
+  const { id, formItemId, formMessageId, describedBy } = useFormField();
+  // The trigger forwards no ref; both fields focus it, so `shouldFocusError` lands
+  // there whichever of the two is first in error.
+  useFocusHandle(from.ref, () => document.getElementById(formItemId));
+  useFocusHandle(to.ref, () => document.getElementById(formItemId));
+  const invalid = fromState.invalid || toState.invalid;
+  const messages = [fromState.error?.message, toState.error?.message].filter(
+    (m, i, all): m is string => typeof m === "string" && m !== "" && all.indexOf(m) === i,
+  );
+  const messageIds = messages.map((_, i) => `${formMessageId}-${i}`);
+  const fromValue: unknown = from.value;
+  const toValue: unknown = to.value;
+  return (
+    <>
+      {hasContent(label) && (
+        // FormLabel colours from the START's error alone (its context is that field);
+        // the pair's state says it here.
+        <FormLabel id={`${id}-label`} required={required} data-error={invalid || undefined}>
+          {label}
+        </FormLabel>
+      )}
+      <DateRangePicker
+        {...pickerProps}
+        id={formItemId}
+        // Merged, never replaced — a caller's own reference first, as FormControl does.
+        aria-describedby={
+          [pickerProps["aria-describedby"], describedBy, ...messageIds].filter(Boolean).join(" ") || undefined
+        }
+        aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
+        from={typeof fromValue === "string" ? fromValue : ""}
+        to={typeof toValue === "string" ? toValue : ""}
+        onChange={(f, t) => {
+          from.onChange(f === "" ? emptyValue : f);
+          to.onChange(t === "" ? emptyValue : t);
+          if (t !== "" || f === "") {
+            from.onBlur();
+            to.onBlur();
+          }
+        }}
+        disabled={disabled || from.disabled || to.disabled}
+        invalid={invalid}
+        className={inputClassName ?? "w-full"}
+      />
+      {hasContent(hint) && <FormDescription>{hint}</FormDescription>}
+      {messages.map((message, i) => (
+        // FormMessage's look and its rule: no `role="alert"` — read when focus reaches
+        // the trigger, which names these in its description.
+        <p
+          key={message}
+          id={messageIds[i]}
+          data-slot="form-message"
+          className="text-[11px] leading-tight text-[var(--danger)]"
+        >
+          {message}
+        </p>
+      ))}
+    </>
+  );
+}
+
+// ── time ─────────────────────────────────────────────────────────────────────
+
+export type RhfTimeInputProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  Omit<
+    TimeInputProps,
+    | "name"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "onValueChange"
+    | "onBlur"
+    | "label"
+    | "error"
+    | "invalid"
+    | "className"
+    | "disabled"
+    | "required"
+  > & {
+    /** What a cleared time stores. Default `""`; `null` for a nullable schema. */
+    emptyValue?: "" | null;
+  };
+
+/**
+ * The kit's {@link TimeInput}: a time of day as `"HH:mm"` (`"HH:mm:ss"` when `step`
+ * asks for seconds), normalised before it reaches the form, so the stored value
+ * compares and sorts as a string. kastlan 4: the owner meeting's time was an
+ * {@link RhfField} with a hand-wired `TimeInput` in its render — `ref`, `name`, the
+ * `?? ""`, `onValueChange`, `onBlur`, `invalid` — the seven lines every bound field
+ * folds into one.
+ *
+ * `min` / `max` paint an out-of-window time (see TimeInput) but do not fail the form:
+ * validation stays the schema's or `rules`'. `rules={{ validate: (v) =>
+ * isTimeInRange(v, min, max) || "…" }}` says it with the same window.
+ */
+export function RhfTimeInput<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  emptyValue = "",
+  ...timeProps
+}: RhfTimeInputProps<TFieldValues, TName, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid }) => {
+        const value: unknown = field.value;
+        return (
+          <TimeInput
+            aria-required={required || undefined}
+            {...timeProps}
+            name={field.name}
+            ref={field.ref}
+            value={typeof value === "string" ? value : ""}
+            onValueChange={(v) => field.onChange(v === "" ? emptyValue : v)}
+            onBlur={field.onBlur}
+            disabled={field.disabled}
+            invalid={invalid}
+          />
+        );
+      }}
+    />
+  );
+}
+
+// ── IBAN and phone (0.22) ────────────────────────────────────────────────────
+
+type OwnTextishProps<P> = Omit<
+  P,
+  | "name"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "onValueChange"
+  | "onBlur"
+  | "label"
+  | "error"
+  | "invalid"
+  | "className"
+  | "disabled"
+  | "required"
+>;
+
+export type RhfIbanInputProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> & OwnTextishProps<IbanInputProps>;
+
+/**
+ * {@link IbanInput} bound to one field, which stores the COMPACT upper-case IBAN (what
+ * kastlan's server checks and its QR bill prints). The field's own checksum and
+ * `kind` messages show while the form has nothing to say; a form error (the schema's
+ * or `rules`') replaces them, as a caller's `error` does on the bare field. kastlan
+ * asked for the field; it binds everything through react-hook-form.
+ */
+export function RhfIbanInput<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  ...ibanProps
+}: RhfIbanInputProps<TFieldValues, TName, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid }) => {
+        const value: unknown = field.value;
+        return (
+          <IbanInput
+            aria-required={required || undefined}
+            {...ibanProps}
+            name={field.name}
+            ref={field.ref}
+            value={typeof value === "string" ? value : ""}
+            onValueChange={field.onChange}
+            onBlur={field.onBlur}
+            disabled={field.disabled}
+            invalid={invalid}
+          />
+        );
+      }}
+    />
+  );
+}
+
+export type RhfPhoneInputProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> & OwnTextishProps<PhoneInputProps>;
+
+/**
+ * {@link PhoneInput} bound to one field, which stores E.164 when the number reads as
+ * one and the typed text unchanged otherwise — kastlan's contacts keep their old free
+ * text until someone edits it. Validation (required, a pattern for E.164 only) is the
+ * schema's or `rules`'.
+ */
+export function RhfPhoneInput<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  ...phoneProps
+}: RhfPhoneInputProps<TFieldValues, TName, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid }) => {
+        const value: unknown = field.value;
+        return (
+          <PhoneInput
+            aria-required={required || undefined}
+            {...phoneProps}
+            name={field.name}
+            ref={field.ref}
+            value={typeof value === "string" ? value : ""}
+            onValueChange={field.onChange}
+            onBlur={field.onBlur}
+            disabled={field.disabled}
+            invalid={invalid}
+          />
+        );
+      }}
     />
   );
 }
@@ -896,6 +1327,172 @@ export function RhfCheckbox<
           description={hint}
         />
       )}
+    />
+  );
+}
+
+// ── toggle group ─────────────────────────────────────────────────────────────
+
+/** The two shapes a {@link ToggleGroup} comes in, carried over: `allowEmpty` picks
+ *  whether a press on the chosen option clears it, and types the caption to match. */
+type RhfToggleGroupMode<T extends string> =
+  | {
+      /** One option is always the answer (the default): a press on the chosen
+       *  option re-sends it. */
+      allowEmpty?: false;
+      semantics?: ToggleGroupRequiredProps<T>["semantics"];
+      caption?: ToggleGroupRequiredProps<T>["caption"];
+      emptyValue?: undefined;
+    }
+  | {
+      /** A press on the chosen option clears it, and the form stores `emptyValue`. */
+      allowEmpty: true;
+      semantics?: ToggleGroupClearableProps<T>["semantics"];
+      caption?: ToggleGroupClearableProps<T>["caption"];
+      /** What a cleared group stores. Default `null`; `""` for a schema that spells
+       *  "no choice" as an empty string. */
+      emptyValue?: null | "";
+    };
+
+export type RhfToggleGroupProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  T extends string = string,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  Pick<
+    ToggleGroupBaseProps<T>,
+    "options" | "optionClassName" | "overflow" | "size" | "aria-label" | "commit" | "disabledReason"
+  > & {
+    /** Classes for the group itself — `className` is the item's box. */
+    groupClassName?: string;
+  } & RhfToggleGroupMode<T>;
+
+/**
+ * The kit's {@link ToggleGroup} bound to one field: a choice between a few answers
+ * ("Monthly / Quarterly / Yearly"), stored as the chosen option's `value`. kastlan 4
+ * asked for it with {@link RhfTimeInput} and {@link RhfDateRangePicker}: the controls
+ * its forms still had to wire by hand through {@link RhfField}'s render.
+ *
+ * The label is the form's {@link FormLabel} above the bare group, as on every other
+ * bound field — the `labelPlacement="above"` shape, not the group's own field chrome —
+ * and it names the group (`aria-labelledby`); the hint and the message describe it,
+ * and an error paints the group's border. Focus on error goes to the option a
+ * keyboard user would land on (the chosen one, else the first); touched is set when
+ * focus leaves the group, not when it moves between options.
+ *
+ * Required by default, as the group is: a press on the chosen option keeps it. With
+ * `allowEmpty`, a second press clears the choice and the form stores `emptyValue`
+ * (`null` by default) — the options then become toggle buttons, see ToggleGroup. A
+ * value that matches no option (an empty default) leaves nothing pressed; that the
+ * field still needs answering is the schema's or `rules`' to say.
+ */
+export function RhfToggleGroup<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  T extends string = string,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  ...groupProps
+}: RhfToggleGroupProps<TFieldValues, TName, T, TTransformed>) {
+  const labelled = hasContent(label);
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      asControl={false}
+      render={({ field, invalid, id, labelId, describedBy }) => (
+        <ToggleControl<T>
+          field={field as unknown as ControllerRenderProps}
+          invalid={invalid}
+          required={required}
+          id={id}
+          labelledBy={labelled ? labelId : undefined}
+          describedBy={describedBy}
+          groupProps={groupProps}
+        />
+      )}
+    />
+  );
+}
+
+function ToggleControl<T extends string>({
+  field,
+  invalid,
+  required,
+  id,
+  labelledBy,
+  describedBy,
+  groupProps,
+}: {
+  field: ControllerRenderProps;
+  invalid: boolean;
+  required?: boolean;
+  id: string;
+  labelledBy: string | undefined;
+  describedBy: string | undefined;
+  groupProps: Omit<RhfToggleGroupProps<FieldValues, string, T>, keyof RhfFieldBaseProps>;
+}) {
+  const { groupClassName, emptyValue, allowEmpty, semantics, caption, ...rest } = groupProps;
+  // ToggleGroup forwards no ref. Its options are buttons: the radio shape's one tab
+  // stop (`tabindex="0"`), or in the pressed shape the pressed one — else the first.
+  useFocusHandle(field.ref, () => {
+    const group = document.getElementById(id);
+    return (
+      group?.querySelector<HTMLElement>('button[tabindex="0"], button[aria-pressed="true"]') ??
+      group?.querySelector<HTMLElement>("button")
+    );
+  });
+  // React's onBlur is focusout: it fires on every move between options as well, and
+  // only leaving the group is a blur of the FIELD.
+  const onBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) field.onBlur();
+  };
+  const raw: unknown = field.value;
+  const value = raw === null || raw === undefined || raw === "" ? null : (String(raw) as T);
+  const common = {
+    ...rest,
+    id,
+    className: groupClassName,
+    "aria-labelledby": labelledBy,
+    "aria-describedby": describedBy,
+    "aria-invalid": invalid || undefined,
+    disabled: field.disabled,
+    onBlur,
+  };
+  // The props' union pairs `allowEmpty` with its caption's type; taken apart above it no
+  // longer narrows, so each branch says which half it is.
+  if (allowEmpty) {
+    return (
+      <ToggleGroup<T>
+        {...common}
+        allowEmpty
+        caption={caption as ToggleGroupClearableProps<T>["caption"]}
+        value={value}
+        onChange={(v) => field.onChange(v ?? emptyValue ?? null)}
+      />
+    );
+  }
+  return (
+    <ToggleGroup<T>
+      {...common}
+      allowEmpty={false}
+      semantics={semantics}
+      caption={caption as ToggleGroupRequiredProps<T>["caption"]}
+      // A radiogroup takes `aria-required`; a group of toggle buttons does not.
+      aria-required={required && semantics !== "pressed" ? true : undefined}
+      // An empty default matches no option: nothing pressed, the first option the tab
+      // stop.
+      value={(value ?? "") as T}
+      onChange={(v) => field.onChange(v)}
     />
   );
 }

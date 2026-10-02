@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS, PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account-settings";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
@@ -109,5 +110,126 @@ describe("TwoFactorSetting setup", () => {
       "src",
       `data:image/svg+xml;base64,${btoa("<svg/>")}`,
     );
+  });
+});
+
+describe("PasswordSetting strength meter (0.22.0)", () => {
+  const fill = async (current: string, next: string, confirm = next) => {
+    await userEvent.type(screen.getByLabelText("Current password"), current);
+    await userEvent.type(screen.getByLabelText("New password"), next);
+    await userEvent.type(screen.getByLabelText("Confirm new password"), confirm);
+  };
+
+  it("shows no meter unless asked — existing callers are unchanged", async () => {
+    render(<PasswordSetting onSubmit={() => {}} />);
+    await userEvent.type(screen.getByLabelText("New password"), "example-pass");
+    expect(screen.queryByText("At least 8 characters")).toBeNull();
+    expect(document.querySelector("[data-score]")).toBeNull();
+  });
+
+  it("shows the meter under the new-password field, its length rule from minLength", async () => {
+    render(<PasswordSetting onSubmit={() => {}} strength minLength={10} />);
+    const field = screen.getByLabelText("New password");
+    await userEvent.type(field, "abc");
+    expect(screen.getByText("Too short")).toBeInTheDocument();
+    expect(screen.getByText("At least 10 characters")).toBeInTheDocument();
+    // Right under the field: the two share one box in the card's stack.
+    const meter = document.querySelector("[data-score]")!;
+    expect(field.closest("div.relative")!.parentElement).toContainElement(meter as HTMLElement);
+  });
+
+  it("passes the meter's own options through", async () => {
+    render(
+      <PasswordSetting
+        onSubmit={() => {}}
+        strength={{ showRequirements: false, score: () => 4, labels: { strong: "Excellent" } }}
+      />,
+    );
+    await userEvent.type(screen.getByLabelText("New password"), "x");
+    expect(screen.getByText("Excellent")).toBeInTheDocument();
+    expect(screen.queryByText("At least 8 characters")).toBeNull();
+  });
+
+  it("refuses a new password over maxBytes with the meter's sentence, and the meter warns too", async () => {
+    const onSubmit = vi.fn();
+    render(<PasswordSetting onSubmit={onSubmit} strength maxBytes={10} />);
+    // Ten characters, twelve bytes: each "ü" is two.
+    await fill("old-example", "üüabcdefgh");
+    const sentence = "At most 10 characters (accents and emoji count for more than one).";
+    expect(screen.getAllByText(sentence)).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    await waitFor(() => expect(screen.getAllByText(sentence)).toHaveLength(2));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("enforces maxBytes without the meter as well", async () => {
+    const onSubmit = vi.fn();
+    render(<PasswordSetting onSubmit={onSubmit} maxBytes={8} />);
+    await fill("old-example", "abcdefghi");
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText(/At most 8 characters/)).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("counts characters as a person does: four emoji are four, not eight", async () => {
+    const onSubmit = vi.fn();
+    render(<PasswordSetting onSubmit={onSubmit} />);
+    await fill("old-example", "😀😀😀😀");
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText("The new password is too short.")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("submits a valid pair as before", async () => {
+    const onSubmit = vi.fn();
+    render(<PasswordSetting onSubmit={onSubmit} strength maxBytes={72} />);
+    await fill("old-example", "new-example-1");
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("old-example", "new-example-1"));
+  });
+});
+
+describe("TwoFactorSetting code fields (0.22.0: OneTimeCodeInput)", () => {
+  const noop = () => {};
+  const URI = "otpauth://totp/Example:user%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example";
+
+  it("keeps the setup field read-only until focus, looking editable, and takes digits only", async () => {
+    const onEnable = vi.fn();
+    render(
+      <TwoFactorSetting enabled={false} setup={{ otpauthUri: URI }} onStartSetup={noop} onEnable={onEnable} onDisable={noop} />,
+    );
+    const field = screen.getByLabelText("Verification code");
+    expect(field).toHaveAttribute("readonly");
+    expect(field).toHaveAttribute("autocomplete", "one-time-code");
+    expect(field).toHaveAttribute("inputmode", "numeric");
+    expect(field.className).toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+    await userEvent.click(field);
+    expect(field).not.toHaveAttribute("readonly");
+    // A grouped code from an authenticator: the space no longer reaches onEnable.
+    fireEvent.change(field, { target: { value: "012 345" } });
+    expect(field).toHaveValue("012345");
+    await userEvent.type(field, "{Enter}");
+    expect(onEnable).toHaveBeenCalledWith("012345");
+  });
+
+  it("still takes up to eight digits, as its maxLength did", () => {
+    render(
+      <TwoFactorSetting enabled={false} setup={{ otpauthUri: URI }} onStartSetup={noop} onEnable={noop} onDisable={noop} />,
+    );
+    const field = screen.getByLabelText("Verification code");
+    fireEvent.focus(field);
+    fireEvent.change(field, { target: { value: "0123456789" } });
+    expect(field).toHaveValue("01234567");
+  });
+
+  it("guards the disable form's code field the same way, and submits with Enter", async () => {
+    const onDisable = vi.fn();
+    render(<TwoFactorSetting enabled setup={null} onStartSetup={noop} onEnable={noop} onDisable={onDisable} />);
+    const field = screen.getByLabelText("Verification code");
+    expect(field).toHaveAttribute("readonly");
+    await userEvent.type(screen.getByLabelText("Current password"), "example-pass");
+    await userEvent.click(field);
+    await userEvent.type(field, "654321{Enter}");
+    expect(onDisable).toHaveBeenCalledWith("example-pass", "654321");
   });
 });

@@ -10,8 +10,9 @@ export * from "./components/data-table-pagination";
 export { FilterPopover } from "./components/data-table-filter-popover";
 // `SortState` comes from data-table-sort above; re-exporting the module wholesale
 // would collide with it, which is why the main barrel names these explicitly too.
-export { DataTable } from "./components/data-table";
+export { DataTable, DEFAULT_DATA_TABLE_SORT_LABELS } from "./components/data-table";
 export type {
+  DataTableSortLabels,
   DataTableColumn,
   DataTableProps,
   ServerPagination,

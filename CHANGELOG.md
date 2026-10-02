@@ -20,6 +20,26 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.22.0](https://github.com/Eifi1/ui-kit/compare/v0.21.0...v0.22.0) (2026-10-02)
+
+### Added
+
+* DataTable mobileSort, FormActions submitShortcut, attachment refs, ChatComposer, rowProps ([46ba97f](https://github.com/Eifi1/ui-kit/commit/46ba97fd80896388b3328cfa8d9e8a71e8a8df90))
+* export the 0.22 parts; showcase demos, search index; 0.22 notes ([01b59ed](https://github.com/Eifi1/ui-kit/commit/01b59ed3a75e6d0619528086122992f817de76ab))
+* **feedback:** FeedbackComposer size="sm" for a narrow panel (keksdose) ([ea6436c](https://github.com/Eifi1/ui-kit/commit/ea6436c8bf7ec78cb68b1ed163bf97a70102f92e))
+* fields — hint and showCount, a kept placeholder, commit on self-saving controls, CheckboxGroup ([4d578f9](https://github.com/Eifi1/ui-kit/commit/4d578f9cbca0150dd8c14658a69c51afbd9662bf))
+* **i18n:** the 0.22 labels in every catalogue ([40a9a9e](https://github.com/Eifi1/ui-kit/commit/40a9a9ed58aee3fb42065af5fd41b0b3c03b5005))
+* InlineEditField, TypedConfirmField, DangerConfirm acknowledge and consequences, file locks ([c023bb0](https://github.com/Eifi1/ui-kit/commit/c023bb02d0cbf3901c720cef2963d3e3d60b882e))
+* numbers — NumberInput reads the locale's marks (K5), SignChip, calculator off, money warning ([839f79a](https://github.com/Eifi1/ui-kit/commit/839f79a4d9a1d74ed232ddff586591cfed1abf58))
+* OneTimeCodeInput, CountrySelect, IbanInput, PhoneInput, LanguageSelect ([4adb8e4](https://github.com/Eifi1/ui-kit/commit/4adb8e4983ce31d043becbbee4a83aedd342fb2c))
+* pickers — ToggleGroup chrome fix (K1) and strip label, year mode, provider formatDate ([dc268c5](https://github.com/Eifi1/ui-kit/commit/dc268c57448b157c1cb0efe8c5f3e335fe4f5549))
+* **rhf:** RhfTimeInput, RhfDateRangePicker, RhfToggleGroup, RhfIbanInput, RhfPhoneInput ([7bbed59](https://github.com/Eifi1/ui-kit/commit/7bbed59ecb7f9f033757033d9e375d87bbe49fed))
+
+### Fixed
+
+* **fields:** a hint coming and going no longer rebuilds the field (keksdose) ([92e0f29](https://github.com/Eifi1/ui-kit/commit/92e0f298e1f36e8ffd1e1de5e3d9d6203dc00028))
+* **tour:** a step without a target never keeps the previous step's spotlight (keksdose) ([2ea9606](https://github.com/Eifi1/ui-kit/commit/2ea9606da374e931cca37af33e3721bdf80af042))
+
 ## [0.21.0](https://github.com/Eifi1/ui-kit/compare/v0.20.1...v0.21.0) (2026-10-02)
 
 ### Added

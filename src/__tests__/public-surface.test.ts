@@ -135,16 +135,25 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `REVIEW_STATUS_TONES`, `DEFAULT_TRANSLATION_REVIEW_LABELS` (+26); the legal pages'
   // shell `LegalLayout`, `LegalSection`, `LegalLinks`, `DEFAULT_LEGAL_LABELS` (+4).
   // 0.20.0: `peekUiKitLabels`, `useUiKitLabels`, `withAllPlurals` (kastlan) (+3).
-  ["@eifi1/ui-kit", barrel, 547],
+  // 0.22.0, the inputs round (+39): CheckboxGroup, DEFAULT_CHARACTER_COUNT_LABELS;
+  // OneTimeCodeInput, LanguageSelect, TileRadioGroup, TILE_SIZE; InlineEditField,
+  // DEFAULT_INLINE_EDIT_LABELS; TypedConfirmField, CurrentPasswordInput; SignChip,
+  // DEFAULT_SIGN_CHIP_LABELS; CountrySelect, DEFAULT_COUNTRY_SELECT_LABELS, COUNTRY_CODES,
+  // countryName; IbanInput, DEFAULT_IBAN_INPUT_LABELS + 7 IBAN and 3 ISIN helpers;
+  // PhoneInput, DEFAULT_PHONE_INPUT_LABELS + 6 phone helpers; DEFAULT_DATA_TABLE_SORT_LABELS;
+  // useKitDateFormatter; ChatComposer (FeedbackComposer's neutral name).
+  ["@eifi1/ui-kit", barrel, 586],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
   ["@eifi1/ui-kit/chart", chart, 59],
-  ["@eifi1/ui-kit/data-table", dataTable, 27],
+  // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
+  ["@eifi1/ui-kit/data-table", dataTable, 28],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 27],
+  // 0.22.0: ChatComposer, FeedbackComposer under a neutral name (keksdose K17) (+1).
+  ["@eifi1/ui-kit/feedback", feedback, 28],
   ["@eifi1/ui-kit/search", search, 9],
   ["@eifi1/ui-kit/shell", shell, 12],
   ["@eifi1/ui-kit/tour", tour, 4],
@@ -160,7 +169,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `RhfCombobox`, `RhfTextCombobox` — and `RhfLineItems` (+11).
   // 0.13.0: `RhfIntegerField`, the digits={0} calculator={false} emptyValue="" preset
   // (kastlan 41) (+1).
-  ["@eifi1/ui-kit/rhf", rhf, 21],
+  // 0.22.0: RhfTimeInput, RhfDateRangePicker, RhfToggleGroup (kastlan 4), RhfIbanInput,
+  // RhfPhoneInput (+5).
+  ["@eifi1/ui-kit/rhf", rhf, 26],
   ["@eifi1/ui-kit/table-text", tableText, 5],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],

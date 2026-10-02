@@ -22,6 +22,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
 
 /**
  * `value`/`onChange` are the TEXT's, and `onSelect` is "a suggestion was taken" —
@@ -105,6 +106,14 @@ export interface AutocompleteProps<V extends string | number = string>
    *  `loadErrorLabel`, shown in the list. */
   error?: ReactNode;
   /**
+   * Standing advice — {@link Combobox}'s `hint`, so this field reads like every other
+   * (keksdose K4): plain TEXT is a caption under the field on the input's
+   * `aria-describedby`, before any error; a {@link FieldHint} "?" rides the label line,
+   * or with no label sits at the field's end edge, outside the box. Not the list's
+   * `status` line, which talks about the lookup, not the field.
+   */
+  hint?: ReactNode;
+  /**
    * The caller's own line in the list, replacing the automatic one (loading / failed
    * / no results). For what only the caller knows: "offline", "the address service
    * is switched off", a privacy note, the hint a caller-fetched list needs below its
@@ -135,6 +144,7 @@ function AutocompleteInner<V extends string | number = string>(
     icon,
     invalid,
     error,
+    hint,
     status,
     emptyLabel,
     loadErrorLabel,
@@ -166,7 +176,8 @@ function AutocompleteInner<V extends string | number = string>(
     noResults: emptyLabel,
     loadError: loadErrorLabel,
   });
-  const field = useComboboxFieldError(error, invalid, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const field = useComboboxFieldError(error, invalid, hintParts.describedBy);
 
   /** The user's intent: the field is focused and the list has not been dismissed.
    *  Whether anything SHOWS is decided below, from what there is to show. */
@@ -241,124 +252,136 @@ function AutocompleteInner<V extends string | number = string>(
     <div className={cn("relative", className)}>
       {/* A real <label for> (lenkbank), and still `aria-labelledby`'s target, so the
           name — and the listbox's, which borrows it — is exactly what it was. */}
-      {hasLabel && (
+      {hasLabel && hintParts.labelHint === undefined && (
         <ComboboxFieldLabel id={labelId} htmlFor={fieldId}>
           {label}
         </ComboboxFieldLabel>
       )}
-      <div ref={fieldRef} className="relative">
-        {icon && (
-          <span
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute flex text-[var(--text-muted)]",
-              small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
-              // Labelled, the icon sits on the VALUE's line — the one line box below
-              // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
-              // the box. Centred on the box it rose into the top strip and sat on the
-              // label's first letters, which float at the same start inset. On the
-              // value line it is beside what it describes, and the label keeps the
-              // start edge every other label in the form's column shares.
-              hasLabel
-                ? "top-[calc(1rem+1px)] h-5 items-center"
-                : "top-1/2 -translate-y-1/2",
-            )}
-          >
-            {icon}
-          </span>
-        )}
-        <input
-          {...rest}
-          ref={ref}
-          id={fieldId}
-          size={nativeSize}
-          type="text"
-          value={value}
-          disabled={disabled}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={expanded}
-          // Required by the role, and set while closed too, as on the siblings.
-          aria-controls={listboxId}
-          aria-activedescendant={activeId}
-          aria-label={ariaLabel}
-          aria-labelledby={labelledBy}
-          aria-invalid={field.isInvalid || rest["aria-invalid"] || undefined}
-          aria-describedby={field.describedBy}
-          autoComplete="off"
-          onFocus={(e) => {
-            onFocus?.(e);
-            // A seeded field (keksdose's `initialQuery`) is looked up as it is
-            // focused; an empty one asks nothing, because of `minChars`.
-            setOpen(true);
-          }}
-          onBlur={(e) => {
-            onBlur?.(e);
-            close();
-          }}
-          onChange={(e) => {
-            onChange(e.target.value);
-            setOpen(true);
-            setActive(-1);
-          }}
-          onKeyDown={(e) => {
-            // An Escape that closes the OPEN list is the list's, and is consumed before
-            // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
-            // address search) otherwise closed the whole panel when the user only meant
-            // to dismiss the suggestions — the opposite of what the docs promised.
-            if (e.key === "Escape" && expanded) {
-              e.preventDefault();
-              e.stopPropagation();
-              close();
-              return;
-            }
-            onKeyDown?.(e);
-            if (e.defaultPrevented) return;
-            // Disabled rows are passed over; at either end the highlight stays put.
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              if (!open) setOpen(true);
-              else setActive((i) => stepEnabled(results, i, 1));
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              if (!open) setOpen(true);
-              // From "nothing highlighted", Up goes to the bottom, as the APG has it.
-              else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
-            } else if (e.key === "Enter") {
-              // No row highlighted: the text is the answer, and a form's own submit
-              // is left alone.
-              if (expanded && activeId) {
-                e.preventDefault();
-                take(results[active]);
-              }
-            } else if (e.key === "Tab") {
-              close();
-            }
-          }}
-          className={cn(
-            FIELD_BASE,
-            hasLabel && FIELD_FLOATING_PAD,
-            // Select's `SELECT_SM` box: a fixed 28px, so the caller's line height
-            // cannot grow it.
-            small && "h-7 py-0 pe-2 ps-2 text-xs",
-            icon ? (small ? "ps-7" : "ps-8") : undefined,
-            busy && (small ? "pe-7" : "pe-9"),
-            field.isInvalid && FIELD_INVALID,
-            inputClassName,
+      <EndHintRow hint={hasLabel ? undefined : hintParts.labelHint}>
+        <div ref={fieldRef} className="relative">
+          {icon && (
+            <span
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute flex text-[var(--text-muted)]",
+                small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
+                // Labelled, the icon sits on the VALUE's line — the one line box below
+                // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
+                // the box. Centred on the box it rose into the top strip and sat on the
+                // label's first letters, which float at the same start inset. On the
+                // value line it is beside what it describes, and the label keeps the
+                // start edge every other label in the form's column shares.
+                hasLabel
+                  ? "top-[calc(1rem+1px)] h-5 items-center"
+                  : "top-1/2 -translate-y-1/2",
+              )}
+            >
+              {icon}
+            </span>
           )}
-        />
-        {busy && live && (
-          // Decorative: the live region below already says "Loading…".
-          <span
+          <input
+            {...rest}
+            ref={ref}
+            id={fieldId}
+            size={nativeSize}
+            type="text"
+            value={value}
+            disabled={disabled}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={expanded}
+            // Required by the role, and set while closed too, as on the siblings.
+            aria-controls={listboxId}
+            aria-activedescendant={activeId}
+            aria-label={ariaLabel}
+            aria-labelledby={labelledBy}
+            aria-invalid={field.isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={field.describedBy}
+            autoComplete="off"
+            onFocus={(e) => {
+              onFocus?.(e);
+              // A seeded field (keksdose's `initialQuery`) is looked up as it is
+              // focused; an empty one asks nothing, because of `minChars`.
+              setOpen(true);
+            }}
+            onBlur={(e) => {
+              onBlur?.(e);
+              close();
+            }}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setOpen(true);
+              setActive(-1);
+            }}
+            onKeyDown={(e) => {
+              // An Escape that closes the OPEN list is the list's, and is consumed before
+              // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
+              // address search) otherwise closed the whole panel when the user only meant
+              // to dismiss the suggestions — the opposite of what the docs promised.
+              if (e.key === "Escape" && expanded) {
+                e.preventDefault();
+                e.stopPropagation();
+                close();
+                return;
+              }
+              onKeyDown?.(e);
+              if (e.defaultPrevented) return;
+              // Disabled rows are passed over; at either end the highlight stays put.
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (!open) setOpen(true);
+                else setActive((i) => stepEnabled(results, i, 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (!open) setOpen(true);
+                // From "nothing highlighted", Up goes to the bottom, as the APG has it.
+                else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
+              } else if (e.key === "Enter") {
+                // No row highlighted: the text is the answer, and a form's own submit
+                // is left alone.
+                if (expanded && activeId) {
+                  e.preventDefault();
+                  take(results[active]);
+                }
+              } else if (e.key === "Tab") {
+                close();
+              }
+            }}
             className={cn(
-              "pointer-events-none absolute top-1/2 flex -translate-y-1/2",
-              small ? "end-2" : "end-2.5",
+              FIELD_BASE,
+              hasLabel && FIELD_FLOATING_PAD,
+              // Select's `SELECT_SM` box: a fixed 28px, so the caller's line height
+              // cannot grow it.
+              small && "h-7 py-0 pe-2 ps-2 text-xs",
+              icon ? (small ? "ps-7" : "ps-8") : undefined,
+              busy && (small ? "pe-7" : "pe-9"),
+              field.isInvalid && FIELD_INVALID,
+              inputClassName,
             )}
-          >
-            <Spinner label={null} className={small ? "h-3.5 w-3.5" : "h-4 w-4"} />
-          </span>
-        )}
-      </div>
+          />
+          {busy && live && (
+            // Decorative: the live region below already says "Loading…".
+            <span
+              className={cn(
+                "pointer-events-none absolute top-1/2 flex -translate-y-1/2",
+                small ? "end-2" : "end-2.5",
+              )}
+            >
+              <Spinner label={null} className={small ? "h-3.5 w-3.5" : "h-4 w-4"} />
+            </span>
+          )}
+        </div>
+      </EndHintRow>
+      {/* With a "?" the label shares the top strip with it, after the field so the "?"
+          follows the control in the tab order (as on Input and Select). */}
+      {hasLabel && hintParts.labelHint !== undefined && (
+        <StaticLabelRow hint={hintParts.labelHint}>
+          <ComboboxFieldLabel id={labelId} htmlFor={fieldId} className={LABEL_IN_ROW}>
+            {label}
+          </ComboboxFieldLabel>
+        </StaticLabelRow>
+      )}
+      <FieldCaption parts={hintParts} />
       {field.errorEl}
       {/* The live region, kept mounted so a change IS an announcement: focus stays
           in the field, and without it a reader typed into a geocoder and heard only

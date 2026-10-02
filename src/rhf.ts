@@ -10,7 +10,8 @@ export * from "./rhf/form";
 // The react-hook-form bridge to the wizard's Next gate (useWizard lives in /wizard).
 export * from "./rhf/use-rhf-wizard-step";
 // Bound fields — one line per field (RhfTextField, RhfNumberField, RhfIntegerField, RhfMoneyField,
-// RhfDateField, RhfTextarea, RhfSelect, RhfCheckbox, RhfCombobox, RhfTextCombobox)
+// RhfDateField, RhfTextarea, RhfSelect, RhfCheckbox, RhfCombobox, RhfTextCombobox; 0.22: RhfTimeInput,
+// RhfDateRangePicker, RhfToggleGroup, RhfIbanInput, RhfPhoneInput)
 // and RhfField, the shell they are built on.
 export * from "./rhf/fields";
 // LineItems over useFieldArray.

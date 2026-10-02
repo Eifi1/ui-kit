@@ -15,6 +15,7 @@ import {
 import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
 import { useDragTarget } from "../hooks/use-file-drop";
 import { toast } from "./toast";
+import { useCommitReason } from "./write-lock";
 
 /**
  * Where a refused file's message goes.
@@ -35,6 +36,11 @@ export interface FileDropzoneState {
   dragOver: boolean;
   disabled: boolean;
   busy: boolean;
+  /** 0.22: locked with a reason (`disabledReason`, or `commit` under a locked
+   *  {@link WriteLockProvider}) — takes no files, like `disabled`. */
+  locked: boolean;
+  /** The reason while `locked`, for a custom body to show; `undefined` otherwise. */
+  disabledReason: ReactNode | undefined;
   /** What is chosen: `files` in multiple mode, `[file]` or `[]` in single mode. */
   files: readonly File[];
   /** The inline refusal, when `rejectionFeedback="inline"` has one to show. */
@@ -140,6 +146,22 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    */
   busy?: boolean;
   /**
+   * Why the zone is not taking files — the write lock's sentence, a quota, a closed
+   * period (keksdose K3). Takes no drop, no picker and no removal, like `disabled`, and
+   * SAYS so: the Browse button (and every remove button) stays focusable,
+   * `aria-disabled`, with the reason in the kit Tooltip and its description, the zone's
+   * group is described by it, and the default body shows it where the hint was. Not
+   * dimmed: what is chosen stays readable. Wins over `disabled`'s silent look.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This zone COMMITS — an upload that starts on drop. Under a locked
+   * {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
+   * reason (which wins over one of its own). No provider, or an unlocked one: no
+   * effect. A zone that only stages a file for a form saved later is not a commit.
+   */
+  commit?: boolean;
+  /**
    * Replace the zone's body — the icon, the text and the chosen-file list — with your
    * own, given the zone's state: keksdose's spinner-plus-"uploading", its multi-shot
    * hint ("several photos are possible"), a second trigger for the camera.
@@ -182,6 +204,8 @@ export function FileDropzone({
   hint: hintProp,
   disabled,
   busy,
+  disabledReason: ownDisabledReason,
+  commit,
   renderBody,
   className,
   "aria-label": ariaLabel,
@@ -189,7 +213,12 @@ export function FileDropzone({
   ...rest
 }: FileDropzoneProps) {
   const [error, setError] = useState<string | null>(null);
-  const inert = Boolean(disabled || busy);
+  const disabledReason = useCommitReason(commit, ownDisabledReason);
+  const locked = hasReason(disabledReason);
+  // Locked counts as inert for every file path (drop, click, Browse, remove); only the
+  // LOOK and the native `disabled` keep it apart, so its controls stay focusable.
+  const inert = Boolean(disabled || busy) || locked;
+  const reasonId = useId();
   // State rather than a ref: `open` is handed to `renderBody` during render, and a
   // function that reads a ref there is exactly what the refs rule cannot prove safe.
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
@@ -278,7 +307,16 @@ export function FileDropzone({
 
   const chosen: readonly File[] = multiple ? (files ?? []) : file ? [file] : [];
   const showError = feedback === "inline" && error !== null;
-  const describedBy = cn(describedByProp, showError && errorId) || undefined;
+  const describedBy = cn(describedByProp, showError && errorId, locked && reasonId) || undefined;
+  // The controls inside: natively disabled while disabled or busy; locked, they take
+  // the reason instead and stay reachable (Button's `disabledReason` path).
+  const controlDisabled = Boolean(disabled || busy);
+  const controlReason = locked ? disabledReason : undefined;
+  const reasonLine = locked && (
+    <div data-slot="file-dropzone-reason" className="text-xs text-[var(--text-muted)]">
+      {disabledReason}
+    </div>
+  );
 
   return (
     <>
@@ -311,7 +349,7 @@ export function FileDropzone({
         // reached through the description instead, and spoken when it appears.
         aria-describedby={describedBy}
         data-invalid={showError || undefined}
-        aria-disabled={disabled || undefined}
+        aria-disabled={disabled || locked || undefined}
         aria-busy={busy || undefined}
         data-drag-over={dragOver || undefined}
         className={cn(
@@ -336,7 +374,9 @@ export function FileDropzone({
             ? "cursor-not-allowed border-[var(--border)] opacity-60"
             : busy
               ? "cursor-progress border-[var(--border)]"
-              : dragOver
+              : locked
+                ? "cursor-not-allowed border-[var(--border)]"
+                : dragOver
                 ? "cursor-pointer border-[var(--border-strong)] bg-[var(--bg-active)]"
                 : showError
                   ? "cursor-pointer border-[var(--danger-border-strong)]"
@@ -349,6 +389,8 @@ export function FileDropzone({
             dragOver,
             disabled: Boolean(disabled),
             busy: Boolean(busy),
+            locked,
+            disabledReason: locked ? disabledReason : undefined,
             files: chosen,
             error: showError ? error : null,
             open,
@@ -365,34 +407,38 @@ export function FileDropzone({
           <>
             <Upload aria-hidden className="size-5 text-[var(--text-muted)]" />
             {multiple && chosen.length > 0 ? (
-              <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
-                {chosen.map((f, i) => (
-                  <li
-                    // Name + size + position: two files may share a name, and the index
-                    // alone would re-key every row below a removal.
-                    key={`${f.name}-${f.size}-${i}`}
-                    className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
-                  >
-                    <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
-                    <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
-                    {onRemove && (
-                      <IconButton
-                        type="button"
-                        size="sm"
-                        disabled={inert}
-                        aria-label={labels.remove(f.name)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemove(f, i);
-                          afterRemoval(labels.removed(f.name));
-                        }}
-                      >
-                        <X aria-hidden />
-                      </IconButton>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
+                  {chosen.map((f, i) => (
+                    <li
+                      // Name + size + position: two files may share a name, and the index
+                      // alone would re-key every row below a removal.
+                      key={`${f.name}-${f.size}-${i}`}
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
+                    >
+                      <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
+                      <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
+                      {onRemove && (
+                        <IconButton
+                          type="button"
+                          size="sm"
+                          disabled={controlDisabled}
+                          disabledReason={controlReason}
+                          aria-label={labels.remove(f.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove(f, i);
+                            afterRemoval(labels.removed(f.name));
+                          }}
+                        >
+                          <X aria-hidden />
+                        </IconButton>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {reasonLine}
+              </>
             ) : (
               <>
                 <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
@@ -403,7 +449,8 @@ export function FileDropzone({
                     <IconButton
                       type="button"
                       size="sm"
-                      disabled={inert}
+                      disabled={controlDisabled}
+                      disabledReason={controlReason}
                       aria-label={labels.remove(file.name)}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -415,9 +462,16 @@ export function FileDropzone({
                     </IconButton>
                   )}
                 </div>
-                <div className="text-xs text-[var(--text-muted)]">
-                  {file && !multiple ? fileText.size(file.size) : hint}
-                </div>
+                {/* Locked, the reason takes the hint's place: what may be dropped is moot
+                    while nothing may. A chosen file keeps its size, the reason below. */}
+                {locked && !(file && !multiple) ? (
+                  reasonLine
+                ) : (
+                  <div className="text-xs text-[var(--text-muted)]">
+                    {file && !multiple ? fileText.size(file.size) : hint}
+                  </div>
+                )}
+                {locked && file && !multiple && reasonLine}
               </>
             )}
           </>
@@ -427,7 +481,8 @@ export function FileDropzone({
             ref={browseRef}
             type="button"
             variant="secondary"
-            disabled={inert}
+            disabled={controlDisabled}
+            disabledReason={controlReason}
             onClick={(e) => {
               e.stopPropagation();
               open();
@@ -439,7 +494,8 @@ export function FileDropzone({
             <Button
               type="button"
               variant="ghost"
-              disabled={inert}
+              disabled={controlDisabled}
+              disabledReason={controlReason}
               onClick={(e) => {
                 e.stopPropagation();
                 onClear();
@@ -454,6 +510,13 @@ export function FileDropzone({
           <p id={errorId} className="text-xs text-[var(--danger)]">
             {error}
           </p>
+        )}
+        {/* The group's description while locked: a copy of its own, so a custom body
+            that does not show the reason still has the zone say it. */}
+        {locked && (
+          <span id={reasonId} hidden>
+            {disabledReason}
+          </span>
         )}
         <input
           ref={setFileInput}
@@ -482,6 +545,11 @@ export function FileDropzone({
       <span {...alert.regionProps} />
     </>
   );
+}
+
+/** A reason that is really there — `null`, `false` and `""` are no reason. */
+function hasReason(reason: ReactNode): boolean {
+  return reason !== undefined && reason !== null && reason !== false && reason !== "";
 }
 
 /** A click that landed on a control inside the zone (a custom body's own button, a

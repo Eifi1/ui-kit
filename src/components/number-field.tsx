@@ -2,12 +2,13 @@ import { useId, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { NumberInput } from "./number-input";
 import { evaluateExpression, formatResult } from "../lib/calc";
+import { decimalMark } from "../lib/decimal-marks";
 import { useKitLocale } from "../i18n/kit-labels";
 
 type NumberInputProps = ComponentProps<typeof NumberInput>;
 
 export interface NumberFieldProps
-  extends Omit<NumberInputProps, "value" | "onChange" | "onCommit" | "suffix" | "invalid"> {
+  extends Omit<NumberInputProps, "value" | "onChange" | "onCommit" | "suffix" | "invalid" | "error" | "locale"> {
   /** The committed number. `null` is "no value" — shown as an empty field. */
   value: number | null;
   /**
@@ -72,20 +73,6 @@ export interface NumberFieldProps
   "aria-required"?: boolean | "true" | "false";
 }
 
-/** The locale's decimal mark, as far as this field can type it: "," or ".". A mark
- *  outside those two (Arabic's "٫") is not something {@link sanitizeLive} lets
- *  through, so those locales keep the dot rather than get a field that eats keys. */
-function decimalMark(locale: string | undefined): "," | "." {
-  try {
-    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
-    return part?.value === "," ? "," : ".";
-  } catch {
-    // An invalid tag throws a RangeError; a typo in a locale prop must not take the
-    // form down with it.
-    return ".";
-  }
-}
-
 /** What the draft reads as while it is being typed — see `onValueChange`. `undefined`
  *  is "not a number yet", distinct from `null` (empty). */
 function parseLive(text: string): number | null | undefined {
@@ -108,10 +95,6 @@ function roundTo(n: number, digits: number | undefined): number {
   const rounded = Number(n.toFixed(d));
   return Number.isFinite(rounded) ? rounded : n;
 }
-
-// The error line under a field — the same type as `ui.tsx`'s (module-private) one,
-// so a NumberField's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
 
 /**
  * A number field whose value IS a number: {@link NumberInput}'s text, calculator and
@@ -149,10 +132,20 @@ const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
  *
  * LOCALE. The decimal mark is the locale's: a German user sees and types "1,5".
  * NumberInput normalises every keystroke to a dot (so its evaluator reads one
- * alphabet); this field maps the dot back before the draft is shown, which also
- * means the numpad's "." key types the mark the field is displaying. There is no
- * digit grouping — "1.000" would read as a thousand in German and as one in English,
- * and a field that parses its own display back must not have that ambiguity.
+ * alphabet); this field maps the dot back before the draft is shown. The field never
+ * WRITES digit grouping — "1.000" would read as a thousand in German and as one in
+ * English, and a field that parses its own display back must not have that ambiguity —
+ * but since 0.22 it READS it, through NumberInput (keksdose K5): "1.234,56" typed by a
+ * German user commits 1234.56 rather than 1.23456, and "1,234.56" by an English one
+ * likewise. While a figure is typed the typist's own text stays on screen ("1.234,5",
+ * or a dot typed as the decimal in a comma locale); it is re-spelt in the locale's mark
+ * when it commits.
+ *
+ * NOT FOR MONEY. `digits={2}` rounds, but a currency is more than two decimals: JPY has
+ * none, a unit price has four, and the chip, the minor-unit default and `min`/`max` on
+ * the SIGNED figure are {@link MoneyField}'s (number value) and {@link AmountInput}'s
+ * (string value). A NumberField whose `unit` is a currency says so on the console in
+ * development — see NumberInput's money guard.
  */
 export function NumberField(props: NumberFieldProps) {
   const {
@@ -255,10 +248,6 @@ export function NumberField(props: NumberFieldProps) {
 
   const generatedId = useId();
   const fieldId = id ?? generatedId;
-  const errorId = useId();
-  // `null`/`false`/`""` are what `touched && errors.x` evaluates to on the happy path.
-  const hasError = error !== undefined && error !== null && error !== false && error !== "";
-  const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ");
 
   // Straight onto NumberInput's <input>, which declares both now. They used to be set
   // on the DOM node from an effect, because NumberInput had no props for them.
@@ -277,11 +266,11 @@ export function NumberField(props: NumberFieldProps) {
           )
       : label;
 
-  const field = (
+  return (
     <NumberInput
       {...rest}
       id={fieldId}
-      aria-describedby={describedBy || undefined}
+      aria-describedby={ariaDescribedBy}
       aria-required={required || undefined}
       label={labelWithUnit}
       value={draft}
@@ -289,25 +278,18 @@ export function NumberField(props: NumberFieldProps) {
       onCommit={commit}
       min={min}
       max={max}
+      // The mark this field spells its draft in, so the two can never disagree when
+      // this field's `locale` is not the provider's.
+      locale={locale}
       suffix={unitPlacement === "suffix" ? unit : undefined}
-      invalid={invalid || hasError || ariaInvalid === true || ariaInvalid === "true"}
+      invalid={invalid || ariaInvalid === true || ariaInvalid === "true"}
+      // NumberInput's `error` — the message, the description, the paint, and Input's
+      // steady box: no wrapper for a field that never takes `error`, and the SAME one
+      // for a field that does, message or not, so the message coming or going never
+      // remounts the <input> mid-keystroke. Only forwarded when it was passed, since
+      // passing the key is what asks for the box.
+      {...("error" in props ? { error } : {})}
     />
-  );
-  // Input's FieldGroup, restated: no wrapper for a field that never takes `error`, so
-  // the prop changed nothing about the DOM a flex row lays out — and a STEADY one for a
-  // field that does, message or not. Wrapping only while a message showed swapped the
-  // element above the <input>, which remounted it: focus, caret and the half-typed
-  // draft's keystrokes were lost the moment the message came or went.
-  if (!hasError && !("error" in props)) return field;
-  return (
-    <div>
-      {field}
-      {hasError && (
-        <p id={errorId} className={FIELD_ERROR_CLASS}>
-          {error}
-        </p>
-      )}
-    </div>
   );
 }
 

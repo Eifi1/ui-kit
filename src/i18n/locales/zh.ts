@@ -24,6 +24,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       attachmentScreenshot: "截图",
       attachmentRemoveFile: (name) => `移除 ${name}`,
       attachmentLimit: (max) => `最多 ${n(max)} 个附件，请先移除一个再添加。`,
+      attachmentUploading: "正在上传…",
     },
     feedbackDialog: {
       title: "发送反馈",
@@ -199,6 +200,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       booleanTrue: "是",
       booleanFalse: "否",
       booleanUnset: "未设置",
+      sortBy: "排序依据",
+      sortDefault: "默认顺序",
+      sortAscending: "升序",
+      sortDescending: "降序",
     },
     miniCalendar: {
       previousMonth: "上个月",
@@ -218,6 +223,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       previousMonth: "上个月",
       nextMonth: "下个月",
       today: "今天",
+      yearPanel: "选择年份",
+      earlierYears: "更早的年份",
+      laterYears: "更晚的年份",
+      thisYear: "今年",
     },
     calendarHeatmap: {
       grid: "每日数值",
@@ -314,6 +323,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       prompt: "此操作无法撤销。",
       password: "密码",
       phrase: (phrase) => `输入“${phrase}”以确认`,
+      acknowledge: "我已了解此操作的作用，并希望继续。",
     },
     tabs: {
       add: "添加标签页",
@@ -516,6 +526,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     form: {
       save: "保存",
       cancel: "取消",
+      submitShortcut: (apple) => (apple ? "⌘ Enter" : "Ctrl+Enter"),
     },
     descriptionList: {
       empty: "—",
@@ -622,6 +633,39 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     legal: {
       navLabel: "法律信息",
+    },
+    characterCount: {
+      count: (used, max) => `已输入 ${n(used)}/${n(max)} 个字符`,
+      remaining: (left) => `还可输入 ${n(left)} 个字符`,
+      limitReached: "已达到字符数上限",
+    },
+    countrySelect: {
+      country: "国家/地区",
+      search: "搜索国家/地区",
+      others: "其他国家/地区",
+    },
+    inlineEdit: {
+      edit: (label) => `编辑“${label}”`,
+      failed: "无法保存更改。",
+      empty: "空",
+    },
+    ibanInput: {
+      format: "IBAN 以两个字母的国家代码和两位校验码开头。",
+      country: (code) => `“${code}”不是 IBAN 的国家代码。`,
+      length: (actual, expected) =>
+        `该国家的 IBAN 应为 ${n(expected)} 个字符，当前为 ${n(actual)} 个。`,
+      checksum: "校验码不匹配，可能有字符输入错误。",
+      qrRequired: "这是普通 IBAN。QR 账单需要该账户的 QR-IBAN。",
+      qrNotAllowed: "这是 QR-IBAN，只能接收 QR 账单付款。请输入该账户的普通 IBAN。",
+    },
+    phoneInput: {
+      countryCode: "国家/地区代码",
+      other: "其他",
+    },
+    signChip: {
+      outflow: "支出",
+      inflow: "收入",
+      direction: (current, next) => `方向：${current}，切换为${next}`,
     },
     translationReview: {
       statusMissing: "缺失",

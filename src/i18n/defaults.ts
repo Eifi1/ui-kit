@@ -6,7 +6,11 @@ import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents";
 import { DEFAULT_POPOVER_LABELS } from "../components/popover";
 import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip";
 import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync";
-import { DEFAULT_PASSWORD_REVEAL_LABELS, DEFAULT_TABS_LABELS } from "../components/ui";
+import {
+  DEFAULT_CHARACTER_COUNT_LABELS,
+  DEFAULT_PASSWORD_REVEAL_LABELS,
+  DEFAULT_TABS_LABELS,
+} from "../components/ui";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/types";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette";
@@ -53,6 +57,11 @@ import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "../components/translation-review-labels";
+import { DEFAULT_COUNTRY_SELECT_LABELS } from "../components/country-select";
+import { DEFAULT_INLINE_EDIT_LABELS } from "../components/inline-edit-field";
+import { DEFAULT_IBAN_INPUT_LABELS } from "../components/iban-input";
+import { DEFAULT_PHONE_INPUT_LABELS } from "../components/phone-input";
+import { DEFAULT_SIGN_CHIP_LABELS } from "../components/sign-chip";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -142,4 +151,10 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   serverWake: DEFAULT_SERVER_WAKE_LABELS,
   translationReview: DEFAULT_TRANSLATION_REVIEW_LABELS,
   legal: DEFAULT_LEGAL_LABELS,
+  characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
+  countrySelect: DEFAULT_COUNTRY_SELECT_LABELS,
+  inlineEdit: DEFAULT_INLINE_EDIT_LABELS,
+  ibanInput: DEFAULT_IBAN_INPUT_LABELS,
+  phoneInput: DEFAULT_PHONE_INPUT_LABELS,
+  signChip: DEFAULT_SIGN_CHIP_LABELS,
 };

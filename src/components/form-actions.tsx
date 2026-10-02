@@ -1,21 +1,34 @@
-import { isValidElement } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { isValidElement, useCallback, useEffect, useRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useMediaQuery } from "../hooks/use-media-query";
+import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonVariant } from "./ui";
+import { useWriteLock } from "./write-lock";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
 export interface FormActionsLabels {
   save: string;
   cancel: string;
+  /**
+   * The {@link FormActionsProps.submitShortcut} hint beside Save's text, when
+   * {@link FormActionsProps.submitShortcutHint} shows it. `apple` is true on a Mac,
+   * iPhone or iPad, where the key is Cmd: "⌘ Enter" there, "Ctrl+Enter" elsewhere
+   * (a German keyboard says "Strg").
+   */
+  submitShortcut: (apple: boolean) => string;
 }
 
 export const DEFAULT_FORM_ACTIONS_LABELS: FormActionsLabels = {
   save: "Save",
   cancel: "Cancel",
+  submitShortcut: (apple) => (apple ? "⌘ Enter" : "Ctrl+Enter"),
 };
+
+/** See {@link FormActionsProps.submitShortcut}. */
+export type FormActionsSubmitShortcut = "mod-enter";
 
 export type FormActionsAlign = "start" | "center" | "end" | "between";
 
@@ -229,8 +242,58 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** The `id` of the `<form>` the save button submits, when the row is rendered
    *  outside it (a dialog's footer slot). */
   form?: string;
+  /**
+   * A keyboard shortcut that presses Save from anywhere in the form. `"mod-enter"`:
+   * Ctrl+Enter, or Cmd+Enter on a Mac — both are accepted everywhere, as keksdose's
+   * editors always have. keksdose K14 (inputs audit 2026-10-02, S5): its transaction
+   * editor, category editor and create card each wrote this as an `onKeyDown` on a
+   * container, re-stating `!pending && !saveDisabled && !lock.locked` every time, and
+   * the one that forgot the lock let the demo's refused save through from the keyboard.
+   *
+   * What it does is what pressing Save does — the same button is clicked, so a form
+   * submits with its validation and its submitter, and `onSubmit` is called in the
+   * `type="button"` mode — and it does NOTHING while Save could not be pressed:
+   * `pending`, `submitDisabled`, or a `commit` under a locked {@link WriteLockProvider}.
+   *
+   * Scoped to the form Save submits (the `form` prop's, else the enclosing `<form>`):
+   * the chord counts only when the focus is inside it, so two editors on one page each
+   * answer for their own fields. Without a form (an `onSubmit` row in a plain container)
+   * the scope is the nearest `role="dialog"`, else the row's parent element — the
+   * container the row ends.
+   *
+   * Listened for on the document, so it runs AFTER every React handler: a field that
+   * takes Ctrl+Enter for itself calls `preventDefault()` or `stopPropagation()` and
+   * the row stays out of it (keksdose live #202 — the create card's Ctrl+Shift+Enter
+   * must create ONE row; the chord here is exactly Ctrl/Cmd+Enter, never with Shift or
+   * Alt). Not during IME composition, and not on a held key's repeats.
+   *
+   * The save button announces it with `aria-keyshortcuts`; {@link submitShortcutHint}
+   * also shows it.
+   */
+  submitShortcut?: FormActionsSubmitShortcut;
+  /** Show the {@link submitShortcut} beside Save's text ("Ctrl+Enter", "⌘ Enter"; the
+   *  `form.submitShortcut` label), dimmed. Hidden on a touch-only device, which has no
+   *  keyboard to press it on. Default `false`. */
+  submitShortcutHint?: boolean;
   /** Extra actions, placed before Cancel. */
   children?: ReactNode;
+}
+
+/** Hand `el` to a caller's ref, whichever kind it is. */
+function assignRef<E>(ref: Ref<E> | undefined, el: E | null): void {
+  if (typeof ref === "function") ref(el);
+  else if (ref) (ref as { current: E | null }).current = el;
+}
+
+/**
+ * Where {@link FormActionsProps.submitShortcut} listens: the form Save submits (named
+ * by `formId`, else the enclosing one), else the nearest dialog, else the row's parent.
+ */
+function shortcutScope(row: HTMLElement | null, formId: string | undefined): Element | null {
+  if (!row) return null;
+  const named = formId ? row.ownerDocument.getElementById(formId) : null;
+  if (named instanceof HTMLFormElement) return named;
+  return row.closest("form") ?? row.closest('[role="dialog"]') ?? row.parentElement;
 }
 
 function isDestructiveData(value: unknown): value is FormActionsDestructive {
@@ -272,12 +335,47 @@ export function FormActions({
   stickyWithin = "viewport",
   bleed,
   form,
+  submitShortcut,
+  submitShortcutHint = false,
   children,
   className,
   style,
   ...rest
 }: FormActionsProps) {
   const labels = useKitLabels("form", DEFAULT_FORM_ACTIONS_LABELS);
+  const lock = useWriteLock();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const saveRef = useRef<HTMLButtonElement | null>(null);
+  // The caller's own `submitProps.ref` still gets the element.
+  const callerSaveRef = submitProps?.ref;
+  const setSaveRef = useCallback(
+    (el: HTMLButtonElement | null) => {
+      saveRef.current = el;
+      assignRef(callerSaveRef, el);
+    },
+    [callerSaveRef],
+  );
+  // Read by the shortcut's listener at the moment of the key press, so the listener
+  // itself is attached once and never sees a stale `pending`.
+  const canSave = !pending && !submitDisabled && !(commit && lock.locked);
+  const canSaveRef = useRef(canSave);
+  useEffect(() => {
+    canSaveRef.current = canSave;
+  });
+  useEffect(() => {
+    if (submitShortcut !== "mod-enter") return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+      if (e.repeat || e.isComposing || e.defaultPrevented || !canSaveRef.current) return;
+      const scope = shortcutScope(rootRef.current, form);
+      if (!scope || !(e.target instanceof Node) || !scope.contains(e.target)) return;
+      e.preventDefault();
+      saveRef.current?.click();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [submitShortcut, form]);
+  const apple = submitShortcut ? isApplePlatform() : false;
   const placement = useResolvedPlacement(placementProp);
   const bleedLength = bleed === undefined || bleed === "" ? undefined : cssLength(bleed);
   const hasDestructive = destructive !== undefined && destructive !== null && destructive !== false;
@@ -302,6 +400,7 @@ export function FormActions({
 
   return (
     <div
+      ref={rootRef}
       data-slot="form-actions"
       data-placement={placement}
       data-sticky-within={placement === "sticky" ? stickyWithin : undefined}
@@ -342,6 +441,10 @@ export function FormActions({
         )}
         <Button
           {...submitProps}
+          ref={setSaveRef}
+          aria-keyshortcuts={
+            submitShortcut === "mod-enter" ? "Control+Enter Meta+Enter" : submitProps?.["aria-keyshortcuts"]
+          }
           type={onSubmit ? "button" : "submit"}
           form={form}
           onClick={onSubmit}
@@ -359,6 +462,16 @@ export function FormActions({
             SubmitIcon && <SubmitIcon aria-hidden className="size-4 shrink-0" />
           )}
           {pending && pendingLabel !== undefined ? pendingLabel : saveLabel}
+          {submitShortcut && submitShortcutHint && (
+            // Hidden from the accessibility tree: `aria-keyshortcuts` already says it,
+            // and in the name it would make the button "Save Ctrl+Enter".
+            <kbd
+              aria-hidden
+              className="ms-1 font-sans text-[0.85em] font-normal whitespace-nowrap opacity-70 pointer-coarse:hidden"
+            >
+              {labels.submitShortcut(apple)}
+            </kbd>
+          )}
         </Button>
       </div>
     </div>

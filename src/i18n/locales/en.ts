@@ -120,5 +120,15 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       localeProgress: (approved, total) => `${n(approved)}/${n(total)}`,
       exportCorrections: (count) => `Export corrections (${n(count)})`,
     },
+    characterCount: {
+      ...d.characterCount,
+      count: (used, max) => `${n(used)} of ${n(max)} characters`,
+      remaining: (left) => (left === 1 ? "1 character left" : `${n(left)} characters left`),
+    },
+    ibanInput: {
+      ...d.ibanInput,
+      length: (actual, expected) =>
+        `An IBAN from this country has ${n(expected)} characters — this one has ${n(actual)}.`,
+    },
   };
 }

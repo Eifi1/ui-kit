@@ -28,6 +28,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       attachmentScreenshot: "Screenshot",
       attachmentRemoveFile: (name) => `${name} entfernen`,
       attachmentLimit: (max) => `Maximal ${n(max)} ${max === 1 ? "Anhang" : "Anhänge"} – zum Hinzufügen erst einen entfernen.`,
+      attachmentUploading: "Wird hochgeladen…",
     },
     feedbackDialog: {
       title: "Feedback senden",
@@ -210,6 +211,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       booleanTrue: "Ja",
       booleanFalse: "Nein",
       booleanUnset: "Nicht festgelegt",
+      sortBy: "Sortieren nach",
+      sortDefault: "Standardreihenfolge",
+      sortAscending: "Aufsteigend",
+      sortDescending: "Absteigend",
     },
     miniCalendar: {
       previousMonth: "Vorheriger Monat",
@@ -249,6 +254,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       previousMonth: "Vorheriger Monat",
       nextMonth: "Nächster Monat",
       today: "Heute",
+      yearPanel: "Jahr wählen",
+      earlierYears: "Frühere Jahre",
+      laterYears: "Spätere Jahre",
+      thisYear: "Dieses Jahr",
     },
     popover: {
       panel: "Aufklappfenster",
@@ -330,6 +339,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       prompt: "Dies kann nicht rückgängig gemacht werden.",
       password: "Passwort",
       phrase: (phrase) => `Geben Sie zur Bestätigung „${phrase}“ ein`,
+      acknowledge: "Ich habe gelesen, was dies bewirkt, und möchte fortfahren.",
     },
     tabs: {
       // "Tab" is what German UIs say; "Registerkarte" reads like a 1990s manual.
@@ -541,6 +551,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     form: {
       save: "Speichern",
       cancel: "Abbrechen",
+      // German keyboards label the key "Strg"; Apple's ⌘ is the same everywhere.
+      submitShortcut: (apple) => (apple ? "⌘ Enter" : "Strg+Enter"),
     },
     descriptionList: {
       empty: "—",
@@ -650,6 +662,41 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     legal: {
       navLabel: "Rechtliches",
+    },
+    characterCount: {
+      // "Zeichen" is the same in singular and plural.
+      count: (used, max) => `${n(used)} von ${n(max)} Zeichen`,
+      remaining: (left) => `Noch ${n(left)} Zeichen`,
+      limitReached: "Zeichenlimit erreicht",
+    },
+    countrySelect: {
+      country: "Land",
+      search: "Land suchen",
+      others: "Weitere Länder",
+    },
+    inlineEdit: {
+      edit: (label) => `${label} bearbeiten`,
+      failed: "Die Änderung konnte nicht gespeichert werden.",
+      empty: "Leer",
+    },
+    ibanInput: {
+      format: "Eine IBAN beginnt mit einem Ländercode aus zwei Buchstaben und zwei Prüfziffern.",
+      country: (code) => `„${code}“ ist kein Ländercode einer IBAN.`,
+      length: (actual, expected) =>
+        `Eine IBAN aus diesem Land hat ${n(expected)} Zeichen – diese hat ${n(actual)}.`,
+      checksum: "Die Prüfziffern stimmen nicht – vermutlich ist ein Zeichen falsch eingegeben.",
+      qrRequired: "Dies ist eine reguläre IBAN. Eine QR-Rechnung braucht die QR-IBAN des Kontos.",
+      qrNotAllowed:
+        "Dies ist eine QR-IBAN, die nur Zahlungen mit QR-Rechnung empfängt. Geben Sie die reguläre IBAN des Kontos ein.",
+    },
+    phoneInput: {
+      countryCode: "Ländervorwahl",
+      other: "Andere",
+    },
+    signChip: {
+      outflow: "Ausgabe",
+      inflow: "Einnahme",
+      direction: (current, next) => `Richtung: ${current} – zu ${next} wechseln`,
     },
     translationReview: {
       statusMissing: "Fehlt",

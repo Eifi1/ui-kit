@@ -25,6 +25,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       attachmentScreenshot: "Screenshot",
       attachmentRemoveFile: (name) => `Rimuovi ${name}`,
       attachmentLimit: (max) => `Massimo ${n(max)} ${max === 1 ? "allegato" : "allegati"}: ne rimuova uno per aggiungerne un altro.`,
+      attachmentUploading: "Caricamento…",
     },
     feedbackDialog: {
       title: "Invia feedback",
@@ -202,6 +203,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       booleanTrue: "Sì",
       booleanFalse: "No",
       booleanUnset: "Non impostato",
+      sortBy: "Ordina per",
+      sortDefault: "Ordine predefinito",
+      sortAscending: "Crescente",
+      sortDescending: "Decrescente",
     },
     miniCalendar: {
       previousMonth: "Mese precedente",
@@ -224,6 +229,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       previousMonth: "Mese precedente",
       nextMonth: "Mese successivo",
       today: "Oggi",
+      yearPanel: "Scegli un anno",
+      earlierYears: "Anni precedenti",
+      laterYears: "Anni successivi",
+      thisYear: "Quest’anno",
     },
     calendarHeatmap: {
       grid: "Valori giornalieri",
@@ -322,6 +331,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       prompt: "Questa operazione non può essere annullata.",
       password: "Password",
       phrase: (phrase) => `Digiti «${phrase}» per confermare`,
+      acknowledge: "Ho letto cosa comporta questa operazione e desidero continuare.",
     },
     tabs: {
       add: "Aggiungi scheda",
@@ -529,6 +539,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     form: {
       save: "Salva",
       cancel: "Annulla",
+      submitShortcut: (apple) => (apple ? "⌘ Invio" : "Ctrl+Invio"),
     },
     descriptionList: {
       empty: "—",
@@ -636,6 +647,42 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     legal: {
       navLabel: "Note legali",
+    },
+    characterCount: {
+      count: (used, max) => `${n(used)} di ${n(max)} ${plural(max, "carattere", "caratteri")}`,
+      remaining: (left) =>
+        left === 1 ? "Resta 1 carattere" : `Restano ${n(left)} caratteri`,
+      limitReached: "Limite di caratteri raggiunto",
+    },
+    countrySelect: {
+      country: "Paese",
+      search: "Cerca paese",
+      others: "Altri paesi",
+    },
+    inlineEdit: {
+      edit: (label) => `Modifica ${label}`,
+      failed: "Non è stato possibile salvare la modifica.",
+      empty: "Vuoto",
+    },
+    ibanInput: {
+      format: "Un IBAN inizia con un codice paese di due lettere e due cifre di controllo.",
+      country: (code) => `«${code}» non è il codice paese di un IBAN.`,
+      length: (actual, expected) =>
+        `Un IBAN di questo paese ha ${n(expected)} caratteri, questo ne ha ${n(actual)}.`,
+      checksum: "Le cifre di controllo non corrispondono: probabilmente un carattere è stato digitato male.",
+      qrRequired: "Questo è un IBAN normale. Una QR-fattura richiede il QR-IBAN del conto.",
+      qrNotAllowed:
+        "Questo è un QR-IBAN, che riceve solo pagamenti con QR-fattura. Inserisca l’IBAN normale del conto.",
+    },
+    phoneInput: {
+      countryCode: "Prefisso internazionale",
+      other: "Altro",
+    },
+    signChip: {
+      outflow: "Uscita",
+      inflow: "Entrata",
+      // "premere per…": an instruction without a tu imperative, as the kit's Italian is formal.
+      direction: (current, next) => `Direzione: ${current} – premere per passare a ${next}`,
     },
     translationReview: {
       statusMissing: "Mancante",
