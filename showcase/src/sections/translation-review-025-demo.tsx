@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button, WriteLockProvider } from "@eifi1/ui-kit";
+import { Button, ToggleGroup, WriteLockProvider } from "@eifi1/ui-kit";
 import { TranslationReviewPanel } from "../../../src/components/translation-review";
 import type { TranslationReviewSaveInfo } from "../../../src/components/translation-review";
 import {
@@ -18,6 +18,10 @@ import { Example, Note } from "../lib/section";
  * reviewing on a phone: "Add swiping. And also grouping to the translation review entries
  * for faster reviewing."). The "server" is component state and a timeout; the strings are
  * a few dozen keksdose-style ones in four areas.
+ *
+ * 0.25.1 — "Many areas" swaps in a catalogue of keksdose's shape (122 areas, ~4700
+ * synthetic strings), on which 0.25.0 opened every group on a wide screen; and the
+ * "Groups start" switch is `defaultGroupsOpen`.
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
@@ -103,22 +107,37 @@ const SEED: TranslationReview[] = [
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** keksdose's shape, in synthetic strings: 20 long areas and 102 short ones. Every ninth
+ *  French string is missing, every seventh differs from the reference in a placeholder. */
+function manyAreas(): { en: Record<string, string>; fr: Record<string, string> } {
+  const en: Record<string, string> = {};
+  const fr: Record<string, string> = {};
+  for (let a = 1; a <= 122; a++) {
+    const size = a <= 20 ? 180 + (a % 5) : 5 + (a % 11);
+    for (let i = 1; i <= size; i++) {
+      const key = `area${String(a).padStart(3, "0")}.string${String(i).padStart(3, "0")}`;
+      en[key] = `Example string ${a}.${i} with {{count}}`;
+      if ((a + i) % 9) fr[key] = i % 7 ? `Chaîne d’exemple ${a}.${i} avec {{count}}` : `Chaîne d’exemple ${a}.${i}`;
+    }
+  }
+  return { en, fr };
+}
+
+type Opening = "auto" | "open" | "folded";
+
 export function TranslationReview025Demo() {
   const [reviews, setReviews] = useState<TranslationReview[]>(SEED);
   const [grouped, setGrouped] = useState(true);
   const [locked, setLocked] = useState(false);
   const [rtl, setRtl] = useState(false);
+  const [many, setMany] = useState(false);
+  const [opening, setOpening] = useState<Opening>("auto");
   const [log, setLog] = useState<string[]>([]);
 
+  const catalogue = useMemo(() => (many ? manyAreas() : { en: flattenStrings(EN), fr: flattenStrings(FR) }), [many]);
   const rows = useMemo(
-    () =>
-      translationRows({
-        locale: "fr",
-        strings: flattenStrings(FR),
-        reference: flattenStrings(EN),
-        reviews,
-      }),
-    [reviews],
+    () => translationRows({ locale: "fr", strings: catalogue.fr, reference: catalogue.en, reviews }),
+    [catalogue, reviews],
   );
 
   // What the app's mutation would do: write, patch its copy, and toast "Saved" — except
@@ -153,10 +172,28 @@ export function TranslationReview025Demo() {
           <Button variant="ghost" aria-pressed={rtl} onClick={() => setRtl((on) => !on)}>
             {rtl ? "Left to right" : "Right to left"}
           </Button>
+          <Button variant="ghost" aria-pressed={many} onClick={() => setMany((on) => !on)}>
+            {many ? "Four areas" : "Many areas (122)"}
+          </Button>
           <Button variant="ghost" onClick={() => setReviews(SEED)}>
             Start over
           </Button>
         </div>
+        {grouped && (
+          <div className="max-w-sm">
+            <ToggleGroup<Opening>
+              aria-label="Groups start"
+              size="sm"
+              value={opening}
+              onChange={setOpening}
+              options={[
+                { value: "auto", label: "Auto" },
+                { value: "open", label: "All open" },
+                { value: "folded", label: "All folded" },
+              ]}
+            />
+          </div>
+        )}
         <div dir={rtl ? "rtl" : undefined}>
           <WriteLockProvider locked={locked} reason="Read-only demo — saving is disabled.">
             <TranslationReviewPanel
@@ -167,10 +204,12 @@ export function TranslationReview025Demo() {
               onClear={clear}
               swipe
               groupBy={grouped ? "namespace" : undefined}
+              defaultGroupsOpen={opening === "auto" ? "auto" : opening === "open"}
               // The showcase's example heading is an h3.
               groupHeadingAs="h4"
-              // The "budget" area's batch (12) is larger than a page, so it asks first.
-              pageSize={10}
+              // The "budget" area's batch (12) is larger than a page, so it asks first. The
+              // many areas page as keksdose's do, 50 rows at a time.
+              pageSize={many ? 50 : 10}
             />
           </WriteLockProvider>
         </div>
@@ -190,7 +229,10 @@ export function TranslationReview025Demo() {
           “Approve unreviewed (n)” — one write, one Undo; larger than a page, it asks first. Filters narrow before
           grouping; each area pages on its own; a column sort orders every area alike. On a phone the areas start
           folded. {code("onSave(writes, { origin, toasted })")} tells the app when the kit has toasted, so its own
-          “Saved” is skipped.
+          “Saved” is skipped. Since 0.25.1 a folded area renders its header only, and on a wide screen the areas
+          start folded once opening them all would render more than 100 rows — “Many areas” is keksdose&apos;s
+          catalogue, which 0.25.0 opened as 122 tables. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
+          {code("true")}, {code("false")}) overrides it; an area the reviewer opens or folds keeps that.
         </Note>
       </div>
     </Example>
