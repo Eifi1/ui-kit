@@ -6,6 +6,13 @@ import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
 
+/** The page-size steps, with the current size slotted in when it is not one of them. */
+function sizeOptions(pageSize: number): number[] {
+  const steps: number[] = [...PAGE_SIZE_OPTIONS];
+  if (!Number.isFinite(pageSize) || steps.includes(pageSize)) return steps;
+  return [...steps, pageSize].sort((a, b) => a - b);
+}
+
 interface PaginationProps {
   page: number;
   totalPages: number;
@@ -89,7 +96,9 @@ export function Pagination({
             className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
             aria-label={labels.pageSize}
           >
-            {PAGE_SIZE_OPTIONS.map((n) => (
+            {/* A `defaultPageSize` that is not one of the steps (keksdose's 5) is offered
+                too — a select whose value has no option shows its first one ("10"). */}
+            {sizeOptions(pageSize).map((n) => (
               <option key={n} value={n}>
                 {num.format(n)}
               </option>

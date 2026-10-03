@@ -227,7 +227,7 @@ export function SwipeableRow({
           // text also SELECTS that text — so committing an action left the row
           // highlighted blue. Suppressed only while dragging, so text in a row at
           // rest stays selectable.
-          swipe.dragging ? "select-none" : "transition-transform duration-150",
+          swipe.dragging ? "select-none" : "transition-transform duration-150 motion-reduce:transition-none",
         )}
         style={{
           transform: dx !== 0 ? `translate3d(${dx}px,0,0)` : undefined,
