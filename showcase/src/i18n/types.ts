@@ -32,6 +32,7 @@ export type PageSlug =
   | "tokens"
   | "palette"
   | "localisation"
+  | "kit-review"
   | "inputs"
   | "fields"
   | "forms"

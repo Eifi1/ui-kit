@@ -126,6 +126,7 @@ const ClipboardTiming = lazySection(() => import("./sections/clipboard-timing"),
 const SeriesChartMarks = lazySection(() => import("./sections/series-chart-marks"), "SeriesChartMarks");
 const Localisation = lazySection(() => import("./sections/localisation"), "Localisation");
 const TranslationReviewDemo = lazySection(() => import("./sections/translation-review-demo"), "TranslationReviewDemo");
+const KitReviewPage = lazySection(() => import("./kit-review/kit-review-page"), "KitReviewPage");
 const ListsMenus = lazySection(() => import("./sections/lists-menus"), "ListsMenus");
 const PageStructure = lazySection(() => import("./sections/page-structure"), "PageStructure");
 const ButtonLabelsTones = lazySection(() => import("./sections/button-labels-demo"), "ButtonLabelsTones");
@@ -406,6 +407,16 @@ export const GROUPS: ShowcaseGroup[] = [
             <TranslationReview025Demo />
           </>
         ),
+      },
+      {
+        slug: "kit-review",
+        title: "Kit review (live)",
+        short: "Kit review",
+        blurb:
+          "The kit's own words in every language keksdose ships, reviewed against keksdose's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
+        icon: ListChecks,
+        components: ["TranslationReviewPanel", "TranslationLocaleTabs", "ServerWakeNotice", "createServerWake", "useServerWakeStage"],
+        Body: KitReviewPage,
       },
     ],
   },

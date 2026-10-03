@@ -157,6 +157,12 @@ export const hu: Dictionary = {
       blurb:
         "A csomag által megjelenített összes szöveg egyetlen típusos fában — és a provider, amely egyszerre adja át a fordítást minden komponensnek.",
     },
+    "kit-review": {
+      title: "A csomag ellenőrzése (élő)",
+      short: "Ellenőrzés",
+      blurb:
+        "A csomag szövegei a keksdose minden nyelvén, a keksdose ellenőrzési adatbázisa alapján: ugyanazok a kit. sorok és ítéletek, mint a Fordítások oldalán, ahonnan ellenőrzési tokennel nyitható meg.",
+    },
     inputs: {
       title: "Bevitel",
       blurb:
@@ -552,6 +558,13 @@ export const hu: Dictionary = {
       "lefordítatlan feliratok keresése",
       "területi beállítás dátumokhoz és számokhoz",
       "feliratok átadása minden komponensnek",
+    ],
+    "kit-review": [
+      "a csomag fordításainak ellenőrzése",
+      "fordítás jóváhagyása",
+      "alvó szerver felébresztése",
+      "ellenőrzés megnyitása a keksdose-ból",
+      "javítások exportálása",
     ],
     inputs: [
       "összes beviteli komponens",

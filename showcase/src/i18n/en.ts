@@ -164,6 +164,12 @@ export const en: Dictionary = {
       blurb:
         "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
     },
+    "kit-review": {
+      title: "Kit review (live)",
+      short: "Kit review",
+      blurb:
+        "The kit's own words in every language keksdose ships, reviewed against keksdose's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
+    },
     inputs: {
       title: "Inputs",
       blurb:
@@ -553,6 +559,13 @@ export const en: Dictionary = {
       "find untranslated labels",
       "set the locale for dates and numbers",
       "provide labels to every component",
+    ],
+    "kit-review": [
+      "review the kit's translations",
+      "approve a translation",
+      "wake a sleeping server",
+      "open the review from keksdose",
+      "export translation corrections",
     ],
     inputs: [
       "see every input component",

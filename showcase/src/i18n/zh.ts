@@ -153,6 +153,12 @@ export const zh: Dictionary = {
       short: "本地化",
       blurb: "组件库渲染的每一段文字，汇成一棵带类型的树——以及把译文一次性交给所有组件的 provider。",
     },
+    "kit-review": {
+      title: "组件库审校（实时）",
+      short: "组件库审校",
+      blurb:
+        "组件库在 keksdose 所支持的每种语言中的文字，对照 keksdose 的审校数据库审阅：与其翻译页面相同的 kit. 行和结论，从那里凭审校令牌打开。",
+    },
     inputs: {
       title: "输入",
       blurb:
@@ -535,6 +541,13 @@ export const zh: Dictionary = {
       "查找 未翻译的文本",
       "设置 日期和数字的区域",
       "为所有组件 提供文本",
+    ],
+    "kit-review": [
+      "审校 组件库的 翻译",
+      "批准 译文",
+      "唤醒 休眠的 服务器",
+      "从 keksdose 打开 审校",
+      "导出 更正",
     ],
     inputs: [
       "所有 输入组件",
