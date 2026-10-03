@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { ColumnMapper, ColumnRoleTable } from "../column-mapper";
 import type { ColumnMapperResult, ColumnMapping, ColumnRole } from "../../lib/column-mapping";
@@ -80,12 +80,35 @@ describe("ColumnMapper", () => {
     expect(lastResult(onChange)!.complete).toBe(false);
   });
 
-  it("flags required roles in the role list", () => {
+  it("leaves the required mark off when every role is required — it would tell no option apart", () => {
+    // Kurvenschmiede (0.24): "Zeit (s) (erforderl…" on a phone, the mark cutting the
+    // role's own name short, on every option alike.
     render(<ColumnMapper roles={CURVE} onChange={vi.fn()} />);
     paste(RECORDING);
     const select = screen.getByRole("combobox", { name: "What does column “t” hold?" });
-    expect(within(select).getByRole("option", { name: "Time (required)" })).toBeInTheDocument();
-    expect(within(select).getByRole("option", { name: "Ignore" })).toBeInTheDocument();
+    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Ignore",
+      "Time",
+      "Setpoint",
+      "Actual",
+    ]);
+    expect(screen.queryByText(/\(required\)/)).not.toBeInTheDocument();
+  });
+
+  it("forwards bodyProps and rowProps to the preview table", () => {
+    render(
+      <ColumnMapper
+        roles={CURVE}
+        onChange={vi.fn()}
+        defaultText={RECORDING}
+        bodyProps={{ "data-private": "" }}
+        rowProps={(row, index) => ({ "data-testid": `sample-${index}`, "data-first": row[0] })}
+      />,
+    );
+    const body = screen.getAllByRole("rowgroup")[1];
+    expect(body.tagName).toBe("TBODY");
+    expect(body).toHaveAttribute("data-private", "");
+    expect(screen.getByTestId("sample-2")).toHaveAttribute("data-first", "0,2");
   });
 
   it("keeps the roles when the header checkbox is toggled, and re-guesses when the column count changes", () => {
@@ -266,6 +289,137 @@ describe("ColumnRoleTable", () => {
     );
     expect(screen.getByRole("combobox", { name: "What does column “Column 2” hold?" })).toBeInTheDocument();
     expect(screen.getByText("Still needed: Time, Setpoint, and Actual.")).toBeInTheDocument();
+  });
+
+  it("marks the required roles where some are not, and not a group's members", () => {
+    render(<Bank />);
+    const select = screen.getByRole("combobox", { name: "What does column “Soll” hold?" });
+    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Ignore",
+      "Booking date (required)",
+      "Amount",
+      "Debit",
+      "Credit",
+      "Payee",
+    ]);
+  });
+
+  it("puts bodyProps on the <tbody> and rowProps on each previewed row", () => {
+    // keksdose #336: demo mode blurs `[data-private]`, which it had to set on the body
+    // from a layout effect after every commit.
+    const rowProps = vi.fn((row: readonly string[], index: number) =>
+      index === 0 ? { "data-first": "", className: "own-row", id: `row-${row[0]}` } : undefined,
+    );
+    render(
+      <ColumnRoleTable
+        header={["a", "b"]}
+        rows={[
+          ["1", "x"],
+          ["2", "y"],
+          ["3", "z"],
+        ]}
+        previewRows={2}
+        roles={CURVE}
+        mapping={{ time: 0 }}
+        onMappingChange={vi.fn()}
+        bodyProps={{ "data-private": "", className: "own-body" }}
+        rowProps={rowProps}
+      />,
+    );
+    const [head, body] = screen.getAllByRole("rowgroup");
+    expect(head).not.toHaveAttribute("data-private");
+    expect(body).toHaveAttribute("data-private", "");
+    // Added to the body's own classes, not in place of them.
+    expect(body.className).toContain("own-body");
+    expect(body.className).toContain("[&>tr:last-child]:border-b-0");
+    // Called for the drawn rows only, with the row's cells and its index.
+    expect(rowProps.mock.calls).toEqual([
+      [["1", "x"], 0],
+      [["2", "y"], 1],
+    ]);
+    const [first, second] = within(body).getAllByRole("row");
+    expect(first).toHaveAttribute("data-first", "");
+    expect(first).toHaveAttribute("id", "row-1");
+    expect(first.className).toContain("own-row");
+    expect(first.className).toContain("border-b");
+    expect(second).not.toHaveAttribute("data-first");
+  });
+
+  describe("edge fade", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    const size = (el: HTMLElement, scrollWidth: number, clientWidth: number) => {
+      Object.defineProperty(el, "scrollWidth", { configurable: true, value: scrollWidth });
+      Object.defineProperty(el, "clientWidth", { configurable: true, value: clientWidth });
+    };
+    // The kit Table's scroll wrapper is the `<table>`'s parent; the fade sits on the
+    // box round it.
+    const scrollerOf = () => screen.getByRole("table").parentElement!;
+    const fadeBox = (container: HTMLElement) =>
+      container.querySelector<HTMLElement>('[data-slot="column-role-table-scroll"]')!;
+
+    it("paints nothing while the columns fit", () => {
+      const { container } = render(<Bank />);
+      size(scrollerOf(), 300, 300);
+      fireEvent.scroll(scrollerOf());
+      expect(fadeBox(container).style.maskImage).toBe("");
+      expect(fadeBox(container)).not.toHaveAttribute("data-overflow");
+    });
+
+    it("fades the edge with columns behind it, then both once scrolled into the middle", () => {
+      const { container } = render(<Bank />);
+      const scroller = scrollerOf();
+      size(scroller, 600, 300);
+      fireEvent.scroll(scroller);
+      // (jsdom's style parser drops a gradient with a `calc()` stop, so the end-side
+      // mask itself is only readable in a browser; the start side's has none.)
+      expect(fadeBox(container)).toHaveAttribute("data-overflow", "end");
+      scroller.scrollLeft = 100;
+      fireEvent.scroll(scroller);
+      expect(fadeBox(container)).toHaveAttribute("data-overflow", "both");
+      scroller.scrollLeft = 300;
+      fireEvent.scroll(scroller);
+      expect(fadeBox(container)).toHaveAttribute("data-overflow", "start");
+      expect(fadeBox(container).style.maskImage).toMatch(/^linear-gradient\(to right, transparent, (#000|rgb\(0, 0, 0\)) 24px, /);
+    });
+
+    it("in RTL the hidden columns are at the end, which is the left", () => {
+      const { container } = render(
+        <div dir="rtl" style={{ direction: "rtl" }}>
+          <Bank />
+        </div>,
+      );
+      size(scrollerOf(), 600, 300);
+      fireEvent.scroll(scrollerOf());
+      expect(fadeBox(container)).toHaveAttribute("data-overflow", "end");
+      expect(fadeBox(container).style.maskImage).toMatch(/^linear-gradient\(to right, transparent, /);
+    });
+
+    it("scrolls a role select focused behind the edge clear of the fade", () => {
+      render(<Bank />);
+      const scroller = scrollerOf();
+      size(scroller, 600, 300);
+      const scrollBy = vi.fn();
+      scroller.scrollBy = scrollBy as unknown as typeof scroller.scrollBy;
+      vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({ left: 0, right: 300 } as DOMRect);
+      const select = screen.getByRole("combobox", { name: "What does column “Haben” hold?" });
+      vi.spyOn(select.closest("th")!, "getBoundingClientRect").mockReturnValue({ left: 200, right: 340 } as DOMRect);
+      fireEvent.focus(select);
+      expect(scrollBy).toHaveBeenCalledWith({ left: 64 });
+    });
+
+    it("leaves a select clear of both edges where it is", () => {
+      render(<Bank />);
+      const scroller = scrollerOf();
+      size(scroller, 600, 300);
+      const scrollBy = vi.fn();
+      scroller.scrollBy = scrollBy as unknown as typeof scroller.scrollBy;
+      vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({ left: 0, right: 300 } as DOMRect);
+      const select = screen.getByRole("combobox", { name: "What does column “Empfänger” hold?" });
+      vi.spyOn(select.closest("th")!, "getBoundingClientRect").mockReturnValue({ left: 60, right: 200 } as DOMRect);
+      fireEvent.focus(select);
+      expect(scrollBy).not.toHaveBeenCalled();
+    });
   });
 
   it("disables every role select while the caller's table is being replaced", () => {
