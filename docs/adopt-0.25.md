@@ -76,3 +76,25 @@ showcase (⌘K) has every part live.
 - If an `onFilterChange` (or any handler) of yours calls several `useSearchParamState`
   setters in a row, it was losing all but the last write before 0.25; it works now —
   `useSearchParamsState` is the tidier form.
+
+## 0.25.1
+
+- **TranslationReviewPanel `groupBy` on a wide screen (keksdose):** every group used to
+  start open — keksdose's 122 areas drew ~2,000 rows and ~44k elements (2.9s to appear,
+  2s per filter click; a page test went from 4s to 146s). Groups now start open only
+  while that renders at most `max(100, pageSize)` rows, else folded, and a folded group's
+  body is not rendered (2,147 elements, 0.36s, 0.13s). `defaultGroupsOpen` (`true` /
+  `false` / `"auto"`, the default) chooses. **kastlan:** your desktop review now starts
+  folded; `defaultGroupsOpen` restores all-open. keksdose can pass `groupBy` on every
+  screen again.
+- **A filter not written back:** development builds warn once per field when
+  `onFilterChange` changed a field the app passes in `filter` but never wrote back (the
+  control snapped back silently — Kurvenschmiede's `placeholdersOnly`). Write back every
+  field `onFilterChange` reports, in one update, or leave a field out of `filter` and the
+  panel keeps it.
+- **`useSearchParamsState<YourInterface>(…)`** works (the constraint is `object`, not
+  `Record<string, unknown>` — TS2344 before, Kurvenschmiede).
+- **Test mocks of react-router (keksdose):** a `vi.mock("react-router", () => ({ … }))`
+  without the original module threw at import ("No `UNSAFE_DataRouterContext` export is
+  defined on the mock") since 0.25.0; the kit reads that context defensively now. A
+  partial mock (`importOriginal`) was and stays the safer pattern.
