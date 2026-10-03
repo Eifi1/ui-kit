@@ -152,7 +152,7 @@ describe("TranslationReviewPanel", () => {
           note: null,
           suggestion: null,
         },
-      ]),
+      ], { origin: "row", toasted: false }),
     );
     // The row's own click opens the editor; the button only approves.
     expect(screen.queryByLabelText("Better wording")).toBeNull();
@@ -173,7 +173,7 @@ describe("TranslationReviewPanel", () => {
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith([
         expect.objectContaining({ key: "common.items", verdict: "NEEDS_CHANGE", suggestion: "{{count}} éléments" }),
-      ]),
+      ], { origin: "editor", toasted: false }),
     );
     // Resolved: the editor closes.
     await waitFor(() => expect(screen.queryByLabelText("Better wording")).toBeNull());
@@ -220,7 +220,7 @@ describe("TranslationReviewPanel", () => {
       expect(onClear).toHaveBeenCalledWith([
         { locale: "fr", key: "budget.rta" },
         { locale: "fr", key: "common.save" },
-      ]),
+      ], { origin: "selection", toasted: false }),
     );
   });
 

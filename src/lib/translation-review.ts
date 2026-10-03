@@ -387,6 +387,49 @@ export function filterTranslationRows(
   );
 }
 
+// ── Grouping ────────────────────────────────────────────────────────────────────
+
+/** One group of rows — an area, a source — and how they stand. */
+export interface TranslationRowGroup {
+  key: string;
+  rows: TranslationRow[];
+  summary: TranslationSummary;
+}
+
+/**
+ * Rows in groups, each group where its first row is — the reference's order, so the areas
+ * read the way the app's authors wrote the bundle — and each group's rows in their own
+ * order. keksdose live #377: a reviewer on a phone works area by area ("the budget
+ * strings, then the legal ones"), and a flat list of 3859 rows is not a way to see
+ * where an area stands.
+ *
+ * `groupOf` names a row's group: `(row) => row.namespace` for the areas,
+ * `(row) => row.source` for kastlan's screen texts and documents.
+ */
+export function groupTranslationRows(
+  rows: readonly TranslationRow[],
+  groupOf: (row: TranslationRow) => string,
+): TranslationRowGroup[] {
+  const byKey = new Map<string, TranslationRow[]>();
+  for (const row of rows) {
+    const key = groupOf(row);
+    const list = byKey.get(key);
+    if (list) list.push(row);
+    else byKey.set(key, [row]);
+  }
+  return [...byKey].map(([key, list]) => ({ key, rows: list, summary: summariseRows(list) }));
+}
+
+/**
+ * The rows a group's "Approve the unreviewed" takes: the ones nobody has given a verdict
+ * and that have a text. Not `changed` — a string that moved since it was judged asks to
+ * be READ again, which a bulk action is the opposite of — and not `missing`, which has
+ * nothing to approve.
+ */
+export function unreviewedRows(rows: readonly TranslationRow[]): TranslationRow[] {
+  return rows.filter((row) => row.status === "unreviewed" && row.text !== "");
+}
+
 // ── Writing ─────────────────────────────────────────────────────────────────────
 
 /** What gets stored for a verdict: the wording it was given on, so a later change of the
@@ -406,6 +449,48 @@ export function reviewWrite(
     note,
     suggestion,
   };
+}
+
+/** What takes a set of verdicts back: see {@link reviewUndo}. */
+export interface TranslationReviewUndo {
+  /** The verdicts the rows had before, to store again — each on the wording it was
+   *  given on, so a row that was `changed` reads `changed` again. */
+  writes: TranslationReviewWrite[];
+  /** The rows that had no verdict before: back to unreviewed. */
+  clears: TranslationReviewKey[];
+}
+
+/**
+ * How to take back what was just said about `rows` — the rows AS THEY WERE before the
+ * write, with the verdicts they carried then. The panel's Undo toast (0.25, keksdose live
+ * #377) runs it: a swipe on a phone approves in one movement, and a movement can be a
+ * mistake.
+ *
+ * A row that had a verdict gets it stored again (its note, its suggestion, the wording it
+ * was judged on); one that had none is cleared. The server stamps the restored verdict
+ * with the person undoing and the time, as it stamps every write — the contract has no
+ * way to write a verdict in somebody else's name, and should not.
+ */
+export function reviewUndo(rows: readonly TranslationRow[]): TranslationReviewUndo {
+  const writes: TranslationReviewWrite[] = [];
+  const clears: TranslationReviewKey[] = [];
+  for (const row of rows) {
+    const before = row.review;
+    if (!before) {
+      clears.push({ locale: row.locale, key: row.key });
+      continue;
+    }
+    writes.push({
+      locale: row.locale,
+      key: row.key,
+      text: before.text,
+      referenceText: before.referenceText,
+      verdict: before.verdict,
+      note: before.note,
+      suggestion: before.suggestion,
+    });
+  }
+  return { writes, clears };
 }
 
 /** The app's cached verdict list with `written` in place of what was said before — a

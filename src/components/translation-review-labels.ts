@@ -84,6 +84,16 @@ export interface TranslationReviewLabels {
   exportCorrections: (count: number) => string;
   /** A callback rejected and no `formatError` says better. */
   failed: string;
+  /** 0.25: the Undo toast after an approval (`undo`) — one string, or a batch of them. */
+  approvedToast: (count: number) => string;
+  /** 0.25: a group's header under `groupBy` — how many of its rows nobody has read yet,
+   *  of how many the filters show in it. */
+  groupCount: (unreviewed: number, total: number) => string;
+  /** 0.25: a group's bulk action — approve its unreviewed rows. */
+  approveGroup: (count: number) => string;
+  /** 0.25: asked first when a group's bulk approve is larger than a page — more than the
+   *  reviewer can have had on screen. `group` is the group's name. */
+  confirmGroup: (count: number, group: string) => string;
 }
 
 export const DEFAULT_TRANSLATION_REVIEW_LABELS: TranslationReviewLabels = {
@@ -133,6 +143,13 @@ export const DEFAULT_TRANSLATION_REVIEW_LABELS: TranslationReviewLabels = {
   scope: (areas) => `Your review is limited to: ${areas}.`,
   exportCorrections: (count) => `Export corrections (${count})`,
   failed: "That did not work. Please try again.",
+  approvedToast: (count) => (count === 1 ? "String approved" : `${count} strings approved`),
+  groupCount: (unreviewed, total) => `${unreviewed} unreviewed / ${total}`,
+  approveGroup: (count) => `Approve unreviewed (${count})`,
+  confirmGroup: (count, group) =>
+    count === 1
+      ? `Approve the unreviewed string in ${group}?`
+      : `Approve all ${count} unreviewed strings in ${group}, including those not on screen?`,
 };
 
 /** A status's word, from the namespace's five. */

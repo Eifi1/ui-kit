@@ -1,16 +1,20 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Check, ListChecks, RotateCcw } from "lucide-react";
+import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
+import { useMediaQuery } from "../hooks/use-media-query";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   DEFAULT_TRANSLATION_REVIEW_FILTER,
   REVIEW_STATUSES,
   filterTranslationRows,
+  groupTranslationRows,
   keyInAreas,
+  reviewUndo,
   reviewWrite,
   summariseRows,
+  unreviewedRows,
 } from "../lib/translation-review";
 import type {
   ReviewStatus,
@@ -18,20 +22,24 @@ import type {
   TranslationReviewKey,
   TranslationReviewWrite,
   TranslationRow,
+  TranslationRowGroup,
 } from "../lib/translation-review";
 import { AlertBanner } from "./alert-banner";
 import { BulkActionBar } from "./bulk-action-bar";
 import { Checkbox } from "./checkbox";
 import { Chip } from "./chip";
 import { DataTable } from "./data-table";
-import type { DataTableColumn } from "./data-table";
+import type { DataTableColumn, DataTableProps, MobileSwipeActions, SortState } from "./data-table";
+import { Disclosure } from "./disclosure";
 import { SearchField } from "./search-field";
+import { toast } from "./toast";
 import { ToggleGroup } from "./toggle-group";
 import { TranslationReviewEditor } from "./translation-review-editor";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
 import { ReviewStatusChip, TranslationProgress } from "./translation-review-parts";
 import { Button, IconButton, Select } from "./ui";
+import { useWriteLock } from "./write-lock";
 
 export {
   REVIEW_STATUS_TONES,
@@ -73,6 +81,33 @@ export type { TranslationReviewLabels } from "./translation-review-labels";
 
 type MaybePromise = void | Promise<unknown>;
 
+/** What asked for a write — see {@link TranslationReviewSaveInfo}. */
+export type TranslationReviewOrigin = "editor" | "row" | "swipe" | "group" | "selection" | "undo";
+
+/**
+ * The second argument of `onSave` and `onClear` (0.25): where the write came from, and
+ * whether the panel answers it with a toast of its own.
+ *
+ * WHY THE APP IS TOLD. keksdose and kastlan toast "Saved" from their mutation on every
+ * save. With {@link TranslationReviewPanelProps.undo} on, an approval is answered by the
+ * kit's Undo toast instead — and a reviewer swiping through a list then read two toasts
+ * per card. The app skips its own where `toasted` is true:
+ *
+ *     onSave={(writes, { toasted }) => save.mutateAsync({ items: writes.map(toApiWrite), quiet: toasted })}
+ *
+ * An app that ignores the argument keeps working; it only says "Saved" twice.
+ */
+export interface TranslationReviewSaveInfo {
+  /** The open editor, a row's approve button, a swipe on a phone card, a group's
+   *  "Approve unreviewed", the selection's bulk bar, or an Undo pressed on the toast. */
+  origin: TranslationReviewOrigin;
+  /** The panel shows its own toast for this write (an approval's Undo toast). */
+  toasted: boolean;
+}
+
+/** How {@link TranslationReviewPanelProps.groupBy} names a row's group. */
+export type TranslationReviewGroupBy = "namespace" | "source" | ((row: TranslationRow) => string);
+
 export interface TranslationReviewPanelProps {
   /** One locale's rows, from `translationRows`. */
   rows: readonly TranslationRow[];
@@ -81,10 +116,12 @@ export interface TranslationReviewPanelProps {
   /** The reference language's own name — the reference column's header. */
   referenceLabel: string;
   /** Store verdicts: one for an editor or a row's approve button, many for a bulk
-   *  approve. Left out (or `readOnly`): nothing can be changed. */
-  onSave?: (writes: TranslationReviewWrite[]) => MaybePromise;
-  /** Clear verdicts — back to unreviewed. Left out: no reset. */
-  onClear?: (keys: TranslationReviewKey[]) => MaybePromise;
+   *  approve. Left out (or `readOnly`): nothing can be changed. The second argument
+   *  says where the write came from ({@link TranslationReviewSaveInfo}). */
+  onSave?: (writes: TranslationReviewWrite[], info: TranslationReviewSaveInfo) => MaybePromise;
+  /** Clear verdicts — back to unreviewed. Left out: no reset, and an approval of a row
+   *  that had no verdict cannot be undone. */
+  onClear?: (keys: TranslationReviewKey[], info: TranslationReviewSaveInfo) => MaybePromise;
   /** A locale the viewer may read but not review: the rows and their verdicts, no
    *  actions, and a line saying so. */
   readOnly?: boolean;
@@ -104,9 +141,13 @@ export interface TranslationReviewPanelProps {
   sourceLabels?: Readonly<Record<string, string>>;
   /**
    * Controlled filters — for an app that keeps them in the URL (keksdose's `?status=`,
-   * `?area=`, `?q=`). Whatever is left out is the panel's own. Pair with `onFilterChange`.
+   * `?ns=`, `?q=`). Whatever is left out is the panel's own. Pair with `onFilterChange`.
    */
   filter?: Partial<TranslationReviewFilter>;
+  /** Every filter, on every change — write them in ONE update: `useSearchParamsState`'s
+   *  setter takes this object as it is (`filter={filter} onFilterChange={setFilter}`).
+   *  Single `useSearchParamState` setters compose since 0.25; before, four in a row
+   *  clobbered each other (keksdose live #378). */
   onFilterChange?: (filter: TranslationReviewFilter) => void;
   /** The progress bar over the filters. Default true. */
   progress?: boolean;
@@ -118,9 +159,77 @@ export interface TranslationReviewPanelProps {
   formatDate?: (iso: string) => string;
   /** Turns a callback's rejection into words. Default {@link TranslationReviewLabels.failed}. */
   formatError?: (error: unknown) => ReactNode;
+  /**
+   * Swipe the phone cards (0.25, keksdose live #377 — Marcel reviewing on a phone): toward
+   * the reading END to approve, toward the START for "Needs a change", which OPENS the
+   * editor with the cursor in the wording rather than sending the string back blind — a
+   * verdict without a note or a better wording tells whoever fixes it nothing. In a
+   * right-to-left page the two sides mirror with the reading direction.
+   *
+   * DataTable's swipe sides (`mobileSwipeActions`) on {@link SwipeableRow}: the same
+   * gesture, the same feedback, and the same keyboard path — every swipe is also a real
+   * button, read out and reachable by Tab, so the gesture is a shortcut and never the only
+   * way. A row has no swipe while the editor under it is open, while its own write is out,
+   * under a {@link WriteLockProvider} lock, in a `readOnly` locale, and toward "Approve"
+   * where there is nothing to approve (a missing string, an approved one). A reviewer
+   * limited to `areas` never sees a row outside them, so never swipes one.
+   *
+   * Off by default, so no existing page gains a gesture on the bump. Phones only; the
+   * desktop table keeps its approve button.
+   */
+  swipe?: boolean;
+  /**
+   * Answer every approval with the kit's Undo toast (`toast.undo`): a row's button, a
+   * swipe, the editor's Approve, a group's and the selection's bulk approve. Undo stores
+   * again what the rows said before ({@link reviewUndo}) — or clears them, for rows that
+   * had no verdict, which needs `onClear` (without it the toast reports and offers
+   * nothing). A batch has ONE Undo.
+   *
+   * Default: on with `swipe` or `groupBy` — the two ways to approve in one movement or many
+   * rows at once bring their way back — and off otherwise, so an existing page does not
+   * gain a toast on the bump. Needs the app's `<Toaster>`. Tell the app's own "Saved"
+   * toast apart with the `toasted` flag ({@link TranslationReviewSaveInfo}).
+   */
+  undo?: boolean;
+  /**
+   * Group the strings under a header per area (0.25, keksdose live #377: *"grouping to the
+   * translation review entries for faster reviewing"*): `"namespace"` — the row's
+   * `namespace`, which `translationRows` derives from the key (`budget`, `kit.dataTable`
+   * with keksdose's `namespaceOf`) — `"source"`, or a function of the row.
+   *
+   * Each group is a section with a heading ({@link groupHeadingAs}): its name, "n
+   * unreviewed / total", and "Approve unreviewed (n)", which approves the group's rows
+   * nobody has given a verdict ({@link unreviewedRows}) under the same rules as one
+   * approval — write lock, `readOnly`, one write at a time — with one Undo for the batch.
+   * A batch larger than `pageSize` asks first, inside the opened group: more than a page
+   * is more than the reviewer can have had on screen.
+   *
+   * WHAT IT MEANS FOR THE FILTERS, THE SORT AND THE PAGES. The filters narrow the rows
+   * first, then the rows are grouped: a header counts what the filters show in it (so
+   * "Approve unreviewed" never takes a row the reviewer filtered away), and an area with
+   * nothing left is not shown. Groups stand in the order their first string has in the
+   * reference; a column sort orders the rows INSIDE every group alike. Each group pages
+   * on its own, `pageSize` rows at a time — a header then always stands over its own
+   * rows, and paging one area does not move another — rather than one pager cutting
+   * through the headers. `storageKey` keeps persisting the ungrouped table only.
+   *
+   * Groups fold (each on its own, remembered while the panel lives). On a phone they
+   * start folded when there are several — the headers are then the area list, and the
+   * reviewer opens the one to work through; on a wide screen they start open.
+   */
+  groupBy?: TranslationReviewGroupBy;
+  /** A group's name. Default: `sourceLabels` for `groupBy="source"`, else the key. */
+  groupLabel?: (group: string) => string;
+  /** The level of the group headings. Default `h2`: the panel is a page's body, under
+   *  the page's `h1`. */
+  groupHeadingAs?: "h2" | "h3" | "h4";
   className?: string;
   labels?: Partial<TranslationReviewLabels>;
 }
+
+/** The wide screen's query — the same one DataTable switches its layout on, so "a phone"
+ *  means the same here as in the table. */
+const MD_UP = "(min-width: 768px)";
 
 /** The row's text — or, for a missing string, the line that says so. */
 function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: TranslationReviewLabels; clamp?: boolean }) {
@@ -145,7 +254,14 @@ function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: Transla
  * Bulk approve takes the selected rows that are not approved yet and have a text:
  * approving an absent string says nothing, and re-approving one says it again. On a
  * phone the table has no checkboxes, so "Select all shown" selects what the filters
- * show — filter to `Unreviewed` in one area, read, select, approve.
+ * show — filter to `Unreviewed` in one area, read, select, approve. With `groupBy`, a
+ * group's own "Approve unreviewed" is the shorter way, and with `swipe` a card is approved
+ * by a swipe.
+ *
+ * The panel's writes go out ONE AT A TIME, in the order they were asked for: two writes on
+ * one locale's verdicts can answer out of order, and an Undo must not overtake the
+ * approval it takes back. A swipe on the next card while one is out is queued rather than
+ * refused — a reviewer swiping down a list is faster than the server.
  */
 export function TranslationReviewPanel({
   rows: rowsProp,
@@ -165,12 +281,22 @@ export function TranslationReviewPanel({
   storageKey,
   formatDate,
   formatError,
+  swipe = false,
+  undo: undoProp,
+  groupBy,
+  groupLabel,
+  groupHeadingAs = "h2",
   className,
   labels: labelsProp,
 }: TranslationReviewPanelProps) {
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
   const locale = useKitLocale();
+  const lock = useWriteLock();
+  const phone = !useMediaQuery(MD_UP, true);
+  const baseId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const editable = !readOnly && onSave !== undefined;
+  const undoOn = undoProp ?? (swipe || groupBy !== undefined);
 
   const [ownFilter, setOwnFilter] = useState<TranslationReviewFilter>(DEFAULT_TRANSLATION_REVIEW_FILTER);
   // The app's fields over the panel's own; a field the app leaves `undefined` is the
@@ -180,11 +306,18 @@ export function TranslationReviewPanel({
     if (value !== undefined) Object.assign(filter, { [name]: value });
   }
   const [openId, setOpenId] = useState<string | null>(null);
+  // The row whose editor a swipe opened, to be written in: its wording field takes focus.
+  const [focusId, setFocusId] = useState<string | null>(null);
   const [selected, setSelected] = useState<ReadonlySet<string>>(() => new Set());
-  // One bulk or row action at a time: two writes in flight on one locale's verdicts can
-  // answer out of order. The editor keeps its own, for its own buttons.
-  const [busy, setBusy] = useState<string | null>(null);
+  // The writes asked for and not yet answered, in order: the first is the one out. The
+  // editor keeps its own, for its own buttons.
+  const [queued, setQueued] = useState<readonly string[]>([]);
+  const claimed = useRef(new Set<string>());
+  const tail = useRef<Promise<unknown>>(Promise.resolve());
+  const undoCount = useRef(0);
   const [failure, setFailure] = useState<ReactNode>(null);
+  const busy = queued.length > 0;
+  const isQueued = (key: string) => queued.includes(key);
 
   const rows = useMemo(
     () => (areas ? rowsProp.filter((row) => keyInAreas(row.key, areas, inArea)) : [...rowsProp]),
@@ -206,6 +339,31 @@ export function TranslationReviewPanel({
     [rows, status, source, namespace, query, placeholdersOnly],
   );
 
+  // ── Groups ──
+  const groups = useMemo(() => {
+    if (groupBy === undefined) return null;
+    const of =
+      groupBy === "namespace"
+        ? (r: TranslationRow) => r.namespace
+        : groupBy === "source"
+          ? (r: TranslationRow) => r.source
+          : groupBy;
+    return groupTranslationRows(visible, of);
+  }, [visible, groupBy]);
+  const groupName = (key: string) =>
+    groupLabel?.(key) ?? (groupBy === "source" ? sourceLabels?.[key] : undefined) ?? (key || "—");
+  // Only what the reviewer chose; a group nobody has touched follows the default.
+  const [groupOpen, setGroupOpen] = useState<Readonly<Record<string, boolean>>>({});
+  const groupOpenByDefault = !(phone && (groups?.length ?? 0) > 1);
+  const isGroupOpen = (key: string) => groupOpen[key] ?? groupOpenByDefault;
+  const setGroupOpenFor = (key: string, open: boolean) => setGroupOpen((prev) => ({ ...prev, [key]: open }));
+  // The group whose large batch is waiting for a yes — and, until its confirm button
+  // has mounted and taken focus, the group that asked.
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const confirmFocus = useRef<string | null>(null);
+  // One sort for every group's table, so a header click orders all of them alike.
+  const [groupSorts, setGroupSorts] = useState<SortState[]>([]);
+
   const setFilter = (patch: Partial<TranslationReviewFilter>) => {
     const next = { ...filter, ...patch };
     setOwnFilter(next);
@@ -214,35 +372,122 @@ export function TranslationReviewPanel({
     setSelected(new Set());
   };
 
-  const run = async (key: string, action: () => MaybePromise): Promise<boolean> => {
-    setBusy(key);
-    setFailure(null);
-    try {
-      await action();
-      return true;
-    } catch (caught) {
-      setFailure(formatError ? formatError(caught) : labels.failed);
-      return false;
-    } finally {
-      setBusy(null);
+  /** Queue a write under `key` (one per key at a time); resolves whether it worked. */
+  const run = (key: string, action: () => MaybePromise): Promise<boolean> => {
+    if (claimed.current.has(key)) return Promise.resolve(false);
+    claimed.current.add(key);
+    setQueued((q) => [...q, key]);
+    const step = tail.current.then(async () => {
+      setFailure(null);
+      try {
+        await action();
+        return true;
+      } catch (caught) {
+        setFailure(formatError ? formatError(caught) : labels.failed);
+        return false;
+      } finally {
+        claimed.current.delete(key);
+        setQueued((q) => q.filter((k) => k !== key));
+      }
+    });
+    tail.current = step;
+    return step;
+  };
+
+  /** "String approved — Undo", once `targets` (as they were BEFORE the write) are
+   *  approved. Undo goes through the same queue as every write. */
+  const sayApproved = (targets: readonly TranslationRow[], description?: ReactNode) => {
+    const back = reviewUndo(targets);
+    const message = labels.approvedToast(targets.length);
+    const save = onSave;
+    const clear = onClear;
+    // Taking back the approval of a row that had no verdict is a clear: without
+    // `onClear` there is no way to say it, so the toast reports and offers nothing.
+    if (!save || (back.clears.length > 0 && !clear)) {
+      toast.success(message, { description });
+      return;
     }
+    const key = `undo:${++undoCount.current}`;
+    toast.undo(message, {
+      description,
+      onUndo: () =>
+        void run(key, async () => {
+          if (back.writes.length > 0) await save(back.writes, { origin: "undo", toasted: false });
+          if (back.clears.length > 0) await clear?.(back.clears, { origin: "undo", toasted: false });
+        }),
+    });
+  };
+
+  const approve = async (
+    key: string,
+    targets: readonly TranslationRow[],
+    origin: TranslationReviewOrigin,
+    description?: ReactNode,
+  ): Promise<boolean> => {
+    if (!onSave || targets.length === 0) return false;
+    const save = onSave;
+    const ok = await run(key, () => save(targets.map((r) => reviewWrite(r, "APPROVED")), { origin, toasted: undoOn }));
+    if (ok && undoOn) sayApproved(targets, description);
+    return ok;
+  };
+
+  /** The editor's own save: it waits, closes and shows its errors itself, so it does
+   *  not go through the queue — but an approval there is answered like any other. */
+  const saveFromEditor = async (row: TranslationRow, write: TranslationReviewWrite) => {
+    const toasted = undoOn && write.verdict === "APPROVED";
+    await onSave?.([write], { origin: "editor", toasted });
+    if (toasted) sayApproved([row], row.key);
+  };
+
+  /**
+   * Focus back into the panel once a group's batch has settled, if it fell out: the
+   * button that was pressed goes with the rows it approved (and under the `Unreviewed`
+   * filter the whole group can go). Two frames, so the app's new rows have been drawn.
+   */
+  const keepFocusAt = (groupKey: string) => {
+    const check = () => {
+      const root = rootRef.current;
+      const active = document.activeElement;
+      if (!root || (active && active !== document.body && active.isConnected)) return;
+      const sections = [...root.querySelectorAll<HTMLElement>("[data-review-group]")];
+      const section = sections.find((el) => el.dataset.reviewGroup === groupKey) ?? sections[0];
+      section?.querySelector<HTMLElement>("[data-disclosure-trigger]")?.focus();
+    };
+    requestAnimationFrame(() => requestAnimationFrame(check));
+  };
+
+  const approveGroup = async (group: TranslationRowGroup, confirmed: boolean) => {
+    const targets = unreviewedRows(group.rows);
+    if (targets.length === 0) return;
+    if (!confirmed && targets.length > pageSize) {
+      // Asked inside the opened group, over the rows it is about.
+      setGroupOpenFor(group.key, true);
+      setConfirming(group.key);
+      confirmFocus.current = group.key;
+      return;
+    }
+    const ok = await approve(`group:${group.key}`, targets, "group", groupName(group.key));
+    if (ok) setConfirming((key) => (key === group.key ? null : key));
+    keepFocusAt(group.key);
   };
 
   const visibleIds = new Set(visible.map((r) => r.id));
   const selectedRows = visible.filter((r) => selected.has(r.id));
-  const allSelected = visible.length > 0 && selectedRows.length === visible.length;
+  // What "Select all shown" takes: grouped, the rows of the open groups — a folded
+  // group's rows are not shown.
+  const shownRows = groups ? groups.filter((g) => isGroupOpen(g.key)).flatMap((g) => g.rows) : visible;
+  const allShownSelected = shownRows.length > 0 && shownRows.every((r) => selected.has(r.id));
   const toApprove = selectedRows.filter((r) => r.text !== "" && r.status !== "approved");
   const toReset = selectedRows.filter((r) => r.review !== null);
 
   const approveSelected = async () => {
-    if (!onSave || toApprove.length === 0) return;
-    if (await run("bulk-approve", () => onSave(toApprove.map((r) => reviewWrite(r, "APPROVED"))))) {
-      setSelected(new Set());
-    }
+    if (await approve("bulk-approve", toApprove, "selection")) setSelected(new Set());
   };
   const resetSelected = async () => {
     if (!onClear || toReset.length === 0) return;
-    if (await run("bulk-reset", () => onClear(toReset.map((r) => ({ locale: r.locale, key: r.key }))))) {
+    const clear = onClear;
+    const keys = toReset.map((r) => ({ locale: r.locale, key: r.key }));
+    if (await run("bulk-reset", () => clear(keys, { origin: "selection", toasted: false }))) {
       setSelected(new Set());
     }
   };
@@ -291,8 +536,7 @@ export function TranslationReviewPanel({
       sortBy: (r) => REVIEW_STATUSES.indexOf(r.status),
     },
   ];
-  if (editable && onSave) {
-    const save = onSave;
+  if (editable) {
     columns.push({
       key: "approve",
       header: <span className="sr-only">{labels.approve}</span>,
@@ -304,12 +548,12 @@ export function TranslationReviewPanel({
             tone="muted"
             commit
             label={labels.approve}
-            pending={busy === `row:${r.id}`}
-            disabled={busy !== null}
+            pending={isQueued(`row:${r.id}`)}
+            disabled={busy}
             onClick={(event) => {
               // The row's own click opens the editor; this one only approves.
               event.stopPropagation();
-              void run(`row:${r.id}`, () => save([reviewWrite(r, "APPROVED")]));
+              void approve(`row:${r.id}`, [r], "row", r.key);
             }}
           >
             <Check />
@@ -318,8 +562,214 @@ export function TranslationReviewPanel({
     });
   }
 
+  /**
+   * A phone card's swipes: Approve toward the end, "Needs a change" toward the start.
+   * None where the row must not be acted on — the same conditions under which its
+   * buttons are locked or absent.
+   */
+  const swipeActions = (r: TranslationRow): MobileSwipeActions | null => {
+    if (!editable || lock.locked || isQueued(`row:${r.id}`)) return null;
+    const missing = r.text === "";
+    return {
+      end:
+        missing || r.status === "approved"
+          ? []
+          : [
+              {
+                label: labels.approve,
+                icon: <Check className="size-4" aria-hidden />,
+                onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
+                className: "bg-[var(--success)]",
+                armedClassName: "bg-[var(--success)]",
+              },
+            ],
+      start: [
+        {
+          label: missing ? labels.suggest : labels.flag,
+          icon: <PencilLine className="size-4" aria-hidden />,
+          // Opens the editor rather than sending the string back: "needs a change"
+          // with neither a note nor a better wording tells nobody anything.
+          onCommit: () => {
+            setOpenId(r.id);
+            setFocusId(r.id);
+          },
+          className: missing ? "bg-[var(--brand)]" : "bg-[var(--danger)]",
+          armedClassName: missing ? "bg-[var(--brand-hover)]" : "bg-[var(--danger-hover)]",
+        },
+      ],
+    };
+  };
+
+  const toggleIn = (prev: ReadonlySet<string>, many: readonly TranslationRow[], checked: boolean) => {
+    const next = new Set([...prev].filter((id) => visibleIds.has(id)));
+    for (const r of many) {
+      if (checked) next.add(r.id);
+      else next.delete(r.id);
+    }
+    return next;
+  };
+  /** The checkbox column of a table over `list` — the whole list, or one group. */
+  const selectionFor = (list: readonly TranslationRow[]): DataTableProps<TranslationRow>["selection"] => {
+    if (!editable) return undefined;
+    const picked = list.filter((r) => selected.has(r.id)).length;
+    return {
+      isSelected: (r) => selected.has(r.id),
+      onToggle: (r, checked) => setSelected((prev) => toggleIn(prev, [r], checked)),
+      onToggleMany: (many, checked) => setSelected((prev) => toggleIn(prev, many, checked)),
+      allSelected: list.length > 0 && picked === list.length,
+      someSelected: picked > 0 && picked < list.length,
+      onToggleAll: (checked) => setSelected((prev) => toggleIn(prev, list, checked)),
+    };
+  };
+
+  const table = (list: TranslationRow[], group?: { name: string }) => (
+    <DataTable<TranslationRow>
+      rows={list}
+      rowKey={(r) => r.id}
+      columns={columns}
+      empty={labels.empty}
+      defaultPageSize={pageSize}
+      {...(group
+        ? {
+            // Inside the group's own card: no frame in a frame, no column rail per group,
+            // no scroller per group, and the group's name as the table's.
+            frame: false,
+            chrome: "minimal" as const,
+            maxBodyHeight: "none",
+            sorts: groupSorts,
+            onSortsChange: setGroupSorts,
+            labels: { table: group.name },
+          }
+        : { storageKey })}
+      isExpanded={(r) => r.id === openId}
+      onRowClick={(r) => {
+        setFocusId(null);
+        setOpenId((open) => (open === r.id ? null : r.id));
+      }}
+      expandedRow={(r) => (
+        <TranslationReviewEditor
+          key={r.id}
+          row={r}
+          referenceLabel={referenceLabel}
+          localeLabel={localeLabel}
+          readOnly={!editable}
+          focusWording={focusId === r.id}
+          onSave={onSave ? (write) => saveFromEditor(r, write) : undefined}
+          onClear={onClear ? (key) => onClear([key], { origin: "editor", toasted: false }) : undefined}
+          onClose={() => {
+            setOpenId(null);
+            setFocusId(null);
+          }}
+          formatDate={formatDate}
+          formatError={formatError}
+          labels={labelsProp}
+        />
+      )}
+      mobileCard={(r) => (
+        <div className="min-w-0 space-y-1">
+          <code className="block break-all text-xs text-[var(--text-muted)]">{r.key}</code>
+          <div className="text-sm text-[var(--text-primary)]">
+            <TextCell row={r} labels={labels} clamp />
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <ReviewStatusChip status={r.status} labels={labelsProp} />
+            {r.placeholderMismatch && (
+              <Chip size="sm" tone="danger" variant="outline">
+                {labels.placeholderChip}
+              </Chip>
+            )}
+          </div>
+        </div>
+      )}
+      mobileSwipeActions={swipe ? swipeActions : undefined}
+      selection={selectionFor(list)}
+    />
+  );
+
+  const groupSection = (g: TranslationRowGroup, index: number) => {
+    const name = groupName(g.key);
+    const titleId = `${baseId}-group-${index}`;
+    const questionId = `${baseId}-confirm-${index}`;
+    const targets = editable ? unreviewedRows(g.rows) : [];
+    const key = `group:${g.key}`;
+    return (
+      <Disclosure
+        key={g.key}
+        data-review-group={g.key}
+        headingAs={groupHeadingAs}
+        title={<span id={titleId}>{name}</span>}
+        hint={labels.groupCount(g.summary.unreviewed, g.summary.total)}
+        open={isGroupOpen(g.key)}
+        onOpenChange={(open) => {
+          setGroupOpenFor(g.key, open);
+          if (!open) setConfirming((c) => (c === g.key ? null : c));
+        }}
+        trailing={
+          targets.length > 0 ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              commit
+              // The visible words say what; the group's name, read after them, says where.
+              aria-describedby={titleId}
+              pending={isQueued(key) && confirming !== g.key}
+              disabled={busy}
+              onClick={() => void approveGroup(g, false)}
+            >
+              <Check className="size-4" aria-hidden />
+              {labels.approveGroup(targets.length)}
+            </Button>
+          ) : undefined
+        }
+        bodyClassName="space-y-0 px-0 pb-0 border-t border-[var(--border)]"
+      >
+        {confirming === g.key && targets.length > 0 && (
+          <div className="border-b border-[var(--border)] p-3">
+            <AlertBanner tone="warning" size="sm">
+              <div className="min-w-0 space-y-2">
+                <p id={questionId}>{labels.confirmGroup(targets.length, name)}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    // Focus lands here when the question appears: the expected answer to a
+                    // question the reviewer just asked for, and Undo stays behind it.
+                    ref={(el) => {
+                      if (el && confirmFocus.current === g.key) {
+                        confirmFocus.current = null;
+                        el.focus();
+                      }
+                    }}
+                    variant="primary"
+                    size="sm"
+                    commit
+                    aria-describedby={questionId}
+                    pending={isQueued(key)}
+                    disabled={busy}
+                    onClick={() => void approveGroup(g, true)}
+                  >
+                    {labels.approveGroup(targets.length)}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isQueued(key)}
+                    onClick={() => {
+                      setConfirming(null);
+                      keepFocusAt(g.key);
+                    }}
+                  >
+                    {labels.cancel}
+                  </Button>
+                </div>
+              </div>
+            </AlertBanner>
+          </div>
+        )}
+        {table(g.rows, { name })}
+      </Disclosure>
+    );
+  };
   return (
-    <div className={cn("min-w-0 space-y-4", className)}>
+    <div ref={rootRef} className={cn("min-w-0 space-y-4", className)}>
       {scopeText && (
         <AlertBanner tone="info" variant="inline" size="sm" block live={false}>
           {labels.scope(scopeText)}
@@ -381,14 +831,14 @@ export function TranslationReviewPanel({
         />
       </div>
 
-      {editable && visible.length > 0 && (
+      {editable && shownRows.length > 0 && (
         // The phone's table has no checkboxes; this is its way into the bulk actions.
         <Button
           variant="ghost"
           size="sm"
           className="md:hidden"
-          disabled={allSelected}
-          onClick={() => setSelected(new Set(visible.map((r) => r.id)))}
+          disabled={allShownSelected}
+          onClick={() => setSelected((prev) => toggleIn(prev, shownRows, true))}
         >
           <ListChecks className="size-4" aria-hidden />
           {labels.selectShown}
@@ -407,8 +857,8 @@ export function TranslationReviewPanel({
             variant="primary"
             size="sm"
             commit
-            pending={busy === "bulk-approve"}
-            disabled={busy !== null || toApprove.length === 0}
+            pending={isQueued("bulk-approve")}
+            disabled={busy || toApprove.length === 0}
             onClick={() => void approveSelected()}
           >
             <Check className="size-4" aria-hidden />
@@ -419,8 +869,8 @@ export function TranslationReviewPanel({
               variant="ghost"
               size="sm"
               commit
-              pending={busy === "bulk-reset"}
-              disabled={busy !== null || toReset.length === 0}
+              pending={isQueued("bulk-reset")}
+              disabled={busy || toReset.length === 0}
               onClick={() => void resetSelected()}
             >
               <RotateCcw className="size-4" aria-hidden />
@@ -430,73 +880,11 @@ export function TranslationReviewPanel({
         </BulkActionBar>
       )}
 
-      <DataTable<TranslationRow>
-        rows={visible}
-        rowKey={(r) => r.id}
-        columns={columns}
-        empty={labels.empty}
-        defaultPageSize={pageSize}
-        storageKey={storageKey}
-        isExpanded={(r) => r.id === openId}
-        onRowClick={(r) => setOpenId((open) => (open === r.id ? null : r.id))}
-        expandedRow={(r) => (
-          <TranslationReviewEditor
-            key={r.id}
-            row={r}
-            referenceLabel={referenceLabel}
-            localeLabel={localeLabel}
-            readOnly={!editable}
-            onSave={onSave ? (write) => onSave([write]) : undefined}
-            onClear={onClear ? (key) => onClear([key]) : undefined}
-            onClose={() => setOpenId(null)}
-            formatDate={formatDate}
-            formatError={formatError}
-            labels={labelsProp}
-          />
-        )}
-        mobileCard={(r) => (
-          <div className="min-w-0 space-y-1">
-            <code className="block break-all text-xs text-[var(--text-muted)]">{r.key}</code>
-            <div className="text-sm text-[var(--text-primary)]">
-              <TextCell row={r} labels={labels} clamp />
-            </div>
-            <div className="flex flex-wrap gap-1">
-              <ReviewStatusChip status={r.status} labels={labelsProp} />
-              {r.placeholderMismatch && (
-                <Chip size="sm" tone="danger" variant="outline">
-                  {labels.placeholderChip}
-                </Chip>
-              )}
-            </div>
-          </div>
-        )}
-        selection={
-          editable
-            ? {
-                isSelected: (r) => selected.has(r.id),
-                onToggle: (r, checked) =>
-                  setSelected((prev) => {
-                    const next = new Set([...prev].filter((id) => visibleIds.has(id)));
-                    if (checked) next.add(r.id);
-                    else next.delete(r.id);
-                    return next;
-                  }),
-                onToggleMany: (many, checked) =>
-                  setSelected((prev) => {
-                    const next = new Set([...prev].filter((id) => visibleIds.has(id)));
-                    for (const r of many) {
-                      if (checked) next.add(r.id);
-                      else next.delete(r.id);
-                    }
-                    return next;
-                  }),
-                allSelected,
-                someSelected: selectedRows.length > 0 && !allSelected,
-                onToggleAll: (checked) => setSelected(checked ? new Set(visible.map((r) => r.id)) : new Set()),
-              }
-            : undefined
-        }
-      />
+      {groups && groups.length > 0 ? (
+        <div className="space-y-3">{groups.map(groupSection)}</div>
+      ) : (
+        table(visible)
+      )}
     </div>
   );
 }
