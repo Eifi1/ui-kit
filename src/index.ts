@@ -47,6 +47,9 @@ export type { DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-de
 // URL (Modal's `urlParam`) — kastlan's and keksdose's use-search-param-state, in the kit.
 export { useSearchParamState, useTabParam, useDialogParam } from "./hooks/use-search-param-state";
 export type { SearchParamStateOptions, DialogParam } from "./hooks/use-search-param-state";
+// 0.25: several keys, one navigation (keksdose live #378 — four setters in a row clobbered).
+export { useSearchParamsState } from "./hooks/use-search-param-state";
+export type { SearchParamField, SearchParamFields, SearchParamsUpdate } from "./hooks/use-search-param-state";
 // Copy that reports whether it worked — keksdose's copy buttons said "Copied" when it had not.
 export { useCopyToClipboard, copyToClipboard } from "./hooks/use-copy-to-clipboard";
 export type { CopyState, UseCopyToClipboardOptions, UseCopyToClipboardReturn } from "./hooks/use-copy-to-clipboard";
@@ -388,6 +391,10 @@ export {
   mergeReviews,
   dropReviews,
   translationCorrections,
+  // 0.25: grouping and the approvals' Undo (keksdose live #377).
+  groupTranslationRows,
+  unreviewedRows,
+  reviewUndo,
 } from "./lib/translation-review";
 export type {
   TranslationVerdict,
@@ -402,6 +409,8 @@ export type {
   TranslationSummary,
   TranslationReviewFilter,
   TranslationCorrection,
+  TranslationRowGroup,
+  TranslationReviewUndo,
 } from "./lib/translation-review";
 export {
   TranslationReviewPanel,
@@ -422,6 +431,9 @@ export type {
   TranslationLocaleTabsProps,
   TranslationExportButtonProps,
   TranslationReviewLabels,
+  TranslationReviewSaveInfo,
+  TranslationReviewOrigin,
+  TranslationReviewGroupBy,
 } from "./components/translation-review";
 // The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
 export { LegalLayout, LegalSection, LegalLinks, DEFAULT_LEGAL_LABELS } from "./components/legal";

@@ -1,8 +1,7 @@
 import { useLocation } from "react-router";
-import { Button, ToggleGroup } from "@eifi1/ui-kit";
+import { Button, ToggleGroup, useSearchParamState, useSearchParamsState } from "@eifi1/ui-kit";
 // Until the barrel exports `useSearchParamsState` (0.25), straight from the module — the
 // same file the barrel re-exports, so both hooks share one queue of writes.
-import { useSearchParamState, useSearchParamsState } from "../../../src/hooks/use-search-param-state";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
