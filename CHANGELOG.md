@@ -20,6 +20,21 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.24.0](https://github.com/Eifi1/ui-kit/compare/v0.23.0...v0.24.0) (2026-10-03)
+
+### Added
+
+* /rhf exports RhfInlineEntityCombobox; showcase pages for the 0.24 demos ([1d2c3ec](https://github.com/Eifi1/ui-kit/commit/1d2c3ec7255e8d37cf7afbecaa73511358c9c00a))
+* **column-mapper:** bodyProps / rowProps; no "(required)" when every role is; edge fade ([05f1d31](https://github.com/Eifi1/ui-kit/commit/05f1d31439440dcf7d2b8a709a75a3775d3a899f)), references [#336](https://github.com/Eifi1/ui-kit/issues/336)
+* **danger-confirm:** confirmVariant, a caller's guard, fields inside the tile ([34b583f](https://github.com/Eifi1/ui-kit/commit/34b583f12de398822d56474dff4eb234736b2ba5))
+* **feedback:** the composer hands its root to the attachment slot; button look ([d3bce1e](https://github.com/Eifi1/ui-kit/commit/d3bce1ed2f2fa91e10a647cca6eacace30dc3f51))
+* **rhf:** RhfInlineEntityCombobox; ref on the Combobox family; AmountInput class order ([ce8d2f9](https://github.com/Eifi1/ui-kit/commit/ce8d2f9491a7f995a3db0926636292ecd7768dee))
+
+### Fixed
+
+* **form-actions:** focus returns to Save after a failed save ([1c881c8](https://github.com/Eifi1/ui-kit/commit/1c881c8ef3c9e098278f16885297eaadd8a998d5))
+* **textarea:** scrolled text slides under the floated label, not through it ([01cca3f](https://github.com/Eifi1/ui-kit/commit/01cca3f23d0bea8009d94578b644dc2f0f574679))
+
 ## [0.23.0](https://github.com/Eifi1/ui-kit/compare/v0.22.0...v0.23.0) (2026-10-02)
 
 ### Added
