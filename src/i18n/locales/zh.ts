@@ -694,6 +694,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       roleOf: (column) => `“${column}”列的内容是什么？`,
       ignore: "忽略",
       requiredRole: (role) => `${role}（必填）`,
+      requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) => `显示前 ${n(shown)} 行，共 ${n(total)} 行`,
       // `roles` arrives joined with "或" ("借方或贷方").
       oneOf: (roles) => `${roles}（任选其一）`,
@@ -747,6 +748,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       scope: (areas) => `审校范围仅限于：${areas}。`,
       exportCorrections: (count) => `导出更正（${n(count)}）`,
       failed: "操作未成功，请重试。",
+      approvedToast: (count) => (count === 1 ? "文本已通过" : `已通过 ${n(count)} 条文本`),
+      groupCount: (unreviewed, total) => `未审校 ${n(unreviewed)} / ${n(total)}`,
+      approveGroup: (count) => `通过未审校项（${n(count)}）`,
+      confirmGroup: (count, group) =>
+        count === 1
+          ? `通过“${group}”中的未审校文本？`
+          : `通过“${group}”中全部 ${n(count)} 条未审校文本（包括未显示在屏幕上的）？`,
     },
   };
 }

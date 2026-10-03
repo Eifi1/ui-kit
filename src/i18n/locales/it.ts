@@ -716,6 +716,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       roleOf: (column) => `Che cosa contiene la colonna «${column}»?`,
       ignore: "Ignora",
       requiredRole: (role) => `${role} (obbligatorio)`,
+      requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
         shown === 1
           ? `La prima di ${n(total)} righe`
@@ -772,6 +773,14 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       scope: (areas) => `La Sua revisione è limitata a: ${areas}.`,
       exportCorrections: (count) => `Esporta le correzioni (${n(count)})`,
       failed: "Non ha funzionato. Riprovi.",
+      approvedToast: (count) => (count === 1 ? "Testo approvato" : `${n(count)} testi approvati`),
+      groupCount: (unreviewed, total) =>
+        `${n(unreviewed)} ${plural(unreviewed, "non rivisto", "non rivisti")} / ${n(total)}`,
+      approveGroup: (count) => `Approva i non rivisti (${n(count)})`,
+      confirmGroup: (count, group) =>
+        count === 1
+          ? `Approvare il testo non rivisto in «${group}»?`
+          : `Approvare tutti i ${n(count)} testi non rivisti in «${group}», compresi quelli non visibili sullo schermo?`,
     },
   };
 }

@@ -24,6 +24,19 @@ import { useEffect } from "react";
 let lockCount = 0;
 let previousOverflow = "";
 let previousPaddingRight = "";
+let previousRootOverflow: { x: string; y: string } | null = null;
+
+/**
+ * Whether `overflow` on <body> reaches the viewport. It does only while <html>'s own
+ * overflow is `visible` on both axes; once an app clips or hides <html> (keksdose's
+ * `html, body { overflow-x: clip }` guard, 0.25), the body's `hidden` stays on the
+ * body and the page behind a "locked" dialog scrolls on (measured: the wheel moved
+ * 800px). Then <html> is locked too.
+ */
+function rootTakesOverflow(): boolean {
+  const style = getComputedStyle(document.documentElement);
+  return style.overflowX !== "visible" || style.overflowY !== "visible";
+}
 
 /**
  * How much width the scrollbar of the DOCUMENT is currently taking.
@@ -58,6 +71,13 @@ function acquire(): void {
     previousOverflow = document.body.style.overflow;
     previousPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
+    if (rootTakesOverflow()) {
+      // Per axis, so an app's own inline `overflow-x` comes back as it was.
+      const root = document.documentElement.style;
+      previousRootOverflow = { x: root.overflowX, y: root.overflowY };
+      root.overflowX = "hidden";
+      root.overflowY = "hidden";
+    }
     if (gap > 0) {
       // Added to whatever the body already had rather than assigned, so a consumer
       // that sets its own padding keeps it.
@@ -74,8 +94,13 @@ function release(): void {
   if (lockCount === 0) {
     document.body.style.overflow = previousOverflow;
     document.body.style.paddingRight = previousPaddingRight;
+    if (previousRootOverflow !== null) {
+      document.documentElement.style.overflowX = previousRootOverflow.x;
+      document.documentElement.style.overflowY = previousRootOverflow.y;
+    }
     previousOverflow = "";
     previousPaddingRight = "";
+    previousRootOverflow = null;
   }
 }
 

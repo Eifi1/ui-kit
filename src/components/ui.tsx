@@ -1614,7 +1614,10 @@ export function FieldHint({
   ...rest
 }: FieldHintProps) {
   return (
-    <Tooltip label={label} side={side} portal>
+    // `tap="toggle"` (0.25): the "?" exists only to explain, so a tap on a phone shows
+    // the bubble and the next tap hides it — the touch rule (no bubble left behind by a
+    // tap) would otherwise make it show nothing at all.
+    <Tooltip label={label} side={side} portal tap="toggle">
       <button
         {...rest}
         // `type` after the spread, not before. These render inside forms — that is the
@@ -2502,6 +2505,72 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
 Select.displayName = "Select";
 
 /**
+ * The lower edge of {@link TEXTAREA_LABEL_STRIP} (0.25, Kurvenschmiede).
+ *
+ * The 0.24 strip ends on a hard line, and a line of text scrolled most of the way under
+ * it left its lower edge showing below that line: in a pasted table, a row of comma
+ * tails between the strip and the first whole line (`0,5;1,9` cut above its baseline is
+ * `, ,`). This layer, hung under the strip, closes that gap. What it draws depends on
+ * how much of the line on its way out is still below the strip ({@link labelEdge}):
+ *
+ * - **Half a line or less** — its descenders, the feet of its letters: covered, solid,
+ *   down to exactly where that line's box ends. The strip's bottom snaps to the line
+ *   box, so the row of tails is gone and the next line, which starts there, is not
+ *   touched.
+ * - **More than half** — a line you can still read: a soft edge, the strip's surface
+ *   fading into it over {@link LABEL_EDGE_SOFT_PX}, where 0.24 cut it hard. Never taller
+ *   than the part of that line already gone, so it grows from nothing as a line starts
+ *   to move and never reaches the next one.
+ * - **Nothing to cover** — at rest, or a line boundary right on the strip's edge:
+ *   nothing drawn. An unscrolled first line is never covered (at rest the strip covers
+ *   the top padding and nothing else, as in 0.24), and neither is any whole line.
+ *
+ * Why not one of the two alone. A plain fade under the strip, as tall as the tails,
+ * dims the top of the first WHOLE line whenever it sits right under the strip (its
+ * capitals start about 4px into a 20px line), and only half-hides the tails, which sit
+ * in its fading part. A plain snap to the line box would hide a whole line the moment
+ * one starts to scroll. The half-line threshold keeps what is shown legible: a line is
+ * either hidden or shown with most of its letters, never as a row of stray marks.
+ *
+ * Its height and solid part are `--label-strip-edge` / `--label-strip-edge-solid`,
+ * written by {@link TextareaLabelStrip} from the textarea's `scrollTop` and line height
+ * on every scroll; unset (no layout, no script yet) the height is 0 and nothing shows.
+ * A pseudo-element of the strip, so it inherits everything the strip already gets
+ * right: shown only while the label is floated, the same horizontal insets (stopped
+ * short of a classic scrollbar, on either side — RTL included), painted under the
+ * label. Its colour is INHERITED from the strip (`bg-inherit`): `--bg-surface`, and the
+ * disabled / `[readonly]` `--bg-surface-2`, in both themes, with no second copy of
+ * those selectors to keep in step. The soft part is a mask over that colour (alpha
+ * only — the `#000` is the mask's opacity, not a colour on screen).
+ */
+const TEXTAREA_LABEL_EDGE = cn(
+  "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-[var(--label-strip-edge,0px)] after:content-['']",
+  "after:bg-inherit after:[mask-image:linear-gradient(#000_var(--label-strip-edge-solid,0px),transparent)]",
+);
+
+/** The soft edge over a line still more than half in view, in px: "a few pixels" —
+ *  enough to take the cut off its letters, little enough to leave them legible. */
+const LABEL_EDGE_SOFT_PX = 3;
+
+/**
+ * {@link TEXTAREA_LABEL_EDGE}'s height and solid part, in px, for a field scrolled
+ * `scrollTop` with lines `lineHeight` tall.
+ *
+ * The strip covers the top padding exactly, so line boxes meet its lower edge whenever
+ * `scrollTop` is a whole number of lines; `gone` is how far the line now on its way out
+ * has passed under it, `left` how much of it is still below. A line height that is not
+ * a length (`normal`) gives no line boxes to snap to: only the soft edge then.
+ */
+function labelEdge(scrollTop: number, lineHeight: number): { height: number; solid: number } {
+  if (!(scrollTop > 0)) return { height: 0, solid: 0 };
+  if (!(lineHeight > 0)) return { height: Math.min(scrollTop, LABEL_EDGE_SOFT_PX), solid: 0 };
+  const gone = scrollTop % lineHeight;
+  const left = gone === 0 ? 0 : lineHeight - gone;
+  if (left > 0 && left <= lineHeight / 2) return { height: left, solid: left };
+  return { height: Math.min(gone, LABEL_EDGE_SOFT_PX), solid: 0 };
+}
+
+/**
  * The backdrop of a labelled {@link Textarea}'s label strip (Kurvenschmiede, 0.24).
  *
  * The report: paste a long table into ColumnMapper, the field scrolls, and the floated
@@ -2542,11 +2611,15 @@ Select.displayName = "Select";
  *
  * The one thing CSS cannot know is a classic scrollbar's width, and a strip across the
  * whole inner width would hide the scrollbar's top arrow — see {@link TextareaLabelStrip}.
+ *
+ * Its lower edge, where a line scrolled half under it used to leave its tails showing,
+ * is {@link TEXTAREA_LABEL_EDGE} (0.25).
  */
 const TEXTAREA_LABEL_STRIP = cn(
   "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[5px] bg-[var(--bg-surface)]",
   "peer-focus:block peer-[:not(:placeholder-shown)]:block",
   "peer-disabled:bg-[var(--bg-surface-2)] peer-[[readonly]]:bg-[var(--bg-surface-2)]",
+  TEXTAREA_LABEL_EDGE,
 );
 
 /**
@@ -2567,6 +2640,10 @@ const TEXTAREA_LABEL_STRIP = cn(
  * scrollbar comes or goes (it takes the content box with it) and when the field is
  * resized by hand. Not laid out — hidden in a closed panel, or jsdom — the CSS insets
  * stand until it is.
+ *
+ * It also writes the strip's lower edge (0.25, {@link TEXTAREA_LABEL_EDGE}) from the
+ * textarea's scroll position: a passive `scroll` listener, plus the same observer, since
+ * a resize can move the scroll without the user scrolling.
  */
 function TextareaLabelStrip() {
   const ref = useRef<HTMLSpanElement>(null);
@@ -2595,11 +2672,34 @@ function TextareaLabelStrip() {
       strip.style.borderStartEndRadius = bar && atEnd ? "0" : "";
       strip.style.borderStartStartRadius = bar && !atEnd ? "0" : "";
     };
+    // The edge under the strip follows the scroll — see TEXTAREA_LABEL_EDGE. The line
+    // height is read each time, since a caller's class can change the type. Nothing to
+    // draw is no property at all (the CSS default is a 0px edge), so a field at rest
+    // carries exactly the strip it did in 0.24.
+    const follow = () => {
+      const edge = labelEdge(field.scrollTop, parseFloat(getComputedStyle(field).lineHeight));
+      if (edge.height > 0) {
+        strip.style.setProperty("--label-strip-edge", `${edge.height}px`);
+        strip.style.setProperty("--label-strip-edge-solid", `${edge.solid}px`);
+      } else {
+        strip.style.removeProperty("--label-strip-edge");
+        strip.style.removeProperty("--label-strip-edge-solid");
+      }
+    };
     fit();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(fit);
+    follow();
+    field.addEventListener("scroll", follow, { passive: true });
+    if (typeof ResizeObserver === "undefined") return () => field.removeEventListener("scroll", follow);
+    // A resize can move the scroll too (a taller field clamps it).
+    const observer = new ResizeObserver(() => {
+      fit();
+      follow();
+    });
     observer.observe(field);
-    return () => observer.disconnect();
+    return () => {
+      field.removeEventListener("scroll", follow);
+      observer.disconnect();
+    };
   }, []);
   return <span ref={ref} aria-hidden data-slot="label-strip" className={TEXTAREA_LABEL_STRIP} />;
 }

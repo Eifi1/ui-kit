@@ -1,6 +1,7 @@
 import { Children, createContext, useCallback, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { useEdgeFade } from "../lib/strip-fade";
 import { assignRef } from "./choice-parts";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
@@ -194,6 +195,40 @@ export interface TableProps extends ComponentPropsWithRef<"table"> {
    * columns gets none.
    */
   stack?: "phone";
+  /**
+   * Fade out an edge of the scroll wrapper while columns are hidden behind it (0.25).
+   *
+   * A table wider than its box scrolls sideways inside the wrapper, and on a phone —
+   * whose scrollbars are overlays that show only while you drag — nothing said there
+   * was more: the last visible column simply ended at the edge, often mid-word. 0.24
+   * drew a fade for ColumnRoleTable's preview (Kurvenschmiede: the fourth column's
+   * role select sat off-screen with no hint) by wrapping this Table and reaching its
+   * wrapper as the `<table>`'s `parentElement`; this is that fade as the Table's own,
+   * so a table needs neither the reach-around nor a box of its own round it.
+   *
+   * It is the kit Tabs strip's fade, MEASURED rather than assumed: nothing is drawn
+   * while the table fits, so a table that fits paints exactly as without the prop;
+   * the end with columns behind it fades, and both ends once scrolled into the
+   * middle; the ends are the reading direction's, so in RTL the hidden columns fade
+   * on the left. It is a `mask-image` — no layout change, no background colour to
+   * fade to, so it works on any surface in either theme — and never animated, so
+   * there is nothing for reduced motion to turn off. The wrapper's own scrollbars
+   * stay out of it (a fade on a classic scrollbar hid the very thing that says the
+   * box scrolls).
+   *
+   * Focus that lands in a cell behind the fade — a link, a select, a checkbox — is
+   * scrolled clear of it, cell and all where the cell fits; the browser's own scroll
+   * stops at the edge, under the fade. And while the overflowing wrapper ITSELF holds
+   * keyboard focus (it is a tab stop then, for arrow-key scrolling) the fade lifts, so
+   * the focus outline round the box is drawn whole rather than faded out at its sides.
+   *
+   * The wrapper carries `data-overflow` — `"start"`, `"end"` or `"both"`, in
+   * reading-direction terms, absent while it fits — for a caller's own affordance
+   * (a scroll button) and for tests, which cannot read a mask.
+   *
+   * Off by default: it changes how every overflowing table looks.
+   */
+  edgeFade?: boolean;
 }
 
 /**
@@ -236,6 +271,7 @@ export function Table({
   framed = false,
   rowDividers = true,
   stack,
+  edgeFade = false,
   className,
   "aria-label": ariaLabel,
   ref,
@@ -245,6 +281,7 @@ export function Table({
   const [captions, setCaptions] = useState(0);
   const wrapper = useRef<HTMLDivElement | null>(null);
   const overflowing = useScrollOverflow(wrapper);
+  const fade = useEdgeFade(wrapper, edgeFade);
   const tableRef = useRef<HTMLTableElement | null>(null);
   const setTableRef = useMergedRef(tableRef, ref);
 
@@ -307,6 +344,8 @@ export function Table({
         data-overflowing={overflowing || undefined}
         data-clips=""
         data-framed={framed || undefined}
+        // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing while off.
+        {...fade}
         className={cn(
           // `relative`: the containing block for an `sr-only` caption.
           "relative w-full overflow-x-auto",

@@ -48,6 +48,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The key tree",
     "TranslationReviewPanel — one locale at a time",
     "ReviewStatusChip — the vocabulary",
+    "Swipe and group — 0.25",
   ],
   "fields": [
     "Input — unlabelled and labelled",
@@ -75,6 +76,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FieldStrip — the strip label for content of your own",
     "FieldStrip group={false}",
     "Textarea — the floated label on a scrolled field",
+    "Textarea — the label strip's lower edge",
   ],
   "forms": [
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
@@ -277,6 +279,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ColumnRoleTable — rows a server already read",
     "Edge fade — a preview wider than its box",
     "bodyProps / rowProps — attributes on the preview's body and rows",
+    "ColumnRoleTable — the required mark on a phone",
   ],
   "field-sync": [
     "The four states",
@@ -433,6 +436,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Table — stack=\"phone\", a table of prose on a phone",
     "Table parts take a ref",
     "DescriptionItem — placeholder for a missing value",
+    "Table — edgeFade, a table wider than its box",
   ],
   "tree-view": [
     "TreeView — keyboard, icons, trailing figures",
@@ -471,6 +475,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "rowActions, toolbar and the empty label",
     "Totals row: a trial balance",
     "DataTable — a Sort by row on the phone",
+    "DataTable — edgeFade on the desktop table",
   ],
   "data-table-server": [
     "urlSync — the view lives in the address",
@@ -616,6 +621,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tooltip — auto-portal inside a scroll container",
     "Tooltip — lazy: in place, mounted only while up",
     "Tooltip — in-place bubble clamped to the viewport",
+    "Tooltip — a tap leaves no bubble behind; the page edge holds",
     "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [
@@ -746,6 +752,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackAttachmentField multiple — screenshot chip and two adds in one tick",
     "FeedbackAttachmentField — uploaded on pick",
     "FeedbackAttachmentField — refusals that name the file, and a field that holds",
+    "FeedbackDialog — the attachment buttons' look",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -766,6 +773,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ChatComposer — the composer under a neutral name",
     "ChatComposer — counted against the server's limit",
     "ChatComposer — the slot gets the composer's root",
+    "FeedbackNoteEditor — the attachment buttons' look",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",
@@ -820,5 +828,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useTabParam — the open tab in ?tab",
     "Modal urlParam — an edit dialog that survives reload",
     "useDialogParam — several dialogs on one param",
+    "useSearchParamsState — a filter object in the URL",
+    "useSearchParamState — setters called in a row compose",
   ],
 };

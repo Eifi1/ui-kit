@@ -712,6 +712,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       roleOf: (column) => `¿Qué contiene la columna «${column}»?`,
       ignore: "Ignorar",
       requiredRole: (role) => `${role} (obligatorio)`,
+      requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
         shown === 1
           ? `La primera de ${n(total)} filas`
@@ -768,6 +769,14 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       scope: (areas) => `Su revisión se limita a: ${areas}.`,
       exportCorrections: (count) => `Exportar correcciones (${n(count)})`,
       failed: "No ha funcionado. Inténtelo de nuevo.",
+      approvedToast: (count) => (count === 1 ? "Texto aprobado" : `${n(count)} textos aprobados`),
+      // "sin revisar" does not agree with the count, so one form serves both.
+      groupCount: (unreviewed, total) => `${n(unreviewed)} sin revisar / ${n(total)}`,
+      approveGroup: (count) => `Aprobar los sin revisar (${n(count)})`,
+      confirmGroup: (count, group) =>
+        count === 1
+          ? `¿Aprobar el texto sin revisar de «${group}»?`
+          : `¿Aprobar los ${n(count)} textos sin revisar de «${group}», incluidos los que no están en pantalla?`,
     },
   };
 }

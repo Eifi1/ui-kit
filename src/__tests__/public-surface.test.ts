@@ -146,7 +146,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // ColumnRoleTable, DEFAULT_COLUMN_MAPPER_LABELS and the six column-mapping helpers
   // (assignColumnRole, guessMapping, missingRoles, readMappedTable, readTextFile,
   // roleOfColumn) — Kurvenschmiede's columns input, keksdose's import map step.
-  ["@eifi1/ui-kit", barrel, 596],
+  // 0.25.0 (+4): useSearchParamsState (keksdose #378); groupTranslationRows,
+  // unreviewedRows, reviewUndo — the review panel's groups and Undo (keksdose #377).
+  ["@eifi1/ui-kit", barrel, 600],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

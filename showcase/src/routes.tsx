@@ -273,6 +273,16 @@ const ChatComposerSlot024Demo = lazySection(() => import("./sections/feedback-02
 const ColumnMapper024Demo = lazySection(() => import("./sections/column-mapper-024-demo"), "ColumnMapper024Demo");
 const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox-024-demo"), "RhfInlineEntity024Demo");
 const AutocompleteHint024Demo = lazySection(() => import("./sections/combobox-024-demo"), "AutocompleteHint024Demo");
+// 0.25.0: keksdose's feedback run 72 and the polish list.
+const SearchParams025Demo = lazySection(() => import("./sections/search-params-025-demo"), "SearchParams025Demo");
+const TranslationReview025Demo = lazySection(() => import("./sections/translation-review-025-demo"), "TranslationReview025Demo");
+const TextareaEdge025Demo = lazySection(() => import("./sections/polish-025-demo"), "TextareaEdge025Demo");
+const ColumnRoleRequired025Demo = lazySection(() => import("./sections/polish-025-demo"), "ColumnRoleRequired025Demo");
+const FeedbackDialogButtons025Demo = lazySection(() => import("./sections/polish-025-demo"), "FeedbackDialogButtons025Demo");
+const FeedbackNoteButtons025Demo = lazySection(() => import("./sections/polish-025-demo"), "FeedbackNoteButtons025Demo");
+const TableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "TableEdgeFadeDemo");
+const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "DataTableEdgeFadeDemo");
+const TooltipTapDemo = lazySection(() => import("./sections/tooltip-025-demo"), "TooltipTapDemo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -393,6 +403,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <Localisation />
             <TranslationReviewDemo />
+            <TranslationReview025Demo />
           </>
         ),
       },
@@ -422,6 +433,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <AccountNumbers022Demo />
             <FieldStrip023Demo />
             <Textarea024Demo />
+            <TextareaEdge025Demo />
           </>
         ),
       },
@@ -646,6 +658,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <InlineEdit022Demo />
             <ColumnMapper023Demo />
             <ColumnMapper024Demo />
+            <ColumnRoleRequired025Demo />
           </>
         ),
       },
@@ -770,6 +783,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TableStackDemo />
             <TableRefs016Demo />
             <DescriptionPlaceholderDemo />
+            <TableEdgeFadeDemo />
           </>
         ),
       },
@@ -815,6 +829,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <DataTableActionsDemo />
             <DataTableTotalsDemo />
             <DataTableMobileSort022Demo />
+            <DataTableEdgeFadeDemo />
           </>
         ),
       },
@@ -1024,6 +1039,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TooltipAutoPortal />
             <TooltipLazyDemo />
             <TooltipClampDemo />
+            <TooltipTapDemo />
             <ClipsMarkerDemo />
           </>
         ),
@@ -1193,6 +1209,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackAttachment016Demo />
             <FeedbackAttachmentRefs022Demo />
             <FeedbackAttachment023Demo />
+            <FeedbackDialogButtons025Demo />
           </>
         ),
       },
@@ -1212,6 +1229,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ChatComposer022Demo />
             <ChatComposerCount023Demo />
             <ChatComposerSlot024Demo />
+            <FeedbackNoteButtons025Demo />
           </>
         ),
       },
@@ -1281,8 +1299,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "A value, a tab and an open dialog kept in the address, so a reload keeps them and Back undoes them: the search-param hooks and the dialog that opens from a link.",
         icon: Bookmark,
-        components: ["useSearchParamState", "useTabParam", "useDialogParam", "Modal"],
-        Body: UrlStateDemo,
+        components: ["useSearchParamState", "useTabParam", "useDialogParam", "Modal", "useSearchParamsState"],
+        Body: () => (
+          <>
+            <UrlStateDemo />
+            <SearchParams025Demo />
+          </>
+        ),
       },
     ],
   },

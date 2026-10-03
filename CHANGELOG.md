@@ -20,6 +20,28 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.25.0](https://github.com/Eifi1/ui-kit/compare/v0.24.1...v0.25.0) (2026-10-03)
+
+### Added
+
+* export useSearchParamsState and the review groups' helpers; route the 0.25 demos ([fcc6002](https://github.com/Eifi1/ui-kit/commit/fcc60021ee890897092370455ffe9facbee9f75e))
+* **i18n:** the review groups' and approvals' words, and the short required mark, in every language ([096acdf](https://github.com/Eifi1/ui-kit/commit/096acdf051b2f710afb7189432a88fdf8f0736b9))
+* **table:** edgeFade on Table and DataTable — a sideways-scrolling table fades at the cut edge ([e22239f](https://github.com/Eifi1/ui-kit/commit/e22239f393fc9f42c81510a059901b77038ca86d))
+* **translation-review:** swipe on the phone cards; group by area with one approve each ([018f8fb](https://github.com/Eifi1/ui-kit/commit/018f8fb94c1da89da30e378d2232626a7ad91e84)), references [#377](https://github.com/Eifi1/ui-kit/issues/377)
+
+### Fixed
+
+* **data-table:** the page-size select shows an off-step size; no snap-back under reduced motion ([68168a9](https://github.com/Eifi1/ui-kit/commit/68168a9d1a2712bdb3d6fbbaa4dfaa87b22f82f5))
+* **field-hint:** the "?" toggles its bubble on a tap ([ff94531](https://github.com/Eifi1/ui-kit/commit/ff94531a0ad6361501699b12836ca4ca8c01ee77))
+* **scroll-lock:** lock <html> too when the app clips it ([4bf0dc9](https://github.com/Eifi1/ui-kit/commit/4bf0dc9419d00e657ae7799720aae3f3b7947639))
+* **textarea:** no half line under the label strip; ColumnMapper role names; attachment buttons ([2c62561](https://github.com/Eifi1/ui-kit/commit/2c62561c630a6e2e1be6498b1a7bdd80d8a328ac))
+* **tooltip:** a tap leaves no bubble; the in-place bubble never widens the page ([ae82194](https://github.com/Eifi1/ui-kit/commit/ae82194f2078d5e288bdf9d7220252f18f22fb12)), references [#379](https://github.com/Eifi1/ui-kit/issues/379) [#381](https://github.com/Eifi1/ui-kit/issues/381)
+* **url-state:** useSearchParamState setters compose; useSearchParamsState for several keys ([5838ebc](https://github.com/Eifi1/ui-kit/commit/5838ebc1af85dd93dfc6fe2b28b3209c5f8c2a25)), references [#378](https://github.com/Eifi1/ui-kit/issues/378)
+
+### Changed
+
+* **column-mapper:** ColumnRoleTable uses Table's own edgeFade ([be688fe](https://github.com/Eifi1/ui-kit/commit/be688fe40d819a83633c206aa84fe3540a07de30))
+
 ## [0.24.1](https://github.com/Eifi1/ui-kit/compare/v0.24.0...v0.24.1) (2026-10-03)
 
 ### Fixed

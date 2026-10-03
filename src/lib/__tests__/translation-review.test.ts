@@ -7,6 +7,7 @@ import {
   filterTranslationRows,
   flattenStrings,
   fromApiReview,
+  groupTranslationRows,
   keyInAreas,
   keyInArea,
   mergeReviews,
@@ -14,11 +15,13 @@ import {
   placeholderMismatch,
   placeholderTokens,
   reviewStatus,
+  reviewUndo,
   reviewWrite,
   summariseRows,
   toApiWrite,
   translationCorrections,
   translationRows,
+  unreviewedRows,
 } from "../translation-review";
 import type { ApiTranslationReview, TranslationReview } from "../translation-review";
 
@@ -372,5 +375,59 @@ describe("translationCorrections", () => {
       },
       expect.objectContaining({ key: "common.close", status: "needs_change", current: "", suggestion: "Fermer" }),
     ]);
+  });
+});
+
+describe("0.25: groups and Undo (keksdose live #377)", () => {
+  const rows = translationRows({
+    locale: "fr",
+    strings: { "budget.rta": "À attribuer", "common.save": "Enregistrer", "budget.hint": "Astuce", "legal.terms": "Conditions" },
+    reference: {
+      "budget.rta": "Ready to Assign",
+      "common.save": "Save",
+      "budget.hint": "Hint",
+      "budget.goal": "Goal",
+      "legal.terms": "Terms",
+    },
+    reviews: [
+      review({}),
+      review({ key: "budget.rta", text: "A attribuer", referenceText: "Ready to Assign", verdict: "NEEDS_CHANGE", note: "accent" }),
+    ],
+  });
+
+  it("groups rows where each group's first row is, keeping the rows' order, with each group's counts", () => {
+    const groups = groupTranslationRows(rows, (r) => r.namespace);
+    expect(groups.map((g) => [g.key, g.rows.map((r) => r.key)])).toEqual([
+      ["budget", ["budget.rta", "budget.hint", "budget.goal"]],
+      ["common", ["common.save"]],
+      ["legal", ["legal.terms"]],
+    ]);
+    expect(groups[0].summary).toEqual({ missing: 1, unreviewed: 1, changed: 1, needs_change: 0, approved: 0, total: 3 });
+    expect(groupTranslationRows([], (r) => r.namespace)).toEqual([]);
+  });
+
+  it("takes only the rows nobody has judged and that have a text into a group's bulk approve", () => {
+    // Not the changed one (read it again), not the missing one (nothing to approve).
+    expect(unreviewedRows(rows).map((r) => r.key)).toEqual(["budget.hint", "legal.terms"]);
+  });
+
+  it("undoes by storing the earlier verdict again, or clearing a row that had none", () => {
+    const byKey = new Map(rows.map((r) => [r.key, r]));
+    const before = ["budget.rta", "budget.hint"].map((key) => byKey.get(key)!);
+    expect(reviewUndo(before)).toEqual({
+      writes: [
+        {
+          locale: "fr",
+          key: "budget.rta",
+          // The wording it was judged on, so the row reads "changed" again, not "approved".
+          text: "A attribuer",
+          referenceText: "Ready to Assign",
+          verdict: "NEEDS_CHANGE",
+          note: "accent",
+          suggestion: null,
+        },
+      ],
+      clears: [{ locale: "fr", key: "budget.hint" }],
+    });
   });
 });

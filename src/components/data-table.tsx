@@ -38,6 +38,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
 import { Tooltip } from "./tooltip";
+import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, isRtl, type Direction } from "../lib/direction";
 
 // ---------- Types ----------
@@ -494,6 +495,26 @@ export interface DataTableProps<T> {
    * Default true.
    */
   frame?: boolean;
+  /**
+   * Fade out an edge of the desktop table's scroller while columns are hidden behind
+   * it (0.25) — the kit {@link Table}'s `edgeFade`, on the scroller this table draws
+   * itself (DataTable renders its own `<table>`, not through Table, so the prop is
+   * its own too). Measured: nothing is drawn while every column fits; the end with
+   * columns behind it fades, both ends once scrolled into the middle, the reading
+   * direction's ends in RTL. A `mask-image`, so no layout moves and no colour is
+   * assumed; never animated. The scroller's own scrollbars stay out of it — its
+   * vertical one sits at the inline end, in the very band that fades. Focus landing
+   * in a cell behind the fade (a row action, a link, the selection box) is scrolled
+   * clear of it. The scroller carries `data-overflow` (`"start"`, `"end"`, `"both"`).
+   *
+   * The phone layout is a card list that never scrolls sideways; it is unaffected.
+   *
+   * Off by default. It is visual only, but not neutral: on the bump it would change
+   * how every overflowing desktop table in an app looks, and the mask covers
+   * everything the scroller paints — the sticky header and totals rows, an app's own
+   * marks at the scroller's edges. Opt in per table, or app-wide from your own wrapper.
+   */
+  edgeFade?: boolean;
   /** Extra classes for the table's root element (the card, or with `frame={false}`
    *  the plain wrapper). Merged last, so a caller's margin or width wins. */
   className?: string;
@@ -1002,6 +1023,7 @@ export function DataTable<T>({
   resizable: resizableProp,
   multiSort: multiSortProp,
   frame = true,
+  edgeFade = false,
   className,
   rowActions,
   toolbar,
@@ -1545,6 +1567,9 @@ export function DataTable<T>({
   // list — never both — so we don't double up DOM nodes that screen readers and
   // integration tests would have to disambiguate.
   const isMdUp = useMediaQuery("(min-width: 768px)", true);
+  // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
+  const desktopScroller = useRef<HTMLDivElement | null>(null);
+  const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
 
   // ---- Mobile card list (md:hidden) ----
   // Renders the same paged/filtered/sorted slice but as stacked cards instead
@@ -2060,10 +2085,18 @@ export function DataTable<T>({
               other half of the `w-0 min-w-full` fix on the expansion cell below
               (feedback #104: "expanding an item resizes the columns"). */}
           <div
+            ref={desktopScroller}
             // The scroller: marked for the Tooltip's auto-portal (see the root above).
             data-clips=""
             className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "flex-1 min-h-0")}
-            style={fillHeight ? undefined : { maxHeight: maxBodyHeight }}
+            // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing
+            // while off. The height bound is merged over the mask, not replaced by it.
+            {...edgeFadeProps}
+            style={
+              fillHeight
+                ? edgeFadeProps.style
+                : { ...edgeFadeProps.style, maxHeight: maxBodyHeight }
+            }
           >
         {/* A table with no name is "table" in a screen reader's list of tables, and
             an app renders several. `labels.table` is how a call site says which. */}

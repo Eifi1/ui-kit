@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
@@ -38,6 +38,14 @@ export interface TranslationReviewEditorProps {
   onClose?: () => void;
   /** Look, do not touch: a locale the viewer may read but not review. */
   readOnly?: boolean;
+  /**
+   * 0.25: put the cursor in the wording field when the editor opens, at the end of the
+   * text. The panel sets it when a phone card is swiped toward "Needs a change" (keksdose
+   * live #377): that swipe opens the editor to be written in, and a reviewer who has just
+   * said "this is wrong" should not have to find the field first. Not for an editor
+   * opened by a tap — that one may only be opened to read.
+   */
+  focusWording?: boolean;
   /** How the verdict's date reads. Default: the kit's `formatDate`, medium, in the
    *  provider's locale. */
   formatDate?: (iso: string) => string;
@@ -85,6 +93,7 @@ export function TranslationReviewEditor({
   onClear,
   onClose,
   readOnly = false,
+  focusWording = false,
   formatDate: formatDateProp,
   formatError,
   className,
@@ -99,6 +108,16 @@ export function TranslationReviewEditor({
   const [note, setNote] = useState(review?.note ?? "");
   const [busy, setBusy] = useState<"approve" | "flag" | "clear" | null>(null);
   const [failure, setFailure] = useState<ReactNode>(null);
+  const wordingRef = useRef<HTMLTextAreaElement>(null);
+  // On mount only: the prop says how the editor was OPENED, not where focus belongs
+  // for the rest of its life.
+  const focusOnOpen = useRef(focusWording && editable);
+  useEffect(() => {
+    const field = wordingRef.current;
+    if (!focusOnOpen.current || !field) return;
+    field.focus();
+    field.setSelectionRange(field.value.length, field.value.length);
+  }, []);
 
   const canFlag = note.trim() !== "" || suggestion.trim() !== row.text.trim();
   const changed = row.status === "changed" ? review : null;
@@ -195,6 +214,7 @@ export function TranslationReviewEditor({
       {editable && (
         <>
           <Textarea
+            ref={wordingRef}
             label={missing ? labels.translation : labels.suggestion}
             lang={row.locale}
             rows={Math.min(8, Math.max(2, Math.ceil(Math.max(row.text.length, row.reference.length) / 80)))}
