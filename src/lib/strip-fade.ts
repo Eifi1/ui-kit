@@ -5,8 +5,8 @@ import { useLayoutEffect, useState, type RefObject } from "react";
 export const TAB_FADE_PX = 24;
 
 /**
- * Shared by Tabs' strip and AppShell's scrolling phone sub-nav; internal, not part of
- * the package's surface.
+ * Shared by Tabs' strip, AppShell's scrolling phone sub-nav and (0.24) ColumnRoleTable's
+ * preview; internal, not part of the package's surface.
  *
  * Which ends of a sideways-scrolling strip have tabs cut off behind them, as the
  * `mask-image` that fades those ends out — or `undefined` while everything fits.
