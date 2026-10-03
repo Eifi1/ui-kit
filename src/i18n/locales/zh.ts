@@ -749,6 +749,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       exportCorrections: (count) => `导出更正（${n(count)}）`,
       failed: "操作未成功，请重试。",
       approvedToast: (count) => (count === 1 ? "文本已通过" : `已通过 ${n(count)} 条文本`),
+      clearedToast: (count) => (count === 1 ? "文本已标记为未审校" : `已将 ${n(count)} 条文本标记为未审校`),
       groupCount: (unreviewed, total) => `未审校 ${n(unreviewed)} / ${n(total)}`,
       approveGroup: (count) => `通过未审校项（${n(count)}）`,
       confirmGroup: (count, group) =>

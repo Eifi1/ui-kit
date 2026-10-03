@@ -790,6 +790,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       exportCorrections: (count) => `Korrekturen exportieren (${n(count)})`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
       approvedToast: (count) => (count === 1 ? "Text bestätigt" : `${n(count)} Texte bestätigt`),
+      clearedToast: (count) => (count === 1 ? "Text als ungeprüft markiert" : `${n(count)} Texte als ungeprüft markiert`),
       groupCount: (unreviewed, total) => `${n(unreviewed)} ungeprüft / ${n(total)}`,
       approveGroup: (count) => `Ungeprüfte bestätigen (${n(count)})`,
       // The group's name quoted, as `columnMapper.roleOf`'s column: it is often a key

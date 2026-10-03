@@ -787,6 +787,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       exportCorrections: (count) => `Exporter les corrections (${n(count)})`,
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
       approvedToast: (count) => (count < 2 ? "Texte approuvé" : `${n(count)} textes approuvés`),
+      clearedToast: (count) => (count < 2 ? "Texte marqué comme non relu" : `${n(count)} textes marqués comme non relus`),
       groupCount: (unreviewed, total) =>
         `${n(unreviewed)} non ${plural(unreviewed, "relu", "relus")} / ${n(total)}`,
       approveGroup: (count) => `Approuver les non relus (${n(count)})`,

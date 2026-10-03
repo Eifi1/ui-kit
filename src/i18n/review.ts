@@ -194,6 +194,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "translationReview.scope": [["{{areas}}"]],
   "translationReview.exportCorrections": [[0], [1], [3]],
   "translationReview.approvedToast": one,
+  "translationReview.clearedToast": one,
   "translationReview.groupCount": [
     [1, 12],
     [3, 12],
