@@ -1,18 +1,22 @@
 import {
   cloneElement,
   isValidElement,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
+  type FocusEvent,
+  type MouseEvent,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { useEscapeKey } from "../hooks/use-dismiss";
+import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 import { dirOf, type Direction } from "../lib/direction";
 import { hasClippingAncestor } from "../lib/clipping";
@@ -29,6 +33,18 @@ export { CLIPS_ATTRIBUTE } from "../lib/clipping";
  *  for. `left` / `right` stay physical, for a bubble tied to something that does not
  *  mirror (a chart axis, a map). */
 export type TooltipSide = "top" | "bottom" | "left" | "right" | "start" | "end";
+
+/** What a TAP — a touch or a pen press, never the mouse — on the trigger does to the
+ *  bubble. See "A tap is not a hover" on {@link Tooltip}.
+ *
+ *  - `"auto"` (the default): a tap that activates something shows nothing; a tap that
+ *    activates nothing — on a disabled or `aria-disabled` control (a write lock's
+ *    reason), or on a trigger with no control at all (a truncated name, a badge) —
+ *    toggles the bubble, since showing it is then the tap's only answer.
+ *  - `"toggle"`: every tap toggles it — for a control that exists only to explain, such
+ *    as a "?" whose click does nothing.
+ *  - `"ignore"`: a tap never shows it. */
+export type TooltipTap = "auto" | "toggle" | "ignore";
 
 /** The placement the maths works in: a logical side resolved against the trigger. */
 type PhysicalSide = "top" | "bottom" | "left" | "right";
@@ -105,20 +121,30 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
   lazy?: boolean;
   /** Tag the bubble `data-private`, for a label that repeats the user's own data. */
   redact?: boolean;
+  /**
+   * What a tap (touch or pen) on the trigger does — see {@link TooltipTap} and "A tap is
+   * not a hover" below. Default `"auto"`: a tap that activates the control shows nothing;
+   * one that activates nothing (a disabled control, plain text) toggles the bubble.
+   */
+  tap?: TooltipTap;
   children: ReactNode;
 }
 
-/** What each variant below takes: the resolved `side`, and every span attribute the
- *  caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
-type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy"> & { side: TooltipSide };
+/** What each variant below takes: the resolved `side` and `tap`, and every span attribute
+ *  the caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
+type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy" | "tap"> & {
+  side: TooltipSide;
+  tap: TooltipTap;
+};
 
 /**
  * Hover/focus label for a control.
  *
  * Two placements, and the choice matters more than it looks. In place, the bubble is
- * always mounted next to the trigger and fades in on `:hover`, which costs no state and
- * works in a plain render test. Portalled, the bubble is mounted in `document.body`
- * only while it is up, positioned by measurement.
+ * always mounted next to the trigger — so a plain render test finds it without a hover —
+ * and shown while it is up (`display: none` otherwise, see "never widens the page"
+ * below). Portalled, the bubble is mounted in `document.body` only while it is up,
+ * positioned by measurement.
  *
  * ⚠️ **A bubble that repeats a value has to be redactable.** The consuming app blurs
  * `[data-private]` under a `demo-mode` class on `<html>` — and the portalled bubble is
@@ -237,8 +263,8 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy"> & { si
  * So now, when an in-place bubble goes up (default or `lazy`), a layout effect measures
  * it and, if it crosses the viewport edge minus the same margin the portalled bubble
  * keeps, slides it back along its CROSS axis only — sideways for `top` / `bottom`, up or
- * down for the four side placements — with an inline `transform`, which composes with the
- * placement classes' own `translate`. The main axis is left alone on purpose: sliding a
+ * down for the four side placements — with an inline margin (a `transform` until 0.25; see
+ * {@link shiftStyle} for why that widened the page). The main axis is left alone on purpose: sliding a
  * `start` bubble along the main axis would slide it over its own trigger, and turning it
  * round is a measured-placement decision this CSS-placed bubble does not make (pass
  * `portal` for that). The width is already capped to the viewport (see
@@ -247,13 +273,84 @@ type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy"> & { si
  *
  * Why on by default, with no prop? Because it is a no-op for every bubble that already
  * fits — the shift is zero unless the bubble would overflow — so the only placements it
- * changes are ones that were broken. The maths is in physical viewport pixels, so it
- * needs no `dir`: an RTL row puts its long label at the RIGHT edge and gets slid left by
- * the same code. Under jsdom there is no layout — every rect is zero-sized — and a
- * zero-sized bubble is taken to be unmeasured, so tests see no transform at all. It is
- * measured on open (and when the label or side changes while open), not on every scroll:
- * an in-place bubble follows its trigger for free, and a page that scrolls sideways under
- * an open tooltip is not a case worth a listener per tooltip.
+ * changes are ones that were broken. The maths is in physical viewport pixels: an RTL
+ * row puts its long label at the RIGHT edge and gets slid left by the same code, and the
+ * reading direction only decides which edge is kept when a bubble is wider than the room
+ * (its start, as {@link placeTooltip} keeps). Under jsdom there is no layout — every rect
+ * is zero-sized — and a zero-sized bubble is taken to be unmeasured, so tests see no
+ * transform at all. It is measured on open (and when the label or side changes while
+ * open), not on every scroll: an in-place bubble follows its trigger for free, and a page
+ * that scrolls sideways under an open tooltip is not a case worth a listener per tooltip.
+ *
+ * ⚠️ **An in-place bubble never widens the page (keksdose run 72, live #381).** Two
+ * holes let it, and a page wider than the screen is worse than a bubble cut off: on a
+ * phone Chrome then lays every `position: fixed` layer out against the WIDER page while
+ * the glass still shows the old width. Measured on a 406px phone: the sync icon at x=254,
+ * its `bottom` bubble at 102–422, the page 426px wide, and a FloatingPanel 17px off the
+ * glass. First, the clamp compared against `window.innerWidth` — and on a phone that is
+ * the layout viewport, which GROWS to the page's width once something sticks out (430 on
+ * a 406px screen, measured in Chromium's mobile emulation), so a bubble already past the
+ * edge found itself "inside" and stayed there. It now measures against the root's client
+ * width, which on a phone is the screen (the initial containing block, the width `100vw`
+ * and media queries see) whatever overflows, and on a desktop also leaves out a classic
+ * scrollbar; the window is the fallback where there is no layout (jsdom). The portalled
+ * bubble takes the same width, since a `fixed` bubble placed against a grown layout
+ * viewport is off the glass for the same reason. Second, the always-mounted bubble was
+ * `opacity: 0` while closed — invisible, but still laid out where the CSS puts it, so a
+ * bubble nobody opened, centred on a trigger near the end edge, widened the page all by
+ * itself (dev#488's phantom scroll, at the scale of the page instead of a scroller, where
+ * the auto-portal cannot help: the page is not an ancestor it can portal out of). It is
+ * now `display: none` until it is up, so a closed bubble takes no room at all, and an open
+ * one is slid onto the glass in the same layout pass that shows it, before paint. jsdom
+ * computes no Tailwind, so tests still find the closed bubble without a hover.
+ *
+ * ⚠️ **A tap is not a hover (keksdose run 72, live #379).** The bubble used to show on
+ * `mouseenter` and on `focus`, and hide only on `mouseleave` and `blur`. A tap on a phone
+ * fires an emulated `mouseenter` and, on a button, focuses it — and the virtual mouse and
+ * the focus both stay on the button until the next tap somewhere else, so every
+ * IconButton's label (the top-bar icons, the sync indicator, a row's actions) stayed up
+ * over whatever the tap had just opened. Now a touch or pen press is told apart from the
+ * mouse: the emulated `mouseenter` that follows a tap is ignored, the press itself closes
+ * a bubble that was up, and a focus that arrives while the page's last input was a finger
+ * or a pen — the tap's own, or one a closing dialog RETURNS to the icon it was opened
+ * from — shows nothing. The next key press (a Bluetooth keyboard on a tablet) or mouse
+ * press makes focus count again, and a mouse entering the trigger hovers as ever, so a
+ * hybrid laptop gets both.
+ *
+ * Focus otherwise shows the bubble, as it always did — the keyboard, a script, a test's
+ * `.focus()` — with one more exception: the focus a mouse press on the trigger gives it.
+ * There it follows `:focus-visible`, so a text field still shows its bubble while you type
+ * and a clicked button does not hold it: a desktop click behaves as it always did while
+ * the pointer is over the button (the hover shows it) and lets it go when the pointer
+ * leaves, where the in-place bubble used to linger until the button lost focus — the same
+ * left-behind bubble on a smaller scale, and what the portalled bubble always did. A
+ * keyboard user's bubble, in turn, now stays up when a mouse passes over and leaves (the
+ * portalled one used to close). Any `pointerdown` outside the trigger closes an open
+ * bubble too — the Safari case, where a tap elsewhere moves no focus.
+ *
+ * What a tap DOES show is {@link TooltipTap} (`tap`). By default a tap that activates
+ * something shows nothing — the action is the answer — while a tap that activates nothing
+ * toggles the bubble, because there the bubble is the only answer: a write-locked or
+ * disabled control, whose bubble is the reason it did not respond, and a trigger with no
+ * control at all, a truncated payee or a badge, whose bubble is the rest of the text. A
+ * second tap, a tap anywhere else, Escape or the focus leaving closes it. "Activates" is
+ * read off the DOM — a link, a button, a field, a label, an element with a widget role
+ * (`button`, `link`, `checkbox`, `option`, …), or a DataTable row (`tr[tabindex]`) — from
+ * the tapped element outwards, past the tooltip, so a glyph inside a clickable row or a
+ * button counts as that row or button. What it cannot read is a click handler on an
+ * element with no role (give it `role="button"`, which it needs anyway, or pass
+ * `tap="ignore"`), and a button that exists only to explain, whose click does nothing —
+ * FieldHint's "?" — which says so with `tap="toggle"`.
+ *
+ * Why not show the label on a long press, as Android does for its own icons? Because the
+ * web gives no reliable long press on a control: browsers disagree on whether the release
+ * that ends one still clicks the button, and the button's own long press — the context
+ * menu, text selection, a row's drag — claims the gesture first on others. A gesture meant
+ * to ask "what does this do" must not risk doing it. Screen readers do not need it (the
+ * bubble is in `aria-describedby`, and an IconButton's label is its name), and a tap on
+ * anything that does nothing already shows it. No scroll listener either: every touch scroll begins with a `pointerdown`, which
+ * already closes the bubble, and closing on scroll would close a keyboard user's bubble
+ * the moment Tab scrolled its control into view.
  */
 export function Tooltip({
   label,
@@ -262,6 +359,7 @@ export function Tooltip({
   portal,
   lazy = false,
   redact = false,
+  tap = "auto",
   children,
   ...rest
 }: TooltipProps) {
@@ -277,6 +375,7 @@ export function Tooltip({
         side={side}
         className={className}
         redact={redact}
+        tap={tap}
         {...rest}
       >
         {children}
@@ -294,6 +393,7 @@ export function Tooltip({
       redact={redact}
       detect={portal === undefined}
       lazy={lazy}
+      tap={tap}
       {...rest}
     >
       {children}
@@ -302,13 +402,241 @@ export function Tooltip({
 }
 
 
+/** The pointer handlers a caller may hand {@link Tooltip} that the trigger also needs:
+ *  both run, the trigger's first. (The mouse and focus handlers are the trigger's alone,
+ *  as they have always been.) */
+type PointerHandlers = Pick<
+  ComponentPropsWithoutRef<"span">,
+  "onPointerEnter" | "onPointerDown" | "onPointerUp" | "onPointerCancel"
+>;
+
+/** A press that is not the mouse's: a finger, or a pen on the glass. */
+function isTap(pointerType: string): boolean {
+  return pointerType === "touch" || pointerType === "pen";
+}
+
+/**
+ * What a tap ACTIVATES, for `tap="auto"`: the tapped element or the nearest ancestor —
+ * inside the tooltip or round it — that a tap would do something with. The DataTable's
+ * own list of row-owned controls (`OWN_CONTROL`), plus `tr[tabindex]` — a clickable
+ * DataTable row is a roving tab stop, so all but one of its rows say `-1` — and the other
+ * widget roles a tap selects or toggles.
+ *
+ * Two things on the DataTable's list are left off on purpose. A bare `tabindex`: a roving
+ * tab stop is `0` on one element of a widget and `-1` on the rest, so it would make one
+ * cell of a display-only grid "activate" and its neighbours not — and dialogs, panels and
+ * `<main>` carry `-1` only to be focusable by script. And `gridcell` / `row`: the
+ * CalendarHeatmap's days are display-only grid cells whose tooltip is the day's value,
+ * and a tap is the only way to read it on a phone; a heatmap day that does select is a
+ * `<button>`, caught above.
+ */
+const ACTIVATES = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "label",
+  "summary",
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  "tr[tabindex]",
+  ...[
+    "button",
+    "link",
+    "checkbox",
+    "radio",
+    "switch",
+    "tab",
+    "menuitem",
+    "menuitemcheckbox",
+    "menuitemradio",
+    "option",
+    "treeitem",
+    "slider",
+    "spinbutton",
+    "combobox",
+  ].map((role) => `[role="${role}"]`),
+].join(",");
+
+/** Whether a tap on `target` should toggle the bubble — see {@link TooltipTap}. Under
+ *  `auto`: when the tap activates nothing, either because there is no control under it
+ *  or because the control is disabled (natively, or `aria-disabled` — a write lock). */
+function tapShows(tap: TooltipTap, target: EventTarget | null): boolean {
+  if (tap !== "auto") return tap === "toggle";
+  if (!(target instanceof Element)) return true;
+  const control = target.closest(ACTIVATES);
+  return control === null || control.matches(":disabled") || control.closest('[aria-disabled="true"]') !== null;
+}
+
+/**
+ * The last kind of input the document saw: a `pointerdown`'s `pointerType` ("mouse",
+ * "touch", "pen"), "keyboard" after a key press, `null` before either. ONE pair of
+ * capturing listeners for the whole page, installed by the first trigger that mounts —
+ * not a pair per tooltip, which a table of forty would multiply.
+ *
+ * Why a page-wide note and not only the trigger's own: the focus that brings a label back
+ * after a tap is not always the tap's. A tap on a top-bar icon opens a dialog; closing it
+ * (another tap) RETURNS the focus to the icon by script, and that focus arrives with no
+ * press on the icon at all. On a phone it would put the label up over the page the dialog
+ * just left, and keep it there. Keys an on-screen keyboard sends while typing
+ * (`Unidentified`, a composition) and shortcut chords do not count as the keyboard.
+ */
+let lastInput: string | null = null;
+let trackingInput = false;
+
+function trackInput(): void {
+  if (trackingInput || typeof document === "undefined") return;
+  trackingInput = true;
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      lastInput = e.pointerType;
+    },
+    { capture: true, passive: true },
+  );
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Unidentified" || e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return;
+      lastInput = "keyboard";
+    },
+    { capture: true, passive: true },
+  );
+}
+
+/**
+ * Whether a focus should show the bubble. Not after a tap — the last input was a finger
+ * or a pen, whoever moved the focus. Not after a mouse press on this very trigger either,
+ * unless the browser would draw a focus ring there (`:focus-visible`: a text field, not a
+ * button) — the hover already shows it while the pointer is there. Every other focus
+ * shows it as every focus did before: the keyboard, a script, and a test's `.focus()` or
+ * `fireEvent.focus` (jsdom's own `:focus-visible` guesses from whatever events the test
+ * file fired before, so it is consulted only where a press makes the answer certain).
+ */
+function focusShows(target: EventTarget, pressedByMouse: boolean): boolean {
+  if (lastInput !== null && isTap(lastInput)) return false;
+  if (!pressedByMouse || !(target instanceof Element)) return true;
+  try {
+    return target.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Whether the bubble is up, from what the trigger hears — shared by both variants so the
+ * in-place and the portalled bubble cannot disagree about it. See "A tap is not a hover"
+ * on {@link Tooltip} for the rules; this is their bookkeeping.
+ *
+ * Three ways up — hovered by a mouse (or a hovering pen), focused (see {@link focusShows}),
+ * and tapped (`tap`) — and Escape over all three (`dismissed`), re-armed by the next
+ * request rather than by an effect watching the flags: coming back to a trigger is a
+ * fresh request for its label, and an effect would also re-show the bubble under a
+ * pointer that never left. `onArm` runs with each request, for the variant's own per-open
+ * work (the reading direction, the clipping check).
+ *
+ * The refs change nothing on screen, only how the next event is read. `pressedByTouch`
+ * is set by a touch or pen arriving or pressing — which precedes the emulated
+ * `mouseenter` a tap produces (pointer events first, then the compatibility mouse
+ * events) — and cleared by a mouse, or a pen that is not pressing, entering again, so a
+ * hybrid laptop's mouse still hovers. `pressedByMouse` spans one mouse press, the window
+ * in which that press's own focus arrives.
+ */
+function useTooltipTrigger(
+  triggerRef: RefObject<HTMLSpanElement | null>,
+  tap: TooltipTap,
+  passed: PointerHandlers,
+  onArm: (el: HTMLElement) => void,
+) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [tapped, setTapped] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const pressedByTouch = useRef(false);
+  const pressedByMouse = useRef(false);
+  // The tap in progress, and whether a bubble was up when it began: a tap on an open
+  // bubble closes it (at pointerdown) and must not open it again at pointerup.
+  const press = useRef<{ wasOpen: boolean } | null>(null);
+  useEffect(trackInput, []);
+  const open = (hovered || focused || tapped) && !dismissed;
+  const close = () => {
+    setHovered(false);
+    setFocused(false);
+    setTapped(false);
+  };
+  useEscapeKey(() => setDismissed(true), open);
+  // A press anywhere else closes it — the case a blur does not cover: Safari moves no
+  // focus on a tap, and a tap on plain text moves it nowhere.
+  useOutsideClick(triggerRef, close, open);
+  const arm = (el: HTMLElement) => {
+    setDismissed(false);
+    onArm(el);
+  };
+  const handlers = {
+    onPointerEnter: (e: PointerEvent<HTMLSpanElement>) => {
+      if (e.pointerType === "touch") pressedByTouch.current = true;
+      else if (e.buttons === 0) pressedByTouch.current = false;
+      passed.onPointerEnter?.(e);
+    },
+    onPointerDown: (e: PointerEvent<HTMLSpanElement>) => {
+      if (isTap(e.pointerType)) {
+        pressedByTouch.current = true;
+        press.current = { wasOpen: open };
+        close();
+      } else {
+        pressedByTouch.current = false;
+        pressedByMouse.current = true;
+      }
+      passed.onPointerDown?.(e);
+    },
+    onPointerUp: (e: PointerEvent<HTMLSpanElement>) => {
+      pressedByMouse.current = false;
+      const began = press.current;
+      press.current = null;
+      if (began && !began.wasOpen && isTap(e.pointerType) && tapShows(tap, e.target)) {
+        setTapped(true);
+        arm(e.currentTarget);
+      }
+      passed.onPointerUp?.(e);
+    },
+    // The browser took the gesture over — a scroll, a pinch: not a tap.
+    onPointerCancel: (e: PointerEvent<HTMLSpanElement>) => {
+      pressedByMouse.current = false;
+      press.current = null;
+      passed.onPointerCancel?.(e);
+    },
+    onMouseEnter: (e: MouseEvent<HTMLSpanElement>) => {
+      if (pressedByTouch.current) return;
+      setHovered(true);
+      arm(e.currentTarget);
+    },
+    onMouseLeave: () => setHovered(false),
+    onFocus: (e: FocusEvent<HTMLSpanElement>) => {
+      if (!focusShows(e.target, pressedByMouse.current)) return;
+      setFocused(true);
+      arm(e.currentTarget);
+    },
+    onBlur: (e: FocusEvent<HTMLSpanElement>) => {
+      setFocused(false);
+      if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
+      setTapped(false);
+    },
+  };
+  return { open, dismissed, handlers };
+}
+
 /** The variant that lives next to its trigger, and — when `detect` is on, which is the
  *  default — moves its bubble to `<body>` when that turns out to be inside a clipping
  *  container (see "Inside a scroll container" on {@link Tooltip}).
  *
- *  In place it holds the little state it does for the two things CSS cannot express —
- *  which element to point `aria-describedby` at, and Escape — and not for the fade,
- *  which is still `group-hover`/`group-focus-within` and still costs a render nothing.
+ *  Whether the bubble is up is {@link useTooltipTrigger}'s, shared with the portalled
+ *  variant. Until 0.25 the always-mounted bubble showed itself with CSS alone —
+ *  `group-hover` / `group-focus-within` — which is exactly what a tap on a phone could not
+ *  get rid of: the tapped button keeps the focus, and `:focus-within` cannot be told that
+ *  the focus came from a finger. It is shown from the same state as every other bubble
+ *  now, and is `display: none` while closed (see "never widens the page" on
+ *  {@link Tooltip}).
  *
  *  ONE component for both placements rather than a switch between the two variants: a
  *  switch would be a different component at the same place in the tree, and React
@@ -322,60 +650,48 @@ function InPlaceTooltip({
   redact,
   detect,
   lazy,
+  tap,
   children,
   ...rest
 }: TooltipVariantProps & { detect: boolean; lazy: boolean }) {
   const id = useId();
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const [clipped, setClipped] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const [dir, setDir] = useState<Direction>("ltr");
-  const open = (hovered || focused) && !dismissed;
-  useEscapeKey(() => setDismissed(true), open);
+  // The reading direction on every request (the clamp keeps the start edge of a bubble
+  // too wide for the room); the clipping check too, for a container that began to scroll
+  // after mount.
+  const { open, dismissed, handlers } = useTooltipTrigger(triggerRef, tap, rest, (el) => {
+    setDir(dirOf(el));
+    if (detect) setClipped(hasClippingAncestor(el));
+  });
   // keksdose G7: slide an open in-place bubble back onto the screen. See "The in-place
   // bubble is clamped" on {@link Tooltip}.
   const bubbleRef = useRef<HTMLSpanElement | null>(null);
-  const shift = useViewportClamp(bubbleRef, open && !clipped, side, label);
+  const { shift, measuring } = useViewportClamp(bubbleRef, open && !clipped, side, label, dir);
   // At mount, before the first paint: the in-place bubble inside a scroller is the
   // phantom-scroll bug whether or not anyone opens it.
   useLayoutEffect(() => {
     if (detect) setClipped(hasClippingAncestor(triggerRef.current));
   }, [detect]);
-  // Re-armed by the next hover or focus rather than by an effect watching those flags:
-  // coming back to a trigger is a fresh request for its label, and an effect would also
-  // re-show the bubble under a pointer that never left. The clipping check is repeated
-  // here for a container that began to scroll after mount.
-  const arm = (el: Element) => {
-    setDismissed(false);
-    if (!detect) return;
-    setDir(dirOf(el));
-    setClipped(hasClippingAncestor(el));
-  };
   return (
-    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers track
-       whether the bubble is up and activate nothing; the caller's child is the
-       interactive element, keeps its own handlers, and its focus shows the bubble too. */
+    // No role for this span: its handlers track whether the bubble is up and activate
+    // nothing; the caller's child is the interactive element, keeps its own handlers,
+    // and its focus shows the bubble too.
     <span
-      // `...rest` first: the four handlers below are what decides whether a bubble is
-      // up, and a caller passing an `onFocus` of its own must not replace them.
+      // `...rest` first: the handlers below are what decides whether a bubble is up, and
+      // a caller passing an `onFocus` of its own must not replace them (its pointer
+      // handlers are called from them).
       {...rest}
       ref={triggerRef}
+      // Clipped for the one render in which the bubble is measured (see useViewportClamp):
+      // that layout must not reach the page's width.
+      style={measuring ? { ...rest.style, overflow: "clip" } : rest.style}
       className={cn("relative inline-flex", !clipped && "group/tooltip", className)}
-      // These four track WHETHER A BUBBLE IS UP. They activate nothing — the only thing
-      // here that can be activated is the caller's child, which keeps every handler it
+      // These track WHETHER A BUBBLE IS UP. They activate nothing — the only thing here
+      // that can be activated is the caller's child, which keeps every handler it
       // arrived with — so this wrapper needs no role and no key handling of its own.
-      onMouseEnter={(e) => {
-        setHovered(true);
-        arm(e.currentTarget);
-      }}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={(e) => {
-        setFocused(true);
-        arm(e.currentTarget);
-      }}
-      onBlur={() => setFocused(false)}
+      {...handlers}
     >
       {/* In place the bubble is always there to point at; portalled or lazy, only while up. */}
       {describedBy(children, clipped || lazy ? (open ? id : undefined) : dismissed ? undefined : id)}
@@ -385,10 +701,7 @@ function InPlaceTooltip({
         )
       ) : lazy ? (
         // keksdose F6: the in-place slot and classes, the portalled lifetime. Mounted only
-        // while up, so it is visible whenever it exists — `opacity-100` outright rather
-        // than the `group-hover` switch, which would also be right but would make the
-        // bubble's visibility depend on two sources (the state that mounted it and the
-        // CSS that shows it) that can disagree for a frame after Escape.
+        // while up, so it is visible whenever it exists.
         open && (
           <span
             ref={bubbleRef}
@@ -407,14 +720,19 @@ function InPlaceTooltip({
           id={id}
           role="tooltip"
           style={shiftStyle(shift)}
-          // The `hidden` ATTRIBUTE, not an opacity class: dismissing has to take the
-          // bubble out of the accessibility tree as well as off the screen, or a screen
-          // reader still reads out the description of a bubble the user just closed.
+          // The `hidden` ATTRIBUTE, not a class: dismissing has to take the bubble out of
+          // the accessibility tree as well as off the screen, or a screen reader still
+          // reads out the description of a bubble the user just closed. Merely CLOSED it
+          // is the `hidden` CLASS — `display: none` in the browser, so it takes no room
+          // and widens nothing (live #381), and nothing at all under jsdom, where tests
+          // have always found this bubble without a hover. `aria-describedby` reads a
+          // `display: none` node all the same.
           hidden={dismissed || undefined}
           data-private={redact ? "" : undefined}
           className={cn(
             TOOLTIP_SURFACE,
-            "pointer-events-none absolute z-50 opacity-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
+            "pointer-events-none absolute z-50",
+            open ? "opacity-100" : "hidden",
             sidePositionClass[side],
           )}
         >
@@ -463,24 +781,67 @@ interface Shift {
 
 const NO_SHIFT: Shift = { x: 0, y: 0 };
 
+/** An in-place bubble's slide and the label, side and direction it was measured for. */
+interface Placement {
+  shift: Shift;
+  for: { side: TooltipSide; label: ReactNode; dir: Direction } | null;
+}
+
+const UNPLACED: Placement = { shift: NO_SHIFT, for: null };
+
 /** How far to slide the span `[low, high]` so it sits inside `[TOOLTIP_MARGIN,
- *  extent - TOOLTIP_MARGIN]`. Zero when it already does. The start edge wins when the
- *  span is wider than the room — as in {@link clamp}, the start of a label is the half
- *  worth keeping (and the width cap means that only happens on a viewport narrower than
- *  twice the margin). */
-function slideInto(low: number, high: number, extent: number): number {
-  if (low < TOOLTIP_MARGIN) return TOOLTIP_MARGIN - low;
-  if (high > extent - TOOLTIP_MARGIN) return Math.max(extent - TOOLTIP_MARGIN - high, TOOLTIP_MARGIN - low);
+ *  extent - TOOLTIP_MARGIN]`. Zero when it already does. When the span is wider than the
+ *  room, the edge it keeps is its START — as in {@link clamp}, the start of a label is the
+ *  half worth keeping — which is the low edge unless `keepHigh` says the start is the
+ *  high one (an RTL label, along x). The width cap means that only happens on a viewport
+ *  barely wider than the margins, or one whose scrollbar the cap's `100vw` counts. */
+function slideInto(low: number, high: number, extent: number, keepHigh = false): number {
+  const min = TOOLTIP_MARGIN;
+  const max = extent - TOOLTIP_MARGIN;
+  if (high - low > max - min) return keepHigh ? max - high : min - low;
+  if (low < min) return min - low;
+  if (high > max) return max - high;
   return 0;
+}
+
+/**
+ * The glass a bubble has to stay on, in CSS pixels — `window.innerWidth` is the wrong
+ * width on a phone (keksdose run 72, live #381). There it is the LAYOUT viewport, and
+ * that grows to the page's width as soon as anything sticks out past the screen: 430 on
+ * a 406px screen in Chromium's mobile emulation, with `position: fixed` layers laid out
+ * against the 430. A bubble that had widened the page then measured itself as inside it.
+ * The root element's client width is the initial containing block instead — the screen,
+ * the width `100vw` and the media queries see — whatever overflows, and on a desktop it
+ * also leaves a classic scrollbar out. It is 0 where nothing is laid out (jsdom), and the
+ * window is the answer there. The height stays the window's: nothing measured grows it,
+ * and a phone's collapsing toolbar makes the window the truer of the two.
+ */
+function viewportSize(): TooltipViewport {
+  return {
+    width: document.documentElement.clientWidth || window.innerWidth,
+    height: window.innerHeight,
+  };
 }
 
 /**
  * The in-place bubble's viewport clamp (keksdose G7): while `active`, measure the bubble
  * in a LAYOUT effect — before paint, so there is no frame with the label off the screen —
- * and return the cross-axis slide that brings it inside the viewport minus
- * `TOOLTIP_MARGIN`. `top` / `bottom` slide along x; `left` / `right` / `start` / `end`
+ * and return the cross-axis slide that brings it inside the viewport ({@link viewportSize})
+ * minus `TOOLTIP_MARGIN`. `top` / `bottom` slide along x; `left` / `right` / `start` / `end`
  * along y. {@link NO_SHIFT} while closed, so the next open measures the bubble where the
- * CSS alone puts it.
+ * CSS alone puts it. `dir` only decides which edge survives a bubble wider than the room.
+ *
+ * `measuring` is true for the one render in which the bubble is measured — on open, and
+ * again when the label, side or direction changes while open — and the caller clips its
+ * wrapper (`overflow: clip`) for that render. Measuring means laying the bubble out where
+ * the CSS alone puts it, which is past the edge whenever there is something to slide, and
+ * that layout counts towards the page's scrollable overflow even though it is never
+ * painted. Chrome on a phone grows the layout viewport to it and does not always give the
+ * width back: in an RTL page, where overflow on the left is scrollable, a bubble measured
+ * at −24 left the page 426 wide and scrolled by −20 after the slide had already brought it
+ * to 4 (Chromium mobile emulation, 406px). A clipped wrapper keeps the measurement out of
+ * every ancestor's overflow — `clip` and not `hidden`, so the wrapper never becomes a
+ * scroll container — and it is unclipped, with the slide, in the same task, before paint.
  *
  * The rect it reads already includes the slide it applied last time (a label that
  * changed while open), so that slide is taken back out before deciding the new one.
@@ -491,33 +852,62 @@ function useViewportClamp(
   active: boolean,
   side: TooltipSide,
   label: ReactNode,
-): Shift {
-  const [shift, setShift] = useState<Shift>(NO_SHIFT);
+  dir: Direction,
+): { shift: Shift; measuring: boolean } {
+  // The slide, and what it was measured for: anything else on screen — a fresh open, a
+  // new label, side or direction — is not measured yet, and renders clipped until it is.
+  const [placement, setPlacement] = useState<Placement>(UNPLACED);
+  const measured =
+    placement.for !== null &&
+    placement.for.side === side &&
+    placement.for.label === label &&
+    placement.for.dir === dir;
   useLayoutEffect(() => {
     const el = bubbleRef.current;
     if (!active || !el) {
-      setShift(NO_SHIFT);
+      setPlacement(UNPLACED);
       return;
     }
+    if (measured) return;
     const r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) return;
+    const unlaid = r.width === 0 && r.height === 0;
     const horizontal = side === "top" || side === "bottom";
-    setShift((previous) => {
-      const next = horizontal
-        ? { x: slideInto(r.left - previous.x, r.right - previous.x, window.innerWidth), y: 0 }
-        : { x: 0, y: slideInto(r.top - previous.y, r.bottom - previous.y, window.innerHeight) };
-      return next.x === previous.x && next.y === previous.y ? previous : next;
+    const viewport = viewportSize();
+    setPlacement(({ shift: previous }) => {
+      const next = unlaid
+        ? previous
+        : horizontal
+          ? { x: slideInto(r.left - previous.x, r.right - previous.x, viewport.width, dir === "rtl"), y: 0 }
+          : { x: 0, y: slideInto(r.top - previous.y, r.bottom - previous.y, viewport.height) };
+      const shift = next.x === previous.x && next.y === previous.y ? previous : next;
+      return { shift, for: { side, label, dir } };
     });
-  }, [bubbleRef, active, side, label]);
-  return shift;
+  }, [bubbleRef, active, measured, side, label, dir]);
+  return { shift: placement.shift, measuring: active && !measured };
 }
 
-/** The inline style for a slide: none at all when there is nothing to slide, so a bubble
- *  that fits renders exactly as it did before G7. `transform` rather than `translate`
- *  because the placement classes own the `translate` property (Tailwind v4's
- *  `-translate-x-1/2`); the two compose instead of one replacing the other. */
+/**
+ * The inline style for a slide: none at all when there is nothing to slide, so a bubble
+ * that fits renders exactly as it did before G7.
+ *
+ * A MARGIN, not a `transform` (0.14–0.24 used `transform: translate(…)`), because of what
+ * Blink does with the page's width (keksdose run 72, live #381). The slide is decided after
+ * a layout that placed the bubble where the CSS alone puts it — past the edge — and that
+ * layout already counted it into the page's scrollable overflow. A later change to
+ * `transform` alone re-paints but does not re-lay-out, so that overflow was never taken
+ * back: measured in Chromium's mobile emulation, a bubble shown at 108–428 on a 406px
+ * screen and then slid to 400 by a transform left the page 428 wide, the layout viewport
+ * with it (`position: fixed` layers laid out against 428), until the bubble closed. The
+ * same slide as a margin is a layout change; the page went back to 406 in the same frame.
+ *
+ * Physical margins, matching the physical maths: `margin-left` moves a `top` / `bottom`
+ * bubble, whose placement is the physical `left: 50%`; `margin-top` moves the four side
+ * placements, placed by `top: 50%`. Neither is a margin the placement classes set — they
+ * keep their gap on the main axis (`mb-1`, `ms-1`, …).
+ */
 function shiftStyle(shift: Shift) {
-  return shift.x === 0 && shift.y === 0 ? undefined : { transform: `translate(${shift.x}px, ${shift.y}px)` };
+  if (shift.x === 0 && shift.y === 0) return undefined;
+  return shift.x !== 0 ? { marginLeft: shift.x } : { marginTop: shift.y };
 }
 
 const portalTransformBySide: Record<PhysicalSide, string> = {
@@ -660,46 +1050,38 @@ function PortalTooltip({
   side,
   className,
   redact,
+  tap,
   children,
   ...rest
 }: TooltipVariantProps) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
-  const [visible, setVisible] = useState(false);
   // The trigger's reading direction, read when the bubble is asked for (an event, not a
   // render): it resolves `start` / `end`, and the portalled bubble — which has left the
   // subtree it would have inherited `dir` from — carries it too.
   const [dir, setDir] = useState<Direction>("ltr");
-  const show = (el: Element) => {
-    setDir(dirOf(el));
-    setVisible(true);
-  };
   const id = useId();
   // Escape closes it outright, since this variant's bubble only exists while it is
   // shown. The next mouseenter/focus brings it back, which is the behaviour WCAG
   // 1.4.13 asks for: dismissible now, still available when you ask again.
-  useEscapeKey(() => setVisible(false), visible);
+  const { open, handlers } = useTooltipTrigger(triggerRef, tap, rest, (el) => setDir(dirOf(el)));
 
   return (
     <>
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- as in
-          `InPlaceTooltip`: the handlers only show and hide the bubble; the caller's child
-          is the interactive element, and focusing it shows the bubble. */}
+      {/* As in `InPlaceTooltip`, no role: the handlers only show and hide the bubble; the
+          caller's child is the interactive element, and focusing it shows the bubble. */}
       <span
-        // As in `InPlaceTooltip`: the caller's attributes first, the four handlers that
-        // run this component after them. The BUBBLE is deliberately not given them — it
+        // As in `InPlaceTooltip`: the caller's attributes first, the handlers that run
+        // this component after them. The BUBBLE is deliberately not given them — it
         // is portalled to `<body>`, and an id or a tour anchor duplicated onto a node
         // that only exists while hovered would match twice or match nothing.
         {...rest}
         ref={triggerRef}
         className={cn("relative inline-flex", className)}
-        onMouseEnter={(e) => show(e.currentTarget)}
-        onMouseLeave={() => setVisible(false)}
-        onFocus={(e) => show(e.currentTarget)}
-        onBlur={() => setVisible(false)}
+        {...handlers}
       >
-        {describedBy(children, visible ? id : undefined)}
+        {describedBy(children, open ? id : undefined)}
       </span>
-      {visible && (
+      {open && (
         <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
       )}
     </>
@@ -740,7 +1122,8 @@ function PortalBubble({
       if (!measured) return null;
       const next = {
         size: { width: measured.width, height: measured.height },
-        viewport: { width: window.innerWidth, height: window.innerHeight },
+        // The glass, not the window: see viewportSize (live #381).
+        viewport: viewportSize(),
       };
       // Only publish what actually CHANGED: every re-measure allocates a fresh
       // object, and a new object on every scroll event would re-render the
