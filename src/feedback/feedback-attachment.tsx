@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
 import { Button, IconButton, Spinner } from "../components/ui";
+import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-button";
 import { useCommitReason } from "../components/write-lock";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
@@ -186,8 +187,39 @@ interface FeedbackAttachmentFieldBaseProps {
    *  in, whose common parent is where the event bubbles to. Ignored when
    *  `documentPaste` is set. */
   pasteFrom?: RefObject<HTMLElement | null>;
+  /**
+   * The add and capture buttons' look (0.24.0, keksdose) — Button's own `variant`.
+   * Default `"secondary"`, the look they always had.
+   *
+   * keksdose's support chat puts this field in ChatComposer's `attachmentSlot`, in the
+   * row with Send, where its own picker had been a `ghost` / `sm` FileButton: two
+   * bordered full-size buttons under a chat box read as a second form, and the field
+   * gave no way to say otherwise. Every mode, wherever the buttons appear; the chips'
+   * remove buttons keep their size.
+   */
+  buttonVariant?: ButtonVariant;
+  /** The add and capture buttons' size — Button's own `size`, with `buttonVariant`.
+   *  Default `"md"`. `"sm"` draws their icons at 14px, as a small button's are. */
+  buttonSize?: ButtonSize;
   className?: string;
 }
+
+/**
+ * The field's root, in every mode. `relative` for the `sr-only` file input (see the
+ * single field). `min-w-0 max-w-full` (0.24.0, keksdose) because the field is often a
+ * FLEX ITEM — ChatComposer's `attachmentSlot` row, FormActions' `start` — and a flex item
+ * is never narrower than its content's min-content width unless told it may be. A chip
+ * truncates its name only inside a box of bounded width, and a screenshot's name
+ * ("Screenshot 2026-10-03 at 07.45.12.png") was the min-content: the field grew to it
+ * and ran off a 390px phone composer (measured in Chromium: the field's right edge at
+ * 592px, the page 614px wide). keksdose passed `className="min-w-0 max-w-full"` at both
+ * its callers to stop it; here once, for every host. In normal flow — a dialog, a note
+ * editor — both are no-ops.
+ */
+const FIELD_ROOT = "relative min-w-0 max-w-full";
+
+/** Paperclip and camera at the size the button's text is: 16px at `md`, 14px at `sm`. */
+const buttonIcon = (size: ButtonSize) => (size === "sm" ? "size-3.5" : "size-4");
 
 /** One file: choosing a second means removing the first. The field's only mode until 0.15.5. */
 export interface FeedbackAttachmentFieldSingleProps extends FeedbackAttachmentFieldBaseProps {
@@ -354,6 +386,8 @@ function SingleField({
   documentPaste = false,
   pasteFrom,
   disabled = false,
+  buttonVariant = "secondary",
+  buttonSize = "md",
   className,
 }: FeedbackAttachmentFieldSingleProps) {
   // The object URL is keyed to the file it was made for, so a stale one (from the
@@ -406,8 +440,9 @@ function SingleField({
       // `relative` for the same reason as FileDropzone: the `sr-only` file input below
       // is `position: absolute`, and without a positioned ancestor it is laid out
       // against the initial containing block — extending the DOCUMENT height to its own
-      // offset and producing a phantom second scrollbar on any long page.
-      className={cn("relative", className)}
+      // offset and producing a phantom second scrollbar on any long page. And
+      // `min-w-0 max-w-full`, so a long name truncates in a flex row: see FIELD_ROOT.
+      className={cn(FIELD_ROOT, className)}
       onPaste={onPaste}
     >
       <Heading text={labelsProp?.attachment} />
@@ -439,11 +474,12 @@ function SingleField({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              variant="secondary"
+              variant={buttonVariant}
+              size={buttonSize}
               disabled={disabled}
               onClick={() => fileInputRef.current?.click()}
             >
-              <Paperclip className="size-4" /> {text.attachmentAdd}
+              <Paperclip className={buttonIcon(buttonSize)} /> {text.attachmentAdd}
             </Button>
             {onCaptureScreenshot && (
               <CaptureButton
@@ -451,6 +487,8 @@ function SingleField({
                 onFile={pick}
                 label={text.attachmentCapture}
                 disabled={disabled}
+                variant={buttonVariant}
+                size={buttonSize}
               />
             )}
           </div>
@@ -490,6 +528,8 @@ function MultipleField({
   documentPaste = false,
   pasteFrom,
   disabled = false,
+  buttonVariant = "secondary",
+  buttonSize = "md",
   className,
 }: FeedbackAttachmentFieldMultipleProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -592,7 +632,7 @@ function MultipleField({
   ];
 
   return (
-    <div ref={rootRef} className={cn("relative space-y-2", className)} onPaste={onPaste}>
+    <div ref={rootRef} className={cn(FIELD_ROOT, "space-y-2", className)} onPaste={onPaste}>
       <Heading text={labelsProp?.attachment} className="mb-0" />
       {chips.length > 0 && (
         // One chip per row, full width: wrapped chips of name-dependent widths made a
@@ -630,12 +670,13 @@ function MultipleField({
           {room > 0 && (
             <Button
               type="button"
-              variant="secondary"
+              variant={buttonVariant}
+              size={buttonSize}
               data-attachment-action=""
               disabled={disabled}
               onClick={() => fileInputRef.current?.click()}
             >
-              <Paperclip className="size-4" /> {text.attachmentAdd}
+              <Paperclip className={buttonIcon(buttonSize)} /> {text.attachmentAdd}
             </Button>
           )}
           {canCapture && onCaptureScreenshot && (
@@ -644,6 +685,8 @@ function MultipleField({
               onFile={capture}
               label={text.attachmentCapture}
               disabled={disabled}
+              variant={buttonVariant}
+              size={buttonSize}
               data-attachment-action=""
             />
           )}
@@ -697,6 +740,8 @@ function RefsField({
   disabled = false,
   commit: commits,
   disabledReason: ownDisabledReason,
+  buttonVariant = "secondary",
+  buttonSize = "md",
   className,
 }: FeedbackAttachmentFieldRefsProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -827,7 +872,7 @@ function RefsField({
   const hasChips = value.length > 0 || uploads.length > 0;
 
   return (
-    <div ref={rootRef} className={cn("relative space-y-2", className)} onPaste={onPaste}>
+    <div ref={rootRef} className={cn(FIELD_ROOT, "space-y-2", className)} onPaste={onPaste}>
       <Heading text={labelsProp?.attachment} className="mb-0" />
       {hasChips && (
         <ul aria-label={text.attachmentList} className="flex flex-col gap-2">
@@ -873,13 +918,14 @@ function RefsField({
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant={buttonVariant}
+            size={buttonSize}
             data-attachment-action=""
             disabled={disabled}
             disabledReason={reason}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Paperclip className="size-4" /> {text.attachmentAdd}
+            <Paperclip className={buttonIcon(buttonSize)} /> {text.attachmentAdd}
           </Button>
           {onCaptureScreenshot && (
             <CaptureButton
@@ -888,6 +934,8 @@ function RefsField({
               label={text.attachmentCapture}
               disabled={disabled}
               disabledReason={reason}
+              variant={buttonVariant}
+              size={buttonSize}
               data-attachment-action=""
             />
           )}
@@ -945,6 +993,8 @@ function CaptureButton({
   label,
   disabled = false,
   disabledReason,
+  variant,
+  size,
   ...rest
 }: {
   capture: () => Promise<File | null>;
@@ -952,13 +1002,16 @@ function CaptureButton({
   label: string;
   disabled?: boolean;
   disabledReason?: ReactNode;
+  variant: ButtonVariant;
+  size: ButtonSize;
   "data-attachment-action"?: string;
 }) {
   const [capturing, setCapturing] = useState(false);
   return (
     <Button
       type="button"
-      variant="secondary"
+      variant={variant}
+      size={size}
       disabled={capturing || disabled}
       disabledReason={disabledReason}
       {...rest}
@@ -972,7 +1025,7 @@ function CaptureButton({
           .finally(() => setCapturing(false));
       }}
     >
-      <Camera className="size-4" /> {capturing ? "…" : label}
+      <Camera className={buttonIcon(size)} /> {capturing ? "…" : label}
     </Button>
   );
 }
