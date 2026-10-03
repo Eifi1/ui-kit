@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
@@ -142,6 +142,11 @@ export interface TranslationReviewPanelProps {
   /**
    * Controlled filters — for an app that keeps them in the URL (keksdose's `?status=`,
    * `?ns=`, `?q=`). Whatever is left out is the panel's own. Pair with `onFilterChange`.
+   *
+   * A field passed here is the app's, and the control shows what the app says: one the app
+   * passes but does not write back from `onFilterChange` is a control that does nothing.
+   * A development build warns about that once per field (0.25.1, Kurvenschmiede); a field
+   * left out entirely is fine — the panel keeps it.
    */
   filter?: Partial<TranslationReviewFilter>;
   /** Every filter, on every change — write them in ONE update: `useSearchParamsState`'s
@@ -213,11 +218,42 @@ export interface TranslationReviewPanelProps {
    * rows, and paging one area does not move another — rather than one pager cutting
    * through the headers. `storageKey` keeps persisting the ungrouped table only.
    *
-   * Groups fold (each on its own, remembered while the panel lives). On a phone they
-   * start folded when there are several — the headers are then the area list, and the
-   * reviewer opens the one to work through; on a wide screen they start open.
+   * Groups fold (each on its own, remembered while the panel lives), and a folded group's
+   * rows are not rendered at all — only its header. Which groups start open is
+   * {@link defaultGroupsOpen}: by default, on a phone they start folded when there are
+   * several — the headers are then the area list, and the reviewer opens the one to work
+   * through — and on a wide screen they start open while that is cheap (see there).
    */
   groupBy?: TranslationReviewGroupBy;
+  /**
+   * Which groups start open under {@link groupBy} (0.25.1). A group the reviewer opens or
+   * folds keeps that; this is what every other group follows.
+   *
+   * - `"auto"` (default): on a phone, open when there is one group and folded when there
+   *   are several, as in 0.25.0. On a wide screen, open while opening every group renders
+   *   at most 100 rows (each group shows up to `pageSize` of them; the budget is one page
+   *   where `pageSize` is larger) — and folded above that, the headers then being the area
+   *   list, as on a phone.
+   * - `true`: every group starts open, on a phone too.
+   * - `false`: every group starts folded, on a wide screen too.
+   *
+   * WHY A BUDGET OF ROWS (keksdose, measured on 0.25.0): a wide screen opened EVERY group.
+   * keksdose's /translations has 122 areas and ~4700 strings — 122 tables and 2053 rows at
+   * once, ~46 000 elements, 5.2 s before the panel appeared and 2.5 s for a filter click
+   * to paint, against 50 rows and 0.34 s ungrouped; its page test went from 4 s to 146 s.
+   * kastlan (~31 areas, ~1300 rows open) and Kurvenschmiede (28, ~700) had the same page.
+   * What costs is the rows on screen, so the rule counts them rather than the groups:
+   * 100 rows is two of the panel's default pages — any one or two areas still open as
+   * before, however long, and so do a dozen small ones, or a search whose hits fall in
+   * many areas — while a whole catalogue starts as its list of areas: keksdose's shape
+   * in jsdom, 122 headers and ~2100 elements instead of ~44 000 (the ungrouped panel has
+   * ~1200). The rule follows the filters: narrow them and the groups open.
+   *
+   * A boolean rather than a controlled open state: the panel already keeps each group's
+   * own state, and an app that only wants "all open" or "all folded" should not have to
+   * keep a record of 122 flags to say it.
+   */
+  defaultGroupsOpen?: boolean | "auto";
   /** A group's name. Default: `sourceLabels` for `groupBy="source"`, else the key. */
   groupLabel?: (group: string) => string;
   /** The level of the group headings. Default `h2`: the panel is a page's body, under
@@ -230,6 +266,108 @@ export interface TranslationReviewPanelProps {
 /** The wide screen's query — the same one DataTable switches its layout on, so "a phone"
  *  means the same here as in the table. */
 const MD_UP = "(min-width: 768px)";
+
+/**
+ * How many rows the groups may render at once on a wide screen before they start folded
+ * ({@link TranslationReviewPanelProps.defaultGroupsOpen}): two of the default 50-row pages.
+ * A row costs about twenty elements in either layout, so this is the cost of two pages of
+ * the ungrouped table — not of 2053 rows in 122 tables.
+ */
+const GROUPS_OPEN_ROW_BUDGET = 100;
+
+/**
+ * Would opening every group stay within the budget? Each group renders up to `pageSize`
+ * rows (it pages on its own); the budget is never less than one page, so a single group —
+ * which renders at most one — always starts open, as on a phone.
+ */
+function groupsFitOpen(groups: readonly TranslationRowGroup[], pageSize: number): boolean {
+  const budget = Math.max(GROUPS_OPEN_ROW_BUDGET, pageSize);
+  let rendered = 0;
+  for (const group of groups) {
+    rendered += Math.min(group.rows.length, pageSize);
+    if (rendered > budget) return false;
+  }
+  return true;
+}
+
+/**
+ * The kit's dev switch, as NumberInput's money guard and `lib/logger.ts` read it: a
+ * development build — the consumer's bundler makes `import.meta.env.DEV` false in a
+ * production one, and the branch is dead code there — and never under vitest, where every
+ * consumer suite would print it; a test opts in with `vi.stubEnv("VITEST", "")`. Read per
+ * call, and optional-chained: `import.meta.env` is a Vite injection, absent under Node.
+ */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+type FilterField = keyof TranslationReviewFilter;
+
+/** How long after the last filter change the app's `filter` is looked at again: well past
+ *  a router's transition, so a URL that is still being written is not mistaken for one
+ *  that never will be. */
+const FILTER_ECHO_MS = 1500;
+
+/**
+ * The development warning for a controlled filter that does not follow (Kurvenschmiede,
+ * 0.25.1). A field the app passes in `filter` is the app's: the panel shows the app's
+ * value, whatever the reviewer picked. An app that passes a field but does not write the
+ * reported value back — its `onFilterChange` hands on only some fields, `filter` is built
+ * as `{ ...DEFAULT_TRANSLATION_REVIEW_FILTER, ...fromTheUrl }`, a URL parser rejects what
+ * its serialiser wrote, or there is no `onFilterChange` at all — has a control that
+ * silently does nothing: the box unticks itself, the select jumps back.
+ *
+ * So, after the panel reports a change of a field the app controls, it looks at the
+ * app's `filter` again once the change has had time to land ({@link FILTER_ECHO_MS}, read
+ * from the last COMMITTED props, so a router transition still rendering does not count),
+ * and warns — once per field — when that field still holds the value it had before.
+ *
+ * Quiet by construction for an app that passes no `filter`, and for a field the app LEAVES
+ * OUT: that field is the panel's own and works (keksdose keeps the placeholder switch so,
+ * on purpose). Quiet too when the app moved the field somewhere else itself. Development
+ * builds only (see {@link devWarnings}): in production and under vitest nothing is
+ * recorded and no timer is set.
+ */
+function useFilterEchoCheck(filterProp: Partial<TranslationReviewFilter> | undefined) {
+  const committed = useRef(filterProp);
+  useEffect(() => {
+    committed.current = filterProp;
+  });
+  // Per field: what the app's filter said when the reviewer first changed it, and what
+  // the panel reported last.
+  const pending = useRef(new Map<FilterField, { from: unknown; to: unknown }>());
+  const warned = useRef(new Set<FilterField>());
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  return (next: TranslationReviewFilter) => {
+    if (filterProp === undefined || !devWarnings()) return;
+    for (const field of Object.keys(next) as FilterField[]) {
+      const from = filterProp[field];
+      if (from === undefined || warned.current.has(field)) continue;
+      const seen = pending.current.get(field);
+      if (seen) seen.to = next[field];
+      else if (next[field] !== from) pending.current.set(field, { from, to: next[field] });
+    }
+    if (pending.current.size === 0) return;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const now = committed.current;
+      for (const [field, { from, to }] of pending.current) {
+        if (to === from || now?.[field] !== from || warned.current.has(field)) continue;
+        warned.current.add(field);
+        console.warn(
+          `[ui-kit] TranslationReviewPanel: the "${field}" filter was changed to ${JSON.stringify(to)}, but the ` +
+            `\`filter\` prop still says ${JSON.stringify(from)}, so the control does nothing. A field passed in ` +
+            `\`filter\` is the app's: write back every field \`onFilterChange\` reports, in one update ` +
+            `(useSearchParamsState's setter takes the object as it is), or leave the field out of \`filter\` and ` +
+            `the panel keeps it. (Development builds only; once per field.)`,
+        );
+      }
+      pending.current.clear();
+    }, FILTER_ECHO_MS);
+  };
+}
 
 /** The row's text — or, for a missing string, the line that says so. */
 function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: TranslationReviewLabels; clamp?: boolean }) {
@@ -286,6 +424,7 @@ export function TranslationReviewPanel({
   groupBy,
   groupLabel,
   groupHeadingAs = "h2",
+  defaultGroupsOpen = "auto",
   className,
   labels: labelsProp,
 }: TranslationReviewPanelProps) {
@@ -305,6 +444,7 @@ export function TranslationReviewPanel({
   for (const [name, value] of Object.entries(filterProp ?? {})) {
     if (value !== undefined) Object.assign(filter, { [name]: value });
   }
+  const echoFilter = useFilterEchoCheck(filterProp);
   const [openId, setOpenId] = useState<string | null>(null);
   // The row whose editor a swipe opened, to be written in: its wording field takes focus.
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -352,11 +492,21 @@ export function TranslationReviewPanel({
   }, [visible, groupBy]);
   const groupName = (key: string) =>
     groupLabel?.(key) ?? (groupBy === "source" ? sourceLabels?.[key] : undefined) ?? (key || "—");
-  // Only what the reviewer chose; a group nobody has touched follows the default.
+  // Only what the reviewer chose; a group nobody has touched follows the default, which
+  // follows the filters (see `defaultGroupsOpen`).
   const [groupOpen, setGroupOpen] = useState<Readonly<Record<string, boolean>>>({});
-  const groupOpenByDefault = !(phone && (groups?.length ?? 0) > 1);
+  const groupOpenByDefault =
+    defaultGroupsOpen !== "auto"
+      ? defaultGroupsOpen
+      : groups !== null && (phone ? groups.length <= 1 : groupsFitOpen(groups, pageSize));
   const isGroupOpen = (key: string) => groupOpen[key] ?? groupOpenByDefault;
   const setGroupOpenFor = (key: string, open: boolean) => setGroupOpen((prev) => ({ ...prev, [key]: open }));
+  /** A group the reviewer works in — an editor opened in it — stays open when the default
+   *  turns (a search cleared, the rows grown past the budget): folding it would drop the
+   *  editor and whatever was typed in it. */
+  const keepGroupOpen = (key: string | undefined) => {
+    if (key !== undefined) setGroupOpen((prev) => (key in prev ? prev : { ...prev, [key]: true }));
+  };
   // The group whose large batch is waiting for a yes — and, until its confirm button
   // has mounted and taken focus, the group that asked.
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -368,6 +518,7 @@ export function TranslationReviewPanel({
     const next = { ...filter, ...patch };
     setOwnFilter(next);
     onFilterChange?.(next);
+    echoFilter(next);
     // A selection the new filter hides would be acted on unseen.
     setSelected(new Set());
   };
@@ -567,7 +718,7 @@ export function TranslationReviewPanel({
    * None where the row must not be acted on — the same conditions under which its
    * buttons are locked or absent.
    */
-  const swipeActions = (r: TranslationRow): MobileSwipeActions | null => {
+  const swipeActions = (r: TranslationRow, groupKey?: string): MobileSwipeActions | null => {
     if (!editable || lock.locked || isQueued(`row:${r.id}`)) return null;
     const missing = r.text === "";
     return {
@@ -590,6 +741,7 @@ export function TranslationReviewPanel({
           // Opens the editor rather than sending the string back: "needs a change"
           // with neither a note nor a better wording tells nobody anything.
           onCommit: () => {
+            keepGroupOpen(groupKey);
             setOpenId(r.id);
             setFocusId(r.id);
           },
@@ -622,7 +774,7 @@ export function TranslationReviewPanel({
     };
   };
 
-  const table = (list: TranslationRow[], group?: { name: string }) => (
+  const table = (list: TranslationRow[], group?: { key: string; name: string }) => (
     <DataTable<TranslationRow>
       rows={list}
       rowKey={(r) => r.id}
@@ -643,6 +795,7 @@ export function TranslationReviewPanel({
         : { storageKey })}
       isExpanded={(r) => r.id === openId}
       onRowClick={(r) => {
+        if (openId !== r.id) keepGroupOpen(group?.key);
         setFocusId(null);
         setOpenId((open) => (open === r.id ? null : r.id));
       }}
@@ -681,7 +834,7 @@ export function TranslationReviewPanel({
           </div>
         </div>
       )}
-      mobileSwipeActions={swipe ? swipeActions : undefined}
+      mobileSwipeActions={swipe ? (r) => swipeActions(r, group?.key) : undefined}
       selection={selectionFor(list)}
     />
   );
@@ -692,6 +845,13 @@ export function TranslationReviewPanel({
     const questionId = `${baseId}-confirm-${index}`;
     const targets = editable ? unreviewedRows(g.rows) : [];
     const key = `group:${g.key}`;
+    const open = isGroupOpen(g.key);
+    // A folded group renders its header and nothing else. Its body is handed over only
+    // while it is open, or when the REVIEWER folded it — so the fold animates over the
+    // rows it hides. A group folded by the default gets none: when the default turns (a
+    // search cleared over 122 areas), the groups that close would otherwise render their
+    // grown tables for the length of the fold.
+    const body = open || groupOpen[g.key] === false;
     return (
       <Disclosure
         key={g.key}
@@ -699,10 +859,10 @@ export function TranslationReviewPanel({
         headingAs={groupHeadingAs}
         title={<span id={titleId}>{name}</span>}
         hint={labels.groupCount(g.summary.unreviewed, g.summary.total)}
-        open={isGroupOpen(g.key)}
-        onOpenChange={(open) => {
-          setGroupOpenFor(g.key, open);
-          if (!open) setConfirming((c) => (c === g.key ? null : c));
+        open={open}
+        onOpenChange={(next) => {
+          setGroupOpenFor(g.key, next);
+          if (!next) setConfirming((c) => (c === g.key ? null : c));
         }}
         trailing={
           targets.length > 0 ? (
@@ -723,7 +883,7 @@ export function TranslationReviewPanel({
         }
         bodyClassName="space-y-0 px-0 pb-0 border-t border-[var(--border)]"
       >
-        {confirming === g.key && targets.length > 0 && (
+        {body && confirming === g.key && targets.length > 0 && (
           <div className="border-b border-[var(--border)] p-3">
             <AlertBanner tone="warning" size="sm">
               <div className="min-w-0 space-y-2">
@@ -764,7 +924,7 @@ export function TranslationReviewPanel({
             </AlertBanner>
           </div>
         )}
-        {table(g.rows, { name })}
+        {body && table(g.rows, { key: g.key, name })}
       </Disclosure>
     );
   };

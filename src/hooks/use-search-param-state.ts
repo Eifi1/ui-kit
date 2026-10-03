@@ -136,9 +136,24 @@ const queuedByLocation = new WeakMap<Location, QueuedQuery>();
  */
 type DataRouterProbe = { router?: { state?: { navigation?: { state?: string } } } } | null;
 const NO_DATA_ROUTER = createContext<DataRouterProbe>(null);
-const DataRouterContext: Context<DataRouterProbe> =
-  (ReactRouter as unknown as { UNSAFE_DataRouterContext?: Context<DataRouterProbe> }).UNSAFE_DataRouterContext ??
-  NO_DATA_ROUTER;
+const DataRouterContext: Context<DataRouterProbe> = readDataRouterContext();
+
+/**
+ * A static member read (so a bundler still tree-shakes the namespace), inside a `try`:
+ * a test's `vi.mock("react-router", () => ({ … }))` without the original module throws
+ * on ANY export it does not define, and it threw here at import (keksdose, 0.25.0) —
+ * the hook then runs without the refinement, as on a router without the context.
+ */
+function readDataRouterContext(): Context<DataRouterProbe> {
+  try {
+    return (
+      (ReactRouter as unknown as { UNSAFE_DataRouterContext?: Context<DataRouterProbe> }).UNSAFE_DataRouterContext ??
+      NO_DATA_ROUTER
+    );
+  } catch {
+    return NO_DATA_ROUTER;
+  }
+}
 
 /**
  * One write: `change` edits the queued query in place and says whether a param it
@@ -295,7 +310,7 @@ export type SearchParamsUpdate<V> = Partial<V> | ((prev: V) => Partial<V>);
  * The value object keeps its identity while its params do not change, so it can sit in
  * a dependency array. Requires a react-router Router.
  */
-export function useSearchParamsState<V extends Record<string, unknown>>(
+export function useSearchParamsState<V extends object>(
   fields: SearchParamFields<V>,
 ): [V, (next: SearchParamsUpdate<V>) => void] {
   const [params, write] = useQueryWriter();
