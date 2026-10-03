@@ -7,6 +7,7 @@ import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   DEFAULT_TRANSLATION_REVIEW_FILTER,
+  DEFAULT_TRANSLATION_REVIEW_SWIPE,
   REVIEW_STATUSES,
   filterTranslationRows,
   groupTranslationRows,
@@ -14,12 +15,15 @@ import {
   reviewUndo,
   reviewWrite,
   summariseRows,
+  translationReviewSwipePlan,
   unreviewedRows,
 } from "../lib/translation-review";
 import type {
   ReviewStatus,
   TranslationReviewFilter,
   TranslationReviewKey,
+  TranslationReviewSwipeAction,
+  TranslationReviewSwipeBinding,
   TranslationReviewWrite,
   TranslationRow,
   TranslationRowGroup,
@@ -33,6 +37,7 @@ import type { DataTableColumn, DataTableProps, MobileSwipeActions, SortState } f
 import { Disclosure } from "./disclosure";
 import { SearchField } from "./search-field";
 import { toast } from "./toast";
+import type { SwipeAction } from "./swipeable-row";
 import { ToggleGroup } from "./toggle-group";
 import { TranslationReviewEditor } from "./translation-review-editor";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
@@ -101,7 +106,8 @@ export interface TranslationReviewSaveInfo {
   /** The open editor, a row's approve button, a swipe on a phone card, a group's
    *  "Approve unreviewed", the selection's bulk bar, or an Undo pressed on the toast. */
   origin: TranslationReviewOrigin;
-  /** The panel shows its own toast for this write (an approval's Undo toast). */
+  /** The panel shows its own toast for this write (an approval's Undo toast, or a
+   *  swiped `clear`'s). */
   toasted: boolean;
 }
 
@@ -181,8 +187,31 @@ export interface TranslationReviewPanelProps {
    *
    * Off by default, so no existing page gains a gesture on the bump. Phones only; the
    * desktop table keeps its approve button.
+   *
+   * A BINDING instead of `true` (keksdose — Marcel's live #377 rework, 2026-10-03: *"Add
+   * the swipe options to be shown also to the settings /settings#interaction area where
+   * the other swipe options are defined"*): keksdose lets the user bind every list's
+   * swipes in Settings → Interaction, per side a primary action at the first threshold and
+   * a secondary one at a longer drag, and a fixed mapping is one its settings cannot
+   * reach. So each logical side takes an ordered ladder of
+   * {@link TranslationReviewSwipeAction}s — index 0 at the first threshold, index 1 at the
+   * longer drag, as {@link SwipeableRow} stages them:
+   *
+   *     swipe={{ end: ["approve", "clear"], start: ["edit"] }}
+   *
+   * `approve` (with Undo), `edit` (the editor, cursor in the wording — "Needs a change"),
+   * `clear` (the verdict taken back, with Undo, which stores it again; only with
+   * `onClear`). An action a row cannot offer drops out and the ladder closes up behind it
+   * ({@link translationReviewSwipePlan}): `approve` on an approved or missing string,
+   * `clear` on a row with no verdict. Every rule above still holds for every binding —
+   * no side swipes in a `readOnly` locale, under a write lock, with the editor open or
+   * the row's write out.
+   *
+   * `true` is {@link DEFAULT_TRANSLATION_REVIEW_SWIPE} — `{ end: ["approve"], start:
+   * ["edit"] }`, 0.25's mapping exactly — and `false` or nothing is no swipe. A binding
+   * turns the Undo toast on by default, as `true` does.
    */
-  swipe?: boolean;
+  swipe?: boolean | TranslationReviewSwipeBinding;
   /**
    * Answer every approval with the kit's Undo toast (`toast.undo`): a row's button, a
    * swipe, the editor's Approve, a group's and the selection's bulk approve. Undo stores
@@ -435,7 +464,9 @@ export function TranslationReviewPanel({
   const baseId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const editable = !readOnly && onSave !== undefined;
-  const undoOn = undoProp ?? (swipe || groupBy !== undefined);
+  const binding: TranslationReviewSwipeBinding | null =
+    swipe === true ? DEFAULT_TRANSLATION_REVIEW_SWIPE : swipe || null;
+  const undoOn = undoProp ?? (binding !== null || groupBy !== undefined);
 
   const [ownFilter, setOwnFilter] = useState<TranslationReviewFilter>(DEFAULT_TRANSLATION_REVIEW_FILTER);
   // The app's fields over the panel's own; a field the app leaves `undefined` is the
@@ -546,10 +577,12 @@ export function TranslationReviewPanel({
   };
 
   /** "String approved — Undo", once `targets` (as they were BEFORE the write) are
-   *  approved. Undo goes through the same queue as every write. */
-  const sayApproved = (targets: readonly TranslationRow[], description?: ReactNode) => {
+   *  approved — or, after a swiped `clear`, "String marked unreviewed — Undo". Either way
+   *  Undo puts back what the rows said before ({@link reviewUndo}), through the same queue
+   *  as every write. */
+  const sayDone = (targets: readonly TranslationRow[], description?: ReactNode, cleared = false) => {
     const back = reviewUndo(targets);
-    const message = labels.approvedToast(targets.length);
+    const message = (cleared ? labels.clearedToast : labels.approvedToast)(targets.length);
     const save = onSave;
     const clear = onClear;
     // Taking back the approval of a row that had no verdict is a clear: without
@@ -578,8 +611,19 @@ export function TranslationReviewPanel({
     if (!onSave || targets.length === 0) return false;
     const save = onSave;
     const ok = await run(key, () => save(targets.map((r) => reviewWrite(r, "APPROVED")), { origin, toasted: undoOn }));
-    if (ok && undoOn) sayApproved(targets, description);
+    if (ok && undoOn) sayDone(targets, description);
     return ok;
+  };
+
+  /** A swipe bound to `clear`: the row's verdict taken back, answered like an approval —
+   *  the Undo toast stores the verdict again. Under the row's own key, so it queues behind
+   *  (and never overlaps) an approval of the same row. */
+  const clearRow = async (row: TranslationRow) => {
+    if (!onClear || row.review === null) return;
+    const clear = onClear;
+    const keys = [{ locale: row.locale, key: row.key }];
+    const ok = await run(`row:${row.id}`, () => clear(keys, { origin: "swipe", toasted: undoOn }));
+    if (ok && undoOn) sayDone([row], row.key, true);
   };
 
   /** The editor's own save: it waits, closes and shows its errors itself, so it does
@@ -587,7 +631,7 @@ export function TranslationReviewPanel({
   const saveFromEditor = async (row: TranslationRow, write: TranslationReviewWrite) => {
     const toasted = undoOn && write.verdict === "APPROVED";
     await onSave?.([write], { origin: "editor", toasted });
-    if (toasted) sayApproved([row], row.key);
+    if (toasted) sayDone([row], row.key);
   };
 
   /**
@@ -713,29 +757,20 @@ export function TranslationReviewPanel({
     });
   }
 
-  /**
-   * A phone card's swipes: Approve toward the end, "Needs a change" toward the start.
-   * None where the row must not be acted on — the same conditions under which its
-   * buttons are locked or absent.
-   */
-  const swipeActions = (r: TranslationRow, groupKey?: string): MobileSwipeActions | null => {
-    if (!editable || lock.locked || isQueued(`row:${r.id}`)) return null;
+  /** One bound swipe action on one row, as {@link SwipeableRow} draws and commits it. */
+  const swipeAction = (r: TranslationRow, id: TranslationReviewSwipeAction, groupKey?: string): SwipeAction => {
     const missing = r.text === "";
-    return {
-      end:
-        missing || r.status === "approved"
-          ? []
-          : [
-              {
-                label: labels.approve,
-                icon: <Check className="size-4" aria-hidden />,
-                onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
-                className: "bg-[var(--success)]",
-                armedClassName: "bg-[var(--success)]",
-              },
-            ],
-      start: [
-        {
+    switch (id) {
+      case "approve":
+        return {
+          label: labels.approve,
+          icon: <Check className="size-4" aria-hidden />,
+          onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
+          className: "bg-[var(--success)]",
+          armedClassName: "bg-[var(--success)]",
+        };
+      case "edit":
+        return {
           label: missing ? labels.suggest : labels.flag,
           icon: <PencilLine className="size-4" aria-hidden />,
           // Opens the editor rather than sending the string back: "needs a change"
@@ -747,8 +782,32 @@ export function TranslationReviewPanel({
           },
           className: missing ? "bg-[var(--brand)]" : "bg-[var(--danger)]",
           armedClassName: missing ? "bg-[var(--brand-hover)]" : "bg-[var(--danger-hover)]",
-        },
-      ],
+        };
+      case "clear":
+        return {
+          label: labels.reset,
+          icon: <RotateCcw className="size-4" aria-hidden />,
+          onCommit: () => void clearRow(r),
+          // A step back, not a verdict: neither the approval's green nor the send-back's red.
+          className: "bg-[var(--text-muted)]",
+          armedClassName: "bg-[var(--text-secondary)]",
+        };
+    }
+  };
+
+  /**
+   * A phone card's swipes: the binding ({@link TranslationReviewPanelProps.swipe}) resolved
+   * against the row, each side's ladder closed up over what the row cannot offer. None
+   * where the row must not be acted on — the same conditions under which its buttons are
+   * locked or absent.
+   */
+  const swipeActions = (r: TranslationRow, groupKey?: string): MobileSwipeActions | null => {
+    if (!binding || !editable || lock.locked || isQueued(`row:${r.id}`)) return null;
+    const plan = translationReviewSwipePlan(binding, r, { canClear: onClear !== undefined });
+    if (plan.start.length === 0 && plan.end.length === 0) return null;
+    return {
+      start: plan.start.map((id) => swipeAction(r, id, groupKey)),
+      end: plan.end.map((id) => swipeAction(r, id, groupKey)),
     };
   };
 
@@ -834,7 +893,7 @@ export function TranslationReviewPanel({
           </div>
         </div>
       )}
-      mobileSwipeActions={swipe ? (r) => swipeActions(r, group?.key) : undefined}
+      mobileSwipeActions={binding ? (r) => swipeActions(r, group?.key) : undefined}
       selection={selectionFor(list)}
     />
   );
