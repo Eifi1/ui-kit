@@ -213,6 +213,9 @@
      journey to the database, this one an ACTION's outcome. Emerald rather than the
      money teal, so a "resolved" chip cannot be misread as an inflow. */
   --success: #047857;             /* emerald-700 */
+  /* Text on a `--success` fill (0.26: a swipe's approve panel) — white here, the
+     darkest emerald in dark mode, where the fill is a pastel and white text failed. */
+  --success-contrast: #ffffff;
   --success-border: #6ee7b7;      /* emerald-300 */
   --success-bg: #d1fae5;          /* emerald-100 */
 }
@@ -237,6 +240,7 @@
   --info-bg: rgba(12, 74, 110, 0.25);
 
   --success: #6ee7b7;             /* emerald-300 */
+  --success-contrast: #022c22;    /* emerald-950 */
   --success-border: rgba(4, 120, 87, 0.6);
   --success-bg: rgba(6, 78, 59, 0.25);
 }

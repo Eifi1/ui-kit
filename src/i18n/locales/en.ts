@@ -127,6 +127,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       localeProgress: (approved, total) => `${n(approved)}/${n(total)}`,
       exportCorrections: (count) => `Export corrections (${n(count)})`,
       approvedToast: (count) => (count === 1 ? "String approved" : `${n(count)} strings approved`),
+      clearedToast: (count) => (count === 1 ? "String marked unreviewed" : `${n(count)} strings marked unreviewed`),
       groupCount: (unreviewed, total) => `${n(unreviewed)} unreviewed / ${n(total)}`,
       approveGroup: (count) => `Approve unreviewed (${n(count)})`,
       confirmGroup: (count, group) =>

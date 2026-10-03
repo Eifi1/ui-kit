@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_UI_KIT_LABELS } from "../../i18n/defaults";
 import { kitLabelStrings } from "../../i18n/review";
 import {
+  DEFAULT_TRANSLATION_REVIEW_SWIPE,
+  TRANSLATION_REVIEW_SWIPE_ACTIONS,
   dropReviews,
   filterTranslationRows,
   flattenStrings,
@@ -20,10 +22,11 @@ import {
   summariseRows,
   toApiWrite,
   translationCorrections,
+  translationReviewSwipePlan,
   translationRows,
   unreviewedRows,
 } from "../translation-review";
-import type { ApiTranslationReview, TranslationReview } from "../translation-review";
+import type { ApiTranslationReview, TranslationReview, TranslationReviewSwipeAction } from "../translation-review";
 
 /**
  * The pure half of the translation review, ported from keksdose's and kastlan's
@@ -429,5 +432,73 @@ describe("0.25: groups and Undo (keksdose live #377)", () => {
       ],
       clears: [{ locale: "fr", key: "budget.hint" }],
     });
+  });
+});
+
+describe("swipe bindings (keksdose, live #377 rework: the swipes bound in its settings)", () => {
+  // missing (no suggestion) · missing with a suggested translation · unreviewed · changed ·
+  // needs a change · approved.
+  const rows = translationRows({
+    locale: "fr",
+    strings: { "a.unreviewed": "Un", "a.changed": "Deux", "a.flagged": "Trois", "a.approved": "Quatre" },
+    reference: {
+      "a.missing": "Zero",
+      "a.suggested": "Half",
+      "a.unreviewed": "One",
+      "a.changed": "Two",
+      "a.flagged": "Three",
+      "a.approved": "Four",
+    },
+    reviews: [
+      review({ key: "a.suggested", text: "", referenceText: "Half", verdict: "NEEDS_CHANGE", suggestion: "Demi" }),
+      review({ key: "a.changed", text: "Deux!", referenceText: "Two" }),
+      review({ key: "a.flagged", text: "Trois", referenceText: "Three", verdict: "NEEDS_CHANGE", note: "n" }),
+      review({ key: "a.approved", text: "Quatre", referenceText: "Four" }),
+    ],
+  });
+  const row = (key: string) => rows.find((r) => r.key === key)!;
+  const plan = (binding: Parameters<typeof translationReviewSwipePlan>[0], key: string, canClear = true) =>
+    translationReviewSwipePlan(binding, row(key), { canClear });
+
+  it("lists the ids a settings page offers, and defaults to 0.25's mapping", () => {
+    expect(TRANSLATION_REVIEW_SWIPE_ACTIONS).toEqual(["approve", "edit", "clear"]);
+    expect(DEFAULT_TRANSLATION_REVIEW_SWIPE).toEqual({ start: ["edit"], end: ["approve"] });
+    expect(Object.isFrozen(DEFAULT_TRANSLATION_REVIEW_SWIPE)).toBe(true);
+  });
+
+  it("offers approve where there is a text not yet approved, clear where there is a verdict, edit everywhere", () => {
+    const all = { end: ["approve", "clear", "edit"] } as const;
+    expect(
+      ["a.missing", "a.suggested", "a.unreviewed", "a.changed", "a.flagged", "a.approved"].map((key) => [
+        row(key).status,
+        plan(all, key).end,
+      ]),
+    ).toEqual([
+      ["missing", ["edit"]],
+      ["needs_change", ["clear", "edit"]],
+      ["unreviewed", ["approve", "edit"]],
+      ["changed", ["approve", "clear", "edit"]],
+      ["needs_change", ["approve", "clear", "edit"]],
+      ["approved", ["clear", "edit"]],
+    ]);
+  });
+
+  it("closes a ladder up over what drops out, per side, in the bound order", () => {
+    const binding = { end: ["approve", "clear"], start: ["clear", "edit"] } as const;
+    expect(plan(binding, "a.approved")).toEqual({ end: ["clear"], start: ["clear", "edit"] });
+    expect(plan(binding, "a.unreviewed")).toEqual({ end: ["approve"], start: ["edit"] });
+    expect(plan({ end: ["clear", "approve"] }, "a.flagged")).toEqual({ end: ["clear", "approve"], start: [] });
+  });
+
+  it("drops clear without onClear, a duplicate, and an id it does not know", () => {
+    expect(plan({ end: ["clear", "approve"] }, "a.approved", false)).toEqual({ end: [], start: [] });
+    expect(plan({ end: ["approve", "approve"], start: ["edit", "edit"] }, "a.unreviewed")).toEqual({
+      end: ["approve"],
+      start: ["edit"],
+    });
+    // A binding stored by another version, or an app's own empty slot.
+    const stored = ["none", "needsChange", "approve"] as unknown as TranslationReviewSwipeAction[];
+    expect(plan({ end: stored }, "a.unreviewed")).toEqual({ end: ["approve"], start: [] });
+    expect(plan({}, "a.unreviewed")).toEqual({ end: [], start: [] });
   });
 });

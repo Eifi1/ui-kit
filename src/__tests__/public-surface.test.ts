@@ -148,7 +148,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // roleOfColumn) — Kurvenschmiede's columns input, keksdose's import map step.
   // 0.25.0 (+4): useSearchParamsState (keksdose #378); groupTranslationRows,
   // unreviewedRows, reviewUndo — the review panel's groups and Undo (keksdose #377).
-  ["@eifi1/ui-kit", barrel, 600],
+  // 0.26.0 (+3): TRANSLATION_REVIEW_SWIPE_ACTIONS, DEFAULT_TRANSLATION_REVIEW_SWIPE,
+  // translationReviewSwipePlan — the review panel's swipe bindings (keksdose #377).
+  ["@eifi1/ui-kit", barrel, 603],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

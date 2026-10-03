@@ -770,6 +770,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       exportCorrections: (count) => `Exportar correcciones (${n(count)})`,
       failed: "No ha funcionado. Inténtelo de nuevo.",
       approvedToast: (count) => (count === 1 ? "Texto aprobado" : `${n(count)} textos aprobados`),
+      clearedToast: (count) => (count === 1 ? "Texto marcado como sin revisar" : `${n(count)} textos marcados como sin revisar`),
       // "sin revisar" does not agree with the count, so one form serves both.
       groupCount: (unreviewed, total) => `${n(unreviewed)} sin revisar / ${n(total)}`,
       approveGroup: (count) => `Aprobar los sin revisar (${n(count)})`,

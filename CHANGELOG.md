@@ -20,6 +20,18 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.26.0](https://github.com/Eifi1/ui-kit/compare/v0.25.1...v0.26.0) (2026-10-03)
+
+### Added
+
+* export the review panel's swipe binding types and helpers ([f623fad](https://github.com/Eifi1/ui-kit/commit/f623fad8f351e4d31346cea3d2f6b58503fa2f0c))
+* **i18n:** translationReview.clearedToast in every language ([dc8c7fa](https://github.com/Eifi1/ui-kit/commit/dc8c7faf85678301803ab999c17ed6125e3ae4de))
+* **translation-review:** swipe takes a binding — approve, edit, clear per side and stage ([517b401](https://github.com/Eifi1/ui-kit/commit/517b40103e1e4b76c444399726d1ccc86296b274)), references [#377](https://github.com/Eifi1/ui-kit/issues/377)
+
+### Fixed
+
+* **swipe:** swipe panels use their fill's contrast text colour, readable in dark mode ([7c8ac24](https://github.com/Eifi1/ui-kit/commit/7c8ac245c50a068a9185e1572be75cdb942e4797))
+
 ## [0.25.1](https://github.com/Eifi1/ui-kit/compare/v0.25.0...v0.25.1) (2026-10-03)
 
 ### Fixed

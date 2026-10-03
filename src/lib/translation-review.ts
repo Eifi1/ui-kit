@@ -512,6 +512,115 @@ export function dropReviews<T extends TranslationReviewKey>(
   return prev.filter((r) => !gone.has(`${r.locale}|${r.key}`));
 }
 
+// ── Swipe bindings ──────────────────────────────────────────────────────────────
+
+/**
+ * What a phone card's swipe can be bound to in `TranslationReviewPanel`'s `swipe`
+ * (keksdose — Marcel's live #377 rework, 2026-10-03: *"Add the swipe options to be shown
+ * also to the settings /settings#interaction area where the other swipe options are
+ * defined"*). keksdose lets the user bind every list's swipes there — per side, a primary
+ * action at the first threshold and a secondary one at a longer drag — and lists each
+ * surface's ids in its `SWIPE_ACTIONS`; this is the translation list's, in the order a
+ * settings page offers them.
+ *
+ * - `approve` — the string is right as it stands. With the panel's Undo toast.
+ * - `edit` — open the editor with the cursor in the wording: "Needs a change" (or
+ *   "Suggest translation" on a missing string). Writes nothing; the editor does.
+ * - `clear` — take the verdict back: unreviewed again. With the Undo toast, which stores
+ *   the verdict again.
+ *
+ * THERE IS NO SEPARATE "needs a change". The editor has no verdict to preselect: Approve
+ * and "Needs a change" stand side by side in it, and "Needs a change" takes a note or a
+ * different wording — a verdict without either tells whoever fixes the string nothing, so
+ * a swipe never sends one blind (0.25). The one honest thing a "needs a change" swipe can
+ * do is therefore open the editor with the cursor in the wording — which is `edit`, and
+ * `edit` already says "Needs a change" on the card. A second id doing the same would arm
+ * a second threshold that does what the first already did: the duplicate keksdose's
+ * `resolveSwipePlan` drops for exactly that reason.
+ */
+export const TRANSLATION_REVIEW_SWIPE_ACTIONS = ["approve", "edit", "clear"] as const;
+
+/** One of {@link TRANSLATION_REVIEW_SWIPE_ACTIONS}. */
+export type TranslationReviewSwipeAction = (typeof TRANSLATION_REVIEW_SWIPE_ACTIONS)[number];
+
+/**
+ * Which swipe does what on a phone card — `TranslationReviewPanel`'s `swipe`. Each side is
+ * an ordered ladder, exactly as `SwipeableRow` and DataTable's `mobileSwipeActions` model
+ * one: index 0 commits at the first threshold, index 1 at the longer drag (and so on — the
+ * thresholds spread evenly over the card's width). A side left out, or empty, does not
+ * swipe.
+ *
+ * LOGICAL SIDES: `end` is a drag toward the reading end of the line — right in a
+ * left-to-right page, left in a right-to-left one — and `start` the other way, so one
+ * binding holds in both directions. An app whose settings store physical sides (keksdose's
+ * `right`/`left`) hands `right` as `end` for a left-to-right page.
+ */
+export interface TranslationReviewSwipeBinding {
+  /** A drag toward the reading START, nearest threshold first. */
+  start?: readonly TranslationReviewSwipeAction[];
+  /** A drag toward the reading END, nearest threshold first. */
+  end?: readonly TranslationReviewSwipeAction[];
+}
+
+/** What `swipe={true}` means — 0.25's fixed mapping: approve toward the end, open the
+ *  editor ("Needs a change") toward the start. A settings page's "reset" goes back here. */
+export const DEFAULT_TRANSLATION_REVIEW_SWIPE: TranslationReviewSwipeBinding = Object.freeze({
+  start: Object.freeze(["edit"] as const),
+  end: Object.freeze(["approve"] as const),
+});
+
+/** The ladders one row actually offers, from a {@link TranslationReviewSwipeBinding}. */
+export interface TranslationReviewSwipePlan {
+  start: TranslationReviewSwipeAction[];
+  end: TranslationReviewSwipeAction[];
+}
+
+/**
+ * The binding resolved against one row — keksdose's `resolveSwipePlan`, for this list.
+ * An id the row cannot offer DROPS OUT and the ladder closes up behind it, so the second
+ * stage becomes the first rather than the side going dead behind an unreachable first
+ * stage (or arming a threshold that does nothing):
+ *
+ * - `approve`: not on a missing string (nothing to approve) or an approved one (it would
+ *   say it again) — the rows that have no approve button either;
+ * - `clear`: not without `canClear` (the app passed no `onClear`), and not on a row with
+ *   no verdict to take back (unreviewed; missing with no suggestion);
+ * - `edit`: on every row;
+ * - an id named twice on one side: the second time (a longer drag to the same effect);
+ * - an id this version does not know (a binding stored by another version, an app's own
+ *   "none" slot): dropped like one that does not apply.
+ *
+ * Only what the ROW decides. Whether the panel may write at all — `readOnly`, no
+ * `onSave`, a write lock, the row's own write still out — is the panel's, and then no
+ * side swipes.
+ */
+export function translationReviewSwipePlan(
+  binding: TranslationReviewSwipeBinding,
+  row: TranslationRow,
+  { canClear = false }: { canClear?: boolean } = {},
+): TranslationReviewSwipePlan {
+  const offers = (id: TranslationReviewSwipeAction): boolean => {
+    switch (id) {
+      case "approve":
+        return row.text !== "" && row.status !== "approved";
+      case "edit":
+        return true;
+      case "clear":
+        return canClear && row.review !== null;
+      default:
+        return false;
+    }
+  };
+  const side = (ids: readonly TranslationReviewSwipeAction[] | undefined): TranslationReviewSwipeAction[] => {
+    const out: TranslationReviewSwipeAction[] = [];
+    for (const id of ids ?? []) {
+      if (!out.includes(id) && offers(id)) out.push(id);
+    }
+    return out;
+  };
+  return { start: side(binding.start), end: side(binding.end) };
+}
+
 // ── Export ──────────────────────────────────────────────────────────────────────
 
 /**

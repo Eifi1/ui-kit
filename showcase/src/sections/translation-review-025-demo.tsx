@@ -9,6 +9,7 @@ import {
   translationRows,
   type TranslationReview,
   type TranslationReviewKey,
+  type TranslationReviewSwipeBinding,
   type TranslationReviewWrite,
 } from "../../../src/lib/translation-review";
 import { Example, Note } from "../lib/section";
@@ -22,6 +23,10 @@ import { Example, Note } from "../lib/section";
  * 0.25.1 — "Many areas" swaps in a catalogue of keksdose's shape (122 areas, ~4700
  * synthetic strings), on which 0.25.0 opened every group on a wide screen; and the
  * "Groups start" switch is `defaultGroupsOpen`.
+ *
+ * The "Swipe" switch binds the swipes as an app's settings would (keksdose, Marcel's live
+ * #377 rework: "Add the swipe options to be shown also to the settings
+ * /settings#interaction area where the other swipe options are defined").
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
@@ -125,6 +130,21 @@ function manyAreas(): { en: Record<string, string>; fr: Record<string, string> }
 
 type Opening = "auto" | "open" | "folded";
 
+/** The "Swipe" switch: `true`, two bindings a settings page could store, and off. */
+type SwipeChoice = "default" | "ladder" | "rebound" | "off";
+const SWIPES: Record<SwipeChoice, { value: boolean | TranslationReviewSwipeBinding; source: string }> = {
+  default: { value: true, source: "swipe" },
+  ladder: {
+    value: { end: ["approve", "clear"], start: ["edit"] },
+    source: 'swipe={{ end: ["approve", "clear"], start: ["edit"] }}',
+  },
+  rebound: {
+    value: { end: ["edit"], start: ["clear", "approve"] },
+    source: 'swipe={{ end: ["edit"], start: ["clear", "approve"] }}',
+  },
+  off: { value: false, source: "swipe={false}" },
+};
+
 export function TranslationReview025Demo() {
   const [reviews, setReviews] = useState<TranslationReview[]>(SEED);
   const [grouped, setGrouped] = useState(true);
@@ -132,6 +152,7 @@ export function TranslationReview025Demo() {
   const [rtl, setRtl] = useState(false);
   const [many, setMany] = useState(false);
   const [opening, setOpening] = useState<Opening>("auto");
+  const [swipe, setSwipe] = useState<SwipeChoice>("default");
   const [log, setLog] = useState<string[]>([]);
 
   const catalogue = useMemo(() => (many ? manyAreas() : { en: flattenStrings(EN), fr: flattenStrings(FR) }), [many]);
@@ -159,7 +180,7 @@ export function TranslationReview025Demo() {
   return (
     <Example
       label="Swipe and group — 0.25"
-      hint="on a phone: swipe a card toward the end to approve, toward the start for “Needs a change”"
+      hint="on a phone: swipe a card — by default toward the end to approve, toward the start for “Needs a change”"
     >
       <div className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -178,6 +199,22 @@ export function TranslationReview025Demo() {
           <Button variant="ghost" onClick={() => setReviews(SEED)}>
             Start over
           </Button>
+        </div>
+        <div className="min-w-0 space-y-1">
+          <ToggleGroup<SwipeChoice>
+            aria-label="Swipe"
+            size="sm"
+            overflow="wrap"
+            value={swipe}
+            onChange={setSwipe}
+            options={[
+              { value: "default", label: "Default" },
+              { value: "ladder", label: "Two stages" },
+              { value: "rebound", label: "Rebound" },
+              { value: "off", label: "Off" },
+            ]}
+          />
+          <p className="break-words font-mono text-xs text-[var(--text-secondary)]">{SWIPES[swipe].source}</p>
         </div>
         {grouped && (
           <div className="max-w-sm">
@@ -202,7 +239,7 @@ export function TranslationReview025Demo() {
               referenceLabel="English"
               onSave={save}
               onClear={clear}
-              swipe
+              swipe={SWIPES[swipe].value}
               groupBy={grouped ? "namespace" : undefined}
               defaultGroupsOpen={opening === "auto" ? "auto" : opening === "open"}
               // The showcase's example heading is an h3.
@@ -233,6 +270,16 @@ export function TranslationReview025Demo() {
           start folded once opening them all would render more than 100 rows — “Many areas” is keksdose&apos;s
           catalogue, which 0.25.0 opened as 122 tables. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
           {code("true")}, {code("false")}) overrides it; an area the reviewer opens or folds keeps that.
+        </Note>
+        <Note>
+          {code("swipe")} also takes a binding, for an app whose users bind their swipes in its settings (keksdose
+          lists every list&apos;s there): per logical side an ordered ladder of {code('"approve"')},{" "}
+          {code('"edit"')} and {code('"clear"')} — index 0 at the first threshold, index 1 at the longer drag. An
+          action a card cannot offer drops out and the ladder closes up: “Two stages” on an approved string is just
+          “Mark unreviewed” toward the end, on an unreviewed one just “Approve”. {code('"clear"')} needs{" "}
+          {code("onClear")} and answers with Undo, which stores the verdict again. {code("true")} is{" "}
+          {code('{ end: ["approve"], start: ["edit"] }')}; there is no separate “needs a change”, because{" "}
+          {code('"edit"')} already is one — it opens the editor with the cursor in the wording.
         </Note>
       </div>
     </Example>

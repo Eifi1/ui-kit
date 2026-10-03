@@ -94,6 +94,10 @@ export interface TranslationReviewLabels {
   /** 0.25: asked first when a group's bulk approve is larger than a page — more than the
    *  reviewer can have had on screen. `group` is the group's name. */
   confirmGroup: (count: number, group: string) => string;
+  /** The Undo toast after a swipe bound to `clear` took a verdict back (keksdose, live
+   *  #377 rework: the swipes bound in its settings) — one string, or a batch of them.
+   *  The swipe itself is named by {@link reset}. */
+  clearedToast: (count: number) => string;
 }
 
 export const DEFAULT_TRANSLATION_REVIEW_LABELS: TranslationReviewLabels = {
@@ -150,6 +154,7 @@ export const DEFAULT_TRANSLATION_REVIEW_LABELS: TranslationReviewLabels = {
     count === 1
       ? `Approve the unreviewed string in ${group}?`
       : `Approve all ${count} unreviewed strings in ${group}, including those not on screen?`,
+  clearedToast: (count) => (count === 1 ? "String marked unreviewed" : `${count} strings marked unreviewed`),
 };
 
 /** A status's word, from the namespace's five. */

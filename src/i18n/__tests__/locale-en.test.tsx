@@ -101,6 +101,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "tour.step",
       "translationReview.approveGroup",
       "translationReview.approvedToast",
+      "translationReview.clearedToast",
       "translationReview.confirmGroup",
       "translationReview.exportCorrections",
       "translationReview.filterCount",

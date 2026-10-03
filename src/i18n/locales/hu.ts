@@ -774,6 +774,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
       // No plural after a numeral (convention 2).
       approvedToast: (count) => (count === 1 ? "Szöveg jóváhagyva" : `${n(count)} szöveg jóváhagyva`),
+      clearedToast: (count) => (count === 1 ? "Szöveg ellenőrizetlenként megjelölve" : `${n(count)} szöveg ellenőrizetlenként megjelölve`),
       groupCount: (unreviewed, total) => `${n(unreviewed)} ellenőrizetlen / ${n(total)}`,
       approveGroup: (count) => `Ellenőrizetlenek jóváhagyása (${n(count)})`,
       // Opens with the quoted name, as `filePicker`'s refusals: no case ending ("-ban/-ben")

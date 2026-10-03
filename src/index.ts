@@ -395,6 +395,10 @@ export {
   groupTranslationRows,
   unreviewedRows,
   reviewUndo,
+  // 0.26: swipe bindings for an app's Settings → Interaction (keksdose #377 rework).
+  TRANSLATION_REVIEW_SWIPE_ACTIONS,
+  DEFAULT_TRANSLATION_REVIEW_SWIPE,
+  translationReviewSwipePlan,
 } from "./lib/translation-review";
 export type {
   TranslationVerdict,
@@ -411,6 +415,8 @@ export type {
   TranslationCorrection,
   TranslationRowGroup,
   TranslationReviewUndo,
+  TranslationReviewSwipeAction,
+  TranslationReviewSwipeBinding,
 } from "./lib/translation-review";
 export {
   TranslationReviewPanel,
