@@ -1614,7 +1614,10 @@ export function FieldHint({
   ...rest
 }: FieldHintProps) {
   return (
-    <Tooltip label={label} side={side} portal>
+    // `tap="toggle"` (0.25): the "?" exists only to explain, so a tap on a phone shows
+    // the bubble and the next tap hides it — the touch rule (no bubble left behind by a
+    // tap) would otherwise make it show nothing at all.
+    <Tooltip label={label} side={side} portal tap="toggle">
       <button
         {...rest}
         // `type` after the spread, not before. These render inside forms — that is the
