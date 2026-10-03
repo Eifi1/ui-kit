@@ -17,6 +17,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Button, Textarea } from "../components/ui";
+import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
 import { FeedbackAttachmentField, type FeedbackAttachmentErrorInfo } from "./feedback-attachment";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
@@ -539,6 +540,8 @@ export function FeedbackNoteEditor({
           maxBytes={attachment.maxBytes}
           onError={attachment.onError}
           onCaptureScreenshot={attachment.onCaptureScreenshot}
+          buttonVariant={attachment.buttonVariant}
+          buttonSize={attachment.buttonSize}
           // Within THIS editor's subtree, not on `document`: the editor sits
           // inline on a page that has other fields, so a paste made in one of
           // them is meant for that one. The textarea above is where the caret
@@ -560,8 +563,9 @@ export function FeedbackNoteEditor({
 }
 
 /** What {@link FeedbackNoteEditor} needs in order to offer a picture with the
- *  note: the same four things {@link FeedbackAttachmentField} takes, so the
- *  reply path is held to the app's own limits rather than to the defaults. */
+ *  note: the same things {@link FeedbackAttachmentField} takes, so the reply path is
+ *  held to the app's own limits — and drawn in its own look — rather than the
+ *  defaults. */
 export interface FeedbackNoteAttachment {
   labels: FeedbackAttachmentLabels;
   accept?: string[];
@@ -569,6 +573,19 @@ export interface FeedbackNoteAttachment {
   /** `info` (0.23.0) names the refused file and the limit. */
   onError?: (kind: "type" | "size", info: FeedbackAttachmentErrorInfo) => void;
   onCaptureScreenshot?: () => Promise<File | null>;
+  /**
+   * The add and capture buttons' look (0.25.0) — the field's `buttonVariant` (0.24.0),
+   * Button's own `variant`. Default `"secondary"`, as before.
+   *
+   * The note editor sits inline in a triage panel, and its buttons end in a ghost
+   * Cancel and a brand Save: two bordered full-size attachment buttons above them read
+   * as a second form. The field could already be told otherwise; the editor builds it
+   * itself and had nowhere to say so.
+   */
+  buttonVariant?: ButtonVariant;
+  /** The add and capture buttons' size (0.25.0) — the field's `buttonSize`. Default
+   *  `"md"`; `"sm"` draws their icons at 14px. */
+  buttonSize?: ButtonSize;
 }
 
 /**

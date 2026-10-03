@@ -294,14 +294,16 @@ describe("ColumnRoleTable", () => {
   it("marks the required roles where some are not, and not a group's members", () => {
     render(<Bank />);
     const select = screen.getByRole("combobox", { name: "What does column “Soll” hold?" });
+    // Shown with the short mark (0.25), named with the word — see column-mapper-required-025.
     expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Ignore",
-      "Booking date (required)",
+      "Booking date *",
       "Amount",
       "Debit",
       "Credit",
       "Payee",
     ]);
+    expect(within(select).getByRole("option", { name: "Booking date (required)" })).toBeInTheDocument();
   });
 
   it("puts bodyProps on the <tbody> and rowProps on each previewed row", () => {

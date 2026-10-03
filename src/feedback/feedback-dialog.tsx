@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
+import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Modal } from "../components/modal";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -151,6 +152,21 @@ interface FeedbackDialogBaseProps {
    * dialog's behaviour until 0.14.2 (keksdose K1: its backend takes title-only reports).
    */
   requireBody?: boolean;
+  /**
+   * The attachment field's add and capture buttons: its `buttonVariant` (0.25.0),
+   * Button's own `variant`. Default `"secondary"`, the look they always had.
+   *
+   * The field took `buttonVariant` / `buttonSize` in 0.24.0 (keksdose's support chat),
+   * but the dialog builds its field itself and passed neither, so a host that wanted
+   * quieter buttons here — a dialog that already ends in a row of Cancel / Send — had
+   * no way to say so short of rebuilding the dialog. Named after the dialog's other
+   * attachment options (`attachmentAccept`, `onAttachmentError`) and handed through
+   * unchanged, in both `attachments` modes.
+   */
+  attachmentButtonVariant?: ButtonVariant;
+  /** The attachment field's `buttonSize` (0.25.0) — with {@link attachmentButtonVariant}.
+   *  Default `"md"`; `"sm"` draws the paperclip and camera at 14px. */
+  attachmentButtonSize?: ButtonSize;
 }
 
 /** One attachment — a screenshot, a picked or a pasted image; a second replaces
@@ -216,6 +232,8 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
     maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
     onCaptureScreenshot,
     requireBody = true,
+    attachmentButtonVariant,
+    attachmentButtonSize,
   } = props;
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -299,6 +317,9 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
     accept: attachmentAccept,
     maxBytes: maxAttachmentBytes,
     onCaptureScreenshot,
+    // Left undefined they are the field's own defaults (secondary / md).
+    buttonVariant: attachmentButtonVariant,
+    buttonSize: attachmentButtonSize,
     // On `document`, not on the panel: the Modal focuses its own panel on open
     // and traps Tab inside it, so while this dialog is up every paste in the
     // page is meant for it — including the one made with nothing in

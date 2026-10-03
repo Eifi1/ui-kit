@@ -102,8 +102,16 @@ export interface ColumnMapperLabels {
   /** The role select's "no role" option. */
   ignore: string;
   /** A required role in the select — only while some role is NOT required: when
-   *  every one is, the mark tells no role from another (0.24, Kurvenschmiede). */
+   *  every one is, the mark tells no role from another (0.24, Kurvenschmiede). Since
+   *  0.25 this is what a screen reader says for the option (its `aria-label`); the
+   *  option SHOWS {@link requiredRoleShort}. */
   requiredRole: (role: string) => string;
+  /** The same required role as the select shows it (0.25): the role's name and a short
+   *  mark, so the mark does not cut the name short in a phone-width column — "Booking
+   *  date (re…" was all keksdose's closed select had room for. Spoken as
+   *  {@link requiredRole}. Optional, so a complete `UiKitLabels` typed before 0.25
+   *  still compiles; the asterisk needs no translation in most languages. */
+  requiredRoleShort?: (role: string) => string;
   /** Under the preview, when it shows fewer rows than were read. */
   previewOf: (shown: number, total: number) => string;
   /** A required group's roles, already joined as a list with "or". */
@@ -111,6 +119,10 @@ export interface ColumnMapperLabels {
   /** What the table still needs, already joined as a list with "and". */
   missing: (roles: string) => string;
 }
+
+/** {@link ColumnMapperLabels.requiredRoleShort}'s English — and its fallback for a
+ *  provider whose labels predate the key. */
+const markedShort = (role: string) => `${role} *`;
 
 export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   paste: "Paste a table",
@@ -139,6 +151,7 @@ export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   roleOf: (column) => `What does column “${column}” hold?`,
   ignore: "Ignore",
   requiredRole: (role) => `${role} (required)`,
+  requiredRoleShort: markedShort,
   previewOf: (shown, total) =>
     shown === 1
       ? `The first of ${total} rows`
@@ -264,11 +277,22 @@ export interface ColumnRoleTableProps<
  *
  * Picking a role another column holds MOVES it ({@link assignColumnRole}). What the
  * table still needs is named under it — a required group as "either Amount, Debit or
- * Credit". Required roles say "(required)" in the list only where some role is not
+ * Credit". Required roles are marked in the list only where some role is not
  * (0.24): Kurvenschmiede's roles are all required, so the mark told no option from
  * another, and on a phone it cut the role's own name short ("Zeit (s) (erforderl…")
  * — the part of the option the reader has to read. The "Still needed" line already
  * says what is missing; a mark that distinguishes nothing is only noise.
+ *
+ * Where the mark does tell roles apart, it is short (0.25): keksdose's bank roles, on
+ * a phone, still showed "Booking date (re…" in the closed select. The option shows
+ * "Booking date *" ({@link ColumnMapperLabels.requiredRoleShort}) and is NAMED "Booking
+ * date (required)" ({@link ColumnMapperLabels.requiredRole}, its `aria-label`), so a
+ * screen reader hears the word rather than "star". And no role is cut at all: each
+ * column is at least as wide as its select's longest option — the select's own width,
+ * which a table cell otherwise ignores for a `w-full` control — up to 14rem, the width
+ * the column's name and values already stop at. A long role name ("Date de
+ * comptabilisation", "Betrag (mit Vorzeichen)") widens the columns, and the edge fade
+ * says there are more of them to scroll to.
  *
  * The table scrolls sideways inside its own box (the kit {@link Table}'s wrapper, a
  * named, keyboard-reachable region while it overflows), so a wide export never widens
@@ -324,7 +348,7 @@ export function ColumnRoleTable<
       ? labelOf(gap[0])
       : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
   );
-  // "(required)" only where it tells one option from another.
+  // The required mark only where it tells one option from another.
   const markRequired = roles.some((role) => role.required !== true);
 
   // The Table's own scroll wrapper — the `<table>`'s parent — is what overflows; the
@@ -373,6 +397,11 @@ export function ColumnRoleTable<
                     <Select
                       size="sm"
                       className="w-full"
+                      // Its own width (the longest option) rather than the cell's: a cell
+                      // takes no width from a `w-full` select, so the role's name was
+                      // cut at the column's 9rem minimum. Stretched to the cell when that
+                      // is wider; capped where the column's name and values stop.
+                      selectClassName="w-auto min-w-full max-w-56"
                       aria-label={labels.roleOf(name)}
                       value={role ?? ""}
                       disabled={disabled}
@@ -397,13 +426,23 @@ export function ColumnRoleTable<
                       }
                     >
                       <option value="">{labels.ignore}</option>
-                      {roles.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.required === true && markRequired
-                            ? labels.requiredRole(option.label)
-                            : option.label}
-                        </option>
-                      ))}
+                      {roles.map((option) => {
+                        const marked = option.required === true && markRequired;
+                        return (
+                          <option
+                            key={option.value}
+                            value={option.value}
+                            // The short mark on screen, the word for a screen reader.
+                            aria-label={
+                              marked ? labels.requiredRole(option.label) : undefined
+                            }
+                          >
+                            {marked
+                              ? (labels.requiredRoleShort ?? markedShort)(option.label)
+                              : option.label}
+                          </option>
+                        );
+                      })}
                     </Select>
                   </TableHeaderCell>
                 );
