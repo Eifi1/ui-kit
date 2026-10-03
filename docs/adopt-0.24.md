@@ -72,3 +72,12 @@ live.
 
 - Nothing to change: the Textarea fix and the "(required)" rule apply on the bump,
   and the preview's edge fade shows on a phone.
+
+## 0.24.1
+
+- **tailwind-merge ≥ 3.7 (keksdose):** the kit now requires `tailwind-merge ^3.7.0`
+  (was `^3.3.0`). AmountInput's `inputClassName` beats the kit's end padding only
+  because `px-2` replaces `pe-3` in the merge, which tailwind-merge does from 3.7.0;
+  an app on 3.3–3.6 satisfied the old range, npm deduped the kit onto it, and the cell
+  silently kept 12px at its end. If your lockfile holds an older tailwind-merge, the
+  bump moves it to 3.7 (or nests a 3.7 copy for the kit) — raise your own range too.
