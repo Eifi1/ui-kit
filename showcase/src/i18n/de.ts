@@ -161,6 +161,12 @@ export const de: Dictionary = {
       blurb:
         "Jeder Text, den das Kit rendert, als ein typisierter Baum — und der Provider, der eine Übersetzung an alle Komponenten zugleich weitergibt.",
     },
+    "kit-review": {
+      title: "Kit-Prüfung (live)",
+      short: "Kit-Prüfung",
+      blurb:
+        "Die Texte des Kits in jeder Sprache, die keksdose ausliefert, geprüft gegen die Prüfdatenbank von keksdose: dieselben kit.-Zeilen und Urteile wie auf seiner Übersetzungsseite, von dort mit einem Prüf-Token geöffnet.",
+    },
     inputs: {
       title: "Eingaben",
       blurb:
@@ -556,6 +562,13 @@ export const de: Dictionary = {
       "nicht übersetzte Texte finden",
       "Gebietsschema für Datum und Zahlen",
       "Beschriftungen für alle Komponenten",
+    ],
+    "kit-review": [
+      "Übersetzungen des Kits prüfen",
+      "Übersetzung freigeben",
+      "schlafenden Server aufwecken",
+      "Prüfung aus keksdose öffnen",
+      "Korrekturen exportieren",
     ],
     inputs: [
       "alle Eingabekomponenten ansehen",

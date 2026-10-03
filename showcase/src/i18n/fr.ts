@@ -154,6 +154,12 @@ export const fr: Dictionary = {
       blurb:
         "Chaque texte affiché par le kit, sous la forme d’un seul arbre typé — et le provider qui transmet une traduction à tous les composants à la fois.",
     },
+    "kit-review": {
+      title: "Revue du kit (en direct)",
+      short: "Revue du kit",
+      blurb:
+        "Les textes du kit dans chaque langue que livre keksdose, relus contre la base de relecture de keksdose : les mêmes lignes kit. et les mêmes verdicts que sa page Traductions, ouverte depuis là avec un jeton de relecture.",
+    },
     inputs: {
       title: "Saisie",
       blurb:
@@ -549,6 +555,13 @@ export const fr: Dictionary = {
       "trouver les libellés non traduits",
       "régler la locale des dates et des nombres",
       "fournir les libellés à tous les composants",
+    ],
+    "kit-review": [
+      "relire les traductions du kit",
+      "approuver une traduction",
+      "réveiller un serveur endormi",
+      "ouvrir la relecture depuis keksdose",
+      "exporter les corrections",
     ],
     inputs: [
       "voir tous les composants de saisie",

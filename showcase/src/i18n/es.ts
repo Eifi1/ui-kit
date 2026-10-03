@@ -151,6 +151,12 @@ export const es: Dictionary = {
       blurb:
         "Cada texto que muestra el kit, como un único árbol tipado — y el provider que entrega una traducción a todos los componentes a la vez.",
     },
+    "kit-review": {
+      title: "Revisión del kit (en vivo)",
+      short: "Revisión del kit",
+      blurb:
+        "Los textos del kit en cada idioma que publica keksdose, revisados contra la base de datos de revisión de keksdose: las mismas filas kit. y los mismos veredictos que su página Traducciones, abierta desde allí con un token de revisión.",
+    },
     inputs: {
       title: "Entradas",
       blurb:
@@ -546,6 +552,13 @@ export const es: Dictionary = {
       "encontrar textos sin traducir",
       "configurar el idioma de fechas y números",
       "pasar los textos a todos los componentes",
+    ],
+    "kit-review": [
+      "revisar las traducciones del kit",
+      "aprobar una traducción",
+      "despertar un servidor dormido",
+      "abrir la revisión desde keksdose",
+      "exportar las correcciones",
     ],
     inputs: [
       "ver todos los componentes de entrada",

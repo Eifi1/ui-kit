@@ -108,6 +108,10 @@ jobs:
       # base; ~2s with Vite 8.
       - name: Pack the tested package and build the Pages showcase
         if: matrix.group == 'check:build'
+        # keksdose's API for the showcase's live kit review (#/kit-review). A repository
+        # variable, not a secret: the base is public, the review token is what authorises.
+        env:
+          VITE_REVIEW_API_BASE: ${{ vars.REVIEW_API_BASE }}
         run: |
           mkdir -p ci-artifacts/tree
           npm pack --silent --pack-destination ci-artifacts
