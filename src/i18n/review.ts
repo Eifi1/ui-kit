@@ -193,6 +193,16 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "translationReview.lastFlagged": [["{{name}}", "{{date}}"]],
   "translationReview.scope": [["{{areas}}"]],
   "translationReview.exportCorrections": [[0], [1], [3]],
+  "translationReview.approvedToast": one,
+  "translationReview.groupCount": [
+    [1, 12],
+    [3, 12],
+  ],
+  "translationReview.approveGroup": one,
+  "translationReview.confirmGroup": [
+    [1, "{{group}}"],
+    [3, "{{group}}"],
+  ],
   "characterCount.count": [[12, 80]],
   "characterCount.remaining": one,
   "inlineEdit.edit": [["{{label}}"]],
@@ -210,6 +220,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "columnMapper.columnN": [[3]],
   "columnMapper.roleOf": [["{{column}}"]],
   "columnMapper.requiredRole": [["{{role}}"]],
+  "columnMapper.requiredRoleShort": [["{{role}}"]],
   "columnMapper.previewOf": [
     [1, 12],
     [10, 250],

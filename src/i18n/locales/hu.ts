@@ -717,6 +717,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       roleOf: (column) => `Mit tartalmaz ez az oszlop: „${column}”?`,
       ignore: "Kihagyás",
       requiredRole: (role) => `${role} (kötelező)`,
+      requiredRoleShort: (role) => `${role} *`,
       // "(összesen N)", as `dataTable.pageChanged`: both numerals stay bare (convention 3).
       previewOf: (shown, total) => `Az első ${n(shown)} sor (összesen ${n(total)})`,
       // `roles` arrives joined with "vagy" ("Tartozik vagy Követel").
@@ -771,6 +772,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       scope: (areas) => `Az Ön ellenőrzése a következőkre korlátozódik: ${areas}.`,
       exportCorrections: (count) => `Javítások exportálása (${n(count)})`,
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+      // No plural after a numeral (convention 2).
+      approvedToast: (count) => (count === 1 ? "Szöveg jóváhagyva" : `${n(count)} szöveg jóváhagyva`),
+      groupCount: (unreviewed, total) => `${n(unreviewed)} ellenőrizetlen / ${n(total)}`,
+      approveGroup: (count) => `Ellenőrizetlenek jóváhagyása (${n(count)})`,
+      // Opens with the quoted name, as `filePicker`'s refusals: no case ending ("-ban/-ben")
+      // has to agree with it. "a(z)" before the count, as `filePicker.rejectedPick`.
+      confirmGroup: (count, group) =>
+        count === 1
+          ? `„${group}”: jóváhagyja az ellenőrizetlen szöveget?`
+          : `„${group}”: jóváhagyja mind a(z) ${n(count)} ellenőrizetlen szöveget, a képernyőn nem láthatókat is?`,
     },
   };
 }

@@ -732,6 +732,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       roleOf: (column) => `Was enthält die Spalte „${column}“?`,
       ignore: "Ignorieren",
       requiredRole: (role) => `${role} (erforderlich)`,
+      requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
         shown === 1
           ? `Die erste von ${n(total)} Zeilen`
@@ -788,6 +789,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       scope: (areas) => `Ihre Prüfung ist beschränkt auf: ${areas}.`,
       exportCorrections: (count) => `Korrekturen exportieren (${n(count)})`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+      approvedToast: (count) => (count === 1 ? "Text bestätigt" : `${n(count)} Texte bestätigt`),
+      groupCount: (unreviewed, total) => `${n(unreviewed)} ungeprüft / ${n(total)}`,
+      approveGroup: (count) => `Ungeprüfte bestätigen (${n(count)})`,
+      // The group's name quoted, as `columnMapper.roleOf`'s column: it is often a key
+      // ("billing"), which unquoted would read as part of the sentence.
+      confirmGroup: (count, group) =>
+        count === 1
+          ? `Den ungeprüften Text in „${group}“ bestätigen?`
+          : `Alle ${n(count)} ungeprüften Texte in „${group}“ bestätigen – auch die nicht angezeigten?`,
     },
   };
 }

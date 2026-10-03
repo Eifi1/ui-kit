@@ -730,6 +730,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       roleOf: (column) => `Que contient la colonne «\u202f${column}\u202f»\u202f?`,
       ignore: "Ignorer",
       requiredRole: (role) => `${role} (obligatoire)`,
+      requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
         shown < 2
           ? `La première ligne sur ${n(total)}`
@@ -785,6 +786,14 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       scope: (areas) => `Votre relecture se limite à\u00a0: ${areas}.`,
       exportCorrections: (count) => `Exporter les corrections (${n(count)})`,
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+      approvedToast: (count) => (count < 2 ? "Texte approuvé" : `${n(count)} textes approuvés`),
+      groupCount: (unreviewed, total) =>
+        `${n(unreviewed)} non ${plural(unreviewed, "relu", "relus")} / ${n(total)}`,
+      approveGroup: (count) => `Approuver les non relus (${n(count)})`,
+      confirmGroup: (count, group) =>
+        count < 2
+          ? `Approuver le texte non relu de «\u202f${group}\u202f»\u202f?`
+          : `Approuver les ${n(count)} textes non relus de «\u202f${group}\u202f», y compris ceux qui ne sont pas à l’écran\u202f?`,
     },
   };
 }
