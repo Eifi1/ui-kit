@@ -621,6 +621,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tooltip — auto-portal inside a scroll container",
     "Tooltip — lazy: in place, mounted only while up",
     "Tooltip — in-place bubble clamped to the viewport",
+    "Tooltip — a tap leaves no bubble behind; the page edge holds",
     "Tooltip — data-clips marks an app's own scroller",
   ],
   "tour": [

@@ -282,6 +282,7 @@ const FeedbackDialogButtons025Demo = lazySection(() => import("./sections/polish
 const FeedbackNoteButtons025Demo = lazySection(() => import("./sections/polish-025-demo"), "FeedbackNoteButtons025Demo");
 const TableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "TableEdgeFadeDemo");
 const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "DataTableEdgeFadeDemo");
+const TooltipTapDemo = lazySection(() => import("./sections/tooltip-025-demo"), "TooltipTapDemo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -1038,6 +1039,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TooltipAutoPortal />
             <TooltipLazyDemo />
             <TooltipClampDemo />
+            <TooltipTapDemo />
             <ClipsMarkerDemo />
           </>
         ),
