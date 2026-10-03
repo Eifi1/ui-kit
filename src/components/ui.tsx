@@ -2501,6 +2501,109 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
 });
 Select.displayName = "Select";
 
+/**
+ * The backdrop of a labelled {@link Textarea}'s label strip (Kurvenschmiede, 0.24).
+ *
+ * The report: paste a long table into ColumnMapper, the field scrolls, and the floated
+ * "Paste a table" / "Tabelle einfügen" sits ON the first visible line of text — on
+ * desktop and on a phone. Not a ColumnMapper bug: every labelled textarea that scrolls
+ * did it. An `<input>` has one line that never moves, so the strip FIELD_FLOATING_PAD
+ * leaves for the label is always empty there; a textarea's top padding is part of its
+ * SCROLLING area, and once the content scrolls the lines travel up through the strip
+ * and under the label.
+ *
+ * The fix makes that padding stay put: this layer is a later sibling of the textarea
+ * (so `peer-*` reaches it, and as a positioned box it paints above the textarea's
+ * text), the label paints above it in turn, and it covers exactly the top padding —
+ * `top-px` / `inset-x-px` inside the 1px border, `h-4` = `pt-4`. At rest it covers
+ * padding and nothing else, so no pixel of an unscrolled line is ever hidden; scrolled
+ * text slides out of sight under it instead of through the label.
+ *
+ * Why a layer and not "start the scrolling area below the strip" (a wrapper that draws
+ * the border and background, the textarea transparent inside it): the box would stop
+ * being the textarea. Its focus outline, its brand border on focus, the invalid ring,
+ * the disabled and read-only greys and every caller's `[&_textarea]:…` would all have
+ * to be rebuilt on the wrapper with `focus-within:` / `has-[…]:`, and a caller's
+ * `style={{ height }}` would size the scroller rather than the field. The layer leaves
+ * all of that exactly where it was.
+ *
+ * What it has to match, it matches from the same tokens the field uses: the surface is
+ * FIELD_BASE's `--bg-surface`, and `--bg-surface-2` for `disabled` and `[readonly]` —
+ * on the same ATTRIBUTE selector FIELD_BASE uses, for the reason given there. Focus and
+ * `invalid` change only the border and the ring, which are outside the layer, so they
+ * need nothing. Both themes come with the variables. The inner corners are the field's
+ * radius (`rounded-md`, 6px) less the 1px border, so the rounded border is never cut
+ * into — a literal 5px rather than `var(--radius-md)`, which Tailwind emits only where
+ * a utility uses it and the kit's token check refuses (token-vars-declared).
+ *
+ * Hidden (`display: none`) until the label floats: an empty, unfocused field has
+ * nothing that could scroll, and it renders exactly as it did before 0.24. Pointer
+ * events pass through, so a click on the strip still lands in the field.
+ *
+ * The one thing CSS cannot know is a classic scrollbar's width, and a strip across the
+ * whole inner width would hide the scrollbar's top arrow — see {@link TextareaLabelStrip}.
+ */
+const TEXTAREA_LABEL_STRIP = cn(
+  "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[5px] bg-[var(--bg-surface)]",
+  "peer-focus:block peer-[:not(:placeholder-shown)]:block",
+  "peer-disabled:bg-[var(--bg-surface-2)] peer-[[readonly]]:bg-[var(--bg-surface-2)]",
+);
+
+/**
+ * {@link TEXTAREA_LABEL_STRIP}, stopped short of a classic scrollbar.
+ *
+ * A Windows / Linux desktop draws a textarea's vertical scrollbar INSIDE the border, in
+ * a gutter it takes from the content box (15px in Chromium); a strip across the full
+ * inner width would sit on top of the scrollbar's up arrow. So the gutter is measured —
+ * border box less client width less the borders — and the strip ends where it begins.
+ * On whichever side it is: `clientLeft` includes a gutter on the LEFT, which is where
+ * Chromium and Firefox put it in a right-to-left field. The side is applied as an
+ * inline-start / inline-end inset, so when `dir` flips afterwards and the scrollbar
+ * follows it to the other edge, the strip does too without a re-measure. That corner
+ * also loses its rounding, since it no longer meets the border.
+ *
+ * Overlay scrollbars (macOS, phones) take no gutter: the measurement is zero and the
+ * strip spans the field. A ResizeObserver on the textarea re-measures when the
+ * scrollbar comes or goes (it takes the content box with it) and when the field is
+ * resized by hand. Not laid out — hidden in a closed panel, or jsdom — the CSS insets
+ * stand until it is.
+ */
+function TextareaLabelStrip() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const strip = ref.current;
+    const field = strip?.previousElementSibling;
+    if (!strip || !(field instanceof HTMLTextAreaElement)) return;
+    const fit = () => {
+      if (field.offsetWidth === 0) return;
+      const style = getComputedStyle(field);
+      const borderLeft = parseFloat(style.borderLeftWidth) || 0;
+      const borderRight = parseFloat(style.borderRightWidth) || 0;
+      const gutter = field.offsetWidth - field.clientWidth - borderLeft - borderRight;
+      // offsetWidth and clientWidth are whole pixels, so a field with no scrollbar can
+      // read ±1 here; no scrollbar is that thin.
+      const bar = gutter > 1.5;
+      const onLeft = field.clientLeft - borderLeft > 1.5;
+      // Kept as a LOGICAL side: a `dir` flipped later (a language switch) moves the
+      // scrollbar across without resizing anything, so nothing would re-measure —
+      // but it stays at the inline end, and so does an inline-end inset.
+      const rtl = style.direction === "rtl";
+      const atEnd = onLeft === rtl;
+      const border = (end: boolean) => (end === rtl ? borderLeft : borderRight);
+      strip.style.insetInlineEnd = bar && atEnd ? `${border(true) + gutter}px` : "";
+      strip.style.insetInlineStart = bar && !atEnd ? `${border(false) + gutter}px` : "";
+      strip.style.borderStartEndRadius = bar && atEnd ? "0" : "";
+      strip.style.borderStartStartRadius = bar && !atEnd ? "0" : "";
+    };
+    fit();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(fit);
+    observer.observe(field);
+    return () => observer.disconnect();
+  }, []);
+  return <span ref={ref} aria-hidden data-slot="label-strip" className={TEXTAREA_LABEL_STRIP} />;
+}
+
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: ReactNode;
   /** See {@link Input}'s `invalid`. */
@@ -2591,6 +2694,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
             isInvalid && FIELD_INVALID,
           )}
         />
+        {/* Between the textarea and the label, on purpose: after the textarea so it
+            is its `peer` and paints over its text, before the label so the label
+            paints over it. See TEXTAREA_LABEL_STRIP. */}
+        <TextareaLabelStrip />
       </FloatingField>
     </FieldGroup>
   );
