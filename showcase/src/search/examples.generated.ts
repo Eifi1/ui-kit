@@ -74,6 +74,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PhoneInput — E.164 when it reads, the text when it does not",
     "FieldStrip — the strip label for content of your own",
     "FieldStrip group={false}",
+    "Textarea — the floated label on a scrolled field",
   ],
   "forms": [
     "Form · FormField · FormItem · FormLabel · FormControl · FormDescription · FormMessage",
@@ -101,6 +102,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "commit on the controls that save themselves",
     "RhfCountrySelect, RhfMonthPicker",
     "FormActions — size and cancelVariant",
+    "RhfInlineEntityCombobox",
   ],
   "choices": [
     "Checkbox — states",
@@ -233,6 +235,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Combobox — error and disabled",
     "Combobox — a Tooltip in optionAdornment (data-clips)",
     "hint on the combobox family",
+    "Autocomplete — a hint that comes and goes",
   ],
   "entity-pickers": [
     "InlineEntityCombobox",
@@ -272,6 +275,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "InlineEditField — a rename that can fail",
     "ColumnMapper — paste, drop or choose a recorder's export",
     "ColumnRoleTable — rows a server already read",
+    "Edge fade — a preview wider than its box",
+    "bodyProps / rowProps — attributes on the preview's body and rows",
   ],
   "field-sync": [
     "The four states",
@@ -303,6 +308,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CurrentPasswordInput",
     "DangerConfirm — the held confirm says why",
     "DangerConfirm — onConfirm hears the typed text",
+    "DangerConfirm — a field of the caller's and a guard of its own",
+    "DangerConfirm — confirmVariant",
   ],
   "buttons": [
     "Button — the six variants",
@@ -758,6 +765,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackThread + FeedbackComposer — a support chat",
     "ChatComposer — the composer under a neutral name",
     "ChatComposer — counted against the server's limit",
+    "ChatComposer — the slot gets the composer's root",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",

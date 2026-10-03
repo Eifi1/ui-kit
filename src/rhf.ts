@@ -12,7 +12,7 @@ export * from "./rhf/use-rhf-wizard-step";
 // Bound fields — one line per field (RhfTextField, RhfNumberField, RhfIntegerField, RhfMoneyField,
 // RhfDateField, RhfTextarea, RhfSelect, RhfCheckbox, RhfCombobox, RhfTextCombobox; 0.22: RhfTimeInput,
 // RhfDateRangePicker, RhfToggleGroup, RhfIbanInput, RhfPhoneInput; 0.23: RhfCountrySelect,
-// RhfMonthPicker)
+// RhfMonthPicker; 0.24: RhfInlineEntityCombobox)
 // and RhfField, the shell they are built on.
 export * from "./rhf/fields";
 // LineItems over useFieldArray.
