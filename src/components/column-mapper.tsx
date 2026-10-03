@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type { ChangeEvent, DragEvent, HTMLAttributes, ReactNode } from "react";
 import { Upload } from "lucide-react";
 
@@ -17,7 +17,6 @@ import type {
   ColumnMapping,
   ColumnRole,
 } from "../lib/column-mapping";
-import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { parseTextTable } from "../lib/table-text";
 import type { TableSeparator, TextTable } from "../lib/table-text";
 import { AlertBanner } from "./alert-banner";
@@ -298,13 +297,13 @@ export interface ColumnRoleTableProps<
  * named, keyboard-reachable region while it overflows), so a wide export never widens
  * the page at 390px. An edge with columns behind it fades out (0.24, Kurvenschmiede:
  * on a phone the fourth column's select sat off-screen and nothing said there was more
- * to the right; phone scrollbars are overlays that show only while you drag). It is
- * the kit Tabs strip's measured fade: drawn only while something is hidden on that
- * side, so a table that fits is painted as before; both ends once scrolled into the
- * middle; the reading direction's own in RTL; never animated, so there is nothing for
- * reduced motion to turn off; and a `mask-image`, which changes no layout and needs no
- * background colour to fade to. A role select focused behind the fade is scrolled
- * clear of it.
+ * to the right; phone scrollbars are overlays that show only while you drag). Since
+ * 0.25 that is the kit Table's own `edgeFade`, not a box of this table's round it:
+ * measured, so a table that fits is painted as before; both ends once scrolled into
+ * the middle; the reading direction's own in RTL; never animated; a `mask-image`,
+ * which changes no layout and needs no background colour to fade to. A role select
+ * focused behind the fade is scrolled clear of it, cell and all, and the Table's
+ * wrapper says which ends are cut in `data-overflow`.
  */
 export function ColumnRoleTable<
   R extends string,
@@ -351,131 +350,100 @@ export function ColumnRoleTable<
   // The required mark only where it tells one option from another.
   const markRequired = roles.some((role) => role.required !== true);
 
-  // The Table's own scroll wrapper — the `<table>`'s parent — is what overflows; the
-  // fade is measured on it and drawn on the box round it, which has the same edges.
-  const scroller = useRef<HTMLElement | null>(null);
-  const tableRef = useCallback((table: HTMLTableElement | null) => {
-    scroller.current = table?.parentElement ?? null;
-  }, []);
-  const fade = useStripFade(scroller);
-
   return (
     <div
       className={cn("min-w-0 space-y-1.5", className)}
       data-slot="column-role-table"
     >
-      <div
-        data-slot="column-role-table-scroll"
-        // In reading-direction terms ("start", "end", "both"), for a caller's styling.
-        data-overflow={fade.overflow}
-        style={
-          fade.mask
-            ? { maskImage: fade.mask, WebkitMaskImage: fade.mask }
-            : undefined
-        }
-      >
-        <Table
-          ref={tableRef}
-          density="compact"
-          framed
-          aria-label={labels.table}
-        >
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => {
-                const role = roleOfColumn(roles, mapping, column);
-                const name = nameOf(column);
-                return (
-                  <TableHeaderCell
-                    key={column}
-                    scope="col"
-                    className="min-w-36 py-2 align-top"
-                  >
-                    <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
-                      {name}
-                    </span>
-                    <Select
-                      size="sm"
-                      className="w-full"
-                      // Its own width (the longest option) rather than the cell's: a cell
-                      // takes no width from a `w-full` select, so the role's name was
-                      // cut at the column's 9rem minimum. Stretched to the cell when that
-                      // is wider; capped where the column's name and values stop.
-                      selectClassName="w-auto min-w-full max-w-56"
-                      aria-label={labels.roleOf(name)}
-                      value={role ?? ""}
-                      disabled={disabled}
-                      // Focus brings a select behind the fade clear of it — the browser's
-                      // own scroll stops at the edge, under the fade.
-                      onFocus={(event) => {
-                        const cell = event.currentTarget.closest("th");
-                        if (scroller.current && cell)
-                          scrollIntoStrip(scroller.current, cell);
-                      }}
-                      onChange={(event) =>
-                        onMappingChange(
-                          assignColumnRole(
-                            roles,
-                            mapping,
-                            column,
-                            event.target.value === ""
-                              ? null
-                              : (event.target.value as R),
-                          ),
-                        )
-                      }
-                    >
-                      <option value="">{labels.ignore}</option>
-                      {roles.map((option) => {
-                        const marked = option.required === true && markRequired;
-                        return (
-                          <option
-                            key={option.value}
-                            value={option.value}
-                            // The short mark on screen, the word for a screen reader.
-                            aria-label={
-                              marked ? labels.requiredRole(option.label) : undefined
-                            }
-                          >
-                            {marked
-                              ? (labels.requiredRoleShort ?? markedShort)(option.label)
-                              : option.label}
-                          </option>
-                        );
-                      })}
-                    </Select>
-                  </TableHeaderCell>
-                );
-              })}
-            </TableRow>
-          </TableHead>
-          <TableBody {...bodyProps}>
-            {shown.map((row, index) => (
-              <TableRow {...rowProps?.(row, index)} key={index}>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column}
-                    data-ignored={
-                      roleOfColumn(roles, mapping, column) === null || undefined
+      <Table density="compact" framed edgeFade aria-label={labels.table}>
+        <TableHead>
+          <TableRow>
+            {columns.map((column) => {
+              const role = roleOfColumn(roles, mapping, column);
+              const name = nameOf(column);
+              return (
+                <TableHeaderCell
+                  key={column}
+                  scope="col"
+                  className="min-w-36 py-2 align-top"
+                >
+                  <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
+                    {name}
+                  </span>
+                  <Select
+                    size="sm"
+                    className="w-full"
+                    // Its own width (the longest option) rather than the cell's: a cell
+                    // takes no width from a `w-full` select, so the role's name was
+                    // cut at the column's 9rem minimum. Stretched to the cell when that
+                    // is wider; capped where the column's name and values stop.
+                    selectClassName="w-auto min-w-full max-w-56"
+                    aria-label={labels.roleOf(name)}
+                    value={role ?? ""}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      onMappingChange(
+                        assignColumnRole(
+                          roles,
+                          mapping,
+                          column,
+                          event.target.value === ""
+                            ? null
+                            : (event.target.value as R),
+                        ),
+                      )
                     }
-                    className={cn(
-                      "font-mono whitespace-nowrap",
-                      // Dimmed, not hidden: its values are what tell you whether ignoring
-                      // it was right.
-                      roleOfColumn(roles, mapping, column) === null &&
-                        "text-[var(--text-muted)]",
-                    )}
                   >
-                    <span className="block max-w-56 truncate">
-                      {row[column] ?? ""}
-                    </span>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                    <option value="">{labels.ignore}</option>
+                    {roles.map((option) => {
+                      const marked = option.required === true && markRequired;
+                      return (
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          // The short mark on screen, the word for a screen reader.
+                          aria-label={
+                            marked ? labels.requiredRole(option.label) : undefined
+                          }
+                        >
+                          {marked
+                            ? (labels.requiredRoleShort ?? markedShort)(option.label)
+                            : option.label}
+                        </option>
+                      );
+                    })}
+                  </Select>
+                </TableHeaderCell>
+              );
+            })}
+          </TableRow>
+        </TableHead>
+        <TableBody {...bodyProps}>
+          {shown.map((row, index) => (
+            <TableRow {...rowProps?.(row, index)} key={index}>
+              {columns.map((column) => (
+                <TableCell
+                  key={column}
+                  data-ignored={
+                    roleOfColumn(roles, mapping, column) === null || undefined
+                  }
+                  className={cn(
+                    "font-mono whitespace-nowrap",
+                    // Dimmed, not hidden: its values are what tell you whether ignoring
+                    // it was right.
+                    roleOfColumn(roles, mapping, column) === null &&
+                      "text-[var(--text-muted)]",
+                  )}
+                >
+                  <span className="block max-w-56 truncate">
+                    {row[column] ?? ""}
+                  </span>
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {total > shown.length && (
         <p className="text-xs text-[var(--text-muted)]">
           {labels.previewOf(shown.length, total)}

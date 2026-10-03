@@ -354,47 +354,45 @@ describe("ColumnRoleTable", () => {
       Object.defineProperty(el, "scrollWidth", { configurable: true, value: scrollWidth });
       Object.defineProperty(el, "clientWidth", { configurable: true, value: clientWidth });
     };
-    // The kit Table's scroll wrapper is the `<table>`'s parent; the fade sits on the
-    // box round it.
+    // The preview is a kit Table with `edgeFade` (0.25): the fade, its `data-overflow`
+    // and the focus handling are on Table's own scroll wrapper, the `<table>`'s parent.
     const scrollerOf = () => screen.getByRole("table").parentElement!;
-    const fadeBox = (container: HTMLElement) =>
-      container.querySelector<HTMLElement>('[data-slot="column-role-table-scroll"]')!;
 
     it("paints nothing while the columns fit", () => {
-      const { container } = render(<Bank />);
+      render(<Bank />);
       size(scrollerOf(), 300, 300);
       fireEvent.scroll(scrollerOf());
-      expect(fadeBox(container).style.maskImage).toBe("");
-      expect(fadeBox(container)).not.toHaveAttribute("data-overflow");
+      expect(scrollerOf().style.maskImage).toBe("");
+      expect(scrollerOf()).not.toHaveAttribute("data-overflow");
     });
 
     it("fades the edge with columns behind it, then both once scrolled into the middle", () => {
-      const { container } = render(<Bank />);
+      render(<Bank />);
       const scroller = scrollerOf();
       size(scroller, 600, 300);
       fireEvent.scroll(scroller);
       // (jsdom's style parser drops a gradient with a `calc()` stop, so the end-side
       // mask itself is only readable in a browser; the start side's has none.)
-      expect(fadeBox(container)).toHaveAttribute("data-overflow", "end");
+      expect(scrollerOf()).toHaveAttribute("data-overflow", "end");
       scroller.scrollLeft = 100;
       fireEvent.scroll(scroller);
-      expect(fadeBox(container)).toHaveAttribute("data-overflow", "both");
+      expect(scrollerOf()).toHaveAttribute("data-overflow", "both");
       scroller.scrollLeft = 300;
       fireEvent.scroll(scroller);
-      expect(fadeBox(container)).toHaveAttribute("data-overflow", "start");
-      expect(fadeBox(container).style.maskImage).toMatch(/^linear-gradient\(to right, transparent, (#000|rgb\(0, 0, 0\)) 24px, /);
+      expect(scrollerOf()).toHaveAttribute("data-overflow", "start");
+      expect(scrollerOf().style.maskImage).toMatch(/^linear-gradient\(to right, transparent, (#000|rgb\(0, 0, 0\)) 24px, /);
     });
 
     it("in RTL the hidden columns are at the end, which is the left", () => {
-      const { container } = render(
+      render(
         <div dir="rtl" style={{ direction: "rtl" }}>
           <Bank />
         </div>,
       );
       size(scrollerOf(), 600, 300);
       fireEvent.scroll(scrollerOf());
-      expect(fadeBox(container)).toHaveAttribute("data-overflow", "end");
-      expect(fadeBox(container).style.maskImage).toMatch(/^linear-gradient\(to right, transparent, /);
+      expect(scrollerOf()).toHaveAttribute("data-overflow", "end");
+      expect(scrollerOf().style.maskImage).toMatch(/^linear-gradient\(to right, transparent, /);
     });
 
     it("scrolls a role select focused behind the edge clear of the fade", () => {
