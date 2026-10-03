@@ -1,4 +1,4 @@
-import { useId, useMemo, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { useCallback, useId, useMemo, type ComponentPropsWithoutRef, type ReactNode, type Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
@@ -25,7 +25,7 @@ import {
   useFieldHint,
   useLockReason,
 } from "./field-parts";
-import { mergeDescribedBy } from "./choice-parts";
+import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason } from "./write-lock";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
@@ -100,6 +100,10 @@ export interface MultiEntityComboboxProps<V extends string | number>
   debounceMs?: number;
   /** Shown when `loadOptions` rejects. Default: `combobox.loadError`. */
   loadErrorLabel?: string;
+  /** The TRIGGER — the focusable `<button>` — as a React 19 ref prop, as on
+   *  {@link EntityCombobox} and {@link CountrySelect} (0.24, kastlan: react-hook-form's
+   *  focus-on-error focuses whatever `field.ref` is handed). Not the wrapper. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -137,6 +141,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     minChars,
     debounceMs,
     loadErrorLabel,
+    ref,
     "aria-label": ariaLabel,
     // The control's own wiring, taken off `rest` so it lands on the TRIGGER rather than
     // the wrapper: `Field`'s render-prop spreads `{ id, aria-describedby, aria-invalid,
@@ -173,6 +178,14 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const { open, results, resolve, setOpen, query, triggerRef } = core;
+  // The core's trigger ref and the caller's, fed by one callback — see EntityCombobox.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
   // The lock — see EntityCombobox: the trigger stays reachable and says why.
   const lock = useLockReason(commit, disabledReason);
   const inert = lock.locked || Boolean(disabled);
@@ -241,7 +254,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
       <EndHintRow {...endHintRowProps("hint" in props, label !== undefined, hintParts.labelHint)}>
         {withLock(
           <button
-            ref={triggerRef}
+            ref={setTrigger}
             id={id}
             type="button"
             // A combobox, not a button. The distinction is not pedantry: this control

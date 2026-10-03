@@ -1,5 +1,5 @@
-import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useCallback, useId } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
@@ -22,7 +22,7 @@ import {
   useFieldHint,
   useLockReason,
 } from "./field-parts";
-import { mergeDescribedBy } from "./choice-parts";
+import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason } from "./write-lock";
 
 export type { ComboClearValue, ComboOption } from "./combobox-core";
@@ -69,6 +69,10 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
    *  actions, and on a full-screen sheet the close button is the only way out —
    *  so it is the one control here that MUST be in the reader's language. */
   closeLabel?: string;
+  /** The phone sheet's heading (and, as a string, its accessible name) for a picker
+   *  whose label is drawn by someone else — a form's `FormLabel`; `RhfCombobox`
+   *  hands its label over here (0.24). Default: `label`, then `placeholder`. */
+  sheetTitle?: ReactNode;
   disabled?: boolean;
   /**
    * Why the choice cannot be changed — {@link Button}'s `disabledReason`, for a picker
@@ -125,6 +129,14 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
   debounceMs?: number;
   /** Shown when `loadOptions` rejects. Default: `combobox.loadError`. */
   loadErrorLabel?: string;
+  /**
+   * The TRIGGER — the focusable `<button>` a reader meets — as a React 19 ref prop, as
+   * on {@link CountrySelect}, which is built on the same core (0.24, kastlan: react-hook-
+   * form's focus-on-error calls `focus()` on whatever `field.ref` is handed, and a
+   * picker with no ref gave it nothing to focus). Not the wrapper: focus belongs on the
+   * trigger, which is also where the panel hands it back after a pick.
+   */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -151,6 +163,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     clearable,
     clearLabel,
     closeLabel,
+    sheetTitle,
     disabled,
     disabledReason,
     commit,
@@ -166,6 +179,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     minChars,
     debounceMs,
     loadErrorLabel,
+    ref,
     "aria-label": ariaLabel,
     // The control's own wiring, taken off `rest` so it lands on the TRIGGER rather than
     // the wrapper — see MultiEntityCombobox: `Field`'s render-prop spreads `{ id,
@@ -201,6 +215,15 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const { open, results, resolve, setOpen, rememberOption, query, triggerRef } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both — CountrySelect's.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
   // The lock: this picker's own reason, or the provider's under `commit`.
   const lock = useLockReason(commit, disabledReason);
   const inert = lock.locked || Boolean(disabled);
@@ -260,7 +283,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
       <EndHintRow {...endHintRowProps("hint" in props, label !== undefined, hintParts.labelHint)}>
         {withLock(
           <button
-            ref={triggerRef}
+            ref={setTrigger}
             id={id}
             type="button"
             // A combobox, not a button. The distinction is not pedantry: this control
@@ -369,7 +392,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
         listboxId={listboxId}
         // On a phone the panel becomes a full-screen sheet, which needs the field's
         // own label to say what it is asking for (live #200).
-        sheetTitle={label ?? placeholder}
+        sheetTitle={sheetTitle ?? label ?? placeholder}
         searchPlaceholder={labels.search}
         emptyLabel={labels.noResults}
         closeLabel={closeLabel}

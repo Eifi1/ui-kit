@@ -1,5 +1,5 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Plus, X } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
@@ -245,6 +245,14 @@ export interface ComboboxProps
   searchPlaceholder?: string;
   closeLabel?: string;
   /**
+   * The phone sheet's heading — and, as a string, the dialog's accessible name — for a
+   * field whose label is drawn by someone else: a form's `FormLabel` above it,
+   * which `RhfTextCombobox` hands over here (0.24). Default: `label`. Without either, the
+   * full-screen sheet opened untitled and unnamed, the one screen on a phone that has to
+   * say what it is asking for (live #200).
+   */
+  sheetTitle?: ReactNode;
+  /**
    * Label for the row that COMMITS a value the list does not contain — e.g.
    * `(v) => \`Add "${v}" as payee\``. Supplying it turns the free text into
    * something you confirm rather than something you leave behind.
@@ -260,6 +268,15 @@ export interface ComboboxProps
    * values are all supposed to already exist.
    */
   createLabel?: (value: string) => string;
+  /**
+   * The `<input>` — the control a reader types in and the one focus belongs on — as a
+   * React 19 ref prop, the way {@link CountrySelect} takes its trigger's (0.24, kastlan:
+   * react-hook-form's focus-on-error calls `focus()` on whatever `field.ref` is handed,
+   * and a combobox with no ref inside a hand-wired `RhfField` gave it nothing, so a
+   * failed submit could not take the user to it). Not the wrapper: a ref is for focus,
+   * measurement and selection, and all three are the input's. `RhfTextCombobox` passes it.
+   */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -285,6 +302,7 @@ export function Combobox(props: ComboboxProps) {
     maxSuggestions,
     searchPlaceholder,
     closeLabel,
+    sheetTitle,
     createLabel,
     invalid,
     error,
@@ -296,6 +314,7 @@ export function Combobox(props: ComboboxProps) {
     autoFocus,
     onBlur,
     onSubmit,
+    ref,
     "aria-label": ariaLabel,
     // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
     // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and
@@ -481,6 +500,7 @@ export function Combobox(props: ComboboxProps) {
               `peer`, so it is dimmed by hand above). */
           <div ref={fieldRef} className={cn("relative", inert && "cursor-not-allowed opacity-50")}>
             <input
+              ref={ref}
               id={fieldId}
               value={value}
               placeholder={placeholder}
@@ -616,7 +636,7 @@ export function Combobox(props: ComboboxProps) {
         <PickerSheet
           open={open && !inert}
           onClose={() => setOpen(false)}
-          title={label}
+          title={sheetTitle ?? label}
           // The sheet's input IS the field: this is a free-text control, so what is
           // typed here is the value (a brand-new payee is just a name nothing
           // matches), and the list below narrows as it changes.
@@ -794,6 +814,11 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    *  list simply does not open. Default: `combobox.noResults` from the provider. */
   emptyLabel?: string;
   closeLabel?: string;
+  /** The phone sheet's heading (and, as a string, its accessible name) for a field
+   *  whose label is drawn by someone else — a form's `FormLabel`;
+   *  `RhfInlineEntityCombobox` hands its label over here (0.24). Default: `label`.
+   *  See {@link Combobox}'s `sheetTitle`. */
+  sheetTitle?: ReactNode;
   /** Offer a clear "×" in place of the chevron whenever something is selected.
    *
    *  Emptying the text already clears (see {@link reconcile}), and on a desktop that
@@ -870,6 +895,16 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    * `commit`: a locked field opens no list at all.
    */
   createCommit?: boolean;
+  /**
+   * The `<input>` — the focusable control, the one a reader types in — as a React 19
+   * ref prop (0.24, kastlan). Its account picker is this component inside an
+   * `RhfField` render, and react-hook-form's focus-on-error calls `focus()` on whatever
+   * `field.ref` is handed: with no ref there was nothing to hand it, so a line-item form
+   * whose account was missing failed its submit and left the caret where it was. Pass
+   * `field.ref` here, or use `RhfInlineEntityCombobox`, which does. The wrapper is not
+   * reachable this way — focus and selection are the input's. See {@link Combobox}'s `ref`.
+   */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -907,6 +942,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     searchPlaceholder,
     emptyLabel,
     closeLabel,
+    sheetTitle,
     clearable,
     clearLabel,
     disabledReason,
@@ -918,6 +954,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     invalid,
     error,
     hint,
+    ref,
     "aria-label": ariaLabel,
     // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
     // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and
@@ -1146,6 +1183,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               `peer`, so it is dimmed by hand above). */
           <div ref={fieldRef} className={cn("relative", inert && "cursor-not-allowed opacity-50")}>
             <input
+              ref={ref}
               id={fieldId}
               value={shown}
               placeholder={placeholder}
@@ -1300,7 +1338,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
           // Closing without choosing keeps the value: `text` was never emptied, so
           // reconcile has nothing to undo — it just puts the label back.
           onClose={reconcile}
-          title={label}
+          title={sheetTitle ?? label}
           query={sheetQuery}
           onQueryChange={(v) => {
             setSheetQuery(v);

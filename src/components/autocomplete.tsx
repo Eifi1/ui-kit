@@ -14,6 +14,7 @@ import { useAnchorDir } from "./use-anchor-dir";
 import {
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
+  endHintRowProps,
   isOptionEnabled,
   stepEnabled,
   useActiveOptionScroll,
@@ -120,6 +121,11 @@ export interface AutocompleteProps<V extends string | number = string>
    * `aria-describedby`, before any error; a {@link FieldHint} "?" rides the label line,
    * or with no label sits at the field's end edge, outside the box. Not the list's
    * `status` line, which talks about the lookup, not the field.
+   *
+   * Pass it — even as `undefined` — on a field whose hint comes and goes (0.24): the
+   * unlabelled field then keeps its end-hint row whether or not a "?" is in it, so the
+   * `<input>` is never re-parented, and focus and caret survive the toggle. The rule
+   * the rest of the family has had since 0.23 (and the fields since 0.22).
    */
   hint?: ReactNode;
   /**
@@ -159,7 +165,10 @@ export interface AutocompleteProps<V extends string | number = string>
 }
 
 function AutocompleteInner<V extends string | number = string>(
-  {
+  props: AutocompleteProps<V>,
+  ref: ForwardedRef<HTMLInputElement>,
+) {
+  const {
     value,
     onChange,
     options,
@@ -194,9 +203,7 @@ function AutocompleteInner<V extends string | number = string>(
     "aria-labelledby": ariaLabelledBy,
     "aria-describedby": ariaDescribedBy,
     ...rest
-  }: AutocompleteProps<V>,
-  ref: ForwardedRef<HTMLInputElement>,
-) {
+  } = props;
   const generated = useId();
   const fieldId = id ?? generated;
   // Off the GENERATED id: a caller's `id` is theirs to collide with.
@@ -303,7 +310,11 @@ function AutocompleteInner<V extends string | number = string>(
           {label}
         </ComboboxFieldLabel>
       )}
-      <EndHintRow hint={hasLabel ? undefined : hintParts.labelHint}>
+      {/* `"hint" in props`: the family's 0.22 rule (see `endHintRowProps`) — passed at
+          all, even as `undefined`, a hint keeps the unlabelled field's end-hint row, so
+          a "?" coming and going never re-parents the <input> under the caret (0.24, the
+          last of the family to get it; the siblings had it in 0.23). */}
+      <EndHintRow {...endHintRowProps("hint" in props, hasLabel, hintParts.labelHint)}>
         {withLock(
           <div ref={fieldRef} className={cn("relative", locked && "cursor-not-allowed")}>
             {icon && (

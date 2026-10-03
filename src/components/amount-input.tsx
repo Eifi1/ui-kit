@@ -60,17 +60,26 @@ interface AmountInputProps {
   className?: string;
   /**
    * Classes for the `<input>` itself — {@link NumberInput}'s and {@link Input}'s prop of
-   * the same name, merged the same way: after the field's own base classes, so it can
-   * restyle the figure (`text-end` for a money column whose decimal points line up,
-   * `font-medium`, a tighter `py-1` in a table cell), and before the end padding the
-   * calculator and the currency chip reserve and before the invalid border, so neither
-   * can be taken away by accident.
+   * the same name, merged the same way: after everything the field sets for LOOKS — the
+   * base classes, the plain end padding, the display shape's centring and the `tone`
+   * colour — so it can restyle the figure (`text-end` for a money column whose decimal
+   * points line up, `font-medium`, a tighter `py-1` or a symmetric `px-2` in a table
+   * cell, `text-transparent` while a figure is being re-fetched), and before what the
+   * field needs to WORK: the end padding the calculator and the currency chip reserve,
+   * and the invalid border. Neither of those can be taken away by accident — a caller's
+   * `px-2` keeps its start edge and the digits still stop short of the chip, and a
+   * borderless cell's `border-transparent` still turns red when the value is wrong.
    *
    * keksdose G7: the invoice's VAT cell right-aligns its figure, and with only
    * `className` (the wrapper) it reached the element through `[&_input]:text-end` — a
    * descendant selector that depends on the field's inner markup, which the kit is free
    * to change, and that a reader of the call site has to decode. {@link MoneyField}
    * passes it through, and `RhfMoneyField` takes it too.
+   *
+   * keksdose 0.24: until then it sat BEFORE the plain end padding (`pe-3`) and the tone,
+   * so the budget's assigned cell could not make its padding symmetric (`px-2` came out
+   * `px-2 pe-3`) and the holdings price could not hide an outflow-toned figure while
+   * re-fetching — both were back on `[&_input]:` selectors on the wrapper.
    */
   inputClassName?: string;
   id?: string;
@@ -337,6 +346,17 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // fighting itself through responsive overrides. `useMediaQuery` reads
     // synchronously on mount, so there is no field→figure flash.
     const asDisplay = variant === "display" && isMobile;
+    // Room for the trailing controls — the calculator and the currency chip — or
+    // nothing when neither trails. showCalc is always false on a phone, so the display
+    // shape only ever has to clear the currency chip — and it clears it by the chip's
+    // actual width (a text-sm code plus a chevron, ~58px) rather than the 5rem the
+    // boxed shape reserves. On a 375px screen those 16px are the difference between a
+    // readable figure and a clipped one (feedback #430 rework).
+    const trailingRoom = asDisplay
+      ? currency ? (editable ? "pe-16" : "pe-12") : undefined
+      : showCalc
+        ? currency ? (editable ? "pe-24" : "pe-16") : "pe-10"
+        : currency ? (editable ? "pe-20" : "pe-14") : undefined;
     const innerRef = useRef<HTMLInputElement>(null);
     const setRefs = useCallback(
       (el: HTMLInputElement | null) => {
@@ -521,27 +541,24 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
             // transparent-placeholder bits.
             asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
-            // The caller's, over the base and under everything below (see `inputClassName`).
-            inputClassName,
-            // Room for the trailing controls. showCalc is always false on a phone,
-            // so the display shape only ever has to clear the currency chip — and
-            // it clears it by the chip's actual width (a text-sm code plus a
-            // chevron, ~58px) rather than the 5rem the boxed shape reserves. On a
-            // 375px screen those 16px are the difference between a readable figure
-            // and a clipped one (feedback #430 rework).
-            asDisplay
-              ? currency ? (editable ? "pe-16" : "pe-12") : "pe-0"
-              : showCalc
-                ? currency ? (editable ? "pe-24" : "pe-16") : "pe-10"
-                : currency ? (editable ? "pe-20" : "pe-14") : "pe-3",
+            // The plain end padding, with nothing trailing: cosmetic, so the caller's
+            // to change (keksdose 0.24 — a symmetric `px-2` in a budget cell).
+            !trailingRoom && (asDisplay ? "pe-0" : "pe-3"),
             // Centred display shape: centre in what is LEFT of the currency chip.
             // `text-center` alone would centre the figure in the whole box, i.e.
-            // partly underneath the chip; the padding above is what takes the chip
+            // partly underneath the chip; the padding below is what takes the chip
             // out of the centring, and nothing is added at the start because a
             // mirrored reservation would spend the width twice (see `align`).
             asDisplay && align === "center" && "text-center",
-            // Last, so it wins over the base class's own text colour.
+            // Over the base class's own text colour.
             TONE_CLASS[tone],
+            // The caller's, over all of the above — base, plain padding, alignment and
+            // tone — and under only what the field needs to work (see `inputClassName`).
+            inputClassName,
+            // Room for the trailing controls, after the caller's so a `px-2` cannot run
+            // the digits under the chip (NumberInput's order, which reserves its unit
+            // and calculator the same way).
+            trailingRoom,
             invalid && FIELD_INVALID,
           )}
           aria-invalid={invalid || undefined}
