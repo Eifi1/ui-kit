@@ -1,9 +1,9 @@
-import { forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
+import { Children, forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, Input, Label, Spinner } from "./ui";
-import type { InputProps } from "./ui";
+import type { ButtonVariant, InputProps } from "./ui";
 import { Checkbox } from "./checkbox";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
@@ -451,15 +451,99 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
   /** The warning above the fields. Defaults to `labels.prompt`. */
   prompt?: ReactNode;
   /** `"danger"` (default) for what cannot be undone; `"warning"` for what can, at a
-   *  cost (loading demo data over your own). Colours the prompt and the confirm. */
+   *  cost (loading demo data over your own). Colours the prompt, and picks the arm
+   *  button's variant and — unless {@link DangerConfirmProps.confirmVariant} is
+   *  given — the confirm's. */
   tone?: "danger" | "warning";
+  /**
+   * The confirm button's variant, apart from `tone` (0.24, keksdose). Default: what
+   * `tone` picks, as before — `"danger"` for `"danger"`, `"primary"` for `"warning"`.
+   *
+   * `tone` says how bad the outcome is; this says how loud the last press is, and the two
+   * need not agree. keksdose's `UserActionConfirm` (an admin resets somebody else's
+   * password) asks an AMBER question — what it guards against is mis-targeting, not data
+   * loss, so the danger colour stays its one `severe` consequence's — and ends in a RED
+   * Go, as its hand-built panel did before it moved onto this tile in 0.23; with only
+   * `tone`, the amber question made Go the neutral primary fill. `tone="warning"
+   * confirmVariant="danger"` is that panel again.
+   */
+  confirmVariant?: ButtonVariant;
+  /**
+   * Hold the armed confirm for a reason of the CALLER's own (0.24, keksdose) — the
+   * tile's counterpart of FormActions' `submitDisabledReason`. While it has content the
+   * confirm is held exactly as by the built-in guards: `aria-disabled` but focusable,
+   * the reason in the kit {@link Tooltip} and its description, a press — or Enter in a
+   * field — does nothing. Nothing else changes: the arm button stays usable, and no
+   * line is printed under the buttons.
+   *
+   * keksdose's `UserPlanEditor` ("move this account onto another plan") must not confirm
+   * the plan the account already holds — the request would only write FREE → FREE into
+   * the audit trail. With no guard of its own to give, it passed "Pick a different plan"
+   * as `lockedReason`, which is a LOCK: documented as "the action is not available",
+   * spelled out under the buttons as well as in the tooltip, and meant for a write the
+   * user cannot make land. A guard the user lifts by changing a field is this prop.
+   *
+   * Which reason the held confirm names: a write lock's first (`lockedReason`, `commit`
+   * — nothing in the tile lifts it), then this one, then the built-in guards in the
+   * order they are drawn (the tick, the phrase, the password). This one before the
+   * built-ins because it is usually about a field in
+   * {@link DangerConfirmProps.children}, which is drawn ABOVE them — the rule since 0.23
+   * is "the first open guard in the order the user meets it" — and because it is about
+   * WHAT is being confirmed (which plan), which has to be settled before acknowledging
+   * it means anything. It is also the order keksdose's plan editor had, its
+   * `lockedReason` winning over the tick.
+   */
+  confirmDisabledReason?: ReactNode;
+  /**
+   * Fields of the caller's own, drawn INSIDE the armed tile (0.24, keksdose): after the
+   * prompt and the consequences, before the tick, the typed phrase and the password —
+   * the order is "what this does, what to do it with, then prove you mean it". Nothing
+   * is drawn for them while the tile is disarmed, and nothing at all without them, so a
+   * tile without children is laid out exactly as before.
+   *
+   * keksdose's `UserPlanEditor` asks WHICH plan before it asks for the tick; with no
+   * place inside the tile for the picker, the `Select` sat above it, and the tile's
+   * prompt — the panel's title by rights — became the "FREE → PRO" line under the
+   * picker. With the picker here, the prompt is the title again.
+   *
+   * The fields are the caller's: their values are not wiped on disarm (an uncontrolled
+   * field starts over anyway — the slot unmounts), not passed to `onConfirm`, and a
+   * guard on them is {@link DangerConfirmProps.confirmDisabledReason}. Arming moves
+   * focus to their first form field (an input, a select, a combobox, a radio…), else to
+   * the tile's own first field as before; Tab then goes on through the tick, the phrase
+   * and the password to Cancel and the confirm. They sit inside the tile's `<form>`:
+   * Enter in a text field confirms once every guard allows, and a {@link Button} among
+   * them needs `type="button"` — without one it SUBMITS the form, as a native button
+   * does.
+   */
+  children?: ReactNode;
   /** Visible text of the arm button; defaults to `labels.arm`. */
   armLabel?: ReactNode;
   /** Visible text of the confirm button; defaults to `labels.confirm`. */
   confirmLabel?: ReactNode;
-  /** The action is running: confirm shows a spinner and nothing can be pressed. For a
-   *  caller that tracks the mutation itself (a `useMutation`'s `isPending`); a
-   *  promise returned from `onConfirm` does the same on its own. */
+  /**
+   * The action is running: confirm shows a spinner and nothing can be pressed — Cancel
+   * included. For a caller that tracks the mutation itself (a `useMutation`'s
+   * `isPending`); a promise returned from `onConfirm` does the same on its own.
+   *
+   * Cancel stays disabled ON PURPOSE, unlike FormActions' (keksdose asked in 0.24 why the
+   * two differ). Once the request has left, nothing on the client can call it back —
+   * not even an `AbortSignal`, which only stops the waiting, not the server — so a usable
+   * Cancel could only collapse the tile while the action went on: "Cancel" pressed, and
+   * the account reset anyway. Every way of settling what comes back is wrong somewhere: a
+   * resolve after the Cancel did what the user called off; a reject finds the fields
+   * wiped (a collapsed tile holds no password), so the 0.23 "stay armed and retry" is
+   * gone; and re-arming while the first request runs is either a busy tile with empty
+   * fields or — if the busy state went with the Cancel — a second destructive request
+   * beside the first. FormActions' Cancel leaves an editor whose save is the user's own
+   * edit landing, and a form can be edited again; the tile's action is the one that
+   * cannot be undone, so it says nothing it cannot keep and waits — the wait is one
+   * request long.
+   *
+   * When the action settles still armed (it failed) and the press on the confirm had
+   * dropped the focus — a natively disabled button loses it — focus comes back to the
+   * confirm, so a keyboard user can retry or Shift+Tab to the field to correct (0.24).
+   */
   busy?: boolean;
   /** The arm button is disabled. */
   disabled?: boolean;
@@ -493,11 +577,44 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
   labels?: Partial<DangerConfirmLabels>;
 }
 
+/** What counts as a FIELD among the caller's `children` — what arming focuses. Not
+ *  any tabbable element: a "see the plans" link or a disclosure button before the
+ *  picker is not where the user starts. `[tabindex="-1"]` is a roving radio group's
+ *  unselected option; the selected one (`0`) is the group's stop. */
+const SLOT_FIELD = [
+  'input:not([type="hidden"])',
+  "select",
+  "textarea",
+  ...["combobox", "listbox", "radio", "checkbox", "switch", "slider", "spinbutton", "textbox"].map(
+    (role) => `[role="${role}"]`,
+  ),
+]
+  .map((selector) => `${selector}:not(:disabled):not([tabindex="-1"]):not([aria-hidden="true"])`)
+  .join(", ");
+
+/** The first field among the caller's `children`, skipping a native radio that is not
+ *  the checked one of its group (Tab lands on the checked one). */
+function firstSlotField(slot: HTMLElement | null): HTMLElement | null {
+  if (!slot) return null;
+  for (const el of slot.querySelectorAll<HTMLElement>(SLOT_FIELD)) {
+    if (el.closest("[hidden], [inert]")) continue;
+    if (el instanceof HTMLInputElement && el.type === "radio" && !el.checked && el.name) {
+      const group = el.form?.elements.namedItem(el.name);
+      const checked =
+        group instanceof RadioNodeList && Array.from(group).some((r) => r instanceof HTMLInputElement && r.checked);
+      if (checked) continue;
+    }
+    return el;
+  }
+  return null;
+}
+
 /**
  * An "arm → confirm" tile for destructive actions: one button, which expands into a
- * warning, an optional list of consequences, an optional "I understand" tick, an
- * optional type-to-confirm field, an optional password field and a confirm that is held
- * until every guard is satisfied.
+ * warning, an optional list of consequences, optional fields of the caller's own
+ * (`children`, 0.24), an optional "I understand" tick, an optional type-to-confirm
+ * field, an optional password field and a confirm that is held until every guard is
+ * satisfied — the built-in ones, and the caller's `confirmDisabledReason` (0.24).
  *
  * A held confirm SAYS which guard is still open (0.23, keksdose G4a): it is
  * `aria-disabled` rather than `disabled` — still focusable, so a keyboard user can land
@@ -505,8 +622,10 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
  * “DELETE” to confirm", "Tick the box to confirm", "Enter your password to confirm";
  * `labels.needs*`), the first open guard in the order they are drawn. FormActions'
  * `submitDisabledReason` does the same for a form's Save. Pressing it, or Enter in a
- * field, does nothing. A lock's reason wins over a guard's; while the action runs the
- * confirm is plainly disabled, its spinner saying why.
+ * field, does nothing. A lock's reason wins over a guard's, the caller's guard over the
+ * built-in ones; while the action runs the confirm is plainly disabled, its spinner
+ * saying why — and so is Cancel, which cannot call back a request that has left (see
+ * `busy`).
  *
  * Keksdose hand-rolled it three times (load demo data, wipe everything, reset a
  * budget) and then as `shared/components/danger-confirm.tsx`; the only app-specific
@@ -527,6 +646,9 @@ export function DangerConfirm({
   phraseMatch = "trim",
   prompt,
   tone = "danger",
+  confirmVariant,
+  confirmDisabledReason,
+  children,
   armLabel,
   confirmLabel,
   busy: busyProp,
@@ -554,13 +676,18 @@ export function DangerConfirm({
   const consequencesId = useId();
   const reasonId = useId();
 
-  // The kit's Button takes no ref, so the two buttons focus is moved to are found by id.
+  // The buttons focus is moved to are found by id.
   const armId = useId();
   const cancelId = useId();
+  const confirmId = useId();
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  // The caller's fields (`children`), searched for their first form field on arm.
+  const slotRef = useRef<HTMLDivElement>(null);
   // Focus moves only after a transition — never on mount, so a tile that renders armed
   // (controlled) does not take the page's focus merely by existing.
   const moveFocus = useRef(false);
+  // A confirm from this tile is under way — see the focus return after a failure below.
+  const confirmed = useRef(false);
 
   // A disarm from anywhere (cancel, a resolved confirm, the parent) wipes the fields.
   // During render, like NumberField's draft, so no frame shows a collapsed tile that
@@ -583,14 +710,37 @@ export function DangerConfirm({
     moveFocus.current = false;
     if (!changed) return;
     if (armed) {
-      if (byUser) (firstFieldRef.current ?? document.getElementById(cancelId))?.focus();
+      if (byUser) {
+        // The caller's fields come first on the page, so first in focus too.
+        (firstSlotField(slotRef.current) ?? firstFieldRef.current ?? document.getElementById(cancelId))?.focus();
+      }
       return;
     }
+    confirmed.current = false;
     // A controlled parent collapsing the tile from its own `onSuccess` did not go
     // through `setArmed`; if focus went down with the form, bring it back too.
     const lost = document.activeElement === null || document.activeElement === document.body;
     if (byUser || lost) document.getElementById(armId)?.focus();
   }, [armed, armId, cancelId]);
+
+  // The action settled and the tile is still armed — it failed, and the user retries.
+  // The confirm was natively disabled while it ran, and a focused button that turns
+  // disabled drops the focus to <body>: bring it back to the button that was pressed.
+  // Only after a confirm from THIS tile (`confirmed`), so a `busy` that comes and goes
+  // on its own never pulls the page's focus in. (A resolve disarms, and the effect
+  // above takes the focus to the arm button.)
+  const wasBusy = useRef(busy);
+  useEffect(() => {
+    const settled = wasBusy.current && !busy;
+    wasBusy.current = busy;
+    if (!settled) return;
+    const ours = confirmed.current;
+    confirmed.current = false;
+    if (!ours || !armed) return;
+    if (document.activeElement === null || document.activeElement === document.body) {
+      document.getElementById(confirmId)?.focus();
+    }
+  }, [busy, armed, confirmId]);
 
   const setArmed = (next: boolean) => {
     moveFocus.current = true;
@@ -607,7 +757,10 @@ export function DangerConfirm({
   const passwordOk = !requirePassword || password !== "";
   const phraseOk = phrase === undefined || typedMatches(typed, phrase, phraseMatch);
   const acknowledgeOk = !asksAcknowledge || acknowledged;
-  const canConfirm = passwordOk && phraseOk && acknowledgeOk && !busy;
+  const callerHeld = hasContent(confirmDisabledReason);
+  // `{cond && <Select />}` and `[null, false]` are no fields: no wrapper, no gap.
+  const hasFields = Children.toArray(children).some(hasContent);
+  const canConfirm = passwordOk && phraseOk && acknowledgeOk && !callerHeld && !busy;
   // The first guard still open, in the order the fields are drawn — the one the user
   // meets next, so the sentence points at it.
   const guardReason: string | undefined = !acknowledgeOk
@@ -620,18 +773,27 @@ export function DangerConfirm({
         ? labels.needsPassword
         : undefined;
   // The lock first (no guard can lift it); none while busy, when the guards were met and
-  // the spinner is the state.
-  const confirmReason: ReactNode = locked ? lockedReason : busy ? undefined : guardReason;
+  // the spinner is the state; then the caller's guard — about the fields drawn above the
+  // built-in ones, and about WHAT is confirmed — then the first built-in guard still open.
+  const confirmReason: ReactNode = locked
+    ? lockedReason
+    : busy
+      ? undefined
+      : callerHeld
+        ? confirmDisabledReason
+        : guardReason;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    // `locked` too: Enter in a field submits the form without the button's say.
+    // `locked` too: Enter in a field submits the form without the button's say (and
+    // `canConfirm` holds the caller's guard the same way).
     if (!canConfirm || locked) return;
     const values: DangerConfirmValues = {
       ...(phrase !== undefined && { typed: phraseMatch === "exact" ? typed : typed.trim() }),
       ...(requirePassword && { password }),
       ...(asksAcknowledge && { acknowledged: true as const }),
     };
+    confirmed.current = true;
     // Disarms when it resolves; a rejection leaves it armed, fields kept: the caller
     // shows why, the user retries.
     run(onConfirm(values.password, values), () => setArmed(false));
@@ -712,6 +874,13 @@ export function DangerConfirm({
             ))}
           </ul>
         )}
+        {/* The caller's fields: after what the action does, before the proof that it is
+            meant. No wrapper without them — a 0.23 tile's markup is unchanged. */}
+        {hasFields && (
+          <div ref={slotRef} className="space-y-2">
+            {children}
+          </div>
+        )}
         {asksAcknowledge && (
           <Checkbox
             ref={firstField === "acknowledge" ? firstFieldRef : undefined}
@@ -751,13 +920,15 @@ export function DangerConfirm({
             {labels.cancel}
           </Button>
           <Button
+            id={confirmId}
             type="submit"
-            variant={tone === "warning" ? "primary" : "danger"}
+            variant={confirmVariant ?? (tone === "warning" ? "primary" : "danger")}
             disabled={!canConfirm}
-            // Held by a guard, or armed and then locked (or rendered armed under a lock):
-            // the confirm says why the way Button does — focusable, `aria-disabled`, the
-            // reason in its tooltip and description, a press swallowed (the submit with
-            // it) — and the fields stay as typed. Only busy is the native `disabled`.
+            // Held by a guard (the caller's or a built-in one), or armed and then locked
+            // (or rendered armed under a lock): the confirm says why the way Button
+            // does — focusable, `aria-disabled`, the reason in its tooltip and
+            // description, a press swallowed (the submit with it) — and the fields stay
+            // as typed. Only busy is the native `disabled`.
             disabledReason={confirmReason}
             aria-busy={busy || undefined}
           >
