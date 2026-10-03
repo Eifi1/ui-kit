@@ -1,5 +1,5 @@
-import { useEffect, useEffectEvent, useState } from "react";
-import type { ChangeEvent, DragEvent, ReactNode } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import type { ChangeEvent, DragEvent, HTMLAttributes, ReactNode } from "react";
 import { Upload } from "lucide-react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
@@ -17,6 +17,7 @@ import type {
   ColumnMapping,
   ColumnRole,
 } from "../lib/column-mapping";
+import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { parseTextTable } from "../lib/table-text";
 import type { TableSeparator, TextTable } from "../lib/table-text";
 import { AlertBanner } from "./alert-banner";
@@ -100,7 +101,8 @@ export interface ColumnMapperLabels {
   roleOf: (column: string) => string;
   /** The role select's "no role" option. */
   ignore: string;
-  /** A required role in the select. */
+  /** A required role in the select — only while some role is NOT required: when
+   *  every one is, the mark tells no role from another (0.24, Kurvenschmiede). */
   requiredRole: (role: string) => string;
   /** Under the preview, when it shows fewer rows than were read. */
   previewOf: (shown: number, total: number) => string;
@@ -176,6 +178,29 @@ function formatList(
 
 // ── ColumnRoleTable ───────────────────────────────────────────────────────────
 
+/** A `data-*` attribute, typed so `{ "data-private": "" }` needs no cast. */
+type DataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined };
+
+/**
+ * What {@link ColumnRoleTableProps.bodyProps} puts on the preview's `<tbody>`: `data-*`
+ * hooks, an `id`, a class, a style.
+ */
+export type ColumnRoleTableBodyProps = Omit<
+  HTMLAttributes<HTMLTableSectionElement>,
+  "children" | "dangerouslySetInnerHTML"
+> &
+  DataAttributes;
+
+/**
+ * What {@link ColumnRoleTableProps.rowProps} returns for one preview row's `<tr>` —
+ * the same shape as LineItems' `LineItemsRowProps`, on a table row.
+ */
+export type ColumnRoleTableRowProps = Omit<
+  HTMLAttributes<HTMLTableRowElement>,
+  "children" | "dangerouslySetInnerHTML"
+> &
+  DataAttributes;
+
 export interface ColumnRoleTableProps<
   R extends string,
   M extends ColumnMapping<R> = ColumnMapping<R>,
@@ -202,6 +227,26 @@ export interface ColumnRoleTableProps<
   /** Every role select disabled — keksdose locks them while a re-sniff replaces the
    *  table they point into. */
   disabled?: boolean;
+  /**
+   * Extra attributes for the preview's `<tbody>` (0.24) — keksdose: the sample rows are
+   * the user's own bank data (payees, memos, amounts), and its demo mode blurs exactly
+   * that through `.demo-mode [data-private]` (#336). With nowhere to put the attribute,
+   * its map step reached into the table with a `useLayoutEffect` that set it on the
+   * `<tbody>` after every commit; `bodyProps={{ "data-private": "" }}` declares it.
+   * There is deliberately no head counterpart: the column names and the role selects
+   * are what such a mode is there to show.
+   *
+   * Spread on the kit `TableBody`; a `className` is added to its own.
+   */
+  bodyProps?: ColumnRoleTableBodyProps;
+  /**
+   * Extra attributes for one preview row's `<tr>`, from its cells and its index in the
+   * preview (0.24) — the contract of LineItems' `rowProps` (keksdose K20), on a table:
+   * `data-*` hooks (a per-row `data-private`, a test id), an `id`, a class. Called for
+   * the rows drawn, the first {@link previewRows}. The row has no attributes of its own
+   * to protect; a `className` is added after its classes.
+   */
+  rowProps?: (row: readonly string[], index: number) => ColumnRoleTableRowProps | undefined;
   labels?: Partial<ColumnMapperLabels>;
   className?: string;
 }
@@ -217,13 +262,25 @@ export interface ColumnRoleTableProps<
  * not after the import. A column with no role says "Ignore" and its values are dimmed:
  * the state that most needs to be visible in a twelve-column bank export.
  *
- * Picking a role another column holds MOVES it ({@link assignColumnRole}). Required
- * roles say so in the list, and what the table still needs is named under it — a
- * required group as "either Amount, Debit or Credit".
+ * Picking a role another column holds MOVES it ({@link assignColumnRole}). What the
+ * table still needs is named under it — a required group as "either Amount, Debit or
+ * Credit". Required roles say "(required)" in the list only where some role is not
+ * (0.24): Kurvenschmiede's roles are all required, so the mark told no option from
+ * another, and on a phone it cut the role's own name short ("Zeit (s) (erforderl…")
+ * — the part of the option the reader has to read. The "Still needed" line already
+ * says what is missing; a mark that distinguishes nothing is only noise.
  *
  * The table scrolls sideways inside its own box (the kit {@link Table}'s wrapper, a
  * named, keyboard-reachable region while it overflows), so a wide export never widens
- * the page at 390px.
+ * the page at 390px. An edge with columns behind it fades out (0.24, Kurvenschmiede:
+ * on a phone the fourth column's select sat off-screen and nothing said there was more
+ * to the right; phone scrollbars are overlays that show only while you drag). It is
+ * the kit Tabs strip's measured fade: drawn only while something is hidden on that
+ * side, so a table that fits is painted as before; both ends once scrolled into the
+ * middle; the reading direction's own in RTL; never animated, so there is nothing for
+ * reduced motion to turn off; and a `mask-image`, which changes no layout and needs no
+ * background colour to fade to. A role select focused behind the fade is scrolled
+ * clear of it.
  */
 export function ColumnRoleTable<
   R extends string,
@@ -238,6 +295,8 @@ export function ColumnRoleTable<
   previewRows = 5,
   totalRows,
   disabled,
+  bodyProps,
+  rowProps,
   labels: labelsProp,
   className,
 }: ColumnRoleTableProps<R, M>) {
@@ -265,86 +324,119 @@ export function ColumnRoleTable<
       ? labelOf(gap[0])
       : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
   );
+  // "(required)" only where it tells one option from another.
+  const markRequired = roles.some((role) => role.required !== true);
+
+  // The Table's own scroll wrapper — the `<table>`'s parent — is what overflows; the
+  // fade is measured on it and drawn on the box round it, which has the same edges.
+  const scroller = useRef<HTMLElement | null>(null);
+  const tableRef = useCallback((table: HTMLTableElement | null) => {
+    scroller.current = table?.parentElement ?? null;
+  }, []);
+  const fade = useStripFade(scroller);
 
   return (
     <div
       className={cn("min-w-0 space-y-1.5", className)}
       data-slot="column-role-table"
     >
-      <Table density="compact" framed aria-label={labels.table}>
-        <TableHead>
-          <TableRow>
-            {columns.map((column) => {
-              const role = roleOfColumn(roles, mapping, column);
-              const name = nameOf(column);
-              return (
-                <TableHeaderCell
-                  key={column}
-                  scope="col"
-                  className="min-w-36 py-2 align-top"
-                >
-                  <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
-                    {name}
-                  </span>
-                  <Select
-                    size="sm"
-                    className="w-full"
-                    aria-label={labels.roleOf(name)}
-                    value={role ?? ""}
-                    disabled={disabled}
-                    onChange={(event) =>
-                      onMappingChange(
-                        assignColumnRole(
-                          roles,
-                          mapping,
-                          column,
-                          event.target.value === ""
-                            ? null
-                            : (event.target.value as R),
-                        ),
-                      )
-                    }
+      <div
+        data-slot="column-role-table-scroll"
+        // In reading-direction terms ("start", "end", "both"), for a caller's styling.
+        data-overflow={fade.overflow}
+        style={
+          fade.mask
+            ? { maskImage: fade.mask, WebkitMaskImage: fade.mask }
+            : undefined
+        }
+      >
+        <Table
+          ref={tableRef}
+          density="compact"
+          framed
+          aria-label={labels.table}
+        >
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => {
+                const role = roleOfColumn(roles, mapping, column);
+                const name = nameOf(column);
+                return (
+                  <TableHeaderCell
+                    key={column}
+                    scope="col"
+                    className="min-w-36 py-2 align-top"
                   >
-                    <option value="">{labels.ignore}</option>
-                    {roles.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.required === true
-                          ? labels.requiredRole(option.label)
-                          : option.label}
-                      </option>
-                    ))}
-                  </Select>
-                </TableHeaderCell>
-              );
-            })}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {shown.map((row, index) => (
-            <TableRow key={index}>
-              {columns.map((column) => (
-                <TableCell
-                  key={column}
-                  data-ignored={
-                    roleOfColumn(roles, mapping, column) === null || undefined
-                  }
-                  className={cn(
-                    "font-mono whitespace-nowrap",
-                    // Dimmed, not hidden: its values are what tell you whether ignoring
-                    // it was right.
-                    roleOfColumn(roles, mapping, column) === null &&
-                      "text-[var(--text-muted)]",
-                  )}
-                >
-                  <span className="block max-w-56 truncate">
-                    {row[column] ?? ""}
-                  </span>
-                </TableCell>
-              ))}
+                    <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
+                      {name}
+                    </span>
+                    <Select
+                      size="sm"
+                      className="w-full"
+                      aria-label={labels.roleOf(name)}
+                      value={role ?? ""}
+                      disabled={disabled}
+                      // Focus brings a select behind the fade clear of it — the browser's
+                      // own scroll stops at the edge, under the fade.
+                      onFocus={(event) => {
+                        const cell = event.currentTarget.closest("th");
+                        if (scroller.current && cell)
+                          scrollIntoStrip(scroller.current, cell);
+                      }}
+                      onChange={(event) =>
+                        onMappingChange(
+                          assignColumnRole(
+                            roles,
+                            mapping,
+                            column,
+                            event.target.value === ""
+                              ? null
+                              : (event.target.value as R),
+                          ),
+                        )
+                      }
+                    >
+                      <option value="">{labels.ignore}</option>
+                      {roles.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.required === true && markRequired
+                            ? labels.requiredRole(option.label)
+                            : option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </TableHeaderCell>
+                );
+              })}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody {...bodyProps}>
+            {shown.map((row, index) => (
+              <TableRow {...rowProps?.(row, index)} key={index}>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column}
+                    data-ignored={
+                      roleOfColumn(roles, mapping, column) === null || undefined
+                    }
+                    className={cn(
+                      "font-mono whitespace-nowrap",
+                      // Dimmed, not hidden: its values are what tell you whether ignoring
+                      // it was right.
+                      roleOfColumn(roles, mapping, column) === null &&
+                        "text-[var(--text-muted)]",
+                    )}
+                  >
+                    <span className="block max-w-56 truncate">
+                      {row[column] ?? ""}
+                    </span>
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       {total > shown.length && (
         <p className="text-xs text-[var(--text-muted)]">
           {labels.previewOf(shown.length, total)}
@@ -392,6 +484,12 @@ export interface ColumnMapperProps<R extends string> {
    *  order. */
   guess?: (table: TextTable) => ColumnMapping<R>;
   disabled?: boolean;
+  /** The preview table's `<tbody>` attributes — {@link ColumnRoleTableProps.bodyProps}
+   *  (0.24): `{ "data-private": "" }` for a table of someone's own data. */
+  bodyProps?: ColumnRoleTableBodyProps;
+  /** One preview row's `<tr>` attributes — {@link ColumnRoleTableProps.rowProps}
+   *  (0.24). `row` is the row as read, `index` its place in the preview. */
+  rowProps?: (row: readonly string[], index: number) => ColumnRoleTableRowProps | undefined;
   labels?: Partial<ColumnMapperLabels>;
   className?: string;
 }
@@ -439,6 +537,8 @@ export function ColumnMapper<R extends string>({
   previewRows = 5,
   guess,
   disabled = false,
+  bodyProps,
+  rowProps,
   labels: labelsProp,
   className,
 }: ColumnMapperProps<R>) {
@@ -632,6 +732,8 @@ export function ColumnMapper<R extends string>({
             onMappingChange={(mapping) => commit({ ...state, mapping })}
             previewRows={previewRows}
             disabled={disabled}
+            bodyProps={bodyProps}
+            rowProps={rowProps}
             labels={labelsProp}
           />
           {unread.length > 0 && (

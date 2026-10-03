@@ -176,7 +176,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.22.0: RhfTimeInput, RhfDateRangePicker, RhfToggleGroup (kastlan 4), RhfIbanInput,
   // RhfPhoneInput (+5).
   // 0.23.0: RhfCountrySelect, RhfMonthPicker (kastlan) (+2).
-  ["@eifi1/ui-kit/rhf", rhf, 28],
+  // 0.24.0: RhfInlineEntityCombobox (kastlan's AccountPicker, focus-on-error) (+1).
+  ["@eifi1/ui-kit/rhf", rhf, 29],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).

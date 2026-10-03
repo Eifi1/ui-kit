@@ -266,6 +266,13 @@ const InlineCreateRow023Demo = lazySection(() => import("./sections/combobox-023
 const StepperNavFinishLock023Demo = lazySection(() => import("./sections/combobox-023-demo"), "StepperNavFinishLock023Demo");
 const DateRange023Demo = lazySection(() => import("./sections/date-range-023-demo"), "DateRange023Demo");
 const ColumnMapper023Demo = lazySection(() => import("./sections/column-mapper-023-demo"), "ColumnMapper023Demo");
+// 0.24.0: the apps' 0.23 adoption round.
+const Textarea024Demo = lazySection(() => import("./sections/textarea-024-demo"), "Textarea024Demo");
+const DangerConfirm024Demo = lazySection(() => import("./sections/confirm-024-demo"), "DangerConfirm024Demo");
+const ChatComposerSlot024Demo = lazySection(() => import("./sections/feedback-024-demo"), "ChatComposerSlot024Demo");
+const ColumnMapper024Demo = lazySection(() => import("./sections/column-mapper-024-demo"), "ColumnMapper024Demo");
+const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox-024-demo"), "RhfInlineEntity024Demo");
+const AutocompleteHint024Demo = lazySection(() => import("./sections/combobox-024-demo"), "AutocompleteHint024Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -414,6 +421,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Fields022Demo />
             <AccountNumbers022Demo />
             <FieldStrip023Demo />
+            <Textarea024Demo />
           </>
         ),
       },
@@ -424,7 +432,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox"],
         Body: () => (
           <>
             <FormsRhf />
@@ -445,6 +453,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <CommitControls022Demo />
             <Rhf023Demo />
             <FormActions023Demo />
+            <RhfInlineEntity024Demo />
           </>
         ),
       },
@@ -585,6 +594,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <AutocompleteDemo />
             <ComboboxClipsDemo />
             <PickerHints022Demo />
+            <AutocompleteHint024Demo />
           </>
         ),
       },
@@ -635,6 +645,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TableTextDemo />
             <InlineEdit022Demo />
             <ColumnMapper023Demo />
+            <ColumnMapper024Demo />
           </>
         ),
       },
@@ -663,6 +674,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <DangerConfirmDemo />
             <Guards022Demo />
             <DangerConfirm023Demo />
+            <DangerConfirm024Demo />
           </>
         ),
       },
@@ -1199,6 +1211,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Feedback014Demo />
             <ChatComposer022Demo />
             <ChatComposerCount023Demo />
+            <ChatComposerSlot024Demo />
           </>
         ),
       },

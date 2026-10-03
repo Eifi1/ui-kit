@@ -1,5 +1,5 @@
 import { useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { ReactNode, Ref } from "react";
+import type { ReactNode, Ref, RefObject } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
@@ -467,11 +467,46 @@ function toDate(value: Date | string | number): Date | null {
 /** What the composer's attach control takes — {@link FeedbackNoteAttachment} with the
  *  labels optional, since the field reads `feedbackAttachment` from the provider, and
  *  `onError` the field's own (0.23.0): it is handed the refused file and the limit too
- *  (`FeedbackAttachmentErrorInfo`), and a `(kind) => …` handler still fits. */
+ *  (`FeedbackAttachmentErrorInfo`), and a `(kind) => …` handler still fits. Since
+ *  0.24.0 also the field's `buttonVariant` / `buttonSize`, for a composer whose row
+ *  wants smaller or quieter attach buttons than the bordered `md` default. */
 export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" | "onError"> & {
   labels?: Partial<FeedbackAttachmentLabels>;
   onError?: FeedbackAttachmentFieldSingleProps["onError"];
-};
+} & Pick<FeedbackAttachmentFieldSingleProps, "buttonVariant" | "buttonSize">;
+
+/**
+ * What a render-prop {@link FeedbackComposerProps.attachmentSlot} is handed (0.24.0,
+ * keksdose).
+ *
+ * keksdose's support chat put `<FeedbackAttachmentField refs>` in the slot and a
+ * screenshot pasted into the reply box never reached it: the box is the field's
+ * sibling, so the paste bubbles to their common parent — the composer's root — and the
+ * field hears it only through `pasteFrom`, which needs that root. The composer kept it
+ * to itself, so keksdose wrapped the whole composer in a ref'd `<div>` of its own just
+ * to have an element to hand over.
+ */
+export interface FeedbackComposerSlotContext {
+  /**
+   * The composer's root, round the text box and this slot — the field's `pasteFrom`,
+   * as it is: `pasteFrom={slot.root}`.
+   *
+   * A ref, not the element, because `pasteFrom` is one: the field reads `.current` in
+   * an effect, and the slot renders INSIDE this root, so the two are committed together
+   * and React attaches the root before any effect of the slot's runs — the first paste
+   * after the first paint already lands. The element itself would be `null` on the
+   * first render (it does not exist yet) and could only arrive by a second render
+   * through state; the ref is the same object every render, so the field's listener is
+   * added once and never re-added.
+   *
+   * With the built-in `attachment` on as well, it listens on this root too: hand the
+   * root to one field only, or an image pasted once is attached twice.
+   */
+  root: RefObject<HTMLElement | null>;
+  /** The composer's `pending` — a send is in flight. For the field's `disabled`
+   *  (keksdose G5b): the message carries the attachments as they were at the press. */
+  pending: boolean;
+}
 
 export interface FeedbackComposerProps {
   /**
@@ -496,8 +531,21 @@ export interface FeedbackComposerProps {
    * The slot is the host's picker plus the chips of what is uploaded; the upload, the
    * refs and clearing them once `onSend` resolves stay with the host. Pair it with
    * `canSend`.
+   *
+   * A node, or (0.24.0) a function of {@link FeedbackComposerSlotContext} that returns
+   * one — for a field that wants the composer's root as its `pasteFrom`, so a
+   * screenshot pasted into the box reaches it, and `pending` for its `disabled`:
+   *
+   * ```tsx
+   * attachmentSlot={({ root, pending }) => (
+   *   <FeedbackAttachmentField refs pasteFrom={root} disabled={pending} … />
+   * )}
+   * ```
+   *
+   * Called once per render of the composer, and not at all while `disabledReason`
+   * stands in for it.
    */
-  attachmentSlot?: ReactNode;
+  attachmentSlot?: ReactNode | ((slot: FeedbackComposerSlotContext) => ReactNode);
   /**
    * Whether Send is enabled, over the composer's own rule (some text in the box) —
    * for state the composer cannot see, i.e. `attachmentSlot`'s (keksdose G5): `true`
@@ -718,6 +766,14 @@ export function FeedbackComposer({
   };
 
   const config = attachment === true ? {} : attachment || null;
+  // The slot is handed the ref OBJECT, for a field's `pasteFrom`, which reads `.current`
+  // in an effect once the root is attached — nothing reads it during this render (see
+  // FeedbackComposerSlotContext.root).
+  const slot =
+    typeof attachmentSlot === "function"
+      ? // eslint-disable-next-line react-hooks/refs -- handed on for an effect, not read here
+        attachmentSlot({ root, pending })
+      : attachmentSlot;
 
   return (
     <div {...rootAttributes} ref={root} className={cn("space-y-2", className)}>
@@ -756,7 +812,7 @@ export function FeedbackComposer({
         }}
       />
       <div className="flex flex-wrap items-end justify-between gap-2">
-        {config || attachmentSlot != null ? (
+        {config || slot != null ? (
           <div className="flex min-w-0 flex-wrap items-end gap-2">
             {config && (
               <FeedbackAttachmentField
@@ -767,11 +823,13 @@ export function FeedbackComposer({
                 maxBytes={config.maxBytes}
                 onError={config.onError}
                 onCaptureScreenshot={config.onCaptureScreenshot}
+                buttonVariant={config.buttonVariant}
+                buttonSize={config.buttonSize}
                 // The box is this field's sibling; a paste in it bubbles to `root`.
                 pasteFrom={root}
               />
             )}
-            {attachmentSlot}
+            {slot}
           </div>
         ) : (
           <span />
@@ -827,3 +885,5 @@ export type ChatComposerHandle = FeedbackComposerHandle;
 /** {@link FeedbackComposerLabels}, for {@link ChatComposer} — still the `feedbackComposer`
  *  namespace of the provider. */
 export type ChatComposerLabels = FeedbackComposerLabels;
+/** {@link FeedbackComposerSlotContext}, for {@link ChatComposer}'s `attachmentSlot`. */
+export type ChatComposerSlotContext = FeedbackComposerSlotContext;

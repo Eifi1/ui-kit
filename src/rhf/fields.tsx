@@ -9,6 +9,7 @@
  *   <RhfDateField name="start" label="Start" />
  *   <RhfSelect name="type" label="Type" options={TYPES} />
  *   <RhfCombobox name="tenantId" label="Tenant" options={tenants} clearable />
+ *   <RhfInlineEntityCombobox name="accountId" label="Account" options={accounts} />
  *   <RhfCheckbox name="isDefault" label="Default account" />
  *   <RhfTimeInput name="meetingTime" label="Time" />
  *   <RhfDateRangePicker fromName="periodFrom" toName="periodTo" label="Period" />
@@ -78,7 +79,12 @@ import {
 } from "../components/toggle-group";
 import { Checkbox, type CheckboxProps } from "../components/checkbox";
 import { EntityCombobox, type EntityComboboxProps } from "../components/entity-combobox";
-import { Combobox, type ComboboxProps } from "../components/combobox";
+import {
+  Combobox,
+  InlineEntityCombobox,
+  type ComboboxProps,
+  type InlineEntityComboboxProps,
+} from "../components/combobox";
 import type { ComboClearValue } from "../components/combobox-core";
 import { cn } from "../lib/cn";
 
@@ -1769,11 +1775,17 @@ export type RhfComboboxProps<
     | "emptyLabel"
     | "clearable"
     | "clearLabel"
+    | "closeLabel"
     | "onCreate"
     | "createLabel"
+    | "createEmptyLabel"
+    | "createCommit"
+    | "commit"
+    | "disabledReason"
     | "filter"
     | "minChars"
     | "debounceMs"
+    | "aria-label"
   > & {
     /** What a clear stores — the picker's `clearValue`. Default `null`; `""` for a
      *  schema that spells "no choice" as an empty string. */
@@ -1791,6 +1803,8 @@ function EntityControl<V extends string | number>({
   describedBy,
   clearValue,
   comboClassName,
+  sheetTitle,
+  focusRef,
   comboProps,
 }: {
   field: ControllerRenderProps;
@@ -1801,12 +1815,15 @@ function EntityControl<V extends string | number>({
   describedBy: string | undefined;
   clearValue: ComboClearValue;
   comboClassName?: string;
+  sheetTitle: ReactNode;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   comboProps: Omit<RhfComboboxProps<FieldValues, string, V>, keyof RhfFieldBaseProps | "clearValue" | "comboClassName">;
 }) {
   const box = useRef<HTMLDivElement>(null);
   // EntityCombobox puts `id` and the ARIA below on its trigger, so the label's
-  // `htmlFor` names it, the hint describes it and the focus handle finds it by id.
-  useFocusHandle(field.ref, () => document.getElementById(id));
+  // `htmlFor` names it and the hint describes it; `field.ref` reaches the trigger
+  // through the picker's own `ref` (0.24), as RhfCountrySelect's does.
   // EntityCombobox reports no blur: focus leaving the picker marks the field touched.
   const onBlur = field.onBlur;
   useLayoutEffect(() => {
@@ -1819,7 +1836,11 @@ function EntityControl<V extends string | number>({
   return (
     <div ref={box}>
       <EntityCombobox<V, ComboClearValue>
+        // The form's label titles the phone sheet: the picker is not handed `label`,
+        // which the FormLabel above already draws.
+        sheetTitle={sheetTitle}
         {...comboProps}
+        ref={focusRef}
         className={comboClassName}
         id={id}
         aria-describedby={describedBy}
@@ -1841,6 +1862,14 @@ function EntityControl<V extends string | number>({
  * The kit's {@link EntityCombobox}: an id-keyed pick from `options` or `loadOptions`.
  * Stores the option's `value`, or `clearValue` on a clear (only offered with
  * `clearable`).
+ *
+ * 0.24: `field.ref` goes through the picker's own `ref` to its trigger (it used to be
+ * a focus handle that found the trigger by id — the same element, now by the route
+ * every other binding takes); the write lock (`commit`, `disabledReason`), the create
+ * row's `createEmptyLabel` / `createCommit`, `closeLabel` and `aria-label` pass
+ * through; and the form's label titles the phone sheet, which fell back to the
+ * placeholder. For the INLINE picker — a text input, the account field typed into —
+ * see {@link RhfInlineEntityCombobox}.
  */
 export function RhfCombobox<
   TFieldValues extends FieldValues = FieldValues,
@@ -1876,9 +1905,128 @@ export function RhfCombobox<
           describedBy={describedBy}
           clearValue={clearValue}
           comboClassName={comboClassName}
+          sheetTitle={hasContent(label) ? label : undefined}
+          focusRef={field.ref}
           comboProps={comboProps}
         />
       )}
+    />
+  );
+}
+
+type OwnInlineEntityComboboxProps<V extends string | number> = Omit<
+  InlineEntityComboboxProps<V, ComboClearValue>,
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "onBlur"
+  | "label"
+  | "hint"
+  | "error"
+  | "invalid"
+  | "disabled"
+  | "className"
+  | "id"
+  | "ref"
+  | "clearValue"
+>;
+
+export type RhfInlineEntityComboboxProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  V extends string | number = string | number,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  OwnInlineEntityComboboxProps<V> & {
+    /** What a clear stores — emptying the text, or the "×" with `clearable`. Default
+     *  `null`; `""` for a schema that spells "no choice" as an empty string. The
+     *  picker reads either back as empty. */
+    clearValue?: ComboClearValue;
+    /** Classes for the picker — `className` is the item's box. As {@link RhfCombobox}'s. */
+    comboClassName?: string;
+  };
+
+/**
+ * {@link InlineEntityCombobox} bound to one field, which stores the chosen option's
+ * `value` (an id), or `clearValue` once the text is emptied or the "×" pressed.
+ *
+ * kastlan asked for it (0.24): its account picker IS an `InlineEntityCombobox` — the
+ * account number is typed straight into the field — and the budget line-item form
+ * wired it through {@link RhfField}'s render. The picker took no `ref`, so react-hook-
+ * form's focus-on-error had nothing to focus: a line item saved without an account
+ * failed its submit and left the caret where it was, the one field on the form a
+ * failed submit could not take you to. (The same gap {@link RhfCountrySelect} closed
+ * for the address form's country in 0.23.)
+ *
+ * Bound the way {@link RhfCountrySelect} is: `field.ref` reaches the `<input>` (the
+ * picker's `ref`, 0.24), the form's error paints the input and is the shell's message
+ * under it, and the hint is the shell's description — so neither is ever handed to the
+ * picker, and its box never changes when one comes or goes. The form's label names
+ * the input through `<label for>` and titles the phone sheet (`sheetTitle`); the picker
+ * draws no floating label of its own. Focus leaving the picker marks the field
+ * touched.
+ *
+ * Everything else is the picker's and passes through: `commit` and `disabledReason`
+ * (a picker whose choice saves stays focusable under a lock and says why), `clearable`,
+ * `autoFocus`, `aria-label` for an unlabelled cell, and the create row — `onCreate`,
+ * `createLabel`, `createEmptyLabel`, `createCommit`. Making the record is the
+ * caller's, and so is storing its id once it exists:
+ *
+ * ```tsx
+ * <RhfInlineEntityCombobox<LineItem, "account_id", number>
+ *   name="account_id" label="Account" required options={accounts}
+ *   rules={{ required: "Choose an account" }}
+ *   onCreate={async (name) => form.setValue("account_id", (await createAccount(name)).id)} />
+ * ```
+ *
+ * For the button-shaped picker with an async `loadOptions`, see {@link RhfCombobox}.
+ */
+export function RhfInlineEntityCombobox<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  V extends string | number = string | number,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  clearValue = null,
+  comboClassName,
+  ...comboProps
+}: RhfInlineEntityComboboxProps<TFieldValues, TName, V, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid }) => {
+        const value: unknown = field.value;
+        return (
+          // FormControl clones this element with `id` / `aria-describedby` /
+          // `aria-invalid`, which the picker routes to its <input>.
+          <InlineEntityCombobox<V, ComboClearValue>
+            aria-required={required || undefined}
+            // The form's label is the phone sheet's heading — the picker is not handed
+            // `label`, which the FormLabel above already draws. A caller's own wins.
+            sheetTitle={hasContent(label) ? label : undefined}
+            {...comboProps}
+            className={comboClassName}
+            ref={field.ref}
+            value={(value ?? null) as V | ComboClearValue | null}
+            clearValue={clearValue}
+            onChange={(v) => field.onChange(v)}
+            // The wrapper's blur, which the <input>'s bubbles to after the picker has
+            // judged any loose text — so the value is in before the field is touched.
+            onBlur={field.onBlur}
+            disabled={field.disabled}
+            invalid={invalid}
+          />
+        );
+      }}
     />
   );
 }
@@ -1899,6 +2047,9 @@ export type RhfTextComboboxProps<
     | "optionAdornment"
     | "autoFocus"
     | "aria-label"
+    | "closeLabel"
+    | "commit"
+    | "disabledReason"
   > & {
     /** Classes for the combobox. */
     comboClassName?: string;
@@ -1939,6 +2090,8 @@ export function RhfTextCombobox<
           id={id}
           describedBy={describedBy}
           className={comboClassName}
+          sheetTitle={hasContent(label) ? label : undefined}
+          focusRef={field.ref}
           comboProps={comboProps}
         />
       )}
@@ -1954,6 +2107,8 @@ function TextComboControl({
   id,
   describedBy,
   className,
+  sheetTitle,
+  focusRef,
   comboProps,
 }: {
   field: ControllerRenderProps;
@@ -1963,16 +2118,22 @@ function TextComboControl({
   id: string;
   describedBy: string | undefined;
   className?: string;
+  sheetTitle: ReactNode;
+  /** `field.ref` — see EntityControl. */
+  focusRef: ControllerRenderProps["ref"];
   comboProps: Omit<RhfTextComboboxProps, keyof RhfFieldBaseProps | "comboClassName">;
 }) {
   // The combobox routes `id` and its ARIA to its <input>, so the label's `htmlFor`
-  // names it, the hint describes it and the focus handle finds it; the error is its
-  // own `error` prop, which it merges in after the hint.
-  useFocusHandle(field.ref, () => document.getElementById(id));
+  // names it and the hint describes it; `field.ref` reaches the <input> through the
+  // combobox's own `ref` (0.24). The error is its own `error` prop, which it merges
+  // in after the hint.
   const value: unknown = field.value;
   return (
     <Combobox
+      // The form's label titles the phone sheet (see EntityControl).
+      sheetTitle={sheetTitle}
       {...comboProps}
+      ref={focusRef}
       id={id}
       aria-describedby={describedBy}
       aria-required={required || undefined}

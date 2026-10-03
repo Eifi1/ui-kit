@@ -520,3 +520,268 @@ describe("CurrentPasswordInput", () => {
     expect(field).not.toBeDisabled();
   });
 });
+
+/** keksdose's 0.23 adoption: `UserActionConfirm` (an amber question, a red Go) and
+ *  `UserPlanEditor` (a plan picker inside the tile, held until a different plan is
+ *  picked — without the lock's printed line). */
+describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of the caller's (0.24)", () => {
+  it("takes the confirm's variant from `tone` by default, and from `confirmVariant` when given", () => {
+    const { rerender } = render(<DangerConfirm armed onConfirm={() => {}} />);
+    expect(confirmButton().className).toContain("bg-[var(--danger)]");
+    rerender(<DangerConfirm armed tone="warning" onConfirm={() => {}} />);
+    expect(confirmButton().className).not.toContain("bg-[var(--danger)]");
+    expect(confirmButton().className).toContain("bg-[var(--bg-surface-2)]");
+    // The amber question and the red Go of keksdose's UserActionConfirm.
+    rerender(<DangerConfirm armed tone="warning" confirmVariant="danger" prompt="Reset?" onConfirm={() => {}} />);
+    expect(confirmButton().className).toContain("bg-[var(--danger)]");
+    expect(screen.getByText("Reset?").className).toContain("text-[var(--warning)]");
+    rerender(<DangerConfirm armed confirmVariant="brand" onConfirm={() => {}} />);
+    expect(confirmButton().className).toContain("bg-[var(--brand)]");
+  });
+
+  it("leaves the arm button to `tone`", () => {
+    render(<DangerConfirm tone="warning" confirmVariant="danger" onConfirm={() => {}} />);
+    expect(screen.getByRole("button", { name: "Delete…" }).className).not.toContain("bg-[var(--danger)]");
+  });
+
+  it("holds the armed confirm for the caller's reason: focusable, the reason in its tooltip, no line printed", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const { container, rerender } = render(
+      <DangerConfirm armed confirmDisabledReason="Pick a different plan" onConfirm={onConfirm} />,
+    );
+    expectHeld("Pick a different plan");
+    await user.hover(confirmButton());
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Pick a different plan");
+    await user.click(confirmButton());
+    expect(onConfirm).not.toHaveBeenCalled();
+    // Not the lock's sentence under the buttons: only the button's hidden description
+    // and the tooltip carry it.
+    const printed = Array.from(container.querySelectorAll("p")).filter((p) => p.textContent === "Pick a different plan");
+    expect(printed).toEqual([]);
+    rerender(<DangerConfirm armed confirmDisabledReason={undefined} onConfirm={onConfirm} />);
+    expectReady();
+    await user.click(confirmButton());
+    expect(onConfirm).toHaveBeenCalledOnce();
+  });
+
+  it("does not hold the arm button — the guard is lifted inside the tile", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm confirmDisabledReason="Pick a different plan" onConfirm={() => {}} />);
+    const arm = screen.getByRole("button", { name: "Delete…" });
+    expect(arm).not.toHaveAttribute("aria-disabled");
+    await user.click(arm);
+    expectHeld("Pick a different plan");
+  });
+
+  it("swallows Enter in a field while the caller's guard holds", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    render(<DangerConfirm armed phrase="ok" confirmDisabledReason="Not yet" onConfirm={onConfirm} />);
+    await user.type(screen.getByLabelText("Type “ok” to confirm"), "ok{Enter}");
+    expect(onConfirm).not.toHaveBeenCalled();
+    expectHeld("Not yet");
+  });
+
+  it("names the lock first, then the caller's guard, then the first built-in guard", () => {
+    const tile = (props: { lockedReason?: string; confirmDisabledReason?: string }) => (
+      <DangerConfirm armed requireAcknowledge phrase="ok" onConfirm={() => {}} {...props} />
+    );
+    const { rerender } = render(tile({ lockedReason: "Read-only demo", confirmDisabledReason: "Pick a different plan" }));
+    expectHeld("Read-only demo");
+    rerender(tile({ confirmDisabledReason: "Pick a different plan" }));
+    expectHeld("Pick a different plan");
+    rerender(tile({}));
+    expectHeld("Tick the box to confirm");
+  });
+
+  it("treats an empty reason as none — `cond && reason` on the path where there is none", () => {
+    render(<DangerConfirm armed confirmDisabledReason={false} onConfirm={() => {}} />);
+    expectReady();
+  });
+
+  it("draws the caller's fields only once armed, after the consequences and before the guards", async () => {
+    const user = userEvent.setup();
+    render(
+      <DangerConfirm consequences={["Budgets are kept."]} requireAcknowledge phrase="ok" requirePassword onConfirm={() => {}}>
+        <label>
+          Plan
+          <select defaultValue="FREE">
+            <option>FREE</option>
+            <option>PRO</option>
+          </select>
+        </label>
+      </DangerConfirm>,
+    );
+    expect(screen.queryByRole("combobox", { name: "Plan" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    const order = [
+      screen.getByRole("listitem"),
+      screen.getByRole("combobox", { name: "Plan" }),
+      screen.getByRole("checkbox"),
+      screen.getByLabelText("Type “ok” to confirm"),
+      screen.getByLabelText("Password"),
+      screen.getByRole("button", { name: "Cancel" }),
+    ];
+    for (let i = 1; i < order.length; i++) {
+      expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it("focuses the caller's first field on arm, then tabs through the tick to Cancel and the confirm", async () => {
+    const user = userEvent.setup();
+    render(
+      <DangerConfirm requireAcknowledge confirmDisabledReason="Pick a different plan" onConfirm={() => {}}>
+        <p>FREE today, 2 of 3 budgets used.</p>
+        <label>
+          Plan
+          <select defaultValue="FREE">
+            <option>FREE</option>
+            <option>PRO</option>
+          </select>
+        </label>
+      </DangerConfirm>,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.getByRole("combobox", { name: "Plan" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("checkbox")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+    await user.tab();
+    // Held, and still a stop: the keyboard user lands on it and hears why.
+    expect(confirmButton()).toHaveFocus();
+  });
+
+  it("falls back to the tile's own first field when the caller's children hold none", async () => {
+    const user = userEvent.setup();
+    render(
+      <DangerConfirm phrase="ok" onConfirm={() => {}}>
+        <p>
+          See <a href="#plans">the plans</a> first.
+        </p>
+      </DangerConfirm>,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.getByLabelText("Type “ok” to confirm")).toHaveFocus();
+  });
+
+  it("focuses the checked radio of a group in the caller's fields, not the first", async () => {
+    const user = userEvent.setup();
+    render(
+      <DangerConfirm onConfirm={() => {}}>
+        <label>
+          <input type="radio" name="plan" value="FREE" /> FREE
+        </label>
+        <label>
+          <input type="radio" name="plan" value="PRO" defaultChecked /> PRO
+        </label>
+      </DangerConfirm>,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.getByRole("radio", { name: "PRO" })).toHaveFocus();
+  });
+
+  it("confirms on Enter in a caller's text field once the guards allow", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    render(
+      <DangerConfirm armed onConfirm={onConfirm}>
+        <input aria-label="Note" />
+      </DangerConfirm>,
+    );
+    await user.type(screen.getByRole("textbox", { name: "Note" }), "moved by request{Enter}");
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(undefined, {});
+  });
+
+  it("draws no wrapper for no fields, so a 0.23 tile is laid out as before", () => {
+    const { container, rerender } = render(<DangerConfirm armed onConfirm={() => {}} />);
+    const form = container.querySelector("form")!;
+    // The prompt and the button row.
+    expect(form.children).toHaveLength(2);
+    rerender(<DangerConfirm armed onConfirm={() => {}}>{false}</DangerConfirm>);
+    expect(container.querySelector("form")!.children).toHaveLength(2);
+    rerender(
+      <DangerConfirm armed onConfirm={() => {}}>
+        {null}
+        {false}
+      </DangerConfirm>,
+    );
+    expect(container.querySelector("form")!.children).toHaveLength(2);
+  });
+});
+
+/** What a browser does to a focused button that turns natively `disabled`: the focus
+ *  falls to <body>. jsdom leaves it on the button (and will not `blur()` a disabled one), so
+ *  it is lost the other way — through a field that is focused and removed. */
+function dropFocus() {
+  const sink = document.createElement("input");
+  document.body.append(sink);
+  act(() => sink.focus());
+  act(() => sink.remove());
+  expect(document.body).toHaveFocus();
+}
+
+/** keksdose asked why Cancel is dead while the action runs when FormActions' is not —
+ *  it stays so (see `busy`); what changed is where the focus is when it fails. */
+describe("DangerConfirm — while the action runs (0.24)", () => {
+  it("keeps Cancel unusable while busy: the tile stays armed", async () => {
+    const user = userEvent.setup();
+    const onArmedChange = vi.fn();
+    render(<DangerConfirm armed busy onArmedChange={onArmedChange} onConfirm={() => {}} />);
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    expect(cancel).toBeDisabled();
+    await user.click(cancel);
+    expect(onArmedChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("brings the focus back to the confirm when a failed action had dropped it", async () => {
+    const user = userEvent.setup();
+    let reject!: () => void;
+    render(<DangerConfirm requireAcknowledge onConfirm={() => new Promise<void>((_, r) => (reject = r))} />);
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(confirmButton());
+    dropFocus();
+    await act(async () => reject());
+    expect(confirmButton()).toHaveFocus();
+    expectReady();
+  });
+
+  it("does the same for a caller's `busy` that clears with the tile still armed", async () => {
+    const user = userEvent.setup();
+    function Parent() {
+      const [busy, setBusy] = useState(false);
+      return (
+        <>
+          <DangerConfirm armed busy={busy} onConfirm={() => setBusy(true)} />
+          <button type="button" onClick={() => setBusy(false)}>
+            fail
+          </button>
+        </>
+      );
+    }
+    render(<Parent />);
+    await user.click(confirmButton());
+    dropFocus();
+    act(() => screen.getByRole("button", { name: "fail" }).click());
+    expect(confirmButton()).toHaveFocus();
+  });
+
+  it("leaves the focus where it is when it was not lost (Enter in a field), or no confirm was pressed", async () => {
+    const user = userEvent.setup();
+    let reject!: () => void;
+    const { rerender } = render(
+      <DangerConfirm armed requirePassword onConfirm={() => new Promise<void>((_, r) => (reject = r))} />,
+    );
+    await user.type(screen.getByLabelText("Password"), "wrong{Enter}");
+    await act(async () => reject());
+    expect(screen.getByLabelText("Password")).toHaveFocus();
+    // A `busy` that comes and goes on its own does not pull the page's focus in.
+    dropFocus();
+    rerender(<DangerConfirm armed requirePassword busy onConfirm={() => {}} />);
+    rerender(<DangerConfirm armed requirePassword onConfirm={() => {}} />);
+    expect(document.body).toHaveFocus();
+  });
+});

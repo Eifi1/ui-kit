@@ -10,6 +10,7 @@ import {
   RhfDateField,
   RhfDateRangePicker,
   RhfIbanInput,
+  RhfInlineEntityCombobox,
   RhfIntegerField,
   RhfMoneyField,
   RhfMonthPicker,
@@ -250,6 +251,13 @@ const BINDINGS: Array<[string, Values, ReactElement, () => HTMLElement]> = [
     "RhfCombobox",
     { f: null },
     <RhfCombobox name="f" label="Field" options={[{ value: 1, label: "Example Ltd" }]} rules={REQUIRED} />,
+    () => screen.getByRole("combobox", { name: "Field" }),
+  ],
+  [
+    // 0.24 (kastlan): the inline picker's <input>, through the picker's own `ref`.
+    "RhfInlineEntityCombobox",
+    { f: null },
+    <RhfInlineEntityCombobox name="f" label="Field" options={[{ value: 1, label: "Example Ltd" }]} rules={REQUIRED} />,
     () => screen.getByRole("combobox", { name: "Field" }),
   ],
   [

@@ -378,6 +378,22 @@ export function FormActions({
     },
     [callerSaveRef],
   );
+  // The save settled and the form is still here — it failed, and the user retries. The
+  // button was natively disabled while it ran, and a focused button that turns disabled
+  // drops the focus to <body> (DangerConfirm's 0.24 fix, keksdose). Only after a press
+  // of THIS button (`pressed`: a click or the shortcut), so a `pending` that comes and
+  // goes on its own never pulls the page's focus in.
+  const pressed = useRef(false);
+  const wasPending = useRef(pending);
+  useEffect(() => {
+    const settled = wasPending.current && !pending;
+    wasPending.current = pending;
+    if (!settled) return;
+    const ours = pressed.current;
+    pressed.current = false;
+    if (!ours) return;
+    if (document.activeElement === null || document.activeElement === document.body) saveRef.current?.focus();
+  }, [pending]);
   // Read by the shortcut's listener at the moment of the key press, so the listener
   // itself is attached once and never sees a stale `pending`.
   const canSave = !pending && !submitDisabled && !(commit && lock.locked);
@@ -474,7 +490,10 @@ export function FormActions({
           }
           type={onSubmit ? "button" : "submit"}
           form={form}
-          onClick={onSubmit}
+          onClick={() => {
+            pressed.current = true;
+            onSubmit?.();
+          }}
           variant={submitVariant}
           size={saveSize}
           disabled={pending || submitDisabled}
