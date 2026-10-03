@@ -18,7 +18,11 @@ export interface SwipeAction {
   /** Rendered inside the panel. Icons stay the consumer's choice — this package
    *  ships no opinion about which icon set an app uses. */
   icon?: ReactNode;
-  /** Background utility class while the action is previewed but not yet armed. */
+  /** Background utility class while the action is previewed but not yet armed. The
+   *  panel's text is white unless this sets a text colour too — and a fill that turns
+   *  light in dark mode needs one: pass the fill's contrast token
+   *  (`bg-[var(--danger)] text-[var(--danger-contrast)]`; also `--brand-contrast`,
+   *  `--success-contrast`), as the kit's own swipes do since 0.26. */
   className: string;
   /** Background utility class once the drag has passed this action's threshold. */
   armedClassName: string;

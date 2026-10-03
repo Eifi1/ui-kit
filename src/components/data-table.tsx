@@ -1116,8 +1116,15 @@ export function DataTable<T>({
       label: a.label,
       icon: a.icon,
       onCommit: () => void runRowAction(a.action, row),
-      className: a.tone === "danger" ? "bg-[var(--danger)]" : "bg-[var(--brand)]",
-      armedClassName: a.tone === "danger" ? "bg-[var(--danger-hover)]" : "bg-[var(--brand-hover)]",
+      // Each fill's own text colour — the fills are pastels in dark mode (0.26).
+      className:
+        a.tone === "danger"
+          ? "bg-[var(--danger)] text-[var(--danger-contrast)]"
+          : "bg-[var(--brand)] text-[var(--brand-contrast)]",
+      armedClassName:
+        a.tone === "danger"
+          ? "bg-[var(--danger-hover)] text-[var(--danger-contrast)]"
+          : "bg-[var(--brand-hover)] text-[var(--brand-contrast)]",
     });
     return {
       start: swipes.filter((a) => a.swipe === "start").map(toSwipe),

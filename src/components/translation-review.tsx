@@ -766,8 +766,10 @@ export function TranslationReviewPanel({
           label: labels.approve,
           icon: <Check className="size-4" aria-hidden />,
           onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
-          className: "bg-[var(--success)]",
-          armedClassName: "bg-[var(--success)]",
+          // Text on the fill in its own contrast colour: the fills are pastels in dark
+          // mode, where SwipeableRow's default white text was unreadable (0.26).
+          className: "bg-[var(--success)] text-[var(--success-contrast)]",
+          armedClassName: "bg-[var(--success)] text-[var(--success-contrast)]",
         };
       case "edit":
         return {
@@ -780,8 +782,12 @@ export function TranslationReviewPanel({
             setOpenId(r.id);
             setFocusId(r.id);
           },
-          className: missing ? "bg-[var(--brand)]" : "bg-[var(--danger)]",
-          armedClassName: missing ? "bg-[var(--brand-hover)]" : "bg-[var(--danger-hover)]",
+          className: missing
+            ? "bg-[var(--brand)] text-[var(--brand-contrast)]"
+            : "bg-[var(--danger)] text-[var(--danger-contrast)]",
+          armedClassName: missing
+            ? "bg-[var(--brand-hover)] text-[var(--brand-contrast)]"
+            : "bg-[var(--danger-hover)] text-[var(--danger-contrast)]",
         };
       case "clear":
         return {
@@ -789,8 +795,10 @@ export function TranslationReviewPanel({
           icon: <RotateCcw className="size-4" aria-hidden />,
           onCommit: () => void clearRow(r),
           // A step back, not a verdict: neither the approval's green nor the send-back's red.
-          className: "bg-[var(--text-muted)]",
-          armedClassName: "bg-[var(--text-secondary)]",
+          // The surface colour as text: white on the grey in light mode, the dark page on
+          // the light grey in dark mode.
+          className: "bg-[var(--text-muted)] text-[var(--bg-surface)]",
+          armedClassName: "bg-[var(--text-secondary)] text-[var(--bg-surface)]",
         };
     }
   };
