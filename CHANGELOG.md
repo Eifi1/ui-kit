@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.24.1](https://github.com/Eifi1/ui-kit/compare/v0.24.0...v0.24.1) (2026-10-03)
+
+### Fixed
+
+* **deps:** require tailwind-merge ^3.7.0, where px-2 replaces pe-3 ([6bd3028](https://github.com/Eifi1/ui-kit/commit/6bd30289ab2f3a88b4daa77b4d3224e7b643445f))
+
 ## [0.24.0](https://github.com/Eifi1/ui-kit/compare/v0.23.0...v0.24.0) (2026-10-03)
 
 ### Added
