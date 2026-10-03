@@ -117,7 +117,7 @@
   "_dependencies": "Only what the package imports AND owns the version of. `lucide-react` is a PEER: every consumer already declares `lucide-react: ^0.511.0` itself, so a hard dependency here bought each of them a second copy of the icon set in node_modules — and pinned to 0.511.x it held all three behind a release line that is now at 1.x. The range is deliberately wide (`>=0.400.0 <2`): the kit imports named icon components and nothing else, which has been stable across that whole span, so the app picks the version. `flag-icons` was never imported at all — 5.6 MB of stylesheet and SVG installed into every consumer to support class NAMES (`fi fi-xx`) that CurrencyFlag, CurrencySelect and LanguageMenu render as strings. The host supplies that stylesheet; see the dependency section of README.md. It stays a devDependency because the showcase imports it.",
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.0",
+    "tailwind-merge": "^3.7.0",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
