@@ -1,5 +1,5 @@
 import { Checkbox } from "../components/checkbox";
-import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import type { FeedbackContext, FeedbackEnvironment } from "./feedback-record";
 
@@ -121,7 +121,8 @@ export function feedbackContext(input: FeedbackContextInput): FeedbackContext {
  */
 export interface FeedbackContextLabels {
   /** The submitter line's label — the box draws "**User:** Ada Example (ada@example.com)".
-   *  The colon is the box's, after the label. */
+   *  The label alone: the colon between it and the person is the language's
+   *  `common.fieldValue` (fr "Utilisateur : …", zh "用户：…"). */
   user: string;
   /** The checkbox. The URL it is about is the line beneath it. */
   attachUrl: string;
@@ -169,6 +170,14 @@ export function FeedbackContextBox({
   className,
 }: FeedbackContextBoxProps) {
   const labels = useKitLabels("feedbackContext", DEFAULT_FEEDBACK_CONTEXT_LABELS, labelsProp);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const submitter = submitterLine(user);
+  // "User: Ada …" through `common.fieldValue`, so French gets its space before the colon
+  // and Chinese its full-width one; the label and its punctuation are drawn bold, as
+  // keksdose's box does. A `fieldValue` that does not end in the value (an app's own
+  // order) is shown whole, unbolded, rather than cut in the wrong place.
+  const line = common.fieldValue(labels.user, submitter);
+  const lead = line.endsWith(submitter) ? line.slice(0, line.length - submitter.length) : null;
   return (
     <div
       className={cn(
@@ -177,7 +186,14 @@ export function FeedbackContextBox({
       )}
     >
       <div className="[overflow-wrap:anywhere]">
-        <span className="font-medium text-[var(--text-secondary)]">{labels.user}:</span> {submitterLine(user)}
+        {lead === null ? (
+          line
+        ) : (
+          <>
+            <span className="font-medium text-[var(--text-secondary)]">{lead}</span>
+            {submitter}
+          </>
+        )}
       </div>
       <Checkbox
         checked={attachUrl}

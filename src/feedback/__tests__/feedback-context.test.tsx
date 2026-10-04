@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
+import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
 import {
   DEFAULT_FEEDBACK_CONTEXT_LABELS,
   FeedbackContextBox,
@@ -144,6 +146,40 @@ describe("FeedbackContextBox", () => {
       </UiKitProvider>,
     );
     expect(screen.getByText("Reporter:")).toBeInTheDocument();
+  });
+
+  it("puts the language's own colon between the label and the person (common.fieldValue)", () => {
+    const line = (labels: UiKitLabelOverrides) => {
+      const { container, unmount } = render(
+        <UiKitProvider labels={labels}>
+          <Box />
+        </UiKitProvider>,
+      );
+      const bold = container.querySelector(".font-medium")!;
+      const out = { bold: bold.textContent, whole: bold.parentElement!.textContent };
+      unmount();
+      return out;
+    };
+    // French: a no-break space before the colon, as the catalogue's fieldValue writes it.
+    expect(line({ common: UI_KIT_LABELS_FR.common, feedbackContext: UI_KIT_LABELS_FR.feedbackContext })).toEqual({
+      bold: "Utilisateur\u00a0: ",
+      whole: "Utilisateur\u00a0: Ada Example (ada@example.com)",
+    });
+    // Chinese: the full-width colon, and no space after it.
+    expect(line({ common: UI_KIT_LABELS_ZH.common, feedbackContext: UI_KIT_LABELS_ZH.feedbackContext })).toEqual({
+      bold: "用户：",
+      whole: "用户：Ada Example (ada@example.com)",
+    });
+  });
+
+  it("shows an app's fieldValue whole when it does not end in the value", () => {
+    const { container } = render(
+      <UiKitProvider labels={{ common: { fieldValue: (field, value) => `${value} — ${field}` } } as UiKitLabelOverrides}>
+        <Box />
+      </UiKitProvider>,
+    );
+    expect(container.querySelector(".font-medium")?.textContent).not.toContain("User");
+    expect(screen.getByText("Ada Example (ada@example.com) — User")).toBeInTheDocument();
   });
 
   it("has English defaults", () => {
