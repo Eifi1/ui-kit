@@ -23,12 +23,19 @@ const LOCALES = {
   zh: UI_KIT_LABELS_ZH,
 };
 
-/** Every leaf, as text: functions are called with plausible arguments. */
+/** Every leaf, as text: functions are called with plausible arguments — numbers, or the
+ *  same as text for a label that works on text (`feedbackPage.environment`). */
 function leaves(tree: unknown, path = ""): Array<[string, string]> {
   if (typeof tree === "string") return [[path, tree]];
   if (typeof tree === "function") {
+    const fn = tree as (...a: unknown[]) => unknown;
     const args = Array.from({ length: tree.length }, (_, i) => (i === 0 ? 1234 : 2));
-    const out = (tree as (...a: unknown[]) => unknown)(...args);
+    let out: unknown;
+    try {
+      out = fn(...args);
+    } catch {
+      out = fn(...args.map(String));
+    }
     return typeof out === "string" ? [[path, out]] : [];
   }
   if (tree && typeof tree === "object") {

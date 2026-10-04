@@ -20,14 +20,18 @@ export function germanLabels(numberLocale: string): UiKitLabels {
 
   return {
     feedbackAttachment: {
-      attachmentAdd: "Bild anhängen",
+      attachmentAdd: "Anhang hinzufügen",
       attachmentCapture: "Screenshot aufnehmen",
-      attachmentPaste: "…oder einen Screenshot aus der Zwischenablage einfügen.",
+      attachmentPaste:
+        "…oder einen Screenshot direkt aus der Zwischenablage einfügen — so lässt sich ein Ausschnitt zeigen statt der ganzen Seite.",
       attachmentRemove: "Anhang entfernen",
       attachmentList: "Anhänge",
       attachmentScreenshot: "Screenshot",
       attachmentRemoveFile: (name) => `${name} entfernen`,
-      attachmentLimit: (max) => `Maximal ${n(max)} ${max === 1 ? "Anhang" : "Anhänge"} – zum Hinzufügen erst einen entfernen.`,
+      attachmentLimit: (max) =>
+        max === 1
+          ? `Höchstens ${n(max)} Anhang – entfernen Sie ihn, um einen weiteren hinzuzufügen.`
+          : `Höchstens ${n(max)} Anhänge – entfernen Sie einen, um einen weiteren hinzuzufügen.`,
       attachmentUploading: "Wird hochgeladen…",
       attachmentUploadFailed: (name) => `„${name}“ konnte nicht hochgeladen werden`,
     },
@@ -37,7 +41,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       subject: "Betreff",
       body: "Was ist passiert?",
       bodyOptional: "Was ist passiert? (optional)",
-      attachment: "Screenshot",
+      attachment: "Anhang",
       submitHint: "Strg/⌘ + Enter zum Senden",
       cancel: "Abbrechen",
       save: "Senden",
@@ -60,6 +64,96 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sendHint: (modifier) => `${modifier === "Ctrl" ? "Strg" : modifier} + Enter zum Senden`,
       // "Umschalt", the German key label, as in the table's sort hint.
       sendHintEnter: "Enter zum Senden, Umschalt + Enter für neue Zeile",
+    },
+    // 0.27.0 — keksdose's de-CH wording is the canon (docs/feedback-harmonization.md §4),
+    // written here with "ß" like the rest of this source; `swiss()` makes it "grösser".
+    feedbackStatus: {
+      OPEN: "Offen",
+      IN_PROGRESS: "In Bearbeitung",
+      IN_EVALUATION: "Zur Prüfung",
+      NEEDS_LIVE_TEST: "Live testen",
+      POSTPONED: "Zurückgestellt",
+      DONE: "Erledigt",
+      WONT_DO: "Wird nicht umgesetzt",
+    },
+    feedbackCategory: {
+      CRASH: "Absturz",
+      BUG: "Fehler",
+      IDEA: "Idee",
+      QUESTION: "Frage",
+      OTHER: "Sonstiges",
+    },
+    feedbackToast: {
+      submitted: "Danke für Ihr Feedback!",
+      submitFailed: "Feedback konnte nicht gesendet werden",
+      attachmentUnsupported: "Nur Bilder, PDF- oder Textdateien sind erlaubt",
+      attachmentTooLarge: "Datei ist größer als 10 MB",
+      attachmentTooMany: (count) =>
+        count === 1
+          ? "Es passt nur 1 Anhang – die übrigen wurden weggelassen."
+          : `Es passen nur ${n(count)} Anhänge – die übrigen wurden weggelassen.`,
+      captureFailed: "Screenshot konnte nicht aufgenommen werden",
+      updateFailed: "Änderung konnte nicht gespeichert werden.",
+      statusChanged: (status, title) => `Auf „${status}“ gesetzt: ${title}`,
+      statusUndo: "Rückgängig",
+      statusRestored: (status, title) => `Zurück auf „${status}“: ${title}`,
+    },
+    feedbackMenu: {
+      trigger: "Feedback senden",
+      myFeedback: "Mein Feedback",
+      viewFeedback: "Feedback ansehen",
+    },
+    feedbackContext: {
+      user: "Nutzer",
+      attachUrl: "Aktuelle Seiten-URL anhängen",
+    },
+    feedbackPage: {
+      title: "Feedback",
+      myTitle: "Mein Feedback",
+      columnId: "#",
+      columnDate: "Datum",
+      columnCategory: "Kategorie",
+      columnSubject: "Betreff",
+      columnUser: "Nutzer",
+      columnEmail: "E-Mail",
+      columnUrl: "URL",
+      columnStatus: "Status",
+      columnResolved: "Erledigt am",
+      openPage: "Seite öffnen",
+      empty: "Noch kein Feedback",
+      emptyHintMine: "Feedback senden Sie über die Sprechblase in der oberen Leiste.",
+      emptyHintInbox: "Bisher wurde nichts gesendet.",
+      deletedUser: "<gelöschter Nutzer>",
+      // An id, not a count: printed as it is, like the "#" column.
+      userFallback: (id) => `Nutzer #${id}`,
+      environment: (environment) => environment.toUpperCase(),
+      reworkChip: (count) => (count === 1 ? "Nacharbeit" : `Nacharbeit ×${n(count)}`),
+      awaitingFilter: "Nur was auf Sie wartet",
+      phoneActions: "Feedback-Aktionen",
+    },
+    feedbackDetail: {
+      body: "Was ist passiert?",
+      edit: "Bearbeiten",
+      editDescription: "Beschreibung bearbeiten",
+      save: "Speichern",
+      cancel: "Abbrechen",
+      url: "URL",
+      copyUrl: "URL kopieren",
+      attachment: "Anhang",
+      download: (name) => `${name} herunterladen`,
+      downloadFailed: "Der Anhang konnte nicht heruntergeladen werden.",
+      outcome: "Ergebnis",
+      resolvedAt: (date) => `Erledigt am: ${date}`,
+      outcomeAdd: "Ergebnis hinzufügen",
+      outcomeUpdate: "Aktualisieren",
+      outcomePlaceholder: "Was wurde umgesetzt, entschieden oder warum nicht.",
+      rework: "Nacharbeit",
+      openPage: "Seite öffnen",
+      reworkTitle: "Zur Nacharbeit senden",
+      reworkSend: "Nacharbeit senden",
+      reworkPlaceholder: "Was muss noch angepasst werden? Neue Anforderungen oder Richtungswechsel.",
+      reworkUploadFailed: "Die Datei konnte nicht hochgeladen werden. Die Nacharbeit wurde nicht gesendet.",
+      status: "Status",
     },
     accountSettings: {
       profile: {
