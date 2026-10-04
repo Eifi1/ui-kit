@@ -90,13 +90,21 @@ export interface FeedbackDialogTextLabels {
   attachments?: string;
 }
 
+/**
+ * English. Already the feedback contract's wording (docs/feedback-harmonization.md §4.2,
+ * 0.27.0) — "Send", not keksdose's "Save", and the body asks "What happened?" — except
+ * `attachment`, the single-mode heading, which said "Screenshot" over a button that now
+ * says "Add attachment" and a picker that may offer a PDF: since 0.27.0 it is keksdose's
+ * `feedback.attachment`, **"Attachment"**. The `attachments="multiple"` heading is
+ * `feedbackAttachment.attachmentList` ("Attachments") and did not change.
+ */
 export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   title: "Send feedback",
   category: "Category",
   subject: "Subject",
   body: "What happened?",
   bodyOptional: "What happened? (optional)",
-  attachment: "Screenshot",
+  attachment: "Attachment",
   // No `attachments`: the multiple-mode heading is `feedbackAttachment.attachmentList`,
   // and a default here would shadow a provider that translated only that one.
   submitHint: "Ctrl/⌘ + Enter to send",

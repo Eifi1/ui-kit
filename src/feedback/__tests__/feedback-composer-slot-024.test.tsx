@@ -100,9 +100,9 @@ describe("ChatComposer attachmentSlot as a function", () => {
 
   it("passes `pending`, for the field's `disabled`", () => {
     const { rerender } = render(<Host />);
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeEnabled();
     rerender(<Host pending />);
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeDisabled();
   });
 
   it("is not called while disabledReason stands in for the composer", () => {
@@ -121,12 +121,12 @@ describe("ChatComposer attachmentSlot as a function", () => {
 describe("FeedbackComposer attachment button look", () => {
   it("hands buttonVariant / buttonSize to the built-in field; default as before", () => {
     const { unmount } = render(<FeedbackComposer onSend={vi.fn()} attachment />);
-    const md = screen.getByRole("button", { name: /Attach image/ });
+    const md = screen.getByRole("button", { name: /Add attachment/ });
     expect(md).toHaveClass("border", "px-3");
     unmount();
 
     render(<FeedbackComposer onSend={vi.fn()} attachment={{ buttonVariant: "ghost", buttonSize: "sm" }} />);
-    const sm = screen.getByRole("button", { name: /Attach image/ });
+    const sm = screen.getByRole("button", { name: /Add attachment/ });
     expect(sm).toHaveClass("px-2", "py-1", "text-xs");
     expect(sm).not.toHaveClass("border");
   });

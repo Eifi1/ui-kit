@@ -26,7 +26,7 @@ beforeAll(() => {
 const capture = () => Promise.resolve(null);
 
 const buttons = () => [
-  screen.getByRole("button", { name: /Attach image/ }),
+  screen.getByRole("button", { name: /Add attachment/ }),
   screen.getByRole("button", { name: /Capture screenshot/ }),
 ];
 
@@ -116,7 +116,7 @@ describe("FeedbackNoteEditor attachment buttons (0.25)", () => {
       saveLabel="Save"
       cancelLabel="Cancel"
       attachment={{
-        labels: { attachmentAdd: "Attach image", attachmentRemove: "Remove" },
+        labels: { attachmentAdd: "Add attachment", attachmentRemove: "Remove" },
         onCaptureScreenshot: capture,
         ...look,
       }}

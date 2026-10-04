@@ -134,7 +134,7 @@ describe("FeedbackAttachmentField refs", () => {
     expect(onUpload).toHaveBeenCalledTimes(2);
     expect(onError).toHaveBeenCalledWith("count", undefined, expect.objectContaining({ max: 3 }));
     // Full with two uploads running: the add button gives way to the limit line.
-    expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add attachment/ })).not.toBeInTheDocument();
     expect(screen.getByText("Up to 3 attachments — remove one to add another.")).toBeInTheDocument();
   });
 
