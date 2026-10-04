@@ -112,9 +112,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       columnStatus: "Stato",
       columnResolved: "Risolto il",
       openPage: "Apri pagina",
-      empty: "Ancora nessun feedback",
-      emptyHintMine: "Per inviarne uno, usi il fumetto nella barra superiore.",
-      emptyHintInbox: "Non è stato ancora inviato nulla.",
+      empty: "Nessuno",
       deletedUser: "<utente eliminato>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `utente #${id}`,

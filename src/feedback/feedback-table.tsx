@@ -63,9 +63,8 @@ import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 
 /**
  * `feedbackPage` — the words of the two feedback pages (§4.3). The English is keksdose's
- * `en.json` (`feedback.*`); the de-CH canon is noted on each key (keksdose `de-CH.json`,
- * ss never ß). Two hints are new with the contract (§7.13) and their German is a
- * proposal for the i18n round.
+ * `en.json` (`feedback.*`, `common.none`); the de-CH canon is noted on each key (keksdose
+ * `de-CH.json`, ss never ß).
  */
 export interface FeedbackPageLabels {
   /** The admin inbox's page title, `/feedback`. de-CH: "Feedback" */
@@ -93,15 +92,9 @@ export interface FeedbackPageLabels {
   /** What the URL cell's link does, said before the path to a screen reader.
    *  de-CH: "Seite öffnen" */
   openPage: string;
-  /** The table with no reports at all (§7.13 — keksdose's bare "None" goes).
-   *  de-CH: "Noch kein Feedback" */
+  /** The table with nothing to show, on both pages (§7.13) — keksdose's `common.none`.
+   *  de-CH: "Keine" */
   empty: string;
-  /** Beneath it on `/my-feedback`: where reports are sent from (the feedback menu's
-   *  speech bubble, §4.1). de-CH (proposal): "Feedback senden Sie über die Sprechblase
-   *  in der oberen Leiste." */
-  emptyHintMine: string;
-  /** Beneath it on the admin inbox. de-CH (proposal): "Bisher wurde nichts gesendet." */
-  emptyHintInbox: string;
   /** The submitter of a report whose account was erased (`user_id: null`, keksdose live
    *  #275). de-CH: "<gelöschter Nutzer>" */
   deletedUser: string;
@@ -136,9 +129,7 @@ export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
   columnStatus: "Status",
   columnResolved: "Resolved",
   openPage: "Open page",
-  empty: "No feedback yet",
-  emptyHintMine: "Use the speech bubble in the top bar to send some.",
-  emptyHintInbox: "Nothing has been sent yet.",
+  empty: "None",
   deletedUser: "<deleted user>",
   userFallback: (id) => `user #${id}`,
   environment: (environment) => environment.toUpperCase(),
@@ -744,27 +735,21 @@ export function FeedbackAwaitingToggle({
 /* ── Empty ──────────────────────────────────────────────────────────────────── */
 
 export interface FeedbackEmptyStateProps {
-  /** `/my-feedback`: the hint says where reports are sent from. */
-  mine?: boolean;
   /** Over the `feedbackPage` namespace. */
   labels?: Partial<FeedbackPageLabels>;
 }
 
 /**
- * The table with no reports (§7.13): **No feedback yet**, and beneath it where to send
- * one (`/my-feedback`) or that nobody has (the inbox). keksdose said a bare "None".
+ * The table with nothing to show (§7.13): the one word **None** / **Keine**, on both
+ * pages — keksdose's `empty={t("common.none")}` (`feedback-page.tsx:982`). No hint
+ * beneath it: where reports are sent from is the feedback menu's business, and the inbox
+ * needs no sentence to say it is empty.
  *
  * For `DataTable empty`, which sits in a centred, muted cell — so no box of its own.
- * Pass it only while the SOURCE list is empty: a filter (or the awaiting toggle) that
- * leaves nothing is "No results", the table's own words, not "nothing has been sent":
- * `empty={all.length === 0 ? <FeedbackEmptyState mine={mine} /> : undefined}`.
+ * keksdose passes it unconditionally, so a filter (or the awaiting toggle) that leaves
+ * nothing says "None" too: `empty={<FeedbackEmptyState />}`.
  */
-export function FeedbackEmptyState({ mine = false, labels: labelsProp }: FeedbackEmptyStateProps) {
+export function FeedbackEmptyState({ labels: labelsProp }: FeedbackEmptyStateProps) {
   const labels = useFeedbackPageLabels(labelsProp);
-  return (
-    <div className="flex flex-col items-center gap-1" data-feedback-empty="">
-      <span className="font-medium text-[var(--text-secondary)]">{labels.empty}</span>
-      <span className="text-xs">{mine ? labels.emptyHintMine : labels.emptyHintInbox}</span>
-    </div>
-  );
+  return <span data-feedback-empty="">{labels.empty}</span>;
 }

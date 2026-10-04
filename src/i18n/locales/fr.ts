@@ -110,9 +110,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       columnStatus: "Statut",
       columnResolved: "Résolu le",
       openPage: "Ouvrir la page",
-      empty: "Aucun retour pour l’instant",
-      emptyHintMine: "Utilisez la bulle de la barre supérieure pour en envoyer un.",
-      emptyHintInbox: "Rien n’a encore été envoyé.",
+      empty: "Aucun",
       deletedUser: "<utilisateur supprimé>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `utilisateur #${id}`,

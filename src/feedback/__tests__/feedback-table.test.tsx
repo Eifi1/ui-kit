@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn, DataTableProps } from "../../components/data-table";
 import { UiKitProvider, type KitLinkProps, type UiKitLabelOverrides } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { FEEDBACK_STATUS_ORDER } from "../feedback-inbox";
 import {
   DEFAULT_FEEDBACK_CATEGORY_LABELS,
@@ -509,21 +510,28 @@ describe("FeedbackAwaitingToggle", () => {
 });
 
 describe("FeedbackEmptyState", () => {
-  it("says where to send one on /my-feedback, and that nobody has on the inbox", () => {
-    const { unmount } = render(<FeedbackEmptyState mine />);
-    expect(screen.getByText("No feedback yet")).toBeInTheDocument();
-    expect(screen.getByText("Use the speech bubble in the top bar to send some.")).toBeInTheDocument();
-    unmount();
+  it("is keksdose's one word, the same on both pages — no hint beneath it", () => {
     render(<FeedbackEmptyState />);
-    expect(screen.getByText("Nothing has been sent yet.")).toBeInTheDocument();
+    const empty = screen.getByText("None");
+    expect(empty.textContent).toBe("None");
+    expect(empty.parentElement?.textContent).toBe("None");
+  });
+
+  it("reads feedbackPage.empty — Keine in de-CH", () => {
+    render(
+      <UiKitProvider labels={{ feedbackPage: UI_KIT_LABELS_DE_CH.feedbackPage }}>
+        <FeedbackEmptyState />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Keine")).toBeInTheDocument();
   });
 
   it("stands in the table's empty slot", () => {
     render(
       <MemoryRouter>
-        <Table options={{}} extra={{ rows: [], empty: <FeedbackEmptyState mine /> }} />
+        <Table options={{}} extra={{ rows: [], empty: <FeedbackEmptyState /> }} />
       </MemoryRouter>,
     );
-    expect(screen.getByText("No feedback yet").closest("td")).not.toBeNull();
+    expect(screen.getByText("None").closest("td")).not.toBeNull();
   });
 });

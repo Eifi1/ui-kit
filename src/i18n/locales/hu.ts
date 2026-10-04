@@ -110,9 +110,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       columnStatus: "Állapot",
       columnResolved: "Lezárva",
       openPage: "Oldal megnyitása",
-      empty: "Még nincs visszajelzés",
-      emptyHintMine: "Visszajelzést a felső sáv szövegbuborékával küldhet.",
-      emptyHintInbox: "Még semmit sem küldtek.",
+      empty: "Nincs",
       deletedUser: "<törölt felhasználó>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `felhasználó #${id}`,

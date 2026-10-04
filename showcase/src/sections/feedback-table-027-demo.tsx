@@ -190,9 +190,8 @@ export function FeedbackTable027Demo() {
           rows={visible}
           columns={columns}
           rowKey={(r) => r.id}
-          // §7.13 only while there is nothing at all; a filter that leaves nothing is the
-          // table's own "No results".
-          empty={all.length === 0 ? <FeedbackEmptyState mine={mine} /> : undefined}
+          // §7.13: keksdose's one word, on both pages — also when a filter leaves nothing.
+          empty={<FeedbackEmptyState />}
           mobileGroupBy={feedbackMobileGroupBy(renderDate)}
           mobileCard={(row) => <FeedbackMobileCard row={row} showSubmitter={canEdit} renderDate={renderDate} />}
           // Admin inbox only (§4.5) — and every swipe goes through the same Undo.

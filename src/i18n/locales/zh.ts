@@ -105,9 +105,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       columnStatus: "状态",
       columnResolved: "解决日期",
       openPage: "打开页面",
-      empty: "暂无反馈",
-      emptyHintMine: "请使用顶栏中的对话气泡图标发送反馈。",
-      emptyHintInbox: "目前还没有提交任何内容。",
+      empty: "无",
       deletedUser: "<已删除的用户>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `用户 #${id}`,

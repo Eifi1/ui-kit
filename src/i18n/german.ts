@@ -121,9 +121,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       columnStatus: "Status",
       columnResolved: "Erledigt am",
       openPage: "Seite öffnen",
-      empty: "Noch kein Feedback",
-      emptyHintMine: "Feedback senden Sie über die Sprechblase in der oberen Leiste.",
-      emptyHintInbox: "Bisher wurde nichts gesendet.",
+      empty: "Keine",
       deletedUser: "<gelöschter Nutzer>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `Nutzer #${id}`,
