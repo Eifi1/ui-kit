@@ -122,7 +122,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       phoneActions: "Acciones de comentarios",
     },
     feedbackDetail: {
-      body: "¿Qué ha pasado?",
+      body: "Descripción",
       edit: "Editar",
       editDescription: "Editar descripción",
       save: "Guardar",

@@ -63,7 +63,7 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
  *   path (`/accounts?p=2`): keksdose's `new URL(…)` throws on one and the section
  *   vanished. kastlan already fell back to `context.route` (`feedbackRaw`, `:97`).
  *
- * The sections, in the contract's order: **What happened?** (the body; the author's
+ * The sections, in the contract's order: **Description** (the body; the author's
  * Edit while OPEN / IN_PROGRESS), **URL**, **Attachment**, **Outcome** (the admin's
  * outcome editor, Rework, Open page), **Send for rework** (only while reworking) and
  * **Status**. No comment thread (§2.2: kastlan's comments fold into the body, §7.7).
@@ -81,8 +81,9 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
  * canon (keksdose `de-CH.json`, ss never ß, "Nacharbeit" throughout — §7.14) on each key.
  */
 export interface FeedbackDetailLabels {
-  /** Section 1's heading — the dialog's wording, §7.3 (keksdose said "Description").
-   *  de-CH: "Was ist passiert?" */
+  /** Section 1's heading — keksdose's `feedback.body` (§7.3). The dialog's field asks
+   *  "What happened? (optional)"; the description, once filed, is headed as what it is
+   *  — and as the author's "Edit description" calls it. de-CH: "Beschreibung" */
   body: string;
   /** The author's button on that heading. de-CH: "Bearbeiten" */
   edit: string;
@@ -139,7 +140,7 @@ export interface FeedbackDetailLabels {
 }
 
 export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
-  body: "What happened?",
+  body: "Description",
   edit: "Edit",
   editDescription: "Edit description",
   save: "Save",

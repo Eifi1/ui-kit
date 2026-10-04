@@ -120,7 +120,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       phoneActions: "Actions sur les retours",
     },
     feedbackDetail: {
-      body: "Que s’est-il passé\u202f?",
+      body: "Description",
       edit: "Modifier",
       editDescription: "Modifier la description",
       save: "Enregistrer",

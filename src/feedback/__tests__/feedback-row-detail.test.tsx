@@ -79,7 +79,7 @@ describe("FeedbackRowDetail — sections", () => {
         renderDate={(iso) => iso.slice(0, 10)}
       />,
     );
-    expect(headings()).toEqual(["What happened?", "URL", "Attachment", "Outcome", "Status"]);
+    expect(headings()).toEqual(["Description", "URL", "Attachment", "Outcome", "Status"]);
     // The rounds stay in the prose (what was said after the answer); the file line goes.
     expect(screen.getByText(/Typo here\.\s+--- REWORK 2026-10-04 09:12 ---\s+Still jumps\./)).toBeInTheDocument();
     expect(screen.queryByText(/\[screenshot\]/)).toBeNull();
@@ -91,7 +91,7 @@ describe("FeedbackRowDetail — sections", () => {
     render(
       <FeedbackRowDetail row={record({ body: "  ", context: null })} canEdit={false} viewerId={OTHER} onUpdate={landing()} />,
     );
-    expect(headings()).toEqual(["What happened?", "Outcome", "Status"]);
+    expect(headings()).toEqual(["Description", "Outcome", "Status"]);
     expect(screen.getAllByText("—")).toHaveLength(2); // body and outcome
   });
 });

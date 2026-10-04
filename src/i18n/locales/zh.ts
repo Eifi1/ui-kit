@@ -115,7 +115,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       phoneActions: "反馈操作",
     },
     feedbackDetail: {
-      body: "发生了什么？",
+      body: "描述",
       edit: "编辑",
       editDescription: "编辑描述",
       save: "保存",

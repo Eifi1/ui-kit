@@ -120,7 +120,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       phoneActions: "Visszajelzés-műveletek",
     },
     feedbackDetail: {
-      body: "Mi történt?",
+      body: "Leírás",
       edit: "Szerkesztés",
       editDescription: "Leírás szerkesztése",
       save: "Mentés",

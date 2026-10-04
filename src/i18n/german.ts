@@ -131,7 +131,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       phoneActions: "Feedback-Aktionen",
     },
     feedbackDetail: {
-      body: "Was ist passiert?",
+      body: "Beschreibung",
       edit: "Bearbeiten",
       editDescription: "Beschreibung bearbeiten",
       save: "Speichern",
