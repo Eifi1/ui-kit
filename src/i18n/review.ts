@@ -6,8 +6,9 @@ import type { UiKitLabels } from "./kit-labels";
  * keksdose reviews its own locale bundles on its /translations page — one verdict per
  * locale and key, stored with the text the reviewer saw, so a later change re-opens it.
  * The kit's words appear on the same screens but live in TypeScript, not in the app's
- * bundles, and 94 of them are functions (`(count) => "3 results"`), which a bundle
- * flattener skips. This turns a label tree into rows that page can join on.
+ * bundles, and 138 of them are functions (`(count) => "3 results"`; 0.27.0, every one
+ * listed in {@link KIT_LABEL_SAMPLES}), which a bundle flattener skips. This turns a
+ * label tree into rows that page can join on.
  *
  * - A string label is one row under its dot path: `common.close`. An array of words
  *   (weekday names) is one row per entry: `miniCalendar.weekdays.0`.
