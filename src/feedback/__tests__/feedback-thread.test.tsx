@@ -227,4 +227,36 @@ describe("FeedbackDialog labels (0.12.0)", () => {
     // The prop wins over the provider.
     expect(screen.getByRole("button", { name: "Abschicken" })).toBeInTheDocument();
   });
+
+  it("names the submit shortcut for the platform — keksdose's Ctrl+Enter, ⌘ on Apple (0.27.0)", () => {
+    const de = { feedbackDialog: UI_KIT_LABELS_DE_CH.feedbackDialog };
+    // jsdom is not a Mac.
+    const { unmount } = render(<FeedbackDialog {...base} />);
+    expect(screen.getByText("Ctrl+Enter to send")).toBeInTheDocument();
+    unmount();
+    const german = render(
+      <UiKitProvider labels={de}>
+        <FeedbackDialog {...base} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Strg+Enter zum Senden")).toBeInTheDocument();
+    german.unmount();
+
+    const platform = vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    try {
+      render(
+        <UiKitProvider labels={de}>
+          <FeedbackDialog {...base} />
+        </UiKitProvider>,
+      );
+      expect(screen.getByText("⌘ Enter zum Senden")).toBeInTheDocument();
+    } finally {
+      platform.mockRestore();
+    }
+  });
+
+  it("still shows a plain-string submit hint as it is, on every platform", () => {
+    render(<FeedbackDialog {...base} labels={{ submitHint: "Strg+Enter sendet" }} />);
+    expect(screen.getByText("Strg+Enter sendet")).toBeInTheDocument();
+  });
 });

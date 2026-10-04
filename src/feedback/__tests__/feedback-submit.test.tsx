@@ -77,7 +77,7 @@ describe("useFeedbackSubmit — the dialog", () => {
     // The four pickable ones, in the kit's words — never Crash.
     expect(Array.from(category.options).map((o) => o.textContent)).toEqual(["Bug", "Idea", "Question", "Other"]);
     expect(within(dialog).getByLabelText("What happened? (optional)")).toBeInTheDocument();
-    expect(within(dialog).getByText("Ctrl/⌘ + Enter to send")).toBeInTheDocument();
+    expect(within(dialog).getByText("Ctrl+Enter to send")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: /Add attachment/ })).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: /Capture screenshot/ })).toBeInTheDocument();
     // The context box, from the same values the report will carry.

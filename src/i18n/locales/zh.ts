@@ -35,7 +35,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       body: "发生了什么？",
       bodyOptional: "发生了什么？（可选）",
       attachment: "附件",
-      submitHint: "Ctrl/⌘ + Enter 发送",
+      submitHint: (apple) => (apple ? "⌘ Enter 发送" : "Ctrl+Enter 发送"),
       cancel: "取消",
       save: "发送",
     },

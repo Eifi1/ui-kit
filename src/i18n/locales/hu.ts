@@ -39,7 +39,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       body: "Mi történt?",
       bodyOptional: "Mi történt? (nem kötelező)",
       attachment: "Melléklet",
-      submitHint: "Ctrl/⌘ + Enter a küldéshez",
+      submitHint: (apple) => (apple ? "⌘ Enter a küldéshez" : "Ctrl+Enter a küldéshez"),
       cancel: "Mégse",
       save: "Küldés",
     },

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Modal } from "../components/modal";
+import { isApplePlatform } from "../hooks/use-hotkey";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { useKitLabels } from "../i18n/kit-labels";
 import {
@@ -52,7 +53,8 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
   subject: string;
   body: string;
   attachment: string;
-  submitHint: string;
+  /** See {@link FeedbackDialogTextLabels.submitHint}. */
+  submitHint: FeedbackSubmitHint;
   cancel: string;
   save: string;
   /** @deprecated since 0.16.0 — use `attachmentList`, the one key for the heading and
@@ -60,6 +62,9 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
    *  `attachmentList` (but not over an `attachmentList` passed beside it). */
   attachments?: string;
 }
+
+/** The submit hint: a string, or the line for the platform (`apple`: Mac, iPhone, iPad). */
+export type FeedbackSubmitHint = string | ((apple: boolean) => string);
 
 /**
  * The dialog's own strings — the `feedbackDialog` namespace of `<UiKitProvider
@@ -79,8 +84,13 @@ export interface FeedbackDialogTextLabels {
   bodyOptional?: string;
   /** The heading over the attachment buttons. */
   attachment: string;
-  /** The line beside the buttons naming the shortcut. */
-  submitHint: string;
+  /**
+   * The line beside the buttons naming the shortcut. Since 0.27.0 a function of the
+   * platform, like `form.submitShortcut`: `apple` is true on a Mac, iPhone or iPad, where
+   * the key is Cmd — "⌘ Enter to send" there, keksdose's "Ctrl+Enter to send" elsewhere
+   * (§7.12). A plain string is still taken and shown everywhere, as before 0.27.0.
+   */
+  submitHint: FeedbackSubmitHint;
   cancel: string;
   save: string;
   /** @deprecated since 0.16.0 — use `feedbackAttachment.attachmentList`. It and this
@@ -91,11 +101,13 @@ export interface FeedbackDialogTextLabels {
 }
 
 /**
- * English. Already the feedback contract's wording (docs/feedback-harmonization.md §4.2,
- * 0.27.0) — "Send", not keksdose's "Save", and the body asks "What happened?" — except
- * `attachment`, the single-mode heading, which said "Screenshot" over a button that now
- * says "Add attachment" and a picker that may offer a PDF: since 0.27.0 it is keksdose's
- * `feedback.attachment`, **"Attachment"**. The `attachments="multiple"` heading is
+ * English. The feedback contract's wording (docs/feedback-harmonization.md §4.2, 0.27.0):
+ * "Send", not keksdose's "Save", and the body asks "What happened?" (Marcel's two calls);
+ * the rest is keksdose's. Since 0.27.0 `attachment`, the single-mode heading, is keksdose's
+ * `feedback.attachment` **"Attachment"** (it said "Screenshot" over a button that says "Add
+ * attachment" and a picker that may offer a PDF), and `submitHint` is keksdose's
+ * **"Ctrl+Enter to send"** — "⌘ Enter to send" on Apple platforms, where the old
+ * "Ctrl/⌘ + Enter" made every reader parse both. The `attachments="multiple"` heading is
  * `feedbackAttachment.attachmentList` ("Attachments") and did not change.
  */
 export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
@@ -107,7 +119,8 @@ export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   attachment: "Attachment",
   // No `attachments`: the multiple-mode heading is `feedbackAttachment.attachmentList`,
   // and a default here would shadow a provider that translated only that one.
-  submitHint: "Ctrl/⌘ + Enter to send",
+  // The modifier as `form.submitShortcut` writes it: "⌘ Enter" on Apple, "Ctrl+Enter" elsewhere.
+  submitHint: (apple) => (apple ? "⌘ Enter to send" : "Ctrl+Enter to send"),
   cancel: "Cancel",
   save: "Send",
 };
@@ -401,7 +414,9 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           </>
         )}
         <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-[var(--text-placeholder)]">{labels.submitHint}</div>
+          <div className="text-xs text-[var(--text-placeholder)]">
+            {typeof labels.submitHint === "function" ? labels.submitHint(isApplePlatform()) : labels.submitHint}
+          </div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>
               {labels.cancel}

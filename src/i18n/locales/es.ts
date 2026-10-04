@@ -39,7 +39,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       body: "¿Qué ha pasado?",
       bodyOptional: "¿Qué ha pasado? (opcional)",
       attachment: "Adjunto",
-      submitHint: "Ctrl/⌘ + Intro para enviar",
+      submitHint: (apple) => (apple ? "⌘ Intro para enviar" : "Ctrl+Intro para enviar"),
       cancel: "Cancelar",
       save: "Enviar",
     },

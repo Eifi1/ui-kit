@@ -42,7 +42,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       body: "Was ist passiert?",
       bodyOptional: "Was ist passiert? (optional)",
       attachment: "Anhang",
-      submitHint: "Strg/⌘ + Enter zum Senden",
+      // keksdose's "Strg+Enter zum Senden"; Apple's ⌘ as `form.submitShortcut` writes it.
+      submitHint: (apple) => (apple ? "⌘ Enter zum Senden" : "Strg+Enter zum Senden"),
       cancel: "Abbrechen",
       save: "Senden",
     },

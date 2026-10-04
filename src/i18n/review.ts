@@ -150,6 +150,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackAttachment.attachmentLimit": one,
   "feedbackAttachment.attachmentUploadFailed": [["{{name}}"]],
   "feedbackComposer.sendHint": [["{{modifier}}"]],
+  "feedbackDialog.submitHint": [[true], [false]],
   "feedbackToast.attachmentTooMany": one,
   "feedbackToast.statusChanged": [["{{status}}", "{{title}}"]],
   "feedbackToast.statusRestored": [["{{status}}", "{{title}}"]],
