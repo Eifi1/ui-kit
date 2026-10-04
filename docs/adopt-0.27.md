@@ -81,6 +81,16 @@ wires both (`feedback-page.tsx:969-972`): `onRowClick` toggles the expanded row
 (`isExpanded` / its `expandedId`), `rowHref` hands out the replacing `?row=` link;
 navigating to `?row=` with `replace: true`, as in the snippet, works as well.
 
+**Testing an app that mocks the barrel (keksdose's finding):** the kit's own hooks call its
+INTERNAL toast module, not the `toast` the barrel exports, so a `vi.mock("@eifi1/ui-kit")`
+spy on `toast` never sees `useFeedbackStatusUndo`'s Undo toast (nor the submit dialog's
+toasts). Test them as a user sees them: mount the real `<Toaster />` and find or click the
+toast in the DOM (scope the query to one toast — sonner's store outlives a test).
+
+**The URL column's link routes in-app** through the provider's link component (keksdose's
+was a plain `<a>`), and its accessible name is "Open page /path" — a test asserting the
+browser's default navigation or the bare name "Open page" changes.
+
 ## Per app
 
 The full checklists — backend first where needed — are §6 of
