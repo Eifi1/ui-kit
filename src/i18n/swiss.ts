@@ -12,7 +12,11 @@ export function swiss<T>(value: T): T {
   if (typeof value === "string") return respell(value) as T;
   if (typeof value === "function") {
     const fn = value as (...args: unknown[]) => unknown;
-    return ((...args: unknown[]) => swiss(fn(...args))) as T;
+    const wrapped = (...args: unknown[]) => swiss(fn(...args));
+    // Keep the label's arity: a rest-parameter wrapper reports 0, and whatever inspects
+    // a label by its parameters (the catalogue tests do) would then pass it nothing.
+    Object.defineProperty(wrapped, "length", { value: fn.length });
+    return wrapped as T;
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, swiss(v)])) as T;

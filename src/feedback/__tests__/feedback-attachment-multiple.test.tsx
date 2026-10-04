@@ -79,7 +79,7 @@ describe("FeedbackAttachmentField multiple", () => {
     expect(names()).toBe("a.png,b.png,c.png");
     expect(onError).toHaveBeenCalledWith("count", expect.objectContaining({ max: 3 }));
     // Full: no add button, no paste hint, the limit said instead.
-    expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add attachment/ })).not.toBeInTheDocument();
     expect(screen.queryByText(/paste a screenshot/)).not.toBeInTheDocument();
     expect(screen.getByText("Up to 3 attachments — remove one to add another.")).toBeInTheDocument();
     expect(DEFAULT_MAX_ATTACHMENTS).toBe(5);
@@ -108,7 +108,7 @@ describe("FeedbackAttachmentField multiple", () => {
     expect(screen.getByRole("button", { name: "Remove b.png" })).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Remove c.png" }));
     expect(names()).toBe("b.png");
-    expect(screen.getByRole("button", { name: /Attach image/ })).toHaveFocus();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toHaveFocus();
   });
 
   it("revokes a chip's object URL when it is removed, and the rest on unmount", () => {
@@ -141,7 +141,7 @@ describe("FeedbackAttachmentField multiple", () => {
     expect(fileInput(container)).not.toHaveAttribute("multiple");
     pick(container, [png("a.png"), png("b.png")]);
     expect(names()).toBe("a.png");
-    expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add attachment/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove attachment" })).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
     fireEvent.paste(container.firstElementChild!, clipboard(png("image.png")));
@@ -199,7 +199,7 @@ describe("FeedbackDialog attachments", () => {
       />,
     );
     fireEvent.paste(document, clipboard(png("image.png")));
-    expect(screen.queryByRole("button", { name: /Attach image/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add attachment/ })).not.toBeInTheDocument();
     // Still capturable: the screenshot has its own slot.
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
@@ -208,7 +208,7 @@ describe("FeedbackDialog attachments", () => {
   it("single (the default): submits `attachment`, as before", async () => {
     const onSubmit = vi.fn();
     render(<FeedbackDialog {...base} onSubmit={onSubmit} />);
-    expect(screen.getByText("Screenshot")).toBeInTheDocument();
+    expect(screen.getByText("Attachment")).toBeInTheDocument();
     fireEvent.paste(document, clipboard(png("image.png")));
     fill();
     await send();

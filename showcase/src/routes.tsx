@@ -284,6 +284,11 @@ const FeedbackNoteButtons025Demo = lazySection(() => import("./sections/polish-0
 const TableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "TableEdgeFadeDemo");
 const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "DataTableEdgeFadeDemo");
 const TooltipTapDemo = lazySection(() => import("./sections/tooltip-025-demo"), "TooltipTapDemo");
+// 0.27.0: the feedback harmonization.
+const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-submit-027-demo"), "FeedbackSubmit027Demo");
+const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-table-027-demo"), "FeedbackTable027Demo");
+const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-detail-027-demo"), "FeedbackDetail027Demo");
+const FeedbackRecord027Demo = lazySection(() => import("./sections/feedback-record-027-demo"), "FeedbackRecord027Demo");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -1213,7 +1218,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Compose",
         blurb: "The report form and its attachment field.",
         icon: MessageSquarePlus,
-        components: ["FeedbackDialog", "FeedbackAttachmentField"],
+        components: ["FeedbackDialog", "FeedbackAttachmentField", "FeedbackMenu", "useFeedbackSubmit", "FeedbackContextBox", "captureAppScreenshot", "createCrashReporter"],
         Body: () => (
           <>
             <FeedbackCompose />
@@ -1221,6 +1226,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackAttachmentRefs022Demo />
             <FeedbackAttachment023Demo />
             <FeedbackDialogButtons025Demo />
+            <FeedbackSubmit027Demo />
           </>
         ),
       },
@@ -1230,7 +1236,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer", "ChatComposer"],
+        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
         Body: () => (
           <>
             <FeedbackInbox />
@@ -1241,6 +1247,9 @@ export const GROUPS: ShowcaseGroup[] = [
             <ChatComposerCount023Demo />
             <ChatComposerSlot024Demo />
             <FeedbackNoteButtons025Demo />
+            <FeedbackTable027Demo />
+            <FeedbackDetail027Demo />
+            <FeedbackRecord027Demo />
           </>
         ),
       },

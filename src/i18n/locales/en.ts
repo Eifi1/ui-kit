@@ -27,7 +27,21 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     feedbackAttachment: {
       ...d.feedbackAttachment,
       attachmentLimit: (max) =>
-        `Up to ${n(max)} ${max === 1 ? "attachment" : "attachments"} — remove one to add another.`,
+        max === 1
+          ? "Up to 1 attachment — remove it to add another."
+          : `Up to ${n(max)} attachments — remove one to add another.`,
+    },
+    feedbackToast: {
+      ...d.feedbackToast,
+      attachmentTooMany: (count) =>
+        count === 1
+          ? "Only 1 attachment fits — the rest were left out."
+          : `Only ${n(count)} attachments fit — the rest were left out.`,
+    },
+    feedbackPage: {
+      ...d.feedbackPage,
+      // `userFallback`'s number is an id, not a count: it stays as the default prints it.
+      reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${n(count)}`),
     },
     measuredGrid: {
       ...d.measuredGrid,

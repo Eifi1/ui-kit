@@ -23,12 +23,13 @@ const LOCALES = {
   zh: UI_KIT_LABELS_ZH,
 };
 
-/** Every leaf, as text: functions are called with plausible arguments. */
+/** Every leaf, as text: functions are called with plausible arguments — numbers; a label
+ *  that works on text (`feedbackPage.environment`) prints one rather than throw. */
 function leaves(tree: unknown, path = ""): Array<[string, string]> {
   if (typeof tree === "string") return [[path, tree]];
   if (typeof tree === "function") {
-    const args = Array.from({ length: tree.length }, (_, i) => (i === 0 ? 1234 : 2));
-    const out = (tree as (...a: unknown[]) => unknown)(...args);
+    const fn = tree as (...a: unknown[]) => unknown;
+    const out = fn(...Array.from({ length: tree.length }, (_, i) => (i === 0 ? 1234 : 2)));
     return typeof out === "string" ? [[path, out]] : [];
   }
   if (tree && typeof tree === "object") {
@@ -40,6 +41,14 @@ function leaves(tree: unknown, path = ""): Array<[string, string]> {
 describe.each(Object.entries(LOCALES))("@eifi1/ui-kit/i18n/%s", (_code, labels) => {
   it("covers every key of the English defaults", () => {
     expect(missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)).toEqual([]);
+  });
+
+  it("upper-cases feedbackPage.environment, and never throws on a value that is no string", () => {
+    const environment = labels.feedbackPage.environment as (value: unknown) => string;
+    expect(environment("dev")).toBe("DEV");
+    expect(environment(undefined)).toBe("");
+    expect(environment(null)).toBe("");
+    expect(environment(7)).toBe("7");
   });
 
   it("is not the English defaults under another name", () => {

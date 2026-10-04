@@ -20,6 +20,28 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.27.0](https://github.com/Eifi1/ui-kit/compare/v0.26.0...v0.27.0) (2026-10-04)
+
+### Added
+
+* export the feedback harmonization's parts; showcase demos on the feedback pages ([0306f90](https://github.com/Eifi1/ui-kit/commit/0306f9096c7df3a1a7d8ea1f4a2603cf13814388))
+* **feedback:** createCrashReporter — filed only when stored, buffered until a sign-in ([1ebaf19](https://github.com/Eifi1/ui-kit/commit/1ebaf19c0a56500d1fe04ca03ba9f1dee267e7f5))
+* **feedback:** FeedbackMenu gives an admin only "View feedback", as keksdose does ([7e1aa70](https://github.com/Eifi1/ui-kit/commit/7e1aa70f901b17963691b212760fc9183eca1571))
+* **feedback:** FeedbackMenu, useFeedbackSubmit, FeedbackContextBox, captureAppScreenshot ([d2a2b61](https://github.com/Eifi1/ui-kit/commit/d2a2b61fbc9c08743f739aab3e2188cbd25f6039))
+* **feedback:** FeedbackRowDetail and FeedbackReworkSection — one detail for three apps ([bb74222](https://github.com/Eifi1/ui-kit/commit/bb742229cd54dd8aaac0e151523e69fe0f47d57b))
+* **feedback:** the dialog's submit hint is keksdose's "Ctrl+Enter to send" — "⌘ Enter" on Apple ([07de676](https://github.com/Eifi1/ui-kit/commit/07de676c31c922564e78dfcea7dfa3773d867ce5))
+* **feedback:** the empty table says keksdose's "None" on both pages, with no hint ([7dcdff8](https://github.com/Eifi1/ui-kit/commit/7dcdff8ecd4741265786bc1a9e5bfe3ac7d4fd76))
+* **feedback:** the feedback table — columns, phone cards, the awaiting filter, empty states ([bf8081a](https://github.com/Eifi1/ui-kit/commit/bf8081aafecd0a23e36f3076952ebc1ca236bbe7))
+* **feedback:** the row detail's body section is headed "Description", as keksdose's ([1987be7](https://github.com/Eifi1/ui-kit/commit/1987be7309f1136224bfd508e10dfa6480be9a63))
+* **feedback:** the shared feedback record, labels, rework helpers, Undo and swipes ([876ccf9](https://github.com/Eifi1/ui-kit/commit/876ccf9209c40d9a90a39d3f89a7b26181e62c83))
+* **i18n:** the feedback harmonization's words in every language ([3ac5aaf](https://github.com/Eifi1/ui-kit/commit/3ac5aafc14832f2dad1bfda01987578412ad0b10))
+
+### Fixed
+
+* **feedback:** clamp the crash payload's environment to 20, keksdose's CrashReportCreate cap ([3d66ea9](https://github.com/Eifi1/ui-kit/commit/3d66ea9e147f7a5307891e5dd7c40af319d0bbc2))
+* **feedback:** feedbackPage.environment prints a non-string instead of throwing ([6db0376](https://github.com/Eifi1/ui-kit/commit/6db03767276c11a0d85237791b39102514a9e159))
+* **feedback:** the context box's "User:" takes the language's colon from common.fieldValue ([5a436e2](https://github.com/Eifi1/ui-kit/commit/5a436e27b314ac2498107387143a390e48767639))
+
 ## [0.26.0](https://github.com/Eifi1/ui-kit/compare/v0.25.1...v0.26.0) (2026-10-03)
 
 ### Added

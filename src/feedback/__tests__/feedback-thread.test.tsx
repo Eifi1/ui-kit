@@ -169,9 +169,9 @@ describe("FeedbackComposer", () => {
 
   it("offers the attachment field only when asked, and a reason instead of the box", () => {
     const { rerender } = render(<FeedbackComposer onSend={vi.fn()} />);
-    expect(screen.queryByRole("button", { name: /Attach image/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Add attachment/ })).toBeNull();
     rerender(<FeedbackComposer onSend={vi.fn()} attachment />);
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeInTheDocument();
     rerender(<FeedbackComposer onSend={vi.fn()} disabledReason="This report is closed." />);
     expect(screen.getByText("This report is closed.")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
@@ -203,7 +203,8 @@ describe("FeedbackDialog labels (0.12.0)", () => {
     const { unmount } = render(<FeedbackDialog {...base} />);
     expect(screen.getByRole("heading", { name: "Send feedback" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
-    expect(screen.getByText("Screenshot")).toBeInTheDocument();
+    // The single-mode heading — "Attachment" since 0.27.0 (the feedback contract, §4.2).
+    expect(screen.getByText("Attachment")).toBeInTheDocument();
     unmount();
 
     render(
@@ -218,8 +219,44 @@ describe("FeedbackDialog labels (0.12.0)", () => {
     );
     expect(screen.getByRole("heading", { name: "Feedback senden" })).toBeInTheDocument();
     expect(screen.getByLabelText("Betreff")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Bild anhängen/ })).toBeInTheDocument();
+    // From the catalogue rather than spelled out, so the canon wording (0.27.0) can land
+    // in it without this test having to follow.
+    expect(
+      screen.getByRole("button", { name: new RegExp(UI_KIT_LABELS_DE_CH.feedbackAttachment.attachmentAdd) }),
+    ).toBeInTheDocument();
     // The prop wins over the provider.
     expect(screen.getByRole("button", { name: "Abschicken" })).toBeInTheDocument();
+  });
+
+  it("names the submit shortcut for the platform — keksdose's Ctrl+Enter, ⌘ on Apple (0.27.0)", () => {
+    const de = { feedbackDialog: UI_KIT_LABELS_DE_CH.feedbackDialog };
+    // jsdom is not a Mac.
+    const { unmount } = render(<FeedbackDialog {...base} />);
+    expect(screen.getByText("Ctrl+Enter to send")).toBeInTheDocument();
+    unmount();
+    const german = render(
+      <UiKitProvider labels={de}>
+        <FeedbackDialog {...base} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Strg+Enter zum Senden")).toBeInTheDocument();
+    german.unmount();
+
+    const platform = vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    try {
+      render(
+        <UiKitProvider labels={de}>
+          <FeedbackDialog {...base} />
+        </UiKitProvider>,
+      );
+      expect(screen.getByText("⌘ Enter zum Senden")).toBeInTheDocument();
+    } finally {
+      platform.mockRestore();
+    }
+  });
+
+  it("still shows a plain-string submit hint as it is, on every platform", () => {
+    render(<FeedbackDialog {...base} labels={{ submitHint: "Strg+Enter sendet" }} />);
+    expect(screen.getByText("Strg+Enter sendet")).toBeInTheDocument();
   });
 });

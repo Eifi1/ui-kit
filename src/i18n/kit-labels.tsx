@@ -29,6 +29,15 @@ import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
 import type { FeedbackComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
+import type {
+  FeedbackCategoryLabels,
+  FeedbackStatusLabels,
+  FeedbackToastLabels,
+} from "../feedback/feedback-labels";
+import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
+import type { FeedbackContextLabels } from "../feedback/feedback-context";
+import type { FeedbackPageLabels } from "../feedback/feedback-table";
+import type { FeedbackDetailLabels } from "../feedback/feedback-row-detail";
 import type { AccountSettingsLabels } from "../components/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
@@ -267,6 +276,17 @@ export interface UiKitLabels {
   feedbackDialog: FeedbackDialogTextLabels;
   feedbackThread: FeedbackThreadLabels;
   feedbackComposer: FeedbackComposerLabels;
+  /** 0.27.0: the feedback harmonisation (docs/feedback-harmonization.md §4) — a report's
+   *  status and category words, keyed by the enum value; the toasts a feedback page
+   *  shows; `FeedbackMenu`; `FeedbackContextBox`; the two pages' table; the row detail.
+   *  keksdose's wording is the canon, in every language. */
+  feedbackStatus: FeedbackStatusLabels;
+  feedbackCategory: FeedbackCategoryLabels;
+  feedbackToast: FeedbackToastLabels;
+  feedbackMenu: FeedbackMenuLabels;
+  feedbackContext: FeedbackContextLabels;
+  feedbackPage: FeedbackPageLabels;
+  feedbackDetail: FeedbackDetailLabels;
   /** 0.12.0: `ProfileSetting`, `PasswordSetting`, `TwoFactorSetting`, `PasskeysSetting`
    *  — one record per section. The provider takes a whole section record; the
    *  components merge it key by key, as a prop. */

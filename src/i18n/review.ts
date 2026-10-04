@@ -6,8 +6,9 @@ import type { UiKitLabels } from "./kit-labels";
  * keksdose reviews its own locale bundles on its /translations page — one verdict per
  * locale and key, stored with the text the reviewer saw, so a later change re-opens it.
  * The kit's words appear on the same screens but live in TypeScript, not in the app's
- * bundles, and 94 of them are functions (`(count) => "3 results"`), which a bundle
- * flattener skips. This turns a label tree into rows that page can join on.
+ * bundles, and 138 of them are functions (`(count) => "3 results"`; 0.27.0, every one
+ * listed in {@link KIT_LABEL_SAMPLES}), which a bundle flattener skips. This turns a
+ * label tree into rows that page can join on.
  *
  * - A string label is one row under its dot path: `common.close`. An array of words
  *   (weekday names) is one row per entry: `miniCalendar.weekdays.0`.
@@ -150,6 +151,17 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackAttachment.attachmentLimit": one,
   "feedbackAttachment.attachmentUploadFailed": [["{{name}}"]],
   "feedbackComposer.sendHint": [["{{modifier}}"]],
+  "feedbackDialog.submitHint": [[true], [false]],
+  "feedbackToast.attachmentTooMany": one,
+  "feedbackToast.statusChanged": [["{{status}}", "{{title}}"]],
+  "feedbackToast.statusRestored": [["{{status}}", "{{title}}"]],
+  "feedbackPage.userFallback": [[42]],
+  // A real value, not a placeholder: the chip upper-cases what it is given, and
+  // "{{ENVIRONMENT}}" would read as a placeholder of that name.
+  "feedbackPage.environment": [["dev"]],
+  "feedbackPage.reworkChip": one,
+  "feedbackDetail.download": [["{{name}}"]],
+  "feedbackDetail.resolvedAt": [["{{date}}"]],
   "accountSettings.passkeys.renameItem": [["{{name}}"]],
   "accountSettings.passkeys.renameField": [["{{name}}"]],
   "accountSettings.passkeys.deleteItem": [["{{name}}"]],

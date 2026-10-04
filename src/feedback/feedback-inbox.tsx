@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Ban,
@@ -19,8 +19,10 @@ import { cn } from "../lib/cn";
 import { Button, Textarea } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
+import { useCommitReason, useWriteLock } from "../components/write-lock";
 import { FeedbackAttachmentField, type FeedbackAttachmentErrorInfo } from "./feedback-attachment";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import { useFeedbackCategoryLabels, useFeedbackStatusLabels } from "./feedback-labels";
 
 /**
  * The feedback **inbox**, as the parts two apps were each writing separately.
@@ -37,13 +39,20 @@ import type { FeedbackAttachmentLabels } from "./feedback-dialog";
  * Design's was thinner in every one of those places and read as a different
  * product for no reason anyone chose.
  *
- * **What is deliberately NOT here.** The two apps store a report differently and
- * are meant to: one keeps the reporter's context in a JSON column and the
- * screenshot in an object store, the other keeps a `page_path` and the bytes in
- * the row. So there is no `Feedback` type in this file and nothing here takes
- * one. Every component takes the values it draws, and the detail panel is a
- * *shell* the app fills — which is what lets each keep the shape that suits it
- * without either of them inventing a second look for a status pill.
+ * **The report itself lives next door (0.27.0).** This file used to say there
+ * was deliberately no `Feedback` type here: the apps stored a report differently
+ * (a context JSON column and an object store in one, a `page_path` and the bytes
+ * in the row in another). Marcel's feedback round (2026-10-04,
+ * docs/feedback-harmonization.md §5) gave all three apps one contract, so the
+ * shape is now shared — `FeedbackRecord` / `FeedbackContext` in
+ * feedback-record.ts, with the constants and body helpers. The components HERE
+ * still take the values they draw rather than a row, which keeps them usable
+ * from any surface; the detail panel stays a *shell* the row detail fills.
+ *
+ * **The words are the kit's too (0.27.0).** The status and category names are
+ * the `feedbackStatus` / `feedbackCategory` namespaces (feedback-labels.ts,
+ * keksdose's wording), read by default by the badges and the transitions below;
+ * a `label` the caller passes still wins.
  */
 
 /** The seven states a report can be in.
@@ -264,8 +273,9 @@ export function feedbackCategoryRank(category: FeedbackCategory): number {
  * Falls back to OTHER's treatment for a category this build has never heard of,
  * so an older client against a newer API degrades to a readable neutral pill
  * instead of throwing on `meta.icon` — a crash report must not be able to cause
- * one. The *label* is the caller's, and for the same reason it needs the same
- * guard: pass what OTHER is called if you cannot name the value you were given.
+ * one. The *label* gets the same guard: by default the `feedbackCategory`
+ * namespace's word (0.27.0), and for a value it has no word for, what OTHER is
+ * called.
  */
 export function FeedbackCategoryBadge({
   category,
@@ -274,10 +284,13 @@ export function FeedbackCategoryBadge({
   className,
 }: {
   category: FeedbackCategory;
-  label: ReactNode;
+  /** Over the `feedbackCategory` label (0.27.0: optional — before, every app passed
+   *  its own translation). */
+  label?: ReactNode;
   compact?: boolean;
   className?: string;
 }) {
+  const names = useFeedbackCategoryLabels();
   // Annotated `| undefined` because the Record's index signature promises a hit
   // for every FeedbackCategory, and at runtime the API can hand us one that is not.
   const known: (typeof FEEDBACK_CATEGORY_META)["OTHER"] | undefined = FEEDBACK_CATEGORY_META[category];
@@ -294,23 +307,28 @@ export function FeedbackCategoryBadge({
       )}
     >
       <Icon className={compact ? "size-3" : "size-3.5"} aria-hidden />
-      {label}
+      {label ?? (known ? names[category] : names.OTHER)}
     </span>
   );
 }
 
 /** Where a report stands, as a badge — for the places that only *report* the
- *  status rather than offering to change it. */
+ *  status rather than offering to change it. Named by the `feedbackStatus`
+ *  namespace unless `label` says otherwise (0.27.0); a status this build has never
+ *  heard of shows OPEN's look and its own raw value, never OPEN's name. */
 export function FeedbackStatusBadge({
   status,
   label,
   className,
 }: {
   status: FeedbackStatus;
-  label: ReactNode;
+  /** Over the `feedbackStatus` label (0.27.0: optional). */
+  label?: ReactNode;
   className?: string;
 }) {
+  const names = useFeedbackStatusLabels();
   const meta = FEEDBACK_STATUS_META[status] ?? FEEDBACK_STATUS_META.OPEN;
+  const name: string | undefined = names[status];
   const Icon = meta.icon;
   return (
     <span
@@ -322,7 +340,7 @@ export function FeedbackStatusBadge({
       )}
     >
       <Icon className="size-3" aria-hidden />
-      {label}
+      {label ?? name ?? status}
     </span>
   );
 }
@@ -349,6 +367,8 @@ export function FeedbackStatusTransitions({
   onPick,
   variant,
   label,
+  commit,
+  disabledReason: ownDisabledReason,
   className,
 }: {
   status: FeedbackStatus;
@@ -356,10 +376,30 @@ export function FeedbackStatusTransitions({
   canEdit: boolean;
   onPick: (status: FeedbackStatus) => void;
   variant: "icon" | "pill";
-  /** What each status is called, translated by the app. */
-  label: (status: FeedbackStatus) => string;
+  /** What each status is called. Default (0.27.0): the `feedbackStatus` namespace —
+   *  before, every app passed its own translation. */
+  label?: (status: FeedbackStatus) => string;
+  /**
+   * Every button here SAVES the moment it is pressed (0.27.0) — opt in and, under a
+   * locked {@link WriteLockProvider}, the row stays as it is and says why: each status
+   * the row could move to is `aria-disabled` but focusable, the click does nothing, and
+   * the lock's reason is in the kit Tooltip and the button's description — the
+   * `disabledReason` path `Button` takes. Off by default: a feedback inbox is not what
+   * every app's lock is about (keksdose's shell lock is a read-only demo BUDGET, and a
+   * report is not budget data).
+   */
+  commit?: boolean;
+  /** Why the statuses cannot be changed right now, the same way (a lock's own reason
+   *  wins over it). Only read while `canEdit`: a read-only row is a picture of the
+   *  workflow, not a refused action. */
+  disabledReason?: ReactNode;
   className?: string;
 }) {
+  const names = useFeedbackStatusLabels();
+  const nameOf = label ?? ((value: FeedbackStatus) => names[value]);
+  const reason = useCommitReason(commit, ownDisabledReason);
+  const locked = canEdit && reason !== undefined && reason !== null && reason !== false && reason !== "";
+  const reasonId = useId();
   return (
     // Not a control: it only stops clicks on the buttons inside from bubbling to
     // the row. The buttons are the keyboard path, and Enter/Space on them fires
@@ -370,17 +410,29 @@ export function FeedbackStatusTransitions({
       // A status control inside a clickable row must not also open the row.
       onClick={(event) => event.stopPropagation()}
     >
+      {locked && (
+        <span id={reasonId} hidden>
+          {reason}
+        </span>
+      )}
       {statuses.map((value) => {
         const meta = FEEDBACK_STATUS_META[value];
         const Icon = meta.icon;
         const active = status === value;
-        const name = label(value);
+        const name = nameOf(value);
+        // Locked: focusable and described, never firing (see `commit`). The current
+        // status stays natively disabled — it was never something to press.
+        const refused = locked && !active;
         const button = (
           <button
             key={value}
             type="button"
-            disabled={!canEdit || active}
-            onClick={() => onPick(value)}
+            disabled={refused ? undefined : !canEdit || active}
+            aria-disabled={refused || undefined}
+            aria-describedby={refused ? reasonId : undefined}
+            onClick={() => {
+              if (!refused) onPick(value);
+            }}
             aria-label={name}
             aria-pressed={active}
             className={cn(
@@ -404,12 +456,24 @@ export function FeedbackStatusTransitions({
               // "unavailable" rather than as "this is where the row stands".
               (!canEdit || active) && "cursor-default",
               !canEdit && "opacity-60",
+              refused && "cursor-not-allowed opacity-50",
             )}
           >
             <Icon className={variant === "icon" ? "size-4" : "size-3.5"} aria-hidden />
             {variant === "pill" && name}
           </button>
         );
+        // Locked, the bubble says WHY in both variants; the icon's name is still its
+        // `aria-label`, and the reason its description — the hidden copy above, which
+        // stays put, rather than the bubble (as on `Button`: the FRAGMENT keeps Tooltip
+        // from adding the bubble as a second, coming-and-going description).
+        if (refused) {
+          return (
+            <Tooltip key={value} label={reason} side="top" portal={variant === "icon" || undefined}>
+              <>{button}</>
+            </Tooltip>
+          );
+        }
         // The icon row has no visible label, so it needs the tooltip; the pills
         // carry theirs inline.
         //
@@ -474,6 +538,8 @@ export function FeedbackNoteEditor({
   rows = 3,
   attachment,
   resetKey,
+  required = false,
+  commit,
 }: {
   initial: string;
   pending: boolean;
@@ -496,6 +562,19 @@ export function FeedbackNoteEditor({
    *  that cannot put a `key` on the editor (see the note above). Leave it out and
    *  the draft is never thrown away behind the user's back. */
   resetKey?: string | number;
+  /**
+   * A blank note cannot be saved (0.27.0): Save stays disabled — and Ctrl/⌘+Enter does
+   * nothing — until the trimmed text is non-empty, and the box is `aria-required`. For
+   * the rework note, which the feedback contract requires (§3.4: a file alone cannot
+   * be sent; keksdose `feedback-page.tsx:577` dropped the click silently instead, so a
+   * press on Send with an empty box looked like a lost send). Default `false`: an
+   * outcome or a description may be cleared on purpose.
+   */
+  required?: boolean;
+  /** Save COMMITS (0.27.0): under a locked `WriteLockProvider` it is disabled the
+   *  `disabledReason` way, with the lock's reason, and Ctrl/⌘+Enter saves nothing. The
+   *  text box stays editable — nothing in it reaches the server until the save. */
+  commit?: boolean;
 }) {
   const [draft, setDraft] = useState(initial);
   const [file, setFile] = useState<File | null>(null);
@@ -514,6 +593,12 @@ export function FeedbackNoteEditor({
   // never passes through the field's own subtree. It listens here instead
   // (Steering Design feedback #140).
   const root = useRef<HTMLDivElement>(null);
+  const hintId = useId();
+  const lock = useWriteLock();
+  const blank = required && !draft.trim();
+  // The shortcut obeys what the button shows: no save while one is in flight, while the
+  // note a `required` editor needs is missing, or while a `commit` save is locked.
+  const canSubmit = !pending && !blank && !(commit && lock.locked);
   const submit = () => onSave(draft, file);
   return (
     // Not a control: a delegated Ctrl/Cmd+Enter shortcut for the textarea inside,
@@ -523,18 +608,34 @@ export function FeedbackNoteEditor({
       ref={root}
       className="space-y-2"
       onKeyDown={(event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !pending) {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && canSubmit) {
           event.preventDefault();
           submit();
         }
       }}
     >
-      {placeholder && <p className="text-xs text-[var(--text-muted)]">{placeholder}</p>}
-      <Textarea rows={rows} value={draft} onChange={(event) => setDraft(event.target.value)} />
+      {/* The line names the box (0.27.0): it is the only text that says what to write
+          in it, and an unnamed textarea is read out as just "edit text". */}
+      {placeholder && (
+        <p id={hintId} className="text-xs text-[var(--text-muted)]">
+          {placeholder}
+        </p>
+      )}
+      <Textarea
+        rows={rows}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        aria-labelledby={placeholder ? hintId : undefined}
+        aria-required={required || undefined}
+      />
       {attachment && (
         <FeedbackAttachmentField
           value={file}
           onChange={setFile}
+          // A pause while the save is in flight (the field's G5b `disabled`): the note
+          // goes out with the file AS IT WAS at the press, so a chip removed or added
+          // mid-send would be a lie about what was sent.
+          disabled={pending}
           labels={attachment.labels}
           accept={attachment.accept}
           maxBytes={attachment.maxBytes}
@@ -554,7 +655,7 @@ export function FeedbackNoteEditor({
         <Button variant="ghost" onClick={onCancel}>
           {cancelLabel}
         </Button>
-        <Button variant="brand" disabled={pending} onClick={submit}>
+        <Button variant="brand" disabled={pending || blank} commit={commit} onClick={submit}>
           {saveLabel}
         </Button>
       </div>
@@ -567,7 +668,10 @@ export function FeedbackNoteEditor({
  *  held to the app's own limits — and drawn in its own look — rather than the
  *  defaults. */
 export interface FeedbackNoteAttachment {
-  labels: FeedbackAttachmentLabels;
+  /** Over the field's own `feedbackAttachment` namespace. Optional since 0.27.0 — the
+   *  field has read the provider's words since 0.7.0, so an app with a catalogue has
+   *  nothing to restate. */
+  labels?: Partial<FeedbackAttachmentLabels>;
   accept?: string[];
   maxBytes?: number;
   /** `info` (0.23.0) names the refused file and the limit. */
@@ -623,8 +727,8 @@ export function FeedbackDetailSection({
 
 /** The stack a detail panel is. Here so the spacing between sections is decided
  *  once rather than by whichever app was written second. */
-export function FeedbackDetail({ children }: { children: ReactNode }) {
-  return <div className="space-y-3 text-sm">{children}</div>;
+export function FeedbackDetail({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("space-y-3 text-sm", className)}>{children}</div>;
 }
 
 /** Prose inside a section — a body, an outcome, a note.

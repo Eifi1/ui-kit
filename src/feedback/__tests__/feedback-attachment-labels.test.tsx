@@ -46,7 +46,7 @@ describe("FeedbackAttachmentField labels", () => {
       </UiKitProvider>,
     );
     expect(screen.getByRole("button", { name: /Snap it/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeInTheDocument();
   });
 
   it("names the remove button from the provider too", () => {

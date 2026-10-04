@@ -5,12 +5,12 @@ import { UiKitProvider, formatFileSize, missingKitLabels } from "../kit-labels";
 import { uiKitLabelsEn } from "../locales/en";
 import { BulkActionBar } from "../../components/bulk-action-bar";
 
-/** Every leaf, as text: functions are called with `arg` for every parameter. */
+/** Every leaf, as text: functions are called with `arg` for every parameter — a label
+ *  that works on text (`feedbackPage.environment`) prints a number rather than throw. */
 function leaves(tree: unknown, arg: number, path = ""): Array<[string, string]> {
   if (typeof tree === "string") return [[path, tree]];
   if (typeof tree === "function") {
-    const args = Array.from({ length: tree.length }, () => arg);
-    const out = (tree as (...a: unknown[]) => unknown)(...args);
+    const out = (tree as (...a: unknown[]) => unknown)(...Array.from({ length: tree.length }, () => arg));
     return typeof out === "string" ? [[path, out]] : [];
   }
   if (tree && typeof tree === "object") {
@@ -83,6 +83,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "dataTable.pageRange",
       "dataTable.rowCount",
       "feedbackAttachment.attachmentLimit",
+      "feedbackPage.reworkChip",
+      "feedbackToast.attachmentTooMany",
       "filePicker.rejectedCount",
       "filePicker.rejectedMany",
       "filePicker.rejectedPick",

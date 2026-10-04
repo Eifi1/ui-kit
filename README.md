@@ -382,20 +382,20 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1291 names from 193 modules** — 603 values and 688 types. _Italic_ is a type-only export.
+**1392 names from 204 modules** — 658 values and 734 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1291 |
+| `@eifi1/ui-kit` | 1392 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
-| `@eifi1/ui-kit/feedback` | 64 |
+| `@eifi1/ui-kit/feedback` | 165 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -605,8 +605,19 @@ re-slicing of it, never a second API.
 |---|---|
 | `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 | `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
-| `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_ |
+| `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
+| `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
+| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
+| `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
+| `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
+| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
+| `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
+| `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
+| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
+| `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
+| `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
+| `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
 
 ### shell
 

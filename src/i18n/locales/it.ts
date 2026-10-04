@@ -17,14 +17,18 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
 
   return {
     feedbackAttachment: {
-      attachmentAdd: "Allega immagine",
+      attachmentAdd: "Aggiungi allegato",
       attachmentCapture: "Cattura schermata",
-      attachmentPaste: "…oppure incolli uno screenshot dagli appunti.",
+      attachmentPaste:
+        "…oppure incolli uno screenshot direttamente dagli appunti, così può mostrare solo un dettaglio invece dell’intera pagina.",
       attachmentRemove: "Rimuovi allegato",
       attachmentList: "Allegati",
       attachmentScreenshot: "Screenshot",
       attachmentRemoveFile: (name) => `Rimuovi ${name}`,
-      attachmentLimit: (max) => `Massimo ${n(max)} ${max === 1 ? "allegato" : "allegati"}: ne rimuova uno per aggiungerne un altro.`,
+      attachmentLimit: (max) =>
+        max === 1
+          ? `Massimo ${n(max)} allegato: lo rimuova per aggiungerne un altro.`
+          : `Massimo ${n(max)} allegati: ne rimuova uno per aggiungerne un altro.`,
       attachmentUploading: "Caricamento…",
       attachmentUploadFailed: (name) => `Impossibile caricare «${name}»`,
     },
@@ -34,8 +38,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       subject: "Oggetto",
       body: "Cosa è successo?",
       bodyOptional: "Cosa è successo? (facoltativo)",
-      attachment: "Screenshot",
-      submitHint: "Ctrl/⌘ + Invio per inviare",
+      attachment: "Allegato",
+      submitHint: (apple) => (apple ? "⌘ Invio per inviare" : "Ctrl+Invio per inviare"),
       cancel: "Annulla",
       save: "Invia",
     },
@@ -53,6 +57,94 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       send: "Invia",
       sendHint: (modifier) => `${modifier} + Invio per inviare`,
       sendHintEnter: "Invio per inviare, Maiusc + Invio per andare a capo",
+    },
+    // 0.27.0. "Feedback" stays, as `feedbackDialog`; "rielaborazione" for rework.
+    feedbackStatus: {
+      OPEN: "Aperto",
+      IN_PROGRESS: "In corso",
+      IN_EVALUATION: "In valutazione",
+      NEEDS_LIVE_TEST: "Da testare in produzione",
+      POSTPONED: "Rimandato",
+      DONE: "Completato",
+      WONT_DO: "Non verrà fatto",
+    },
+    feedbackCategory: {
+      CRASH: "Arresto anomalo",
+      BUG: "Errore",
+      IDEA: "Idea",
+      QUESTION: "Domanda",
+      OTHER: "Altro",
+    },
+    feedbackToast: {
+      submitted: "Grazie per il feedback!",
+      submitFailed: "Impossibile inviare il feedback",
+      attachmentUnsupported: "Sono consentiti solo immagini, PDF o file di testo",
+      attachmentTooLarge: "Il file supera i 10 MB",
+      attachmentTooMany: (count) =>
+        count === 1
+          ? "C’è posto solo per 1 allegato: gli altri sono stati esclusi."
+          : `C’è posto solo per ${n(count)} allegati: gli altri sono stati esclusi.`,
+      captureFailed: "Impossibile catturare lo screenshot",
+      updateFailed: "Non è stato possibile salvare la modifica.",
+      statusChanged: (status, title) => `Impostato su «${status}»: ${title}`,
+      statusUndo: "Annulla",
+      statusRestored: (status, title) => `Tornato a «${status}»: ${title}`,
+    },
+    feedbackMenu: {
+      trigger: "Invia feedback",
+      myFeedback: "I miei feedback",
+      viewFeedback: "Visualizza feedback",
+    },
+    feedbackContext: {
+      user: "Utente",
+      attachUrl: "Allega l’URL della pagina corrente",
+    },
+    feedbackPage: {
+      title: "Feedback",
+      myTitle: "I miei feedback",
+      columnId: "#",
+      columnDate: "Data",
+      columnCategory: "Categoria",
+      columnSubject: "Oggetto",
+      columnUser: "Utente",
+      columnEmail: "Email",
+      columnUrl: "URL",
+      columnStatus: "Stato",
+      columnResolved: "Risolto il",
+      openPage: "Apri pagina",
+      empty: "Nessuno",
+      deletedUser: "<utente eliminato>",
+      // An id, not a count: printed as it is, like the "#" column.
+      userFallback: (id) => `utente #${id}`,
+      environment: (environment) => String(environment ?? "").toUpperCase(),
+      reworkChip: (count) => (count === 1 ? "Rielaborazione" : `Rielaborazione ×${n(count)}`),
+      awaitingFilter: "Solo ciò che attende Lei",
+      phoneActions: "Azioni sul feedback",
+    },
+    feedbackDetail: {
+      body: "Descrizione",
+      edit: "Modifica",
+      editDescription: "Modifica descrizione",
+      save: "Salva",
+      cancel: "Annulla",
+      url: "URL",
+      copyUrl: "Copia URL",
+      attachment: "Allegato",
+      download: (name) => `Scarica ${name}`,
+      downloadFailed: "Non è stato possibile scaricare l’allegato.",
+      outcome: "Esito",
+      resolvedAt: (date) => `Risolto il ${date}`,
+      outcomeAdd: "Aggiungi esito",
+      outcomeUpdate: "Aggiorna",
+      outcomePlaceholder: "Cosa è stato fatto o deciso, oppure perché non verrà affrontato.",
+      rework: "Rielaborazione",
+      openPage: "Apri pagina",
+      reworkTitle: "Rimanda in rielaborazione",
+      reworkSend: "Richiedi rielaborazione",
+      reworkPlaceholder: "Cosa va ancora perfezionato? Eventuali nuovi vincoli o cambi di direzione.",
+      reworkUploadFailed:
+        "Non è stato possibile caricare il file. La richiesta di rielaborazione non è stata inviata.",
+      status: "Stato",
     },
     accountSettings: {
       profile: {

@@ -31,7 +31,7 @@ function field(mode: Mode, look: Look = {}) {
 }
 
 const buttons = () => [
-  screen.getByRole("button", { name: /Attach image/ }),
+  screen.getByRole("button", { name: /Add attachment/ }),
   screen.getByRole("button", { name: /Capture screenshot/ }),
 ];
 

@@ -35,6 +35,15 @@ import {
   DEFAULT_FEEDBACK_COMPOSER_LABELS,
   DEFAULT_FEEDBACK_THREAD_LABELS,
 } from "../feedback/feedback-thread";
+import {
+  DEFAULT_FEEDBACK_CATEGORY_LABELS,
+  DEFAULT_FEEDBACK_STATUS_LABELS,
+  DEFAULT_FEEDBACK_TOAST_LABELS,
+} from "../feedback/feedback-labels";
+import { DEFAULT_FEEDBACK_MENU_LABELS } from "../feedback/feedback-menu";
+import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "../feedback/feedback-context";
+import { DEFAULT_FEEDBACK_PAGE_LABELS } from "../feedback/feedback-table";
+import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "../feedback/feedback-row-detail";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../components/account-settings-labels";
 import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar";
@@ -128,6 +137,13 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   feedbackDialog: DEFAULT_FEEDBACK_DIALOG_LABELS,
   feedbackThread: DEFAULT_FEEDBACK_THREAD_LABELS,
   feedbackComposer: DEFAULT_FEEDBACK_COMPOSER_LABELS,
+  feedbackStatus: DEFAULT_FEEDBACK_STATUS_LABELS,
+  feedbackCategory: DEFAULT_FEEDBACK_CATEGORY_LABELS,
+  feedbackToast: DEFAULT_FEEDBACK_TOAST_LABELS,
+  feedbackMenu: DEFAULT_FEEDBACK_MENU_LABELS,
+  feedbackContext: DEFAULT_FEEDBACK_CONTEXT_LABELS,
+  feedbackPage: DEFAULT_FEEDBACK_PAGE_LABELS,
+  feedbackDetail: DEFAULT_FEEDBACK_DETAIL_LABELS,
   accountSettings: DEFAULT_ACCOUNT_SETTINGS_LABELS,
   confirmDialog: DEFAULT_CONFIRM_DIALOG_LABELS,
   floatingPanel: DEFAULT_FLOATING_PANEL_LABELS,

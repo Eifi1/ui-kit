@@ -753,6 +753,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackAttachmentField — uploaded on pick",
     "FeedbackAttachmentField — refusals that name the file, and a field that holds",
     "FeedbackDialog — the attachment buttons' look",
+    "FeedbackMenu + useFeedbackSubmit — the top-bar menu and the wired dialog",
+    "FeedbackContextBox + feedbackContext() — what the box shows is what is sent",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -774,6 +776,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ChatComposer — counted against the server's limit",
     "ChatComposer — the slot gets the composer's root",
     "FeedbackNoteEditor — the attachment buttons' look",
+    "feedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages",
+    "The row detail",
+    "Status and category in the kit's words, with Undo",
+    "The body's rework rounds",
   ],
   "hooks-lib": [
     "useMediaQuery(query, fallback)",

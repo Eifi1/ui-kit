@@ -204,7 +204,7 @@ describe("G5b: disabled holds the field while a send is in flight", () => {
     const { rerender, container } = render(
       <FeedbackAttachmentField value={null} onChange={onChange} onCaptureScreenshot={async () => null} disabled />,
     );
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Capture screenshot/ })).toBeDisabled();
     expect(fileInput(container)).toBeDisabled();
     rerender(<FeedbackAttachmentField value={png("shot.png")} onChange={onChange} disabled />);
@@ -232,7 +232,7 @@ describe("G5b: disabled holds the field while a send is in flight", () => {
     for (const name of ["a.png", "b.png"]) {
       expect(screen.getByRole("button", { name: `Remove ${name}` })).toBeDisabled();
     }
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeDisabled();
     fireEvent.paste(container.firstElementChild!, clipboard(png("image.png")));
     expect(screen.getByTestId("names")).toHaveTextContent("a.png,b.png");
   });
@@ -256,7 +256,7 @@ describe("G5b: disabled holds the field while a send is in flight", () => {
   it("the default stays open: no `disabled`, everything works as in 0.22", () => {
     render(<Multiple initial={[png("a.png")]} />);
     expect(screen.getByRole("button", { name: "Remove a.png" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /Attach image/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toBeEnabled();
   });
 });
 
@@ -273,7 +273,7 @@ describe("refs mode commits: commit / disabledReason", () => {
         disabledReason="This thread is closed."
       />,
     );
-    const add = screen.getByRole("button", { name: /Attach image/ });
+    const add = screen.getByRole("button", { name: /Add attachment/ });
     const capture = screen.getByRole("button", { name: /Capture screenshot/ });
     const remove = screen.getByRole("button", { name: "Remove one.png" });
     for (const button of [add, capture, remove]) {
@@ -298,7 +298,7 @@ describe("refs mode commits: commit / disabledReason", () => {
         <Refs commit disabledReason="Own reason" />
       </WriteLockProvider>,
     );
-    expect(screen.getByRole("button", { name: /Attach image/ })).toHaveAccessibleDescription(
+    expect(screen.getByRole("button", { name: /Add attachment/ })).toHaveAccessibleDescription(
       "Read-only demo — saving is disabled.",
     );
   });
@@ -309,13 +309,13 @@ describe("refs mode commits: commit / disabledReason", () => {
         <Refs commit />
       </WriteLockProvider>,
     );
-    expect(screen.getByRole("button", { name: /Attach image/ })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: /Add attachment/ })).not.toHaveAttribute("aria-disabled", "true");
     unmount();
     render(
       <WriteLockProvider locked>
         <Refs />
       </WriteLockProvider>,
     );
-    expect(screen.getByRole("button", { name: /Attach image/ })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: /Add attachment/ })).not.toHaveAttribute("aria-disabled", "true");
   });
 });
