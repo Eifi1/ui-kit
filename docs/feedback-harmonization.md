@@ -7,7 +7,7 @@ Everything after them follows the same pattern as the language round
 ([i18n-harmonization.md](i18n-harmonization.md)): **one contract + kit parts**. The
 contract is keksdose's, read off its code; the kit owns every visible word and every
 part that three apps were building separately; each app keeps its data, API client,
-auth and routes. Open points are in §7 — nothing there is decided.
+auth and routes. The points the draft left open are settled in §7.
 
 Paths below are relative to each repo: **kk** = keksdose, **ka** = kastlan,
 **KS** = Kurvenschmiede.
