@@ -399,6 +399,11 @@ export interface DataTableProps<T> {
    * key/value rows) with a compact custom layout, while keeping the shared
    * clickable/expandable row wrapper. Use when the stacked label/value grid
    * wastes space (feedback #317). Desktop is unaffected.
+   *
+   * It replaces the WHOLE body, `mobilePrimary` included: a column's
+   * `mobilePrimary` cell is not drawn when `mobileCard` is set, so anything that
+   * cell carried (keksdose's environment and rework chips, 0.27) must be drawn by
+   * the card itself — as `FeedbackMobileCard` does.
    */
   mobileCard?: (row: T) => ReactNode;
   /**
