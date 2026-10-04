@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
@@ -6,8 +6,8 @@ import { DEFAULT_FEEDBACK_MENU_LABELS, FeedbackMenu, type FeedbackMenuProps } fr
 
 /**
  * §4.1 of the feedback contract (keksdose `app/top-bar.tsx:156`, §7.11): the four category
- * rows, a divider, the app's extras, "My feedback" for everyone and "View feedback" in
- * addition for admins. No heading, no CRASH.
+ * rows, a divider, the app's extras, and ONE list link — "View feedback" for an admin,
+ * "My feedback" for everyone else (keksdose `top-bar.tsx:205-214`). No heading, no CRASH.
  */
 
 function renderMenu(props: Partial<FeedbackMenuProps> = {}, labels?: UiKitLabelOverrides) {
@@ -50,21 +50,23 @@ describe("FeedbackMenu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
-  it("gives an admin both lists, My feedback first", () => {
+  it("gives an admin only View feedback — the inbox, in place of My feedback", () => {
     renderMenu({ isAdmin: true });
     const menu = openMenu();
-    expect(rows(menu).slice(-2)).toEqual(["My feedback", "View feedback"]);
+    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "View feedback"]);
     expect(within(menu).getByRole("menuitem", { name: "View feedback" })).toHaveAttribute("href", "/feedback");
+    expect(within(menu).queryByRole("menuitem", { name: "My feedback" })).toBeNull();
   });
 
   it("takes the routes from props", () => {
+    renderMenu({ myFeedbackHref: "/me/reports", inboxHref: "/admin/reports" });
+    expect(within(openMenu()).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/me/reports");
+    cleanup();
     renderMenu({ isAdmin: true, myFeedbackHref: "/me/reports", inboxHref: "/admin/reports" });
-    const menu = openMenu();
-    expect(within(menu).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/me/reports");
-    expect(within(menu).getByRole("menuitem", { name: "View feedback" })).toHaveAttribute("href", "/admin/reports");
+    expect(within(openMenu()).getByRole("menuitem", { name: "View feedback" })).toHaveAttribute("href", "/admin/reports");
   });
 
-  it("puts the app's extra entries between the divider and the list links", () => {
+  it("puts the app's extra entries between the divider and the list link", () => {
     const onAssistant = vi.fn();
     renderMenu({
       isAdmin: true,
@@ -81,7 +83,6 @@ describe("FeedbackMenu", () => {
       "Other",
       "Help assistant",
       "Support chat2",
-      "My feedback",
       "View feedback",
     ]);
     const divider = menu.querySelector("li.border-t")!;
@@ -105,7 +106,7 @@ describe("FeedbackMenu", () => {
       } as UiKitLabelOverrides,
     );
     const menu = openMenu("Feedback senden");
-    expect(rows(menu)).toEqual(["Fehler", "Idee", "Frage", "Sonstiges", "Mein Feedback", "Inbox"]);
+    expect(rows(menu)).toEqual(["Fehler", "Idee", "Frage", "Sonstiges", "Inbox"]);
   });
 
   it("has English defaults", () => {

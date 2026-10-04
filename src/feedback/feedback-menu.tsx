@@ -15,9 +15,11 @@ import { FEEDBACK_PICKABLE_CATEGORIES } from "./feedback-record";
 export interface FeedbackMenuLabels {
   /** The trigger's accessible name, and the menu's. keksdose `feedback.send`. */
   trigger: string;
-  /** The link to the reporter's own reports — shown to everyone. keksdose `feedback.my_title`. */
+  /** The link to the reporter's own reports — everyone but an admin. keksdose
+   *  `feedback.my_title`. */
   myFeedback: string;
-  /** The link to the inbox — admins only, after "My feedback". keksdose `feedback.view_all`. */
+  /** The link to the inbox — an admin's one list link, in place of "My feedback".
+   *  keksdose `feedback.view_all`. */
   viewFeedback: string;
 }
 
@@ -31,20 +33,22 @@ export interface FeedbackMenuProps {
   /** A category row was chosen — open the submit dialog on it (`useFeedbackSubmit`'s
    *  `open`). Never called with `CRASH`: there is no row for it. */
   onFile: (category: FeedbackCategory) => void;
-  /** Adds "View feedback" → {@link inboxHref} after "My feedback" (§7.11). The admin check
-   *  is the app's (kastlan's is company-scoped). Default `false`. */
+  /** The list link is "View feedback" → {@link inboxHref} INSTEAD of "My feedback" (§4.1,
+   *  keksdose `top-bar.tsx:205-214`). The admin check is the app's (kastlan's is
+   *  company-scoped). Default `false`. */
   isAdmin?: boolean;
   /**
-   * Rows of the app's own, between the divider and the two list links — keksdose's
+   * Rows of the app's own, between the divider and the list link — keksdose's
    * `Sparkles` Help assistant → `/assistant` and `MessagesSquare` Support chat →
    * `/support` with its unread chip. Any {@link TopBarMenuEntry}; keep their `key`s clear
    * of the menu's own (`BUG`, `IDEA`, `QUESTION`, `OTHER`, `feedback-divider`,
    * `my-feedback`, `view-feedback`).
    */
   extraEntries?: TopBarMenuEntry[];
-  /** The user's own reports. Default `"/my-feedback"` (§2.3). */
+  /** The user's own reports, linked for everyone but an admin. Default `"/my-feedback"`
+   *  (§2.3). */
   myFeedbackHref?: string;
-  /** The admin inbox. Default `"/feedback"` (§2.3). */
+  /** The admin inbox, linked for an admin. Default `"/feedback"` (§2.3). */
   inboxHref?: string;
   /** A dot on the trigger — keksdose's unread support replies (`tone: "danger"`). Its
    *  `label` joins the trigger's name ("Send feedback 2 unread"). The words are the app's. */
@@ -64,16 +68,16 @@ export interface FeedbackMenuProps {
  *    the category badges' own glyphs), each calling `onFile(category)`;
  * 3. a divider, always;
  * 4. the app's `extraEntries`;
- * 5. `Inbox` "My feedback" → `/my-feedback` for EVERYONE, and "View feedback" →
- *    `/feedback` in addition for admins.
+ * 5. ONE list link, `Inbox`: an admin's is "View feedback" → `/feedback`, everyone
+ *    else's "My feedback" → `/my-feedback` — keksdose's (`top-bar.tsx:205-214`, feedback
+ *    #331: admins get the management view, everyone else their own submissions).
  *
  * WHY A PRESET. Three apps had drawn three menus on the same primitive and they disagreed:
  * kastlan headed it "New submission", Kurvenschmiede "Send feedback" with a single link
- * that changed its words by role, keksdose had no heading and gave its admins ONLY "View
- * feedback" (top-bar.tsx:205-214), so an admin could not reach their own reports from the
- * menu. §7.11 settled one shape — no heading, both links for an admin — and the kit draws
- * it, so the row order, the icons and the words cannot drift again. Where the menu sits in
- * the bar stays each app's.
+ * that changed its words by role, keksdose had no heading and one link by role. keksdose
+ * is the source (§2.4, §7.11): no heading, one link — the inbox for an admin, who reaches
+ * their own reports there too — and the kit draws it, so the row order, the icons and the
+ * words cannot drift again. Where the menu sits in the bar stays each app's.
  *
  * `CRASH` has no row and never will: crash reports are filed by the error boundary with
  * the stack and a fingerprint (keksdose feedback #160), and a hand-filed "crash" would sort
@@ -110,22 +114,11 @@ export function FeedbackMenu({
     ...(extraEntries ?? []),
     {
       kind: "link",
-      key: "my-feedback",
-      to: myFeedbackHref,
+      key: isAdmin ? "view-feedback" : "my-feedback",
+      to: isAdmin ? inboxHref : myFeedbackHref,
       icon: <Inbox className="size-4" />,
-      label: labels.myFeedback,
+      label: isAdmin ? labels.viewFeedback : labels.myFeedback,
     },
-    ...(isAdmin
-      ? [
-          {
-            kind: "link",
-            key: "view-feedback",
-            to: inboxHref,
-            icon: <Inbox className="size-4" />,
-            label: labels.viewFeedback,
-          } satisfies TopBarMenuEntry,
-        ]
-      : []),
   ];
   return (
     <TopBarActionMenu

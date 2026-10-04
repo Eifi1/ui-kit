@@ -119,8 +119,8 @@ export function FeedbackSubmit027Demo() {
           )}
           <Note>
             {code("<FeedbackMenu onFile={feedback.open} isAdmin={…} />")} draws §4.1: Bug · Idea · Question · Other,
-            a rule, the app&apos;s {code("extraEntries")}, then {code("My feedback")} for everyone and{" "}
-            {code("View feedback")} in addition for an admin — never a Crash row. {code("useFeedbackSubmit")} takes the
+            a rule, the app&apos;s {code("extraEntries")}, then one list link: {code("View feedback")} for an admin,{" "}
+            {code("My feedback")} for everyone else — never a Crash row. {code("useFeedbackSubmit")} takes the
             app&apos;s {code("upload(file) → url")} and {code("create(payload)")} and owns the rest: multiple attachments
             (one screenshot + 5 files, images/PDF/text, 10 MB), the capture, the context box, uploads before the create,
             and every toast in the kit&apos;s words. Hand it {code("errorMessage")} to toast the server&apos;s{" "}
