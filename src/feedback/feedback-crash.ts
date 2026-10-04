@@ -42,9 +42,10 @@ const MAX_PENDING = 3;
 const HOT_UPDATE_GRACE_MS = 10_000;
 
 /**
- * `POST /feedback/crash`'s body — `CrashReportCreate`, §3.6, plus the two keys the
- * contract adds over keksdose's schema (`origin`, `environment`), so a dev crash no
- * longer reads as prod and the admin list can show its env chip (§3.2).
+ * `POST /feedback/crash`'s body — `CrashReportCreate`, §3.6 (kk `schemas/feedback.py`),
+ * including the optional `origin` and `environment` the server copies into the row's
+ * `context`, so a dev crash no longer reads as prod and the admin list shows its env
+ * chip (§3.2).
  *
  * Every string is clamped to the server's column width before it is sent: one character
  * over a `max_length` used to come back 422 and the report was lost (kk
@@ -73,9 +74,9 @@ export interface CrashReportCreate {
   online: boolean | null;
   /** ISO 8601, UTC — when it crashed, not when a buffered copy was finally sent. */
   occurred_at: string;
-  /** `location.origin` — which copy of the app (§3.2). The contract names no cap; ≤ 200. */
+  /** `location.origin` — which copy of the app (§3.2). ≤ 200. */
   origin: string | null;
-  /** `"prod"` / `"dev"` / `"local"` (§3.2). The contract names no cap; ≤ 50. */
+  /** `"prod"` / `"dev"` / `"local"` (§3.2) — the app's `environment` option. ≤ 20. */
   environment: string | null;
 }
 
@@ -455,7 +456,7 @@ export function createCrashReporter(options: CrashReporterOptions): CrashReporte
       online: typeof report.online === "boolean" ? report.online : null,
       occurred_at: typeof report.time === "string" && report.time ? report.time : new Date().toISOString(),
       origin: clamp(origin, 200),
-      environment: clamp(environment, 50),
+      environment: clamp(environment, 20),
     };
   }
 

@@ -156,6 +156,14 @@ describe("createCrashReporter — the payload", () => {
     expect(sent(fetchImpl, 1).message).toHaveLength(2000);
   });
 
+  it("clamps origin to 200 and environment to 20, keksdose's CrashReportCreate caps", async () => {
+    const { reporter, fetchImpl } = setup({ origin: `https://${"o".repeat(300)}.test`, environment: "e".repeat(40) });
+    await reporter.onReport(crash());
+    const p = sent(fetchImpl);
+    expect(p.origin).toHaveLength(200);
+    expect(p.environment).toBe("e".repeat(20));
+  });
+
   it("takes version and origin from the options over the report and location", async () => {
     const { reporter, fetchImpl } = setup({ version: "9.9.9", origin: undefined, environment: "prod" });
     await reporter.onReport(crash());
