@@ -125,7 +125,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       deletedUser: "<gelöschter Nutzer>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `Nutzer #${id}`,
-      environment: (environment) => environment.toUpperCase(),
+      environment: (environment) => String(environment ?? "").toUpperCase(),
       reworkChip: (count) => (count === 1 ? "Nacharbeit" : `Nacharbeit ×${n(count)}`),
       awaitingFilter: "Nur was auf Sie wartet",
       phoneActions: "Feedback-Aktionen",

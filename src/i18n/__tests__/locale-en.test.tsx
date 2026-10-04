@@ -5,20 +5,12 @@ import { UiKitProvider, formatFileSize, missingKitLabels } from "../kit-labels";
 import { uiKitLabelsEn } from "../locales/en";
 import { BulkActionBar } from "../../components/bulk-action-bar";
 
-/** Every leaf, as text: functions are called with `arg` for every parameter — or, for a
- *  label that works on text (`feedbackPage.environment` upper-cases its argument), with
- *  `arg` as text. */
+/** Every leaf, as text: functions are called with `arg` for every parameter — a label
+ *  that works on text (`feedbackPage.environment`) prints a number rather than throw. */
 function leaves(tree: unknown, arg: number, path = ""): Array<[string, string]> {
   if (typeof tree === "string") return [[path, tree]];
   if (typeof tree === "function") {
-    const fn = tree as (...a: unknown[]) => unknown;
-    const args = Array.from({ length: tree.length }, () => arg);
-    let out: unknown;
-    try {
-      out = fn(...args);
-    } catch {
-      out = fn(...args.map(String));
-    }
+    const out = (tree as (...a: unknown[]) => unknown)(...Array.from({ length: tree.length }, () => arg));
     return typeof out === "string" ? [[path, out]] : [];
   }
   if (tree && typeof tree === "object") {

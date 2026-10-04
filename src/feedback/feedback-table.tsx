@@ -104,7 +104,9 @@ export interface FeedbackPageLabels {
   /** The chip for a report filed from a copy of the app that is not production —
    *  `environment` is `context.environment` as filed ("dev", "local", or the app's own
    *  word). Upper-cased like the top bar's environment badge, so the marker the tester saw
-   *  is the marker triage sees. de-CH: the same (`environment.toUpperCase()`). */
+   *  is the marker triage sees. Guarded: a context is untyped JSON, so a value that is no
+   *  string (an app calling it with `context.environment` as stored) is printed, never
+   *  thrown on. de-CH: the same. */
   environment: (environment: string) => string;
   /** The chip for a report sent back for rework — `count` ≥ 1 is how many times
    *  (`reworkCount`, keksdose live #331). de-CH: "Nacharbeit" / "Nacharbeit ×{{count}}" */
@@ -132,7 +134,7 @@ export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
   empty: "None",
   deletedUser: "<deleted user>",
   userFallback: (id) => `user #${id}`,
-  environment: (environment) => environment.toUpperCase(),
+  environment: (environment) => String(environment ?? "").toUpperCase(),
   reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${count}`),
   awaitingFilter: "Only what is waiting for you",
   phoneActions: "Feedback actions",
@@ -163,8 +165,8 @@ function text(value: unknown): string {
  * The environment a report was filed from when it is NOT production, as filed — or
  * `null` (keksdose `environmentLabel`, :142). Production is silent, as the top bar's
  * badge is: the marker earns attention by being rare. A missing value is production too —
- * every row filed before a test copy existed, and crash rows until their payload carries
- * `environment` (§3.2). An unknown value is shown rather than swallowed: an environment
+ * every row filed before a test copy existed, and crash rows filed before the crash
+ * payload carried `environment` (§3.2, §3.6). An unknown value is shown rather than swallowed: an environment
  * nobody recognises is exactly when triage needs to see one.
  */
 export function feedbackEnvironment(context: FeedbackContext | null | undefined): string | null {

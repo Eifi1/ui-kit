@@ -109,7 +109,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       deletedUser: "<已删除的用户>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `用户 #${id}`,
-      environment: (environment) => environment.toUpperCase(),
+      environment: (environment) => String(environment ?? "").toUpperCase(),
       reworkChip: (count) => (count === 1 ? "返工" : `返工 ×${n(count)}`),
       awaitingFilter: "仅显示待您处理的",
       phoneActions: "反馈操作",

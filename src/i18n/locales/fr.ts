@@ -114,7 +114,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       deletedUser: "<utilisateur supprimé>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `utilisateur #${id}`,
-      environment: (environment) => environment.toUpperCase(),
+      environment: (environment) => String(environment ?? "").toUpperCase(),
       reworkChip: (count) => (count === 1 ? "Reprise" : `Reprise ×${n(count)}`),
       awaitingFilter: "Seulement ce qui vous attend",
       phoneActions: "Actions sur les retours",

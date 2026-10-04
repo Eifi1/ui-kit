@@ -139,6 +139,10 @@ describe("feedbackPage labels", () => {
     expect(DEFAULT_FEEDBACK_PAGE_LABELS.reworkChip(1)).toBe("Rework");
     expect(DEFAULT_FEEDBACK_PAGE_LABELS.reworkChip(3)).toBe("Rework ×3");
     expect(DEFAULT_FEEDBACK_PAGE_LABELS.environment("local")).toBe("LOCAL");
+    // A context is untyped JSON: a stored non-string is printed, never thrown on.
+    const environment = DEFAULT_FEEDBACK_PAGE_LABELS.environment as (value: unknown) => string;
+    expect(environment(undefined)).toBe("");
+    expect(environment(42)).toBe("42");
     expect(DEFAULT_FEEDBACK_PAGE_LABELS.userFallback(7)).toBe("user #7");
   });
 });

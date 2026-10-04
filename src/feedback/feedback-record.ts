@@ -32,10 +32,11 @@ export type FeedbackEnvironment = "prod" | "dev" | "local";
  *
  * **Every key is optional on read**, and a reader treats a missing one as "unknown":
  * kastlan's client sends six of them (no email, no version), Kurvenschmiede's old rows are
- * backfilled from two columns with a path-only `url`, crash rows add their own and lack
- * `origin` / `environment` until the keksdose backend copies them in, and an erased
- * account's row keeps only an allow-list (§3.2). Extra keys are allowed — a server may
- * add its own — hence the index signature.
+ * backfilled from two columns with a path-only `url`, crash rows add their own (and
+ * `origin` / `environment` from the crash payload, §3.6 — older crash rows have neither),
+ * and an erased account's row keeps only an allow-list (§3.2: `environment` stays,
+ * `origin` goes). Extra keys are allowed — a server may add its own — hence the index
+ * signature.
  */
 export interface FeedbackContext {
   /** The full `location.href` at open time; `""` when "Attach current page URL" was off.

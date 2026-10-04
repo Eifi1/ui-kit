@@ -114,7 +114,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       deletedUser: "<törölt felhasználó>",
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `felhasználó #${id}`,
-      environment: (environment) => environment.toUpperCase(),
+      environment: (environment) => String(environment ?? "").toUpperCase(),
       reworkChip: (count) => (count === 1 ? "Átdolgozás" : `Átdolgozás ×${n(count)}`),
       awaitingFilter: "Csak ami Önre vár",
       phoneActions: "Visszajelzés-műveletek",
