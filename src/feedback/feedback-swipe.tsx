@@ -51,9 +51,11 @@ export const DEFAULT_FEEDBACK_SWIPE: FeedbackSwipeBinding = Object.freeze({
 });
 
 export interface FeedbackSwipeOptions {
-  /** The undoable change from `useFeedbackStatusUndo` — every swipe commits through it,
-   *  so a swipe gets the same 8 s Undo toast as a tap (§7.10; keksdose's swipes called the
-   *  bare mutation and offered none). */
+  /** What a swipe commits through: the undoable change from `useFeedbackStatusUndo`, the
+   *  same one the status cell and the detail's pills use — so a swipe gets the same 8 s
+   *  "Set to …" toast with Undo as a tap (§4.5, §7.10, Marcel 2026-10-04; keksdose's
+   *  `changeStatusUndoably` on its swipes too). A swipe is the easiest status change to
+   *  make by accident. The plan calls it and nothing else, so the page owns the PATCH. */
   change: FeedbackStatusChange;
   /** The status names the panels show — `useFeedbackStatusLabels()`. The `done` panel
    *  reads DONE's, `wont_do` WONT_DO's, `advance` the next status's. */

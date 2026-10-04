@@ -60,8 +60,9 @@ export const FEEDBACK_UNDO_DURATION = 8000;
 
 /**
  * The undoable status change — for the table's status cell, the row detail's pills and
- * the phone swipes alike (§4.5, §7.10: keksdose's swipe commits bypassed Undo, the kit's
- * do not). Wire every one of them through the function this returns:
+ * the phone swipes alike (§4.5, §7.10: swipes included, Marcel 2026-10-04 — keksdose's
+ * swipe commits go through its `changeStatusUndoably` too). Wire every one of them
+ * through the function this returns:
  *
  * ```tsx
  * const update = useMutation({ mutationFn: api.updateFeedback, onError: … });
