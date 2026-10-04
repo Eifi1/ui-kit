@@ -150,7 +150,13 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // unreviewedRows, reviewUndo — the review panel's groups and Undo (keksdose #377).
   // 0.26.0 (+3): TRANSLATION_REVIEW_SWIPE_ACTIONS, DEFAULT_TRANSLATION_REVIEW_SWIPE,
   // translationReviewSwipePlan — the review panel's swipe bindings (keksdose #377).
-  ["@eifi1/ui-kit", barrel, 603],
+  // 0.27.0, the feedback harmonization (+55, docs/feedback-harmonization.md §5): the
+  // shared record's constants and body helpers; label hooks and defaults for statuses,
+  // categories, toasts, menu, context, page and detail; useFeedbackStatusUndo and the
+  // inbox swipe plan; FeedbackMenu, useFeedbackSubmit, FeedbackContextBox,
+  // captureAppScreenshot; the table parts; FeedbackRowDetail, FeedbackReworkSection and
+  // the page-URL helpers; createCrashReporter.
+  ["@eifi1/ui-kit", barrel, 658],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -161,7 +167,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
   // 0.22.0: ChatComposer, FeedbackComposer under a neutral name (keksdose K17) (+1).
-  ["@eifi1/ui-kit/feedback", feedback, 28],
+  // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
+  ["@eifi1/ui-kit/feedback", feedback, 83],
   ["@eifi1/ui-kit/search", search, 9],
   ["@eifi1/ui-kit/shell", shell, 12],
   ["@eifi1/ui-kit/tour", tour, 4],
