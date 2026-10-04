@@ -205,6 +205,9 @@
      not a call to action, and painting it `--brand` would make every table look
      like it had a primary button in the toolbar. */
   --info: #0369a1;                /* sky-700 */
+  /* Text on an `--info` fill (0.27: the feedback inbox's "advance" swipe) — white here,
+     the darkest sky in dark mode, where the fill is a pastel. */
+  --info-contrast: #ffffff;
   --info-border: #7dd3fc;         /* sky-300 */
   --info-bg: #e0f2fe;             /* sky-100 */
 
@@ -236,6 +239,7 @@
   --warning-bg: rgba(120, 53, 15, 0.2);
 
   --info: #7dd3fc;                /* sky-300 */
+  --info-contrast: #082f49;       /* sky-950 */
   --info-border: rgba(3, 105, 161, 0.6);
   --info-bg: rgba(12, 74, 110, 0.25);
 

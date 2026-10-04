@@ -21,6 +21,7 @@ import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
 import { FeedbackAttachmentField, type FeedbackAttachmentErrorInfo } from "./feedback-attachment";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import { useFeedbackCategoryLabels, useFeedbackStatusLabels } from "./feedback-labels";
 
 /**
  * The feedback **inbox**, as the parts two apps were each writing separately.
@@ -37,13 +38,20 @@ import type { FeedbackAttachmentLabels } from "./feedback-dialog";
  * Design's was thinner in every one of those places and read as a different
  * product for no reason anyone chose.
  *
- * **What is deliberately NOT here.** The two apps store a report differently and
- * are meant to: one keeps the reporter's context in a JSON column and the
- * screenshot in an object store, the other keeps a `page_path` and the bytes in
- * the row. So there is no `Feedback` type in this file and nothing here takes
- * one. Every component takes the values it draws, and the detail panel is a
- * *shell* the app fills — which is what lets each keep the shape that suits it
- * without either of them inventing a second look for a status pill.
+ * **The report itself lives next door (0.27.0).** This file used to say there
+ * was deliberately no `Feedback` type here: the apps stored a report differently
+ * (a context JSON column and an object store in one, a `page_path` and the bytes
+ * in the row in another). Marcel's feedback round (2026-10-04,
+ * docs/feedback-harmonization.md §5) gave all three apps one contract, so the
+ * shape is now shared — `FeedbackRecord` / `FeedbackContext` in
+ * feedback-record.ts, with the constants and body helpers. The components HERE
+ * still take the values they draw rather than a row, which keeps them usable
+ * from any surface; the detail panel stays a *shell* the row detail fills.
+ *
+ * **The words are the kit's too (0.27.0).** The status and category names are
+ * the `feedbackStatus` / `feedbackCategory` namespaces (feedback-labels.ts,
+ * keksdose's wording), read by default by the badges and the transitions below;
+ * a `label` the caller passes still wins.
  */
 
 /** The seven states a report can be in.
@@ -264,8 +272,9 @@ export function feedbackCategoryRank(category: FeedbackCategory): number {
  * Falls back to OTHER's treatment for a category this build has never heard of,
  * so an older client against a newer API degrades to a readable neutral pill
  * instead of throwing on `meta.icon` — a crash report must not be able to cause
- * one. The *label* is the caller's, and for the same reason it needs the same
- * guard: pass what OTHER is called if you cannot name the value you were given.
+ * one. The *label* gets the same guard: by default the `feedbackCategory`
+ * namespace's word (0.27.0), and for a value it has no word for, what OTHER is
+ * called.
  */
 export function FeedbackCategoryBadge({
   category,
@@ -274,10 +283,13 @@ export function FeedbackCategoryBadge({
   className,
 }: {
   category: FeedbackCategory;
-  label: ReactNode;
+  /** Over the `feedbackCategory` label (0.27.0: optional — before, every app passed
+   *  its own translation). */
+  label?: ReactNode;
   compact?: boolean;
   className?: string;
 }) {
+  const names = useFeedbackCategoryLabels();
   // Annotated `| undefined` because the Record's index signature promises a hit
   // for every FeedbackCategory, and at runtime the API can hand us one that is not.
   const known: (typeof FEEDBACK_CATEGORY_META)["OTHER"] | undefined = FEEDBACK_CATEGORY_META[category];
@@ -294,23 +306,28 @@ export function FeedbackCategoryBadge({
       )}
     >
       <Icon className={compact ? "size-3" : "size-3.5"} aria-hidden />
-      {label}
+      {label ?? (known ? names[category] : names.OTHER)}
     </span>
   );
 }
 
 /** Where a report stands, as a badge — for the places that only *report* the
- *  status rather than offering to change it. */
+ *  status rather than offering to change it. Named by the `feedbackStatus`
+ *  namespace unless `label` says otherwise (0.27.0); a status this build has never
+ *  heard of shows OPEN's look and its own raw value, never OPEN's name. */
 export function FeedbackStatusBadge({
   status,
   label,
   className,
 }: {
   status: FeedbackStatus;
-  label: ReactNode;
+  /** Over the `feedbackStatus` label (0.27.0: optional). */
+  label?: ReactNode;
   className?: string;
 }) {
+  const names = useFeedbackStatusLabels();
   const meta = FEEDBACK_STATUS_META[status] ?? FEEDBACK_STATUS_META.OPEN;
+  const name: string | undefined = names[status];
   const Icon = meta.icon;
   return (
     <span
@@ -322,7 +339,7 @@ export function FeedbackStatusBadge({
       )}
     >
       <Icon className="size-3" aria-hidden />
-      {label}
+      {label ?? name ?? status}
     </span>
   );
 }
@@ -356,10 +373,13 @@ export function FeedbackStatusTransitions({
   canEdit: boolean;
   onPick: (status: FeedbackStatus) => void;
   variant: "icon" | "pill";
-  /** What each status is called, translated by the app. */
-  label: (status: FeedbackStatus) => string;
+  /** What each status is called. Default (0.27.0): the `feedbackStatus` namespace —
+   *  before, every app passed its own translation. */
+  label?: (status: FeedbackStatus) => string;
   className?: string;
 }) {
+  const names = useFeedbackStatusLabels();
+  const nameOf = label ?? ((value: FeedbackStatus) => names[value]);
   return (
     // Not a control: it only stops clicks on the buttons inside from bubbling to
     // the row. The buttons are the keyboard path, and Enter/Space on them fires
@@ -374,7 +394,7 @@ export function FeedbackStatusTransitions({
         const meta = FEEDBACK_STATUS_META[value];
         const Icon = meta.icon;
         const active = status === value;
-        const name = label(value);
+        const name = nameOf(value);
         const button = (
           <button
             key={value}
