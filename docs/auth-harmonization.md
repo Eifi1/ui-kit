@@ -1,8 +1,10 @@
 # Sign-in, sign-up and the account across the kit and the three apps — harmonisation plan
 
-Status: **2026-10-05, a draft for the apps' reviews**, led from ui-kit at Marcel's request.
+Status: **2026-10-05, reviewed.** Led from ui-kit at Marcel's request. All three apps
+reviewed the draft the same day; §10 records what they settled, and §2 has Marcel's
+decisions, including those that followed the reviews.
 It is built from a read-only audit of the three apps (keksdose `cd0c5954`, kastlan
-`1674ad6` plus its work in progress on password reset, Kurvenschmiede `628af3e`). The
+`1674ad6` plus its local `feat/auth-pages`, Kurvenschmiede `628af3e`). The
 full audit is kept outside the repo; the facts this plan rests on are quoted here.
 Marcel's decisions are in §2.
 
@@ -30,16 +32,16 @@ Paths below are relative to each repo: **kk** = keksdose, **ka** = kastlan,
 | Login answer | `TokenResponse \| {requires_2fa, challenge_token} \| {requires_password_change, challenge_token, encrypted}` | tokens; `/login/2fa` | tokens |
 | 2FA | TOTP, sealed secret | TOTP, plaintext secret; backup codes minted on a GET, never accepted | none |
 | Passkeys | `/auth/passkey/*`, same paths in all three | same | same, password re-auth first |
-| Login throttle | per IP | **none** | per IP + registration |
+| Login throttle | per IP | **none** (reset: 10/h per IP, 3/h per address) | per IP + registration |
 | Access / refresh | 24 h / 30 d | 15 min / 7 d, session row per refresh | 24 h / 30 d |
-| Token carries | `sub, type, role, iat` | `sub, company_id, roles, first_name, last_name, is_superuser, review_locales, locale`, **no email** | `sub` |
+| Token carries | `sub, type, role, iat` | `sub, company_id, roles, first_name, last_name, is_superuser, review_locales, locale`, **no email**; no session check per request | `sub`; cut-off checked per request |
 | The user, for the shell | `GET /auth/me` | decoded from the token; `/auth/user` only on the profile page | `GET /auth/me` |
 | Password change | `POST /auth/me/password`, keeps other sessions | inside `PATCH /auth/user`, keeps sessions | `POST /auth/me/password`, **ends all sessions** |
 | Sign out everywhere | — | sessions API, no UI | `POST /auth/logout` |
-| Forgot / reset | `/auth/password-reset/{request,check,confirm}`, 1 h | being built on keksdose's shape | same as keksdose |
+| Forgot / reset | `/auth/password-reset/{request,check,confirm}`, 1 h; confirm answers **without** tokens | built locally (`feat/auth-pages`) on keksdose's shape: hashed, 1 h, one live link, redeem ends every session | same as keksdose |
 | Email verification | `POST /auth/verify-email {token}`, 48 h, no gate | `GET /auth/verify-email?token=`, public resend | none (waits for the kits, §2.8) |
-| Invitations | beta: `/register?email=` (no token); budget shares: token, 14 d | admin creates the user **with a password the admin chooses** | allow-list: `/register?email=`; shares: pending by email |
-| Mail | Resend / console | SMTP / console → Resend (being built) | Resend / console |
+| Invitations | beta: `/register?email=` (no token); budget shares: `/join?token=`, plaintext token, address optional, no mail, role guest | admin-chosen passwords, replaced locally by a set-password mail (reset table, `purpose=invite`, 72 h) | allow-list: `/register?email=`; shares: pending by email |
+| Mail | Resend / console | Resend / console (built locally) | Resend / console |
 | Email case | lower-cased everywhere | lower-cased at login | trimmed + lower-cased |
 
 The kit already has the settings sections (`ProfileSetting`, `PasswordSetting`,
@@ -68,6 +70,23 @@ The kit already has the settings sections (`ProfileSetting`, `PasswordSetting`,
 8. **Kurvenschmiede's email verification waits for the kit parts**, so it is built once.
    As in keksdose, verification does not gate sign-in.
 
+After the reviews:
+
+9. **kastlan locks its company data to staff now.** Every company-data route requires
+   an employee role, TENANT leaves the create and invite dialogs, and kastlan checks
+   production for existing tenant accounts. The review found that a TENANT reads the
+   whole company: about 100 routes check only that someone is signed in, and RLS
+   separates companies, not the people in one. A tenant portal comes later.
+10. **A deactivated account gets the same answer as a wrong password**, plus a hint under
+    the form: "Account deactivated? Write to …". A separate message after a correct
+    password would confirm to an attacker that a leaked password is right.
+11. **Only admins and team managers bring a new person in, and the invitation defines
+    the company** (or team): a sign-up through an invitation needs no Company field, and
+    the invitee joins what the invitation names, in the role it names.
+12. **An allow-list entry becomes an invitation**: only the mailbox owner can register,
+    and "resend" mints a new token. The environment list stays only to bootstrap the
+    first admin.
+
 ## 3. The account
 
 ### 3.1 Fields (the core every app has)
@@ -76,7 +95,7 @@ The kit already has the settings sections (`ProfileSetting`, `PasswordSetting`,
 |---|---|
 | `id` | |
 | `email` | unique. **Trimmed and lower-cased at every entry**: sign-up, sign-in, reset, invite, allow-list, admin |
-| `first_name`, `last_name` | both required at sign-up, 1–100 characters after trimming, any script. Migrated rows may hold an empty `last_name` until completed (§3.3) |
+| `first_name`, `last_name` | both required at sign-up, 1–120 characters after trimming (the old `display_name` limit, so a migrated name fits; kastlan widens its columns from 100), any script. Migrated rows may hold an empty `last_name` until completed (§3.3). Plaintext, because lists sort by them |
 | `locale` | from the sign-up form, defaulting to the UI language; used for every mail to the user |
 | `is_active` | |
 | `email_verified_at` | null = unverified |
@@ -99,6 +118,13 @@ avatars, feedback, and the greeting in a mail.
   with the formatted name.
 - **APIs keep a read-only `display_name`**, derived the same way, so everything that only
   shows a name keeps working. Writes take `first_name` and `last_name` only.
+- **Whose language decides the order** (§10.6):
+  - on screen, the reader's: the kit formats from `first_name` and `last_name`, and the
+    API's `display_name` is only a fallback;
+  - in a mail or a push, the recipient's;
+  - in a copy frozen at the time of writing (the feedback stamp), the author's.
+- **Lists sort by `(last_name, first_name, id)`** in SQL. Search matches first name, last
+  name, and both orders of the two together.
 
 ### 3.3 Migrating keksdose's and Kurvenschmiede's users
 
@@ -108,6 +134,10 @@ avatars, feedback, and the greeting in a mail.
   prefilled with what is there, and a save button. Dismissing it only defers it to the
   next sign-in.
 - Nothing else waits on it: an incomplete name blocks no page.
+- **A demo user never counts as incomplete**: keksdose's demo session gets a complete
+  name, or `name_incomplete` is false whenever `is_demo`.
+- `name_incomplete` is also in the user inside the sign-in answer, for an app that boots
+  from it (§6.1).
 
 ## 4. Sign-up
 
@@ -137,8 +167,8 @@ avatars, feedback, and the greeting in a mail.
 
 - **Gate** (the same everywhere already):
   - the first user ever becomes the admin;
-  - after that, the address must be on the environment list, on the allow-list table, or
-    carry a valid **invitation**;
+  - after that, the address must carry a valid **invitation** (§4.4). An allow-list entry
+    *is* an invitation (§2.12); the environment list only bootstraps the first admin;
   - anyone else gets `403 {code: "registration_closed"}`.
 - **The role and the associations never come from the form.** They come from:
   - **an invitation** (§4.4): the company and its role in kastlan, the role in
@@ -153,6 +183,11 @@ avatars, feedback, and the greeting in a mail.
 - **kastlan's allow-list** becomes the platform's: only a superuser reads or writes it.
   Today any company's admin sees every other company's invited addresses and notes.
   Company admins invite people into their own company (§4.4).
+- **Registering through an invitation proves the mailbox**, so the account starts with
+  `email_verified_at` set.
+- **TENANT is not an invitable role** in kastlan until a tenant portal exists (§2.9).
+  Kurvenschmiede's CUSTOMER rule holds for invitations too: a customer is never a team
+  manager.
 
 ### 4.4 Invitations (one shape)
 
@@ -164,8 +199,15 @@ avatars, feedback, and the greeting in a mail.
     budget;
   - **a role**;
   - the inviter.
+- **Who may invite a new person**: admins and team managers (§2.11). A Kurvenschmiede
+  team manager invites into the team; a kastlan company admin into the company. A
+  member's share to an unknown address stays a pending grant, attached by address once
+  the person is let in.
 - The mail goes out in the **invitee's** language, picked in the invite dialog (i18n H7).
   The link is `/register?invite=<token>`.
+- Shown once: the token is stored hashed, so an admin page cannot show the link again.
+  "Resend" mints a new token. An expired invitation stays listed as expired until it is
+  resent or removed.
 - **The address has no account yet**: the sign-up form opens with the email fixed. On
   success the invitation is spent and attached.
 - **The address has an account**: the link leads to sign-in, then the app attaches the
@@ -173,6 +215,10 @@ avatars, feedback, and the greeting in a mail.
   a second company.
 - keksdose's and Kurvenschmiede's token-free `/register?email=` beta links become
   invitations with the registration scope.
+- **keksdose's budget-share invites are not this shape yet** (§10.8): plaintext token,
+  optional address, no mail, `/join?token=` behind sign-in, and they pass the sign-up
+  gate by adding the address to the allow-list. They move to it, and links already out
+  keep working for their 14 days.
 - **kastlan's admin-created accounts** stop: no admin chooses anyone's password.
   kastlan's interim plan (create the user, mail a set-your-password link on the reset
   token) is replaced by this invitation. Until the kit parts exist, kastlan may keep its
@@ -190,13 +236,28 @@ avatars, feedback, and the greeting in a mail.
 A passkey sign-in (`/auth/passkey/login/begin|finish`, already the same paths in all
 three) answers the same way.
 
+- `refresh_token` may be **null**: keksdose's demo session has a 60-minute access token
+  and no refresh.
+- The challenges may carry **app fields**, which the kit passes through: keksdose's
+  `encrypted` on the password-change challenge, `key_wrap_unchanged` on its answer.
+- keksdose's passkey PRF unlock is not part of sign-in. It is a separate step after it,
+  and stays the app's.
+
 ### 5.2 Rules
 
-- **One error for unknown address and wrong password**: `401 {code: "invalid_credentials"}`.
-  A deactivated account gets the same answer: it must not reveal that the account exists.
-  The review settles whether a deactivated account deserves its own message after a
-  correct password.
-- **Throttle** per IP and per address (a server-kit preset). kastlan gains one.
+- **One error for an unknown address, a wrong password and a deactivated account**:
+  `401 {code: "invalid_credentials"}`, in the same time (a dummy hash for unknown
+  addresses). The 2FA, set-password and refresh steps check `is_active` too.
+  - The form shows the hint "Account deactivated? Write to …" (§2.10).
+  - In kastlan, a **deactivated company** blocks that company only: sign-in opens another
+    company of the user's, or "no active company".
+- **Every refusal carries a `code`**: `invalid_credentials`, `registration_closed`,
+  `email_taken` (409), `invitation_invalid`, `invitation_expired`, `token_invalid`.
+  Today the pages show the server's detail strings, so each app switches its server and
+  its pages together.
+- **Throttle**: per IP as the hard limit. Per address, only failures are counted, and
+  the answer slows down rather than locking out, because a lock per address would let
+  anyone lock a known address out. A server-kit preset; kastlan gains one.
 - After sign-in, the app:
   - loads `/auth/me`;
   - switches to the user's language;
@@ -214,6 +275,12 @@ three) answers the same way.
 - `/auth/me` adds `companies: [{id, name, roles}]` and `current_company_id`.
 - **Switcher**: the kit's `CompanySwitcher` in the top bar, built on
   `OptionSwitcherMenu`. It shows only for a user in more than one company.
+- **What must change in kastlan** (its review, §10.9). Two items must not be missed:
+  - **roles per company**: `User.roles` returns the assignments of every company today,
+    so an admin in A would be an admin in B. `require_role` and the token's `roles`
+    filter by the token's company, and the fallback to `users.role` goes;
+  - **membership on every refresh**: refresh mints for `last_company_id` only while the
+    user still belongs to it.
 - **Leaving and removing**: a user leaves a company, or its admin removes them. The last
   admin cannot leave. A user with no company left sees "Create a company" (the sign-up's
   company field, on its own page) or waits for an invitation.
@@ -232,20 +299,37 @@ three) answers the same way.
 - **The shell reads the user from `/auth/me`, never from the token.** Names and email
   change; a token is proof of who, not a profile. kastlan's top bar gains the email it
   could not show.
+  - An offline-first app (keksdose) boots from the persisted user of its last sign-in
+    answer and refreshes it from `/auth/me` when online.
+  - kastlan moves everything it reads from the token today (names, locale,
+    `is_superuser`, review locales) to `/auth/me` in the same change that drops those
+    claims.
 
 ### 6.2 Tokens
 
 - **The access token carries what the server needs to authorise**: `sub`, `type`, `iat`;
   kastlan also `company_id` and `roles` for RLS. **No names, no email, no locale.**
-- Lifetimes are a decision for the review (§10): today 24 h / 30 d in two apps, and
-  15 min / 7 d in kastlan.
+- **Every request checks revocation**: the `iat` cut-off (keksdose, Kurvenschmiede) or
+  the session row (kastlan, via a `sid` claim), in `get_current_user` and on refresh. So
+  ending sessions takes effect at once, whatever the lifetime.
+- **Lifetimes are a per-app setting** with a server-kit default of 24 h access and 30 d
+  refresh. keksdose is an offline-first app people may open weekly. kastlan keeps
+  15 min until its per-request check exists, and its refresh moves to 30 d.
 
 ### 6.3 Ending sessions
 
-- `POST /auth/logout` ends **every** session (Kurvenschmiede's). Signing out on one
-  device is the client dropping its tokens.
-- **A password change or reset ends every other session** (Kurvenschmiede's and keksdose's
-  reset; keksdose's change keeps them today). The review confirms (§10).
+- `POST /auth/logout` ends **every** session (Kurvenschmiede's), behind its own "Sign out
+  everywhere" action. The normal sign-out stays on this device only: the client drops
+  its tokens (and keksdose wipes this device's offline copy).
+- **A password change ends every other session and keeps the caller's**: stamp the
+  cut-off, then mint fresh tokens (keksdose's forced-change endpoint). So the change
+  answers with tokens, not `204`. kastlan ends every session row but the token's `sid`.
+  - Side effect: translation-review tokens end with the cut-off.
+  - keksdose's personal access tokens survive a voluntary change; a reset revokes them.
+- **A reset is not a sign-in**: confirm answers without tokens, so 2FA cannot be
+  skipped, and the page ends on "Sign in" with the email filled in. The app's outcomes
+  are shown there (keksdose: the recovery-code notice, "N API tokens revoked"). The page
+  checks the token (`/check`) before it shows the form.
 - kastlan keeps its session rows, so it can later show devices. The rule above holds for
   it as well.
 
@@ -271,7 +355,20 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
   - `SignInForm`: email, password, "Forgot password?", the passkey button, the 2FA step
     (`OneTimeCodeInput`) and the set-new-password step;
   - it takes `onSubmit` / `onPasskey` / `onCode` callbacks and renders §5.1's answers.
-- **Sign-up:** `RegisterForm` (§4.1, with the app-field slot), `CompleteNameDialog`.
+    **The kit never sends a request itself**: keksdose must see the password on its way
+    (it refuses the same string as an encryption passphrase);
+  - the email field is `autoComplete="username webauthn"`, so the app can arm passkey
+    autofill on mount. The passkey button asks for no email;
+  - slots for each step's app content (keksdose's private-mode note on the
+    password-change step).
+- **Sign-up:**
+  - `RegisterForm` (§4.1). Its slots: above the form (keksdose's closed-beta banner),
+    under the email (keksdose's address-tag hint), the app fields, and after them
+    (keksdose's privacy-mode note);
+  - the language field may be bound to the app's i18n with no local state;
+  - the password rules are min 8 characters and 72 bytes. Any checklist is advisory, and
+    the kit adds no rule of its own;
+  - `CompleteNameDialog`.
 - **Signed-out pages:** `ForgotPasswordForm`, `ResetPasswordForm`, `VerifyEmailStatus`,
   `EmailVerificationBanner`, `NotFoundPage`, and an `AcceptInvitation` status.
 - **Names:** `formatPersonName`, `personInitials`; `UserAvatar` takes `{first, last}`.
@@ -286,7 +383,11 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
   `full_name(first, last, locale)`.
 - **Tokens:** one-time tokens (mint, hash, expiry, single use) for reset, verification
   and invitation; claim builders and `token_is_revoked`.
-- **Rate limits:** the `AuthLimiters` preset.
+- **Rate limits:** the `AuthLimiters` preset: per IP, failures per address, the reset
+  limits kastlan already runs (10/h per IP, 3/h per address).
+- **Erasure:** a user's identifiers for `anonymise_feedback` are the email, the old
+  `display_name`, and the full name in both orders. A bare first or last name on its own
+  is not redacted, because it would shred a report that mentions "Mai" or "Bank".
 - **Schemas:** Pydantic for `RegisterRequest` core, `TokenResponse`, the two challenges,
   `UserResponse` core and `ProfileUpdate`.
 - **Mail:** a Resend client, `render_message`, `pick(locale, texts)`.
@@ -307,50 +408,134 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
 
 **keksdose:**
 1. `display_name` → `first_name` + `last_name`, with the migration of §3.3,
-   `name_incomplete` and `CompleteNameDialog`. The read-only `display_name` stays in
-   the API.
-2. The register form → `RegisterForm`: first and last name, with currency in the slot.
-3. Beta invites → token invitations (§4.4). Budget-share invites already have the shape.
-4. Mails greet with `full_name`.
+   `name_incomplete` (also in the sign-in answer's user) and `CompleteNameDialog`. The
+   read-only `display_name` stays in the API; the demo user is never incomplete. It is
+   used in 31 backend files, 63 backend test files and 12 frontend files; factories, the
+   seed and the demo write first and last.
+2. Where a name is more than a label:
+   - lists that sort or search by name → `(last_name, first_name)`: the admin roster,
+     support search, share guests, category owners, reviewer names;
+   - the E2EE key-recipient list sorts the same way;
+   - push texts name the guest in the **recipient's** order;
+   - mails greet with `full_name` in the recipient's order, escaped as today;
+   - erasure passes the server-kit identifiers (§8);
+   - existing passkeys keep the name they were registered with.
+3. The register form → `RegisterForm`, with your slots (§8). The beta invite →
+   invitations. **Budget-share invites move to §4.4's shape**, and `/join?token=` links
+   already out keep working for their 14 days.
+4. The password change answers with fresh tokens and ends the other sessions; personal
+   access tokens survive it. The sign-in answer's `refresh_token` stays nullable for the
+   demo.
+5. Coded refusals: the server and `extractApiErrorMessage` switch together.
 
 **kastlan:**
-1. **Remove the first-company path.** "Company" is required without an invitation.
-2. **Several companies** (§5.3):
-   - the role-assignment constraint;
-   - `last_company_id`;
-   - `/auth/switch-company`;
-   - `/auth/me` with `companies`;
-   - the switcher;
-   - leave and remove.
-3. `/auth/me` (alias `/auth/user`). The shell reads it, not the token, and the token
-   drops names and locale.
-4. Sign-up takes `locale`. Every entry lower-cases the email.
-5. **Login throttle.** One `invalid_credentials` answer. `/auth/login` answers with
+1. **Now, on its own (§2.9): lock company data to staff**:
+   - every company-data route requires an employee role;
+   - TENANT leaves the create and invite dialogs;
+   - production is checked for tenant accounts;
+   - a test sweeps the route table so no new route misses the gate.
+2. **Remove the first-company path.** "Company" is required without an invitation; an
+   invitation names the company and role.
+3. **Several companies** (§5.3), from kastlan's review:
+   - a. **roles filtered by the token's company** in `require_role` and in the token's
+     `roles`; the `users.role` fallback goes; the migration backfills assignments;
+   - b. the deactivated-company check reads the token's company;
+   - c. **refresh checks membership** and mints for `last_company_id`;
+   - d. about 25 reads of `user.company_id` → a `current_company_id` dependency: billing,
+     **feedback (a row would land in another company's inbox)**, **offline sync**, handover
+     photos, documents, property, rent increase, company, users, platform, switch-role,
+     `_issue_tokens`;
+   - e. the user list goes through role assignments;
+   - f. `contacts.user_id` becomes unique per `(user_id, company_id)`: one contact per
+     membership;
+   - g. seeds and tests create assignments;
+   - h. the WebSocket channels are per company;
+   - plus `/auth/switch-company`, `/auth/me` with `companies`, the switcher, and leave and
+     remove.
+4. `/auth/me` (alias `/auth/user`). The frontend moves names, locale, `is_superuser` and
+   review locales from the token to `/auth/me`, and the token drops them in the same
+   change.
+5. Sign-up takes `locale`. Every entry trims and lower-cases the email (login only
+   lower-cases today).
+6. **Login throttle** (the server-kit preset; your reset limiters fold into it). One
+   `invalid_credentials` answer, with the deactivated hint. `/auth/login` answers with
    keksdose's challenge shapes.
-6. **Invitations** (§4.4) replace admin-chosen passwords. The allow-list moves to the
-   superuser.
-7. `GET /auth/verify-email?token=` → `POST /auth/verify-email {token}`. The page reads
-   the token from the URL and posts it, so a link scanner's GET verifies nothing.
-8. 2FA: seal the secret; fix or remove the backup codes (minted on a GET, never
-   accepted). This is the user-management round's, listed here because it sits in the
-   sign-in path.
+7. **Per-request revocation**: a `sid` claim checked against the session row in
+   `get_current_user`. Until then, 15-minute access tokens; refresh 7 d → 30 d.
+8. Invitations (§4.4) replace your interim set-password invite once the kits land; the
+   interim stays until then. The allow-list moves to the superuser. Mails go in the
+   invitee's language.
+9. `GET /auth/verify-email?token=` → `POST /auth/verify-email {token}`.
+10. 2FA: seal the secret; fix or remove the backup codes (minted on a GET, never
+    accepted). This belongs to the user-management round, listed here because it sits in
+    the sign-in path.
+11. Legal: with Resend live, production no longer logs the verification link, so the
+    privacy sentence from the legal round follows that.
 
 **Kurvenschmiede:**
-1. `display_name` → first and last name, the migration, `CompleteNameDialog`.
+1. `display_name` → first and last name, the migration, `CompleteNameDialog`. Where a
+   name is more than a label:
+   - share candidates, `access.display_names` and team members sort by
+     `(last_name, first_name)`;
+   - the reset mail greets in the recipient's order;
+   - the feedback stamp, the reviewer names, the passkey's user name, the CLI and the seed
+     are updated.
+   Names stay plaintext.
 2. The register form gains "confirm password".
-3. Allow-list `/register?email=` links → token invitations. The allow-list keeps its
-   role column.
-4. Email verification with the kit parts (§2.8).
+3. Allow-list rows → invitations, keeping the role column (CUSTOMER never a team
+   manager). Team managers may invite new people into their team (§2.11). That is new:
+   today adding an unknown address to a team fails with 404.
+4. Coded refusals: `invalid_credentials`, `registration_closed`, `email_taken`, …
+   instead of detail strings.
+5. Email verification with the kit parts (§2.8); 2FA later, the same way (§10.5).
+6. The invite mail's product line is stale ("where a steering gear is sized"); the
+   rewrite uses the curves wording.
 
-## 10. Open points for the reviews
+## 10. Settled after the reviews (2026-10-05)
 
-1. **Deactivated account**: the same `invalid_credentials`, or a message of its own
-   once the password was right?
-2. **Password change ends other sessions** in every app?
-3. **Token lifetimes**: keksdose's 24 h / 30 d, or kastlan's 15 min / 7 d?
-4. **kastlan's interim** set-password link for admin-created users: keep until the kit's
-   invitation lands, or go straight to invitations?
-5. **2FA in Kurvenschmiede**: part of this round, or later?
-6. Each app: anything in its sign-in or sign-up that this plan misses or breaks
-   (keksdose's demo session and E2EE sign-in, kastlan's tenant role, Kurvenschmiede's
-   customers).
+1. **Deactivated account** → the same `invalid_credentials` plus a hint (Marcel, §2.10).
+   keksdose and Kurvenschmiede already answer that way. kastlan's message after a
+   correct password goes. A deactivated *company* in kastlan blocks only that company
+   (kastlan's point).
+2. **Password change ends every other session** and keeps the caller's (all three
+   agree; §6.3). keksdose's personal access tokens survive a voluntary change.
+3. **Lifetimes**:
+   - a per-request revocation check is required everywhere;
+   - lifetimes are then a per-app setting, defaulting to 24 h / 30 d;
+   - kastlan keeps 15 min until its check exists.
+   The two sides argued it out: keksdose and Kurvenschmiede on offline-first use and a
+   backend that scales to zero, kastlan on its unchecked access tokens (§6.2).
+4. **kastlan's interim** set-password invite (reset table, 72 h) stays until the kit's
+   invitations land. The swap needs no data migration (kastlan).
+5. **2FA in Kurvenschmiede** comes later, built once from the kit parts.
+   `SignInForm` renders the 2FA step from the start, so adding it later is backend
+   work only (Kurvenschmiede's recommendation; Marcel has not been asked separately).
+6. **Names**:
+   - order by the reader's language on screen, the recipient's in mail and push, and
+     the author's in a frozen stamp;
+   - lists sort by `(last_name, first_name, id)`;
+   - 1–120 characters;
+   - plaintext;
+   - identifiers for erasure as in §8.
+7. **Invitations and the gate** (Marcel, §2.11–12):
+   - admins and team managers invite new people, and the invitation defines the company
+     or team;
+   - allow-list entries become invitations;
+   - registering through one sets `email_verified_at`;
+   - a member's share to an unknown address stays a pending grant.
+8. **keksdose's budget-share invites** were not the model the draft said: plaintext
+   token, optional address, no mail, `/join?token=`. They move to §4.4, and the links
+   already out keep working.
+9. **kastlan's several companies**: RLS itself is fine, because the company comes from
+   the token. What breaks is everything keyed on `users.company_id` and the unscoped
+   roles (§9 kastlan 3a–h). Medium effort, mostly mechanical, one migration.
+10. **Security, found by the reviews**:
+    - kastlan's TENANT reads the whole company: locked now (§2.9);
+    - a per-address lockout would be a denial-of-service lever, so only failures are
+      counted and the answer slows down (§5.2);
+    - verify-email by GET lets a link scanner verify an address, so it moves to POST.
+11. **The kit forms never send requests**; they pass the input to the app. **A reset is
+    not a sign-in.** An offline-first app boots from its persisted user (§5–6).
+
+Nothing is open. Next: server-kit 0.3.0 and ui-kit 0.29.0 (§8), after 0.28.0 and 0.2.1
+are released. kastlan's tenant lock (§9 kastlan 1) goes first, on its own.
