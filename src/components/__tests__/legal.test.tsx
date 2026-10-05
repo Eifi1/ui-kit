@@ -68,6 +68,23 @@ describe("LegalLinks", () => {
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("aria-current", "page");
   });
 
+  it("keeps its spaced row and className without the nav (0.27.1, Kurvenschmiede's menu)", () => {
+    const { container } = render(
+      <ul>
+        <li>
+          <LegalLinks links={LINKS} nav={false} className="justify-center" />
+        </li>
+      </ul>,
+    );
+    const row = container.querySelector("li > div");
+    expect(row).not.toBeNull();
+    expect(row!.className).toMatch(/flex/);
+    expect(row!.className).toMatch(/gap-x-4/);
+    expect(row!.className).toContain("justify-center");
+    expect(row!.querySelectorAll("a")).toHaveLength(LINKS.length);
+    expect(screen.queryByRole("navigation")).toBeNull();
+  });
+
   it("names its nav from UiKitProvider", () => {
     render(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>

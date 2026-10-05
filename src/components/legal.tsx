@@ -46,8 +46,11 @@ export interface LegalLinksProps {
   /** The page being shown; its link is marked `aria-current="page"`. Usually the
    *  router's pathname. */
   currentHref?: string;
-  /** `false` renders the links without the `<nav>` — inside `AuthLayout`'s `footer`,
-   *  which wraps its footer in a `<nav>` named by `footerLabel` already. Default true. */
+  /** `false` renders the links without the `<nav>` landmark — inside `AuthLayout`'s
+   *  `footer` or `TopBarActionMenu`'s `footer`, which are named `<nav>`s already. The row
+   *  keeps its spacing and `className` either way (0.27.1: it used to return the bare
+   *  links, so in a plain container — Kurvenschmiede's account-menu `<li>` — they ran
+   *  together as "ImpressumDatenschutzerklärungNutz…" and overflowed). Default true. */
   nav?: boolean;
   labels?: Partial<LegalLabels>;
   className?: string;
@@ -62,12 +65,10 @@ export function LegalLinks({ links, currentHref, nav = true, labels: labelsProp,
       {link.label}
     </TextLink>
   ));
-  if (!nav) return <>{items}</>;
+  const rowClass = cn("flex flex-wrap gap-x-4 gap-y-1 text-xs", className);
+  if (!nav) return <div className={rowClass}>{items}</div>;
   return (
-    <nav
-      aria-label={labels.navLabel}
-      className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs", className)}
-    >
+    <nav aria-label={labels.navLabel} className={rowClass}>
       {items}
     </nav>
   );
