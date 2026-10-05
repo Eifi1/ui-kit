@@ -20,6 +20,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.27.1](https://github.com/Eifi1/ui-kit/compare/v0.27.0...v0.27.1) (2026-10-05)
+
+### Fixed
+
+* **legal:** LegalLinks keeps its spaced row and className without the nav ([55c532f](https://github.com/Eifi1/ui-kit/commit/55c532f1187970eefd13a1ccf9617c9785c267c6))
+
 ## [0.27.0](https://github.com/Eifi1/ui-kit/compare/v0.26.0...v0.27.0) (2026-10-04)
 
 ### Added

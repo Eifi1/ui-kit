@@ -68,10 +68,28 @@ const columns = useFeedbackColumns<Feedback>({ mine, canEdit, onStatus: change, 
 <DataTable rows={rows} columns={columns} urlSync empty={<FeedbackEmptyState />}
   mobileCard={(r) => <FeedbackMobileCard row={r} showSubmitter={canEdit} />}
   mobileGroupBy={feedbackMobileGroupBy(renderDate)}
+  rowHref={(r) => `?row=${r.id}`} onRowClick={(r) => navigate(`?row=${r.id}`, { replace: true })} // or toggle isExpanded
   mobileSwipeActions={canEdit ? (r) => feedbackSwipePlan(DEFAULT_FEEDBACK_SWIPE, r, { change, labels: statusLabels }) : undefined}
   expandedRow={(r) => <FeedbackRowDetail row={r} canEdit={canEdit} viewerId={user.id}
     onUpdate={update.mutate} statusChange={change} onUpload={api.upload} fetcher={fetcher} />} />
 ```
+
+`rowHref` makes the row's PRIMARY CELL a real link (open in a new tab, copy the
+address); a click elsewhere in the row — or on a phone card outside that cell — does
+nothing unless `onRowClick` is set too (Kurvenschmiede's finding on adoption). keksdose
+wires both (`feedback-page.tsx:969-972`): `onRowClick` toggles the expanded row
+(`isExpanded` / its `expandedId`), `rowHref` hands out the replacing `?row=` link;
+navigating to `?row=` with `replace: true`, as in the snippet, works as well.
+
+**Testing an app that mocks the barrel (keksdose's finding):** the kit's own hooks call its
+INTERNAL toast module, not the `toast` the barrel exports, so a `vi.mock("@eifi1/ui-kit")`
+spy on `toast` never sees `useFeedbackStatusUndo`'s Undo toast (nor the submit dialog's
+toasts). Test them as a user sees them: mount the real `<Toaster />` and find or click the
+toast in the DOM (scope the query to one toast — sonner's store outlives a test).
+
+**The URL column's link routes in-app** through the provider's link component (keksdose's
+was a plain `<a>`), and its accessible name is "Open page /path" — a test asserting the
+browser's default navigation or the bare name "Open page" changes.
 
 ## Per app
 
