@@ -757,8 +757,89 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       waking: (appName) =>
         `Der Server schläft ein, wenn ${appName ?? "die App"} gerade niemand benutzt. Die erste Anfrage nach einer Pause muss ihn erst wieder starten. Das kann einen Moment dauern – es geht nichts verloren, die Seite füllt sich von selbst.`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: keksdose's reviewed de-CH wording,
+    // and Kurvenschmiede's for the browser section and the beta notice. None of it needs
+    // a "ß", so `swiss()` leaves it as the apps wrote it.
     legal: {
       navLabel: "Rechtliches",
+      links: {
+        impressum: "Impressum",
+        privacy: "Datenschutz",
+        terms: "Nutzungsbedingungen",
+      },
+      titles: {
+        impressum: "Impressum",
+        privacy: "Datenschutzerklärung",
+        terms: "Nutzungsbedingungen",
+      },
+      backHome: "Zurück zur Startseite",
+      accept: "Ich akzeptiere die {terms} und die {privacy}",
+      notice: {
+        beta: "Geschlossene Beta. Diese Texte sind noch nicht anwaltlich geprüft; das geschieht vor einem öffentlichen Start.",
+        privacy:
+          "Geschlossene Beta. Die rechtlichen Formulierungen unten sind noch nicht anwaltlich geprüft; das geschieht vor einem öffentlichen Start. Die technischen Angaben — was gespeichert wird, wo, und wer es lesen kann — beschreiben, was die Software heute tatsächlich tut, und sind ausdrücklich dazu da, daran überprüft zu werden.",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "Betreiber",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\nDie vollständige Postanschrift wird auf Anfrage an alle Personen mit berechtigtem rechtlichem Interesse herausgegeben; wenden Sie sich dazu an die unten genannte Kontaktadresse.`,
+          },
+          contact: {
+            title: "Kontakt",
+            body: (o) => `E-Mail: ${o.email}`,
+          },
+          disclaimer: {
+            title: "Haftung für Inhalte und Links",
+            body: "Dies ist ein privates, nicht-kommerzielles Projekt, das im Rahmen einer geschlossenen Beta ohne Gewähr bereitgestellt wird. Für verlinkte externe Websites sind deren Betreiber verantwortlich; auf deren Inhalte haben wir keinen Einfluss.",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "Verantwortlicher",
+            body: (o) =>
+              `Verantwortlich für die Verarbeitung personenbezogener Daten in diesem Dienst ist:\n${o.name}\n${o.postalCode} ${o.city}, ${o.country}\nE-Mail: ${o.email}\n\nDie vollständige Postanschrift wird betroffenen Personen und Aufsichtsbehörden auf Anfrage mitgeteilt.`,
+          },
+          legal_basis: {
+            title: "Rechtsgrundlage",
+            body: "Da der Betreiber in der Schweiz ansässig ist, richtet sich die Verarbeitung nach dem Schweizer Datenschutzgesetz (DSG). Soweit die EU-Datenschutz-Grundverordnung (DSGVO) auf Sie anwendbar ist, stützen wir uns auf die Vertragserfüllung zur Bereitstellung des Dienstes (Art. 6 Abs. 1 lit. b DSGVO) und unser berechtigtes Interesse am Betrieb und an der Sicherheit des Dienstes (Art. 6 Abs. 1 lit. f DSGVO).",
+          },
+          browser: {
+            title: "Was Ihr Browser speichert",
+            lead: "Keine Cookies. Die App legt Folgendes im Speicher Ihres Browsers ab:",
+            tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist; alles andere bleibt auf Ihrem Gerät. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
+          },
+          rights: {
+            title: "Ihre Rechte",
+            lead: "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch.",
+            tail: "In der Schweiz können Sie sich an den Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) wenden; in der EU können Sie sich bei Ihrer zuständigen Aufsichtsbehörde beschweren.",
+          },
+          contact: {
+            title: "Kontakt zum Datenschutz",
+            body: (o) => `Für Datenschutzanfragen wenden Sie sich an: ${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "Keine Gewährleistung",
+            body: "Der Dienst wird im gesetzlich zulässigen Rahmen „wie besehen“ und „wie verfügbar“ ohne jegliche Gewährleistung bereitgestellt. Als Beta kann er Fehler enthalten, sich ändern oder jederzeit unterbrochen werden – bewahren Sie eigene Sicherungskopien wichtiger Daten auf.",
+          },
+          liability: {
+            title: "Haftungsbeschränkung",
+            body: "Soweit gesetzlich zulässig, haftet der Betreiber nicht für indirekte Schäden oder Folgeschäden, die aus der Nutzung oder Nichtnutzbarkeit des Dienstes entstehen. Eine Haftung, die gesetzlich nicht ausgeschlossen werden kann, bleibt unberührt.",
+          },
+          changes: {
+            title: "Änderungen dieser Bedingungen",
+            body: "Diese Bedingungen können im Zuge der Weiterentwicklung des Dienstes angepasst werden. Wesentliche Änderungen werden per E-Mail oder in der App angekündigt; die weitere Nutzung nach einer Änderung gilt als Zustimmung.",
+          },
+          law: {
+            title: "Anwendbares Recht",
+            body: (o) =>
+              `Es gilt schweizerisches Recht unter Ausschluss des Kollisionsrechts. Soweit gesetzlich zulässig, ist Gerichtsstand ${o.city} (${o.region}), ${o.country}.`,
+          },
+        },
+      },
     },
     characterCount: {
       // "Zeichen" is the same in singular and plural.

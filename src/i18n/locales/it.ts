@@ -741,8 +741,92 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       waking: (appName) =>
         `Il server va in sospensione quando nessuno usa ${appName ?? "l’app"}, quindi la prima richiesta dopo una pausa deve riavviarlo. Può volerci un momento: non si perde nulla, la pagina si completa da sola.`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: keksdose's reviewed Italian, and
+    // Kurvenschmiede's for the browser section and the beta notice; formal, "Lei" and
+    // "Suo" capitalised, like the rest of this catalogue.
     legal: {
       navLabel: "Note legali",
+      links: {
+        impressum: "Impressum",
+        privacy: "Privacy",
+        terms: "Condizioni d’uso",
+      },
+      titles: {
+        impressum: "Impressum",
+        privacy: "Informativa sulla privacy",
+        terms: "Condizioni d’uso",
+      },
+      backHome: "Torna alla pagina iniziale",
+      // The elided article stays glued to the link: "e l’Informativa", no space (§4.4).
+      accept: "Accetto le {terms} e l’{privacy}",
+      notice: {
+        beta: "Beta chiusa. Questi testi non sono ancora stati verificati da un avvocato e lo saranno prima di un lancio pubblico.",
+        privacy:
+          "Beta chiusa. Le formulazioni legali qui sotto non sono ancora state verificate da un avvocato; lo saranno prima di un lancio pubblico. Le descrizioni tecniche — cosa viene memorizzato, dove e chi può leggerlo — descrivono ciò che il software fa davvero oggi e sono pensate per essere verificate rispetto a esso.",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "Gestore",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\nL’indirizzo postale completo viene fornito su richiesta a chiunque abbia un legittimo interesse giuridico; scriva all’indirizzo di contatto qui sotto.`,
+          },
+          contact: {
+            title: "Contatto",
+            body: (o) => `Email: ${o.email}`,
+          },
+          disclaimer: {
+            title: "Responsabilità per contenuti e link",
+            body: "Questo è un progetto privato e non commerciale, offerto nell’ambito di una beta chiusa, senza garanzia. I siti esterni a cui rimandiamo sono di responsabilità dei rispettivi gestori; non abbiamo alcun controllo sui loro contenuti.",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "Titolare del trattamento",
+            // "Titolare", as the title says: in the GDPR's Italian the "responsabile del
+            // trattamento" is the processor (Art. 28), not the controller.
+            body: (o) =>
+              `Il titolare del trattamento dei dati personali in questo servizio è:\n${o.name}\n${o.postalCode} ${o.city}, ${o.country}\nEmail: ${o.email}\n\nL’indirizzo postale completo viene fornito su richiesta agli interessati e alle autorità di controllo.`,
+          },
+          legal_basis: {
+            title: "Base giuridica",
+            body: "Poiché il gestore ha sede in Svizzera, il trattamento è disciplinato dalla Legge federale svizzera sulla protezione dei dati (LPD). Dove il Regolamento generale sulla protezione dei dati dell’UE (GDPR) si applica a Lei, ci basiamo sull’esecuzione di un contratto per fornire il servizio (art. 6, par. 1, lett. b GDPR) e sul nostro legittimo interesse a gestirlo e proteggerlo (art. 6, par. 1, lett. f GDPR).",
+          },
+          browser: {
+            title: "Che cosa salva il Suo browser",
+            lead: "Nessun cookie. L’app salva quanto segue nella memoria del Suo browser:",
+            tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile; tutto il resto rimane sul Suo dispositivo. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
+          },
+          rights: {
+            title: "I Suoi diritti",
+            lead: "Ha diritto di accesso, rettifica, cancellazione, limitazione, portabilità dei dati e opposizione.",
+            tail: "Se si trova in Svizzera può rivolgersi all’Incaricato federale della protezione dei dati e della trasparenza (IFPDT); se si trova nell’UE può presentare reclamo alla Sua autorità di controllo locale.",
+          },
+          contact: {
+            title: "Contatto per la protezione dei dati",
+            body: (o) => `Per qualsiasi richiesta sulla privacy, si rivolga a: ${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "Nessuna garanzia",
+            body: "Il servizio è fornito «così com’è» e «come disponibile», senza garanzie di alcun tipo nei limiti consentiti dalla legge. Come beta può contenere errori, cambiare o essere interrotto in qualsiasi momento: conservi copie di backup dei dati importanti.",
+          },
+          liability: {
+            title: "Limitazione di responsabilità",
+            body: "Nei limiti consentiti dalla legge applicabile, il gestore non è responsabile per danni indiretti o consequenziali derivanti dall’uso o dall’impossibilità di usare il servizio. Nulla di quanto qui previsto limita la responsabilità che non può essere limitata per legge.",
+          },
+          changes: {
+            title: "Modifiche a queste condizioni",
+            body: "Queste condizioni possono essere aggiornate con l’evoluzione del servizio. Le modifiche sostanziali saranno annunciate via email o nell’app; l’uso continuato dopo una modifica ne implica l’accettazione.",
+          },
+          law: {
+            title: "Legge applicabile",
+            body: (o) =>
+              `Queste condizioni sono disciplinate dal diritto svizzero, con esclusione delle norme sui conflitti di legge. Nei limiti consentiti dalla legge, il foro competente è ${o.city} (${o.region}), ${o.country}.`,
+          },
+        },
+      },
     },
     characterCount: {
       count: (used, max) => `${n(used)} di ${n(max)} ${plural(max, "carattere", "caratteri")}`,
