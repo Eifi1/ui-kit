@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1414 names from 206 modules** — 665 values and 749 types. _Italic_ is a type-only export.
+**1417 names from 206 modules** — 668 values and 749 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1414 |
+| `@eifi1/ui-kit` | 1417 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -478,7 +478,7 @@ re-slicing of it, never a second API.
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 | `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
 | `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
-| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `LegalSection`, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
+| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
 | `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
