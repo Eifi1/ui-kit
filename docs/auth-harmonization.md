@@ -187,7 +187,10 @@ avatars, feedback, and the greeting in a mail.
   Today any company's admin sees every other company's invited addresses and notes.
   Company admins invite people into their own company (§4.4).
 - **Registering through an invitation proves the mailbox**, so the account starts with
-  `email_verified_at` set.
+  `email_verified_at` set, but **only when the registered address is exactly the
+  invited one**. A tagged registration (§4.5) gets its own verification mail like any
+  other: the token reached `you@x`, which says nothing about whether `you+app@x` is
+  delivered.
 - **TENANT is not an invitable role** in kastlan until a tenant portal exists (§2.9).
   Kurvenschmiede's CUSTOMER rule holds for invitations too: a customer is never a team
   manager.
@@ -248,12 +251,14 @@ yours does; you then sign in with the tagged address.
   strips a tag; `you@…` and `you+kastlan@…` are different addresses.
 - **With an invitation:** the invitee may take the tag. An invitation for
   `you@example.com` also accepts `you+<app>@example.com` (same local part, same domain,
-  the app's own tag only), and the account keeps the tagged address.
+  the app's own tag only), and the account keeps the tagged address. It starts
+  **unverified** and is sent its own verification mail (§4.3).
 - **Sign-in stays exact.** After `invalid_credentials` the form's hint also says:
   "Signed up with name+kastlan@…? Use that address." The server looks nothing up.
 - **A password reset** for `you@example.com` that finds no account also tries
-  `you+<app>@example.com`, and mails that one. It is the same mailbox wherever the tag
-  was delivered at all, and the answer is `204` either way, so it reveals nothing.
+  `you+<app>@example.com`. The mail goes to **the account's own address, the tagged
+  one**, because that is the identity and the address the user signs in with. The answer
+  is `204` either way, so it reveals nothing.
 - **Where else an address is typed for oneself** (a later email change in the profile),
   the same suggestion appears. Never in a field for someone else's address (invite
   dialogs, shares).
@@ -562,7 +567,8 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
    - admins and team managers invite new people, and the invitation defines the company
      or team;
    - allow-list entries become invitations;
-   - registering through one sets `email_verified_at`;
+   - registering through one sets `email_verified_at` only for the exact invited address;
+    a tagged variant verifies by its own mail (Kurvenschmiede's point);
    - a member's share to an unknown address stays a pending grant.
 8. **keksdose's budget-share invites** were not the model the draft said: plaintext
    token, optional address, no mail, `/join?token=`. They move to §4.4, and the links
