@@ -3,7 +3,8 @@
 Status: **2026-10-05**, led from ui-kit at Marcel's request. Built from a read-only audit
 of the three apps' working trees (keksdose `chore/vscode-workspace`, kastlan
 `feat/feedback-harmonization`, Kurvenschmiede `chore/workspace-server-kit`). Marcel's
-decisions are in §2. It follows the pattern of the feedback round
+decisions are in §2, the three apps' reviews and what they settled in §7 (all
+answered the same day). It follows the pattern of the feedback round
 ([feedback-harmonization.md](feedback-harmonization.md)): **one contract + kit parts**.
 **keksdose is the reference**; the kit owns every word that is the same in all three apps
 and every part that three apps were building separately; each app keeps the sections
@@ -69,6 +70,13 @@ ways:
 6. Kit **0.28.0** carries the rest: the link labels (7 languages), keksdose's separator
    style, the page frame, `useNoIndex`, legal links on every auth page and in the account
    menu's footer, and the shared section skeleton and key naming.
+7. **"Non-commercial" stays** in the disclaimer; it is true of all three apps today.
+   kastlan's Stripe billing module is switched off in production. Whichever app turns
+   billing on updates its legal texts **in that same release**: Stripe as a processor
+   and transfer, the prices in its terms, and a commercial version of the disclaimer
+   (a kit variant, built then). (Marcel, after the reviews.)
+8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
+   disclaimer, warranty and notices. (Marcel, after the reviews.)
 
 ## 3. The page contract
 
@@ -83,8 +91,10 @@ kit sets it.
 
 From top to bottom:
 
-1. **The app's public header**: the one its signed-out pages already show (brand,
-   language switcher, theme, sign-in).
+1. **The app's public header**: the one a signed-out visitor already sees on the app's
+   public pages (brand, language switcher, theme, sign-in). keksdose: `LandingHeader`.
+   Kurvenschmiede: its `AppTopBar`, rendered without the shell. kastlan: the brand row
+   its sign-in page shows.
 2. **The column**: the kit's `LegalLayout` with:
    - the back link `← Back to home`, pointing to `/`;
    - the title;
@@ -98,8 +108,9 @@ the app. For kastlan, which has no landing page, `/` takes a signed-out visitor 
 sign-in page.
 
 **Notice:**
-- The imprint and the terms carry the kit's **beta notice** (keksdose's
-  `placeholder_banner`).
+- The imprint and the terms carry the kit's **beta notice** (§4.3). It is no longer
+  keksdose's `placeholder_banner` ("provided in good faith and is not legal advice"),
+  because the terms are the agreement itself, not information (§7.3).
 - The privacy page carries the kit's **privacy notice**. It is keksdose's
   `privacy_banner`, with the keksdose-only phrase "what leaves your household" replaced by
   Kurvenschmiede's "what is stored, where, and who can read it" (§4.3).
@@ -114,9 +125,13 @@ keksdose does (feedback #97, #129). Each app's web server also sends
 
 | Place | Who sees it | Part |
 |---|---|---|
-| Public footer: landing/home, **every** auth page (sign-in, register, forgot/reset password, verify email, two-factor, invitation), the legal pages, 404 | signed out (and signed in on those pages) | `LegalFooter` |
+| Public footer: landing/home, **every** signed-out page the app has (sign-in, register, forgot/reset password, verify email, …), the legal pages, the 404 where there is one; §6 lists each app's pages | signed out (and signed in on those pages) | `LegalFooter` |
 | Account menu footer | signed in, every viewport | `LegalLinks nav={false}` in `TopBarActionMenu`'s `footer` (with its `footerLabel`), or in a plain container (KS's `HoverMenu`) |
 | Sidebar footer | optional; keksdose and kastlan keep theirs | kit labels, no own words |
+
+The rule behind the table: **from every page a signed-out visitor can reach, the three
+links are one click away.** That includes Kurvenschmiede's public `/control` and
+`/steering`.
 
 The labels are always the kit's short link labels (`legal.links.*`, §4.4), in the order
 Imprint · Privacy Policy · Terms, with `·` separators (`aria-hidden`). This applies in the
@@ -141,10 +156,14 @@ keksdose's `register-page.tsx` behaviour, now the kit's `LegalAcceptCheckbox`.
 - Section keys are keksdose's. Kurvenschmiede renames `processors` → `third_parties` and
   `results` → `no_advice`.
 - **Section titles carry no numbers.** The kit numbers the privacy and terms sections in
-  render order; the imprint stays unnumbered, as in keksdose. A cross-reference is a link
-  to the section's id, not a number in running text. This matters because the new browser
-  section shifts keksdose's numbering, and keksdose's text says "section 7" and
-  "section 9".
+  render order; the imprint stays unnumbered, as in keksdose.
+- **Cross-references use a token**: `{ref:retention}` in an app body renders as the
+  section's computed number, linked to `#retention`. The words around it stay in the
+  app's text ("see section {ref:retention}", "siehe Abschnitt {ref:retention}"), so
+  each language keeps its own grammar. Hungarian puts its case ending on the noun after
+  the number. keksdose has 12 such references per language and Kurvenschmiede has one;
+  the new browser section shifts keksdose's numbers, and with the token they can't go
+  stale again.
 
 ### 4.2 Skeleton
 
@@ -166,10 +185,10 @@ keksdose's `register-page.tsx` behaviour, now the kit's `LegalAcceptCheckbox`.
 |---|---|---|
 | `controller` | kit | |
 | `data` | app | |
-| `legal_basis` | kit + app | the FADP/GDPR paragraph is the kit's. An optional app paragraph follows: keksdose's consent list; Kurvenschmiede's "no tracking, no analytics, no advertising" |
+| `legal_basis` | kit + app | the kit's FADP/GDPR paragraph names contract and legitimate interest only. **Consent is the app's**: an app that relies on it says so in its paragraph (keksdose's consent list), §7.3. Kurvenschmiede's paragraph: "no tracking, no analytics, no advertising" |
 | `third_parties` | app | hosting and processors |
 | *app sections* | app | keksdose's `price_pool`, `location`, `documents_ai` |
-| `browser` | kit + app | the kit's text around the app's list of what it keeps (§4.3) |
+| `browser` | kit + app | the kit's text around the app's list of what it keeps (§4.3), then an optional app paragraph: what sign-out removes beyond the tokens, what stays |
 | `transfers` | app | which providers, in which countries |
 | `retention` | app | |
 | `rights` | kit + app | the kit's list of rights, then the app's paragraph (how to export, how to delete), then the kit's sentence about the supervisory authorities |
@@ -211,13 +230,17 @@ The texts are keksdose's unless marked otherwise.
   - **legal_basis**, "Legal basis": As the operator is based in Switzerland, processing
     is governed by the Swiss Federal Act on Data Protection (FADP). Where the EU General
     Data Protection Regulation (GDPR) applies to you, we rely on the performance of a
-    contract to provide the service (Art. 6(1)(b) GDPR), your consent (Art. 6(1)(a) GDPR)
-    and our legitimate interest in operating and securing the service (Art. 6(1)(f) GDPR).
-    → *app paragraph*
-  - **browser**, "What your browser stores" (Kurvenschmiede's wording): No cookies. The
-    app keeps a few entries in your browser's local storage: `{entries}`. They stay on your
-    device, are not used to track you and disappear when you clear the site's data;
-    signing out removes the sign-in tokens.
+    contract to provide the service (Art. 6(1)(b) GDPR) and our legitimate interest in
+    operating and securing it (Art. 6(1)(f) GDPR). → *app paragraph* (keksdose:
+    "… your consent (Art. 6(1)(a) GDPR) for what you switch on yourself: …")
+  - **browser**, "What your browser stores" (Kurvenschmiede's section, reworded after the
+    reviews, §7.2):
+    - No cookies. The app keeps the following in your browser's storage:
+    - `{entries}`, rendered as a list, one item per entry, from the app.
+    - None of it is used to track you. Entries waiting to be sent are sent to us as soon
+      as they can be; everything else stays on your device. All of it disappears when you
+      clear the site's data, and signing out removes the sign-in tokens.
+    - → *app paragraph*
   - **rights**, "Your rights":
     - lead: You have the right to access, rectification, erasure, restriction, data
       portability and objection.
@@ -242,8 +265,10 @@ The texts are keksdose's unless marked otherwise.
     `{city} ({region})`, `{country}`.
 
 **Notices:**
-- **beta**: Closed beta. This information is provided in good faith and is not legal
-  advice; it will be reviewed before a public launch.
+- **beta**: Closed beta. These texts have not been reviewed by a lawyer yet and will be
+  before a public launch. (This is Kurvenschmiede's wording, §7.3. It replaces keksdose's
+  "provided in good faith and is not legal advice", which fits a page of information but
+  not the terms.)
 - **privacy**: Closed beta. The legal wording below has not been reviewed by a lawyer yet
   and will be before a public launch. The technical descriptions — what is stored, where,
   and who can read it — describe what the software actually does today, and are meant to
@@ -262,6 +287,13 @@ The texts are keksdose's unless marked otherwise.
 fr and it come from keksdose's `landing.footer.*`, `legal.*` and `auth.accept_*`. es, hu
 and zh are new; they come from Kurvenschmiede's titles. `accept` is one template, not a
 prefix plus a joiner, so a language can put the links where its grammar needs them.
+The articles live in the template next to the placeholders. For example:
+- fr "J’accepte les {terms} et la {privacy}";
+- it "Accetto le {terms} e l’{privacy}". There is no space after the elided article, so
+  interpolation must not add one.
+
+The kit's fr `navLabel` stays "Informations légales". keksdose's own "Mentions légales"
+would repeat the fr Imprint link's label, so a screen reader would read it twice.
 
 ## 5. What the kit adds, what stays app-side
 
@@ -270,7 +302,7 @@ prefix plus a joiner, so a language can put the links where its grammar needs th
 - **The `legal` label namespace, extended, in all 7 languages**:
   - `links`, `titles`, `backHome`, `accept`;
   - `notice.beta`, `notice.privacy`;
-  - `sections.*`, the §4.3 texts as functions of the operator and the browser list.
+  - `sections.*`, the §4.3 texts as functions of the operator.
 - **`LegalOperator`**: `{ name, postalCode, city, region, country, email }`. `country`
   is an ISO code; the kit names it in the page's language. The kit holds **no personal
   data**: each app passes the same values once (kk, ka and KS: Marcel Eifert,
@@ -278,13 +310,14 @@ prefix plus a joiner, so a language can put the links where its grammar needs th
 - **`LegalPage`**: the §3.2 frame.
   - Props: `page` (`"impressum" | "privacy" | "terms"`), `operator`, `header`, `footer`
     (default `<LegalFooter />`), `homeHref` (default `/`), `notice` (default per page).
-  - It sets the title from `titles`, numbers the sections where §4.1 says so, and calls
-    `useNoIndex()`.
+  - It sets the title from `titles`, numbers the sections where §4.1 says so, resolves
+    `{ref:key}` tokens in the bodies (§4.1), and calls `useNoIndex()`.
 - **Kit sections**: one part renders a §4.3 section by key, with its id and number
   (`<LegalKitSection section="warranty" />`). It takes `children` for the app paragraph
-  where §4.2 says kit + app, and `entries` for the browser list.
-- **`LegalSection`** gains automatic numbering inside a `LegalPage` and its key as id.
-  Its API stays the same otherwise.
+  where §4.2 says kit + app. For the browser section it takes `entries` as a list of
+  strings, rendered as a `<ul>`.
+- **`LegalSection`** gains automatic numbering inside a `LegalPage`, its key as id, and
+  `{ref:key}` resolution. Its API stays the same otherwise.
 - **`LegalLinks`**:
   - `links` becomes optional; the default is the three routes with the kit's link labels.
   - `·` separators.
@@ -296,100 +329,192 @@ prefix plus a joiner, so a language can put the links where its grammar needs th
 - **`useNoIndex()`**: keksdose's hook, which removes its `<meta>` on unmount.
 - **`LEGAL_SKELETON`**: the §4.2 order as data, so an app test can assert that its pages
   follow it.
-- **Review**: `kitLabelStrings` covers the new keys. The sample values for the legal
-  texts can be the app's own operator, so a reviewer reads the real sentence.
+- **Review** (§7.5):
+  - The default `keyInArea` also matches `kit.<area>.`, since all three apps flatten
+    the kit's labels under `kit.`.
+  - A new exported `reviewAreaOf(key)` gives the app's translation page the same rule:
+    `kit.legal.*` → `legal`.
+  - `kitLabelStrings` covers the new keys and takes an optional operator, so a
+    reviewer reads the real sentence.
 - **Docs**: a showcase page (all three pages, phone and desktop) and `docs/adopt-0.28.md`.
+  The adopt guide includes the review-area lines for each app's server and page.
+
+**server-kit** (a patch, on Marcel's go like every release):
+- `in_areas` matches `kit.<area>.` as well, the same rule as the kit's `keyInArea`.
+  keksdose uses it already. kastlan and Kurvenschmiede have their own copy of
+  `in_areas` and make the same one-line change.
+- While there: the CORS module's comment about "the SPA's refresh cookie" is stale (no
+  app has one). keksdose's `main.py:152` has the same stale comment.
 
 **App-side**:
 - the routes;
 - the public header;
 - the app sections and the app paragraphs;
-- the browser list (what this app really keeps);
+- the browser list (what this app really keeps), in every language it serves;
 - the operator values;
 - the web server's `X-Robots-Tag`;
-- mapping `kit.legal.*` into each app's `legal` review area.
+- the review-area mapping on its server and translation page.
 
 ## 6. Per repo
 
 **ui-kit** (first, one minor release, 0.28.0):
-1. Labels and all 7 catalogues (§4.3, §4.4).
-2. `LegalOperator`, `LegalPage`, `LegalKitSection`, numbering and ids, `LEGAL_SKELETON`.
+1. Labels and all 7 catalogues (§4.3, §4.4). es, hu and zh are seeded from
+   Kurvenschmiede's texts and go back to it for review.
+2. `LegalOperator`, `LegalPage`, `LegalKitSection`, numbering, ids, `{ref:key}`,
+   `LEGAL_SKELETON`.
 3. `LegalLinks` default links and separators, `LegalFooter`, `LegalAcceptCheckbox`,
    `useNoIndex`.
-4. `kitLabelStrings` samples, the showcase, `adopt-0.28.md`.
+4. `keyInArea` + `reviewAreaOf`, `kitLabelStrings` with an operator, the showcase,
+   `adopt-0.28.md`.
 
 **keksdose**:
 1. Bump the kit.
 2. `features/legal/legal-layout.tsx` → `LegalPage` with `header={<LandingHeader />}`.
    `SiteFooter` → `LegalFooter` with the tagline as children. `use-noindex.ts` →
    the kit's hook.
-3. Account menu footer and sidebar footer → `LegalLinks`.
-4. The register checkbox → `LegalAcceptCheckbox`.
-5. Remove the keys the kit now owns:
+3. **`/verify-email`** gains the header, the footer and `useNoIndex`. Caddy's `@noindex`
+   gains `/forgot-password`, `/reset-password` and `/verify-email` (today it covers the
+   legal pages, `/login` and `/register`).
+4. Account menu footer and sidebar footer → `LegalLinks`.
+5. The register checkbox → `LegalAcceptCheckbox`.
+6. Remove the keys the kit now owns:
    - `legal.back_home`, `nav_label`, `placeholder_banner`, `privacy_banner`;
    - the kit sections;
    - `landing.footer.impressum` / `privacy` / `terms`;
    - `auth.accept_prefix` / `accept_and`.
-6. Section titles lose their numbers. "section 7" and "section 9" in `third_parties` and
-   `rights` become links to `#documents_ai` and `#retention`.
-7. `legal_basis` keeps its consent paragraph and `rights` its export paragraph, both as
-   the app paragraph. `credits` stays.
-8. **New**: the `browser` list. Check against the code that no cookie is set; the
-   Plausible line moves here.
+7. Section titles lose their numbers. The 12 numbered references per language become
+   `{ref:…}` tokens:
+   - in `data`, `third_parties`, `price_pool`, `documents_ai`, `retention` and `rights`;
+   - pointing to `price_pool`, `location`, `documents_ai`, `retention` and `contact`.
+8. `legal_basis`: the app paragraph now carries the consent basis (Art. 6(1)(a)) along
+   with the consent list. `rights` keeps its export paragraph as the app paragraph.
+   `credits` stays.
+9. **New**: the `browser` list, using your drafts (10 entries, 4 languages, through
+   /translations). The app paragraph says what an explicit sign-out wipes (the offline
+   copy, the cached data, the keys), that settings and the home position stay, and that
+   an expired session keeps the offline copy and unsent changes. **The Plausible
+   paragraph stays in `third_parties`**: it describes a processor, not browser storage,
+   and `privacy-analytics-flag.test.ts` pins it there.
+10. `translations-page.tsx`:
+    - the area of a `kit.legal.*` key is `legal`, via `reviewAreaOf`;
+    - `kitLabelStrings` gets the operator;
+    - the note that "the legal pages hold no kit. key" (lines 247-249) stops being true.
+    The server takes the server-kit patch.
 
 **kastlan**:
 1. Bump the kit.
-2. `features/legal/legal-layout.tsx` (own frame) → `LegalPage`, with the header its
-   sign-in page shows. The back link goes to `/` ("Back to home").
-3. `LegalFooter` on **every** auth page: today only `login-page.tsx` has it; register,
-   verify email and two-factor gain it.
-4. Account menu: plain `Link`s → `LegalLinks`. The sidebar entry takes the kit's labels.
+2. `features/legal/legal-layout.tsx` (own frame) → `LegalPage`, with the brand row its
+   sign-in page shows. The back link goes to `/` ("Back to home"), which takes a
+   signed-out visitor to `/login`.
+3. `LegalFooter` on `/login`, `/register` and `/verify-email`. There are no
+   forgot/reset, invitation, landing or 404 pages.
+   - `/2fa` is an orphan placeholder (the real challenge is a step of `/login`):
+     remove it, or give it the footer.
+   - A 404 page is not part of this round.
+4. Account menu: plain `Link`s (`top-bar.tsx:167`) → `LegalLinks`. The sidebar entry
+   (`app-layout.tsx:108`) takes the kit's labels.
 5. noindex: `useNoIndex` on the legal and auth pages, `X-Robots-Tag` in Caddy for the
    three routes.
 6. The register checkbox (new).
 7. Content:
-   - the kit sections replace yours;
-   - the street address goes (canon: on request);
-   - **new**: the `browser` list.
-   - Check two facts against the running setup:
-     - your privacy page names no email provider, yet the app has a verify-email page,
-       so it sends mail;
-     - it says Cloudflare carries traffic (DNS, TLS, CDN), where the other two apps run
-       Cloudflare as DNS only.
+   - the kit sections replace yours, and the street address goes (canon: on request);
+   - **new**: the `browser` list from your drafts. The app paragraph names what is not
+     in local storage: the IndexedDB `kastlan-offline` photos waiting to upload, which
+     sign-out does not clear, and the service worker's offline cache;
+   - `legal_basis`: the kit's lead no longer claims consent. Add a consent paragraph
+     only if something in kastlan rests on it;
+   - **`third_parties` is wrong today**: Cloudflare is DNS only (Cloud Run domain
+     mapping, `server: Google Frontend`, no `cf-ray`). Fix it **in the same change** as
+     the kit swap, because the privacy notice says the technical descriptions match the
+     running software;
+   - email: no provider is right while there is no SMTP. But the verification link is
+     written to the backend log (Cloud Logging) together with the user's email address,
+     so the privacy page says so. Name the provider when SMTP goes on.
+8. Review area: `translation_review_service.in_areas` matches `kit.<area>.`.
+   `translations-page.tsx:58` maps `kit.legal.*` to `legal` via `reviewAreaOf`.
+9. Billing (decision 7): nothing changes now. The day `KASTLAN_BILLING_ENABLED` goes
+   on, the legal texts change in the same release.
 
 **Kurvenschmiede**:
 1. Bump the kit.
-2. The legal pages leave the app shell → `LegalPage` with the header of its home and auth
-   pages; the back link gains its arrow.
-3. `LegalFooter` on the home page and in `AuthShell` (replacing `LegalLinks`). The
-   account menu's `<li>` keeps `LegalLinks nav={false}`, now without `links`.
-4. noindex as kastlan. The register checkbox (new).
+2. The legal pages leave the app shell → `LegalPage` with `header` = your `AppTopBar`
+   without the shell (mark, `LanguageMenu`, `ThemeToggle`, sign-in or account). The
+   back link gains its arrow.
+   - `AuthShell` has no header and no language switcher. Giving it `AppTopBar` too is
+     your call; this round does not require it.
+3. `LegalFooter`:
+   - on `/`, the four auth pages (`/login`, `/register`, `/forgot-password`,
+     `/reset-password`), the legal pages and the 404, replacing `LegalLinks`;
+   - for signed-out visitors, also on the public `/control` and `/steering`, or anywhere
+     else that puts the links one click away (§3.3).
+   - The account menu's `<li>` keeps `LegalLinks nav={false}`, now without `links`.
+4. noindex: `useNoIndex`, plus `X-Robots-Tag` for the three routes in
+   `deploy/gcp/Caddyfile.cloudrun` and `deploy/Caddyfile`. The register checkbox (new).
 5. Keys:
    - `imprint` → `impressum`, `processors` → `third_parties`, `results` → `no_advice`;
    - `draft_banner` → the kit's notices;
-   - titles lose their numbers.
-6. The `browser` section keeps its facts as the `{entries}` list. The kit's
-   `legal_basis` + your "no tracking" sentence as the app paragraph. `accounts` and
-   `content` stay, after `no_advice`.
-7. Your es/hu/zh texts are the seed of the kit's for the shared sections. The kit will
-   send the result for your review.
+   - titles lose their numbers;
+   - "section 9" in `retention` becomes `{ref:contact}`.
+6. The `browser` list, from your corrected drafts in 7 languages (tokens and cached
+   account, language, theme, layouts, error reports until sent). Your `data` section
+   gains the automatic crash reports. The kit's `legal_basis` + your "no tracking"
+   sentence as the app paragraph. `accounts` and `content` stay, after `no_advice`.
+7. Review area: your `in_areas` matches `kit.<area>.`. `namespaceOf`/`groupOf` in
+   `translations-page.tsx` map `kit.legal.*` to `legal` via `reviewAreaOf`.
+8. Your es/hu/zh texts seed the kit's translations of the shared sections; the kit sends
+   the result back for your review.
 
-## 7. Open points for the reviews
+## 7. Settled after the reviews (2026-10-05)
 
-Each app answers these from its code before the kit round starts:
+The three apps answered from their code. What they found, and what follows:
 
-1. **Cookies**: does the app set any cookie, its own or a third party's? The kit's
-   browser text starts "No cookies." If one app sets one, the kit adds a variant.
-2. **Sign-in tokens**: are they in local storage, and does signing out remove them, as
-   the kit's sentence says?
-3. **"Closed beta"** (Kurvenschmiede): the canon's disclaimer, warranty and notices say
-   "closed beta". Kurvenschmiede's texts avoid the word: true or not?
-4. **"Non-commercial"** (kastlan): the canon's disclaimer says "private,
-   non-commercial". kastlan says only "private": true or not?
-5. **Auth pages**: the full list of the app's signed-out pages (§3.3) that gain the
-   footer.
-6. **Review area**: where the app derives a key's area (frontend catalogue or backend),
-   so that `kit.legal.*` lands in `legal`.
+1. **No cookies** in any app: none of their own, none from a third party. Each app
+   checked its code and production. Plausible is cookieless and proxied first-party.
+   Cloudflare is DNS only everywhere, and Cloud Run sets no session affinity. "No
+   cookies." stays.
+2. **Browser storage is more than "a few entries in local storage"**:
+   - keksdose: IndexedDB (an offline budget copy and outbox, a query cache, private-mode
+     keys for up to 12 h) and Cache Storage;
+   - kastlan: IndexedDB (photos waiting to upload) and the service worker's cache;
+   - all three: `createCrashReporter`'s buffer, which is sent to the operator after
+     sign-in.
+   So the kit's text now says "your browser's storage" and takes the entries as a list.
+   Its old "they stay on your device" no longer covers everything: entries waiting to be
+   sent are named as the exception. `browser` becomes kit + app, so an app can say what
+   sign-out removes beyond the tokens (§4.3). The tokens sentence holds in all three:
+   each app's every sign-out path clears them.
+3. **Consent and the beta notice** (Kurvenschmiede):
+   - The kit's `legal_basis` no longer claims consent. Kurvenschmiede relies on none, and
+     claiming it would imply a withdrawal right with nothing behind it. Consent moves to
+     the app paragraph of the apps that use it.
+   - The beta notice is Kurvenschmiede's "not reviewed by a lawyer yet". keksdose's "not
+     legal advice" fits information, not the terms themselves.
+   - keksdose does not object to the privacy notice change or to the dots in the account
+     menu.
+4. **Cross-references**: keksdose has 12 per language, not 2, and Kurvenschmiede has 1.
+   Rewording them all as links would be clumsy, so the kit resolves `{ref:key}` to the
+   computed number (keksdose's proposal, §4.1).
+5. **Review areas**: `kit.legal.*` reaches no `legal` area today in any app, on the
+   server (`in_areas`, a prefix test) or on the page (`keyInArea`; `kit.<ns>` as the
+   area). A lawyer with a `["legal"]` grant would not see the kit's legal text and would
+   be refused writing to it. The fix is one rule in four places:
+   - the kit's `keyInArea` and `reviewAreaOf`;
+   - server-kit's `in_areas`;
+   - kastlan's and Kurvenschmiede's own copies of `in_areas`;
+   - plus each translation page's area and grouping.
+6. **Signed-out pages** differ per app, so §3.3 states a rule (the links one click away
+   from every signed-out page) and §6 lists each app's pages:
+   - kastlan has no forgot/reset, landing or 404 page;
+   - keksdose's `/verify-email` was the one page without footer and noindex;
+   - Kurvenschmiede's public `/control` and `/steering` had no links for a signed-out
+     visitor.
+7. **Facts the reviews corrected**:
+   - kastlan's `third_parties` (Cloudflare DNS only);
+   - kastlan's email statement (no SMTP; the verification link in the server log);
+   - keksdose's Plausible paragraph stays a processor disclosure;
+   - Kurvenschmiede's renamed anchors (`#processors`, `#results`) have no inbound links.
+8. **Marcel**: "non-commercial" stays until an app bills (§2.7), and Kurvenschmiede is a
+   closed beta (§2.8). kastlan's billing module (off in production, but still in the
+   admin sidebar) is the subject of the next round.
 
-A kit-wording question that only Marcel can answer goes to him; anything else the kit
-settles and records here.
+Nothing is open. The kit round starts on `feat/0.28.0`.
