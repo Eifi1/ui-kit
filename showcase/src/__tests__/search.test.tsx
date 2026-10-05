@@ -1,14 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router";
-import { TourProvider, createSearchIndex } from "@eifi1/ui-kit";
-import { Showcase } from "../showcase";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { useLocation } from "react-router";
+import { createSearchIndex } from "@eifi1/ui-kit";
 import { GROUPS, PAGES } from "../routes";
-import { LOCALES, LocaleProvider, de, en } from "../i18n";
+import { LOCALES, de, en } from "../i18n";
 import { slugify } from "../lib/section";
 import { PAGE_EXAMPLE_LABELS } from "../search/examples.generated";
 import { SEARCH_SUGGESTIONS, buildSearchEntries } from "../search/showcase-search";
-import { preloadAllSections } from "../lib/lazy-section";
+import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./showcase-harness";
 
 /**
  * The top-bar search. Its index is derived — routes.tsx, the dictionaries, and the
@@ -18,34 +17,8 @@ import { preloadAllSections } from "../lib/lazy-section";
  * where they should.
  */
 
-class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
-const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
-// Every section is lazy (lib/lazy-section.ts). Loaded up front, a page renders in one
-// synchronous pass, exactly as it did before the split — so these tests keep asserting on
-// the page right after render() instead of on a Suspense fallback. The lazy path itself
-// is covered by lazy-section.test.tsx.
-beforeAll(() => preloadAllSections(), 60_000);
-beforeAll(() => {
-  vi.stubGlobal("ResizeObserver", ResizeObserverStub);
-  vi.spyOn(console, "warn").mockImplementation(() => {});
-  if (!JSDOM_HAS_IT) PROTO.scrollIntoView = () => {};
-});
-afterAll(() => {
-  vi.unstubAllGlobals();
-  if (!JSDOM_HAS_IT) delete PROTO.scrollIntoView;
-});
-afterEach(() => {
-  localStorage.clear();
-  document.documentElement.removeAttribute("dir");
-  document.documentElement.removeAttribute("lang");
-});
+useShowcaseEnvironment({ scrollIntoView: true });
 
-const MOUNT_TIMEOUT_MS = 60_000;
 /** Vitest runs from the repository root (vitest.config.ts lives there). */
 const ROOT = process.cwd();
 
@@ -148,37 +121,8 @@ describe("queries a reader types", () => {
   });
 });
 
-/**
- * The static extraction checked against the DOM: for every page, the anchors the index
- * links to are exactly the `<h3 id>` headings the page renders — no example the page
- * shows is missing from the search, and no search result points at a heading that is not
- * there.
- */
-describe("example anchors", () => {
-  function Mounted({ path }: { path: string }) {
-    return (
-      <MemoryRouter initialEntries={[path]}>
-        <LocaleProvider>
-          <TourProvider>
-            <Showcase />
-          </TourProvider>
-        </LocaleProvider>
-      </MemoryRouter>
-    );
-  }
-
-  it.each(PAGES.map((p) => [p.slug] as const))(
-    "/%s: every indexed example is a heading on the page, and every heading is indexed",
-    (slug) => {
-      render(<Mounted path={`/${slug}`} />);
-      const rendered = new Set([...document.querySelectorAll("main h3[id]")].map((h) => h.id));
-      const indexed = new Set((PAGE_EXAMPLE_LABELS[slug] ?? []).map(slugify));
-      for (const id of indexed) expect(rendered, `#${id} is indexed but not on /${slug}`).toContain(id);
-      for (const id of rendered) expect(indexed, `#${id} is on /${slug} but not indexed`).toContain(id);
-    },
-    MOUNT_TIMEOUT_MS,
-  );
-});
+// The per-page check — every indexed example is a heading on its page, and every heading
+// is indexed — runs with the page mounts in pages-shard-*.test.tsx (0.28.1).
 
 describe("the top-bar search", () => {
   function Where() {
@@ -187,16 +131,7 @@ describe("the top-bar search", () => {
   }
 
   it("opens on Ctrl K, suggests needs, and jumps to an example's anchor", async () => {
-    render(
-      <MemoryRouter initialEntries={["/overview"]}>
-        <LocaleProvider>
-          <TourProvider>
-            <Showcase />
-            <Where />
-          </TourProvider>
-        </LocaleProvider>
-      </MemoryRouter>,
-    );
+    renderShowcase("/overview", <Where />);
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
     });
