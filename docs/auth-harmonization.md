@@ -86,6 +86,8 @@ After the reviews:
 12. **An allow-list entry becomes an invitation**: only the mailbox owner can register,
     and "resend" mints a new token. The environment list stays only to bootstrap the
     first admin.
+13. **The address tag in every app** (0.29.0): the sign-up form offers
+    `you+<app>@example.com` as one click, as keksdose does (§4.5).
 
 ## 3. The account
 
@@ -145,7 +147,8 @@ avatars, feedback, and the greeting in a mail.
 
 1. First name
 2. Last name
-3. Email (prefilled and read-only when the sign-up comes from an invitation)
+3. Email (prefilled when the sign-up comes from an invitation), with the **address-tag
+   suggestion** (§4.5)
 4. Password, with the strength meter
 5. Confirm password. keksdose and kastlan have it; Kurvenschmiede gains it.
 6. Language, preselected from the UI language
@@ -223,6 +226,37 @@ avatars, feedback, and the greeting in a mail.
   kastlan's interim plan (create the user, mail a set-your-password link on the reset
   token) is replaced by this invitation. Until the kit parts exist, kastlan may keep its
   interim if it is already built. The review decides (§10).
+
+### 4.5 The address tag (keksdose's, for every app — Marcel, 2026-10-05)
+
+Under the email field, once the address is plausible, the form offers the address with
+the app's name as a sub-address, as **one click with the exact result on the button**:
+"Use you+kastlan@example.com". After it a short hint reads: many providers deliver
+`name+tag@…` to the same inbox, so the app's mail is easy to filter and trace; check
+yours does; you then sign in with the tagged address.
+
+- **Offered, never applied.** `+` is valid in an address (RFC 5322), and sub-addressing
+  is specified (RFC 5233). But it is a convention the *receiving* server may implement:
+  Gmail, Outlook, iCloud, Fastmail and Proton do; many Exchange installs, small hosters
+  and corporate filters don't. Silently rewriting would send the verification mail down
+  a path nobody checked, and the user would sign in with an address they never typed
+  (keksdose `features/auth/email-tag.ts`, feedback dev#481).
+- **No offer** when the address already carries a `+` (their own scheme wins; stacking
+  two would be wrong) or isn't complete enough to split.
+- **The tag** is the app's name in lower case: `keksdose`, `kastlan`, `kurvenschmiede`.
+- **The tagged address is the identity.** Normalisation trims and lower-cases and never
+  strips a tag; `you@…` and `you+kastlan@…` are different addresses.
+- **With an invitation:** the invitee may take the tag. An invitation for
+  `you@example.com` also accepts `you+<app>@example.com` (same local part, same domain,
+  the app's own tag only), and the account keeps the tagged address.
+- **Sign-in stays exact.** After `invalid_credentials` the form's hint also says:
+  "Signed up with name+kastlan@…? Use that address." The server looks nothing up.
+- **A password reset** for `you@example.com` that finds no account also tries
+  `you+<app>@example.com`, and mails that one. It is the same mailbox wherever the tag
+  was delivered at all, and the answer is `204` either way, so it reveals nothing.
+- **Where else an address is typed for oneself** (a later email change in the profile),
+  the same suggestion appears. Never in a field for someone else's address (invite
+  dialogs, shares).
 
 ## 5. Sign-in
 
@@ -362,7 +396,8 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
   - slots for each step's app content (keksdose's private-mode note on the
     password-change step).
 - **Sign-up:**
-  - `RegisterForm` (§4.1). Its slots: above the form (keksdose's closed-beta banner),
+  - `RegisterForm` (§4.1), with the address-tag suggestion built in (`emailTag="kastlan"`,
+    §4.5) and `taggedEmail(email, tag)` exported for other fields. Its slots: above the form (keksdose's closed-beta banner),
     under the email (keksdose's address-tag hint), the app fields, and after them
     (keksdose's privacy-mode note);
   - the language field may be bound to the app's i18n with no local state;
@@ -407,6 +442,8 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
 **server-kit:** §8 as 0.3.0, after 0.2.1 (the review-area patch).
 
 **keksdose:**
+0. `features/auth/email-tag.ts` → the kit's `taggedEmail` and `RegisterForm`'s built-in
+   suggestion. Your `auth.email_tag_*` keys go to the kit.
 1. `display_name` → `first_name` + `last_name`, with the migration of §3.3,
    `name_incomplete` (also in the sign-in answer's user) and `CompleteNameDialog`. The
    read-only `display_name` stays in the API; the demo user is never incomplete. It is
@@ -429,6 +466,8 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
 5. Coded refusals: the server and `extractApiErrorMessage` switch together.
 
 **kastlan:**
+0. Gains the address-tag suggestion with the kit's `RegisterForm` (`+kastlan`). The
+   invitation and reset rules of §4.5 apply on the server.
 1. **Now, on its own (§2.9): lock company data to staff**:
    - every company-data route requires an employee role;
    - TENANT leaves the create and invite dialogs;
@@ -473,6 +512,8 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
     privacy sentence from the legal round follows that.
 
 **Kurvenschmiede:**
+0. Gains the address-tag suggestion with the kit's `RegisterForm` (`+kurvenschmiede`),
+   with §4.5's invitation and reset rules on the server.
 1. `display_name` → first and last name, the migration, `CompleteNameDialog`. Where a
    name is more than a label:
    - share candidates, `access.display_names` and team members sort by
@@ -536,6 +577,10 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
     - verify-email by GET lets a link scanner verify an address, so it moves to POST.
 11. **The kit forms never send requests**; they pass the input to the app. **A reset is
     not a sign-in.** An offline-first app boots from its persisted user (§5–6).
+
+12. **The address tag** (Marcel, after the reviews): keksdose's `+keksdose` suggestion
+    goes into the kit for all three apps (§4.5). It is offered and never applied; an
+    invitation accepts the tagged variant; a reset falls back to it; sign-in stays exact.
 
 Nothing is open. Next: server-kit 0.3.0 and ui-kit 0.29.0 (§8), after 0.28.0 and 0.2.1
 are released. kastlan's tenant lock (§9 kastlan 1) goes first, on its own.
