@@ -767,6 +767,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         privacy:
           "Zárt béta. Az alábbi jogi szövegezést ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül. A műszaki leírások – mit tárolunk, hol és ki olvashatja – azt írják le, amit a szoftver ma ténylegesen tesz, és arra valók, hogy a szoftverrel össze lehessen vetni őket.",
       },
+      translation: {
+        note: (o) =>
+          `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
+        show: (o) => `Megjelenítés ezen a nyelven: ${o.bindingLanguage}`,
+      },
       sections: {
         impressum: {
           operator: {
@@ -820,6 +825,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           changes: {
             title: "A feltételek módosítása",
             body: "Ezek a feltételek a szolgáltatás fejlődésével módosulhatnak. A lényeges változásokat e-mailben vagy az alkalmazásban jelentjük be; aki a változás után tovább használja a szolgáltatást, elfogadja azt.",
+          },
+          language: {
+            title: "Nyelv",
+            body: (o) =>
+              `Ezek a feltételek ${o.bindingLanguage} nyelven készültek. A más nyelvű fordítások csak tájékoztató jellegűek; eltérés esetén az eredeti, ${o.bindingLanguage} nyelvű változat az irányadó.`,
           },
           law: {
             title: "Irányadó jog",

@@ -10,6 +10,7 @@ import { Checkbox } from "./checkbox";
 import type { CheckboxProps } from "./checkbox";
 import {
   LEGAL_HREFS,
+  baseLanguage,
   LegalFooter,
   LegalLayout,
   LegalPageContext,
@@ -33,6 +34,7 @@ import type {
   LegalTextSectionLabels,
 } from "./legal";
 import { TextLink } from "./text-link";
+import { Button } from "./ui";
 
 /**
  * The legal pages' frame and the kit's own sections — docs/legal-harmonization.md §3
@@ -107,6 +109,8 @@ export const LEGAL_SKELETON: Readonly<Record<LegalPageKey, LegalSkeletonPage>> =
       { key: "warranty", owner: "kit" },
       { key: "liability", owner: "kit" },
       { key: "changes", owner: "kit" },
+      // 0.28.1: which language's version prevails (the operator's `bindingLanguage`).
+      { key: "language", owner: "kit" },
       { key: "law", owner: "kit" },
     ] as const),
   }),
@@ -125,6 +129,7 @@ export type LegalKitSectionKey =
   | "warranty"
   | "liability"
   | "changes"
+  | "language"
   | "law";
 
 /** The kit's sections of one page, in the skeleton's order. */
@@ -228,6 +233,11 @@ export function LegalKitSection(props: LegalKitSectionProps) {
         `LegalKitSection "${section}" names the operator: render it inside <LegalPage operator={…}>, or pass operator.`,
       );
     }
+    if (section === "language" && !operator.bindingLanguage) {
+      throw new Error(
+        `LegalKitSection "language" names the binding language: give the operator a bindingLanguage ("de-CH").`,
+      );
+    }
     return body(operator);
   };
 
@@ -303,6 +313,12 @@ export interface LegalPageProps {
   /** Default: the kit's beta notice on the imprint and the terms, its privacy notice on
    *  the privacy policy (§3.2). `null` for none. */
   notice?: ReactNode;
+  /**
+   * 0.28.1: switches the app to the operator's `bindingLanguage` — the button after the
+   * translation note on a page read in another language. Without it the note stands
+   * alone; the app's own language switcher is in its header anyway.
+   */
+  onShowBindingLanguage?: () => void;
   /** The language the operator's country is named in. Default: the `<UiKitProvider
    *  locale>`, else English. */
   locale?: string;
@@ -434,6 +450,7 @@ export function LegalPage({
   footer,
   homeHref = "/",
   notice,
+  onShowBindingLanguage,
   locale: localeProp,
   headingAs = "h1",
   landmark = true,
@@ -462,6 +479,23 @@ export function LegalPage({
   const Main = landmark ? "main" : "div";
   const shownNotice =
     notice !== undefined ? notice : page === "privacy" ? labels.notice.privacy : labels.notice.beta;
+  // 0.28.1 (Marcel): one language is binding and the lawyer reviews that one; a page read
+  // in any other says so, with a way to the binding version.
+  const translated =
+    operator.bindingLanguage !== undefined && baseLanguage(operator.bindingLanguage) !== baseLanguage(locale);
+  const translationNote = translated ? (
+    <p className="text-sm text-[var(--text-secondary)]">
+      {labels.translation.note(operatorText)}
+      {onShowBindingLanguage && (
+        <>
+          {" "}
+          <Button type="button" variant="link" size="sm" className="h-auto p-0 align-baseline" onClick={onShowBindingLanguage}>
+            {labels.translation.show(operatorText)}
+          </Button>
+        </>
+      )}
+    </p>
+  ) : undefined;
 
   return (
     <UiKitProvider labels={overrides}>
@@ -477,6 +511,7 @@ export function LegalPage({
               }
               title={labels.titles[page]}
               notice={shownNotice}
+              translationNote={translationNote}
               headingAs={headingAs}
             >
               {nodes}

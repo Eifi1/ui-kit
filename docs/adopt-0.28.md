@@ -16,7 +16,21 @@ what describes what it alone does.
 
 ## 0.28.1
 
-A patch from the three apps' adoption. Nothing to change unless you want the new options.
+A patch from the three apps' adoption, plus Marcel's binding language.
+
+- **German is the binding language** (Marcel, 2026-10-05). The lawyer reviews the German
+  texts; the other languages are translations for convenience.
+  - Give your `LegalOperator` the field `bindingLanguage: "de-CH"`.
+  - Every legal page read in another language shows a note under the title: "This is a
+    translation for your convenience. The German version is binding."
+  - Pass `onShowBindingLanguage={() => switchLanguage("de-CH")}` to `LegalPage` to add a
+    "Show the German version" button.
+  - **Add `<LegalKitSection section="language" />` to your terms, between `changes` and
+    `law`** (`LEGAL_SKELETON` has it). A test that pins your pages to the skeleton fails
+    until you do.
+  - Translations of the privacy policy must still be accurate: it is an information
+    duty, not a contract. The note does not cure a wrong translation; it saves a lawyer
+    reading every language.
 
 - **Footers on `AuthLayout` pages:** `AuthLayout` already wraps its `footer` slot in a
   `<footer>`, and HTML forbids a footer inside a footer. There:

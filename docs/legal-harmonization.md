@@ -77,6 +77,15 @@ ways:
    (a kit variant, built then). (Marcel, after the reviews.)
 8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
    disclaimer, warranty and notices. (Marcel, after the reviews.)
+9. **German is the binding language** (Marcel, after the adoption, 0.28.1). The lawyer
+   reviews the German texts; every other language is a translation for convenience.
+   - A legal page read in another language says so under its title, with a way to the
+     German version.
+   - The terms carry a `language` section (between `changes` and `law`) saying the
+     German version prevails.
+   - Privacy translations must still be accurate: an information duty is met by what the
+     reader read, so native reviewers check them on /translations, and a lawyer only for
+     the languages of markets an app actively targets.
 
 ## 3. The page contract
 

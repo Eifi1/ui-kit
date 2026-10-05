@@ -759,6 +759,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         privacy:
           "Beta cerrada. La redacción jurídica que sigue aún no ha sido revisada por un abogado y lo será antes de un lanzamiento público. Las descripciones técnicas —qué se guarda, dónde y quién puede leerlo— describen lo que el software hace realmente hoy y deben poder contrastarse con él.",
       },
+      translation: {
+        note: (o) =>
+          `Esta es una traducción ofrecida para su comodidad. La versión vinculante es la versión en ${o.bindingLanguage}.`,
+        show: (o) => `Ver la versión en ${o.bindingLanguage}`,
+      },
       sections: {
         impressum: {
           operator: {
@@ -812,6 +817,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           changes: {
             title: "Cambios en estas condiciones",
             body: "Estas condiciones pueden actualizarse a medida que evolucione el servicio. Los cambios importantes se anunciarán por correo electrónico o en la aplicación; si sigue usando el servicio después de un cambio, lo acepta.",
+          },
+          language: {
+            title: "Idioma",
+            body: (o) =>
+              `Estas condiciones están redactadas en ${o.bindingLanguage}. Las traducciones a otros idiomas se ofrecen solo por comodidad; en caso de discrepancia, prevalece la versión en ${o.bindingLanguage}.`,
           },
           law: {
             title: "Legislación aplicable",

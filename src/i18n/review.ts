@@ -1,5 +1,5 @@
+import { legalOperatorText } from "../components/legal";
 import type { LegalOperator, LegalOperatorText } from "../components/legal";
-import { countryName } from "../lib/countries";
 import type { UiKitLabels } from "./kit-labels";
 
 /**
@@ -40,7 +40,7 @@ import type { UiKitLabels } from "./kit-labels";
  */
 export function kitLabelStrings(labels: UiKitLabels, options: KitLabelStringsOptions = {}): Record<string, string> {
   const out: Record<string, string> = {};
-  const operator = options.operator && operatorText(options.operator, options.locale);
+  const operator = options.operator && legalOperatorText(options.operator, options.locale);
   const walk = (node: unknown, path: string) => {
     if (typeof node === "string") {
       out[path] = node;
@@ -76,10 +76,6 @@ export interface KitLabelStringsOptions {
   locale?: string;
 }
 
-function operatorText(operator: LegalOperator, locale = "en"): LegalOperatorText {
-  return { ...operator, country: countryName(operator.country, locale) };
-}
-
 function render(label: (...args: unknown[]) => unknown, args: readonly unknown[]): string {
   try {
     return String(label(...args));
@@ -112,6 +108,7 @@ const LEGAL_OPERATOR_SAMPLE: LegalOperatorText = Object.freeze({
   region: "{{region}}",
   country: "{{country}}",
   email: "{{email}}",
+  bindingLanguage: "{{bindingLanguage}}",
 });
 const operatorSample = [[LEGAL_OPERATOR_SAMPLE]] as const;
 
@@ -293,4 +290,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.sections.privacy.controller.body": operatorSample,
   "legal.sections.privacy.contact.body": operatorSample,
   "legal.sections.terms.law.body": operatorSample,
+  // 0.28.1: the binding language, named in the reader's language.
+  "legal.sections.terms.language.body": operatorSample,
+  "legal.translation.note": operatorSample,
+  "legal.translation.show": operatorSample,
 };

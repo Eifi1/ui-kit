@@ -31,6 +31,8 @@ const OPERATOR: LegalOperator = {
   region: "EX",
   country: "CH",
   email: "legal@example.com",
+  // 0.28.1: German is binding, so the English preview shows the translation note.
+  bindingLanguage: "de-CH",
 };
 
 const HERE = "/auth-account";
@@ -166,6 +168,7 @@ const TERMS = (
     <LegalKitSection section="warranty" />
     <LegalKitSection section="liability" />
     <LegalKitSection section="changes" />
+    <LegalKitSection section="language" />
     <LegalKitSection section="law" />
   </>
 );
