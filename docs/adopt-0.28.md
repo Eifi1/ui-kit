@@ -14,6 +14,32 @@ browser storage, rights, privacy contact, warranty, liability, changes and gover
 law, plus the notices, the link labels and the sign-up checkbox. Your app keeps only
 what describes what it alone does.
 
+## 0.28.1
+
+A patch from the three apps' adoption. Nothing to change unless you want the new options.
+
+- **Footers on `AuthLayout` pages:** `AuthLayout` already wraps its `footer` slot in a
+  `<footer>`, and HTML forbids a footer inside a footer. There:
+  - use `footer={<LegalLinks nav={false} />}`;
+  - set `footerLabel` to the kit's `navLabel`, via `useLegalLabels().navLabel`. This is
+    the pattern kastlan adopted.
+  - `LegalFooter landmark={false}` draws a `<div>`, for any other host that is a footer
+    already.
+- **`LegalLinks onLinkClick`:** called on a click on any of the links, so an account menu
+  can close itself. keksdose had to catch the click on a wrapping `<div>`.
+- **New exports:**
+  - `useLegalLabels()`: the kit's `legal` words in the provider's language, for a
+    `footerLabel`;
+  - `LEGAL_HREFS`: the three routes;
+  - `legalOperatorText(operator, locale)`: the operator with its country named.
+- **Translations** (Kurvenschmiede's review):
+  - the operator "resides" in Switzerland instead of having a company seat: hu
+    "lakóhelye", es "reside", it "risiede";
+  - the hu checkbox no longer depends on the titles' case endings;
+  - the zh checkbox reads "我已阅读并同意";
+  - es "rastrearle" and "en cuanto sea posible";
+  - hu formal "Ön" in the browser section.
+
 ## Everyone
 
 1. Bump to `^0.28.0` by hand; a caret below 1.0 locks the minor version.

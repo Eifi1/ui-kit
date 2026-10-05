@@ -790,7 +790,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           legal_basis: {
             title: "Base giuridica",
-            body: "Poiché il gestore ha sede in Svizzera, il trattamento è disciplinato dalla Legge federale svizzera sulla protezione dei dati (LPD). Dove il Regolamento generale sulla protezione dei dati dell’UE (GDPR) si applica a Lei, ci basiamo sull’esecuzione di un contratto per fornire il servizio (art. 6, par. 1, lett. b GDPR) e sul nostro legittimo interesse a gestirlo e proteggerlo (art. 6, par. 1, lett. f GDPR).",
+            body: "Poiché il gestore risiede in Svizzera, il trattamento è disciplinato dalla Legge federale svizzera sulla protezione dei dati (LPD). Dove il Regolamento generale sulla protezione dei dati dell’UE (GDPR) si applica a Lei, ci basiamo sull’esecuzione di un contratto per fornire il servizio (art. 6, par. 1, lett. b GDPR) e sul nostro legittimo interesse a gestirlo e proteggerlo (art. 6, par. 1, lett. f GDPR).",
           },
           browser: {
             title: "Che cosa salva il Suo browser",

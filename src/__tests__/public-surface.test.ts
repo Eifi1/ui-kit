@@ -159,7 +159,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.28.0, the legal harmonization (+7, docs/legal-harmonization.md §5): LegalPage,
   // LegalKitSection, LegalFooter, LegalAcceptCheckbox, LEGAL_SKELETON, useNoIndex, and
   // reviewAreaOf (the review area of a `kit.legal.*` key).
-  ["@eifi1/ui-kit", barrel, 665],
+  // 0.28.1 (+3, the apps' adoption): LEGAL_HREFS, legalOperatorText and useLegalLabels —
+  // an app's own footer label and links need the kit's words and routes.
+  ["@eifi1/ui-kit", barrel, 668],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

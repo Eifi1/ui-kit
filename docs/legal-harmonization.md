@@ -129,6 +129,10 @@ keksdose does (feedback #97, #129). Each app's web server also sends
 | Account menu footer | signed in, every viewport | `LegalLinks nav={false}` in `TopBarActionMenu`'s `footer` (with its `footerLabel`), or in a plain container (KS's `HoverMenu`) |
 | Sidebar footer | optional; keksdose and kastlan keep theirs | kit labels, no own words |
 
+On a page drawn with the kit's `AuthLayout`, the footer slot is a `<footer>` already, so
+the links go there as `<LegalLinks nav={false} />` under the kit's `navLabel`, not as a
+`LegalFooter` (kastlan's adoption; 0.28.1).
+
 The rule behind the table: **from every page a signed-out visitor can reach, the three
 links are one click away.** That includes Kurvenschmiede's public `/control` and
 `/steering`.

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -375,6 +375,9 @@ export interface LegalLinksProps {
    *  links, so in a plain container — Kurvenschmiede's account-menu `<li>` — they ran
    *  together as "ImpressumDatenschutzerklärungNutz…" and overflowed). Default true. */
   nav?: boolean;
+  /** Called on a click on any of the links, before it navigates — an account menu closes
+   *  itself here (0.28.1, keksdose: it had to catch the click on a wrapping `<div>`). */
+  onLinkClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   labels?: LabelOverride<LegalLabels>;
   className?: string;
 }
@@ -396,12 +399,19 @@ function defaultLinks(labels: LegalLabels): LegalLink[] {
  * already hears three links, and "middle dot" between them is noise. They are flex items
  * of the row like the links, so the row's gap spaces them evenly.
  */
-export function LegalLinks({ links, currentHref, nav = true, labels: labelsProp, className }: LegalLinksProps) {
+export function LegalLinks({
+  links,
+  currentHref,
+  nav = true,
+  onLinkClick,
+  labels: labelsProp,
+  className,
+}: LegalLinksProps) {
   const labels = useLegalLabels(labelsProp);
   const shown = links ?? defaultLinks(labels);
   const items = shown.flatMap((link, i) => [
     ...(i > 0 ? [<span key={`sep-${link.href}`} aria-hidden="true">·</span>] : []),
-    <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref}>
+    <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref} onClick={onLinkClick}>
       {link.label}
     </TextLink>,
   ]);
@@ -425,6 +435,14 @@ export interface LegalFooterProps {
   /** Marks that link `aria-current="page"`. {@link LegalPage}'s default footer passes
    *  its own page. */
   currentHref?: string;
+  /**
+   * Default true: the footer is a `<footer>`. `false` draws a `<div>` — for a host that is
+   * a footer already: `AuthLayout`'s `footer` slot is one, and HTML forbids a footer inside
+   * a footer (0.28.1, kastlan). On an `AuthLayout` page the usual choice is simpler still:
+   * `footer={<LegalLinks nav={false} />}` with `footerLabel` set to the kit's `navLabel`
+   * ({@link useLegalLabels}).
+   */
+  landmark?: boolean;
   className?: string;
   labels?: LabelOverride<LegalLabels>;
 }
@@ -440,9 +458,10 @@ export interface LegalFooterProps {
  * only. Its palette classes (`border-slate-200 bg-white dark:…`) became the surface and
  * border tokens, so it follows the theme like the rest of the kit.
  */
-export function LegalFooter({ children, links, currentHref, className, labels }: LegalFooterProps) {
+export function LegalFooter({ children, links, currentHref, landmark = true, className, labels }: LegalFooterProps) {
+  const Root = landmark ? "footer" : "div";
   return (
-    <footer className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}>
+    <Root className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}>
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-[var(--text-muted)]">
         <LegalLinks
           links={links}
@@ -452,7 +471,7 @@ export function LegalFooter({ children, links, currentHref, className, labels }:
         />
         {children !== undefined && children !== null && <p className="mt-4 text-center">{children}</p>}
       </div>
-    </footer>
+    </Root>
   );
 }
 

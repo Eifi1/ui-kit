@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
@@ -70,6 +70,14 @@ describe("LegalSection", () => {
 });
 
 describe("LegalLinks", () => {
+  it("calls onLinkClick on a click on any link, so a menu can close", () => {
+    const onLinkClick = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    render(<LegalLinks nav={false} onLinkClick={onLinkClick} />);
+    fireEvent.click(screen.getByRole("link", { name: "Terms" }));
+    fireEvent.click(screen.getByRole("link", { name: "Imprint" }));
+    expect(onLinkClick).toHaveBeenCalledTimes(2);
+  });
+
   it("renders bare links for AuthLayout's own footer nav", () => {
     render(<LegalLinks links={LINKS} currentHref="/terms" nav={false} />);
     expect(screen.queryByRole("navigation")).toBeNull();
@@ -130,6 +138,16 @@ describe("LegalLinks", () => {
 });
 
 describe("LegalFooter", () => {
+  it("is a <div> with landmark={false}, for a host that is a footer already (AuthLayout)", () => {
+    const { container } = render(
+      <footer>
+        <LegalFooter landmark={false} />
+      </footer>,
+    );
+    expect(container.querySelectorAll("footer")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Imprint" })).toBeInTheDocument();
+  });
+
   it("is keksdose's SiteFooter: a centred nav of the three links, the tagline under it", () => {
     render(<LegalFooter currentHref="/terms">Self-hosted household budgeting.</LegalFooter>);
     const footer = screen.getByRole("contentinfo");
