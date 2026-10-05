@@ -406,11 +406,9 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
 2. `features/legal/legal-layout.tsx` (own frame) → `LegalPage`, with the brand row its
    sign-in page shows. The back link goes to `/` ("Back to home"), which takes a
    signed-out visitor to `/login`.
-3. `LegalFooter` on `/login`, `/register` and `/verify-email`. There are no
-   forgot/reset, invitation, landing or 404 pages.
-   - `/2fa` is an orphan placeholder (the real challenge is a step of `/login`):
-     remove it, or give it the footer.
-   - A 404 page is not part of this round.
+3. `LegalFooter` on `/login`, `/register`, `/verify-email`, and on the pages §7.9 adds:
+   `/forgot-password`, `/reset-password` and a 404. `/2fa`, an orphan placeholder
+   (the real challenge is a step of `/login`), goes.
 4. Account menu: plain `Link`s (`top-bar.tsx:167`) → `LegalLinks`. The sidebar entry
    (`app-layout.tsx:108`) takes the kit's labels.
 5. noindex: `useNoIndex` on the legal and auth pages, `X-Robots-Tag` in Caddy for the
@@ -504,7 +502,7 @@ The three apps answered from their code. What they found, and what follows:
    - plus each translation page's area and grouping.
 6. **Signed-out pages** differ per app, so §3.3 states a rule (the links one click away
    from every signed-out page) and §6 lists each app's pages:
-   - kastlan has no forgot/reset, landing or 404 page;
+   - kastlan had no forgot/reset, landing or 404 page (it gains them, §7.9);
    - keksdose's `/verify-email` was the one page without footer and noindex;
    - Kurvenschmiede's public `/control` and `/steering` had no links for a signed-out
      visitor.
@@ -517,4 +515,16 @@ The three apps answered from their code. What they found, and what follows:
    closed beta (§2.8). kastlan's billing module (off in production, but still in the
    admin sidebar) is the subject of the next round.
 
-Nothing is open. The kit round starts on `feat/0.28.0`.
+9. **Marcel, later the same day: every app gets the full set of signed-out pages**:
+   sign-in, register, forgot password, reset password, verify email, a 404 and the
+   legal pages.
+   - kastlan builds its missing ones now, on keksdose's shape: password reset
+     (request, check, confirm), a 404, invite links on the reset tokens instead of
+     admin-chosen passwords, and mail through Resend. `/2fa` goes.
+   - Kurvenschmiede lacks email verification altogether. Its scope is confirmed with
+     Marcel in its own session.
+   - Every new page gets `LegalFooter` and `useNoIndex` like the others.
+   - The shared parts (forgot/reset/404/verify pages in the kit, the reset-token rules
+     and the Resend client in server-kit) belong to the user-management round.
+
+Nothing is open. The kit round runs on `feat/0.28.0`.
