@@ -25,5 +25,9 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
 
   "search.exclude": { "**/dist": true, "**/node_modules": true, "showcase/dist": true },
+
+  // The backend sibling's repository in Source Control from this window, even with only
+  // this folder open (`ui-kit.code-workspace` adds it as a second root as well).
+  "git.scanRepositories": ["../server-kit"],
   "files.associations": { "tokens.css": "tailwindcss" }
 }

@@ -737,8 +737,89 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       waking: (appName) =>
         `El servidor se duerme cuando nadie usa ${appName ?? "la aplicación"}, así que la primera solicitud tras una pausa tiene que volver a arrancarlo. Puede tardar un momento; no se pierde nada y la página se completará sola.`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: Kurvenschmiede's reviewed Spanish
+    // (formal "usted"), brought into line with the kit's English; it goes back to
+    // Kurvenschmiede for review.
     legal: {
       navLabel: "Información legal",
+      links: {
+        impressum: "Aviso legal",
+        privacy: "Política de privacidad",
+        terms: "Condiciones de uso",
+      },
+      titles: {
+        impressum: "Aviso legal",
+        privacy: "Política de privacidad",
+        terms: "Condiciones de uso",
+      },
+      backHome: "Volver al inicio",
+      accept: "Acepto las {terms} y la {privacy}",
+      notice: {
+        beta: "Beta cerrada. Estos textos aún no han sido revisados por un abogado y lo serán antes de un lanzamiento público.",
+        privacy:
+          "Beta cerrada. La redacción jurídica que sigue aún no ha sido revisada por un abogado y lo será antes de un lanzamiento público. Las descripciones técnicas —qué se guarda, dónde y quién puede leerlo— describen lo que el software hace realmente hoy y están pensadas para que se contrasten con él.",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "Responsable del sitio",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\nLa dirección postal completa se facilita, previa solicitud, a quien tenga un interés jurídico legítimo; escriba a la dirección de contacto indicada abajo.`,
+          },
+          contact: {
+            title: "Contacto",
+            body: (o) => `Correo electrónico: ${o.email}`,
+          },
+          disclaimer: {
+            title: "Responsabilidad por contenidos y enlaces",
+            body: "Este es un proyecto privado y sin fines comerciales, que se ofrece sin garantía durante una beta cerrada. Los sitios externos que enlazamos son responsabilidad de sus respectivos operadores; no tenemos control sobre su contenido.",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "Responsable del tratamiento",
+            body: (o) =>
+              `El responsable del tratamiento de los datos personales en este servicio es:\n${o.name}\n${o.postalCode} ${o.city}, ${o.country}\nCorreo electrónico: ${o.email}\n\nLa dirección postal completa se facilita, previa solicitud, a los interesados y a las autoridades de control.`,
+          },
+          legal_basis: {
+            title: "Base jurídica",
+            body: "Como el responsable tiene su sede en Suiza, el tratamiento se rige por la Ley Federal suiza de Protección de Datos (LPD). Cuando le sea aplicable el Reglamento General de Protección de Datos de la UE (RGPD), nos basamos en la ejecución de un contrato para prestar el servicio (art. 6.1.b RGPD) y en nuestro interés legítimo en operarlo y protegerlo (art. 6.1.f RGPD).",
+          },
+          browser: {
+            title: "Qué guarda su navegador",
+            lead: "Ninguna cookie. La aplicación guarda lo siguiente en el almacenamiento de su navegador:",
+            tail: "Nada de ello se usa para seguirle. Las entradas pendientes de envío se nos envían en cuanto es posible; todo lo demás permanece en su dispositivo. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+          },
+          rights: {
+            title: "Sus derechos",
+            lead: "Tiene derecho de acceso, rectificación, supresión, limitación, portabilidad y oposición.",
+            tail: "Si se encuentra en Suiza, puede dirigirse al Comisionado Federal de Protección de Datos e Información (FDPIC); si se encuentra en la UE, puede presentar una reclamación ante su autoridad de control local.",
+          },
+          contact: {
+            title: "Contacto para la protección de datos",
+            body: (o) => `Para cualquier solicitud sobre privacidad, escriba a: ${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "Sin garantía",
+            body: "El servicio se ofrece «tal cual» y «según disponibilidad», sin garantías de ningún tipo, en la medida en que lo permita la ley. Al ser una beta, puede contener errores, cambiar o interrumpirse en cualquier momento; conserve usted mismo copias de seguridad de los datos importantes.",
+          },
+          liability: {
+            title: "Limitación de responsabilidad",
+            body: "En la medida en que lo permita la legislación aplicable, el operador no responde de los daños indirectos o consecuentes derivados del uso o de la imposibilidad de uso del servicio. Nada de lo aquí dispuesto limita la responsabilidad que la ley no permite limitar.",
+          },
+          changes: {
+            title: "Cambios en estas condiciones",
+            body: "Estas condiciones pueden actualizarse a medida que evolucione el servicio. Los cambios importantes se anunciarán por correo electrónico o en la aplicación; si sigue usando el servicio después de un cambio, lo acepta.",
+          },
+          law: {
+            title: "Legislación aplicable",
+            body: (o) =>
+              `Estas condiciones se rigen por el derecho suizo, con exclusión de sus normas de conflicto de leyes. En la medida en que lo permita la ley, el fuero competente es ${o.city} (${o.region}), ${o.country}.`,
+          },
+        },
+      },
     },
     characterCount: {
       count: (used, max) => `${n(used)} de ${n(max)} ${plural(max, "carácter", "caracteres")}`,

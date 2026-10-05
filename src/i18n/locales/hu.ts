@@ -742,8 +742,92 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       waking: (appName) =>
         `A szerver elalszik, ha senki sem használja ${appName ? `a(z) ${appName} alkalmazást` : "az alkalmazást"}, ezért egy szünet utáni első kérésnek újra el kell indítania. Ez eltarthat egy ideig – semmi sem vész el, az oldal magától betöltődik.`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: Kurvenschmiede's reviewed Hungarian
+    // (formal "Ön"), brought into line with the kit's English; it goes back to
+    // Kurvenschmiede for review.
     legal: {
       navLabel: "Jogi információk",
+      links: {
+        impressum: "Impresszum",
+        privacy: "Adatvédelmi tájékoztató",
+        terms: "Felhasználási feltételek",
+      },
+      titles: {
+        impressum: "Impresszum",
+        privacy: "Adatvédelmi tájékoztató",
+        terms: "Felhasználási feltételek",
+      },
+      backHome: "Vissza a kezdőlapra",
+      // The accusative ending is glued to the link, as Italian glues its article: "a
+      // Felhasználási feltételeket és az Adatvédelmi tájékoztatót". Nothing is added around
+      // a placeholder, and the articles fit these two titles (a F…, az A…).
+      accept: "Elfogadom a {terms}et és az {privacy}t",
+      notice: {
+        beta: "Zárt béta. Ezeket a szövegeket ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül.",
+        privacy:
+          "Zárt béta. Az alábbi jogi szövegezést ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül. A műszaki leírások – mit tárolunk, hol és ki olvashatja – azt írják le, amit a szoftver ma ténylegesen tesz, és arra valók, hogy a szoftverrel össze lehessen vetni őket.",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "Üzemeltető",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\nA teljes postai címet kérésre megadjuk mindenkinek, akinek jogos jogi érdeke fűződik hozzá; ehhez írjon az alábbi kapcsolattartási címre.`,
+          },
+          contact: {
+            title: "Kapcsolat",
+            body: (o) => `E-mail: ${o.email}`,
+          },
+          disclaimer: {
+            title: "Felelősség a tartalmakért és a hivatkozásokért",
+            body: "Ez egy magán, nem kereskedelmi projekt, amelyet zárt béta keretében, szavatosság nélkül kínálunk. Az általunk hivatkozott külső oldalakért azok üzemeltetői felelősek; tartalmukra nincs befolyásunk.",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "Adatkezelő",
+            body: (o) =>
+              `A szolgáltatásban a személyes adatok kezeléséért felelős:\n${o.name}\n${o.postalCode} ${o.city}, ${o.country}\nE-mail: ${o.email}\n\nA teljes postai címet kérésre megadjuk az érintetteknek és a felügyeleti hatóságoknak.`,
+          },
+          legal_basis: {
+            title: "Jogalap",
+            body: "Mivel az üzemeltető székhelye Svájcban van, az adatkezelésre a svájci szövetségi adatvédelmi törvény (DSG/FADP) az irányadó. Ha Önre az EU általános adatvédelmi rendelete (GDPR) vonatkozik, a szolgáltatás nyújtására irányuló szerződés teljesítésére (GDPR 6. cikk (1) b) pont) és a szolgáltatás működtetéséhez és védelméhez fűződő jogos érdekünkre (GDPR 6. cikk (1) f) pont) támaszkodunk.",
+          },
+          browser: {
+            title: "Mit tárol az Ön böngészője",
+            lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja a böngészője tárhelyén:",
+            tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges; minden más az Ön eszközén marad. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
+          },
+          rights: {
+            title: "Az Ön jogai",
+            lead: "Önt megilleti a hozzáférés, a helyesbítés, a törlés, a korlátozás, az adathordozhatóság és a tiltakozás joga.",
+            tail: "Ha Svájcban tartózkodik, a Szövetségi Adatvédelmi és Információs Biztoshoz (FDPIC) fordulhat; ha az EU-ban, panaszt nyújthat be a helyi felügyeleti hatóságnál.",
+          },
+          contact: {
+            title: "Kapcsolat adatvédelmi ügyekben",
+            body: (o) => `Bármilyen adatvédelmi kérés esetén írjon ide: ${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "Szavatosság kizárása",
+            body: "A szolgáltatást a jogszabályok által megengedett mértékben „ahogy van” és „ahogy elérhető” alapon nyújtjuk, mindenféle szavatosság nélkül. Bétaváltozatként hibákat tartalmazhat, változhat vagy bármikor megszakadhat – fontos adatairól készítsen saját biztonsági másolatot.",
+          },
+          liability: {
+            title: "Felelősségkorlátozás",
+            body: "Az alkalmazandó jog által megengedett mértékben az üzemeltető nem felel a szolgáltatás használatából vagy annak lehetetlenségéből eredő közvetett vagy következményes károkért. Ez nem korlátozza azt a felelősséget, amelyet jogszabály alapján nem lehet korlátozni.",
+          },
+          changes: {
+            title: "A feltételek módosítása",
+            body: "Ezek a feltételek a szolgáltatás fejlődésével módosulhatnak. A lényeges változásokat e-mailben vagy az alkalmazásban jelentjük be; aki a változás után tovább használja a szolgáltatást, elfogadja azt.",
+          },
+          law: {
+            title: "Irányadó jog",
+            body: (o) =>
+              `Ezekre a feltételekre a svájci jog az irányadó, a kollíziós szabályok kizárásával. A jogszabályok által megengedett mértékben az illetékes bíróság székhelye ${o.city} (${o.region}), ${o.country}.`,
+          },
+        },
+      },
     },
     characterCount: {
       // A noun after a numeral stays singular: "80 karakter".

@@ -224,6 +224,8 @@ const Passkeys018Demo = lazySection(() => import("./sections/account-018-demo"),
 const AccountRoster018Demo = lazySection(() => import("./sections/account-018-demo"), "AccountRoster018Demo");
 const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Share018Demo");
 const Legal019Demo = lazySection(() => import("./sections/legal-019-demo"), "Legal019Demo");
+const Legal028Demo = lazySection(() => import("./sections/legal-028-demo"), "Legal028Demo");
+const LegalAccept028Demo = lazySection(() => import("./sections/legal-028-demo"), "LegalAccept028Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
@@ -1183,7 +1185,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "OneTimeCodeInput"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1192,6 +1194,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <AccountRoster018Demo />
             <Share018Demo />
             <Legal019Demo />
+            <Legal028Demo />
+            <LegalAccept028Demo />
             <OneTimeCode022Demo />
             <OneTimeCodeUnlabelled022Demo />
           </>

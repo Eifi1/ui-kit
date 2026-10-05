@@ -84,6 +84,43 @@ describe("kitLabelStrings", () => {
     expect(rows["tabs.remove(tab)"]).toBe("⚠ broken override");
   });
 
+  it("lists the legal labels (0.28), the operator's texts with one placeholder per field", () => {
+    expect(reference["legal.titles.terms"]).toBe("Terms of Service");
+    expect(reference["legal.accept"]).toBe("I accept the {terms} and the {privacy}");
+    expect(reference["legal.sections.privacy.browser.lead"]).toBe(
+      "No cookies. The app keeps the following in your browser's storage:",
+    );
+    expect(reference["legal.sections.impressum.operator.body(operator)"]).toBe(
+      "{{name}}\n{{postalCode}} {{city}}\n{{country}}\n\nThe full postal address is supplied on request to anyone with a legitimate legal interest; write to the contact address below.",
+    );
+    expect(reference["legal.sections.terms.law.body(operator)"]).toContain("is {{city}} ({{region}}), {{country}}.");
+    expect(reference).not.toHaveProperty("legal.sections.terms.law.body([object Object])");
+  });
+
+  it("reads the real sentence with the app's operator — same keys, the country in the rows' language", () => {
+    const operator = {
+      name: "Example Operator",
+      postalCode: "0000",
+      city: "Example Town",
+      region: "EX",
+      country: "CH",
+      email: "legal@example.com",
+    };
+    const rows = kitLabelStrings(DEFAULT_UI_KIT_LABELS, { operator });
+    expect(Object.keys(rows)).toEqual(Object.keys(reference));
+    expect(rows["legal.sections.privacy.controller.body(operator)"]).toBe(
+      "The party responsible for processing personal data in this service is:\nExample Operator\n0000 Example Town, Switzerland\nEmail: legal@example.com\n\nThe full postal address is supplied on request to data subjects and supervisory authorities.",
+    );
+    expect(rows["legal.sections.impressum.contact.body(operator)"]).toBe("Email: legal@example.com");
+    expect(rows["legal.sections.privacy.contact.body(operator)"]).toBe(
+      "For any privacy request, contact: legal@example.com",
+    );
+    // Everything that does not name the operator is unchanged.
+    expect(rows["combobox.resultCount(3)"]).toBe(reference["combobox.resultCount(3)"]);
+    const german = kitLabelStrings(DEFAULT_UI_KIT_LABELS, { operator, locale: "de-CH" });
+    expect(german["legal.sections.terms.law.body(operator)"]).toContain("is Example Town (EX), Schweiz.");
+  });
+
   it("gives the English reference no ⚠ rows and nothing unrendered", () => {
     for (const [key, text] of Object.entries(reference)) {
       expect(text, key).not.toMatch(/^⚠|NaN|undefined|\[object /);

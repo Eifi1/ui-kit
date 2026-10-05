@@ -1,0 +1,49 @@
+{
+  // A multi-root workspace: the design system and its backend sibling.
+  //
+  // Open it with File → Open Workspace from File… when you want the server kit in the
+  // Explorer, in Search and in Go to File, and not only in Source Control. Opening the
+  // folder on its own still works and still shows the server kit's repository, because
+  // `.vscode/settings.json` scans for it — this file is the larger version of the same
+  // wiring, not a replacement for it (the apps' workspaces do the same, 2026-10-05).
+  //
+  // Neither is a dependency of the other: `@eifi1/ui-kit` is the frontend kit published
+  // to npm, `eifi1-server-kit` the backend kit the apps install as the wheel on its
+  // GitHub release. They sit together because a cross-app contract (feedback, the
+  // translation review, notifications next) is usually changed on both sides at once.
+  "folders": [
+    { "name": "@eifi1/ui-kit — design system", "path": "." },
+    { "name": "eifi1-server-kit — shared backend", "path": "../server-kit" }
+  ],
+
+  "settings": {
+    // These apply to every root; this repo's own `.vscode/settings.json` still wins for
+    // this repo (folder settings outrank workspace ones). They keep each root's
+    // node_modules, .venv, dist and Python caches out of Quick Open and search.
+    "files.watcherExclude": {
+      "**/__pycache__/**": true,
+      "**/.mypy_cache/**": true,
+      "**/.pytest_cache/**": true,
+      "**/.ruff_cache/**": true,
+      "**/.venv/**": true,
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/showcase/dist/**": true
+    },
+    "search.exclude": {
+      "**/.venv": true,
+      "**/dist": true,
+      "**/node_modules": true,
+      "**/.mypy_cache": true,
+      "**/.coverage": true
+    }
+    // No Python interpreter here on purpose: a workspace-level
+    // `python.defaultInterpreterPath` applies to every root. The server kit's `.venv`
+    // sits at its top (`uv sync`), where the Python extension finds it per folder.
+  },
+
+  "extensions": {
+    // The server kit's checks run ruff and mypy --strict (scripts/check.sh).
+    "recommendations": ["ms-python.python", "charliermarsh.ruff", "ms-python.mypy-type-checker"]
+  }
+}

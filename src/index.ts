@@ -36,6 +36,8 @@ export type { UseAnnounceReturn, UseAnnounceOptions, AnnounceRegionProps } from 
 export { useOverlayHistory } from "./hooks/use-overlay-history";
 export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transition";
 export { useRowSwipe } from "./hooks/use-row-swipe";
+// 0.28: keksdose's noindex marker, for the legal and auth pages of every app.
+export { useNoIndex } from "./hooks/use-noindex";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
 // Any element as a file drop target, screened like FileButton (kastlan).
 export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";
@@ -379,6 +381,7 @@ export * from "./i18n/kit-labels";
 export * from "./i18n/defaults";
 // The kit's words as `key → text` rows for an app's translation review (keksdose).
 export { kitLabelStrings } from "./i18n/review";
+export type { KitLabelStringsOptions } from "./i18n/review";
 // The seven languages, how an app resolves one, and the kit catalogue loader for it.
 export * from "./i18n/languages";
 // CLDR plural categories for an app's i18next catalogue, filled from `_other`.
@@ -396,6 +399,8 @@ export {
   reviewStatus,
   keyInArea,
   keyInAreas,
+  // 0.28: the area a key is grouped under — `kit.legal.*` in `legal` (legal round §7.5).
+  reviewAreaOf,
   translationRows,
   summariseRows,
   DEFAULT_TRANSLATION_REVIEW_FILTER,
@@ -455,8 +460,33 @@ export type {
   TranslationReviewGroupBy,
 } from "./components/translation-review";
 // The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
-export { LegalLayout, LegalSection, LegalLinks, DEFAULT_LEGAL_LABELS } from "./components/legal";
-export type { LegalLabels, LegalLink, LegalLinksProps, LegalSectionProps, LegalLayoutProps } from "./components/legal";
+// 0.28 (docs/legal-harmonization.md): the shared wording, the page frame, the kit's
+// sections, the public footer and the terms checkbox.
+export { LegalLayout, LegalSection, LegalLinks, LegalFooter, DEFAULT_LEGAL_LABELS } from "./components/legal";
+export type {
+  LegalLabels,
+  LegalLink,
+  LegalLinksProps,
+  LegalSectionProps,
+  LegalLayoutProps,
+  LegalFooterProps,
+  LegalOperator,
+  LegalOperatorText,
+  LegalPageKey,
+  LegalTextSectionLabels,
+  LegalOperatorSectionLabels,
+  LegalFramedSectionLabels,
+} from "./components/legal";
+export { LegalPage, LegalKitSection, LegalAcceptCheckbox, LEGAL_SKELETON } from "./components/legal-page";
+export type {
+  LegalPageProps,
+  LegalKitSectionProps,
+  LegalKitSectionKey,
+  LegalAcceptCheckboxProps,
+  LegalSkeletonEntry,
+  LegalSkeletonPage,
+  LegalSectionOwner,
+} from "./components/legal-page";
 
 // ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
 export * from "./components/checkbox-group";

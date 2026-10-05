@@ -95,8 +95,13 @@ describe("buildKitRows", () => {
     expect(rows.find((r) => r.key === close)?.status).toBe("changed");
   });
 
-  it("a reviewer limited to the legal area gets no kit rows", () => {
+  it("a reviewer limited to the legal area gets the kit's legal wording, and only that", () => {
+    // 0.28: the legal pages' shared sections are kit words (kit.legal.*), which keyInArea
+    // puts in the `legal` area — the lawyer reviews the text all three apps share.
     const strings = kitCatalogues(["fr"]);
-    expect(buildKitRows(["fr"], strings, [], ["legal"]).get("fr")).toEqual([]);
+    const rows = buildKitRows(["fr"], strings, [], ["legal"]).get("fr")!;
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.key.startsWith("kit.legal."))).toBe(true);
+    expect(rows.some((r) => r.key === "kit.legal.sections.terms.warranty.body")).toBe(true);
   });
 });

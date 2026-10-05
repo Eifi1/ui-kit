@@ -210,7 +210,10 @@ export function placeholderTokens(text: string): string[] {
   const found: string[] = [];
   for (const m of text.matchAll(PLACEHOLDER_RE)) {
     if (m[1]) found.push(`{{${m[1]}}}`);
-    else if (m[2]) found.push(`{${m[2]}}`);
+    // `{ref:retention}` (ui-kit 0.28's legal cross-reference) keeps its target: a
+    // translation that points at another section changed what the sentence says. Every
+    // other `{x:spec}` is a format spec, which a translation may change.
+    else if (m[2]) found.push(m[2] === "ref" ? m[0] : `{${m[2]}}`);
     else if (m[3]) found.push(`<${m[3]}>`);
     else if (m[4]) found.push(`$t(${m[4]})`);
   }
@@ -245,10 +248,46 @@ export function reviewStatus(
   return review.verdict === "APPROVED" ? "approved" : "needs_change";
 }
 
-/** Whether `key` lies in `area`: the key IS the area, or sits under it — `legal.terms`
- *  and kastlan's `legal:terms` are in `legal`, `legalese.title` is not. */
+/**
+ * Whether `key` lies in `area`: the key IS the area, or sits under it — `legal.terms`
+ * and kastlan's `legal:terms` are in `legal`, `legalese.title` is not.
+ *
+ * 0.28: the kit's own words of that area too — `kit.legal.sections.terms.law.body(…)`
+ * is in `legal`. All three apps list the kit's labels under `kit.`
+ * (`flattenStrings(kitLabelStrings(labels), "kit.")`), and since 0.28 the kit writes
+ * the shared legal sections, so a lawyer with a `["legal"]` grant who was not shown
+ * `kit.legal.*` would not see half of the Privacy Policy — and the server would refuse
+ * the verdicts (docs/legal-harmonization.md §7.5). server-kit's `in_areas` and the apps'
+ * copies of it apply the same rule.
+ */
 export function keyInArea(key: string, area: string): boolean {
-  return key === area || key.startsWith(`${area}.`) || key.startsWith(`${area}:`);
+  return (
+    key === area || key.startsWith(`${area}.`) || key.startsWith(`${area}:`) || key.startsWith(`kit.${area}.`)
+  );
+}
+
+/**
+ * The area of `areas` that `key` lies in ({@link keyInArea}), or `undefined` — the
+ * translation page's grouping by the same rule the filter and the server use, so
+ * `kit.legal.sections.privacy.rights.lead` is grouped under `legal` with the app's own
+ * legal texts instead of under `kit.legal`:
+ *
+ *     const namespaceOf = (key: string) => reviewAreaOf(key, ["legal"]) ?? ownNamespaceOf(key);
+ *
+ * Where two areas both hold the key (`legal` and `legal.privacy`), the longer — the more
+ * specific — wins, whatever their order. `inArea` is the app's own rule, as for
+ * {@link keyInAreas}.
+ */
+export function reviewAreaOf(
+  key: string,
+  areas: readonly string[],
+  inArea: (key: string, area: string) => boolean = keyInArea,
+): string | undefined {
+  let found: string | undefined;
+  for (const area of areas) {
+    if (inArea(key, area) && (found === undefined || area.length > found.length)) found = area;
+  }
+  return found;
 }
 
 /**

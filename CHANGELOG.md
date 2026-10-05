@@ -20,6 +20,13 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.28.0](https://github.com/Eifi1/ui-kit/compare/v0.27.1...v0.28.0) (2026-10-05)
+
+### Added
+
+* **i18n:** the legal namespace in all seven languages ([fbcc1e7](https://github.com/Eifi1/ui-kit/commit/fbcc1e7d095c5f8036dbeca718d0de3f257e6ffc))
+* **legal:** one legal page for three apps — frame, kit-owned sections, footer, terms checkbox ([e53454e](https://github.com/Eifi1/ui-kit/commit/e53454ec8f2ddc78880ff8c0fcf8d08cfa857555))
+
 ## [0.27.1](https://github.com/Eifi1/ui-kit/compare/v0.27.0...v0.27.1) (2026-10-05)
 
 ### Fixed

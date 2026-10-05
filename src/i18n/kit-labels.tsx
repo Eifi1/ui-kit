@@ -318,7 +318,10 @@ export interface UiKitLabels {
   /** 0.19.0: the translation-review parts (`TranslationReviewPanel`, its editor, chip,
    *  progress, locale tabs and export) — keksdose's /translations, for every app. */
   translationReview: TranslationReviewLabels;
-  /** 0.19.0: `LegalLinks`' navigation name — the legal pages' shell, for every app. */
+  /** 0.19.0: `LegalLinks`' navigation name. 0.28.0: every kit-owned word of the legal
+   *  pages — the link labels, titles, back link, terms checkbox and notices, and the
+   *  sections that are the same in every app, filled in with the app's operator
+   *  (docs/legal-harmonization.md §4.3/§4.4). */
   legal: LegalLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;

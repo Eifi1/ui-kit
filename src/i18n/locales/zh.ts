@@ -720,8 +720,89 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       waking: (appName) =>
         `无人使用${appName ? ` ${appName} ` : "本应用"}时，服务器会进入休眠，因此暂停后的第一个请求需要重新启动它。这可能需要一点时间——不会丢失任何内容，页面会自动加载完成。`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: Kurvenschmiede's reviewed Chinese,
+    // brought into line with the kit's English; it goes back to Kurvenschmiede for review.
     legal: {
       navLabel: "法律信息",
+      links: {
+        impressum: "运营者信息",
+        privacy: "隐私政策",
+        terms: "使用条款",
+      },
+      titles: {
+        impressum: "运营者信息",
+        privacy: "隐私政策",
+        terms: "使用条款",
+      },
+      backHome: "返回首页",
+      // Book-title marks around the two documents, outside the links.
+      accept: "我接受《{terms}》和《{privacy}》",
+      notice: {
+        beta: "封闭测试阶段。这些文本尚未经律师审阅，将在公开发布之前完成审阅。",
+        privacy:
+          "封闭测试阶段。以下法律措辞尚未经律师审阅，将在公开发布之前完成审阅。其中的技术说明——存储了什么、存储在哪里以及谁可以读取——描述的是软件目前的实际行为，旨在供人对照软件加以核实。",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "运营者",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\n完整的邮寄地址可应具有正当法律利益者的要求提供；请发送邮件至下方联系地址。`,
+          },
+          contact: {
+            title: "联系方式",
+            body: (o) => `电子邮件：${o.email}`,
+          },
+          disclaimer: {
+            title: "内容与链接的责任",
+            body: "这是一个私人的非商业项目，在封闭测试期间提供，不作任何保证。我们所链接的外部网站由其各自的运营者负责；我们无法控制其内容。",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "数据控制者",
+            body: (o) =>
+              `负责处理本服务中个人数据的是：\n${o.name}\n${o.postalCode} ${o.city}，${o.country}\n电子邮件：${o.email}\n\n完整的邮寄地址可应数据主体和监管机构的要求提供。`,
+          },
+          legal_basis: {
+            title: "法律依据",
+            body: "由于运营者位于瑞士，数据处理受瑞士《联邦数据保护法》（FADP）约束。如果欧盟《通用数据保护条例》（GDPR）适用于您，我们的依据是为提供服务而履行合同（GDPR 第 6 条第 1 款 b 项）以及我们在运行和保护服务方面的合法利益（GDPR 第 6 条第 1 款 f 项）。",
+          },
+          browser: {
+            title: "您的浏览器存储什么",
+            lead: "不使用 Cookie。应用程序会在您浏览器的存储中保留以下内容：",
+            tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们；其他所有内容都保留在您的设备上。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
+          },
+          rights: {
+            title: "您的权利",
+            lead: "您享有访问、更正、删除、限制处理、数据可携和反对的权利。",
+            tail: "如果您在瑞士，可以联系联邦数据保护和信息专员（FDPIC）；如果您在欧盟，可以向您当地的监管机构投诉。",
+          },
+          contact: {
+            title: "数据保护联系方式",
+            body: (o) => `如有任何隐私方面的请求，请联系：${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "不作保证",
+            body: "在法律允许的范围内，本服务按“现状”和“现有”提供，不作任何形式的保证。作为测试版，它可能包含错误、发生变化或随时中断——请自行备份重要数据。",
+          },
+          liability: {
+            title: "责任限制",
+            body: "在适用法律允许的范围内，运营者对因使用或无法使用本服务而产生的任何间接损失或后果性损失不承担责任。本条款不限制依法不得限制的责任。",
+          },
+          changes: {
+            title: "条款变更",
+            body: "本条款可能会随着服务的发展而更新。重大变更将通过电子邮件或在应用程序中公布；变更后继续使用本服务即表示您接受变更。",
+          },
+          law: {
+            title: "适用法律",
+            body: (o) =>
+              `本条款受瑞士法律管辖，但不适用其冲突法规则。在法律允许的范围内，管辖法院所在地为${o.country} ${o.city}（${o.region}）。`,
+          },
+        },
+      },
     },
     characterCount: {
       count: (used, max) => `已输入 ${n(used)}/${n(max)} 个字符`,

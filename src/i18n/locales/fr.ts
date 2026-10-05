@@ -753,8 +753,91 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       waking: (appName) =>
         `Le serveur se met en veille quand personne n’utilise ${appName ?? "l’application"}, donc la première requête après une pause doit le redémarrer. Cela peut prendre un moment — rien n’est perdu, la page se remplira d’elle-même.`,
     },
+    // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: keksdose's reviewed French, and
+    // Kurvenschmiede's for the browser section and the beta notice; spaced as this
+    // catalogue writes it (\u00a0 before ":", \u202f before ";" and inside « »).
     legal: {
+      // Not keksdose's "Mentions légales": that is the Imprint link's label, and a screen
+      // reader would read it twice (§4.4).
       navLabel: "Informations légales",
+      links: {
+        impressum: "Mentions légales",
+        privacy: "Confidentialité",
+        terms: "Conditions d’utilisation",
+      },
+      titles: {
+        impressum: "Mentions légales",
+        privacy: "Politique de confidentialité",
+        terms: "Conditions d’utilisation",
+      },
+      backHome: "Retour à l’accueil",
+      accept: "J’accepte les {terms} et la {privacy}",
+      notice: {
+        beta: "Bêta fermée. Ces textes n’ont pas encore été relus par un avocat et le seront avant un lancement public.",
+        privacy:
+          "Bêta fermée. Les formulations juridiques ci-dessous n’ont pas encore été relues par un avocat\u202f; cela sera fait avant un lancement public. Les descriptions techniques — ce qui est stocké, où, et qui peut le lire — décrivent ce que fait réellement le logiciel aujourd’hui et sont faites pour être vérifiées par rapport à lui.",
+      },
+      sections: {
+        impressum: {
+          operator: {
+            title: "Exploitant",
+            body: (o) =>
+              `${o.name}\n${o.postalCode} ${o.city}\n${o.country}\n\nL’adresse postale complète est communiquée sur demande à toute personne ayant un intérêt juridique légitime\u202f; écrivez à l’adresse de contact ci-dessous.`,
+          },
+          contact: {
+            title: "Contact",
+            body: (o) => `E-mail\u00a0: ${o.email}`,
+          },
+          disclaimer: {
+            title: "Responsabilité pour les contenus et les liens",
+            body: "Il s’agit d’un projet privé et non commercial, proposé dans le cadre d’une bêta fermée, sans garantie. Les sites externes vers lesquels nous renvoyons relèvent de la responsabilité de leurs exploitants respectifs\u202f; nous n’avons aucun contrôle sur leur contenu.",
+          },
+        },
+        privacy: {
+          controller: {
+            title: "Responsable du traitement",
+            body: (o) =>
+              `Le responsable du traitement des données personnelles dans ce service est\u00a0:\n${o.name}\n${o.postalCode} ${o.city}, ${o.country}\nE-mail\u00a0: ${o.email}\n\nL’adresse postale complète est communiquée sur demande aux personnes concernées et aux autorités de surveillance.`,
+          },
+          legal_basis: {
+            title: "Base légale",
+            body: "L’exploitant étant établi en Suisse, le traitement est régi par la loi fédérale suisse sur la protection des données (LPD). Lorsque le Règlement général sur la protection des données de l’UE (RGPD) vous est applicable, nous nous fondons sur l’exécution d’un contrat pour fournir le service (art. 6, par. 1, let. b RGPD) et sur notre intérêt légitime à l’exploiter et à le sécuriser (art. 6, par. 1, let. f RGPD).",
+          },
+          browser: {
+            title: "Ce que votre navigateur enregistre",
+            lead: "Aucun cookie. L’app conserve les éléments suivants dans le stockage de votre navigateur\u00a0:",
+            tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible\u202f; tout le reste demeure sur votre appareil. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
+          },
+          rights: {
+            title: "Vos droits",
+            lead: "Vous disposez d’un droit d’accès, de rectification, d’effacement, de limitation, de portabilité des données et d’opposition.",
+            tail: "Si vous êtes en Suisse, vous pouvez vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT)\u202f; si vous êtes dans l’UE, vous pouvez déposer une plainte auprès de votre autorité de surveillance locale.",
+          },
+          contact: {
+            title: "Contact pour la protection des données",
+            body: (o) => `Pour toute demande relative à la confidentialité, contactez\u00a0: ${o.email}`,
+          },
+        },
+        terms: {
+          warranty: {
+            title: "Absence de garantie",
+            body: "Le service est fourni «\u202ftel quel\u202f» et «\u202fselon disponibilité\u202f», sans garantie d’aucune sorte dans la mesure permise par la loi. En tant que bêta, il peut contenir des erreurs, changer ou être interrompu à tout moment — conservez vos propres sauvegardes des données importantes.",
+          },
+          liability: {
+            title: "Limitation de responsabilité",
+            body: "Dans la mesure permise par le droit applicable, l’exploitant n’est pas responsable des dommages indirects ou consécutifs résultant de l’utilisation ou de l’impossibilité d’utiliser le service. Rien ici ne limite une responsabilité qui ne peut pas être limitée par la loi.",
+          },
+          changes: {
+            title: "Modifications des présentes conditions",
+            body: "Ces conditions peuvent être mises à jour au fil de l’évolution du service. Les modifications importantes seront annoncées par e-mail ou dans l’app\u202f; continuer à utiliser le service après une modification vaut acceptation.",
+          },
+          law: {
+            title: "Droit applicable",
+            body: (o) =>
+              `Les présentes conditions sont régies par le droit suisse, à l’exclusion de ses règles de conflit de lois. Dans la mesure où la loi le permet, le for est ${o.city} (${o.region}), ${o.country}.`,
+          },
+        },
+      },
     },
     characterCount: {
       count: (used, max) => `${n(used)} sur ${n(max)} ${plural(max, "caractère", "caractères")}`,

@@ -16,6 +16,7 @@ import {
   keyNamespace,
   placeholderMismatch,
   placeholderTokens,
+  reviewAreaOf,
   reviewStatus,
   reviewUndo,
   reviewWrite,
@@ -90,6 +91,12 @@ describe("keyNamespace", () => {
 });
 
 describe("placeholderTokens", () => {
+  it("keeps a legal cross-reference's target, so pointing elsewhere is a mismatch", () => {
+    expect(placeholderTokens("see section {ref:retention} and {amount:.2f}")).toEqual(["{amount}", "{ref:retention}"]);
+    expect(placeholderMismatch("siehe Abschnitt {ref:contact}", "see section {ref:retention}")).toBe(true);
+    expect(placeholderMismatch("siehe Abschnitt {ref:retention}", "see section {ref:retention}")).toBe(false);
+  });
+
   it("finds interpolations, numbered and named tags and nested $t()", () => {
     expect(placeholderTokens("{{count}} of {{ total, number }} <1>open</1> $t(common.save)")).toEqual(
       ["$t(common.save)", "<1>", "<1>", "{{count}}", "{{total}}"].sort(),
@@ -280,6 +287,45 @@ describe("areas", () => {
     expect(keyInArea("doc_textual:x", "doc_text")).toBe(false);
     expect(keyInAreas("common:save", ["legal", "doc_text"])).toBe(false);
     expect(keyInAreas("docs/legal/x", ["legal"], (key, area) => key.includes(`/${area}/`))).toBe(true);
+  });
+
+  it("counts the kit's words of an area in it: kit.legal.* is in legal (0.28, §7.5)", () => {
+    expect(keyInArea("kit.legal.sections.terms.law.body(operator)", "legal")).toBe(true);
+    expect(keyInArea("kit.legal.titles.privacy", "legal")).toBe(true);
+    expect(keyInAreas("kit.legal.notice.beta", ["legal"])).toBe(true);
+    // Only directly under `kit.`, and only the area itself.
+    expect(keyInArea("kit.legalese.title", "legal")).toBe(false);
+    expect(keyInArea("kit.dataTable.pageSize", "legal")).toBe(false);
+    expect(keyInArea("app.kit.legal.x", "legal")).toBe(false);
+    const rows = translationRows({
+      locale: "fr",
+      strings: { "kit.legal.backHome": "Retour à l’accueil", "kit.common.close": "Fermer" },
+      reference: { "kit.legal.backHome": "Back to home", "kit.common.close": "Close" },
+      areas: ["legal"],
+    });
+    expect(rows.map((r) => r.key)).toEqual(["kit.legal.backHome"]);
+  });
+
+  it("reviewAreaOf: the area a key is grouped under, by the same rule", () => {
+    const areas = ["legal", "doc_text"];
+    expect(reviewAreaOf("kit.legal.sections.privacy.rights.lead", areas)).toBe("legal");
+    expect(reviewAreaOf("legal.privacy.data.body", areas)).toBe("legal");
+    expect(reviewAreaOf("legal:imprint.title", areas)).toBe("legal");
+    expect(reviewAreaOf("doc_text.invoice:payment_note", areas)).toBe("doc_text");
+    expect(reviewAreaOf("kit.dataTable.pageSize", areas)).toBeUndefined();
+    expect(reviewAreaOf("budget.rta", areas)).toBeUndefined();
+    expect(reviewAreaOf("budget.rta", [])).toBeUndefined();
+    // The more specific area wins, whatever the order.
+    expect(reviewAreaOf("legal.privacy.data", ["legal", "legal.privacy"])).toBe("legal.privacy");
+    expect(reviewAreaOf("legal.privacy.data", ["legal.privacy", "legal"])).toBe("legal.privacy");
+    // The app's own rule.
+    expect(reviewAreaOf("docs/legal/x", ["legal"], (key, area) => key.includes(`/${area}/`))).toBe("legal");
+    // The translation page's grouping, as the adopt guide writes it.
+    const namespaceOf = (key: string) =>
+      reviewAreaOf(key, ["legal"]) ?? (key.startsWith("kit.") ? key.split(".", 2).join(".") : key.split(".", 1)[0]);
+    expect(namespaceOf("kit.legal.backHome")).toBe("legal");
+    expect(namespaceOf("kit.dataTable.pageSize")).toBe("kit.dataTable");
+    expect(namespaceOf("budget.rta")).toBe("budget");
   });
 
   it("leaves rows outside the areas out of the rows altogether", () => {

@@ -1,3 +1,5 @@
+import type { LegalOperator, LegalOperatorText } from "../components/legal";
+import { countryName } from "../lib/countries";
 import type { UiKitLabels } from "./kit-labels";
 
 /**
@@ -6,7 +8,7 @@ import type { UiKitLabels } from "./kit-labels";
  * keksdose reviews its own locale bundles on its /translations page — one verdict per
  * locale and key, stored with the text the reviewer saw, so a later change re-opens it.
  * The kit's words appear on the same screens but live in TypeScript, not in the app's
- * bundles, and 138 of them are functions (`(count) => "3 results"`; 0.27.0, every one
+ * bundles, and 143 of them are functions (`(count) => "3 results"`; 0.28.0, every one
  * listed in {@link KIT_LABEL_SAMPLES}), which a bundle flattener skips. This turns a
  * label tree into rows that page can join on.
  *
@@ -18,6 +20,13 @@ import type { UiKitLabels } from "./kit-labels";
  *   where the wording may depend on them — 1 and 3 — so a reviewer sees singular and
  *   plural. The key names the sample: `combobox.resultCount(1)`,
  *   `shareCard.removeConfirm(name)`, `serverWake.waking()`.
+ * - The legal sections that name the operator (0.28) take one object; its sample is a
+ *   placeholder per field and the key calls it `operator`:
+ *   `legal.sections.privacy.controller.body(operator)`. Pass the app's operator in
+ *   `options` and those rows read the real sentence — same keys — so the lawyer
+ *   reviewing the `legal` area reads what the page says:
+ *
+ *       kitLabelStrings(UI_KIT_LABELS_DE_CH, { operator: OPERATOR, locale: "de-CH" })
  *
  * Keys depend only on the samples, never on the locale, so the rows of `de-CH` and of the
  * English reference line up key by key. Pass exactly the tree the app hands
@@ -29,16 +38,20 @@ import type { UiKitLabels } from "./kit-labels";
  * A label that throws on its sample becomes a row starting with "⚠", so one broken
  * override shows up on the page instead of taking the page down.
  */
-export function kitLabelStrings(labels: UiKitLabels): Record<string, string> {
+export function kitLabelStrings(labels: UiKitLabels, options: KitLabelStringsOptions = {}): Record<string, string> {
   const out: Record<string, string> = {};
+  const operator = options.operator && operatorText(options.operator, options.locale);
   const walk = (node: unknown, path: string) => {
     if (typeof node === "string") {
       out[path] = node;
     } else if (typeof node === "function") {
       for (const args of KIT_LABEL_SAMPLES[path] ?? [[]]) {
+        // The key is the SAMPLE's (`…body(operator)`), whatever the label is called with,
+        // so rows with and without the app's operator join on the same keys.
+        const called = operator ? args.map((arg) => (arg === LEGAL_OPERATOR_SAMPLE ? operator : arg)) : args;
         out[`${path}(${args.map(sampleName).filter((a) => a !== "").join(", ")})`] = render(
           node as (...args: unknown[]) => unknown,
-          args,
+          called,
         );
       }
     } else if (node !== null && typeof node === "object") {
@@ -47,6 +60,24 @@ export function kitLabelStrings(labels: UiKitLabels): Record<string, string> {
   };
   walk(labels, "");
   return out;
+}
+
+export interface KitLabelStringsOptions {
+  /**
+   * The app's operator (0.28): the legal sections that name it — the imprint's operator
+   * and contact, the controller, the privacy contact, the governing law — are rendered
+   * with the real values instead of `{{name}}`-style placeholders, so a reviewer (the
+   * lawyer, under the `legal` area) reads the sentence the page shows. The keys do not
+   * change: `legal.sections.impressum.operator.body(operator)` either way.
+   */
+  operator?: LegalOperator;
+  /** The language the operator's country is named in — the locale these rows are
+   *  for ("de-CH" → "Schweiz"). Default English. */
+  locale?: string;
+}
+
+function operatorText(operator: LegalOperator, locale = "en"): LegalOperatorText {
+  return { ...operator, country: countryName(operator.country, locale) };
 }
 
 function render(label: (...args: unknown[]) => unknown, args: readonly unknown[]): string {
@@ -61,11 +92,28 @@ function render(label: (...args: unknown[]) => unknown, args: readonly unknown[]
  *  itself, an empty string as `""`, a missing optional argument not at all. */
 function sampleName(arg: unknown): string {
   if (arg === undefined) return "";
+  if (arg === LEGAL_OPERATOR_SAMPLE) return "operator";
   if (typeof arg === "string") return /^\{\{(\w+)\}\}$/.exec(arg)?.[1] ?? JSON.stringify(arg);
   return String(arg);
 }
 
 const one = [[1], [3]] as const;
+
+/**
+ * The legal sections' operator (0.28) as placeholders, one per field — so a translation
+ * that drops the city or the email is caught by the same check as a dropped `{{name}}`
+ * anywhere else. Named `operator` in the key; {@link kitLabelStrings}' `operator` option
+ * swaps the app's real values in for it.
+ */
+const LEGAL_OPERATOR_SAMPLE: LegalOperatorText = Object.freeze({
+  name: "{{name}}",
+  postalCode: "{{postalCode}}",
+  city: "{{city}}",
+  region: "{{region}}",
+  country: "{{country}}",
+  email: "{{email}}",
+});
+const operatorSample = [[LEGAL_OPERATOR_SAMPLE]] as const;
 
 /**
  * The sample arguments of every function label in {@link UiKitLabels}, by dot path.
@@ -240,4 +288,9 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   ],
   "columnMapper.oneOf": [["{{roles}}"]],
   "columnMapper.missing": [["{{roles}}"]],
+  "legal.sections.impressum.operator.body": operatorSample,
+  "legal.sections.impressum.contact.body": operatorSample,
+  "legal.sections.privacy.controller.body": operatorSample,
+  "legal.sections.privacy.contact.body": operatorSample,
+  "legal.sections.terms.law.body": operatorSample,
 };
