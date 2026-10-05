@@ -139,7 +139,8 @@ export interface TranslationReviewPanelProps {
   areas?: readonly string[] | null;
   /** An area's name for the notice ("the legal pages (Imprint, …)"). Default: the key. */
   areaLabels?: Readonly<Record<string, string>>;
-  /** Default `keyInArea`: the key is the area or sits under it (`legal.…`, `legal:…`). */
+  /** Default `keyInArea`: the key is the area or sits under it (`legal.…`, `legal:…`,
+   *  and the kit's `kit.legal.…` since 0.28). */
   inArea?: (key: string, area: string) => boolean;
   /** A source's name for the source filter, which appears once the rows come from more
    *  than one (kastlan: `{ screen: "Screen", documents: "PDFs and emails" }`). Default:

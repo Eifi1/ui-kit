@@ -724,6 +724,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ShareCard — read-only",
     "ShareCard — under a write lock",
     "LegalLayout — Imprint, Privacy Policy, Terms",
+    "LegalPage — the three pages, the kit's wording, numbers and references",
+    "LegalAcceptCheckbox and LegalLinks — sign-up and the account menu",
     "OneTimeCodeInput — the sign-in verification code",
     "OneTimeCodeInput — named by its prompt",
   ],

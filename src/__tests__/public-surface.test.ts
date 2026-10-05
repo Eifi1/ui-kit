@@ -156,7 +156,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // inbox swipe plan; FeedbackMenu, useFeedbackSubmit, FeedbackContextBox,
   // captureAppScreenshot; the table parts; FeedbackRowDetail, FeedbackReworkSection and
   // the page-URL helpers; createCrashReporter.
-  ["@eifi1/ui-kit", barrel, 658],
+  // 0.28.0, the legal harmonization (+7, docs/legal-harmonization.md §5): LegalPage,
+  // LegalKitSection, LegalFooter, LegalAcceptCheckbox, LEGAL_SKELETON, useNoIndex, and
+  // reviewAreaOf (the review area of a `kit.legal.*` key).
+  ["@eifi1/ui-kit", barrel, 665],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
