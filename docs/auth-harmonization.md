@@ -113,7 +113,9 @@ avatars, feedback, and the greeting in a mail.
 - **Order follows the language**:
   - "First Last" in de-CH, en, fr, it and es;
   - **"Last First" in hu**;
-  - **"LastFirst" with no space in zh**.
+  - **"LastFirst" with no space in zh**, for a name written in CJK script in both parts
+    (李 + 小龙 → 李小龙). A Latin name stays as written: "Ada Lovelace", never
+    "LovelaceAda" (refined while building, 0.29).
 - The kit gets `formatPersonName({ first, last }, locale)` and `personInitials(…)`.
   `UserAvatar` uses them. server-kit gets `full_name(first, last, locale)` for mails and
   for `stamp_identity`. The feedback context keeps its `user_display_name` key, filled
