@@ -770,7 +770,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       translation: {
         note: (o) =>
           `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
-        show: (o) => `Megjelenítés ezen a nyelven: ${o.bindingLanguage}`,
+        show: (o) => `Az irányadó változat megjelenítése (${o.bindingLanguage})`,
       },
       sections: {
         impressum: {

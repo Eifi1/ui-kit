@@ -761,7 +761,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       },
       translation: {
         note: (o) =>
-          `Esta es una traducción ofrecida para su comodidad. La versión vinculante es la versión en ${o.bindingLanguage}.`,
+          `Esta es una traducción ofrecida para su comodidad; solo la versión en ${o.bindingLanguage} es vinculante.`,
         show: (o) => `Ver la versión en ${o.bindingLanguage}`,
       },
       sections: {
