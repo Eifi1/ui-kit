@@ -45,7 +45,8 @@ describe("ResetPasswordForm — the check", () => {
     expect(onCheck).toHaveBeenCalledTimes(1);
     expect(onCheck).toHaveBeenCalledWith(TOKEN);
     answer({ email: "ada@example.com" });
-    expect(await screen.findByLabelText("New password")).toHaveFocus();
+    const field = await screen.findByLabelText("New password");
+    await waitFor(() => expect(field).toHaveFocus());
     expect(onCheck).toHaveBeenCalledTimes(1);
   });
 
@@ -150,7 +151,7 @@ describe("ResetPasswordForm — the form", () => {
 
     answer({ email: "ada+app@example.com", notices: <p>Your 2 API tokens were revoked.</p> });
     const success = await screen.findByText("Your password has been changed. You can sign in with it now.");
-    expect(success.parentElement).toHaveFocus();
+    await waitFor(() => expect(success.parentElement).toHaveFocus());
     expect(screen.getByText("Your 2 API tokens were revoked.")).toBeInTheDocument();
     expect(
       screen.getByText("Signed-in devices were signed out — you’ll need to sign in again there."),

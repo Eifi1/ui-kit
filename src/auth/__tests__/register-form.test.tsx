@@ -217,7 +217,7 @@ describe("RegisterForm — refusals", () => {
     const email = screen.getByLabelText("Email");
     await waitFor(() => expect(email).toHaveAccessibleDescription("An account with this email address already exists."));
     expect(email).toHaveAttribute("aria-invalid", "true");
-    expect(email).toHaveFocus();
+    await waitFor(() => expect(email).toHaveFocus());
     expect(submitButton()).toBeEnabled();
     await user.type(email, "m");
     expect(email).not.toHaveAttribute("aria-invalid");

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ForgotPasswordForm } from "../forgot-password-form";
@@ -54,7 +54,8 @@ describe("ForgotPasswordForm", () => {
       screen.getByText("The link is valid for one hour and works exactly once. Check your spam folder too."),
     ).toBeInTheDocument();
     // The button that had focus is gone; the confirmation takes it.
-    expect(sent.parentElement).toHaveFocus();
+    // Focus moves in an effect after the confirmation renders: wait for it, not the paint.
+    await waitFor(() => expect(sent.parentElement).toHaveFocus());
     expect(screen.queryByLabelText("Email")).toBeNull();
     expect(screen.getByRole("link", { name: "Back to sign in" })).toHaveAttribute("href", "/login");
   });
