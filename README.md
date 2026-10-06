@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1417 names from 206 modules** — 668 values and 749 types. _Italic_ is a type-only export.
+**1478 names from 219 modules** — 692 values and 786 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1417 |
+| `@eifi1/ui-kit` | 1478 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -416,6 +416,7 @@ re-slicing of it, never a second API.
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
 | `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
+| `lib/person-name` | `formatPersonName`, `personInitials`, _`PersonName`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
 | `lib/iban` | `compactIban`, `formatIban`, `IBAN_LENGTHS`, `ibanCheckDigits`, `ibanProblem`, `isQrIban`, `isValidIban`, _`IbanKind`_, _`IbanProblem`_ |
 | `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
@@ -462,9 +463,9 @@ re-slicing of it, never a second API.
 | Module | Exports |
 |---|---|
 | `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
+| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
-| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
 | `i18n/plurals` | `withAllPlurals` |
 
 ### components
@@ -621,6 +622,22 @@ re-slicing of it, never a second API.
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
 
+### auth
+
+| Module | Exports |
+|---|---|
+| `auth/register-form` | `DEFAULT_REGISTER_LABELS`, `RegisterForm`, _`RegisterFormProps`_, _`RegisterLabels`_, _`RegisterValues`_ |
+| `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
+| `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
+| `auth/email-tag` | `taggedEmail` |
+| `auth/auth-errors` | `authErrorCode`, `isAuthError`, _`AuthErrorCode`_ |
+| `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
+| `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
+| `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
+| `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
+| `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
+| `auth/status-parts` | _`AuthHeadingLevel`_ |
+
 ### shell
 
 | Module | Exports |
@@ -633,6 +650,7 @@ re-slicing of it, never a second API.
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
+| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
 ### wizard
 
