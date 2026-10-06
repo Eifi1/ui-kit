@@ -53,11 +53,21 @@ export default defineConfig({
     //
     // Its one caveat that bit here: jsdom's `window.location` cannot be redefined in a
     // VM context, so a test stubs `documentNavigation` (lib/document-navigation.ts)
-    // instead of `location`. The other known caveats (instanceof across contexts, a
-    // worker's memory growing) have not shown up; `vmMemoryLimit` recycles a worker
-    // that grows past a fifth of the machine's memory.
+    // instead of `location`. The other known caveat, a worker's memory growing, DID
+    // show up once the suite grew: see `vmMemoryLimit`.
     pool: "vmThreads",
-    vmMemoryLimit: 0.2,
+    // A worker is recycled once it grows past 600 MB. It was a fifth of the machine's
+    // memory (0.2): with one worker per core that let 8 workers grow to 3 GB EACH, and
+    // on a 15 GB machine the coverage run of the pre-push check was killed by the
+    // system twice on 2026-10-05 (0.28.1). Measured that day, coverage on, 377 files:
+    //   default workers, 1 GB   174 s  8.5 GB peak
+    //   6 workers,       1 GB   170 s  7.5 GB
+    //   4 workers,     1.5 GB   203 s  7.1 GB
+    //   6 workers,     600 MB   169 s  4.7 GB
+    //   default workers, 600 MB 160 s  5.1 GB   ← this
+    // Recycling more often costs no time here: a fresh worker is cheaper than one that
+    // carries a grown heap. (The check took 221 s before, when it survived.)
+    vmMemoryLimit: "600MB",
     // Vitest's per-file isolation hints ("jsdom was created N times …") no longer
     // apply; kept off so a standing hint does not come back. The import and transform
     // diagnostics stay on, so a NEW slow spot still shows.

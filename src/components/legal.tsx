@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -66,6 +66,14 @@ export interface LegalOperator {
   country: string;
   /** The contact address the imprint and the privacy policy print. */
   email: string;
+  /**
+   * The language whose version of the legal texts is BINDING ("de-CH"), a BCP 47 code
+   * (0.28.1, Marcel 2026-10-05). The lawyer reviews that one; the others are translations
+   * for convenience. With it, {@link LegalPage} shows a note on every page read in
+   * another language, and the terms' `language` section says which version prevails.
+   * Only the language subtag counts: "de-CH" and "de" are the same language here.
+   */
+  bindingLanguage?: string;
 }
 
 /**
@@ -78,10 +86,42 @@ export interface LegalOperator {
  */
 export type LegalOperatorText = Readonly<Record<keyof LegalOperator, string>>;
 
+/** The language subtag of a BCP 47 code, lower-cased: "de-CH" → "de". */
+export function baseLanguage(code: string): string {
+  return code.split(/[-_]/)[0]!.toLowerCase();
+}
+
+const languageNamers = new Map<string, Intl.DisplayNames | null>();
+
+/** The name of a language in `locale` — "Deutsch", "German", "allemand", "德语" — from its
+ *  language subtag, so "de-CH" is plain "German", not "Swiss High German". The code itself
+ *  when the runtime cannot name it. */
+function languageName(code: string, locale: string): string {
+  let namer = languageNamers.get(locale);
+  if (namer === undefined) {
+    try {
+      namer = new Intl.DisplayNames([locale], { type: "language" });
+    } catch {
+      namer = null;
+    }
+    languageNamers.set(locale, namer);
+  }
+  const base = baseLanguage(code);
+  try {
+    return namer?.of(base) ?? base;
+  } catch {
+    return base;
+  }
+}
+
 /** @internal The operator as the texts read it: its country named in `locale` (English
  *  without one — `countryName`'s rule, so an app that set no locale reads English). */
 export function legalOperatorText(operator: LegalOperator, locale: string = "en"): LegalOperatorText {
-  return { ...operator, country: countryName(operator.country, locale) };
+  return {
+    ...operator,
+    country: countryName(operator.country, locale),
+    bindingLanguage: operator.bindingLanguage ? languageName(operator.bindingLanguage, locale) : "",
+  };
 }
 
 // ── Labels ────────────────────────────────────────────────────────────────────
@@ -142,6 +182,16 @@ export interface LegalLabels {
     beta: string;
     privacy: string;
   };
+  /**
+   * 0.28.1: on a page read in another language than the operator's `bindingLanguage` —
+   * `note` under the title, `show` on the button that switches to the binding version
+   * (when the app passes `onShowBindingLanguage`). `o.bindingLanguage` is the binding
+   * language's NAME in the reader's language ("German", "allemand").
+   */
+  translation: {
+    note: (o: LegalOperatorText) => string;
+    show: (o: LegalOperatorText) => string;
+  };
   /** The kit's sections (§4.3), by page and section key. */
   sections: {
     impressum: {
@@ -164,6 +214,8 @@ export interface LegalLabels {
       warranty: LegalTextSectionLabels;
       liability: LegalTextSectionLabels;
       changes: LegalTextSectionLabels;
+      /** 0.28.1: which language's version prevails — `o.bindingLanguage`, named. */
+      language: LegalOperatorSectionLabels;
       /** The place of jurisdiction is the operator's `{city} ({region}), {country}`. */
       law: LegalOperatorSectionLabels;
     };
@@ -188,6 +240,11 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
     beta: "Closed beta. These texts have not been reviewed by a lawyer yet and will be before a public launch.",
     privacy:
       "Closed beta. The legal wording below has not been reviewed by a lawyer yet and will be before a public launch. The technical descriptions — what is stored, where, and who can read it — describe what the software actually does today, and are meant to be checked against it.",
+  },
+  translation: {
+    note: (o) =>
+      `This is a translation for your convenience. The ${o.bindingLanguage} version is binding.`,
+    show: (o) => `Show the ${o.bindingLanguage} version`,
   },
   sections: {
     impressum: {
@@ -242,6 +299,11 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       changes: {
         title: "Changes to these terms",
         body: "These terms may be updated as the service evolves. Material changes will be announced by email or in the app; continued use after a change means you accept it.",
+      },
+      language: {
+        title: "Language",
+        body: (o) =>
+          `These terms are written in ${o.bindingLanguage}. Translations into other languages are provided for convenience only; where a translation differs, the ${o.bindingLanguage} version prevails.`,
       },
       law: {
         title: "Governing law",
@@ -375,6 +437,9 @@ export interface LegalLinksProps {
    *  links, so in a plain container — Kurvenschmiede's account-menu `<li>` — they ran
    *  together as "ImpressumDatenschutzerklärungNutz…" and overflowed). Default true. */
   nav?: boolean;
+  /** Called on a click on any of the links, before it navigates — an account menu closes
+   *  itself here (0.28.1, keksdose: it had to catch the click on a wrapping `<div>`). */
+  onLinkClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   labels?: LabelOverride<LegalLabels>;
   className?: string;
 }
@@ -396,12 +461,19 @@ function defaultLinks(labels: LegalLabels): LegalLink[] {
  * already hears three links, and "middle dot" between them is noise. They are flex items
  * of the row like the links, so the row's gap spaces them evenly.
  */
-export function LegalLinks({ links, currentHref, nav = true, labels: labelsProp, className }: LegalLinksProps) {
+export function LegalLinks({
+  links,
+  currentHref,
+  nav = true,
+  onLinkClick,
+  labels: labelsProp,
+  className,
+}: LegalLinksProps) {
   const labels = useLegalLabels(labelsProp);
   const shown = links ?? defaultLinks(labels);
   const items = shown.flatMap((link, i) => [
     ...(i > 0 ? [<span key={`sep-${link.href}`} aria-hidden="true">·</span>] : []),
-    <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref}>
+    <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref} onClick={onLinkClick}>
       {link.label}
     </TextLink>,
   ]);
@@ -425,6 +497,14 @@ export interface LegalFooterProps {
   /** Marks that link `aria-current="page"`. {@link LegalPage}'s default footer passes
    *  its own page. */
   currentHref?: string;
+  /**
+   * Default true: the footer is a `<footer>`. `false` draws a `<div>` — for a host that is
+   * a footer already: `AuthLayout`'s `footer` slot is one, and HTML forbids a footer inside
+   * a footer (0.28.1, kastlan). On an `AuthLayout` page the usual choice is simpler still:
+   * `footer={<LegalLinks nav={false} />}` with `footerLabel` set to the kit's `navLabel`
+   * ({@link useLegalLabels}).
+   */
+  landmark?: boolean;
   className?: string;
   labels?: LabelOverride<LegalLabels>;
 }
@@ -440,9 +520,10 @@ export interface LegalFooterProps {
  * only. Its palette classes (`border-slate-200 bg-white dark:…`) became the surface and
  * border tokens, so it follows the theme like the rest of the kit.
  */
-export function LegalFooter({ children, links, currentHref, className, labels }: LegalFooterProps) {
+export function LegalFooter({ children, links, currentHref, landmark = true, className, labels }: LegalFooterProps) {
+  const Root = landmark ? "footer" : "div";
   return (
-    <footer className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}>
+    <Root className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}>
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-[var(--text-muted)]">
         <LegalLinks
           links={links}
@@ -452,7 +533,7 @@ export function LegalFooter({ children, links, currentHref, className, labels }:
         />
         {children !== undefined && children !== null && <p className="mt-4 text-center">{children}</p>}
       </div>
-    </footer>
+    </Root>
   );
 }
 
@@ -526,6 +607,9 @@ export interface LegalLayoutProps {
    * than the others (its technical sections describe running code).
    */
   notice?: ReactNode;
+  /** 0.28.1: under the title, before the notice — {@link LegalPage}'s note that this
+   *  page is a translation and which language is binding. */
+  translationNote?: ReactNode;
   /** The sections — {@link LegalSection}s. */
   children: ReactNode;
   /** The three pages, linked at the end of the column with the current one marked.
@@ -543,6 +627,7 @@ export function LegalLayout({
   title,
   back,
   notice,
+  translationNote,
   children,
   links,
   currentHref,
@@ -554,6 +639,7 @@ export function LegalLayout({
     <article className={cn("mx-auto w-full max-w-3xl px-4 py-12", className)}>
       {back !== undefined && <div className="mb-4 text-sm">{back}</div>}
       <Heading className="text-3xl font-bold tracking-tight break-words text-[var(--text-primary)]">{title}</Heading>
+      {translationNote !== undefined && translationNote !== null && <div className="mt-3">{translationNote}</div>}
       {notice !== undefined && notice !== null && (
         <AlertBanner tone="warning" role="note" className="mt-4">
           {notice}

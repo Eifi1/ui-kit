@@ -764,6 +764,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         privacy:
           "Beta chiusa. Le formulazioni legali qui sotto non sono ancora state verificate da un avvocato; lo saranno prima di un lancio pubblico. Le descrizioni tecniche — cosa viene memorizzato, dove e chi può leggerlo — descrivono ciò che il software fa davvero oggi e sono pensate per essere verificate rispetto a esso.",
       },
+      translation: {
+        note: (o) =>
+          `Questa è una traduzione fornita per Sua comodità. Fa fede la versione in ${o.bindingLanguage}.`,
+        show: (o) => `Mostra la versione in ${o.bindingLanguage}`,
+      },
       sections: {
         impressum: {
           operator: {
@@ -790,7 +795,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           legal_basis: {
             title: "Base giuridica",
-            body: "Poiché il gestore ha sede in Svizzera, il trattamento è disciplinato dalla Legge federale svizzera sulla protezione dei dati (LPD). Dove il Regolamento generale sulla protezione dei dati dell’UE (GDPR) si applica a Lei, ci basiamo sull’esecuzione di un contratto per fornire il servizio (art. 6, par. 1, lett. b GDPR) e sul nostro legittimo interesse a gestirlo e proteggerlo (art. 6, par. 1, lett. f GDPR).",
+            body: "Poiché il gestore risiede in Svizzera, il trattamento è disciplinato dalla Legge federale svizzera sulla protezione dei dati (LPD). Dove il Regolamento generale sulla protezione dei dati dell’UE (GDPR) si applica a Lei, ci basiamo sull’esecuzione di un contratto per fornire il servizio (art. 6, par. 1, lett. b GDPR) e sul nostro legittimo interesse a gestirlo e proteggerlo (art. 6, par. 1, lett. f GDPR).",
           },
           browser: {
             title: "Che cosa salva il Suo browser",
@@ -819,6 +824,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           changes: {
             title: "Modifiche a queste condizioni",
             body: "Queste condizioni possono essere aggiornate con l’evoluzione del servizio. Le modifiche sostanziali saranno annunciate via email o nell’app; l’uso continuato dopo una modifica ne implica l’accettazione.",
+          },
+          language: {
+            title: "Lingua",
+            body: (o) =>
+              `Le presenti condizioni sono redatte in ${o.bindingLanguage}. Le traduzioni in altre lingue sono fornite solo per comodità; in caso di divergenza prevale la versione in ${o.bindingLanguage}.`,
           },
           law: {
             title: "Legge applicabile",

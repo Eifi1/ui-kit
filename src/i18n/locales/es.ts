@@ -757,7 +757,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       notice: {
         beta: "Beta cerrada. Estos textos aún no han sido revisados por un abogado y lo serán antes de un lanzamiento público.",
         privacy:
-          "Beta cerrada. La redacción jurídica que sigue aún no ha sido revisada por un abogado y lo será antes de un lanzamiento público. Las descripciones técnicas —qué se guarda, dónde y quién puede leerlo— describen lo que el software hace realmente hoy y están pensadas para que se contrasten con él.",
+          "Beta cerrada. La redacción jurídica que sigue aún no ha sido revisada por un abogado y lo será antes de un lanzamiento público. Las descripciones técnicas —qué se guarda, dónde y quién puede leerlo— describen lo que el software hace realmente hoy y deben poder contrastarse con él.",
+      },
+      translation: {
+        note: (o) =>
+          `Esta es una traducción ofrecida para su comodidad. La versión vinculante es la versión en ${o.bindingLanguage}.`,
+        show: (o) => `Ver la versión en ${o.bindingLanguage}`,
       },
       sections: {
         impressum: {
@@ -783,12 +788,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           },
           legal_basis: {
             title: "Base jurídica",
-            body: "Como el responsable tiene su sede en Suiza, el tratamiento se rige por la Ley Federal suiza de Protección de Datos (LPD). Cuando le sea aplicable el Reglamento General de Protección de Datos de la UE (RGPD), nos basamos en la ejecución de un contrato para prestar el servicio (art. 6.1.b RGPD) y en nuestro interés legítimo en operarlo y protegerlo (art. 6.1.f RGPD).",
+            body: "Como el responsable reside en Suiza, el tratamiento se rige por la Ley Federal suiza de Protección de Datos (LPD). Cuando le sea aplicable el Reglamento General de Protección de Datos de la UE (RGPD), nos basamos en la ejecución de un contrato para prestar el servicio (art. 6.1.b RGPD) y en nuestro interés legítimo en operarlo y protegerlo (art. 6.1.f RGPD).",
           },
           browser: {
             title: "Qué guarda su navegador",
             lead: "Ninguna cookie. La aplicación guarda lo siguiente en el almacenamiento de su navegador:",
-            tail: "Nada de ello se usa para seguirle. Las entradas pendientes de envío se nos envían en cuanto es posible; todo lo demás permanece en su dispositivo. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+            tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible; todo lo demás permanece en su dispositivo. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
           },
           rights: {
             title: "Sus derechos",
@@ -812,6 +817,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           changes: {
             title: "Cambios en estas condiciones",
             body: "Estas condiciones pueden actualizarse a medida que evolucione el servicio. Los cambios importantes se anunciarán por correo electrónico o en la aplicación; si sigue usando el servicio después de un cambio, lo acepta.",
+          },
+          language: {
+            title: "Idioma",
+            body: (o) =>
+              `Estas condiciones están redactadas en ${o.bindingLanguage}. Las traducciones a otros idiomas se ofrecen solo por comodidad; en caso de discrepancia, prevalece la versión en ${o.bindingLanguage}.`,
           },
           law: {
             title: "Legislación aplicable",

@@ -761,11 +761,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // The accusative ending is glued to the link, as Italian glues its article: "a
       // Felhasználási feltételeket és az Adatvédelmi tájékoztatót". Nothing is added around
       // a placeholder, and the articles fit these two titles (a F…, az A…).
-      accept: "Elfogadom a {terms}et és az {privacy}t",
+      accept: "Elfogadom a következőket: {terms} és {privacy}",
       notice: {
         beta: "Zárt béta. Ezeket a szövegeket ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül.",
         privacy:
           "Zárt béta. Az alábbi jogi szövegezést ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül. A műszaki leírások – mit tárolunk, hol és ki olvashatja – azt írják le, amit a szoftver ma ténylegesen tesz, és arra valók, hogy a szoftverrel össze lehessen vetni őket.",
+      },
+      translation: {
+        note: (o) =>
+          `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
+        show: (o) => `Megjelenítés ezen a nyelven: ${o.bindingLanguage}`,
       },
       sections: {
         impressum: {
@@ -791,11 +796,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           legal_basis: {
             title: "Jogalap",
-            body: "Mivel az üzemeltető székhelye Svájcban van, az adatkezelésre a svájci szövetségi adatvédelmi törvény (DSG/FADP) az irányadó. Ha Önre az EU általános adatvédelmi rendelete (GDPR) vonatkozik, a szolgáltatás nyújtására irányuló szerződés teljesítésére (GDPR 6. cikk (1) b) pont) és a szolgáltatás működtetéséhez és védelméhez fűződő jogos érdekünkre (GDPR 6. cikk (1) f) pont) támaszkodunk.",
+            body: "Mivel az üzemeltető lakóhelye Svájcban van, az adatkezelésre a svájci szövetségi adatvédelmi törvény (DSG/FADP) az irányadó. Ha Önre az EU általános adatvédelmi rendelete (GDPR) vonatkozik, a szolgáltatás nyújtására irányuló szerződés teljesítésére (GDPR 6. cikk (1) b) pont) és a szolgáltatás működtetéséhez és védelméhez fűződő jogos érdekünkre (GDPR 6. cikk (1) f) pont) támaszkodunk.",
           },
           browser: {
             title: "Mit tárol az Ön böngészője",
-            lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja a böngészője tárhelyén:",
+            lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja az Ön böngészőjének tárhelyén:",
             tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges; minden más az Ön eszközén marad. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
           },
           rights: {
@@ -820,6 +825,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           changes: {
             title: "A feltételek módosítása",
             body: "Ezek a feltételek a szolgáltatás fejlődésével módosulhatnak. A lényeges változásokat e-mailben vagy az alkalmazásban jelentjük be; aki a változás után tovább használja a szolgáltatást, elfogadja azt.",
+          },
+          language: {
+            title: "Nyelv",
+            body: (o) =>
+              `Ezek a feltételek ${o.bindingLanguage} nyelven készültek. A más nyelvű fordítások csak tájékoztató jellegűek; eltérés esetén az eredeti, ${o.bindingLanguage} nyelvű változat az irányadó.`,
           },
           law: {
             title: "Irányadó jog",

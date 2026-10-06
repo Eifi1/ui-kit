@@ -736,11 +736,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       },
       backHome: "返回首页",
       // Book-title marks around the two documents, outside the links.
-      accept: "我接受《{terms}》和《{privacy}》",
+      accept: "我已阅读并同意《{terms}》和《{privacy}》",
       notice: {
         beta: "封闭测试阶段。这些文本尚未经律师审阅，将在公开发布之前完成审阅。",
         privacy:
           "封闭测试阶段。以下法律措辞尚未经律师审阅，将在公开发布之前完成审阅。其中的技术说明——存储了什么、存储在哪里以及谁可以读取——描述的是软件目前的实际行为，旨在供人对照软件加以核实。",
+      },
+      translation: {
+        note: (o) =>
+          `本页为方便阅读而提供的译文，以${o.bindingLanguage}版本为准。`,
+        show: (o) => `查看${o.bindingLanguage}版本`,
       },
       sections: {
         impressum: {
@@ -795,6 +800,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           changes: {
             title: "条款变更",
             body: "本条款可能会随着服务的发展而更新。重大变更将通过电子邮件或在应用程序中公布；变更后继续使用本服务即表示您接受变更。",
+          },
+          language: {
+            title: "语言",
+            body: (o) =>
+              `本条款以${o.bindingLanguage}撰写。其他语言的译文仅供参考；如译文与原文不一致，以${o.bindingLanguage}版本为准。`,
           },
           law: {
             title: "适用法律",

@@ -779,6 +779,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         privacy:
           "Geschlossene Beta. Die rechtlichen Formulierungen unten sind noch nicht anwaltlich geprüft; das geschieht vor einem öffentlichen Start. Die technischen Angaben — was gespeichert wird, wo, und wer es lesen kann — beschreiben, was die Software heute tatsächlich tut, und sind ausdrücklich dazu da, daran überprüft zu werden.",
       },
+      translation: {
+        note: (o) =>
+          `Dies ist eine Übersetzung zu Ihrer Information. Massgebend ist die Fassung auf ${o.bindingLanguage}.`,
+        show: (o) => `Fassung auf ${o.bindingLanguage} anzeigen`,
+      },
       sections: {
         impressum: {
           operator: {
@@ -832,6 +837,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           changes: {
             title: "Änderungen dieser Bedingungen",
             body: "Diese Bedingungen können im Zuge der Weiterentwicklung des Dienstes angepasst werden. Wesentliche Änderungen werden per E-Mail oder in der App angekündigt; die weitere Nutzung nach einer Änderung gilt als Zustimmung.",
+          },
+          language: {
+            title: "Sprache",
+            body: (o) =>
+              `Diese Bedingungen sind auf ${o.bindingLanguage} verfasst. Übersetzungen in andere Sprachen dienen nur der Information; weicht eine Übersetzung ab, ist die Fassung auf ${o.bindingLanguage} massgebend.`,
           },
           law: {
             title: "Anwendbares Recht",

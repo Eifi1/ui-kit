@@ -1,10 +1,9 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
-import { DEFAULT_UI_KIT_LABELS, TourProvider, missingKitLabels } from "@eifi1/ui-kit";
-import { Showcase } from "../showcase";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { DEFAULT_UI_KIT_LABELS, missingKitLabels } from "@eifi1/ui-kit";
 import { GROUPS, NAV, PAGES, RETIRED_SLUGS, hasOverview } from "../routes";
-import { LOCALES, LOCALE_STORAGE_KEY, LocaleProvider, de, en, es, fr, hu } from "../i18n";
-import { preloadAllSections } from "../lib/lazy-section";
+import { LOCALES, LOCALE_STORAGE_KEY, de, en, es, fr, hu } from "../i18n";
+import { PAGE_SHARDS, pagesOfShard } from "./page-shard";
+import { MOUNT_TIMEOUT_MS, renderShowcase as renderAt, useShowcaseEnvironment } from "./showcase-harness";
 
 /**
  * The showcase is the only place in this repository where the components are rendered
@@ -19,72 +18,14 @@ import { preloadAllSections } from "../lib/lazy-section";
  *   - Back did not return you to where you had been reading.
  */
 
-class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
+useShowcaseEnvironment();
 
-// Every section is lazy (lib/lazy-section.ts). Loaded up front, a page renders in one
-// synchronous pass, exactly as it did before the split — so these tests keep asserting on
-// the page right after render() instead of on a Suspense fallback. The lazy path itself
-// is covered by lazy-section.test.tsx.
-beforeAll(() => preloadAllSections(), 60_000);
-beforeAll(() => {
-  vi.stubGlobal("ResizeObserver", ResizeObserverStub);
-  // recharts' ResponsiveContainer measures 0x0 in jsdom and warns on every chart. That
-  // is expected and would otherwise bury a real failure in noise.
-  vi.spyOn(console, "warn").mockImplementation(() => {});
-});
-afterAll(() => vi.unstubAllGlobals());
-
-/** Mounting every component in the kit is slow; vitest's 5s default fails this file
- *  and nothing else. Raised here rather than globally so other suites stay honest. */
-const MOUNT_TIMEOUT_MS = 30_000;
-
-function renderAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      {/* The real tree from main.tsx: the provider is ABOVE the shell, because it owns
-          `<html dir>` and the whole frame is laid out from that. Without it `useT` falls
-          back to English and the language menu would set nothing — which is precisely
-          the bug these tests exist to keep fixed. */}
-      <LocaleProvider>
-        <TourProvider>
-          <Showcase />
-        </TourProvider>
-      </LocaleProvider>
-    </MemoryRouter>,
-  );
-}
-
-/**
- * The locale is PERSISTED and `dir`/`lang` live on `<html>` — both outside React's tree
- * and outside `cleanup()`. A test that picks Hungarian would otherwise hand Hungarian,
- * and its `<html lang>`, to whichever test ran next, and every English assertion in
- * this file would fail somewhere far from the cause.
- */
-afterEach(() => {
-  localStorage.clear();
-  document.documentElement.removeAttribute("dir");
-  document.documentElement.removeAttribute("lang");
-});
-
-describe("every page mounts", () => {
-  it.each(PAGES.map((p) => [p.slug, p.title] as const))(
-    "/%s renders without throwing",
-    (slug, title) => {
-      renderAt(`/${slug}`);
-      expect(screen.getByRole("heading", { name: title, level: 1 })).toBeInTheDocument();
-      // SectionBoundary sets data-section-error only after catching. Not role="alert":
-      // components legitimately render alerts of their own (the field-sync error state).
-      const crashed = [...document.querySelectorAll("[data-section-error]")].map((el) =>
-        el.getAttribute("data-section-error"),
-      );
-      expect(crashed, `section threw on mount: ${crashed.join(", ")}`).toEqual([]);
-    },
-    MOUNT_TIMEOUT_MS,
-  );
+/** Every page mounts — and its examples match the search index — in the four
+ *  pages-shard-*.test.tsx files (0.28.1), one page per test, each page once. This checks
+ *  the shards leave none out. */
+it("the page shards cover every page exactly once", () => {
+  const sharded = Array.from({ length: PAGE_SHARDS }, (_, i) => pagesOfShard(i)).flat();
+  expect(sharded.map((p) => p.slug).sort()).toEqual(PAGES.map((p) => p.slug).sort());
 });
 
 describe("navigation", () => {

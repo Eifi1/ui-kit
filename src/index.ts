@@ -462,7 +462,16 @@ export type {
 // The legal pages' shell (0.19, H10): Imprint, Privacy Policy, Terms in every app.
 // 0.28 (docs/legal-harmonization.md): the shared wording, the page frame, the kit's
 // sections, the public footer and the terms checkbox.
-export { LegalLayout, LegalSection, LegalLinks, LegalFooter, DEFAULT_LEGAL_LABELS } from "./components/legal";
+export {
+  LegalLayout,
+  LegalSection,
+  LegalLinks,
+  LegalFooter,
+  DEFAULT_LEGAL_LABELS,
+  LEGAL_HREFS,
+  legalOperatorText,
+  useLegalLabels,
+} from "./components/legal";
 export type {
   LegalLabels,
   LegalLink,

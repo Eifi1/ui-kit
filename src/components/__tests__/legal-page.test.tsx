@@ -116,6 +116,49 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
   });
 
+  it("0.28.1: a page read in another language than the binding one says so, with a way back", () => {
+    const show = vi.fn();
+    const op = { ...OPERATOR, bindingLanguage: "de-CH" };
+    const { rerender } = render(
+      <LegalPage page="terms" operator={op} locale="en" onShowBindingLanguage={show}>
+        <LegalKitSection section="changes" />
+        <LegalKitSection section="language" />
+        <LegalKitSection section="law" />
+      </LegalPage>,
+    );
+    expect(screen.getByText("This is a translation for your convenience. The German version is binding.", { exact: false })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show the German version" }));
+    expect(show).toHaveBeenCalledTimes(1);
+    // The terms' clause names the binding language, numbered between changes and law.
+    expect(screen.getByRole("heading", { level: 2, name: "2. Language" })).toBeInTheDocument();
+    expect(screen.getByText(/These terms are written in German\./)).toBeInTheDocument();
+    // Read in the binding language (any region of it): no note.
+    rerender(
+      <LegalPage page="terms" operator={op} locale="de">
+        <LegalKitSection section="language" />
+      </LegalPage>,
+    );
+    expect(screen.queryByText(/translation for your convenience/)).toBeNull();
+    // No binding language: no note.
+    rerender(
+      <LegalPage page="terms" operator={OPERATOR} locale="en">
+        <LegalKitSection section="changes" />
+      </LegalPage>,
+    );
+    expect(screen.queryByText(/translation for your convenience/)).toBeNull();
+  });
+
+  it("0.28.1: the language section needs the operator's bindingLanguage", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() =>
+      render(
+        <LegalPage page="terms" operator={OPERATOR}>
+          <LegalKitSection section="language" />
+        </LegalPage>,
+      ),
+    ).toThrow(/bindingLanguage/);
+  });
+
   it("calls useNoIndex: the marker is there while the page is, and gone after", () => {
     const { unmount } = render(
       <LegalPage page="terms" operator={OPERATOR}>

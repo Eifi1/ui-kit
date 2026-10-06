@@ -77,6 +77,15 @@ ways:
    (a kit variant, built then). (Marcel, after the reviews.)
 8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
    disclaimer, warranty and notices. (Marcel, after the reviews.)
+9. **German is the binding language** (Marcel, after the adoption, 0.28.1). The lawyer
+   reviews the German texts; every other language is a translation for convenience.
+   - A legal page read in another language says so under its title, with a way to the
+     German version.
+   - The terms carry a `language` section (between `changes` and `law`) saying the
+     German version prevails.
+   - Privacy translations must still be accurate: an information duty is met by what the
+     reader read, so native reviewers check them on /translations, and a lawyer only for
+     the languages of markets an app actively targets.
 
 ## 3. The page contract
 
@@ -128,6 +137,10 @@ keksdose does (feedback #97, #129). Each app's web server also sends
 | Public footer: landing/home, **every** signed-out page the app has (sign-in, register, forgot/reset password, verify email, …), the legal pages, the 404 where there is one; §6 lists each app's pages | signed out (and signed in on those pages) | `LegalFooter` |
 | Account menu footer | signed in, every viewport | `LegalLinks nav={false}` in `TopBarActionMenu`'s `footer` (with its `footerLabel`), or in a plain container (KS's `HoverMenu`) |
 | Sidebar footer | optional; keksdose and kastlan keep theirs | kit labels, no own words |
+
+On a page drawn with the kit's `AuthLayout`, the footer slot is a `<footer>` already, so
+the links go there as `<LegalLinks nav={false} />` under the kit's `navLabel`, not as a
+`LegalFooter` (kastlan's adoption; 0.28.1).
 
 The rule behind the table: **from every page a signed-out visitor can reach, the three
 links are one click away.** That includes Kurvenschmiede's public `/control` and
