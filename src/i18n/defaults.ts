@@ -61,6 +61,15 @@ import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid";
 import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox";
 import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock";
 import { DEFAULT_LEGAL_LABELS } from "../components/legal";
+import { DEFAULT_SIGN_IN_LABELS } from "../auth/sign-in-form";
+import { DEFAULT_REGISTER_LABELS } from "../auth/register-form";
+import { DEFAULT_COMPLETE_NAME_LABELS } from "../auth/complete-name-dialog";
+import { DEFAULT_FORGOT_PASSWORD_LABELS } from "../auth/forgot-password-form";
+import { DEFAULT_RESET_PASSWORD_LABELS } from "../auth/reset-password-form";
+import { DEFAULT_VERIFY_EMAIL_LABELS } from "../auth/verify-email";
+import { DEFAULT_NOT_FOUND_LABELS } from "../auth/not-found-page";
+import { DEFAULT_ACCEPT_INVITATION_LABELS } from "../auth/accept-invitation";
+import { DEFAULT_COMPANY_SWITCHER_LABELS } from "../shell/company-switcher";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
@@ -168,6 +177,15 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   serverWake: DEFAULT_SERVER_WAKE_LABELS,
   translationReview: DEFAULT_TRANSLATION_REVIEW_LABELS,
   legal: DEFAULT_LEGAL_LABELS,
+  signIn: DEFAULT_SIGN_IN_LABELS,
+  register: DEFAULT_REGISTER_LABELS,
+  completeName: DEFAULT_COMPLETE_NAME_LABELS,
+  forgotPassword: DEFAULT_FORGOT_PASSWORD_LABELS,
+  resetPassword: DEFAULT_RESET_PASSWORD_LABELS,
+  verifyEmail: DEFAULT_VERIFY_EMAIL_LABELS,
+  notFound: DEFAULT_NOT_FOUND_LABELS,
+  acceptInvitation: DEFAULT_ACCEPT_INVITATION_LABELS,
+  companySwitcher: DEFAULT_COMPANY_SWITCHER_LABELS,
   characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
   countrySelect: DEFAULT_COUNTRY_SELECT_LABELS,
   inlineEdit: DEFAULT_INLINE_EDIT_LABELS,

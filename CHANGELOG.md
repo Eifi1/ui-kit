@@ -20,6 +20,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.29.0](https://github.com/Eifi1/ui-kit/compare/v0.28.1...v0.29.0) (2026-10-06)
+
+### Added
+
+* **auth:** export the 0.29 parts and wire their nine label namespaces ([c4f4d71](https://github.com/Eifi1/ui-kit/commit/c4f4d718b06741c1eeba60f0727f773e32872395))
+* **auth:** SignInForm, RegisterForm, CompleteNameDialog — callbacks only, keksdose's words ([7c8278d](https://github.com/Eifi1/ui-kit/commit/7c8278d1634b47c9533e57389c0ca846fcab630b))
+* **auth:** the signed-out pages, names in each language's order, the company switcher ([cac971d](https://github.com/Eifi1/ui-kit/commit/cac971d1411c197497d1f56812578aba3c5aab8f))
+* **i18n:** the sign-in and sign-up namespaces in all seven languages ([d684e5d](https://github.com/Eifi1/ui-kit/commit/d684e5d4911175bcfb9234293dbc6adefe2d17b8))
+
+### Fixed
+
+* **i18n:** the binding-language button in hu and the note in es read naturally ([1c1a762](https://github.com/Eifi1/ui-kit/commit/1c1a762ed18aaf470584e20face6d2237eaa37de))
+
 ## [0.28.1](https://github.com/Eifi1/ui-kit/compare/v0.28.0...v0.28.1) (2026-10-05)
 
 ### Added

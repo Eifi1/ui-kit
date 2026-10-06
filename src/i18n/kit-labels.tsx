@@ -57,6 +57,15 @@ import type { ImageGridLabels } from "../components/image-grid";
 import type { LightboxLabels } from "../components/lightbox";
 import type { WriteLockLabels } from "../components/write-lock";
 import type { LegalLabels } from "../components/legal";
+import type { SignInLabels } from "../auth/sign-in-form";
+import type { RegisterLabels } from "../auth/register-form";
+import type { CompleteNameLabels } from "../auth/complete-name-dialog";
+import type { ForgotPasswordLabels } from "../auth/forgot-password-form";
+import type { ResetPasswordLabels } from "../auth/reset-password-form";
+import type { VerifyEmailLabels } from "../auth/verify-email";
+import type { NotFoundLabels } from "../auth/not-found-page";
+import type { AcceptInvitationLabels } from "../auth/accept-invitation";
+import type { CompanySwitcherLabels } from "../shell/company-switcher";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -323,6 +332,24 @@ export interface UiKitLabels {
    *  sections that are the same in every app, filled in with the app's operator
    *  (docs/legal-harmonization.md §4.3/§4.4). */
   legal: LegalLabels;
+  /** 0.29.0: sign-in form: credentials, passkey, 2FA, forced new password (docs/auth-harmonization.md §5). */
+  signIn: SignInLabels;
+  /** 0.29.0: the sign-up form, with the +app address tag (§4.1, §4.5). */
+  register: RegisterLabels;
+  /** 0.29.0: asking a migrated account for first and last name once (§3.3). */
+  completeName: CompleteNameLabels;
+  /** 0.29.0: requesting a reset link (always the same answer). */
+  forgotPassword: ForgotPasswordLabels;
+  /** 0.29.0: choosing a new password from a reset link; not a sign-in (§6.3). */
+  resetPassword: ResetPasswordLabels;
+  /** 0.29.0: the verify-email page and the unverified banner. */
+  verifyEmail: VerifyEmailLabels;
+  /** 0.29.0: the 404 page. */
+  notFound: NotFoundLabels;
+  /** 0.29.0: accepting an invitation with an account (§4.4). */
+  acceptInvitation: AcceptInvitationLabels;
+  /** 0.29.0: kastlan's switcher between a user's companies (§5.3). */
+  companySwitcher: CompanySwitcherLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */

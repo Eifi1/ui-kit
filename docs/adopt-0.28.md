@@ -23,8 +23,15 @@ A patch from the three apps' adoption, plus Marcel's binding language.
   - Give your `LegalOperator` the field `bindingLanguage: "de-CH"`.
   - Every legal page read in another language shows a note under the title: "This is a
     translation for your convenience. The German version is binding."
-  - Pass `onShowBindingLanguage={() => switchLanguage("de-CH")}` to `LegalPage` to add a
-    "Show the German version" button.
+  - Pass `onShowBindingLanguage` to `LegalPage` to add a "Show the German version"
+    button. **It must show German for now, not choose it.** An app's language switch
+    usually remembers the pick on the device and, for a signed-in user, writes it to the
+    account, which is the language its mails go out in. So the button must not call it.
+    The apps' answers, from lightest to strictest:
+    - kastlan's `showLanguage(code)` changes i18n without persisting;
+    - Kurvenschmiede's `changeLanguage(i18n, "de-CH")` runs without `remember`;
+    - keksdose renders only the page in German (`LegalPage locale` + its fixed `t`)
+      and leaves i18n alone, because its detector would cache even a bare change.
   - **Add `<LegalKitSection section="language" />` to your terms, between `changes` and
     `law`** (`LEGAL_SKELETON` has it). A test that pins your pages to the skeleton fails
     until you do.

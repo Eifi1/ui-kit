@@ -10,6 +10,13 @@
  * slowest group. CI runs the same three scripts as three jobs, so the local gate and CI
  * still cannot drift: both compose these package.json scripts and nothing else.
  *
+ * `CHECK_SERIAL=1` runs them one after another instead (0.29, 2026-10-06): side by side
+ * the three peak together — the test group alone reaches ~5 GB — and on a 15 GB machine
+ * that also hosts three apps' sessions and editors, with its swap full, the parallel run
+ * froze in swap for 11 minutes and every test that was running timed out. Serial costs
+ * about a minute and a half and cannot do that. `CHECK_SERIAL=1 git push` hands it to
+ * the pre-push hook. CI runs the groups as separate jobs either way.
+ *
  * Output stays quiet: each group's output is held back and printed only if it FAILS;
  * a passing group is one line with its time. Interleaving three live streams would be
  * unreadable, and a green run has nothing to say.
@@ -51,7 +58,10 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
   });
 }
 
-const results = await Promise.all(GROUPS.map(run));
+const serial = Boolean(process.env.CHECK_SERIAL) && process.env.CHECK_SERIAL !== "0";
+const results = [];
+if (serial) for (const group of GROUPS) results.push(await run(group));
+else results.push(...(await Promise.all(GROUPS.map(run))));
 const failed = results.filter((ok) => !ok).length;
 console.log(
   failed

@@ -1,5 +1,8 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { personInitials } from "../lib/person-name";
+import type { PersonName } from "../lib/person-name";
+import { useKitLocale } from "../i18n/kit-labels";
 import { StatusDot } from "./status-dot";
 import type { StatusDotSize, StatusDotTone } from "./status-dot";
 
@@ -43,10 +46,23 @@ export interface UserAvatarBadge {
 }
 
 /** A `<span>`'s props, minus `children`: the content is the initials this computes
- *  from `name`/`email`, so there is nothing for a caller to put inside. */
+ *  from `person`/`name`/`email`, so there is nothing for a caller to put inside. */
 export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   name?: string | null;
   email?: string | null;
+  /**
+   * The person's first and last name (0.29.0, docs/auth-harmonization.md §3.2) —
+   * preferred over `name` whenever either part is filled in. The initials follow the
+   * READER's language, the provider's `locale`: "AE" for Ada Example, "EA" in Hungarian
+   * (family name first), the family name's first character alone in Chinese. See
+   * {@link personInitials}.
+   *
+   * `name` stays the fallback for an API that still sends only `display_name`, and
+   * `email` after it: a person whose two parts are both blank falls through to them.
+   * A migrated user (the whole old display name in `first`, no `last`, §3.3) keeps the
+   * initials they had.
+   */
+  person?: PersonName | null;
   size?: keyof typeof AVATAR_SIZES;
   /**
    * A status dot in the top-end corner (the top-right in LTR, top-left in RTL), ringed
@@ -64,7 +80,9 @@ export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, 
  * A round initials avatar — the common user chip shared across apps (feedback
  * #333). Purely presentational; wrap it in a button for the account menu trigger.
  */
-export function UserAvatar({ name, email, size = "md", badge, className, ...rest }: UserAvatarProps) {
+export function UserAvatar({ name, email, person, size = "md", badge, className, ...rest }: UserAvatarProps) {
+  const locale = useKitLocale();
+  const initials = (person ? personInitials(person, locale) : "") || avatarInitials(name, email);
   if (badge) {
     // A wrapper, because the chip itself is `aria-hidden` and the badge label must not
     // be. `className` stays on the chip (a size override still sizes the circle); the
@@ -80,7 +98,7 @@ export function UserAvatar({ name, email, size = "md", badge, className, ...rest
             className,
           )}
         >
-          {avatarInitials(name, email)}
+          {initials}
         </span>
         <StatusDot
           ring
@@ -109,7 +127,7 @@ export function UserAvatar({ name, email, size = "md", badge, className, ...rest
         className,
       )}
     >
-      {avatarInitials(name, email)}
+      {initials}
     </span>
   );
 }
