@@ -666,6 +666,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
+    "CompanySwitcher — several companies, one session",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
@@ -728,6 +729,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "LegalAcceptCheckbox and LegalLinks — sign-up and the account menu",
     "OneTimeCodeInput — the sign-in verification code",
     "OneTimeCodeInput — named by its prompt",
+    "SignInForm — credentials, passkey, second factor, a new password",
+    "RegisterForm — names, the address tag, the app's fields, the terms",
+    "CompleteNameDialog — a migrated name, asked once after sign-in",
+    "taggedEmail and isAuthError",
+    "The signed-out pages — forgot, reset, verify, invitation, 404",
+    "EmailVerificationBanner — confirm your address",
+    "formatPersonName and UserAvatar person — the reader's order",
   ],
   "wizard": [
     "Three-step wizard",

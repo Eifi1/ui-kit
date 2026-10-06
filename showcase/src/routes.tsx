@@ -226,6 +226,14 @@ const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Sha
 const Legal019Demo = lazySection(() => import("./sections/legal-019-demo"), "Legal019Demo");
 const Legal028Demo = lazySection(() => import("./sections/legal-028-demo"), "Legal028Demo");
 const LegalAccept028Demo = lazySection(() => import("./sections/legal-028-demo"), "LegalAccept028Demo");
+const AuthForms029Demo = lazySection(() => import("./sections/auth-forms-029-demo"), "AuthForms029Demo");
+const AuthPages029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "AuthPages029Demo");
+const EmailVerificationBanner029Demo = lazySection(
+  () => import("./sections/auth-pages-029-demo"),
+  "EmailVerificationBanner029Demo",
+);
+const PersonNames029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "PersonNames029Demo");
+const CompanySwitcher029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "CompanySwitcher029Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
@@ -1118,7 +1126,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar", "CompanySwitcher"],
         Body: () => (
           <>
             <ShellSection />
@@ -1126,6 +1134,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ShellBrandDemo />
             <AccountHeaderLinkDemo />
             <TopBarMenuHeadingsDemo />
+            <CompanySwitcher029Demo />
           </>
         ),
       },
@@ -1185,7 +1194,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1198,6 +1207,10 @@ export const GROUPS: ShowcaseGroup[] = [
             <LegalAccept028Demo />
             <OneTimeCode022Demo />
             <OneTimeCodeUnlabelled022Demo />
+            <AuthForms029Demo />
+            <AuthPages029Demo />
+            <EmailVerificationBanner029Demo />
+            <PersonNames029Demo />
           </>
         ),
       },

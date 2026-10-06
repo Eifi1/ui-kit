@@ -161,7 +161,12 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // reviewAreaOf (the review area of a `kit.legal.*` key).
   // 0.28.1 (+3, the apps' adoption): LEGAL_HREFS, legalOperatorText and useLegalLabels —
   // an app's own footer label and links need the kit's words and routes.
-  ["@eifi1/ui-kit", barrel, 668],
+  // 0.29.0 (+24, docs/auth-harmonization.md §8): SignInForm, RegisterForm,
+  // CompleteNameDialog, ForgotPasswordForm, ResetPasswordForm, VerifyEmailStatus,
+  // EmailVerificationBanner, NotFoundPage, AcceptInvitation, CompanySwitcher and their
+  // nine DEFAULT_*_LABELS; taggedEmail, isAuthError, authErrorCode, formatPersonName and
+  // personInitials.
+  ["@eifi1/ui-kit", barrel, 692],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

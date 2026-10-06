@@ -294,4 +294,12 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.sections.terms.language.body": operatorSample,
   "legal.translation.note": operatorSample,
   "legal.translation.show": operatorSample,
+  // 0.29.0: the sign-in and sign-up parts (docs/auth-harmonization.md).
+  "signIn.tagHint": [["{{taggedAddress}}"]],
+  "register.emailTagUse": [["{{address}}"]],
+  "forgotPassword.sent": [["{{email}}"]],
+  "resetPassword.intro": [["{{email}}"]],
+  "verifyEmail.resendIn": [[30]],
+  "acceptInvitation.joined": [["{{name}}"]],
+  "companySwitcher.current": [["{{name}}"]],
 };

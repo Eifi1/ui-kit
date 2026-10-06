@@ -487,6 +487,59 @@ export type {
   LegalFramedSectionLabels,
 } from "./components/legal";
 export { LegalPage, LegalKitSection, LegalAcceptCheckbox, LEGAL_SKELETON } from "./components/legal-page";
+
+// 0.29.0 (docs/auth-harmonization.md): sign-in, sign-up and the signed-out pages — forms
+// that take callbacks and never send a request themselves — the person-name order of each
+// language, and kastlan's company switcher.
+export { SignInForm, DEFAULT_SIGN_IN_LABELS } from "./auth/sign-in-form";
+export type {
+  SignInFormProps,
+  SignInLabels,
+  SignInAnswer,
+  SignInStep,
+  SignInAction,
+  SignInCredentials,
+  SignInCodeValues,
+  SignInNewPasswordValues,
+} from "./auth/sign-in-form";
+export { RegisterForm, DEFAULT_REGISTER_LABELS } from "./auth/register-form";
+export type { RegisterFormProps, RegisterLabels, RegisterValues } from "./auth/register-form";
+export { CompleteNameDialog, DEFAULT_COMPLETE_NAME_LABELS } from "./auth/complete-name-dialog";
+export type { CompleteNameDialogProps, CompleteNameLabels, CompleteNameValues } from "./auth/complete-name-dialog";
+export { taggedEmail } from "./auth/email-tag";
+export { isAuthError, authErrorCode } from "./auth/auth-errors";
+export type { AuthErrorCode } from "./auth/auth-errors";
+export { ForgotPasswordForm, DEFAULT_FORGOT_PASSWORD_LABELS } from "./auth/forgot-password-form";
+export type { ForgotPasswordFormProps, ForgotPasswordLabels } from "./auth/forgot-password-form";
+export { ResetPasswordForm, DEFAULT_RESET_PASSWORD_LABELS } from "./auth/reset-password-form";
+export type {
+  ResetPasswordFormProps,
+  ResetPasswordLabels,
+  ResetPasswordCheck,
+  ResetPasswordValues,
+  ResetPasswordResult,
+} from "./auth/reset-password-form";
+export { VerifyEmailStatus, EmailVerificationBanner, DEFAULT_VERIFY_EMAIL_LABELS } from "./auth/verify-email";
+export type {
+  VerifyEmailStatusProps,
+  EmailVerificationBannerProps,
+  VerifyEmailLabels,
+  VerifyEmailFailure,
+} from "./auth/verify-email";
+export { NotFoundPage, DEFAULT_NOT_FOUND_LABELS } from "./auth/not-found-page";
+export type { NotFoundPageProps, NotFoundLabels } from "./auth/not-found-page";
+export { AcceptInvitation, DEFAULT_ACCEPT_INVITATION_LABELS } from "./auth/accept-invitation";
+export type {
+  AcceptInvitationProps,
+  AcceptInvitationLabels,
+  AcceptInvitationResult,
+  AcceptInvitationFailure,
+} from "./auth/accept-invitation";
+export type { AuthHeadingLevel } from "./auth/status-parts";
+export { formatPersonName, personInitials } from "./lib/person-name";
+export type { PersonName } from "./lib/person-name";
+export { CompanySwitcher, DEFAULT_COMPANY_SWITCHER_LABELS } from "./shell/company-switcher";
+export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompany } from "./shell/company-switcher";
 export type {
   LegalPageProps,
   LegalKitSectionProps,
