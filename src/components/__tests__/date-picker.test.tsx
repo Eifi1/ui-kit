@@ -131,3 +131,30 @@ describe("Date pickers in RTL (0.7.0)", () => {
     expect(icon("Today")).not.toContain("rtl:-scale-x-100");
   });
 });
+
+describe("the step row's focus frame (keksdose live #394)", () => {
+  it("raises the focused, pressed or invalid part, not the trigger on :focus-visible", () => {
+    render(
+      <DatePicker
+        value="2026-09-14"
+        onChange={() => {}}
+        step
+        today="2026-09-20"
+        stepLabels={{ prev: "Previous day", next: "Next day" }}
+        todayLabel="Today"
+      />,
+    );
+    // A tap focuses without :focus-visible, so the tapped part stayed under its later
+    // neighbour, whose grey left edge covered its right one.
+    // The row of parts: the steps sit in their tooltip's wrapper, so find it by its
+    // stretch rather than as a button's parent.
+    const row = screen.getByRole("combobox").closest<HTMLElement>(".items-stretch")!;
+    expect(row.className).toContain("[&>*:focus-within]:z-20");
+    expect(row.className).toContain("[&>*:active]:z-20");
+    expect(row.className).toContain("[&>*:has([aria-invalid=true])]:z-10");
+    expect(row.className).not.toContain("focus-visible]:z-10");
+    for (const name of ["Previous day", "Next day", "Today"]) {
+      expect(screen.getByRole("button", { name }).className).not.toMatch(/(hover|focus-visible):z-10/);
+    }
+  });
+});

@@ -588,9 +588,6 @@ function StepButton({
           // px-3 would make it wider than it needs to be. twMerge lets these win.
           "relative flex h-full w-10 shrink-0 items-center justify-center px-0 text-[var(--text-muted)]",
           "hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]",
-          // Raised while hovered or focused, so the shared border and the focus ring are
-          // drawn on top of the neighbour they overlap by a pixel.
-          "hover:z-10 focus-visible:z-10",
           // Dimmed ICON, not a dimmed box: at 40% opacity the whole button — border
           // included — faded out of the group and read as a broken, detached control.
           "disabled:cursor-not-allowed disabled:text-[var(--text-placeholder)] disabled:opacity-60 disabled:hover:bg-[var(--bg-surface)]",
@@ -1164,7 +1161,15 @@ export function DatePicker(props: DatePickerProps) {
         "flex items-stretch [&>*:not(:first-child)]:-ms-px",
         step && "[&_[role=combobox]]:rounded-s-none",
         (step || today) && "[&_[role=combobox]]:rounded-e-none",
-        "[&_[role=combobox]:focus-visible]:relative [&_[role=combobox]:focus-visible]:z-10",
+        // The PART that is focused, pressed or invalid is raised over the neighbour it
+        // overlaps by a pixel, so its blue (or red) border shows on all four sides
+        // (keksdose live #394). `:focus-within`, not `:focus-visible`: a tap focuses
+        // without it, as does the sheet handing focus back, and the next part — later in
+        // the DOM — painted its grey left edge over the tapped one's right. Raising the
+        // whole part (each is `relative`) keeps the floating label and the icon above
+        // the trigger, which raising the trigger alone covered. Hover raises nothing: it
+        // changes no border, and would let a hovered › cover a focused field's edge.
+        "[&>*:focus-within]:z-20 [&>*:active]:z-20 [&>*:has([aria-invalid=true])]:z-10",
         className,
       )}
     >

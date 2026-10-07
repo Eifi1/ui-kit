@@ -42,6 +42,7 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 ### Fixed
 
+* **date-picker:** the step row raises the focused, pressed or invalid part, so a tapped ‹, › or date shows its frame on all four sides (keksdose live #394)
 * **data-table:** the phone card's focus frame is drawn inside the card ([cdbcea7](https://github.com/Eifi1/ui-kit/commit/cdbcea737b0b4eecb9ab2bf8a3ab2fbca55dc3c8))
 * **invitations:** revoke an expired invitation too, and listTitle={null} ([dd7d8ac](https://github.com/Eifi1/ui-kit/commit/dd7d8acc0a0022f232bcfe9e5c5e0854ed91b9fd))
 * **showcase:** the sample settings page has a heading of its own ([63b5305](https://github.com/Eifi1/ui-kit/commit/63b5305ad333dbbe9c6d4cd6ba09d98b24282b63))
