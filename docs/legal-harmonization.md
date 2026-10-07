@@ -130,6 +130,18 @@ An app may still pass its own notice.
 keksdose does (feedback #97, #129). Each app's web server also sends
 `X-Robots-Tag: noindex` for the three legal routes, as keksdose's Caddy does.
 
+**robots.txt and sitemap.xml** (2026-10-07, keksdose's practice, from Kurvenschmiede):
+every app serves real files, never the SPA shell as `text/html`.
+
+- **`robots.txt`** disallows only token links (reset, verification, invitation) and
+  `/api/`. It never disallows the noindex legal pages: a `Disallow` keeps a crawler from
+  ever reading their `X-Robots-Tag`. It never disallows signed-in routes either; their
+  noindex and sign-in redirect do that job.
+- **`sitemap.xml`** lists only the public, indexable pages, with no `lastmod`.
+
+Each app writes its own, since they name its domain, its public pages and its token
+routes. The kit ships nothing for it.
+
 ### 3.3 Where the links appear
 
 | Place | Who sees it | Part |
