@@ -31,11 +31,12 @@ const german = {
 } as unknown as UiKitLabelOverrides;
 
 describe("the English defaults (keksdose en.json)", () => {
-  it("names all seven statuses and five categories", () => {
+  it("names all eight statuses and five categories", () => {
     expect(Object.keys(DEFAULT_FEEDBACK_STATUS_LABELS)).toEqual(FEEDBACK_STATUS_ORDER);
     expect(Object.keys(DEFAULT_FEEDBACK_CATEGORY_LABELS)).toEqual(FEEDBACK_CATEGORY_ORDER);
     expect(Object.values(DEFAULT_FEEDBACK_STATUS_LABELS)).toEqual([
       "Open",
+      "Ready to implement",
       "In progress",
       "In evaluation",
       "Test when live",

@@ -31,13 +31,13 @@ describe("feedbackSwipePlan", () => {
   it("offers keksdose's default: advance then done toward the end, won't do toward the start", () => {
     expect(FEEDBACK_SWIPE_ACTIONS).toEqual(["advance", "done", "wont_do"]);
     expect(DEFAULT_FEEDBACK_SWIPE).toEqual({ start: ["wont_do"], end: ["advance", "done"] });
-    expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "OPEN")).toEqual({ start: ["Won't do"], end: ["In progress", "Done"] });
+    expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "OPEN")).toEqual({ start: ["Won't do"], end: ["Ready to implement", "Done"] });
   });
 
   it("commits through the undoable change, with the target status", () => {
     const { out, change } = plan(DEFAULT_FEEDBACK_SWIPE, "OPEN");
     out?.end?.[0].onCommit();
-    expect(change).toHaveBeenLastCalledWith(at("OPEN"), "IN_PROGRESS");
+    expect(change).toHaveBeenLastCalledWith(at("OPEN"), "READY");
     out?.end?.[1].onCommit();
     expect(change).toHaveBeenLastCalledWith(at("OPEN"), "DONE");
     out?.start?.[0].onCommit();
@@ -89,5 +89,14 @@ describe("feedbackSwipePlan", () => {
     for (const status of [...FEEDBACK_STATUS_ORDER, "ESCALATED" as FeedbackStatus]) {
       expect(() => plan(DEFAULT_FEEDBACK_SWIPE, status)).not.toThrow();
     }
+  });
+});
+
+describe("the chain with READY (feedback contract §8.2)", () => {
+  it("goes OPEN → READY → IN_PROGRESS, so triage is one advance", async () => {
+    const { nextFeedbackStatus } = await import("../feedback-inbox");
+    expect(nextFeedbackStatus("OPEN")).toBe("READY");
+    expect(nextFeedbackStatus("READY")).toBe("IN_PROGRESS");
+    expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "READY")).toEqual({ start: ["Won't do"], end: ["In progress", "Done"] });
   });
 });

@@ -70,6 +70,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     // 0.27.0. "Feedback" stays, as `feedbackDialog`; "rielaborazione" for rework.
     feedbackStatus: {
       OPEN: "Aperto",
+      READY: "Pronto da implementare",
       IN_PROGRESS: "In corso",
       IN_EVALUATION: "In valutazione",
       NEEDS_LIVE_TEST: "Da testare in produzione",
@@ -131,6 +132,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       phoneActions: "Azioni sul feedback",
     },
     feedbackDetail: {
+      subject: "Oggetto",
       body: "Descrizione",
       edit: "Modifica",
       editDescription: "Modifica descrizione",

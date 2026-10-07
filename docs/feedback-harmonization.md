@@ -39,7 +39,8 @@ Paths below are relative to each repo: **kk** = keksdose, **ka** = kastlan,
 ## 2. Decisions (Marcel, 2026-10-04)
 
 1. **All 7 statuses everywhere**: OPEN, IN_PROGRESS, IN_EVALUATION, NEEDS_LIVE_TEST,
-   POSTPONED, DONE, WONT_DO — kastlan's backend adds the two it lacks. **Categories**
+   POSTPONED, DONE, WONT_DO — kastlan's backend adds the two it lacks. **Eight since
+   0.31:** READY joins between OPEN and IN_PROGRESS (§8). **Categories**
    CRASH, BUG, IDEA, QUESTION, OTHER; CRASH is filed automatically and never pickable.
 2. **One conversation model**: the team writes an **outcome**; the submitter can send
    an answered item back for **rework** (a note and at most one file; the server
@@ -745,3 +746,51 @@ payload's caps), the kit went back to keksdose's behaviour.
 - the description editor holds only the original text and re-appends the rework /
   comment blocks and file lines on save (keksdose's edited the raw body and could delete
   the history, §4.4).
+
+## 8. Amendment for 0.31 (Marcel, 2026-10-07)
+
+Two of Marcel's keksdose feedback rows, forwarded by keksdose's session.
+
+### 8.1 The subject in the expanded row (keksdose live #395)
+
+With a row expanded and the table scrolled, nothing said which entry was being answered.
+**`FeedbackRowDetail` now opens with the subject**: the kit's `FeedbackSubject` (title
+and category badge), in every app. `showSubject={false}` suppresses it for an app that
+already shows the title beside the detail; the default is on.
+
+### 8.2 A triage step: READY, "Ready to implement" (keksdose live #396)
+
+Marcel: "There should be an intermediate status where open is not touched by you but a
+ready to implement. Then I will set it from open to ready to implement and my (or admin
+feedback) will be right away persisted with ready to implement."
+
+- **The eighth status `READY`**, "Ready to implement" / „Bereit zur Umsetzung" /
+  « Prêt à implémenter » / "Pronto da implementare", sits between OPEN and IN_PROGRESS
+  in the chain, so the status order, the picker and the swipe's "next status" go
+  OPEN → READY → IN_PROGRESS.
+- **OPEN now means "filed, not yet triaged".** Nobody works on an OPEN row, agents
+  included. An admin releases it for implementation by setting READY.
+- **Feedback filed by an admin is created READY.** The server decides at submit, from
+  the author's role; the client never sends a status with a new row. A crash report is
+  filed OPEN whoever's session it came from: nobody has looked at it yet.
+- **A rework goes back to READY when an admin sends it, and to OPEN otherwise** (§3.4's
+  append rule; the server sets the status). An admin's rework is already triaged; a
+  user's is new input to look at.
+- **The author may still edit** title, body and category while the row is OPEN, READY or
+  IN_PROGRESS. Nothing has been answered yet.
+- **Rework is offered from the same five answered statuses** as before. READY is not
+  among them.
+- **"Waiting for you"** (the inbox's awaiting toggle, §4.3) now holds **OPEN**,
+  IN_EVALUATION and NEEDS_LIVE_TEST. An OPEN row waits on the triager now, and READY
+  waits on the implementer.
+- **The colour:** READY takes the brand tint at full strength, so it reads as "go"
+  beside NEEDS_LIVE_TEST's muted brand tint and OPEN's neutral one. It has its own icon.
+- **Rollout:** existing OPEN rows stay OPEN; there is no back-fill. Marcel triages them
+  once. An app whose status column is a database enum adds the value
+  (`ALTER TYPE feedbackstatus ADD VALUE 'READY' AFTER 'OPEN'` in Postgres). keksdose's
+  feedback-loop scripts pick READY and IN_PROGRESS instead of OPEN and IN_PROGRESS.
+- **Kits:** server-kit 0.5 has `FeedbackStatus.READY`, `initial_status(author_is_admin,
+  crash=…)` and `rework_status(actor_is_admin)`, and the author-editable set gains READY.
+  ui-kit 0.31 has the status, its meta and its label in seven languages, and the awaiting
+  set above.
+

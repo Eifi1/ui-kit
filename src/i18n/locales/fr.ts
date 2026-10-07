@@ -70,6 +70,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     // 0.27.0. "Retour" for feedback, as `feedbackDialog`; "reprise" for rework.
     feedbackStatus: {
       OPEN: "Ouvert",
+      READY: "Prêt à implémenter",
       IN_PROGRESS: "En cours",
       IN_EVALUATION: "En évaluation",
       NEEDS_LIVE_TEST: "À tester en production",
@@ -129,6 +130,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       phoneActions: "Actions sur les retours",
     },
     feedbackDetail: {
+      subject: "Objet",
       body: "Description",
       edit: "Modifier",
       editDescription: "Modifier la description",

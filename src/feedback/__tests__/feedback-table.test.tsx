@@ -183,8 +183,8 @@ describe("reading a row", () => {
     expect(feedbackSubmitterEmail(row({ user_id: null, user_email: "a@example.test" }))).toBe("");
   });
 
-  it("keeps exactly the two statuses that wait on the triager", () => {
-    expect(FEEDBACK_STATUS_ORDER.filter(isFeedbackAwaiting)).toEqual(["IN_EVALUATION", "NEEDS_LIVE_TEST"]);
+  it("keeps exactly the three statuses that wait on the triager", () => {
+    expect(FEEDBACK_STATUS_ORDER.filter(isFeedbackAwaiting)).toEqual(["OPEN", "IN_EVALUATION", "NEEDS_LIVE_TEST"]);
   });
 });
 
@@ -237,6 +237,7 @@ describe("feedbackColumns", () => {
     ]);
     expect(status?.type === "select" && status.options?.map((o) => o.label)).toEqual([
       "Open",
+      "Ready to implement",
       "In progress",
       "In evaluation",
       "Test when live",

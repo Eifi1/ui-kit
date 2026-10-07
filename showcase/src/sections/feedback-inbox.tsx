@@ -48,6 +48,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  */
 const STATUS_LABEL: Record<FeedbackStatus, string> = {
   OPEN: "Open",
+  READY: "Ready to implement",
   IN_PROGRESS: "In progress",
   IN_EVALUATION: "In evaluation",
   NEEDS_LIVE_TEST: "Needs live test",

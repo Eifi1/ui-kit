@@ -4,6 +4,7 @@ import {
   Ban,
   Bug,
   CheckCircle2,
+  ClipboardCheck,
   CloudUpload,
   Eye,
   HelpCircle,
@@ -55,13 +56,16 @@ import { useFeedbackCategoryLabels, useFeedbackStatusLabels } from "./feedback-l
  * a `label` the caller passes still wins.
  */
 
-/** The seven states a report can be in.
+/** The eight states a report can be in.
  *
- *  Shared value for value across both apps on purpose: it is what lets one habit,
- *  and one agent prompt, work on either repo. Four are a chain and three sit off
- *  it — see {@link visibleFeedbackStatuses} for what that buys. */
+ *  Shared value for value across the apps on purpose: it is what lets one habit,
+ *  and one agent prompt, work on any repo. Five are a chain and three sit off
+ *  it — see {@link visibleFeedbackStatuses} for what that buys. `READY` joined in 0.31
+ *  (feedback contract §8.2): OPEN is "filed, not yet triaged", READY "released for
+ *  implementation", and nobody works an OPEN row. */
 export type FeedbackStatus =
   | "OPEN"
+  | "READY"
   | "IN_PROGRESS"
   | "IN_EVALUATION"
   | "NEEDS_LIVE_TEST"
@@ -81,7 +85,7 @@ export type FeedbackCategory = "CRASH" | "BUG" | "IDEA" | "QUESTION" | "OTHER";
  * its own shape as well. Declaration order is chain order, and
  * {@link FEEDBACK_STATUS_ORDER} is derived from it rather than restated, because
  * a restated list cannot be checked for exhaustiveness: an eighth status would
- * break the build here and leave a literal seven long.
+ * break the build here and leave a literal eight long (as READY did in 0.31).
  */
 export const FEEDBACK_STATUS_META: Record<
   FeedbackStatus,
@@ -91,6 +95,15 @@ export const FEEDBACK_STATUS_META: Record<
     icon: Inbox,
     activeBg: "bg-[var(--bg-active)]",
     activeText: "text-[var(--text-primary)]",
+  },
+  // Triaged and released for implementation (feedback contract §8.2, keksdose live
+  // #396): OPEN is "filed, nobody has looked yet", READY is "go". The brand tint at full
+  // strength, so it reads as the go-ahead beside OPEN's neutral fill and
+  // NEEDS_LIVE_TEST's muted brand.
+  READY: {
+    icon: ClipboardCheck,
+    activeBg: "bg-[var(--brand-bg)]",
+    activeText: "text-[var(--brand)]",
   },
   IN_PROGRESS: {
     icon: Wrench,
@@ -155,7 +168,7 @@ export const FEEDBACK_STATUS_ORDER = Object.keys(FEEDBACK_STATUS_META) as Feedba
  *  through them to reach `DONE`. */
 const OFF_CHAIN: FeedbackStatus[] = ["NEEDS_LIVE_TEST", "POSTPONED", "WONT_DO"];
 
-const FORWARD_CHAIN: FeedbackStatus[] = ["OPEN", "IN_PROGRESS", "IN_EVALUATION", "DONE"];
+const FORWARD_CHAIN: FeedbackStatus[] = ["OPEN", "READY", "IN_PROGRESS", "IN_EVALUATION", "DONE"];
 
 /** The next status along the chain, or null at the end (or off it, as `WONT_DO`
  *  is). What a swipe-to-advance gesture commits. */
@@ -168,7 +181,7 @@ export function nextFeedbackStatus(current: FeedbackStatus): FeedbackStatus | nu
  * The steps that make sense from where a row currently stands.
  *
  * For the compact control in a table cell: it is a glanceable triage affordance,
- * and a row of seven icons in a cell is noise. One step forward, one step back
+ * and a row of eight icons in a cell is noise. One step forward, one step back
  * (so an item can be sent back for rework), and any of the three off-chain
  * verdicts — which is what makes those usable as verdicts at all.
  *
@@ -452,7 +465,7 @@ export function FeedbackStatusTransitions({
                   ),
               // Both stay unclickable, but only the read-only case is DIMMED: the
               // current status is the one thing in the row that has to be legible
-              // at a glance, and among seven pills a faded active one reads as
+              // at a glance, and among eight pills a faded active one reads as
               // "unavailable" rather than as "this is where the row stands".
               (!canEdit || active) && "cursor-default",
               !canEdit && "opacity-60",

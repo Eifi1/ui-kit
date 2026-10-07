@@ -12,6 +12,7 @@ import { formatDate } from "../lib/format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog";
 import {
+  FeedbackCategoryBadge,
   FeedbackDetail,
   FeedbackDetailSection,
   FeedbackNoteEditor,
@@ -63,8 +64,9 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
  *   path (`/accounts?p=2`): keksdose's `new URL(…)` throws on one and the section
  *   vanished. kastlan already fell back to `context.route` (`feedbackRaw`, `:97`).
  *
- * The sections, in the contract's order: **Description** (the body; the author's
- * Edit while OPEN / IN_PROGRESS), **URL**, **Attachment**, **Outcome** (the admin's
+ * The sections, in the contract's order: **Subject** (the category and the title, §8.1;
+ * `showSubject={false}` leaves it out), **Description** (the body; the author's
+ * Edit while OPEN / READY / IN_PROGRESS), **URL**, **Attachment**, **Outcome** (the admin's
  * outcome editor, Rework, Open page), **Send for rework** (only while reworking) and
  * **Status**. No comment thread (§2.2: kastlan's comments fold into the body, §7.7).
  *
@@ -81,7 +83,11 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
  * canon (keksdose `de-CH.json`, ss never ß, "Nacharbeit" throughout — §7.14) on each key.
  */
 export interface FeedbackDetailLabels {
-  /** Section 1's heading — keksdose's `feedback.body` (§7.3). The dialog's field asks
+  /** The first section's heading: what the report is called (feedback contract §8.1,
+   *  keksdose live #395 — with the row expanded and the table scrolled, nothing said
+   *  which entry was being answered). de-CH: "Betreff" */
+  subject: string;
+  /** The description section's heading — keksdose's `feedback.body` (§7.3). The dialog's field asks
    *  "What happened? (optional)"; the description, once filed, is headed as what it is
    *  — and as the author's "Edit description" calls it. de-CH: "Beschreibung" */
   body: string;
@@ -140,6 +146,7 @@ export interface FeedbackDetailLabels {
 }
 
 export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
+  subject: "Subject",
   body: "Description",
   edit: "Edit",
   editDescription: "Edit description",
@@ -316,7 +323,7 @@ function AttachmentDownload({
 export interface FeedbackRowAccess {
   /** The viewer filed it (`viewerId === row.user_id`; never for an erased author). */
   isAuthor: boolean;
-  /** "Edit description": the author, while the row is OPEN or IN_PROGRESS — on either
+  /** "Edit description": the author, while the row is OPEN, READY or IN_PROGRESS — on either
    *  page (keksdose `canAuthorEdit`, `feedback-page.tsx:398`, is not gated on `mine`). */
   canEditDescription: boolean;
   /** The outcome editor: the admin on the inbox (`canEdit`). */
@@ -563,6 +570,12 @@ export interface FeedbackRowDetailProps {
    * BUDGET, and a person viewing one still owns their own reports.
    */
   commit?: boolean;
+  /**
+   * Open with the subject: the category badge and the title (feedback contract §8.1,
+   * keksdose live #395). On by default; `false` for a page that already shows the title
+   * beside the detail.
+   */
+  showSubject?: boolean;
   labels?: Partial<FeedbackDetailLabels>;
   className?: string;
 }
@@ -603,6 +616,7 @@ export function FeedbackRowDetail({
   reworkAttachment,
   renderDate,
   commit,
+  showSubject = true,
   labels: labelsProp,
   className,
 }: FeedbackRowDetailProps) {
@@ -653,6 +667,16 @@ export function FeedbackRowDetail({
 
   return (
     <FeedbackDetail className={className}>
+      {showSubject && (
+        <FeedbackDetailSection title={labels.subject}>
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-feedback-subject="">
+            <FeedbackCategoryBadge category={row.category} />
+            <span className="min-w-0 font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
+              {row.title}
+            </span>
+          </p>
+        </FeedbackDetailSection>
+      )}
       <FeedbackDetailSection
         title={labels.body}
         action={

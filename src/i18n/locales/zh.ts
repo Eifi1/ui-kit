@@ -64,6 +64,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     // 0.27.0. 反馈 for feedback, as `feedbackDialog`; 返工 for rework.
     feedbackStatus: {
       OPEN: "待处理",
+      READY: "待实现",
       IN_PROGRESS: "处理中",
       IN_EVALUATION: "评估中",
       NEEDS_LIVE_TEST: "待线上测试",
@@ -122,6 +123,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       phoneActions: "反馈操作",
     },
     feedbackDetail: {
+      subject: "主题",
       body: "描述",
       edit: "编辑",
       editDescription: "编辑描述",

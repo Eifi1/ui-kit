@@ -79,7 +79,7 @@ describe("FeedbackRowDetail — sections", () => {
         renderDate={(iso) => iso.slice(0, 10)}
       />,
     );
-    expect(headings()).toEqual(["Description", "URL", "Attachment", "Outcome", "Status"]);
+    expect(headings()).toEqual(["Subject", "Description", "URL", "Attachment", "Outcome", "Status"]);
     // The rounds stay in the prose (what was said after the answer); the file line goes.
     expect(screen.getByText(/Typo here\.\s+--- REWORK 2026-10-04 09:12 ---\s+Still jumps\./)).toBeInTheDocument();
     expect(screen.queryByText(/\[screenshot\]/)).toBeNull();
@@ -91,7 +91,7 @@ describe("FeedbackRowDetail — sections", () => {
     render(
       <FeedbackRowDetail row={record({ body: "  ", context: null })} canEdit={false} viewerId={OTHER} onUpdate={landing()} />,
     );
-    expect(headings()).toEqual(["Description", "Outcome", "Status"]);
+    expect(headings()).toEqual(["Subject", "Description", "Outcome", "Status"]);
     expect(screen.getAllByText("—")).toHaveLength(2); // body and outcome
   });
 });
@@ -397,12 +397,12 @@ describe("FeedbackRowDetail — rework", () => {
 });
 
 describe("FeedbackRowDetail — status", () => {
-  it("gives the admin all seven pills, through the undoable change", () => {
+  it("gives the admin all eight pills, through the undoable change", () => {
     const statusChange = vi.fn();
     const row = record({ status: "IN_EVALUATION" });
     render(<FeedbackRowDetail row={row} canEdit viewerId={ADMIN} onUpdate={landing()} statusChange={statusChange} />);
     const pills = within(screen.getByText("Status").parentElement!.parentElement!).getAllByRole("button");
-    expect(pills).toHaveLength(7);
+    expect(pills).toHaveLength(8);
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(statusChange).toHaveBeenCalledWith(row, "DONE");
   });
@@ -500,5 +500,27 @@ describe("FeedbackNoteEditor (0.27 additions)", () => {
     fireEvent.change(box, { target: { value: "x" } });
     fireEvent.keyDown(box, { key: "Enter", metaKey: true });
     expect(onSave).toHaveBeenCalledWith("x", null);
+  });
+});
+
+describe("FeedbackRowDetail — the subject and READY (feedback contract §8, 0.31)", () => {
+  it("opens with the category and the title, and leaves them out on request", () => {
+    const { unmount } = render(
+      <FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} />,
+    );
+    const subject = document.querySelector("[data-feedback-subject]");
+    expect(subject).toHaveTextContent("Chart jumps on save");
+    expect(within(subject as HTMLElement).getByText("Bug")).toBeInTheDocument();
+    unmount();
+    render(<FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} showSubject={false} />);
+    expect(document.querySelector("[data-feedback-subject]")).toBeNull();
+    expect(headings()[0]).toBe("Description");
+  });
+
+  it("lets the author edit a READY row: nothing has been answered yet", () => {
+    expect(feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canEditDescription).toBe(
+      true,
+    );
+    expect(feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canRework).toBe(false);
   });
 });

@@ -71,6 +71,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     // A noun after a number stays singular in Hungarian, so the counts need no plural.
     feedbackStatus: {
       OPEN: "Nyitott",
+      READY: "Megvalósításra kész",
       IN_PROGRESS: "Folyamatban",
       IN_EVALUATION: "Értékelés alatt",
       NEEDS_LIVE_TEST: "Élesben tesztelendő",
@@ -129,6 +130,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       phoneActions: "Visszajelzés-műveletek",
     },
     feedbackDetail: {
+      subject: "Tárgy",
       body: "Leírás",
       edit: "Szerkesztés",
       editDescription: "Leírás szerkesztése",

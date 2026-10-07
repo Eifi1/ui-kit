@@ -79,6 +79,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     // written here with "ß" like the rest of this source; `swiss()` makes it "grösser".
     feedbackStatus: {
       OPEN: "Offen",
+      READY: "Bereit zur Umsetzung",
       IN_PROGRESS: "In Bearbeitung",
       IN_EVALUATION: "Zur Prüfung",
       NEEDS_LIVE_TEST: "Live testen",
@@ -140,6 +141,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       phoneActions: "Feedback-Aktionen",
     },
     feedbackDetail: {
+      subject: "Betreff",
       body: "Beschreibung",
       edit: "Bearbeiten",
       editDescription: "Beschreibung bearbeiten",

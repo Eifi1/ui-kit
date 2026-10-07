@@ -70,6 +70,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     // 0.27.0. "Comentarios" for feedback, as `feedbackDialog`; "corrección" for rework.
     feedbackStatus: {
       OPEN: "Abierto",
+      READY: "Listo para implementar",
       IN_PROGRESS: "En curso",
       IN_EVALUATION: "En evaluación",
       NEEDS_LIVE_TEST: "Probar en producción",
@@ -131,6 +132,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       phoneActions: "Acciones de comentarios",
     },
     feedbackDetail: {
+      subject: "Asunto",
       body: "Descripción",
       edit: "Editar",
       editDescription: "Editar descripción",

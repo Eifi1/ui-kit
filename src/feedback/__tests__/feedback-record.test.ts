@@ -228,9 +228,9 @@ describe("the contract's constants", () => {
   });
 
   it("splits the statuses by who may act on them", () => {
-    expect(FEEDBACK_AUTHOR_EDITABLE_STATUSES).toEqual(["OPEN", "IN_PROGRESS"]);
+    expect(FEEDBACK_AUTHOR_EDITABLE_STATUSES).toEqual(["OPEN", "READY", "IN_PROGRESS"]);
     expect(FEEDBACK_REWORKABLE_STATUSES).toEqual(["IN_EVALUATION", "NEEDS_LIVE_TEST", "POSTPONED", "DONE", "WONT_DO"]);
-    expect(FEEDBACK_AWAITING_STATUSES).toEqual(["IN_EVALUATION", "NEEDS_LIVE_TEST"]);
+    expect(FEEDBACK_AWAITING_STATUSES).toEqual(["OPEN", "IN_EVALUATION", "NEEDS_LIVE_TEST"]);
     // Author-editable and reworkable together are every status, and never overlap.
     expect([...FEEDBACK_AUTHOR_EDITABLE_STATUSES, ...FEEDBACK_REWORKABLE_STATUSES].sort()).toEqual(
       [...FEEDBACK_STATUS_ORDER].sort(),
