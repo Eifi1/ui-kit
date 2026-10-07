@@ -709,7 +709,13 @@ export {
   NEXT_PARAM,
   DEFAULT_LAST_VISITED_EXCLUDES,
 } from "./landing/routing";
-export type { RootEntryProps, RedirectIfAuthedProps, LastVisitedPageOptions, PathPattern } from "./landing/routing";
+export type {
+  RootEntryProps,
+  RedirectIfAuthedProps,
+  RoutingSession,
+  LastVisitedPageOptions,
+  PathPattern,
+} from "./landing/routing";
 export { PublicHeader } from "./landing/public-header";
 export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
 export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";

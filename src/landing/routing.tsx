@@ -4,6 +4,15 @@ import { Navigate, Outlet, useLocation } from "react-router";
 
 import { readStored, writeStored } from "../lib/safe-storage";
 import type { LandingSession } from "./landing-actions";
+import { LoadingState } from "../components/loading-state";
+
+/**
+ * 0.31.1: a session that is still being restored — an app whose access token lives in
+ * memory reads it back from its refresh token first (kastlan's 0.31 adoption). Until
+ * then `/` neither shows the landing nor resumes, and a public page neither shows nor
+ * redirects: both render `loading` instead.
+ */
+export type RoutingSession = LandingSession | "loading";
 
 /**
  * The public routes' logic (docs/landing-demo-harmonization.md §3): what `/` shows,
@@ -144,8 +153,11 @@ export function clearLastVisitedPage(key: string): void {
 /* ── RootEntry ───────────────────────────────────────────────────────────── */
 
 export interface RootEntryProps {
-  /** Without a session `/` is the landing; with one (real or demo) it resumes. */
-  session: LandingSession;
+  /** Without a session `/` is the landing; with one (real or demo) it resumes;
+   *  `"loading"` while the app restores one. */
+  session: RoutingSession;
+  /** What shows while `session` is `"loading"`. Default: the kit's `LoadingState`. */
+  loading?: ReactNode;
   /** The remembered page — `readLastVisitedPage(key)`. */
   resumePath?: string | null;
   /** The landing page element. */
@@ -164,7 +176,8 @@ export interface RootEntryProps {
  * home instead, because a session at `/` came to use the app. The landing stays one tap
  * away at `/welcome`, where the signed-in brand link points.
  */
-export function RootEntry({ session, resumePath, landing, home }: RootEntryProps) {
+export function RootEntry({ session, resumePath, landing, home, loading }: RootEntryProps) {
+  if (session === "loading") return <>{loading ?? <LoadingState />}</>;
   if (session === "none") return <>{landing}</>;
   const resume = safeNextPath(resumePath);
   return <Navigate to={resume && resume !== "/" ? resume : home} replace />;
@@ -173,7 +186,10 @@ export function RootEntry({ session, resumePath, landing, home }: RootEntryProps
 /* ── RedirectIfAuthed ────────────────────────────────────────────────────── */
 
 export interface RedirectIfAuthedProps {
-  session: LandingSession;
+  /** `"loading"` while the app restores a session: neither the page nor a redirect. */
+  session: RoutingSession;
+  /** What shows while `session` is `"loading"`. Default: the kit's `LoadingState`. */
+  loading?: ReactNode;
   /**
    * Let a DEMO session through (§5.6): on `/login`, `/register` and the app's invitation
    * pages, so a demo visitor can sign in or accept an invitation — a successful one
@@ -199,8 +215,9 @@ export interface RedirectIfAuthedProps {
  * `allowDemo` around `/login`, `/register` and the invitation pages, and one without
  * around `/demo` (and `/forgot-password`).
  */
-export function RedirectIfAuthed({ session, allowDemo = false, fallback, children }: RedirectIfAuthedProps) {
+export function RedirectIfAuthed({ session, allowDemo = false, fallback, children, loading }: RedirectIfAuthedProps) {
   const { search } = useLocation();
+  if (session === "loading") return <>{loading ?? <LoadingState />}</>;
   if (session === "none" || (session === "demo" && allowDemo)) {
     return children === undefined ? <Outlet /> : <>{children}</>;
   }
