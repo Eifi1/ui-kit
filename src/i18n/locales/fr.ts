@@ -14,6 +14,15 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count < 2 ? one : many);
+  // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
+  // src/auth/auth-errors.ts: no wait → "un instant", under a minute → seconds, else
+  // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
+  const wait = (seconds: number) =>
+    seconds < 60 ? `${n(Math.ceil(seconds))}\u00a0s` : `${n(Math.ceil(seconds / 60))}\u00a0min`;
+  const rateLimited = (seconds?: number) =>
+    !seconds || seconds <= 0
+      ? "Trop de tentatives. Veuillez patienter un instant, puis réessayer."
+      : `Trop de tentatives. Réessayez dans ${wait(seconds)}.`;
 
   return {
     feedbackAttachment: {
@@ -152,6 +161,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         memberSince: "Membre depuis",
         displayName: "Nom affiché",
         save: "Enregistrer",
+        firstName: "Prénom",
+        lastName: "Nom",
+        nameRequired: "Saisissez un prénom et un nom.",
       },
       password: {
         title: "Changer le mot de passe",
@@ -715,6 +727,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       registered: "Inscrit",
       unverified: "Non vérifié",
       passwordChange: "Doit changer de mot de passe",
+      deletion: "Suppression demandée",
+      deletionOn: (date) => `Suppression le ${date}`,
     },
     shareCard: {
       dialogTitle: "Partager",
@@ -884,6 +898,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       setPasswordFailed: "Le mot de passe n’a pas pu être défini.",
       expired: "Cette connexion a expiré. Veuillez vous reconnecter.",
       backToSignIn: "Retour à la connexion",
+      // kastlan's backup-code words ("code de secours" — not keksdose's "code de
+      // récupération", which is the key of its end-to-end encryption).
+      useRecoveryCode: "Utiliser un code de secours",
+      useAuthenticatorCode: "Utiliser votre application d’authentification",
+      recoveryCode: "Code de secours",
+      recoveryIntro:
+        "Saisissez l’un des codes de secours que vous avez enregistrés en activant l’authentification à deux facteurs.",
+      recoveryCodeHint: (length) =>
+        `${n(length)} lettres et chiffres. Les tirets et les espaces ne comptent pas.`,
+      recoveryCodeInvalid: "Ce code de secours n’est pas valable ou a déjà été utilisé.",
+      rateLimited,
     },
     register: {
       firstName: "Prénom",
@@ -907,6 +932,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       invitationInvalid: "Ce lien d’invitation n’est pas valide.",
       invitationExpired: "Cette invitation a expiré. Demandez-en une nouvelle.",
       failed: "Échec de l’inscription. Veuillez réessayer.",
+      rateLimited,
     },
     completeName: {
       title: "Complétez votre nom",
@@ -929,6 +955,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Le lien est valable une heure et ne fonctionne qu’une seule fois. Vérifiez aussi votre dossier de courrier indésirable.",
       backToSignIn: "Retour à la connexion",
       error: "La demande a échoué. Veuillez réessayer plus tard.",
+      rateLimited,
     },
     resetPassword: {
       title: "Choisir un nouveau mot de passe",
@@ -947,6 +974,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       success: "Votre mot de passe a été changé. Vous pouvez vous connecter avec dès maintenant.",
       sessionsEnded: "Les appareils connectés ont été déconnectés — vous devrez vous y reconnecter.",
       signIn: "Aller à la connexion",
+      rateLimited,
     },
     verifyEmail: {
       title: "Confirmez votre adresse e-mail",
@@ -995,6 +1023,210 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // Agreeing with "entreprise" (feminine).
       currentMark: "(actuelle)",
       switching: "Changement d’entreprise…",
+    },
+    // 0.30.0 — docs/user-admin-harmonization.md: keksdose's reviewed French for the admin
+    // words (admin.users.*), Kurvenschmiede's for transfer, invitations and sessions,
+    // kastlan's for the company, the throttle and "Se déconnecter partout"; written fresh
+    // where no app had the sentence. Phrased so that no sentence about the reader needs
+    // a gender ("déconnecté·e").
+    emailChange: {
+      title: "Adresse e-mail",
+      current: "Adresse actuelle",
+      newEmail: "Nouvelle adresse e-mail",
+      password: "Mot de passe actuel",
+      passwordHint: "Votre adresse sert à vous connecter, c’est pourquoi la changer demande votre mot de passe.",
+      emailTagUse: (address) => `Utiliser ${address}`,
+      emailTagHint:
+        "Beaucoup de fournisseurs livrent nom+tag@… dans la même boîte, ce qui rend le courrier de cette application filtrable et traçable. Vérifiez que le vôtre le fait avant de vous y fier\u00a0: vous vous connecteriez avec l’adresse marquée.",
+      submit: "Changer d’adresse e-mail",
+      sameAsCurrent: "C’est déjà votre adresse.",
+      emailTaken: "Un compte existe déjà avec cette adresse e-mail.",
+      wrongPassword: "Le mot de passe est incorrect.",
+      pending: (newEmail) => `Confirmez le lien que nous avons envoyé à ${newEmail}.`,
+      pendingHint: (currentEmail) =>
+        `D’ici là, vous continuez à vous connecter avec ${currentEmail}. Vérifiez aussi votre dossier de courrier indésirable.`,
+      resend: "Renvoyer le lien",
+      resent: "Nous avons renvoyé le lien.",
+      cancel: "Annuler le changement",
+      confirmed: (email) => `Votre adresse e-mail est désormais ${email}.`,
+      passkeyNote:
+        "Vos clés d’accès continuent de fonctionner. Votre appareil peut encore les afficher sous votre ancienne adresse.",
+      rateLimited,
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
+    sessions: {
+      title: "Sessions",
+      description:
+        "Une session ouverte sur un appareil que vous n’utilisez plus, ou auquel vous ne vous fiez pas\u202f? Déconnectez-vous partout.",
+      signOutEverywhere: "Se déconnecter partout…",
+      signOutEverywherePrompt:
+        "Toutes les sessions prennent fin, y compris celle-ci\u00a0: cet appareil sera déconnecté lui aussi, et il faudra vous reconnecter ici.",
+      confirmSignOutEverywhere: "Se déconnecter partout",
+      list: "Vos sessions ouvertes",
+      loading: "Chargement des sessions…",
+      empty: "Aucune session à afficher.",
+      current: "Cet appareil",
+      unknownDevice: "Appareil inconnu",
+      // A colon: `when` is either "il y a 3 heures" or a date.
+      lastActive: (when) => `Dernière activité\u00a0: ${when}`,
+      ip: (address) => `IP ${address}`,
+      revoke: "Déconnecter",
+      // Starts with `revoke`, the button's visible text, for voice control.
+      revokeItem: (device) => `Déconnecter ${device}`,
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
+    deleteAccount: {
+      title: "Supprimer le compte",
+      afterDays: (days) =>
+        `Votre compte est désactivé immédiatement et effacé définitivement ${n(days)} ${plural(days, "jour", "jours")} plus tard.`,
+      operator: "Votre compte est désactivé immédiatement, puis l’exploitant l’effacera définitivement.",
+      arm: "Supprimer le compte…",
+      prompt: "Toutes vos sessions prendront fin, sur tous les appareils, et votre compte ne pourra plus être utilisé.",
+      handOver: (count) =>
+        count < 2
+          ? `${n(count)} élément visible par d’autres passera à un administrateur.`
+          : `${n(count)} éléments visibles par d’autres passeront à un administrateur.`,
+      confirm: "Supprimer mon compte",
+      done: "Votre compte est désactivé. Déconnexion en cours.",
+      wrongPassword: "Le mot de passe est incorrect.",
+      confirmationMismatch: "Ce n’est pas l’adresse de votre compte.",
+      lastAdmin:
+        "Votre compte est le dernier compte administrateur. Nommez d’abord quelqu’un d’autre administrateur.",
+      lastAdminOf: (companies) =>
+        `Votre compte est le dernier compte administrateur de ${companies}. Nommez-y d’abord quelqu’un d’autre administrateur.`,
+      // keksdose's "ménage".
+      householdHasMembers:
+        "Votre ménage a d’autres membres, le compte ne peut donc pas être supprimé ici. Veuillez écrire à l’exploitant.",
+      rateLimited,
+      failed: "Votre compte n’a pas pu être supprimé. Veuillez réessayer.",
+    },
+    dataExport: {
+      title: "Exporter vos données",
+      description: "Téléchargez une copie des données de votre compte sous forme de fichier JSON.",
+      download: "Télécharger mes données",
+      started: "Votre téléchargement a commencé.",
+      saveAgain: "Rien ne s’est passé\u202f? Enregistrer le fichier",
+      rateLimited: (seconds) =>
+        seconds && seconds > 0
+          ? `Vous venez d’exporter vos données. Réessayez dans ${wait(seconds)}.`
+          : "Vous venez d’exporter vos données. Veuillez réessayer dans une minute.",
+      failed: "L’export a échoué. Veuillez réessayer.",
+    },
+    userRoster: {
+      name: "Nom",
+      email: "E-mail",
+      role: "Rôle",
+      state: "État",
+      created: "Créé le",
+      lastLogin: "Dernière connexion",
+      never: "Jamais",
+      actions: "Actions",
+      actionsFor: (name) => `Actions pour ${name}`,
+    },
+    roleSelect: {
+      label: "Rôle",
+      rolesLegend: "Rôles",
+      roleOf: (name) => `Rôle de ${name}`,
+      lockedLastAdmin: "Le dernier compte administrateur actif garde ce rôle.",
+      lockedSelf: "Vous ne pouvez pas changer votre propre rôle.",
+      notForLastAdmin: "pas pour le dernier administrateur",
+      notForSelf: "pas pour votre propre compte",
+      unavailable: (role, reason) => `${role} (${reason})`,
+    },
+    reviewerScope: {
+      languages: "Langues",
+      hint: "Cochez les langues que cette personne relit.",
+      none: "Aucune langue\u00a0: enregistrer retire le rôle de relecteur.",
+      areas: "Limiter à",
+      legalOnly: "Uniquement les pages légales",
+      legalOnlyHint:
+        "Mentions légales, politique de confidentialité et conditions d’utilisation\u00a0: pour un juriste plutôt que pour un locuteur natif.",
+      failed: "Le rôle de relecteur n’a pas pu être enregistré. Veuillez réessayer.",
+    },
+    adminAction: {
+      confirm: "Confirmer",
+      cancel: "Annuler",
+      close: "Fermer",
+      lastAdmin:
+        "C’est le dernier compte administrateur actif. Nommez d’abord quelqu’un d’autre administrateur.",
+      self: "Vous ne pouvez pas faire cela sur votre propre compte.",
+      confirmationMismatch:
+        "L’adresse ne correspond pas à ce compte. Vérifiez sur quel compte vous êtes.",
+      otherCompanies:
+        "Ce compte appartient aussi à d’autres entreprises, seul l’exploitant de la plateforme peut donc faire cela. Vous pouvez plutôt le retirer de cette entreprise.",
+      removeFromCompany: "Retirer de l’entreprise",
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
+    adminActionLog: {
+      title: "Actions d’administration",
+      empty: "Aucune action d’administration pour l’instant.",
+      loading: "Chargement…",
+      by: (actor) => `par ${actor}`,
+      bySelf: "par la personne elle-même",
+      automatic: "automatiquement",
+      erased: "un compte effacé",
+      filteredTo: (target) => `Uniquement ${target}`,
+      showAll: "Afficher toutes les actions",
+      filterBy: (target) => `Afficher uniquement les actions concernant ${target}`,
+      // Agreeing with "compte" (masculine), like `accountState`.
+      actions: {
+        deactivate: "Désactivé",
+        reactivate: "Réactivé",
+        role: "Rôle modifié",
+        membership_remove: "Retiré de l’entreprise",
+        password_change_require: "Nouveau mot de passe exigé",
+        password_change_withdraw: "Exigence de mot de passe retirée",
+        mail_verification: "E-mail de confirmation envoyé",
+        mail_reset: "E-mail de réinitialisation du mot de passe envoyé",
+        reviewer: "Périmètre de relecture modifié",
+        invite: "Invité",
+        invite_resend: "Invitation renvoyée",
+        invite_revoke: "Invitation révoquée",
+        transfer: "Travail transmis",
+        deletion_request: "Suppression demandée",
+        deletion_cancel: "Suppression annulée",
+        erase: "Compte effacé",
+      },
+    },
+    transferOwnership: {
+      title: (name) => `Transmettre le travail de ${name}`,
+      body: "Tout ce que possède ce compte passe au compte choisi, en une seule étape.",
+      recipient: "Le transmettre à",
+      choose: "Choisissez un compte…",
+      chooseFirst: "Choisissez qui reçoit le travail",
+      confirm: "Transmettre",
+      customer: "client",
+      deactivated: "désactivé",
+      self: "le même compte",
+      unavailable: (account, reason) => `${account} (${reason})`,
+      noCandidates: "Aucun autre compte ne peut le recevoir.",
+    },
+    invitations: {
+      email: "Adresse e-mail",
+      invalidEmail: "Saisissez une adresse e-mail complète.",
+      role: "Rôle",
+      scope: "Portée",
+      scopeNone: "Aucune",
+      language: "Langue de l’invitation",
+      note: "Note",
+      invite: "Inviter",
+      listTitle: "Invitations",
+      empty: "Personne n’a encore été invité.",
+      loading: "Chargement…",
+      // Agreeing with "invitation" (feminine).
+      status: { open: "Ouverte", accepted: "Acceptée", expired: "Expirée", revoked: "Révoquée" },
+      sent: (date) => `Envoyée le ${date}`,
+      // kastlan's "Valable jusqu’au".
+      expires: (date) => `Valable jusqu’au ${date}`,
+      invitedBy: (name) => `par ${name}`,
+      resend: (email) => `Envoyer un nouveau lien à ${email}`,
+      copyLink: "Copier le lien d’invitation",
+      revoke: (email) => `Révoquer l’invitation de ${email}`,
+      consoleHint:
+        "Ce serveur n’envoie pas d’e-mails — ils sont écrits dans le journal du serveur. Copiez ici chaque lien d’invitation et transmettez-le vous-même\u00a0: il n’est affiché qu’une seule fois.",
+      linkReady: (email) => `Le lien d’invitation pour ${email}, affiché cette seule fois\u00a0:`,
+      notSent: (email) => `${email} est invité, mais l’e-mail n’a pas pu être envoyé. Renvoyez-le.`,
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
     },
     characterCount: {
       count: (used, max) => `${n(used)} sur ${n(max)} ${plural(max, "caractère", "caractères")}`,

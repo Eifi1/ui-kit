@@ -104,6 +104,12 @@ export const es: Dictionary = {
       blurb:
         "Cada enlace del kit dirigido por el router de la aplicación, configurado una vez en el proveedor: el enlace de texto y sus tonos, un botón o una tarjeta de acción que es un enlace, y enlaces que salen de la aplicación.",
     },
+    "user-admin": {
+      title: "Administración de usuarios",
+      short: "Usuarios",
+      blurb:
+        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones y el traspaso de trabajo.",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -491,6 +497,15 @@ export const es: Dictionary = {
       "enlace que abre una pestaña nueva",
       "un botón que navega",
       "resaltar el enlace de la página actual",
+    ],
+    "user-admin": [
+      "listar los usuarios con sus roles",
+      "desactivar una cuenta",
+      "cambiar el rol de un usuario",
+      "invitar a alguien por correo electrónico",
+      "mostrar quién hizo qué en una cuenta",
+      "traspasar el trabajo de alguien a otro usuario",
+      "definir los idiomas de un revisor de traducciones",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",

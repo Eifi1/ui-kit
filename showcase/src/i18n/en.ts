@@ -117,6 +117,12 @@ export const en: Dictionary = {
       blurb:
         "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
     },
+    "user-admin": {
+      title: "User administration",
+      short: "Users",
+      blurb:
+        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, and handing work on.",
+    },
     "auth-account": {
       title: "Sign-in & account security",
       short: "Auth",
@@ -498,6 +504,15 @@ export const en: Dictionary = {
       "link that opens a new tab",
       "a button that navigates",
       "highlight the current page link",
+    ],
+    "user-admin": [
+      "list the users with their roles",
+      "deactivate an account",
+      "change a user's role",
+      "invite someone by email",
+      "show who did what to an account",
+      "hand someone's work to another user",
+      "set a translation reviewer's languages",
     ],
     "auth-account": [
       "login page layout",

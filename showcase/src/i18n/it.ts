@@ -103,6 +103,12 @@ export const it: Dictionary = {
       blurb:
         "Ogni link del kit instradato dal router dell'app, impostato una volta sul provider: il link testuale e i suoi toni, un pulsante o una scheda azione che è un link, e i link che escono dall'app.",
     },
+    "user-admin": {
+      title: "Amministrazione utenti",
+      short: "Utenti",
+      blurb:
+        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti e il passaggio del lavoro.",
+    },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
       short: "Accesso",
@@ -490,6 +496,15 @@ export const it: Dictionary = {
       "link che apre una nuova scheda",
       "un pulsante che naviga",
       "evidenziare il link della pagina corrente",
+    ],
+    "user-admin": [
+      "elencare gli utenti con i loro ruoli",
+      "disattivare un account",
+      "cambiare il ruolo di un utente",
+      "invitare qualcuno via email",
+      "mostrare chi ha fatto cosa su un account",
+      "passare il lavoro di qualcuno a un altro utente",
+      "impostare le lingue di un revisore delle traduzioni",
     ],
     "auth-account": [
       "layout della pagina di accesso",

@@ -55,13 +55,21 @@ export interface AnchoredPanel {
 /** Absolute floor: below this a list is useless, so overflow the margin instead. */
 const FLOOR = 96;
 
+/** How much more room above must offer, when neither side fits the preferred height,
+ *  before the panel changes sides — so it never jumps for a few pixels' gain. */
+const FLIP_GAIN = 48;
+
 /**
  * The pure half of {@link useAnchoredPanel}: where a panel goes, given the trigger's
  * rect and the region actually on screen.
  *
  * Prefers below the trigger — the conventional direction, and the one that keeps the
- * trigger's own value visible. Flips above only when below cannot show a usable list
- * AND above is roomier, so a panel never jumps sides for a few pixels' gain. The
+ * trigger's own value visible — whenever the panel's preferred height fits there. When it
+ * does not, the panel opens above if the full height fits there, or if above is clearly
+ * roomier (by {@link FLIP_GAIN}); below an unusable `minHeight` it flips to any roomier
+ * side, as before. It used to flip only below `minHeight`, so a select with 160–319 px
+ * under it opened downward as a cramped list with 600 px free above (keksdose live #384,
+ * the currency select of the new-budget form near the bottom of the screen). The
  * returned `maxHeight` is what makes the flip sufficient rather than merely different:
  * without it a tall panel placed above just runs off the top instead of the bottom.
  *
@@ -77,7 +85,10 @@ export function anchoredPanelPlacement(
   const viewBottom = viewport.top + viewport.height - margin;
   const spaceBelow = viewBottom - (rect.bottom + gap);
   const spaceAbove = rect.top - gap - viewTop;
-  const above = spaceBelow < minHeight && spaceAbove > spaceBelow;
+  const above =
+    spaceAbove > spaceBelow &&
+    (spaceBelow < minHeight ||
+      (spaceBelow < preferredHeight && (spaceAbove >= preferredHeight || spaceAbove - spaceBelow >= FLIP_GAIN)));
   const space = Math.max(FLOOR, above ? spaceAbove : spaceBelow);
   const maxHeight = Math.min(preferredHeight, space);
   return {

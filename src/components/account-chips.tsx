@@ -118,25 +118,55 @@ export function RoleChip<R extends string = string>({
  * - `registered` — an allowlist row whose address has an account now (Kurvenschmiede).
  * - `unverified` — the email address is not confirmed (keksdose).
  * - `passwordChange` — must set a new password at the next sign-in (keksdose).
+ * - `deletion` — 0.30.0: the user asked for the account to be deleted
+ *   (docs/user-admin-harmonization.md §2.1, §6.4). It is deactivated at once and erased
+ *   on a date (`after_days`: keksdose, Kurvenschmiede) or by an operator (kastlan). The
+ *   chip says the date when there is one ({@link AccountStateChipProps.date}), and
+ *   "Deletion requested" when there is none. It stands IN PLACE of `inactive`: an
+ *   account marked for deletion is always deactivated, and two chips would say it twice.
  *
  * An account can be several at once (inactive AND unverified): render one chip per
  * state, as keksdose's state column does.
  */
-export type AccountState = "active" | "inactive" | "invited" | "registered" | "unverified" | "passwordChange";
+export type AccountState =
+  | "active"
+  | "inactive"
+  | "invited"
+  | "registered"
+  | "unverified"
+  | "passwordChange"
+  | "deletion";
 
-export type AccountStateLabels = Record<AccountState, string>;
+/**
+ * The `accountState` namespace. One word per state, plus the two forms of `deletion`.
+ *
+ * The 0.30 keys are OPTIONAL, like every key added to a namespace an app annotates
+ * (`const L: AccountStateLabels = {…}`): a new required key would be a compile error in
+ * each app on its next update. Left out, they fall back to the provider's, then English.
+ */
+export interface AccountStateLabels extends Record<Exclude<AccountState, "deletion">, string> {
+  /** 0.30.0: an account marked for deletion with no date — kastlan's `operator` mode,
+   *  where an operator erases it (§6.4). "Deletion requested". */
+  deletion?: string;
+  /** 0.30.0: an account that will be erased on `date`, already formatted in the
+   *  reader's locale — the `after_days` mode. "Deletion on 6 Nov 2026". */
+  deletionOn?: (date: string) => string;
+}
 
-export const DEFAULT_ACCOUNT_STATE_LABELS: AccountStateLabels = {
+export const DEFAULT_ACCOUNT_STATE_LABELS = {
   active: "Active",
   inactive: "Inactive",
   invited: "Invited",
   registered: "Registered",
   unverified: "Unverified",
   passwordChange: "Must change password",
-};
+  deletion: "Deletion requested",
+  deletionOn: (date: string) => `Deletion on ${date}`,
+} satisfies Required<AccountStateLabels>;
 
-/** The default tone of each state: green for the normal case, red for switched off,
- *  amber for something the user still has to do, blue for an open invitation. */
+/** The default tone of each state: green for the normal case, red for switched off
+ *  (and for going, `deletion`), amber for something the user still has to do, blue for
+ *  an open invitation. */
 export const ACCOUNT_STATE_TONES: Readonly<Record<AccountState, ChipTone>> = {
   active: "success",
   inactive: "danger",
@@ -144,10 +174,22 @@ export const ACCOUNT_STATE_TONES: Readonly<Record<AccountState, ChipTone>> = {
   registered: "neutral",
   unverified: "warning",
   passwordChange: "warning",
+  // Red like `inactive`, which it replaces: the account cannot sign in, and it is going.
+  deletion: "danger",
 };
 
 export interface AccountStateChipProps extends AccountChipLook {
   state: AccountState;
+  /**
+   * 0.30.0, `state="deletion"` only: the day the account will be erased — the row's
+   * `deletion_scheduled_at` (§3.2, §6.4). Formatted as a date in the reader's locale
+   * ("Deletion on 6 Nov 2026"), through the provider's `formatDate` when the app set
+   * one, as {@link DateMark} does. Missing or `null` — an operator erases it, so there
+   * is no date — the chip says "Deletion requested". Ignored for every other state.
+   */
+  date?: DateInput;
+  /** Over the provider's locale, for the `deletion` date. */
+  locale?: string;
   /** Over {@link ACCOUNT_STATE_TONES} — Kurvenschmiede draws `inactive` neutral. */
   tone?: ChipTone;
   /** Over the label, for an app whose word for the state is its own ("Deactivated"). */
@@ -162,6 +204,8 @@ export interface AccountStateChipProps extends AccountChipLook {
  */
 export function AccountStateChip({
   state,
+  date,
+  locale: localeProp,
   tone,
   children,
   labels: labelsProp,
@@ -175,10 +219,23 @@ export function AccountStateChip({
   // An `undefined` in the prop is skipped (the provider's merge does that), so an
   // optional value cannot blank a default.
   const labels = useKitLabels("accountState", DEFAULT_ACCOUNT_STATE_LABELS, labelsProp);
+  const locale = useKitLocale(localeProp);
+  const fromProvider = useKitDateFormatter();
+  const when = state === "deletion" ? toDate(date ?? null) : null;
+  let text: ReactNode;
+  if (state !== "deletion") text = labels[state];
+  else if (when) {
+    // A date in a SENTENCE, so no weekday (keksdose's rule, KitDateFormatContext).
+    const day =
+      (fromProvider && fromProvider(toLocalIso(when), { unit: "day", source: "dateMark", locale, weekday: false })) ||
+      formatDate(when, "medium", { locale });
+    text = (labels.deletionOn ?? DEFAULT_ACCOUNT_STATE_LABELS.deletionOn)(day);
+  } else text = labels.deletion ?? DEFAULT_ACCOUNT_STATE_LABELS.deletion;
   return (
     <Chip
       {...rest}
       data-state={state}
+      data-date={when ? toLocalIso(when) : undefined}
       tone={tone ?? ACCOUNT_STATE_TONES[state]}
       size={size}
       variant={variant}
@@ -186,7 +243,7 @@ export function AccountStateChip({
       caps={caps}
       className={className}
     >
-      {children ?? labels[state]}
+      {children ?? text}
     </Chip>
   );
 }

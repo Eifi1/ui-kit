@@ -91,6 +91,25 @@ describe("RegisterForm — gating", () => {
   });
 });
 
+describe("RegisterForm — defaultEmail (0.29.1)", () => {
+  it("starts with the address, editable, and still offers the tag", async () => {
+    const { user } = setup({ defaultEmail: "ada@example.com", emailTag: "exampleapp" });
+    const email = screen.getByLabelText("Email");
+    expect(email).toHaveValue("ada@example.com");
+    expect(email).not.toHaveAttribute("readonly");
+    expect(screen.getByRole("button", { name: /^Use ada\+exampleapp@example\.com/ })).toBeInTheDocument();
+    await user.clear(email);
+    await user.type(email, "grace@example.com");
+    expect(email).toHaveValue("grace@example.com");
+  });
+
+  it("gives way to invitedEmail, which locks the field", () => {
+    setup({ defaultEmail: "ada@example.com", invitedEmail: "grace@example.com" });
+    expect(screen.getByLabelText("Email")).toHaveValue("grace@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+  });
+});
+
 describe("RegisterForm — the address tag", () => {
   it("offers the tagged address once the address is plausible, and applies it only on a click", async () => {
     const { user, onSubmit } = setup({ emailTag: "kastlan" });
@@ -237,5 +256,18 @@ describe("RegisterForm — refusals", () => {
   it("describeError has the app's words first", async () => {
     await submitRejected(refusal(429, "x"), { describeError: () => "Too many sign-ups from here." });
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many sign-ups from here.");
+  });
+
+  it("a 429 says the kit's rateLimited, after the app's words (0.30.0)", async () => {
+    const { unmount } = await submitRejected({ response: { status: 429, data: { detail: "Too many requests" } } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Wait a moment and try again.");
+    expect(submitButton()).toBeEnabled();
+    unmount();
+
+    await submitRejected(
+      { status: 429, headers: new Headers({ "Retry-After": "120" }) },
+      { labels: { rateLimited: (seconds) => `Slow down: ${seconds} s.` } },
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("Slow down: 120 s.");
   });
 });

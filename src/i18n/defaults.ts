@@ -70,6 +70,17 @@ import { DEFAULT_VERIFY_EMAIL_LABELS } from "../auth/verify-email";
 import { DEFAULT_NOT_FOUND_LABELS } from "../auth/not-found-page";
 import { DEFAULT_ACCEPT_INVITATION_LABELS } from "../auth/accept-invitation";
 import { DEFAULT_COMPANY_SWITCHER_LABELS } from "../shell/company-switcher";
+import { DEFAULT_EMAIL_CHANGE_LABELS } from "../account/email-change-setting";
+import { DEFAULT_SESSIONS_LABELS } from "../account/sessions-setting";
+import { DEFAULT_DELETE_ACCOUNT_LABELS } from "../account/delete-account-setting";
+import { DEFAULT_DATA_EXPORT_LABELS } from "../account/data-export-setting";
+import { DEFAULT_USER_ROSTER_LABELS } from "../admin/user-roster";
+import { DEFAULT_ROLE_SELECT_LABELS } from "../admin/role-select";
+import { DEFAULT_REVIEWER_SCOPE_LABELS } from "../admin/reviewer-scope-editor";
+import { DEFAULT_ADMIN_ACTION_LABELS } from "../admin/admin-action-confirm";
+import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "../admin/admin-action-log";
+import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "../admin/transfer-ownership-dialog";
+import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
@@ -186,6 +197,17 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   notFound: DEFAULT_NOT_FOUND_LABELS,
   acceptInvitation: DEFAULT_ACCEPT_INVITATION_LABELS,
   companySwitcher: DEFAULT_COMPANY_SWITCHER_LABELS,
+  emailChange: DEFAULT_EMAIL_CHANGE_LABELS,
+  sessions: DEFAULT_SESSIONS_LABELS,
+  deleteAccount: DEFAULT_DELETE_ACCOUNT_LABELS,
+  dataExport: DEFAULT_DATA_EXPORT_LABELS,
+  userRoster: DEFAULT_USER_ROSTER_LABELS,
+  roleSelect: DEFAULT_ROLE_SELECT_LABELS,
+  reviewerScope: DEFAULT_REVIEWER_SCOPE_LABELS,
+  adminAction: DEFAULT_ADMIN_ACTION_LABELS,
+  adminActionLog: DEFAULT_ADMIN_ACTION_LOG_LABELS,
+  transferOwnership: DEFAULT_TRANSFER_OWNERSHIP_LABELS,
+  invitations: DEFAULT_INVITATIONS_LABELS,
   characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
   countrySelect: DEFAULT_COUNTRY_SELECT_LABELS,
   inlineEdit: DEFAULT_INLINE_EDIT_LABELS,

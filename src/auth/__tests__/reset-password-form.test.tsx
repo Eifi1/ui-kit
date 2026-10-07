@@ -229,4 +229,23 @@ describe("ResetPasswordForm — the form", () => {
     await user.click(screen.getByRole("button", { name: "Save password" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("You are offline."));
   });
+
+  it("says the kit's rateLimited for a 429, keeping the password (0.30.0)", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn(() => Promise.reject({ response: { status: 429, data: { detail: "Too many requests" } } }));
+    const { unmount } = render(<ResetPasswordForm token={TOKEN} onCheck={live()} onSubmit={onSubmit} />);
+    await fillPassword(user);
+    await user.click(screen.getByRole("button", { name: "Save password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Wait a moment and try again.");
+    expect(screen.getByLabelText("New password")).toHaveValue(GOOD);
+    unmount();
+
+    // A Response thrown as it came, its Retry-After on its own headers.
+    const thrown = { status: 429, headers: new Headers({ "Retry-After": "5" }) };
+    render(<ResetPasswordForm token={TOKEN} onCheck={live()} onSubmit={() => Promise.reject(thrown)} />);
+    await fillPassword(user);
+    await user.click(screen.getByRole("button", { name: "Save password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 5 s.");
+    expect(screen.getByLabelText("New password")).toHaveValue(GOOD);
+  });
 });

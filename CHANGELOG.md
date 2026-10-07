@@ -20,6 +20,20 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.30.0](https://github.com/Eifi1/ui-kit/compare/v0.29.0...v0.30.0) (2026-10-07)
+
+### Added
+
+* **account:** the account's own settings — names, email change, sessions, deletion, export ([6c53419](https://github.com/Eifi1/ui-kit/commit/6c5341966c79fdc310444ad2c8f93108cd5da809))
+* **admin:** user list, roles, reviewer scope, admin actions, log, invitations, transfer ([4da1467](https://github.com/Eifi1/ui-kit/commit/4da14671952a245aad0e61c075dd208449deacfc))
+* **auth:** RegisterForm defaultEmail, describeError on the resend, token_expired ([3a2c1ea](https://github.com/Eifi1/ui-kit/commit/3a2c1ea983ab59b55d0dfca2a9a33bfe4f16c89c))
+* **i18n:** user administration and the account's settings in all seven languages ([314f4ed](https://github.com/Eifi1/ui-kit/commit/314f4edfddf1eb8db86230636c997b1716cd5bcd))
+
+### Fixed
+
+* **anchored-panel:** a dropdown with too little room below opens above when there is room there ([248adcd](https://github.com/Eifi1/ui-kit/commit/248adcd1eef342a47a2e0b5194ececde296d98a1))
+* **i18n:** the sign-in round's hu and es wording, from Kurvenschmiede's review ([a187d08](https://github.com/Eifi1/ui-kit/commit/a187d08eafef5998afe329387122df681475e617))
+
 ## [0.29.0](https://github.com/Eifi1/ui-kit/compare/v0.28.1...v0.29.0) (2026-10-06)
 
 ### Added

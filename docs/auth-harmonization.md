@@ -207,7 +207,11 @@ avatars, feedback, and the greeting in a mail.
     budget;
   - **a role**;
   - the inviter.
-- **Who may invite a new person**: admins and team managers (§2.11). A Kurvenschmiede
+- **Who may invite a new person**: admins and team managers (§2.11). **keksdose's
+  exception** (Marcel, 2026-10-07): a budget OWNER who is no admin may share a budget
+  with an address that has no account, and that invitation lets the person register.
+  It is a token invitation scoped to the budget, role guest, in the invitee's language,
+  14 days. Its holder passes `registration_decision` as `invite`, whoever minted it. A Kurvenschmiede
   team manager invites into the team; a kastlan company admin into the company. A
   member's share to an unknown address stays a pending grant, attached by address once
   the person is let in.
@@ -589,6 +593,11 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
 12. **The address tag** (Marcel, after the reviews): keksdose's `+keksdose` suggestion
     goes into the kit for all three apps (§4.5). It is offered and never applied; an
     invitation accepts the tagged variant; a reset falls back to it; sign-in stays exact.
+13. **keksdose's budget invitations** (Marcel, 2026-10-07): an exception to §2.11. A
+    non-admin budget owner's share to an unknown address is an invitation that lets the
+    person register (budget scope, role guest, 14 days). Admins keep the
+    registration-scope invitation. The kit and server-kit assume nothing about who minted
+    an invitation.
 
 Nothing is open. Next: server-kit 0.3.0 and ui-kit 0.29.0 (§8), after 0.28.0 and 0.2.1
 are released. kastlan's tenant lock (§9 kastlan 1) goes first, on its own.

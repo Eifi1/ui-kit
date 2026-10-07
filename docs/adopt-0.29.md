@@ -10,6 +10,25 @@ each app's checklist. This note is the kits' side.
 **keksdose is the reference**, except for Marcel's decisions in §2 and what the reviews
 settled in §10.
 
+## 0.29.1
+
+A patch from the apps' adoption. Nothing to change unless you want the new options.
+
+- **Dropdowns open above** when the list's full height (320 px) doesn't fit below but
+  fits above, or when above is clearly roomier (48 px or more). It used to stay below
+  until fewer than 160 px were left, so a select near the bottom of the screen opened as
+  a cramped list (keksdose live #384). This affects every `useAnchoredPanel` consumer:
+  comboboxes, the currency select, the pickers.
+- **`RegisterForm defaultEmail`**: an editable start address, with the `+tag`
+  suggestion still offered, for a link anyone can build, such as a token-free
+  `/register?email=…` kept during the move to invitations. `invitedEmail` still locks the
+  field and wins.
+- **`EmailVerificationBanner` / `VerifyEmailStatus` `describeError`**: the server's own
+  sentence for a refused resend (a throttle's "try again in N minutes"), else the kit's.
+- **`token_expired`** joins `AuthErrorCode`. Without a `classifyError`,
+  `VerifyEmailStatus` shows a coded `token_expired` as "expired".
+- Kurvenschmiede's corrections to the hu and es sign-in wording.
+
 ## Everyone
 
 1. Bump the kit to `^0.29.0` by hand; a caret below 1.0 locks the minor version. Take

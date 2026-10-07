@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS, PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account-settings";
+import type { ProfileNameValues } from "../account-settings";
+import { WriteLockProvider } from "../write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
@@ -28,6 +31,148 @@ describe("ProfileSetting", () => {
     expect(b).toHaveValue("Bob");
     expect(a.id).not.toBe(b.id);
     expect(a.id).not.toBe("display-name");
+  });
+});
+
+describe("ProfileSetting — the single name, unchanged (0.30.0 backwards compatibility)", () => {
+  it("is the one controlled field, saved by onSave once the draft differs", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    function Page() {
+      const [value, setValue] = useState("Ada Example");
+      return <ProfileSetting name="Ada Example" value={value} onChange={setValue} onSave={onSave} />;
+    }
+    render(<Page />);
+    expect(screen.queryByLabelText("First name")).not.toBeInTheDocument();
+    const field = screen.getByLabelText("Display name");
+    expect(field).toHaveAttribute("maxlength", "120");
+    const save = screen.getByRole("button", { name: "Save" });
+    expect(save).toBeDisabled();
+    await user.type(field, " Lovelace");
+    expect(save).toBeEnabled();
+    await user.click(save);
+    // As before 0.30: the button's own click handler — the card hands it no names.
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ProfileSetting — first and last name (0.30.0, §6.1)", () => {
+  function Page({
+    onSave,
+    first = "Ada",
+    last = "Example" as string | null,
+  }: {
+    onSave: (values: ProfileNameValues) => void | Promise<unknown>;
+    first?: string;
+    last?: string | null;
+  }) {
+    return <ProfileSetting email="ada@example.com" firstName={first} lastName={last} onSave={onSave} />;
+  }
+
+  it("two fields replace the single one, filled from the saved names", () => {
+    render(<Page onSave={() => {}} />);
+    expect(screen.queryByLabelText("Display name")).not.toBeInTheDocument();
+    const first = screen.getByLabelText("First name");
+    const last = screen.getByLabelText("Last name");
+    expect(first).toHaveValue("Ada");
+    expect(last).toHaveValue("Example");
+    expect(first).toHaveAttribute("autocomplete", "given-name");
+    expect(last).toHaveAttribute("autocomplete", "family-name");
+    expect(first).toHaveAttribute("maxlength", "120");
+    // Nothing changed yet: nothing to save.
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    // The avatar's initials come from the two parts.
+    expect(screen.getByText("AE")).toBeInTheDocument();
+  });
+
+  it("saves the trimmed pair, busy until it settles; the drafts follow the names that come back", async () => {
+    const user = userEvent.setup();
+    let resolve!: () => void;
+    const onSave = vi.fn(() => new Promise<void>((r) => (resolve = r)));
+    const { rerender } = render(<Page onSave={onSave} />);
+    const last = screen.getByLabelText("Last name");
+    await user.clear(last);
+    await user.type(last, "  Lovelace ");
+    const save = screen.getByRole("button", { name: "Save" });
+    await user.click(save);
+    expect(onSave).toHaveBeenCalledWith({ firstName: "Ada", lastName: "Lovelace" });
+    expect(save).toHaveAttribute("aria-busy", "true");
+    expect(last).toHaveAttribute("readonly");
+    resolve();
+    await waitFor(() => expect(save).not.toHaveAttribute("aria-busy"));
+    rerender(<Page onSave={onSave} last="Lovelace" />);
+    expect(screen.getByLabelText("Last name")).toHaveValue("Lovelace");
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("Enter in a field saves", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(<Page onSave={onSave} />);
+    await user.type(screen.getByLabelText("First name"), "{Backspace}{Backspace}{Backspace}Grace{Enter}");
+    expect(onSave).toHaveBeenCalledWith({ firstName: "Grace", lastName: "Example" });
+  });
+
+  it("holds Save while a name is blank, saying why — a migrated account with no last name too", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    const { unmount } = render(<Page onSave={onSave} />);
+    await user.clear(screen.getByLabelText("First name"));
+    await user.type(screen.getByLabelText("First name"), "   ");
+    const save = screen.getByRole("button", { name: "Save" });
+    expect(save).toHaveAttribute("aria-disabled", "true");
+    expect(save).toHaveAccessibleDescription("Enter both a first and a last name.");
+    await user.click(save);
+    expect(onSave).not.toHaveBeenCalled();
+    unmount();
+
+    render(<Page onSave={onSave} first="Ada Example" last={null} />);
+    expect(screen.getByLabelText("Last name")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAccessibleDescription(
+      "Enter both a first and a last name.",
+    );
+    await user.type(screen.getByLabelText("Last name"), "Example");
+    await user.clear(screen.getByLabelText("First name"));
+    await user.type(screen.getByLabelText("First name"), "Ada");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSave).toHaveBeenCalledWith({ firstName: "Ada", lastName: "Example" });
+  });
+
+  it("a rejected save keeps what was typed", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn(() => Promise.reject(new Error("500")));
+    render(<Page onSave={onSave} />);
+    await user.type(screen.getByLabelText("Last name"), "-Lovelace");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save" })).not.toHaveAttribute("aria-busy"));
+    expect(screen.getByLabelText("Last name")).toHaveValue("Example-Lovelace");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("Save is a commit: a write lock holds it with the lock's reason", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <WriteLockProvider locked reason="Read-only demo — saving is disabled">
+        <Page onSave={onSave} />
+      </WriteLockProvider>,
+    );
+    await user.type(screen.getByLabelText("Last name"), "s");
+    const save = screen.getByRole("button", { name: "Save" });
+    expect(save).toHaveAttribute("aria-disabled", "true");
+    expect(save).toHaveAccessibleDescription("Read-only demo — saving is disabled");
+    await user.click(save);
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("reads firstName / lastName from the provider's accountSettings.profile", () => {
+    render(
+      <UiKitProvider labels={{ accountSettings: { profile: { firstName: "Vorname", lastName: "Nachname" } } }}>
+        <Page onSave={() => {}} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByLabelText("Vorname")).toHaveValue("Ada");
+    expect(screen.getByLabelText("Nachname")).toHaveValue("Example");
   });
 });
 

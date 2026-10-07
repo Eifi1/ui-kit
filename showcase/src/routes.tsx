@@ -12,6 +12,7 @@ import {
   Bookmark,
   Images,
   KeyRound,
+  UserCog,
   Link2,
   Percent,
   ChartLine,
@@ -234,6 +235,11 @@ const EmailVerificationBanner029Demo = lazySection(
 );
 const PersonNames029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "PersonNames029Demo");
 const CompanySwitcher029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "CompanySwitcher029Demo");
+const Account030Demo = lazySection(() => import("./sections/account-030-demo"), "Account030Demo");
+const UserRoster030Demo = lazySection(() => import("./sections/admin-030-demo"), "UserRoster030Demo");
+const RolesEditor030Demo = lazySection(() => import("./sections/admin-030-demo"), "RolesEditor030Demo");
+const Invitations030Demo = lazySection(() => import("./sections/admin-030-demo"), "Invitations030Demo");
+const AccountDeletionChip030Demo = lazySection(() => import("./sections/admin-030-demo"), "AccountDeletionChip030Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
@@ -1194,7 +1200,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials"],
+        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1211,6 +1217,24 @@ export const GROUPS: ShowcaseGroup[] = [
             <AuthPages029Demo />
             <EmailVerificationBanner029Demo />
             <PersonNames029Demo />
+            <Account030Demo />
+          </>
+        ),
+      },
+      {
+        slug: "user-admin",
+        title: "User administration",
+        short: "Users",
+        blurb:
+          "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, and handing work on.",
+        icon: UserCog,
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip"],
+        Body: () => (
+          <>
+            <UserRoster030Demo />
+            <RolesEditor030Demo />
+            <Invitations030Demo />
+            <AccountDeletionChip030Demo />
           </>
         ),
       },

@@ -8,6 +8,7 @@ import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
 import { Button, EmptyState } from "../components/ui";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
+import { authErrorCode } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
@@ -83,6 +84,9 @@ type ResendPhase = "idle" | "sending" | "sent" | "failed";
  */
 function useResend(onResend: (() => Promise<unknown> | void) | undefined, cooldown: number) {
   const [phase, setPhase] = useState<ResendPhase>("idle");
+  // The refusal itself, for `describeError` (0.29.1): the server's own sentence — keksdose's
+  // per-address throttle, "try again in N minutes" — beats a fixed "could not send".
+  const [error, setError] = useState<unknown>(undefined);
   const [remaining, setRemaining] = useState(0);
   const counting = remaining > 0;
   useEffect(() => {
@@ -100,7 +104,8 @@ function useResend(onResend: (() => Promise<unknown> | void) | undefined, cooldo
     let result: unknown;
     try {
       result = onResend();
-    } catch {
+    } catch (e) {
+      setError(e);
       setPhase("failed");
       return;
     }
@@ -109,9 +114,12 @@ function useResend(onResend: (() => Promise<unknown> | void) | undefined, cooldo
       return;
     }
     setPhase("sending");
-    result.then(sent, () => setPhase("failed"));
+    result.then(sent, (e: unknown) => {
+      setError(e);
+      setPhase("failed");
+    });
   };
-  return { phase, remaining, send };
+  return { phase, remaining, send, error };
 }
 
 function ResendButton({
@@ -139,13 +147,26 @@ function ResendButton({
   );
 }
 
-function ResendStatus({ phase, labels, className }: { phase: ResendPhase; labels: VerifyEmailLabels; className?: string }) {
+function ResendStatus({
+  phase,
+  error,
+  describeError,
+  labels,
+  className,
+}: {
+  phase: ResendPhase;
+  error?: unknown;
+  describeError?: (error: unknown) => string | undefined;
+  labels: VerifyEmailLabels;
+  className?: string;
+}) {
+  const failed = phase === "failed" ? (describeError?.(error) ?? labels.resendError) : "";
   return (
     <span
       role="status"
       className={cn(phase === "failed" ? "text-[var(--danger)]" : "text-[var(--success)]", className)}
     >
-      {phase === "sent" ? labels.resent : phase === "failed" ? labels.resendError : ""}
+      {phase === "sent" ? labels.resent : failed}
     </span>
   );
 }
@@ -154,6 +175,11 @@ function ResendStatus({ phase, labels, className }: { phase: ResendPhase; labels
 
 /** What became of a confirmation link that did not verify. */
 export type VerifyEmailFailure = "invalid" | "expired";
+
+/** The default when the app gives no `classifyError`: the coded refusal decides. */
+function defaultVerifyFailure(error: unknown): VerifyEmailFailure {
+  return authErrorCode(error) === "token_expired" ? "expired" : "invalid";
+}
 
 export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
   /** The link's token — the app's `?token=`. Empty: the link was cut short, and the
@@ -169,6 +195,9 @@ export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"d
   /** Which dead end a rejection is. Default: `invalid` for everything — §5.2's servers
    *  answer one `token_invalid`; an app whose server tells expiry apart maps it here. */
   classifyError?: (error: unknown) => VerifyEmailFailure;
+  /** 0.29.1: the words for a refused resend — the server's own sentence (a throttle's
+   *  "try again in N minutes"), else the kit's `resendError`. */
+  describeError?: (error: unknown) => string | undefined;
   /** Someone is signed in on this device: "Continue" goes into the app, and a dead link
    *  offers "Send again" (with `onResend`). */
   signedIn?: boolean;
@@ -211,6 +240,7 @@ export function VerifyEmailStatus({
   token,
   onVerify,
   classifyError,
+  describeError,
   signedIn = false,
   onResend,
   cooldown = DEFAULT_COOLDOWN,
@@ -230,7 +260,11 @@ export function VerifyEmailStatus({
   const resend = useResend(onResend, cooldown);
 
   useOncePerKey(token === "" ? null : token, onVerify, (key, result) => {
-    const next: VerifyOutcome = result.ok ? "verified" : (classifyError?.(result.error) ?? "invalid");
+    // Without a classifier, the coded refusal decides (0.29.1): `token_expired` is
+    // "expired", anything else "invalid".
+    const next: VerifyOutcome = result.ok
+      ? "verified"
+      : (classifyError ?? defaultVerifyFailure)(result.error);
     setSettled({ token: key, outcome: next });
     announce(labels[next]);
   });
@@ -291,7 +325,15 @@ export function VerifyEmailStatus({
     >
       {title === null ? null : <Heading className={STATUS_HEADING_CLASS}>{title ?? labels.title}</Heading>}
       {body}
-      {canResend && <ResendStatus phase={resend.phase} labels={labels} className="block text-center text-xs" />}
+      {canResend && (
+        <ResendStatus
+          phase={resend.phase}
+          error={resend.error}
+          describeError={describeError}
+          labels={labels}
+          className="block text-center text-xs"
+        />
+      )}
       {/* Rendered from the start, so the outcome is read when it arrives. */}
       <div {...regionProps} />
     </div>
@@ -304,6 +346,8 @@ export interface EmailVerificationBannerProps {
   /** Send a new confirmation mail (`POST /auth/verify-email/resend`). Resolve when it
    *  went out; reject and the banner says it could not. */
   onResend: () => Promise<unknown> | void;
+  /** 0.29.1: the words for a refused resend — the server's own sentence, else the kit's. */
+  describeError?: (error: unknown) => string | undefined;
   /** Seconds "Send again" waits after a mail went out. Default 60; `0` never waits. */
   cooldown?: number;
   /** The ×, "Not now". The banner does not hide itself: the app stops rendering it —
@@ -331,6 +375,7 @@ export interface EmailVerificationBannerProps {
  */
 export function EmailVerificationBanner({
   onResend,
+  describeError,
   cooldown = DEFAULT_COOLDOWN,
   onDismiss,
   variant = "strip",
@@ -352,7 +397,13 @@ export function EmailVerificationBanner({
     >
       {labels.banner}
       {children != null && children !== false && <> {children}</>}{" "}
-      <ResendStatus phase={resend.phase} labels={labels} className="font-medium" />
+      <ResendStatus
+        phase={resend.phase}
+        error={resend.error}
+        describeError={describeError}
+        labels={labels}
+        className="font-medium"
+      />
     </AlertBanner>
   );
 }

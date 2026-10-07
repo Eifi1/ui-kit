@@ -166,7 +166,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // EmailVerificationBanner, NotFoundPage, AcceptInvitation, CompanySwitcher and their
   // nine DEFAULT_*_LABELS; taggedEmail, isAuthError, authErrorCode, formatPersonName and
   // personInitials.
-  ["@eifi1/ui-kit", barrel, 692],
+  // 0.30.0 (+32, docs/user-admin-harmonization.md §7): EmailChangeSetting,
+  // SessionsSetting, DeleteAccountSetting, DataExportSetting; the user list
+  // (userRosterColumns, useUserRosterColumns, UserIdentityCell, UserRowActions,
+  // adminUserStates, userRosterSort, USER_ROSTER_SORT_KEYS); RoleSelect, RolesEditor,
+  // ReviewerScopeEditor, AdminActionConfirm, AdminActionLog, ADMIN_ACTION_KINDS,
+  // TransferOwnershipDialog, InvitationsPanel; their eleven DEFAULT_*_LABELS;
+  // isRateLimited and retryAfterSeconds.
+  ["@eifi1/ui-kit", barrel, 724],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

@@ -540,6 +540,99 @@ export { formatPersonName, personInitials } from "./lib/person-name";
 export type { PersonName } from "./lib/person-name";
 export { CompanySwitcher, DEFAULT_COMPANY_SWITCHER_LABELS } from "./shell/company-switcher";
 export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompany } from "./shell/company-switcher";
+
+// 0.30.0 (docs/user-admin-harmonization.md): the admin user list and its actions, the
+// invitations panel, and the account's own settings — email change, sessions, deletion,
+// export. Callbacks only; the confirmation level is the server's.
+export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
+export type { AccountErrorCode, KitErrorCode } from "./auth/auth-errors";
+export { EmailChangeSetting, DEFAULT_EMAIL_CHANGE_LABELS } from "./account/email-change-setting";
+export type {
+  EmailChangeSettingProps,
+  EmailChangeLabels,
+  EmailChangeValues,
+  EmailChangeAction,
+} from "./account/email-change-setting";
+export { SessionsSetting, DEFAULT_SESSIONS_LABELS } from "./account/sessions-setting";
+export type { SessionsSettingProps, SessionsLabels, SessionItem, SessionId, SessionsAction } from "./account/sessions-setting";
+export { DeleteAccountSetting, DEFAULT_DELETE_ACCOUNT_LABELS } from "./account/delete-account-setting";
+export type {
+  DeleteAccountSettingProps,
+  DeleteAccountLabels,
+  DeleteAccountValues,
+  DeletionMode,
+  DeleteAccountConsequence,
+} from "./account/delete-account-setting";
+export { DataExportSetting, DEFAULT_DATA_EXPORT_LABELS } from "./account/data-export-setting";
+export type { DataExportSettingProps, DataExportLabels, DataExportFile } from "./account/data-export-setting";
+export {
+  userRosterColumns,
+  useUserRosterColumns,
+  UserIdentityCell,
+  UserRowActions,
+  adminUserStates,
+  userRosterSort,
+  USER_ROSTER_SORT_KEYS,
+  DEFAULT_USER_ROSTER_LABELS,
+} from "./admin/user-roster";
+export type {
+  UserRosterRow,
+  AdminUserStateFields,
+  RosterState,
+  UserRosterSortKey,
+  UserRosterLabels,
+  UserIdentityCellProps,
+  UserRowAction,
+  UserRowActionList,
+  UserRowActionsProps,
+  RoleEditing,
+  UserRosterColumnsOptions,
+} from "./admin/user-roster";
+export { RoleSelect, RolesEditor, DEFAULT_ROLE_SELECT_LABELS } from "./admin/role-select";
+export type { RoleSelectProps, RolesEditorProps, RoleSelectLabels, RoleLock, RoleLockCode } from "./admin/role-select";
+export { ReviewerScopeEditor, DEFAULT_REVIEWER_SCOPE_LABELS } from "./admin/reviewer-scope-editor";
+export type {
+  ReviewerScope,
+  ReviewerScopeArea,
+  ReviewerScopeLanguage,
+  ReviewerScopeLabels,
+  ReviewerScopeEditorProps,
+} from "./admin/reviewer-scope-editor";
+export { AdminActionConfirm, DEFAULT_ADMIN_ACTION_LABELS } from "./admin/admin-action-confirm";
+export type {
+  AdminConfirmLevel,
+  AdminActionConfirmValues,
+  AdminActionTarget,
+  AdminActionLabels,
+  AdminActionConfirmProps,
+} from "./admin/admin-action-confirm";
+export { AdminActionLog, ADMIN_ACTION_KINDS, DEFAULT_ADMIN_ACTION_LOG_LABELS } from "./admin/admin-action-log";
+export type {
+  AdminActionKind,
+  AdminActionLogEntry,
+  AdminActionLogLabels,
+  AdminActionLogPaging,
+  AdminActionLogProps,
+} from "./admin/admin-action-log";
+export { TransferOwnershipDialog, DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./admin/transfer-ownership-dialog";
+export type {
+  TransferCandidate,
+  TransferUnavailable,
+  TransferValues,
+  TransferOwnershipLabels,
+  TransferOwnershipDialogProps,
+} from "./admin/transfer-ownership-dialog";
+export { InvitationsPanel, DEFAULT_INVITATIONS_LABELS } from "./admin/invitations-panel";
+export type {
+  InvitationStatus,
+  InvitationRow,
+  InvitationDraft,
+  InvitationSentAnswer,
+  InvitationScope,
+  InvitationsLabels,
+  InvitationsPanelProps,
+} from "./admin/invitations-panel";
+export type { AdminPerson } from "./admin/admin-parts";
 export type {
   LegalPageProps,
   LegalKitSectionProps,

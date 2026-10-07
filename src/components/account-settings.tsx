@@ -1,10 +1,12 @@
 import { useId, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 import { Button, Card, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
 import { CopyButton } from "./copy-button";
 import { QrCode } from "./qr-code";
 import { OneTimeCodeInput } from "./one-time-code-input";
+import { usePromisePending } from "./danger-confirm";
+import { personNameOk, PERSON_NAME_MAX_LENGTH } from "../auth/form-rules";
 import {
   DEFAULT_PASSWORD_STRENGTH_LABELS,
   passwordByteLength,
@@ -40,38 +42,90 @@ export { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "./account-settings-labels";
  * `accountSettings` namespace, then English (see account-settings-labels.ts).
  */
 
-export function ProfileSetting({
-  name,
-  email,
-  role,
-  memberSince,
-  value,
-  onChange,
-  onSave,
-  saving,
-  labels: labelsProp,
-}: {
+/** What {@link ProfileSetting} hands `onSave` in its two-field form (0.30.0): both
+ *  trimmed, 1–120 characters each — the `PATCH /auth/me` body's `first_name` /
+ *  `last_name` (docs/user-admin-harmonization.md §6.1). */
+export interface ProfileNameValues {
+  firstName: string;
+  lastName: string;
+}
+
+/** What both forms of {@link ProfileSetting} take. */
+interface ProfileSettingCommonProps {
   name?: string | null;
   email?: string | null;
   role?: ReactNode;
   memberSince?: ReactNode;
-  value: string;
-  onChange: (value: string) => void;
-  onSave: () => void;
   saving?: boolean;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { profile } }}>` > English. */
   labels?: Partial<ProfileSettingLabels>;
-}) {
+}
+
+/**
+ * The single display name, as before 0.30.0 — controlled through `value` / `onChange`,
+ * saved by `onSave()`. Kept unchanged for an app that has not moved to first and last
+ * name yet.
+ */
+export interface ProfileSettingDisplayNameProps extends ProfileSettingCommonProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  firstName?: undefined;
+  lastName?: undefined;
+}
+
+/**
+ * First and last name (0.30.0, docs/user-admin-harmonization.md §6.1): the saved
+ * values in, the edited ones out through `onSave`. The card keeps the drafts itself.
+ */
+export interface ProfileSettingNamesProps extends ProfileSettingCommonProps {
+  /** The saved given name — `first_name`. `null` reads as empty. */
+  firstName: string | null;
+  /** The saved family name — `last_name`. `null` (a migrated account, §3.3) reads as
+   *  empty, and Save then waits for one. */
+  lastName: string | null;
+  /**
+   * Save the two names (`PATCH /auth/me`, which also clears `name_incomplete`). Return
+   * a promise and Save is busy until it settles. Refresh `firstName` / `lastName` from
+   * the answer: the card compares its drafts with them, so Save turns off once the new
+   * names come back. A rejection keeps what was typed — the app says why (a toast), as
+   * for `PasswordSetting`.
+   */
+  onSave: (values: ProfileNameValues) => void | Promise<unknown>;
+  value?: undefined;
+  onChange?: undefined;
+}
+
+export type ProfileSettingProps = ProfileSettingDisplayNameProps | ProfileSettingNamesProps;
+
+/**
+ * The profile section: avatar, address, role, member since, and the name.
+ *
+ * **Two forms.** Given `firstName` / `lastName` (0.30.0, §6.1) it edits first and last
+ * name in two fields, side by side where the card is wide enough — the order and the
+ * 1–120-character rule of `RegisterForm` (auth §3.1), so the name a person signed up
+ * with is edited the way it was typed. Without them it is the single `displayName`
+ * field it always was, `value` / `onChange` / `onSave()` unchanged, for an app that has
+ * not moved yet (kastlan split the one name at its first space on save; Kurvenschmiede
+ * built its own card instead).
+ *
+ * The two-field form owns its drafts, starting from the saved names and following them
+ * when they change; Save waits for a change, holds — saying why — while a name is
+ * blank, and is a `commit` (a {@link WriteLockProvider} locks it, keksdose's demo).
+ */
+export function ProfileSetting(props: ProfileSettingProps) {
+  const { name, email, role, memberSince, labels: labelsProp } = props;
   const labels = useAccountSettingsLabels("profile", labelsProp);
-  const dirty = value.trim().length > 0 && value.trim() !== (name ?? "");
-  // Generated, not the literal "display-name" it was: two of these on one page (an
-  // admin editing someone else's profile beside their own) shared an id, and the
-  // second label pointed at the first field.
-  const inputId = useId();
+  const names = props.firstName !== undefined || props.lastName !== undefined;
   return (
     <Card className="p-4 space-y-3">
       <div className="flex items-center gap-3">
-        <UserAvatar name={name} email={email} size="lg" />
+        <UserAvatar
+          name={name}
+          email={email}
+          person={names ? { first: props.firstName, last: props.lastName } : undefined}
+          size="lg"
+        />
         <div className="min-w-0">
           <div className="text-sm font-medium">{labels.title}</div>
           <div className="truncate font-mono text-xs text-[var(--text-muted)]">
@@ -88,6 +142,51 @@ export function ProfileSetting({
         <span className="text-[var(--text-muted)]">{labels.memberSince}</span>
         <span>{memberSince ?? "—"}</span>
       </div>
+      {names ? (
+        <PersonNameFields
+          firstName={props.firstName ?? ""}
+          lastName={props.lastName ?? ""}
+          onSave={(props as ProfileSettingNamesProps).onSave}
+          saving={props.saving}
+          labels={labels}
+        />
+      ) : (
+        <DisplayNameField
+          name={name}
+          value={(props as ProfileSettingDisplayNameProps).value}
+          onChange={(props as ProfileSettingDisplayNameProps).onChange}
+          onSave={(props as ProfileSettingDisplayNameProps).onSave}
+          saving={props.saving}
+          labels={labels}
+        />
+      )}
+    </Card>
+  );
+}
+
+/** The single-name form — exactly the 0.29 card's field and button. */
+function DisplayNameField({
+  name,
+  value,
+  onChange,
+  onSave,
+  saving,
+  labels,
+}: {
+  name?: string | null;
+  value: string;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  saving?: boolean;
+  labels: Required<ProfileSettingLabels>;
+}) {
+  const dirty = value.trim().length > 0 && value.trim() !== (name ?? "");
+  // Generated, not the literal "display-name" it was: two of these on one page (an
+  // admin editing someone else's profile beside their own) shared an id, and the
+  // second label pointed at the first field.
+  const inputId = useId();
+  return (
+    <>
       <Input
         id={inputId}
         label={labels.displayName}
@@ -98,7 +197,84 @@ export function ProfileSetting({
       <Button onClick={onSave} disabled={!dirty || saving}>
         {labels.save}
       </Button>
-    </Card>
+    </>
+  );
+}
+
+/** The first-and-last form (0.30.0, §6.1). */
+function PersonNameFields({
+  firstName,
+  lastName,
+  onSave,
+  saving,
+  labels,
+}: {
+  firstName: string;
+  lastName: string;
+  onSave: (values: ProfileNameValues) => void | Promise<unknown>;
+  saving?: boolean;
+  labels: Required<ProfileSettingLabels>;
+}) {
+  const [first, setFirst] = useState(firstName);
+  const [last, setLast] = useState(lastName);
+  // The saved names moved (the save came back, another tab renamed): the drafts follow
+  // them. During render, as DangerConfirm resets its fields, so no frame shows the old
+  // draft beside the new name.
+  const [saved, setSaved] = useState({ firstName, lastName });
+  if (saved.firstName !== firstName || saved.lastName !== lastName) {
+    setSaved({ firstName, lastName });
+    setFirst(firstName);
+    setLast(lastName);
+  }
+  const { pending, run } = usePromisePending();
+  const busy = Boolean(saving) || pending;
+  const valid = personNameOk(first) && personNameOk(last);
+  const dirty = first.trim() !== firstName.trim() || last.trim() !== lastName.trim();
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!valid || !dirty || busy) return;
+    // A rejection keeps the drafts; the app reports it, as PasswordSetting's does.
+    run(onSave({ firstName: first.trim(), lastName: last.trim() }), () => {});
+  };
+
+  return (
+    <form className="@container space-y-3" onSubmit={submit} noValidate>
+      {/* The order and the rule of RegisterForm's two fields (auth §3.1). */}
+      <div className="grid gap-3 @xs:grid-cols-2">
+        <Input
+          name="given-name"
+          autoComplete="given-name"
+          label={labels.firstName}
+          value={first}
+          onChange={(e) => setFirst(e.target.value)}
+          maxLength={PERSON_NAME_MAX_LENGTH}
+          readOnly={busy}
+          required
+        />
+        <Input
+          name="family-name"
+          autoComplete="family-name"
+          label={labels.lastName}
+          value={last}
+          onChange={(e) => setLast(e.target.value)}
+          maxLength={PERSON_NAME_MAX_LENGTH}
+          readOnly={busy}
+          required
+        />
+      </div>
+      <Button
+        type="submit"
+        commit
+        pending={busy}
+        // A blank name is a reason the person can act on; an unchanged one is not —
+        // there is nothing to save, and the button is simply off.
+        disabled={valid && !dirty}
+        disabledReason={valid ? undefined : labels.nameRequired}
+      >
+        {labels.save}
+      </Button>
+    </form>
   );
 }
 

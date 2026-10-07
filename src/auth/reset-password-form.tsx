@@ -6,7 +6,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
 import { Button, EmptyState } from "../components/ui";
-import { authErrorCode } from "./auth-errors";
+import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { newPasswordProblem } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
 import {
@@ -53,9 +53,15 @@ export interface ResetPasswordLabels {
   sessionsEnded: string;
   /** The button out — to sign-in, with the address filled in. */
   signIn: string;
+  /** 0.30.0: the save was throttled — HTTP 429 ({@link isRateLimited}) — given the
+   *  `Retry-After` wait in seconds, or `undefined` without one. OPTIONAL, like every key
+   *  added to a shipped interface; the provider's `resetPassword`, then English, fill
+   *  it. */
+  rateLimited?: (seconds?: number) => string;
 }
 
-export const DEFAULT_RESET_PASSWORD_LABELS: ResetPasswordLabels = {
+/** `Required`: every key, the 0.30 one included, has its English here. */
+export const DEFAULT_RESET_PASSWORD_LABELS: Required<ResetPasswordLabels> = {
   title: "Choose a new password",
   checking: "Checking the link…",
   intro: (email) => `You’re setting a new password for ${email}.`,
@@ -71,6 +77,7 @@ export const DEFAULT_RESET_PASSWORD_LABELS: ResetPasswordLabels = {
   success: "Your password has been changed. You can sign in with it now.",
   sessionsEnded: "Signed-in devices were signed out — you’ll need to sign in again there.",
   signIn: "Go to sign in",
+  rateLimited: englishRateLimited,
 };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -135,8 +142,9 @@ export interface ResetPasswordFormProps
   /** "Request a new link" — the app's "Forgot password" page. Default
    *  `/forgot-password`. */
   forgotHref?: string;
-  /** The app's words for a failed save (a `429`, the device offline), or `undefined`
-   *  for the kit's `failed`. Not asked for `token_invalid`, which is a state. */
+  /** The app's words for a failed save (the device offline), or `undefined` for the
+   *  kit's: `rateLimited` for a bare `429` (0.30.0), else `failed`. Not asked for
+   *  `token_invalid`, which is a state. */
   describeError?: (error: unknown) => ReactNode | undefined;
   /** The heading. Default `labels.title`; `null` draws none, for a page that puts it
    *  in `AuthLayout`'s `title` instead. */
@@ -297,7 +305,13 @@ export function ResetPasswordForm({
             setPhase({ token, phase: { kind: "invalid" } });
             return;
           }
-          setFailure(describeError?.(error) ?? labels.failed);
+          // The app's words first, then the throttle's, then the kit's catch-all.
+          setFailure(
+            describeError?.(error) ??
+              (isRateLimited(error)
+                ? (labels.rateLimited ?? DEFAULT_RESET_PASSWORD_LABELS.rateLimited)(retryAfterSeconds(error))
+                : labels.failed),
+          );
         },
       );
   };
