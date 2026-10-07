@@ -80,7 +80,8 @@ After the reviews:
 - **Paged on the server**, keksdose's shape. Kurvenschmiede's unpaged list moves to it;
   kastlan's `/auth/users` takes the same query.
 - `sort`: `name` (last, first, id: auth §3.2), `email`, `role`, `created`,
-  `last_login`; a leading `-` for descending.
+  `last_login`; descending as `key.desc` (what the kit's `DataTable` writes) or `-key`.
+  The server kit accepts both.
 - `q` searches first name, last name, both orders together, and email (auth §10.6).
 - `state` tokens, comma-separated: `active`, `deactivated`, `invited`, `unverified`,
   `password_change_required`, `deletion_scheduled`, `never_logged_in`, `admin`,
@@ -154,9 +155,15 @@ and the page asks for what it says.
 
 | Level | Actions |
 |---|---|
-| `type_email` | deactivate, erase now (operator), transfer |
+| `type_email` | deactivate, erase now (operator), transfer, the user's own deletion request |
 | `acknowledge` | force password change, change role |
 | `none` | the rest |
+
+Every action body carries the answer: `acknowledged` and `confirm_email`. A typed
+address that matches also satisfies `acknowledge`. A missing answer is
+`409 confirmation_required`, and a wrong address `409 confirmation_mismatch`. The level
+in the table is a floor: an app may raise it (keksdose: `type_email` for an account
+whose key a password opens).
 
 The kit's `AdminActionConfirm` renders the right dialog from the level, over
 `DangerConfirm` / `useConfirm`.
@@ -221,7 +228,9 @@ card meanwhile. It saves through `PATCH /auth/me` and clears `name_incomplete`.
 ### 6.2 Email change (§2.5)
 
 - `POST /auth/me/email {new_email, password}`. The password is asked again because the
-  address is the identity.
+  address is the identity. A wrong one answers **`400 password_incorrect`, never a
+  401**: an app's client reads a 401 as an ended session and would sign the user out
+  over a typo. The same holds for the deletion request (§6.4).
 - It mails a one-time token to the **new** address (server-kit, 48 h) and a notice to the
   **old** one ("your address is being changed; not you? write to …").
 - `POST /auth/me/email/confirm {token}` switches the address, sets
