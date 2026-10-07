@@ -468,7 +468,7 @@ the banner at 23 h / 50 min / 4 min, and `DemoEnded`.
   `count_live`, `is_ready`), using a per-IP `Budget(5, 3600)` from the settings; it
   raises `DemoError` with the code, status and `Retry-After`;
 - `client_ip(headers, peer, *, trusted_hops)` (§5.1), for the demo window and every
-  other per-IP limit;
+  other per-IP limit. It lives in `eifi1_server_kit.limiter`, beside the limiter;
 - `demo_address(domain)`, `is_demo_address(email)`, `demo_password()`;
 - `demo_expires_at(created_at, settings)` and `stale_cutoff(now, settings)`;
 - `demo_write_allowed(method, path, allow=…)` (§6.3) and `refuse_demo(user, what)` →
