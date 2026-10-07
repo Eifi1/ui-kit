@@ -10,8 +10,8 @@ import { CurrentPasswordInput } from "../components/danger-confirm";
 import { OneTimeCodeInput } from "../components/one-time-code-input";
 import { TextLink } from "../components/text-link";
 import { Button, Input } from "../components/ui";
-import { authErrorCode } from "./auth-errors";
-import type { AuthErrorCode } from "./auth-errors";
+import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import type { KitErrorCode } from "./auth-errors";
 import { taggedEmail } from "./email-tag";
 import { newPasswordProblem } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
@@ -72,8 +72,17 @@ export interface SignInCredentials {
 
 export interface SignInCodeValues {
   challengeToken: string;
-  /** Digits only — {@link OneTimeCodeInput} drops the spaces of "123 456". */
+  /** Digits only — {@link OneTimeCodeInput} drops the spaces of "123 456". A backup code
+   *  (`kind: "recovery"`) is trimmed and otherwise as typed: its dashes and case are the
+   *  server's to normalise, as kastlan's `_normalise_backup_code` does. */
   code: string;
+  /**
+   * 0.30.0: `"recovery"` when the person typed one of their backup codes instead
+   * (`recoveryCode`); absent for the authenticator's code, as before. kastlan's
+   * `/auth/login/2fa` takes either in the same `code` and tells them apart itself; an
+   * app whose server takes a backup code elsewhere routes on this.
+   */
+  kind?: "recovery";
 }
 
 export interface SignInNewPasswordValues {
@@ -140,9 +149,32 @@ export interface SignInLabels {
   expired: string;
   /** From the second and third step back to the credentials. */
   backToSignIn: string;
+  /*
+   * 0.30.0 — OPTIONAL, like `TwoFactorSettingLabels.qrAlt` and for its reason: a new
+   * required key is a compile error at every call site that annotates this interface
+   * (CONTRIBUTING's additive-API rule). Each falls back to the provider's `signIn`, then
+   * English.
+   */
+  /** The second-factor step's switch to a backup code (`recoveryCode`). */
+  useRecoveryCode?: string;
+  /** The switch back, from the backup-code field to the authenticator's code. */
+  useAuthenticatorCode?: string;
+  /** The backup-code field's label. */
+  recoveryCode?: string;
+  /** The step's intro while a backup code is asked for, in place of `twoFactorIntro`. */
+  recoveryIntro?: string;
+  /** Under the backup-code field, given how many letters and digits a code has. */
+  recoveryCodeHint?: (length: number) => string;
+  /** A refused backup code — wrong, or spent already (each one works once). */
+  recoveryCodeInvalid?: string;
+  /** Any step's request was throttled — HTTP 429 ({@link isRateLimited}) — given the
+   *  wait its `Retry-After` asks for, in seconds ({@link retryAfterSeconds}), or
+   *  `undefined` (or `0`) without one. */
+  rateLimited?: (seconds?: number) => string;
 }
 
-export const DEFAULT_SIGN_IN_LABELS: SignInLabels = {
+/** `Required`: every key, the 0.30 ones included, has its English here. */
+export const DEFAULT_SIGN_IN_LABELS: Required<SignInLabels> = {
   email: "Email",
   password: "Password",
   submit: "Sign in",
@@ -169,6 +201,13 @@ export const DEFAULT_SIGN_IN_LABELS: SignInLabels = {
   setPasswordFailed: "The password could not be set.",
   expired: "This sign-in has expired. Please sign in again.",
   backToSignIn: "Back to sign in",
+  useRecoveryCode: "Use a backup code",
+  useAuthenticatorCode: "Use your authenticator app",
+  recoveryCode: "Backup code",
+  recoveryIntro: "Enter one of the backup codes you saved when you turned on two-factor authentication.",
+  recoveryCodeHint: (length) => `${length} letters and digits. Dashes and spaces don’t matter.`,
+  recoveryCodeInvalid: "This backup code is not valid, or it has been used already.",
+  rateLimited: englishRateLimited,
 };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
@@ -230,10 +269,26 @@ export interface SignInFormProps extends Omit<ComponentPropsWithoutRef<"div">, "
   deactivatedContact?: ReactNode;
   /** Digits of the second factor. Default 6 (TOTP). */
   codeLength?: number;
+  /**
+   * 0.30.0: offer a backup code on the second-factor step (kastlan's 0.29 adoption: its
+   * `/auth/login/2fa` takes one of the eight codes minted at 2FA setup, and the kit's
+   * step had no way to type one). A "Use a backup code" switch under the code field
+   * swaps the digits-only {@link OneTimeCodeInput} for a plain text field; the code goes
+   * to `onCode` with the same challenge and `kind: "recovery"`.
+   *
+   * `true` for a 16-character code (kastlan's `ABCD-EFGH-JKLM-NPQR`), or `{ length }`.
+   * The length counts letters and digits only — the dashes and spaces a printed code is
+   * grouped with don't count — and "Verify" waits for it. Left out, no switch.
+   */
+  recoveryCode?: boolean | { length?: number };
   /** App content at the top of the credentials step — a notice, a demo button. */
   credentialsContent?: ReactNode;
-  /** App content on the second-factor step, under its intro. */
-  twoFactorContent?: ReactNode;
+  /**
+   * App content on the second-factor step, under its intro. 0.30.0: pass a function and
+   * it gets the challenge token — kastlan kept its own copy of the token for a "lost
+   * your device?" link, which the step now hands over.
+   */
+  twoFactorContent?: ReactNode | ((challengeToken: string) => ReactNode);
   /**
    * App content on the set-a-new-password step, under its intro — keksdose's
    * private-mode note ("Your encrypted data is untouched …"), which depends on the
@@ -241,9 +296,10 @@ export interface SignInFormProps extends Omit<ComponentPropsWithoutRef<"div">, "
    */
   passwordChangeContent?: ReactNode | ((extra: Readonly<Record<string, unknown>> | undefined) => ReactNode);
   /**
-   * The app's own words for a failure, or `undefined` for the kit's: a throttled
-   * attempt (`429`), the device being offline. Asked first, for every failure; what it
-   * returns replaces the message, and the `invalid_credentials` hints still follow.
+   * The app's own words for a failure, or `undefined` for the kit's: the device being
+   * offline, a throttle with its wait ("try again in an hour"). Asked first, for every
+   * failure; what it returns replaces the message, and the `invalid_credentials` hints
+   * still follow. A bare `429` needs none since 0.30.0: the kit says `rateLimited`.
    */
   describeError?: (error: unknown, action: SignInAction) => ReactNode | undefined;
   /** The step changed — retitle the page (`AuthLayout`'s `title`) if the app wants. */
@@ -258,7 +314,7 @@ export interface SignInFormProps extends Omit<ComponentPropsWithoutRef<"div">, "
 
 interface Failure {
   action: SignInAction;
-  code: AuthErrorCode | undefined;
+  code: KitErrorCode | undefined;
   message: ReactNode;
   /** The address the failed credentials carried — the tag hint names its tagged form. */
   email?: string;
@@ -284,6 +340,16 @@ function withContact(template: string, contact: ReactNode): ReactNode[] {
 }
 
 const HINT_CLASS = "text-xs text-[var(--text-secondary)]";
+
+/** A backup code's letters and digits — kastlan's: 16, printed `ABCD-EFGH-JKLM-NPQR`. */
+const RECOVERY_CODE_LENGTH = 16;
+
+/** How many letters and digits a typed backup code has: the dashes and spaces it is
+ *  printed in groups with don't count, so "abcd-efgh ijkl mnop" is 16 — the count
+ *  kastlan's server normalises the code to before it compares. */
+function recoveryCharacters(value: string): number {
+  return value.replace(/[^\p{L}\p{N}]/gu, "").length;
+}
 const INTRO_CLASS = "text-sm text-[var(--text-secondary)]";
 
 /* ── The form ────────────────────────────────────────────────────────────── */
@@ -319,7 +385,14 @@ const INTRO_CLASS = "text-sm text-[var(--text-secondary)]";
  *    whole code. A refused code stays here with its error; `token_invalid` (the
  *    challenge expired) goes back to the credentials and says why. Kurvenschmiede has
  *    no 2FA yet, and the step is here from the start, so adding it is backend work only
- *    (§10.5).
+ *    (§10.5). With `recoveryCode` (0.30.0) a switch under the field takes a backup code
+ *    instead, through the same `onCode` with `kind: "recovery"`.
+ *
+ * **A throttled request** (HTTP 429, {@link isRateLimited}) says "Too many attempts. Try
+ * again in 30 s." on any step (0.30.0) — the wait from its `Retry-After`, else "Wait a
+ * moment and try again." — after `describeError`, whose words still come first, and
+ * instead of "wrong password" or "invalid code", which would send the person to try
+ * another one.
  *  - New password: new + confirm with the strength meter, the 8-character / 72-byte
  *    rules and nothing else (§8). It reads as explained, not blocked (keksdose): the
  *    person did nothing wrong.
@@ -339,6 +412,7 @@ export function SignInForm({
   emailTag,
   deactivatedContact,
   codeLength = 6,
+  recoveryCode,
   credentialsContent,
   twoFactorContent,
   passwordChangeContent,
@@ -354,6 +428,9 @@ export function SignInForm({
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  // 0.30.0: the second factor as a backup code instead of the authenticator's digits.
+  const [useRecovery, setUseRecovery] = useState(false);
+  const [recovery, setRecovery] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [challenge, setChallenge] = useState<{ token: string; extra?: Readonly<Record<string, unknown>> } | null>(
@@ -368,6 +445,7 @@ export function SignInForm({
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
+  const recoveryRef = useRef<HTMLInputElement>(null);
   const newPasswordRef = useRef<HTMLInputElement>(null);
 
   // A late answer after unmount (the app navigated away) must not set state.
@@ -394,6 +472,8 @@ export function SignInForm({
     // The password has done its work; it does not stay in state for the next steps.
     setPassword("");
     setCode("");
+    setRecovery("");
+    setUseRecovery(false);
     setNewPassword("");
     setConfirm("");
     if (answer.kind === "2fa") {
@@ -405,25 +485,41 @@ export function SignInForm({
     }
   };
 
-  const messageFor = (error: unknown, action: SignInAction, code: AuthErrorCode | undefined): ReactNode => {
+  const messageFor = (
+    error: unknown,
+    action: SignInAction,
+    code: KitErrorCode | undefined,
+    recoveryUsed: boolean,
+  ): ReactNode => {
     const own = describeError?.(error, action);
     if (hasMessage(own)) return own;
+    // After the app's words, before the kit's generic ones (0.30.0): a throttle is
+    // neither a wrong password nor a wrong code, and saying so sends the person to try
+    // another one — which the limiter counts too.
+    if (isRateLimited(error)) return (labels.rateLimited ?? DEFAULT_SIGN_IN_LABELS.rateLimited)(retryAfterSeconds(error));
     if (action === "password") return code === "invalid_credentials" ? labels.invalidCredentials : labels.failed;
     if (action === "passkey") return labels.passkeyFailed;
-    if (action === "code") return code === "token_invalid" ? labels.expired : labels.codeInvalid;
+    if (action === "code") {
+      if (code === "token_invalid") return labels.expired;
+      return recoveryUsed
+        ? (labels.recoveryCodeInvalid ?? DEFAULT_SIGN_IN_LABELS.recoveryCodeInvalid)
+        : labels.codeInvalid;
+    }
     return code === "token_invalid" ? labels.expired : labels.setPasswordFailed;
   };
 
-  const fail = (error: unknown, action: SignInAction, sentEmail?: string) => {
+  const fail = (error: unknown, action: SignInAction, sentEmail?: string, recoveryUsed = false) => {
     setBusy(null);
     // Our own abort (a passkey ceremony cancelled by the unmount) is no failure.
     if ((error as { name?: unknown } | null)?.name === "AbortError") return;
     const code = authErrorCode(error);
-    const message = messageFor(error, action, code);
+    const message = messageFor(error, action, code, recoveryUsed);
     // The challenge expired between the steps: only a fresh sign-in helps.
     if ((action === "code" || action === "set-password") && code === "token_invalid") {
       setChallenge(null);
       setCode("");
+      setRecovery("");
+      setUseRecovery(false);
       setNewPassword("");
       setConfirm("");
       goTo("credentials");
@@ -431,7 +527,12 @@ export function SignInForm({
     setFailure({ action, code, message, email: sentEmail });
   };
 
-  const attempt = (action: SignInAction, call: () => Promise<SignInAnswer>, sentEmail?: string) => {
+  const attempt = (
+    action: SignInAction,
+    call: () => Promise<SignInAnswer>,
+    sentEmail?: string,
+    recoveryUsed = false,
+  ) => {
     if (busy) return;
     setBusy(action);
     setFailure(null);
@@ -446,7 +547,7 @@ export function SignInForm({
         if (mounted.current) present(answer);
       },
       (error: unknown) => {
-        if (mounted.current) fail(error, action, sentEmail);
+        if (mounted.current) fail(error, action, sentEmail, recoveryUsed);
       },
     );
   };
@@ -488,12 +589,24 @@ export function SignInForm({
     else if (emailRef.current?.value) passwordRef.current?.focus();
     else emailRef.current?.focus();
   }, [step]);
+  // The backup-code switch swaps one field for the other under the focus that pressed
+  // it; the field that came in is where the person is going. Only after a switch on
+  // this step — arriving on it is the effect above.
+  const shownRecovery = useRef(useRecovery);
+  useEffect(() => {
+    if (shownRecovery.current === useRecovery) return;
+    shownRecovery.current = useRecovery;
+    if (step !== "2fa") return;
+    (useRecovery ? recoveryRef : codeRef).current?.focus();
+  }, [useRecovery, step]);
 
   const backToCredentials = () => {
     if (busy) return;
     setChallenge(null);
     setFailure(null);
     setCode("");
+    setRecovery("");
+    setUseRecovery(false);
     setNewPassword("");
     setConfirm("");
     goTo("credentials");
@@ -504,35 +617,94 @@ export function SignInForm({
 
   /* ── Step 2: the second factor ── */
   if (step === "2fa" && challenge) {
+    const recoveryOn = recoveryCode !== undefined && recoveryCode !== false;
+    const recoveryLength = (typeof recoveryCode === "object" ? recoveryCode.length : undefined) ?? RECOVERY_CODE_LENGTH;
+    const asRecovery = recoveryOn && useRecovery;
+    const recoveryReady = recoveryCharacters(recovery) === recoveryLength;
+    const ready = asRecovery ? recoveryReady : code.length === codeLength;
     const submitCode = (e: FormEvent) => {
       e.preventDefault();
-      if (code.length !== codeLength) return;
+      if (!ready) return;
+      if (asRecovery) {
+        attempt(
+          "code",
+          () => onCode({ challengeToken: challenge.token, code: recovery.trim(), kind: "recovery" }),
+          undefined,
+          true,
+        );
+        return;
+      }
       attempt("code", () => onCode({ challengeToken: challenge.token, code }));
     };
+    const switchCode = () => {
+      if (working) return;
+      setFailure(null);
+      setCode("");
+      setRecovery("");
+      setUseRecovery((on) => !on);
+    };
     const codeError = failure?.action === "code" ? failure.message : undefined;
+    const content =
+      typeof twoFactorContent === "function" ? twoFactorContent(challenge.token) : twoFactorContent;
     return (
       <div {...rest} data-step="2fa" className={rootClass}>
         <form className="space-y-3" aria-labelledby={headingId} onSubmit={submitCode}>
           <Heading id={headingId} className="text-base font-semibold text-[var(--text-primary)]">
             {labels.twoFactorTitle}
           </Heading>
-          <p className={INTRO_CLASS}>{labels.twoFactorIntro}</p>
-          {twoFactorContent}
-          <OneTimeCodeInput
-            ref={codeRef}
-            label={labels.code}
-            name="code"
-            value={code}
-            length={codeLength}
-            onChange={(next) => {
-              setCode(next);
-              if (failure) setFailure(null);
-            }}
-            readOnly={working}
-            error={codeError}
-            required
-          />
-          <Button type="submit" className="w-full" disabled={!working && code.length !== codeLength} pending={working}>
+          <p className={INTRO_CLASS}>
+            {asRecovery ? (labels.recoveryIntro ?? DEFAULT_SIGN_IN_LABELS.recoveryIntro) : labels.twoFactorIntro}
+          </p>
+          {content}
+          {asRecovery ? (
+            // A plain text field, not the digits-only one: a backup code is letters and
+            // digits in printed groups. Nothing a phone keyboard would "correct", and no
+            // autofill — the browser's suggestion for an unknown field is the username.
+            <Input
+              ref={recoveryRef}
+              label={labels.recoveryCode ?? DEFAULT_SIGN_IN_LABELS.recoveryCode}
+              name="recovery-code"
+              value={recovery}
+              onChange={(e) => {
+                setRecovery(e.target.value);
+                if (failure) setFailure(null);
+              }}
+              autoComplete="off"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              inputClassName="font-mono"
+              hint={(labels.recoveryCodeHint ?? DEFAULT_SIGN_IN_LABELS.recoveryCodeHint)(recoveryLength)}
+              readOnly={working}
+              error={codeError}
+              required
+            />
+          ) : (
+            <OneTimeCodeInput
+              ref={codeRef}
+              label={labels.code}
+              name="code"
+              value={code}
+              length={codeLength}
+              onChange={(next) => {
+                setCode(next);
+                if (failure) setFailure(null);
+              }}
+              readOnly={working}
+              error={codeError}
+              required
+            />
+          )}
+          {recoveryOn && (
+            <p className="text-sm">
+              <Button type="button" variant="link" size="sm" disabled={working} onClick={switchCode}>
+                {asRecovery
+                  ? (labels.useAuthenticatorCode ?? DEFAULT_SIGN_IN_LABELS.useAuthenticatorCode)
+                  : (labels.useRecoveryCode ?? DEFAULT_SIGN_IN_LABELS.useRecoveryCode)}
+              </Button>
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={!working && !ready} pending={working}>
             {labels.verify}
           </Button>
         </form>

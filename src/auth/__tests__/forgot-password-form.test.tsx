@@ -103,6 +103,38 @@ describe("ForgotPasswordForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many requests.");
   });
 
+  it("says the kit's rateLimited for a 429 the app has no words for (0.30.0)", async () => {
+    const user = userEvent.setup();
+    render(<ForgotPasswordForm onSubmit={() => Promise.reject({ response: { status: 429 } })} />);
+    await user.type(screen.getByLabelText("Email"), "ada@example.com{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Wait a moment and try again.");
+    expect(screen.getByLabelText("Email")).toHaveValue("ada@example.com");
+  });
+
+  it("names the wait in minutes from a minute up — keksdose's hourly reset throttle", async () => {
+    const user = userEvent.setup();
+    render(
+      <ForgotPasswordForm
+        onSubmit={() => Promise.reject({ response: { status: 429, headers: { "Retry-After": "3600" } } })}
+      />,
+    );
+    await user.type(screen.getByLabelText("Email"), "ada@example.com{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 60 min.");
+  });
+
+  it("says it for a callback that throws a 429 before returning, too", async () => {
+    const user = userEvent.setup();
+    render(
+      <ForgotPasswordForm
+        onSubmit={() => {
+          throw Object.assign(new Error("429"), { status: 429 });
+        }}
+      />,
+    );
+    await user.type(screen.getByLabelText("Email"), "ada@example.com{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Wait a moment and try again.");
+  });
+
   it("takes labels, app content, a heading level, or no heading at all", () => {
     const { unmount } = render(
       <ForgotPasswordForm

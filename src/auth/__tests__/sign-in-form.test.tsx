@@ -186,6 +186,168 @@ describe("SignInForm — the second factor", () => {
   });
 });
 
+describe("SignInForm — a backup code (0.30.0)", () => {
+  const twoFactor = async (): Promise<SignInAnswer> => ({ kind: "2fa", challengeToken: "challenge-1" });
+
+  it("the switch swaps the digits for a text field, focused, and posts the code with kind: recovery", async () => {
+    const { user, onCode } = setup({ onSubmit: twoFactor, recoveryCode: true });
+    await signIn(user);
+    await user.click(await screen.findByRole("button", { name: "Use a backup code" }));
+    const field = screen.getByLabelText("Backup code");
+    await waitFor(() => expect(field).toHaveFocus());
+    expect(screen.queryByLabelText("2FA code")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Enter one of the backup codes you saved when you turned on two-factor authentication."),
+    ).toBeInTheDocument();
+    expect(field).toHaveAccessibleDescription("16 letters and digits. Dashes and spaces don’t matter.");
+    expect(field).toHaveAttribute("autocomplete", "off");
+    expect(field).toHaveAttribute("spellcheck", "false");
+    const verify = screen.getByRole("button", { name: "Verify" });
+    // Fifteen letters and digits: the dashes and the space don't count.
+    await user.type(field, " abcd-efgh ijkl mno");
+    expect(verify).toBeDisabled();
+    await user.type(field, "p ");
+    expect(verify).toBeEnabled();
+    await user.click(verify);
+    expect(onCode).toHaveBeenCalledWith({ challengeToken: "challenge-1", code: "abcd-efgh ijkl mnop", kind: "recovery" });
+  });
+
+  it("a refused backup code says so; switching back clears it, focuses the digits, and sends no kind", async () => {
+    const onCode = vi.fn<SignInFormProps["onCode"]>(async ({ kind }) =>
+      kind === "recovery" ? Promise.reject(new Error("401")) : { kind: "signed-in" },
+    );
+    const { user } = setup({ onSubmit: twoFactor, onCode, recoveryCode: true });
+    await signIn(user);
+    await user.click(await screen.findByRole("button", { name: "Use a backup code" }));
+    await user.type(screen.getByLabelText("Backup code"), "ABCD-EFGH-JKLM-NPQR{Enter}");
+    expect(await screen.findByText("This backup code is not valid, or it has been used already.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Backup code")).toHaveAttribute("aria-invalid", "true");
+
+    await user.click(screen.getByRole("button", { name: "Use your authenticator app" }));
+    const code = screen.getByLabelText("2FA code");
+    await waitFor(() => expect(code).toHaveFocus());
+    expect(screen.queryByText("This backup code is not valid, or it has been used already.")).not.toBeInTheDocument();
+    expect(screen.getByText("Enter the code your authenticator app shows.")).toBeInTheDocument();
+    await user.type(code, "123456{Enter}");
+    expect(onCode).toHaveBeenLastCalledWith({ challengeToken: "challenge-1", code: "123456" });
+  });
+
+  it("takes its own length", async () => {
+    const { user } = setup({ onSubmit: twoFactor, recoveryCode: { length: 8 } });
+    await signIn(user);
+    await user.click(await screen.findByRole("button", { name: "Use a backup code" }));
+    const field = screen.getByLabelText("Backup code");
+    expect(field).toHaveAccessibleDescription("8 letters and digits. Dashes and spaces don’t matter.");
+    await user.type(field, "1234-567");
+    expect(screen.getByRole("button", { name: "Verify" })).toBeDisabled();
+    await user.type(field, "8");
+    expect(screen.getByRole("button", { name: "Verify" })).toBeEnabled();
+  });
+
+  it("offers no switch without recoveryCode, and back to sign in leaves the backup field behind", async () => {
+    const { user, unmount } = setup({ onSubmit: twoFactor });
+    await signIn(user);
+    await screen.findByLabelText("2FA code");
+    expect(screen.queryByRole("button", { name: "Use a backup code" })).not.toBeInTheDocument();
+    unmount();
+
+    const second = setup({ onSubmit: twoFactor, recoveryCode: true });
+    await signIn(second.user);
+    await second.user.click(await screen.findByRole("button", { name: "Use a backup code" }));
+    await second.user.click(screen.getByRole("button", { name: "Back to sign in" }));
+    // The address stays; the password was dropped.
+    await second.user.type(screen.getByLabelText("Password"), "correct horse{Enter}");
+    // A fresh challenge starts on the authenticator's code again.
+    expect(await screen.findByLabelText("2FA code")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Backup code")).not.toBeInTheDocument();
+  });
+
+  it("hands the challenge token to a twoFactorContent function", async () => {
+    const { user } = setup({
+      onSubmit: async () => ({ kind: "2fa", challengeToken: "challenge-7" }),
+      twoFactorContent: (token) => <p>Lost your device? Token {token}</p>,
+    });
+    await signIn(user);
+    expect(await screen.findByText("Lost your device? Token challenge-7")).toBeInTheDocument();
+  });
+});
+
+describe("SignInForm — a throttled request (0.30.0)", () => {
+  const throttled = { response: { status: 429, data: { detail: "Too many requests" } } };
+  const TEXT = "Too many attempts. Wait a moment and try again.";
+
+  it("says so on the credentials, with no credential hint under it", async () => {
+    const { user } = setup({
+      onSubmit: async () => Promise.reject(throttled),
+      deactivatedContact: "support@example.com",
+      emailTag: "kastlan",
+    });
+    await signIn(user);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(TEXT);
+    expect(alert).not.toHaveTextContent("Account deactivated?");
+    expect(alert).not.toHaveTextContent("Signed up with");
+  });
+
+  it("says so on the code step and stays there, for a backup code too", async () => {
+    const { user } = setup({
+      onSubmit: async () => ({ kind: "2fa", challengeToken: "c" }),
+      onCode: async () => Promise.reject(throttled),
+      recoveryCode: true,
+    });
+    await signIn(user);
+    await user.type(await screen.findByLabelText("2FA code"), "123456{Enter}");
+    expect(await screen.findByText(TEXT)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Use a backup code" }));
+    await user.type(screen.getByLabelText("Backup code"), "ABCD-EFGH-JKLM-NPQR{Enter}");
+    expect(await screen.findByText(TEXT)).toBeInTheDocument();
+    expect(screen.getByLabelText("Backup code")).toBeInTheDocument();
+  });
+
+  it("says so for a passkey and on the set-password step", async () => {
+    const first = setup({ onPasskey: async () => Promise.reject(throttled) });
+    await first.user.click(screen.getByRole("button", { name: "Sign in with a passkey" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(TEXT);
+    first.unmount();
+
+    const { user } = setup({
+      onSubmit: async () => ({ kind: "password-change", challengeToken: "c" }),
+      onSetPassword: async () => Promise.reject(throttled),
+    });
+    await signIn(user);
+    await user.type(await screen.findByLabelText("New password"), "a good new password");
+    await user.type(screen.getByLabelText("Repeat new password"), "a good new password");
+    await user.click(screen.getByRole("button", { name: "Set password and sign in" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(TEXT);
+  });
+
+  it("the app's describeError still comes first, and the label is the namespace's", async () => {
+    const { user, unmount } = setup({
+      onSubmit: async () => Promise.reject(throttled),
+      describeError: () => "Try again in an hour.",
+    });
+    await signIn(user);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Try again in an hour.");
+    unmount();
+
+    const second = setup({
+      onSubmit: async () => Promise.reject(throttled),
+      labels: { rateLimited: (seconds) => `Slow down (${seconds ?? "?"}).` },
+    });
+    await signIn(second.user);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Slow down (?).");
+  });
+
+  it("names the wait a Retry-After asks for — keksdose's uncoded 429", async () => {
+    const { user } = setup({
+      onSubmit: async () =>
+        Promise.reject({ response: { status: 429, headers: { "retry-after": "30" }, data: { detail: "x" } } }),
+    });
+    await signIn(user);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 30 s.");
+  });
+});
+
 describe("SignInForm — a new password", () => {
   it("password-change: the challenge's extra reaches the step's content; the new password goes to onSetPassword", async () => {
     const { user, onSetPassword } = setup({

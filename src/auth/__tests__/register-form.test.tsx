@@ -257,4 +257,17 @@ describe("RegisterForm — refusals", () => {
     await submitRejected(refusal(429, "x"), { describeError: () => "Too many sign-ups from here." });
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many sign-ups from here.");
   });
+
+  it("a 429 says the kit's rateLimited, after the app's words (0.30.0)", async () => {
+    const { unmount } = await submitRejected({ response: { status: 429, data: { detail: "Too many requests" } } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Wait a moment and try again.");
+    expect(submitButton()).toBeEnabled();
+    unmount();
+
+    await submitRejected(
+      { status: 429, headers: new Headers({ "Retry-After": "120" }) },
+      { labels: { rateLimited: (seconds) => `Slow down: ${seconds} s.` } },
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("Slow down: 120 s.");
+  });
 });

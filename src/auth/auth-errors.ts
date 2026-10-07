@@ -35,7 +35,39 @@ export type AuthErrorCode =
   | "token_expired"
   | "account_inactive";
 
-const CODES: ReadonlySet<string> = new Set<AuthErrorCode>([
+/**
+ * 0.30.0: the coded refusals of user administration and the account's own settings
+ * (docs/user-admin-harmonization.md §4, §6) — server-kit 0.4.0's `AccountErrorCode`,
+ * value for value. The same family of answer as the sign-in codes (`{detail, code}`,
+ * plus `companies` on kastlan's `last_admin`), read by the same {@link authErrorCode}.
+ *
+ * - `last_admin` — the action would leave no active admin: deactivating, demoting or
+ *   deleting the last one (in kastlan, of a company; the answer names the `companies`).
+ * - `self_action` — an admin acting on their own account where that is never allowed.
+ * - `other_companies` — kastlan: the account belongs to other companies too, so a
+ *   company admin may not deactivate it; "Remove from company" instead (§9.6).
+ * - `household_has_members` — keksdose's guard on a deletion request (§6.4).
+ * - `confirmation_required`, `confirmation_mismatch` — the action's confirmation level
+ *   asked for a typed address (or a tick), and the request carried none, or another
+ *   address (§4.2).
+ * - `password_incorrect` — the CURRENT password is wrong on a signed-in route (the email
+ *   change, the deletion request). `400`, not `401`: an app's client reads a 401 as an
+ *   ended session and signs the user out, the wrong answer to a typo. Every other one
+ *   is a `409`.
+ */
+export type AccountErrorCode =
+  | "last_admin"
+  | "self_action"
+  | "other_companies"
+  | "household_has_members"
+  | "confirmation_required"
+  | "confirmation_mismatch"
+  | "password_incorrect";
+
+/** Every code the kit reads: the sign-in refusals and the account ones (0.30.0). */
+export type KitErrorCode = AuthErrorCode | AccountErrorCode;
+
+const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "invalid_credentials",
   "registration_closed",
   "email_taken",
@@ -44,6 +76,13 @@ const CODES: ReadonlySet<string> = new Set<AuthErrorCode>([
   "token_invalid",
   "token_expired",
   "account_inactive",
+  "last_admin",
+  "self_action",
+  "other_companies",
+  "household_has_members",
+  "confirmation_required",
+  "confirmation_mismatch",
+  "password_incorrect",
 ]);
 
 type Bag = Record<string, unknown>;
@@ -51,19 +90,20 @@ type Bag = Record<string, unknown>;
 const isBag = (value: unknown): value is Bag => typeof value === "object" && value !== null;
 
 /** A known code, or undefined. */
-function known(value: unknown): AuthErrorCode | undefined {
-  return typeof value === "string" && CODES.has(value) ? (value as AuthErrorCode) : undefined;
+function known(value: unknown): KitErrorCode | undefined {
+  return typeof value === "string" && CODES.has(value) ? (value as KitErrorCode) : undefined;
 }
 
 /** `{code}` on a parsed body, or FastAPI's `{detail: {code}}` — what an
  *  `HTTPException(detail={"code": …})` serialises to. */
-function codeOfBody(body: unknown): AuthErrorCode | undefined {
+function codeOfBody(body: unknown): KitErrorCode | undefined {
   if (!isBag(body)) return undefined;
   return known(body.code) ?? (isBag(body.detail) ? known(body.detail.code) : undefined);
 }
 
 /**
- * The {@link AuthErrorCode} an error carries, or `undefined` when it carries none.
+ * The code an error carries — an {@link AuthErrorCode}, or since 0.30.0 an
+ * {@link AccountErrorCode} — or `undefined` when it carries none.
  *
  * Reads the parsed response body wherever the apps' HTTP clients put it, without
  * depending on any of them:
@@ -80,7 +120,7 @@ function codeOfBody(body: unknown): AuthErrorCode | undefined {
  * read as a refusal. The HTTP status is not checked: the code is the contract, and the
  * status differs per refusal (401, 403, 409, 410).
  */
-export function authErrorCode(err: unknown): AuthErrorCode | undefined {
+export function authErrorCode(err: unknown): KitErrorCode | undefined {
   if (!isBag(err)) return undefined;
   const response = err.response;
   return (
@@ -101,9 +141,122 @@ export function authErrorCode(err: unknown): AuthErrorCode | undefined {
  *
  * The kit's `SignInForm` and `RegisterForm` call it on what their callbacks reject
  * with, so an app's `onSubmit` can simply let its client's error through. See
- * {@link authErrorCode} for the shapes it reads.
+ * {@link authErrorCode} for the shapes it reads. Since 0.30.0 it knows the account codes
+ * too: `isAuthError(err, "last_admin")`.
  */
-export function isAuthError(err: unknown, code?: AuthErrorCode): boolean {
+export function isAuthError(err: unknown, code?: KitErrorCode): boolean {
   const found = authErrorCode(err);
   return found !== undefined && (code === undefined || found === code);
+}
+
+/** An HTTP status as a number, or undefined. */
+function statusOf(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
+}
+
+/**
+ * Whether `err` is a throttled request — HTTP `429 Too Many Requests` (0.30.0, from the
+ * apps' 0.29 adoption: every app answered a throttled sign-in, sign-up or reset through
+ * its own `describeError`, with three wordings of one sentence).
+ *
+ * A throttle carries no `code` in the contract — the STATUS is the answer, set by the
+ * apps' limiters (server-kit's `AuthLimiters`, keksdose's per-IP limit) — so this reads
+ * the status, wherever the apps' HTTP clients put it, without depending on any of them:
+ *
+ *  1. `err.response.status` — axios (all three apps' clients);
+ *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
+ *     a `Response` thrown as it came;
+ *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
+ *
+ * There is no `rate_limited` code: keksdose answers its 429s uncoded, with a
+ * `Retry-After` header, and the status is the one signal every limiter gives.
+ *
+ * The kit's `SignInForm`, `RegisterForm`, `ForgotPasswordForm` and `ResetPasswordForm`
+ * call it AFTER the app's `describeError` — an app with words of its own keeps them —
+ * and before their generic failure, so "Too many attempts. Try again in 30 s." (with
+ * {@link retryAfterSeconds}) or "… Wait a moment and try again." needs no app code.
+ */
+export function isRateLimited(err: unknown): boolean {
+  if (!isBag(err)) return false;
+  const response = err.response;
+  const status =
+    (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
+  return status === 429;
+}
+
+/** A header's value from a `Headers` (fetch, ofetch's `response`), axios' `AxiosHeaders`
+ *  or a plain record — whose keys may come in any case. */
+function headerOf(headers: unknown, name: string): unknown {
+  if (!isBag(headers)) return undefined;
+  if (typeof headers.get === "function") {
+    try {
+      const value: unknown = (headers.get as (key: string) => unknown).call(headers, name);
+      if (value !== undefined && value !== null) return value;
+    } catch {
+      // A `get` that is not a header lookup; the record below is.
+    }
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === name) return value;
+  }
+  return undefined;
+}
+
+/** `Retry-After` as seconds from `now`: delta-seconds ("30"), or an HTTP date
+ *  ("Wed, 07 Oct 2026 10:00:00 GMT") counted from now, never below 0 (RFC 9110 §10.2.3). */
+function parseRetryAfter(value: unknown, now: number): number | undefined {
+  const raw = Array.isArray(value) ? (value as unknown[])[0] : value;
+  if (typeof raw === "number") return Number.isFinite(raw) && raw >= 0 ? Math.ceil(raw) : undefined;
+  if (typeof raw !== "string") return undefined;
+  const text = raw.trim();
+  if (/^\d+$/.test(text)) return Number(text);
+  // An HTTP date names its day and month ("Wed, 07 Oct 2026 …"). Without a letter it is
+  // a malformed number ("-5", "1.5"), which `Date.parse` would happily read as a year.
+  if (!/[a-z]/i.test(text)) return undefined;
+  const at = Date.parse(text);
+  if (Number.isNaN(at)) return undefined;
+  return Math.max(0, Math.ceil((at - now) / 1000));
+}
+
+/**
+ * How long a throttled request asks to wait, in whole seconds — its `Retry-After`
+ * header (0.30.0, keksdose: its 429s carry no code, only the header) — or `undefined`
+ * when there is none, or none that parses.
+ *
+ * Read where the apps' clients keep the response headers, without depending on any of
+ * them: `err.response.headers` (axios' `AxiosHeaders` or a plain record; ofetch's
+ * `FetchError.response`, a fetch `Headers`), then `err.headers` (a `Response` thrown as
+ * it came). The value is delta-seconds, or an HTTP date turned into seconds from `now`
+ * (default: the present moment) — never below 0.
+ *
+ * The forms hand it to their `rateLimited` label when {@link isRateLimited} is true:
+ * "Too many attempts. Try again in 30 s." — and, without one, "… Wait a moment and try
+ * again." A browser only exposes `Retry-After` to a cross-origin page when the server
+ * lists it in `Access-Control-Expose-Headers`.
+ */
+export function retryAfterSeconds(err: unknown, now: number | Date = Date.now()): number | undefined {
+  if (!isBag(err)) return undefined;
+  const at = typeof now === "number" ? now : now.getTime();
+  const response = err.response;
+  const value =
+    (isBag(response) ? headerOf(response.headers, "retry-after") : undefined) ?? headerOf(err.headers, "retry-after");
+  return value === undefined ? undefined : parseRetryAfter(value, at);
+}
+
+/**
+ * The English of every `rateLimited` label (0.30.0): "Too many attempts. Try again in
+ * 30 s." with a wait under a minute, in whole minutes from one minute up (keksdose's
+ * reset throttle answers in hours, and "3600 s" is a number nobody reads), and "Wait a
+ * moment and try again." without one — or with a `0`.
+ *
+ * @internal The namespaces' English; not part of the barrel.
+ */
+export function englishRateLimited(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "Too many attempts. Wait a moment and try again.";
+  return `Too many attempts. Try again in ${englishWait(seconds)}.`;
+}
+
+/** "30 s", "2 min" — a wait in English, rounded up. @internal */
+export function englishWait(seconds: number): string {
+  return seconds < 60 ? `${Math.ceil(seconds)} s` : `${Math.ceil(seconds / 60)} min`;
 }

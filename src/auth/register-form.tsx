@@ -11,7 +11,7 @@ import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
 import { TextLink } from "../components/text-link";
 import { Button, Input } from "../components/ui";
-import { authErrorCode } from "./auth-errors";
+import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { emailParts, taggedEmail } from "./email-tag";
 import { newPasswordProblem, personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
@@ -71,9 +71,15 @@ export interface RegisterLabels {
   invitationExpired: string;
   /** Any other failure. */
   failed: string;
+  /** 0.30.0: the request was throttled — HTTP 429 ({@link isRateLimited}) — given the
+   *  `Retry-After` wait in seconds, or `undefined` without one. OPTIONAL, like every key
+   *  added to a shipped interface (an annotated call site must keep compiling); the
+   *  provider's `register`, then English, fill it. */
+  rateLimited?: (seconds?: number) => string;
 }
 
-export const DEFAULT_REGISTER_LABELS: RegisterLabels = {
+/** `Required`: every key, the 0.30 one included, has its English here. */
+export const DEFAULT_REGISTER_LABELS: Required<RegisterLabels> = {
   firstName: "First name",
   lastName: "Last name",
   email: "Email",
@@ -94,6 +100,7 @@ export const DEFAULT_REGISTER_LABELS: RegisterLabels = {
   invitationInvalid: "This invitation link is not valid.",
   invitationExpired: "This invitation has expired. Ask for a new one.",
   failed: "Registration failed. Please try again.",
+  rateLimited: englishRateLimited,
 };
 
 export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children"> {
@@ -165,8 +172,9 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">,
   privacyHref?: string;
   /** "Already have an account? Sign in" goes here — `/login`. Left out, no line. */
   signInHref?: string;
-  /** The app's own words for a failure the kit cannot know (a throttled attempt), or
-   *  `undefined` for the kit's. Asked first, for every failure. */
+  /** The app's own words for a failure the kit cannot know (the device offline, a
+   *  throttle with its wait), or `undefined` for the kit's. Asked first, for every
+   *  failure; a bare `429` needs none since 0.30.0 — the kit says `rateLimited`. */
   describeError?: (error: unknown) => ReactNode | undefined;
   labels?: Partial<RegisterLabels>;
 }
@@ -320,7 +328,9 @@ export function RegisterForm({
         setFailure(
           hasMessage(own)
             ? own
-            : code === "registration_closed"
+            : isRateLimited(error)
+              ? (labels.rateLimited ?? DEFAULT_REGISTER_LABELS.rateLimited)(retryAfterSeconds(error))
+              : code === "registration_closed"
               ? labels.registrationClosed
               : code === "invitation_invalid"
                 ? labels.invitationInvalid

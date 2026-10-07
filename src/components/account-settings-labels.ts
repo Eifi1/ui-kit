@@ -20,8 +20,19 @@ export interface ProfileSettingLabels {
   email: string;
   role: string;
   memberSince: string;
+  /** The single name field — the card without `firstName` / `lastName`. */
   displayName: string;
   save: string;
+  /**
+   * 0.30.0 (docs/user-admin-harmonization.md §6.1): the two fields that replace
+   * `displayName` once the card is given `firstName` / `lastName`. OPTIONAL, like
+   * `TwoFactorSettingLabels.qrAlt` and for its reason — this interface is annotated at
+   * call sites — and filled from the provider's `accountSettings.profile`, then English.
+   */
+  firstName?: string;
+  lastName?: string;
+  /** Why Save is held while a name is blank: both are required (§3.1). */
+  nameRequired?: string;
 }
 
 export interface PasswordSettingLabels {
@@ -104,7 +115,7 @@ export interface PasskeysSettingLabels {
 }
 
 export interface AccountSettingsLabels {
-  profile: ProfileSettingLabels;
+  profile: Required<ProfileSettingLabels>;
   password: PasswordSettingLabels;
   // `Required` here, optional on the section interfaces: the namespace is what a full
   // catalogue (`@eifi1/ui-kit/i18n/<code>`, `missingKitLabels`) is written against, so
@@ -121,6 +132,9 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
     memberSince: "Member since",
     displayName: "Display name",
     save: "Save",
+    firstName: "First name",
+    lastName: "Last name",
+    nameRequired: "Enter both a first and a last name.",
   },
   password: {
     title: "Change password",

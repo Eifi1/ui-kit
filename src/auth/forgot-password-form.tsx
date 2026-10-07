@@ -6,6 +6,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { TextLink } from "../components/text-link";
 import { Button, Input } from "../components/ui";
+import { englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, isThenable, useFocusWhen } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
 
@@ -30,9 +31,15 @@ export interface ForgotPasswordLabels {
   /** A request that did not go through: a throttle, an outage. Never "unknown
    *  address" — the endpoint does not say. */
   error: string;
+  /** 0.30.0: the request was throttled — HTTP 429 ({@link isRateLimited}) — given the
+   *  `Retry-After` wait in seconds, or `undefined` without one. OPTIONAL, like every key
+   *  added to a shipped interface; the provider's `forgotPassword`, then English, fill
+   *  it. */
+  rateLimited?: (seconds?: number) => string;
 }
 
-export const DEFAULT_FORGOT_PASSWORD_LABELS: ForgotPasswordLabels = {
+/** `Required`: every key, the 0.30 one included, has its English here. */
+export const DEFAULT_FORGOT_PASSWORD_LABELS: Required<ForgotPasswordLabels> = {
   title: "Forgot password",
   intro: "Enter your account’s email address. We’ll send you a link to choose a new password.",
   email: "Email",
@@ -41,6 +48,7 @@ export const DEFAULT_FORGOT_PASSWORD_LABELS: ForgotPasswordLabels = {
   sentHint: "The link is valid for one hour and works exactly once. Check your spam folder too.",
   backToSignIn: "Back to sign in",
   error: "The request failed. Please try again later.",
+  rateLimited: englishRateLimited,
 };
 
 /* ── The form ────────────────────────────────────────────────────────────── */
@@ -61,8 +69,9 @@ export interface ForgotPasswordFormProps
    *  whose password just failed need not type it twice. */
   defaultEmail?: string;
   /**
-   * The app's words for a failed request (a `429`: "Too many requests — try again in
-   * an hour"), or `undefined` for the kit's `error`. The same hook as `SignInForm`'s.
+   * The app's words for a failed request ("Too many requests — try again in an hour"),
+   * or `undefined` for the kit's: `rateLimited` for a bare `429` (0.30.0), else `error`.
+   * The same hook as `SignInForm`'s.
    */
   describeError?: (error: unknown) => ReactNode | undefined;
   /** App content under the intro — a notice, a support address. */
@@ -146,6 +155,13 @@ export function ForgotPasswordForm({
     );
   }
 
+  // The app's words first, then the throttle's, then the kit's catch-all.
+  const failureFor = (error: unknown): ReactNode =>
+    describeError?.(error) ??
+    (isRateLimited(error)
+      ? (labels.rateLimited ?? DEFAULT_FORGOT_PASSWORD_LABELS.rateLimited)(retryAfterSeconds(error))
+      : labels.error);
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const address = email.trim();
@@ -155,7 +171,7 @@ export function ForgotPasswordForm({
     try {
       result = onSubmit(address);
     } catch (error) {
-      setFailure(describeError?.(error) ?? labels.error);
+      setFailure(failureFor(error));
       return;
     }
     if (!isThenable(result)) {
@@ -170,7 +186,7 @@ export function ForgotPasswordForm({
       },
       (error: unknown) => {
         setPending(false);
-        setFailure(describeError?.(error) ?? labels.error);
+        setFailure(failureFor(error));
       },
     );
   };
