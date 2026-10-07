@@ -64,9 +64,9 @@ export const hu: Dictionary = {
     searchExamples: "Példák",
     searchNeeds: "Mire van szüksége?",
     searchPages: "Oldalak",
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
-    serverSide: "Server side",
-    searchServer: "Server kit",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "Szerveroldal",
+    searchServer: "Szervercsomag",
   },
 
   groups: {
@@ -81,8 +81,9 @@ export const hu: Dictionary = {
     Overlays: "Felugró elemek",
     "App chrome": "Alkalmazáskeret",
     API: "API",
-    // ENGLISH PLACEHOLDER (0.31).
-    "Server kit": "Server kit",
+    // "Csomag" (package), as this file names the kit elsewhere: server-kit IS a Python
+    // package, and Hungarian has no settled loanword for "kit".
+    "Server kit": "Szervercsomag",
   },
 
   groupShort: {
@@ -94,8 +95,7 @@ export const hu: Dictionary = {
     Inputs: "Bevitel",
     Charts: "Ábrák",
     Overlays: "Felugró",
-    // ENGLISH PLACEHOLDER (0.31).
-    "Server kit": "Server",
+    "Server kit": "Szerver",
   },
 
   pages: {
@@ -116,6 +116,18 @@ export const hu: Dictionary = {
       short: "Linkek",
       blurb:
         "A kit minden hivatkozása az alkalmazás saját routerén át, egyszer beállítva a providerben: a szöveges hivatkozás és tónusai, egy hivatkozásként működő gomb vagy műveleti kártya, és az alkalmazásból kivezető hivatkozások.",
+    },
+    "settings-page": {
+      title: "Beállítások oldal",
+      short: "Beállítások oldal",
+      blurb:
+        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel.",
+    },
+    "landing-demo": {
+      title: "Kezdőlap és demó",
+      short: "Kezdőlap",
+      blurb:
+        "A nyilvános kezdőlap és a kipróbálható demó: a fejléc három állapota, a kezdőlap szakaszai, a SEO-ellenőrzések, a visszatérés a legutóbb megnyitott oldalra, valamint a demó indítása, visszaszámlálása és vége.",
     },
     "user-admin": {
       title: "Felhasználókezelés",
@@ -484,59 +496,59 @@ export const hu: Dictionary = {
       blurb:
         "A beviteli mezők mögötti függvények és adatok, bemenet → eredmény formában: dátumszámítás a @eifi1/ui-kit/dates alútvonalról, a számológép kiértékelője, a pénznemtáblázat és az osztálykonstansok, amelyekből egyéni mező állítható össze.",
     },
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
     "server-kit": {
-      title: "Server kit",
+      title: "Szervercsomag",
       blurb:
-        "The Python package behind the apps' backends: the contracts these components speak, as code — every module's signatures and docstrings, pinned to one server-kit release.",
+        "Az alkalmazások backendjei mögötti Python-csomag: a szerződések, amelyeket ezek a komponensek követnek, kódként — minden modul szignatúrái és docstringjei, egyetlen server-kit kiadáshoz rögzítve.",
     },
     "server-auth": {
-      title: "Sign-in & account",
-      short: "Auth",
+      title: "Bejelentkezés és fiók",
+      short: "Belépés",
       blurb:
-        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+        "Regisztráció, bejelentkezés, egyszer használatos tokenek, munkamenet-claimek és a fiók átviteli formátumai — a bejelentkezési, regisztrációs és fiókoldalak szerveroldali fele.",
     },
     "server-user-admin": {
-      title: "User admin",
-      short: "Users",
+      title: "Felhasználókezelés",
+      short: "Felhasználók",
       blurb:
-        "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
+        "A felhasználólista lekérdezése, a négy adminisztrátori művelet és megerősítési szintjeik, az auditbejegyzés, a kétlépcsős törlés és az adatexport.",
     },
     "server-settings": {
-      title: "Settings & language",
-      short: "Settings",
+      title: "Beállítások és nyelv",
+      short: "Beállítások",
       blurb:
-        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — és a fiók egyetlen kanonikus nyelve.",
     },
     "server-demo": {
-      title: "Demo",
-      short: "Demo",
+      title: "Demó",
+      short: "Demó",
       blurb:
-        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+        "Az eldobható demófiók: a beállításai, az indítás előtti ellenőrzések sorrendje, az elutasítások és kódjaik, a csak olvasható mód szabálya és az egyetlen élettartama.",
     },
     "server-mail": {
-      title: "Mail",
-      short: "Mail",
+      title: "E-mail",
+      short: "E-mail",
       blurb:
-        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+        "A fiók e-mailjei: a szövegek nyelvenként, egyetlen elrendezés, amely minden értéket escape-el, két küldési mód, amely soha nem dob kivételt — és a kiadás minta-e-mailjei, renderelve.",
     },
     "server-feedback": {
-      title: "Feedback & uploads",
-      short: "Feedback",
+      title: "Visszajelzés és feltöltés",
+      short: "Visszajelzés",
       blurb:
-        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés — és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
     },
     "server-limits": {
-      title: "Limits, errors & CORS",
-      short: "Limits",
+      title: "Korlátok, hibák és CORS",
+      short: "Korlátok",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, és CORS néhány további originre.",
     },
     "server-translation-review": {
-      title: "Translation review",
-      short: "Review",
+      title: "Fordítások ellenőrzése",
+      short: "Ellenőrzés",
       blurb:
-        "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
+        "A fordításellenőrzés átviteli formátumai, hogy ki mely kulcsokat és nyelveket ellenőrizheti, és az ellenőrzési tokenek, amelyekkel egy ellenőr megnyitja a csomag ellenőrző oldalát.",
     },
   },
 
@@ -564,6 +576,23 @@ export const hu: Dictionary = {
       "új lapon nyíló hivatkozás",
       "navigáló gomb",
       "az aktuális oldal hivatkozásának kiemelése",
+    ],
+    "settings-page": [
+      "beállítások oldal oldalsávval",
+      "beállítások listaként telefonon",
+      "közvetlen hivatkozás egy beállításra",
+      "keresés a beállításokban",
+      "adminisztrációs oldal ugyanabban az elrendezésben",
+      "a fiók nyelvének követése",
+    ],
+    "landing-demo": [
+      "nyilvános kezdőlap készítése",
+      "„Hozzáférés kérése” gomb hozzáadása",
+      "oldalcím és leírás ellenőrzése keresőmotorokhoz",
+      "az alkalmazás megnyitása ott, ahol a felhasználó abbahagyta",
+      "demó munkamenet indítása",
+      "a demó hátralévő idejének visszaszámlálása",
+      "annak jelzése, hogy a demó véget ért",
     ],
     "user-admin": [
       "felhasználók listázása a szerepkörükkel",
@@ -1115,74 +1144,74 @@ export const hu: Dictionary = {
       "utolsó teljes hónapok",
       "mező osztálynevek",
     ],
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    // The Server kit group (0.31).
     "server-kit": [
-      "document the backend package",
-      "install the server kit",
-      "which server-kit release is documented",
-      "python contracts for the backend",
-      "find the server side of a component",
+      "a backend csomag dokumentációja",
+      "a server-kit telepítése",
+      "melyik server-kit kiadás van dokumentálva",
+      "Python-szerződések a backendhez",
+      "egy komponens szerveroldalának megkeresése",
     ],
     "server-auth": [
-      "check a sign-in on the server",
-      "registration by invitation only",
-      "mint a password reset token",
-      "session token claims",
-      "normalise an email address",
-      "auth error codes",
+      "bejelentkezés ellenőrzése a szerveren",
+      "regisztráció csak meghívóval",
+      "jelszó-visszaállító token létrehozása",
+      "munkamenet-token claimjei",
+      "e-mail-cím normalizálása",
+      "hitelesítési hibakódok",
     ],
     "server-user-admin": [
-      "query the user list on the server",
-      "confirmation level of an admin action",
-      "write an admin audit entry",
-      "delete an account in two stages",
-      "export a user's data",
-      "never remove the last admin",
+      "felhasználólista lekérdezése a szerveren",
+      "adminisztrátori művelet megerősítési szintje",
+      "adminisztrátori auditbejegyzés írása",
+      "fiók törlése két lépésben",
+      "felhasználó adatainak exportálása",
+      "az utolsó adminisztrátor megtartása",
     ],
     "server-settings": [
-      "patch settings without losing fields",
-      "clear a setting with null",
-      "refuse unknown fields in a body",
-      "store the account's language",
-      "read the Accept-Language header",
+      "beállítások módosítása mezők elvesztése nélkül",
+      "beállítás törlése null értékkel",
+      "ismeretlen mezők elutasítása a kéréstörzsben",
+      "a fiók nyelvének tárolása",
+      "az Accept-Language fejléc olvasása",
     ],
     "server-demo": [
-      "start a demo session",
-      "demo account settings",
-      "make the demo read-only",
-      "demo refusal codes",
-      "clean up old demo users",
+      "demó munkamenet indítása",
+      "a demófiók beállításai",
+      "a demó csak olvashatóvá tétele",
+      "a demó elutasítási kódjai",
+      "régi demófelhasználók törlése",
     ],
     "server-mail": [
-      "send a password reset mail",
-      "preview the account mails",
-      "mail texts per language",
-      "send mail through Resend",
-      "log mail in development",
-      "reply-to support address",
+      "jelszó-visszaállító e-mail küldése",
+      "a fiók e-mailjeinek előnézete",
+      "e-mail-szövegek nyelvenként",
+      "e-mail küldése Resenden keresztül",
+      "e-mailek naplózása fejlesztés közben",
+      "ügyfélszolgálati válaszcím",
     ],
     "server-feedback": [
-      "validate a feedback report",
-      "feedback status rules",
-      "file a crash report",
-      "check an uploaded file's type",
-      "limit the attachment size",
-      "erase feedback of a deleted user",
+      "visszajelzés validálása",
+      "visszajelzések állapotszabályai",
+      "összeomlás-jelentés rögzítése",
+      "feltöltött fájl típusának ellenőrzése",
+      "mellékletek méretének korlátozása",
+      "törölt felhasználó visszajelzéseinek törlése",
     ],
     "server-limits": [
-      "rate limit a route",
-      "client IP behind a proxy",
-      "send a Retry-After header",
-      "map kit errors to HTTP statuses",
-      "allow an extra CORS origin",
-      "error response with a code",
+      "útvonal sebességkorlátozása",
+      "kliens IP-címe proxy mögött",
+      "Retry-After fejléc küldése",
+      "a csomag hibáinak leképezése HTTP-státuszokra",
+      "további CORS-origin engedélyezése",
+      "hibaválasz kóddal",
     ],
     "server-translation-review": [
-      "review translations through the API",
-      "issue a review token",
-      "who may review which language",
-      "translation verdicts",
-      "kit translation keys",
+      "fordítások ellenőrzése API-n keresztül",
+      "ellenőrzési token kiadása",
+      "ki melyik nyelvet ellenőrizheti",
+      "fordítási ítéletek",
+      "a csomag fordítási kulcsai",
     ],
   },
 

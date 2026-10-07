@@ -63,9 +63,9 @@ export const zh: Dictionary = {
     searchExamples: "示例",
     searchNeeds: "您需要什么？",
     searchPages: "页面",
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
-    serverSide: "Server side",
-    searchServer: "Server kit",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "服务端",
+    searchServer: "服务端套件",
   },
 
   groups: {
@@ -80,8 +80,7 @@ export const zh: Dictionary = {
     // "Chrome" as in the frame around an app, not the browser.
     "App chrome": "应用框架",
     API: "API",
-    // ENGLISH PLACEHOLDER (0.31).
-    "Server kit": "Server kit",
+    "Server kit": "服务端套件",
   },
 
   groupShort: {
@@ -93,8 +92,7 @@ export const zh: Dictionary = {
     Inputs: "输入",
     Charts: "图表",
     Overlays: "浮层",
-    // ENGLISH PLACEHOLDER (0.31).
-    "Server kit": "Server",
+    "Server kit": "服务端",
   },
 
   pages: {
@@ -115,6 +113,18 @@ export const zh: Dictionary = {
       short: "链接",
       blurb:
         "每个套件链接都由应用自己的路由器处理，只需在 Provider 上设置一次：文本链接及其色调、作为链接的按钮或操作卡片，以及离开应用的链接。",
+    },
+    "settings-page": {
+      title: "设置页面",
+      short: "设置页面",
+      blurb:
+        "设置页面和管理页面共用同一外壳：桌面端的侧边栏、手机上的下钻列表、每个分组一个路径、搜索，以及被链接高亮的卡片。",
+    },
+    "landing-demo": {
+      title: "首页与演示",
+      short: "首页",
+      blurb:
+        "公开首页和可试用的演示：页头的三种状态、首页的各个区块、SEO 检查、回到上次访问的页面，以及演示的开始、倒计时和结束。",
     },
     "user-admin": {
       title: "用户管理",
@@ -466,59 +476,59 @@ export const zh: Dictionary = {
       blurb:
         "输入框背后的函数与数据，以“输入 → 结果”展示：@eifi1/ui-kit/dates 的日期运算、计算器的求值器、货币表，以及组合自定义字段所用的类名常量。",
     },
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
     "server-kit": {
-      title: "Server kit",
+      title: "服务端套件",
       blurb:
-        "The Python package behind the apps' backends: the contracts these components speak, as code — every module's signatures and docstrings, pinned to one server-kit release.",
+        "应用后端背后的 Python 包：这些组件所遵循的契约，以代码形式呈现——每个模块的签名和文档字符串，锁定到某一个 server-kit 版本。",
     },
     "server-auth": {
-      title: "Sign-in & account",
-      short: "Auth",
+      title: "登录与账户",
+      short: "登录",
       blurb:
-        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+        "注册、登录、一次性令牌、会话声明以及账户的传输格式——登录、注册和账户页面的服务端部分。",
     },
     "server-user-admin": {
-      title: "User admin",
-      short: "Users",
+      title: "用户管理",
+      short: "用户",
       blurb:
-        "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
+        "用户列表的查询、四项管理操作及其确认级别、审计条目、分两步删除，以及数据导出。",
     },
     "server-settings": {
-      title: "Settings & language",
-      short: "Settings",
+      title: "设置与语言",
+      short: "设置",
       blurb:
-        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+        "适用于所有设置请求体的同一条规则——省略即保留，null 即清空，未知字段即拒绝——以及账户唯一的规范语言。",
     },
     "server-demo": {
-      title: "Demo",
-      short: "Demo",
+      title: "演示",
+      short: "演示",
       blurb:
-        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+        "一次性的演示账户：它的设置、入口检查的先后顺序、各种拒绝及其代码、只读规则，以及它唯一的有效期。",
     },
     "server-mail": {
-      title: "Mail",
-      short: "Mail",
+      title: "邮件",
+      short: "邮件",
       blurb:
-        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+        "账户邮件：按语言区分的文案、对每个值转义的统一版式、两种永不抛出异常的发送方式——以及本版本示例邮件的渲染效果。",
     },
     "server-feedback": {
-      title: "Feedback & uploads",
-      short: "Feedback",
+      title: "反馈与上传",
+      short: "反馈",
       blurb:
-        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+        "以纯函数实现的反馈契约——Schema、状态、PATCH 规则、返工、崩溃上报、数据清除——以及按字节判定的附件。",
     },
     "server-limits": {
-      title: "Limits, errors & CORS",
-      short: "Limits",
+      title: "限流、错误与 CORS",
+      short: "限流",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应，以及为少量额外来源开放的 CORS。",
     },
     "server-translation-review": {
-      title: "Translation review",
-      short: "Review",
+      title: "翻译审校",
+      short: "审校",
       blurb:
-        "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
+        "翻译审校的传输格式、谁可以审校哪些键和语言，以及审校者用来打开组件库审校页面的审校令牌。",
     },
   },
 
@@ -546,6 +556,23 @@ export const zh: Dictionary = {
       "在新标签页打开的链接",
       "可导航的按钮",
       "高亮当前页面的链接",
+    ],
+    "settings-page": [
+      "带侧边栏的 设置页面",
+      "手机上 以列表显示 设置",
+      "直接链接到 某项设置",
+      "搜索 设置",
+      "管理页面 使用相同布局",
+      "语言 跟随账户",
+    ],
+    "landing-demo": [
+      "搭建 公开 落地页",
+      "添加 申请访问 按钮",
+      "为搜索引擎 检查 页面标题和描述",
+      "回到 用户上次离开的 页面",
+      "启动 演示 会话",
+      "演示 剩余时间 倒计时",
+      "显示 演示 已结束",
     ],
     "user-admin": [
       "列出用户及其角色",
@@ -1097,74 +1124,74 @@ export const zh: Dictionary = {
       "最近几个 完整月份",
       "字段 类名",
     ],
-    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    // The Server kit group (0.31).
     "server-kit": [
-      "document the backend package",
-      "install the server kit",
-      "which server-kit release is documented",
-      "python contracts for the backend",
-      "find the server side of a component",
+      "后端 包 文档",
+      "安装 server-kit",
+      "文档对应的 server-kit 版本",
+      "后端的 Python 契约",
+      "查找 组件的 服务端",
     ],
     "server-auth": [
-      "check a sign-in on the server",
-      "registration by invitation only",
-      "mint a password reset token",
-      "session token claims",
-      "normalise an email address",
-      "auth error codes",
+      "在服务端 校验 登录",
+      "仅限 邀请 注册",
+      "生成 密码重置 令牌",
+      "会话令牌的 声明",
+      "规范化 电子邮件地址",
+      "认证 错误码",
     ],
     "server-user-admin": [
-      "query the user list on the server",
-      "confirmation level of an admin action",
-      "write an admin audit entry",
-      "delete an account in two stages",
-      "export a user's data",
-      "never remove the last admin",
+      "在服务端 查询 用户列表",
+      "管理操作的 确认级别",
+      "写入 管理 审计条目",
+      "分两步 删除账户",
+      "导出 用户数据",
+      "永不 移除 最后一位管理员",
     ],
     "server-settings": [
-      "patch settings without losing fields",
-      "clear a setting with null",
-      "refuse unknown fields in a body",
-      "store the account's language",
-      "read the Accept-Language header",
+      "更新设置 不丢失 字段",
+      "用 null 清空 设置",
+      "拒绝 请求体中的 未知字段",
+      "保存 账户 语言",
+      "读取 Accept-Language 请求头",
     ],
     "server-demo": [
-      "start a demo session",
-      "demo account settings",
-      "make the demo read-only",
-      "demo refusal codes",
-      "clean up old demo users",
+      "启动 演示 会话",
+      "演示账户 设置",
+      "将演示 设为 只读",
+      "演示 拒绝代码",
+      "清理 旧的 演示用户",
     ],
     "server-mail": [
-      "send a password reset mail",
-      "preview the account mails",
-      "mail texts per language",
-      "send mail through Resend",
-      "log mail in development",
-      "reply-to support address",
+      "发送 密码重置 邮件",
+      "预览 账户邮件",
+      "按语言的 邮件文案",
+      "通过 Resend 发送 邮件",
+      "开发环境中 记录 邮件",
+      "客服 回复地址",
     ],
     "server-feedback": [
-      "validate a feedback report",
-      "feedback status rules",
-      "file a crash report",
-      "check an uploaded file's type",
-      "limit the attachment size",
-      "erase feedback of a deleted user",
+      "校验 反馈 报告",
+      "反馈 状态规则",
+      "提交 崩溃报告",
+      "检查 上传文件的 类型",
+      "限制 附件 大小",
+      "清除 已删除用户的 反馈",
     ],
     "server-limits": [
-      "rate limit a route",
-      "client IP behind a proxy",
-      "send a Retry-After header",
-      "map kit errors to HTTP statuses",
-      "allow an extra CORS origin",
-      "error response with a code",
+      "路由 限流",
+      "代理后的 客户端 IP",
+      "发送 Retry-After 响应头",
+      "套件错误 映射为 HTTP 状态码",
+      "允许 额外的 CORS 来源",
+      "带代码的 错误响应",
     ],
     "server-translation-review": [
-      "review translations through the API",
-      "issue a review token",
-      "who may review which language",
-      "translation verdicts",
-      "kit translation keys",
+      "通过 API 审校 翻译",
+      "签发 审校令牌",
+      "谁可以 审校 哪种语言",
+      "翻译 审校结论",
+      "组件库的 翻译键",
     ],
   },
 
