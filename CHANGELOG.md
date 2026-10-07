@@ -20,6 +20,32 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.31.0](https://github.com/Eifi1/ui-kit/compare/v0.30.0...v0.31.0) (2026-10-07)
+
+### ⚠ BREAKING CHANGES
+
+* **feedback:** `FeedbackStatus` gains `"READY"` ("Ready to implement", feedback contract
+  §8.2), so an app's own `Record<FeedbackStatus, …>` fails to compile until it has the
+  entry, and a database status enum needs the value. `FEEDBACK_AWAITING_STATUSES` now
+  holds `OPEN` too. See `docs/adopt-0.31.md`.
+* **account settings:** `TwoFactorSetting` shows a title with an On/Off chip in place of
+  its "Two-factor authentication: Off" line.
+
+### Added
+
+* **feedback:** READY "Ready to implement", and the subject in the row ([7430df7](https://github.com/Eifi1/ui-kit/commit/7430df75fd1bc855577c5a98f6076a1da6e706b7))
+* **i18n:** the settings shell, the landing page and the demo in all seven languages ([8baab02](https://github.com/Eifi1/ui-kit/commit/8baab0288fb611e9f979a127cc64afa9b1976762))
+* **showcase:** one Settings page, the shell and its rows ([13df74e](https://github.com/Eifi1/ui-kit/commit/13df74ec60a426ecac6b060d50612a84d7823a2a))
+* **showcase:** the 0.31 pages and the Server kit group in all seven languages ([e4a7555](https://github.com/Eifi1/ui-kit/commit/e4a7555f4bb99e32a2515eec942f872a7a690e32))
+* **showcase:** the Server kit group, and the settings and landing pages ([c5a042a](https://github.com/Eifi1/ui-kit/commit/c5a042af8484f359b59d28a3e442624d8fcc3cfc))
+* the settings shell, the public landing page and the demo (0.31) ([bfc25e1](https://github.com/Eifi1/ui-kit/commit/bfc25e14f09d07b945aa29e1258712baea6f4c50))
+
+### Fixed
+
+* **data-table:** the phone card's focus frame is drawn inside the card ([cdbcea7](https://github.com/Eifi1/ui-kit/commit/cdbcea737b0b4eecb9ab2bf8a3ab2fbca55dc3c8))
+* **invitations:** revoke an expired invitation too, and listTitle={null} ([dd7d8ac](https://github.com/Eifi1/ui-kit/commit/dd7d8acc0a0022f232bcfe9e5c5e0854ed91b9fd))
+* **showcase:** the sample settings page has a heading of its own ([63b5305](https://github.com/Eifi1/ui-kit/commit/63b5305ad333dbbe9c6d4cd6ba09d98b24282b63))
+
 ## [0.30.0](https://github.com/Eifi1/ui-kit/compare/v0.29.0...v0.30.0) (2026-10-07)
 
 ### Added
