@@ -1725,6 +1725,14 @@ export function DataTable<T>({
       // flip stays instant.
       interactive &&
         "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-[var(--bg-active)] motion-reduce:transition-none motion-reduce:active:scale-100",
+      // The keyboard's frame drawn INSIDE the card, as the desktop row's is (keksdose live
+      // #394): the browser's own ring and tap highlight sit on the card's outer edge, and
+      // three ancestors clip it — SwipeableRow's `overflow-hidden`, the card list, and
+      // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
+      // keeps the fill and the squeeze above; an outline on every tap of a long list would
+      // be louder than the acknowledgement it replaces.
+      interactive &&
+        "[-webkit-tap-highlight-color:transparent] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
     );
     // The card's content is written once and worn by either tag below. Note that
     // the primary cell is rendered RAW here, never through `linkColumn` — the card

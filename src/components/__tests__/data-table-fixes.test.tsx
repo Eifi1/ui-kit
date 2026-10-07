@@ -438,3 +438,24 @@ describe("controlled filters reset the page", () => {
     expect(namesOnScreen()).toEqual(["Charlie"]);
   });
 });
+
+describe("the phone card's keyboard frame (keksdose live #394)", () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = stubPhone();
+  });
+  afterEach(() => restore());
+
+  it("draws the focus frame inside the card and drops the native tap highlight", () => {
+    render(
+      <MemoryRouter>
+        <DataTable rows={ROWS.slice(0, 1)} columns={COLUMNS} rowKey={(r) => r.id} onRowClick={() => {}} />
+      </MemoryRouter>,
+    );
+    // Clipped ancestors (SwipeableRow, the list, AppShell main) cut an OUTER ring on one
+    // side; an inset outline and no tap highlight keep the frame whole.
+    const card = document.querySelector('[role="button"].w-full, a.w-full') as HTMLElement;
+    expect(card.className).toContain("focus-visible:-outline-offset-2");
+    expect(card.className).toContain("[-webkit-tap-highlight-color:transparent]");
+  });
+});
