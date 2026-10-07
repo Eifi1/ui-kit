@@ -328,6 +328,8 @@ function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"
   return (
     <SettingsLayout<Group>
       layout={layout}
+      // The sample app's own heading, so the specimen's h1 is not the showcase page's.
+      title="Garden Planner settings"
       groups={GROUPS}
       entries={entries}
       basePath="/settings"
