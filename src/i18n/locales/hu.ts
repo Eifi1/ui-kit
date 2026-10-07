@@ -856,9 +856,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       invalidCredentials: "Az e-mail-cím vagy a jelszó helytelen.",
       failed: "A bejelentkezés sikertelen. Kérjük, próbálja újra.",
       passkeyFailed: "A bejelentkezés hozzáférési kulccsal sikertelen.",
-      deactivatedHint: "Inaktív a fiókja? Írjon ide: {contact}.",
+      deactivatedHint: "Letiltották a fiókját? Írjon ide: {contact}.",
       tagHint: (taggedAddress) =>
-        `Ezzel a címmel regisztrált: ${taggedAddress}? Akkor ezt a címet használja.`,
+        `Ezzel a címmel regisztrált (${taggedAddress})? Akkor azt használja.`,
       twoFactorTitle: "Kétlépcsős azonosítás",
       twoFactorIntro: "Adja meg a hitelesítő alkalmazásban megjelenő kódot.",
       code: "Ellenőrző kód",
@@ -895,7 +895,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       emailTaken: "Ezzel az e-mail-címmel már létezik fiók.",
       registrationClosed:
         "Új fiókot csak meghívással lehet létrehozni. Kérje meg az üzemeltetőt, hogy küldjön meghívót az e-mail-címére.",
-      invitationInvalid: "Ez a meghívó hivatkozás érvénytelen.",
+      invitationInvalid: "Ez a meghívóhivatkozás érvénytelen.",
       invitationExpired: "Ez a meghívó lejárt. Kérjen újat.",
       failed: "A regisztráció sikertelen. Kérjük, próbálja újra.",
     },
@@ -915,7 +915,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "Adja meg a fiókjához tartozó e-mail-címet. Küldünk egy hivatkozást, amellyel új jelszót választhat.",
       email: "E-mail",
       submit: "Hivatkozás küldése",
-      sent: (email) => `Ha létezik fiók ehhez a címhez: ${email}, a hivatkozás úton van.`,
+      sent: (email) => `Ha létezik fiók ezzel a címmel (${email}), a hivatkozás úton van.`,
       sentHint:
         "A hivatkozás egy órán át érvényes, és pontosan egyszer használható. Nézze meg a levélszemét mappát is.",
       backToSignIn: "Vissza a bejelentkezéshez",
@@ -967,7 +967,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       title: "Meghívás elfogadása",
       accepting: "Csatlakozás…",
       accepted: "Meghívás elfogadva.",
-      joined: (name) => `Csatlakozott: ${name}.`,
+      joined: (name) => `Sikeresen csatlakozott: ${name}.`,
       continue: "Tovább",
       invalid: "Ezzel a hivatkozással nem sikerült csatlakozni",
       expired: "Ez a meghívó lejárt",

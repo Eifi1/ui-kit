@@ -871,7 +871,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       email: "Correo electrónico",
       emailTagUse: (address) => `Usar ${address}`,
       emailTagHint:
-        "Muchos proveedores entregan nombre+etiqueta@… en el mismo buzón, así que el correo de esta aplicación es fácil de filtrar y rastrear. Compruebe que el suyo lo hace antes de confiar en ello: iniciaría sesión con la dirección etiquetada.",
+        "Muchos proveedores entregan nombre+etiqueta@… en el mismo buzón, así que el correo de esta aplicación es fácil de filtrar y rastrear. Compruebe que el suyo lo hace antes de confiar en ello: tendría que iniciar sesión con la dirección etiquetada.",
       invitedEmailHint: "La dirección a la que se envió su invitación.",
       invitedTagNote: "La dirección etiquetada recibe su propio correo de confirmación.",
       password: "Contraseña",
@@ -906,7 +906,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       submit: "Enviar el enlace",
       sent: (email) => `Si existe una cuenta para ${email}, el enlace está en camino.`,
       sentHint:
-        "El enlace es válido durante una hora y funciona una sola vez. Mire también en la carpeta de correo no deseado.",
+        "El enlace es válido durante una hora y funciona una sola vez. Revise también la carpeta de correo no deseado.",
       backToSignIn: "Volver a iniciar sesión",
       error: "La solicitud ha fallado. Inténtelo de nuevo más tarde.",
     },
@@ -948,7 +948,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     notFound: {
       title: "Página no encontrada",
-      body: "Esta dirección no existe (o ya no existe). Quizá sea una errata, o la página se ha movido.",
+      body: "Esta dirección no existe (o ya no existe). Quizá sea una errata o la página se haya movido.",
       home: "Ir a la página de inicio",
       app: "Volver a la aplicación",
     },
