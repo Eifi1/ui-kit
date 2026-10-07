@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1478 names from 219 modules** — 692 values and 786 types. _Italic_ is a type-only export.
+**1577 names from 231 modules** — 724 values and 853 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1478 |
+| `@eifi1/ui-kit` | 1577 |
 | `@eifi1/ui-kit/chart` | 104 |
 | `@eifi1/ui-kit/shell` | 24 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -457,6 +457,19 @@ re-slicing of it, never a second API.
 | `theme/palette-presets` | `ALTERNATIVE_PRESETS`, `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+
+### admin
+
+| Module | Exports |
+|---|---|
+| `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
+| `admin/user-roster` | `adminUserStates`, `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterColumns`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
+| `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
+| `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
+| `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
+| `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
+| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_ |
+| `admin/admin-parts` | _`AdminPerson`_ |
 
 ### i18n
 
@@ -531,7 +544,7 @@ re-slicing of it, never a second API.
 | `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/pie-chart` | `PieChart`, _`PieChartProps`_, _`PieChartSlice`_ |
 | `components/pie-chart-labels` | `DEFAULT_PIE_CHART_LABELS`, _`PieChartLabels`_ |
-| `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`TwoFactorSetupData`_ |
+| `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
 | `components/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
@@ -622,6 +635,15 @@ re-slicing of it, never a second API.
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
 
+### account
+
+| Module | Exports |
+|---|---|
+| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
+| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
+| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
+| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
+
 ### auth
 
 | Module | Exports |
@@ -630,7 +652,7 @@ re-slicing of it, never a second API.
 | `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
 | `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
 | `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `isAuthError`, _`AuthErrorCode`_ |
+| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`KitErrorCode`_ |
 | `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
 | `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
 | `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
