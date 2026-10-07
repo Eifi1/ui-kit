@@ -91,6 +91,7 @@
     "dev:showcase": "vite --config showcase/vite.config.ts",
     "build:showcase": "vite build --config showcase/vite.config.ts --logLevel warn",
     "preview:showcase": "vite preview --config showcase/vite.config.ts",
+    "sync:server-kit": "node scripts/sync-server-kit.mjs",
     "prepublishOnly": "npm run build",
     "release": "commit-and-tag-version",
     "release:dry": "commit-and-tag-version --dry-run",

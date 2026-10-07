@@ -68,6 +68,9 @@ export const de: Dictionary = {
     searchExamples: "Beispiele",
     searchNeeds: "Was brauchen Sie?",
     searchPages: "Seiten",
+    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    serverSide: "Server side",
+    searchServer: "Server kit",
   },
 
   groups: {
@@ -82,6 +85,8 @@ export const de: Dictionary = {
     // "Chrome" in the UI sense is the frame around the content, not the browser.
     "App chrome": "App-Rahmen",
     API: "API",
+    // ENGLISH PLACEHOLDER (0.31).
+    "Server kit": "Server kit",
   },
 
   groupShort: {
@@ -93,6 +98,8 @@ export const de: Dictionary = {
     Inputs: "Felder",
     Charts: "Charts",
     Overlays: "Popups",
+    // ENGLISH PLACEHOLDER (0.31).
+    "Server kit": "Server",
   },
 
   pages: {
@@ -480,6 +487,60 @@ export const de: Dictionary = {
       short: "Hilfsfunktionen",
       blurb:
         "Die Funktionen und Daten hinter den Eingabefeldern, als Eingabe → Ergebnis: Datumsrechnung aus @eifi1/ui-kit/dates, der Auswerter des Rechners, die Währungstabelle und die Klassenkonstanten, aus denen ein eigenes Feld zusammengesetzt wird.",
+    },
+    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    "server-kit": {
+      title: "Server kit",
+      blurb:
+        "The Python package behind the apps' backends: the contracts these components speak, as code — every module's signatures and docstrings, pinned to one server-kit release.",
+    },
+    "server-auth": {
+      title: "Sign-in & account",
+      short: "Auth",
+      blurb:
+        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+    },
+    "server-user-admin": {
+      title: "User admin",
+      short: "Users",
+      blurb:
+        "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
+    },
+    "server-settings": {
+      title: "Settings & language",
+      short: "Settings",
+      blurb:
+        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+    },
+    "server-demo": {
+      title: "Demo",
+      short: "Demo",
+      blurb:
+        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+    },
+    "server-mail": {
+      title: "Mail",
+      short: "Mail",
+      blurb:
+        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+    },
+    "server-feedback": {
+      title: "Feedback & uploads",
+      short: "Feedback",
+      blurb:
+        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+    },
+    "server-limits": {
+      title: "Limits, errors & CORS",
+      short: "Limits",
+      blurb:
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+    },
+    "server-translation-review": {
+      title: "Translation review",
+      short: "Review",
+      blurb:
+        "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
     },
   },
 
@@ -1057,6 +1118,75 @@ export const de: Dictionary = {
       "Liste der Währungen",
       "letzte volle Monate",
       "Klassennamen für Felder",
+    ],
+    // Server kit (0.31) — ENGLISH PLACEHOLDERS until the translation round.
+    "server-kit": [
+      "document the backend package",
+      "install the server kit",
+      "which server-kit release is documented",
+      "python contracts for the backend",
+      "find the server side of a component",
+    ],
+    "server-auth": [
+      "check a sign-in on the server",
+      "registration by invitation only",
+      "mint a password reset token",
+      "session token claims",
+      "normalise an email address",
+      "auth error codes",
+    ],
+    "server-user-admin": [
+      "query the user list on the server",
+      "confirmation level of an admin action",
+      "write an admin audit entry",
+      "delete an account in two stages",
+      "export a user's data",
+      "never remove the last admin",
+    ],
+    "server-settings": [
+      "patch settings without losing fields",
+      "clear a setting with null",
+      "refuse unknown fields in a body",
+      "store the account's language",
+      "read the Accept-Language header",
+    ],
+    "server-demo": [
+      "start a demo session",
+      "demo account settings",
+      "make the demo read-only",
+      "demo refusal codes",
+      "clean up old demo users",
+    ],
+    "server-mail": [
+      "send a password reset mail",
+      "preview the account mails",
+      "mail texts per language",
+      "send mail through Resend",
+      "log mail in development",
+      "reply-to support address",
+    ],
+    "server-feedback": [
+      "validate a feedback report",
+      "feedback status rules",
+      "file a crash report",
+      "check an uploaded file's type",
+      "limit the attachment size",
+      "erase feedback of a deleted user",
+    ],
+    "server-limits": [
+      "rate limit a route",
+      "client IP behind a proxy",
+      "send a Retry-After header",
+      "map kit errors to HTTP statuses",
+      "allow an extra CORS origin",
+      "error response with a code",
+    ],
+    "server-translation-review": [
+      "review translations through the API",
+      "issue a review token",
+      "who may review which language",
+      "translation verdicts",
+      "kit translation keys",
     ],
   },
 

@@ -1,7 +1,16 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
-import { ArrowLeft, ArrowRight, ListTree, MonitorSmartphone, PanelLeft, PanelRight, PanelRightOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ListTree,
+  MonitorSmartphone,
+  PanelLeft,
+  PanelRight,
+  PanelRightOpen,
+  Server,
+} from "lucide-react";
 import {
   AppShell,
   Button,
@@ -29,6 +38,7 @@ import type { AppShellNavItem, KitLinkComponent } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
+import { serverModulesFor, serverPageOf } from "./server-kit/links";
 import { ShowcaseSearch } from "./search/showcase-search";
 import { GROUPS, HOME_SLUG, NAV, PAGES, RETIRED_SLUGS, groupOf, hasOverview } from "./routes";
 import type { ShowcasePage } from "./routes";
@@ -394,6 +404,7 @@ function PageView({
 
       <h1 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
       <p className="mt-1 max-w-3xl text-sm text-[var(--text-secondary)]">{blurb}</p>
+      <ServerSideLinks slug={page.slug} />
 
       <PageContentsMenu />
 
@@ -441,6 +452,39 @@ function PageView({
         )}
       </nav>
     </PageContentsLayout>
+  );
+}
+
+/**
+ * Under a kit page's title: the server-kit modules it is the client half of, each a link
+ * to its entry in the Server kit group — the kit side of the cross-links, from the one map
+ * in server-kit/links.ts that the server pages' "Kit counterparts" read too. Here, in the
+ * frame, so no section file has to remember it; nothing at all on a page with no server
+ * half.
+ */
+function ServerSideLinks({ slug }: { slug: string }) {
+  const t = useT();
+  const links = serverModulesFor(slug).flatMap((module) => {
+    const page = serverPageOf(module);
+    return page ? [{ module, to: `/${page}#${module}` }] : [];
+  });
+  if (links.length === 0) return null;
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-muted)]">
+      <Server aria-hidden className="size-3.5 shrink-0" />
+      <span>{t.chrome.serverSide}</span>
+      {links.map(({ module, to }) => (
+        // A module name is an identifier: never translated, always left-to-right.
+        <Link
+          key={module}
+          to={to}
+          dir="ltr"
+          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-[11px] text-[var(--brand)] hover:underline"
+        >
+          {module}
+        </Link>
+      ))}
+    </p>
   );
 }
 

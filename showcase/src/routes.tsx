@@ -30,6 +30,7 @@ import {
   FunctionSquare,
   Gauge,
   Grid3x3,
+  FlaskConical,
   Inbox,
   Languages,
   Layers,
@@ -37,6 +38,7 @@ import {
   ListTree,
   List as ListIcon,
   ListChecks,
+  Mail,
   PanelTop,
   LayoutGrid,
   LayoutPanelLeft,
@@ -49,11 +51,13 @@ import {
   Palette,
   PanelTopClose,
   PanelsTopLeft,
+  Paperclip,
   PenLine,
   Pin,
   Puzzle,
   Server,
   Settings as SettingsIcon,
+  ShieldAlert,
   Sigma,
   SwatchBook,
   Table,
@@ -62,6 +66,8 @@ import {
   ToggleRight,
   Wand2,
   Wrench,
+  LayoutTemplate,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
@@ -240,6 +246,18 @@ const UserRoster030Demo = lazySection(() => import("./sections/admin-030-demo"),
 const RolesEditor030Demo = lazySection(() => import("./sections/admin-030-demo"), "RolesEditor030Demo");
 const Invitations030Demo = lazySection(() => import("./sections/admin-030-demo"), "Invitations030Demo");
 const AccountDeletionChip030Demo = lazySection(() => import("./sections/admin-030-demo"), "AccountDeletionChip030Demo");
+const SettingsDesktop031Demo = lazySection(() => import("./sections/settings-031-demo"), "SettingsDesktop031Demo");
+const SettingsPhone031Demo = lazySection(() => import("./sections/settings-031-demo"), "SettingsPhone031Demo");
+const SettingsAdmin031Demo = lazySection(() => import("./sections/settings-031-demo"), "SettingsAdmin031Demo");
+const SettingsSearchEntries031Demo = lazySection(
+  () => import("./sections/settings-031-demo"),
+  "SettingsSearchEntries031Demo",
+);
+const SampleLanding031Demo = lazySection(() => import("./sections/landing-031-demo"), "SampleLanding031Demo");
+const PublicHeaderStates031Demo = lazySection(() => import("./sections/landing-031-demo"), "PublicHeaderStates031Demo");
+const DemoStart031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoStart031Demo");
+const DemoBanner031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoBanner031Demo");
+const DemoEnded031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoEnded031Demo");
 const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
 const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
@@ -305,6 +323,9 @@ const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-subm
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-table-027-demo"), "FeedbackTable027Demo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-detail-027-demo"), "FeedbackDetail027Demo");
 const FeedbackRecord027Demo = lazySection(() => import("./sections/feedback-record-027-demo"), "FeedbackRecord027Demo");
+// 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
+const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
+const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
 
 /**
  * One page per component area, grouped for the sidebar — and every group with more
@@ -326,7 +347,9 @@ const FeedbackRecord027Demo = lazySection(() => import("./sections/feedback-reco
  * what everything paints with; inputs, pickers, displays and charts are built from
  * primitives in those tokens; overlays float those over the page; the app chrome composes all of it
  * into a frame; the API group is what is left when you take the pixels away. The Getting
- * started page says this in prose.
+ * started page says this in prose. The Server kit comes last because it is not a layer of
+ * this package at all: it is the backend half of the same contracts, documented here so
+ * both halves are one site.
  *
  * SIZE. A page holds one component family — about a dozen specimens, not thirty — and a
  * group holds at most about ten pages. The second limit is the phone's: below `md` the
@@ -352,6 +375,11 @@ export interface ShowcasePage {
   /** The page's sections. Each one it renders is a `lazySection`, fetched as its own
    *  chunk when the page first opens (showcase.tsx suspends on it). */
   Body: React.ComponentType;
+  /** A Server kit page: the server-kit modules it documents, by short name (`auth`,
+   *  `user_admin`), in page order. Its `Body` is `ServerModules` over them (see
+   *  `serverPage`); server-kit/links.ts finds a module's page here, and the search
+   *  index (scripts/gen-showcase-search-index.mjs) reads this list from the source. */
+  serverModules?: readonly string[];
 }
 
 export interface ShowcaseGroup {
@@ -364,6 +392,17 @@ export interface ShowcaseGroup {
   /** One sentence for the overview page: what this layer is FOR. */
   blurb: string;
   pages: ShowcasePage[];
+  /** The overview page's body, when the group needs more than its cards (the Server
+   *  kit's says which release it documents). Default `GroupOverview`. */
+  overview?: React.ComponentType<{ group: ShowcaseGroup }>;
+}
+
+/**
+ * A Server kit page: its fields, and a `Body` that renders the server-kit modules it
+ * names — one list, so the page, its links and its search entries cannot disagree.
+ */
+function serverPage(page: Omit<ShowcasePage, "Body"> & { serverModules: readonly string[] }): ShowcasePage {
+  return { ...page, Body: () => <ServerModules modules={page.serverModules} /> };
 }
 
 export const GROUPS: ShowcaseGroup[] = [
@@ -1010,7 +1049,8 @@ export const GROUPS: ShowcaseGroup[] = [
   {
     slug: "overlays",
     label: "Overlays",
-    // Nine groups share a 390px bar: a cell is 43px, and "Overlays" at 11px is 46.
+    // Ten groups share a 390px bar since the Server kit joined (0.31): a cell is 39px,
+    // and "Overlays" at 11px is 46.
     shortLabel: "Popups",
     icon: MousePointerClick,
     blurb:
@@ -1194,6 +1234,41 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
+        slug: "settings-page",
+        title: "Settings page",
+        short: "Settings page",
+        blurb:
+          "The settings page and the admin page on one shell: the sidebar on a desktop, the drill-down list on a phone, a group per path, search, and the card a link rings.",
+        icon: SlidersHorizontal,
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting"],
+        Body: () => (
+          <>
+            <SettingsDesktop031Demo />
+            <SettingsPhone031Demo />
+            <SettingsAdmin031Demo />
+            <SettingsSearchEntries031Demo />
+          </>
+        ),
+      },
+      {
+        slug: "landing-demo",
+        title: "Landing & demo",
+        short: "Landing",
+        blurb:
+          "The public start page and the try-it demo: the header in its three states, the landing's sections, the SEO checks, the resume, and the demo's start, countdown and end.",
+        icon: LayoutTemplate,
+        components: ["PublicHeader", "Hero", "FeatureRows", "FeatureRow", "TrustStrip", "CtaBand", "PublicFooter", "LandingActions", "accessAction", "usePageSeo", "seoCopyProblems", "metaContent", "RootEntry", "RedirectIfAuthed", "useLastVisitedPage", "readLastVisitedPage", "safeNextPath", "DemoStart", "DemoBanner", "useDemoCountdown", "DemoEnded", "isDemoSession"],
+        Body: () => (
+          <>
+            <SampleLanding031Demo />
+            <PublicHeaderStates031Demo />
+            <DemoStart031Demo />
+            <DemoBanner031Demo />
+            <DemoEnded031Demo />
+          </>
+        ),
+      },
+      {
         slug: "auth-account",
         title: "Sign-in & account security",
         short: "Auth",
@@ -1370,6 +1445,94 @@ export const GROUPS: ShowcaseGroup[] = [
       },
     ],
   },
+  {
+    // The other half of the components above: eifi1-server-kit, the Python package the
+    // apps' backends share (Marcel, 2026-10-07: one site for both kits). Its pages are
+    // DATA — server-kit's api.json, pinned per release by scripts/sync-server-kit.mjs —
+    // so a page here is a list of modules, not a section file. Last, after the API: it
+    // is what is left when you take the browser away as well.
+    slug: "server-kit",
+    label: "Server kit",
+    shortLabel: "Server",
+    icon: Server,
+    blurb:
+      "The Python package behind the apps' backends: the contracts these components speak, as code — every module's signatures and docstrings, pinned to one server-kit release.",
+    overview: ServerKitOverview,
+    pages: [
+      serverPage({
+        slug: "server-auth",
+        title: "Sign-in & account",
+        short: "Auth",
+        blurb:
+          "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+        icon: KeyRound,
+        serverModules: ["auth"],
+      }),
+      serverPage({
+        slug: "server-user-admin",
+        title: "User admin",
+        short: "Users",
+        blurb:
+          "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
+        icon: UserCog,
+        serverModules: ["user_admin"],
+      }),
+      serverPage({
+        slug: "server-settings",
+        title: "Settings & language",
+        short: "Settings",
+        blurb:
+          "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+        icon: SettingsIcon,
+        serverModules: ["settings"],
+      }),
+      serverPage({
+        slug: "server-demo",
+        title: "Demo",
+        short: "Demo",
+        blurb:
+          "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+        icon: FlaskConical,
+        serverModules: ["demo"],
+      }),
+      serverPage({
+        slug: "server-mail",
+        title: "Mail",
+        short: "Mail",
+        blurb:
+          "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+        icon: Mail,
+        serverModules: ["mail"],
+      }),
+      serverPage({
+        slug: "server-feedback",
+        title: "Feedback & uploads",
+        short: "Feedback",
+        blurb:
+          "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+        icon: Paperclip,
+        serverModules: ["feedback", "uploads"],
+      }),
+      serverPage({
+        slug: "server-limits",
+        title: "Limits, errors & CORS",
+        short: "Limits",
+        blurb:
+          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+        icon: ShieldAlert,
+        serverModules: ["limiter", "errors", "cors"],
+      }),
+      serverPage({
+        slug: "server-translation-review",
+        title: "Translation review",
+        short: "Review",
+        blurb:
+          "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
+        icon: Languages,
+        serverModules: ["translation_review"],
+      }),
+    ],
+  },
 ];
 
 /**
@@ -1401,7 +1564,12 @@ function overviewPage(group: ShowcaseGroup): ShowcasePage {
     short: group.shortLabel ?? group.label,
     blurb: group.blurb,
     icon: LayoutGrid,
-    Body: () => <GroupOverview group={group} />,
+    Body: group.overview
+      ? () => {
+          const Overview = group.overview!;
+          return <Overview group={group} />;
+        }
+      : () => <GroupOverview group={group} />,
   };
 }
 
@@ -1427,6 +1595,10 @@ export const NAV: AppShellNavItem[] = GROUPS.map((group) => ({
   to: `/${hasOverview(group) ? group.slug : group.pages[0].slug}`,
   label: group.label,
   shortLabel: group.shortLabel,
+  // Ten groups would leave each bottom-bar cell 39px at 390, and five labels clipped.
+  // The phone reaches the start page through the brand link in the top bar, so its
+  // cell goes and the other nine keep their 43px (0.31: the Server kit group).
+  mobileHidden: group.slug === "start" || undefined,
   icon: group.icon,
   // The group entry is highlighted while ANY of its pages is open — AppShell matches
   // the sub-items itself — so `end` only has to cover the overview route.
