@@ -14,10 +14,22 @@ This note is the kits' side.
 Each app adopts 0.31 after its 0.30 adoption. kastlan ships its demo backend together
 with its landing page.
 
-## 0.31.1
+## 0.31.1 (with server-kit 0.5.1)
 
-A patch from keksdose's 0.30 bump. Nothing to change unless you want to drop a
-workaround.
+A patch from keksdose's 0.30 bump and kastlan's 0.31 adoption. Nothing to change unless
+you want to drop a workaround.
+
+- **`useConfirm({…, commit: true})`:** the confirm button takes the write lock of the place
+  that asked. Under a locked `WriteLockProvider` it is `aria-disabled` with the lock's
+  reason, so a read-only page can't confirm a delete through a dialog. One prop per
+  confirm site, in place of locking every trigger.
+- **`RootEntry` / `RedirectIfAuthed` `session="loading"`** (`RoutingSession`): while an
+  app restores an in-memory session, both render `loading` (default `LoadingState`)
+  instead of showing the landing or redirecting. kastlan's own wrapper can go.
+- **server-kit 0.5.1:**
+  - `Budget.limiter()` defaults its clock to `time.monotonic`;
+  - `refuse_demo` says "Not possible for a demo account: …", which reads right when an
+    admin acts on a demo account too.
 
 - **`AdminPerson` reads server-kit's `PersonRef` as it serialises** (`first_name` /
   `last_name`, beside the kit's `first` / `last`). Hand the server's `invited_by` or an
