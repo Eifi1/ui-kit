@@ -122,13 +122,19 @@ avatars, feedback, and the greeting in a mail.
   with the formatted name.
 - **APIs keep a read-only `display_name`**, derived the same way, so everything that only
   shows a name keeps working. Writes take `first_name` and `last_name` only.
+- **Every API that returns a person returns `first_name` and `last_name`**: lists,
+  members, shares, comment authors, not only `/auth/me`. The client formats them in the
+  reader's language. `display_name` beside them is a fallback, and an app may drop it one
+  release after its clients read the two (keksdose, 2026-10-07).
 - **Whose language decides the order** (§10.6):
   - on screen, the reader's: the kit formats from `first_name` and `last_name`, and the
     API's `display_name` is only a fallback;
   - in a mail or a push, the recipient's;
   - in a copy frozen at the time of writing (the feedback stamp), the author's.
-- **Lists sort by `(last_name, first_name, id)`** in SQL. Search matches first name, last
-  name, and both orders of the two together.
+- **Lists sort by `(last_name, first_name, id)`** in SQL. While a migrated `last_name` can
+  be empty (§3.3), sort by `COALESCE(NULLIF(last_name, ''), first_name), first_name, id`,
+  so a first-name-only person sorts among the last names instead of first. Search matches
+  first name, last name, and both orders of the two together.
 
 ### 3.3 Migrating keksdose's and Kurvenschmiede's users
 
