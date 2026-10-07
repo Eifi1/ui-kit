@@ -189,6 +189,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         qrAlt: "QR-kód a hitelesítő alkalmazáshoz",
         secretHint: "Nem sikerül beolvasni? Adja meg inkább ezt a kulcsot az alkalmazásban:",
         copySecret: "Kulcs másolása",
+        // 0.31.0: the card's title; the state ("Bekapcsolva") stands beside it.
+        title: "Kétlépcsős azonosítás",
       },
       passkeys: {
         title: "Hozzáférési kulcsok",
@@ -899,6 +901,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         `${n(length)} betű és számjegy. A kötőjelek és a szóközök nem számítanak.`,
       recoveryCodeInvalid: "Ez a tartalékkód érvénytelen, vagy már felhasználták.",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "Hozzáférés kérése",
     },
     register: {
       firstName: "Keresztnév",
@@ -1333,6 +1337,84 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         count === 1
           ? `„${group}”: jóváhagyja az ellenőrizetlen szöveget?`
           : `„${group}”: jóváhagyja mind a(z) ${n(count)} ellenőrizetlen szöveget, a képernyőn nem láthatókat is?`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The help
+    // lines name things as `accountSettings`, `sessions` and `dataExport` do. "Ön"; the
+    // buttons are nouns, as "Fiók létrehozása"; the numeral stays bare before its noun
+    // ("3 találat", "50 perc"); every value the app passes in stands after a colon.
+    settings: {
+      title: "Beállítások",
+      search: "Keresés a beállításokban",
+      searchPlaceholder: "Keresés a beállításokban…",
+      results: "Megfelelő beállítások",
+      noMatches: (query) => `Nincs a keresésnek megfelelő beállítás: „${query}”.`,
+      // As `commandPalette.clear`.
+      clearSearch: "Keresés törlése",
+      back: "Vissza a beállításokhoz",
+      sections: "Beállításcsoportok",
+      matchCount: (count) => `${n(count)} találat`,
+      groups: {
+        appearance: {
+          title: "Megjelenés",
+          help: "Nyelv, téma és az alkalmazás megjelenése ezen az eszközön.",
+        },
+        account: {
+          title: "Fiók",
+          help: "Az Ön profilja és e-mail-címe.",
+        },
+        security: {
+          title: "Biztonság",
+          help: "Hogyan jelentkezik be: jelszó, ellenőrző kódok, hozzáférési kulcsok és munkamenetek.",
+        },
+        notifications: {
+          title: "Értesítések",
+          help: "Miről, mikor és mely eszközökön kap értesítést.",
+        },
+        data: {
+          title: "Adatok",
+          help: "Exportálja a saját adatait, vagy törölje őket a fiókjával együtt.",
+        },
+      },
+    },
+    landing: {
+      signIn: "Bejelentkezés",
+      requestAccess: "Hozzáférés kérése",
+      getStarted: "Kezdés",
+      tryDemo: "Demó kipróbálása",
+      openApp: "Alkalmazás megnyitása",
+      continueDemo: "Demó folytatása",
+      beta: "Béta",
+      // Plain text: a mail's subject and body lines, never HTML. The app's name after a
+      // colon, so it needs no case ending ("Hozzáférés a Kastlanhoz").
+      accessSubject: (app) => (app ? `Hozzáférési kérelem: ${app}` : "Hozzáférési kérelem"),
+      accessName: "Név:",
+      accessCompany: "Cég:",
+      accessUse: "Mire használná:",
+    },
+    demo: {
+      starting: "A demó indítása…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `Túl sok demó indult erről a hálózatról. Próbálja újra ${n(minutes)} perc múlva.`
+          : "Túl sok demó indult erről a hálózatról. Próbálja újra később.",
+      capacity: "A demó jelenleg megtelt. Kérjük, próbálja újra később.",
+      unavailable: "A demó jelenleg nem érhető el.",
+      failed: "A demót nem sikerült elindítani. Kérjük, próbálja újra.",
+      // As `legal.backHome`.
+      backToStart: "Vissza a kezdőlapra",
+      hoursLeft: (hours, minutes) => `Demó · még ${n(hours)} óra ${n(minutes)} perc`,
+      minutesLeft: (minutes) => `Demó · még ${n(minutes)} perc`,
+      badge: "Demó",
+      readOnly: "Mintaadatokat lát. Módosításra nincs lehetőség.",
+      sandbox: "Amit Ön hoz létre, az a demó végén törlődik.",
+      details: "A demó részletei",
+      writeLocked: "A demóban ez nem lehetséges.",
+      endedTitle: "A demó véget ért",
+      endedReadOnly: "A mintaadatokat rendszeresen visszaállítjuk.",
+      endedSandbox:
+        "A mintaadatokat rendszeresen visszaállítjuk, a demóban létrehozott saját munkáját pedig töröljük.",
+      restart: "Új demó indítása",
     },
   };
 }

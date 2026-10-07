@@ -191,6 +191,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         qrAlt: "Código QR para su app de autenticación",
         secretHint: "¿No puede escanearlo? Introduzca esta clave en la app:",
         copySecret: "Copiar clave",
+        // 0.31.0: the card's title; the state ("Activada") stands beside it.
+        title: "Verificación en dos pasos",
       },
       passkeys: {
         title: "Llaves de acceso",
@@ -889,6 +891,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         `${n(length)} letras y dígitos. Los guiones y los espacios no importan.`,
       recoveryCodeInvalid: "Este código de respaldo no es válido o ya se ha usado.",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "Solicitar acceso",
     },
     register: {
       firstName: "Nombre",
@@ -1332,6 +1336,83 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         count === 1
           ? `¿Aprobar el texto sin revisar de «${group}»?`
           : `¿Aprobar los ${n(count)} textos sin revisar de «${group}», incluidos los que no están en pantalla?`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The help
+    // lines name things as `accountSettings`, `sessions` and `dataExport` do. "Usted".
+    // "Ajustes" (es-ES), a countable noun: "Ningún ajuste coincide…".
+    settings: {
+      title: "Ajustes",
+      search: "Buscar en los ajustes",
+      searchPlaceholder: "Buscar en los ajustes…",
+      results: "Ajustes coincidentes",
+      noMatches: (query) => `Ningún ajuste coincide con «${query}».`,
+      // As `commandPalette.clear`.
+      clearSearch: "Borrar búsqueda",
+      back: "Volver a los ajustes",
+      sections: "Secciones de los ajustes",
+      matchCount: (count) => `${n(count)} ${plural(count, "resultado", "resultados")}`,
+      groups: {
+        appearance: {
+          title: "Apariencia",
+          help: "Idioma, tema y aspecto de la aplicación en este dispositivo.",
+        },
+        account: {
+          title: "Cuenta",
+          help: "Su perfil y su dirección de correo electrónico.",
+        },
+        security: {
+          title: "Seguridad",
+          help: "Cómo inicia sesión: contraseña, verificación en dos pasos, llaves de acceso y sesiones.",
+        },
+        notifications: {
+          title: "Notificaciones",
+          help: "Qué notificaciones recibe, cuándo y en qué dispositivos.",
+        },
+        data: {
+          title: "Datos",
+          help: "Exporte lo que es suyo o elimínelo junto con su cuenta.",
+        },
+      },
+    },
+    landing: {
+      signIn: "Iniciar sesión",
+      requestAccess: "Solicitar acceso",
+      getStarted: "Empezar",
+      tryDemo: "Probar la demo",
+      openApp: "Abrir la aplicación",
+      continueDemo: "Continuar la demo",
+      beta: "Beta",
+      // Plain text: a mail's subject and body lines, never HTML.
+      accessSubject: (app) => (app ? `Acceso a ${app}` : "Solicitud de acceso"),
+      accessName: "Nombre:",
+      accessCompany: "Empresa:",
+      accessUse: "Uso previsto:",
+    },
+    demo: {
+      starting: "Iniciando la demo…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `Demasiadas demos desde esta red. Inténtelo de nuevo en ${n(minutes)} min.`
+          : "Demasiadas demos desde esta red. Inténtelo de nuevo más tarde.",
+      capacity: "La demo está completa en este momento. Inténtelo de nuevo más tarde.",
+      unavailable: "La demo no está disponible en este momento.",
+      failed: "No se pudo iniciar la demo. Inténtelo de nuevo.",
+      // As `legal.backHome`.
+      backToStart: "Volver al inicio",
+      // Hours and minutes together are plural; minutes alone agree with the count.
+      hoursLeft: (hours, minutes) => `Demo · quedan ${n(hours)} h ${n(minutes)} min`,
+      minutesLeft: (minutes) => `Demo · ${plural(minutes, "queda", "quedan")} ${n(minutes)} min`,
+      badge: "Demo",
+      readOnly: "Está viendo datos de ejemplo. No es posible hacer cambios.",
+      sandbox: "Su propio trabajo se elimina cuando termina la demo.",
+      details: "Detalles de la demo",
+      writeLocked: "No es posible en la demo.",
+      endedTitle: "La demo ha terminado",
+      endedReadOnly: "Los datos de ejemplo se restablecen con regularidad.",
+      endedSandbox:
+        "Los datos de ejemplo se restablecen con regularidad; su propio trabajo en la demo se elimina.",
+      restart: "Iniciar una nueva demo",
     },
   };
 }

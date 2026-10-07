@@ -193,6 +193,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         qrAlt: "Codice QR per la Sua app di autenticazione",
         secretHint: "Non riesce a scansionarlo? Inserisca invece questa chiave nell’app:",
         copySecret: "Copia chiave",
+        // 0.31.0: the card's title; the state ("Attiva") stands beside it.
+        title: "Autenticazione a due fattori",
       },
       passkeys: {
         title: "Passkey",
@@ -897,6 +899,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       recoveryCodeHint: (length) => `${n(length)} lettere e cifre. Trattini e spazi non contano.`,
       recoveryCodeInvalid: "Questo codice di riserva non è valido o è già stato usato.",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "Richiedi l’accesso",
     },
     register: {
       firstName: "Nome",
@@ -1343,6 +1347,83 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         count === 1
           ? `Approvare il testo non rivisto in «${group}»?`
           : `Approvare tutti i ${n(count)} testi non rivisti in «${group}», compresi quelli non visibili sullo schermo?`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The help
+    // lines name things as `accountSettings`, `sessions` and `dataExport` do. "Lei", and
+    // no sentence about the reader needs a gender ("avvisato/a").
+    settings: {
+      title: "Impostazioni",
+      search: "Cerca nelle impostazioni",
+      searchPlaceholder: "Cerca nelle impostazioni…",
+      results: "Impostazioni corrispondenti",
+      noMatches: (query) => `Nessuna impostazione corrisponde a «${query}».`,
+      // As `commandPalette.clear`.
+      clearSearch: "Cancella ricerca",
+      back: "Torna alle impostazioni",
+      sections: "Sezioni delle impostazioni",
+      matchCount: (count) => `${n(count)} ${plural(count, "risultato", "risultati")}`,
+      groups: {
+        appearance: {
+          title: "Aspetto",
+          help: "Lingua, tema e aspetto dell’app su questo dispositivo.",
+        },
+        account: {
+          title: "Account",
+          help: "Il Suo profilo e il Suo indirizzo email.",
+        },
+        security: {
+          title: "Sicurezza",
+          help: "Come accede: password, codici 2FA, passkey e sessioni.",
+        },
+        notifications: {
+          title: "Notifiche",
+          help: "Quali notifiche riceve, quando e su quali dispositivi.",
+        },
+        data: {
+          title: "Dati",
+          help: "Esporti i Suoi dati o li elimini insieme al Suo account.",
+        },
+      },
+    },
+    landing: {
+      signIn: "Accedi",
+      requestAccess: "Richiedi l’accesso",
+      getStarted: "Inizia",
+      tryDemo: "Prova la demo",
+      openApp: "Apri l’app",
+      continueDemo: "Continua la demo",
+      beta: "Beta",
+      // Plain text: a mail's subject and body lines, never HTML.
+      accessSubject: (app) => (app ? `Accesso a ${app}` : "Richiesta di accesso"),
+      accessName: "Nome:",
+      accessCompany: "Azienda:",
+      accessUse: "Uso previsto:",
+    },
+    demo: {
+      starting: "Avvio della demo…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `Troppe demo da questa rete. Riprovi tra ${n(minutes)} min.`
+          : "Troppe demo da questa rete. Riprovi più tardi.",
+      capacity: "La demo è al completo in questo momento. Riprovi più tardi.",
+      unavailable: "La demo non è disponibile in questo momento.",
+      failed: "Impossibile avviare la demo. Riprovi.",
+      // As `legal.backHome`.
+      backToStart: "Torna alla pagina iniziale",
+      // "ancora" rather than "mancano", which would have to agree with the count.
+      hoursLeft: (hours, minutes) => `Demo · ancora ${n(hours)} h ${n(minutes)} min`,
+      minutesLeft: (minutes) => `Demo · ancora ${n(minutes)} min`,
+      badge: "Demo",
+      readOnly: "Sta guardando dati di esempio. Non è possibile apportare modifiche.",
+      sandbox: "Quello che crea viene eliminato al termine della demo.",
+      details: "Dettagli della demo",
+      writeLocked: "Non è possibile nella demo.",
+      endedTitle: "La demo è terminata",
+      endedReadOnly: "I dati di esempio vengono reimpostati regolarmente.",
+      endedSandbox:
+        "I dati di esempio vengono reimpostati regolarmente; quello che ha creato nella demo viene eliminato.",
+      restart: "Avvia una nuova demo",
     },
   };
 }
