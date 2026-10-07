@@ -1,6 +1,7 @@
 # Settings — harmonisation plan
 
-Status: **2026-10-07, draft for review.** Led from ui-kit at Marcel's request: "The whole
+Status: **2026-10-07, reviewed.** All three apps answered the same day; §10 records
+what they settled, and the sections above already follow it. Led from ui-kit at Marcel's request: "The whole
 settings layout shall be the next one to harmonize. With the sidebar inside like keksdose
 has … also with differences in desktop and mobile appearance. Also ui and server, not
 only appearance but also similar backend functionality." It ships in ui-kit **0.31** and
@@ -26,16 +27,16 @@ three (Marcel's decisions, §2).
 | Phone | the sidebar becomes a wrapped chip strip above the content | one column of cards | one column of cards |
 | Catalogue and search | `settings-index.ts`: groups + one entry per setting, localized keywords; the same catalogue feeds ⌘K | none | none |
 | Groups | appearance, account, security, privacy, assistant, interaction, notifications, data | none | none |
-| Profile | kit `ProfileSetting`, one name | kit `ProfileSetting`, one name split on save | own card, first and last |
+| Profile | kit `ProfileSetting`, one name (first and last on its sign-in branch) | kit `ProfileSetting`, one name split on save | own card, first and last (the kit's on its 0.30 branch) |
 | Password | kit | kit (+ strength, 72 bytes) | kit |
 | 2FA | kit + "replace authenticator" | kit + backup codes (app) | none yet |
 | Passkeys | kit | kit | kit |
 | Sessions | none | app "sign out everywhere"; `/auth/sessions` unused | app "sign out everywhere" |
-| Theme | light/dark toggle, no "system" | kit `ThemeSetting` system/light/dark | top-bar toggle only |
+| Theme | the store knows "system"; the control offers light/dark only | kit `ThemeSetting` system/light/dark | top-bar toggle only |
 | Language | kit `LanguageSetting`; device → account only | kit; device → account → browser | kit; device → account → browser |
 | Notifications | full push, inbox, per type, quiet hours, digest, devices | two switches stored, **read by nothing** | none |
 | Admin page | `/admin#section`, the **same** sidebar shell | `/users` (admin nav group with `/billing`, `/import`) | `/admin` stacks users, teams, invitations |
-| PATCH and `null` | `display_name: null` ignored; `reporting_currency: null` clears | company settings: null skipped on required fields, clears elsewhere | server-kit `ProfileUpdate`: null refused (422) |
+| PATCH and `null` | `PATCH /auth/me` on server-kit's `ProfileUpdate` (sign-in branch); the push bodies (PUT) drop or keep nulls | company settings: null skipped on required fields, clears elsewhere | server-kit `ProfileUpdate`: null refused (422) |
 
 What is already the same: the kit's `PasswordSetting`, `PasskeysSetting` and
 `LanguageSetting`, the theme kept on the device (`createThemeStore`),
@@ -89,7 +90,11 @@ Settled by the kit in this draft; the reviews may object:
 
 - **An unknown group** is replaced by the default group (desktop) or the list (phone).
   It is never a 404, so an old bookmark keeps working.
-- **Hidden groups** (§4.2) behave like unknown ones.
+- **Hidden groups** (§4.1) behave like unknown ones.
+- **Aliases:** `aliases: {overview: "metrics"}` maps a retired group id to its successor
+  (keksdose's admin), with a replace.
+- **The sub-segment belongs to a card.** The card selects it with `selectSub(sub)` (a
+  replace) from the layout's context, and never builds the path itself.
 - **History:**
   - On a phone, opening a group **pushes**, so the OS back gesture returns to the list.
   - On a desktop, switching groups in the sidebar **replaces**. This is keksdose's rule:
@@ -99,9 +104,15 @@ Settled by the kit in this draft; the reviews may object:
     A deep link from a mail or a push therefore never sends "back" out of the app.
 - **Redirects, kept for good** (they cost nothing; mails, push payloads, tours and
   bookmarks hold the old links):
-  - kk `/settings#<group>[/<sub>]` → `/settings/<group>[/<sub>]`, and
-    `/settings?focus=x#g` → `/settings/g?focus=x`. The kit's hook reads a legacy hash
-    once on mount.
+  - kk `/settings?<query>#<group>[/<sub>]` → `/settings/<group>[/<sub>]?<query>`, with
+    **the whole query carried** (a tour's `?tour=…&tourStep=…` as well as `focus`).
+  - **The conversion runs on every navigation, not once on mount**: whenever the
+    pathname is the base path and a hash is present, keyed on `location.key`. The router
+    keeps the layout mounted across links followed inside the app (keksdose's inbox
+    renders admin-typed URLs; a push click routes an open window without a reload).
+  - The app's sign-in redirect must keep the hash in `?next=` (keksdose's
+    `ProtectedRoute` drops it today), so an old link opened while signed out still
+    lands.
   - ka `/profile` → `/settings/account`.
   - KS `/account` → `/settings/account`.
 - **Breadcrumb and title:** `document.title` is "<group> · Settings · <app>". kastlan's
@@ -111,8 +122,9 @@ Settled by the kit in this draft; the reviews may object:
 
 Lifted from keksdose (`settings-page.tsx`), with one addition:
 
-- The page: `max-w-6xl`, the kit `PageHeader` "Settings" (h1), then the search field
-  (§3.4) above the grid.
+- The page: `max-w-6xl` by default, the kit `PageHeader` "Settings" (h1), then the
+  search field (§3.4) above the grid. A `width` prop widens it: keksdose's admin stays
+  `max-w-7xl`, because its user table scrolled sideways at 6xl (dev#488).
 - The grid: `md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6`.
 - **The sidebar** is the kit's vertical `Tabs`: an icon per group, the active row filled,
   arrow keys, `aria-orientation="vertical"`. Each row is a link to `/settings/<group>`.
@@ -150,17 +162,19 @@ The bottom bar keeps no settings entry; settings stay in the account menu (§3.6
   `/settings/<group>?focus=<anchor>`.
 - **While searching (phone):** the group list is replaced by the same hit list.
 - **No hits:** "No settings match “…”." with a clear button.
-- **When it shows:** the search field shows once the catalogue has **more than 8
-  entries**. Below that it is noise (KS starts with about seven). ⌘K always gets the
-  entries.
+- **When it shows:** by default once the catalogue has **more than 8 entries** (KS has
+  about twelve, keksdose 26). An explicit `search={false}` or `search` wins over the
+  count: keksdose's admin keeps no search field. ⌘K always gets the entries.
 - **⌘K:** `settingsSearchEntries(catalogue, t)` builds the `GlobalSearch` entries with
   the `/settings/<group>?focus=<anchor>` href and the group as their section.
 
 ### 3.5 Focus
 
 `?focus=<anchor>` scrolls the card into view once its group has rendered and draws the
-focus ring round it for 1.8 s (keksdose's `HIGHLIGHT`). Then the parameter is removed
-with a replace, so a reload doesn't ring it again. Focus moves to the card's heading for
+focus ring round it for 1.8 s (keksdose's `HIGHLIGHT`). Then **only `focus`** is removed,
+with a replace, so a reload doesn't ring it again. Every other parameter stays: a tour's
+`tour` / `tourStep` and the admin roster's filters (dropping URL parts broke the tours
+once, keksdose dev#495). Focus moves to the card's heading for
 a screen reader. A search hit, ⌘K, a tour and a mail link all use it.
 
 ### 3.6 Where settings are reached
@@ -181,6 +195,9 @@ a screen reader. A search hit, ⌘K, a tour and a mail link all use it.
   (desktop) or the page's `h1` (phone, then `h2`). A context sets the level, so the same
   card outside settings keeps its plain title. App cards use `SettingsSection` (§7.1),
   which gives them the same title, anchor and focus ring.
+- **A card alone in a group named after it** keeps its title for screen readers only
+  (`titleVisible={false}`), so the page doesn't print the same heading twice (keksdose's
+  admin, dev#490, #493, #494).
 - `TwoFactorSetting` gets a title ("Two-factor authentication"); it had only a status
   line.
 - Destructive cards (`DeleteAccountSetting`, keksdose's "erase all data") go last in
@@ -205,6 +222,7 @@ interface SettingsEntry<G extends string = string> {
   anchor: string;            // the card's DOM id, unique on the page
   title: string;
   keywords?: string;         // localized, space-separated; never shown
+  visible?: boolean;         // false drops the entry from the page and from search
 }
 ```
 
@@ -217,14 +235,21 @@ interface SettingsEntry<G extends string = string> {
   (`defaultGroup`). keksdose keeps "appearance".
 - A group with no visible entries is hidden. KS's notifications group is therefore
   hidden until it has a card.
+- **A demo session** (`docs/landing-demo-harmonization.md`) marks every card that is
+  refused for a demo `visible: false`: passkeys, 2FA, API tokens, sessions, email and
+  password change, push, E2EE, export, deletion. A group left with no visible entry is
+  hidden by the rule above, so a demo sees no page of cards that each answer 403. In KS
+  that hides security and data; keksdose's readable data cards keep its data group.
+- keksdose keeps its catalogue as key-based data (its help assistant's corpus builder
+  parses `settings-index.ts`) and maps it to this shape at render time.
 
 ### 4.2 The groups
 
 | Group | Holds | kk | ka | KS |
 |---|---|---|---|---|
 | `appearance` | language, theme, palette, date format, density | language, theme (+ system), simple/enhanced, palette, date format | language, theme | language, theme (moves in from the top bar; the toggle stays there too) |
-| `account` | profile, email change, the app's memberships | profile, email change | profile, email change, **companies** (leave) | profile, email change, **pending shares** |
-| `security` | password, 2FA, passkeys, sessions, API tokens | password, 2FA (+ replace), passkeys, sessions, API tokens | password, 2FA, backup codes, passkeys, sessions (with the device list) | password, passkeys, sessions; 2FA when it arrives |
+| `account` | profile, email change, the app's memberships | profile, email change | profile, email change, **companies** (leave) | profile (first and last name), email change, **pending shares** |
+| `security` | password, 2FA, passkeys, sessions, API tokens | password (moves in from account), 2FA (+ replace), passkeys, sessions, API tokens | password, 2FA, backup codes, passkeys, sessions (with the device list) | password, passkeys, sessions; 2FA when it arrives |
 | *app groups* | | privacy, assistant, interaction | — | — |
 | `notifications` | the app's notification cards | inbox, push, checkup, devices (unchanged) | the two switches (until the notifications round, §6.4) | hidden |
 | `data` | export, imports and exports of the app's data, then the destructive cards | price pool, exchange rates, export, demo data, erase all data, delete account | export, delete account | export, delete account |
@@ -234,6 +259,8 @@ interface SettingsEntry<G extends string = string> {
   (set in Reports) and display currency (per budget).
 - Language stays in the top bar or account menu as well. That is the quick switch; the
   card is the place to find it.
+- The email change, sessions, export and deletion cards arrive with each app's 0.30
+  adoption.
 
 ### 4.3 Labels
 
@@ -249,21 +276,30 @@ An app may override any core label and supplies its own groups' words.
 ## 5. The admin page, same shell (§2.5)
 
 - `/admin/<section>` uses the same `SettingsLayout` with its own catalogue: the sidebar
-  on desktop, the drill-down list on a phone, search when it has more than 8 entries,
-  `?focus=`. The heading is "Administration" ("Verwaltung").
+  on desktop, the drill-down list on a phone, `?focus=`. Search follows §3.4, and an app
+  may switch it off. The heading is "Administration" ("Verwaltung").
 - **Who sees it:** the app's admin check. The account menu's "Administration" entry
   shows only to an admin, and the route answers the app's 403 page to anyone else.
+  keksdose adds both (today each card meets a 403 from the API).
+- **The 0.30 `AdminActionLog` gets a section of its own, `activity`**, in every app that
+  shows it (KS asked; it was going to sit under the roster).
+- **Link-only entries are not catalogue entries.** A page that is a task rather than a
+  setting (kastlan's import wizard) stays a page: a `phoneFooter` link row on a phone,
+  and its own entry in the app's admin nav group on a desktop.
 - **Per app:**
   - **keksdose:** its `/admin#section` (metrics, health, scheduler, users, access,
-    messaging, system) moves to path segments. Its section heading becomes the group
-    `h2` (today a `PageHeader`, the one drift).
-  - **kastlan:** `/admin/users` (the roster and invitations, today `/users`) and a new
-    `/admin/company` (document language, QR-bill account, today on `/users`). `/billing`
-    and `/import` may become sections or stay pages of the admin nav group; that is
-    kastlan's call. `/users` redirects.
-  - **KS:** `/admin/users`, `/admin/teams`, `/admin/invitations` (today stacked on one
-    page). Whether `/teams` (team managers, not only admins) stays its own page is KS's
-    call.
+    messaging, system) moves to path segments, with `aliases` for retired ids
+    (`overview` → `metrics`), `width="7xl"` and `search={false}`. Its heading is
+    already an `h2`; only the look differs.
+  - **kastlan:** `/admin/users` (the roster and invitations, today `/users`),
+    `/admin/company` (document language, QR-bill account, today on `/users`),
+    `/admin/billing` with `visible: billing_enabled` (hidden, so it acts as unknown,
+    while billing is off; its routes answer 503 since 0.10.13), and `/admin/activity`.
+    `/import` stays its own page. The nav's admin group holds "Administration" and
+    "Import". `/users` and `/billing` redirect.
+  - **KS:** `/admin/users`, `/admin/teams`, `/admin/invitations`, `/admin/activity`
+    (today stacked on one page). `/teams` stays its own page as well, because team
+    managers and members use it.
 - The admin page is **company-scoped** in kastlan: it shows the active company and
   follows the `CompanySwitcher`.
 
@@ -271,8 +307,9 @@ An app may override any core label and supplies its own groups' words.
 
 ### 6.1 One PATCH rule
 
-Every settings write (`PATCH /auth/me`, kastlan's company settings, keksdose's
-`/push/settings`, any later one) follows one rule:
+Every settings write body (`PATCH /auth/me`, kastlan's company settings, keksdose's
+`PUT /push/settings` and `/push/preferences`, any later one) follows one rule. It is
+about the body, not the verb: keksdose's push writes stay PUT in this round.
 
 1. **An omitted field keeps its value.**
 2. **An explicit `null` clears a nullable field** (back to "not set" or the default).
@@ -284,8 +321,10 @@ Every settings write (`PATCH /auth/me`, kastlan's company settings, keksdose's
 server-kit 0.5 adds `apply_patch(obj, update, *, not_nullable=…)`, which applies a
 pydantic model's `model_fields_set` under rules 1–3. server-kit's `ProfileUpdate` already
 follows them. **What changes:**
-- keksdose: `display_name: null` becomes a 422 instead of being ignored;
-  `/push/preferences` lets `null` reset a type to its default (today it is dropped).
+- keksdose (`PATCH /auth/me` already follows the rule on its sign-in branch):
+  - `/push/preferences`: `null` resets a type to its default (today it is dropped);
+  - `/push/settings`: `digest_cadence: null` becomes a 422 (today it is silently kept);
+  - both push bodies forbid unknown fields.
 - kastlan: `null` on `default_language` or `default_account_country` becomes a 422
   instead of being skipped.
 
@@ -303,23 +342,34 @@ follows them. **What changes:**
 - **The order on a device:** the device's own choice → the account's locale → the
   browser's language → the app's default.
   - "The device's own choice" is a choice made **on this device**. It is stored under
-    `<app>-lang` only when the user picks a language. Detecting the browser never writes
-    it.
+    `<app>-lang` only when the user picks a language. **Detecting the browser never
+    writes it**: i18next's detector must not cache (`caches: []`). keksdose's does
+    today, so its detection is indistinguishable from a pick; devices that already hold
+    a value keep it.
   - **At sign-in**, the account's locale applies unless the device has its own choice.
     That is kastlan's and KS's rule today. **keksdose changes:** a new device now follows
     the account.
   - **Picking a language** writes the device's choice and `PATCH /auth/me {locale}`
     (all three already do).
-- The kit's `useAccountLanguage({account, device, setDevice, save})` implements the
-  order and the sign-in rule, so the three copies go.
+  - **Nothing writes the account's locale on its own.** keksdose's
+    `useSyncLanguageToAccount` (a PATCH on every session start) goes, or a new device
+    would overwrite the account before adopting it. It was keksdose's only `de` →
+    `de-CH` migration, so a one-off data migration through `canonical_locale` replaces
+    it.
+  - **A demo session never writes the account**: the pick stays on the device (a
+    throwaway account needs no language, and model R refuses the write).
+- The kit's `useAccountLanguage({account, device, setDevice, save, isDemo})` implements
+  the order, the sign-in rule and the demo rule, so the three copies go.
 - Mails and pushes use the account's locale; the server never guesses from the request.
 
 ### 6.3 Everything else stays on the device
 
-- Theme, palette, date format, density, keksdose's gestures and blur mode: one
-  localStorage key each, `<app>-<name>`, through the kit's stores.
-- They are **not** sent to the server and not in `/auth/me`. The export (0.30) does not
-  list them.
+- Theme, palette, date format, density, keksdose's gestures and blur mode are
+  **device-local and never on the server**: not sent, not in `/auth/me`, not in the
+  export (0.30). Their storage keys stay as each app has them.
+- The date format in particular stays on the device: its "auto" follows the language,
+  so a new device that adopts the account's language gets the matching format anyway.
+  It would move to the account only once the server renders a date as text.
 - "Reset this device's settings" is not in this round.
 
 ### 6.4 Notifications (the notifications round)
@@ -359,19 +409,23 @@ new_password}` may stay for one release while the client moves to
 ### 7.1 ui-kit 0.31
 
 **Layout** (router-aware, so in the main entry and the `./shell` slice):
-- `SettingsLayout({title, groups, entries, basePath, defaultGroup?, search?, renderGroup,
-  phoneFooter?, labels})`: the page, the sticky sidebar, the phone list and group page,
-  the search and the hit list, the focus handling.
+- `SettingsLayout({title, groups, entries, basePath, defaultGroup?, aliases?, search?,
+  width?, renderGroup, phoneFooter?, labels})`: the page, the sticky sidebar, the phone
+  list and group page, the search and the hit list, the focus handling.
   - `basePath` is `/settings` or `/admin`.
   - `renderGroup(group, sub)` returns that group's cards.
-  - `phoneFooter` holds the extra link rows (§3.3).
-- `SettingsSection({anchor, title, description?, tone?, action?, children})`: a card at the
-  settings type scale with the anchor, the `h3` and the focus ring. It throws in
-  development when the anchor has no catalogue entry.
-- `useSettingsRoute({groups, basePath, defaultGroup})`: `{group, sub, focus, select,
-  back}`. It reads the legacy hash once (§3.1) and owns the push/replace rule.
-- `useSettingsFocus(anchor)`: the scroll, the ring and the parameter's removal (used
-  inside the layout; exported for an app's own pages).
+  - `search`: `undefined` follows the count (§3.4); `true` or `false` wins.
+  - `width`: `"6xl"` (default) or `"7xl"`.
+  - `phoneFooter` holds the extra link rows (§3.3, §5).
+- `SettingsSection({anchor, title, titleVisible?, description?, tone?, action?,
+  children})`: a card at the settings type scale with the anchor, the `h3` (screen
+  readers only when `titleVisible={false}`) and the focus ring. It throws in development
+  when the anchor has no catalogue entry.
+- `useSettingsRoute({groups, basePath, defaultGroup, aliases})`: `{group, sub, focus,
+  select, selectSub, back}`. It converts a legacy hash on every navigation (§3.1) and
+  owns the push/replace rule. Cards reach `selectSub` through the layout's context.
+- `useSettingsFocus(anchor)`: the scroll, the ring and the removal of `focus` alone
+  (used inside the layout; exported for an app's own pages).
 - `settingsSearchEntries(groups, entries)` → `GlobalSearch` entries.
 - `SettingsHeadingLevel` (context): the kit's setting cards read it (§3.7).
 - `TwoFactorSetting` gains its title. `ThemeSetting variant="toggle"`: the segmented
@@ -387,7 +441,7 @@ new_password}` may stay for one release while the client moves to
 ### 7.2 server-kit 0.5
 
 - `settings.apply_patch(obj, update, *, not_nullable=…)` (§6.1), with
-  `PatchNullError` → 422.
+  `PatchNullError` → 422, for PATCH and PUT bodies alike.
 - `settings.canonical_locale(tag, offered)` and `parse_accept_language(header, offered)`
   (§6.2).
 - `ProfileUpdate` takes the app's `offered` locales through a small factory, so KS's
@@ -402,37 +456,73 @@ new_password}` may stay for one release while the client moves to
 - The redirects of §3.1 and the admin check of §5.
 - The backend endpoints, under the rule of §6.1.
 
-## 8. Per repo (summary; the reviews refine it)
+## 8. Per repo
 
-- **keksdose:**
-  - `settings-page.tsx` onto `SettingsLayout`; `settings-index.ts` into the catalogue
-    shape; `/settings#…` links (account menu, tours, ⌘K, mails, pushes) to paths, the
-    legacy hash kept;
+- **keksdose** (the most work: the reference's own pattern changes):
+  - `settings-page.tsx` onto `SettingsLayout`; `settings-index.ts` stays key-based data,
+    mapped to the catalogue shape at render (the help corpus builder keeps parsing it);
   - the phone chip strip becomes the drill-down;
-  - the admin page onto the same layout at `/admin/<section>`;
-  - theme gains "system";
-  - a new device follows the account's language;
-  - the PATCH rule on `PATCH /auth/me` and `/push/preferences`;
+  - `/settings#…` links to paths: the routes, the account menu (its `current` becomes a
+    prefix match), ⌘K, 13 tour sites, the swipe card (`selectSub`), the help corpus (29
+    links), its builder and `help_corpus_service`, then a corpus rebuild;
+  - `ProtectedRoute` keeps the hash in `?next=`;
+  - the admin page onto the same layout at `/admin/<section>`, with `aliases`, `width`,
+    `search={false}`, `titleVisible={false}` on about 15 cards, a client admin guard and
+    a 403 page;
+  - the password card moves to security; the profile card is titled "Profile";
+  - theme gains "system" (the store has it; the control binds the choice, not the
+    resolved mode);
+  - the language: `caches: []`, `useSyncLanguageToAccount` removed, a locale data
+    migration, a new device follows the account;
+  - the push bodies under §6.1;
   - `canonical_locale` from server-kit.
 - **kastlan:**
   - `/profile` → `/settings/<group>`; its two-column grid becomes the groups of §4.2;
-  - `/users` → `/admin/users`, and the company settings to `/admin/company`;
-  - the poller respects `browser_notifications`;
+  - `/users` → `/admin/users`, the company settings to `/admin/company`, `/billing` →
+    `/admin/billing` (`visible: billing_enabled`), `/admin/activity`; `/import` stays a
+    page;
+  - `useNotificationPoller(user?.browser_notifications ?? false)`;
   - the PATCH rule on `/company/settings`; `normalize_lang` → `canonical_locale` (the
-    document language keeps its own list);
-  - the password on `/auth/me/password`.
+    document language keeps its own list for documents and tenant mails);
+  - the password on `/auth/me/password` at the 0.30 adoption; the PATCH alias stays one
+    release.
 - **Kurvenschmiede:**
-  - `/account` → `/settings/<group>`; its own profile card → the kit's (0.30);
-  - `/admin` → `/admin/users|teams|invitations` on the same layout;
+  - `/account` → `/settings/<group>` with about twelve entries (§4.2);
+  - `/admin` → `/admin/users|teams|invitations|activity` on the same layout; `/teams`
+    stays;
   - the theme card joins appearance;
-  - `LanguageIn` → `canonical_locale`.
+  - `LanguageIn` → `canonical_locale` with its seven codes; `extra="forbid"` confirmed on
+    its `ProfileUpdate` subclass.
 
-## 9. Questions for the reviews
+## 9. Order
 
-1. keksdose: does any push payload, mail or stored tour state hold a `/settings#…` link
-   that the legacy-hash reading in §3.1 would not cover?
-2. Is "more than 8 entries" the right threshold for the search field?
-3. kastlan: should `/billing` and `/import` become admin sections, or stay pages?
-4. Does any app keep a setting that should follow the account after all (keksdose's
-   date format?) — §2.4 says only the language does.
-5. Anything in §6.5 that your client calls differently and can't move this round?
+The layout needs ui-kit 0.31; the PATCH rule and `canonical_locale` need server-kit 0.5.
+Each app adopts after its 0.30 adoption: keksdose after its sign-in round and 0.30;
+kastlan after its single 0.30 release; Kurvenschmiede after its 0.30 adoption, which is
+in progress.
+
+## 10. Settled after the reviews (2026-10-07)
+
+All three apps reviewed the draft (4a2940f) the same day. The sections above follow
+what they settled; this is the list.
+
+1. **The legacy hash is converted on every navigation**, not once on mount, and the
+   whole query is carried (keksdose; §3.1).
+2. **`aliases`**, **`selectSub`** through the layout's context, and **`focus` removed
+   alone** (keksdose; §3.1, §3.5).
+3. **`width`** and **`search`** props; an explicit `search` wins over the count
+   (keksdose; §3.2, §3.4). The threshold of 8 stands (KS, keksdose).
+4. **`titleVisible={false}`** for a card alone in a section named after it (keksdose;
+   §3.7).
+5. **`visible` per entry**; a demo hides its refused cards, and a group left empty
+   disappears (keksdose, KS; §4.1).
+6. **The admin page:** an `activity` section for the 0.30 log (KS); kastlan's billing as
+   a hidden-while-off section and its import as a page; no link-only catalogue entries
+   (§5).
+7. **The PATCH rule is about bodies**; keksdose's push writes stay PUT and gain the
+   null and unknown-field rules (keksdose; §6.1).
+8. **The language:** detection never writes the device's choice; nothing writes the
+   account's locale on its own; a demo never writes it (keksdose, KS; §6.2).
+9. **Device-local settings keep their keys** (no renaming rule); the date format stays
+   on the device (keksdose; §6.3).
+10. kastlan's poller follows `browser_notifications` with a one-line change (§6.4).
