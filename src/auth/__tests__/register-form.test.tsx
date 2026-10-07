@@ -91,6 +91,25 @@ describe("RegisterForm — gating", () => {
   });
 });
 
+describe("RegisterForm — defaultEmail (0.29.1)", () => {
+  it("starts with the address, editable, and still offers the tag", async () => {
+    const { user } = setup({ defaultEmail: "ada@example.com", emailTag: "exampleapp" });
+    const email = screen.getByLabelText("Email");
+    expect(email).toHaveValue("ada@example.com");
+    expect(email).not.toHaveAttribute("readonly");
+    expect(screen.getByRole("button", { name: /^Use ada\+exampleapp@example\.com/ })).toBeInTheDocument();
+    await user.clear(email);
+    await user.type(email, "grace@example.com");
+    expect(email).toHaveValue("grace@example.com");
+  });
+
+  it("gives way to invitedEmail, which locks the field", () => {
+    setup({ defaultEmail: "ada@example.com", invitedEmail: "grace@example.com" });
+    expect(screen.getByLabelText("Email")).toHaveValue("grace@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+  });
+});
+
 describe("RegisterForm — the address tag", () => {
   it("offers the tagged address once the address is plausible, and applies it only on a click", async () => {
     const { user, onSubmit } = setup({ emailTag: "kastlan" });

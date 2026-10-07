@@ -49,6 +49,12 @@ describe("authErrorCode", () => {
   });
 });
 
+describe("authErrorCode — token_expired (0.29.1)", () => {
+  it("is a known code", () => {
+    expect(authErrorCode({ response: { data: { code: "token_expired" } } })).toBe("token_expired");
+  });
+});
+
 describe("isAuthError", () => {
   const taken = { response: { status: 409, data: { code: "email_taken" } } };
 

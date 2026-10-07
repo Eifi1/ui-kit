@@ -125,6 +125,17 @@ describe("VerifyEmailStatus", () => {
   });
 });
 
+describe("VerifyEmailStatus — 0.29.1 additions", () => {
+  it("reads a coded token_expired as expired without a classifier, anything else as invalid", async () => {
+    const expired = Object.assign(new Error("gone"), { response: { data: { code: "token_expired" } } });
+    const { unmount } = render(<VerifyEmailStatus token="t1" onVerify={() => Promise.reject(expired)} />);
+    expect(await screen.findByText("This confirmation link has expired")).toBeInTheDocument();
+    unmount();
+    render(<VerifyEmailStatus token="t2" onVerify={() => Promise.reject(new Error("nope"))} />);
+    expect(await screen.findByText("This confirmation link is not valid")).toBeInTheDocument();
+  });
+});
+
 describe("EmailVerificationBanner", () => {
   it("is keksdose's warning strip: the message, the app's sentence, 'Send again' and 'Not now'", async () => {
     const user = userEvent.setup();
@@ -185,5 +196,23 @@ describe("EmailVerificationBanner", () => {
     expect(screen.getByRole("button", { name: "Send again" })).toHaveAttribute("aria-busy", "true");
     fail(new Error("500"));
     expect(await screen.findByText("Could not send the confirmation email")).toBeInTheDocument();
+  });
+});
+
+describe("EmailVerificationBanner — describeError (0.29.1)", () => {
+  it("shows the server's own sentence for a refused resend, else the kit's", async () => {
+    const throttled = Object.assign(new Error("429"), { detail: "Try again in 5 minutes." });
+    const { unmount } = render(
+      <EmailVerificationBanner
+        onResend={() => Promise.reject(throttled)}
+        describeError={(e) => (e as { detail?: string }).detail}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Send again" }));
+    expect(await screen.findByText("Try again in 5 minutes.", { selector: STATUS })).toBeInTheDocument();
+    unmount();
+    render(<EmailVerificationBanner onResend={() => Promise.reject(new Error("x"))} describeError={() => undefined} />);
+    fireEvent.click(screen.getByRole("button", { name: "Send again" }));
+    expect(await screen.findByText("Could not send the confirmation email", { selector: STATUS })).toBeInTheDocument();
   });
 });

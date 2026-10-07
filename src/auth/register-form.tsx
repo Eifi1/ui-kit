@@ -120,6 +120,13 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">,
    */
   invitedEmail?: string;
   /**
+   * 0.29.1: an address to start with that stays EDITABLE, with the `+tag` suggestion still
+   * offered — for a link anyone can build (keksdose's token-free `/register?email=…`
+   * beta link, kept while an app moves to invitations). Unlike `invitedEmail` it proves
+   * nothing, so it locks nothing. `invitedEmail` wins when both are given.
+   */
+  defaultEmail?: string;
+  /**
    * The language field's value — controlled. Pass the app's UI language
    * (`i18n.resolvedLanguage`) with `onLocaleChange` switching it, and the field IS the
    * app's language switch, with no copy of its own to drift from a second switcher on
@@ -211,6 +218,7 @@ export function RegisterForm({
   onSubmit,
   emailTag,
   invitedEmail,
+  defaultEmail,
   locale: localeProp,
   defaultLocale,
   onLocaleChange,
@@ -234,7 +242,7 @@ export function RegisterForm({
   const invited = invitedEmail !== undefined;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState(invitedEmail ?? "");
+  const [email, setEmail] = useState(invitedEmail ?? defaultEmail ?? "");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [ownLocale, setOwnLocale] = useState<string>(
