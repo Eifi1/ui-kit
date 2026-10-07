@@ -58,6 +58,9 @@ export const it: Dictionary = {
     searchExamples: "Esempi",
     searchNeeds: "Di cosa hai bisogno?",
     searchPages: "Pagine",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "Lato server",
+    searchServer: "Kit server",
   },
 
   groups: {
@@ -71,6 +74,7 @@ export const it: Dictionary = {
     // "Chrome" in the UI sense: the frame around the content, not the browser.
     "App chrome": "Struttura dell’app",
     API: "API",
+    "Server kit": "Kit server",
   },
 
   groupShort: {
@@ -82,6 +86,7 @@ export const it: Dictionary = {
     Inputs: "Input",
     Charts: "Grafici",
     Overlays: "Overlay",
+    "Server kit": "Server",
   },
 
   pages: {
@@ -102,6 +107,12 @@ export const it: Dictionary = {
       short: "Link",
       blurb:
         "Ogni link del kit instradato dal router dell'app, impostato una volta sul provider: il link testuale e i suoi toni, un pulsante o una scheda azione che è un link, e i link che escono dall'app.",
+    },
+    "landing-demo": {
+      title: "Pagina iniziale e demo",
+      short: "Pagina iniziale",
+      blurb:
+        "La pagina iniziale pubblica e la demo da provare: l’intestazione nei suoi tre stati, le sezioni della pagina iniziale, i controlli SEO, il ritorno all’ultima pagina visitata, e l’avvio, il conto alla rovescia e la fine della demo.",
     },
     "user-admin": {
       title: "Amministrazione utenti",
@@ -426,10 +437,10 @@ export const it: Dictionary = {
       blurb: "La cornice dell’app che stai guardando, smontata pezzo per pezzo.",
     },
     settings: {
-      title: "Campi delle impostazioni",
+      title: "Impostazioni",
       short: "Impostazioni",
       blurb:
-        "Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
+        "La pagina delle impostazioni e quella di amministrazione sulla stessa shell: la barra laterale su desktop, l’elenco con drill-down sul telefono, un gruppo per percorso, la ricerca e la scheda che un link mette in evidenza. Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
     },
     wizard: {
       title: "Procedura guidata",
@@ -470,6 +481,60 @@ export const it: Dictionary = {
       blurb:
         "Le funzioni e i dati dietro i campi, come input → risultato: il calcolo delle date di @eifi1/ui-kit/dates, il valutatore della calcolatrice, la tabella delle valute e le costanti di classe con cui si compone un campo personalizzato.",
     },
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
+    "server-kit": {
+      title: "Kit server",
+      blurb:
+        "Il pacchetto Python dietro i backend delle app: i contratti che questi componenti seguono, sotto forma di codice — firme e docstring di ogni modulo, fissati su una release di server-kit.",
+    },
+    "server-auth": {
+      title: "Accesso e account",
+      short: "Accesso",
+      blurb:
+        "Registrazione, accesso, token monouso, claim di sessione e i formati di scambio dell’account — la metà server delle pagine di accesso, registrazione e account.",
+    },
+    "server-user-admin": {
+      title: "Amministrazione utenti",
+      short: "Utenti",
+      blurb:
+        "La query dell’elenco utenti, le quattro azioni di amministrazione e i loro livelli di conferma, la voce di audit, l’eliminazione in due fasi e l’esportazione dei dati.",
+    },
+    "server-settings": {
+      title: "Impostazioni e lingua",
+      short: "Impostazioni",
+      blurb:
+        "Una sola regola per ogni body di impostazioni — un campo omesso resta, null lo azzera, uno sconosciuto viene rifiutato — e l’unica lingua canonica dell’account.",
+    },
+    "server-demo": {
+      title: "Demo",
+      short: "Demo",
+      blurb:
+        "L’account demo usa e getta: le sue impostazioni, i controlli d’ingresso nel loro ordine, i rifiuti e i loro codici, la regola di sola lettura e la sua unica durata.",
+    },
+    "server-mail": {
+      title: "Email",
+      short: "Email",
+      blurb:
+        "Le email dell’account: i testi per lingua, un unico layout che fa l’escape di ogni valore, due trasporti che non sollevano mai eccezioni — e le email di esempio della release, renderizzate.",
+    },
+    "server-feedback": {
+      title: "Feedback e upload",
+      short: "Feedback",
+      blurb:
+        "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — e allegati giudicati dai loro byte.",
+    },
+    "server-limits": {
+      title: "Limiti, errori e CORS",
+      short: "Limiti",
+      blurb:
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, e CORS per qualche origine in più.",
+    },
+    "server-translation-review": {
+      title: "Revisione delle traduzioni",
+      short: "Revisione",
+      blurb:
+        "I formati di scambio della revisione delle traduzioni, chi può rivedere quali chiavi e lingue, e i token di revisione con cui un revisore apre la pagina di revisione del kit.",
+    },
   },
 
 
@@ -496,6 +561,15 @@ export const it: Dictionary = {
       "link che apre una nuova scheda",
       "un pulsante che naviga",
       "evidenziare il link della pagina corrente",
+    ],
+    "landing-demo": [
+      "creare una pagina iniziale pubblica",
+      "aggiungere un pulsante «Richiedi l’accesso»",
+      "controllare titolo e descrizione per i motori di ricerca",
+      "riaprire l’app dove l’utente l’aveva lasciata",
+      "avviare una sessione demo",
+      "conto alla rovescia della demo",
+      "mostrare che la demo è finita",
     ],
     "user-admin": [
       "elencare gli utenti con i loro ruoli",
@@ -992,6 +1066,12 @@ export const it: Dictionary = {
       "scegliere il tema",
       "scegliere la lingua",
       "preferenze dell’utente",
+      "creare una pagina delle impostazioni con barra laterale",
+      "mostrare le impostazioni come elenco sul telefono",
+      "link diretto a un’impostazione",
+      "cercare nelle impostazioni",
+      "pagina di amministrazione con lo stesso layout",
+      "far seguire la lingua all’account",
     ],
     wizard: [
       "modulo in più passaggi",
@@ -1046,6 +1126,75 @@ export const it: Dictionary = {
       "elenco delle valute",
       "ultimi mesi completi",
       "classi dei campi",
+    ],
+    // The Server kit group (0.31).
+    "server-kit": [
+      "documentazione del pacchetto backend",
+      "installare server-kit",
+      "quale release di server-kit è documentata",
+      "contratti Python per il backend",
+      "trovare il lato server di un componente",
+    ],
+    "server-auth": [
+      "verificare un accesso sul server",
+      "registrazione solo su invito",
+      "creare un token per reimpostare la password",
+      "claim del token di sessione",
+      "normalizzare un indirizzo email",
+      "codici di errore dell’autenticazione",
+    ],
+    "server-user-admin": [
+      "interrogare l’elenco utenti sul server",
+      "livello di conferma di un’azione di amministrazione",
+      "scrivere una voce di audit",
+      "eliminare un account in due fasi",
+      "esportare i dati di un utente",
+      "non rimuovere mai l’ultimo amministratore",
+    ],
+    "server-settings": [
+      "aggiornare le impostazioni senza perdere campi",
+      "azzerare un’impostazione con null",
+      "rifiutare i campi sconosciuti nel body",
+      "salvare la lingua dell’account",
+      "leggere l’header Accept-Language",
+    ],
+    "server-demo": [
+      "avviare una sessione demo",
+      "impostazioni dell’account demo",
+      "rendere la demo di sola lettura",
+      "codici di rifiuto della demo",
+      "ripulire i vecchi utenti demo",
+    ],
+    "server-mail": [
+      "inviare l’email di reimpostazione della password",
+      "anteprima delle email dell’account",
+      "testi delle email per lingua",
+      "inviare email tramite Resend",
+      "registrare le email in sviluppo",
+      "indirizzo di risposta del supporto",
+    ],
+    "server-feedback": [
+      "validare una segnalazione",
+      "regole di stato del feedback",
+      "registrare un arresto anomalo",
+      "controllare il tipo di un file caricato",
+      "limitare la dimensione degli allegati",
+      "cancellare il feedback di un utente eliminato",
+    ],
+    "server-limits": [
+      "limitare la frequenza di una route",
+      "IP del client dietro un proxy",
+      "inviare l’header Retry-After",
+      "mappare gli errori del kit sugli stati HTTP",
+      "consentire un’origine CORS aggiuntiva",
+      "risposta di errore con codice",
+    ],
+    "server-translation-review": [
+      "rivedere le traduzioni tramite API",
+      "emettere un token di revisione",
+      "chi può rivedere quale lingua",
+      "verdetti sulle traduzioni",
+      "chiavi di traduzione del kit",
     ],
   },
 

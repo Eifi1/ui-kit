@@ -242,3 +242,27 @@ describe("AppShell in RTL (0.7.0)", () => {
     expect(panel.className).toContain("ps-1");
   });
 });
+
+describe("AppShell — an entry the phone reaches another way (mobileHidden, 0.31)", () => {
+  it("leaves it out of the bottom bar and its cell count, and keeps it in the sidebar", () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/forms"]}>
+        <AppShell
+          nav={[
+            { to: "/", label: "Start", icon: Home, mobileHidden: true },
+            { to: "/forms", label: "Forms", icon: TextCursorInput },
+            { to: "/layers", label: "Layers", icon: Layers },
+          ]}
+          topBar={<div>bar</div>}
+        >
+          <div>content</div>
+        </AppShell>
+      </MemoryRouter>,
+    );
+    const bar = container.querySelector<HTMLElement>(".fixed.bottom-0 [data-tour=nav]")!;
+    expect(within(bar).queryByRole("link", { name: "Start" })).toBeNull();
+    expect(within(bar).getAllByRole("link")).toHaveLength(2);
+    expect(bar.style.gridTemplateColumns).toBe("repeat(2, minmax(0, 1fr))");
+    expect(screen.getAllByRole("link", { name: "Start" }).length).toBeGreaterThan(0);
+  });
+});

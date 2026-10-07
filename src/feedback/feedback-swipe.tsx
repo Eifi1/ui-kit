@@ -10,7 +10,7 @@ import type { FeedbackStatusChange, FeedbackStatusRow } from "./feedback-status-
  * (`feedback-page.tsx:990`, feedback #144 rework item 4: *"it is a queue, and triaging it
  * one tap-into-the-row at a time is the slow way"*), for every app.
  *
- * - `advance` — one step along the chain (`nextFeedbackStatus`: OPEN → IN_PROGRESS →
+ * - `advance` — one step along the chain (`nextFeedbackStatus`: OPEN → READY → IN_PROGRESS →
  *   IN_EVALUATION → DONE), labelled with the status it goes to;
  * - `done` — straight to DONE, for a row that plainly needs no stop on the way;
  * - `wont_do` — dismiss as WONT_DO.

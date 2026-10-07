@@ -37,6 +37,12 @@ export interface AppShellNavItem {
    *  shortening the real label, which the sidebar has ample room for and which is the
    *  name the rest of the product uses. */
   shortLabel?: string;
+  /** 0.31.0: leave this entry out of the MOBILE BOTTOM BAR; the sidebar keeps it.
+   *  For an entry a phone reaches another way — the brand link to the start page —
+   *  when one cell fewer is what keeps the others' labels whole (the bar divides its
+   *  width evenly, see `shortLabel`). Its group's sub-row still shows while one of its
+   *  pages is open. Named like `DataTable`'s column `mobileHidden`. */
+  mobileHidden?: boolean;
   icon: LucideIcon;
   /** Passed to NavLink's `end` (exact match). Defaults to true. */
   end?: boolean;
@@ -272,6 +278,8 @@ export function AppShell({
   ...rest
 }: AppShellProps) {
   const embedded = useContext(AppShellNesting) || !!embeddedProp;
+  // The bottom bar's cells: every entry the phone does not reach another way.
+  const barNav = nav.filter((item) => !item.mobileHidden);
   // An embedded shell sharing the default key would overwrite the outer app's sidebar
   // preference with its own — so it persists only when given a key of its own.
   const collapseStorageKey =
@@ -448,9 +456,9 @@ export function AppShell({
           <nav
             data-tour="nav"
             className="grid"
-            style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${barNav.length}, minmax(0, 1fr))` }}
           >
-            {nav.map((item) => (
+            {barNav.map((item) => (
               <MobileNavItem key={item.to} item={item} />
             ))}
           </nav>

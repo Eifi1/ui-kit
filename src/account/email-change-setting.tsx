@@ -10,7 +10,8 @@ import { CurrentPasswordInput } from "../components/danger-confirm";
 import { Button, Card, Input } from "../components/ui";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { emailParts, taggedEmail } from "../auth/email-tag";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS, settle, useMounted } from "./account-parts";
+import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
+import { SettingsCardTitle } from "../settings/settings-heading";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -263,9 +264,7 @@ export function EmailChangeSetting({
     return (
       <Card {...rest} data-state="pending" className={cn("p-4 space-y-3", className)}>
         <div>
-          <div id={titleId} className={CARD_TITLE_CLASS}>
-            {labels.title}
-          </div>
+          <SettingsCardTitle id={titleId}>{labels.title}</SettingsCardTitle>
           <div className={cn(CARD_DESCRIPTION_CLASS, "break-all")}>{common.fieldValue(labels.current, currentEmail)}</div>
         </div>
         {/* Focusable, not a control: the request's answer is read out when it takes the
@@ -381,9 +380,7 @@ export function EmailChangeSetting({
   return (
     <Card {...rest} data-state={confirmed ? "confirmed" : "form"} className={cn("p-4 space-y-3", className)}>
       <div>
-        <div id={titleId} className={CARD_TITLE_CLASS}>
-          {labels.title}
-        </div>
+        <SettingsCardTitle id={titleId}>{labels.title}</SettingsCardTitle>
         <div className={cn(CARD_DESCRIPTION_CLASS, "break-all")}>{common.fieldValue(labels.current, currentEmail)}</div>
       </div>
       {confirmed && (

@@ -103,21 +103,28 @@ describe("InvitationsPanel", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("resends open and expired ones, revokes open ones", async () => {
+  it("resends and revokes open and expired ones", async () => {
     const user = userEvent.setup();
     const onResend = vi.fn(async () => undefined);
     const onRevoke = vi.fn(async () => undefined);
     render(<InvitationsPanel<Role> invitations={ROWS} roles={ROLES} onResend={onResend} onRevoke={onRevoke} />);
     expect(within(rowOf("tim@example.com")).queryByRole("button")).not.toBeInTheDocument();
     expect(within(rowOf("gone@example.com")).queryByRole("button")).not.toBeInTheDocument();
-    expect(
-      within(rowOf("old@example.com")).queryByRole("button", { name: "Revoke the invitation for old@example.com" }),
-    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Send old@example.com a new link" }));
     expect(onResend).toHaveBeenCalledWith(ROWS[2]);
     await user.click(screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" }));
     expect(onRevoke).toHaveBeenCalledWith(ROWS[0]);
+    // 0.31: an expired row can be removed too — otherwise it stays listed for good
+    // in an app that keeps its rows (Kurvenschmiede's 0.30 adoption).
+    await user.click(screen.getByRole("button", { name: "Revoke the invitation for old@example.com" }));
+    expect(onRevoke).toHaveBeenLastCalledWith(ROWS[2]);
+  });
+
+  it("leaves its list heading out with listTitle={null}, keeping the list's name", () => {
+    render(<InvitationsPanel<Role> invitations={ROWS} roles={ROLES} listTitle={null} />);
+    expect(screen.queryByRole("heading", { name: "Invitations" })).not.toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Invitations" })).toBeInTheDocument();
   });
 
   it("hints at console mail and keeps a link shown once, on its row", async () => {

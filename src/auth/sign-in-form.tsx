@@ -10,6 +10,9 @@ import { CurrentPasswordInput } from "../components/danger-confirm";
 import { OneTimeCodeInput } from "../components/one-time-code-input";
 import { TextLink } from "../components/text-link";
 import { Button, Input } from "../components/ui";
+import { accessAction } from "../landing/access";
+import type { AccessChoice } from "../landing/access";
+import { useLandingLabels } from "../landing/landing-labels";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { KitErrorCode } from "./auth-errors";
 import { taggedEmail } from "./email-tag";
@@ -171,6 +174,9 @@ export interface SignInLabels {
    *  wait its `Retry-After` asks for, in seconds ({@link retryAfterSeconds}), or
    *  `undefined` (or `0`) without one. */
   rateLimited?: (seconds?: number) => string;
+  /** 0.31.0: the link after `noAccount` for an invitation-only app (`access` of kind
+   *  `request`) — a mail to support, in place of `register`. */
+  requestAccess?: string;
 }
 
 /** `Required`: every key, the 0.30 ones included, has its English here. */
@@ -208,6 +214,7 @@ export const DEFAULT_SIGN_IN_LABELS: Required<SignInLabels> = {
   recoveryCodeHint: (length) => `${length} letters and digits. Dashes and spaces don’t matter.`,
   recoveryCodeInvalid: "This backup code is not valid, or it has been used already.",
   rateLimited: englishRateLimited,
+  requestAccess: "Request access",
 };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
@@ -252,6 +259,15 @@ export interface SignInFormProps extends Omit<ComponentPropsWithoutRef<"div">, "
   forgotHref?: string;
   /** "No account yet? Create account" goes here — `/register`. Left out, no line. */
   registerHref?: string;
+  /**
+   * 0.31.0 (docs/landing-demo-harmonization.md §4.2): how a visitor gets an account —
+   * the same value the landing's `PublicHeader` and `Hero` take. `{kind: "request",
+   * email}` turns the line into "No account yet? Request access", a mail to support with
+   * the subject and body of `accessAction` (every app is invitation-only); `{kind:
+   * "register", href}` keeps "Create account", to `href`. Wins over `registerHref`; left
+   * out, `registerHref` works as before.
+   */
+  access?: AccessChoice;
   /** The email field's start value — the reset page ends on "Sign in" with the address
    *  filled in (§6.3). */
   defaultEmail?: string;
@@ -408,6 +424,7 @@ export function SignInForm({
   passkeyAutofill,
   forgotHref,
   registerHref,
+  access,
   defaultEmail = "",
   emailTag,
   deactivatedContact,
@@ -424,6 +441,20 @@ export function SignInForm({
   ...rest
 }: SignInFormProps) {
   const labels = useKitLabels("signIn", DEFAULT_SIGN_IN_LABELS, labelsProp);
+  // The mail's subject and body are the landing's words (`landing` namespace), so the
+  // request reads the same from every page that offers it.
+  const landing = useLandingLabels();
+  const accountLink =
+    access === undefined
+      ? registerHref === undefined
+        ? null
+        : { href: registerHref, label: labels.register }
+      : access.kind === "register"
+        ? { href: access.href, label: labels.register }
+        : {
+            href: accessAction(access, landing).href,
+            label: labels.requestAccess ?? DEFAULT_SIGN_IN_LABELS.requestAccess,
+          };
   const [step, setStep] = useState<SignInStep>("credentials");
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
@@ -834,11 +865,11 @@ export function SignInForm({
           </TextLink>
         </p>
       )}
-      {registerHref !== undefined && (
+      {accountLink !== null && (
         <p className="text-center text-sm text-[var(--text-secondary)]">
           {labels.noAccount}{" "}
-          <TextLink href={registerHref} tone="primary">
-            {labels.register}
+          <TextLink href={accountLink.href} tone="primary">
+            {accountLink.label}
           </TextLink>
         </p>
       )}

@@ -382,16 +382,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1577 names from 231 modules** — 724 values and 853 types. _Italic_ is a type-only export.
+**1688 names from 253 modules** — 778 values and 910 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1577 |
+| `@eifi1/ui-kit` | 1688 |
 | `@eifi1/ui-kit/chart` | 104 |
-| `@eifi1/ui-kit/shell` | 24 |
+| `@eifi1/ui-kit/shell` | 71 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
@@ -513,7 +513,7 @@ re-slicing of it, never a second API.
 | `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_, _`MultiSelectProps`_ |
 | `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipTap`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarBadge`_, _`UserAvatarProps`_ |
-| `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_ |
+| `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingToggleProps`_ |
 | `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
 | `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
 | `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
@@ -652,7 +652,7 @@ re-slicing of it, never a second API.
 | `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
 | `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
 | `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`KitErrorCode`_ |
+| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
 | `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
 | `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
 | `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
@@ -699,6 +699,43 @@ re-slicing of it, never a second API.
 | `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, `useCommandKey`, _`CommandItem`_, _`CommandPaletteDensity`_, _`CommandPaletteLabels`_ |
 | `search/search-index` | `createSearchIndex`, `matchEntries`, `normalizeSearchText`, `SEARCH_TIER_POINTS`, _`SearchEntry`_, _`SearchHit`_, _`SearchIndex`_, _`SearchIndexOptions`_, _`SearchMatchField`_ |
 | `search/global-search` | `DEFAULT_GLOBAL_SEARCH_LABELS`, `GlobalSearch`, _`GlobalSearchLabels`_, _`GlobalSearchProps`_, _`GlobalSearchSource`_, _`GlobalSearchSourceGroup`_, _`GlobalSearchSuggestion`_, _`GlobalSearchTriggerProps`_ |
+
+### settings
+
+| Module | Exports |
+|---|---|
+| `settings/settings-layout` | `SETTINGS_SEARCH_THRESHOLD`, `SettingsLayout`, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
+| `settings/use-settings-route` | `resolveSettingsLocation`, `SETTINGS_FROM_LIST_STATE`, `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
+| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useSettingsFocus` |
+| `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
+| `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
+| `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
+| `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
+| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
+| `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
+
+### landing
+
+| Module | Exports |
+|---|---|
+| `landing/landing-labels` | `DEFAULT_LANDING_LABELS`, `useLandingLabels`, _`LandingLabels`_ |
+| `landing/access` | `accessAction`, `useAccessAction`, _`AccessChoice`_, _`AccessLabels`_, _`AccessLink`_ |
+| `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
+| `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
+| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
+| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_ |
+| `landing/public-header` | `PublicHeader`, _`PublicHeaderBrand`_, _`PublicHeaderProps`_ |
+
+### demo
+
+| Module | Exports |
+|---|---|
+| `demo/demo-labels` | `DEFAULT_DEMO_LABELS`, `useDemoLabels`, _`DemoLabels`_ |
+| `demo/demo-session` | `isDemoSession`, _`DemoModel`_, _`DemoSessionUser`_ |
+| `demo/demo-countdown` | `DEMO_MINUTES_ONLY`, `DEMO_WARNING_MINUTES`, `demoCountdown`, `useDemoCountdown`, _`DemoCountdown`_, _`DemoCountdownOptions`_, _`DemoExpiry`_ |
+| `demo/demo-start` | `DemoStart`, _`DemoStartProps`_ |
+| `demo/demo-banner` | `DemoBanner`, _`DemoBannerProps`_ |
+| `demo/demo-ended` | `DemoEnded`, _`DemoEndedProps`_ |
 
 <!-- END GENERATED: exports -->
 

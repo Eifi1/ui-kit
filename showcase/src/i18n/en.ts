@@ -67,6 +67,9 @@ export const en: Dictionary = {
     searchExamples: "Examples",
     searchNeeds: "What do you need?",
     searchPages: "Pages",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "Server side",
+    searchServer: "Server kit",
   },
 
   // Keyed by the English label in routes.tsx — the key is the identity of the group, the
@@ -81,6 +84,7 @@ export const en: Dictionary = {
     Overlays: "Overlays",
     "App chrome": "App chrome",
     API: "API",
+    "Server kit": "Server kit",
   },
 
   // The bottom bar's short names, copied from each group's `shortLabel` in routes.tsx.
@@ -93,6 +97,7 @@ export const en: Dictionary = {
     Inputs: "Inputs",
     Charts: "Charts",
     Overlays: "Popups",
+    "Server kit": "Server",
   },
 
   // Copied verbatim from showcase/src/routes.tsx, keyed by slug. A group's overview
@@ -116,6 +121,12 @@ export const en: Dictionary = {
       short: "Links",
       blurb:
         "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
+    },
+    "landing-demo": {
+      title: "Landing & demo",
+      short: "Landing",
+      blurb:
+        "The public start page and the try-it demo: the header in its three states, the landing's sections, the SEO checks, the resume, and the demo's start, countdown and end.",
     },
     "user-admin": {
       title: "User administration",
@@ -436,9 +447,10 @@ export const en: Dictionary = {
       blurb: "The app frame you are looking at, taken apart.",
     },
     settings: {
-      title: "Settings fields",
+      title: "Settings",
       short: "Settings",
-      blurb: "The account-settings rows: theme, language, profile, password and two-factor.",
+      blurb:
+        "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
     },
     wizard: {
       title: "Wizard",
@@ -478,6 +490,60 @@ export const en: Dictionary = {
       blurb:
         "The functions and data behind the inputs, shown as input → output: date arithmetic at @eifi1/ui-kit/dates, the calculator's evaluator, the currency table, and the class constants a custom field is composed from.",
     },
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
+    "server-kit": {
+      title: "Server kit",
+      blurb:
+        "The Python package behind the apps' backends: the contracts these components speak, as code — every module's signatures and docstrings, pinned to one server-kit release.",
+    },
+    "server-auth": {
+      title: "Sign-in & account",
+      short: "Auth",
+      blurb:
+        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+    },
+    "server-user-admin": {
+      title: "User admin",
+      short: "Users",
+      blurb:
+        "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
+    },
+    "server-settings": {
+      title: "Settings & language",
+      short: "Settings",
+      blurb:
+        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+    },
+    "server-demo": {
+      title: "Demo",
+      short: "Demo",
+      blurb:
+        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+    },
+    "server-mail": {
+      title: "Mail",
+      short: "Mail",
+      blurb:
+        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+    },
+    "server-feedback": {
+      title: "Feedback & uploads",
+      short: "Feedback",
+      blurb:
+        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+    },
+    "server-limits": {
+      title: "Limits, errors & CORS",
+      short: "Limits",
+      blurb:
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+    },
+    "server-translation-review": {
+      title: "Translation review",
+      short: "Review",
+      blurb:
+        "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
+    },
   },
 
 
@@ -504,6 +570,15 @@ export const en: Dictionary = {
       "link that opens a new tab",
       "a button that navigates",
       "highlight the current page link",
+    ],
+    "landing-demo": [
+      "build a public start page",
+      "add a request-access button",
+      "check the page title and description for search engines",
+      "reopen the app where the user left it",
+      "start a demo session",
+      "count down the demo's time",
+      "show that the demo has ended",
     ],
     "user-admin": [
       "list the users with their roles",
@@ -1000,6 +1075,12 @@ export const en: Dictionary = {
       "choose the theme",
       "choose the language",
       "user preferences",
+      "build a settings page with a sidebar",
+      "show settings as a list on a phone",
+      "link straight to one setting",
+      "search the settings",
+      "put the admin page on the same layout",
+      "let the language follow the account",
     ],
     wizard: [
       "multi-step form",
@@ -1054,6 +1135,74 @@ export const en: Dictionary = {
       "list of currencies",
       "last full months",
       "field class names",
+    ],
+    "server-kit": [
+      "document the backend package",
+      "install the server kit",
+      "which server-kit release is documented",
+      "python contracts for the backend",
+      "find the server side of a component",
+    ],
+    "server-auth": [
+      "check a sign-in on the server",
+      "registration by invitation only",
+      "mint a password reset token",
+      "session token claims",
+      "normalise an email address",
+      "auth error codes",
+    ],
+    "server-user-admin": [
+      "query the user list on the server",
+      "confirmation level of an admin action",
+      "write an admin audit entry",
+      "delete an account in two stages",
+      "export a user's data",
+      "never remove the last admin",
+    ],
+    "server-settings": [
+      "patch settings without losing fields",
+      "clear a setting with null",
+      "refuse unknown fields in a body",
+      "store the account's language",
+      "read the Accept-Language header",
+    ],
+    "server-demo": [
+      "start a demo session",
+      "demo account settings",
+      "make the demo read-only",
+      "demo refusal codes",
+      "clean up old demo users",
+    ],
+    "server-mail": [
+      "send a password reset mail",
+      "preview the account mails",
+      "mail texts per language",
+      "send mail through Resend",
+      "log mail in development",
+      "reply-to support address",
+    ],
+    "server-feedback": [
+      "validate a feedback report",
+      "feedback status rules",
+      "file a crash report",
+      "check an uploaded file's type",
+      "limit the attachment size",
+      "erase feedback of a deleted user",
+    ],
+    "server-limits": [
+      "rate limit a route",
+      "client IP behind a proxy",
+      "send a Retry-After header",
+      "map kit errors to HTTP statuses",
+      "allow an extra CORS origin",
+      "error response with a code",
+    ],
+    "server-translation-review": [
+      "review translations through the API",
+      "issue a review token",
+      "who may review which language",
+      "translation verdicts",
+      "kit translation keys",
     ],
   },
 

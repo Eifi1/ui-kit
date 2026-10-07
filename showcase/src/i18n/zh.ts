@@ -63,6 +63,9 @@ export const zh: Dictionary = {
     searchExamples: "示例",
     searchNeeds: "您需要什么？",
     searchPages: "页面",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "服务端",
+    searchServer: "服务端套件",
   },
 
   groups: {
@@ -77,6 +80,7 @@ export const zh: Dictionary = {
     // "Chrome" as in the frame around an app, not the browser.
     "App chrome": "应用框架",
     API: "API",
+    "Server kit": "服务端套件",
   },
 
   groupShort: {
@@ -88,6 +92,7 @@ export const zh: Dictionary = {
     Inputs: "输入",
     Charts: "图表",
     Overlays: "浮层",
+    "Server kit": "服务端",
   },
 
   pages: {
@@ -108,6 +113,12 @@ export const zh: Dictionary = {
       short: "链接",
       blurb:
         "每个套件链接都由应用自己的路由器处理，只需在 Provider 上设置一次：文本链接及其色调、作为链接的按钮或操作卡片，以及离开应用的链接。",
+    },
+    "landing-demo": {
+      title: "首页与演示",
+      short: "首页",
+      blurb:
+        "公开首页和可试用的演示：页头的三种状态、首页的各个区块、SEO 检查、回到上次访问的页面，以及演示的开始、倒计时和结束。",
     },
     "user-admin": {
       title: "用户管理",
@@ -418,9 +429,10 @@ export const zh: Dictionary = {
       blurb: "拆解你眼前的这个应用框架。",
     },
     settings: {
-      title: "设置字段",
+      title: "设置",
       short: "设置",
-      blurb: "账户设置中的各行：主题、语言、个人资料、密码和双重验证。",
+      blurb:
+        "设置页面和管理页面共用同一外壳：桌面端的侧边栏、手机上的下钻列表、每个分组一个路径、搜索，以及被链接高亮的卡片。 账户设置中的各行：主题、语言、个人资料、密码和双重验证。",
     },
     wizard: {
       title: "向导",
@@ -459,6 +471,60 @@ export const zh: Dictionary = {
       blurb:
         "输入框背后的函数与数据，以“输入 → 结果”展示：@eifi1/ui-kit/dates 的日期运算、计算器的求值器、货币表，以及组合自定义字段所用的类名常量。",
     },
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
+    "server-kit": {
+      title: "服务端套件",
+      blurb:
+        "应用后端背后的 Python 包：这些组件所遵循的契约，以代码形式呈现——每个模块的签名和文档字符串，锁定到某一个 server-kit 版本。",
+    },
+    "server-auth": {
+      title: "登录与账户",
+      short: "登录",
+      blurb:
+        "注册、登录、一次性令牌、会话声明以及账户的传输格式——登录、注册和账户页面的服务端部分。",
+    },
+    "server-user-admin": {
+      title: "用户管理",
+      short: "用户",
+      blurb:
+        "用户列表的查询、四项管理操作及其确认级别、审计条目、分两步删除，以及数据导出。",
+    },
+    "server-settings": {
+      title: "设置与语言",
+      short: "设置",
+      blurb:
+        "适用于所有设置请求体的同一条规则——省略即保留，null 即清空，未知字段即拒绝——以及账户唯一的规范语言。",
+    },
+    "server-demo": {
+      title: "演示",
+      short: "演示",
+      blurb:
+        "一次性的演示账户：它的设置、入口检查的先后顺序、各种拒绝及其代码、只读规则，以及它唯一的有效期。",
+    },
+    "server-mail": {
+      title: "邮件",
+      short: "邮件",
+      blurb:
+        "账户邮件：按语言区分的文案、对每个值转义的统一版式、两种永不抛出异常的发送方式——以及本版本示例邮件的渲染效果。",
+    },
+    "server-feedback": {
+      title: "反馈与上传",
+      short: "反馈",
+      blurb:
+        "以纯函数实现的反馈契约——Schema、状态、PATCH 规则、返工、崩溃上报、数据清除——以及按字节判定的附件。",
+    },
+    "server-limits": {
+      title: "限流、错误与 CORS",
+      short: "限流",
+      blurb:
+        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应，以及为少量额外来源开放的 CORS。",
+    },
+    "server-translation-review": {
+      title: "翻译审校",
+      short: "审校",
+      blurb:
+        "翻译审校的传输格式、谁可以审校哪些键和语言，以及审校者用来打开组件库审校页面的审校令牌。",
+    },
   },
 
 
@@ -485,6 +551,15 @@ export const zh: Dictionary = {
       "在新标签页打开的链接",
       "可导航的按钮",
       "高亮当前页面的链接",
+    ],
+    "landing-demo": [
+      "搭建 公开 落地页",
+      "添加 申请访问 按钮",
+      "为搜索引擎 检查 页面标题和描述",
+      "回到 用户上次离开的 页面",
+      "启动 演示 会话",
+      "演示 剩余时间 倒计时",
+      "显示 演示 已结束",
     ],
     "user-admin": [
       "列出用户及其角色",
@@ -981,6 +1056,12 @@ export const zh: Dictionary = {
       "选择 主题",
       "选择 语言",
       "用户 偏好",
+      "带侧边栏的 设置页面",
+      "手机上 以列表显示 设置",
+      "直接链接到 某项设置",
+      "搜索 设置",
+      "管理页面 使用相同布局",
+      "语言 跟随账户",
     ],
     wizard: [
       "多步骤 表单",
@@ -1035,6 +1116,75 @@ export const zh: Dictionary = {
       "货币 列表",
       "最近几个 完整月份",
       "字段 类名",
+    ],
+    // The Server kit group (0.31).
+    "server-kit": [
+      "后端 包 文档",
+      "安装 server-kit",
+      "文档对应的 server-kit 版本",
+      "后端的 Python 契约",
+      "查找 组件的 服务端",
+    ],
+    "server-auth": [
+      "在服务端 校验 登录",
+      "仅限 邀请 注册",
+      "生成 密码重置 令牌",
+      "会话令牌的 声明",
+      "规范化 电子邮件地址",
+      "认证 错误码",
+    ],
+    "server-user-admin": [
+      "在服务端 查询 用户列表",
+      "管理操作的 确认级别",
+      "写入 管理 审计条目",
+      "分两步 删除账户",
+      "导出 用户数据",
+      "永不 移除 最后一位管理员",
+    ],
+    "server-settings": [
+      "更新设置 不丢失 字段",
+      "用 null 清空 设置",
+      "拒绝 请求体中的 未知字段",
+      "保存 账户 语言",
+      "读取 Accept-Language 请求头",
+    ],
+    "server-demo": [
+      "启动 演示 会话",
+      "演示账户 设置",
+      "将演示 设为 只读",
+      "演示 拒绝代码",
+      "清理 旧的 演示用户",
+    ],
+    "server-mail": [
+      "发送 密码重置 邮件",
+      "预览 账户邮件",
+      "按语言的 邮件文案",
+      "通过 Resend 发送 邮件",
+      "开发环境中 记录 邮件",
+      "客服 回复地址",
+    ],
+    "server-feedback": [
+      "校验 反馈 报告",
+      "反馈 状态规则",
+      "提交 崩溃报告",
+      "检查 上传文件的 类型",
+      "限制 附件 大小",
+      "清除 已删除用户的 反馈",
+    ],
+    "server-limits": [
+      "路由 限流",
+      "代理后的 客户端 IP",
+      "发送 Retry-After 响应头",
+      "套件错误 映射为 HTTP 状态码",
+      "允许 额外的 CORS 来源",
+      "带代码的 错误响应",
+    ],
+    "server-translation-review": [
+      "通过 API 审校 翻译",
+      "签发 审校令牌",
+      "谁可以 审校 哪种语言",
+      "翻译 审校结论",
+      "组件库的 翻译键",
     ],
   },
 

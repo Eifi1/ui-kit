@@ -545,7 +545,7 @@ export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompan
 // invitations panel, and the account's own settings — email change, sessions, deletion,
 // export. Callbacks only; the confirmation level is the server's.
 export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
-export type { AccountErrorCode, KitErrorCode } from "./auth/auth-errors";
+export type { AccountErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
 export { EmailChangeSetting, DEFAULT_EMAIL_CHANGE_LABELS } from "./account/email-change-setting";
 export type {
   EmailChangeSettingProps,
@@ -633,6 +633,97 @@ export type {
   InvitationsPanelProps,
 } from "./admin/invitations-panel";
 export type { AdminPerson } from "./admin/admin-parts";
+
+// ── 0.31.0: the settings page and the admin page on one shell (docs/settings-harmonization.md) ──
+// Router-aware: the layout, its route and focus hooks (also in `@eifi1/ui-kit/shell`).
+export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
+export type { SettingsLayoutProps, SettingsLayoutWidth } from "./settings/settings-layout";
+export {
+  useSettingsRoute,
+  resolveSettingsLocation,
+  settingsFromListState,
+  SETTINGS_FROM_LIST_STATE,
+} from "./settings/use-settings-route";
+export type {
+  UseSettingsRouteOptions,
+  SettingsRoute,
+  SettingsLayoutMode,
+  SettingsLocation,
+  SettingsLocationRules,
+  SettingsLocationResult,
+} from "./settings/use-settings-route";
+export { useSettingsFocus, SETTINGS_FOCUS_RING, SETTINGS_FOCUS_MS } from "./settings/use-settings-focus";
+// The router-free companions: a card, the context, the heading level, the catalogue.
+export { SettingsSection } from "./settings/settings-section";
+export type { SettingsSectionProps } from "./settings/settings-section";
+export { useSettingsLayout } from "./settings/settings-context";
+export type { SettingsLayoutContextValue } from "./settings/settings-context";
+export { SettingsHeadingLevel, useSettingsHeadingLevel } from "./settings/settings-heading";
+export type { SettingsHeadingLevelProps, SettingsHeadingTag } from "./settings/settings-heading";
+export {
+  settingsSearchEntries,
+  visibleSettingsGroups,
+  visibleSettingsEntries,
+  settingsHref,
+} from "./settings/settings-catalogue";
+export type { SettingsGroup, SettingsEntry, SettingsSearchEntriesOptions } from "./settings/settings-catalogue";
+export { DEFAULT_SETTINGS_LABELS } from "./settings/settings-labels";
+export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
+// Only the language follows the account (§6.2).
+export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
+export type {
+  UseAccountLanguageOptions,
+  AccountLanguage,
+  AccountLanguageSource,
+  ResolveAccountLanguageInput,
+  ResolvedAccountLanguage,
+} from "./settings/use-account-language";
+
+// ── 0.31.0: the public landing page and the demo (docs/landing-demo-harmonization.md) ──
+export { DEFAULT_LANDING_LABELS, useLandingLabels } from "./landing/landing-labels";
+export type { LandingLabels } from "./landing/landing-labels";
+export { accessAction, useAccessAction } from "./landing/access";
+export type { AccessChoice, AccessLink, AccessLabels } from "./landing/access";
+export { LandingActions } from "./landing/landing-actions";
+export type { LandingActionsProps, LandingSession } from "./landing/landing-actions";
+export { Hero, FeatureRows, FeatureRow, TrustStrip, CtaBand, PublicFooter } from "./landing/landing-sections";
+export type {
+  HeroProps,
+  FeatureRowsProps,
+  FeatureRowProps,
+  TrustItem,
+  TrustStripProps,
+  CtaBandProps,
+  PublicFooterProps,
+} from "./landing/landing-sections";
+export { usePageSeo, seoCopyProblems, metaContent } from "./landing/page-seo";
+export type { SeoCopy, SeoCopyLimits, SeoCopyProblem, SeoCopyProblemCode } from "./landing/page-seo";
+// Router-aware (also in `@eifi1/ui-kit/shell`): the header and the resume.
+export {
+  RootEntry,
+  RedirectIfAuthed,
+  useLastVisitedPage,
+  readLastVisitedPage,
+  clearLastVisitedPage,
+  safeNextPath,
+  NEXT_PARAM,
+  DEFAULT_LAST_VISITED_EXCLUDES,
+} from "./landing/routing";
+export type { RootEntryProps, RedirectIfAuthedProps, LastVisitedPageOptions, PathPattern } from "./landing/routing";
+export { PublicHeader } from "./landing/public-header";
+export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
+export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";
+export type { DemoLabels } from "./demo/demo-labels";
+export { isDemoSession } from "./demo/demo-session";
+export type { DemoModel, DemoSessionUser } from "./demo/demo-session";
+export { useDemoCountdown, demoCountdown, DEMO_WARNING_MINUTES, DEMO_MINUTES_ONLY } from "./demo/demo-countdown";
+export type { DemoCountdown, DemoCountdownOptions, DemoExpiry } from "./demo/demo-countdown";
+export { DemoStart } from "./demo/demo-start";
+export type { DemoStartProps } from "./demo/demo-start";
+export { DemoBanner } from "./demo/demo-banner";
+export type { DemoBannerProps } from "./demo/demo-banner";
+export { DemoEnded } from "./demo/demo-ended";
+export type { DemoEndedProps } from "./demo/demo-ended";
 export type {
   LegalPageProps,
   LegalKitSectionProps,

@@ -64,8 +64,31 @@ export type AccountErrorCode =
   | "confirmation_mismatch"
   | "password_incorrect";
 
-/** Every code the kit reads: the sign-in refusals and the account ones (0.30.0). */
-export type KitErrorCode = AuthErrorCode | AccountErrorCode;
+/**
+ * 0.31.0: the demo's coded refusals (docs/landing-demo-harmonization.md §6.2) —
+ * server-kit 0.5's `DemoErrorCode`, value for value, answered as `{detail, code}` like
+ * the others and read by the same {@link authErrorCode}.
+ *
+ * - `demo_disabled` — `404`: the demo switch is off (it is "not there", not forbidden).
+ * - `demo_rate_limited` — `429` with `Retry-After`: the per-IP window of demo starts.
+ * - `demo_capacity` — `429`, no `Retry-After`: the cap of live demo users.
+ * - `demo_not_ready` — `503`: the demo data has not been seeded yet.
+ * - `demo_read_only` — `403`, model R: any write by a demo user. The app's write lock
+ *   already explains it, so it shows no toast (§5.4).
+ * - `demo_refused` — `403`, both models: an action a demo never may — a way in or out,
+ *   mail, uploads, the account export (§6.4).
+ */
+export type DemoErrorCode =
+  | "demo_disabled"
+  | "demo_rate_limited"
+  | "demo_capacity"
+  | "demo_not_ready"
+  | "demo_read_only"
+  | "demo_refused";
+
+/** Every code the kit reads: the sign-in refusals, the account ones (0.30.0) and the
+ *  demo's (0.31.0). */
+export type KitErrorCode = AuthErrorCode | AccountErrorCode | DemoErrorCode;
 
 const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "invalid_credentials",
@@ -83,6 +106,12 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "confirmation_required",
   "confirmation_mismatch",
   "password_incorrect",
+  "demo_disabled",
+  "demo_rate_limited",
+  "demo_capacity",
+  "demo_not_ready",
+  "demo_read_only",
+  "demo_refused",
 ]);
 
 type Bag = Record<string, unknown>;
@@ -102,8 +131,9 @@ function codeOfBody(body: unknown): KitErrorCode | undefined {
 }
 
 /**
- * The code an error carries — an {@link AuthErrorCode}, or since 0.30.0 an
- * {@link AccountErrorCode} — or `undefined` when it carries none.
+ * The code an error carries — an {@link AuthErrorCode}, since 0.30.0 an
+ * {@link AccountErrorCode}, since 0.31.0 a {@link DemoErrorCode} — or `undefined` when it
+ * carries none.
  *
  * Reads the parsed response body wherever the apps' HTTP clients put it, without
  * depending on any of them:
@@ -142,7 +172,8 @@ export function authErrorCode(err: unknown): KitErrorCode | undefined {
  * The kit's `SignInForm` and `RegisterForm` call it on what their callbacks reject
  * with, so an app's `onSubmit` can simply let its client's error through. See
  * {@link authErrorCode} for the shapes it reads. Since 0.30.0 it knows the account codes
- * too: `isAuthError(err, "last_admin")`.
+ * too: `isAuthError(err, "last_admin")`; since 0.31.0 the demo's:
+ * `isAuthError(err, "demo_read_only")`.
  */
 export function isAuthError(err: unknown, code?: KitErrorCode): boolean {
   const found = authErrorCode(err);

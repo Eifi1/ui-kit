@@ -70,6 +70,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     // 0.27.0. "Retour" for feedback, as `feedbackDialog`; "reprise" for rework.
     feedbackStatus: {
       OPEN: "Ouvert",
+      READY: "Prêt à implémenter",
       IN_PROGRESS: "En cours",
       IN_EVALUATION: "En évaluation",
       NEEDS_LIVE_TEST: "À tester en production",
@@ -129,6 +130,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       phoneActions: "Actions sur les retours",
     },
     feedbackDetail: {
+      subject: "Objet",
       body: "Description",
       edit: "Modifier",
       editDescription: "Modifier la description",
@@ -189,6 +191,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         qrAlt: "Code QR pour votre application d’authentification",
         secretHint: "Impossible de le scanner\u202f? Saisissez plutôt cette clé dans l’application\u00a0:",
         copySecret: "Copier la clé",
+        // 0.31.0: the card's title; the state ("Activée") stands beside it.
+        title: "Authentification à deux facteurs",
       },
       passkeys: {
         title: "Clés d’accès",
@@ -909,6 +913,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         `${n(length)} lettres et chiffres. Les tirets et les espaces ne comptent pas.`,
       recoveryCodeInvalid: "Ce code de secours n’est pas valable ou a déjà été utilisé.",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "Demander l’accès",
     },
     register: {
       firstName: "Prénom",
@@ -1357,6 +1363,84 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         count < 2
           ? `Approuver le texte non relu de «\u202f${group}\u202f»\u202f?`
           : `Approuver les ${n(count)} textes non relus de «\u202f${group}\u202f», y compris ceux qui ne sont pas à l’écran\u202f?`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The help
+    // lines name things as `accountSettings`, `sessions` and `dataExport` do, and no
+    // sentence about the reader needs a gender ("informé·e").
+    settings: {
+      title: "Paramètres",
+      search: "Rechercher dans les paramètres",
+      searchPlaceholder: "Rechercher dans les paramètres…",
+      results: "Paramètres correspondants",
+      noMatches: (query) => `Aucun paramètre ne correspond à «\u202f${query}\u202f».`,
+      // As `commandPalette.clear`.
+      clearSearch: "Effacer la recherche",
+      back: "Retour aux paramètres",
+      sections: "Sections des paramètres",
+      matchCount: (count) => `${n(count)} ${plural(count, "résultat", "résultats")}`,
+      groups: {
+        appearance: {
+          title: "Apparence",
+          help: "Langue, thème et apparence de l’application sur cet appareil.",
+        },
+        account: {
+          title: "Compte",
+          help: "Votre profil et votre adresse e-mail.",
+        },
+        security: {
+          title: "Sécurité",
+          help: "Comment vous vous connectez\u00a0: mot de passe, codes 2FA, clés d’accès et sessions.",
+        },
+        notifications: {
+          title: "Notifications",
+          help: "Quelles notifications vous recevez, quand et sur quels appareils.",
+        },
+        data: {
+          title: "Données",
+          help: "Exportez ce qui vous appartient, ou supprimez-le avec votre compte.",
+        },
+      },
+    },
+    landing: {
+      signIn: "Se connecter",
+      requestAccess: "Demander l’accès",
+      getStarted: "Commencer",
+      tryDemo: "Essayer la démo",
+      openApp: "Ouvrir l’application",
+      continueDemo: "Continuer la démo",
+      // As `legal.notice` ("Bêta fermée").
+      beta: "Bêta",
+      // Plain text: a mail's subject and body lines, never HTML. The no-break space
+      // before the colon, as everywhere in this catalogue.
+      accessSubject: (app) => (app ? `Accès à ${app}` : "Demande d’accès"),
+      accessName: "Nom\u00a0:",
+      accessCompany: "Entreprise\u00a0:",
+      accessUse: "Utilisation prévue\u00a0:",
+    },
+    demo: {
+      starting: "Démarrage de la démo…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `Trop de démos depuis ce réseau. Réessayez dans ${n(minutes)}\u00a0min.`
+          : "Trop de démos depuis ce réseau. Réessayez plus tard.",
+      capacity: "La démo est complète pour le moment. Réessayez plus tard.",
+      unavailable: "La démo n’est pas disponible pour le moment.",
+      failed: "La démo n’a pas pu être lancée. Veuillez réessayer.",
+      // As `legal.backHome`.
+      backToStart: "Retour à l’accueil",
+      hoursLeft: (hours, minutes) => `Démo · il reste ${n(hours)}\u00a0h ${n(minutes)}\u00a0min`,
+      minutesLeft: (minutes) => `Démo · il reste ${n(minutes)}\u00a0min`,
+      badge: "Démo",
+      readOnly: "Vous consultez des données d’exemple. Aucune modification n’est possible.",
+      sandbox: "Ce que vous créez vous-même est supprimé à la fin de la démo.",
+      details: "Détails de la démo",
+      writeLocked: "Impossible dans la démo.",
+      endedTitle: "La démo est terminée",
+      endedReadOnly: "Les données d’exemple sont réinitialisées régulièrement.",
+      endedSandbox:
+        "Les données d’exemple sont réinitialisées régulièrement\u202f; ce que vous avez créé dans la démo est supprimé.",
+      restart: "Lancer une nouvelle démo",
     },
   };
 }

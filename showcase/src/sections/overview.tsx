@@ -78,7 +78,8 @@ function PageCard({ page }: { page: ShowcasePage }) {
  * through forty pages of specimens otherwise has to reconstruct for themselves.
  */
 export function GettingStarted() {
-  const layers = GROUPS.filter((g) => g.slug !== "start");
+  // The Server kit group is the backend beside the layers, not one of them.
+  const layers = GROUPS.filter((g) => g.slug !== "start" && g.slug !== "server-kit");
   return (
     <>
       <Example label="What this is">

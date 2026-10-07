@@ -158,22 +158,25 @@ export const FEEDBACK_REWORKABLE_STATUSES: readonly FeedbackStatus[] = Object.fr
 
 /**
  * The statuses in which the AUTHOR may still edit title, body and category (§3.4,
- * keksdose `canAuthorEdit`, `feedback-page.tsx:398`): `OPEN` and `IN_PROGRESS`. Once the
- * team has answered, the description is what they answered and stays as it was; a
- * correction goes in as a rework.
+ * keksdose `canAuthorEdit`, `feedback-page.tsx:398`): `OPEN`, `READY` and `IN_PROGRESS`.
+ * Once the team has answered, the description is what they answered and stays as it
+ * was; a correction goes in as a rework.
  */
 export const FEEDBACK_AUTHOR_EDITABLE_STATUSES: readonly FeedbackStatus[] = Object.freeze([
   "OPEN",
+  "READY",
   "IN_PROGRESS",
 ] as const);
 
 /**
- * The two statuses that wait on the person triaging: answered and handed back for a
- * verdict, or answered and only checkable on a deployed build (keksdose
- * `AWAITING_VERDICT`, live #330). The phone's "Only what is waiting for you" toggle
- * narrows the inbox to exactly these (§4.3).
+ * The statuses that wait on the person triaging: filed and not yet triaged (`OPEN`,
+ * since READY took over "released for implementation" in 0.31, feedback contract §8.2),
+ * answered and handed back for a verdict, or answered and only checkable on a deployed
+ * build (keksdose `AWAITING_VERDICT`, live #330). The phone's "Only what is waiting for
+ * you" toggle narrows the inbox to exactly these (§4.3).
  */
 export const FEEDBACK_AWAITING_STATUSES: readonly FeedbackStatus[] = Object.freeze([
+  "OPEN",
   "IN_EVALUATION",
   "NEEDS_LIVE_TEST",
 ] as const);

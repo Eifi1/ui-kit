@@ -470,3 +470,37 @@ Nothing is open. Next: server-kit 0.4.0 and ui-kit 0.30.0 (§7). The
 0.30 kit round also takes the apps' auth findings: a backup-code entry on the 2FA step,
 the challenge token passed to its slot, a "too many attempts" label, and `ProfileSetting`
 with first and last name.
+
+## 10. From the adoptions (2026-10-07, for 0.31 / 0.5)
+
+kastlan adopted 0.30 / 0.4 first (feat/user-admin-0.30). Its notes, settled:
+
+1. **The list answer carries the confirmation levels and the active-admin count.**
+   `UserListResponse.levels` maps an action to its `ConfirmationLevel`, so the page
+   renders the right confirmation before its first request. `summary.active_admins`
+   (`SUMMARY_ACTIVE_ADMINS`) is what the last-admin lock reads. Both are in server-kit
+   0.5; kastlan and Kurvenschmiede already send this shape.
+2. **The user's own deletion request is a platform row** (`company_id` NULL). In an app
+   whose `admin_actions` is company-scoped under RLS, the insert needs the bypass for
+   that one transaction (kastlan: `set_config('app.bypass_rls', 'on', true)`).
+3. **The operator's erase is offered only for an account that is deactivated with
+   `deletion_requested_at` set.** Anything else answers 409, and the UI doesn't offer it.
+4. **A backup code at the 2FA step goes through `SignInForm`'s own `recoveryCode`
+   entry** (0.30). `onCode({…, kind: "recovery"})` returns the answer union, so a
+   `password-change` answer moves the form to its third step. An app doesn't draw its
+   own step in `twoFactorContent` for that.
+5. **`InvitationRow.invited_by`** is the inviter as a person (`PersonRef`). An app sends
+   it, not only the id, so the panel can name them.
+
+Kurvenschmiede adopted next (feat/user-admin, 2026-10-07). Its notes, settled in 0.31:
+
+6. **An expired invitation can be revoked**, not only resent. In an app that keeps the
+   rows it would otherwise stay listed for good. `InvitationsPanel` offers revoke on
+   open and expired rows.
+7. **`InvitationsPanel listTitle={null}`** leaves the list's heading out under a card
+   already headed "Invitations".
+8. **The export leaves storage keys out.** A feedback file's `key` trips
+   `assert_no_secrets`, rightly: it is an address inside the app, not the user's data.
+9. **Tests submit the confirm dialogs' form** (`fireEvent.submit`), because their button
+   submits through its `form` attribute, which jsdom doesn't follow (ADOPTING.md
+   step 7).

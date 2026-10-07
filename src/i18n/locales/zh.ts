@@ -64,6 +64,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     // 0.27.0. 反馈 for feedback, as `feedbackDialog`; 返工 for rework.
     feedbackStatus: {
       OPEN: "待处理",
+      READY: "待实现",
       IN_PROGRESS: "处理中",
       IN_EVALUATION: "评估中",
       NEEDS_LIVE_TEST: "待线上测试",
@@ -122,6 +123,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       phoneActions: "反馈操作",
     },
     feedbackDetail: {
+      subject: "主题",
       body: "描述",
       edit: "编辑",
       editDescription: "编辑描述",
@@ -180,6 +182,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         qrAlt: "身份验证器应用的二维码",
         secretHint: "无法扫描？请改为在应用中输入此密钥：",
         copySecret: "复制密钥",
+        // 0.31.0: the card's title; the state ("已开启") stands beside it.
+        title: "双重验证",
       },
       passkeys: {
         title: "通行密钥",
@@ -866,6 +870,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       recoveryCodeHint: (length) => `共 ${n(length)} 位字母和数字，连字符和空格不影响。`,
       recoveryCodeInvalid: "此备用码无效或已被使用。",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "申请访问权限",
     },
     register: {
       firstName: "名字",
@@ -1275,6 +1281,81 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         count === 1
           ? `通过“${group}”中的未审校文本？`
           : `通过“${group}”中全部 ${n(count)} 条未审校文本（包括未显示在屏幕上的）？`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The help
+    // lines name things as `accountSettings`, `sessions` and `dataExport` do; "访问权限"
+    // as `shareCard`. A space either side of a numeral or a Latin name.
+    settings: {
+      title: "设置",
+      search: "搜索设置",
+      searchPlaceholder: "搜索设置…",
+      results: "匹配的设置",
+      noMatches: (query) => `没有与“${query}”匹配的设置。`,
+      // As `commandPalette.clear`.
+      clearSearch: "清除搜索",
+      back: "返回设置",
+      sections: "设置分类",
+      matchCount: (count) => `${n(count)} 个匹配项`,
+      groups: {
+        appearance: {
+          title: "外观",
+          help: "语言、主题，以及应用在此设备上的外观。",
+        },
+        account: {
+          title: "账户",
+          help: "您的个人资料和电子邮箱地址。",
+        },
+        security: {
+          title: "安全",
+          help: "您的登录方式：密码、双重验证码、通行密钥和会话。",
+        },
+        notifications: {
+          title: "通知",
+          help: "您会收到哪些通知、何时收到，以及在哪些设备上收到。",
+        },
+        data: {
+          title: "数据",
+          help: "导出属于您的数据，或将其连同账户一并删除。",
+        },
+      },
+    },
+    landing: {
+      signIn: "登录",
+      requestAccess: "申请访问权限",
+      getStarted: "开始使用",
+      tryDemo: "体验演示",
+      openApp: "打开应用",
+      continueDemo: "继续演示",
+      beta: "测试版",
+      // Plain text: a mail's subject and body lines, never HTML. Full-width colons.
+      accessSubject: (app) => (app ? `申请访问 ${app}` : "访问权限申请"),
+      accessName: "姓名：",
+      accessCompany: "公司：",
+      accessUse: "用途：",
+    },
+    demo: {
+      starting: "正在启动演示…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `来自此网络的演示过多，请 ${n(minutes)} 分钟后重试。`
+          : "来自此网络的演示过多，请稍后重试。",
+      capacity: "演示名额已满，请稍后重试。",
+      unavailable: "演示暂不可用。",
+      failed: "无法启动演示，请重试。",
+      // As `legal.backHome`.
+      backToStart: "返回首页",
+      hoursLeft: (hours, minutes) => `演示 · 剩余 ${n(hours)} 小时 ${n(minutes)} 分钟`,
+      minutesLeft: (minutes) => `演示 · 剩余 ${n(minutes)} 分钟`,
+      badge: "演示",
+      readOnly: "您正在查看示例数据，无法进行修改。",
+      sandbox: "您自己创建的内容将在演示结束时删除。",
+      details: "演示详情",
+      writeLocked: "演示中无法执行此操作。",
+      endedTitle: "演示已结束",
+      endedReadOnly: "示例数据会定期重置。",
+      endedSandbox: "示例数据会定期重置；您在演示中创建的内容会被删除。",
+      restart: "开始新的演示",
     },
   };
 }

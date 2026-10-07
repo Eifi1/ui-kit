@@ -62,6 +62,9 @@ export const fr: Dictionary = {
     searchExamples: "Exemples",
     searchNeeds: "De quoi avez-vous besoin\u202f?",
     searchPages: "Pages",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "Côté serveur",
+    searchServer: "Kit serveur",
   },
 
   groups: {
@@ -75,6 +78,7 @@ export const fr: Dictionary = {
     // "Chrome" in the UI sense: the frame around the content, not the browser.
     "App chrome": "Cadre de l’application",
     API: "API",
+    "Server kit": "Kit serveur",
   },
 
   groupShort: {
@@ -86,6 +90,9 @@ export const fr: Dictionary = {
     Inputs: "Saisie",
     Charts: "Tracés",
     Overlays: "Pop-up",
+    // Seven letters, two of them a narrow "r": no wider than the seven-letter labels that
+    // already fit the cell in other languages ("Entrada", "Cornice").
+    "Server kit": "Serveur",
   },
 
   pages: {
@@ -106,6 +113,12 @@ export const fr: Dictionary = {
       short: "Liens",
       blurb:
         "Chaque lien du kit routé par le routeur de l'application, défini une fois sur le provider : le lien texte et ses tons, un bouton ou une carte d'action qui est un lien, et les liens qui quittent l'application.",
+    },
+    "landing-demo": {
+      title: "Accueil et démo",
+      short: "Accueil",
+      blurb:
+        "La page d’accueil publique et la démo à essayer\u00a0: l’en-tête dans ses trois états, les sections de l’accueil, les vérifications SEO, le retour à la dernière page visitée, et le démarrage, le compte à rebours et la fin de la démo.",
     },
     "user-admin": {
       title: "Administration des utilisateurs",
@@ -430,10 +443,10 @@ export const fr: Dictionary = {
       blurb: "Le cadre d’application que vous avez sous les yeux, démonté pièce par pièce.",
     },
     settings: {
-      title: "Champs de paramètres",
+      title: "Paramètres",
       short: "Paramètres",
       blurb:
-        "Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe et authentification à deux facteurs.",
+        "La page des paramètres et la page d’administration sur une même structure\u00a0: la barre latérale sur ordinateur, la liste à explorer en profondeur sur téléphone, un groupe par chemin, la recherche, et la carte qu’un lien met en évidence. Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe et authentification à deux facteurs.",
     },
     wizard: {
       title: "Assistant",
@@ -474,6 +487,60 @@ export const fr: Dictionary = {
       blurb:
         "Les fonctions et données derrière les champs, en entrée → résultat : le calcul de dates de @eifi1/ui-kit/dates, l\u2019évaluateur de la calculatrice, la table des devises et les constantes de classes dont on compose un champ sur mesure.",
     },
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
+    "server-kit": {
+      title: "Kit serveur",
+      blurb:
+        "Le paquet Python derrière les backends des applications\u00a0: les contrats que suivent ces composants, sous forme de code — les signatures et les docstrings de chaque module, figées sur une version de server-kit.",
+    },
+    "server-auth": {
+      title: "Connexion et compte",
+      short: "Connexion",
+      blurb:
+        "Inscription, connexion, jetons à usage unique, claims de session et formats d’échange du compte — la moitié serveur des pages de connexion, d’inscription et de compte.",
+    },
+    "server-user-admin": {
+      title: "Administration des utilisateurs",
+      short: "Utilisateurs",
+      blurb:
+        "La requête de la liste des utilisateurs, les quatre actions d’administration et leurs niveaux de confirmation, l’entrée d’audit, la suppression en deux temps et l’export des données.",
+    },
+    "server-settings": {
+      title: "Paramètres et langue",
+      short: "Paramètres",
+      blurb:
+        "Une seule règle pour tout corps de requête de paramètres — un champ omis est conservé, null l’efface, un champ inconnu est refusé — et l’unique langue canonique du compte.",
+    },
+    "server-demo": {
+      title: "Démo",
+      short: "Démo",
+      blurb:
+        "Le compte de démo jetable\u00a0: ses paramètres, les vérifications d’accès dans leur ordre, les refus et leurs codes, la règle de lecture seule et son unique durée de vie.",
+    },
+    "server-mail": {
+      title: "E-mails",
+      short: "E-mails",
+      blurb:
+        "Les e-mails du compte\u00a0: les textes par langue, une seule mise en page qui échappe chaque valeur, deux transports qui ne lèvent jamais d’exception — et les e-mails d’exemple de la version, rendus.",
+    },
+    "server-feedback": {
+      title: "Retours et téléversements",
+      short: "Retours",
+      blurb:
+        "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — et des pièces jointes jugées sur leurs octets.",
+    },
+    "server-limits": {
+      title: "Limites, erreurs et CORS",
+      short: "Limites",
+      blurb:
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, et CORS pour quelques origines supplémentaires.",
+    },
+    "server-translation-review": {
+      title: "Relecture des traductions",
+      short: "Relecture",
+      blurb:
+        "Les formats d’échange de la relecture des traductions, qui peut relire quelles clés et quelles langues, et les jetons de relecture avec lesquels un relecteur ouvre la page de relecture du kit.",
+    },
   },
 
 
@@ -500,6 +567,15 @@ export const fr: Dictionary = {
       "lien qui ouvre un nouvel onglet",
       "un bouton qui navigue",
       "mettre en évidence le lien de la page actuelle",
+    ],
+    "landing-demo": [
+      "créer une page d’accueil publique",
+      "ajouter un bouton «\u202fDemander l’accès\u202f»",
+      "vérifier le titre et la description pour les moteurs de recherche",
+      "rouvrir l’application là où l’utilisateur l’a laissée",
+      "démarrer une session de démo",
+      "compte à rebours de la démo",
+      "indiquer que la démo est terminée",
     ],
     "user-admin": [
       "lister les utilisateurs avec leurs rôles",
@@ -996,6 +1072,12 @@ export const fr: Dictionary = {
       "choisir le thème",
       "choisir la langue",
       "préférences de l’utilisateur",
+      "créer une page de paramètres avec barre latérale",
+      "afficher les paramètres en liste sur téléphone",
+      "lien direct vers un paramètre",
+      "rechercher dans les paramètres",
+      "même mise en page pour la page d’administration",
+      "faire suivre la langue du compte",
     ],
     wizard: [
       "formulaire en plusieurs étapes",
@@ -1050,6 +1132,75 @@ export const fr: Dictionary = {
       "liste des devises",
       "derniers mois complets",
       "classes CSS des champs",
+    ],
+    // The Server kit group (0.31).
+    "server-kit": [
+      "documentation du paquet backend",
+      "installer server-kit",
+      "quelle version de server-kit est documentée",
+      "contrats Python pour le backend",
+      "trouver le côté serveur d’un composant",
+    ],
+    "server-auth": [
+      "vérifier une connexion côté serveur",
+      "inscription sur invitation uniquement",
+      "créer un jeton de réinitialisation du mot de passe",
+      "claims du jeton de session",
+      "normaliser une adresse e-mail",
+      "codes d’erreur d’authentification",
+    ],
+    "server-user-admin": [
+      "interroger la liste des utilisateurs côté serveur",
+      "niveau de confirmation d’une action d’administration",
+      "écrire une entrée d’audit d’administration",
+      "supprimer un compte en deux temps",
+      "exporter les données d’un utilisateur",
+      "ne jamais retirer le dernier administrateur",
+    ],
+    "server-settings": [
+      "modifier des paramètres sans perdre de champs",
+      "effacer un paramètre avec null",
+      "refuser les champs inconnus d’un corps de requête",
+      "enregistrer la langue du compte",
+      "lire l’en-tête Accept-Language",
+    ],
+    "server-demo": [
+      "démarrer une session de démo",
+      "paramètres du compte de démo",
+      "mettre la démo en lecture seule",
+      "codes de refus de la démo",
+      "nettoyer les anciens utilisateurs de démo",
+    ],
+    "server-mail": [
+      "envoyer un e-mail de réinitialisation du mot de passe",
+      "aperçu des e-mails du compte",
+      "textes des e-mails par langue",
+      "envoyer des e-mails via Resend",
+      "journaliser les e-mails en développement",
+      "adresse de réponse du support",
+    ],
+    "server-feedback": [
+      "valider un retour",
+      "règles de statut des retours",
+      "enregistrer un rapport de plantage",
+      "vérifier le type d’un fichier téléversé",
+      "limiter la taille des pièces jointes",
+      "effacer les retours d’un utilisateur supprimé",
+    ],
+    "server-limits": [
+      "limiter le débit d’une route",
+      "IP du client derrière un proxy",
+      "envoyer un en-tête Retry-After",
+      "associer les erreurs du kit aux statuts HTTP",
+      "autoriser une origine CORS supplémentaire",
+      "réponse d’erreur avec un code",
+    ],
+    "server-translation-review": [
+      "relire les traductions via l’API",
+      "émettre un jeton de relecture",
+      "qui peut relire quelle langue",
+      "verdicts de traduction",
+      "clés de traduction du kit",
     ],
   },
 

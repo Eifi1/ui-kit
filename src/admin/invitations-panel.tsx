@@ -196,8 +196,10 @@ export interface InvitationsPanelProps<R extends string = string> {
   onInvite?: (draft: InvitationDraft<R>) => MaybePromise<InvitationSentAnswer | void>;
   /** Mints a new link and mails it. Left out: no resend button. */
   onResend?: (invitation: InvitationRow<R>) => MaybePromise<InvitationSentAnswer | void>;
-  /** Revokes an open invitation (level `none`, §4.2: re-inviting undoes it). Left out:
-   *  no revoke button. */
+  /** Revokes an open or an expired invitation (level `none`, §4.2: re-inviting undoes
+   *  it). An expired row can be resent, and since 0.31 also removed: in an app that
+   *  keeps the rows it would otherwise stay listed for good (Kurvenschmiede's 0.30
+   *  adoption). Left out: no revoke button. */
   onRevoke?: (invitation: InvitationRow<R>) => MaybePromise;
   /** The list is being fetched. */
   loading?: boolean;
@@ -205,6 +207,10 @@ export interface InvitationsPanelProps<R extends string = string> {
   describeError?: (error: unknown) => ReactNode | undefined;
   /** Over the form: who can be invited and what happens, in the app's words. */
   intro?: ReactNode;
+  /** The list's visible heading. Default: the `listTitle` label. `null` leaves it out,
+   *  for a page whose card is already headed "Invitations" (Kurvenschmiede's 0.30
+   *  adoption); the list keeps the label as its accessible name either way. */
+  listTitle?: ReactNode | null;
   className?: string;
   labels?: Partial<InvitationsLabels>;
 }
@@ -233,6 +239,7 @@ export function InvitationsPanel<R extends string = string>({
   loading = false,
   describeError,
   intro,
+  listTitle,
   className,
   labels: labelsProp,
 }: InvitationsPanelProps<R>) {
@@ -418,7 +425,7 @@ export function InvitationsPanel<R extends string = string>({
       )}
 
       <div className="space-y-2">
-        <SectionLabel as="h4">{labels.listTitle}</SectionLabel>
+        {listTitle !== null && <SectionLabel as="h4">{listTitle ?? labels.listTitle}</SectionLabel>}
         {loading && invitations.length === 0 ? (
           <div className="flex justify-center py-3">
             <Spinner label={labels.loading} />
@@ -432,7 +439,7 @@ export function InvitationsPanel<R extends string = string>({
               const link = invitation.link ?? links[key];
               const open = invitation.status === "open";
               const resendable = onResend && (open || invitation.status === "expired");
-              const revocable = onRevoke && open;
+              const revocable = onRevoke && (open || invitation.status === "expired");
               const scopeText = scopeLabel(invitation.scope);
               const by =
                 typeof invitation.invited_by === "string" ? invitation.invited_by : nameOf(invitation.invited_by);

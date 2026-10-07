@@ -25,6 +25,15 @@
  * label that is not a string literal cannot be indexed statically and FAILS the run, rather
  * than quietly leaving a section out of the search.
  *
+ * THE SERVER KIT GROUP (0.31) has no section files: a page there is `serverPage({ slug,
+ * serverModules: [...] })` in routes.tsx, and its headings and members come from the
+ * server-kit release's api.json (scripts/sync-server-kit.mjs copies it). So for those pages
+ * the labels are read from that file — one `<h3>` per module and kind of member, the rule
+ * showcase/src/server-kit/api.ts `kindHeading` writes — and a second module,
+ * search/server-kit.generated.ts, carries every module and member for the search, so the
+ * top bar finds `apply_patch` without loading the 270 kB export. A module the export has
+ * and no page shows, or a page naming a module the export lacks, fails the run.
+ *
  * Two guards keep the output honest, both in showcase/src/__tests__/search.test.tsx:
  *   - `--check` in the suite: the committed file equals a fresh extraction;
  *   - every page is rendered and its `main h3[id]` headings compared with this index, so
@@ -43,6 +52,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(ROOT, "showcase/src");
 const ROUTES = join(SRC, "routes.tsx");
 const OUT = join(SRC, "search/examples.generated.ts");
+const SERVER_KIT_API = join(SRC, "server-kit/api.json");
+const SERVER_OUT = join(SRC, "search/server-kit.generated.ts");
 
 const errors = [];
 
@@ -186,6 +197,61 @@ function labelsOf(file, name, seen = new Set()) {
   return out;
 }
 
+/* ── The Server kit group ── */
+
+const PACKAGE = "eifi1_server_kit";
+// The same order and titles as showcase/src/server-kit/api.ts (KIND_ORDER, kindTitle);
+// the per-page test compares the headings a page renders with what is written here.
+const KIND_ORDER = ["function", "class", "model", "enum", "protocol", "constant"];
+const KIND_TITLES = {
+  function: "Functions",
+  class: "Classes",
+  model: "Models",
+  enum: "Enums",
+  protocol: "Protocols",
+  constant: "Constants",
+};
+const kindTitle = (kind) => KIND_TITLES[kind] ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1)}s`;
+const MAIL_MODULE = "mail";
+
+let serverApi;
+function serverKitApi() {
+  if (serverApi === undefined) {
+    serverApi = existsSync(SERVER_KIT_API) ? JSON.parse(readFileSync(SERVER_KIT_API, "utf8")) : null;
+    if (!serverApi) errors.push(`${SERVER_KIT_API.slice(ROOT.length + 1)} is missing — run node scripts/sync-server-kit.mjs`);
+  }
+  return serverApi;
+}
+
+function serverModule(short) {
+  return serverKitApi()?.modules.find((m) => m.name === `${PACKAGE}.${short}`);
+}
+
+/** The kinds a module has, in page order: KIND_ORDER, then any other in export order. */
+function kindsOf(mod) {
+  const kinds = KIND_ORDER.filter((k) => mod.members.some((m) => m.kind === k));
+  for (const m of mod.members) if (!kinds.includes(m.kind)) kinds.push(m.kind);
+  return kinds;
+}
+
+/** A Server kit page's `<h3>` labels: per module, its mails (the mail module), then one
+ *  per kind of member — "auth · Functions". */
+function serverLabels(slug, modules) {
+  const api = serverKitApi();
+  if (!api) return [];
+  const labels = [];
+  for (const short of modules) {
+    const mod = serverModule(short);
+    if (!mod) {
+      errors.push(`routes.tsx: /${slug} names ${PACKAGE}.${short}, which server-kit ${api.kit_version} does not have`);
+      continue;
+    }
+    if (short === MAIL_MODULE && api.mails.length) labels.push(`${short} · Rendered mails`);
+    for (const kind of kindsOf(mod)) labels.push(`${short} · ${kindTitle(kind)}`);
+  }
+  return labels;
+}
+
 /** slug → the section components its Body renders, from routes.tsx. */
 function pageBodies() {
   const sf = parse(ROUTES);
@@ -197,7 +263,16 @@ function pageBodies() {
     if (ts.isObjectLiteralExpression(node)) {
       const slug = prop(node, "slug");
       const body = prop(node, "Body");
-      if (slug && body && ts.isStringLiteral(slug.initializer)) {
+      const server = prop(node, "serverModules");
+      if (slug && server && ts.isStringLiteral(slug.initializer)) {
+        const list = server.initializer;
+        if (!ts.isArrayLiteralExpression(list) || !list.elements.every((e) => ts.isStringLiteral(e))) {
+          const { line } = sf.getLineAndCharacterOfPosition(server.getStart());
+          errors.push(`showcase/src/routes.tsx:${line + 1}: serverModules the index cannot read`);
+        } else {
+          pages.push({ slug: slug.initializer.text, refs: [], serverModules: list.elements.map((e) => e.text) });
+        }
+      } else if (slug && body && ts.isStringLiteral(slug.initializer)) {
         const refs = [];
         const walk = (n) => {
           if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
@@ -214,18 +289,80 @@ function pageBodies() {
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  return pages.map(({ slug, refs }) => ({
+  return pages.map(({ slug, refs, serverModules }) => ({
     slug,
-    labels: refs.flatMap((ref) => {
-      const imp = imports.get(ref);
-      return imp ? labelsOf(imp.file, imp.name) : [];
-    }),
+    serverModules,
+    labels: serverModules
+      ? serverLabels(slug, serverModules)
+      : refs.flatMap((ref) => {
+          const imp = imports.get(ref);
+          return imp ? labelsOf(imp.file, imp.name) : [];
+        }),
   }));
 }
 
-export function extract() {
+/**
+ * The search's Server kit entries: per module its page, summary and members. Every module
+ * of the export must be on a page — a release that adds one fails here until routes.tsx
+ * gives it one.
+ */
+export function extractServerKit(pages = pageBodies()) {
+  const api = serverKitApi();
+  if (!api) return undefined;
+  const pageOf = new Map();
+  for (const { slug, serverModules } of pages) for (const short of serverModules ?? []) pageOf.set(short, slug);
+  const modules = [];
+  for (const mod of api.modules) {
+    const short = mod.name.slice(PACKAGE.length + 1);
+    const page = pageOf.get(short);
+    if (!page) {
+      errors.push(`server-kit ${api.kit_version} has ${mod.name}, and no Server kit page in routes.tsx shows it`);
+      continue;
+    }
+    modules.push({ page, module: short, summary: mod.summary, members: mod.members.map((m) => [m.name, m.kind]) });
+  }
+  return { version: api.kit_version, modules };
+}
+
+export function renderServerKit(data) {
+  const lines = [
+    "// GENERATED by scripts/gen-showcase-search-index.mjs from showcase/src/server-kit/api.json —",
+    "// do not edit by hand. Re-run it after `node scripts/sync-server-kit.mjs`; the showcase suite",
+    "// fails while this file is stale.",
+    "",
+    "/** The server-kit release the Server kit pages document. */",
+    `export const SERVER_KIT_VERSION = ${JSON.stringify(data.version)};`,
+    "",
+    "export interface ServerKitSearchModule {",
+    "  /** The Server kit page that documents it. */",
+    "  page: string;",
+    "  /** Its short name, `auth` for `eifi1_server_kit.auth` — also its anchor on the page. */",
+    "  module: string;",
+    "  summary: string;",
+    "  /** [name, kind] per member; a member's anchor is `module.name`. */",
+    "  members: ReadonlyArray<readonly [name: string, kind: string]>;",
+    "}",
+    "",
+    "/** Every module of the release, in the export's order, with its members. */",
+    "export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [",
+  ];
+  for (const mod of data.modules) {
+    lines.push("  {");
+    lines.push(`    page: ${JSON.stringify(mod.page)},`);
+    lines.push(`    module: ${JSON.stringify(mod.module)},`);
+    lines.push(`    summary: ${JSON.stringify(mod.summary)},`);
+    lines.push("    members: [");
+    for (const [name, kind] of mod.members) lines.push(`      [${JSON.stringify(name)}, ${JSON.stringify(kind)}],`);
+    lines.push("    ],");
+    lines.push("  },");
+  }
+  lines.push("];", "");
+  return lines.join("\n");
+}
+
+export function extract(pages = pageBodies()) {
   const out = {};
-  for (const { slug, labels } of pageBodies()) {
+  for (const { slug, labels } of pages) {
     if (labels.length === 0) continue;
     // One entry per label: two identical headings on a page are one anchor (the first).
     out[slug] = [...new Set(labels)];
@@ -253,22 +390,35 @@ export function render(index) {
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const index = extract();
+  const pages = pageBodies();
+  const index = extract(pages);
   const text = render(index);
+  const server = pages.some((p) => p.serverModules) ? extractServerKit(pages) : undefined;
+  const serverText = server ? renderServerKit(server) : undefined;
   if (errors.length) {
     console.error(`✖ cannot index these examples statically:\n  ${errors.join("\n  ")}`);
     process.exit(1);
   }
+  const outputs = [[OUT, text]];
+  if (serverText) outputs.push([SERVER_OUT, serverText]);
   if (process.argv.includes("--check")) {
-    const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
-    if (current !== text) {
-      console.error(`✖ ${OUT.slice(ROOT.length + 1)} is stale — run node scripts/gen-showcase-search-index.mjs`);
-      process.exit(1);
+    for (const [file, expected] of outputs) {
+      const current = existsSync(file) ? readFileSync(file, "utf8") : "";
+      if (current !== expected) {
+        console.error(`✖ ${file.slice(ROOT.length + 1)} is stale — run node scripts/gen-showcase-search-index.mjs`);
+        process.exit(1);
+      }
     }
     console.log("✓ showcase search index is up to date");
   } else {
-    writeFileSync(OUT, text);
+    for (const [file, content] of outputs) writeFileSync(file, content);
     const count = Object.values(index).reduce((n, l) => n + l.length, 0);
     console.log(`✓ wrote ${OUT.slice(ROOT.length + 1)}: ${count} examples`);
+    if (server) {
+      const members = server.modules.reduce((n, m) => n + m.members.length, 0);
+      console.log(
+        `✓ wrote ${SERVER_OUT.slice(ROOT.length + 1)}: server-kit ${server.version}, ${server.modules.length} modules, ${members} members`,
+      );
+    }
   }
 }

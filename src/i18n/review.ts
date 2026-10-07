@@ -338,4 +338,17 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "invitations.linkReady": [["{{email}}"]],
   "invitations.notSent": [["{{email}}"]],
   "accountState.deletionOn": [["{{date}}"]],
+  // 0.31.0: the settings shell, the landing page and the demo
+  // (docs/settings-harmonization.md, docs/landing-demo-harmonization.md). An optional
+  // argument both given and left out: the subject without an app name, the refusal
+  // without a `Retry-After`.
+  "settings.noMatches": [["{{query}}"]],
+  "settings.matchCount": one,
+  "landing.accessSubject": [["{{app}}"], [undefined]],
+  "demo.rateLimited": [[], [1], [3]],
+  "demo.hoursLeft": [
+    [1, 1],
+    [3, 12],
+  ],
+  "demo.minutesLeft": one,
 };

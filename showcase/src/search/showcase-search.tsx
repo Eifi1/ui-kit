@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router";
-import { Braces, Hash, Lightbulb } from "lucide-react";
+import { Braces, Hash, Lightbulb, Server } from "lucide-react";
 import { GlobalSearch } from "@eifi1/ui-kit";
 import type { GlobalSearchSuggestion, SearchEntry } from "@eifi1/ui-kit";
 import { PAGES, groupOf } from "../routes";
@@ -8,6 +8,7 @@ import { en, useT } from "../i18n";
 import type { Dictionary, PageSlug } from "../i18n";
 import { slugify } from "../lib/section";
 import { PAGE_EXAMPLE_LABELS } from "./examples.generated";
+import { SERVER_KIT_MODULES } from "./server-kit.generated";
 
 /**
  * The showcase's ⌘K search: the kit's `GlobalSearch`, fed the way an app feeds it.
@@ -27,12 +28,16 @@ import { PAGE_EXAMPLE_LABELS } from "./examples.generated";
  *    and the one `useScrollRestoration` scrolls to on a PUSH with a hash.
  *  - Needs — the dictionary's plain-language `needs` per page, in the reader's language:
  *    "ask before deleting", "Datumsbereich auswählen".
+ *  - Server kit — every server-kit module and member (`eifi1_server_kit.auth`,
+ *    `apply_patch`), from server-kit.generated.ts, which the same script writes out of the
+ *    pinned api.json; each links to its anchor on its Server kit page. The export itself
+ *    stays in that group's chunk.
  *
  * The ranking tiers come from the kit's matcher (exact > prefix > title words > keywords
  * > description); `weight` orders the kinds within a tier the way the list above does.
  */
 
-const WEIGHT = { component: 30, page: 20, example: 10, need: 0 } as const;
+const WEIGHT = { component: 30, page: 20, serverModule: 15, example: 10, serverMember: 5, need: 0 } as const;
 
 /** A page's title in `dict`, tolerant of a slug the dictionary has not heard of. */
 function pageTitle(dict: Dictionary, slug: string): string {
@@ -107,7 +112,43 @@ export function buildSearchEntries(dict: Dictionary): SearchEntry[] {
       });
     });
   }
+
+  // The server-kit modules and their members. Identifiers, so never translated; the
+  // group name and the page title in the hint are.
+  for (const mod of SERVER_KIT_MODULES) {
+    const title = pageTitle(dict, mod.page);
+    const path = `eifi1_server_kit.${mod.module}`;
+    entries.push({
+      id: `server:${mod.module}`,
+      title: path,
+      keywords: [mod.module, title],
+      // The summary as plain words: its ``literals`` are RST, not something to match on.
+      description: mod.summary.replace(/``?/g, ""),
+      group: dict.chrome.searchServer,
+      hint: title,
+      icon: <Server className="size-4" />,
+      href: serverKitHref(mod.page, mod.module),
+      weight: WEIGHT.serverModule,
+    });
+    for (const [name, kind] of mod.members) {
+      entries.push({
+        id: `server:${mod.module}.${name}`,
+        title: name,
+        keywords: [`${mod.module}.${name}`, `${path}.${name}`],
+        group: dict.chrome.searchServer,
+        hint: `${mod.module} · ${kind}`,
+        icon: <Braces className="size-4" />,
+        href: serverKitHref(mod.page, `${mod.module}.${name}`),
+        weight: WEIGHT.serverMember,
+      });
+    }
+  }
   return entries;
+}
+
+/** A server-kit module's or member's anchor on its page (server-kit/api.ts anchors). */
+export function serverKitHref(page: string, anchor: string): string {
+  return `/${page}#${anchor}`;
 }
 
 function needId(slug: string, index: number): string {

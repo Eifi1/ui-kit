@@ -64,6 +64,9 @@ export const hu: Dictionary = {
     searchExamples: "Példák",
     searchNeeds: "Mire van szüksége?",
     searchPages: "Oldalak",
+    // The "Server side" line under a kit page's title, and the search's server-kit group.
+    serverSide: "Szerveroldal",
+    searchServer: "Szervercsomag",
   },
 
   groups: {
@@ -78,6 +81,9 @@ export const hu: Dictionary = {
     Overlays: "Felugró elemek",
     "App chrome": "Alkalmazáskeret",
     API: "API",
+    // "Csomag" (package), as this file names the kit elsewhere: server-kit IS a Python
+    // package, and Hungarian has no settled loanword for "kit".
+    "Server kit": "Szervercsomag",
   },
 
   groupShort: {
@@ -89,6 +95,7 @@ export const hu: Dictionary = {
     Inputs: "Bevitel",
     Charts: "Ábrák",
     Overlays: "Felugró",
+    "Server kit": "Szerver",
   },
 
   pages: {
@@ -109,6 +116,12 @@ export const hu: Dictionary = {
       short: "Linkek",
       blurb:
         "A kit minden hivatkozása az alkalmazás saját routerén át, egyszer beállítva a providerben: a szöveges hivatkozás és tónusai, egy hivatkozásként működő gomb vagy műveleti kártya, és az alkalmazásból kivezető hivatkozások.",
+    },
+    "landing-demo": {
+      title: "Kezdőlap és demó",
+      short: "Kezdőlap",
+      blurb:
+        "A nyilvános kezdőlap és a kipróbálható demó: a fejléc három állapota, a kezdőlap szakaszai, a SEO-ellenőrzések, a visszatérés a legutóbb megnyitott oldalra, valamint a demó indítása, visszaszámlálása és vége.",
     },
     "user-admin": {
       title: "Felhasználókezelés",
@@ -433,10 +446,10 @@ export const hu: Dictionary = {
       blurb: "Az alkalmazáskeret, amelyet éppen lát, darabjaira szedve.",
     },
     settings: {
-      title: "Beállításmezők",
+      title: "Beállítások",
       short: "Beállítások",
       blurb:
-        "A fiókbeállítások sorai: téma, nyelv, profil, jelszó és kétfaktoros hitelesítés.",
+        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel. A fiókbeállítások sorai: téma, nyelv, profil, jelszó és kétfaktoros hitelesítés.",
     },
     wizard: {
       title: "Varázsló",
@@ -477,6 +490,60 @@ export const hu: Dictionary = {
       blurb:
         "A beviteli mezők mögötti függvények és adatok, bemenet → eredmény formában: dátumszámítás a @eifi1/ui-kit/dates alútvonalról, a számológép kiértékelője, a pénznemtáblázat és az osztálykonstansok, amelyekből egyéni mező állítható össze.",
     },
+    // The Server kit group (0.31): server-kit's modules, from its release's api.json.
+    "server-kit": {
+      title: "Szervercsomag",
+      blurb:
+        "Az alkalmazások backendjei mögötti Python-csomag: a szerződések, amelyeket ezek a komponensek követnek, kódként — minden modul szignatúrái és docstringjei, egyetlen server-kit kiadáshoz rögzítve.",
+    },
+    "server-auth": {
+      title: "Bejelentkezés és fiók",
+      short: "Belépés",
+      blurb:
+        "Regisztráció, bejelentkezés, egyszer használatos tokenek, munkamenet-claimek és a fiók átviteli formátumai — a bejelentkezési, regisztrációs és fiókoldalak szerveroldali fele.",
+    },
+    "server-user-admin": {
+      title: "Felhasználókezelés",
+      short: "Felhasználók",
+      blurb:
+        "A felhasználólista lekérdezése, a négy adminisztrátori művelet és megerősítési szintjeik, az auditbejegyzés, a kétlépcsős törlés és az adatexport.",
+    },
+    "server-settings": {
+      title: "Beállítások és nyelv",
+      short: "Beállítások",
+      blurb:
+        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — és a fiók egyetlen kanonikus nyelve.",
+    },
+    "server-demo": {
+      title: "Demó",
+      short: "Demó",
+      blurb:
+        "Az eldobható demófiók: a beállításai, az indítás előtti ellenőrzések sorrendje, az elutasítások és kódjaik, a csak olvasható mód szabálya és az egyetlen élettartama.",
+    },
+    "server-mail": {
+      title: "E-mail",
+      short: "E-mail",
+      blurb:
+        "A fiók e-mailjei: a szövegek nyelvenként, egyetlen elrendezés, amely minden értéket escape-el, két küldési mód, amely soha nem dob kivételt — és a kiadás minta-e-mailjei, renderelve.",
+    },
+    "server-feedback": {
+      title: "Visszajelzés és feltöltés",
+      short: "Visszajelzés",
+      blurb:
+        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés — és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
+    },
+    "server-limits": {
+      title: "Korlátok, hibák és CORS",
+      short: "Korlátok",
+      blurb:
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, és CORS néhány további originre.",
+    },
+    "server-translation-review": {
+      title: "Fordítások ellenőrzése",
+      short: "Ellenőrzés",
+      blurb:
+        "A fordításellenőrzés átviteli formátumai, hogy ki mely kulcsokat és nyelveket ellenőrizheti, és az ellenőrzési tokenek, amelyekkel egy ellenőr megnyitja a csomag ellenőrző oldalát.",
+    },
   },
 
 
@@ -503,6 +570,15 @@ export const hu: Dictionary = {
       "új lapon nyíló hivatkozás",
       "navigáló gomb",
       "az aktuális oldal hivatkozásának kiemelése",
+    ],
+    "landing-demo": [
+      "nyilvános kezdőlap készítése",
+      "„Hozzáférés kérése” gomb hozzáadása",
+      "oldalcím és leírás ellenőrzése keresőmotorokhoz",
+      "az alkalmazás megnyitása ott, ahol a felhasználó abbahagyta",
+      "demó munkamenet indítása",
+      "a demó hátralévő idejének visszaszámlálása",
+      "annak jelzése, hogy a demó véget ért",
     ],
     "user-admin": [
       "felhasználók listázása a szerepkörükkel",
@@ -999,6 +1075,12 @@ export const hu: Dictionary = {
       "téma kiválasztása",
       "nyelv kiválasztása",
       "felhasználói beállítások",
+      "beállítások oldal oldalsávval",
+      "beállítások listaként telefonon",
+      "közvetlen hivatkozás egy beállításra",
+      "keresés a beállításokban",
+      "adminisztrációs oldal ugyanabban az elrendezésben",
+      "a fiók nyelvének követése",
     ],
     wizard: [
       "többlépéses űrlap",
@@ -1053,6 +1135,75 @@ export const hu: Dictionary = {
       "pénznemek listája",
       "utolsó teljes hónapok",
       "mező osztálynevek",
+    ],
+    // The Server kit group (0.31).
+    "server-kit": [
+      "a backend csomag dokumentációja",
+      "a server-kit telepítése",
+      "melyik server-kit kiadás van dokumentálva",
+      "Python-szerződések a backendhez",
+      "egy komponens szerveroldalának megkeresése",
+    ],
+    "server-auth": [
+      "bejelentkezés ellenőrzése a szerveren",
+      "regisztráció csak meghívóval",
+      "jelszó-visszaállító token létrehozása",
+      "munkamenet-token claimjei",
+      "e-mail-cím normalizálása",
+      "hitelesítési hibakódok",
+    ],
+    "server-user-admin": [
+      "felhasználólista lekérdezése a szerveren",
+      "adminisztrátori művelet megerősítési szintje",
+      "adminisztrátori auditbejegyzés írása",
+      "fiók törlése két lépésben",
+      "felhasználó adatainak exportálása",
+      "az utolsó adminisztrátor megtartása",
+    ],
+    "server-settings": [
+      "beállítások módosítása mezők elvesztése nélkül",
+      "beállítás törlése null értékkel",
+      "ismeretlen mezők elutasítása a kéréstörzsben",
+      "a fiók nyelvének tárolása",
+      "az Accept-Language fejléc olvasása",
+    ],
+    "server-demo": [
+      "demó munkamenet indítása",
+      "a demófiók beállításai",
+      "a demó csak olvashatóvá tétele",
+      "a demó elutasítási kódjai",
+      "régi demófelhasználók törlése",
+    ],
+    "server-mail": [
+      "jelszó-visszaállító e-mail küldése",
+      "a fiók e-mailjeinek előnézete",
+      "e-mail-szövegek nyelvenként",
+      "e-mail küldése Resenden keresztül",
+      "e-mailek naplózása fejlesztés közben",
+      "ügyfélszolgálati válaszcím",
+    ],
+    "server-feedback": [
+      "visszajelzés validálása",
+      "visszajelzések állapotszabályai",
+      "összeomlás-jelentés rögzítése",
+      "feltöltött fájl típusának ellenőrzése",
+      "mellékletek méretének korlátozása",
+      "törölt felhasználó visszajelzéseinek törlése",
+    ],
+    "server-limits": [
+      "útvonal sebességkorlátozása",
+      "kliens IP-címe proxy mögött",
+      "Retry-After fejléc küldése",
+      "a csomag hibáinak leképezése HTTP-státuszokra",
+      "további CORS-origin engedélyezése",
+      "hibaválasz kóddal",
+    ],
+    "server-translation-review": [
+      "fordítások ellenőrzése API-n keresztül",
+      "ellenőrzési token kiadása",
+      "ki melyik nyelvet ellenőrizheti",
+      "fordítási ítéletek",
+      "a csomag fordítási kulcsai",
     ],
   },
 

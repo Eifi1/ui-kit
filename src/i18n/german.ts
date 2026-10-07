@@ -79,6 +79,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     // written here with "ß" like the rest of this source; `swiss()` makes it "grösser".
     feedbackStatus: {
       OPEN: "Offen",
+      READY: "Bereit zur Umsetzung",
       IN_PROGRESS: "In Bearbeitung",
       IN_EVALUATION: "Zur Prüfung",
       NEEDS_LIVE_TEST: "Live testen",
@@ -140,6 +141,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       phoneActions: "Feedback-Aktionen",
     },
     feedbackDetail: {
+      subject: "Betreff",
       body: "Beschreibung",
       edit: "Bearbeiten",
       editDescription: "Beschreibung bearbeiten",
@@ -198,6 +200,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         qrAlt: "QR-Code für die Authenticator-App",
         secretHint: "Scannen nicht möglich? Stattdessen diesen Schlüssel in der App eingeben:",
         copySecret: "Schlüssel kopieren",
+        // 0.31.0: the card's title; the state ("Aktiv") stands beside it.
+        title: "Zwei-Faktor-Authentifizierung",
       },
       passkeys: {
         title: "Passkeys",
@@ -908,6 +912,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         `${n(length)} Buchstaben und Ziffern. Bindestriche und Leerzeichen spielen keine Rolle.`,
       recoveryCodeInvalid: "Dieser Backup-Code ist ungültig oder wurde schon verwendet.",
       rateLimited,
+      // 0.31.0: the same words as `landing.requestAccess`.
+      requestAccess: "Zugang anfragen",
     },
     register: {
       firstName: "Vorname",
@@ -1362,6 +1368,86 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         count === 1
           ? `Den ungeprüften Text in „${group}“ bestätigen?`
           : `Alle ${n(count)} ungeprüften Texte in „${group}“ bestätigen – auch die nicht angezeigten?`,
+    },
+    // 0.31.0 — docs/settings-harmonization.md §4.3 and docs/landing-demo-harmonization.md
+    // §4–§5: the settings shell, the landing page's generic words and the demo. The group
+    // names are the contracts' ("Darstellung", "Konto", "Sicherheit", "Benachrichtigungen",
+    // "Daten"); the help lines name things as `accountSettings`, `sessions` and
+    // `dataExport` do. Formal "Sie".
+    settings: {
+      title: "Einstellungen",
+      search: "Einstellungen durchsuchen",
+      searchPlaceholder: "Einstellungen durchsuchen…",
+      results: "Passende Einstellungen",
+      noMatches: (query) => `Keine Einstellung passt zu „${query}“.`,
+      // As `commandPalette.clear`.
+      clearSearch: "Suche löschen",
+      back: "Zurück zu den Einstellungen",
+      sections: "Einstellungsbereiche",
+      // "Treffer" is the same in singular and plural.
+      matchCount: (count) => `${n(count)} Treffer`,
+      groups: {
+        appearance: {
+          title: "Darstellung",
+          // "Theme", as `topBar.theme`.
+          help: "Sprache, Theme und wie die App auf diesem Gerät aussieht.",
+        },
+        account: {
+          title: "Konto",
+          help: "Ihr Profil und Ihre E-Mail-Adresse.",
+        },
+        security: {
+          title: "Sicherheit",
+          help: "Wie Sie sich anmelden: Passwort, Zwei-Faktor-Codes, Passkeys und Sitzungen.",
+        },
+        notifications: {
+          title: "Benachrichtigungen",
+          help: "Worüber Sie informiert werden, wann und auf welchen Geräten.",
+        },
+        data: {
+          title: "Daten",
+          help: "Ihre Daten exportieren oder zusammen mit Ihrem Konto löschen.",
+        },
+      },
+    },
+    landing: {
+      signIn: "Anmelden",
+      requestAccess: "Zugang anfragen",
+      getStarted: "Jetzt starten",
+      tryDemo: "Demo ausprobieren",
+      openApp: "App öffnen",
+      continueDemo: "Demo fortsetzen",
+      beta: "Beta",
+      // Plain text: a mail's subject and body lines, never HTML.
+      accessSubject: (app) => (app ? `Zugang zu ${app}` : "Zugangsanfrage"),
+      accessName: "Name:",
+      // "Unternehmen", as `companySwitcher`.
+      accessCompany: "Unternehmen:",
+      accessUse: "Wofür Sie die App nutzen möchten:",
+    },
+    demo: {
+      starting: "Demo wird gestartet…",
+      rateLimited: (minutes) =>
+        minutes
+          ? `Zu viele Demos aus diesem Netzwerk. Versuchen Sie es in ${n(minutes)} min erneut.`
+          : "Zu viele Demos aus diesem Netzwerk. Versuchen Sie es später erneut.",
+      capacity: "Die Demo ist gerade ausgelastet. Versuchen Sie es später erneut.",
+      unavailable: "Die Demo ist gerade nicht verfügbar.",
+      failed: "Die Demo konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+      // As `legal.backHome`.
+      backToStart: "Zurück zur Startseite",
+      hoursLeft: (hours, minutes) => `Demo · noch ${n(hours)} h ${n(minutes)} min`,
+      minutesLeft: (minutes) => `Demo · noch ${n(minutes)} min`,
+      badge: "Demo",
+      readOnly: "Sie sehen Beispieldaten. Änderungen sind nicht möglich.",
+      sandbox: "Was Sie selbst anlegen, wird gelöscht, wenn die Demo endet.",
+      details: "Demo-Details",
+      writeLocked: "In der Demo nicht möglich.",
+      endedTitle: "Die Demo ist beendet",
+      endedReadOnly: "Die Beispieldaten werden regelmäßig zurückgesetzt.",
+      endedSandbox:
+        "Die Beispieldaten werden regelmäßig zurückgesetzt; was Sie in der Demo selbst angelegt haben, wird gelöscht.",
+      restart: "Neue Demo starten",
     },
   };
 }

@@ -6,6 +6,7 @@ import { useKitLocale } from "../i18n/kit-labels";
 import { Button, Card, EmptyState, Input } from "./ui";
 import { Skeleton } from "./skeleton";
 import { useAccountSettingsLabels } from "./account-settings-labels";
+import { SettingsCardTitle } from "../settings/settings-heading";
 import type { PasskeysSettingLabels } from "./account-settings-labels";
 
 /** What a passkey's `id` may be: the app's own key type, string or numeric. */
@@ -243,7 +244,7 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
     // `rest` is only `id` and `data-*`: everything else the props name is destructured.
     <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div>
-        <div className="text-sm font-medium">{labels.title}</div>
+        <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className="text-xs text-[var(--text-muted)]">
           {mode === "alongside"
             ? labels.descriptionAlongside

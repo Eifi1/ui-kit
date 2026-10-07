@@ -83,6 +83,7 @@ export type PageSlug =
   | "links"
   | "settings"
   | "auth-account"
+  | "landing-demo"
   | "user-admin"
   | "wizard"
   | "feedback-compose"
@@ -92,7 +93,16 @@ export type PageSlug =
   | "clipboard-timing"
   | "helpers"
   | "formatting"
-  | "url-state";
+  | "url-state"
+  | "server-kit"
+  | "server-auth"
+  | "server-user-admin"
+  | "server-settings"
+  | "server-demo"
+  | "server-mail"
+  | "server-feedback"
+  | "server-limits"
+  | "server-translation-review";
 
 export interface Dictionary {
   /** BCP-47 tag, used for `lang` and for every `Intl` formatter on the page. */
@@ -145,14 +155,20 @@ export interface Dictionary {
     searchExamples: string;
     searchNeeds: string;
     searchPages: string;
+    /** The line under a kit page's title naming the server-kit modules behind it
+     *  ("Server side" auth · mail) — the kit half of the cross-links (0.31). */
+    serverSide: string;
+    /** The search's result group of server-kit modules and members. */
+    searchServer: string;
   };
   /** Sidebar group names, keyed by the English label in routes.tsx. */
   groups: Record<string, string>;
   /** The phone bottom bar's shorter group names, keyed like `groups` — one entry for
    *  each group that has a `shortLabel` in routes.tsx ("App chrome" → "Chrome").
    *
-   *  The budget is PIXELS, not letters: nine groups share a 390px phone, so a cell is
-   *  43px and the kit truncates an 11px label past about seven narrow letters. Every
+   *  The budget is PIXELS, not letters: ten groups share a 390px phone since the
+   *  Server kit joined (0.31), so a cell is 39px — it was 43 with nine — and the kit
+   *  truncates an 11px label past about six or seven narrow letters. Every
    *  translation is measured against that — "Superposiciones" became "Capas", not an
    *  ellipsis — so a new entry is checked on a phone, not in the dictionary. */
   groupShort: Record<string, string>;
