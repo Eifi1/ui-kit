@@ -323,8 +323,9 @@ and **`expires_at`**. The checks run in this order (kastlan's):
     set to null;
   - KS: one `DELETE` (the sandbox cascades).
 - **When:** on every demo start (§5.1 step 3) in every app, and **also** in a scheduled
-  job where the app has a job runner (keksdose's `demo_cleanup`; KS's erasure job from
-  0.30 can run it as well). Reaping on start keeps the live cap honest when the job is
+  job where the app has a job runner (keksdose's `demo_cleanup`). kastlan and
+  Kurvenschmiede have none (Kurvenschmiede's deletion went to `operator` mode on
+  2026-10-07), so they reap on start only. Reaping on start keeps the live cap honest when the job is
   late. **A start reaps at most the 20 oldest**; the job, or the next starts, take the
   rest.
 - **One reap is one transaction per user** (a savepoint per user inside the start's
@@ -548,7 +549,8 @@ In `auth`:
     - the sandbox; app data exports allowed;
     - the refusals (sharing, inviting, teams, feedback, uploads, mail, the account
       export);
-    - the reap on start and in the erasure job;
+    - the reap on start (it has no job runner since its deletion went to `operator`
+      mode);
   - the frontend parts as above, and `FeedbackMenu` hidden for a demo.
 
 ## 9. Order

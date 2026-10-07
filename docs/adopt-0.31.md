@@ -23,6 +23,8 @@ you want to drop a workaround.
   that asked. Under a locked `WriteLockProvider` it is `aria-disabled` with the lock's
   reason, so a read-only page can't confirm a delete through a dialog. One prop per
   confirm site, in place of locking every trigger.
+- **`LandingActions` / `Hero` / `CtaBand` `demoHref={null}`** leaves "Try the demo" out
+  for an app with no demo yet; "Request access" stands alone.
 - **`RootEntry` / `RedirectIfAuthed` `session="loading"`** (`RoutingSession`): while an
   app restores an in-memory session, both render `loading` (default `LoadingState`)
   instead of showing the landing or redirecting. kastlan's own wrapper can go.
@@ -86,7 +88,11 @@ you want to drop a workaround.
    - `listTitle={null}` leaves the panel's own heading out under a card headed
      "Invitations";
    - ADOPTING.md step 7 covers testing the confirm dialogs (`fireEvent.submit`).
-6. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
+6. **server-kit 0.5 has no breaking change in its behaviour**, but its shapes gained
+   fields. `UserResponse` and `AdminUserRow` carry `demo_expires_at`, and
+   `TokenResponse` carries `expires_at`. An app that writes these shapes out field by
+   field (a parity test against its own schema) adds them (Kurvenschmiede's 0.31
+   adoption). `ProfileUpdate` behaves as before until
    you set `offered_locales`.
 
 ## New in the kit: settings
@@ -305,5 +311,6 @@ The contracts' §8 hold each app's list. In short:
     - the system account and the hidden "Demo" team, converged in the migrate job;
     - the sandbox; app data exports allowed;
     - the refusals;
-    - the reap on start and in the erasure job.
+    - the reap on start (no job runner: its deletion is in `operator` mode since
+      2026-10-07).
   - **Feedback:** READY in the enum.

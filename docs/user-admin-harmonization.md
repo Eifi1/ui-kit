@@ -273,14 +273,15 @@ card meanwhile. It saves through `PATCH /auth/me` and clears `name_incomplete`.
 - **Push and mail stop** for a deactivated account: every send path filters on
   `is_active` (keksdose's pushes didn't).
 - **The app's mode**, a setting:
-  - `after_days` (keksdose, Kurvenschmiede; `days = 30`). The erasure is a **Cloud
-    Scheduler → Cloud Run Job**, not code in the service: the services scale to zero, so
-    nothing in-process runs then. It is daily, idempotent, erases **one account per
+  - `after_days` (keksdose; `days = 30`). The erasure is a **Cloud Scheduler → Cloud
+    Run Job**, not code in the service: the services scale to zero, so nothing
+    in-process runs then. It is daily, idempotent, erases **one account per
     transaction** (a failure holds back no other), and writes `erase` to `admin_actions`
-    in the same transaction. keksdose adds it to its `jobs.py` registry; Kurvenschmiede
-    adds `kurvenschmiede-erase` beside its migrate job.
-  - `operator` (kastlan): no date. The operator's erasure is a **platform action**
-    (superuser, `type_email`, logged with no company), not a script.
+    in the same transaction. keksdose adds it to its `jobs.py` registry.
+  - `operator` (kastlan; **Kurvenschmiede since 2026-10-07**, Marcel's word in its
+    session): no date. The operator's erasure is an admin or platform action
+    (`type_email`, logged), not a script. Kurvenschmiede erases from `/admin`, with no
+    scheduler and no `kurvenschmiede-erase` job.
 - **Before it is allowed** (`409 {code}` otherwise):
   - the last admin can't request it (`last_admin`). In kastlan this is checked per
     company, and the answer names the companies. A **one-person company** is always its
@@ -425,7 +426,8 @@ app's scheduler or Cloud Scheduler); kastlan's platform superuser.
   - force password change and resend verification (now that verification exists);
   - its list becomes paged;
   - `admin_actions` replaces log lines;
-  - deletion in `after_days` mode, with the transfer question (§6.4);
+  - deletion in `operator` mode since 2026-10-07 (erased by an admin from `/admin`),
+    with the transfer question (§6.4);
   - the export and email change.
 
 ## 9. Settled after the reviews (2026-10-07)
