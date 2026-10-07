@@ -83,6 +83,7 @@ export type PageSlug =
   | "links"
   | "settings"
   | "auth-account"
+  | "user-admin"
   | "wizard"
   | "feedback-compose"
   | "feedback-inbox"

@@ -66,6 +66,17 @@ import type { VerifyEmailLabels } from "../auth/verify-email";
 import type { NotFoundLabels } from "../auth/not-found-page";
 import type { AcceptInvitationLabels } from "../auth/accept-invitation";
 import type { CompanySwitcherLabels } from "../shell/company-switcher";
+import type { EmailChangeLabels } from "../account/email-change-setting";
+import type { SessionsLabels } from "../account/sessions-setting";
+import type { DeleteAccountLabels } from "../account/delete-account-setting";
+import type { DataExportLabels } from "../account/data-export-setting";
+import type { UserRosterLabels } from "../admin/user-roster";
+import type { RoleSelectLabels } from "../admin/role-select";
+import type { ReviewerScopeLabels } from "../admin/reviewer-scope-editor";
+import type { AdminActionLabels } from "../admin/admin-action-confirm";
+import type { AdminActionLogLabels } from "../admin/admin-action-log";
+import type { TransferOwnershipLabels } from "../admin/transfer-ownership-dialog";
+import type { InvitationsLabels } from "../admin/invitations-panel";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -350,6 +361,28 @@ export interface UiKitLabels {
   acceptInvitation: AcceptInvitationLabels;
   /** 0.29.0: kastlan's switcher between a user's companies (§5.3). */
   companySwitcher: CompanySwitcherLabels;
+  /** 0.30.0: changing the account's address with re-verification (docs/user-admin-harmonization.md §6.2). */
+  emailChange: EmailChangeLabels;
+  /** 0.30.0: sign out everywhere, and kastlan's device list (§6.3). */
+  sessions: SessionsLabels;
+  /** 0.30.0: deletion in two stages (§6.4). */
+  deleteAccount: DeleteAccountLabels;
+  /** 0.30.0: the self-service JSON export (§6.5). */
+  dataExport: DataExportLabels;
+  /** 0.30.0: the admin user list's columns (§3). */
+  userRoster: UserRosterLabels;
+  /** 0.30.0: picking one or several roles, with the reasons a choice is locked (§4.1). */
+  roleSelect: RoleSelectLabels;
+  /** 0.30.0: a translation reviewer's languages and areas. */
+  reviewerScope: ReviewerScopeLabels;
+  /** 0.30.0: an admin action's confirmation and refusals (§4.2). */
+  adminAction: AdminActionLabels;
+  /** 0.30.0: the admin_actions list (§4.3). */
+  adminActionLog: AdminActionLogLabels;
+  /** 0.30.0: handing an account's work to another (Kurvenschmiede). */
+  transferOwnership: TransferOwnershipLabels;
+  /** 0.30.0: the invitations panel (§5). */
+  invitations: InvitationsLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */
