@@ -46,7 +46,11 @@ with its landing page.
      - the author may edit a READY row;
      - "Waiting for you" now holds OPEN, IN_EVALUATION and NEEDS_LIVE_TEST.
    - **keksdose's feedback-loop scripts** pick READY and IN_PROGRESS.
-4. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
+4. **A new option, nothing required:** `AppShellNavItem.mobileHidden` leaves an entry out
+   of the phone's bottom bar (the sidebar keeps it). Use it for an entry the phone
+   reaches another way, when one cell fewer keeps the others' labels whole. The bar
+   divides its width evenly.
+5. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
    you set `offered_locales`.
 
 ## New in the kit: settings
@@ -172,6 +176,11 @@ Your marketing copy stays yours.
 - **`parse_accept_language(header, offered)`**.
 - **`profile_update_model(offered)`**, or set `ProfileUpdate.offered_locales` on your
   own subclass. mypy won't take a factory's result as a base class.
+
+**`eifi1_server_kit.user_admin`** (from kastlan's 0.30 adoption): `UserListResponse.levels`
+maps an action to the `ConfirmationLevel` the server will demand, so a roster renders
+the right confirmation before its first request. `SUMMARY_ACTIVE_ADMINS` names the
+`summary` key the last-admin lock reads.
 
 **`eifi1_server_kit.demo`:**
 - **`DemoSettings`:** a pydantic mixin with the five settings; `enabled` is False by
