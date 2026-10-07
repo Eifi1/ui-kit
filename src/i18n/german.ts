@@ -994,6 +994,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       resendIn: (seconds) => `In ${n(seconds)} s erneut senden`,
       resent: "Bestätigungs-E-Mail gesendet",
       resendError: "Bestätigungs-E-Mail konnte nicht gesendet werden",
+      rateLimited,
       banner: "Bitte bestätigen Sie Ihre E-Mail-Adresse.",
       dismiss: "Später",
     },

@@ -173,3 +173,23 @@ describe("InvitationsPanel", () => {
     expect(await screen.findByText("The invitation is gone already.")).toBeInTheDocument();
   });
 });
+
+describe("InvitationsPanel — 0.31.1", () => {
+  it("names the inviter from server-kit's PersonRef as it serialises", () => {
+    render(
+      <InvitationsPanel<Role>
+        invitations={[
+          {
+            id: 10,
+            email: "lou@example.com",
+            created_at: "2026-10-07T10:00:00Z",
+            status: "open",
+            invited_by: { id: 1, email: "ada@example.com", first_name: "Ada", last_name: "Example" },
+          },
+        ]}
+        roles={ROLES}
+      />,
+    );
+    expect(rowOf("lou@example.com")).toHaveTextContent("Ada Example");
+  });
+});

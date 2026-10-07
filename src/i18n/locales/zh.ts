@@ -949,6 +949,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       resendIn: (seconds) => `${n(seconds)} 秒后可重新发送`,
       resent: "确认邮件已发送",
       resendError: "无法发送确认邮件",
+      rateLimited,
       banner: "请确认您的电子邮箱地址。",
       dismiss: "暂不",
     },

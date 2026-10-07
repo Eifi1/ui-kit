@@ -975,6 +975,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       resendIn: (seconds) => `Enviar de nuevo en ${n(seconds)} s`,
       resent: "Correo de confirmación enviado",
       resendError: "No se pudo enviar el correo de confirmación",
+      rateLimited,
       banner: "Confirme su dirección de correo electrónico.",
       dismiss: "Ahora no",
     },
