@@ -50,7 +50,13 @@ with its landing page.
    of the phone's bottom bar (the sidebar keeps it). Use it for an entry the phone
    reaches another way, when one cell fewer keeps the others' labels whole. The bar
    divides its width evenly.
-5. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
+5. **From the 0.30 adoptions:**
+   - `InvitationsPanel` also revokes an **expired** invitation, so an app that keeps its
+     rows can remove it;
+   - `listTitle={null}` leaves the panel's own heading out under a card headed
+     "Invitations";
+   - ADOPTING.md step 7 covers testing the confirm dialogs (`fireEvent.submit`).
+6. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
    you set `offered_locales`.
 
 ## New in the kit: settings
