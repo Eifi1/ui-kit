@@ -81,6 +81,9 @@ import { DEFAULT_ADMIN_ACTION_LABELS } from "../admin/admin-action-confirm";
 import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "../admin/admin-action-log";
 import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "../admin/transfer-ownership-dialog";
 import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel";
+import { DEFAULT_SETTINGS_LABELS } from "../settings/settings-labels";
+import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
+import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
@@ -208,6 +211,9 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   adminActionLog: DEFAULT_ADMIN_ACTION_LOG_LABELS,
   transferOwnership: DEFAULT_TRANSFER_OWNERSHIP_LABELS,
   invitations: DEFAULT_INVITATIONS_LABELS,
+  settings: DEFAULT_SETTINGS_LABELS,
+  landing: DEFAULT_LANDING_LABELS,
+  demo: DEFAULT_DEMO_LABELS,
   characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
   countrySelect: DEFAULT_COUNTRY_SELECT_LABELS,
   inlineEdit: DEFAULT_INLINE_EDIT_LABELS,

@@ -46,6 +46,12 @@ export interface PasswordSettingLabels {
 }
 
 export interface TwoFactorSettingLabels {
+  /**
+   * Before 0.31 the card's one line, "<status>: On". Since 0.31 the setting's name is the
+   * card's {@link title} and the state stands beside it, so this is read only where no
+   * `title` is given at the same level — an app that translated `status` keeps its word
+   * as the title.
+   */
   status: string;
   enabledText: string;
   disabledText: string;
@@ -70,6 +76,12 @@ export interface TwoFactorSettingLabels {
   secretHint?: string;
   /** The copy button beside that key. */
   copySecret?: string;
+  /**
+   * 0.31.0 (docs/settings-harmonization.md §3.7): the card's title, a heading inside a
+   * `SettingsLayout`. OPTIONAL for the reason `qrAlt` is. Unset, the same source's
+   * `status` stands in for it, then English.
+   */
+  title?: string;
 }
 
 export interface PasskeysSettingLabels {
@@ -160,6 +172,7 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
     qrAlt: "QR code",
     secretHint: "Can’t scan it? Enter this key in the app instead:",
     copySecret: "Copy key",
+    title: "Two-factor authentication",
   },
   passkeys: {
     title: "Passkeys",

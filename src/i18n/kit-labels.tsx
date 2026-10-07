@@ -77,6 +77,9 @@ import type { AdminActionLabels } from "../admin/admin-action-confirm";
 import type { AdminActionLogLabels } from "../admin/admin-action-log";
 import type { TransferOwnershipLabels } from "../admin/transfer-ownership-dialog";
 import type { InvitationsLabels } from "../admin/invitations-panel";
+import type { SettingsLabels } from "../settings/settings-labels";
+import type { LandingLabels } from "../landing/landing-labels";
+import type { DemoLabels } from "../demo/demo-labels";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -383,6 +386,12 @@ export interface UiKitLabels {
   transferOwnership: TransferOwnershipLabels;
   /** 0.30.0: the invitations panel (§5). */
   invitations: InvitationsLabels;
+  /** 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §4.3). */
+  settings: SettingsLabels;
+  /** 0.31.0: the public landing page's kit words (docs/landing-demo-harmonization.md §4). */
+  landing: LandingLabels;
+  /** 0.31.0: the demo's start, banner and end (§5). */
+  demo: DemoLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */

@@ -12,7 +12,8 @@ import { hasMessage } from "../components/choice-parts";
 import { DangerConfirm } from "../components/danger-confirm";
 import { Skeleton } from "../components/skeleton";
 import { Button, Card } from "../components/ui";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS, settle, useMounted } from "./account-parts";
+import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
+import { SettingsCardTitle } from "../settings/settings-heading";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -206,7 +207,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
   return (
     <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div>
-        <div className={CARD_TITLE_CLASS}>{labels.title}</div>
+        <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{labels.description}</div>
       </div>
       {showList &&

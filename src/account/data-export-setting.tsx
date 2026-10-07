@@ -9,7 +9,8 @@ import { hasMessage } from "../components/choice-parts";
 import { TextLink } from "../components/text-link";
 import { Button, Card } from "../components/ui";
 import { englishWait, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS, settle, useMounted } from "./account-parts";
+import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
+import { SettingsCardTitle } from "../settings/settings-heading";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -186,7 +187,7 @@ export function DataExportSetting({
   return (
     <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div className="space-y-1">
-        <div className={CARD_TITLE_CLASS}>{labels.title}</div>
+        <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{labels.description}</div>
         {hasMessage(description) && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
       </div>

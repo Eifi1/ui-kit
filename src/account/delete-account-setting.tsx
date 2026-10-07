@@ -17,7 +17,8 @@ import type { DangerConsequence } from "../components/danger-confirm";
 import { Card } from "../components/ui";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useFocusWhen } from "../auth/status-parts";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
+import { CARD_DESCRIPTION_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
+import { SettingsCardTitle } from "../settings/settings-heading";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -306,7 +307,7 @@ export function DeleteAccountSetting({
       className={cn("p-4 space-y-3", className)}
     >
       <div>
-        <div className={CARD_TITLE_CLASS}>{labels.title}</div>
+        <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{modeSentence}</div>
       </div>
       {done ? (

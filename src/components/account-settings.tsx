@@ -13,8 +13,10 @@ import {
   PasswordStrengthMeter,
 } from "./password-strength";
 import type { PasswordStrengthMeterProps } from "./password-strength";
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { useKitLabelOverrides, useKitLabels } from "../i18n/kit-labels";
+import { Chip } from "./chip";
 import { useAccountSettingsLabels } from "./account-settings-labels";
+import { SettingsCardTitle } from "../settings/settings-heading";
 import type {
   PasswordSettingLabels,
   ProfileSettingLabels,
@@ -59,6 +61,8 @@ interface ProfileSettingCommonProps {
   saving?: boolean;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { profile } }}>` > English. */
   labels?: Partial<ProfileSettingLabels>;
+  /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
+  id?: string;
 }
 
 /**
@@ -114,11 +118,11 @@ export type ProfileSettingProps = ProfileSettingDisplayNameProps | ProfileSettin
  * blank, and is a `commit` (a {@link WriteLockProvider} locks it, keksdose's demo).
  */
 export function ProfileSetting(props: ProfileSettingProps) {
-  const { name, email, role, memberSince, labels: labelsProp } = props;
+  const { name, email, role, memberSince, labels: labelsProp, id } = props;
   const labels = useAccountSettingsLabels("profile", labelsProp);
   const names = props.firstName !== undefined || props.lastName !== undefined;
   return (
-    <Card className="p-4 space-y-3">
+    <Card id={id} className="p-4 space-y-3">
       <div className="flex items-center gap-3">
         <UserAvatar
           name={name}
@@ -127,7 +131,9 @@ export function ProfileSetting(props: ProfileSettingProps) {
           size="lg"
         />
         <div className="min-w-0">
-          <div className="text-sm font-medium">{labels.title}</div>
+          {/* A heading inside a SettingsLayout (0.31, docs/settings-harmonization.md
+              §3.7), the plain div it always was outside one. */}
+          <SettingsCardTitle>{labels.title}</SettingsCardTitle>
           <div className="truncate font-mono text-xs text-[var(--text-muted)]">
             {/* `email` was a required key that nothing rendered; it names the address
                 for a screen reader, which otherwise hears a bare string under a title. */}
@@ -293,6 +299,7 @@ export function PasswordSetting({
   strength,
   maxBytes,
   labels: labelsProp,
+  id,
 }: {
   /** Called with the validated (current, new) pair; return a promise to auto-clear on success. */
   onSubmit: (currentPassword: string, newPassword: string) => void | Promise<unknown>;
@@ -323,6 +330,8 @@ export function PasswordSetting({
   maxBytes?: number;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { password } }}>` > English. */
   labels?: Partial<PasswordSettingLabels>;
+  /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
+  id?: string;
 }) {
   const labels = useAccountSettingsLabels("password", labelsProp);
   const strengthOptions = typeof strength === "object" ? strength : undefined;
@@ -365,8 +374,8 @@ export function PasswordSetting({
   );
 
   return (
-    <Card className="p-4 space-y-3">
-      <div className="text-sm font-medium">{labels.title}</div>
+    <Card id={id} className="p-4 space-y-3">
+      <SettingsCardTitle>{labels.title}</SettingsCardTitle>
       <Input type="password" autoComplete="current-password" label={labels.current} value={current} onChange={(e) => setCurrent(e.target.value)} />
       {strength ? (
         // One box for the field and its meter, so the card's `space-y-3` spaces the pair
@@ -433,6 +442,7 @@ export function TwoFactorSetting({
   busy,
   renderQr,
   labels: labelsProp,
+  id,
 }: {
   enabled: boolean;
   /** What the app's setup call returned; null before setup starts. */
@@ -446,8 +456,16 @@ export function TwoFactorSetting({
   renderQr?: (otpauthUri: string) => ReactNode;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { twoFactor } }}>` > English. */
   labels?: Partial<TwoFactorSettingLabels>;
+  /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
+  id?: string;
 }) {
   const labels = useAccountSettingsLabels("twoFactor", labelsProp);
+  // The title (0.31, docs/settings-harmonization.md §3.7) is new, and an app that
+  // translated this card before it named the setting in `status` — "2FA",
+  // "Zwei-Faktor-Authentifizierung". Each source's `title` first, then its `status`, so
+  // that app keeps its own word instead of meeting the English title.
+  const overrides = useKitLabelOverrides("accountSettings")?.twoFactor;
+  const title = labelsProp?.title ?? overrides?.title ?? labelsProp?.status ?? overrides?.status ?? labels.title;
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   // Both code fields are a OneTimeCodeInput (0.22.0) — the field this card wrote by hand
@@ -461,17 +479,20 @@ export function TwoFactorSetting({
   //    pasted from an authenticator that groups its digits used to reach `onEnable`
   //    with the space in it.
   //  - one `code` state for both, as before.
-  // Only for the "Status: Enabled" composition — the punctuation between a field's
-  // name and its value is the language's (see `CommonLabels.fieldValue`).
-  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const secret = setup
     ? (setup.secret ?? ("otpauthUri" in setup ? otpauthSecret(setup.otpauthUri) : null))
     : null;
 
   return (
-    <Card className="p-4 space-y-3">
-      <div className="text-sm">
-        {common.fieldValue(labels.status, enabled ? labels.enabledText : labels.disabledText)}
+    <Card id={id} className="p-4 space-y-3">
+      {/* The card had only "Two-factor authentication: Off". A settings page outlines its
+          cards by their titles (§3.7), so the setting's name is the title now, and the
+          state stands beside it as a chip instead of repeating the name. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SettingsCardTitle>{title}</SettingsCardTitle>
+        <Chip size="sm" tone={enabled ? "success" : "neutral"}>
+          {enabled ? labels.enabledText : labels.disabledText}
+        </Chip>
       </div>
 
       {!enabled && !setup && (

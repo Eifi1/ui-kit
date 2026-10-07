@@ -173,7 +173,15 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // ReviewerScopeEditor, AdminActionConfirm, AdminActionLog, ADMIN_ACTION_KINDS,
   // TransferOwnershipDialog, InvitationsPanel; their eleven DEFAULT_*_LABELS;
   // isRateLimited and retryAfterSeconds.
-  ["@eifi1/ui-kit", barrel, 724],
+  // 0.31.0 (+54): the settings shell (docs/settings-harmonization.md §7.1) —
+  // SettingsLayout, SettingsSection, useSettingsRoute, useSettingsFocus,
+  // useSettingsLayout, SettingsHeadingLevel, the catalogue helpers, useAccountLanguage
+  // and their constants; the landing and demo (docs/landing-demo-harmonization.md
+  // §7.1) — PublicHeader, Hero, FeatureRows, FeatureRow, TrustStrip, CtaBand,
+  // PublicFooter, LandingActions, accessAction, usePageSeo, seoCopyProblems,
+  // metaContent, RootEntry, RedirectIfAuthed, the last-visited page, DemoStart,
+  // DemoBanner, DemoEnded, the countdown, isDemoSession; three DEFAULT_*_LABELS.
+  ["@eifi1/ui-kit", barrel, 778],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -187,7 +195,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
   ["@eifi1/ui-kit/feedback", feedback, 83],
   ["@eifi1/ui-kit/search", search, 9],
-  ["@eifi1/ui-kit/shell", shell, 12],
+  // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
+  // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
+  // last-visited page — the router-aware parts and their companions.
+  ["@eifi1/ui-kit/shell", shell, 38],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
