@@ -1366,7 +1366,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         },
         security: {
           title: "Biztonság",
-          help: "Hogyan jelentkezik be: jelszó, ellenőrző kódok, hozzáférési kulcsok és munkamenetek.",
+          help: "Hogyan jelentkezik be, és hol van bejelentkezve.",
         },
         notifications: {
           title: "Értesítések",

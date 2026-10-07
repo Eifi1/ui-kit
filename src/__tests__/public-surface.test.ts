@@ -181,7 +181,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // PublicFooter, LandingActions, accessAction, usePageSeo, seoCopyProblems,
   // metaContent, RootEntry, RedirectIfAuthed, the last-visited page, DemoStart,
   // DemoBanner, DemoEnded, the countdown, isDemoSession; three DEFAULT_*_LABELS.
-  ["@eifi1/ui-kit", barrel, 778],
+  // 0.31.1 (+1): useSettingsLabels.
+  ["@eifi1/ui-kit", barrel, 779],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

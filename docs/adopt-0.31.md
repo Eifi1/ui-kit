@@ -25,6 +25,10 @@ you want to drop a workaround.
   confirm site, in place of locking every trigger.
 - **`LandingActions` / `Hero` / `CtaBand` `demoHref={null}`** leaves "Try the demo" out
   for an app with no demo yet; "Request access" stands alone.
+- **`useSettingsLabels()`** reads the `settings` namespace (the core group names and help
+  lines) for an app's catalogue and page title, in one call.
+- **The core `security` group's help line** names no factor any more ("How you sign in,
+  and where you are signed in"), so an app without 2FA needn't override it.
 - **`RootEntry` / `RedirectIfAuthed` `session="loading"`** (`RoutingSession`): while an
   app restores an in-memory session, both render `loading` (default `LoadingState`)
   instead of showing the landing or redirecting. kastlan's own wrapper can go.

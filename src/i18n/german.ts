@@ -1399,7 +1399,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         },
         security: {
           title: "Sicherheit",
-          help: "Wie Sie sich anmelden: Passwort, Zwei-Faktor-Codes, Passkeys und Sitzungen.",
+          help: "Wie Sie sich anmelden und wo Sie angemeldet sind.",
         },
         notifications: {
           title: "Benachrichtigungen",

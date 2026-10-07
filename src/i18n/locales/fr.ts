@@ -1391,7 +1391,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         },
         security: {
           title: "Sécurité",
-          help: "Comment vous vous connectez\u00a0: mot de passe, codes 2FA, clés d’accès et sessions.",
+          help: "Votre connexion, et les appareils où elle est ouverte.",
         },
         notifications: {
           title: "Notifications",

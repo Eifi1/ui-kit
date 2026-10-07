@@ -1,3 +1,5 @@
+import { useKitLabels } from "../i18n/kit-labels";
+
 /**
  * The `settings` namespace (docs/settings-harmonization.md §4.3): the settings page's
  * own words, and the names and help lines of the five core groups every app shares —
@@ -61,7 +63,7 @@ export const DEFAULT_SETTINGS_LABELS: SettingsLabels = {
     },
     security: {
       title: "Security",
-      help: "How you sign in: password, two-factor codes, passkeys and sessions.",
+      help: "How you sign in, and where you are signed in.",
     },
     notifications: {
       title: "Notifications",
@@ -73,3 +75,13 @@ export const DEFAULT_SETTINGS_LABELS: SettingsLabels = {
     },
   },
 };
+
+/**
+ * 0.31.1: the `settings` namespace, resolved — English, then the provider, then `labels`.
+ * What an app reads for its catalogue's core group titles and help lines, and for the
+ * page title "<group> · Settings · <app>" (settings contract §3.1), without restating
+ * the namespace and its defaults (Kurvenschmiede's 0.31 adoption).
+ */
+export function useSettingsLabels(labels?: Partial<SettingsLabels>): SettingsLabels {
+  return useKitLabels("settings", DEFAULT_SETTINGS_LABELS, labels);
+}

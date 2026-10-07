@@ -1375,7 +1375,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         },
         security: {
           title: "Sicurezza",
-          help: "Come accede: password, codici 2FA, passkey e sessioni.",
+          help: "Come accede, e su quali dispositivi la sessione è aperta.",
         },
         notifications: {
           title: "Notifiche",

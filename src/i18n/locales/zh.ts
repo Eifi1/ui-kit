@@ -1309,7 +1309,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         },
         security: {
           title: "安全",
-          help: "您的登录方式：密码、双重验证码、通行密钥和会话。",
+          help: "您的登录方式，以及已在哪些设备上登录。",
         },
         notifications: {
           title: "通知",

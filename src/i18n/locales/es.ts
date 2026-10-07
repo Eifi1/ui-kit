@@ -1364,7 +1364,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         },
         security: {
           title: "Seguridad",
-          help: "Cómo inicia sesión: contraseña, verificación en dos pasos, llaves de acceso y sesiones.",
+          help: "Cómo inicia sesión, y en qué dispositivos tiene la sesión abierta.",
         },
         notifications: {
           title: "Notificaciones",
