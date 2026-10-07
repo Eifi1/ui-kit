@@ -201,7 +201,11 @@ From auth §4.4: hashed tokens, 14 days, email + scope + role.
   `revoked_at`; either is fine.
 - **Who invites:** admins, and team managers into their own team (auth §2.11). In
   kastlan, the company admin invites into the company, and the operator sends sign-up
-  invitations.
+  invitations. **In keksdose, any budget owner** may invite a new person into a budget
+  (Marcel, 2026-10-07: the exception to auth §2.11). Those budget invitations live with
+  the budget's sharing, not in the admin panel, which shows registration invitations
+  only. The kit's `InvitationsPanel` and server-kit's `invitation_accepts` /
+  `registration_decision` assume nothing about who minted an invitation.
 - The kit's **`InvitationsPanel`**: a form (email with no `+tag` suggestion, since it is
   someone else's address; role; scope; language; note), then rows with status chips, and
   resend / copy link / revoke.
