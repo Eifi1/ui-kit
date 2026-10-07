@@ -137,7 +137,10 @@ every app serves real files, never the SPA shell as `text/html`.
   `/api/`. It never disallows the noindex legal pages: a `Disallow` keeps a crawler from
   ever reading their `X-Robots-Tag`. It never disallows signed-in routes either; their
   noindex and sign-in redirect do that job.
-- **`sitemap.xml`** lists only the public, indexable pages, with no `lastmod`.
+- **`sitemap.xml`** lists only the public, indexable pages, with no `lastmod`. An app
+  with **no** indexable page (kastlan: `/` leads to sign-in, and every signed-out page is
+  noindex) serves none: `/sitemap.xml` is a plain 404, never the SPA shell. A sitemap
+  listing noindex pages would contradict their header.
 
 Each app writes its own, since they name its domain, its public pages and its token
 routes. The kit ships nothing for it.
