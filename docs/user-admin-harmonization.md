@@ -491,3 +491,16 @@ kastlan adopted 0.30 / 0.4 first (feat/user-admin-0.30). Its notes, settled:
    own step in `twoFactorContent` for that.
 5. **`InvitationRow.invited_by`** is the inviter as a person (`PersonRef`). An app sends
    it, not only the id, so the panel can name them.
+
+Kurvenschmiede adopted next (feat/user-admin, 2026-10-07). Its notes, settled in 0.31:
+
+6. **An expired invitation can be revoked**, not only resent. In an app that keeps the
+   rows it would otherwise stay listed for good. `InvitationsPanel` offers revoke on
+   open and expired rows.
+7. **`InvitationsPanel listTitle={null}`** leaves the list's heading out under a card
+   already headed "Invitations".
+8. **The export leaves storage keys out.** A feedback file's `key` trips
+   `assert_no_secrets`, rightly: it is an address inside the app, not the user's data.
+9. **Tests submit the confirm dialogs' form** (`fireEvent.submit`), because their button
+   submits through its `form` attribute, which jsdom doesn't follow (ADOPTING.md
+   step 7).

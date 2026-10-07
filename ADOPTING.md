@@ -70,6 +70,13 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `ThemeToggle`/`PaletteMenu`/`LanguageMenu` with your own nav items and app-owned
    menus (account, etc.). See the example at the end of the README.
 
+7. **Tests.** The kit's confirm dialogs (`DangerConfirm`, `AdminActionConfirm`,
+   `DeleteAccountSetting`'s confirmation) submit through the confirm button's `form`
+   attribute, because the button sits in the dialog's footer outside the `<form>`.
+   jsdom doesn't follow that attribute on a click, so in a test submit the form itself:
+   `fireEvent.submit(screen.getByRole("dialog").querySelector("form")!)`. A real browser
+   needs nothing (Kurvenschmiede's 0.30 adoption).
+
 ## Reference
 
 | | |
