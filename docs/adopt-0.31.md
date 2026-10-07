@@ -14,6 +14,24 @@ This note is the kits' side.
 Each app adopts 0.31 after its 0.30 adoption. kastlan ships its demo backend together
 with its landing page.
 
+## 0.31.1
+
+A patch from keksdose's 0.30 bump. Nothing to change unless you want to drop a
+workaround.
+
+- **`AdminPerson` reads server-kit's `PersonRef` as it serialises** (`first_name` /
+  `last_name`, beside the kit's `first` / `last`). Hand the server's `invited_by` or an
+  action's actor over as it came, and drop the mapping.
+- **`ResetPasswordForm`** shows the dead-link state for a coded `token_expired` on save
+  too, not only `token_invalid`.
+- **The verification resend** (`EmailVerificationBanner`, `VerifyEmailStatus`) says "Too
+  many attempts. Try again in N s / N min." for a 429 when your `describeError` has no
+  words of its own (`verifyEmail.rateLimited`).
+- **Auth contract §10.15:** expose `Retry-After` in your CORS headers, or the forms can't
+  read the wait from a cross-origin API.
+- **Invitations keep expiring** (§10.14): the 14 days are the unused link's, and the
+  account is permanent. No migration.
+
 ## Everyone, on the bump
 
 1. Bump the kit to `^0.31.0` by hand (a caret below 1.0 locks the minor version). Take
