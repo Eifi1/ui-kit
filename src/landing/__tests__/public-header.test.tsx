@@ -169,3 +169,25 @@ describe("FeatureRows, TrustStrip and PublicFooter", () => {
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
   });
 });
+
+describe("LandingActions — an app without a demo yet (0.31.1)", () => {
+  it("leaves 'Try the demo' out with demoHref={null}, in the hero and the CTA band alike", () => {
+    render(
+      <MemoryRouter>
+        <Hero title="Plan the garden" subtitle="Beds, seeds, harvest." session="none" access={ACCESS} demoHref={null} />
+        <CtaBand title="Start planning" session="none" access={ACCESS} demoHref={null} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("link", { name: "Try the demo" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Request access" })).toHaveLength(2);
+  });
+
+  it("keeps it by default", () => {
+    render(
+      <MemoryRouter>
+        <LandingActions session="none" access={ACCESS} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("link", { name: "Try the demo" })).toHaveAttribute("href", "/demo");
+  });
+});

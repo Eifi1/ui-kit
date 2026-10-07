@@ -23,8 +23,10 @@ export interface LandingActionsProps extends Omit<ComponentPropsWithoutRef<"div"
   session: LandingSession;
   access: AccessChoice;
   /** "Try the demo" without a session, "Continue the demo" with a demo one. Default
-   *  `/demo`, which starts a demo — or, for a live one, continues it (§3.1). */
-  demoHref?: string;
+   *  `/demo`, which starts a demo — or, for a live one, continues it (§3.1). `null`
+   *  (0.31.1): the app has no demo yet, and the action is left out — "Request access"
+   *  stands alone (Kurvenschmiede's 0.31 adoption). */
+  demoHref?: string | null;
   /** "Open app" for a real session: the resume target. Default `/`, which resumes
    *  through `RootEntry`. */
   openAppHref?: string;
@@ -82,9 +84,11 @@ export function LandingActions({
           <Button href={accessLink.href} variant="brand" size={buttonSize} className={extra}>
             {accessLink.label}
           </Button>
-          <Button href={demoHref} variant="secondary" size={buttonSize} className={extra}>
-            {session === "demo" ? labels.continueDemo : labels.tryDemo}
-          </Button>
+          {demoHref !== null && (
+            <Button href={demoHref} variant="secondary" size={buttonSize} className={extra}>
+              {session === "demo" ? labels.continueDemo : labels.tryDemo}
+            </Button>
+          )}
         </>
       )}
     </div>
