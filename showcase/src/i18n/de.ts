@@ -119,12 +119,6 @@ export const de: Dictionary = {
       blurb:
         "Jeder Link des Kits über den Router der App, einmal am Provider gesetzt: der Textlink und seine Töne, ein Button oder eine Aktionskarte als Link, und Links, die die App verlassen.",
     },
-    "settings-page": {
-      title: "Einstellungsseite",
-      short: "Einstellungsseite",
-      blurb:
-        "Die Einstellungsseite und die Admin-Seite auf einem gemeinsamen Grundgerüst: die Seitenleiste auf dem Desktop, die Drilldown-Liste auf dem Smartphone, eine Gruppe pro Pfad, die Suche und die Karte, die ein Link hervorhebt.",
-    },
     "landing-demo": {
       title: "Startseite & Demo",
       short: "Startseite",
@@ -454,10 +448,10 @@ export const de: Dictionary = {
       blurb: "Der Anwendungsrahmen, den Sie gerade vor sich haben, auseinandergenommen.",
     },
     settings: {
-      title: "Einstellungsfelder",
+      title: "Einstellungen",
       short: "Einstellungen",
       blurb:
-        "Die Zeilen der Kontoeinstellungen: Theme, Sprache, Profil, Passwort und Zwei-Faktor-Authentifizierung.",
+        "Die Einstellungsseite und die Admin-Seite auf einem gemeinsamen Grundgerüst: die Seitenleiste auf dem Desktop, die Drilldown-Liste auf dem Smartphone, eine Gruppe pro Pfad, die Suche und die Karte, die ein Link hervorhebt. Die Zeilen der Kontoeinstellungen: Theme, Sprache, Profil, Passwort und Zwei-Faktor-Authentifizierung.",
     },
     wizard: {
       title: "Assistent",
@@ -578,14 +572,6 @@ export const de: Dictionary = {
       "Link in neuem Tab öffnen",
       "Button, der navigiert",
       "Link der aktuellen Seite hervorheben",
-    ],
-    "settings-page": [
-      "Einstellungsseite mit Seitenleiste bauen",
-      "Einstellungen auf dem Smartphone als Liste zeigen",
-      "direkt auf eine Einstellung verlinken",
-      "Einstellungen durchsuchen",
-      "Admin-Seite im selben Layout",
-      "Sprache dem Konto folgen lassen",
     ],
     "landing-demo": [
       "öffentliche Startseite bauen",
@@ -1091,6 +1077,12 @@ export const de: Dictionary = {
       "Theme wählen",
       "Sprache wählen",
       "Benutzereinstellungen",
+      "Einstellungsseite mit Seitenleiste bauen",
+      "Einstellungen auf dem Smartphone als Liste zeigen",
+      "direkt auf eine Einstellung verlinken",
+      "Einstellungen durchsuchen",
+      "Admin-Seite im selben Layout",
+      "Sprache dem Konto folgen lassen",
     ],
     wizard: [
       "mehrstufiges Formular",

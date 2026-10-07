@@ -21,7 +21,7 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   user_admin: ["user-admin", "auth-account"],
   // One PATCH rule and the account's language: the settings rows, and the kit's own
   // language resolution beside `canonical_locale`.
-  settings: ["settings-page", "settings", "localisation"],
+  settings: ["settings", "localisation"],
   // The demo's start, banner and end, and the routing that lets a demo through.
   demo: ["landing-demo"],
   // The reset and email-change mails the Auth page's forms ask for.

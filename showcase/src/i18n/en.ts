@@ -122,12 +122,6 @@ export const en: Dictionary = {
       blurb:
         "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
     },
-    "settings-page": {
-      title: "Settings page",
-      short: "Settings page",
-      blurb:
-        "The settings page and the admin page on one shell: the sidebar on a desktop, the drill-down list on a phone, a group per path, search, and the card a link rings.",
-    },
     "landing-demo": {
       title: "Landing & demo",
       short: "Landing",
@@ -453,9 +447,10 @@ export const en: Dictionary = {
       blurb: "The app frame you are looking at, taken apart.",
     },
     settings: {
-      title: "Settings fields",
+      title: "Settings",
       short: "Settings",
-      blurb: "The account-settings rows: theme, language, profile, password and two-factor.",
+      blurb:
+        "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
     },
     wizard: {
       title: "Wizard",
@@ -575,14 +570,6 @@ export const en: Dictionary = {
       "link that opens a new tab",
       "a button that navigates",
       "highlight the current page link",
-    ],
-    "settings-page": [
-      "build a settings page with a sidebar",
-      "show settings as a list on a phone",
-      "link straight to one setting",
-      "search the settings",
-      "put the admin page on the same layout",
-      "let the language follow the account",
     ],
     "landing-demo": [
       "build a public start page",
@@ -1088,6 +1075,12 @@ export const en: Dictionary = {
       "choose the theme",
       "choose the language",
       "user preferences",
+      "build a settings page with a sidebar",
+      "show settings as a list on a phone",
+      "link straight to one setting",
+      "search the settings",
+      "put the admin page on the same layout",
+      "let the language follow the account",
     ],
     wizard: [
       "multi-step form",

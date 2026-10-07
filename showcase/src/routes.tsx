@@ -67,7 +67,6 @@ import {
   Wand2,
   Wrench,
   LayoutTemplate,
-  SlidersHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AppShellNavItem } from "@eifi1/ui-kit";
@@ -1219,34 +1218,24 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
+        // 0.31: the page and its rows on one page — App chrome holds at most ten (the
+        // phone's row of page pills wraps), and the settings shell is where the rows go.
         slug: "settings",
-        title: "Settings fields",
+        title: "Settings",
         short: "Settings",
-        blurb: "The account-settings rows: theme, language, profile, password and two-factor.",
-        icon: SettingsIcon,
-        components: ["ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting", "LanguageSelect"],
-        Body: () => (
-          <>
-            <Settings />
-            <PasswordStrength022Demo />
-            <LanguageSelect022Demo />
-          </>
-        ),
-      },
-      {
-        slug: "settings-page",
-        title: "Settings page",
-        short: "Settings page",
         blurb:
-          "The settings page and the admin page on one shell: the sidebar on a desktop, the drill-down list on a phone, a group per path, search, and the card a link rings.",
-        icon: SlidersHorizontal,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting"],
+          "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
+        icon: SettingsIcon,
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting", "LanguageSelect"],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
             <SettingsPhone031Demo />
             <SettingsAdmin031Demo />
             <SettingsSearchEntries031Demo />
+            <Settings />
+            <PasswordStrength022Demo />
+            <LanguageSelect022Demo />
           </>
         ),
       },

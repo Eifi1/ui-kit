@@ -45,7 +45,7 @@ describe("a module page", () => {
       expect(screen.getAllByText(installLine(api.kit_version)).length).toBeGreaterThan(0);
       // Kit counterparts: the settings rows' page (inside the page — the sidebar names it too).
       const main = document.querySelector("main")!;
-      expect(within(main).getByRole("link", { name: "Settings fields" })).toHaveAttribute("href", "/settings");
+      expect(within(main).getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
 
       // One <h3> per kind, one <h4> per member, each with its anchor.
       for (const [kind, members] of membersByKind(mod.members)) {

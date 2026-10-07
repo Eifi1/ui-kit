@@ -117,12 +117,6 @@ export const hu: Dictionary = {
       blurb:
         "A kit minden hivatkozása az alkalmazás saját routerén át, egyszer beállítva a providerben: a szöveges hivatkozás és tónusai, egy hivatkozásként működő gomb vagy műveleti kártya, és az alkalmazásból kivezető hivatkozások.",
     },
-    "settings-page": {
-      title: "Beállítások oldal",
-      short: "Beállítások oldal",
-      blurb:
-        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel.",
-    },
     "landing-demo": {
       title: "Kezdőlap és demó",
       short: "Kezdőlap",
@@ -452,10 +446,10 @@ export const hu: Dictionary = {
       blurb: "Az alkalmazáskeret, amelyet éppen lát, darabjaira szedve.",
     },
     settings: {
-      title: "Beállításmezők",
+      title: "Beállítások",
       short: "Beállítások",
       blurb:
-        "A fiókbeállítások sorai: téma, nyelv, profil, jelszó és kétfaktoros hitelesítés.",
+        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel. A fiókbeállítások sorai: téma, nyelv, profil, jelszó és kétfaktoros hitelesítés.",
     },
     wizard: {
       title: "Varázsló",
@@ -576,14 +570,6 @@ export const hu: Dictionary = {
       "új lapon nyíló hivatkozás",
       "navigáló gomb",
       "az aktuális oldal hivatkozásának kiemelése",
-    ],
-    "settings-page": [
-      "beállítások oldal oldalsávval",
-      "beállítások listaként telefonon",
-      "közvetlen hivatkozás egy beállításra",
-      "keresés a beállításokban",
-      "adminisztrációs oldal ugyanabban az elrendezésben",
-      "a fiók nyelvének követése",
     ],
     "landing-demo": [
       "nyilvános kezdőlap készítése",
@@ -1089,6 +1075,12 @@ export const hu: Dictionary = {
       "téma kiválasztása",
       "nyelv kiválasztása",
       "felhasználói beállítások",
+      "beállítások oldal oldalsávval",
+      "beállítások listaként telefonon",
+      "közvetlen hivatkozás egy beállításra",
+      "keresés a beállításokban",
+      "adminisztrációs oldal ugyanabban az elrendezésben",
+      "a fiók nyelvének követése",
     ],
     wizard: [
       "többlépéses űrlap",

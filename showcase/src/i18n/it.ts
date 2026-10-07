@@ -108,12 +108,6 @@ export const it: Dictionary = {
       blurb:
         "Ogni link del kit instradato dal router dell'app, impostato una volta sul provider: il link testuale e i suoi toni, un pulsante o una scheda azione che è un link, e i link che escono dall'app.",
     },
-    "settings-page": {
-      title: "Pagina delle impostazioni",
-      short: "Pagina impostazioni",
-      blurb:
-        "La pagina delle impostazioni e quella di amministrazione sulla stessa shell: la barra laterale su desktop, l’elenco con drill-down sul telefono, un gruppo per percorso, la ricerca e la scheda che un link mette in evidenza.",
-    },
     "landing-demo": {
       title: "Pagina iniziale e demo",
       short: "Pagina iniziale",
@@ -443,10 +437,10 @@ export const it: Dictionary = {
       blurb: "La cornice dell’app che stai guardando, smontata pezzo per pezzo.",
     },
     settings: {
-      title: "Campi delle impostazioni",
+      title: "Impostazioni",
       short: "Impostazioni",
       blurb:
-        "Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
+        "La pagina delle impostazioni e quella di amministrazione sulla stessa shell: la barra laterale su desktop, l’elenco con drill-down sul telefono, un gruppo per percorso, la ricerca e la scheda che un link mette in evidenza. Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
     },
     wizard: {
       title: "Procedura guidata",
@@ -567,14 +561,6 @@ export const it: Dictionary = {
       "link che apre una nuova scheda",
       "un pulsante che naviga",
       "evidenziare il link della pagina corrente",
-    ],
-    "settings-page": [
-      "creare una pagina delle impostazioni con barra laterale",
-      "mostrare le impostazioni come elenco sul telefono",
-      "link diretto a un’impostazione",
-      "cercare nelle impostazioni",
-      "pagina di amministrazione con lo stesso layout",
-      "far seguire la lingua all’account",
     ],
     "landing-demo": [
       "creare una pagina iniziale pubblica",
@@ -1080,6 +1066,12 @@ export const it: Dictionary = {
       "scegliere il tema",
       "scegliere la lingua",
       "preferenze dell’utente",
+      "creare una pagina delle impostazioni con barra laterale",
+      "mostrare le impostazioni come elenco sul telefono",
+      "link diretto a un’impostazione",
+      "cercare nelle impostazioni",
+      "pagina di amministrazione con lo stesso layout",
+      "far seguire la lingua all’account",
     ],
     wizard: [
       "modulo in più passaggi",

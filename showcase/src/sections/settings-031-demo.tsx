@@ -48,10 +48,10 @@ import { Example, Note, OutTable } from "../lib/section";
  * answers, with synthetic people only. Each frame has its own router, so its links move
  * the frame and not this page.
  *
- * Belongs on a new "Settings" page (`settings-page`) in the App chrome group, after
- * "Settings fields". Components: SettingsLayout, SettingsSection, useSettingsRoute,
- * useSettingsFocus, useSettingsLayout, SettingsHeadingLevel, settingsSearchEntries,
- * useAccountLanguage, ThemeSetting.
+ * On the App chrome group's "Settings" page (`settings`), above the setting rows it lays
+ * out. Components: SettingsLayout, SettingsSection, useSettingsRoute, useSettingsFocus,
+ * useSettingsLayout, SettingsHeadingLevel, settingsSearchEntries, useAccountLanguage,
+ * ThemeSetting.
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;

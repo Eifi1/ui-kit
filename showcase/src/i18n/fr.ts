@@ -114,12 +114,6 @@ export const fr: Dictionary = {
       blurb:
         "Chaque lien du kit routé par le routeur de l'application, défini une fois sur le provider : le lien texte et ses tons, un bouton ou une carte d'action qui est un lien, et les liens qui quittent l'application.",
     },
-    "settings-page": {
-      title: "Page des paramètres",
-      short: "Page des paramètres",
-      blurb:
-        "La page des paramètres et la page d’administration sur une même structure\u00a0: la barre latérale sur ordinateur, la liste à explorer en profondeur sur téléphone, un groupe par chemin, la recherche, et la carte qu’un lien met en évidence.",
-    },
     "landing-demo": {
       title: "Accueil et démo",
       short: "Accueil",
@@ -449,10 +443,10 @@ export const fr: Dictionary = {
       blurb: "Le cadre d’application que vous avez sous les yeux, démonté pièce par pièce.",
     },
     settings: {
-      title: "Champs de paramètres",
+      title: "Paramètres",
       short: "Paramètres",
       blurb:
-        "Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe et authentification à deux facteurs.",
+        "La page des paramètres et la page d’administration sur une même structure\u00a0: la barre latérale sur ordinateur, la liste à explorer en profondeur sur téléphone, un groupe par chemin, la recherche, et la carte qu’un lien met en évidence. Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe et authentification à deux facteurs.",
     },
     wizard: {
       title: "Assistant",
@@ -573,14 +567,6 @@ export const fr: Dictionary = {
       "lien qui ouvre un nouvel onglet",
       "un bouton qui navigue",
       "mettre en évidence le lien de la page actuelle",
-    ],
-    "settings-page": [
-      "créer une page de paramètres avec barre latérale",
-      "afficher les paramètres en liste sur téléphone",
-      "lien direct vers un paramètre",
-      "rechercher dans les paramètres",
-      "même mise en page pour la page d’administration",
-      "faire suivre la langue du compte",
     ],
     "landing-demo": [
       "créer une page d’accueil publique",
@@ -1086,6 +1072,12 @@ export const fr: Dictionary = {
       "choisir le thème",
       "choisir la langue",
       "préférences de l’utilisateur",
+      "créer une page de paramètres avec barre latérale",
+      "afficher les paramètres en liste sur téléphone",
+      "lien direct vers un paramètre",
+      "rechercher dans les paramètres",
+      "même mise en page pour la page d’administration",
+      "faire suivre la langue du compte",
     ],
     wizard: [
       "formulaire en plusieurs étapes",

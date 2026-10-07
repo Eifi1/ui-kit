@@ -111,12 +111,6 @@ export const es: Dictionary = {
       blurb:
         "Cada enlace del kit dirigido por el router de la aplicación, configurado una vez en el proveedor: el enlace de texto y sus tonos, un botón o una tarjeta de acción que es un enlace, y enlaces que salen de la aplicación.",
     },
-    "settings-page": {
-      title: "Página de ajustes",
-      short: "Página de ajustes",
-      blurb:
-        "La página de ajustes y la de administración sobre la misma estructura: la barra lateral en el escritorio, la lista con desglose en el móvil, un grupo por ruta, la búsqueda y la tarjeta que un enlace resalta.",
-    },
     "landing-demo": {
       title: "Portada y demo",
       short: "Portada",
@@ -446,10 +440,10 @@ export const es: Dictionary = {
       blurb: "El marco de la aplicación que estás viendo, desmontado pieza a pieza.",
     },
     settings: {
-      title: "Campos de ajustes",
+      title: "Ajustes",
       short: "Ajustes",
       blurb:
-        "Las filas de los ajustes de la cuenta: tema, idioma, perfil, contraseña y verificación en dos pasos.",
+        "La página de ajustes y la de administración sobre la misma estructura: la barra lateral en el escritorio, la lista con desglose en el móvil, un grupo por ruta, la búsqueda y la tarjeta que un enlace resalta. Las filas de los ajustes de la cuenta: tema, idioma, perfil, contraseña y verificación en dos pasos.",
     },
     wizard: {
       title: "Asistente",
@@ -570,14 +564,6 @@ export const es: Dictionary = {
       "enlace que abre una pestaña nueva",
       "un botón que navega",
       "resaltar el enlace de la página actual",
-    ],
-    "settings-page": [
-      "crear una página de ajustes con barra lateral",
-      "mostrar los ajustes como lista en el móvil",
-      "enlazar directamente a un ajuste",
-      "buscar en los ajustes",
-      "página de administración con el mismo diseño",
-      "que el idioma siga a la cuenta",
     ],
     "landing-demo": [
       "crear una portada pública",
@@ -1083,6 +1069,12 @@ export const es: Dictionary = {
       "elegir el tema",
       "elegir el idioma",
       "preferencias del usuario",
+      "crear una página de ajustes con barra lateral",
+      "mostrar los ajustes como lista en el móvil",
+      "enlazar directamente a un ajuste",
+      "buscar en los ajustes",
+      "página de administración con el mismo diseño",
+      "que el idioma siga a la cuenta",
     ],
     wizard: [
       "formulario en varios pasos",

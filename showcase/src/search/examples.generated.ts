@@ -700,6 +700,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "IconButton — toneColor per theme",
   ],
   "settings": [
+    "SettingsLayout — desktop",
+    "SettingsLayout — phone",
+    "SettingsLayout — the admin page",
+    "settingsSearchEntries — the catalogue for ⌘K",
     "ThemeSetting",
     "LanguageSetting",
     "ThemeSetting · LanguageSetting — Select props pass through",
@@ -710,12 +714,6 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TwoFactorSetting",
     "PasswordSetting — strength + maxBytes",
     "LanguageSelect — a language as a form field",
-  ],
-  "settings-page": [
-    "SettingsLayout — desktop",
-    "SettingsLayout — phone",
-    "SettingsLayout — the admin page",
-    "settingsSearchEntries — the catalogue for ⌘K",
   ],
   "landing-demo": [
     "A sample landing — Ada's Garden Planner",

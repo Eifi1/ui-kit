@@ -83,7 +83,6 @@ export type PageSlug =
   | "links"
   | "settings"
   | "auth-account"
-  | "settings-page"
   | "landing-demo"
   | "user-admin"
   | "wizard"
