@@ -107,6 +107,12 @@ export const fr: Dictionary = {
       blurb:
         "Chaque lien du kit routé par le routeur de l'application, défini une fois sur le provider : le lien texte et ses tons, un bouton ou une carte d'action qui est un lien, et les liens qui quittent l'application.",
     },
+    "user-admin": {
+      title: "Administration des utilisateurs",
+      short: "Utilisateurs",
+      blurb:
+        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations et la transmission du travail.",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -494,6 +500,15 @@ export const fr: Dictionary = {
       "lien qui ouvre un nouvel onglet",
       "un bouton qui navigue",
       "mettre en évidence le lien de la page actuelle",
+    ],
+    "user-admin": [
+      "lister les utilisateurs avec leurs rôles",
+      "désactiver un compte",
+      "changer le rôle d’un utilisateur",
+      "inviter quelqu’un par e-mail",
+      "montrer qui a fait quoi sur un compte",
+      "transmettre le travail de quelqu’un à un autre utilisateur",
+      "définir les langues d’un relecteur de traductions",
     ],
     "auth-account": [
       "mise en page de la connexion",

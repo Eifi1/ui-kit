@@ -110,6 +110,12 @@ export const hu: Dictionary = {
       blurb:
         "A kit minden hivatkozása az alkalmazás saját routerén át, egyszer beállítva a providerben: a szöveges hivatkozás és tónusai, egy hivatkozásként működő gomb vagy műveleti kártya, és az alkalmazásból kivezető hivatkozások.",
     },
+    "user-admin": {
+      title: "Felhasználókezelés",
+      short: "Felhasználók",
+      blurb:
+        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók és a munka továbbadása.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -497,6 +503,15 @@ export const hu: Dictionary = {
       "új lapon nyíló hivatkozás",
       "navigáló gomb",
       "az aktuális oldal hivatkozásának kiemelése",
+    ],
+    "user-admin": [
+      "felhasználók listázása a szerepkörükkel",
+      "fiók inaktiválása",
+      "felhasználó szerepkörének módosítása",
+      "valaki meghívása e-mailben",
+      "annak megmutatása, ki mit tett egy fiókkal",
+      "valaki munkájának átadása egy másik felhasználónak",
+      "fordítási lektor nyelveinek beállítása",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",

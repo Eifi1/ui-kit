@@ -17,6 +17,15 @@ import type { UiKitLabels } from "./kit-labels";
 export function germanLabels(numberLocale: string): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
+  // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
+  // src/auth/auth-errors.ts: no wait → "einen Moment", under a minute → seconds, else
+  // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
+  const wait = (seconds: number) =>
+    seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`;
+  const rateLimited = (seconds?: number) =>
+    !seconds || seconds <= 0
+      ? "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es dann noch einmal."
+      : `Zu viele Versuche. Versuchen Sie es in ${wait(seconds)} erneut.`;
 
   return {
     feedbackAttachment: {
@@ -162,6 +171,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         memberSince: "Mitglied seit",
         displayName: "Anzeigename",
         save: "Speichern",
+        firstName: "Vorname",
+        lastName: "Nachname",
+        nameRequired: "Geben Sie Vor- und Nachnamen ein.",
       },
       password: {
         title: "Passwort ändern",
@@ -718,6 +730,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       registered: "Registriert",
       unverified: "Nicht bestätigt",
       passwordChange: "Passwortänderung erforderlich",
+      deletion: "Löschung beantragt",
+      deletionOn: (date) => `Löschung am ${date}`,
     },
     shareCard: {
       dialogTitle: "Teilen",
@@ -883,6 +897,17 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       setPasswordFailed: "Das Passwort konnte nicht vergeben werden.",
       expired: "Diese Anmeldung ist abgelaufen. Bitte melden Sie sich erneut an.",
       backToSignIn: "Zurück zur Anmeldung",
+      // kastlan's backup-code words ("Backup-Code" — not keksdose's
+      // "Wiederherstellungscode", which is the key of its end-to-end encryption).
+      useRecoveryCode: "Backup-Code verwenden",
+      useAuthenticatorCode: "Authenticator-App verwenden",
+      recoveryCode: "Backup-Code",
+      recoveryIntro:
+        "Geben Sie einen der Backup-Codes ein, die Sie beim Einrichten der Zwei-Faktor-Authentifizierung gespeichert haben.",
+      recoveryCodeHint: (length) =>
+        `${n(length)} Buchstaben und Ziffern. Bindestriche und Leerzeichen spielen keine Rolle.`,
+      recoveryCodeInvalid: "Dieser Backup-Code ist ungültig oder wurde schon verwendet.",
+      rateLimited,
     },
     register: {
       firstName: "Vorname",
@@ -906,6 +931,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       invitationInvalid: "Dieser Einladungslink ist ungültig.",
       invitationExpired: "Diese Einladung ist abgelaufen. Bitten Sie um eine neue.",
       failed: "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      rateLimited,
     },
     completeName: {
       title: "Namen vervollständigen",
@@ -927,6 +953,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sentHint: "Der Link gilt eine Stunde und funktioniert genau einmal. Sehen Sie auch im Spam-Ordner nach.",
       backToSignIn: "Zurück zur Anmeldung",
       error: "Anfrage fehlgeschlagen. Bitte versuchen Sie es später noch einmal.",
+      rateLimited,
     },
     resetPassword: {
       title: "Neues Passwort vergeben",
@@ -944,6 +971,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       success: "Ihr Passwort ist geändert. Sie können sich jetzt damit anmelden.",
       sessionsEnded: "Angemeldete Geräte wurden abgemeldet – dort müssen Sie sich neu anmelden.",
       signIn: "Zur Anmeldung",
+      rateLimited,
     },
     verifyEmail: {
       title: "E-Mail-Adresse bestätigen",
@@ -987,12 +1015,220 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       register: "Registrieren",
     },
     companySwitcher: {
-      // "Firma", as kastlan's sign-up asks for the "Firmenname".
-      switchCompany: "Firma wechseln",
-      heading: "Firmen",
-      current: (name) => `Firma: ${name}`,
+      // "Unternehmen" (0.30), the word kastlan's admin strings use ("Aus dem Unternehmen
+      // entfernen"), so one German word names a company across the kit.
+      switchCompany: "Unternehmen wechseln",
+      heading: "Unternehmen",
+      current: (name) => `Unternehmen: ${name}`,
       currentMark: "(aktuell)",
-      switching: "Firma wird gewechselt…",
+      switching: "Unternehmen wird gewechselt…",
+    },
+    // 0.30.0 — docs/user-admin-harmonization.md: keksdose's reviewed de-CH for the admin
+    // words (admin.users.*), Kurvenschmiede's for transfer, invitations and sessions,
+    // kastlan's for "Unternehmen", the throttle and "Überall abmelden"; written fresh where
+    // no app had the sentence. Formal "Sie". "Administratorrechte" rather than "der letzte
+    // Administrator", which would give the reader a gender.
+    emailChange: {
+      title: "E-Mail-Adresse",
+      current: "Aktuelle Adresse",
+      newEmail: "Neue E-Mail-Adresse",
+      password: "Aktuelles Passwort",
+      passwordHint: "Mit Ihrer Adresse melden Sie sich an – deshalb braucht eine Änderung Ihr Passwort.",
+      emailTagUse: (address) => `${address} verwenden`,
+      emailTagHint:
+        "Viele Anbieter stellen name+kennung@… an dasselbe Postfach zu, damit Post von dieser App filter- und zuordenbar wird. Prüfen Sie vorher, ob Ihrer das tut: Angemeldet wird dann mit der markierten Adresse.",
+      submit: "E-Mail-Adresse ändern",
+      sameAsCurrent: "Das ist bereits Ihre Adresse.",
+      emailTaken: "Ein Konto mit dieser E-Mail-Adresse existiert bereits.",
+      wrongPassword: "Das Passwort ist falsch.",
+      pending: (newEmail) => `Bestätigen Sie den Link, den wir an ${newEmail} geschickt haben.`,
+      pendingHint: (currentEmail) =>
+        `Bis dahin melden Sie sich weiterhin mit ${currentEmail} an. Sehen Sie auch im Spam-Ordner nach.`,
+      resend: "Link erneut senden",
+      resent: "Wir haben den Link erneut gesendet.",
+      cancel: "Änderung abbrechen",
+      confirmed: (email) => `Ihre E-Mail-Adresse ist jetzt ${email}.`,
+      passkeyNote:
+        "Ihre Passkeys funktionieren weiterhin. Ihr Gerät zeigt sie eventuell noch unter der alten Adresse an.",
+      rateLimited,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
+    sessions: {
+      title: "Sitzungen",
+      description:
+        "Auf einem Gerät angemeldet, das Sie nicht mehr nutzen oder dem Sie nicht trauen? Melden Sie sich überall ab.",
+      signOutEverywhere: "Überall abmelden…",
+      signOutEverywherePrompt:
+        "Damit enden alle Sitzungen, auch diese: Sie werden auch auf diesem Gerät abgemeldet und melden sich hier neu an.",
+      confirmSignOutEverywhere: "Überall abmelden",
+      list: "Wo Sie angemeldet sind",
+      loading: "Sitzungen werden geladen…",
+      empty: "Keine Sitzungen vorhanden.",
+      current: "Dieses Gerät",
+      unknownDevice: "Unbekanntes Gerät",
+      // A colon: `when` is either "vor 3 Stunden" or a date.
+      lastActive: (when) => `Zuletzt aktiv: ${when}`,
+      ip: (address) => `IP ${address}`,
+      revoke: "Abmelden",
+      // Starts with `revoke`, the button's visible text, for voice control.
+      revokeItem: (device) => `Abmelden: ${device}`,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
+    deleteAccount: {
+      title: "Konto löschen",
+      afterDays: (days) =>
+        days === 1
+          ? "Ihr Konto wird sofort deaktiviert und 1 Tag später endgültig gelöscht."
+          : `Ihr Konto wird sofort deaktiviert und ${n(days)} Tage später endgültig gelöscht.`,
+      operator: "Ihr Konto wird sofort deaktiviert und anschließend vom Betreiber endgültig gelöscht.",
+      arm: "Konto löschen…",
+      prompt: "Sie werden auf allen Geräten abgemeldet, und Ihr Konto kann nicht mehr verwendet werden.",
+      handOver: (count) =>
+        count === 1
+          ? "1 Element, das andere sehen können, geht an einen Administrator über."
+          : `${n(count)} Elemente, die andere sehen können, gehen an einen Administrator über.`,
+      confirm: "Mein Konto löschen",
+      done: "Ihr Konto ist deaktiviert. Sie werden abgemeldet.",
+      wrongPassword: "Das Passwort ist falsch.",
+      confirmationMismatch: "Das ist nicht die Adresse Ihres Kontos.",
+      lastAdmin:
+        "Ihr Konto ist das letzte mit Administratorrechten. Geben Sie zuerst einem anderen Konto Administratorrechte.",
+      lastAdminOf: (companies) =>
+        `Ihr Konto ist das letzte mit Administratorrechten bei ${companies}. Geben Sie dort zuerst einem anderen Konto Administratorrechte.`,
+      // keksdose's "Haushalt".
+      householdHasMembers:
+        "Ihr Haushalt hat weitere Mitglieder, deshalb kann das Konto hier nicht gelöscht werden. Bitte schreiben Sie dem Betreiber.",
+      rateLimited,
+      failed: "Ihr Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    },
+    dataExport: {
+      title: "Ihre Daten exportieren",
+      description: "Laden Sie eine Kopie der Daten Ihres Kontos als JSON-Datei herunter.",
+      download: "Meine Daten herunterladen",
+      started: "Ihr Download hat begonnen.",
+      saveAgain: "Nicht gestartet? Datei speichern",
+      rateLimited: (seconds) =>
+        seconds && seconds > 0
+          ? `Sie haben Ihre Daten gerade erst exportiert. Versuchen Sie es in ${wait(seconds)} erneut.`
+          : "Sie haben Ihre Daten gerade erst exportiert. Bitte versuchen Sie es in einer Minute erneut.",
+      failed: "Der Export ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    },
+    userRoster: {
+      name: "Name",
+      email: "E-Mail",
+      role: "Rolle",
+      state: "Status",
+      created: "Erstellt",
+      lastLogin: "Letzte Anmeldung",
+      never: "Nie",
+      actions: "Aktionen",
+      actionsFor: (name) => `Aktionen für ${name}`,
+    },
+    roleSelect: {
+      label: "Rolle",
+      rolesLegend: "Rollen",
+      roleOf: (name) => `Rolle von ${name}`,
+      lockedLastAdmin: "Das letzte aktive Konto mit Administratorrechten behält diese Rolle.",
+      lockedSelf: "Ihre eigene Rolle können Sie nicht ändern.",
+      notForLastAdmin: "nicht für das letzte Administratorkonto",
+      notForSelf: "nicht für Ihr eigenes Konto",
+      unavailable: (role, reason) => `${role} (${reason})`,
+    },
+    reviewerScope: {
+      languages: "Sprachen",
+      hint: "Kreuzen Sie die Sprachen an, die diese Person prüft.",
+      none: "Keine Sprache: Beim Speichern wird die Prüfrolle entzogen.",
+      areas: "Beschränken auf",
+      legalOnly: "Nur die rechtlichen Seiten",
+      legalOnlyHint:
+        "Impressum, Datenschutzerklärung und Nutzungsbedingungen – für eine Juristin oder einen Juristen statt für Muttersprachler.",
+      failed: "Die Prüfrolle konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    },
+    adminAction: {
+      confirm: "Bestätigen",
+      cancel: "Abbrechen",
+      close: "Schließen",
+      lastAdmin:
+        "Dies ist das letzte aktive Konto mit Administratorrechten. Geben Sie zuerst einem anderen Konto Administratorrechte.",
+      self: "Mit Ihrem eigenen Konto ist das nicht möglich.",
+      confirmationMismatch:
+        "Die Adresse passt nicht zu diesem Konto. Prüfen Sie, bei welchem Konto Sie sind.",
+      otherCompanies:
+        "Dieses Konto gehört auch zu anderen Unternehmen, deshalb kann nur der Plattformbetreiber das tun. Sie können es stattdessen aus diesem Unternehmen entfernen.",
+      removeFromCompany: "Aus dem Unternehmen entfernen",
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
+    adminActionLog: {
+      title: "Admin-Aktionen",
+      empty: "Noch keine Admin-Aktionen.",
+      loading: "Wird geladen…",
+      // "durch", not "von": it takes the accusative, so `erased` ("ein gelöschtes Konto")
+      // reads right both on its own and after it.
+      by: (actor) => `durch ${actor}`,
+      bySelf: "durch die Person selbst",
+      automatic: "automatisch",
+      erased: "ein gelöschtes Konto",
+      filteredTo: (target) => `Nur ${target}`,
+      showAll: "Alle Aktionen zeigen",
+      filterBy: (target) => `Nur Aktionen zu ${target} zeigen`,
+      actions: {
+        deactivate: "Deaktiviert",
+        reactivate: "Reaktiviert",
+        role: "Rolle geändert",
+        membership_remove: "Aus dem Unternehmen entfernt",
+        password_change_require: "Neues Passwort verlangt",
+        password_change_withdraw: "Passwortforderung zurückgenommen",
+        mail_verification: "Bestätigungsmail gesendet",
+        mail_reset: "Mail zum Zurücksetzen des Passworts gesendet",
+        reviewer: "Prüfrolle geändert",
+        invite: "Eingeladen",
+        invite_resend: "Einladung erneut gesendet",
+        invite_revoke: "Einladung zurückgezogen",
+        transfer: "Arbeit übergeben",
+        deletion_request: "Löschung beantragt",
+        deletion_cancel: "Löschung aufgehoben",
+        erase: "Konto endgültig gelöscht",
+      },
+    },
+    transferOwnership: {
+      title: (name) => `Arbeit von ${name} übergeben`,
+      body: "Alles, was diesem Konto gehört, geht in einem Schritt an das gewählte Konto.",
+      recipient: "Übergeben an",
+      choose: "Konto wählen…",
+      chooseFirst: "Wählen Sie, wer die Arbeit erhält",
+      confirm: "Übergeben",
+      customer: "Kundenkonto",
+      deactivated: "deaktiviert",
+      self: "dasselbe Konto",
+      unavailable: (account, reason) => `${account} (${reason})`,
+      noCandidates: "Kein anderes Konto kann sie erhalten.",
+    },
+    invitations: {
+      email: "E-Mail-Adresse",
+      invalidEmail: "Bitte eine vollständige E-Mail-Adresse eingeben.",
+      role: "Rolle",
+      scope: "Bereich",
+      scopeNone: "Keiner",
+      language: "Sprache der Einladung",
+      note: "Notiz",
+      invite: "Einladen",
+      listTitle: "Einladungen",
+      empty: "Noch niemand ist eingeladen.",
+      loading: "Wird geladen…",
+      status: { open: "Offen", accepted: "Angenommen", expired: "Abgelaufen", revoked: "Zurückgezogen" },
+      sent: (date) => `Gesendet am ${date}`,
+      // kastlan's "Gültig bis".
+      expires: (date) => `Gültig bis ${date}`,
+      invitedBy: (name) => `von ${name}`,
+      resend: (email) => `${email} einen neuen Link senden`,
+      copyLink: "Einladungslink kopieren",
+      revoke: (email) => `Einladung an ${email} zurückziehen`,
+      consoleHint:
+        "Dieser Server verschickt keine Mails – sie werden ins Server-Log geschrieben. Kopieren Sie jeden Einladungslink hier und geben Sie ihn selbst weiter: Er wird nur einmal angezeigt.",
+      linkReady: (email) => `Der Einladungslink für ${email}, nur dieses eine Mal angezeigt:`,
+      notSent: (email) =>
+        `${email} ist eingeladen, aber die Mail konnte nicht gesendet werden. Senden Sie sie erneut.`,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
     characterCount: {
       // "Zeichen" is the same in singular and plural.

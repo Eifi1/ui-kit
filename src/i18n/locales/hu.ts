@@ -13,6 +13,15 @@ import type { UiKitLabels } from "../kit-labels";
 export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
+  // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
+  // src/auth/auth-errors.ts: no wait → "egy kicsit", under a minute → seconds, else
+  // minutes rounded up. The numeral stays bare before its unit ("30 mp múlva").
+  const wait = (seconds: number) =>
+    seconds < 60 ? `${n(Math.ceil(seconds))} mp` : `${n(Math.ceil(seconds / 60))} perc`;
+  const rateLimited = (seconds?: number) =>
+    !seconds || seconds <= 0
+      ? "Túl sok próbálkozás. Várjon egy kicsit, majd próbálja újra."
+      : `Túl sok próbálkozás. Próbálja újra ${wait(seconds)} múlva.`;
 
   return {
     feedbackAttachment: {
@@ -151,6 +160,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         memberSince: "Regisztráció dátuma",
         displayName: "Megjelenített név",
         save: "Mentés",
+        firstName: "Keresztnév",
+        lastName: "Vezetéknév",
+        nameRequired: "Adja meg a keresztnevet és a vezetéknevet is.",
       },
       password: {
         title: "Jelszó módosítása",
@@ -700,6 +712,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       registered: "Regisztrált",
       unverified: "Nincs megerősítve",
       passwordChange: "Jelszócsere szükséges",
+      deletion: "Törlés kérelmezve",
+      deletionOn: (date) => `Törlés: ${date}`,
     },
     shareCard: {
       dialogTitle: "Megosztás",
@@ -874,6 +888,15 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       setPasswordFailed: "A jelszót nem sikerült beállítani.",
       expired: "Ez a bejelentkezés lejárt. Kérjük, jelentkezzen be újra.",
       backToSignIn: "Vissza a bejelentkezéshez",
+      useRecoveryCode: "Tartalékkód használata",
+      useAuthenticatorCode: "Hitelesítő alkalmazás használata",
+      recoveryCode: "Tartalékkód",
+      recoveryIntro:
+        "Adja meg az egyik tartalékkódot, amelyet a kétlépcsős azonosítás bekapcsolásakor mentett el.",
+      recoveryCodeHint: (length) =>
+        `${n(length)} betű és számjegy. A kötőjelek és a szóközök nem számítanak.`,
+      recoveryCodeInvalid: "Ez a tartalékkód érvénytelen, vagy már felhasználták.",
+      rateLimited,
     },
     register: {
       firstName: "Keresztnév",
@@ -898,6 +921,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       invitationInvalid: "Ez a meghívóhivatkozás érvénytelen.",
       invitationExpired: "Ez a meghívó lejárt. Kérjen újat.",
       failed: "A regisztráció sikertelen. Kérjük, próbálja újra.",
+      rateLimited,
     },
     completeName: {
       title: "Név kiegészítése",
@@ -920,6 +944,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "A hivatkozás egy órán át érvényes, és pontosan egyszer használható. Nézze meg a levélszemét mappát is.",
       backToSignIn: "Vissza a bejelentkezéshez",
       error: "A kérés sikertelen. Kérjük, próbálja újra később.",
+      rateLimited,
     },
     resetPassword: {
       title: "Új jelszó választása",
@@ -938,6 +963,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       success: "A jelszava megváltozott. Most már bejelentkezhet vele.",
       sessionsEnded: "A bejelentkezett eszközök ki lettek jelentkeztetve – ott újra be kell jelentkeznie.",
       signIn: "Tovább a bejelentkezéshez",
+      rateLimited,
     },
     verifyEmail: {
       title: "E-mail-cím megerősítése",
@@ -984,6 +1010,199 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       current: (name) => `Cég: ${name}`,
       currentMark: "(jelenlegi)",
       switching: "Cég váltása folyamatban…",
+    },
+    // 0.30.0 — docs/user-admin-harmonization.md: Kurvenschmiede's reviewed Hungarian for
+    // the admin words (inaktiválás, szerepkör, lektor), transfer, invitations and
+    // sessions; written fresh where it had no sentence. "Ön", and every value the app
+    // passes in stands after a colon or in brackets, never with a case ending.
+    emailChange: {
+      title: "E-mail-cím",
+      current: "Jelenlegi cím",
+      newEmail: "Új e-mail-cím",
+      password: "Jelenlegi jelszó",
+      passwordHint: "A címével jelentkezik be, ezért a módosításához meg kell adnia a jelszavát.",
+      emailTagUse: (address) => `${address} használata`,
+      emailTagHint:
+        "Sok szolgáltató a név+címke@… alakú címekre érkező leveleket ugyanabba a postafiókba kézbesíti, így az alkalmazás levelei könnyen szűrhetők és visszakövethetők. Mielőtt erre hagyatkozna, ellenőrizze, hogy az Öné is így működik-e: a címkés címmel kell majd bejelentkeznie.",
+      submit: "E-mail-cím módosítása",
+      sameAsCurrent: "Már ez az Ön címe.",
+      emailTaken: "Ezzel az e-mail-címmel már létezik fiók.",
+      wrongPassword: "A jelszó helytelen.",
+      pending: (newEmail) => `Erősítse meg a hivatkozást, amelyet erre a címre küldtünk: ${newEmail}.`,
+      pendingHint: (currentEmail) =>
+        `Addig továbbra is ezzel a címmel jelentkezik be: ${currentEmail}. Nézze meg a levélszemét mappát is.`,
+      resend: "Hivatkozás újraküldése",
+      resent: "Újra elküldtük a hivatkozást.",
+      cancel: "Módosítás visszavonása",
+      confirmed: (email) => `Az e-mail-címe mostantól: ${email}.`,
+      passkeyNote:
+        "A hozzáférési kulcsai továbbra is működnek. Az eszköze azonban még a régi címe alatt mutathatja őket.",
+      rateLimited,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
+    sessions: {
+      title: "Munkamenetek",
+      description:
+        "Be van jelentkezve egy olyan eszközön, amelyet már nem használ, vagy amelyben nem bízik? Jelentkezzen ki mindenhol.",
+      signOutEverywhere: "Kijelentkezés mindenhol…",
+      signOutEverywherePrompt:
+        "Ez minden munkamenetet befejez, ezt is: ezen az eszközön is kijelentkezik, és innen újra be kell jelentkeznie.",
+      confirmSignOutEverywhere: "Kijelentkezés mindenhol",
+      list: "Ahol be van jelentkezve",
+      loading: "Munkamenetek betöltése…",
+      empty: "Nincs megjeleníthető munkamenet.",
+      current: "Ez az eszköz",
+      unknownDevice: "Ismeretlen eszköz",
+      lastActive: (when) => `Utoljára aktív: ${when}`,
+      ip: (address) => `IP-cím: ${address}`,
+      revoke: "Kijelentkeztetés",
+      // Starts with `revoke`, the button's visible text, for voice control.
+      revokeItem: (device) => `Kijelentkeztetés: ${device}`,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
+    deleteAccount: {
+      title: "Fiók törlése",
+      afterDays: (days) =>
+        `A fiókját azonnal inaktiváljuk, majd ${n(days)} nap múlva véglegesen töröljük.`,
+      operator: "A fiókját azonnal inaktiváljuk, a végleges törlést pedig az üzemeltető végzi el.",
+      arm: "Fiók törlése…",
+      prompt: "Minden eszközön kijelentkezik, és a fiókja többé nem használható.",
+      handOver: (count) => `${n(count)} elem, amelyet mások is látnak, egy adminisztrátorhoz kerül.`,
+      confirm: "Fiókom törlése",
+      done: "A fiókja inaktiválva. Kijelentkeztetjük.",
+      wrongPassword: "A jelszó helytelen.",
+      confirmationMismatch: "Ez nem a fiókja címe.",
+      lastAdmin: "Ön az utolsó adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",
+      lastAdminOf: (companies) =>
+        `Ön az utolsó adminisztrátor itt: ${companies}. Előbb tegyen ott adminisztrátorrá valaki mást.`,
+      householdHasMembers:
+        "A háztartásának más tagjai is vannak, ezért a fiók itt nem törölhető. Kérjük, írjon az üzemeltetőnek.",
+      rateLimited,
+      failed: "A fiókját nem sikerült törölni. Kérjük, próbálja újra.",
+    },
+    dataExport: {
+      title: "Adatai exportálása",
+      description: "Töltse le a fiókja adatainak másolatát JSON-fájlként.",
+      download: "Adataim letöltése",
+      started: "A letöltés elkezdődött.",
+      saveAgain: "Nem indult el? Fájl mentése",
+      rateLimited: (seconds) =>
+        seconds && seconds > 0
+          ? `Az imént exportálta az adatait. Próbálja újra ${wait(seconds)} múlva.`
+          : "Az imént exportálta az adatait. Kérjük, próbálja újra egy perc múlva.",
+      failed: "Az exportálás sikertelen. Kérjük, próbálja újra.",
+    },
+    userRoster: {
+      name: "Név",
+      email: "E-mail",
+      role: "Szerepkör",
+      state: "Állapot",
+      created: "Létrehozva",
+      lastLogin: "Utolsó bejelentkezés",
+      never: "Soha",
+      actions: "Műveletek",
+      // The name in brackets, never inflected — as `shareCard.roleOf`.
+      actionsFor: (name) => `Műveletek (${name})`,
+    },
+    roleSelect: {
+      label: "Szerepkör",
+      rolesLegend: "Szerepkörök",
+      roleOf: (name) => `Szerepkör (${name})`,
+      lockedLastAdmin: "Az utolsó aktív adminisztrátor megtartja ezt a szerepkört.",
+      lockedSelf: "A saját szerepkörét nem módosíthatja.",
+      notForLastAdmin: "az utolsó adminisztrátornak nem",
+      notForSelf: "a saját fiókjának nem",
+      unavailable: (role, reason) => `${role} (${reason})`,
+    },
+    reviewerScope: {
+      languages: "Nyelvek",
+      hint: "Jelölje be a nyelveket, amelyeket ez a személy lektorál.",
+      none: "Nincs nyelv: mentéskor megszűnik a lektori szerepkör.",
+      areas: "Szűkítés",
+      legalOnly: "Csak a jogi oldalak",
+      legalOnlyHint:
+        "Impresszum, adatvédelmi tájékoztató és felhasználási feltételek – inkább jogásznak, mint anyanyelvi lektornak.",
+      failed: "A lektori beállítást nem sikerült menteni. Kérjük, próbálja újra.",
+    },
+    adminAction: {
+      confirm: "Megerősítés",
+      cancel: "Mégse",
+      close: "Bezárás",
+      lastAdmin: "Ez az utolsó aktív adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",
+      self: "Ezt a saját fiókjával nem teheti meg.",
+      confirmationMismatch: "A cím nem egyezik ezzel a fiókkal. Ellenőrizze, melyik fióknál jár.",
+      otherCompanies:
+        "Ez a fiók más cégekhez is tartozik, ezért ezt csak a platform üzemeltetője teheti meg. Ehelyett eltávolíthatja ebből a cégből.",
+      removeFromCompany: "Eltávolítás a cégből",
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
+    adminActionLog: {
+      title: "Adminisztrátori műveletek",
+      empty: "Még nincs adminisztrátori művelet.",
+      loading: "Betöltés…",
+      by: (actor) => `Végrehajtotta: ${actor}`,
+      bySelf: "A felhasználó maga",
+      automatic: "Automatikusan",
+      erased: "egy törölt fiók",
+      filteredTo: (target) => `Csak: ${target}`,
+      showAll: "Az összes művelet megjelenítése",
+      filterBy: (target) => `Csak az ezt a fiókot érintő műveletek megjelenítése: ${target}`,
+      actions: {
+        deactivate: "Inaktiválva",
+        reactivate: "Újraaktiválva",
+        role: "Szerepkör módosítva",
+        membership_remove: "Eltávolítva a cégből",
+        password_change_require: "Új jelszó előírva",
+        password_change_withdraw: "Jelszócsere-előírás visszavonva",
+        mail_verification: "Megerősítő e-mail elküldve",
+        mail_reset: "Jelszó-visszaállító e-mail elküldve",
+        reviewer: "Lektori beállítás módosítva",
+        invite: "Meghívva",
+        invite_resend: "Meghívó újraküldve",
+        invite_revoke: "Meghívó visszavonva",
+        transfer: "Munka továbbadva",
+        deletion_request: "Törlés kérelmezve",
+        deletion_cancel: "Törlés visszavonva",
+        erase: "Fiók véglegesen törölve",
+      },
+    },
+    transferOwnership: {
+      title: (name) => `Munka továbbadása: ${name}`,
+      body: "Minden, ami ennek a fióknak a tulajdona, egy lépésben átkerül a kiválasztott fiókhoz.",
+      recipient: "Kinek adja",
+      choose: "Válasszon egy fiókot…",
+      chooseFirst: "Válassza ki, ki kapja meg a munkát",
+      confirm: "Továbbadás",
+      customer: "ügyfél",
+      deactivated: "inaktivált",
+      self: "ugyanaz a fiók",
+      unavailable: (account, reason) => `${account} (${reason})`,
+      noCandidates: "Más fiók nem kaphatja meg.",
+    },
+    invitations: {
+      email: "E-mail-cím",
+      invalidEmail: "Adjon meg egy teljes e-mail-címet.",
+      role: "Szerepkör",
+      scope: "Hatókör",
+      scopeNone: "Nincs",
+      language: "A meghívó nyelve",
+      note: "Megjegyzés",
+      invite: "Meghívás",
+      listTitle: "Meghívók",
+      empty: "Még senkit sem hívtak meg.",
+      loading: "Betöltés…",
+      status: { open: "Függőben", accepted: "Elfogadva", expired: "Lejárt", revoked: "Visszavonva" },
+      sent: (date) => `Elküldve: ${date}`,
+      expires: (date) => `Lejár: ${date}`,
+      invitedBy: (name) => `Meghívta: ${name}`,
+      resend: (email) => `Új hivatkozás küldése ide: ${email}`,
+      copyLink: "Meghívóhivatkozás másolása",
+      revoke: (email) => `Meghívó visszavonása: ${email}`,
+      consoleHint:
+        "Ez a szerver nem küld leveleket – a szervernaplóba írja őket. Innen másolja ki az egyes meghívóhivatkozásokat, és adja tovább maga: mindegyik csak egyszer jelenik meg.",
+      linkReady: (email) => `Meghívóhivatkozás ehhez a címhez: ${email}. Csak most jelenik meg:`,
+      notSent: (email) => `${email} meghívást kapott, de az e-mailt nem sikerült elküldeni. Küldje el újra.`,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
     },
     characterCount: {
       // A noun after a numeral stays singular: "80 karakter".

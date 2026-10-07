@@ -114,6 +114,12 @@ export const de: Dictionary = {
       blurb:
         "Jeder Link des Kits über den Router der App, einmal am Provider gesetzt: der Textlink und seine Töne, ein Button oder eine Aktionskarte als Link, und Links, die die App verlassen.",
     },
+    "user-admin": {
+      title: "Benutzerverwaltung",
+      short: "Benutzer",
+      blurb:
+        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen und das Übergeben von Arbeit.",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -501,6 +507,15 @@ export const de: Dictionary = {
       "Link in neuem Tab öffnen",
       "Button, der navigiert",
       "Link der aktuellen Seite hervorheben",
+    ],
+    "user-admin": [
+      "Benutzer mit ihren Rollen auflisten",
+      "ein Konto deaktivieren",
+      "die Rolle eines Benutzers ändern",
+      "jemanden per E-Mail einladen",
+      "zeigen, wer was an einem Konto getan hat",
+      "die Arbeit einer Person an jemand anderen übergeben",
+      "die Sprachen eines Übersetzungsprüfers festlegen",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",
