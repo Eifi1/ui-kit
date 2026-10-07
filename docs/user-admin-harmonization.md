@@ -289,9 +289,11 @@ card meanwhile. It saves through `PATCH /auth/me` and clears `name_incomplete`.
     days, and a reactivation restores everything untouched.
   - **keksdose, also:** the owner's household and every key wrap of it (the guests'
     included) go once no live budget remains in it.
-  - **keksdose, to check first:** if a household still has more than one member row (pre
-    #29), erasing its owner would wipe budgets a co-member uses. Marcel checks production;
-    if there are any, the request refuses with `household_has_members`.
+  - **keksdose, a guard:** if a household ever had more than one member row, erasing its
+    owner would wipe budgets a co-member uses. Marcel checked production on 2026-10-07:
+    every household has exactly one member (its owner), and today's code can't create a
+    second. The request still refuses with `household_has_members` if one ever appears, a
+    cheap guard against a future change.
   - **kastlan:** company records stay with the company. The contact card that links the
     user to a company stays, with its user link nulled. Sessions are deleted.
 - **Cancel:** an admin reactivates the account before the date. That clears both
@@ -425,8 +427,8 @@ app's scheduler or Cloud Scheduler); kastlan's platform superuser.
 2. **A deleted owner's shared budget** (keksdose): the share ends at erasure, as "erase
    all data" already does. A hand-over is impossible: re-tenanting rows across
    households, and in private mode data sealed under the owner's key. Guests are told at
-   the request and have the 30 days to export. **Open for Marcel:** the production check
-   for households with more than one member row (§6.4).
+   the request and have the 30 days to export. Marcel's production check (2026-10-07) found no
+   household with more than one member; `household_has_members` stays as a guard (§6.4).
 3. **Audit in kastlan:** a new `admin_actions` table with a nullable company, and two
    views; `audit_logs` stays. kastlan also stops logging platform actions into the
    operator's acting company.
@@ -455,7 +457,7 @@ app's scheduler or Cloud Scheduler); kastlan's platform superuser.
      address;
    - Kurvenschmiede's teams: memberships cascade, and a team keeps its members.
 
-Open: only §9.2's production check. Next: server-kit 0.4.0 and ui-kit 0.30.0 (§7). The
+Nothing is open. Next: server-kit 0.4.0 and ui-kit 0.30.0 (§7). The
 0.30 kit round also takes the apps' auth findings: a backup-code entry on the 2FA step,
 the challenge token passed to its slot, a "too many attempts" label, and `ProfileSetting`
 with first and last name.
