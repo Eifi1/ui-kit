@@ -604,6 +604,14 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
     person register (budget scope, role guest, 14 days). Admins keep the
     registration-scope invitation. The kit and server-kit assume nothing about who minted
     an invitation.
+14. **Invitations keep expiring** (Marcel, 2026-10-07). The 14 days are the unused
+    link's lifetime, not the account's: an account made through an invitation is
+    permanent, and an invitee who registered signs in long after the link ran out. A
+    passing "never expire" decision was taken back the same day once that was clear.
+15. **`Retry-After` is an exposed CORS header** in every app (keksdose, 2026-10-07):
+    without it a browser hides the header from a cross-origin client, and the forms'
+    "Try again in N s" (`retryAfterSeconds`) can't read it, as in a development setup
+    with the API on another origin.
 
 Nothing is open. Next: server-kit 0.3.0 and ui-kit 0.29.0 (§8), after 0.28.0 and 0.2.1
 are released. kastlan's tenant lock (§9 kastlan 1) goes first, on its own.
