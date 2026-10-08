@@ -311,7 +311,7 @@ export function DemoStart031Demo() {
           />
         </div>
       </Sandbox>
-      <pre className="mt-3 rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="mt-3 overflow-x-auto rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
         {log.length ? log.join("\n") : "—"}
       </pre>
       <Note>
