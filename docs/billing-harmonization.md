@@ -471,6 +471,30 @@ differ, this list wins.
     - the guest `BillingBanner` variant;
     - the "payment processing" state.
 
+**After the 0.32 / 0.6 adoption** (the three apps' reports, 2026-10-08/09)
+31. **Installed old clients and sync refusals (§12.5).** A client from before this round
+    reads a 2xx sync reply as "delivered" and drops what was refused. So the
+    refusals-in-the-reply shape is **opt-in per request**: the client sends
+    `refusals: true` on its sync request (keksdose's flag); without it, a lapsed payer's
+    push is refused whole (402 `billing_read_only`, or the app's existing 409), as before.
+    The same exposure exists in kastlan and Kurvenschmiede.
+32. **`SyncRefusal.change_ids` are row ids.** Two queued changes to one row can't be told
+    apart, which holds while a push is refused whole per row (keksdose's server does). An
+    app that ever applies part of a row's changes needs per-change ids first.
+33. **No row is not good standing by accident.** `in_good_standing(None)` is True ("not
+    billing's business"). An app with row-level security on its subscription table reads
+    the payer's row with the RLS bypass: a guest reading the owner's row would otherwise
+    get nothing back, and the gate would fail open (keksdose pins it with a Postgres
+    test).
+34. **An operator's plan change before launch keeps the beta** (keksdose's `kept_beta`):
+    a running beta grant given no new end keeps `source = beta` and its end; only the
+    plan changes. Otherwise every pre-launch move would become a lifetime grant.
+35. **Removing access under a billing lock (§12.13).** ShareCard's remove-grantee and
+    revoke-invitation are `commit` controls, so a billing lock blocks them, though
+    §12.13 allows them. Kit fix in the next round: a lock says its source (demo, billing)
+    and a control can be exempt from one. Until then an app keeps its own share card or
+    passes the actions unlocked. keksdose has its own; Kurvenschmiede uses the kit's.
+
 ## 13. Proposed plans (Marcel, 2026-10-08)
 
 Marcel: "Propose like that." Starting points, not market research. Billing stays off in
