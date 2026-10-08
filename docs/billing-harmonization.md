@@ -114,7 +114,12 @@ company's creation, and by a migration for those that exist. "No row" never happ
 - **A new payer** starts as `trialing`, `source = trial`, `trial_ends_at = now + 30 days`
   (§2.7).
 - **A beta user or company** (one that exists when billing goes on) gets `comped`,
-  `source = beta`, `comped_until = launch + 12 months` (§2.4).
+  `source = beta`, `comped_until = launch + 12 months` (§2.4). A row written before the
+  launch date is known (the beta migration, a registration before launch) stores
+  `comped_until = null`; the kit reads `source = beta` with a null end as launch + 12
+  months, from the settings' launch date, at read time (server-kit 0.6.1
+  `effective_comped_until`, the `launch` argument of `in_good_standing` and `grant_holds`;
+  Kurvenschmiede's 0.32 report). A moved launch date then needs no data change.
 - **An operator's grant** is `comped`, `source = manual`, with or without an end date.
 
 ### 3.3 Good standing and read-only (§2.3, §2.7)
@@ -329,7 +334,9 @@ differ, this list wins.
 3. **Order of refusals:** the demo's 403 first, then billing's 402; a lapsed payer creating
    gets `billing_read_only`, never `plan_limit`.
 4. **Scheduled jobs are outside the HTTP gate** and must skip a lapsed payer's data
-   (keksdose: recurring, bank sync, the two extract jobs, which also bill Gemini).
+   (keksdose: recurring, bank sync, the two extract jobs, which also bill Gemini;
+   kastlan: recurring rent, which is off by default — its lease-status sweep only follows
+   the dates and keeps running).
 
 **Offline, sync and privacy**
 5. **A 402 is not a refusal of one change.**
@@ -476,13 +483,14 @@ ten months.
 Every unit counts, parking, storage and cellars included (decision 13), so a building of
 12 flats already holds about 36 units. Seats count staff only (decision 15).
 
-| Code | `units` | `seats` | `storage_gb` | Month | Year |
+| Code | `units` | `seats` | `storage` | Month | Year |
 |---|---|---|---|---|---|
-| `starter` | 40 | 2 | 5 | 29 | 290 |
-| `standard` | 150 | 5 | 25 | 79 | 790 |
-| `professional` | 500 | 15 | 100 | 199 | 1,990 |
+| `starter` | 40 | 2 | 5 GB | 29 | 290 |
+| `standard` | 150 | 5 | 25 GB | 79 | 790 |
+| `professional` | 500 | 15 | 100 GB | 199 | 1,990 |
 
-Above 500 units: an operator's grant at a quoted price (§3.4 "Ask for more"). This
+`storage` is in bytes, as server-kit's `PlanSpec` documents (5 GB = 5 × 1024³). Above
+500 units: an operator's grant at a quoted price (§3.4 "Ask for more"). This
 replaces the placeholders CHF 49 / 149 / 399 for 50 / 250 / 1,000 units. Comparable:
 ImmoSync (Switzerland) CHF 30 / 99 / 299; immocloud €39.99 up to 50 units.
 Open: kastlan sells to businesses, which usually quote before VAT; §12.17 says gross.
