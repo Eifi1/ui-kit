@@ -163,3 +163,47 @@ limits and prices, and the launch date per app. Billing stays off by default unt
 
 The contracts' per-app sections hold the lists: text size §7 and §10.13–10.14, billing
 §11 and §12.28–12.29.
+
+## 0.32.1 and server-kit 0.6.1
+
+From the apps' 0.32 reports (Kurvenschmiede, kastlan, keksdose) and a sweep of every
+showcase page at 360 px / Extra large. Bump to `^0.32.1` and take the server-kit 0.6.1
+wheel.
+
+**Changes you will see:**
+- **ToggleGroup wraps at Large and Extra large** for every option count and placement but
+  the strip, where 0.32.0 wrapped only a field of four or more. A row breaks only where its
+  labels don't fit, so a wrap only replaces a truncation. `ThemeSetting variant="toggle"`
+  now defaults to `overflow="wrap"`, like `TextSizeSetting` and `ContrastSetting`, so an
+  `overflow="wrap"` you pass is no longer needed.
+- **One column below the breakpoint:** `Hero`, `FeatureRow`, `TrustStrip`, `PlanPicker`,
+  `ChoiceCardGroup` and the translation review editor get `grid-cols-1`. An untemplated
+  column grew to its widest unbreakable line (Kurvenschmiede's landing ran 80 px past a
+  360 px phone). A `contain: inline-size` workaround can go.
+- **AlertBanner's actions wrap** on a line of their own (the demo strip's "Request access"
+  and "Sign in" at Extra large).
+
+**New:**
+- **`RowAction.href`** (+ `external`): an action that navigates is a real link, inline
+  and in the "⋯" menu, so open in a new tab and a middle click work. `onSelect` becomes
+  optional beside it and still runs. A refused or pending action stays a button. Replace
+  `onSelect: () => navigate(…)` with `href`.
+- **`name` accepts `null`** on `RowActions` and `rowActionsColumn`: drop the `?? undefined`.
+- **`billing.notConfigured` and `billing.disabled`:** the words for `billing_not_configured`
+  and `billing_disabled` in seven languages (`useBillingLabels()`). Your own can go.
+
+**server-kit 0.6.1:**
+- **`PlanOut`** (`PlanOut.from_spec(plan)`, `plans_out(catalogue)`): a plan's wire shape for
+  `GET /billing/plans`, with `prices` nested currency → interval → minor units, the shape
+  of ui-kit's `BillingPlan.prices`. Names, descriptions and feature lines stay in your
+  i18n. A plan no longer sold: hide it or mark it `disabled` (empty `prices` reads as
+  free).
+- **A beta row without an end** (`source = beta`, `comped_until = null`, written before the
+  launch date was known) now ends at launch + 12 months: `grant_holds`,
+  `in_good_standing`, `dispatch` and `BillingOverview.from_row` take `launch=`, and
+  `effective_comped_until(row, launch)` gives the date. Without a launch date set, such a
+  row still never ends: set `billing_launch_at` before billing goes on in production.
+- **README:** a test that monkeypatches `billing_price_ids` must assign the parsed shape
+  (lists); a plain assignment is never validated.
+
+**Billing plans for local review:** see `docs/billing-harmonization.md` §13.
