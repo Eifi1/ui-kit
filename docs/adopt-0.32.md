@@ -166,8 +166,8 @@ The contracts' per-app sections hold the lists: text size §7 and §10.13–10.1
 
 ## 0.32.1 and server-kit 0.6.1
 
-From the apps' 0.32 reports (Kurvenschmiede, kastlan, keksdose) and a sweep of every
-showcase page at 360 px / Extra large. Bump to `^0.32.1` and take the server-kit 0.6.1
+From the apps' 0.32 reports and a sweep of every showcase page at 360 px / Extra
+large. Bump to `^0.32.1` and take the server-kit 0.6.1
 wheel.
 
 **Changes you will see:**
@@ -182,6 +182,22 @@ wheel.
   360 px phone). A `contain: inline-size` workaround can go.
 - **AlertBanner's actions wrap** on a line of their own (the demo strip's "Request access"
   and "Sign in" at Extra large).
+- **Nothing runs past a 360 px phone at Extra large**, from a sweep of every showcase page:
+  - `Pagination`: the page numbers wrap between the arrows; ±1 pages around the current
+    one on a phone at Large (±2 elsewhere);
+  - `DatePicker` / `DateRangePicker`: the value wraps at Large instead of losing its end;
+    with `step`, the ‹ date › row stacks on a phone at Large, the field on its own line;
+  - `MonthPicker`'s stepper and `WizardStepper` wrap;
+  - `PhoneInput`: the number takes its own line under the country on a phone at Large;
+  - `CardHeader`: with `stackAction` unset, the action stacks below `sm` at Large, where
+    an IconButton shows its label. Pass `stackAction={false}` for an action you keep an
+    icon (`labelVisible={false}`);
+  - a joined horizontal `ButtonGroup` wraps at Large, each member drawing its frame;
+  - `ShareCard`'s row controls wrap inside the row. Under a write lock with the form
+    present, a row's reason stays in its tooltip (on touch at Normal too), since the
+    form already says it.
+  Re-check your main screens at 360 px / 150 %: a sweep only finds what runs past the
+  screen, not what is cut inside a card.
 
 **New:**
 - **`RowAction.href`** (+ `external`): an action that navigates is a real link, inline
