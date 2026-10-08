@@ -32,7 +32,9 @@ describe("AdminActionLog", () => {
     expect(deactivated).toHaveTextContent("Ben Sample");
     expect(deactivated).toHaveTextContent("ben@example.com");
     expect(deactivated).toHaveTextContent("by Ada Example");
-    expect(within(deactivated).getByText(/ago|yesterday|today/i).tagName).toBe("TIME");
+    // 0.32: DateMark shows the exact date beside the relative words, both inside one
+    // <time>, so the words are a span within it.
+    expect(within(deactivated).getByText(/ago|yesterday|today/i).closest("time")).not.toBeNull();
 
     expect(requested).toHaveTextContent("Deletion requested");
     expect(requested).toHaveTextContent("by the user themselves");

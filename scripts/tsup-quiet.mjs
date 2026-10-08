@@ -35,10 +35,17 @@ const INVENTORY = [
 // eslint-disable-next-line no-control-regex -- matching the colour codes is the point
 const ANSI = /\x1b\[[0-9;]*m/g;
 
+// The declaration build (tsup's DTS worker, rollup-plugin-dts over ~400 unbundled
+// entries) outgrew Node's default heap in 0.32: it died with ERR_WORKER_OUT_OF_MEMORY on
+// this machine and would on a 16 GB CI runner too. It peaks at about 5.2 GB resident with
+// this ceiling. A caller's own --max-old-space-size wins: it comes later in NODE_OPTIONS.
+const HEAP = "--max-old-space-size=6144";
+const env = { ...process.env, NODE_OPTIONS: [HEAP, process.env.NODE_OPTIONS].filter(Boolean).join(" ") };
+
 const child = spawn(process.execPath, [cli, ...process.argv.slice(2)], {
   stdio: ["inherit", "pipe", "inherit"],
   // Piped, tsup would drop its colours; keep them when the caller is a terminal.
-  env: process.stdout.isTTY ? { FORCE_COLOR: "1", ...process.env } : process.env,
+  env: process.stdout.isTTY ? { FORCE_COLOR: "1", ...env } : env,
 });
 
 createInterface({ input: child.stdout }).on("line", (line) => {
