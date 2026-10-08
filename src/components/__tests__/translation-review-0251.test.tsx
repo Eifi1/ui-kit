@@ -54,9 +54,9 @@ function panel(props: Partial<TranslationReviewPanelProps> = {}) {
 
 /** jsdom has no matchMedia, so the wide layout renders unless a phone is stubbed. */
 function stubPhone() {
-  vi.stubGlobal("matchMedia", () => ({
-    matches: false,
-    media: "",
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
+    media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
   }));

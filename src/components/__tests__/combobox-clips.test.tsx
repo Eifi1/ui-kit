@@ -20,7 +20,7 @@ function mockPhone() {
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     value: (query: string) => ({
-      matches: query.includes("max-width: 767px"),
+      matches: query.includes("width < 768px"),
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),

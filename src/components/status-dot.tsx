@@ -66,6 +66,28 @@ export function statusDotColor(tone: StatusDotTone): string {
 
 const SIZE: Record<StatusDotSize, string> = { sm: "size-2", md: "size-2.5", lg: "size-3" };
 
+/**
+ * A labelled dot at Large and Extra large (0.32.1, keksdose's 0.32 report;
+ * docs/text-size-harmonization.md §4 "nothing truncates"): the label wraps instead of
+ * ending in "…", so a legend entry or a status keeps its last word, the one that tells
+ * two states apart. The dot then sits on the label's FIRST line rather than halfway down
+ * the block: the row aligns to the top and the dot moves down by half of what one line
+ * (`1lh`, the label's own line height, which the dot inherits) leaves around it.
+ * `large:` classes, so Normal keeps its one centred line.
+ *
+ * `break-words`, not `[overflow-wrap:anywhere]`: a legend often sits in a table, and
+ * `anywhere` lowers the label's min-content width to one letter, so an auto-sized column
+ * squeezed it to a letter per line (the showcase's tone table at 360 px, Extra large).
+ * `break-word` keeps each word whole wherever the width is the content's to choose, and
+ * still breaks one that cannot fit its line at all.
+ */
+const LABEL_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const DOT_ON_FIRST_LINE: Record<StatusDotSize, string> = {
+  sm: "large:mt-[calc((1lh_-_0.5rem)/2)]",
+  md: "large:mt-[calc((1lh_-_0.625rem)/2)]",
+  lg: "large:mt-[calc((1lh_-_0.75rem)/2)]",
+};
+
 export interface StatusDotProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   tone?: StatusDotTone;
   size?: StatusDotSize;
@@ -116,6 +138,7 @@ export function StatusDot({
         SIZE[size],
         FILL[tone],
         ring && "ring-2 ring-[var(--bg-surface)]",
+        label != null && DOT_ON_FIRST_LINE[size],
         label == null && className,
         dotClassName,
       )}
@@ -130,9 +153,9 @@ export function StatusDot({
   return (
     // No `aria-label` here: the visible label is the text, and a name on a role-less
     // span is one ARIA forbids and screen readers ignore.
-    <span {...rest} className={cn("inline-flex min-w-0 items-center gap-1.5 text-sm", className)}>
+    <span {...rest} className={cn("inline-flex min-w-0 items-center gap-1.5 text-sm large:items-start", className)}>
       {dot}
-      <span className="min-w-0 truncate">{label}</span>
+      <span className={cn("min-w-0 truncate", LABEL_WRAP_AT_LARGE)}>{label}</span>
     </span>
   );
 }

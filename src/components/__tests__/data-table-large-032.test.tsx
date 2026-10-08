@@ -19,13 +19,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** A `matchMedia` answering `(min-width)` / `(max-width)` for a fixed viewport, as
+/** A `matchMedia` answering `(min-width)` / `(width <)` for a fixed viewport, as
  *  use-breakpoint-032 does — 390 px is the phone layout at every size. */
 function viewport(width: number) {
   vi.stubGlobal("matchMedia", (query: string) => {
     const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /max-width:\s*(\d+)px/.exec(query);
-    const matches = min ? width >= Number(min[1]) : max ? width <= Number(max[1]) : false;
+    const max = /width\s*<\s*(\d+)px/.exec(query);
+    const matches = min ? width >= Number(min[1]) : max ? width < Number(max[1]) : false;
     return { matches, media: query, addEventListener() {}, removeEventListener() {} };
   });
 }

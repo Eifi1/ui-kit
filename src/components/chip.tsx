@@ -382,8 +382,10 @@ export function refreshChipEdges(): void {
       const r = el.getBoundingClientRect();
       const label = el.querySelector<HTMLElement>(".truncate");
       // Not laid out (a hidden ancestor, jsdom), or truncated at its container's edge,
-      // where a wider chip would overflow: leave it alone.
-      if (!r.width || (label && label.scrollWidth > label.clientWidth)) return null;
+      // where a wider chip would overflow: leave it alone. So too a label wrapped onto
+      // a second line at Large (0.32.1): the chip is already as wide as its row lets it
+      // be, and a min-width past that would push it over the edge just the same.
+      if (!r.width || (label && (label.scrollWidth > label.clientWidth || labelWraps(label)))) return null;
       const width = Math.round(r.width * 64) / 64;
       const target = snappedChipEdgeWidth(width, r.left + window.scrollX, dpr);
       return target === width ? null : target;
@@ -404,6 +406,13 @@ export function refreshChipEdges(): void {
     });
     pending = next;
   }
+}
+
+/** Whether a chip's label runs to more than one line — taller than one and a half of
+ *  its line height. A line height of `normal` (no number to compare) counts as one line. */
+function labelWraps(label: HTMLElement): boolean {
+  const line = Number.parseFloat(getComputedStyle(label).lineHeight);
+  return line > 0 && label.clientHeight > 1.5 * line;
 }
 
 function scheduleChipEdges() {
@@ -489,11 +498,29 @@ function assignRef<T>(target: Ref<T> | undefined, value: T | null) {
 }
 
 const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border transition-colors";
+
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
 // pointer click reads as a stuck selection.
 const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]`;
 const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
+
+/**
+ * A text chip's label at Large and Extra large (0.32.1, keksdose's 0.32 report;
+ * docs/text-size-harmonization.md §4 "nothing truncates"): it wraps instead of ending in
+ * "…". keksdose's "Zur Prüfung zurücklegen" read "Zur Prüfung zu…" on a phone at Extra
+ * large, which is a different instruction. No size has a fixed height (padding and
+ * `min-h-*` only), so the pill grows with its lines; the mark before the text stays
+ * centred on them, as in a pill. A `large:` class, so Normal keeps its one-line chip.
+ *
+ * `break-words`, not `[overflow-wrap:anywhere]`: a status chip often sits in a table
+ * cell, and `anywhere` lowers the label's min-content width to one letter, so an
+ * auto-sized column can squeeze it to a letter per line (StatusDot's label did, in the
+ * showcase's tone table at 360 px, Extra large). `break-word` keeps each word whole
+ * wherever the width is the content's to choose, and still breaks one that cannot fit
+ * the row at all.
+ */
+const CHIP_LABEL_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
 
 /**
  * An interactive chip's touch target at Large and Extra large (docs/text-size-harmonization.md
@@ -814,14 +841,15 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         ) : (
           <Icon className={cn(s.icon, "shrink-0")} aria-hidden />
         ))}
-      {/* Text truncates. Mixed children (an icon and a word) sit in a row instead: as a
-          plain span, the svg — a block under Tailwind's preflight — stacked above the
-          text (keksdose live #358). */}
+      {/* Text truncates at Normal and wraps at Large (CHIP_LABEL_WRAP_AT_LARGE). Mixed
+          children (an icon and a word) sit in a row instead: as a plain span, the svg —
+          a block under Tailwind's preflight — stacked above the text (keksdose live
+          #358). */}
       <span
         className={cn(
           "min-w-0",
           typeof children === "string" || typeof children === "number"
-            ? "truncate"
+            ? cn("truncate", CHIP_LABEL_WRAP_AT_LARGE)
             : "inline-flex items-center gap-1 [&>svg]:size-[1em] [&>svg]:shrink-0",
         )}
       >

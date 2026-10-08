@@ -24,11 +24,11 @@ interface Row {
 const ROWS: Row[] = Array.from({ length: 30 }, (_, i) => ({ id: i, name: `Row ${i}` }));
 const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r) => r.name }];
 
-/** The phone layout: `useMediaQuery("(min-width: 768px)")` answers false. */
+/** The phone layout: `usePhoneLayout()`'s `(width < 768px)` matches, nothing else. */
 function stubPhone() {
-  vi.stubGlobal("matchMedia", () => ({
-    matches: false,
-    media: "",
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
+    media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
   }));

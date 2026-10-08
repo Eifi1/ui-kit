@@ -40,13 +40,13 @@ afterEach(() => {
 function media({ width = 1280, coarse = false }: { width?: number; coarse?: boolean } = {}) {
   vi.stubGlobal("matchMedia", (query: string) => {
     const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /max-width:\s*(\d+)px/.exec(query);
+    const max = /width\s*<\s*(\d+)px/.exec(query);
     const matches = /pointer:\s*coarse/.test(query)
       ? coarse
       : min
         ? width >= Number(min[1])
         : max
-          ? width <= Number(max[1])
+          ? width < Number(max[1])
           : false;
     return { matches, media: query, addEventListener() {}, removeEventListener() {} };
   });

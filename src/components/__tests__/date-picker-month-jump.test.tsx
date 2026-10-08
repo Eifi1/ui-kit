@@ -337,7 +337,7 @@ describe("DateRangePicker monthJump (kastlan's July–June period)", () => {
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       value: (query: string) => ({
-        matches: query.includes("max-width: 767px") || query.includes("reduced-motion"),
+        matches: query.includes("width < 768px") || query.includes("reduced-motion"),
         media: query,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),

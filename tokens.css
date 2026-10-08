@@ -693,10 +693,18 @@ body {
   .animate-drill { animation-name: overlay-fade-in; }
 }
 
-/* Scrollbars: keep light defaults; theme to slate when dark mode is active. */
+/* Scrollbars: keep light defaults; theme to the palette when dark mode is active.
+ *
+ * From the tokens, not literals (0.32.1, keksdose's 0.32 report): the thumb is a border
+ * (`--border`) on the page (`--bg-page`), so a palette preset carries through, and so
+ * does More contrast (§5), which steps `--border` until it clears 3:1 against every
+ * surface, the page among them: WCAG 1.4.11's floor for a control's visible part. At
+ * standard contrast it is as quiet as the slate-700-on-slate-900 it replaces (1.5:1
+ * against 1.7:1 in the default dark preset). Hover takes `--border-strong`, the border
+ * pulled toward the text, which grows with it. */
 .dark {
   color-scheme: dark;
-  scrollbar-color: rgb(51 65 85) rgb(15 23 42); /* slate-700 thumb on slate-900 track */
+  scrollbar-color: var(--border) var(--bg-page);
 }
 
 .dark ::-webkit-scrollbar {
@@ -705,19 +713,19 @@ body {
 }
 
 .dark ::-webkit-scrollbar-track {
-  background-color: rgb(15 23 42); /* slate-900 */
+  background-color: var(--bg-page);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgb(51 65 85); /* slate-700 */
+  background-color: var(--border);
   border-radius: 6px;
-  border: 2px solid rgb(15 23 42); /* slate-900 — creates inset padding */
+  border: 2px solid var(--bg-page); /* the track's colour: inset padding */
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(71 85 105); /* slate-600 */
+  background-color: var(--border-strong);
 }
 
 .dark ::-webkit-scrollbar-corner {
-  background-color: rgb(15 23 42); /* slate-900 */
+  background-color: var(--bg-page);
 }

@@ -156,6 +156,32 @@ describe("Chip snapEdges", () => {
     expect(chip(container).tagName).toBe("A");
   });
 
+  it("leaves a chip alone whose label wrapped onto a second line at Large (0.32.1)", () => {
+    // At Large the label wraps instead of truncating; a wrapped chip is already as wide
+    // as its row lets it be, and a min-width past that would overflow.
+    ratio(1.25);
+    const { container } = render(
+      <div>
+        <Chip snapEdges data-testid="c" data-left="31" data-width="59.66">
+          Zur Prüfung zurücklegen
+        </Chip>
+        <Chip snapEdges data-testid="d" data-left="31" data-width="59.66">
+          FAILED
+        </Chip>
+      </div>,
+    );
+    const lines = (testId: string, count: number) => {
+      const label = container.querySelector<HTMLElement>(`[data-testid=${testId}] .truncate`)!;
+      label.style.lineHeight = "16px";
+      Object.defineProperty(label, "clientHeight", { configurable: true, value: 16 * count });
+    };
+    lines("c", 2);
+    lines("d", 1);
+    act(() => refreshChipEdges());
+    expect(chip(container).style.minWidth).toBe("");
+    expect(container.querySelector<HTMLElement>("[data-testid=d]")!.style.minWidth).toBe("62px");
+  });
+
   it("forwards the ref on a plain chip as before", () => {
     const ref = { current: null as HTMLElement | null };
     const { container } = render(

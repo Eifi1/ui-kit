@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
-import { useBreakpoint } from "../hooks/use-breakpoint";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
@@ -458,9 +458,10 @@ export function TranslationReviewPanel({
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
   const locale = useKitLocale();
   const lock = useWriteLock();
-  // The wide screen's breakpoint — the one DataTable switches its layout on, so "a phone"
-  // means the same here as in the table, at every text size.
-  const phone = !useBreakpoint("md", true);
+  // The phone layout DataTable switches its layout on, so "a phone" means the same here
+  // as in the table, at every text size: `usePhoneLayout()` itself (§10.4; 0.32.1,
+  // keksdose's 0.32 report — `!useBreakpoint("md")` could disagree with it at 767.5 px).
+  const phone = usePhoneLayout();
   const baseId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const editable = !readOnly && onSave !== undefined;

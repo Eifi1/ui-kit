@@ -112,12 +112,12 @@ function mount(initial: InitialEntry, props: Partial<SettingsLayoutProps<G>> = {
   );
 }
 
-/** A phone: PHONE_QUERY matches. */
+/** A phone: the phone layout's `(width < 768px)` matches. */
 function mockPhone() {
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     value: (query: string) => ({
-      matches: query.includes("max-width: 767px"),
+      matches: query.includes("width < 768px"),
       media: query,
       addEventListener: () => {},
       removeEventListener: () => {},

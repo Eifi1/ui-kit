@@ -73,10 +73,12 @@ const CY: Row = {
 };
 
 /** A viewport the test decides: wide = the table, narrow = the phone cards. */
+/** A wide or a narrow screen: a `max-*` query (`(width < …)` since 0.32.1) is the exact
+ *  complement of its `min-*` one, so "every query true" no longer means "wide". */
 function stubViewport(wide: boolean) {
-  vi.stubGlobal("matchMedia", () => ({
-    matches: wide,
-    media: "",
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: wide !== query.includes("width <"),
+    media: query,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
   }));

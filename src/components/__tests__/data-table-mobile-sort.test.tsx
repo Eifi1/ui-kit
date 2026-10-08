@@ -43,11 +43,12 @@ const COLUMNS: DataTableColumn<Row>[] = [
 function stubViewport(initialWide: boolean) {
   let wide = initialWide;
   const listeners = new Set<() => void>();
-  vi.stubGlobal("matchMedia", () => ({
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    // Wide: `md` matches; narrow: the phone layout's `(width < 768px)` does.
     get matches() {
-      return wide;
+      return wide !== query.includes("width <");
     },
-    media: "",
+    media: query,
     addEventListener: (_: string, cb: () => void) => listeners.add(cb),
     removeEventListener: (_: string, cb: () => void) => listeners.delete(cb),
   }));

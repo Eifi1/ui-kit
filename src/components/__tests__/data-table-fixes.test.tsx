@@ -59,15 +59,14 @@ function namesOnScreen(): string[] {
   return rows.map((r) => within(r).getAllByRole("cell")[0]?.textContent ?? "");
 }
 
-/** The phone layout: `useMediaQuery("(min-width: 768px)")` answers false. */
+/** The phone layout: `usePhoneLayout()`'s `(width < 768px)` matches, nothing else. */
 function stubPhone() {
-  const mql = {
-    matches: false,
-    media: "",
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("width <"),
+    media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
-  };
-  vi.stubGlobal("matchMedia", () => mql);
+  }));
   return () => vi.unstubAllGlobals();
 }
 

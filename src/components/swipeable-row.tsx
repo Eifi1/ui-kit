@@ -269,8 +269,15 @@ export function SwipeableRow({
               type="button"
               onClick={action.onCommit}
               className={cn(
-                "sr-only whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-sm",
+                "sr-only whitespace-nowrap rounded-md border-[var(--border)] bg-[var(--bg-surface)] text-xs font-medium text-[var(--text-primary)] shadow-sm",
                 "focus:not-sr-only focus:pointer-events-auto focus:inline-flex focus:items-center focus:gap-1.5",
+                // The box's padding and border only once it shows (0.32.1, keksdose's
+                // 0.32 report). Unconditional, `px-2` and `border` beat `sr-only`'s
+                // `padding: 0` and `border-width: 0`, so the hidden button was a 1 px
+                // box with 2 × 0.5rem of padding round it: 26 px at Extra large, running
+                // past the row's end from the strip's start — invisible under its clip,
+                // but counted in the page's scroll width (§4: nothing overflows).
+                "focus:border focus:px-2 focus:py-1",
                 FOCUS_RING,
               )}
             >

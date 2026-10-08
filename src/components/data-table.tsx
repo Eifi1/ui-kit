@@ -35,7 +35,7 @@ import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
-import { useBreakpoint } from "../hooks/use-breakpoint";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
@@ -1655,9 +1655,13 @@ export function DataTable<T>({
     : labels.columnsCount(visibleCount, totalCount);
   // Match the `md:` breakpoint at the text size in force: we render either the table or
   // the card list — never both — so we don't double up DOM nodes that screen readers and
-  // integration tests would have to disambiguate. The same answer as `usePhoneLayout()`
-  // (inverted), which an app's own phone checks use (§10.4).
-  const isMdUp = useBreakpoint("md", true);
+  // integration tests would have to disambiguate. `usePhoneLayout()` itself, not its twin
+  // `useBreakpoint("md")`: the same query an app's own phone checks ask (keksdose's
+  // sticky editor footer), so the card list and the full-screen row dialog switch with
+  // them and never a frame apart (§10.4 "usePhoneLayout() is the single answer"; 0.32.1,
+  // keksdose's 0.32 report, where `md` and `max-md` both missed at 767.5 px). Without
+  // `matchMedia` (SSR, jsdom) it is the table, as before.
+  const isMdUp = !usePhoneLayout();
   // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
   const desktopScroller = useRef<HTMLDivElement | null>(null);
   const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
