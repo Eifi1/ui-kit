@@ -1203,6 +1203,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         deletion_request: "Löschung beantragt",
         deletion_cancel: "Löschung aufgehoben",
         erase: "Konto endgültig gelöscht",
+        plan: "Tarif geändert",
       },
     },
     transferOwnership: {
@@ -1546,6 +1547,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       contrastHelp:
         "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
       contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
+      saveFailed: "Konnte nicht in Ihrem Konto gespeichert werden. Auf diesem Gerät gilt es trotzdem.",
     },
     rowActions: {
       actions: "Aktionen",

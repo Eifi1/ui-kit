@@ -193,7 +193,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // CompactControls, DisabledReasonLine, useDisabledReasonLine, TOUCH_TARGET_LARGE,
   // useLargeText, useCoarsePointer, useInlineFacts, WINDOWED_ROW_INDEX, the "More"
   // cell's labels and splitMobileBar, DEFAULT_MOBILE_BAR_MAX; two DEFAULT_*_LABELS.
-  ["@eifi1/ui-kit", barrel, 856],
+  // 0.32.1: `remPx` and `useRemPx`, for the few lengths an app's JS does arithmetic with
+  // (keksdose's 0.32 report) (+2).
+  ["@eifi1/ui-kit", barrel, 858],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

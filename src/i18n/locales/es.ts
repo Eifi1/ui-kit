@@ -1175,6 +1175,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         deletion_request: "Eliminación solicitada",
         deletion_cancel: "Eliminación cancelada",
         erase: "Cuenta borrada",
+        plan: "Plan cambiado",
       },
     },
     transferOwnership: {
@@ -1502,6 +1503,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       contrastHelp:
         "El contraste aumentado oscurece los textos tenues y las líneas, y engrosa los marcos de foco. «Sistema» sigue el ajuste de este dispositivo.",
       contrastModes: { system: "Sistema", standard: "Estándar", more: "Aumentado" },
+      saveFailed: "No se ha podido guardar en su cuenta. En este dispositivo se aplica igualmente.",
     },
     rowActions: {
       actions: "Acciones",

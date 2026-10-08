@@ -1178,6 +1178,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deletion_request: "Törlés kérelmezve",
         deletion_cancel: "Törlés visszavonva",
         erase: "Fiók véglegesen törölve",
+        plan: "Csomag módosítva",
       },
     },
     transferOwnership: {
@@ -1506,6 +1507,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       contrastHelp:
         "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
       contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
+      saveFailed: "Nem sikerült menteni a fiókjába. Ezen az eszközön ettől még érvényes.",
     },
     rowActions: {
       actions: "Műveletek",

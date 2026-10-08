@@ -22,6 +22,12 @@ export interface AppearanceLabels {
   contrastHelp: string;
   /** The three choices, in {@link CONTRAST_MODES} order. */
   contrastModes: Record<ContrastMode, string>;
+  /**
+   * The account could not keep the pick (`useAccountAppearance`'s `pickTextSize` /
+   * `pickContrast` rejected): this device keeps it, the account doesn't. For the app's
+   * toast or the line under the setting (0.32.1, keksdose's 0.32 report).
+   */
+  saveFailed: string;
 }
 
 export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
@@ -31,6 +37,7 @@ export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
   contrast: "Contrast",
   contrastHelp: "More contrast darkens quiet text and lines, and thickens focus frames. System follows this device.",
   contrastModes: { system: "System", standard: "Standard", more: "More" },
+  saveFailed: "Couldn't save this to your account. It still applies on this device.",
 };
 
 /** The `appearance` namespace, resolved — English, then the provider, then `labels`. For

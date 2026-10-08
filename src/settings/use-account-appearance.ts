@@ -79,7 +79,7 @@ export interface UseAccountAppearanceOptions {
 export interface AccountAppearance extends ResolvedAccountAppearance {
   /** The user picked a size: it becomes the device's choice and — signed in, and not a
    *  demo — the account's. The promise is `save`'s; the device keeps the pick if it
-   *  fails, and the app says so. */
+   *  fails, and the app says so (`appearance.saveFailed`, 0.32.1). */
   pickTextSize: (size: TextSize) => Promise<unknown>;
   /** As {@link pickTextSize}, for the contrast mode. */
   pickContrast: (mode: ContrastMode) => Promise<unknown>;
