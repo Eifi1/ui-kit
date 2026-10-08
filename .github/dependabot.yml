@@ -1,0 +1,55 @@
+# Monthly dependency updates for @eifi1/ui-kit — the apps' convention (keksdose,
+# kastlan, Kurvenschmiede), so all five repos behave alike:
+#   - MONTHLY at 06:00 Zurich: every Dependabot PR and each rebase is a CI run.
+#   - ONE npm entry at "/": the package and its showcase share the root lockfile.
+#   - Commit messages `build(deps): …` (packages) and `ci(deps): …` (actions). Both
+#     types are hidden in .versionrc.cjs, so an update never cuts a release on its own.
+#   - Minor and patch updates grouped into one PR per ecosystem; packages that pin
+#     each other move together (the first matching group wins).
+#   - NO major versions (Marcel, 2026-09-26, harmonised across the repos): a major is
+#     taken by hand with its migration. That also keeps react, react-dom, recharts,
+#     react-router and lucide-react inside the peer ranges the apps install.
+# Security updates are unaffected by the ignores.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Zurich
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
+      eslint:
+        patterns: ["eslint", "@eslint/js", "typescript-eslint", "eslint-plugin-*"]
+      tailwind:
+        patterns: ["tailwindcss", "@tailwindcss/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Zurich
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
