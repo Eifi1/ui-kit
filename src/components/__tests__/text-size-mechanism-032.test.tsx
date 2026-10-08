@@ -76,6 +76,25 @@ describe("TextSizeSetting / ContrastSetting (§6)", () => {
     expect(screen.getByRole("radio", { name: "Mehr" })).toBeChecked();
   });
 
+  it("puts a text hint under the group, never on the label line (0.32.1)", () => {
+    render(
+      <TextSizeSetting
+        value="normal"
+        onChange={() => {}}
+        label="Text size"
+        labelPlacement="above"
+        hint="Changes the text across the app."
+      />,
+    );
+    const group = screen.getByRole("radiogroup", { name: "Text size" });
+    const hint = screen.getByText("Changes the text across the app.");
+    // A caption under the group, describing it — not a sibling of the label.
+    expect(hint.tagName).toBe("P");
+    expect(group.parentElement!.contains(hint)).toBe(true);
+    expect(screen.getByText("Text size", { selector: "label" }).parentElement!.contains(hint)).toBe(false);
+    expect(group.getAttribute("aria-describedby")).toContain(hint.id);
+  });
+
   it("wraps its options by default, and so does ThemeSetting's toggle beside it (0.32.1)", () => {
     const optionLabels = { system: "System", light: "Light", dark: "Dark" };
     render(

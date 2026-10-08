@@ -216,16 +216,32 @@ export function RowActions({
       )}
     >
       {(close) => (
-        <ul data-slot="row-actions-menu" className="space-y-0.5">
-          {entries.map((action) => (
-            <li key={action.key ?? action.label}>
-              <MenuAction action={action} close={close} />
-            </li>
-          ))}
-        </ul>
+        // React carries an event out of a portal along the COMPONENT tree, so a click on
+        // an entry (or between two) reached a clickable row or a DataTable `onRowClick`
+        // the menu was opened from, though the panel is nowhere near it in the page —
+        // only the "⋯" trigger stopped its own (0.32.1, keksdose's 0.32 report). Stopped
+        // here for the whole panel: clicks, and the Enter / Space a row also listens for.
+        // Escape goes on, to the popover that closes on it.
+        <div role="presentation" onClick={stopClick} onKeyDown={stopActivationKeys}>
+          <ul data-slot="row-actions-menu" className="space-y-0.5">
+            {entries.map((action) => (
+              <li key={action.key ?? action.label}>
+                <MenuAction action={action} close={close} />
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </Popover>
   );
+}
+
+function stopClick(e: MouseEvent) {
+  e.stopPropagation();
+}
+
+function stopActivationKeys(e: KeyboardEvent) {
+  if (e.key === "Enter" || e.key === " ") e.stopPropagation();
 }
 
 /**

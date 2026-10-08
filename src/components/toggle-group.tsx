@@ -9,6 +9,7 @@ import {
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
   hasContent,
+  isTextHint,
   LabelStrip,
   useDisabledReasonLine,
   useInlineHint,
@@ -130,8 +131,15 @@ export interface ToggleGroupBaseProps<T extends string>
    * two stack and both keep their corners.
    */
   chromeClassName?: string;
-  /** A {@link FieldHint} on the label line, as on a labelled {@link Select}. Only with
-   *  `label`. */
+  /**
+   * As on a labelled {@link Select}: a {@link FieldHint} "?" on the label line, and plain
+   * text (a string) as a caption under the group. Only with `label`.
+   *
+   * 0.32.1 (keksdose's 0.32 report): text went on the label line in every placement, so
+   * `TextSizeSetting`'s hint with `labelPlacement="above"` sat beside the label in body
+   * type, and at Extra large became a column one word wide — on the setting a reader who
+   * needs large text opens first. The label line holds the "?" only (`isTextHint`).
+   */
   hint?: ReactNode;
   /** The message under the field when it is wrong: paints the field's border with
    *  `--danger`, marks the group `aria-invalid` and describes it with the message, as
@@ -339,9 +347,10 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const locked = hasContent(disabledReason);
   // §4: at Large and on touch the reason is a line under the group, not a bubble.
   const reasonLine = useDisabledReasonLine(disabledReasonDisplay) && locked;
-  // §4: likewise a FieldHint "?" on the label line becomes a caption under the group.
+  // §4: likewise a FieldHint "?" on the label line becomes a caption under the group at
+  // Large and on touch; text is a caption at every size, as Select's (see `hint`).
   const inlineHint = useInlineHint(hint);
-  const hintAsCaption = inlineHint !== hint ? inlineHint : undefined;
+  const hintAsCaption = isTextHint(hint) ? hint : inlineHint !== hint ? inlineHint : undefined;
   const labelHint = hintAsCaption === undefined ? hint : undefined;
   // Locked looks disabled — the dimmed group, the not-allowed cursor, no hover offer —
   // but stays focusable; `disabled` alone also takes the segments out of the tab order.

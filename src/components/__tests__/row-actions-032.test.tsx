@@ -399,3 +399,52 @@ describe("RowActions — a row name that is null (0.32.1)", () => {
     expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
   });
 });
+
+describe("RowActions — the menu keeps its clicks from the row (0.32.1)", () => {
+  it("stops a menu entry's click and Enter at the panel; Escape still closes", async () => {
+    setSize("large");
+    const onRow = vi.fn();
+    const onRowKey = vi.fn();
+    const remove = vi.fn();
+    const user = userEvent.setup();
+    render(
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a clickable row stand-in
+      <div onClick={onRow} onKeyDown={onRowKey}>
+        <RowActions actions={actions({ remove })} name="Ada Example" />
+      </div>,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions for Ada Example" }));
+    const menu = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
+    fireEvent.keyDown(within(menu).getByRole("button", { name: "Edit" }), { key: "Enter" });
+    await user.click(within(menu).getByRole("button", { name: "Delete" }));
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(onRow).not.toHaveBeenCalled();
+    expect(onRowKey).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Actions for Ada Example" }));
+    const again = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
+    await user.keyboard("{Escape}");
+    expect(again).not.toBeInTheDocument();
+    expect(onRow).not.toHaveBeenCalled();
+  });
+
+  it("keeps a DataTable's onRowClick out of the menu", async () => {
+    setSize("large");
+    const onRowClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <DataTable
+          rows={ROWS}
+          columns={[NAME, rowActionsColumn<Row>({ actions: () => actions(), name: (r) => r.name })]}
+          rowKey={(r) => r.id}
+          onRowClick={onRowClick}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getAllByRole("button", { name: "Actions for Alpha" })[0]);
+    const menu = await screen.findByRole("dialog", { name: "Actions for Alpha" });
+    await user.click(within(menu).getByRole("button", { name: "Archive" }));
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+});
