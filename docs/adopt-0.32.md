@@ -180,6 +180,13 @@ wheel.
   `ChoiceCardGroup` and the translation review editor get `grid-cols-1`. An untemplated
   column grew to its widest unbreakable line (Kurvenschmiede's landing ran 80 px past a
   360 px phone). A `contain: inline-size` workaround can go.
+- **A ToggleGroup's text `hint` is a caption under the group** at every size, as on
+  Select; the label line keeps a `FieldHint` "?" only. This reaches `TextSizeSetting`,
+  `ContrastSetting` and `ThemeSetting`'s toggle (keksdose: with `labelPlacement="above"`
+  the hint sat beside the label, a one-word column at Extra large).
+- **RowActions' "⋯" menu keeps its clicks:** an entry's click (and Enter / Space) no
+  longer reaches a clickable row or a DataTable's `onRowClick` through the portal. A
+  wrapper that stops propagation around `RowActions` can go.
 - **AlertBanner's actions wrap** on a line of their own (the demo strip's "Request access"
   and "Sign in" at Extra large).
 - **Nothing runs past a 360 px phone at Extra large**, from a sweep of every showcase page:
