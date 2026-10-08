@@ -131,6 +131,12 @@ export const de: Dictionary = {
       blurb:
         "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen und das Übergeben von Arbeit.",
     },
+    subscription: {
+      title: "Abonnement",
+      short: "Abrechnung",
+      blurb:
+        "Für eine App bezahlen: die Tarifauswahl in zwei Währungen und zwei Abrechnungszeiträumen, der Status des Abonnements, die Banner von der Testphase bis zum Ablauf, der Hinweis auf das Tariflimit, die Nur-Lesen-Sperre neben jener der Demo, das Portal des Anbieters und der kommerzielle Hinweis im Impressum.",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -165,6 +171,12 @@ export const de: Dictionary = {
       short: "Tokens",
       blurb:
         "Jeder Wert des aktiven TokenSet, live. Wechseln Sie oben in der Leiste Theme oder Palette und sehen Sie dieser Seite beim Umschalten zu — was sich nicht bewegt, ist hart kodiert.",
+    },
+    "text-size": {
+      title: "Textgrösse & Kontrast",
+      short: "Textgrösse",
+      blurb:
+        "Normal, Gross und Sehr gross über eine einzige Skala am Wurzelelement, mit den Breakpoints, die mit ihr wandern, der Stufe „Mehr“ beim Kontrast, der Kontoregel, die beides von Gerät zu Gerät mitnimmt — und was die Komponenten bei Gross tun.",
     },
     palette: {
       title: "Palettengenerator",
@@ -240,7 +252,7 @@ export const de: Dictionary = {
     pickers: {
       title: "Picker & Erfassung",
       blurb:
-        "Aus einer Liste wählen statt tippen, und die aufwendigeren Arten der Erfassung: eine Messtabelle, ein Feld, das beim Verlassen speichert, eine Unterschrift, ein Passwort.",
+        "Aus einer Liste wählen statt tippen, und die aufwendigeren Arten der Erfassung: eine Messtabelle, ein Feld, das beim Verlassen speichert, eine Unterschrift, ein Passwort, ein Formular in Schritten.",
     },
     comboboxes: {
       title: "Comboboxen",
@@ -434,7 +446,7 @@ export const de: Dictionary = {
     "app-chrome": {
       title: "App-Rahmen",
       blurb:
-        "Der Rahmen, in dem eine App lebt, und die Abläufe, die jede App wiederholt: Einstellungen, mehrstufige Formulare, Feedback.",
+        "Der Rahmen, in dem eine App lebt, und die Abläufe, die jede App wiederholt: Einstellungen, Konten, Abonnements, Feedback.",
     },
     "page-structure": {
       title: "Seitenkopf & Pfadnavigation",
@@ -522,6 +534,12 @@ export const de: Dictionary = {
       blurb:
         "Das Wegwerf-Demokonto: seine Einstellungen, die Prüfungen vor dem Start in fester Reihenfolge, die Ablehnungen und ihre Codes, die Nur-Lesen-Regel und seine eine Lebensdauer.",
     },
+    "server-billing": {
+      title: "Abrechnung",
+      short: "Abrechnung",
+      blurb:
+        "Tarife und ihre Limits, der Stand des Abonnements mit den Daten der Testphase und der Beta, die Nur-Lesen-Sperre bei Ablauf und die Webhooks von Paddle und Lemon Squeezy: Signaturen geprüft, Ereignisse vereinheitlicht, ein Dispatch.",
+    },
     "server-mail": {
       title: "E-Mail",
       short: "E-Mail",
@@ -591,6 +609,18 @@ export const de: Dictionary = {
       "die Arbeit einer Person an jemand anderen übergeben",
       "die Sprachen eines Übersetzungsprüfers festlegen",
     ],
+    subscription: [
+      "einen Tarif wählen",
+      "Preise in CHF und EUR",
+      "monatlich oder jährlich abrechnen",
+      "den Status des Abonnements anzeigen",
+      "Banner zum Ende der Testphase",
+      "Banner bei fehlgeschlagener Zahlung",
+      "Tariflimit erreicht",
+      "nur lesen nach Ablauf des Abonnements",
+      "das Abrechnungsportal öffnen",
+      "das Abonnement kündigen",
+    ],
     "auth-account": [
       "Layout der Anmeldeseite",
       "Zwei-Faktor per QR-Code einrichten",
@@ -625,6 +655,7 @@ export const de: Dictionary = {
       "das ganze Kit übersetzen",
       "Farbpalette der Marke",
       "Dark Mode",
+      "grössere Schrift und mehr Kontrast",
     ],
     tokens: [
       "alle Farb-Tokens ansehen",
@@ -634,6 +665,17 @@ export const de: Dictionary = {
       "Abstände, Radien und Schatten",
       "Textfarben und Flächen",
       "fest eingetragene Werte finden",
+    ],
+    "text-size": [
+      "Text vergrössern",
+      "Einstellung für grosse Schrift",
+      "mehr Kontrast bei Sehschwäche",
+      "Modus mit hohem Kontrast",
+      "Breakpoints, die mit der Schrift wachsen",
+      "im Code auf das Smartphone-Layout prüfen",
+      "die Textgrösse dem Konto folgen lassen",
+      "die Beschriftung eines Icon-Buttons als Text zeigen",
+      "Zeilenaktionen in ein Menü falten",
     ],
     palette: [
       "Palette aus einer Markenfarbe erzeugen",
@@ -751,6 +793,7 @@ export const de: Dictionary = {
       "Feld beim Verlassen speichern",
       "Unterschrift erfassen",
       "Passwortstärke prüfen",
+      "mehrstufiges Formular",
     ],
     comboboxes: [
       "lange Liste durch Tippen filtern",
@@ -1042,7 +1085,7 @@ export const de: Dictionary = {
       "App-Layout",
       "Seitenleiste und obere Leiste",
       "Einstellungsseite",
-      "mehrstufiges Formular",
+      "einen Abonnement-Tarif wählen",
       "Feedback von Nutzern sammeln",
     ],
     "page-structure": [
@@ -1175,6 +1218,15 @@ export const de: Dictionary = {
       "Demo schreibgeschützt machen",
       "Ablehnungscodes der Demo",
       "alte Demo-Benutzer aufräumen",
+    ],
+    "server-billing": [
+      "Tariflimit auf dem Server prüfen",
+      "Webhook-Signatur prüfen",
+      "Ereignisse von Paddle und Lemon Squeezy verarbeiten",
+      "ist das Abonnement in Ordnung",
+      "Enddaten von Testphase und Beta",
+      "Schreibzugriffe nach Ablauf des Abonnements ablehnen",
+      "Tarifkatalog mit Preisen",
     ],
     "server-mail": [
       "E-Mail zum Zurücksetzen des Passworts senden",

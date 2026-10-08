@@ -120,6 +120,12 @@ export const it: Dictionary = {
       blurb:
         "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti e il passaggio del lavoro.",
     },
+    subscription: {
+      title: "Abbonamento",
+      short: "Fatturazione",
+      blurb:
+        "Pagare un’app: la scelta del piano in due valute e su due periodi, lo stato dell’abbonamento, i banner dalla prova alla scadenza, l’avviso di limite del piano, il blocco di sola lettura accanto a quello della demo, il portale del fornitore e l’avvertenza commerciale delle note legali.",
+    },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
       short: "Accesso",
@@ -154,6 +160,12 @@ export const it: Dictionary = {
       short: "Token",
       blurb:
         "Ogni valore del TokenSet attivo, dal vivo. Cambia tema o palette nella barra in alto e guarda questa pagina cambiare: tutto ciò che resta fermo è scritto nel codice.",
+    },
+    "text-size": {
+      title: "Dimensione del testo e contrasto",
+      short: "Testo",
+      blurb:
+        "Normale, Grande e Molto grande su un’unica scala alla radice, con i breakpoint che la seguono, il livello Aumentato del contrasto, la regola dell’account che porta entrambi da un dispositivo all’altro — e cosa fanno i componenti a Grande.",
     },
     palette: {
       title: "Generatore di palette",
@@ -229,7 +241,7 @@ export const it: Dictionary = {
     pickers: {
       title: "Selettori e inserimento",
       blurb:
-        "Scegliere da un elenco invece di digitare, e i tipi di inserimento più impegnativi: una tabella di misure, un campo salvato quando lo lasci, una firma, una password.",
+        "Scegliere da un elenco invece di digitare, e i tipi di inserimento più impegnativi: una tabella di misure, un campo salvato quando lo lasci, una firma, una password, un modulo a passaggi.",
     },
     comboboxes: {
       title: "Combobox",
@@ -423,7 +435,7 @@ export const it: Dictionary = {
     "app-chrome": {
       title: "Struttura dell’app",
       blurb:
-        "La cornice in cui vive un’app e i flussi che ogni app ripete: impostazioni, moduli a più passaggi, feedback.",
+        "La cornice in cui vive un’app e i flussi che ogni app ripete: impostazioni, account, abbonamenti, feedback.",
     },
     "page-structure": {
       title: "Intestazione di pagina e percorso",
@@ -511,6 +523,12 @@ export const it: Dictionary = {
       blurb:
         "L’account demo usa e getta: le sue impostazioni, i controlli d’ingresso nel loro ordine, i rifiuti e i loro codici, la regola di sola lettura e la sua unica durata.",
     },
+    "server-billing": {
+      title: "Fatturazione",
+      short: "Fatturazione",
+      blurb:
+        "I piani e i loro limiti, la posizione dell’abbonamento con le date della prova e della beta, il blocco di sola lettura alla scadenza, e i webhook di Paddle e Lemon Squeezy: firme verificate, eventi normalizzati, un solo dispatch.",
+    },
     "server-mail": {
       title: "Email",
       short: "Email",
@@ -580,6 +598,18 @@ export const it: Dictionary = {
       "passare il lavoro di qualcuno a un altro utente",
       "impostare le lingue di un revisore delle traduzioni",
     ],
+    subscription: [
+      "scegliere un piano",
+      "prezzi in CHF ed EUR",
+      "fatturazione mensile o annuale",
+      "mostrare lo stato dell’abbonamento",
+      "banner di fine prova",
+      "banner di pagamento non riuscito",
+      "limite del piano raggiunto",
+      "sola lettura alla scadenza dell’abbonamento",
+      "aprire il portale di fatturazione",
+      "disdire l’abbonamento",
+    ],
     "auth-account": [
       "layout della pagina di accesso",
       "configurare i due fattori con un codice QR",
@@ -614,6 +644,7 @@ export const it: Dictionary = {
       "tradurre tutto il kit",
       "palette dei colori del brand",
       "tema scuro",
+      "testo più grande e più contrasto",
     ],
     tokens: [
       "vedere tutti i token di colore",
@@ -623,6 +654,17 @@ export const it: Dictionary = {
       "valori di spaziatura, raggio e ombre",
       "colori del testo e superfici",
       "controllare cosa è scritto a mano",
+    ],
+    "text-size": [
+      "ingrandire il testo",
+      "impostazione per il testo grande",
+      "più contrasto per chi vede poco",
+      "modalità ad alto contrasto",
+      "breakpoint che crescono con il testo",
+      "verificare nel codice il layout da telefono",
+      "far seguire la dimensione del testo all’account",
+      "mostrare come testo l’etichetta di un pulsante icona",
+      "raccogliere le azioni di riga in un menu",
     ],
     palette: [
       "generare una palette dal colore del brand",
@@ -740,6 +782,7 @@ export const it: Dictionary = {
       "salvare un campo quando si esce",
       "raccogliere una firma",
       "verificare la sicurezza della password",
+      "modulo in più passaggi",
     ],
     comboboxes: [
       "filtrare un lungo elenco scrivendo",
@@ -1031,7 +1074,7 @@ export const it: Dictionary = {
       "layout dell’app",
       "barra laterale e barra superiore",
       "pagina delle impostazioni",
-      "modulo in più passaggi",
+      "scegliere un piano di abbonamento",
       "raccogliere il feedback degli utenti",
     ],
     "page-structure": [
@@ -1164,6 +1207,15 @@ export const it: Dictionary = {
       "rendere la demo di sola lettura",
       "codici di rifiuto della demo",
       "ripulire i vecchi utenti demo",
+    ],
+    "server-billing": [
+      "controllare il limite del piano sul server",
+      "verificare la firma di un webhook",
+      "gestire gli eventi di Paddle e Lemon Squeezy",
+      "l’abbonamento è in regola",
+      "date di fine della prova e della beta",
+      "rifiutare le scritture quando l’abbonamento scade",
+      "catalogo dei piani con i prezzi",
     ],
     "server-mail": [
       "inviare l’email di reimpostazione della password",

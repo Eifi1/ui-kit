@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
-// 0.32: from the source until the barrel names them (the coordinator wires src/index.ts).
-import { applyTextSize, createTextSizeStore, isTextSize, resolveTextSize, type TextSize } from "../../src/theme/text-size";
-import { createContrastStore } from "../../src/theme/contrast";
+import {
+  applyTextSize,
+  createContrastStore,
+  createPaletteStore,
+  createTextSizeStore,
+  createThemeStore,
+  isTextSize,
+  resolveTextSize,
+  type TextSize,
+} from "@eifi1/ui-kit";
 
 /**
  * The showcase's own theme + palette stores.

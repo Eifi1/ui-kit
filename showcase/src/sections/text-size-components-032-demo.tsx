@@ -28,17 +28,17 @@ import {
   Input,
   List,
   ListItem,
+  RowActions,
   SignChip,
   StatTile,
   Switch,
   TextSizeSetting,
   ToggleGroup,
+  resolveTextSize,
+  useTextSize,
   useWindowedRows,
 } from "@eifi1/ui-kit";
 import type { AppShellNavItem, DataTableColumn } from "@eifi1/ui-kit";
-// 0.32: from the source until the barrel names them (the coordinator wires src/index.ts).
-import { RowActions } from "../../../src/components/row-actions";
-import { resolveTextSize, useTextSize } from "../../../src/theme/text-size";
 import { useTextSizeStore } from "../stores";
 import { Example, Note } from "../lib/section";
 

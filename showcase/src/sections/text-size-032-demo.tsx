@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { Button, ContrastSetting, Input, Switch, TextSizeSetting, FOCUS_RING, cn } from "@eifi1/ui-kit";
-// 0.32: from the source until the barrel names them (the coordinator wires src/index.ts).
-import { TEXT_SCALE, resolveTextSize, useTextSize } from "../../../src/theme/text-size";
-import type { TextSize } from "../../../src/theme/text-size";
-import { resolveContrastMode } from "../../../src/theme/contrast";
-import type { ContrastMode } from "../../../src/theme/contrast";
-import { BREAKPOINT_REM, useBreakpoint, usePhoneLayout } from "../../../src/hooks/use-breakpoint";
-import { useAccountAppearance } from "../../../src/settings/use-account-appearance";
-import type { AccountAppearanceFields, AccountAppearancePatch } from "../../../src/settings/use-account-appearance";
+import {
+  BREAKPOINT_REM,
+  Button,
+  ContrastSetting,
+  FOCUS_RING,
+  Input,
+  Switch,
+  TEXT_SCALE,
+  TextSizeSetting,
+  cn,
+  resolveContrastMode,
+  resolveTextSize,
+  useAccountAppearance,
+  useBreakpoint,
+  usePhoneLayout,
+  useTextSize,
+} from "@eifi1/ui-kit";
+import type { AccountAppearanceFields, AccountAppearancePatch, ContrastMode, TextSize } from "@eifi1/ui-kit";
 import { useContrastStore, useTextSizeStore } from "../stores";
 import { Example, Note, OutTable } from "../lib/section";
 
@@ -27,13 +36,17 @@ import { Example, Note, OutTable } from "../lib/section";
  * account is local state.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
+// `anywhere`: an identifier has no space to break at, and at Extra large on a phone a long
+// one is wider than the line.
+const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] py-1 last:border-b-0">
       <span className="text-[var(--text-secondary)]">{label}</span>
-      <span className="font-mono text-[var(--text-primary)]">{value}</span>
+      {/* `anywhere` lowers the value's min-content too: the account's JSON is one
+          unbreakable word, and it held the whole grid wider than a phone. */}
+      <span className="min-w-0 text-end font-mono text-[var(--text-primary)] [overflow-wrap:anywhere]">{value}</span>
     </div>
   );
 }
@@ -194,7 +207,7 @@ function AccountRuleDemo() {
           <Readout label="contrast" value={`${appearance.contrast} (from the ${appearance.sources.contrast})`} />
           <Readout label="account" value={signedIn ? JSON.stringify(account) : "signed out"} />
         </div>
-        <ul aria-label="Writes" className="space-y-0.5 font-mono text-xs text-[var(--text-secondary)]">
+        <ul aria-label="Writes" className="space-y-0.5 font-mono text-xs text-[var(--text-secondary)] [overflow-wrap:anywhere]">
           {log.length === 0 ? <li>No writes yet — signing in wrote nothing.</li> : log.map((l, i) => <li key={i}>{l}</li>)}
         </ul>
       </div>

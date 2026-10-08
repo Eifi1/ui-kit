@@ -126,6 +126,12 @@ export const fr: Dictionary = {
       blurb:
         "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations et la transmission du travail.",
     },
+    subscription: {
+      title: "Abonnement",
+      short: "Facturation",
+      blurb:
+        "Payer une application\u00a0: le choix de la formule en deux devises et sur deux périodes, l’état de l’abonnement, les bandeaux de l’essai à l’expiration, l’avis de limite de formule, le verrou de lecture seule à côté de celui de la démo, le portail du prestataire et l’avertissement commercial des mentions légales.",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -160,6 +166,12 @@ export const fr: Dictionary = {
       short: "Tokens",
       blurb:
         "Toutes les valeurs du TokenSet actif, en direct. Changez de thème ou de palette dans la barre du haut et regardez cette page bouger — ce qui ne bouge pas est codé en dur.",
+    },
+    "text-size": {
+      title: "Taille du texte et contraste",
+      short: "Texte",
+      blurb:
+        "Normale, Grande et Très grande sur une seule échelle à la racine, avec les points de rupture qui la suivent, le palier Renforcé du contraste, la règle du compte qui porte les deux d’un appareil à l’autre — et ce que font les composants en taille Grande.",
     },
     palette: {
       title: "Générateur de palette",
@@ -235,7 +247,7 @@ export const fr: Dictionary = {
     pickers: {
       title: "Sélecteurs et saisie",
       blurb:
-        "Choisir dans une liste plutôt que taper, et les saisies plus lourdes\u00a0: un tableau de mesures, un champ enregistré quand on le quitte, une signature, un mot de passe.",
+        "Choisir dans une liste plutôt que taper, et les saisies plus lourdes\u00a0: un tableau de mesures, un champ enregistré quand on le quitte, une signature, un mot de passe, un formulaire en étapes.",
     },
     comboboxes: {
       title: "Combobox",
@@ -429,7 +441,7 @@ export const fr: Dictionary = {
     "app-chrome": {
       title: "Cadre de l’application",
       blurb:
-        "Le cadre dans lequel vit une application, et les parcours que toute application répète\u00a0: paramètres, formulaires en plusieurs étapes, retours.",
+        "Le cadre dans lequel vit une application, et les parcours que toute application répète\u00a0: paramètres, comptes, abonnements, retours.",
     },
     "page-structure": {
       title: "En-tête de page et fil d’Ariane",
@@ -517,6 +529,12 @@ export const fr: Dictionary = {
       blurb:
         "Le compte de démo jetable\u00a0: ses paramètres, les vérifications d’accès dans leur ordre, les refus et leurs codes, la règle de lecture seule et son unique durée de vie.",
     },
+    "server-billing": {
+      title: "Facturation",
+      short: "Facturation",
+      blurb:
+        "Les formules et leurs limites, la situation de l’abonnement avec les dates de l’essai et de la bêta, le verrou de lecture seule à l’expiration, et les webhooks de Paddle et de Lemon Squeezy\u00a0: signatures vérifiées, événements normalisés, un seul dispatch.",
+    },
     "server-mail": {
       title: "E-mails",
       short: "E-mails",
@@ -586,6 +604,18 @@ export const fr: Dictionary = {
       "transmettre le travail de quelqu’un à un autre utilisateur",
       "définir les langues d’un relecteur de traductions",
     ],
+    subscription: [
+      "choisir une formule",
+      "prix en CHF et en EUR",
+      "facturation mensuelle ou annuelle",
+      "afficher l’état de l’abonnement",
+      "bandeau de fin d’essai",
+      "bandeau de paiement échoué",
+      "limite de la formule atteinte",
+      "lecture seule à l’expiration de l’abonnement",
+      "ouvrir le portail de facturation",
+      "résilier l’abonnement",
+    ],
     "auth-account": [
       "mise en page de la connexion",
       "configurer la double authentification par QR code",
@@ -620,6 +650,7 @@ export const fr: Dictionary = {
       "traduire tout le kit",
       "palette de la marque",
       "mode sombre",
+      "texte plus grand et plus de contraste",
     ],
     tokens: [
       "voir tous les tokens de couleur",
@@ -629,6 +660,17 @@ export const fr: Dictionary = {
       "espacements, arrondis et ombres",
       "couleurs de texte et surfaces",
       "repérer les valeurs codées en dur",
+    ],
+    "text-size": [
+      "agrandir le texte",
+      "réglage du texte en grande taille",
+      "plus de contraste pour la basse vision",
+      "mode contraste élevé",
+      "points de rupture qui grandissent avec le texte",
+      "détecter la mise en page mobile dans le code",
+      "faire suivre la taille du texte au compte",
+      "afficher le libellé d’un bouton icône en texte",
+      "replier les actions d’une ligne dans un menu",
     ],
     palette: [
       "générer une palette depuis une couleur de marque",
@@ -746,6 +788,7 @@ export const fr: Dictionary = {
       "enregistrer un champ en le quittant",
       "recueillir une signature",
       "vérifier la robustesse d’un mot de passe",
+      "formulaire en plusieurs étapes",
     ],
     comboboxes: [
       "filtrer une longue liste en tapant",
@@ -1037,7 +1080,7 @@ export const fr: Dictionary = {
       "mise en page d’application",
       "barre latérale et barre du haut",
       "page de paramètres",
-      "formulaire en plusieurs étapes",
+      "choisir une formule d’abonnement",
       "recueillir les avis des utilisateurs",
     ],
     "page-structure": [
@@ -1170,6 +1213,15 @@ export const fr: Dictionary = {
       "mettre la démo en lecture seule",
       "codes de refus de la démo",
       "nettoyer les anciens utilisateurs de démo",
+    ],
+    "server-billing": [
+      "vérifier une limite de formule sur le serveur",
+      "vérifier la signature d’un webhook",
+      "traiter les événements Paddle et Lemon Squeezy",
+      "l’abonnement est-il à jour",
+      "dates de fin de l’essai et de la bêta",
+      "refuser les écritures quand l’abonnement expire",
+      "catalogue des formules avec les prix",
     ],
     "server-mail": [
       "envoyer un e-mail de réinitialisation du mot de passe",

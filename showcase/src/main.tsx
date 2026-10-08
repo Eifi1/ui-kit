@@ -1,11 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router";
-import { applyPersistedTheme, applyPersistedPalette } from "@eifi1/ui-kit";
+import {
+  applyPersistedContrast,
+  applyPersistedPalette,
+  applyPersistedTextSize,
+  applyPersistedTheme,
+  applyTextSize,
+} from "@eifi1/ui-kit";
 import { Showcase } from "./showcase";
 import { LOCALE_STORAGE_KEY, LocaleProvider, dictionaryFor } from "./i18n";
-import { applyPersistedTextSize, applyTextSize } from "../../src/theme/text-size";
-import { applyPersistedContrast } from "../../src/theme/contrast";
 import { CONTRAST_KEY, PALETTE_KEY, TEXT_SIZE_KEY, THEME_KEY, URL_TEXT_SIZE } from "./stores";
 import "./app.css";
 // LanguageMenu's trigger and CurrencyFlag render `fi fi-xx` spans. Without this

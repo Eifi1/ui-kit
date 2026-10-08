@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { ArrowLeft } from "lucide-react";
-import { Button, ToggleGroup, cn } from "@eifi1/ui-kit";
+import { Button, TEXT_SIZES, ToggleGroup, cn, useAppearanceLabels, type TextSize } from "@eifi1/ui-kit";
 import { useLocale, useT } from "../i18n";
 import { usePalette, useTheme } from "../stores";
-import { TEXT_SIZES, type TextSize } from "../../../src/theme/text-size";
-import { useAppearanceLabels } from "../../../src/components/appearance-labels";
 
 /**
  * The current page at the screen sizes that cover most real use — one at a time at

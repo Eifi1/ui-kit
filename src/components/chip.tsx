@@ -1382,7 +1382,10 @@ export function ChipInput({
           aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
           aria-describedby={describedBy || undefined}
           aria-invalid={isInvalid || !!rejected || undefined}
-          className={cn("min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
+          // `w-0` with flex-1: without a width the browser's default input size (20
+          // characters) became the field's minimum width and pushed it past a 240 px
+          // phone at 150 % (0.32's screenshot run).
+          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
             them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's

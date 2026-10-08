@@ -1,18 +1,25 @@
 import { useState } from "react";
 import type { ContextType, ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
-import { Button, LegalKitSection, Switch, ToggleGroup, WriteLockProvider, formatFileSize } from "@eifi1/ui-kit";
-import type { LegalOperator } from "@eifi1/ui-kit";
-import { DEFAULT_DEMO_LABELS } from "../../../src/demo/demo-labels";
-import { PlanPicker } from "../../../src/billing/plan-card";
-import type { BillingPlan, PlanChoice } from "../../../src/billing/plan-card";
-import { formatPlanPrice } from "../../../src/billing/plan-price";
-import { SUBSCRIPTION_STATUSES } from "../../../src/billing/billing-labels";
-import { SubscriptionStatusChip } from "../../../src/billing/subscription-status-chip";
-import { BillingBanner } from "../../../src/billing/billing-banner";
-import { PlanLimitNotice } from "../../../src/billing/plan-limit-notice";
-import { SubscriptionActions } from "../../../src/billing/subscription-actions";
-import { combineWriteLocks, useBillingLockReason } from "../../../src/billing/billing-lock";
+import {
+  BillingBanner,
+  Button,
+  DEFAULT_DEMO_LABELS,
+  LegalKitSection,
+  PlanLimitNotice,
+  PlanPicker,
+  SUBSCRIPTION_STATUSES,
+  SubscriptionActions,
+  SubscriptionStatusChip,
+  Switch,
+  ToggleGroup,
+  WriteLockProvider,
+  combineWriteLocks,
+  formatFileSize,
+  formatPlanPrice,
+  useBillingLockReason,
+} from "@eifi1/ui-kit";
+import type { BillingPlan, LegalOperator, PlanChoice } from "@eifi1/ui-kit";
 import { Example, Note } from "../lib/section";
 
 /**
@@ -26,7 +33,9 @@ import { Example, Note } from "../lib/section";
  * Every callback is the app's part, played by a timer: the kit sends no request.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
+// `anywhere`: `billingDaysLeft(trial_ends_at)` has no space to break at, and at Extra large
+// on a phone it is wider than the note.
+const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
 const beat = (ms = 1200) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** React Router refuses a router inside a router; resetting the location context is its

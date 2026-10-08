@@ -24,6 +24,8 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   settings: ["settings", "localisation"],
   // The demo's start, banner and end, and the routing that lets a demo through.
   demo: ["landing-demo"],
+  // The plans, the standing and the read-only lock the Subscription page's parts render.
+  billing: ["subscription"],
   // The reset and email-change mails the Auth page's forms ask for.
   mail: ["auth-account"],
   feedback: ["feedback-compose", "feedback-inbox"],

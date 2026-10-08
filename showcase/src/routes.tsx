@@ -1,4 +1,5 @@
 import {
+  ALargeSmall,
   AppWindow,
   Blocks,
   BookOpen,
@@ -21,6 +22,7 @@ import {
   ClipboardCheck,
   ClipboardCopy,
   Command,
+  CreditCard,
   Compass,
   Component as ComponentIcon,
   Contact,
@@ -322,6 +324,13 @@ const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-subm
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-table-027-demo"), "FeedbackTable027Demo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-detail-027-demo"), "FeedbackDetail027Demo");
 const FeedbackRecord027Demo = lazySection(() => import("./sections/feedback-record-027-demo"), "FeedbackRecord027Demo");
+// 0.32.0: text size and contrast, and billing.
+const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
+const TextSizeComponents032Demo = lazySection(
+  () => import("./sections/text-size-components-032-demo"),
+  "TextSizeComponents032Demo",
+);
+const Billing032Demo = lazySection(() => import("./sections/billing-032-demo"), "Billing032Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
@@ -440,6 +449,23 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Palette,
         components: ["TokenSet", "PALETTES", "applyPersistedTheme", "applyPersistedPalette"],
         Body: Foundations,
+      },
+      {
+        // 0.32: after Tokens — the root scale is a foundation every page sits on, and the
+        // breakpoints move with it.
+        slug: "text-size",
+        title: "Text size & contrast",
+        short: "Text size",
+        blurb:
+          "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
+        icon: ALargeSmall,
+        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "IconButton", "AppShell", "DataTable"],
+        Body: () => (
+          <>
+            <TextSize032Demo />
+            <TextSizeComponents032Demo />
+          </>
+        ),
       },
       {
         slug: "palette",
@@ -660,7 +686,7 @@ export const GROUPS: ShowcaseGroup[] = [
     shortLabel: "Pickers",
     icon: ListFilter,
     blurb:
-      "Choosing from a list rather than typing, and the heavier kinds of entry: a table of measurements, a field saved as you leave it, a signature, a password.",
+      "Choosing from a list rather than typing, and the heavier kinds of entry: a table of measurements, a field saved as you leave it, a signature, a password, a form in steps.",
     pages: [
       {
         slug: "comboboxes",
@@ -758,6 +784,23 @@ export const GROUPS: ShowcaseGroup[] = [
             <Guards022Demo />
             <DangerConfirm023Demo />
             <DangerConfirm024Demo />
+          </>
+        ),
+      },
+      // 0.32: from App chrome, which reached its ten pages with Subscription. A wizard is
+      // the heaviest kind of entry; the slug is unchanged, so every link still lands.
+      {
+        slug: "wizard",
+        title: "Wizard",
+        short: "Wizard",
+        blurb: "The multi-step engine, its chrome and its review step.",
+        icon: Wand2,
+        components: ["useWizard", "StepperNav", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
+        Body: () => (
+          <>
+            <Wizard />
+            <WizardStepHooksDemo />
+            <StepperNavFinishLock023Demo />
           </>
         ),
       },
@@ -1163,7 +1206,7 @@ export const GROUPS: ShowcaseGroup[] = [
     shortLabel: "Chrome",
     icon: PanelsTopLeft,
     blurb:
-      "The frame an app lives in and the flows every app repeats: settings, multi-step forms, feedback.",
+      "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
     pages: [
       {
         slug: "shell",
@@ -1303,19 +1346,15 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
-        slug: "wizard",
-        title: "Wizard",
-        short: "Wizard",
-        blurb: "The multi-step engine, its chrome and its review step.",
-        icon: Wand2,
-        components: ["useWizard", "StepperNav", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
-        Body: () => (
-          <>
-            <Wizard />
-            <WizardStepHooksDemo />
-            <StepperNavFinishLock023Demo />
-          </>
-        ),
+        // 0.32: beside the user admin — both are the account's business with the app.
+        slug: "subscription",
+        title: "Subscription",
+        short: "Billing",
+        blurb:
+          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice, the read-only lock beside the demo's, the provider's portal, and the imprint's commercial disclaimer.",
+        icon: CreditCard,
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks"],
+        Body: Billing032Demo,
       },
       {
         slug: "feedback-compose",
@@ -1483,6 +1522,15 @@ export const GROUPS: ShowcaseGroup[] = [
           "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
         icon: FlaskConical,
         serverModules: ["demo"],
+      }),
+      serverPage({
+        slug: "server-billing",
+        title: "Billing",
+        short: "Billing",
+        blurb:
+          "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's and Lemon Squeezy's webhooks: signatures checked, events normalised, one dispatch.",
+        icon: CreditCard,
+        serverModules: ["billing"],
       }),
       serverPage({
         slug: "server-mail",

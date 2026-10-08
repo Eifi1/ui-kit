@@ -276,7 +276,9 @@ function Separators() {
           <Separator className="my-3" />
           <p>Danger zone</p>
         </div>
-        <div className="flex h-8 items-center gap-3">
+        {/* Wraps: at Extra large on a phone the row is wider than the screen. A vertical
+            separator stretches to its own line's height, so a wrapped row keeps it. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Button variant="ghost">Bold</Button>
           <Button variant="ghost">Italic</Button>
           <Separator orientation="vertical" />
