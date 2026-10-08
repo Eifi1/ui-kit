@@ -1505,6 +1505,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
       // "Scarta", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Scarta le modifiche in attesa",
+      notConfigured: "I pagamenti non sono ancora configurati. Riprovi più tardi.",
+      disabled: "Gli abbonamenti non sono disponibili qui.",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Aspetto" group.

@@ -1493,6 +1493,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
       // "Elvetés", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Várakozó módosítások elvetése",
+      notConfigured: "A fizetés még nincs beállítva. Kérjük, próbálja újra később.",
+      disabled: "Az előfizetés itt nem érhető el.",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Megjelenés" group.

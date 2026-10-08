@@ -1533,6 +1533,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : `${n(count)} Änderungen warten auf einen Tarif`,
       // "Verwerfen", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Wartende Änderungen verwerfen",
+      notConfigured: "Zahlungen sind noch nicht eingerichtet. Bitte versuchen Sie es später noch einmal.",
+      disabled: "Abonnements sind hier nicht verfügbar.",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Darstellung" group.

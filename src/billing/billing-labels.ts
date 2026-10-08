@@ -146,6 +146,19 @@ export interface BillingLabels {
   waitingChanges: (count: number) => string;
   /** The sign-out guard's way out for someone who will not pay. */
   discardWaiting: string;
+
+  /* ── Refusals with no part of their own (0.32.1, kastlan's 0.32 report) ── */
+  /**
+   * `billing_not_configured`: billing is on but the provider's settings are missing — the
+   * operator's mistake, so the words ask the payer to wait, not to act. For the toast or
+   * alert after "Choose a plan" or "Payment and invoices" (`isBillingError(err,
+   * "billing_not_configured")`). `billing_read_only` and `plan_limit` need none: the
+   * write lock, the banner and `PlanLimitNotice` say them.
+   */
+  notConfigured: string;
+  /** `billing_disabled`: billing is switched off on this server (§2.9), for a page or a
+   *  link that reached it anyway. */
+  disabled: string;
 }
 
 /** "today", "tomorrow", "in 5 days". */
@@ -215,6 +228,9 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   waitingChanges: (count) =>
     count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`,
   discardWaiting: "Discard waiting changes",
+
+  notConfigured: "Payments aren't set up yet. Please try again later.",
+  disabled: "Subscriptions aren't available here.",
 };
 
 /** The `billing` namespace, resolved: English, then the provider, then `labels` — which

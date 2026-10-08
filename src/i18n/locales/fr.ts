@@ -1521,6 +1521,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
       // "Abandonner", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Abandonner les modifications en attente",
+      notConfigured: "Les paiements ne sont pas encore configurés. Veuillez réessayer plus tard.",
+      disabled: "Les abonnements ne sont pas disponibles ici.",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Apparence" group. The steps agree with "taille", the modes with "contraste".

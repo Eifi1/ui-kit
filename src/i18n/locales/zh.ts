@@ -1429,6 +1429,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
       // "放弃", as `wizard.cancelConfirmLabel`.
       discardWaiting: "放弃等待中的修改",
+      notConfigured: "付款尚未设置，请稍后再试。",
+      disabled: "此处不提供订阅。",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "外观" group.
