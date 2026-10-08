@@ -485,6 +485,7 @@ export type {
   LegalTextSectionLabels,
   LegalOperatorSectionLabels,
   LegalFramedSectionLabels,
+  LegalDisclaimerSectionLabels,
 } from "./components/legal";
 export { LegalPage, LegalKitSection, LegalAcceptCheckbox, LEGAL_SKELETON } from "./components/legal-page";
 
@@ -507,7 +508,7 @@ export type { RegisterFormProps, RegisterLabels, RegisterValues } from "./auth/r
 export { CompleteNameDialog, DEFAULT_COMPLETE_NAME_LABELS } from "./auth/complete-name-dialog";
 export type { CompleteNameDialogProps, CompleteNameLabels, CompleteNameValues } from "./auth/complete-name-dialog";
 export { taggedEmail } from "./auth/email-tag";
-export { isAuthError, authErrorCode } from "./auth/auth-errors";
+export { isAuthError, authErrorCode, isBillingError } from "./auth/auth-errors";
 export type { AuthErrorCode } from "./auth/auth-errors";
 export { ForgotPasswordForm, DEFAULT_FORGOT_PASSWORD_LABELS } from "./auth/forgot-password-form";
 export type { ForgotPasswordFormProps, ForgotPasswordLabels } from "./auth/forgot-password-form";
@@ -545,7 +546,7 @@ export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompan
 // invitations panel, and the account's own settings — email change, sessions, deletion,
 // export. Callbacks only; the confirmation level is the server's.
 export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
-export type { AccountErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
+export type { AccountErrorCode, BillingErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
 export { EmailChangeSetting, DEFAULT_EMAIL_CHANGE_LABELS } from "./account/email-change-setting";
 export type {
   EmailChangeSettingProps,
@@ -738,7 +739,30 @@ export type {
   LegalSkeletonEntry,
   LegalSkeletonPage,
   LegalSectionOwner,
+  LegalDisclaimerVariant,
 } from "./components/legal-page";
+
+// ── 0.32.0: billing — plans, standing, banners, the limit notice (docs/billing-harmonization.md §7) ──
+export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from "./billing/billing-labels";
+export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
+export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
+export type { BillingInterval, BillingCurrency, PlanIntervalPrices, PlanPrices, PlanPriceAnswer } from "./billing/plan-price";
+export { PlanCard, PlanPicker, planRelation } from "./billing/plan-card";
+export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice } from "./billing/plan-card";
+export { SubscriptionStatusChip, SUBSCRIPTION_STATUS_TONES } from "./billing/subscription-status-chip";
+export type { SubscriptionStatusChipProps } from "./billing/subscription-status-chip";
+export { BillingBanner } from "./billing/billing-banner";
+export type { BillingBannerProps, BillingBannerKind } from "./billing/billing-banner";
+export { PlanLimitNotice, planLimitMailto } from "./billing/plan-limit-notice";
+export type { PlanLimitNoticeProps } from "./billing/plan-limit-notice";
+export { isPlanLimit } from "./billing/plan-limit";
+export type { PlanLimitRefusal } from "./billing/plan-limit";
+export { combineWriteLocks, useBillingLockReason } from "./billing/billing-lock";
+export type { WriteLockSource, CombinedWriteLock, BillingLockReasonOptions } from "./billing/billing-lock";
+export { billingLockAt, isBillingReadOnly, billingDaysLeft } from "./billing/billing-standing";
+export type { BillingStanding } from "./billing/billing-standing";
+export { SubscriptionActions } from "./billing/subscription-actions";
+export type { SubscriptionActionsProps } from "./billing/subscription-actions";
 
 // ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
 export * from "./components/checkbox-group";

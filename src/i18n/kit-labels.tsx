@@ -80,6 +80,7 @@ import type { InvitationsLabels } from "../admin/invitations-panel";
 import type { SettingsLabels } from "../settings/settings-labels";
 import type { LandingLabels } from "../landing/landing-labels";
 import type { DemoLabels } from "../demo/demo-labels";
+import type { BillingLabels } from "../billing/billing-labels";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -392,6 +393,8 @@ export interface UiKitLabels {
   landing: LandingLabels;
   /** 0.31.0: the demo's start, banner and end (§5). */
   demo: DemoLabels;
+  /** 0.32.0: plans, standing, banners and the limit notice (docs/billing-harmonization.md §7). */
+  billing: BillingLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */
