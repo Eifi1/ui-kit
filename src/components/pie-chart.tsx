@@ -18,6 +18,8 @@ import { paletteFor } from "../theme/chart-palette";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import { DEFAULT_PIE_CHART_LABELS, type PieChartLabels } from "./pie-chart-labels";
 import { StaticLegend, ToggleLegend, toggleHidden, type LegendEntry } from "./toggle-legend";
+import { useTextSize } from "../theme/text-size";
+import { chartHeightProps, type ChartHeight } from "./chart-height";
 
 /** One slice. */
 export interface PieChartSlice {
@@ -46,8 +48,13 @@ export interface PieChartProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
   data: readonly PieChartSlice[];
   /** `"donut"` (default) leaves a hole with the total in it; `"pie"` is the full disc. */
   variant?: "donut" | "pie";
-  /** Height of the plot in px (the legend is under it). Default 300. */
-  height?: number;
+  /**
+   * Height of the plot (the legend is under it): a CSS length (`"20rem"`,
+   * `"min(20rem, 50dvh)"`), a Tailwind class, or px. Default `"18.75rem"` — 300 px at
+   * Normal, growing with the text size so the slice labels keep their room (0.32,
+   * docs/text-size-harmonization.md §10.10). A number does not follow the text size.
+   */
+  height?: ChartHeight;
   /** How a value is written in the tooltip, the slice's name, a `"value"` slice label
    *  and the donut's total. Default: `Intl.NumberFormat` in `locale`. */
   formatValue?: (value: number) => string;
@@ -144,7 +151,7 @@ function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent
 export function PieChart({
   data,
   variant = "donut",
-  height = 300,
+  height = "18.75rem",
   formatValue: formatValueProp,
   sliceLabels = "percent",
   minLabelShare = 0.04,
@@ -165,6 +172,9 @@ export function PieChart({
 }: PieChartProps) {
   const labels = useKitLabels("pieChart", DEFAULT_PIE_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
+  // The slice labels are SVG text in px: they follow the text size by this (§10.10).
+  const { scale } = useTextSize();
+  const box = chartHeightProps(height);
   const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const percentFormats = useMemo(
     () => ({
@@ -312,7 +322,7 @@ export function PieChart({
       const radius = Number(props.outerRadius);
       const mid = Number(props.midAngle);
       if (!d || d.share < minLabelShare || ![cx, cy, radius, mid].every(Number.isFinite)) return null;
-      const r = radius + 10;
+      const r = radius + 10 * scale;
       const x = cx + r * Math.cos(-mid * RADIAN);
       const y = cy + r * Math.sin(-mid * RADIAN);
       const isValue = sliceLabels === "value";
@@ -322,7 +332,7 @@ export function PieChart({
           y={y}
           textAnchor={x >= cx ? "start" : "end"}
           dominantBaseline="central"
-          fontSize={11}
+          fontSize={11 * scale}
           fill="var(--text-secondary)"
           data-private={redact && isValue ? "" : undefined}
           style={{ pointerEvents: "none" }}
@@ -331,7 +341,7 @@ export function PieChart({
         </text>
       );
     },
-    [drawn, minLabelShare, sliceLabels, redact, formatValue, formatShare],
+    [drawn, minLabelShare, sliceLabels, redact, formatValue, formatShare, scale],
   );
 
   const withLabels = sliceLabels !== "none";
@@ -394,8 +404,8 @@ export function PieChart({
 
   const emptyBox = (
     <div
-      className="flex items-center justify-center text-sm text-[var(--text-muted)]"
-      style={{ height }}
+      className={cn("flex items-center justify-center text-sm text-[var(--text-muted)]", box.className)}
+      style={box.style}
     >
       {empty ?? labels.empty}
     </div>
@@ -418,7 +428,7 @@ export function PieChart({
         // Every slice switched off: the legend below is how they come back.
         emptyBox
       ) : (
-        <div role="group" aria-label={labels.slices} className="relative" style={{ height }}>
+        <div role="group" aria-label={labels.slices} className={cn("relative", box.className)} style={box.style}>
           <ChartContainer
             config={PIE_CONFIG}
             className={cn("h-full", clickable && "[&_.recharts-pie-sector]:cursor-pointer")}

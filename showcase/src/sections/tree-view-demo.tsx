@@ -205,7 +205,7 @@ function Lazy() {
                 <FileText aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
               )}
               <span className="truncate">{node.label}</span>
-              <span className="ms-auto text-[11px] text-[var(--text-muted)]">
+              <span className="ms-auto text-caption text-[var(--text-muted)]">
                 {state.loading ? "loading…" : `level ${state.level}`}
               </span>
             </span>

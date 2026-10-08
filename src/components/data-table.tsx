@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, isValidElement, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -14,7 +14,9 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Card, IconButton, Select, Spinner } from "./ui";
+import { Card, FOCUS_RING, IconButton, Select, Spinner } from "./ui";
+import { RowActions, type RowAction } from "./row-actions";
+import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
 import {
   defaultFilterState,
@@ -33,7 +35,7 @@ import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
@@ -367,6 +369,27 @@ export interface DataTableProps<T> {
    */
   mobileExpandAsDialog?: boolean;
   /**
+   * Show the `mobileHidden` columns in the OPENED row on the phone layout — inline
+   * under the card, or in the `mobileExpandAsDialog` dialog — so a column dropped from
+   * the card to keep it short is not lost (0.32, docs/text-size-harmonization.md §4:
+   * "a new `mobileDetailsInRow` puts the `mobileHidden` columns into the opened row, so
+   * nothing is lost"). At Large a card holds fewer facts per screen, and dropping one
+   * from the card must not drop it from the phone.
+   *
+   * Each column is a label above its value, BEFORE what `expandedRow` renders: the
+   * row's own facts first, then the app's detail or editor. A row opens as it always
+   * does (`onRowClick` toggling `isExpanded`); with this set it may open without an
+   * `expandedRow` at all. `rowActions`' column is one of them — the actions, which the
+   * card otherwise offers only as swipes, reachable by a tap. Desktop is unaffected.
+   */
+  mobileDetailsInRow?: boolean;
+  /**
+   * The row's name, as plain text — for the "⋯" menu its `rowActions` collapse into at
+   * Large ("Actions for Ada Example", §10.8). Without it every row's menu button is
+   * named "Actions", which a screen reader cannot tell apart down the list.
+   */
+  rowName?: (row: T) => string | undefined;
+  /**
    * The phone row dialog's `backCloses` ({@link FullBleedDialog}): whether it pushes
    * its own history entry so Back dismisses it. On by default — right for a row whose
    * expansion is component state, where nothing else would answer Back.
@@ -526,7 +549,10 @@ export interface DataTableProps<T> {
   /**
    * Per-row actions: an actions column of icon buttons at the row's end on desktop,
    * and the same actions as swipe actions on a phone card (where the column is not
-   * shown). kastlan's `ResourceListPage` appended this column by hand to every CRUD
+   * shown; with `mobileDetailsInRow` also as buttons in the opened row). At Large and
+   * Extra large two or more collapse into one "⋯" menu with each action's words
+   * (0.32, §10.8, `RowActions`) — name the rows with `rowName` so each menu button is
+   * "Actions for …". kastlan's `ResourceListPage` appended this column by hand to every CRUD
    * list — the edit pencil, the delete bin, a `useConfirm` before the delete, and a
    * `stopPropagation` on each so a press did not also open the row.
    *
@@ -637,6 +663,19 @@ async function runRowAction<T>(action: DataTableRowAction<T>, row: T): Promise<v
   action.onAction(row);
 }
 
+/** A resolved row action as {@link RowActions} takes it. Its `icon` is any node; a
+ *  non-element one (a string glyph) is wrapped, since RowAction wants an element. */
+function toRowAction<T>(a: ResolvedRowAction<T>, row: T): RowAction {
+  return {
+    key: a.key,
+    label: a.label,
+    icon: isValidElement(a.icon) ? a.icon : a.icon != null && a.icon !== false ? <>{a.icon}</> : undefined,
+    tone: a.tone,
+    disabledReason: a.action.disabledReason?.(row),
+    onSelect: () => void runRowAction(a.action, row),
+  };
+}
+
 /** See {@link DataTableProps.chrome}. */
 export type DataTableChrome = "full" | "minimal";
 
@@ -734,6 +773,46 @@ function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): stri
   return col.headerText ?? (typeof col.header === "string" ? col.header : col.key);
 }
 
+// ---------- Phone card at Large (0.32) ----------
+
+/**
+ * §4 "nothing truncates" in a phone card at Large and Extra large: a cell's own
+ * `truncate` (a kit cell, a chip, the app's span) wraps instead — and breaks inside a
+ * word too long for the card rather than running out of it. A descendant rule, so it
+ * reaches the cells without the table knowing what they render; `large:`, so Normal
+ * keeps every ellipsis it had.
+ */
+const CARD_NO_TRUNCATE =
+  "large:[&_.truncate]:whitespace-normal large:[&_.truncate]:[overflow-wrap:anywhere]";
+
+/**
+ * Columns as label-above-value pairs: the phone card's fields at Large (§4), and the
+ * opened row's `mobileDetailsInRow` at every size. Each pair is a `<div>` in the
+ * `<dl>` — the grouping HTML allows — so a pair keeps together and the gap falls
+ * BETWEEN facts rather than between a label and its own value. `relative` holds a
+ * header's `sr-only` text (an actions column's), as every kit container must.
+ */
+function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<T>[]; row: T; compact: boolean }) {
+  return (
+    <dl
+      data-card-fields="stacked"
+      className={cn("relative flex min-w-0 flex-col", compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm", CARD_NO_TRUNCATE)}
+    >
+      {columns.map((col) => (
+        <div key={col.key} className="min-w-0">
+          <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{col.header}</dt>
+          <dd
+            {...dataAttrsOf(col.cellProps?.(row))}
+            className="mt-0.5 min-w-0 break-words text-[var(--text-secondary)]"
+          >
+            {col.cell(row)}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 // ---------- Phone sort control (keksdose K10) ----------
 
 /**
@@ -813,7 +892,9 @@ function MobileSort<T>({
     <div
       data-table-mobile-sort=""
       className={cn(
-        "flex items-center gap-2 border-b border-[var(--border)]",
+        // At Large the direction button shows its words (IconButton's label, §4); the
+        // row wraps so the select keeps a usable width on a 240 px card.
+        "flex flex-wrap items-center gap-2 border-b border-[var(--border)]",
         compact ? "px-3 py-1.5" : "px-4 py-2",
       )}
     >
@@ -823,7 +904,7 @@ function MobileSort<T>({
       <Select
         id={selectId}
         size={compact ? "sm" : "md"}
-        className="min-w-0 flex-1"
+        className="min-w-0 flex-1 large:basis-40"
         value={primary?.key ?? ""}
         onChange={(e) => onPick(e.target.value || null)}
       >
@@ -1014,6 +1095,8 @@ export function DataTable<T>({
   locale: localeProp,
   storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
   mobileExpandAsDialog = false,
+  mobileDetailsInRow = false,
+  rowName,
   mobileDialogBackCloses = true,
   mobileGroupBy,
   mobileGroupLabel,
@@ -1085,24 +1168,19 @@ export function DataTable<T>({
             {
               key: ROW_ACTIONS_KEY,
               header: <span className="sr-only">{labels.actions}</span>,
+              // Through RowActions (0.32, §10.8): the icons inline at Normal, one "⋯"
+              // menu at Large once there are two — every label at once does not fit a
+              // row. Each control stops its own click: the row's handler already skips
+              // its controls, and this is for the caller who wraps the table in a
+              // clickable element of their own.
               cell: (row) => (
-                <div className="flex items-center justify-end gap-0.5">
-                  {rowActionsFor(row).map((a) => (
-                    <IconButton
-                      key={a.key}
-                      size={density === "compact" ? "2xs" : "xs"}
-                      label={a.label}
-                      tone={a.tone === "danger" ? "danger" : undefined}
-                      disabledReason={a.action.disabledReason?.(row)}
-                      // The row's click handler already skips its own controls; this is for
-                      // the caller who wraps the table in a clickable element of their own.
-                      stopPropagation
-                      onClick={() => void runRowAction(a.action, row)}
-                    >
-                      {a.icon}
-                    </IconButton>
-                  ))}
-                </div>
+                <RowActions
+                  actions={rowActionsFor(row).map((a) => toRowAction(a, row))}
+                  name={rowName?.(row)}
+                  size={density === "compact" ? "2xs" : "xs"}
+                  labels={{ actions: labels.actions }}
+                  className="justify-end"
+                />
               ),
               className: "w-px whitespace-nowrap text-end",
               headClassName: "w-px",
@@ -1112,7 +1190,7 @@ export function DataTable<T>({
             },
           ]
         : columnsProp,
-    [columnsProp, rowActions, rowActionsFor, labels.actions, density],
+    [columnsProp, rowActions, rowActionsFor, rowName, labels.actions, density],
   );
   const swipesFromActions = (row: T): MobileSwipeActions | null => {
     const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
@@ -1575,10 +1653,11 @@ export function DataTable<T>({
   const columnsCountLabel = rowActions
     ? labels.columnsCount(visibleCount - 1, totalCount - 1)
     : labels.columnsCount(visibleCount, totalCount);
-  // Match Tailwind's `md` breakpoint: we render either the table or the card
-  // list — never both — so we don't double up DOM nodes that screen readers and
-  // integration tests would have to disambiguate.
-  const isMdUp = useMediaQuery("(min-width: 768px)", true);
+  // Match the `md:` breakpoint at the text size in force: we render either the table or
+  // the card list — never both — so we don't double up DOM nodes that screen readers and
+  // integration tests would have to disambiguate. The same answer as `usePhoneLayout()`
+  // (inverted), which an app's own phone checks use (§10.4).
+  const isMdUp = useBreakpoint("md", true);
   // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
   const desktopScroller = useRef<HTMLDivElement | null>(null);
   const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
@@ -1592,6 +1671,26 @@ export function DataTable<T>({
   const mobilePrimaryCol =
     mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
   const mobileSecondaryColumns = mobileColumns.filter((c) => c !== mobilePrimaryCol);
+  // The columns the card leaves out, for the opened row (`mobileDetailsInRow`).
+  const mobileDetailColumns = mobileDetailsInRow ? visibleColumns.filter((c) => c.mobileHidden) : [];
+  // Large and Extra large (§4 "DataTable phone card"): the card's labels go ABOVE their
+  // values, nothing in it truncates, and the rows get more room. Most of it is a
+  // `large:` class; the label/value grid needs a different STRUCTURE (each pair in a
+  // box of its own), which a class cannot write.
+  const large = useLargeText();
+  // What an opened phone row shows: the card's left-out columns first (when asked
+  // for), then the app's own `expandedRow`. Desktop keeps `expandedRow` alone.
+  const opensRow = !!expandedRow || mobileDetailColumns.length > 0;
+  const openedRowContent = (row: T): ReactNode => {
+    const detail = expandedRow?.(row) ?? null;
+    if (mobileDetailColumns.length === 0) return detail;
+    return (
+      <div data-row-details="" className={cn("flex flex-col", compact ? "gap-2" : "gap-3")}>
+        <StackedFields columns={mobileDetailColumns} row={row} compact={compact} />
+        {detail}
+      </div>
+    );
+  };
   // The phone card IS the anchor, so unlike the desktop table there is no other
   // cell to move the row link into: if any cell the card renders owns a link, the
   // card itself cannot be one (feedback #451 — same nesting rule as `linkColumn`
@@ -1679,7 +1778,7 @@ export function DataTable<T>({
   // When dialog-mode is on, the expanded row's detail goes into a bottom-sheet
   // modal instead of unfolding inline. Only one row is ever expanded at a time.
   const mobileDialogRow = mobileExpandAsDialog && !isMdUp ? mobileSlice.find((r) => isExpanded?.(r)) : undefined;
-  const mobileDialogContent = mobileDialogRow ? expandedRow?.(mobileDialogRow) : null;
+  const mobileDialogContent = mobileDialogRow ? openedRowContent(mobileDialogRow) : null;
   // The full-screen row dialog. Its panel, header, scroll lock and Back handling all
   // live in {@link FullBleedDialog} now — this was the only copy of that shell until
   // the transactions create card needed the same one (Keksdose live #307's follow-up),
@@ -1694,7 +1793,7 @@ export function DataTable<T>({
   // share identical row markup.
   const renderMobileRow = (row: T) => {
     const expanded = isExpanded?.(row) ?? false;
-    const expansion = expanded ? expandedRow?.(row) : null;
+    const expansion = expanded ? openedRowContent(row) : null;
     const tint = rowClassName?.(row);
     // Use div+role="button" rather than a real <button> so cells that
     // contain their own interactive controls (status toggles, action
@@ -1706,7 +1805,7 @@ export function DataTable<T>({
     // values are not editable". A chevron is the affordance every list on a phone
     // uses for exactly this, and it points the way the row actually opens: right into
     // a sheet, or down into an inline panel that flips it when expanded.
-    const opensDetail = interactive && !!expandedRow;
+    const opensDetail = interactive && opensRow;
     const swipeActions = swipeActionsFor?.(row);
     const swipe = swipeActions ? physicalSwipe(swipeActions, mobileDir) : null;
     // An expanded row never swipes: the editor below it owns the horizontal space,
@@ -1715,7 +1814,8 @@ export function DataTable<T>({
     const href = mobileCardLinkable ? rowHref?.(row) : undefined;
     const cardClass = cn(
       "w-full text-start flex items-center",
-      compact ? "px-3 py-2 gap-2 text-sm" : "px-4 py-3 gap-3",
+      // §4: more room per row at Large — a taller row is a bigger tap target too.
+      compact ? "px-3 py-2 gap-2 text-sm large:py-3" : "px-4 py-3 gap-3 large:py-4",
       // Live #320's other half: the card acknowledges the touch before the sheet
       // arrives. On a cold route the data can take a beat, and an unacknowledged tap
       // reads as "did that register?" — which is most of what "abrupt" means here.
@@ -1731,8 +1831,7 @@ export function DataTable<T>({
       // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
       // keeps the fill and the squeeze above; an outline on every tap of a long list would
       // be louder than the acknowledgement it replaces.
-      interactive &&
-        "[-webkit-tap-highlight-color:transparent] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+      interactive && cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
     );
     // The card's content is written once and worn by either tag below. Note that
     // the primary cell is rendered RAW here, never through `linkColumn` — the card
@@ -1743,18 +1842,31 @@ export function DataTable<T>({
       <>
         {/* The card's own content keeps the column it always had; the chevron sits
             beside it rather than inside, so a caller's `mobileCard` is untouched. */}
-        <div className={cn("flex min-w-0 flex-1 flex-col", compact ? "gap-1" : "gap-2")}>
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 flex-col",
+            compact ? "gap-1 large:gap-2" : "gap-2 large:gap-3",
+            // §4 "nothing truncates": at Large a cell's own `truncate` wraps instead —
+            // the reader who chose bigger type is the one an ellipsis fails. A caller's
+            // `mobileCard` is its own layout and keeps what it chose.
+            !mobileCard && CARD_NO_TRUNCATE,
+          )}
+        >
           {mobileCard ? (
             mobileCard(row)
           ) : (
             <>
               {/* Only the `data-*` half of `cellProps` — see its note. */}
               {mobilePrimaryCol && (
-                <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="font-medium">
+                <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="min-w-0 break-words font-medium">
                   {mobilePrimaryCol.cell(row)}
                 </div>
               )}
-              {mobileSecondaryColumns.length > 0 && (
+              {mobileSecondaryColumns.length > 0 && large ? (
+                // §4: each label ABOVE its value at Large. Side by side, a label column
+                // sized to the widest label leaves a value a sliver of a 240 px card.
+                <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} />
+              ) : mobileSecondaryColumns.length > 0 && (
                 <dl
                   className={cn(
                     "grid grid-cols-[auto_1fr] gap-x-3",
@@ -1807,7 +1919,7 @@ export function DataTable<T>({
         <RowLink
           href={href}
           onActivate={() => onRowClick!(row)}
-          aria-expanded={expandedRow ? expanded : undefined}
+          aria-expanded={opensRow ? expanded : undefined}
           className={cardClass}
           // Enter already activates a link natively, and that routes through
           // RowLink's own onClick — handling it here too would open the row twice.
@@ -1848,7 +1960,7 @@ export function DataTable<T>({
                 }
               : undefined
           }
-          aria-expanded={expandedRow ? expanded : undefined}
+          aria-expanded={opensRow ? expanded : undefined}
           className={cardClass}
         >
           {cardInner}
@@ -2238,7 +2350,7 @@ export function DataTable<T>({
                           )}
                           {/* Priority badge, only meaningful with 2+ sort keys */}
                           {active && sorts.length > 1 && (
-                            <span className="text-[9px] font-semibold leading-none text-brand">
+                            <span className="text-micro font-semibold leading-none text-brand">
                               {sortIdx + 1}
                             </span>
                           )}
@@ -2246,7 +2358,9 @@ export function DataTable<T>({
                       </Tooltip>
                       {filter && (
                         <Popover
-                          width={filter.type === "date" ? 420 : undefined}
+                          // 420 px at Normal, in rem so the calendar grows with its
+                          // text (§3.2); Popover caps it at the viewport.
+                          width={filter.type === "date" ? "26.25rem" : undefined}
                           // The panel is the column's filter, and says so. Unnamed it
                           // was announced as the kit-wide fallback, "Popover".
                           labels={{ panel: labels.filter }}
@@ -2364,8 +2478,11 @@ export function DataTable<T>({
                     className={cn(
                       "border-t border-[var(--border)]",
                       rowInteractive && "cursor-pointer hover:bg-[var(--bg-hover)]",
+                      // The kit's focus frame width (§5, `--focus-ring-width`), drawn as an
+                      // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
+                      // is not painted by every engine, an outline is.
                       rowsFocusable &&
-                        "focus-visible:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+                        "focus-visible:bg-[var(--bg-hover)] focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
                       rowClassName?.(row),
                     )}
                     onClick={
@@ -2787,7 +2904,7 @@ function MobileFilters<T>({
         <Filter className="size-4" />
         <span>{labels.filters}</span>
         {activeCount > 0 && (
-          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--info-bg)] px-1 text-[11px] font-semibold text-[var(--info)]">
+          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--info-bg)] px-1 text-caption font-semibold text-[var(--info)]">
             {activeCount}
           </span>
         )}

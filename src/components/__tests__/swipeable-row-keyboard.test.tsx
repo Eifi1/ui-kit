@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SwipeableRow, type SwipeAction } from "../swipeable-row";
+import { FOCUS_RING } from "../focus-ring";
 
 /**
  * The audit's §a11y, `swipeable-row.tsx:144`: *"SwipeableRow ships a pointer-only
@@ -134,7 +135,7 @@ describe("the revealed buttons stay out of the document's way", () => {
     render(<SwipeableRow left={[del(vi.fn())]}>{row}</SwipeableRow>);
     const action = screen.getByRole("button", { name: "Delete" });
     expect(action.className).toMatch(/(^|\s)focus:not-sr-only(\s|$)/);
-    expect(action.className).toMatch(/focus-visible:ring-2/);
+    expect(action.className).toContain(FOCUS_RING);
     expect(action.className).toMatch(/focus-visible:ring-\[var\(--brand\)\]/);
   });
 });

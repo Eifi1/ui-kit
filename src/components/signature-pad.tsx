@@ -4,6 +4,7 @@ import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
+import { useTextSize } from "../theme/text-size";
 import { Button, FIELD_INVALID, Input } from "./ui";
 
 /**
@@ -144,7 +145,9 @@ export interface SignaturePadProps extends Omit<ComponentPropsWithoutRef<"div">,
   exportInk?: string;
   /** Fill behind the exported PNG. Default transparent. */
   exportBackground?: string;
-  /** Base stroke width in CSS pixels. Default 2.5. */
+  /** Base stroke width in CSS pixels at Normal text size. Default 2.5. It grows with the
+   *  text size (× 1.25 / × 1.5, docs/text-size-harmonization.md §10.11), as the pad's
+   *  rem height does, so a signature keeps its weight on a larger pad. */
   lineWidth?: number;
   /** Classes for the canvas — its height, chiefly (default `h-40`). */
   canvasClassName?: string;
@@ -291,10 +294,13 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
 
   // Everything the paint and export paths read that can change between renders, so
   // the observers below subscribe once instead of on every keystroke.
-  const opts = useRef({ lineWidth, exportInk, exportBackground });
+  // The stroke follows the text size like everything in rem around it (§10.11).
+  const { scale: textScale } = useTextSize();
+  const strokeWidth = lineWidth * textScale;
+  const opts = useRef({ lineWidth: strokeWidth, exportInk, exportBackground });
   useEffect(() => {
-    opts.current = { lineWidth, exportInk, exportBackground };
-  }, [lineWidth, exportInk, exportBackground]);
+    opts.current = { lineWidth: strokeWidth, exportInk, exportBackground };
+  }, [strokeWidth, exportInk, exportBackground]);
 
   const sceneEmpty = () => {
     const s = scene.current;
@@ -356,10 +362,10 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
     resize();
   }, [resize]);
 
-  // A changed base width redraws what is already there.
+  // A changed base width — or text size — redraws what is already there.
   useEffect(() => {
     repaint();
-  }, [lineWidth, repaint]);
+  }, [strokeWidth, repaint]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -627,7 +633,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       </div>
 
       {hasError && (
-        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

@@ -532,7 +532,7 @@ export function CountrySelect<Clearable extends boolean = false>({
     <div {...rest} className={className}>
       {box}
       {textHint && (
-        <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
           {hint}
         </p>
       )}

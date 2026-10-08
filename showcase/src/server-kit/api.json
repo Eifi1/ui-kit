@@ -1,12 +1,12 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.5.1",
+  "kit_version": "0.6.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change) and the session's claims;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes;\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change) and the session's claims;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -67,6 +67,12 @@
           "kind": "constant",
           "signature": "CHALLENGE_PER_SUBJECT = Budget(10, 900)",
           "doc": "The same two, per challenge subject — the window a header cannot re-key (keksdose\n``_challenge_subject_limiter``)."
+        },
+        {
+          "name": "CONTRAST_MODES",
+          "kind": "constant",
+          "signature": "CONTRAST_MODES: tuple[ContrastMode, ...] = (\"system\", \"standard\", \"more\")",
+          "doc": "The contrast modes in the settings card's order (text-size §10.6). ``\"system\"`` is one\nof them, because the PATCH rule refuses an explicit ``null``: without it, somebody who\npicked \"More\" could never go back to following the device."
         },
         {
           "name": "DEFAULT_LOCALE",
@@ -185,8 +191,8 @@
         {
           "name": "PROFILE_NOT_NULLABLE",
           "kind": "constant",
-          "signature": "PROFILE_NOT_NULLABLE: tuple[str, ...] = (\"first_name\", \"last_name\", \"locale\")",
-          "doc": "The fields of :class:`ProfileUpdate` that a PATCH may leave out but never null."
+          "signature": "PROFILE_NOT_NULLABLE: tuple[str, ...] = (\"first_name\", \"last_name\", \"locale\", \"text_size\", \"contrast\")",
+          "doc": "The fields of :class:`ProfileUpdate` that a PATCH may leave out but never null. The\ntext size and the contrast are among them (text-size §10.6): their ``null`` means only\n\"never chosen\", which a person cannot choose — \"System\" is a value of its own."
         },
         {
           "name": "REFRESH_TOKEN_EXPIRE_MINUTES",
@@ -241,6 +247,12 @@
           "kind": "constant",
           "signature": "TAG_SEPARATOR = \"+\"",
           "doc": "What stands between a local part and its tag (RFC 5233 sub-addressing)."
+        },
+        {
+          "name": "TEXT_SIZES",
+          "kind": "constant",
+          "signature": "TEXT_SIZES: tuple[TextSize, ...] = (\"normal\", \"large\", \"xlarge\")",
+          "doc": "The text sizes in the settings card's order (text-size §10.6) — the kit's\n``TextSizeSetting`` offers the same three."
         },
         {
           "name": "VERIFICATION_RESEND_PER_RECIPIENT",
@@ -363,6 +375,12 @@
               "value": "password_change"
             }
           ]
+        },
+        {
+          "name": "ContrastMode",
+          "kind": "constant",
+          "signature": "ContrastMode = Literal[\"system\", \"standard\", \"more\"]",
+          "doc": "A contrast mode as stored on the account (text-size §2.4, §10.6). ``\"system\"`` follows\nthe device's ``prefers-contrast``; it is a stored value, not the absence of one."
         },
         {
           "name": "Email",
@@ -520,7 +538,7 @@
           "name": "ProfileUpdate",
           "kind": "model",
           "signature": "class ProfileUpdate(BaseModel)",
-          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?}`` (§6.1; Kurvenschmiede\n``ProfileUpdate``).\n\nEvery field optional, so the language picker writes the locale alone. Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.",
+          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.",
           "fields": [
             {
               "name": "first_name",
@@ -539,6 +557,18 @@
               "type": "LocaleTag | None",
               "default": "None",
               "doc": ""
+            },
+            {
+              "name": "text_size",
+              "type": "TextSize | None",
+              "default": "None",
+              "doc": "One of :data:`TEXT_SIZES`; left out keeps the account's, ``null`` is refused."
+            },
+            {
+              "name": "contrast",
+              "type": "ContrastMode | None",
+              "default": "None",
+              "doc": "One of :data:`CONTRAST_MODES`; left out keeps the account's, ``null`` is refused."
             },
             {
               "name": "offered_locales",
@@ -623,6 +653,12 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "TextSize",
+          "kind": "constant",
+          "signature": "TextSize = Literal[\"normal\", \"large\", \"xlarge\"]",
+          "doc": "A text size as stored on the account (``docs/text-size-harmonization.md`` §2.1,\n§10.6): 100, 125 and 150 % of the browser's own font size."
         },
         {
           "name": "TokenResponse",
@@ -753,6 +789,18 @@
               "type": "UtcDateTime | None",
               "default": "None",
               "doc": "When a demo account ends, ISO-8601 in UTC (landing-demo §5.3): ``created_at`` plus\nthe maximum age, :func:`~eifi1_server_kit.demo.demo_expires_at`. ``None`` for a real\naccount. The ORM row rarely has it, so the app passes it — a property on its model\nread through ``from_attributes``, or ``model_copy(update=…)``."
+            },
+            {
+              "name": "text_size",
+              "type": "TextSize | None",
+              "default": "None",
+              "doc": "The account's text size (text-size §6, §10.6); ``None`` = never chosen, so a device\nwithout its own choice uses Normal. The app's column, read through\n``from_attributes``; an app without the column yet answers ``None``."
+            },
+            {
+              "name": "contrast",
+              "type": "ContrastMode | None",
+              "default": "None",
+              "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
             }
           ],
           "methods": [
@@ -933,8 +981,8 @@
         {
           "name": "CONFIRMATION_LEVELS",
           "kind": "constant",
-          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n}",
-          "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole. Everything else: ``none``."
+          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n}",
+          "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole, change a plan (billing §6). Everything else: ``none``."
         },
         {
           "name": "DEFAULT_DELETION_DAYS",
@@ -1250,6 +1298,10 @@
             {
               "name": "ERASE",
               "value": "erase"
+            },
+            {
+              "name": "PLAN",
+              "value": "plan"
             }
           ]
         },
@@ -1275,7 +1327,7 @@
               "name": "action",
               "type": "Annotated[AdminAction | str, Field(union_mode='left_to_right')]",
               "default": null,
-              "doc": "An :class:`AdminAction`, or the app's own action as a string (keksdose's ``plan``):\n:func:`admin_action_record` takes both, so the row does too (0.5.1)."
+              "doc": "An :class:`AdminAction`, or the app's own action as a string (0.5.1; keksdose's\n``plan`` was one until 0.6 made it :attr:`AdminAction.PLAN`):\n:func:`admin_action_record` takes both, so the row does too."
             },
             {
               "name": "actor_id",
@@ -1386,6 +1438,18 @@
               "type": "UtcDateTime | None",
               "default": "None",
               "doc": "When a demo account ends, ISO-8601 in UTC (landing-demo §5.3): ``created_at`` plus\nthe maximum age, :func:`~eifi1_server_kit.demo.demo_expires_at`. ``None`` for a real\naccount. The ORM row rarely has it, so the app passes it — a property on its model\nread through ``from_attributes``, or ``model_copy(update=…)``."
+            },
+            {
+              "name": "text_size",
+              "type": "TextSize | None",
+              "default": "None",
+              "doc": "The account's text size (text-size §6, §10.6); ``None`` = never chosen, so a device\nwithout its own choice uses Normal. The app's column, read through\n``from_attributes``; an app without the column yet answers ``None``."
+            },
+            {
+              "name": "contrast",
+              "type": "ContrastMode | None",
+              "default": "None",
+              "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
             },
             {
               "name": "last_login_at",
@@ -1987,7 +2051,7 @@
           "name": "admin_action_record",
           "kind": "function",
           "signature": "admin_action_record(action: AdminAction | str, *, actor_id: int | None, target_user_id: int | None, target_email: str | None, detail: Mapping[str, object] | None = None, company_id: int | None = None, now: datetime) -> dict[str, Any]",
-          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"`` when one is given (kastlan's company admins; its platform actions and\nevery other app leave it out, so a table without the column takes the record as it\nis). No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value;\n  stored as the plain string.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
+          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"`` when one is given (kastlan's company admins; its platform actions and\nevery other app leave it out, so a table without the column takes the record as it\nis). No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value,\n  stored as the plain string — or the app's own action (``\"reseed_demo\"``), kept as\n  written, as :class:`~eifi1_server_kit.user_admin.AdminActionRow` reads it back\n  (0.5.1). An empty or blank action is a :class:`ValueError`.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
         },
         {
           "name": "assert_no_secrets",
@@ -2453,6 +2517,1057 @@
           "kind": "function",
           "signature": "stale_cutoff(now: datetime, settings: DemoSettings) -> datetime",
           "doc": "The instant that splits stale from live (§5.7): a demo user created BEFORE it is\nstale and reaped; one created at or after it is live and counted. The same instant\n:func:`demo_expires_at` ends the token at, seen from the other side. Naive in, naive\nout — pass ``now`` in the kind your column stores."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.billing",
+      "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in ``Eifi1/ui-kit``; its §12 wins over the sections above it).",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables, no\nroutes, no provider SDK and no request to a provider. The subscription row and the event\ntable, the routes, the provider's API client (checkout, portal, cancellation), the read-only\ngate's allow-list and the daily notice job stay in each app. Marcel's decisions (§2): all\nthree apps charge, through a Merchant of Record — Paddle or Lemon Squeezy, behind one\ninterface — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets a\n30-day trial without a card, a beta payer 12 free months.\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets and the price ids;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates;\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, and a mapper per provider;\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, checkout,\n  the operator's plan change, and a sync reply's refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.",
+      "contract": {
+        "doc": "docs/billing-harmonization.md",
+        "section": "§10",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#10-what-the-kits-add",
+        "links": [
+          {
+            "section": "§10",
+            "heading": "10. What the kits add",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#10-what-the-kits-add"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "BETA_FREE_MONTHS",
+          "kind": "constant",
+          "signature": "BETA_FREE_MONTHS = 12",
+          "doc": "A beta payer's free months from the day billing goes on (§2.4)."
+        },
+        {
+          "name": "BILLING_ERROR_DETAIL",
+          "kind": "constant",
+          "signature": "BILLING_ERROR_DETAIL: Mapping[BillingErrorCode, str] = {\n    BillingErrorCode.BILLING_DISABLED: \"Billing is not available\",\n    BillingErrorCode.BILLING_READ_ONLY: \"Read-only for now: changes need an active plan\",\n    BillingErrorCode.BILLING_NOT_CONFIGURED: \"Billing is not configured for this\",\n    BillingErrorCode.INVALID_SIGNATURE: \"Invalid webhook signature\",\n}",
+          "doc": "The English ``detail`` of each code, for logs and API clients; the kit's pages show their\nown words for the code. ``billing_read_only``'s says nothing about whose plan or why\n(§12.6)."
+        },
+        {
+          "name": "BILLING_ERROR_STATUS",
+          "kind": "constant",
+          "signature": "BILLING_ERROR_STATUS: Mapping[BillingErrorCode, int] = {\n    BillingErrorCode.BILLING_DISABLED: 404,\n    BillingErrorCode.BILLING_READ_ONLY: 402,\n    BillingErrorCode.BILLING_NOT_CONFIGURED: 503,\n    BillingErrorCode.INVALID_SIGNATURE: 400,\n}",
+          "doc": "Each code's status."
+        },
+        {
+          "name": "CURRENCY_EXPONENTS",
+          "kind": "constant",
+          "signature": "CURRENCY_EXPONENTS: Mapping[str, int] = types.MappingProxyType({\"CHF\": 2, \"EUR\": 2})",
+          "doc": "ISO 4217's minor-unit exponent per currency: how many decimal places one minor unit is.\nCHF and EUR are 2 (rappen and cents). A currency the apps don't charge in is not here,\nand :func:`minor_to_decimal` refuses it rather than guessing 2."
+        },
+        {
+          "name": "LEMONSQUEEZY_EVENT_KINDS",
+          "kind": "constant",
+          "signature": "LEMONSQUEEZY_EVENT_KINDS: Mapping[str, EventKind] = {\n    \"subscription_created\": EventKind.SUBSCRIPTION_STARTED,\n    \"subscription_updated\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_resumed\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_paused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_unpaused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_cancelled\": EventKind.SUBSCRIPTION_CANCELED,\n    \"subscription_expired\": EventKind.SUBSCRIPTION_EXPIRED,\n    \"subscription_payment_failed\": EventKind.PAYMENT_FAILED,\n}",
+          "doc": "Lemon Squeezy's subscription events and their kinds; any other event is not used."
+        },
+        {
+          "name": "LEMONSQUEEZY_SIGNATURE_HEADER",
+          "kind": "constant",
+          "signature": "LEMONSQUEEZY_SIGNATURE_HEADER = \"X-Signature\"",
+          "doc": "Lemon Squeezy's signature header."
+        },
+        {
+          "name": "LEMONSQUEEZY_STATUSES",
+          "kind": "constant",
+          "signature": "LEMONSQUEEZY_STATUSES: Mapping[str, SubscriptionStatus] = {\n    \"on_trial\": SubscriptionStatus.TRIALING,\n    \"active\": SubscriptionStatus.ACTIVE,\n    \"past_due\": SubscriptionStatus.PAST_DUE,\n    \"unpaid\": SubscriptionStatus.EXPIRED,\n    \"paused\": SubscriptionStatus.EXPIRED,\n    \"cancelled\": SubscriptionStatus.ACTIVE,\n    \"expired\": SubscriptionStatus.EXPIRED,\n}",
+          "doc": "Lemon Squeezy's subscription statuses and the row's. ``cancelled`` is still running\nuntil ``ends_at``, so it stays ``active`` with ``cancel_at_period_end``."
+        },
+        {
+          "name": "PADDLE_EVENT_KINDS",
+          "kind": "constant",
+          "signature": "PADDLE_EVENT_KINDS: Mapping[str, EventKind] = {\n    \"subscription.created\": EventKind.SUBSCRIPTION_STARTED,\n    \"subscription.imported\": EventKind.SUBSCRIPTION_STARTED,\n    \"subscription.activated\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription.trialing\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription.updated\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription.resumed\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription.paused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription.past_due\": EventKind.PAYMENT_FAILED,\n    \"subscription.canceled\": EventKind.SUBSCRIPTION_EXPIRED,\n}",
+          "doc": "Paddle Billing's subscription events and their kinds; any other event is not used."
+        },
+        {
+          "name": "PADDLE_SIGNATURE_HEADER",
+          "kind": "constant",
+          "signature": "PADDLE_SIGNATURE_HEADER = \"Paddle-Signature\"",
+          "doc": "Paddle Billing's signature header."
+        },
+        {
+          "name": "PADDLE_SIGNATURE_TOLERANCE",
+          "kind": "constant",
+          "signature": "PADDLE_SIGNATURE_TOLERANCE = 5.0",
+          "doc": "How far, in seconds, Paddle's ``ts`` may be from now: Paddle's own default (its docs:\n\"The default tolerance between the timestamp and the current time is five seconds\").\nChecked both ways, so a clock running ahead is no loophole either. An app on a\nscale-to-zero host (Cloud Run at min-instances 0) may pass a wider ``tolerance``: a cold\nstart can outlast five seconds — Paddle's retry would pass, a little later."
+        },
+        {
+          "name": "PADDLE_STATUSES",
+          "kind": "constant",
+          "signature": "PADDLE_STATUSES: Mapping[str, SubscriptionStatus] = {\n    \"active\": SubscriptionStatus.ACTIVE,\n    \"trialing\": SubscriptionStatus.TRIALING,\n    \"past_due\": SubscriptionStatus.PAST_DUE,\n    \"paused\": SubscriptionStatus.EXPIRED,\n    \"canceled\": SubscriptionStatus.CANCELED,\n}",
+          "doc": "Paddle Billing's subscription statuses and the row's."
+        },
+        {
+          "name": "PAYER_REF_KEY",
+          "kind": "constant",
+          "signature": "PAYER_REF_KEY = \"payer_ref\"",
+          "doc": "The key of the app's payer reference in a checkout's custom data\n(:func:`checkout_custom_data`)."
+        },
+        {
+          "name": "PLAN_LIMIT_CODE",
+          "kind": "constant",
+          "signature": "PLAN_LIMIT_CODE = \"plan_limit\"",
+          "doc": "The ``code`` of :class:`PlanLimitError` (§3.4). keksdose's ``plan_budget_limit`` becomes\nthis over two releases (§12.16): release N's frontend accepts both, release N+1's server\nswitches."
+        },
+        {
+          "name": "SIGNATURE_HEADERS",
+          "kind": "constant",
+          "signature": "SIGNATURE_HEADERS: Mapping[BillingProvider, str] = {\n    BillingProvider.PADDLE: PADDLE_SIGNATURE_HEADER,\n    BillingProvider.LEMONSQUEEZY: LEMONSQUEEZY_SIGNATURE_HEADER,\n}",
+          "doc": "Each provider's header, for :func:`verify_webhook_signature`."
+        },
+        {
+          "name": "TRIAL_LENGTH",
+          "kind": "constant",
+          "signature": "TRIAL_LENGTH = timedelta(days=30)",
+          "doc": "A new payer's trial, without a card (§2.7)."
+        },
+        {
+          "name": "WEBHOOK_MAPPERS",
+          "kind": "constant",
+          "signature": "WEBHOOK_MAPPERS: Mapping[BillingProvider, Callable[[bytes], NormalisedEvent | None]] = {\n    BillingProvider.PADDLE: map_paddle_event,\n    BillingProvider.LEMONSQUEEZY: map_lemonsqueezy_event,\n}",
+          "doc": "The mapper per provider: a second provider is a new entry, not new app code (§5)."
+        },
+        {
+          "name": "BillingCurrency",
+          "kind": "enum",
+          "signature": "class BillingCurrency(enum.StrEnum)",
+          "doc": "The currencies the apps charge in (§2.6): CHF and EUR. The payer's is picked at\ncheckout from the plan's prices, defaulting from the account's stored currency where the\napp keeps one (keksdose ``reporting_currency``), else the locale (§4, §12.18).",
+          "values": [
+            {
+              "name": "CHF",
+              "value": "CHF"
+            },
+            {
+              "name": "EUR",
+              "value": "EUR"
+            }
+          ]
+        },
+        {
+          "name": "BillingError",
+          "kind": "class",
+          "signature": "class BillingError(ValueError)",
+          "doc": "A billing refusal: ``status_code`` and ``code`` from :class:`BillingErrorCode`.\n\n``BillingError(BillingErrorCode.BILLING_DISABLED)`` answers 404 ``{\"detail\": \"Billing is\nnot available\", \"code\": \"billing_disabled\"}`` through\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`; pass ``detail`` to say\nmore. A ``ValueError`` like every kit refusal, so an app-wide ``ValueError`` → 400\nhandler does not swallow its status.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(code: BillingErrorCode, detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "BillingErrorCode",
+          "kind": "enum",
+          "signature": "class BillingErrorCode(enum.StrEnum)",
+          "doc": "The ``code`` of a billing refusal. A ``StrEnum``, so ``str(code)`` is the wire value;\nthe ui-kit's ``KitErrorCode`` reads the same words.",
+          "values": [
+            {
+              "name": "BILLING_DISABLED",
+              "value": "billing_disabled"
+            },
+            {
+              "name": "BILLING_READ_ONLY",
+              "value": "billing_read_only"
+            },
+            {
+              "name": "BILLING_NOT_CONFIGURED",
+              "value": "billing_not_configured"
+            },
+            {
+              "name": "INVALID_SIGNATURE",
+              "value": "invalid_signature"
+            }
+          ]
+        },
+        {
+          "name": "BillingInterval",
+          "kind": "enum",
+          "signature": "class BillingInterval(enum.StrEnum)",
+          "doc": "How often a plan is paid (§3.1). Pages lead with the yearly price: about 5 % + 0.50\nper transaction makes a small monthly price expensive (§12.17).",
+          "values": [
+            {
+              "name": "MONTH",
+              "value": "month"
+            },
+            {
+              "name": "YEAR",
+              "value": "year"
+            }
+          ]
+        },
+        {
+          "name": "BillingOverview",
+          "kind": "model",
+          "signature": "class BillingOverview(BaseModel)",
+          "doc": "``GET /billing/overview`` (§4), for the payer (kastlan: a company admin): where the\nsubscription stands, what the plan allows and what is used.\n\nOnly ever the payer's own: a guest in someone else's budget reads the item's ``locked:\n\"billing\" | null`` instead, never the owner's status (§12.6). Build it with\n:meth:`from_row`.",
+          "fields": [
+            {
+              "name": "plan",
+              "type": "str",
+              "default": null,
+              "doc": "The plan's code (lowercase, §3.1)."
+            },
+            {
+              "name": "status",
+              "type": "SubscriptionStatus",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "source",
+              "type": "SubscriptionSource",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "in_good_standing",
+              "type": "bool",
+              "default": null,
+              "doc": ":func:`~eifi1_server_kit.billing.in_good_standing` now: false = read-only (§3.3)."
+            },
+            {
+              "name": "trial_ends_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "comped_until",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "current_period_end",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "cancel_at_period_end",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "limits",
+              "type": "dict[str, int | None]",
+              "default": null,
+              "doc": "The plan's limits, dimension → number, ``None`` for unlimited."
+            },
+            {
+              "name": "usage",
+              "type": "dict[str, int]",
+              "default": null,
+              "doc": "What the payer has, per dimension (§12.15)."
+            },
+            {
+              "name": "currency",
+              "type": "BillingCurrency",
+              "default": null,
+              "doc": "The payer's currency (§4, §12.18): the subscription's, else the account's stored\ncurrency (keksdose ``reporting_currency``), else the locale's."
+            }
+          ],
+          "methods": [
+            {
+              "name": "from_row",
+              "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None) -> Self",
+              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``."
+            }
+          ]
+        },
+        {
+          "name": "BillingProvider",
+          "kind": "enum",
+          "signature": "class BillingProvider(enum.StrEnum)",
+          "doc": "The Merchants of Record the kit speaks (§2.2, §9). Marcel has not chosen yet, so both\nsit behind one interface: choosing changes the settings, not the app.",
+          "values": [
+            {
+              "name": "PADDLE",
+              "value": "paddle"
+            },
+            {
+              "name": "LEMONSQUEEZY",
+              "value": "lemonsqueezy"
+            }
+          ]
+        },
+        {
+          "name": "BillingSettings",
+          "kind": "model",
+          "signature": "class BillingSettings(BaseModel)",
+          "doc": "Billing's settings (§4, §10), named for ``<APP>_BILLING_*``.\n\nMeant to be INHERITED by the app's settings::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KEKSDOSE_\")\n\nAn app that keeps its own fields builds one from them instead:\n``BillingSettings.model_validate(settings, from_attributes=True)``.\n\n``billing_price_ids`` is plan → currency → interval → the provider's price id (§3.1;\nPaddle's ``pri_…``, Lemon Squeezy's variant id), JSON in the environment::\n\n    KEKSDOSE_BILLING_PRICE_IDS='{\"pro\": {\"CHF\": {\"year\": \"pri_01h…\", \"month\": \"pri_01j…\"}}}'\n\nA combination may hold a LIST instead: the current id first — what a new checkout uses\n— then retired ids whose subscriptions still run, so their webhooks still find the plan\n(``[\"pri_new\", \"pri_old\"]``). An id may stand for one combination only.",
+          "fields": [
+            {
+              "name": "billing_enabled",
+              "type": "bool",
+              "default": "False",
+              "doc": "Off: billing doesn't exist for the app (§4). On: ``billing_provider``,\n``billing_api_key`` and ``billing_webhook_secret`` must be set."
+            },
+            {
+              "name": "billing_provider",
+              "type": "BillingProvider | None",
+              "default": "None",
+              "doc": "The Merchant of Record this deployment sells through (§9)."
+            },
+            {
+              "name": "billing_api_key",
+              "type": "SecretStr | None",
+              "default": "None",
+              "doc": "The provider API key the app's client creates checkouts and portal sessions with\n(§4: hosted checkout and portal only). The kit never sends a request; it only\nrefuses to switch on without it."
+            },
+            {
+              "name": "billing_webhook_secret",
+              "type": "SecretStr | None",
+              "default": "None",
+              "doc": "The webhook's signing secret (§5): Paddle's endpoint secret key (``pdl_ntfset_…``),\nLemon Squeezy's signing secret."
+            },
+            {
+              "name": "billing_price_ids",
+              "type": "dict[PlanCode, dict[Currency, dict[Interval, _PriceIds]]]",
+              "default": "dict()",
+              "doc": "Plan → currency → interval → price id(s); see the class docstring."
+            },
+            {
+              "name": "billing_launch_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": "When billing went on for this app (§2.4): the beta's 12 months run from it\n(:func:`~eifi1_server_kit.billing.beta_comped_until`), and an invitation created\nbefore it makes a beta payer (:func:`~eifi1_server_kit.billing.is_beta`). Unset until\nMarcel names the date."
+            }
+          ],
+          "methods": [
+            {
+              "name": "require_billing_enabled",
+              "signature": "require_billing_enabled() -> None",
+              "doc": "Refuse when the switch is off: 404 ``billing_disabled`` (§2.9). First thing in\nevery billing route but ``GET /billing/status`` (which answers a demo user too,\n§12.19), and in the webhook."
+            },
+            {
+              "name": "billing_price_id",
+              "signature": "billing_price_id(plan: str, currency: BillingCurrency | str, interval: BillingInterval | str) -> str",
+              "doc": "The provider's CURRENT price id for a checkout (§4 ``POST /billing/checkout``).\n\nMissing — the plan isn't sold that way, or the setting lacks it — is 503\n``billing_not_configured``: check the plan's own ``prices`` first for a 422 on a\ncombination the catalogue doesn't sell."
+            },
+            {
+              "name": "billing_price_ref",
+              "signature": "billing_price_ref(price_id: str) -> PriceRef | None",
+              "doc": "What a provider's price id stands for — a webhook's plan — or ``None`` for an id\nthe settings don't name, current or retired."
+            },
+            {
+              "name": "billing_plan_for_price",
+              "signature": "billing_plan_for_price(price_id: str) -> str | None",
+              "doc": "The plan code a provider's price id stands for, or ``None``: the ``plan_for_price``\n:func:`~eifi1_server_kit.billing.dispatch` takes."
+            },
+            {
+              "name": "billing_webhook_key",
+              "signature": "billing_webhook_key() -> str",
+              "doc": "The webhook secret's value, for the signature check (§5); 503\n``billing_not_configured`` without one (only reachable with the switch off)."
+            },
+            {
+              "name": "billing_standing",
+              "signature": "billing_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
+              "doc": ":func:`~eifi1_server_kit.billing.in_good_standing`, behind the switch: with\nbilling off everyone is in good standing (§4). The standing the read-only gate\ntakes (:func:`~eifi1_server_kit.billing.billing_write_allowed`)."
+            }
+          ]
+        },
+        {
+          "name": "BillingStatus",
+          "kind": "model",
+          "signature": "class BillingStatus(BaseModel)",
+          "doc": "``GET /billing/status`` → ``{billing_enabled}`` (§4): the one billing route that\nanswers while billing is off — and to a demo user (§12.19), so the shell can hide the\nbilling page, its nav entry, banners and search entries.",
+          "fields": [
+            {
+              "name": "billing_enabled",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "CheckoutAnswer",
+          "kind": "model",
+          "signature": "class CheckoutAnswer(BaseModel)",
+          "doc": "``{url}``: the provider's hosted page (§2.8) — the answer to ``POST\n/billing/checkout`` (the checkout) and ``POST /billing/portal`` (payment method,\ninvoices, cancellation). No card field and no invoice copy is ever in an app. After the\ncheckout the page shows \"payment processing\" and re-polls the overview: the webhook may\nland after the person is back (§12.21).",
+          "fields": [
+            {
+              "name": "url",
+              "type": "Annotated[str, AfterValidator(_web_address)]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "CheckoutRequest",
+          "kind": "model",
+          "signature": "class CheckoutRequest(BaseModel)",
+          "doc": "``POST /billing/checkout {plan, interval, currency}`` (§4): the plan, how often it\nis paid, and in which currency (CHF or EUR, §2.6). Check the plan against the\ncatalogue and its ``prices`` for the combination (a 422 for one it doesn't sell), then\ntake the provider's price id from the settings\n(:meth:`~eifi1_server_kit.billing.BillingSettings.billing_price_id`) and put the payer's\nreference into the checkout (:func:`~eifi1_server_kit.billing.checkout_custom_data`).",
+          "fields": [
+            {
+              "name": "plan",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "interval",
+              "type": "Interval",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "currency",
+              "type": "Currency",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "Currency",
+          "kind": "constant",
+          "signature": "Currency = Annotated[BillingCurrency, BeforeValidator(_upper)]",
+          "doc": "A :class:`BillingCurrency`, any case on the way in (``\"chf\"`` is CHF)."
+        },
+        {
+          "name": "DispatchOutcome",
+          "kind": "enum",
+          "signature": "class DispatchOutcome(enum.StrEnum)",
+          "doc": "What :func:`dispatch` did with an event. Every outcome answers 2xx\n(:func:`webhook_answer`).",
+          "values": [
+            {
+              "name": "APPLIED",
+              "value": "applied"
+            },
+            {
+              "name": "DUPLICATE",
+              "value": "duplicate"
+            },
+            {
+              "name": "STALE",
+              "value": "stale"
+            },
+            {
+              "name": "GRANT_HOLDS",
+              "value": "grant_holds"
+            },
+            {
+              "name": "OTHER_SUBSCRIPTION",
+              "value": "other_subscription"
+            },
+            {
+              "name": "NO_PAYER",
+              "value": "no_payer"
+            }
+          ]
+        },
+        {
+          "name": "EventKind",
+          "kind": "enum",
+          "signature": "class EventKind(enum.StrEnum)",
+          "doc": "The normalised vocabulary (§5). A ``StrEnum``, so ``str(kind)`` is the word.",
+          "values": [
+            {
+              "name": "SUBSCRIPTION_STARTED",
+              "value": "subscription_started"
+            },
+            {
+              "name": "SUBSCRIPTION_UPDATED",
+              "value": "subscription_updated"
+            },
+            {
+              "name": "PAYMENT_FAILED",
+              "value": "payment_failed"
+            },
+            {
+              "name": "SUBSCRIPTION_CANCELED",
+              "value": "subscription_canceled"
+            },
+            {
+              "name": "SUBSCRIPTION_EXPIRED",
+              "value": "subscription_expired"
+            }
+          ]
+        },
+        {
+          "name": "EventStore",
+          "kind": "protocol",
+          "signature": "class EventStore(Protocol)",
+          "doc": "The app's ``billing_events`` table (§5) — the port :func:`dispatch` records through.\nEvery method runs in the request's one transaction.",
+          "methods": [
+            {
+              "name": "seen",
+              "signature": "async seen(provider: BillingProvider, event_id: str) -> bool",
+              "doc": "Is ``(provider, event_id)`` in the table already — applied or not?"
+            },
+            {
+              "name": "record",
+              "signature": "async record(event: NormalisedEvent, *, received_at: datetime) -> None",
+              "doc": "Insert the event: ``provider``, ``event_id``, ``type`` (``event.provider_type``),\n``occurred_at`` and ``received_at``; ``processed_at`` empty."
+            },
+            {
+              "name": "mark_processed",
+              "signature": "async mark_processed(provider: BillingProvider, event_id: str, *, processed_at: datetime) -> None",
+              "doc": "Set ``processed_at``: the event was decided — applied, or deliberately skipped."
+            }
+          ]
+        },
+        {
+          "name": "Interval",
+          "kind": "constant",
+          "signature": "Interval = Annotated[BillingInterval, BeforeValidator(_lower)]",
+          "doc": "A :class:`BillingInterval`, any case on the way in."
+        },
+        {
+          "name": "MinorUnits",
+          "kind": "constant",
+          "signature": "MinorUnits = Annotated[int, Field(strict=True, ge=0)]",
+          "doc": "An amount in minor units: a whole, non-negative ``int``. Strict, so a float — or a\n``bool`` — is refused rather than rounded (§4)."
+        },
+        {
+          "name": "NormalisedEvent",
+          "kind": "model",
+          "signature": "class NormalisedEvent(BaseModel)",
+          "doc": "One provider event in the kit's vocabulary (§5) — what the event store records and\nthe app applies.\n\nA field that is ``None`` is one the event does not carry: leave the row's value. A\nSNAPSHOT (``status`` set) is the subscription's whole state at ``occurred_at``; a notice\n(``status`` ``None``, Lemon Squeezy's ``payment_failed``) only says something happened.",
+          "fields": [
+            {
+              "name": "provider",
+              "type": "BillingProvider",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "event_id",
+              "type": "str",
+              "default": null,
+              "doc": "Unique per provider: Paddle's ``evt_…``; for Lemon Squeezy, which sends no event id,\nthe SHA-256 of the raw body — a redelivery resends the same body."
+            },
+            {
+              "name": "provider_type",
+              "type": "str",
+              "default": null,
+              "doc": "The provider's own event name (``subscription.updated``), for the event store's\n``type`` and the log."
+            },
+            {
+              "name": "kind",
+              "type": "EventKind",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "occurred_at",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": "When it happened, for the ordering guard (§5): Paddle's ``occurred_at``; Lemon\nSqueezy's ``updated_at`` of the object sent."
+            },
+            {
+              "name": "customer_ref",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The provider's customer id (Paddle ``ctm_…``)."
+            },
+            {
+              "name": "subscription_ref",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The provider's subscription id (Paddle ``sub_…``)."
+            },
+            {
+              "name": "plan_price_id",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The price the subscription runs on: Paddle's first recurring item's ``pri_…``, Lemon\nSqueezy's variant id. The settings say which plan it is."
+            },
+            {
+              "name": "status",
+              "type": "SubscriptionStatus | None",
+              "default": "None",
+              "doc": "The row's new status; ``None`` on a notice."
+            },
+            {
+              "name": "current_period_end",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": "The end of what the payer has paid for: the current period, or when it ended."
+            },
+            {
+              "name": "cancel_at_period_end",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "The payer cancelled for the period's end."
+            },
+            {
+              "name": "custom_data",
+              "type": "dict[str, Any]",
+              "default": "dict()",
+              "doc": "The checkout's custom data, with the app's payer reference\n(:func:`checkout_custom_data`)."
+            }
+          ],
+          "methods": [
+            {
+              "name": "is_snapshot",
+              "signature": "@property is_snapshot -> bool",
+              "doc": "Does it carry the subscription's state (and so take part in the ordering guard)?"
+            },
+            {
+              "name": "payer_ref",
+              "signature": "@property payer_ref -> str | None",
+              "doc": "The payer reference the app put into the checkout, or ``None``."
+            }
+          ]
+        },
+        {
+          "name": "PlanChangeRequest",
+          "kind": "model",
+          "signature": "class PlanChangeRequest(BaseModel)",
+          "doc": "``POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}`` (§4, §6): an\noperator's plan or grant — :attr:`~eifi1_server_kit.user_admin.AdminAction.PLAN` at the\n``acknowledge`` level, checked with\n:func:`~eifi1_server_kit.user_admin.require_confirmation`. No ``confirm_email``: the\nlevel is ``acknowledge`` for every account, and offering the field would suggest a\nstronger gate (keksdose's reasoning).\n\nThe app writes it as an operator's grant (§3.2): ``comped``, ``source`` ``manual``,\nuntil ``comped_until`` or without an end; a ``comped_until`` of now ends a grant. Log it\nas ``detail {from, to, comped_until, counts}`` (§6). An admin transfer or an erasure\nhand-over never checks a limit, and neither does this (§12.15).",
+          "fields": [
+            {
+              "name": "plan",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "comped_until",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "acknowledged",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PlanChangeResponse",
+          "kind": "model",
+          "signature": "class PlanChangeResponse(BaseModel)",
+          "doc": "What a plan change did (§6): ``{previous_plan, plan, limits, over_limit}``.\n\n``previous_plan`` is the point of the shape: \"the plan was changed\" without the value\nit replaced is no trail (keksdose). ``over_limit`` — a downgrade below what the payer\nhas — is not an error and nothing is cleaned up: every item stays open and writable,\nonly the next create is refused (§3.4), so the panel says it rather than let an admin\ndiscover it. Build it with :meth:`of`.",
+          "fields": [
+            {
+              "name": "previous_plan",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "plan",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "limits",
+              "type": "dict[str, int | None]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "over_limit",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "of",
+              "signature": "@classmethod of(previous_plan: str, plan: PlanSpec, usage: Mapping[str, int]) -> Self",
+              "doc": "The answer for a change from ``previous_plan`` to ``plan``, with the payer's\n``usage`` (:func:`~eifi1_server_kit.billing.dimensions_over_limit`)."
+            }
+          ]
+        },
+        {
+          "name": "PlanCode",
+          "kind": "constant",
+          "signature": "PlanCode = Annotated[str, BeforeValidator(_plan_code)]",
+          "doc": "A plan code, normalised on the way in (:func:`normalize_plan`)."
+        },
+        {
+          "name": "PlanLimitError",
+          "kind": "class",
+          "signature": "class PlanLimitError(ValueError)",
+          "doc": "A create beyond the plan's limit (§3.4): ``402 {detail, code: \"plan_limit\",\ndimension, plan, limit, used}``.\n\nRaised by :func:`~eifi1_server_kit.billing.check_limit`. A limit gates creation only:\na downgrade never deletes or hides what is over the new limit, it only stops creating\nmore — so this is the one place a limit ever refuses. The page offers \"Choose a plan\"\nor, where the operator grants plans by hand, \"Ask for more\" (§3.4); it reads the\nfields, never the English ``detail``. ``used`` is the count BEFORE the create.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(*, dimension: str, plan: str, limit: int, used: int, detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PlanSpec",
+          "kind": "model",
+          "signature": "class PlanSpec(BaseModel)",
+          "doc": "One plan in the app's catalogue (§3.1)::\n\n    FREE = PlanSpec(code=\"free\", limits={\"budgets\": 1}, sort=0)\n    PRO = PlanSpec(\n        code=\"pro\",\n        limits={\"budgets\": 5},\n        prices={(\"CHF\", \"year\"): 3000, (\"EUR\", \"year\"): 3000, (\"CHF\", \"month\"): 300},\n        sort=1,\n    )\n    PLANS = plan_catalogue([FREE, PRO])\n\n* ``code`` — lowercase and stable on the wire (:func:`normalize_plan`);\n* ``limits`` — dimension → the most a payer may have, ``None`` for unlimited. Each app\n  names its own (§12.15): keksdose ``budgets``; Kurvenschmiede ``curves``; kastlan\n  ``units``, ``seats`` (staff only) and ``storage`` (bytes, all company files at\n  plaintext size). A dimension the plan doesn't name is a programming error, not\n  \"unlimited\" (:func:`check_limit`);\n* ``prices`` — ``(currency, interval)`` → the GROSS price in minor units (§12.17); a\n  combination left out is not sold. The provider's price id for each lives in the\n  settings;\n* ``sort`` — the page's order, cheapest first.\n\nFrozen: the catalogue is a constant.",
+          "fields": [
+            {
+              "name": "code",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "limits",
+              "type": "dict[str, _Limit | None]",
+              "default": "dict()",
+              "doc": ""
+            },
+            {
+              "name": "prices",
+              "type": "dict[tuple[Currency, Interval], MinorUnits]",
+              "default": "dict()",
+              "doc": ""
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "default": "0",
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "limit",
+              "signature": "limit(dimension: str) -> int | None",
+              "doc": "The limit on ``dimension``, ``None`` for unlimited. A dimension this plan doesn't\nname is a :class:`ValueError`: a typo must not switch a limit off without a word."
+            },
+            {
+              "name": "price",
+              "signature": "price(currency: BillingCurrency | str, interval: BillingInterval | str) -> int | None",
+              "doc": "The gross price in minor units for ``currency`` and ``interval``; ``None`` where\nthe plan is not sold that way (a free plan, a monthly price left out)."
+            }
+          ]
+        },
+        {
+          "name": "PoisonEventError",
+          "kind": "class",
+          "signature": "class PoisonEventError(ValueError)",
+          "doc": "An event that can never be applied — unreadable JSON, a field missing or of the wrong\ntype, a status nobody knows. Answered 2xx and logged (§5, keksdose's Pub/Sub rule): a\n5xx would make the provider redeliver the same bytes, for days (Paddle retries 60 times\nover 3 days).\n\nThe message names the field, never a value: Lemon Squeezy's attributes carry the\nbuyer's name and address, so a log line must never quote the body."
+        },
+        {
+          "name": "PriceRef",
+          "kind": "class",
+          "signature": "class PriceRef(NamedTuple)",
+          "doc": "What a provider's price id stands for: one plan, in one currency, per one interval.",
+          "fields": [
+            {
+              "name": "plan",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "currency",
+              "type": "BillingCurrency",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "interval",
+              "type": "BillingInterval",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SubscriptionRow",
+          "kind": "protocol",
+          "signature": "class SubscriptionRow(Protocol)",
+          "doc": "What the kit reads of the app's subscription row (§3.2). An ORM row satisfies it as\nit is; the provider's ids and ``plan_code`` are the app's columns too, read where the\nkit needs them.\n\nNaive datetimes are read as UTC, as everywhere in the kit (kastlan's columns are naive).",
+          "methods": [
+            {
+              "name": "plan_code",
+              "signature": "@property plan_code -> str",
+              "doc": ""
+            },
+            {
+              "name": "status",
+              "signature": "@property status -> SubscriptionStatus | str",
+              "doc": ""
+            },
+            {
+              "name": "source",
+              "signature": "@property source -> SubscriptionSource | str",
+              "doc": ""
+            },
+            {
+              "name": "trial_ends_at",
+              "signature": "@property trial_ends_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "comped_until",
+              "signature": "@property comped_until -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "current_period_end",
+              "signature": "@property current_period_end -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "cancel_at_period_end",
+              "signature": "@property cancel_at_period_end -> bool | None",
+              "doc": ""
+            },
+            {
+              "name": "provider_subscription_id",
+              "signature": "@property provider_subscription_id -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "updated_from_event_at",
+              "signature": "@property updated_from_event_at -> datetime | None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SubscriptionSource",
+          "kind": "enum",
+          "signature": "class SubscriptionSource(enum.StrEnum)",
+          "doc": "The row's ``source`` (§3.2): where its current state came from.",
+          "values": [
+            {
+              "name": "TRIAL",
+              "value": "trial"
+            },
+            {
+              "name": "PROVIDER",
+              "value": "provider"
+            },
+            {
+              "name": "MANUAL",
+              "value": "manual"
+            },
+            {
+              "name": "BETA",
+              "value": "beta"
+            }
+          ]
+        },
+        {
+          "name": "SubscriptionStatus",
+          "kind": "enum",
+          "signature": "class SubscriptionStatus(enum.StrEnum)",
+          "doc": "The row's ``status`` (§3.2). A ``StrEnum``, so ``str(status)`` is the stored value;\nthe kit's ``SubscriptionStatusChip`` reads the same words.",
+          "values": [
+            {
+              "name": "TRIALING",
+              "value": "trialing"
+            },
+            {
+              "name": "ACTIVE",
+              "value": "active"
+            },
+            {
+              "name": "PAST_DUE",
+              "value": "past_due"
+            },
+            {
+              "name": "CANCELED",
+              "value": "canceled"
+            },
+            {
+              "name": "EXPIRED",
+              "value": "expired"
+            },
+            {
+              "name": "COMPED",
+              "value": "comped"
+            }
+          ]
+        },
+        {
+          "name": "SyncRefusal",
+          "kind": "model",
+          "signature": "class SyncRefusal(BaseModel)",
+          "doc": "The changes a sync reply refused (§12.5): ``{code, detail, change_ids}``, on the\napp's sync answer beside the updates it still sends.\n\n**A 402 is not a refusal of one change.** Sync endpoints stay on the gate's allow-list;\ninside them, a lapsed payer's changes are refused as ``billing_read_only`` and not\napplied, and the reply still carries the updates — keksdose's E2EE gate is the\nprecedent. The client keeps the refused changes queued, as \"N changes waiting for a\nplan\", and sends them after payment::\n\n    class SyncResponse(BaseModel):\n        server_knowledge: int\n        changes: list[SyncChange]\n        refused: SyncRefusal | None = None\n\n``change_ids`` are the client-minted ids of the refused changes (keksdose's and\nkastlan's ``SyncChange.id``; a UUID is written as its string). ``code`` is another\nkit code where a change is refused for another reason (``plan_limit`` for a create past\nthe limit, after the read-only check, §12.3).",
+          "fields": [
+            {
+              "name": "code",
+              "type": "str",
+              "default": "'billing_read_only'",
+              "doc": ""
+            },
+            {
+              "name": "detail",
+              "type": "str",
+              "default": "'Read-only for now: changes need an active plan'",
+              "doc": ""
+            },
+            {
+              "name": "change_ids",
+              "type": "list[_ChangeId]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "WebhookAnswer",
+          "kind": "class",
+          "signature": "class WebhookAnswer(NamedTuple)",
+          "doc": "The status to answer the provider with, and whether the case is worth a log line.",
+          "fields": [
+            {
+              "name": "status_code",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "log",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "beta_comped_until",
+          "kind": "function",
+          "signature": "beta_comped_until(launch: datetime) -> datetime",
+          "doc": "When a beta payer's free months end: 12 calendar months after the launch (§2.4,\n:data:`BETA_FREE_MONTHS`) — the same date for every beta payer of the app.\n\nCalendar months, not 365 days: launched on 1 March, free until 1 March. A launch on\n29 February ends on 28 February. Naive in, naive out."
+        },
+        {
+          "name": "billing_write_allowed",
+          "kind": "function",
+          "signature": "billing_write_allowed(method: str, path: str, *, standing: bool, allow: Collection[str] = frozenset()) -> bool",
+          "doc": "May this request go on, given the payer's ``standing``? §3.3's gate, at the auth\ndependency::\n\n    standing = settings.billing_standing(payer_row, now)\n    if not billing_write_allowed(request.method, request.url.path, standing=standing, allow=BILLING_WRITES):\n        raise BillingError(BillingErrorCode.BILLING_READ_ONLY)\n\n* A payer in good standing — or billing switched off, which\n  :meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` answers as good\n  standing — always may.\n* GET, HEAD and OPTIONS always may: reading, exporting and signing in always work.\n* Anything else only when ``allow`` names it, in the demo's syntax: ``\"METHOD /path\"``\n  with the app's prefix, ``{name}`` for one path segment\n  (:func:`~eifi1_server_kit.demo.demo_write_allowed`). The list is the app's (§12.13,\n  §12.14): billing itself, the account's own settings, signing out; feedback with\n  attachments and crash reports; removing access (revoking a share, leaving a shared\n  item, offboarding, sessions, API tokens, passkeys, 2FA); taking the data and\n  leaving; admin routes; receiving sync. **Adding seats or guests stays blocked.**\n\n**Sync endpoints go on the allow-list** (§12.5): a 402 would stop the reply that\ncarries the updates. Inside them, refuse a lapsed payer's changes one by one and say\nso in the reply (:class:`~eifi1_server_kit.billing.SyncRefusal`)."
+        },
+        {
+          "name": "check_limit",
+          "kind": "function",
+          "signature": "check_limit(plan: PlanSpec, dimension: str, used: int, *, adding: int = 1) -> None",
+          "doc": "Refuse a create that would take the payer past ``plan``'s limit on ``dimension``\n(§3.4): :class:`~eifi1_server_kit.billing.PlanLimitError`, ``402 {code: \"plan_limit\",\ndimension, plan, limit, used}``.\n\n``used`` is the payer's count BEFORE the create (keksdose: owned, non-deleted budgets;\nshared-in budgets and the preview never count, §12.15); ``adding`` is how much the\ncreate adds — 1 for a budget or a unit, the file's size for kastlan's ``storage``. The\ncreate is refused when ``used + adding`` exceeds the limit; an unlimited dimension\n(``None``) always passes. A copy counts; an admin transfer or an erasure hand-over never\nchecks a limit (§12.15).\n\n**Call it after the read-only gate** (§12.3): a lapsed payer creating gets\n``billing_read_only``, never ``plan_limit``."
+        },
+        {
+          "name": "checkout_custom_data",
+          "kind": "function",
+          "signature": "checkout_custom_data(payer_ref: str) -> dict[str, str]",
+          "doc": "The custom data to put into a checkout, so its webhooks find the payer:\n``{\"payer_ref\": \"user:42\"}`` (or ``\"company:7\"``).\n\nPaddle keeps a checkout's ``custom_data`` on the transaction and copies it to the\nsubscription it creates, so every subscription event carries it; Lemon Squeezy sends a\ncheckout's ``checkout_data.custom`` as ``meta.custom_data`` with every subscription\nevent. The reference is the app's own and opaque to the provider — never an address.\nFlat, because Paddle's dashboard shows nested custom data badly."
+        },
+        {
+          "name": "dimensions_over_limit",
+          "kind": "function",
+          "signature": "dimensions_over_limit(plan: PlanSpec, usage: Mapping[str, int]) -> list[str]",
+          "doc": "The dimensions where ``usage`` already exceeds ``plan``'s limits, in the plan's order.\n\nFor a plan change (§6): a downgrade below what the payer has is not an error and\nnothing is cleaned up — only the next create is refused — so the answer says so\n(:class:`~eifi1_server_kit.billing.PlanChangeResponse` ``over_limit``) rather than let an\noperator discover it. A dimension missing from ``usage`` counts as 0."
+        },
+        {
+          "name": "dispatch",
+          "kind": "function",
+          "signature": "async dispatch[RowT: SubscriptionRow](event: NormalisedEvent, store: EventStore, apply: Callable[[NormalisedEvent, RowT, dict[str, object]], Awaitable[None]], *, load: Callable[[NormalisedEvent], Awaitable[RowT | None]], plan_for_price: Callable[[str], str | None], now: datetime | None = None) -> DispatchOutcome",
+          "doc": "Record ``event`` and apply it to the payer's row, through the app's ports (§5).\n\nPure but for its callbacks, which it awaits in order and never concurrently:\n\n1. **seen** → :attr:`DispatchOutcome.DUPLICATE`; nothing else happens;\n2. **record** it (``received_at`` = ``now``);\n3. **load** the payer's row — by ``event.payer_ref`` first (the checkout's custom data,\n   :func:`~eifi1_server_kit.billing.checkout_custom_data`), else by the provider's\n   subscription or customer id. None → :attr:`~DispatchOutcome.NO_PAYER`;\n4. **the ordering guard** (§5): a snapshot older than the row's\n   ``updated_from_event_at`` → :attr:`~DispatchOutcome.STALE`. A notice never moves\n   the mark, so a late notice cannot hide a newer state;\n5. **another subscription** that would not keep the payer in good standing →\n   :attr:`~DispatchOutcome.OTHER_SUBSCRIPTION`; one that would (the payer subscribed\n   again) takes the row's link;\n6. **a free grant** (§12.11, :func:`~eifi1_server_kit.billing.grant_holds`) → apply only\n   the link and the dates, :attr:`~DispatchOutcome.GRANT_HOLDS`;\n7. otherwise **apply** :func:`row_changes`, with the plan from ``plan_for_price``\n   (:meth:`~eifi1_server_kit.billing.BillingSettings.billing_plan_for_price`). A price\n   the settings don't know is 503 ``billing_not_configured``: nothing is kept, and the\n   provider's retry applies the event once the setting is there;\n8. **mark processed**, except for ``NO_PAYER``.\n\n``apply(event, row, changes)`` writes the changes — and may send the app's notice for\nthe kind. It raises :class:`~eifi1_server_kit.billing.PoisonEventError` for an event it\ncan never apply (answered 2xx and logged); any other exception rolls the transaction\nback and answers 5xx, so the provider retries (:func:`webhook_answer`)."
+        },
+        {
+          "name": "grant_holds",
+          "kind": "function",
+          "signature": "grant_holds(row: SubscriptionRow, now: datetime) -> bool",
+          "doc": "Is a free grant running — ``comped`` before ``comped_until``, or without one?\n\nWhile it is, a provider event does not overwrite the row (§12.11): an operator's grant\n— or the beta's — beats the provider, and the provider's state applies from\n``comped_until`` on (:func:`in_good_standing`)."
+        },
+        {
+          "name": "in_good_standing",
+          "kind": "function",
+          "signature": "in_good_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
+          "doc": "May the payer's data change at ``now``? §3.3, with §12.7 and §12.11.\n\n* **No row: always** (§12.7) — demo users, the demo's system account, ownerless items\n  such as keksdose's preview budget. They are never gated and never counted. Every real\n  payer has a row (§12.12), so ``None`` means one of these, never \"forgotten\".\n* ``active`` — yes; but a subscription set to cancel at its period's end is out once\n  that end has passed, even before the provider's final event arrives (it may be late;\n  a cancelled period cannot renew).\n* ``trialing`` — the cardless trial (``source`` ``trial``) before ``trial_ends_at``, or\n  while it is empty: a pure guest's row waits for their first owned item to start it\n  (§12.9). A provider's own trial counts as ``active``.\n* ``comped`` — before ``comped_until``, or without one; after it, while the provider's\n  paid period runs (``current_period_end``): a payer who subscribed during the grant\n  — whose provider events left the grant in place (§12.11) — is in good standing from\n  the grant's end on, as the provider says.\n* ``past_due`` — yes: the provider retries, and moves it on when it gives up (Paddle to\n  ``canceled`` or ``paused``, Lemon Squeezy after 4 retries over 2 weeks to ``unpaid``).\n  With ``retry_grace``, also no later than ``current_period_end`` plus the grace — a\n  backstop for a provider event that never arrived.\n* ``canceled``, ``expired`` — no.\n\nBilling switched off means everyone is in good standing (§4):\n:meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` asks the switch\nfirst. An unknown ``status`` is a :class:`ValueError`."
+        },
+        {
+          "name": "is_beta",
+          "kind": "function",
+          "signature": "is_beta(invitation_created_at: datetime | None, launch: datetime) -> bool",
+          "doc": "Does a payer registering now count as beta (§12.10)? Yes when their invitation was\nCREATED before the launch, even if it is accepted after — the last week's invitees get\n12 months, not 30 days. No invitation (open registration after launch): no.\n\nThe payers who exist when billing goes on are beta by the migration (§3.2), which needs\nno question."
+        },
+        {
+          "name": "map_lemonsqueezy_event",
+          "kind": "function",
+          "signature": "map_lemonsqueezy_event(raw_body: bytes) -> NormalisedEvent | None",
+          "doc": "A Lemon Squeezy webhook as a :class:`NormalisedEvent`; ``None`` for an event billing\ndoesn't use; :class:`PoisonEventError` for a body it cannot read.\n\nThe body is JSON:API: ``{meta: {event_name, custom_data?}, data: {type, id,\nattributes}}``. A subscription's attributes carry ``status``, ``customer_id``,\n``variant_id``, ``cancelled``, ``renews_at``, ``ends_at`` and ``updated_at``;\n``subscription_payment_failed`` sends a ``subscription-invoices`` object instead, with\n``subscription_id`` and ``customer_id`` but no status.\n\nThe event id is the body's SHA-256: Lemon Squeezy documents no event id, and a retry\n(it retries three times, after 5, 25 and 125 seconds) resends the event."
+        },
+        {
+          "name": "map_paddle_event",
+          "kind": "function",
+          "signature": "map_paddle_event(raw_body: bytes) -> NormalisedEvent | None",
+          "doc": "A Paddle Billing notification as a :class:`NormalisedEvent`; ``None`` for an event\nbilling doesn't use; :class:`PoisonEventError` for a body it cannot read.\n\nThe envelope is ``{event_id, event_type, occurred_at, notification_id, data}``, and a\nsubscription event's ``data`` the whole subscription: ``id``, ``status``,\n``customer_id``, ``items[].price.id``, ``current_billing_period.ends_at`` (``null``\nonce cancelled — ``canceled_at`` then), ``scheduled_change.action``, ``custom_data``."
+        },
+        {
+          "name": "minor_to_decimal",
+          "kind": "function",
+          "signature": "minor_to_decimal(amount: int, currency: BillingCurrency | str) -> Decimal",
+          "doc": "``amount`` minor units of ``currency`` as an exact :class:`~decimal.Decimal`:\n``minor_to_decimal(990, \"CHF\") == Decimal(\"9.90\")``.\n\nExact by construction — the exponent of :data:`CURRENCY_EXPONENTS` shifts the integer,\nno float is ever involved (§4). A ``float`` or a ``bool`` amount is a\n:class:`TypeError`; a currency not in the table is a :class:`ValueError`, never a\nguessed exponent."
+        },
+        {
+          "name": "normalize_plan",
+          "kind": "function",
+          "signature": "normalize_plan(code: str) -> str",
+          "doc": "A plan code as stored and sent: trimmed and lowercase (§3.1, §12.16).\n\nCodes become lowercase by a data migration, and **reads compare case-insensitively**:\nkeksdose's ``admin_actions`` history keeps its uppercase ``FREE`` / ``PRO``, and this\nreads them as ``free`` / ``pro``. Not a code — empty, too long (32), or anything but\nletters, digits, ``_`` and ``-`` after a letter — is a :class:`ValueError`, so inside a\nPydantic model it is a 422. Whether the code is one of the app's plans is the\ncatalogue's question (:func:`plan_catalogue`), not this one's."
+        },
+        {
+          "name": "parse_webhook_event",
+          "kind": "function",
+          "signature": "parse_webhook_event(provider: BillingProvider | str, raw_body: bytes) -> NormalisedEvent | None",
+          "doc": "The raw body of ``provider``'s webhook as a :class:`NormalisedEvent` — after its\nsignature passed — or ``None`` for an event billing doesn't use (answer 2xx). A body\nthat cannot be read is a :class:`PoisonEventError` (answer 2xx and log)."
+        },
+        {
+          "name": "plan_catalogue",
+          "kind": "function",
+          "signature": "plan_catalogue(plans: Iterable[PlanSpec]) -> Mapping[str, PlanSpec]",
+          "doc": "The app's plans as one read-only mapping, code → plan, in ``sort`` order (§3.1).\n\nLook a plan up with the code normalised: ``PLANS.get(normalize_plan(code))``. Refused,\nas :class:`ValueError`, on the first import: no plans, two plans with one code, and\nplans that name different dimensions — a ``budget`` beside a ``budgets`` would leave\none plan without a limit there."
+        },
+        {
+          "name": "refuse_billing_read_only",
+          "kind": "function",
+          "signature": "refuse_billing_read_only(in_good_standing: bool, what: str) -> None",
+          "doc": "Refuse a write at the app's own choke point while the payer is not in good standing:\n402 ``billing_read_only``, naming ``what`` for the log (§3.3, §12.2)::\n\n    refuse_billing_read_only(settings.billing_standing(owner_row, now), \"a new budget\")\n\nThe detail never names the payer's status or the payer (§12.6): a guest in a lapsed\nowner's budget reads it too, and learns only that the budget is read-only for now."
+        },
+        {
+          "name": "row_changes",
+          "kind": "function",
+          "signature": "row_changes(event: NormalisedEvent, *, grant_holds: bool = False, plan_code: str | None = None) -> dict[str, object]",
+          "doc": "The columns of the payer's row (§3.2) that ``event`` sets, by name — what\n:func:`dispatch` hands the app's ``apply``::\n\n    for name, value in changes.items():\n        setattr(row, name, value)\n\n* Always ``provider``, and the provider's ``provider_customer_id`` and\n  ``provider_subscription_id`` where the event names them — the link the portal and a\n  deletion's cancellation need (§12.23).\n* A snapshot also sets ``current_period_end`` and ``cancel_at_period_end`` where it\n  carries them, and ``updated_from_event_at`` (the ordering guard's mark).\n* Unless a grant holds, a snapshot then sets ``status``, ``source`` (``provider``) and,\n  given ``plan_code``, the plan. While a grant holds those stay as the grant set them,\n  and :func:`~eifi1_server_kit.billing.in_good_standing` reads the provider's paid\n  period once the grant ends (§12.11).\n\nDatetimes are aware, in UTC: an app with naive columns (kastlan) strips the zone."
+        },
+        {
+          "name": "trial_ends_at",
+          "kind": "function",
+          "signature": "trial_ends_at(now: datetime) -> datetime",
+          "doc": "When a trial started at ``now`` ends: 30 days on (§2.7, :data:`TRIAL_LENGTH`).\n\nSet where the payer is created (§12.12) — except for keksdose's pure guest, whose row is\ncreated with an empty ``trial_ends_at`` and given one at their first OWNED item\n(§12.9). Naive in, naive out."
+        },
+        {
+          "name": "verify_lemonsqueezy_signature",
+          "kind": "function",
+          "signature": "verify_lemonsqueezy_signature(raw_body: bytes, header: str | None, secret: str) -> None",
+          "doc": "Check a Lemon Squeezy webhook's ``X-Signature`` — the hex HMAC-SHA256 of the raw\nbody — or raise 400 ``invalid_signature``."
+        },
+        {
+          "name": "verify_paddle_signature",
+          "kind": "function",
+          "signature": "verify_paddle_signature(raw_body: bytes, header: str | None, secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
+          "doc": "Check a Paddle Billing webhook's ``Paddle-Signature``, or raise 400\n``invalid_signature``.\n\nThe header is ``;``-separated ``key=value`` pairs: one ``ts`` (Unix seconds) and at\nleast one ``h1``; unknown keys are ignored, so a future scheme beside ``h1`` doesn't\nbreak the check. The signed payload is ``ts``, a colon, and the raw body; any ``h1``\nthat matches passes (secret rotation). ``now`` is Unix seconds, the current time by\ndefault; ``ts`` further than ``tolerance`` seconds from it is refused as a replay."
+        },
+        {
+          "name": "verify_webhook_signature",
+          "kind": "function",
+          "signature": "verify_webhook_signature(provider: BillingProvider | str, raw_body: bytes, headers: Mapping[str, str], secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
+          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key())\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); Lemon\nSqueezy's signature has no timestamp. An unknown provider is a :class:`ValueError`."
+        },
+        {
+          "name": "webhook_answer",
+          "kind": "function",
+          "signature": "webhook_answer(result: DispatchOutcome | BaseException | None) -> WebhookAnswer",
+          "doc": "The answer policy (§5): what the webhook route answers for what happened.\n\n* ``None`` — an event billing doesn't use — and every :class:`DispatchOutcome`: 200.\n  Paddle and Lemon Squeezy both ask for a 200; anything else is retried.\n* :attr:`DispatchOutcome.NO_PAYER` and a\n  :class:`~eifi1_server_kit.billing.PoisonEventError`: 200 and logged — a retry would\n  bring the same bytes (keksdose's Pub/Sub rule).\n* A :class:`~eifi1_server_kit.billing.BillingError`: its own status — 400 for a bad\n  signature, 404 with billing off, 503 for a missing setting (retried) — logged, but\n  for the 404.\n* Anything else is transient: 500 and logged, so the provider retries (Paddle 60 times\n  over 3 days, Lemon Squeezy 3 times within minutes).\n\nLog the result's type and message, never the body: it carries the buyer's details."
         }
       ]
     },
@@ -3975,7 +5090,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, and the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -3992,7 +5107,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {

@@ -2,6 +2,7 @@ import { useId, useRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Ban, Check } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { Tooltip } from "./tooltip";
 
@@ -133,7 +134,9 @@ export interface TileRadioGroupProps<T extends string> {
  */
 const TILE_BASE =
   "relative inline-flex shrink-0 items-center justify-center rounded-md border transition-colors " +
-  "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] " +
+  "focus:outline-none " +
+  FOCUS_RING +
+  " focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 const TILE_IDLE =
   "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]";

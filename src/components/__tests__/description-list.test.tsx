@@ -154,7 +154,7 @@ describe("DescriptionList 0.10.0", () => {
       </DescriptionList>,
     );
     const dl = container.querySelector("dl")!;
-    expect(dl.className).toContain("text-[11px]");
+    expect(dl.className).toContain("text-caption");
     expect(dl.className).not.toContain("divide-y");
     expect(dl.firstElementChild!.className).toContain("py-px");
   });

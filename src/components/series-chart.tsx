@@ -61,7 +61,7 @@ import {
 } from "./chart-zoom";
 import { STEP_DASH, strokeDash, type LegendEntry } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
-import { categoryTicks, integerTicks, niceTicks, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
+import { categoryTicks, integerTicks, niceTicks, tickTarget, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
 // The tick module stays internal; the one type of it a public prop names is re-exported.
 export type { TimeTickUnit } from "./series-chart-ticks";
 import { autoAxisBudget, axisUnit, budgetedAxes, type SeriesChartAxisBudget } from "./series-chart-budget";
@@ -74,7 +74,9 @@ import {
   useKitLocale,
   type ChartTooltipPlacement,
 } from "../i18n/kit-labels";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
+import { useTextSize } from "../theme/text-size";
+import { chartHeightProps, type ChartHeight } from "./chart-height";
 import { cn } from "../lib/cn";
 
 export interface SeriesChartSeries {
@@ -343,7 +345,7 @@ export interface SeriesChartX {
    * instead of being centred across it; the anchor is physical, like the plot (see
    * `ChartContainer`), so it is the same in RTL. The band under the axis grows to the
    * rotated height of the longest label on show, estimated from its length (at most
-   * 120 px, past which a label is clipped). Default 0.
+   * 120 px × the text size's scale, past which a label is clipped). Default 0.
    */
   tickAngle?: number;
   /**
@@ -365,10 +367,6 @@ export interface SeriesChartX {
 /** Where the tooltip goes — see {@link SeriesChartTooltip.placement}. */
 export type SeriesChartTooltipPlacement = ChartTooltipPlacement;
 
-/** Below Tailwind's `sm` — where `"auto"` takes the tooltip off the plot. Narrower than
- *  the kit's `PHONE_QUERY` (767 px) on purpose: a tablet's plot is wide enough that the
- *  box beside the finger leaves the data in view; a phone's is not. */
-const TOOLTIP_READOUT_QUERY = "(max-width: 639px)";
 
 /**
  * The placement a chart actually uses: its own, else the provider's, else `"cursor"`;
@@ -537,13 +535,22 @@ export interface SeriesChartProps {
   /** A value in the tooltip, where a number stands on its own and needs its unit.
    *  Default: `Intl.NumberFormat` in the kit's locale. */
   valueFormat?: (value: number) => string;
-  /** Tailwind height class, or a height in pixels. Default `h-72`. The empty state
-   *  takes it too, so a chart losing its last line does not relayout the page under it.
-   *  A number is for a height the caller holds as a number — keksdose's report charts
-   *  take `height = 260` as a prop and wrap the chart in a `SizedSeriesChart` div
-   *  (reports/charts/networth-line.tsx) only to turn it into a style, since a class
-   *  cannot be built from a number Tailwind never saw. */
-  height?: string | number;
+  /**
+   * The chart's height: a CSS length, a Tailwind height class, or px. Default `h-72`
+   * (18rem). The empty state takes it too, so a chart losing its last line does not
+   * relayout the page under it.
+   *
+   * - **A CSS length** (0.32) — `"20rem"`, `"min(20rem, 60dvh)"` — set inline. The form
+   *   for a height that should grow with the text size and still stop at the screen
+   *   (docs/text-size-harmonization.md §10.10): `min(30rem, 60dvh)` is 480 px at Normal
+   *   on a desktop and never more than 60 % of a phone at Extra large, where a scaled
+   *   480 px would be 720.
+   * - **A Tailwind class** — `"h-72"`, `"h-64 md:h-80"` — as before.
+   * - **A number** is px, set inline, and does NOT follow the text size: kept for a
+   *   height the caller holds as a number (keksdose's report charts take
+   *   `height = 260` as a prop). Prefer `"16.25rem"`, or a `min()` with a viewport cap.
+   */
+  height?: ChartHeight;
   /** Bridge holes left by sources sampled on different grids. See {@link mergeSeries}. */
   connectNulls?: boolean;
   /** Shown, centred at the chart's height, instead of an empty chart. Default: the
@@ -587,17 +594,23 @@ export interface SeriesChartProps {
   maxVisibleAxes?: SeriesChartAxisBudget;
   /**
    * `"auto"` (the default): a chart so narrow that its axes' bands would leave the plot
-   * under 160 px (`MIN_PLOT_WIDTH`) draws ONE axis a side — lenkbank's four-axis curve
-   * plot on a phone, whose plot was 10 px wide. Measured on the chart's own box
-   * (`ResizeObserver`), and applied on top of `maxVisibleAxes`.
+   * under 160 px (`MIN_PLOT_WIDTH`, × the text size's scale) draws ONE axis a side —
+   * lenkbank's four-axis curve plot on a phone, whose plot was 10 px wide. And a chart
+   * with an axis on EACH side that one a side still leaves too narrow (0.32: at 150 % a
+   * 390 px phone's plot kept about 80 px between its two bands) drops the right-hand,
+   * secondary axis too. Measured on the chart's own box (`ResizeObserver`), and applied
+   * on top of `maxVisibleAxes`. Either way the series on an axis it hid say the axis'
+   * unit in the tooltip and the readout ("Rack load (N)"), and in a legend built by
+   * {@link seriesLegendEntries} with `onAxisBudget`'s ids.
    *
-   * On by default because it cannot touch a layout that works: it needs a side with two
-   * or more axes AND a plot that would otherwise be under 160 px — a four-axis chart
-   * below about 440 px, a two-left-axis one below about 300. A chart with at most one
-   * axis a side (every facing pair, every single-axis chart) is never budgeted, at any
-   * width. `"off"` keeps every declared axis whatever the width: for a stack of
-   * multi-axis charts that must keep identical bands, or a caller budgeting itself.
-   * Without layout (jsdom, SSR) nothing is measured and nothing is hidden.
+   * On by default because it cannot touch a layout that works: it needs a plot that
+   * would otherwise be under 160 px — a four-axis chart below about 440 px at Normal, a
+   * two-left-axis one below about 300, a one-a-side one below about 290 — and the
+   * left-hand axis always stays. A chart with one axis (each chart of a facing pair,
+   * every single-axis chart) is never budgeted, at any width. `"off"` keeps every
+   * declared axis whatever the width: for a stack of multi-axis charts that must keep
+   * identical bands, or a caller budgeting itself. Without layout (jsdom, SSR) nothing is
+   * measured and nothing is hidden.
    */
   axisBudget?: "auto" | "off";
   /**
@@ -621,38 +634,48 @@ export interface SeriesChartProps {
   minBarLength?: number;
 }
 
-/** How much of an axis band the rotated title takes, in px. Reserved rather than
- *  shared with the ticks: a title merely offset inside the band prints on top of a
- *  five-figure tick, and which gives way depends on the data. */
+/** How much of an axis band the rotated title takes, in px at Normal — × the text size's
+ *  scale on the chart (§3.2), since the title is text. Reserved rather than shared with
+ *  the ticks: a title merely offset inside the band prints on top of a five-figure tick,
+ *  and which gives way depends on the data. */
 export const AXIS_TITLE_STRIP = 16;
 
 /** Where inside its strip the rotated title sits. */
 const AXIS_TITLE_OFFSET = 10;
 
-/** The tallest band tilted x ticks reserve, in px. A category name longer than this at
- *  its angle is clipped rather than squeezing the plot down to a strip. */
+/** The tallest band tilted x ticks reserve, in px at Normal (× the scale). A category
+ *  name longer than this at its angle is clipped rather than squeezing the plot down to
+ *  a strip. */
 const MAX_TILTED_TICK_BAND = 120;
 
-/** What one character of a tick label is taken to be, in px, for the tilted band — the
- *  shell's `text-xs`. An estimate: the SVG is not laid out yet when the band is decided. */
+/** What one character of a tick label is taken to be, in px at Normal, for the tilted
+ *  band — the shell's `text-xs`. An estimate: the SVG is not laid out yet when the band
+ *  is decided. Both grow with the text size, as `text-xs` does (§3.2). */
 const TICK_CHAR_WIDTH = 7;
 const TICK_LINE_HEIGHT = 12;
-/** recharts' gap between the axis line and a bottom tick's text. */
+/** recharts' gap between the axis line and a bottom tick's text — px, at every size:
+ *  recharts draws it, not the type. */
 const TICK_GAP = 8;
+/** recharts' own band under level x ticks. */
+const LEVEL_TICK_BAND = 30;
+/** The least room recharts' x ticks keep between labels, in px at Normal. */
+const MIN_TICK_GAP = 32;
 
 /**
- * The height the x axis reserves for ticks tilted by `angle` degrees: the rotated box of
- * the longest label, from its length. `undefined` for level ticks — recharts' own 30 px.
+ * The height the x axis reserves for its ticks at a text `scale`: tilted by `angle`
+ * degrees, the rotated box of the longest label, from its length; level, recharts' own
+ * 30 px grown with the labels. `undefined` for level ticks at Normal, where recharts'
+ * default is exactly that.
  */
-function tiltedTickBand(labels: readonly string[], angle: number): number | undefined {
-  if (!angle) return undefined;
+function tiltedTickBand(labels: readonly string[], angle: number, scale = 1): number | undefined {
+  if (!angle) return scale === 1 ? undefined : Math.ceil(LEVEL_TICK_BAND * scale);
   const rad = (Math.abs(angle) * Math.PI) / 180;
-  const longest = Math.max(0, ...labels.map((label) => label.length)) * TICK_CHAR_WIDTH;
-  const band = Math.sin(rad) * longest + Math.cos(rad) * TICK_LINE_HEIGHT + TICK_GAP;
-  return Math.min(MAX_TILTED_TICK_BAND, Math.max(30, Math.ceil(band)));
+  const longest = Math.max(0, ...labels.map((label) => label.length)) * TICK_CHAR_WIDTH * scale;
+  const band = Math.sin(rad) * longest + Math.cos(rad) * TICK_LINE_HEIGHT * scale + TICK_GAP;
+  return Math.min(Math.round(MAX_TILTED_TICK_BAND * scale), Math.max(Math.ceil(LEVEL_TICK_BAND * scale), Math.ceil(band)));
 }
 
-/** The width the ticks of a y axis get when a caller does not say. */
+/** The width the ticks of a y axis get when a caller does not say, in px at Normal. */
 export const AXIS_TICK_WIDTH = 48;
 
 /**
@@ -686,10 +709,19 @@ export function padBand(low: number, high: number): [number, number] | undefined
   return [low - pad, high + pad];
 }
 
-/** The whole band a y axis occupies: its ticks, and its title when it draws one. For
- *  lining a heading up over a PLOT rather than over its column. */
-export function axisBandWidth(tickWidth: number | undefined, titled: boolean): number {
-  return (tickWidth ?? AXIS_TICK_WIDTH) + (titled ? AXIS_TITLE_STRIP : 0);
+/**
+ * The whole band a y axis occupies: its ticks, and its title when it draws one. For
+ * lining a heading up over a PLOT rather than over its column.
+ *
+ * `scale` is the text size's (`useTextSize().scale`, §3.2, §10.10): the chart draws every
+ * band — the default 48 px and a caller's own `width` alike (keksdose's
+ * `MONEY_AXIS_WIDTH`) — this many times wider, because the ticks in it are `text-xs`
+ * and grow with the text. A heading lined up over the plot has to pass the same scale.
+ * One factor for both sides of a facing pair, so the mirrored bands stay equal.
+ */
+export function axisBandWidth(tickWidth: number | undefined, titled: boolean, scale = 1): number {
+  const band = (tickWidth ?? AXIS_TICK_WIDTH) + (titled ? AXIS_TITLE_STRIP : 0);
+  return scale === 1 ? band : Math.round(band * scale);
 }
 
 /**
@@ -1016,9 +1048,12 @@ function focusedBarShape(index: number) {
   };
 }
 
-/** A marker label's size and weight — the one place both the text and its width
- *  estimate read them from. */
+/** A marker label's size in px at Normal — the one place both the text and its width
+ *  estimate read it from. × the text size's scale where it is drawn (§10.10). */
 const MARKER_LABEL_SIZE = 11;
+
+/** A reference line's label, in px at Normal, × the scale likewise. */
+const REFERENCE_LABEL_SIZE = 10;
 
 /**
  * A marker's label, centred over its point but clamped inside the plot. recharts'
@@ -1037,16 +1072,17 @@ function MarkerLabel({
   const plot = usePlotArea();
   const ref = useRef<SVGTextElement>(null);
   const [measured, setMeasured] = useState<number>();
+  const fontSize = MARKER_LABEL_SIZE * useTextSize().scale;
   const text = value == null ? "" : String(value);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof el.getComputedTextLength !== "function") return;
     const w = el.getComputedTextLength();
     if (w > 0 && w !== measured) setMeasured(w);
-  }, [text, measured]);
+  }, [text, measured, fontSize]);
   if (!viewBox || viewBox.x == null || viewBox.y == null || text === "") return null;
   const cx = viewBox.x + (viewBox.width ?? 0) / 2;
-  const half = (measured ?? text.length * MARKER_LABEL_SIZE * 0.6) / 2;
+  const half = (measured ?? text.length * fontSize * 0.6) / 2;
   // The start clamp applied last: a label wider than the plot keeps its start on screen.
   const x = plot ? Math.max(plot.x + half, Math.min(cx, plot.x + plot.width - half)) : cx;
   return (
@@ -1055,7 +1091,7 @@ function MarkerLabel({
       x={x}
       y={viewBox.y - 5}
       textAnchor="middle"
-      fontSize={MARKER_LABEL_SIZE}
+      fontSize={fontSize}
       fontWeight={600}
       fill="var(--text-primary)"
       className="recharts-label"
@@ -1216,12 +1252,22 @@ function SeriesPlot({
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
   const number = useDefaultFormat(localeProp);
+  // The text size (docs/text-size-harmonization.md §3.2, §4, §10.10): the axis bands, the
+  // tick spacing and the labels drawn in px grow with it — the tick text is `text-xs` and
+  // grows by itself — and the axes aim at three ticks instead of five from Large up.
+  // Strokes, dashes and the grid stay px.
+  const { scale } = useTextSize();
+  const ticksAim = tickTarget(scale);
+  const grow = (px: number) => (scale === 1 ? px : Math.round(px * scale));
   // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`).
   // Up here, above the empty state's early return, like every hook.
   const [keyStop, setKeyStop] = useState(0);
   const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
   // Where the tooltip goes, and — off the plot — the row it is portalled into.
-  const phone = useMediaQuery(TOOLTIP_READOUT_QUERY, false);
+  // Below `sm` (`max-sm:`, at the text size in force) — where `"auto"` takes the tooltip
+  // off the plot. Narrower than the phone layout on purpose: a tablet's plot is wide
+  // enough that the box beside the finger leaves the data in view; a phone's is not.
+  const phone = useBreakpoint("max-sm", false);
   const placement = resolveTooltipPlacement(tooltip?.placement, useKitChartTooltipPlacement(), phone);
   const [readout, setReadout] = useState<HTMLDivElement | null>(null);
 
@@ -1248,8 +1294,11 @@ function SeriesPlot({
       ? []
       : budgetedAxes(
           afterCap,
-          autoAxisBudget(afterCap, width, (axis) =>
-            axisBandWidth(axis.width, Boolean(axis.title)),
+          autoAxisBudget(
+            afterCap,
+            width,
+            (axis) => axisBandWidth(axis.width, Boolean(axis.title), scale),
+            scale,
           ),
         );
   const budgeted = [...capped, ...auto];
@@ -1263,10 +1312,9 @@ function SeriesPlot({
     onAxisBudget?.(budgetKey ? budgetKey.split("\n") : []);
   }, [budgetKey, onAxisBudget]);
 
-  // A number is pixels, set inline; a string is a class. Either way the one value
-  // sizes both the chart and its empty state.
-  const heightClass = typeof height === "string" ? height : undefined;
-  const heightStyle = typeof height === "number" ? { height } : undefined;
+  // A number or a CSS length is set inline; any other string is a class. Either way the
+  // one value sizes both the chart and its empty state.
+  const { className: heightClass, style: heightStyle } = chartHeightProps(height);
 
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
@@ -1321,11 +1369,12 @@ function SeriesPlot({
   // overhang of the first/last x tick where no y axis covers it.
   const margin = {
     // Room for a marker's label over a point at the top of the band.
-    top: markers?.some((marker) => marker.label) ? 22 : 8,
-    right: onRight ? 0 : 10,
-    left: onLeft ? 0 : 10,
+    top: markers?.some((marker) => marker.label) ? grow(22) : 8,
+    // The first and last x tick's overhang: text, so it grows with it.
+    right: onRight ? 0 : grow(10),
+    left: onLeft ? 0 : grow(10),
     // Under the ticks, not under the whole axis: whatever comes next owns the gap.
-    bottom: x.title ? 18 : 2,
+    bottom: x.title ? grow(18) : 2,
   };
 
   const refs = references ?? [];
@@ -1353,7 +1402,7 @@ function SeriesPlot({
           ) ?? [Infinity, -Infinity]),
         ));
 
-  const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX) : undefined;
+  const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX, ticksAim) : undefined;
   // Whole-number ticks on a number line whose rows are all whole numbers — see
   // `SeriesChartX.integerTicks`.
   const integerX =
@@ -1370,8 +1419,8 @@ function SeriesPlot({
       : model.kind === "time"
         ? timeUnit?.ticks
         : integerX
-          ? (integerTicks(fittedX) ?? niceTicks(fittedX))
-          : niceTicks(fittedX));
+          ? (integerTicks(fittedX, ticksAim) ?? niceTicks(fittedX, ticksAim))
+          : niceTicks(fittedX, ticksAim));
 
   // Ticks and the tooltip heading, back in the caller's terms.
   const timeFormat = new Intl.DateTimeFormat(locale, TIME_TICK_FORMAT[timeUnit?.unit ?? "day"]);
@@ -1404,7 +1453,7 @@ function SeriesPlot({
   const xLabel = (position: number) => label(position, tickAt(position));
 
   const tickAngle = x.ticks === false ? 0 : (x.tickAngle ?? 0);
-  const tickBand = tiltedTickBand((xTicks ?? []).map((tick) => xFormat(tick)), tickAngle);
+  const tickBand = tiltedTickBand((xTicks ?? []).map((tick) => xFormat(tick)), tickAngle, scale);
 
   const source: ZoomFitSource = {
     rows: plotted,
@@ -1597,7 +1646,7 @@ function SeriesPlot({
           allowDataOverflow={zoom?.xDomain !== undefined || model.kind === "category"}
           tickLine={false}
           axisLine={false}
-          minTickGap={32}
+          minTickGap={grow(MIN_TICK_GAP)}
           // Where the ticks crowd, drop every Nth rather than recharts' default
           // `preserveEnd`, which drops whichever single tick collides: a phone's whole-week
           // axis came out 2 4 6 8 _ 12, a doubled gap that reads as a missing week. Every
@@ -1616,8 +1665,8 @@ function SeriesPlot({
             <Label
               value={x.title}
               position="insideBottom"
-              offset={-12}
-              className="fill-[var(--text-muted)] text-[11px]"
+              offset={-grow(12)}
+              className="fill-[var(--text-muted)] text-caption"
             />
           )}
         </XAxis>
@@ -1634,7 +1683,9 @@ function SeriesPlot({
               domain={domain}
               ticks={
                 resolveTicks(axis.tickValues, domain, finite) ??
-                (wholeOnly(axis) ? (integerTicks(domain) ?? niceTicks(domain)) : niceTicks(domain))
+                (wholeOnly(axis)
+                  ? (integerTicks(domain, ticksAim) ?? niceTicks(domain, ticksAim))
+                  : niceTicks(domain, ticksAim))
               }
               allowDataOverflow={zoomed}
               orientation={axis.orientation ?? "left"}
@@ -1642,7 +1693,7 @@ function SeriesPlot({
               // what the budget does on every resize across its threshold — kept its old
               // width in recharts' stacking of that side, and pushed the axes still drawn
               // off the chart's edge. A zero width leaves nothing stale to count.
-              width={axis.hide ? 0 : axisBandWidth(axis.width, Boolean(axis.title))}
+              width={axis.hide ? 0 : axisBandWidth(axis.width, Boolean(axis.title), scale)}
               tickLine={false}
               axisLine={false}
               tickFormatter={axis.format ?? number}
@@ -1659,8 +1710,8 @@ function SeriesPlot({
                   // Inline, so a sole series' colour beats the class's neutral fill —
                   // and absent for a shared axis, so the class draws it.
                   style={{ textAnchor: "middle", fill: soleSeriesColor(axis, series) }}
-                  offset={AXIS_TITLE_OFFSET}
-                  className="fill-[var(--text-muted)] text-[11px]"
+                  offset={grow(AXIS_TITLE_OFFSET)}
+                  className="fill-[var(--text-muted)] text-caption"
                 />
               )}
             </YAxis>
@@ -1817,7 +1868,7 @@ function SeriesPlot({
                   ? {
                       value: ref.label,
                       position: "insideTopLeft",
-                      fontSize: 10,
+                      fontSize: REFERENCE_LABEL_SIZE * scale,
                       fill: color,
                     }
                   : undefined

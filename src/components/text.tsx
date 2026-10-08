@@ -35,10 +35,14 @@ export type SectionLabelSize = "xs" | "md" | "sm";
  * reached as a string than wrapped in a component that only takes a `className`. The
  * uppercase is CSS, so a screen reader reads the text as written: write it in normal
  * case.
+ *
+ * The sizes are the kit's named rem steps since 0.32 (`text-micro` 0.625rem,
+ * `text-caption` 0.6875rem — 10 and 11 px at Normal), so a label grows with the text
+ * size like everything around it (docs/text-size-harmonization.md §3.2).
  */
 export const SECTION_LABEL_CLASS: Record<SectionLabelSize, string> = {
-  xs: "text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-  md: "text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]",
+  xs: "text-micro font-semibold uppercase tracking-wide text-[var(--text-muted)]",
+  md: "text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]",
   sm: "text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]",
 };
 
@@ -61,8 +65,8 @@ export type SectionLabelVariant = "plain" | "band";
  *  a font-size arbitrary `text-` value from a colour one. (Not spelt out as class
  *  names here: Tailwind scans comments, and a literal one broke the showcase CSS.) */
 const SECTION_LABEL_BAND_CLASS: Record<SectionLabelSize, string> = {
-  xs: "text-[10px]",
-  md: "text-[11px]",
+  xs: "text-micro",
+  md: "text-caption",
   sm: "text-xs",
 };
 const BAND =
@@ -112,14 +116,15 @@ export function SectionLabel({
 /* ── Caption ──────────────────────────────────────────────────────────────── */
 
 /**
- * The caption type as a class string: 11px, snug, muted. lenkbank's `CAPTION`
+ * The caption type as a class string: `text-caption` (0.6875rem, 11 px at Normal, §3.2),
+ * snug, muted. lenkbank's `CAPTION`
  * (shared/ui/caption.ts:23) — written out 31 times before it was a constant — as a
  * token colour rather than `slate-500 dark:slate-400`, so it follows the palette.
  * Exported for the same reason lenkbank's is a string: every caller positions it
  * differently (`mt-1`, `self-end pb-2`, `border-t`), and what must be one thing is the
  * type, not the box.
  */
-export const CAPTION_CLASS = "text-[11px] leading-snug text-[var(--text-muted)]";
+export const CAPTION_CLASS = "text-caption leading-snug text-[var(--text-muted)]";
 
 export interface CaptionProps extends ComponentPropsWithoutRef<"p"> {
   /** Default `p`; `span` for a caption inside a line of other content. */

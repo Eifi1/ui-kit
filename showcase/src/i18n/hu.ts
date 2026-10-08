@@ -129,6 +129,12 @@ export const hu: Dictionary = {
       blurb:
         "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók és a munka továbbadása.",
     },
+    subscription: {
+      title: "Előfizetés",
+      short: "Számlázás",
+      blurb:
+        "Fizetés egy alkalmazásért: a csomagválasztó két pénznemben és két időszakkal, az előfizetés állapota, a bannerek a próbaidőtől a lejáratig, a csomagkorlát-értesítés, a csak olvasható zár a demóé mellett, a szolgáltató portálja és az impresszum kereskedelmi nyilatkozata.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -163,6 +169,12 @@ export const hu: Dictionary = {
       short: "Tokenek",
       blurb:
         "Az aktív TokenSet minden értéke, élőben. Váltson témát vagy palettát a felső sávban, és figyelje, ahogy az oldal változik — ami nem mozdul, az be van égetve a kódba.",
+    },
+    "text-size": {
+      title: "Szövegméret és kontraszt",
+      short: "Szövegméret",
+      blurb:
+        "Normál, Nagy és Nagyon nagy egyetlen gyökérszintű skálán, a vele együtt mozduló töréspontokkal, a fokozott kontraszt lépcsőjével, a fiókszabállyal, amely mindkettőt átviszi egyik eszközről a másikra — és amit a komponensek Nagy méretnél tesznek.",
     },
     palette: {
       title: "Palettagenerátor",
@@ -238,7 +250,7 @@ export const hu: Dictionary = {
     pickers: {
       title: "Választók és bevitel",
       blurb:
-        "Választás listából gépelés helyett, és a bevitel összetettebb formái: mérési táblázat, a mező elhagyásakor mentett érték, aláírás, jelszó.",
+        "Választás listából gépelés helyett, és a bevitel összetettebb formái: mérési táblázat, a mező elhagyásakor mentett érték, aláírás, jelszó, lépésenkénti űrlap.",
     },
     comboboxes: {
       title: "Comboboxok",
@@ -432,7 +444,7 @@ export const hu: Dictionary = {
     "app-chrome": {
       title: "Alkalmazáskeret",
       blurb:
-        "A keret, amelyben egy alkalmazás él, és a folyamatok, amelyeket minden alkalmazás megismétel: beállítások, többlépéses űrlapok, visszajelzés.",
+        "A keret, amelyben egy alkalmazás él, és a folyamatok, amelyeket minden alkalmazás megismétel: beállítások, fiókok, előfizetések, visszajelzés.",
     },
     "page-structure": {
       title: "Oldalfejléc és morzsanavigáció",
@@ -520,6 +532,12 @@ export const hu: Dictionary = {
       blurb:
         "Az eldobható demófiók: a beállításai, az indítás előtti ellenőrzések sorrendje, az elutasítások és kódjaik, a csak olvasható mód szabálya és az egyetlen élettartama.",
     },
+    "server-billing": {
+      title: "Számlázás",
+      short: "Számlázás",
+      blurb:
+        "A csomagok és korlátaik, az előfizetés helyzete a próbaidő és a béta dátumaival, a csak olvasható zár lejáratkor, valamint a Paddle és a Lemon Squeezy webhookjai: ellenőrzött aláírások, egységesített események, egyetlen dispatch.",
+    },
     "server-mail": {
       title: "E-mail",
       short: "E-mail",
@@ -589,6 +607,18 @@ export const hu: Dictionary = {
       "valaki munkájának átadása egy másik felhasználónak",
       "fordítási lektor nyelveinek beállítása",
     ],
+    subscription: [
+      "csomag választása",
+      "árak CHF-ben és EUR-ban",
+      "havi vagy éves számlázás",
+      "az előfizetés állapotának megjelenítése",
+      "banner a próbaidő végéről",
+      "sikertelen fizetés bannere",
+      "elérte a csomag korlátját",
+      "csak olvasható mód az előfizetés lejárta után",
+      "a számlázási portál megnyitása",
+      "az előfizetés lemondása",
+    ],
     "auth-account": [
       "bejelentkező oldal elrendezése",
       "kétlépcsős azonosítás beállítása QR-kóddal",
@@ -623,6 +653,7 @@ export const hu: Dictionary = {
       "a teljes csomag fordítása",
       "márkaszín paletta",
       "sötét mód",
+      "nagyobb szöveg és több kontraszt",
     ],
     tokens: [
       "összes szín token",
@@ -632,6 +663,17 @@ export const hu: Dictionary = {
       "térköz, lekerekítés és árnyék értékek",
       "szövegszínek és felületek",
       "beégetett értékek ellenőrzése",
+    ],
+    "text-size": [
+      "a szöveg nagyítása",
+      "nagy szöveg beállítása",
+      "több kontraszt gyengénlátóknak",
+      "magas kontrasztú mód",
+      "a szöveggel együtt növő töréspontok",
+      "telefonos elrendezés vizsgálata kódban",
+      "a szövegméret kövesse a fiókot",
+      "ikongomb címkéje szövegként",
+      "sorműveletek menübe csukása",
     ],
     palette: [
       "paletta generálása márkaszínből",
@@ -749,6 +791,7 @@ export const hu: Dictionary = {
       "mező mentése kilépéskor",
       "aláírás rögzítése",
       "jelszóerősség ellenőrzése",
+      "többlépéses űrlap",
     ],
     comboboxes: [
       "hosszú lista szűrése gépeléssel",
@@ -1040,7 +1083,7 @@ export const hu: Dictionary = {
       "alkalmazás elrendezése",
       "oldalsáv és felső sáv",
       "beállítások oldal",
-      "többlépéses űrlap",
+      "előfizetési csomag választása",
       "felhasználói visszajelzés gyűjtése",
     ],
     "page-structure": [
@@ -1173,6 +1216,15 @@ export const hu: Dictionary = {
       "a demó csak olvashatóvá tétele",
       "a demó elutasítási kódjai",
       "régi demófelhasználók törlése",
+    ],
+    "server-billing": [
+      "csomagkorlát ellenőrzése a szerveren",
+      "webhook aláírásának ellenőrzése",
+      "Paddle és Lemon Squeezy események kezelése",
+      "rendben van-e az előfizetés",
+      "a próbaidő és a béta záró dátuma",
+      "írások elutasítása lejárt előfizetésnél",
+      "csomagkatalógus árakkal",
     ],
     "server-mail": [
       "jelszó-visszaállító e-mail küldése",

@@ -59,7 +59,7 @@ function PageCard({ page }: { page: ShowcasePage }) {
           {page.components.map((name) => (
             <li
               key={name}
-              className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)]"
+              className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)]"
             >
               {name}
             </li>
@@ -225,8 +225,8 @@ const MUI_MAP: Array<[string, string]> = [
   ["Data display", "Data display — buttons, chips, description lists and tables, tree view, data table; Charts — chart shell, tile and series charts, stats"],
   ["Feedback (Dialog, Snackbar, Alert, Progress, Skeleton)", "Overlays — dialogs, confirm dialog, popovers; Feedback & progress under Data display"],
   ["Surfaces (Card, Accordion)", "Buttons & surfaces; Disclosure under Data display"],
-  ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, wizard; Tabs under Chips & toggles"],
+  ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, page header; the wizard under Pickers & entry; Tabs under Chips & toggles"],
   ["Layout / Utils", "API — hooks, clipboard & timing, helpers; Separator and ScrollArea under Description list & table"],
-  ["Customization (Theming)", "Foundations — tokens, palettes, localisation"],
+  ["Customization (Theming)", "Foundations — tokens, palettes, text size and contrast, localisation"],
   ["MUI X (Data Grid, Date Pickers, Charts, Tree View)", "Data table, Calendars & date pickers, Charts, Tree view"],
 ];

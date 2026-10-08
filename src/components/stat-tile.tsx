@@ -5,6 +5,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 import { Card, FieldHint } from "./ui";
+import { useInlineFacts, useLargeText } from "../hooks/use-large-text";
 import { Sparkline } from "./sparkline";
 import { Tooltip } from "./tooltip";
 // The kit's one placeholder look, so a loading tile and the Skeleton list beside it
@@ -151,7 +152,11 @@ export interface StatTileProps
   /** The explanation behind a "?" beside the label (a {@link FieldHint}) — hidden
    *  until asked for, so it is for what a reader MIGHT want to know ("excludes
    *  transfers between your own accounts"). For a line everyone should read, use
-   *  {@link StatTileProps.description} instead. */
+   *  {@link StatTileProps.description} instead.
+   *
+   *  0.32 (docs/text-size-harmonization.md §4 "No fact only in a tooltip"): at Large
+   *  and Extra large, and on a touch screen, the words are shown under the label
+   *  instead of behind the "?". */
   hint?: string;
   /**
    * Keep the label to ONE line, cut with an ellipsis, and show the whole of it in a
@@ -169,6 +174,9 @@ export interface StatTileProps
    * your own `<Tooltip>` for the full text (keksdose's admin metrics-panel.tsx:134
    * does, from before this prop). A wrapped label shows a bubble even when nothing is
    * cut, and nests its trigger inside this one's.
+   *
+   * Ignored at Large and Extra large (0.32, §4): nothing truncates there, and the full
+   * label would otherwise be a fact only in a tooltip.
    */
   truncateLabel?: boolean;
   /**
@@ -199,6 +207,15 @@ export interface StatTileProps
    * Withheld while `loading`, like the sub-values.
    */
   projection?: StatTileSubValue;
+  /**
+   * Smaller figures under the headline, label left and figure right.
+   *
+   * At Large and Extra large (0.32, §4 "StatTile shows its one big number; the sparkline
+   * and sub-values move below"): the tile leads with the headline and its delta, and the
+   * projection, these rows and the sparkline follow beneath the description, each row's
+   * label over its figure — a 2-up tile at 150 % is 120 px of text wide, and a label
+   * beside a figure there squeezed both.
+   */
   subValues?: StatTileSubValue[];
   /** Shorthand for a fluid {@link Sparkline} named after the tile and speaking in
    *  the tile's number format. The name is the label's text; see
@@ -310,6 +327,11 @@ export function StatTile({
   ...rest
 }: StatTileProps) {
   const text = useKitLabels("statTile", DEFAULT_STAT_TILE_LABELS, labels);
+  // §4: at Large the one big number leads and the rest follows below it; the label
+  // never truncates; on touch or at Large the hint is words, not a "?".
+  const large = useLargeText();
+  const inlineHint = useInlineFacts() && !!hint;
+  if (large) truncateLabel = false;
   // A loading StatTileGrid puts every tile in it into the loading state and says
   // "Loading…" ONCE for all of them; the tile then keeps its own sentence to itself
   // (see StatTileGrid's `loading`).
@@ -342,7 +364,9 @@ export function StatTile({
   const stretched = cn(
     "text-start uppercase tracking-wide",
     "after:absolute after:inset-0 after:rounded-lg after:content-['']",
-    "focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
+    // The kit's focus frame (0.32, §5), on the overlay — `FOCUS_RING`'s classes cannot
+    // carry the `after:`, so its width is spelt out.
+    "focus-visible:outline-none focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
   );
   const describedBy = d ? `${valueId} ${deltaId}` : valueId;
   let labelNode: ReactNode = label;
@@ -417,7 +441,7 @@ export function StatTile({
       {!gridLoading && <span className="sr-only">{text.loading}</span>}
     </span>
   ) : hasValue ? (
-    <span id={valueId} data-private={priv} className={cn(valueClass, valueLabel != null && "ms-auto")}>
+    <span id={valueId} data-private={priv} className={cn(valueClass, valueLabel != null && !large && "ms-auto")}>
       {show(value)}
       {unit != null && (
         <span className="ms-1 text-[0.7em] font-medium text-[var(--text-muted)]">{unit}</span>
@@ -480,7 +504,7 @@ export function StatTile({
             </span>
           )}
           {/* Above the stretched link's overlay, so it stays hoverable and focusable. */}
-          {hint && <FieldHint label={hint} side="top" className="relative z-10 shrink-0" />}
+          {hint && !inlineHint && <FieldHint label={hint} side="top" className="relative z-10 shrink-0" />}
         </div>
         {icon != null && (
           <span aria-hidden className="shrink-0 text-[var(--text-muted)] [&_svg]:size-4">
@@ -489,10 +513,19 @@ export function StatTile({
         )}
       </div>
 
+      {inlineHint && (
+        // §4: the hint as words under the label — the same muted type as `description`,
+        // in the reading case of a sentence rather than the label's capitals.
+        <p data-slot="stat-tile-hint" className="mt-0.5 text-xs text-[var(--text-muted)]">
+          {hint}
+        </p>
+      )}
+
       {valueLabel != null ? (
         // Period-left / value-right, matching the sub-rows below it. flex-wrap lets a
-        // too-long amount drop to its own end-aligned line instead of overflowing.
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
+        // too-long amount drop to its own end-aligned line instead of overflowing. At
+        // Large the period goes over the figure, which then has the tile's width.
+        <div className={cn("mt-1 flex items-baseline gap-x-1.5", large ? "flex-col items-start" : "flex-wrap")}>
           <span className="shrink-0 text-xs uppercase tracking-wide text-[var(--text-muted)]">{valueLabel}</span>
           {headline}
         </div>
@@ -500,7 +533,9 @@ export function StatTile({
         <div className="mt-1">{headline}</div>
       )}
 
-      {!loading && projection && (
+      {/* At Large the delta and description follow the figure at once, and the
+          projection moves down with the other figures (see `subValues`). */}
+      {!large && !loading && projection && (
         <dl className="mt-0.5">
           <FigureRow figure={projection} tileTone={tone} show={show} priv={priv} />
         </dl>
@@ -508,14 +543,23 @@ export function StatTile({
 
       {deltaNode}
       {description != null && <div className="mt-1 text-xs text-[var(--text-muted)]">{description}</div>}
-      {graphic && <div className="mt-2">{graphic}</div>}
+      {!large && graphic && <div className="mt-2">{graphic}</div>}
 
-      {!loading && subValues && subValues.length > 0 && (
-        <dl className="mt-1.5 space-y-0.5">
-          {subValues.map((sv, i) => (
-            <FigureRow key={i} figure={sv} tileTone={tone} show={show} priv={priv} />
+      {!loading && ((large && projection) || (subValues && subValues.length > 0)) && (
+        <dl data-slot="stat-tile-figures" className={cn("mt-1.5", large ? "space-y-1.5" : "space-y-0.5")}>
+          {large && projection && (
+            <FigureRow figure={projection} tileTone={tone} show={show} priv={priv} stacked />
+          )}
+          {subValues?.map((sv, i) => (
+            <FigureRow key={i} figure={sv} tileTone={tone} show={show} priv={priv} stacked={large} />
           ))}
         </dl>
+      )}
+
+      {large && graphic && (
+        <div data-slot="stat-tile-graphic" className="mt-2">
+          {graphic}
+        </div>
       )}
 
       {footer != null && <div className="mt-2">{footer}</div>}
@@ -529,11 +573,14 @@ function FigureRow({
   tileTone,
   show,
   priv,
+  stacked = false,
 }: {
   figure: StatTileSubValue;
   tileTone: StatTileTone;
   show: (v: ReactNode) => ReactNode;
   priv: "" | undefined;
+  /** The label over the figure (Large, §4) instead of beside it. */
+  stacked?: boolean;
 }) {
   const own = figure.tone ?? (tileTone === "neutral" ? undefined : tileTone);
   const svTone = own === "none" ? undefined : own;
@@ -543,11 +590,20 @@ function FigureRow({
   // the period it belongs to. Now the label breaks within itself and the amount stays
   // on the label's first line, end-aligned like every other row.
   return (
-    <div className="flex items-baseline gap-x-2 text-xs tabular-nums text-[var(--text-muted)]">
+    <div
+      className={cn(
+        "flex text-xs tabular-nums text-[var(--text-muted)]",
+        stacked ? "flex-col items-start" : "items-baseline gap-x-2",
+      )}
+    >
       <dt className="min-w-0 uppercase tracking-wide [overflow-wrap:anywhere]">{figure.label}</dt>
       <dd
         data-private={priv}
-        className={cn("ms-auto shrink-0 whitespace-nowrap", svTone && [toneClass(svTone, figure.value), "opacity-75"])}
+        className={cn(
+          "shrink-0 whitespace-nowrap",
+          !stacked && "ms-auto",
+          svTone && [toneClass(svTone, figure.value), "opacity-75"],
+        )}
       >
         {show(figure.value)}
       </dd>

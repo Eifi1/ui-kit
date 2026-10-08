@@ -14,6 +14,7 @@ import type {
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
@@ -243,7 +244,8 @@ export function FloatingActionButton({
                 "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
               pressed === true &&
                 "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]",
-              "outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2",
+              "outline-none focus-visible:ring-offset-2",
+              FOCUS_RING,
               className,
             )}
           >
@@ -505,7 +507,7 @@ export function FloatingPanel({
                   setOpen(false);
                 }}
                 aria-label={labels.close}
-                className="-me-1.5 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]", FOCUS_RING)}
               >
                 <X aria-hidden className="size-5" />
               </button>
@@ -687,7 +689,8 @@ export function FloatingAction({
   const isLink = href !== undefined;
   const look = cn(
     "relative flex size-12 items-center justify-center transition-colors",
-    "outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]",
+    "outline-none focus-visible:ring-inset",
+    FOCUS_RING,
     "disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5",
     variant === "primary"
       ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
@@ -704,7 +707,7 @@ export function FloatingAction({
           aria-hidden
           data-badge=""
           className={cn(
-            "pointer-events-none absolute end-1 top-1 h-4 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold",
+            "pointer-events-none absolute end-1 top-1 h-4 min-w-4 rounded-full px-1 text-center text-micro leading-4 font-semibold",
             BADGE_TONE[badgeTone],
           )}
         >

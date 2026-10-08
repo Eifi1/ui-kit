@@ -11,6 +11,8 @@ import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
+import { FIELD_TOUCH_TEXT } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
 
 /**
@@ -34,7 +36,7 @@ import { useAnchorDir } from "./use-anchor-dir";
  * while it is up, so the rule is the hook's rather than each caller's. `backCloses`
  * is for the ONE case where a second entry would be wrong: a caller whose panel is
  * itself a `PickerSheet`, which already registers one — both comboboxes swap shape at
- * {@link PHONE_QUERY}, and two entries would cost two Back presses to close one sheet.
+ * the phone layout (`usePhoneLayout()`), and two entries would cost two Back presses to close one sheet.
  *
  * ## One outside-click rule for the whole package
  *
@@ -206,7 +208,13 @@ export function DropdownSearchHeader({
         aria-controls={listboxId}
         aria-activedescendant={activeId}
         aria-autocomplete={listboxId ? "list" : undefined}
-        className="w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+        // FIELD_TOUCH_TEXT: a search box is a field — at least 16 px on touch, or iOS zooms
+        // the page the moment a picker opens and focuses it (§10.1).
+        className={cn(
+          "w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
+          FOCUS_RING,
+          FIELD_TOUCH_TEXT,
+        )}
       />
     </div>
   );

@@ -139,6 +139,11 @@ export function DemoBanner({
             size="2xs"
             variant="ghost"
             label={labels.details}
+            // The icon alone at every text size (docs/text-size-harmonization.md §10.8):
+            // a strip's one disclosure chevron beside its two links, whose state the
+            // chevron and `aria-expanded` say; "Details" as text at Large would push the
+            // links onto another line of a strip that is meant to stay one.
+            labelVisible={false}
             aria-expanded={!collapsed}
             onClick={toggle}
           >

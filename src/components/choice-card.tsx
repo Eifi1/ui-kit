@@ -93,8 +93,10 @@ const CARD =
   // The focus mark is the CARD's, not the 16px box's: the card is what was clicked and
   // what the eye is on. An OUTLINE rather than a ring, because the checked state already
   // spends the ring — two `ring-*` widths on one element are decided by stylesheet
-  // order, and the loser would be the focus mark. Offset, so the two never merge.
-  "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--brand)] " +
+  // order, and the loser would be the focus mark. Offset, so the two never merge. Its
+  // width is the kit's focus frame (0.32, §5: `--focus-ring-width`, 3 px under More
+  // contrast) — `FOCUS_RING` itself is a ring, which this mark cannot be.
+  "has-[:focus-visible]:outline-[length:var(--focus-ring-width)] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--brand)] " +
   // Read from the input too, so a card disabled by its `<fieldset>` fades as well.
   "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60";
 
@@ -107,10 +109,12 @@ const CARD_INVALID =
 const BOX =
   "peer size-4 shrink-0 appearance-none border border-[var(--border-strong)] bg-[var(--bg-surface)] transition-colors " +
   "checked:border-[var(--brand)] focus:outline-none disabled:cursor-not-allowed";
-const CHECKBOX = "rounded-[4px] checked:bg-[var(--brand)]";
-// A radio's dot is its BORDER: a 5px brand border round a surface-coloured 4px
-// centre. No glyph to lay over it, and it scales with the box.
-const RADIO = "rounded-full checked:border-[5px]";
+const CHECKBOX = "rounded checked:bg-[var(--brand)]";
+// A radio's dot is its BORDER: a 0.3125rem brand border (5px at Normal) round a
+// surface-coloured 0.375rem centre. No glyph to lay over it, and in rem since 0.32
+// (§3.2) it scales with the box — a 5px border on a 24px box at 150 % was a ring, not a
+// dot.
+const RADIO = "rounded-full checked:border-[0.3125rem]";
 
 export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function ChoiceCard(
   {
@@ -219,7 +223,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
           </span>
         )}
         {showError && (
-          <span id={errorId} className="mt-1 block text-[11px] leading-tight text-[var(--danger)]">
+          <span id={errorId} className="mt-1 block text-caption leading-tight text-[var(--danger)]">
             {error}
           </span>
         )}
@@ -341,8 +345,9 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
   const look = cn(
     "flex w-full items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-start shadow-sm transition-colors",
     "hover:border-[var(--brand)] hover:bg-[var(--bg-hover)]",
-    // The outline, as on ChoiceCard: the card is what the eye is on.
-    "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+    // The outline, as on ChoiceCard: the card is what the eye is on — the focus frame's
+    // width (§5).
+    "focus:outline-none focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
     "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-[var(--border)] disabled:hover:bg-[var(--bg-surface)]",
     className,
   );
@@ -543,7 +548,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
           ))}
         </div>
         {showError && (
-          <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+          <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
             {error}
           </p>
         )}

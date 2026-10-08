@@ -15,6 +15,7 @@
 // (the default preset here mirrors those exactly).
 
 import type { HeatStops } from "./chart-palette";
+import { contrastStep, rememberTokenSet } from "./contrast-tokens";
 
 export interface TokenSet {
   // Backgrounds & chrome
@@ -740,15 +741,34 @@ export function presetById(id: string): PalettePreset {
  * have been silent and only a dead function would have noticed. The list is gone;
  * the test beside this asserts instead that every field of a `TokenSet` reaches the
  * element, which is what that list was standing in for.
+ *
+ * **More contrast (0.32, docs/text-size-harmonization.md §5, §10.5).** With `contrast`
+ * the text and border tokens are written one step stronger, and `--text-placeholder` —
+ * otherwise derived in tokens.css — is written inline too; without it that inline
+ * placeholder is removed again, so the stylesheet's formula applies. The step is made
+ * HERE because these tokens are inline: no `[data-contrast=more]` rule could beat them.
+ *
+ * `contrast` defaults to the element's own `data-contrast="more"`, which the contrast
+ * layer (`applyContrast`, `useApplyContrast`) sets first. That is how the palette and the
+ * contrast cooperate without knowing each other: a palette change re-applies through
+ * here and keeps the contrast, and a contrast change re-applies the set remembered here.
  */
-export function applyTokenSet(el: HTMLElement, t: TokenSet): void {
+export function applyTokenSet(
+  el: HTMLElement,
+  t: TokenSet,
+  contrast: boolean = el.getAttribute("data-contrast") === "more",
+): void {
+  rememberTokenSet(el, t);
+  const step = contrast ? contrastStep(t) : null;
   el.style.setProperty("--bg-page", t.bgPage);
   el.style.setProperty("--bg-surface", t.bgSurface);
   el.style.setProperty("--bg-surface-2", t.bgSurface2);
-  el.style.setProperty("--border", t.border);
+  el.style.setProperty("--border", step?.border ?? t.border);
   el.style.setProperty("--text-primary", t.textPrimary);
-  el.style.setProperty("--text-secondary", t.textSecondary);
-  el.style.setProperty("--text-muted", t.textMuted);
+  el.style.setProperty("--text-secondary", step?.textSecondary ?? t.textSecondary);
+  el.style.setProperty("--text-muted", step?.textMuted ?? t.textMuted);
+  if (step) el.style.setProperty("--text-placeholder", step.textPlaceholder);
+  else el.style.removeProperty("--text-placeholder");
   el.style.setProperty("--brand", t.brand);
   el.style.setProperty("--brand-hover", t.brandHover);
   el.style.setProperty("--brand-contrast", t.brandContrast);

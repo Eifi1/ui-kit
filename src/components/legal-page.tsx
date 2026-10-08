@@ -9,6 +9,7 @@ import { cn } from "../lib/cn";
 import { Checkbox } from "./checkbox";
 import type { CheckboxProps } from "./checkbox";
 import {
+  DEFAULT_LEGAL_LABELS,
   LEGAL_HREFS,
   baseLanguage,
   LegalFooter,
@@ -22,6 +23,7 @@ import {
   warnLegalOnce,
 } from "./legal";
 import type {
+  LegalDisclaimerSectionLabels,
   LegalFramedSectionLabels,
   LegalLabels,
   LegalOperator,
@@ -163,6 +165,7 @@ export type LegalKitSectionProps = LegalKitSectionBase &
   (
     | {
         section: "browser";
+        variant?: never;
         /** What this app keeps in the browser, one entry per item — rendered as a `<ul>`
          *  between the kit's two sentences. The app's words, in every language it serves. */
         entries: readonly string[];
@@ -171,6 +174,7 @@ export type LegalKitSectionProps = LegalKitSectionBase &
       }
     | {
         section: "legal_basis" | "rights";
+        variant?: never;
         entries?: never;
         /** `legal_basis`: after the kit's paragraph (consent, where an app relies on
          *  it). `rights`: between the list of rights and the supervisory authorities
@@ -179,11 +183,27 @@ export type LegalKitSectionProps = LegalKitSectionBase &
         children?: ReactNode;
       }
     | {
-        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights">;
+        section: "disclaimer";
+        /**
+         * 0.32.0 (docs/billing-harmonization.md §8, legal decision 7): which disclaimer.
+         * `non-commercial` (default) is the beta's "private, non-commercial project";
+         * `commercial` is for an app that charges, sold through a Merchant of Record —
+         * chosen per app, in the release that turns its billing on.
+         */
+        variant?: LegalDisclaimerVariant;
+        entries?: never;
+        children?: never;
+      }
+    | {
+        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights" | "disclaimer">;
+        variant?: never;
         entries?: never;
         children?: never;
       }
   );
+
+/** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. */
+export type LegalDisclaimerVariant = "non-commercial" | "commercial";
 
 /** The app's paragraph: a plain string as running text (line breaks kept, refs
  *  resolved), anything else as it is. */
@@ -261,7 +281,13 @@ export function LegalKitSection(props: LegalKitSectionProps) {
       parts = [lead, app, tail];
     }
   } else {
-    parts = [<LegalText key="body" text={fill(entry.body)} />, app];
+    // The imprint's commercial disclaimer (0.32.0): its own body under the same title.
+    const commercial =
+      props.section === "disclaimer" && props.variant === "commercial"
+        ? ((entry as LegalDisclaimerSectionLabels).commercial ??
+          DEFAULT_LEGAL_LABELS.sections.impressum.disclaimer.commercial)
+        : undefined;
+    parts = [<LegalText key="body" text={commercial ?? fill(entry.body)} />, app];
   }
 
   return (

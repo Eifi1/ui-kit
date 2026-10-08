@@ -12,6 +12,16 @@
  *  to about twice this, which is the price of every tick being a round number. */
 const TARGET_TICKS = 5;
 
+/** The aim at Large and Extra large (docs/text-size-harmonization.md §4): the labels are
+ *  25–50 % wider and taller, so five of them crowd an axis that holds them at Normal. */
+export const LARGE_TEXT_TARGET_TICKS = 3;
+
+/** How many ticks to aim for at a text `scale` (`useTextSize().scale`): five at Normal,
+ *  three from Large up. */
+export function tickTarget(scale = 1): number {
+  return scale > 1 ? LARGE_TEXT_TARGET_TICKS : TARGET_TICKS;
+}
+
 /** The round step closest to `span / target`: 1, 2 or 5 times a power of ten. */
 export function niceStep(span: number, target: number = TARGET_TICKS): number {
   const rough = span / Math.max(1, target);

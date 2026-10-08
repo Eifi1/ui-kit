@@ -287,7 +287,7 @@ function MemberEntry({ short, member, compact }: { short: string; member: ApiMem
         >
           {member.name}
         </h4>
-        <span className="rounded border border-[var(--border)] px-1.5 text-[11px] text-[var(--text-muted)]">
+        <span className="rounded border border-[var(--border)] px-1.5 text-caption text-[var(--text-muted)]">
           {member.kind}
         </span>
       </div>
@@ -470,7 +470,7 @@ function ServerPageCard({ page }: { page: ShowcasePage }) {
         {modules.map((mod) => (
           <li
             key={mod.name}
-            className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)]"
+            className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)]"
           >
             {mod.name}
             <span className="text-[var(--text-muted)]">

@@ -55,7 +55,7 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
 // the current one), so a strip of these beside a segmented control reads as the same
 // family. Unlike the segments, a pill never truncates: the strip WRAPS instead.
 const PILL =
-  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)] [&_svg]:size-4 [&_svg]:shrink-0";
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-[var(--border-strong)] [&_svg]:size-4 [&_svg]:shrink-0";
 const PILL_SM = "gap-1 px-2 py-1 text-xs [&_svg]:size-3.5";
 const PILL_CURRENT = "bg-[var(--bg-inverse)] text-[var(--text-inverse)]";
 const PILL_IDLE = "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";

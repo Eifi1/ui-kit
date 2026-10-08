@@ -1,5 +1,14 @@
-import { useCallback, useState } from "react";
-import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
+import { useCallback, useEffect, useState } from "react";
+import {
+  applyTextSize,
+  createContrastStore,
+  createPaletteStore,
+  createTextSizeStore,
+  createThemeStore,
+  isTextSize,
+  resolveTextSize,
+  type TextSize,
+} from "@eifi1/ui-kit";
 
 /**
  * The showcase's own theme + palette stores.
@@ -18,6 +27,42 @@ export const PALETTE_KEY = "uikit-showcase-palette";
 export const { useTheme, useApplyTheme } = createThemeStore(THEME_KEY);
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
   createPaletteStore(PALETTE_KEY, useTheme);
+
+/** The text size and the contrast (0.32, docs/text-size-harmonization.md §6) — device
+ *  choices only: the showcase has no account, so the sizes in force are the device's
+ *  choice or the defaults (Normal, System). Pre-painted in `main.tsx` like the theme. */
+export const TEXT_SIZE_KEY = "uikit-showcase-text-size";
+export const CONTRAST_KEY = "uikit-showcase-contrast";
+
+const textSizeStore = createTextSizeStore(TEXT_SIZE_KEY);
+export const { useTextSizeStore } = textSizeStore;
+
+/**
+ * A size the URL asks for — `?text-size=large` before the hash — or null. The screen-size
+ * preview's frames load the page this way, each at its own size (lib/device-preview.tsx),
+ * and so does `scripts/screenshot-sizes.mjs`: the frames share the page's localStorage,
+ * so a stored choice would put every frame at the same size, and writing one would move
+ * the page behind them. Applied on top of the stored size and never stored itself.
+ */
+export const URL_TEXT_SIZE: TextSize | null = (() => {
+  try {
+    const value = new URLSearchParams(window.location.search).get("text-size");
+    return isTextSize(value) ? value : null;
+  } catch {
+    return null;
+  }
+})();
+
+/** The store's apply hook, with {@link URL_TEXT_SIZE} first: the size in force. */
+export function useApplyTextSize(): TextSize {
+  const device = useTextSizeStore((s) => s.size);
+  const size = URL_TEXT_SIZE ?? resolveTextSize(device);
+  useEffect(() => {
+    applyTextSize(size);
+  }, [size]);
+  return size;
+}
+export const { useContrastStore, useApplyContrast } = createContrastStore(CONTRAST_KEY);
 
 export const SIDEBAR_STYLE_KEY = "uikit-showcase-sidebar-style";
 

@@ -25,7 +25,7 @@ export function avatarInitials(name?: string | null, email?: string | null): str
 }
 
 const AVATAR_SIZES = {
-  sm: "size-7 text-[11px]",
+  sm: "size-7 text-caption",
   md: "size-8 text-xs",
   lg: "size-12 text-base",
 } as const;

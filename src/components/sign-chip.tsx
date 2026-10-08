@@ -3,6 +3,7 @@ import { Chip } from "./chip";
 import { Tooltip } from "./tooltip";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
+import { useLargeText } from "../hooks/use-large-text";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -17,12 +18,17 @@ export interface SignChipLabels {
    *  turns it into — `current` and `next` are the two words above. The other option is
    *  nowhere on screen to be read, so the name has to say both. */
   direction: (current: string, next: string) => string;
+  /** 0.32: what a press does, in words under the chip at Large and Extra large —
+   *  `next` is the other direction's word ("Switch to Inflow"). The tooltip's half of
+   *  `direction`, shown, since a fact may not live only in a tooltip there (§4). */
+  switchTo: (next: string) => string;
 }
 
 export const DEFAULT_SIGN_CHIP_LABELS: SignChipLabels = {
   outflow: "Outflow",
   inflow: "Inflow",
   direction: (current, next) => `Direction: ${current} — switch to ${next}`,
+  switchTo: (next) => `Switch to ${next}`,
 };
 
 export interface SignChipProps {
@@ -79,8 +85,10 @@ export function SignChip({ negative, onNegativeChange, disabled, labels: labelsP
   const current = negative ? labels.outflow : labels.inflow;
   const next = negative ? labels.inflow : labels.outflow;
   const name = labels.direction(current, next);
-  return (
-    <Tooltip label={name} lazy>
+  // §4: at Large the chip's word is joined by what a press does, as a line under it —
+  // and the bubble that said only that goes.
+  const large = useLargeText();
+  const chip = (
       <Chip
         size="lg"
         tone={negative ? "expense" : "income"}
@@ -91,13 +99,29 @@ export function SignChip({ negative, onNegativeChange, disabled, labels: labelsP
         // `gap-1.5 px-3`: the chip's narrower body, because on a 375px screen every
         // pixel of it is taken from the figure beside it (#430). `md:py-2.5` with the
         // hairline border is the 42px a labelled field measures (#431).
-        className={cn("shrink-0 gap-1.5 whitespace-nowrap px-3 font-medium md:min-h-0 md:py-2.5", className)}
+        className={cn("shrink-0 gap-1.5 whitespace-nowrap px-3 font-medium md:min-h-0 md:py-2.5", !large && className)}
       >
         {current}
         {/* The swap arrows after the word, in the label's own row: decoration (the
             name already says what a press does), set a little apart from the word. */}
         <ArrowUpDown className="ms-1.5 inline size-3.5 align-[-0.2em] opacity-60" aria-hidden />
       </Chip>
-    </Tooltip>
+  );
+  if (!large) {
+    return (
+      <Tooltip label={name} lazy>
+        {chip}
+      </Tooltip>
+    );
+  }
+  return (
+    // The caller's placement (`self-end`…) moves to the pair, which is now the row's item.
+    <span data-slot="sign-chip" className={cn("inline-flex shrink-0 flex-col items-start gap-0.5", className)}>
+      {chip}
+      {/* Hidden from the accessibility tree: the chip's name already says it. */}
+      <span aria-hidden className="text-xs text-[var(--text-muted)]">
+        {labels.switchTo(next)}
+      </span>
+    </span>
   );
 }

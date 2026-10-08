@@ -50,7 +50,7 @@ describe("AccountStateChip", () => {
 describe("DateMark / dateColumn", () => {
   const NOW = new Date("2026-10-02T12:00:00Z");
 
-  it("prints a date, a relative time with the date in a tooltip, or the empty word", () => {
+  it("prints a date, a relative time with the exact date beside it (0.32), or the empty word", () => {
     render(
       <>
         <DateMark value="2026-07-08" locale="en-US" />
@@ -64,7 +64,7 @@ describe("DateMark / dateColumn", () => {
       </>,
     );
     expect(screen.getByText("Jul 8, 2026").tagName).toBe("TIME");
-    expect(screen.getByText("3 days ago")).toHaveAttribute("dateTime", "2026-09-29T12:00:00.000Z");
+    expect(screen.getByText("3 days ago").closest("time")).toHaveAttribute("dateTime", "2026-09-29T12:00:00.000Z");
     expect(screen.getByText("Never")).toBeInTheDocument();
   });
 

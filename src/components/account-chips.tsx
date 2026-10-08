@@ -7,7 +7,6 @@ import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-lab
 import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
-import { Tooltip } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
 
 /**
@@ -255,10 +254,18 @@ export interface DateMarkProps {
   /**
    * `"date"` (default): the date in `dateStyle` — "Created". `"relative"`: how long
    * ago — "Last login", where the question is "recently?" — with the full date and
-   * time in a tooltip (keksdose's last-seen column).
+   * time beside it (keksdose's last-seen column; see `absolute`).
    */
   display?: "date" | "relative";
-  /** Default `medium`. Under `"relative"`, the style of the tooltip's date (default
+  /**
+   * Where a `"relative"` mark puts the exact date and time (0.32,
+   * docs/text-size-harmonization.md §4: "relative dates show the absolute one beside
+   * them", at every size — a touch screen never opens the tooltip it used to live in):
+   * `"below"` (default), a muted second line under the words, so a table column keeps
+   * its width; `"inline"`, after them on the same line, for a sentence or a wide cell.
+   */
+  absolute?: "below" | "inline";
+  /** Default `medium`. Under `"relative"`, the style of the exact date beside it (default
    *  `dateTime`) and of the date `relative.absoluteAfterDays` switches to. Given, it wins
    *  over the provider's `formatDate`. */
   dateStyle?: FormatDateStyle | Intl.DateTimeFormatOptions;
@@ -288,6 +295,7 @@ export function DateMark({
   display = "date",
   dateStyle,
   relative,
+  absolute = "below",
   empty = EMPTY_FORMATTED_VALUE,
   locale: localeProp,
   className,
@@ -309,14 +317,32 @@ export function DateMark({
     );
   }
   const text = formatRelativeTime(date, { ...relative, locale, absoluteStyle: dateStyle ?? "medium" });
-  return (
-    <Tooltip label={formatDate(date, dateStyle ?? "dateTime", { locale })} lazy>
-      {/* Not a tab stop: a roster of fifty rows would be fifty more of them, and the
-          relative words already answer the column's question; the exact time is extra. */}
-      <time dateTime={date.toISOString()} className={cls}>
-        {text}
+  const exact = formatDate(date, dateStyle ?? "dateTime", { locale });
+  // Past `absoluteAfterDays` the relative words already ARE the date; then the exact
+  // line alone, rather than the same day twice.
+  const sameDay = text === formatDate(date, dateStyle ?? "medium", { locale });
+  const iso = date.toISOString();
+  if (sameDay) {
+    return (
+      <time dateTime={iso} className={cls}>
+        {exact}
       </time>
-    </Tooltip>
+    );
+  }
+  // The exact date and time in the layout, never only in a tooltip (§4). Still no tab
+  // stop: a roster of fifty rows would be fifty more of them.
+  return (
+    <time
+      dateTime={iso}
+      data-slot="date-mark"
+      className={cn(absolute === "below" ? "inline-flex flex-col leading-tight" : "inline", className)}
+    >
+      <span className="whitespace-nowrap tabular-nums">{text}</span>
+      {absolute === "inline" && " · "}
+      <span className={cn("whitespace-nowrap tabular-nums text-[var(--text-muted)]", absolute === "below" && "text-xs")}>
+        {exact}
+      </span>
+    </time>
   );
 }
 

@@ -1003,7 +1003,7 @@ function RangeBody({
           key={message}
           id={messageIds[i]}
           data-slot="form-message"
-          className="text-[11px] leading-tight text-[var(--danger)]"
+          className="text-caption leading-tight text-[var(--danger)]"
         >
           {message}
         </p>

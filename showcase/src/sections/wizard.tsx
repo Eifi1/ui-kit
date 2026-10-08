@@ -514,7 +514,7 @@ function ImportWizard({
           </Row>
         </WizardStep>
       )}
-      <p className="mt-3 font-mono text-[11px] text-[var(--text-muted)]">
+      <p className="mt-3 font-mono text-caption text-[var(--text-muted)]">
         isCommitStep={String(wizard.isCommitStep)} · committed={String(wizard.committed)} · canGoBack=
         {String(wizard.canGoBack)} · canCancel={String(wizard.canCancel)} · canDone={String(wizard.canDone)} ·
         isValidating={String(wizard.isValidating)}

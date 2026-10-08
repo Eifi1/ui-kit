@@ -9,7 +9,7 @@ describe("AlertBanner 0.10.0", () => {
     expect(box.className).toContain("bg-[var(--success-bg)]");
     expect(box.className).toContain("text-[var(--success)]");
     expect(toneFrameClass("success")).toContain("border-[var(--success-border)]");
-    expect(alertFrameClass("success")).toContain("p-[11px]");
+    expect(alertFrameClass("success")).toContain("p-[calc(0.75rem-1px)]");
     expect(box.querySelector("svg")!.getAttribute("class")).toContain("lucide-circle-check");
   });
 
@@ -30,7 +30,7 @@ describe("AlertBanner 0.10.0", () => {
       expect(el.className).not.toContain("text-sm");
       expect(el.querySelector("svg")!.getAttribute("class")).toContain("size-3.5");
     }
-    expect(screen.getByTestId("box").className).toContain("py-[5px]");
+    expect(screen.getByTestId("box").className).toContain("py-[calc(0.375rem-1px)]");
     expect(alertFrameClass("neutral", "sm")).toContain("py-1.5");
     expect(container.querySelectorAll("[role=status]")).toHaveLength(1);
   });
@@ -130,9 +130,9 @@ describe("AlertBanner 0.10.0", () => {
     const box = container.firstElementChild!;
     expect(box.className).toContain("text-sm");
     expect(box.className).toContain("rounded-md");
-    expect(box.className).toContain("p-[11px]");
+    expect(box.className).toContain("p-[calc(0.75rem-1px)]");
     expect(box.className).not.toContain("shadow-lg");
-    expect(alertFrameClass("danger")).toBe(`rounded-md p-[11px] ${toneFrameClass("danger")}`);
+    expect(alertFrameClass("danger")).toBe(`rounded-md p-[calc(0.75rem-1px)] ${toneFrameClass("danger")}`);
   });
 });
 

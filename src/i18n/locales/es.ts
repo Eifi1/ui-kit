@@ -23,6 +23,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     !seconds || seconds <= 0
       ? "Demasiados intentos. Espere un momento e inténtelo de nuevo."
       : `Demasiados intentos. Inténtelo de nuevo en ${wait(seconds)}.`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow.
+  const inDays = (days: number) =>
+    days <= 0 ? "hoy" : days === 1 ? "mañana" : `dentro de ${n(days)} ${plural(days, "día", "días")}`;
 
   return {
     feedbackAttachment: {
@@ -796,6 +800,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           disclaimer: {
             title: "Responsabilidad por contenidos y enlaces",
             body: "Este es un proyecto privado y sin fines comerciales, que se ofrece sin garantía durante una beta cerrada. Los sitios externos que enlazamos son responsabilidad de sus respectivos operadores; no tenemos control sobre su contenido.",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8). "Plan"
+            // and "suscripción" as the `billing` namespace.
+            commercial:
+              "Este es un servicio comercial. Los planes de pago los vende nuestro revendedor, que actúa como Merchant of Record: vende la suscripción en su propio nombre, cobra el pago, emite la factura y gestiona el IVA, y sus condiciones de venta se aplican a la compra. Procuramos que el contenido de este servicio sea correcto, pero no podemos garantizar que esté completo ni actualizado. Los sitios externos que enlazamos son responsabilidad de sus respectivos operadores; no tenemos control sobre su contenido.",
           },
         },
         privacy: {
@@ -1242,6 +1250,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       outflow: "Salida",
       inflow: "Entrada",
       direction: (current, next) => `Dirección: ${current} — cambiar a ${next}`,
+      switchTo: (next) => `Cambiar a ${next}`,
     },
     columnMapper: {
       paste: "Pegar una tabla",
@@ -1414,6 +1423,91 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       endedSandbox:
         "Los datos de ejemplo se restablecen con regularidad; su propio trabajo en la demo se elimina.",
       restart: "Iniciar una nueva demo",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "plan" is what is bought
+    // (Free, Pro), "suscripción" the standing arrangement and the settings group. "Usted".
+    billing: {
+      group: "Suscripción",
+      plans: "Planes",
+      interval: "Periodo de facturación",
+      yearly: "Anual",
+      monthly: "Mensual",
+      // As `currency.currency`.
+      currency: "Moneda",
+      perYear: "al año",
+      perMonth: "al mes",
+      vatIncluded: "IVA incluido",
+      free: "Gratis",
+      notOffered: "No disponible para este periodo de facturación",
+      // As `progressBar.unlimited`.
+      unlimited: "Ilimitado",
+      limits: "Límites",
+      features: "Incluido",
+      current: "Plan actual",
+      choose: (plan) => `Elegir ${plan}`,
+      upgrade: (plan) => `Mejorar a ${plan}`,
+      downgrade: (plan) => `Cambiar a ${plan}`,
+      isCurrent: "Este es su plan actual.",
+      pickFirst: "Elija primero un plan.",
+      // Agreeing with "suscripción"; "caducada", as `invitations.status.expired`.
+      status: {
+        trialing: "Prueba",
+        active: "Activa",
+        past_due: "Pago vencido",
+        canceled: "Cancelada",
+        expired: "Caducada",
+        comped: "De cortesía",
+      },
+      trialEnding: (days) =>
+        `Su periodo de prueba termina ${inDays(days)}. Después podrá seguir viéndolo todo, pero necesitará un plan para hacer cambios.`,
+      grantEnding: (days) =>
+        `Su acceso gratuito termina ${inDays(days)}. Después podrá seguir viéndolo todo, pero necesitará un plan para hacer cambios.`,
+      paymentFailed: "Su último pago no se ha completado. Actualice su método de pago para conservar su plan.",
+      planEnded:
+        "Su plan ha terminado. Puede seguir viendo y exportando todo; elija un plan para volver a hacer cambios.",
+      // Never why: the owner's payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `«${item}» es de solo lectura por ahora; su propietario puede levantar esa restricción.`
+          : "Esto es de solo lectura por ahora; su propietario puede levantar esa restricción.",
+      processing:
+        "Su pago se está procesando. Su plan empieza en cuanto se confirme; esta página se actualiza sola.",
+      choosePlan: "Elegir un plan",
+      updatePayment: "Actualizar el método de pago",
+      checkAgain: "Volver a comprobar",
+      lockReason: "Su plan ha terminado. Elija un plan para volver a hacer cambios.",
+      // As `characterCount.limitReached` ("Límite de caracteres alcanzado").
+      limitReached: "Límite del plan alcanzado",
+      limitUpgrade: "Para añadir más, elija un plan con un límite mayor.",
+      limitContact: "Para añadir más, pídanos un límite mayor.",
+      askForMore: "Pedir más",
+      // Both figures arrive formatted; "de", as `characterCount.count`.
+      usage: (used, limit) => `${used} de ${limit}`,
+      contactSubject: (dimension) => `Límite del plan: ${dimension}`,
+      manage: "Pagos y facturas",
+      cancel: "Cancelar la suscripción",
+      waitingChanges: (count) => `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de un plan`,
+      // "Descartar", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "Descartar los cambios en espera",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "Apariencia" group.
+    appearance: {
+      textSize: "Tamaño del texto",
+      textSizeHelp: "Letras más grandes y un diseño que les hace sitio.",
+      textSizes: { normal: "Normal", large: "Grande", xlarge: "Muy grande" },
+      contrast: "Contraste",
+      contrastHelp:
+        "El contraste aumentado oscurece los textos tenues y las líneas, y engrosa los marcos de foco. «Sistema» sigue el ajuste de este dispositivo.",
+      contrastModes: { system: "Sistema", standard: "Estándar", more: "Aumentado" },
+    },
+    rowActions: {
+      actions: "Acciones",
+      actionsFor: (name) => `Acciones de ${name}`,
+    },
+    appShellMore: {
+      more: "Más",
+      moreTitle: "Más páginas",
     },
   };
 }

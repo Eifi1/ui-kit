@@ -382,16 +382,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1690 names from 253 modules** — 779 values and 911 types. _Italic_ is a type-only export.
+**1828 names from 271 modules** — 856 values and 972 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1690 |
+| `@eifi1/ui-kit` | 1828 |
 | `@eifi1/ui-kit/chart` | 104 |
-| `@eifi1/ui-kit/shell` | 72 |
+| `@eifi1/ui-kit/shell` | 76 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
@@ -431,7 +431,7 @@ re-slicing of it, never a second API.
 | `hooks/use-media-query` | `useMediaQuery` |
 | `hooks/use-body-scroll-lock` | `useBodyScrollLock` |
 | `hooks/use-anchored-rect` | `useAnchoredRect`, _`AnchorRect`_ |
-| `hooks/use-anchored-panel` | `anchoredPanelPlacement`, `useAnchoredPanel`, `useVisualViewport`, _`AnchoredPanel`_, _`AnchoredPanelOptions`_, _`ViewportBox`_ |
+| `hooks/use-anchored-panel` | `anchoredPanelPlacement`, `readKeyboardInset`, `useAnchoredPanel`, `useVisualViewport`, _`AnchoredPanel`_, _`AnchoredPanelOptions`_, _`KeyboardInsetOptions`_, _`ViewportBox`_ |
 | `hooks/use-dismiss` | `useEscapeKey`, `useOutsideClick` |
 | `hooks/use-focus-trap` | `useFocusTrap`, _`FocusTrapOptions`_ |
 | `hooks/use-announce` | `useAnnounce`, _`AnnounceRegionProps`_, _`UseAnnounceOptions`_, _`UseAnnounceReturn`_ |
@@ -445,7 +445,9 @@ re-slicing of it, never a second API.
 | `hooks/use-copy-to-clipboard` | `copyToClipboard`, `useCopyToClipboard`, _`CopyState`_, _`UseCopyToClipboardOptions`_, _`UseCopyToClipboardReturn`_ |
 | `hooks/use-hotkey` | `matchesHotkey`, `parseHotkey`, `useHotkey`, _`Hotkey`_, _`ParsedHotkey`_, _`UseHotkeyOptions`_ |
 | `hooks/use-authed-src` | `useAuthedSrc`, _`AuthedFetcher`_, _`AuthedSrcStatus`_, _`UseAuthedSrcOptions`_, _`UseAuthedSrcResult`_ |
-| `hooks/use-windowed-rows` | `useWindowedRows`, _`WindowedRows`_ |
+| `hooks/use-windowed-rows` | `useWindowedRows`, `WINDOWED_ROW_INDEX`, _`WindowedRows`_ |
+| `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `useBreakpoint`, `usePhoneLayout`, _`Breakpoint`_, _`BreakpointVariant`_ |
+| `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
 
 ### theme, palettes, colour
 
@@ -457,6 +459,8 @@ re-slicing of it, never a second API.
 | `theme/palette-presets` | `ALTERNATIVE_PRESETS`, `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+| `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
+| `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
 
 ### admin
 
@@ -471,6 +475,20 @@ re-slicing of it, never a second API.
 | `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_ |
 | `admin/admin-parts` | _`AdminPerson`_ |
 
+### shell
+
+| Module | Exports |
+|---|---|
+| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_BAR_MAX`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
+| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
+| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
+| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
+| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
+| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
+| `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
+| `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
+| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
+
 ### i18n
 
 | Module | Exports |
@@ -481,19 +499,35 @@ re-slicing of it, never a second API.
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
 | `i18n/plurals` | `withAllPlurals` |
 
+### billing
+
+| Module | Exports |
+|---|---|
+| `billing/billing-labels` | `DEFAULT_BILLING_LABELS`, `SUBSCRIPTION_STATUSES`, `useBillingLabels`, _`BillingLabels`_, _`SubscriptionStatus`_ |
+| `billing/plan-price` | `BILLING_INTERVALS`, `billingCurrencyFor`, `formatPlanPrice`, `minorToMajor`, `planPrice`, _`BillingCurrency`_, _`BillingInterval`_, _`PlanIntervalPrices`_, _`PlanPriceAnswer`_, _`PlanPrices`_ |
+| `billing/plan-card` | `PlanCard`, `PlanPicker`, `planRelation`, _`BillingPlan`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
+| `billing/subscription-status-chip` | `SUBSCRIPTION_STATUS_TONES`, `SubscriptionStatusChip`, _`SubscriptionStatusChipProps`_ |
+| `billing/billing-banner` | `BillingBanner`, _`BillingBannerKind`_, _`BillingBannerProps`_ |
+| `billing/plan-limit-notice` | `planLimitMailto`, `PlanLimitNotice`, _`PlanLimitNoticeProps`_ |
+| `billing/plan-limit` | `isPlanLimit`, _`PlanLimitRefusal`_ |
+| `billing/billing-lock` | `combineWriteLocks`, `useBillingLockReason`, _`BillingLockReasonOptions`_, _`CombinedWriteLock`_, _`WriteLockSource`_ |
+| `billing/billing-standing` | `billingDaysLeft`, `billingLockAt`, `isBillingReadOnly`, _`BillingStanding`_ |
+| `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
+
 ### components
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FieldHint`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_, _`CharacterCountLabels`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FieldHintProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
+| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_, _`CharacterCountLabels`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/confirm-dialog` | `ConfirmProvider`, `DEFAULT_CONFIRM_DIALOG_LABELS`, `useConfirm`, _`ConfirmDialogLabels`_, _`ConfirmFn`_, _`ConfirmOptions`_, _`ConfirmProviderProps`_, _`ConfirmTone`_ |
 | `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/danger-confirm` | `CurrentPasswordInput`, `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `TypedConfirmField`, `typedMatches`, _`CurrentPasswordInputLabels`_, _`CurrentPasswordInputProps`_, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`DangerConfirmValues`_, _`DangerConsequence`_, _`TypedConfirmFieldLabels`_, _`TypedConfirmFieldProps`_, _`TypedMatch`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
-| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
+| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStack`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
 | `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
-| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
+| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
+| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `RowActions`, `rowActionsColumn`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_ |
 | `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
@@ -513,7 +547,7 @@ re-slicing of it, never a second API.
 | `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_, _`MultiSelectProps`_ |
 | `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipTap`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarBadge`_, _`UserAvatarProps`_ |
-| `components/settings-fields` | `LanguageSetting`, `ThemeSetting`, _`LanguageSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingToggleProps`_ |
+| `components/settings-fields` | `ContrastSetting`, `LanguageSetting`, `TextSizeSetting`, `ThemeSetting`, _`ContrastSettingProps`_, _`LanguageSettingProps`_, _`TextSizeSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingToggleProps`_ |
 | `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
 | `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
 | `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
@@ -554,7 +588,7 @@ re-slicing of it, never a second API.
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
-| `components/full-bleed-dialog` | `FullBleedDialog`, _`FullBleedDialogProps`_ |
+| `components/full-bleed-dialog` | `DIALOG_GUTTER`, `FullBleedDialog`, _`FullBleedDialogProps`_ |
 | `components/grouped-picker` | `GroupedPicker`, _`GroupedPickerProps`_, _`PickerGroup`_ |
 | `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_, _`FileDropzoneState`_ |
 | `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarDayState`_, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
@@ -586,7 +620,7 @@ re-slicing of it, never a second API.
 | `components/page-header` | `PageHeader`, _`PageHeaderActionsAlign`_, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
-| `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
+| `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, `TOASTER_OFFSET_BOTTOM`, `TOASTER_OFFSET_TOP`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
 | `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
 | `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
@@ -596,7 +630,8 @@ re-slicing of it, never a second API.
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewGroupBy`_, _`TranslationReviewOrigin`_, _`TranslationReviewPanelProps`_, _`TranslationReviewSaveInfo`_ |
-| `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
+| `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
+| `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
 | `components/checkbox-group` | `CheckboxGroup`, _`CheckboxGroupLegendVisibility`_, _`CheckboxGroupOption`_, _`CheckboxGroupProps`_ |
 | `components/one-time-code-input` | `OneTimeCodeInput`, _`OneTimeCodeInputProps`_ |
 | `components/language-select` | `LanguageSelect`, _`LanguageSelectProps`_ |
@@ -608,8 +643,9 @@ re-slicing of it, never a second API.
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
 | `components/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
 | `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
+| `components/field-parts` | `CompactControls`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
-| `components/field-parts` | `FieldLabel`, `FLOATING_LABEL_STATIC`, _`FieldLabelProps`_ |
+| `components/focus-ring` | `FOCUS_RING`, `FOCUS_RING_WIDTH` |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
 | `components/series-chart-ticks` | _`TimeTickUnit`_ |
@@ -652,27 +688,13 @@ re-slicing of it, never a second API.
 | `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
 | `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
 | `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
+| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
 | `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
 | `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
 | `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
 | `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
 | `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
 | `auth/status-parts` | _`AuthHeadingLevel`_ |
-
-### shell
-
-| Module | Exports |
-|---|---|
-| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
-| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
-| `shell/app-shell` | `AppShell`, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
-| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
-| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
-| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
-| `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
-| `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
-| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
 ### wizard
 
@@ -713,6 +735,7 @@ re-slicing of it, never a second API.
 | `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
 | `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
 | `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
+| `settings/use-account-appearance` | `resolveAccountAppearance`, `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
 
 ### landing
 

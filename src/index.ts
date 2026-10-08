@@ -19,11 +19,17 @@ export { useMediaQuery } from "./hooks/use-media-query";
 export { useBodyScrollLock } from "./hooks/use-body-scroll-lock";
 export { useAnchoredRect } from "./hooks/use-anchored-rect";
 export type { AnchorRect } from "./hooks/use-anchored-rect";
-export { useAnchoredPanel, anchoredPanelPlacement, useVisualViewport } from "./hooks/use-anchored-panel";
+export {
+  useAnchoredPanel,
+  anchoredPanelPlacement,
+  useVisualViewport,
+  readKeyboardInset,
+} from "./hooks/use-anchored-panel";
 export type {
   AnchoredPanel,
   AnchoredPanelOptions,
   ViewportBox,
+  KeyboardInsetOptions,
 } from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
 // Focus containment for an overlay, and a live region for a change that moves no focus.
@@ -151,7 +157,7 @@ export * from "./components/icon-picker";
 export * from "./components/choice-card";
 export * from "./components/autocomplete";
 export * from "./components/measured-grid";
-export { useWindowedRows } from "./hooks/use-windowed-rows";
+export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
 export type { WindowedRows } from "./hooks/use-windowed-rows";
 // Named, not `export *`: file-button.tsx also holds the screening helpers the
 // dropzone shares, which are internal.
@@ -260,7 +266,14 @@ export type {
 // The toast layer over sonner (an OPTIONAL peer, loaded lazily): `toast` mirrors sonner's
 // API so apps migrate by swapping the import; `<Toaster>` carries the placement, theme,
 // tones and z-index both apps had wired by hand.
-export { toast, Toaster, DEFAULT_TOAST_LABELS, TOAST_ACTION_DURATION } from "./components/toast";
+export {
+  toast,
+  Toaster,
+  DEFAULT_TOAST_LABELS,
+  TOAST_ACTION_DURATION,
+  TOASTER_OFFSET_TOP,
+  TOASTER_OFFSET_BOTTOM,
+} from "./components/toast";
 export type {
   ToastId,
   ToastAction,
@@ -485,6 +498,7 @@ export type {
   LegalTextSectionLabels,
   LegalOperatorSectionLabels,
   LegalFramedSectionLabels,
+  LegalDisclaimerSectionLabels,
 } from "./components/legal";
 export { LegalPage, LegalKitSection, LegalAcceptCheckbox, LEGAL_SKELETON } from "./components/legal-page";
 
@@ -507,7 +521,7 @@ export type { RegisterFormProps, RegisterLabels, RegisterValues } from "./auth/r
 export { CompleteNameDialog, DEFAULT_COMPLETE_NAME_LABELS } from "./auth/complete-name-dialog";
 export type { CompleteNameDialogProps, CompleteNameLabels, CompleteNameValues } from "./auth/complete-name-dialog";
 export { taggedEmail } from "./auth/email-tag";
-export { isAuthError, authErrorCode } from "./auth/auth-errors";
+export { isAuthError, authErrorCode, isBillingError } from "./auth/auth-errors";
 export type { AuthErrorCode } from "./auth/auth-errors";
 export { ForgotPasswordForm, DEFAULT_FORGOT_PASSWORD_LABELS } from "./auth/forgot-password-form";
 export type { ForgotPasswordFormProps, ForgotPasswordLabels } from "./auth/forgot-password-form";
@@ -545,7 +559,7 @@ export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompan
 // invitations panel, and the account's own settings — email change, sessions, deletion,
 // export. Callbacks only; the confirmation level is the server's.
 export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
-export type { AccountErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
+export type { AccountErrorCode, BillingErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
 export { EmailChangeSetting, DEFAULT_EMAIL_CHANGE_LABELS } from "./account/email-change-setting";
 export type {
   EmailChangeSettingProps,
@@ -669,7 +683,8 @@ export {
 export type { SettingsGroup, SettingsEntry, SettingsSearchEntriesOptions } from "./settings/settings-catalogue";
 export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
 export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
-// Only the language follows the account (§6.2).
+// The language follows the account (§6.2); since 0.32 so do the text size and the
+// contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
 export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
 export type {
   UseAccountLanguageOptions,
@@ -738,7 +753,60 @@ export type {
   LegalSkeletonEntry,
   LegalSkeletonPage,
   LegalSectionOwner,
+  LegalDisclaimerVariant,
 } from "./components/legal-page";
+
+// ── 0.32.0: text size and contrast (docs/text-size-harmonization.md) ──
+export * from "./theme/text-size";
+export * from "./theme/contrast";
+export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM } from "./hooks/use-breakpoint";
+export type { Breakpoint, BreakpointVariant } from "./hooks/use-breakpoint";
+export { useAccountAppearance, resolveAccountAppearance } from "./settings/use-account-appearance";
+export type {
+  AppearanceSource,
+  AccountAppearanceFields,
+  DeviceAppearance,
+  AccountAppearancePatch,
+  ResolvedAccountAppearance,
+  UseAccountAppearanceOptions,
+  AccountAppearance,
+} from "./settings/use-account-appearance";
+export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
+// The behaviours at Large (§4, §10.7–10.9): a row's actions, the hooks components read.
+export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
+export type {
+  RowAction,
+  RowActionList,
+  RowActionsLabels,
+  RowActionsProps,
+  RowActionsCollapse,
+  RowActionsSize,
+  RowActionsColumnOptions,
+} from "./components/row-actions";
+export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
+export type { AppearanceLabels } from "./components/appearance-labels";
+
+// ── 0.32.0: billing — plans, standing, banners, the limit notice (docs/billing-harmonization.md §7) ──
+export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from "./billing/billing-labels";
+export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
+export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
+export type { BillingInterval, BillingCurrency, PlanIntervalPrices, PlanPrices, PlanPriceAnswer } from "./billing/plan-price";
+export { PlanCard, PlanPicker, planRelation } from "./billing/plan-card";
+export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice } from "./billing/plan-card";
+export { SubscriptionStatusChip, SUBSCRIPTION_STATUS_TONES } from "./billing/subscription-status-chip";
+export type { SubscriptionStatusChipProps } from "./billing/subscription-status-chip";
+export { BillingBanner } from "./billing/billing-banner";
+export type { BillingBannerProps, BillingBannerKind } from "./billing/billing-banner";
+export { PlanLimitNotice, planLimitMailto } from "./billing/plan-limit-notice";
+export type { PlanLimitNoticeProps } from "./billing/plan-limit-notice";
+export { isPlanLimit } from "./billing/plan-limit";
+export type { PlanLimitRefusal } from "./billing/plan-limit";
+export { combineWriteLocks, useBillingLockReason } from "./billing/billing-lock";
+export type { WriteLockSource, CombinedWriteLock, BillingLockReasonOptions } from "./billing/billing-lock";
+export { billingLockAt, isBillingReadOnly, billingDaysLeft } from "./billing/billing-standing";
+export type { BillingStanding } from "./billing/billing-standing";
+export { SubscriptionActions } from "./billing/subscription-actions";
+export type { SubscriptionActionsProps } from "./billing/subscription-actions";
 
 // ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
 export * from "./components/checkbox-group";

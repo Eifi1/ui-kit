@@ -30,6 +30,148 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Text size and contrast (0.32, docs/text-size-harmonization.md §3, §5, §10) ──────
+ *
+ * ONE scale on <html>: `data-text-size="normal|large|xlarge"` is 100 / 125 / 150 % of
+ * the browser's OWN font size — percent, never px, so "Normal" keeps whatever the person
+ * set in the browser. Tailwind's spacing and type are rem, so this one declaration grows
+ * about 90 % of every screen. The kit's stores put the attribute there before first
+ * paint (`applyPersistedTextSize`, or the inline `TEXT_SIZE_INLINE_SCRIPT`).
+ *
+ * `data-contrast="more"` is "More contrast", from the setting or from
+ * `prefers-contrast: more` on "System". The colour tokens are stepped in JS
+ * (`applyTokenSet`), because they are written inline on <html> and no rule here could
+ * beat them; what lives here is only what is NOT inline — the focus frame's width.
+ *
+ * These names are frozen: apps read them, and so does an app's boot splash. */
+
+@theme {
+  /* The kit's two small sizes, which were `text-[10px]` / `text-[11px]` and did not
+     grow with anything (§3.2). Font size only, no line height — exactly what the
+     arbitrary px values set — so a site moves to them without its line box changing. */
+  --text-micro: 0.625rem;
+  --text-caption: 0.6875rem;
+  /* keksdose's `min-[2400px]` as a named step (§10.4), so it scales like the others.
+     Declared here so Tailwind registers `3xl:` in the breakpoint group — the variant
+     below then replaces its query and keeps that place in the cascade order. */
+  --breakpoint-3xl: 150rem;
+}
+
+html[data-text-size="large"] {
+  font-size: 125%;
+}
+html[data-text-size="xlarge"] {
+  font-size: 150%;
+}
+
+/* One focus frame for the kit (§5): `FOCUS_RING` draws its ring this wide. Not inline,
+   so a stylesheet rule can raise it. */
+:root {
+  --focus-ring-width: 2px;
+}
+:root[data-contrast="more"] {
+  --focus-ring-width: 3px;
+}
+
+/* ── Breakpoints that follow the text size (§3.3, §10.4) ─────────────────────────────
+ *
+ * A media query's rem is the browser's default font size, never <html>'s, so Tailwind's
+ * `md:` would stay at 48rem while the text grows to 150 % — a tablet at Extra large
+ * would keep the desktop shell. Each breakpoint is therefore redefined as three media
+ * queries, one per size, each scoped to that size with an attribute selector:
+ *
+ *     md:   48rem at Normal, 60rem at Large, 72rem at Extra large   (× 1, 1.25, 1.5)
+ *
+ * The scope sits in `:where()`, so `md:flex` keeps the specificity it had (0,1,0) and
+ * the cascade between utilities is unchanged. A redefined built-in (`sm` … `2xl`, and
+ * `3xl` from @theme above) keeps its place in Tailwind's variant order — checked in the
+ * built showcase CSS — and Tailwind's own query for it is not emitted any more.
+ *
+ * The `max-*` variants are new names to Tailwind (its own `max-*` is one functional
+ * variant, which CSS cannot replace), so they sort AFTER the other variants rather than
+ * before `sm`. They are declared widest first, as Tailwind orders its own, so the
+ * narrower range still wins (`max-lg:px-4 max-sm:px-2`). A scan of the kit, the
+ * showcase and the three apps (2026-10-08) found no element where a `max-*` utility and
+ * a later variant (`md:`, `dark:`, `@container`, `pointer-*` …) set the same property
+ * in an overlapping range, so no rendering changes with that order.
+ *
+ * Not a container on <body> (§10.4): fixed overlays and a container querying itself
+ * would break. Arbitrary `min-[…]` / `max-[…]` media variants do NOT scale — use a
+ * name. `useBreakpoint` / `usePhoneLayout` answer the same questions in JS, with the
+ * same numbers (hooks/use-breakpoint.ts). */
+
+@custom-variant sm {
+  @media (width >= 40rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 50rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 60rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant md {
+  @media (width >= 48rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 60rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 72rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant lg {
+  @media (width >= 64rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 80rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 96rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant xl {
+  @media (width >= 80rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 100rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 120rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant 2xl {
+  @media (width >= 96rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 120rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 144rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant 3xl {
+  @media (width >= 150rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width >= 187.5rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width >= 225rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+
+@custom-variant max-3xl {
+  @media (width < 150rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 187.5rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 225rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant max-2xl {
+  @media (width < 96rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 120rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 144rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant max-xl {
+  @media (width < 80rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 100rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 120rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant max-lg {
+  @media (width < 64rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 80rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 96rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant max-md {
+  @media (width < 48rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 60rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 72rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+@custom-variant max-sm {
+  @media (width < 40rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
+  @media (width < 50rem) { &:where([data-text-size=large] *) { @slot; } }
+  @media (width < 60rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+}
+
+/* `large:` is Large AND Extra large; `xlarge:` only Extra large; `contrast:` is More
+   contrast however it came about. Modelled on `dark:` — `:where()`, so a variant adds
+   no specificity and `large:text-base` beats `text-sm` by order alone. Declared AFTER
+   the breakpoints, so a size wins over a breakpoint: `max-sm:grid-cols-2
+   large:grid-cols-1` is one column on a phone at Large.
+   `$=large` ("ends in large") matches both "large" and "xlarge". */
+@custom-variant large (&:where([data-text-size$=large], [data-text-size$=large] *));
+@custom-variant xlarge (&:where([data-text-size=xlarge], [data-text-size=xlarge] *));
+@custom-variant contrast (&:where([data-contrast=more], [data-contrast=more] *));
+
 :root {
   --bg-page: #ede3cf;          /* warm dim sand — low-glare light page */
   --bg-surface: #f6ecd9;       /* warm off-white card/panel (not pure white) */
@@ -304,7 +446,7 @@
 /* The kit's focus ring on the toast's buttons — sonner's is a black shadow that
    vanishes on the dark theme. */
 .kit-toaster [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
-  outline: 2px solid var(--brand);
+  outline: var(--focus-ring-width, 2px) solid var(--brand);
   outline-offset: 2px;
 }
 

@@ -22,6 +22,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     !seconds || seconds <= 0
       ? "Túl sok próbálkozás. Várjon egy kicsit, majd próbálja újra."
       : `Túl sok próbálkozás. Próbálja újra ${wait(seconds)} múlva.`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow. The numeral stays bare ("5 nap múlva").
+  const inDays = (days: number) => (days <= 0 ? "ma" : days === 1 ? "holnap" : `${n(days)} nap múlva`);
 
   return {
     feedbackAttachment: {
@@ -804,6 +807,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           disclaimer: {
             title: "Felelősség a tartalmakért és a hivatkozásokért",
             body: "Ez egy magán, nem kereskedelmi projekt, amelyet zárt béta keretében, szavatosság nélkül kínálunk. Az általunk hivatkozott külső oldalakért azok üzemeltetői felelősek; tartalmukra nincs befolyásunk.",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8).
+            // "Csomag" and "előfizetés" as the `billing` namespace.
+            commercial:
+              "Ez egy kereskedelmi szolgáltatás. A fizetős csomagokat viszonteladónk értékesíti, amely Merchant of Record szerepben jár el: a saját nevében értékesíti az előfizetést, beszedi a vételárat, kiállítja a számlát és elszámolja az áfát, a vásárlásra pedig az ő értékesítési feltételei vonatkoznak. Igyekszünk gondoskodni arról, hogy a szolgáltatás tartalma pontos legyen, de nem tudjuk szavatolni, hogy teljes és naprakész legyen. Az általunk hivatkozott külső oldalakért azok üzemeltetői felelősek; tartalmukra nincs befolyásunk.",
           },
         },
         privacy: {
@@ -1245,6 +1252,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       outflow: "Kiadás",
       inflow: "Bevétel",
       direction: (current, next) => `Irány: ${current} – váltás erre: ${next}`,
+      switchTo: (next) => `Váltás erre: ${next}`,
     },
     columnMapper: {
       paste: "Táblázat beillesztése",
@@ -1416,6 +1424,94 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       endedSandbox:
         "A mintaadatokat rendszeresen visszaállítjuk, a demóban létrehozott saját munkáját pedig töröljük.",
       restart: "Új demó indítása",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "csomag" is what is bought
+    // (Free, Pro), "előfizetés" the standing arrangement and the settings group. The plan's
+    // name takes no case ending: it follows a colon or a possessive ("Pro választása").
+    billing: {
+      group: "Előfizetés",
+      plans: "Csomagok",
+      interval: "Számlázási időszak",
+      yearly: "Éves",
+      monthly: "Havi",
+      // As `currency.currency`.
+      currency: "Pénznem",
+      perYear: "évente",
+      perMonth: "havonta",
+      vatIncluded: "Áfával együtt",
+      free: "Ingyenes",
+      notOffered: "Ebben a számlázási időszakban nem érhető el",
+      // As `progressBar.unlimited`.
+      unlimited: "Korlátlan",
+      limits: "Korlátok",
+      features: "A csomag tartalma",
+      current: "Jelenlegi csomag",
+      choose: (plan) => `${plan} választása`,
+      upgrade: (plan) => `Váltás nagyobb csomagra: ${plan}`,
+      downgrade: (plan) => `Váltás erre a csomagra: ${plan}`,
+      isCurrent: "Ez az Ön jelenlegi csomagja.",
+      pickFirst: "Előbb válasszon egy csomagot.",
+      // "Lejárt", as `invitations.status.expired`.
+      status: {
+        trialing: "Próbaidőszak",
+        active: "Aktív",
+        past_due: "Fizetés késésben",
+        canceled: "Lemondva",
+        expired: "Lejárt",
+        comped: "Ingyenesen biztosítva",
+      },
+      trialEnding: (days) =>
+        `A próbaidőszaka ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
+      grantEnding: (days) =>
+        `Az ingyenes hozzáférése ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
+      paymentFailed:
+        "A legutóbbi fizetése nem sikerült. A csomagja megtartásához frissítse a fizetési módját.",
+      planEnded:
+        "A csomagja lejárt. Továbbra is mindent megtekinthet és exportálhat; ha ismét módosítani szeretne, válasszon csomagot.",
+      // Never why: the owner's payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `„${item}” egyelőre csak olvasható; a tulajdonosa feloldhatja ezt a korlátozást.`
+          : "Ez egyelőre csak olvasható; a tulajdonosa feloldhatja ezt a korlátozást.",
+      processing:
+        "A fizetése feldolgozás alatt áll. A csomagja a megerősítés után azonnal elindul; ez az oldal magától frissül.",
+      choosePlan: "Csomag választása",
+      updatePayment: "Fizetési mód frissítése",
+      checkAgain: "Újraellenőrzés",
+      lockReason: "A csomagja lejárt. Ha ismét módosítani szeretne, válasszon csomagot.",
+      // As `characterCount.limitReached` ("Elérte a karakterkorlátot").
+      limitReached: "Elérte a csomag korlátját",
+      limitUpgrade: "Továbbiak hozzáadásához válasszon magasabb korlátú csomagot.",
+      limitContact: "Továbbiak hozzáadásához kérjen tőlünk magasabb korlátot.",
+      askForMore: "Bővítés kérése",
+      // Both figures arrive formatted and stay bare, as `characterCount.count` (convention 3).
+      usage: (used, limit) => `${used} / ${limit}`,
+      contactSubject: (dimension) => `Csomagkorlát: ${dimension}`,
+      manage: "Fizetés és számlák",
+      cancel: "Előfizetés lemondása",
+      // No plural after a numeral (convention 2).
+      waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
+      // "Elvetés", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "Várakozó módosítások elvetése",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "Megjelenés" group.
+    appearance: {
+      textSize: "Szövegméret",
+      textSizeHelp: "Nagyobb betűk, és olyan elrendezés, amely helyet ad nekik.",
+      textSizes: { normal: "Normál", large: "Nagy", xlarge: "Nagyon nagy" },
+      contrast: "Kontraszt",
+      contrastHelp:
+        "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
+      contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
+    },
+    rowActions: {
+      actions: "Műveletek",
+      actionsFor: (name) => `${name} – műveletek`,
+    },
+    appShellMore: {
+      more: "Továbbiak",
+      moreTitle: "További oldalak",
     },
   };
 }

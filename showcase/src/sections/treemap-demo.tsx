@@ -323,12 +323,12 @@ function RtlTreemaps() {
     <>
       <div className="grid gap-4 md:grid-cols-2">
         <div dir="rtl" lang="ar" className="min-w-0">
-          <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">&lt;Treemap&gt; under dir=&quot;rtl&quot;</p>
+          <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">&lt;Treemap&gt; under dir=&quot;rtl&quot;</p>
           <Treemap data={SPEND_AR} valueFormatter={(v) => AR_MONEY.format(v)} height={220} />
         </div>
         <div className="min-w-0">
           <Row className="mb-1 text-xs">
-            <span className="font-mono text-[11px] text-[var(--text-muted)]">
+            <span className="font-mono text-caption text-[var(--text-muted)]">
               &lt;TreemapCell dir=&quot;{cellDir}&quot; /&gt;
             </span>
             <button

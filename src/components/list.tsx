@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { Spinner } from "./ui";
+import { FOCUS_RING, Spinner } from "./ui";
 import { StatusDot } from "./status-dot";
 import { Collapse } from "./disclosure";
 import { toneTextClass } from "./signed-amount";
@@ -114,8 +114,20 @@ const PAD: Record<
  *  colour of the slot's own, so an element's colour (or the row's) stands. */
 export type ListItemTrailingTone = TextTone | "inherit";
 
-const TARGET_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]";
+// The kit's focus frame (§5), inset so the row's own border and its neighbours do not
+// clip it.
+const TARGET_RING = cn(FOCUS_RING, "focus-visible:ring-inset");
+
+/**
+ * §4 "ListItem: title, subtitle and meta wrap instead of truncating" at Large and Extra
+ * large (docs/text-size-harmonization.md). `large:` variants over the Normal look, so
+ * a list keeps its one-height rows at Normal and costs no render to switch: a one-line
+ * `truncate` wraps (and breaks a word too long for the row), a `line-clamp-2` lets go.
+ * An ellipsis hides the end of a name, which is the part a reader who needs big type
+ * cannot recover by squinting.
+ */
+const WRAP_AT_LARGE = "large:whitespace-normal large:[overflow-wrap:anywhere]";
+const UNCLAMP_AT_LARGE = "large:line-clamp-none";
 
 interface ListItemBaseProps {
   /** The row's name: one line, truncated — unless {@link titleLines} says otherwise. */
@@ -410,6 +422,11 @@ interface NotExpandable {
  * One row of a {@link List}: leading icon or avatar, title and subtitle (both
  * truncating by default), a trailing slot, and — beside the row, not inside it — its actions.
  *
+ * At Large and Extra large (0.32, docs/text-size-harmonization.md §4) nothing in it
+ * truncates: the overline, title, subtitle and meta wrap, a two-line clamp lets go, and
+ * a trailing slot drops under the text when the two no longer fit side by side. The
+ * rows lose their one height there; that is the trade the reader asked for.
+ *
  * All three apps draw this row by hand, a dozen times: kastlan's units
  * (building-detail-page.tsx:402), open tickets (group-overview-page.tsx:160), activity
  * feed (activity-feed.tsx:53), company users (platform-company-detail-page.tsx:140)
@@ -506,9 +523,12 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         />
       )}
       {leading}
-      <span className="flex min-w-0 flex-1 flex-col">
+      {/* With a trailing slot, a basis at Large: below it the trailing chip or figure
+          wraps under the text (the target wraps, see `target`) rather than squeezing the
+          now-wrapping title into a column one word wide (§4, 240 px effective width). */}
+      <span className={cn("flex min-w-0 flex-1 flex-col", trailing != null && "large:basis-40")}>
         {overline != null && (
-          <span className="block truncate text-[11px] font-medium leading-snug text-[var(--text-muted)]">
+          <span className={cn("block truncate text-caption font-medium leading-snug text-[var(--text-muted)]", WRAP_AT_LARGE)}>
             {overline}
           </span>
         )}
@@ -517,7 +537,11 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           id={stacked ? titleId : undefined}
           className={cn(
             "block text-sm text-[var(--text-primary)]",
-            titleLines === 1 ? "truncate" : titleLines === 2 ? "line-clamp-2 break-words" : "break-words",
+            titleLines === 1
+              ? cn("truncate", WRAP_AT_LARGE)
+              : titleLines === 2
+                ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE)
+                : "break-words",
             unread ? "font-semibold" : "font-medium",
           )}
         >
@@ -529,7 +553,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           <span
             className={cn(
               "block text-xs text-[var(--text-muted)]",
-              subtitleLines === 2 ? "line-clamp-2" : "truncate",
+              subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : cn("truncate", WRAP_AT_LARGE),
             )}
           >
             {subtitle}
@@ -538,8 +562,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {meta != null && (
           <span
             className={cn(
-              "mt-0.5 text-[11px] leading-snug text-[var(--text-muted)]",
-              metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate",
+              "mt-0.5 text-caption leading-snug text-[var(--text-muted)]",
+              metaWrap ? "flex flex-wrap items-center gap-1" : cn("block truncate", WRAP_AT_LARGE),
             )}
           >
             {meta}
@@ -550,7 +574,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       {trailing != null && (
         <span
           className={cn(
-            "flex shrink-0 items-center gap-2 text-xs",
+            "flex shrink-0 items-center gap-2 text-xs large:ms-auto",
             trailingTone !== "inherit" && toneTextClass(trailingTone),
           )}
         >
@@ -582,6 +606,8 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
 
   const target = cn(
     "flex min-w-0 flex-1 text-start",
+    // §4 at Large: the trailing slot drops under the text when both no longer fit.
+    trailing != null && "large:flex-wrap",
     align === "start" ? "items-start" : "items-center",
     pad.target,
     // When stacked the target is the top of the box, not all of it, so it takes its

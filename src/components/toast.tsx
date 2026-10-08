@@ -1,8 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
-import { useMediaQuery } from "../hooks/use-media-query";
-import { PHONE_QUERY } from "./ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 
 /**
  * The kit's toast layer: a `toast` API and a `<Toaster>`, over sonner.
@@ -298,7 +297,9 @@ export type ToastPosition =
 
 export type ToastSwipeDirection = "top" | "right" | "bottom" | "left";
 
-/** sonner's offset: one value for every edge, or per edge. Numbers are px. */
+/** sonner's offset: one value for every edge, or per edge. Numbers are px, which do not
+ *  follow the text size — prefer a CSS length (rem, or a `calc()` on
+ *  {@link TOASTER_OFFSET_TOP} / {@link TOASTER_OFFSET_BOTTOM}). */
 export type ToasterOffset =
   | string
   | number
@@ -398,6 +399,22 @@ function subscribeDocumentTheme(onChange: () => void): () => void {
 const px = (v: string | number) => (typeof v === "number" ? `${v}px` : v);
 
 /**
+ * The Toaster's default distance from the top edge (desktop), as a CSS length (0.32,
+ * docs/text-size-harmonization.md §10.11): below a 3rem top bar with 1rem to spare, and
+ * the safe area. In rem, so it moves with the text size along with the top bar — an
+ * app's `offset={{ top: 64 }}` (keksdose) did not. Pass it, or a `calc()` built on it,
+ * instead of a px number.
+ */
+export const TOASTER_OFFSET_TOP = "calc(env(safe-area-inset-top, 0px) + 4rem)";
+
+/**
+ * The Toaster's default distance from the bottom edge (phone), as a CSS length: above
+ * AppShell's measured bottom nav (`--app-nav-h`) or the home indicator, whichever is
+ * taller, with 0.75rem to spare.
+ */
+export const TOASTER_OFFSET_BOTTOM = "calc(max(var(--app-nav-h, 0px), env(safe-area-inset-bottom, 0px)) + 0.75rem)";
+
+/**
  * Where the toasts appear, with the kit's defaults — mount ONE, near the root and
  * inside `<UiKitProvider>` (it reads the `toast` labels) and inside the router if a
  * toast's content navigates.
@@ -480,14 +497,17 @@ export function Toaster({
   }, [dismissOnMiddleClick, mod]);
 
   const documentTheme = useSyncExternalStore(subscribeDocumentTheme, readDocumentTheme, () => "light" as const);
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   const resolved: ToastPosition = position ?? (phone ? "bottom-center" : "top-center");
 
   // Above the bottom nav and the home indicator: whichever is taller, since the nav
   // already pads itself by the safe area (the same sum BulkActionBar floats on).
-  const bottom = `calc(max(${navOffset === undefined ? "var(--app-nav-h, 0px)" : px(navOffset)}, env(safe-area-inset-bottom, 0px)) + 0.75rem)`;
-  // Below a 48px TopBar with the same 1rem clearance.
-  const top = "calc(env(safe-area-inset-top, 0px) + 4rem)";
+  const bottom =
+    navOffset === undefined
+      ? TOASTER_OFFSET_BOTTOM
+      : `calc(max(${px(navOffset)}, env(safe-area-inset-bottom, 0px)) + 0.75rem)`;
+  // Below a 3rem TopBar with the same 1rem clearance.
+  const top = TOASTER_OFFSET_TOP;
   const computed = resolved.startsWith("bottom") ? { bottom } : { top };
 
   if (!mod) return null;

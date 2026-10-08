@@ -3,7 +3,9 @@ import type { ReactNode } from "react";
 import { AlertCircle, Check, Loader2, Pencil, PencilLine } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Tooltip } from "./tooltip";
+import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels } from "../i18n/kit-labels";
+import { useLargeText } from "../hooks/use-large-text";
 
 /**
  * Sync state for a field backed by a database row.
@@ -252,7 +254,10 @@ export interface FieldSyncIndicatorProps {
   error?: Error | null;
   /** Override any of the five English defaults. */
   labels?: Partial<FieldSyncLabels>;
-  /** Render the label beside the icon instead of only in the tooltip. */
+  /** Render the label beside the icon instead of only in the tooltip. Always on at
+   *  Large and Extra large (0.32, docs/text-size-harmonization.md §4 "No fact only in a
+   *  tooltip"): the reader who asked for bigger type gets the words, not a 14 px glyph
+   *  and a bubble. */
   showLabel?: boolean;
   /** When given, the error state renders a retry button after the icon. */
   onRetry?: () => void;
@@ -282,6 +287,8 @@ export function FieldSyncIndicator({
   className,
 }: FieldSyncIndicatorProps) {
   const l = useKitLabels("fieldSync", DEFAULT_FIELD_SYNC_LABELS, labels);
+  const large = useLargeText();
+  showLabel = showLabel || large;
   const { color, Icon } = STATE_STYLE[state];
   const text =
     state === "error" ? (error?.message?.trim() ? error.message : l.error) : l[state];
@@ -312,7 +319,11 @@ export function FieldSyncIndicator({
         <button
           type="button"
           onClick={onRetry}
-          className="rounded underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          // The kit's focus frame (0.32, §5), stood off the word.
+          className={cn(
+            "rounded underline underline-offset-2 hover:no-underline focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+            FOCUS_RING,
+          )}
           style={{ color }}
         >
           {l.retry}
@@ -461,7 +472,10 @@ export function FieldSyncRow<T>({
               type="button"
               onClick={retry}
               aria-label={l.retry}
-              className="pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:outline-2 focus-visible:outline-offset-2"
+              className={cn(
+                "pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+                FOCUS_RING,
+              )}
             >
               <AlertCircle aria-hidden className="size-4" />
             </button>

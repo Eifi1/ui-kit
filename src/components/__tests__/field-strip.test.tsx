@@ -27,7 +27,7 @@ describe("FieldStrip (keksdose G8)", () => {
     expect(group.className).toContain("pt-5");
     expect(group.className).toContain("col-span-6");
     const label = screen.getByText("Location");
-    expect(label.className).toContain("text-[11px]");
+    expect(label.className).toContain("text-caption");
     expect(label.className).toContain("leading-tight");
     expect(label.className).toContain("static");
     // The row a field's static label sits in: top-1, inset 12px from either edge.
@@ -107,7 +107,7 @@ describe("FieldStrip (keksdose G8)", () => {
     expect(group).toHaveAccessibleDescription("Stays on this device.");
     const caption = screen.getByText("Stays on this device.");
     expect(caption.tagName).toBe("P");
-    expect(caption.className).toContain("text-[11px]");
+    expect(caption.className).toContain("text-caption");
     expect(group.lastElementChild).toBe(caption);
     rerender(
       <FieldStrip label="Location" hint={<FieldHint label="Where the payment happened" />}>

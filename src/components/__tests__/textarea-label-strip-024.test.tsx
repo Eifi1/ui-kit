@@ -50,7 +50,7 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
     expect(c).toEqual(expect.arrayContaining(["absolute", "top-px", "inset-x-px"]));
     // The field's radius less its border, so the rounded corner is not cut into.
     expect(classes(field)).toContain("rounded-md");
-    expect(c).toContain("rounded-t-[5px]");
+    expect(c).toContain("rounded-t-[calc(0.375rem-1px)]");
   });
 
   it("wears the field's own surface in every state the field paints one", () => {

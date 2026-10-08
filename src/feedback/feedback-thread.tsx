@@ -265,7 +265,7 @@ export function FeedbackThread({
               className="flex flex-wrap items-baseline justify-center gap-x-2 px-4 text-center text-xs text-[var(--text-muted)]"
             >
               <span>{message.body}</span>
-              {time && <span className="text-[11px]">{time}</span>}
+              {time && <span className="text-caption">{time}</span>}
             </li>,
           );
           return rows;
@@ -286,14 +286,14 @@ export function FeedbackThread({
                   : "rounded-es-sm bg-[var(--bg-surface-2)]",
               )}
             >
-              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--text-muted)]">
+              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-[var(--text-muted)]">
                 {author != null && (
                   <span data-private={priv} className="font-medium text-[var(--text-secondary)]">
                     {author}
                   </span>
                 )}
                 {message.staff && (
-                  <span className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+                  <span className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 text-micro font-medium uppercase tracking-wide text-[var(--text-secondary)]">
                     {labels.staff}
                   </span>
                 )}

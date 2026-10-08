@@ -302,7 +302,7 @@ function RaceExample() {
           Clear
         </Button>
       </div>
-      <pre className="mt-1 max-h-40 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-[11px] text-[var(--text-secondary)]">
+      <pre className="mt-1 max-h-40 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption text-[var(--text-secondary)]">
         {log.length ? log.join("\n") : "— nothing sent yet —"}
       </pre>
 
@@ -460,7 +460,7 @@ function ExplicitSaveExample() {
       <p className="font-mono text-xs text-[var(--text-muted)]">
         state {sync.state} · dirty {String(sync.dirty)}
       </p>
-      <pre className="mt-1 max-h-32 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-[11px] text-[var(--text-secondary)]">
+      <pre className="mt-1 max-h-32 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption text-[var(--text-secondary)]">
         {log.length ? log.join("\n") : "— nothing yet —"}
       </pre>
       <Note>

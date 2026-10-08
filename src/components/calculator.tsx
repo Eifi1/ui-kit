@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
+import { FIELD_TOUCH_TEXT } from "./ui";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -70,7 +71,7 @@ const KEYS: Key[] = [
 ];
 
 const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-[var(--border-strong)]";
 // Two key families, two fills: digits sit on the inset surface and darken on
 // hover, operators sit a step down on `--border` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
@@ -151,7 +152,7 @@ function CalculatorPanel({
         // is right-aligned in every script too — so both stay physical, pinned
         // with `dir="ltr"` rather than mirrored in a right-to-left form.
         dir="ltr"
-        className="block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]"
+        className={cn("block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]", FIELD_TOUCH_TEXT)}
       />
       <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
@@ -231,7 +232,7 @@ export function CalculatorButton({
   const labels = useKitLabels("calculator", DEFAULT_CALCULATOR_LABELS, fromProps);
   return (
     <Popover
-      width={224}
+      width="14rem"
       labels={{ panel: labels.panel }}
       trigger={({ open, toggle, ref }) => (
         <button

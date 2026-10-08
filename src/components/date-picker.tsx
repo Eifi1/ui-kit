@@ -15,10 +15,11 @@ import {
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FOCUS_RING_WIDTH } from "./focus-ring";
 import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout, type RemLength } from "../hooks/use-breakpoint";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker";
 import { Popover } from "./popover";
@@ -395,11 +396,12 @@ function DateField({
   panelLabel: string;
   invalid?: boolean;
   className?: string;
-  /** Popover panel width; omit for the default (a bare calendar). */
-  width?: number;
+  /** Popover panel width; omit for the default (a bare calendar). In rem so it grows
+   *  with the text size, like the Popover's own default (§3.2). */
+  width?: number | RemLength;
   onClear: () => void;
   /** Open as a full-screen sheet instead of the popover — the picker decides when
-   *  (below {@link PHONE_QUERY}). */
+   *  (in the phone layout, `usePhoneLayout()`). */
   sheet?: boolean;
   /** The sheet's `FullBleedDialog backCloses`. */
   sheetBackCloses?: boolean;
@@ -943,7 +945,8 @@ function JumpCalendar({
                       // 44px rows: the touch-target size, and four of them stand as tall
                       // as a month of days, so the panel does not jump as the views swap.
                       "h-11 rounded px-1 text-sm tabular-nums transition-colors",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+                      FOCUS_RING_WIDTH,
+                      "focus-visible:outline-none focus-visible:ring-inset",
                       // A --brand ring on a --brand fill exists only in the DOM.
                       end && !disabled ? "focus-visible:ring-[var(--brand-contrast)]" : "focus-visible:ring-[var(--brand)]",
                       disabled
@@ -1288,7 +1291,7 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    */
   renderTrigger?: (props: DateRangeTriggerRenderProps) => ReactNode;
   /**
-   * Below {@link PHONE_QUERY} the panel opens as a full-screen sheet (`FullBleedDialog`)
+   * In the phone layout (`usePhoneLayout()`) the panel opens as a full-screen sheet (`FullBleedDialog`)
    * with presets in a grid above the calendar and Apply pinned in the footer, instead
    * of the 440px popover that hung off a 360px screen (keksdose's report range field,
    * which hand-rolled exactly this). This is its `backCloses`: on by default, so Back
@@ -1615,7 +1618,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
       : `${a}${separator}…`
     : (placeholder ?? "");
   const hasPresets = Boolean(presets && presets.length > 0);
-  const sheet = useMediaQuery(PHONE_QUERY, false);
+  const sheet = usePhoneLayout();
   const commitRange = (f: string, t: string, presetId: string | undefined) => {
     setOwnPreset(presetId);
     // Two arguments when no preset is involved — exactly the 0.7 call, so a caller's
@@ -1635,7 +1638,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
       disabled={disabled}
       invalid={messages.isInvalid}
       // Widen so the preset column sits beside the calendar (default otherwise).
-      width={hasPresets ? 440 : undefined}
+      width={hasPresets ? "27.5rem" : undefined}
       hasValue={Boolean(from || to)}
       triggerText={triggerText}
       onClear={() => commitRange("", "", undefined)}

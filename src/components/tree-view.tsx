@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { Spinner } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
 
 /**
  * A hierarchy you walk with the keyboard: kastlan's chart of accounts (Assets › Current
@@ -182,7 +183,7 @@ export function TreeRow({
             e.stopPropagation();
             onToggle();
           }}
-          className="flex size-4 shrink-0 items-center justify-center rounded text-[var(--text-muted)] outline-none hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-[var(--text-muted)] outline-none hover:text-[var(--text-primary)]", FOCUS_RING)}
         >
           {chevron}
         </button>
@@ -543,7 +544,7 @@ export function TreeView<T = unknown>({
           }}
           // The ring goes on this row's own box, not the <li>: the <li> contains the
           // whole open branch below it, and ringing that would outline a subtree.
-          className="outline-none [&:focus-visible>[data-tree-row]]:ring-2 [&:focus-visible>[data-tree-row]]:ring-[var(--brand)]"
+          className="outline-none [&:focus-visible>[data-tree-row]]:ring-[length:var(--focus-ring-width)] [&:focus-visible>[data-tree-row]]:ring-[var(--brand)]"
         >
           <TreeRow
             id={rowId}

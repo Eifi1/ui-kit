@@ -367,7 +367,7 @@ function ThemePreview({ p }: { p: DerivedPalette }) {
             Approve
           </span>
           <span
-            className="rounded px-1.5 py-0.5 text-[11px] font-medium"
+            className="rounded px-1.5 py-0.5 text-caption font-medium"
             style={{ background: p.semantic.dangerBg, color: p.semantic.danger }}
           >
             2 failed
@@ -812,7 +812,7 @@ export function PaletteGenerator() {
             </Button>
             {copied && <span className="text-xs text-[var(--text-muted)]">Copied to the clipboard.</span>}
           </Row>
-          <pre className="max-h-96 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-[11px] leading-relaxed text-[var(--text-secondary)]">
+          <pre className="max-h-96 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption leading-relaxed text-[var(--text-secondary)]">
             {css}
           </pre>
         </div>

@@ -2,18 +2,22 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
 import {
+  ALargeSmall,
   ArrowLeft,
   ArrowRight,
+  Contrast,
   ListTree,
   MonitorSmartphone,
   PanelLeft,
   PanelRight,
   PanelRightOpen,
   Server,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   AppShell,
   Button,
+  CONTRAST_MODES,
   ConfirmProvider,
   EmptyState,
   IconButton,
@@ -21,20 +25,26 @@ import {
   LoadingState,
   OptionSwitcherMenu,
   PALETTES,
-  PHONE_QUERY,
   PageContents,
   PageContentsLayout,
   PaletteMenu,
+  TEXT_SIZES,
   ThemeToggle,
   Tooltip,
   Toaster,
   TopBar,
+  TopBarActionMenu,
   TourProvider,
   UiKitProvider,
-  useMediaQuery,
+  resolveContrastMode,
+  resolveTextSize,
+  useAppearanceLabels,
+  useLargeText,
+  usePhoneLayout,
   useScrollSpy,
+  useSettingsLabels,
 } from "@eifi1/ui-kit";
-import type { AppShellNavItem, KitLinkComponent } from "@eifi1/ui-kit";
+import type { AppShellNavItem, ContrastMode, KitLinkComponent, TextSize, TopBarMenuEntry } from "@eifi1/ui-kit";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
@@ -44,12 +54,17 @@ import { GROUPS, HOME_SLUG, NAV, PAGES, RETIRED_SLUGS, groupOf, hasOverview } fr
 import type { ShowcasePage } from "./routes";
 import { LOCALE_OPTIONS, en, useGroupLabel, useLocale, usePageText, useT } from "./i18n";
 import {
+  useApplyContrast,
   useApplyPalette,
+  useApplyTextSize,
   useApplyTheme,
   useContentsPosition,
+  useContrastStore,
   usePalette,
   useSidebarStyle,
+  useTextSizeStore,
   useTheme,
+  URL_TEXT_SIZE,
 } from "./stores";
 
 /**
@@ -68,7 +83,7 @@ function useTranslatedNav(): AppShellNavItem[] {
   // phone") filled five lines over the content. There each pill takes the page's short
   // title instead. Above `md` the same items are the sidebar's, which has the room for
   // the full one — so the switch is by width, not a second list.
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   return useMemo(
     () =>
       NAV.map((item, i) => {
@@ -101,15 +116,175 @@ function useTranslatedNav(): AppShellNavItem[] {
   );
 }
 
+/**
+ * The text size and the contrast, beside the theme and the palette (0.32,
+ * docs/text-size-harmonization.md §8): the page's own stores, so every page can be read at
+ * Large and Extra large and with More contrast. Inside the provider, so the menus speak
+ * the page's language through the kit's `appearance` labels.
+ */
+function AppearanceSwitches() {
+  const labels = useAppearanceLabels();
+  const stored = resolveTextSize(useTextSizeStore((s) => s.size));
+  // A preview frame shows the size it was loaded at (`?text-size=`, stores.ts).
+  const size = URL_TEXT_SIZE ?? stored;
+  const setSize = useTextSizeStore((s) => s.setSize);
+  const contrast = resolveContrastMode(useContrastStore((s) => s.contrast));
+  const setContrast = useContrastStore((s) => s.setContrast);
+  return (
+    <>
+      <OptionSwitcherMenu<TextSize>
+        icon={<ALargeSmall className="size-4" />}
+        ariaLabel={labels.textSize}
+        title={labels.textSize}
+        heading={labels.textSize}
+        options={TEXT_SIZES.map((value) => ({ value, label: labels.textSizes[value] }))}
+        value={size}
+        onSelect={setSize}
+      />
+      <OptionSwitcherMenu<ContrastMode>
+        icon={<Contrast className="size-4" />}
+        ariaLabel={labels.contrast}
+        title={labels.contrast}
+        heading={labels.contrast}
+        options={CONTRAST_MODES.map((value) => ({ value, label: labels.contrastModes[value] }))}
+        value={contrast}
+        onSelect={setContrast}
+      />
+    </>
+  );
+}
+
+/** The flag a language row leads with — as the kit's `LanguageMenu` draws it. */
+function Flag({ country }: { country: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`fi fi-${country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+    />
+  );
+}
+
+/**
+ * Palette, text size, contrast and language as ONE menu (0.32): on a phone at Large and
+ * Extra large the six top-bar icons do not fit. Each is 2.25rem — 54 px at 150 % — so
+ * search, theme, palette, text size, contrast and language took 324 px of a 360 px phone
+ * before the brand, and the row ran about 25 px past the edge. The four that pick a value
+ * become headed groups of one "Appearance" menu (the settings page's word for them);
+ * search and the theme stay, being the two a reader reaches for most.
+ *
+ * A menu of headed radio groups rather than four menus behind one: every choice is one
+ * tap away and announced with its group ("Contrast, group"). Nineteen rows at 150 % are
+ * taller than a phone, so the list scrolls inside the panel — the top bar sits outside
+ * the scrolling <main>, and a panel taller than the window could not be scrolled to.
+ */
+function AppearanceMenu() {
+  const t = useT();
+  const labels = useAppearanceLabels();
+  const settings = useSettingsLabels();
+  const { code, setCode } = useLocale();
+  const mode = useTheme((s) => s.mode);
+  const paletteId = usePalette((s) => s.id);
+  const setPaletteId = usePalette((s) => s.setId);
+  const stored = resolveTextSize(useTextSizeStore((s) => s.size));
+  const size = URL_TEXT_SIZE ?? stored;
+  const setSize = useTextSizeStore((s) => s.setSize);
+  const contrast = resolveContrastMode(useContrastStore((s) => s.contrast));
+  const setContrast = useContrastStore((s) => s.setContrast);
+  const entries: TopBarMenuEntry[] = [
+    { kind: "heading", key: "palette", label: t.chrome.palette },
+    ...PALETTES.map((p) => ({
+      key: `palette-${p.id}`,
+      // The preset's brand colour, ringed the way PaletteMenu rings its swatches: a
+      // DATA colour, so not a token.
+      icon: (
+        <span
+          aria-hidden
+          className="size-3.5 shrink-0 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+          style={{ background: p[mode].brand }}
+        />
+      ),
+      label: p.name,
+      checked: p.id === paletteId,
+      checkable: "radio" as const,
+      onSelect: () => setPaletteId(p.id),
+    })),
+    { kind: "heading", key: "text-size", label: labels.textSize },
+    ...TEXT_SIZES.map((value) => ({
+      key: `text-size-${value}`,
+      label: labels.textSizes[value],
+      checked: value === size,
+      checkable: "radio" as const,
+      onSelect: () => setSize(value),
+    })),
+    { kind: "heading", key: "contrast", label: labels.contrast },
+    ...CONTRAST_MODES.map((value) => ({
+      key: `contrast-${value}`,
+      label: labels.contrastModes[value],
+      checked: value === contrast,
+      checkable: "radio" as const,
+      onSelect: () => setContrast(value),
+    })),
+    { kind: "heading", key: "language", label: t.chrome.language },
+    ...LOCALE_OPTIONS.map((o) => ({
+      key: `language-${o.code}`,
+      icon: <Flag country={o.country} />,
+      label: o.label,
+      checked: o.code === code,
+      checkable: "radio" as const,
+      onSelect: () => setCode(o.code),
+    })),
+  ];
+  return (
+    <TopBarActionMenu
+      icon={<SlidersHorizontal className="size-5" />}
+      ariaLabel={settings.groups.appearance.title}
+      entries={entries}
+      panelClassName="max-h-[calc(100dvh-5rem)] overflow-y-auto"
+    />
+  );
+}
+
+/** The top bar's value pickers: four icons where there is room, one menu where there is
+ *  not (see `AppearanceMenu`). */
+function TopBarAppearance() {
+  const t = useT();
+  const { code, setCode } = useLocale();
+  const mode = useTheme((s) => s.mode);
+  const paletteId = usePalette((s) => s.id);
+  const setPaletteId = usePalette((s) => s.setId);
+  const phone = usePhoneLayout();
+  const large = useLargeText();
+  if (phone && large) return <AppearanceMenu />;
+  return (
+    <>
+      <PaletteMenu
+        palettes={PALETTES}
+        activeId={paletteId}
+        mode={mode}
+        onSelect={setPaletteId}
+        ariaLabel={t.chrome.palette}
+        heading={t.chrome.palette}
+      />
+      <AppearanceSwitches />
+      {/* Driven by the locale registry, so adding a dictionary to `LOCALES` adds
+          it here. Each entry is labelled with its ENDONYM — a reader looking for
+          Arabic is looking for العربية, not for the English word "Arabic" they
+          cannot read. */}
+      <LanguageMenu options={LOCALE_OPTIONS} current={code} onChange={setCode} ariaLabel={t.chrome.language} />
+    </>
+  );
+}
+
 export function Showcase() {
   useApplyTheme();
   useApplyPalette();
+  // After the palette, so its tokens are stepped on the first effect pass too.
+  useApplyTextSize();
+  useApplyContrast();
   const mode = useTheme((s) => s.mode);
   const toggle = useTheme((s) => s.toggle);
-  const paletteId = usePalette((s) => s.id);
-  const setPaletteId = usePalette((s) => s.setId);
   const t = useT();
-  const { code, setCode, tag } = useLocale();
+  const { tag } = useLocale();
   const nav = useTranslatedNav();
   const [sidebarStyle, setSidebarStyle] = useSidebarStyle();
   const [contentsPosition, setContentsPosition] = useContentsPosition();
@@ -190,24 +365,7 @@ export function Showcase() {
                 // has words for and the half a screen-reader user needs.
                 title={t.chrome.toggleTheme}
               />
-              <PaletteMenu
-                palettes={PALETTES}
-                activeId={paletteId}
-                mode={mode}
-                onSelect={setPaletteId}
-                ariaLabel={t.chrome.palette}
-                heading={t.chrome.palette}
-              />
-              {/* Driven by the locale registry, so adding a dictionary to `LOCALES` adds
-                  it here. Each entry is labelled with its ENDONYM — a reader looking for
-                  Arabic is looking for العربية, not for the English word "Arabic" they
-                  cannot read. */}
-              <LanguageMenu
-                options={LOCALE_OPTIONS}
-                current={code}
-                onChange={setCode}
-                ariaLabel={t.chrome.language}
-              />
+              <TopBarAppearance />
               <SidebarStyleToggle style={sidebarStyle} onChange={setSidebarStyle} />
               {/* Never inside a preview frame (it would nest), and only from `md`: on a
                   phone the reader already sees the phone layout. A labelled button, not
@@ -479,7 +637,7 @@ function ServerSideLinks({ slug }: { slug: string }) {
           key={module}
           to={to}
           dir="ltr"
-          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-[11px] text-[var(--brand)] hover:underline"
+          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-caption text-[var(--brand)] hover:underline"
         >
           {module}
         </Link>
@@ -506,7 +664,7 @@ function PagerLink({
   const { title } = usePageText(slug);
   const label = (
     <span className="min-w-0">
-      <span className="block text-[11px] text-[var(--text-muted)]">{kicker}</span>
+      <span className="block text-caption text-[var(--text-muted)]">{kicker}</span>
       {/* Two lines before an ellipsis: a title is a few words, and half a phone row is
           about fifteen characters. */}
       <span className="line-clamp-2">{title}</span>

@@ -42,8 +42,8 @@ function usePhoneInputLabels(prop: Partial<PhoneInputLabels> | undefined): Phone
 
 /** The caption and the error under the row — the type every kit field uses for them
  *  (Select's caption, Input's `error`). */
-const CAPTION_CLASS = "mt-1 text-[11px] leading-tight text-[var(--text-muted)]";
-const ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const CAPTION_CLASS = "mt-1 text-caption leading-tight text-[var(--text-muted)]";
+const ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 const isTextHint = (hint: unknown): hint is string | number =>
   (typeof hint === "string" && hint !== "") || typeof hint === "number";

@@ -123,6 +123,12 @@ export const es: Dictionary = {
       blurb:
         "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones y el traspaso de trabajo.",
     },
+    subscription: {
+      title: "Suscripción",
+      short: "Facturación",
+      blurb:
+        "Pagar por una aplicación: el selector de plan en dos monedas y dos periodos, el estado de la suscripción, los banners desde la prueba hasta el vencimiento, el aviso de límite del plan, el bloqueo de solo lectura junto al de la demo, el portal del proveedor y la cláusula comercial del aviso legal.",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -157,6 +163,12 @@ export const es: Dictionary = {
       short: "Tokens",
       blurb:
         "Cada valor del TokenSet activo, en vivo. Cambia el tema o la paleta en la barra superior y mira cómo se mueve esta página: lo que no se mueve está fijado en el código.",
+    },
+    "text-size": {
+      title: "Tamaño del texto y contraste",
+      short: "Texto",
+      blurb:
+        "Normal, Grande y Muy grande en una sola escala en la raíz, con los puntos de corte que la siguen, el nivel Aumentado del contraste, la regla de la cuenta que lleva ambos de un dispositivo a otro — y lo que hacen los componentes en Grande.",
     },
     palette: {
       title: "Generador de paletas",
@@ -232,7 +244,7 @@ export const es: Dictionary = {
     pickers: {
       title: "Selectores y entrada",
       blurb:
-        "Elegir de una lista en lugar de escribir, y las formas de entrada más exigentes: una tabla de medidas, un campo que se guarda al salir de él, una firma, una contraseña.",
+        "Elegir de una lista en lugar de escribir, y las formas de entrada más exigentes: una tabla de medidas, un campo que se guarda al salir de él, una firma, una contraseña, un formulario por pasos.",
     },
     comboboxes: {
       title: "Combobox",
@@ -426,7 +438,7 @@ export const es: Dictionary = {
     "app-chrome": {
       title: "Marco de la aplicación",
       blurb:
-        "El marco en el que vive una aplicación y los flujos que toda aplicación repite: ajustes, formularios de varios pasos, comentarios.",
+        "El marco en el que vive una aplicación y los flujos que toda aplicación repite: ajustes, cuentas, suscripciones, comentarios.",
     },
     "page-structure": {
       title: "Encabezado de página y ruta de navegación",
@@ -514,6 +526,12 @@ export const es: Dictionary = {
       blurb:
         "La cuenta de demo desechable: sus ajustes, las comprobaciones de entrada en su orden, los rechazos y sus códigos, la regla de solo lectura y su única duración.",
     },
+    "server-billing": {
+      title: "Facturación",
+      short: "Facturación",
+      blurb:
+        "Los planes y sus límites, la situación de la suscripción con las fechas de la prueba y de la beta, el bloqueo de solo lectura al vencer, y los webhooks de Paddle y Lemon Squeezy: firmas comprobadas, eventos normalizados, un solo dispatch.",
+    },
     "server-mail": {
       title: "Correo",
       short: "Correo",
@@ -583,6 +601,18 @@ export const es: Dictionary = {
       "traspasar el trabajo de alguien a otro usuario",
       "definir los idiomas de un revisor de traducciones",
     ],
+    subscription: [
+      "elegir un plan",
+      "precios en CHF y EUR",
+      "facturación mensual o anual",
+      "mostrar el estado de la suscripción",
+      "banner de fin de la prueba",
+      "banner de pago fallido",
+      "límite del plan alcanzado",
+      "solo lectura al vencer la suscripción",
+      "abrir el portal de facturación",
+      "cancelar la suscripción",
+    ],
     "auth-account": [
       "diseño de la página de inicio de sesión",
       "configurar la verificación en dos pasos con un código QR",
@@ -617,6 +647,7 @@ export const es: Dictionary = {
       "traducir todo el kit",
       "paleta de colores de marca",
       "modo oscuro",
+      "texto más grande y más contraste",
     ],
     tokens: [
       "ver todos los tokens de color",
@@ -626,6 +657,17 @@ export const es: Dictionary = {
       "valores de espaciado, radio y sombra",
       "colores de texto y superficies",
       "comprobar qué está escrito a mano",
+    ],
+    "text-size": [
+      "agrandar el texto",
+      "ajuste de texto grande",
+      "más contraste para baja visión",
+      "modo de alto contraste",
+      "puntos de corte que crecen con el texto",
+      "comprobar el diseño de móvil en el código",
+      "que el tamaño del texto siga a la cuenta",
+      "mostrar como texto la etiqueta de un botón de icono",
+      "plegar las acciones de una fila en un menú",
     ],
     palette: [
       "generar una paleta a partir del color de marca",
@@ -743,6 +785,7 @@ export const es: Dictionary = {
       "guardar un campo al salir de él",
       "recoger una firma",
       "comprobar la seguridad de la contraseña",
+      "formulario en varios pasos",
     ],
     comboboxes: [
       "filtrar una lista larga escribiendo",
@@ -1034,7 +1077,7 @@ export const es: Dictionary = {
       "estructura de la aplicación",
       "barra lateral y barra superior",
       "página de ajustes",
-      "formulario en varios pasos",
+      "elegir un plan de suscripción",
       "recoger opiniones de los usuarios",
     ],
     "page-structure": [
@@ -1167,6 +1210,15 @@ export const es: Dictionary = {
       "hacer la demo de solo lectura",
       "códigos de rechazo de la demo",
       "limpiar usuarios de demo antiguos",
+    ],
+    "server-billing": [
+      "comprobar el límite del plan en el servidor",
+      "verificar la firma de un webhook",
+      "procesar eventos de Paddle y Lemon Squeezy",
+      "la suscripción está al día",
+      "fechas de fin de la prueba y de la beta",
+      "rechazar escrituras al vencer la suscripción",
+      "catálogo de planes con precios",
     ],
     "server-mail": [
       "enviar un correo para restablecer la contraseña",

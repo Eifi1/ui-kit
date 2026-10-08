@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useTextSize } from "../theme/text-size";
 
 /**
  * The words a sparkline speaks. It has no axes, no tooltip and no legend, so its
@@ -78,8 +79,12 @@ export interface SparklineProps
   /** The series, oldest first. `null`/`undefined`/`NaN` is a GAP — the line breaks
    *  there rather than drawing a zero or bridging across the missing point. */
   data: ReadonlyArray<number | null | undefined>;
-  /** Width in px. Ignored under `fluid`. */
+  /** Width in px at Normal. Ignored under `fluid`. The drawn box is this × the text
+   *  size's scale (0.32, docs/text-size-harmonization.md §3.2): a sparkline stands beside
+   *  a figure, and a 72 × 24 trend under a 150 % number reads as a speck. The strokes
+   *  stay px (`non-scaling-stroke`), as every chart's do. */
   width?: number;
+  /** Height in px at Normal, × the scale likewise. */
   height?: number;
   /** Fill the container's width instead of a fixed one (the height stays fixed). */
   fluid?: boolean;
@@ -182,6 +187,7 @@ export function Sparkline({
   ...rest
 }: SparklineProps) {
   const text = useKitLabels("sparkline", DEFAULT_SPARKLINE_LABELS, labels);
+  const { scale } = useTextSize();
   const kitLocale = useKitLocale(locale);
   const format = formatValue ?? defaultFormat(kitLocale);
 
@@ -252,8 +258,10 @@ export function Sparkline({
       role="img"
       aria-label={name}
       {...rest}
-      width={fluid ? "100%" : W}
-      height={H}
+      // The drawing stays in its own units (the viewBox); only the box it is shown in
+      // grows, uniformly, so nothing is distorted and the strokes keep their px width.
+      width={fluid ? "100%" : W * scale}
+      height={H * scale}
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
       className={cn(fluid ? "block w-full" : "inline-block shrink-0 align-middle", "overflow-visible", className)}

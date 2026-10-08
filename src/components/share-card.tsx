@@ -478,6 +478,12 @@ export function SharePanel({
                             size="xs"
                             commit
                             label={labels.remove}
+                            // The icon alone at every text size (§10.8): the row's one
+                            // control beside its role toggle, where "Remove access" as
+                            // text at Large would not fit a 240 px row. It carries a
+                            // spinner and the write lock, which a "⋯" menu entry
+                            // cannot, and its confirmation names the action in words.
+                            labelVisible={false}
                             pending={busy === key}
                             disabled={busy !== null}
                             onClick={async () => {
@@ -531,6 +537,10 @@ export function SharePanel({
                             size="xs"
                             commit
                             label={labels.revokePending}
+                            // As the grantee's remove above: one action beside the
+                            // copy icon (which is an icon at every size), and the
+                            // confirmation says it in words.
+                            labelVisible={false}
                             pending={busy === key}
                             disabled={busy !== null}
                             onClick={async () => {

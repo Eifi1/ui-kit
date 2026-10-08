@@ -41,7 +41,7 @@ describe("SwatchPicker / IconPicker label (keksdose K2)", () => {
     expect(wrapper.className).toContain("pt-5");
     expect(wrapper.className).toContain("col-span-2");
     expect(group.className).not.toContain("col-span-2");
-    expect(screen.getByText("Flag").className).toContain("text-[11px]");
+    expect(screen.getByText("Flag").className).toContain("text-caption");
     expect(screen.getByRole("button", { name: "Shown in the register" })).toBeInTheDocument();
   });
 

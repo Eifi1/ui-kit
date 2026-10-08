@@ -4,7 +4,9 @@ import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID } from "./ui";
+import { FIELD_INVALID, FIELD_TOUCH_TEXT, TOUCH_TARGET_LARGE } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
+import { DisabledReasonLine, useDisabledReasonLine, type DisabledReasonDisplay } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip } from "./tooltip";
@@ -196,9 +198,9 @@ const DOT_SIZE: Record<ChipSize, string> = { xs: "size-1.5", sm: "size-2", md: "
  *  capitals at body size shout and capitals untracked run together. Per size, so it
  *  replaces the size's own `text-*` through tailwind-merge. */
 const CAPS: Record<ChipSize, string> = {
-  xs: "text-[10px] font-semibold uppercase tracking-wider",
-  sm: "text-[10px] font-semibold uppercase tracking-wider",
-  md: "text-[11px] font-semibold uppercase tracking-wider",
+  xs: "text-micro font-semibold uppercase tracking-wider",
+  sm: "text-micro font-semibold uppercase tracking-wider",
+  md: "text-caption font-semibold uppercase tracking-wider",
   lg: "text-xs font-semibold uppercase tracking-wider",
 };
 
@@ -255,8 +257,8 @@ const SIZE: Record<
   { body: string; split: string; tail: string; icon: string; remove: string }
 > = {
   xs: {
-    body: "gap-1 px-1.5 py-0 text-[11px] leading-4",
-    split: "gap-1 ps-1.5 pe-0.5 py-0 text-[11px] leading-4",
+    body: "gap-1 px-1.5 py-0 text-caption leading-4",
+    split: "gap-1 ps-1.5 pe-0.5 py-0 text-caption leading-4",
     tail: "pe-1",
     icon: "size-3",
     remove: "size-2.5",
@@ -490,9 +492,26 @@ const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border trans
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
 // pointer click reads as a stuck selection.
-const CHIP_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]";
+const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]`;
 const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
+
+/**
+ * An interactive chip's touch target at Large and Extra large (docs/text-size-harmonization.md
+ * §4: "touch targets at least 48 px … for buttons, inputs, chips"): a link or toggle chip
+ * grows its pill to 48 px, as Button `sm` does, and centres what is in it once the
+ * minimum width is what sizes it. An inert chip (a tag on a row) is no target and keeps
+ * its size; a disabled one is no target either.
+ */
+const CHIP_TOUCH_LARGE = `${TOUCH_TARGET_LARGE} large:justify-center`;
+
+/**
+ * The ×'s 48 px hit area at Large (§4) — IconButton's `2xs` pattern: a box that cannot
+ * grow without growing the chip around it keeps its size and gets an invisible
+ * `::after`, 48 px square and centred on it, which takes the taps a finger lands round
+ * the glyph. On an inert removable chip (ChipInput's values) the × is the only target.
+ */
+const REMOVE_HIT_AREA_LARGE =
+  "relative large:after:absolute large:after:inset-[calc((100%-48px)/2)] large:after:content-['']";
 
 interface ChipBaseProps {
   children: ReactNode;
@@ -627,6 +646,7 @@ export type ChipProps = ChipBaseProps &
         renderLink?: (props: ChipLinkProps) => ReactElement;
         commit?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
       }
     | {
         /** The link shape again, with an `onClick`. `href` is a required string here,
@@ -642,6 +662,7 @@ export type ChipProps = ChipBaseProps &
         renderLink?: (props: ChipLinkProps) => ReactElement;
         commit?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
       }
     | {
         href?: never;
@@ -654,11 +675,21 @@ export type ChipProps = ChipBaseProps &
          * `disabledReason`, on the chip's button shape (keksdose K3: a filter or flag
          * chip that saves on press, under a read-only lock). The chip stays focusable
          * and `aria-disabled`, a press (and its `onRemove` ×) does nothing, and the
-         * reason shows in the kit {@link Tooltip} and describes the chip. Wins over
-         * `disabled`. A link chip navigates rather than commits, so it takes neither
-         * this nor `commit`; an inert chip has nothing to refuse.
+         * reason describes the chip — as a line under it at Large and on a touch
+         * screen, in the kit {@link Tooltip} otherwise (see `disabledReasonDisplay`).
+         * Wins over `disabled`. A link chip navigates rather than commits, so it takes
+         * neither this nor `commit`; an inert chip has nothing to refuse.
          */
         disabledReason?: ReactNode;
+        /**
+         * Where `disabledReason` shows (0.32, docs/text-size-harmonization.md §4 "No fact
+         * only in a tooltip") — {@link Button}'s `disabledReasonDisplay`: by default a line
+         * under the chip at Large and Extra large and on a touch screen, where a bubble
+         * cannot be hovered open, and the tooltip otherwise and inside
+         * `CompactControls`. `"line"` / `"tooltip"` force one. See
+         * {@link DisabledReasonDisplay}.
+         */
+        disabledReasonDisplay?: DisabledReasonDisplay;
         /** This chip COMMITS — pressing it saves. Under a locked
          *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
          *  reason, as {@link Button}'s `commit` does. */
@@ -699,6 +730,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     onFocus,
     snapEdges = false,
     disabledReason: ownDisabledReason,
+    disabledReasonDisplay,
     commit,
     ...rest
   },
@@ -726,6 +758,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     locked && "cursor-not-allowed opacity-50",
   );
   const snap = snapEdges && !dot;
+  // A finger's target at Large (§4): what can be pressed, refused or not — see
+  // CHIP_TOUCH_LARGE. A disabled link renders as the inert span below and is none.
+  const target = interactive && (!disabled || locked);
   const snapRef = useSnapEdges(snap);
   // The visible pill carries the snap: the whole chip, or the wrapper of a split one
   // (whose body gets the forwarded ref instead).
@@ -743,6 +778,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     radius,
     surface,
     interactive && !disabled && !locked && "cursor-pointer hover:brightness-[0.97] dark:hover:brightness-110",
+    // §4: a link or toggle is a 48 px target at Large — a locked one too, since it is
+    // still focusable and still says why when pressed.
+    target && CHIP_TOUCH_LARGE,
     // An inert dot chip is text in a column: no inset, so it aligns with the header.
     dot && !interactive && "px-0",
     // The under-4px a snap adds is split between the two sides, not stacked at the end.
@@ -821,7 +859,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         // Logical margins: the × sits at the END of the pill, which is the left in RTL.
         "-me-0.5 ms-0.5 shrink-0 p-0.5 transition-colors",
         shape === "square" ? "rounded-sm" : "rounded-full",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        FOCUS_RING,
+        // §4: the × is a 48 px target at Large without growing the chip around it.
+        REMOVE_HIT_AREA_LARGE,
         !locked && "hover:bg-[var(--bg-active)]",
         locked && "cursor-not-allowed",
         ((disabled && !locked) || removeDisabled) && "pointer-events-none",
@@ -836,7 +876,11 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 
   // ── The combined shape: one pill, two interactive siblings inside it.
   const pill = (inner: ReactNode) => (
-    <span ref={snap ? snapRef : undefined} className={cn(CHIP_PILL, s.tail, radius, surface, snap && "justify-center", className)}>
+    <span
+      ref={snap ? snapRef : undefined}
+      // The pill is the target's box here (§4): the body inside stretches to its height.
+      className={cn(CHIP_PILL, s.tail, radius, surface, target && CHIP_TOUCH_LARGE, snap && "justify-center", className)}
+    >
       {inner}
       {remove}
     </span>
@@ -929,16 +973,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const shaped = remove ? pill(button) : button;
     if (!locked) return shaped;
     return (
-      // The chip in a FRAGMENT, as a locked Button is: the bubble is visual, and the
-      // hidden copy beside it is what the chip (and its ×) is described by.
-      <Tooltip label={disabledReason}>
-        <>
-          {shaped}
-          <span id={reasonId} hidden>
-            {disabledReason}
-          </span>
-        </>
-      </Tooltip>
+      <ChipReasonFrame reason={disabledReason} reasonId={reasonId} display={disabledReasonDisplay}>
+        {shaped}
+      </ChipReasonFrame>
     );
   }
 
@@ -960,6 +997,47 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     </span>
   );
 });
+
+/**
+ * A locked chip and its reason (0.32, docs/text-size-harmonization.md §4): a line under
+ * the chip at Large and on touch, else the kit {@link Tooltip} — Button's `ReasonFrame`,
+ * see {@link DisabledReasonDisplay}. A component of its own so only a LOCKED chip asks
+ * the text size and the pointer; the unlocked chips of a filter row subscribe to nothing.
+ *
+ * Tooltip form: the chip in a FRAGMENT, as a locked Button is — the bubble is visual, and
+ * the hidden copy beside it is what the chip (and its ×) is described by. Line form: the
+ * line is that description, under the chip, and no bubble repeats it.
+ */
+function ChipReasonFrame({
+  reason,
+  reasonId,
+  display,
+  children,
+}: {
+  reason: ReactNode;
+  reasonId: string;
+  display: DisabledReasonDisplay | undefined;
+  children: ReactNode;
+}) {
+  const line = useDisabledReasonLine(display);
+  if (line) {
+    return (
+      <DisabledReasonLine id={reasonId} reason={reason}>
+        {children}
+      </DisabledReasonLine>
+    );
+  }
+  return (
+    <Tooltip label={reason}>
+      <>
+        {children}
+        <span id={reasonId} hidden>
+          {reason}
+        </span>
+      </>
+    </Tooltip>
+  );
+}
 
 /** `null`, `false` and `""` are what a `cond && reason` gives on the happy path — no
  *  reason, so no lock. */
@@ -1304,7 +1382,10 @@ export function ChipInput({
           aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
           aria-describedby={describedBy || undefined}
           aria-invalid={isInvalid || !!rejected || undefined}
-          className="min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default"
+          // `w-0` with flex-1: without a width the browser's default input size (20
+          // characters) became the field's minimum width and pushed it past a 240 px
+          // phone at 150 % (0.32's screenshot run).
+          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
             them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's

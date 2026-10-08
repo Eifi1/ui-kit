@@ -100,7 +100,7 @@ const FIELD_LABELS: FeedbackAttachmentLabels = {
   attachmentRemove: "Remove attachment",
 };
 
-const READOUT = "font-mono text-[11px] text-[var(--text-muted)]";
+const READOUT = "font-mono text-caption text-[var(--text-muted)]";
 
 /** Shown instead of a bare "null" so an empty specimen still says what it is. */
 function FileReadout({ file }: { file: File | null }) {

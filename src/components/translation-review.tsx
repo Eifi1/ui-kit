@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
@@ -293,9 +293,6 @@ export interface TranslationReviewPanelProps {
   labels?: Partial<TranslationReviewLabels>;
 }
 
-/** The wide screen's query — the same one DataTable switches its layout on, so "a phone"
- *  means the same here as in the table. */
-const MD_UP = "(min-width: 768px)";
 
 /**
  * How many rows the groups may render at once on a wide screen before they start folded
@@ -461,7 +458,9 @@ export function TranslationReviewPanel({
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
   const locale = useKitLocale();
   const lock = useWriteLock();
-  const phone = !useMediaQuery(MD_UP, true);
+  // The wide screen's breakpoint — the one DataTable switches its layout on, so "a phone"
+  // means the same here as in the table, at every text size.
+  const phone = !useBreakpoint("md", true);
   const baseId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const editable = !readOnly && onSave !== undefined;
@@ -744,6 +743,12 @@ export function TranslationReviewPanel({
             tone="muted"
             commit
             label={labels.approve}
+            // The icon alone at every text size (docs/text-size-harmonization.md §10.8):
+            // the row's one action, in a hugging column of a dense table beside the
+            // string under review, which "Approve" as text at Large would squeeze. A
+            // single action stays inline in `RowActions` too, so the menu would not help;
+            // the swipe and the editor say it in words.
+            labelVisible={false}
             pending={isQueued(`row:${r.id}`)}
             disabled={busy}
             onClick={(event) => {

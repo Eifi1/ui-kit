@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
 import {
@@ -576,7 +577,7 @@ export function MiniCalendar({
             "grid grid-cols-7 text-center font-medium",
             lg
               ? "gap-px text-xs text-[var(--text-muted)]"
-              : "text-[10px] uppercase text-[var(--text-placeholder)]",
+              : "text-micro uppercase text-[var(--text-placeholder)]",
           )}
         >
           {weekdayLabels.map((w, i) => (
@@ -639,7 +640,8 @@ export function MiniCalendar({
                       onKeyDown={onDayKeyDown}
                       className={cn(
                         "text-xs tabular-nums text-[var(--text-placeholder)] transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]",
+                        FOCUS_RING,
+                        "focus-visible:ring-inset",
                         disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[var(--bg-hover)]",
                         lg
                           ? cn("flex w-full min-w-0 items-start bg-[var(--bg-surface-2)] p-1.5", LG_CELL_HEIGHT)
@@ -730,7 +732,8 @@ export function MiniCalendar({
                       ? cn(
                           "flex w-full min-w-0 flex-col items-stretch gap-1 overflow-hidden p-1.5 text-start text-xs transition-colors",
                           LG_CELL_HEIGHT,
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]",
+                          FOCUS_RING,
+                        "focus-visible:ring-inset",
                           disabled
                             ? "cursor-not-allowed bg-[var(--bg-surface)] text-[var(--text-placeholder)]"
                             : isSelected
@@ -745,7 +748,8 @@ export function MiniCalendar({
                     // colour flips on the selected days for the reason the numpad's
                     // "Done" key does — a --brand ring on a --brand fill is a ring
                     // that exists only in the DOM.
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+                    FOCUS_RING_WIDTH,
+                    "focus-visible:outline-none focus-visible:ring-inset",
                     isStart || isEnd
                       ? "focus-visible:ring-[var(--brand-contrast)]"
                       : "focus-visible:ring-[var(--brand)]",

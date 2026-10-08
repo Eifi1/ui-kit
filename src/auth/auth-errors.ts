@@ -86,9 +86,35 @@ export type DemoErrorCode =
   | "demo_read_only"
   | "demo_refused";
 
-/** Every code the kit reads: the sign-in refusals, the account ones (0.30.0) and the
- *  demo's (0.31.0). */
-export type KitErrorCode = AuthErrorCode | AccountErrorCode | DemoErrorCode;
+/**
+ * 0.32.0: billing's coded refusals (docs/billing-harmonization.md §3.3, §3.4, §4, §12.3) —
+ * server-kit 0.6's `BillingError` and `PlanLimitError`, value for value, answered as
+ * `{detail, code}` like the others and read by the same {@link authErrorCode}.
+ *
+ * - `billing_disabled` — `404`: the billing switch is off (§2.9), so every billing route
+ *   but `GET /billing/status` is "not there", as a switched-off demo is.
+ * - `billing_read_only` — `402`: a write by (or into the data of) a payer out of good
+ *   standing (§3.3, §12.1). Inside a sync reply it marks the changes that were refused
+ *   and not applied (§12.5). The app's write lock and banner already say why, so — like
+ *   `demo_read_only` — it needs no toast of its own.
+ * - `plan_limit` — `402`: a create past the plan's limit (§3.4), with the extra fields
+ *   `dimension`, `plan`, `limit` and `used` — read them with `isPlanLimit`. A lapsed payer
+ *   creating gets `billing_read_only` instead, never this (§12.3).
+ * - `billing_not_configured` — billing is switched on but the provider's settings are
+ *   missing (the secrets, a price id): the operator's mistake, not the payer's.
+ */
+export type BillingErrorCode = "billing_disabled" | "billing_read_only" | "plan_limit" | "billing_not_configured";
+
+/** Every code the kit reads: the sign-in refusals, the account ones (0.30.0), the demo's
+ *  (0.31.0) and billing's (0.32.0). */
+export type KitErrorCode = AuthErrorCode | AccountErrorCode | DemoErrorCode | BillingErrorCode;
+
+const BILLING_CODES: ReadonlySet<BillingErrorCode> = new Set<BillingErrorCode>([
+  "billing_disabled",
+  "billing_read_only",
+  "plan_limit",
+  "billing_not_configured",
+]);
 
 const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "invalid_credentials",
@@ -112,6 +138,7 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "demo_not_ready",
   "demo_read_only",
   "demo_refused",
+  ...BILLING_CODES,
 ]);
 
 type Bag = Record<string, unknown>;
@@ -132,8 +159,8 @@ function codeOfBody(body: unknown): KitErrorCode | undefined {
 
 /**
  * The code an error carries — an {@link AuthErrorCode}, since 0.30.0 an
- * {@link AccountErrorCode}, since 0.31.0 a {@link DemoErrorCode} — or `undefined` when it
- * carries none.
+ * {@link AccountErrorCode}, since 0.31.0 a {@link DemoErrorCode}, since 0.32.0 a
+ * {@link BillingErrorCode} — or `undefined` when it carries none.
  *
  * Reads the parsed response body wherever the apps' HTTP clients put it, without
  * depending on any of them:
@@ -148,7 +175,7 @@ function codeOfBody(body: unknown): KitErrorCode | undefined {
  * it is one of the codes above: axios writes its OWN codes there (`ERR_NETWORK`,
  * `ECONNABORTED`, `ERR_BAD_REQUEST`), and so does Node, so an unknown value is never
  * read as a refusal. The HTTP status is not checked: the code is the contract, and the
- * status differs per refusal (401, 403, 409, 410).
+ * status differs per refusal (401, 402, 403, 404, 409, 410).
  */
 export function authErrorCode(err: unknown): KitErrorCode | undefined {
   if (!isBag(err)) return undefined;
@@ -173,11 +200,45 @@ export function authErrorCode(err: unknown): KitErrorCode | undefined {
  * with, so an app's `onSubmit` can simply let its client's error through. See
  * {@link authErrorCode} for the shapes it reads. Since 0.30.0 it knows the account codes
  * too: `isAuthError(err, "last_admin")`; since 0.31.0 the demo's:
- * `isAuthError(err, "demo_read_only")`.
+ * `isAuthError(err, "demo_read_only")`; since 0.32.0 billing's:
+ * `isAuthError(err, "billing_read_only")` (or {@link isBillingError}).
  */
 export function isAuthError(err: unknown, code?: KitErrorCode): boolean {
   const found = authErrorCode(err);
   return found !== undefined && (code === undefined || found === code);
+}
+
+/**
+ * Whether `err` is one of billing's coded refusals (0.32.0, docs/billing-harmonization.md
+ * §10) — any of the four, or the one named. {@link isAuthError} answers the same for a
+ * named code; this one also answers "is it billing's at all", which an app's error
+ * handler asks before it decides between the write lock, a `PlanLimitNotice` and a toast.
+ */
+export function isBillingError(err: unknown, code?: BillingErrorCode): boolean {
+  const found = authErrorCode(err);
+  return found !== undefined && BILLING_CODES.has(found as BillingErrorCode) && (code === undefined || found === code);
+}
+
+/**
+ * The parsed body that carries a code, wherever {@link authErrorCode} would find it (in
+ * the same order) — the object with the `code`, so FastAPI's nested `detail` when the code
+ * is there. For a reader of a refusal's EXTRA fields (`isPlanLimit`: `dimension`, `limit`,
+ * `used` sit beside the code). `accept` decides which codes count; default, the known ones.
+ *
+ * @internal Not part of the barrel.
+ */
+export function errorBodyWithCode(
+  err: unknown,
+  accept: (code: unknown) => boolean = (code) => known(code) !== undefined,
+): Record<string, unknown> | undefined {
+  if (!isBag(err)) return undefined;
+  const response = err.response;
+  for (const body of [isBag(response) ? response.data : undefined, err.data, err.body, err]) {
+    if (!isBag(body)) continue;
+    if (accept(body.code)) return body;
+    if (isBag(body.detail) && accept(body.detail.code)) return body.detail;
+  }
+  return undefined;
 }
 
 /** An HTTP status as a number, or undefined. */

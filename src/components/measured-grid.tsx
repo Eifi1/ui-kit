@@ -8,9 +8,9 @@ import { horizontalStep } from "../lib/direction";
 // be either and the line decides. See the three named rules at the top of table-text.
 import { cellNumber, isCellNumber, parseRows, splitRow } from "../lib/table-text";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { useWindowedRows } from "../hooks/use-windowed-rows";
+import { useWindowedRows, WINDOWED_ROW_INDEX } from "../hooks/use-windowed-rows";
 import { ToggleGroup } from "./toggle-group";
-import { Button, FIELD_INVALID, Textarea } from "./ui";
+import { Button, FIELD_INVALID, FIELD_TOUCH_TEXT, FOCUS_RING, Textarea } from "./ui";
 
 /**
  * A measured table: a fixed set of numeric columns, typed cell by cell or pasted as a
@@ -101,8 +101,10 @@ export type MeasuredGridView = "cells" | "text";
  *  empty cell is a hole in the measurement, and a table with a hole is not one to save. */
 const BLANK = "";
 
-/** Height of one grid row, in pixels. Fixed, which is what lets the windowing be
- *  arithmetic rather than measurement. */
+/** Height of one grid row at Normal text size, in px — the windowing's ESTIMATE since
+ *  0.32 (docs/text-size-harmonization.md §10.9): `useWindowedRows` multiplies it by the
+ *  text size's scale (35 px at Large, 42 at Extra large) and then measures the rows it
+ *  renders, so a row is never cut to a height the type has outgrown. */
 const DEFAULT_ROW_HEIGHT = 28;
 
 const ALL_VIEWS: readonly MeasuredGridView[] = ["cells", "text"];
@@ -218,7 +220,9 @@ export interface MeasuredGridProps
   /** Which views the toggle offers, the first being where it opens. Default both;
    *  one view hides the toggle. */
   views?: ReadonlyArray<MeasuredGridView>;
-  /** Row height in pixels, for the windowing. Fixed on purpose. Default 28. */
+  /** A row's height at Normal text size, in px. Default 28. Since 0.32 it is the
+   *  windowing's estimate and each row's minimum, multiplied by the text size's scale;
+   *  the rendered rows are measured (docs/text-size-harmonization.md §10.9). */
   rowHeight?: number;
   /** BCP 47 tag for the decimal mark of cells written by a paste or the text view,
    *  and for the row numbers; else the `<UiKitProvider locale>`. */
@@ -288,7 +292,7 @@ export function MeasuredGrid({
     // to the initial containing block (see sr-only-containment.test).
     <div {...rest} className={cn("relative", className)}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <span id={labelId} className="text-[11px] font-medium text-[var(--text-muted)]">
+        <span id={labelId} className="text-caption font-medium text-[var(--text-muted)]">
           {label}
         </span>
         {offered.length > 1 && (
@@ -330,7 +334,7 @@ export function MeasuredGrid({
         />
       )}
       {hint && (
-        <p id={hintId} className="mt-1 px-1 text-[11px] text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 px-1 text-caption text-[var(--text-muted)]">
           {hint}
         </p>
       )}
@@ -382,7 +386,11 @@ function CellGrid({
   // first number, and "add a row" is not the first thing to ask of someone who has
   // just opened an empty table. It is not written back until something is typed.
   const grid = cells.length ? cells : [blankRow()];
-  const { first, last, totalHeight } = useWindowedRows(grid.length, rowHeight, scrollRef);
+  const { first, last, totalHeight, offsetOf, heightOf, estimate, measureRef } = useWindowedRows(
+    grid.length,
+    rowHeight,
+    scrollRef,
+  );
   const rowNumber = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
   // The remove buttons are the last column of the grid, reachable by the arrows like
@@ -434,9 +442,11 @@ function CellGrid({
     if (!element) return;
     const room = element.clientHeight - (headRef.current?.offsetHeight ?? 0);
     if (room <= 0) return;
-    const top = row * rowHeight;
+    // Measured where the row has been rendered, the scaled estimate where not (§10.9).
+    const top = offsetOf(row);
+    const height = heightOf(row);
     if (top < element.scrollTop) element.scrollTop = top;
-    else if (top + rowHeight > element.scrollTop + room) element.scrollTop = top + rowHeight - room;
+    else if (top + height > element.scrollTop + room) element.scrollTop = top + height - room;
   };
 
   const focusCell = (row: number, column: number) => {
@@ -468,7 +478,7 @@ function CellGrid({
     const element = scrollRef.current;
     const room = element ? element.clientHeight - (headRef.current?.offsetHeight ?? 0) : 0;
     // No layout (a hidden pane, jsdom): a fixed ten rather than one row at a time.
-    return room > 0 ? Math.max(1, Math.floor(room / rowHeight) - 1) : 10;
+    return room > 0 ? Math.max(1, Math.floor(room / estimate) - 1) : 10;
   };
 
   /**
@@ -603,7 +613,7 @@ function CellGrid({
               <div
                 role="columnheader"
                 aria-label={labels.rowNumber}
-                className="flex items-end justify-end px-1 py-1 text-[10px] text-[var(--text-placeholder)]"
+                className="flex items-end justify-end px-1 py-1 text-micro text-[var(--text-placeholder)]"
               >
                 #
               </div>
@@ -617,7 +627,7 @@ function CellGrid({
                     {column.label}
                   </span>
                   {column.unit && (
-                    <span className="block truncate text-[10px] text-[var(--text-muted)]">
+                    <span className="block truncate text-micro text-[var(--text-muted)]">
                       {column.unit}
                     </span>
                   )}
@@ -632,21 +642,25 @@ function CellGrid({
           </div>
           {/* Only the rows in the window are mounted — a swept linkage is thousands of
               them across fifteen inputs — each placed at its own offset, so mounting
-              one more (the caret's) costs nothing in the arithmetic. */}
+              one more (the caret's) costs nothing in the arithmetic. Since 0.32 a row
+              is at least the scaled estimate tall and measured as it renders (§10.9):
+              `minHeight`, not `height`, so the type at Extra large is never cut. */}
           <div role="rowgroup" className="relative" style={{ height: totalHeight }}>
             {mounted.map((index) => {
               const row = grid[index];
               return (
                 <div
                   key={index}
+                  ref={measureRef}
+                  {...{ [WINDOWED_ROW_INDEX]: index }}
                   role="row"
                   aria-rowindex={index + 2}
                   className="absolute inset-x-0 grid hover:bg-[var(--bg-hover)]"
-                  style={{ top: index * rowHeight, height: rowHeight, gridTemplateColumns: template }}
+                  style={{ top: offsetOf(index), minHeight: estimate, gridTemplateColumns: template }}
                 >
                   <div
                     role="rowheader"
-                    className="flex items-center justify-end px-1 text-[10px] tabular-nums text-[var(--text-placeholder)]"
+                    className="flex items-center justify-end px-1 text-micro tabular-nums text-[var(--text-placeholder)]"
                   >
                     {rowNumber.format(index + 1)}
                   </div>
@@ -672,9 +686,16 @@ function CellGrid({
                           aria-invalid={bad || undefined}
                           className={cn(
                             "block size-full bg-transparent px-2 text-end tabular-nums text-[var(--text-primary)] outline-none",
+                            // A cell is a field: 16 px on touch, or iOS zooms on focus (§10.1).
+                            FIELD_TOUCH_TEXT,
                             // Arriving selects the text (typing replaces it); editing
                             // in place is the plain surface with a caret in it.
-                            "focus:bg-[var(--brand-bg)] focus:ring-2 focus:ring-inset focus:ring-[var(--brand)]",
+                            // The kit's focus frame (§5), inset so the next cell's
+                            // border does not paint over it. A text input is
+                            // `:focus-visible` however it was focused.
+                            "focus:bg-[var(--brand-bg)]",
+                            FOCUS_RING,
+                            "focus-visible:ring-inset",
                             isCaret && editing && "focus:bg-[var(--bg-surface)]",
                             disabled && "text-[var(--text-muted)]",
                             bad && cn(FIELD_INVALID, "ring-inset"),
@@ -723,7 +744,10 @@ function CellGrid({
                       disabled={!removable}
                       tabIndex={at.row === index && at.column === width ? 0 : -1}
                       aria-label={labels.removeRow(index + 1)}
-                      className="rounded p-1 text-[var(--text-placeholder)] outline-none hover:text-[var(--danger)] focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-default disabled:hover:text-[var(--text-placeholder)]"
+                      className={cn(
+                        "rounded p-1 text-[var(--text-placeholder)] outline-none hover:text-[var(--danger)] disabled:cursor-default disabled:hover:text-[var(--text-placeholder)]",
+                        FOCUS_RING,
+                      )}
                       onKeyDown={(event) => onCellKeyDown(event, index, width)}
                       onFocus={() => {
                         if (at.row !== index || at.column !== width) setCaret({ row: index, column: width });
@@ -749,7 +773,7 @@ function CellGrid({
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--border)] px-2 py-1.5">
         <Button
           variant="ghost"
-          className="px-2 py-1 text-xs"
+          size="sm"
           disabled={disabled}
           onClick={() => {
             onCells([...grid.map(pad), blankRow()]);
@@ -760,7 +784,8 @@ function CellGrid({
         </Button>
         <Button
           variant="ghost"
-          className="px-2 py-1 text-xs text-[var(--text-muted)]"
+          size="sm"
+          className="text-[var(--text-muted)]"
           disabled={disabled || !cells.length}
           onClick={() => {
             onCells([]);
@@ -770,14 +795,14 @@ function CellGrid({
         >
           <Eraser aria-hidden className="size-3.5" /> {labels.clear}
         </Button>
-        <span className="text-[11px] tabular-nums text-[var(--text-muted)]">
+        <span className="text-caption tabular-nums text-[var(--text-muted)]">
           {/* bdi: an LTR label ("3 points") in an RTL grid would reorder to "points 3". */}
           <bdi>{labels.points(filled.length)}</bdi>
         </span>
         {problems > 0 && (
-          <span className="text-[11px] text-[var(--danger)]">{labels.problems(problems)}</span>
+          <span className="text-caption text-[var(--danger)]">{labels.problems(problems)}</span>
         )}
-        <span className="ms-auto flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+        <span className="ms-auto flex items-center gap-1 text-caption text-[var(--text-muted)]">
           <ClipboardPaste aria-hidden className="size-3.5" /> {labels.pasteHint}
         </span>
       </div>
@@ -843,7 +868,7 @@ function TextView({ columns, cells, onCells, disabled, mark, labels, labelledBy,
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
       />
-      <p className="mt-1 px-1 text-[11px] text-[var(--text-muted)]">
+      <p className="mt-1 px-1 text-caption text-[var(--text-muted)]">
         {columns.map((column) => column.label).join(" · ")}
         {" — "}
         <bdi>{labels.points(lines)}</bdi>

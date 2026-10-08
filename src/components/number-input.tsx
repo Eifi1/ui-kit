@@ -2,13 +2,14 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { CURRENCIES } from "./currency-select";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { useInlineHint } from "./field-parts";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLocale } from "../i18n/kit-labels";
 
 interface NumberInputProps {
@@ -65,7 +66,9 @@ interface NumberInputProps {
    *  feedback #48). Plain TEXT (a string or a number) is a caption instead, UNDER
    *  the field and attached through `aria-describedby` after the caller's own —
    *  the same rule as {@link Select}'s `hint`: the label line has no room for a
-   *  sentence, and one placed there ran over the label and into the value. */
+   *  sentence, and one placed there ran over the label and into the value.
+   *  Since 0.32 a FieldHint is that caption too at Large and on a touch screen,
+   *  where a "?" cannot be hovered open (`useInlineHint`). */
   hint?: ReactNode;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
@@ -179,7 +182,7 @@ export function stepNumber(
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
 // NumberInput's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 // ── The money guard (kastlan 5, Kurvenschmiede) ─────────────────────────────────
 
@@ -275,7 +278,7 @@ export function NumberInput(props: NumberInputProps) {
     id,
     calculator = true,
     variant = "field",
-    hint,
+    hint: hintProp,
     invalid: invalidProp,
     error,
     locale: localeProp,
@@ -291,6 +294,10 @@ export function NumberInput(props: NumberInputProps) {
   const fieldId = id ?? generatedId;
   const hintId = useId();
   const errorId = useId();
+  // §4 "No fact only in a tooltip" (docs/text-size-harmonization.md): at Large and on a
+  // touch screen a FieldHint is its words, so it takes the caption's path below — the
+  // other kit fields do the same through `useFieldHint`.
+  const hint = useInlineHint(hintProp);
   // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
   const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
   const hasError = hasMessage(error);
@@ -302,7 +309,7 @@ export function NumberInput(props: NumberInputProps) {
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
-  const isMobile = useMediaQuery(PHONE_QUERY, false);
+  const isMobile = usePhoneLayout();
   const asDisplay = isMobile && variant === "display";
   const showCalc = calculator && !disabled && !isMobile;
   const [focused, setFocused] = useState(false);
@@ -512,7 +519,7 @@ export function NumberInput(props: NumberInputProps) {
     <div>
       {field}
       {textHint && (
-        <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
           {hint}
         </p>
       )}

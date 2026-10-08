@@ -29,6 +29,8 @@ import {
   type InverseScaleFunction,
 } from "recharts";
 import { X } from "lucide-react";
+import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 
@@ -492,7 +494,10 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
           <button
             type="button"
             onClick={clear}
-            className="absolute end-1 top-1 z-10 inline-flex items-center gap-1 rounded border border-[var(--border)] bg-[var(--bg-surface)]/90 px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] backdrop-blur transition-colors hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+            className={cn(
+              "absolute end-1 top-1 z-10 inline-flex items-center gap-1 rounded border border-[var(--border)] bg-[var(--bg-surface)]/90 px-1.5 py-0.5 text-micro text-[var(--text-muted)] backdrop-blur transition-colors hover:text-[var(--text-primary)]",
+              FOCUS_RING,
+            )}
           >
             <X aria-hidden className="size-3" /> {labels.resetZoom}
           </button>

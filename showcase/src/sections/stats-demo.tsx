@@ -262,7 +262,7 @@ function SparklineOptions() {
           {TONES.map((tone) => (
             <span key={tone} className="inline-flex flex-col items-center gap-1">
               <Sparkline data={VISITS} tone={tone} variant="area" label={tone} />
-              <span className="font-mono text-[10px] text-[var(--text-muted)]">{tone}</span>
+              <span className="font-mono text-micro text-[var(--text-muted)]">{tone}</span>
             </span>
           ))}
         </Row>

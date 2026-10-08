@@ -132,6 +132,21 @@ export interface LegalTextSectionLabels {
   body: string;
 }
 
+/**
+ * 0.32.0: the imprint's disclaimer, with the body of its COMMERCIAL variant
+ * (docs/billing-harmonization.md §8; legal decision 7). The title is the same in both:
+ * liability for content and links is the subject either way.
+ */
+export interface LegalDisclaimerSectionLabels extends LegalTextSectionLabels {
+  /**
+   * The body for `<LegalKitSection section="disclaimer" variant="commercial">`: a paid
+   * service sold through a Merchant of Record, which sells in its own name (§2.2), so the
+   * "private, non-commercial … closed beta" of `body` would be untrue. OPTIONAL, as every
+   * key added to a namespace an app may annotate: left out, the provider's, then English.
+   */
+  commercial?: string;
+}
+
 /** A kit section whose text names the operator (§4.3 `{name}`, `{email}`, …). */
 export interface LegalOperatorSectionLabels {
   title: string;
@@ -197,7 +212,8 @@ export interface LegalLabels {
     impressum: {
       operator: LegalOperatorSectionLabels;
       contact: LegalOperatorSectionLabels;
-      disclaimer: LegalTextSectionLabels;
+      /** `body` is the default, non-commercial text; `commercial` the 0.32 variant. */
+      disclaimer: LegalDisclaimerSectionLabels;
     };
     privacy: {
       controller: LegalOperatorSectionLabels;
@@ -260,6 +276,8 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       disclaimer: {
         title: "Liability for content and links",
         body: "This is a private, non-commercial project offered during a closed beta, without warranty. External sites we link to are the responsibility of their respective operators; we have no control over their content.",
+        commercial:
+          "This is a commercial service. Paid plans are sold by our reseller, which acts as the Merchant of Record: it sells the subscription in its own name, takes the payment, issues the invoice and handles VAT, and its terms of sale apply to the purchase. We take care that the content of this service is accurate, but cannot guarantee that it is complete or up to date. External sites we link to are the responsibility of their respective operators; we have no control over their content.",
       },
     },
     privacy: {

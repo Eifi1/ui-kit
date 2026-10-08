@@ -190,7 +190,7 @@ function ProgressTonesSizes() {
       <div className="mt-4 space-y-3">
         {SIZES.map((size) => (
           <div key={size} className="flex items-center gap-3">
-            <code className="w-10 shrink-0 font-mono text-[11px] text-[var(--text-muted)]">{size}</code>
+            <code className="w-10 shrink-0 font-mono text-caption text-[var(--text-muted)]">{size}</code>
             <ProgressBar value={60} size={size} aria-label={`size ${size}`} className="flex-1" />
           </div>
         ))}
@@ -242,7 +242,7 @@ function SkeletonDemo() {
       <div className="grid gap-4 sm:grid-cols-3">
         {SHAPES.map((shape) => (
           <div key={shape} className="space-y-2">
-            <p className="font-mono text-[11px] text-[var(--text-muted)]">shape=&quot;{shape}&quot;</p>
+            <p className="font-mono text-caption text-[var(--text-muted)]">shape=&quot;{shape}&quot;</p>
             <Skeleton shape={shape} />
           </div>
         ))}

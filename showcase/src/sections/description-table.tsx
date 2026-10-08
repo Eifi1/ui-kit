@@ -276,7 +276,9 @@ function Separators() {
           <Separator className="my-3" />
           <p>Danger zone</p>
         </div>
-        <div className="flex h-8 items-center gap-3">
+        {/* Wraps: at Extra large on a phone the row is wider than the screen. A vertical
+            separator stretches to its own line's height, so a wrapped row keeps it. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Button variant="ghost">Bold</Button>
           <Button variant="ghost">Italic</Button>
           <Separator orientation="vertical" />
@@ -310,7 +312,7 @@ function ScrollAreas() {
     >
       <div className="grid gap-4 md:grid-cols-3 [&>*]:min-w-0">
         <div className="space-y-1">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">vertical (default) · label</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">vertical (default) · label</p>
           <ScrollArea label="Activity log" className="h-40 rounded-md border border-[var(--border)] p-2">
             <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
               {(short ? ACTIVITY.slice(0, 3) : ACTIVITY).map((line) => (
@@ -323,7 +325,7 @@ function ScrollAreas() {
           </Button>
         </div>
         <div className="space-y-1">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">horizontal</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal</p>
           <ScrollArea orientation="horizontal" label="Tags" className="rounded-md border border-[var(--border)] p-2">
             <div className="flex w-max gap-2">
               {TAGS.map((tag) => (
@@ -335,11 +337,11 @@ function ScrollAreas() {
           </ScrollArea>
         </div>
         <div className="space-y-1">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">both</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">both</p>
           <ScrollArea orientation="both" label="Grid preview" className="h-40 rounded-md border border-[var(--border)]">
             <div className="grid w-[36rem] grid-cols-6 gap-1 p-2">
               {Array.from({ length: 60 }, (_, i) => (
-                <span key={i} className="rounded bg-[var(--bg-surface-2)] px-2 py-3 text-center font-mono text-[10px] text-[var(--text-muted)]">
+                <span key={i} className="rounded bg-[var(--bg-surface-2)] px-2 py-3 text-center font-mono text-micro text-[var(--text-muted)]">
                   {i + 1}
                 </span>
               ))}

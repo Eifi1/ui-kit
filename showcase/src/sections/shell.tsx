@@ -289,7 +289,7 @@ function TopBarSpecimen() {
             >
               <Bell className="size-5" />
               {unread > 0 && (
-                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-[10px] font-semibold leading-4 text-[var(--brand-contrast)]">
+                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-micro font-semibold leading-4 text-[var(--brand-contrast)]">
                   {unread}
                 </span>
               )}
@@ -491,7 +491,7 @@ function ActionMenu() {
       key: "support",
       icon: <LifeBuoy className="size-4" />,
       label: "Contact support",
-      trailing: <span className="text-[10px] text-[var(--text-muted)]">24h</span>,
+      trailing: <span className="text-micro text-[var(--text-muted)]">24h</span>,
       onSelect: () => setChosen("Contact support"),
     },
     { kind: "divider", key: "sep" },
@@ -548,8 +548,8 @@ function NavItemReference() {
           <li key={item.to} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
             <item.icon className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
             <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
-            <span className="font-mono text-[11px] text-[var(--text-muted)]">{item.to}</span>
-            <span className="ms-auto flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+            <span className="font-mono text-caption text-[var(--text-muted)]">{item.to}</span>
+            <span className="ms-auto flex flex-wrap items-center gap-2 text-caption text-[var(--text-secondary)]">
               <span>
                 bar: <span className="font-mono">{item.shortLabel ?? item.label}</span>
               </span>
@@ -822,7 +822,7 @@ function AppShellPlayground() {
               sidebarFooter={
                 withSidebarFooter
                   ? (collapsed) => (
-                      <div className="border-t border-[var(--border)] px-3 py-2 text-[11px] text-[var(--text-muted)]">
+                      <div className="border-t border-[var(--border)] px-3 py-2 text-caption text-[var(--text-muted)]">
                         {collapsed ? "v2" : "sidebarFooter(collapsed=false) · v2.4.1"}
                       </div>
                     )

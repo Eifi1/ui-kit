@@ -94,7 +94,7 @@ describe("Card toneFill", () => {
     expect(cls).toContain("bg-[var(--bg-surface)]");
     expect(cls).toContain("border-2");
     expect(cls).toContain("border-[var(--danger-border-strong)]");
-    expect(cls).toContain("p-[15px]");
+    expect(cls).toContain("p-[calc(1rem-1px)]");
   });
 
   it("works on a soft card and an outline card", () => {

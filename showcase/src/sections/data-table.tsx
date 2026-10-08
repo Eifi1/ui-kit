@@ -596,6 +596,10 @@ const TRI_OPTIONS: { value: Tri; label: string }[] = [
  *  column (wide enough for "columnSettings") lines the groups up. From `sm` they sit
  *  inline, where a column would only be a gap. */
 const TRI_LABEL = "font-mono max-sm:w-28 max-sm:shrink-0";
+/** One control: its name and its toggle group. It WRAPS (0.32) — at Extra large on a
+ *  phone the name's column and three options are wider than the screen, so the group
+ *  goes under its name rather than past the edge. */
+const CONTROL = "flex flex-wrap items-center gap-x-2 gap-y-1";
 const tri = (v: Tri) => (v === "preset" ? undefined : v === "on");
 
 function ReportTable() {
@@ -612,7 +616,7 @@ function ReportTable() {
       hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
     >
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
-        <span className="flex items-center gap-2">
+        <span className={CONTROL}>
           <code className={TRI_LABEL}>chrome</code>
           <ToggleGroup<DataTableChrome>
             aria-label="chrome"
@@ -624,7 +628,7 @@ function ReportTable() {
             ]}
           />
         </span>
-        <span className="flex items-center gap-2">
+        <span className={CONTROL}>
           <code className={TRI_LABEL}>sortCycle</code>
           <ToggleGroup<SortCycle>
             aria-label="sortCycle"
@@ -649,7 +653,7 @@ function ReportTable() {
             ["multiSort", multiSort, setMultiSort],
           ] as const
         ).map(([name, value, set]) => (
-          <span key={name} className="flex items-center gap-2">
+          <span key={name} className={CONTROL}>
             <code className={TRI_LABEL}>{name}</code>
             <ToggleGroup<Tri> aria-label={name} value={value} onChange={set} options={TRI_OPTIONS} />
           </span>

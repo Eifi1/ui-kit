@@ -87,7 +87,7 @@ export function MeasuredGridDemo() {
               <StateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
             </div>
             <div>
-              <p className="mb-1 text-[11px] font-medium text-[var(--text-muted)]">
+              <p className="mb-1 text-caption font-medium text-[var(--text-muted)]">
                 Copy this, click a cell, paste
               </p>
               <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-primary)]">
@@ -208,7 +208,7 @@ export function MeasuredGridDemo() {
         </Note>
       </Example>
 
-      <Example label="useWindowedRows — a list of your own" hint="10,000 fixed-height rows; only the visible ones and a few either side are mounted">
+      <Example label="useWindowedRows — a list of your own" hint="10,000 rows; only the visible ones and a few either side are mounted, each measured as it renders">
         <Stage>
           <div data-stage="wide">
             <WindowedList />
@@ -220,12 +220,18 @@ export function MeasuredGridDemo() {
 }
 
 /** Ten thousand rows, rendered as a window: a spacer the full height of the list, and
- *  only rows `first` to `last` positioned inside it. */
+ *  only rows `first` to `last` positioned inside it.
+ *
+ *  0.32: each row is placed at `offsetOf(index)` with `estimate` (32px × the text size's
+ *  scale) as its MINIMUM height, and `measureRef` reports its real one. A row that wraps —
+ *  the reading and its value, in a narrow pane at Extra large — grows and pushes the next
+ *  one down; at `top: index × 32` it was cut off and drawn over
+ *  (docs/text-size-harmonization.md §10.9). */
 function WindowedList() {
   const COUNT = 10_000;
   const ROW = 32;
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { first, last, totalHeight } = useWindowedRows(COUNT, ROW, scrollRef);
+  const { first, last, totalHeight, offsetOf, estimate, measureRef } = useWindowedRows(COUNT, ROW, scrollRef);
   return (
     <div className="space-y-2">
       <div
@@ -238,8 +244,10 @@ function WindowedList() {
             return (
               <div
                 key={index}
-                style={{ position: "absolute", top: index * ROW, height: ROW, insetInline: 0 }}
-                className="flex items-center justify-between border-b border-[var(--border)] px-3 text-sm text-[var(--text-primary)]"
+                ref={measureRef}
+                data-row-index={index}
+                style={{ position: "absolute", top: offsetOf(index), minHeight: estimate, insetInline: 0 }}
+                className="flex flex-wrap items-center justify-between gap-x-3 border-b border-[var(--border)] px-3 py-1 text-sm text-[var(--text-primary)]"
               >
                 <span>Reading {index + 1}</span>
                 <span className="font-mono text-xs text-[var(--text-muted)]">
@@ -250,9 +258,9 @@ function WindowedList() {
           })}
         </div>
       </div>
-      <p className="font-mono text-xs text-[var(--text-muted)]">
-        first = {first} · last = {last} · mounted = {last - first} of {COUNT} · totalHeight ={" "}
-        {totalHeight}px
+      <p className="font-mono text-xs text-[var(--text-muted)] [overflow-wrap:anywhere]">
+        first = {first} · last = {last} · mounted = {last - first} of {COUNT} · estimate = {estimate}px ·
+        totalHeight = {Math.round(totalHeight)}px
       </p>
     </div>
   );

@@ -134,6 +134,12 @@ export const en: Dictionary = {
       blurb:
         "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, and handing work on.",
     },
+    subscription: {
+      title: "Subscription",
+      short: "Billing",
+      blurb:
+        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice, the read-only lock beside the demo's, the provider's portal, and the imprint's commercial disclaimer.",
+    },
     "auth-account": {
       title: "Sign-in & account security",
       short: "Auth",
@@ -168,6 +174,12 @@ export const en: Dictionary = {
       short: "Tokens",
       blurb:
         "Every value in the active TokenSet, live. Flip the theme or the palette in the top bar and watch this page move — anything that does not move is hardcoded.",
+    },
+    "text-size": {
+      title: "Text size & contrast",
+      short: "Text size",
+      blurb:
+        "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
     },
     palette: {
       title: "Palette generator",
@@ -241,7 +253,7 @@ export const en: Dictionary = {
     pickers: {
       title: "Pickers & entry",
       blurb:
-        "Choosing from a list rather than typing, and the heavier kinds of entry: a table of measurements, a field saved as you leave it, a signature, a password.",
+        "Choosing from a list rather than typing, and the heavier kinds of entry: a table of measurements, a field saved as you leave it, a signature, a password, a form in steps.",
     },
     comboboxes: {
       title: "Comboboxes",
@@ -433,7 +445,7 @@ export const en: Dictionary = {
     "app-chrome": {
       title: "App chrome",
       blurb:
-        "The frame an app lives in and the flows every app repeats: settings, multi-step forms, feedback.",
+        "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
     },
     "page-structure": {
       title: "Page header & breadcrumbs",
@@ -520,6 +532,12 @@ export const en: Dictionary = {
       blurb:
         "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
     },
+    "server-billing": {
+      title: "Billing",
+      short: "Billing",
+      blurb:
+        "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's and Lemon Squeezy's webhooks: signatures checked, events normalised, one dispatch.",
+    },
     "server-mail": {
       title: "Mail",
       short: "Mail",
@@ -589,6 +607,18 @@ export const en: Dictionary = {
       "hand someone's work to another user",
       "set a translation reviewer's languages",
     ],
+    subscription: [
+      "choose a plan",
+      "prices in CHF and EUR",
+      "monthly or yearly billing",
+      "show the subscription status",
+      "trial ending banner",
+      "payment failed banner",
+      "plan limit reached",
+      "read-only when the subscription lapses",
+      "open the billing portal",
+      "cancel the subscription",
+    ],
     "auth-account": [
       "login page layout",
       "set up two-factor with a QR code",
@@ -623,6 +653,7 @@ export const en: Dictionary = {
       "translate the whole kit",
       "brand colour palette",
       "dark mode",
+      "larger text and more contrast",
     ],
     tokens: [
       "see every colour token",
@@ -632,6 +663,17 @@ export const en: Dictionary = {
       "spacing, radius and shadow values",
       "text colours and surfaces",
       "check what is hardcoded",
+    ],
+    "text-size": [
+      "make the text bigger",
+      "large text setting",
+      "more contrast for low vision",
+      "high contrast mode",
+      "breakpoints that grow with the text",
+      "check for the phone layout in code",
+      "let the text size follow the account",
+      "show an icon button's label as text",
+      "fold row actions into a menu",
     ],
     palette: [
       "generate a palette from a brand colour",
@@ -749,6 +791,7 @@ export const en: Dictionary = {
       "save a field on blur",
       "capture a signature",
       "check password strength",
+      "multi-step form",
     ],
     comboboxes: [
       "type to filter a long list",
@@ -1040,7 +1083,7 @@ export const en: Dictionary = {
       "app layout",
       "sidebar and top bar",
       "settings page",
-      "multi-step form",
+      "choose a subscription plan",
       "collect user feedback",
     ],
     "page-structure": [
@@ -1172,6 +1215,15 @@ export const en: Dictionary = {
       "make the demo read-only",
       "demo refusal codes",
       "clean up old demo users",
+    ],
+    "server-billing": [
+      "check a plan limit on the server",
+      "verify a webhook signature",
+      "handle Paddle and Lemon Squeezy events",
+      "is the subscription in good standing",
+      "trial and beta end dates",
+      "refuse writes when billing lapses",
+      "plan catalogue with prices",
     ],
     "server-mail": [
       "send a password reset mail",

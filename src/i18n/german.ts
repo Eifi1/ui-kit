@@ -26,6 +26,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     !seconds || seconds <= 0
       ? "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es dann noch einmal."
       : `Zu viele Versuche. Versuchen Sie es in ${wait(seconds)} erneut.`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow.
+  const inDays = (days: number) =>
+    days <= 0 ? "heute" : days === 1 ? "morgen" : `in ${n(days)} Tagen`;
 
   return {
     feedbackAttachment: {
@@ -816,6 +820,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           disclaimer: {
             title: "Haftung für Inhalte und Links",
             body: "Dies ist ein privates, nicht-kommerzielles Projekt, das im Rahmen einer geschlossenen Beta ohne Gewähr bereitgestellt wird. Für verlinkte externe Websites sind deren Betreiber verantwortlich; auf deren Inhalte haben wir keinen Einfluss.",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8). "Tarif"
+            // and "Abonnement" as the `billing` namespace; "MWST", the Swiss abbreviation.
+            commercial:
+              "Dies ist ein kommerzieller Dienst. Kostenpflichtige Tarife verkauft unser Wiederverkäufer, der als Merchant of Record auftritt: Er verkauft das Abonnement im eigenen Namen, nimmt die Zahlung entgegen, stellt die Rechnung aus und rechnet die MWST ab, und für den Kauf gelten seine Verkaufsbedingungen. Wir achten darauf, dass die Inhalte dieses Dienstes richtig sind, können aber keine Gewähr für ihre Vollständigkeit und Aktualität übernehmen. Für verlinkte externe Websites sind deren Betreiber verantwortlich; auf deren Inhalte haben wir keinen Einfluss.",
           },
         },
         privacy: {
@@ -1271,6 +1279,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       outflow: "Ausgabe",
       inflow: "Einnahme",
       direction: (current, next) => `Richtung: ${current} – zu ${next} wechseln`,
+      switchTo: (next) => `Zu ${next} wechseln`,
     },
     columnMapper: {
       paste: "Tabelle einfügen",
@@ -1449,6 +1458,100 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       endedSandbox:
         "Die Beispieldaten werden regelmäßig zurückgesetzt; was Sie in der Demo selbst angelegt haben, wird gelöscht.",
       restart: "Neue Demo starten",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "Tarif" is what is
+    // bought (Free, Pro), "Abonnement" the standing arrangement and the settings group.
+    // Formal "Sie".
+    billing: {
+      group: "Abonnement",
+      plans: "Tarife",
+      interval: "Abrechnungszeitraum",
+      yearly: "Jährlich",
+      monthly: "Monatlich",
+      // As `currency.currency`.
+      currency: "Währung",
+      perYear: "pro Jahr",
+      perMonth: "pro Monat",
+      // The Swiss abbreviation (§12.17).
+      vatIncluded: "inkl. MWST",
+      free: "Kostenlos",
+      notOffered: "Für diesen Abrechnungszeitraum nicht erhältlich",
+      // As `progressBar.unlimited`.
+      unlimited: "Unbegrenzt",
+      limits: "Limits",
+      features: "Inbegriffen",
+      current: "Aktueller Tarif",
+      choose: (plan) => `${plan} wählen`,
+      upgrade: (plan) => `Auf ${plan} upgraden`,
+      downgrade: (plan) => `Auf ${plan} wechseln`,
+      isCurrent: "Das ist Ihr aktueller Tarif.",
+      pickFirst: "Wählen Sie zuerst einen Tarif.",
+      status: {
+        trialing: "Testphase",
+        active: "Aktiv",
+        past_due: "Zahlung überfällig",
+        canceled: "Gekündigt",
+        // As `invitations.status.expired`.
+        expired: "Abgelaufen",
+        // Not "Kostenlos", the price of the Free plan: free by the operator's grant.
+        comped: "Kostenlos gewährt",
+      },
+      trialEnding: (days) =>
+        `Ihre Testphase endet ${inDays(days)}. Danach können Sie weiterhin alles ansehen, für Änderungen brauchen Sie aber einen Tarif.`,
+      grantEnding: (days) =>
+        `Ihr kostenloser Zugang endet ${inDays(days)}. Danach können Sie weiterhin alles ansehen, für Änderungen brauchen Sie aber einen Tarif.`,
+      paymentFailed:
+        "Ihre letzte Zahlung ist nicht durchgegangen. Aktualisieren Sie Ihre Zahlungsmethode, um Ihren Tarif zu behalten.",
+      planEnded:
+        "Ihr Tarif ist abgelaufen. Sie können weiterhin alles ansehen und exportieren; wählen Sie einen Tarif, um wieder Änderungen vorzunehmen.",
+      // "Nur angesehen", as `writeLock.reason` ("Nur zum Ansehen"). Never why: the owner's
+      // payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `„${item}“ kann vorerst nur angesehen werden; der Eigentümer kann diese Einschränkung aufheben.`
+          : "Dies kann vorerst nur angesehen werden; der Eigentümer kann diese Einschränkung aufheben.",
+      processing:
+        "Ihre Zahlung wird verarbeitet. Ihr Tarif beginnt, sobald sie bestätigt ist; diese Seite aktualisiert sich von selbst.",
+      choosePlan: "Tarif wählen",
+      updatePayment: "Zahlungsmethode aktualisieren",
+      checkAgain: "Erneut prüfen",
+      lockReason: "Ihr Tarif ist abgelaufen. Wählen Sie einen Tarif, um wieder Änderungen vorzunehmen.",
+      // As `characterCount.limitReached` ("Zeichenlimit erreicht").
+      limitReached: "Tariflimit erreicht",
+      limitUpgrade: "Um mehr hinzuzufügen, wählen Sie einen Tarif mit einem höheren Limit.",
+      limitContact: "Um mehr hinzuzufügen, fragen Sie uns nach einem höheren Limit.",
+      askForMore: "Mehr anfragen",
+      // Both figures arrive formatted.
+      usage: (used, limit) => `${used} von ${limit}`,
+      contactSubject: (dimension) => `Tariflimit: ${dimension}`,
+      manage: "Zahlung und Rechnungen",
+      // §312k BGB: the button that leads to the cancellation says exactly this (§12.26).
+      cancel: "Verträge hier kündigen",
+      waitingChanges: (count) =>
+        count === 1
+          ? `${n(count)} Änderung wartet auf einen Tarif`
+          : `${n(count)} Änderungen warten auf einen Tarif`,
+      // "Verwerfen", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "Wartende Änderungen verwerfen",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "Darstellung" group.
+    appearance: {
+      textSize: "Textgröße",
+      textSizeHelp: "Größere Buchstaben und ein Layout, das ihnen Platz macht.",
+      textSizes: { normal: "Normal", large: "Groß", xlarge: "Sehr groß" },
+      contrast: "Kontrast",
+      contrastHelp:
+        "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
+      contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
+    },
+    rowActions: {
+      actions: "Aktionen",
+      actionsFor: (name) => `Aktionen für ${name}`,
+    },
+    appShellMore: {
+      more: "Mehr",
+      moreTitle: "Weitere Seiten",
     },
   };
 }

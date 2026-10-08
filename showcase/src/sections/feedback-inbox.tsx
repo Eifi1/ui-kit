@@ -137,17 +137,17 @@ export function FeedbackInbox() {
               <span className="w-36 shrink-0">
                 <FeedbackStatusBadge status={status} label={STATUS_LABEL[status]} />
               </span>
-              <code className="w-36 shrink-0 font-mono text-[11px] text-[var(--text-muted)]">
+              <code className="w-36 shrink-0 font-mono text-caption text-[var(--text-muted)]">
                 {status}
               </code>
-              <span className="text-[11px] text-[var(--text-secondary)]">
+              <span className="text-caption text-[var(--text-secondary)]">
                 {CHAIN.includes(status)
                   ? `chain ${CHAIN.indexOf(status) + 1}/${CHAIN.length}`
                   : "off the chain"}
               </span>
               {/* The treatment the kit ships, printed so it is checkable rather than
                   asserted: a semantic token, not a fixed colour. */}
-              <code className="ml-auto font-mono text-[11px] text-[var(--text-muted)]">
+              <code className="ml-auto font-mono text-caption text-[var(--text-muted)]">
                 {FEEDBACK_STATUS_META[status].activeBg}
               </code>
             </div>
@@ -175,11 +175,11 @@ export function FeedbackInbox() {
               </span>
               {/* `compact` is the table-cell size: same pill, one step down. */}
               <FeedbackCategoryBadge category={category} label={CATEGORY_LABEL[category]} compact />
-              <code className="font-mono text-[11px] text-[var(--text-muted)]">{category}</code>
-              <span className="text-[11px] text-[var(--text-secondary)]">
+              <code className="font-mono text-caption text-[var(--text-muted)]">{category}</code>
+              <span className="text-caption text-[var(--text-secondary)]">
                 rank {feedbackCategoryRank(category)}
               </span>
-              <code className="ml-auto font-mono text-[11px] text-[var(--text-muted)]">
+              <code className="ml-auto font-mono text-caption text-[var(--text-muted)]">
                 {FEEDBACK_CATEGORY_META[category].badgeBg}
               </code>
             </div>

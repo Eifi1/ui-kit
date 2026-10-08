@@ -63,7 +63,7 @@ export function CurrencyFlag({ country, className, ...rest }: CurrencyFlagProps)
       // code printed next to it, and a reader that met both would hear the currency
       // twice.
       aria-hidden
-      className={cn("fi inline-block w-5 h-[15px] rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] shrink-0", `fi-${country}`, className)}
+      className={cn("fi inline-block w-5 h-[0.9375rem] rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] shrink-0", `fi-${country}`, className)}
     />
   );
 }
@@ -341,7 +341,7 @@ export function CurrencySelect({
           is `absolute` with no `top`, so it opens at its place in the flow — under the
           caption, had the caption come first. */}
       {textHint && (
-        <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
           {hint}
         </p>
       )}
@@ -356,4 +356,4 @@ export function CurrencySelect({
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
 // CurrencySelect's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";

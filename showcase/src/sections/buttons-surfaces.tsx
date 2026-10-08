@@ -588,7 +588,7 @@ function ButtonGroups() {
     >
       <div className="flex flex-wrap items-start gap-6">
         <div className="space-y-2">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">horizontal · Buttons</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal · Buttons</p>
           <ButtonGroup aria-label="Categories">
             <Button variant="secondary" onClick={() => setAllOpen(false)}>
               <ChevronsDownUp className="size-4" aria-hidden /> Collapse all
@@ -602,7 +602,7 @@ function ButtonGroups() {
           </p>
         </div>
         <div className="space-y-2">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">vertical · IconButtons</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">vertical · IconButtons</p>
           <ButtonGroup orientation="vertical" aria-label="Zoom">
             <IconButton variant="secondary" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(18, z + 1))}>
               <Plus />
@@ -614,7 +614,7 @@ function ButtonGroups() {
           <p className="font-mono text-xs text-[var(--text-secondary)]">zoom {zoom}</p>
         </div>
         <div className="space-y-2">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]">horizontal · three IconButtons</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal · three IconButtons</p>
           <ButtonGroup aria-label="Text alignment">
             {(
               [
@@ -636,7 +636,7 @@ function ButtonGroups() {
           </ButtonGroup>
         </div>
         <div dir="rtl" className="space-y-2">
-          <p className="font-mono text-[11px] text-[var(--text-muted)]" dir="ltr">dir=&quot;rtl&quot;</p>
+          <p className="font-mono text-caption text-[var(--text-muted)]" dir="ltr">dir=&quot;rtl&quot;</p>
           <ButtonGroup aria-label="التنقل">
             <Button variant="secondary">الأول</Button>
             <Button variant="secondary">الثاني</Button>

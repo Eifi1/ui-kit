@@ -95,7 +95,7 @@ function TextOn({ fill }: { fill: string }) {
   return (
     <span className="inline-flex items-center gap-2">
       <span
-        className="rounded px-1.5 py-0.5 text-[11px] font-semibold"
+        className="rounded px-1.5 py-0.5 text-caption font-semibold"
         style={{ background: fill, color: out }}
       >
         -12.50
@@ -432,7 +432,7 @@ export function Foundations() {
                 <span className="text-sm font-medium text-[var(--text-primary)]">{p.name}</span>
                 <code className="font-mono text-xs text-[var(--text-muted)]">id: {p.id}</code>
                 {p.id === activeId && (
-                  <span className="rounded bg-[var(--brand)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--brand-contrast)]">
+                  <span className="rounded bg-[var(--brand)] px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-[var(--brand-contrast)]">
                     active
                   </span>
                 )}

@@ -13,8 +13,8 @@ import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { useMediaQuery } from "../hooks/use-media-query";
-import { FLOATING_LABEL_STATIC, PHONE_QUERY, Spinner } from "./ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { FLOATING_LABEL_STATIC, Spinner } from "./ui";
 import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
@@ -364,7 +364,7 @@ export function useComboboxCore<V extends string | number>({
   // old value, and tapping the search box or the X was equally fatal. `PickerSheet`
   // stops `mousedown` for exactly this reason, but that guard was written for
   // `useDropdown`'s listener and never covered this hook.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
   useEscapeKey(closeToTrigger, open);
 
@@ -437,7 +437,7 @@ export function useComboboxCore<V extends string | number>({
 
 /** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
  *  so a combobox's message is indistinguishable from an Input's. */
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 /**
  * {@link Input}'s `error` for the combobox family: the message under the field, its
@@ -589,7 +589,7 @@ export function ComboboxPanel<V extends string | number>({
   // The phone gets a full-screen sheet instead of an anchored panel (live #200).
   // Same core, same results, same handlers — only the container differs, so the
   // two presentations cannot drift in what they offer.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   // Every row the keyboard can land on, the create row included — passed over, like a
   // disabled option, while a write lock holds it.
   const rows: readonly { disabled?: boolean }[] = showCreate
@@ -732,7 +732,7 @@ export function ComboboxPanel<V extends string | number>({
                 role="presentation"
                 className={cn(
                   "font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-                  isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-[11px] first:pt-1",
+                  isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
                 )}
               >
                 {o.group}
@@ -906,7 +906,8 @@ export function ComboboxPanel<V extends string | number>({
         top: placement.top,
         ...inline,
         width: rect.width,
-        minWidth: 220,
+        // 220 px at Normal, in rem so the panel's text keeps its room at Large (§3.2).
+        minWidth: "13.75rem",
         maxHeight: placement.maxHeight,
       }}
       className={cn(

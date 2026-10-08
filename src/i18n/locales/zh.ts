@@ -20,6 +20,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     seconds < 60 ? `${n(Math.ceil(seconds))} 秒` : `${n(Math.ceil(seconds / 60))} 分钟`;
   const rateLimited = (seconds?: number) =>
     !seconds || seconds <= 0 ? "尝试次数过多，请稍候再试。" : `尝试次数过多，请 ${wait(seconds)}后重试。`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow. A numeral brings its own leading space.
+  const inDays = (days: number) => (days <= 0 ? "今天" : days === 1 ? "明天" : ` ${n(days)} 天后`);
 
   return {
     feedbackAttachment: {
@@ -777,6 +780,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           disclaimer: {
             title: "内容与链接的责任",
             body: "这是一个私人的非商业项目，在封闭测试期间提供，不作任何保证。我们所链接的外部网站由其各自的运营者负责；我们无法控制其内容。",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8). "套餐"
+            // and "订阅" as the `billing` namespace.
+            commercial:
+              "这是一项商业服务。付费套餐由我们的经销商销售，该经销商作为记录商户（Merchant of Record）行事：它以自己的名义销售订阅、收取款项、开具发票并处理增值税，且该笔购买适用其销售条款。我们尽力确保本服务的内容准确，但无法保证其完整或最新。我们所链接的外部网站由其各自的运营者负责；我们无法控制其内容。",
           },
         },
         privacy: {
@@ -1196,6 +1203,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       outflow: "支出",
       inflow: "收入",
       direction: (current, next) => `方向：${current}，切换为${next}`,
+      switchTo: (next) => `切换为${next}`,
     },
     columnMapper: {
       paste: "粘贴表格",
@@ -1357,6 +1365,88 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       endedReadOnly: "示例数据会定期重置。",
       endedSandbox: "示例数据会定期重置；您在演示中创建的内容会被删除。",
       restart: "开始新的演示",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "套餐" is what is bought
+    // (Free, Pro), "订阅" the standing arrangement and the settings group. "您".
+    billing: {
+      group: "订阅",
+      plans: "套餐",
+      interval: "计费周期",
+      yearly: "按年",
+      monthly: "按月",
+      // As `currency.currency`.
+      currency: "货币",
+      perYear: "每年",
+      perMonth: "每月",
+      vatIncluded: "含增值税",
+      free: "免费",
+      notOffered: "此计费周期不提供",
+      // As `progressBar.unlimited`.
+      unlimited: "无限制",
+      limits: "限额",
+      features: "包含内容",
+      current: "当前套餐",
+      choose: (plan) => `选择 ${plan}`,
+      upgrade: (plan) => `升级到 ${plan}`,
+      downgrade: (plan) => `切换到 ${plan}`,
+      isCurrent: "这是您当前的套餐。",
+      pickFirst: "请先选择一个套餐。",
+      status: {
+        trialing: "试用中",
+        active: "有效",
+        past_due: "付款逾期",
+        canceled: "已取消",
+        // As `invitations.status.expired`.
+        expired: "已过期",
+        comped: "免费赠送",
+      },
+      trialEnding: (days) =>
+        `您的试用期将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
+      grantEnding: (days) =>
+        `您的免费使用权将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
+      paymentFailed: "您的上一笔付款未成功。请更新付款方式，以保留您的套餐。",
+      planEnded: "您的套餐已结束。您仍可查看和导出所有内容；选择套餐后即可再次进行修改。",
+      // Never why: the owner's payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `“${item}”目前为只读；其所有者可以解除此限制。`
+          : "此内容目前为只读；其所有者可以解除此限制。",
+      processing: "您的付款正在处理中。确认后您的套餐即会生效；此页面会自动更新。",
+      choosePlan: "选择套餐",
+      updatePayment: "更新付款方式",
+      checkAgain: "再次检查",
+      lockReason: "您的套餐已结束。选择套餐后即可再次进行修改。",
+      // As `characterCount.limitReached` ("已达到字符数上限").
+      limitReached: "已达到套餐上限",
+      limitUpgrade: "如需添加更多，请选择上限更高的套餐。",
+      limitContact: "如需添加更多，请向我们申请更高的上限。",
+      askForMore: "申请提高上限",
+      // Both figures arrive formatted; written as `characterCount.count` writes them.
+      usage: (used, limit) => `${used}/${limit}`,
+      contactSubject: (dimension) => `套餐上限：${dimension}`,
+      manage: "付款与发票",
+      cancel: "取消订阅",
+      waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
+      // "放弃", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "放弃等待中的修改",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "外观" group.
+    appearance: {
+      textSize: "文字大小",
+      textSizeHelp: "更大的文字，以及为其留出空间的布局。",
+      textSizes: { normal: "标准", large: "大", xlarge: "特大" },
+      contrast: "对比度",
+      contrastHelp: "增强对比度会加深浅色文字和线条，并加粗焦点框。“跟随系统”沿用此设备的设置。",
+      contrastModes: { system: "跟随系统", standard: "标准", more: "增强" },
+    },
+    rowActions: {
+      actions: "操作",
+      actionsFor: (name) => `${name} 的操作`,
+    },
+    appShellMore: {
+      more: "更多",
+      moreTitle: "更多页面",
     },
   };
 }

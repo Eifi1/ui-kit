@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Link, NavLink, matchPath, useLocation } from "react-router";
-import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Link, NavLink, matchPath, useHref, useLocation } from "react-router";
+import { ChevronRight, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
@@ -10,9 +10,13 @@ import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
+import { DialogFrame } from "../components/dialog-frame";
+import { CompactControls } from "../components/ui";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
+import { useTextSize } from "../theme/text-size";
+import type { TextSize } from "../theme/text-size";
 import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 
@@ -96,6 +100,46 @@ export type AppShellSidebarFooterItem =
     };
 
 /**
+ * The words of the phone bar's "More" cell and its sheet (0.32,
+ * docs/text-size-harmonization.md §4 Navigation, §10.7) — the `appShellMore` namespace of
+ * `<UiKitProvider labels>`, overridable per shell through `moreLabels`.
+ */
+export interface AppShellMoreLabels {
+  /** The cell's visible label, under its icon — one short word. */
+  more: string;
+  /** The sheet's heading, and so its accessible name. */
+  moreTitle: string;
+}
+
+export const DEFAULT_APP_SHELL_MORE_LABELS: AppShellMoreLabels = {
+  more: "More",
+  moreTitle: "More pages",
+};
+
+/**
+ * The most entries the phone bar shows before the rest go under "More", per text size
+ * (§10.7): every entry at Normal, four at Large, three at Extra large. A fifth of a
+ * 360 px phone at 150 % is 48 px of Normal-sized room, and the cells hold a word each.
+ */
+export const DEFAULT_MOBILE_BAR_MAX: Readonly<Record<TextSize, number>> = {
+  normal: Number.POSITIVE_INFINITY,
+  large: 4,
+  xlarge: 3,
+};
+
+/**
+ * Split the bar's entries into the cells shown and the ones under "More", in the app's
+ * order (§10.7: the app puts its four most used first, or orders by role). One hidden
+ * entry is no saving — the More cell would take its place — so the bar then shows them
+ * all: the cell count is the same either way, and a real entry beats a detour.
+ */
+export function splitMobileBar<T>(entries: readonly T[], max: number): { shown: T[]; hidden: T[] } {
+  const limit = Math.max(1, Math.floor(max));
+  if (entries.length <= limit + 1) return { shown: [...entries], hidden: [] };
+  return { shown: entries.slice(0, limit), hidden: entries.slice(limit) };
+}
+
+/**
  * Exported and `<div>`-shaped. This is the outermost element of every consuming app, so
  * there is nothing above it to hang an id, a landmark label or a `data-tour` anchor on —
  * and nothing a consumer can wrap it in either, since the root owns the `h-dvh` and
@@ -157,6 +201,22 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    */
   mobileSubNavLayout?: "wrap" | "scroll";
   /**
+   * The most entries the phone bar shows; the rest move into a "More" cell that opens a
+   * sheet listing them, each group with its pages (0.32, docs/text-size-harmonization.md
+   * §4, §10.7). The bar takes `nav` in the app's order — after `mobileHidden` — so the
+   * app puts its most used entries first (or orders by role: kastlan's manager and
+   * accountant see different firsts).
+   *
+   * Default {@link DEFAULT_MOBILE_BAR_MAX}: unlimited at Normal, 4 at Large, 3 at Extra
+   * large, because the cells' words grow with the text and the phone does not. A number
+   * replaces the default at every size; `{ large: 5 }` replaces it at one size only.
+   * Never fewer than one entry; and one entry over the limit shows in full rather than
+   * behind a More that would take the same cell.
+   */
+  mobileBarMax?: number | Partial<Record<TextSize, number>>;
+  /** The More cell's words over the provider's `appShellMore`. */
+  moreLabels?: Partial<AppShellMoreLabels>;
+  /**
    * Lay the shell out inside its PARENT'S box instead of the viewport: `h-full` rather
    * than `h-dvh`, its own scroll container at every width, a bottom bar pinned to the
    * shell rather than the window, `--app-nav-h` published on the shell alone, and no
@@ -201,9 +261,10 @@ function useNavHeightVar(
   // Re-run when the breakpoint flips. A ResizeObserver SKIPS an element that is not
   // being rendered, so the nav going `display:none` above `md` fires no callback and
   // would leave the last phone height published — a desktop footer would then sit 56px
-  // off the bottom after a live resize. The query is the one the nav's own `md:hidden`
-  // compiles to, so the two cannot disagree about where the boundary is.
-  const isMdUp = useMediaQuery("(min-width: 768px)", false);
+  // off the bottom after a live resize. `useBreakpoint("md")` is the nav's own `md:hidden`
+  // at the text size in force (0.32), so the two cannot disagree about where the
+  // boundary is — at Extra large both move to 72rem.
+  const isMdUp = useBreakpoint("md", false);
   useEffect(() => {
     const node = ref.current;
     const shell = shellRef.current;
@@ -272,14 +333,26 @@ export function AppShell({
   subNav = "flyout",
   mobileSubNav = true,
   mobileSubNavLayout = "wrap",
+  mobileBarMax,
+  moreLabels,
   toggleGroupLabel,
   embedded: embeddedProp,
   className,
   ...rest
 }: AppShellProps) {
   const embedded = useContext(AppShellNesting) || !!embeddedProp;
-  // The bottom bar's cells: every entry the phone does not reach another way.
-  const barNav = nav.filter((item) => !item.mobileHidden);
+  const { size: textSize } = useTextSize();
+  const large = textSize !== "normal";
+  // The bottom bar's cells: every entry the phone does not reach another way, up to the
+  // text size's limit; the rest go under More (§10.7).
+  const barMax =
+    typeof mobileBarMax === "number"
+      ? mobileBarMax
+      : (mobileBarMax?.[textSize] ?? DEFAULT_MOBILE_BAR_MAX[textSize]);
+  const { shown: barNav, hidden: moreNav } = splitMobileBar(
+    nav.filter((item) => !item.mobileHidden),
+    barMax,
+  );
   // An embedded shell sharing the default key would overwrite the outer app's sidebar
   // preference with its own — so it persists only when given a key of its own.
   const collapseStorageKey =
@@ -310,6 +383,11 @@ export function AppShell({
   useEffect(() => {
     if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
+  // §4: at Large and Extra large the sidebar never collapses to icons only — a glyph
+  // with its name in a tooltip is the very thing a reader who asked for bigger type
+  // cannot use. The persisted preference is left alone, so Normal gets it back, and the
+  // toggle goes while it could not do anything.
+  const iconOnly = collapsed && !large;
 
   return (
     // The caller's attributes go on the shell's own root, never on the `data-tour="nav"`
@@ -331,7 +409,10 @@ export function AppShell({
           className,
         )}
       >
-        {topBar}
+        {/* §4: "the top bar keeps its essential icons" — its IconButtons stay icons at
+            Large (their labels the names and tooltips) and a locked one keeps its reason
+            in the tooltip: a bar 3rem tall has no room for words under every glyph. */}
+        <CompactControls>{topBar}</CompactControls>
         <div className="flex flex-1 min-h-0">
           <aside
             className={cn(
@@ -340,7 +421,7 @@ export function AppShell({
               // Embedded, the row it sits in is already the shell's height; the sticky
               // offsets below are measured against the window's top bar.
               embedded ? "md:self-stretch" : "md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)]",
-              collapsed ? "md:w-14" : "md:w-60",
+              iconOnly ? "md:w-14" : "md:w-60",
             )}
           >
             {/* The `<nav>` is flex-1 so it fills the sidebar's height (with empty
@@ -355,7 +436,7 @@ export function AppShell({
                   <SidebarNavItem
                     key={item.to}
                     item={item}
-                    collapsed={collapsed}
+                    collapsed={iconOnly}
                     inline={subNav === "inline"}
                     toggleGroupLabel={labels.toggleGroup}
                     openGroup={openGroup}
@@ -365,33 +446,36 @@ export function AppShell({
               </div>
             </nav>
             {!!sidebarFooterItems?.length && (
-              <SidebarFooterItems items={sidebarFooterItems} collapsed={collapsed} renderLink={renderLink} />
+              <SidebarFooterItems items={sidebarFooterItems} collapsed={iconOnly} renderLink={renderLink} />
             )}
-            {sidebarFooter?.(collapsed)}
-            <div className="border-t border-[var(--border)] p-2">
-              {collapsed ? (
-                <Tooltip label={labels.expand} side="end" portal className="block">
+            {sidebarFooter?.(iconOnly)}
+            {/* No toggle at Large: the sidebar cannot collapse there (see `iconOnly`). */}
+            {!large && (
+              <div className="border-t border-[var(--border)] p-2">
+                {collapsed ? (
+                  <Tooltip label={labels.expand} side="end" portal className="block">
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(false)}
+                      aria-label={labels.expand}
+                      className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                    >
+                      <PanelLeftOpen className="size-4 shrink-0 rtl:-scale-x-100" />
+                    </button>
+                  </Tooltip>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => setCollapsed(false)}
-                    aria-label={labels.expand}
-                    className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                    onClick={() => setCollapsed(true)}
+                    aria-label={labels.collapse}
+                    className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
                   >
-                    <PanelLeftOpen className="size-4 shrink-0 rtl:-scale-x-100" />
+                    <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
+                    <span className="truncate">{labels.collapse}</span>
                   </button>
-                </Tooltip>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setCollapsed(true)}
-                  aria-label={labels.collapse}
-                  className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
-                >
-                  <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
-                  <span className="truncate">{labels.collapse}</span>
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </aside>
 
           {/* Content column beside the sidebar. main grows to fill so the footer
@@ -456,11 +540,12 @@ export function AppShell({
           <nav
             data-tour="nav"
             className="grid"
-            style={{ gridTemplateColumns: `repeat(${barNav.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${barNav.length + (moreNav.length ? 1 : 0)}, minmax(0, 1fr))` }}
           >
             {barNav.map((item) => (
               <MobileNavItem key={item.to} item={item} />
             ))}
+            {moreNav.length > 0 && <MobileMoreCell hidden={moreNav} labels={moreLabels} />}
           </nav>
         </div>
       </div>
@@ -527,7 +612,7 @@ function SidebarFooterItems({
             <nav
               key={item.key}
               aria-label={item.label}
-              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--text-muted)]"
+              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-[var(--text-muted)]"
             >
               {item.links.map((l) => (
                 <span key={l.to}>
@@ -561,6 +646,37 @@ function SidebarFooterItems({
   );
 }
 
+/**
+ * A bar cell's look, shared by the entries and the More cell. The active page needs a
+ * clear marker, not just a subtle text shade (feedback #327): brand-accent icon + label,
+ * bolder weight, and a top accent bar spanning the cell so it reads at a glance.
+ */
+const mobileCellClass = (active: boolean) =>
+  cn(
+    // `h-full`: the grid row stretches every cell to the tallest one's height, so a
+    // label on two lines never leaves its neighbours a different shape.
+    "relative flex h-full w-full flex-col items-center justify-start py-2 text-caption gap-0.5 transition-colors",
+    "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
+    active
+      ? "font-semibold text-[var(--brand)] before:bg-[var(--brand)]"
+      : "text-[var(--text-muted)] before:bg-transparent",
+  );
+
+/**
+ * A bar cell's label (0.32, §10.7): up to TWO lines, never an ellipsis on one. At Large
+ * a cell is a fifth of a phone holding type a quarter bigger, and one line truncated
+ * "Transactions" to "Trans…" in every app (Kurvenschmiede). Two lines and then a clamp,
+ * centred, a long word broken (and hyphenated where the page's `lang` allows) rather
+ * than overflowing into the next cell. `shortLabel` still wins where the app has one.
+ */
+function MobileCellLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="line-clamp-2 max-w-full break-words px-0.5 text-center leading-tight hyphens-auto">
+      {children}
+    </span>
+  );
+}
+
 /** One cell of the phone's group bar. Marked while the group's own page OR any of its
  *  pages is current — NavLink alone only knows its own `to`, which left the bar with
  *  nothing marked on every sub-page (the same defect the sidebar had). */
@@ -571,28 +687,136 @@ function MobileNavItem({ item }: { item: AppShellNavItem }) {
       to={item.to}
       end={item.end ?? true}
       data-tour={item.dataTour}
-      className={({ isActive }) =>
-        // The active page needs a clear marker, not just a subtle text
-        // shade (feedback #327): brand-accent icon + label, bolder weight,
-        // and a top accent bar spanning the cell so it reads at a glance.
-        cn(
-          "relative flex flex-col items-center justify-center py-2 text-[11px] gap-0.5 transition-colors",
-          "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
-          isActive || subActive
-            ? "font-semibold text-[var(--brand)] before:bg-[var(--brand)]"
-            : "text-[var(--text-muted)] before:bg-transparent",
-        )
-      }
+      className={({ isActive }) => mobileCellClass(isActive || subActive)}
     >
       <span className="relative">
         <item.icon className="size-5" />
       </span>
-      {/* One line, always. `truncate` is the backstop for the case a
-          `shortLabel` was not supplied (or a translation is longer than its
-          author expected): an ellipsis in one cell is a far smaller problem
-          than a bar whose rows are different heights. */}
-      <span className="max-w-full truncate px-0.5">{item.shortLabel ?? item.label}</span>
+      <MobileCellLabel>{item.shortLabel ?? item.label}</MobileCellLabel>
     </NavLink>
+  );
+}
+
+/** Whether the current route is `item`'s page or one of its pages. */
+function entryIsCurrent(item: AppShellNavItem, pathname: string): boolean {
+  return (
+    !!matchPath({ path: item.to, end: item.end ?? true }, pathname) ||
+    !!item.items?.some((sub) => matchPath({ path: sub.to, end: sub.end ?? true }, pathname))
+  );
+}
+
+/** A hidden entry's link, resolved as the router would write it (basename included). */
+function TourAnchor({ to, dataTour }: { to: string; dataTour?: string }) {
+  const href = useHref(to);
+  return (
+    // eslint-disable-next-line jsx-a11y/anchor-has-content -- a tour anchor, aria-hidden and inert; the More button under it is the control (see MobileMoreCell)
+    <a
+      href={href}
+      data-tour={dataTour}
+      // Not a control: no name, no tab stop, no pointer — the More button under it
+      // takes the tap. It exists only to be FOUND (see MobileMoreCell).
+      aria-hidden
+      tabIndex={-1}
+      className="pointer-events-none absolute inset-0"
+    />
+  );
+}
+
+/**
+ * The bar's "More" cell (0.32, docs/text-size-harmonization.md §4, §10.7): the entries
+ * past `mobileBarMax`, in a sheet — each entry as a link, and under a group its pages,
+ * since a group the bar no longer shows has no sub-row to reach them by either. Marked
+ * active while the current page is one of them, as the cell it replaced would be.
+ *
+ * **Tour anchors.** A guided tour finds a nav entry by `[data-tour="nav"] a[href="/x"]`
+ * (keksdose's tours) or by the entry's own `dataTour`. An entry under More has no link
+ * in the bar, and the sidebar's copy is `display:none` on a phone, so such a step would
+ * spotlight nothing. So the More cell carries the hidden entries' links — one `<a>` per
+ * entry and per page of a hidden group, with the entry's `href` and `dataTour` — laid
+ * over the cell (`absolute inset-0`): both selectors resolve to a visible box, and that
+ * box is the More cell, which is where the reader has to go next. They are
+ * `aria-hidden`, out of the tab order and pointer-transparent, so neither a screen
+ * reader nor a tap ever meets them; the button under them is the one control.
+ */
+function MobileMoreCell({
+  hidden,
+  labels: labelsProp,
+}: {
+  hidden: AppShellNavItem[];
+  labels?: Partial<AppShellMoreLabels>;
+}) {
+  const labels: AppShellMoreLabels = useKitLabels("appShellMore", DEFAULT_APP_SHELL_MORE_LABELS, labelsProp);
+  const { pathname } = useLocation();
+  const [open, setOpen] = useState(false);
+  const active = hidden.some((item) => entryIsCurrent(item, pathname));
+  const close = () => setOpen(false);
+  return (
+    <div data-slot="app-shell-more" className="relative min-w-0">
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className={mobileCellClass(active)}
+      >
+        <span className="relative">
+          <MoreHorizontal aria-hidden className="size-5" />
+        </span>
+        <MobileCellLabel>{labels.more}</MobileCellLabel>
+      </button>
+      {hidden.flatMap((item) => [
+        <TourAnchor key={item.to} to={item.to} dataTour={item.dataTour} />,
+        ...(item.items ?? []).map((sub) => <TourAnchor key={`${item.to} ${sub.to}`} to={sub.to} />),
+      ])}
+      <DialogFrame open={open} onClose={close} title={labels.moreTitle} closeButton bodyClassName="space-y-1">
+        <ul className="space-y-1">
+          {hidden.map((item) => (
+            <li key={item.to}>
+              <NavLink
+                to={item.to}
+                end={item.end ?? true}
+                onClick={close}
+                className={({ isActive }) =>
+                  cn(
+                    "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    isActive
+                      ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+                      : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                  )
+                }
+              >
+                <item.icon aria-hidden className="size-5 shrink-0" />
+                <span className="min-w-0 break-words leading-snug">{item.label}</span>
+              </NavLink>
+              {!!item.items?.length && (
+                <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-[var(--border)] ps-2">
+                  {item.items.map((sub) => (
+                    <li key={sub.to}>
+                      <NavLink
+                        to={sub.to}
+                        end={sub.end ?? true}
+                        onClick={close}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                            isActive
+                              ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+                              : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                          )
+                        }
+                      >
+                        <sub.icon aria-hidden className="size-4 shrink-0 opacity-70" />
+                        <span className="min-w-0 break-words leading-snug">{sub.label}</span>
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </DialogFrame>
+    </div>
   );
 }
 
@@ -741,7 +965,7 @@ function SidebarNavItem({
       </span>
       {/* Wraps rather than truncates: in the sidebar a label cut to "Checkbox, switch
           & sl…" hides the one word that tells two pages apart, and there is height
-          to spare. (The phone bar keeps `truncate` — its cells must stay one row.) */}
+          to spare. (The phone bar clamps at two lines instead, since 0.32 §10.7.) */}
       {!collapsed && <span className="min-w-0 flex-1 break-words leading-snug">{item.label}</span>}
       {!collapsed && hasSub && <ChevronRight className="size-3.5 shrink-0 opacity-60 rtl:-scale-x-100" />}
     </NavLink>
@@ -995,7 +1219,7 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
               aria-label={item.label}
               className="animate-flyout min-w-52 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
             >
-              <div className="border-b border-[var(--border)] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <div className="border-b border-[var(--border)] px-3 py-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 {item.label}
               </div>
               <ul className="py-1">

@@ -512,7 +512,7 @@ describe("Chip 0.10.0", () => {
   it("size=xs is 11px type at px-1.5", () => {
     render(<Chip size="xs" data-testid="xs">Goal</Chip>);
     const cls = screen.getByTestId("xs").className;
-    expect(cls).toContain("text-[11px]");
+    expect(cls).toContain("text-caption");
     expect(cls).toContain("px-1.5");
     expect(cls).not.toContain("text-xs");
   });

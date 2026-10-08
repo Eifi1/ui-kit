@@ -27,7 +27,8 @@ const PX: Record<string, number> = {
   "py-0.5": 2,
   "leading-4": 16,
   "leading-5": 20,
-  "leading-[18px]": 18,
+  // 0.32 (§3.2): the md chrome line in rem — 18px at Normal, and it scales with the rest.
+  "leading-[1.125rem]": 18,
 };
 
 /** The one token of `cls` that is `prefix` + a known size, without a variant. */
@@ -43,7 +44,8 @@ const LEADING_TIGHT = 1.25;
 const FIELD_HEIGHT = 42;
 
 function labelBottom(label: Element): number {
-  expect(label.className).toContain("text-[11px]");
+  // `text-caption` is 0.6875rem, 11px at Normal (0.32, §3.2).
+  expect(label.className).toContain("text-caption");
   expect(label.className).toContain("leading-tight");
   return px(label, "top-") + LABEL_FONT * LEADING_TIGHT;
 }

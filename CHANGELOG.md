@@ -20,6 +20,42 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.32.0](https://github.com/Eifi1/ui-kit/compare/v0.31.1...v0.32.0) (2026-10-08)
+
+### ⚠ BREAKING CHANGES
+
+Changed emitted classes and behaviour that apps can see without picking a text size;
+the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
+
+* **The kit's 10 and 11 px text** is `text-micro` / `text-caption` (rem) instead of
+  `text-[10px]` / `text-[11px]`; the sizes are unchanged at Normal. `cn()` knows the two
+  new sizes.
+* **Focus frames:** Button and IconButton show a frame on keyboard focus only
+  (`focus-visible`); every frame takes its width from `--focus-ring-width` (`FOCUS_RING`).
+* **Fields are at least 16 px on touch** (`pointer: coarse`).
+* **On touch, facts leave the tooltip:**
+  - `disabledReason` shows as a line under the control (`disabledReasonDisplay`
+    overrides);
+  - a kit field's hint becomes its caption;
+  - `DateMark` shows the exact date beside the relative one.
+* **A chart with an axis on each side** drops its right axis when the plot would fall
+  below `MIN_PLOT_WIDTH` (also at Normal, under about 288 px).
+* **`PHONE_QUERY` is deprecated:** use `usePhoneLayout()`, which follows the text size.
+* **InvitationsPanel's** resend and revoke are `RowActions`.
+
+### Added
+
+* **billing:** plans, standing, banners and the limit notice (0.32) ([8f86da5](https://github.com/Eifi1/ui-kit/commit/8f86da56d12bb46b8d714d147611d3020f37acdf))
+* **i18n:** billing, text size and contrast, and the commercial disclaimer in seven languages ([afd590a](https://github.com/Eifi1/ui-kit/commit/afd590a2cc313a21ccce6ccbfa1cffbbff66b35a))
+* **showcase:** Text size & contrast, Subscription and the server kit's Billing ([eb7d74b](https://github.com/Eifi1/ui-kit/commit/eb7d74bc6f0248d7f7687e95f4db640b98c9562e))
+* **text-size:** one root scale, scaled breakpoints and the contrast step (0.32) ([83c142b](https://github.com/Eifi1/ui-kit/commit/83c142bf1c191c4e83005326ef233d1bd0806acd))
+* **text-size:** the components at Large, and no fixed px for text ([7287493](https://github.com/Eifi1/ui-kit/commit/72874935c8085f7306dd74842019cb84d136873d))
+* **text-size:** the remaining kit spots at Large ([e3fb23f](https://github.com/Eifi1/ui-kit/commit/e3fb23f7ac16abd77c41c5cacdf8001b30e7b2ee))
+
+### Fixed
+
+* **build:** the declaration build gets a 6 GB heap; a test follows DateMark ([64ee9f7](https://github.com/Eifi1/ui-kit/commit/64ee9f730c81b7ec862aeb0ead1008148c9dd363))
+
 ## [0.31.1](https://github.com/Eifi1/ui-kit/compare/v0.31.0...v0.31.1) (2026-10-08)
 
 ### Added

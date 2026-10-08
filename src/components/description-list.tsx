@@ -165,7 +165,7 @@ export function DescriptionList({
     ? { gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${track}), 1fr))` }
     : undefined;
   const ctx: ListContextValue = { layout, numeric, prose, density, columns: columns ?? 2, placeholder };
-  const text = density === "tight" ? "text-[11px] leading-4" : density === "compact" ? "text-xs" : "text-sm";
+  const text = density === "tight" ? "text-caption leading-4" : density === "compact" ? "text-xs" : "text-sm";
 
   if (stacked) {
     return (
@@ -299,7 +299,7 @@ export function DescriptionItem({
     <dt
       className={cn(
         "flex min-w-0 items-center gap-1 text-[var(--text-muted)]",
-        cards && (density === "tight" ? "text-[10px] uppercase tracking-wide" : "text-xs uppercase tracking-wide"),
+        cards && (density === "tight" ? "text-micro uppercase tracking-wide" : "text-xs uppercase tracking-wide"),
         // Stacked terms are a step smaller than the detail, as kastlan's dialogs set
         // them; in a list that is already small they stay the list's own size.
         stacked && density === "comfortable" && "text-xs",

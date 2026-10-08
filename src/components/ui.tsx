@@ -1,10 +1,12 @@
 import { createContext, forwardRef, useContext, useId, useLayoutEffect, useRef, useState } from "react";
-import { ChevronDown, Eye, EyeOff, HelpCircle, Plus, X } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Plus, X } from "lucide-react";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ChangeEvent, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { useLargeText } from "../hooks/use-large-text";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
@@ -12,9 +14,13 @@ import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-l
 import { useCommitReason } from "./write-lock";
 import { mergeDescribedBy } from "./choice-parts";
 import {
+  CompactControlsContext,
+  DisabledReasonLine,
   EndHintRow,
   FieldCaption,
   LockedReason,
+  useDisabledReasonLine,
+  type DisabledReasonDisplay,
   useFieldHint,
   useLockReason,
   FLOATING_LABEL_STATIC,
@@ -24,16 +30,35 @@ import {
 
 // The static label lives in field-parts since 0.23 (it is what the field anatomy
 // there draws, and field-parts must not import this file); public from here as before.
-export { FieldLabel, FLOATING_LABEL_STATIC } from "./field-parts";
-export type { FieldLabelProps } from "./field-parts";
+export { FieldLabel, FLOATING_LABEL_STATIC, FieldHint } from "./field-parts";
+export type { FieldLabelProps, FieldHintProps } from "./field-parts";
+
+// The kit's focus frame (§5) lives in its own module so the parts ui.tsx itself imports
+// (field-parts, the choice controls) can draw it too; public from here as before.
+export { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
 
 // Shared base ring for every button-styled element. Kept as a named const so the
 // <Button> component and the {@link buttonClasses} helper draw from one source and
 // can never drift apart.
-const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+//
+// The ring is the kit's focus frame (§5): {@link FOCUS_RING_WIDTH} wide, on keyboard focus
+// (`focus-visible`) — a tap or a click no longer leaves a ring on the button — in each
+// variant's own colour below.
+const BUTTON_BASE = cn(
+  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  FOCUS_RING_WIDTH,
+);
+
+/**
+ * The touch target at Large and Extra large (docs/text-size-harmonization.md §4): at
+ * least 48 px, the size a finger needs whatever the type. In px on purpose, like the
+ * field floor ({@link FIELD_TOUCH_TEXT}): it is a physical threshold, not a size that
+ * follows the text. Normal keeps the kit's own heights; a `large:` variant, so it costs
+ * no render and is right on the first paint.
+ */
+export const TOUCH_TARGET_LARGE = "large:min-h-[48px] large:min-w-[48px]";
 
 export type ButtonSize = "sm" | "md";
 
@@ -44,9 +69,18 @@ export type ButtonSize = "sm" | "md";
 // enough, so the two spellings meet at `py-1`. There is no `lg`: no app has asked for
 // a bigger text button (IconButton's `lg` is a touch target, not a text size). The
 // variant map comes AFTER the size, so `link`'s `p-0` still wins at either size.
+//
+// At Large and above (§4) `sm` grows to `md`'s height — the padding that makes its
+// 1rem line as tall as `md`'s 1.25rem one — and both reach the 48 px touch target. The
+// type stays `sm`'s: the compact button is still the quieter one. Not on `link`, which
+// is a word in a sentence and has no box to grow (see `buttonLook`).
 const BUTTON_SIZES: Record<ButtonSize, string> = {
   md: "gap-2 px-3 py-2 text-sm",
   sm: "gap-1.5 px-2 py-1 text-xs",
+};
+const BUTTON_SIZES_LARGE: Record<ButtonSize, string> = {
+  md: "large:min-h-[48px]",
+  sm: "large:min-h-[48px] large:py-2.5",
 };
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
@@ -57,24 +91,24 @@ const BUTTON_SIZES: Record<ButtonSize, string> = {
 // variant's own accent: brand for the four neutral ones, danger for `danger`.
 const buttonVariantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--border)] focus:ring-[var(--brand)]",
+    "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--border)] focus-visible:ring-[var(--brand)]",
   secondary:
-    "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus:ring-[var(--brand)]",
+    "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus-visible:ring-[var(--brand)]",
   ghost:
-    "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus:ring-[var(--brand)]",
+    "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus-visible:ring-[var(--brand)]",
   danger:
-    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus:ring-[var(--danger-border-strong)]",
+    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus-visible:ring-[var(--danger-border-strong)]",
   brand:
-    "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus:ring-[var(--brand)]",
+    "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus-visible:ring-[var(--brand)]",
   // A text link that is still a `<button>` — keksdose's six hand-rolled
   // `<button className="text-brand underline">` sites ("Resend code", "Show all",
   // "Undo" in a toast…), which act rather than navigate and so must not be anchors.
   // The box padding goes (`p-0`) so it sits in a sentence at the text's own size, but
-  // the base's `focus:ring-2` stays: those copies had `outline-none` and no ring, so
+  // the base's focus ring stays: those copies had `outline-none` and no ring, so
   // a keyboard user tabbing onto them saw nothing at all. `rounded-sm` keeps that
   // ring hugging the word instead of drawing a pill round it.
   link:
-    "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus:ring-[var(--brand)]",
+    "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus-visible:ring-[var(--brand)]",
 };
 
 /**
@@ -109,7 +143,7 @@ const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
   muted:
     "text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:hover:text-[var(--text-secondary)]",
   danger:
-    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus:ring-[var(--danger-border-strong)] disabled:hover:text-[var(--text-secondary)]",
+    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus-visible:ring-[var(--danger-border-strong)] disabled:hover:text-[var(--text-secondary)]",
 };
 
 /** Only the two transparent variants take every tone; see {@link ButtonTone}. */
@@ -120,9 +154,9 @@ const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
 // the neutral ones survives the merge.
 const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
   secondary:
-    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border-strong)]",
+    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:ring-[var(--danger-border-strong)]",
   primary:
-    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus:ring-[var(--danger-border-strong)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
+    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus-visible:ring-[var(--danger-border-strong)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
 };
 
 // `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
@@ -155,7 +189,13 @@ export function buttonClasses(
 ): string {
   const { size = "md", className } =
     typeof classNameOrOptions === "object" ? classNameOrOptions : { className: classNameOrOptions };
-  return cn(BUTTON_BASE, BUTTON_SIZES[size], buttonVariantClasses[variant], className);
+  return cn(
+    BUTTON_BASE,
+    BUTTON_SIZES[size],
+    variant !== "link" && BUTTON_SIZES_LARGE[size],
+    buttonVariantClasses[variant],
+    className,
+  );
 }
 
 /**
@@ -213,6 +253,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * DangerConfirm keeps its own.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where `disabledReason` shows (0.32, §4 "No fact only in a tooltip"): by default a
+   * line under the button at Large and on a touch screen, the tooltip otherwise. See
+   * {@link DisabledReasonDisplay}.
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This button COMMITS — it saves, creates, deletes. Under a locked
    * {@link WriteLockProvider} it is disabled the `disabledReason` way, with the lock's
@@ -295,6 +341,7 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   pending?: never;
   pressed?: never;
   disabledReason?: never;
+  disabledReasonDisplay?: never;
   commit?: never;
 }
 
@@ -302,11 +349,24 @@ function hasContent(node: ReactNode): boolean {
   return node !== undefined && node !== null && node !== false && node !== "";
 }
 
+// No fact only in a tooltip (§4): the reason line and the compact region live in
+// field-parts, where the self-saving controls (Switch, Checkbox) reach them too.
+export {
+  CompactControls,
+  DisabledReasonLine,
+  DISABLED_REASON_LINE_CLASS,
+  useDisabledReasonLine,
+} from "./field-parts";
+export type { DisabledReasonDisplay } from "./field-parts";
+
 /** The button look shared by the `<button>` and the `<a>` form. */
 function buttonLook(variant: ButtonVariant, size: ButtonSize, stretch: boolean | undefined, tone: ButtonTone) {
   return cn(
     BUTTON_BASE,
     BUTTON_SIZES[size],
+    // §4: `sm` at `md`'s height and the 48 px target at Large — not on a `link`. In the
+    // order `buttonClasses` has it, so the two strings stay identical.
+    variant !== "link" && BUTTON_SIZES_LARGE[size],
     // In a flex row next to a taller labelled field, `stretch` makes the button
     // fill the field's height so the two line up (self-stretch overrides the row's
     // align-items). No effect outside a flex row / when it's already the tallest.
@@ -422,6 +482,7 @@ function ButtonElement({
   tone = "default",
   pressed,
   disabledReason: ownDisabledReason,
+  disabledReasonDisplay,
   commit,
   pending,
   className,
@@ -486,15 +547,60 @@ function ButtonElement({
   );
   if (!locked) return button;
   return (
-    // The button in a FRAGMENT so Tooltip does not clone its bubble into the
-    // description as well — the hidden copy below already describes it, and the same
-    // sentence twice would be read on every focus. `stretch` moves to the wrapper,
-    // which is now the flex item.
-    <Tooltip label={disabledReason} className={stretch ? "self-stretch" : undefined}>
+    <ReasonFrame
+      reason={disabledReason}
+      reasonId={reasonId}
+      display={disabledReasonDisplay}
+      className={stretch ? "self-stretch" : undefined}
+    >
+      {button}
+    </ReasonFrame>
+  );
+}
+
+/**
+ * A locked control and its reason: the line under it, or the kit {@link Tooltip} with a
+ * hidden copy for `aria-describedby` — see {@link DisabledReasonDisplay}. A component of
+ * its own so only a LOCKED control asks the text size and the pointer; the hundreds of
+ * unlocked buttons on a page subscribe to nothing.
+ *
+ * Tooltip form: the control in a FRAGMENT so Tooltip does not clone its bubble into the
+ * description as well — the hidden copy already describes it, and the same sentence
+ * twice would be read on every focus. Line form: the line is the description, and no
+ * bubble repeats what is on screen. Either way `className` (the control's `stretch`)
+ * moves to the wrapper, which is now the flex item.
+ */
+function ReasonFrame({
+  reason,
+  reasonId,
+  display,
+  className,
+  side,
+  portal,
+  children,
+}: {
+  reason: ReactNode;
+  reasonId: string;
+  display: DisabledReasonDisplay | undefined;
+  className?: string;
+  side?: TooltipSide;
+  portal?: boolean;
+  children: ReactNode;
+}) {
+  const line = useDisabledReasonLine(display);
+  if (line) {
+    return (
+      <DisabledReasonLine id={reasonId} reason={reason} className={className}>
+        {children}
+      </DisabledReasonLine>
+    );
+  }
+  return (
+    <Tooltip label={reason} side={side} portal={portal} className={className}>
       <>
-        {button}
+        {children}
         <span id={reasonId} hidden>
-          {disabledReason}
+          {reason}
         </span>
       </>
     </Tooltip>
@@ -511,8 +617,10 @@ function ButtonElement({
 //
 // Draws its colours from the same `buttonVariantClasses` map as <Button>, so the
 // two re-skin together with the palette.
-const ICON_BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
+const ICON_BUTTON_BASE = cn(
+  "inline-flex items-center justify-center rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  FOCUS_RING_WIDTH,
+);
 
 export type IconButtonSize = "2xl" | "xl" | "lg" | "md" | "sm" | "xs" | "2xs";
 
@@ -548,6 +656,45 @@ const ICON_BUTTON_STRETCH_SIZES: Record<IconButtonSize, string> = {
   "2xs": "w-6 min-h-6 self-stretch rounded [&_svg]:size-3.5",
 };
 
+// The label as visible text beside the glyph (0.32, §4: at Large "IconButton shows its
+// label"): the same height and glyph as the square, a width taken from the words. A
+// map of its own rather than `w-auto` over `size-*`, which tailwind-merge cannot undo
+// in one direction.
+const ICON_BUTTON_TEXT_SIZES: Record<IconButtonSize, string> = {
+  "2xl": "h-16 gap-2 px-4 text-base [&_svg]:size-7",
+  xl: "h-12 gap-2 px-3.5 text-sm [&_svg]:size-6",
+  lg: "h-11 gap-2 px-3 text-sm [&_svg]:size-5",
+  md: "h-9 gap-1.5 px-2.5 text-sm [&_svg]:size-5",
+  sm: "h-8 gap-1.5 px-2 text-sm [&_svg]:size-5",
+  xs: "h-7 gap-1 rounded px-1.5 text-xs [&_svg]:size-4",
+  "2xs": "h-6 gap-1 rounded px-1.5 text-xs [&_svg]:size-3.5",
+};
+const ICON_BUTTON_TEXT_STRETCH_SIZES: Record<IconButtonSize, string> = {
+  "2xl": "min-h-16 self-stretch gap-2 px-4 text-base [&_svg]:size-7",
+  xl: "min-h-12 self-stretch gap-2 px-3.5 text-sm [&_svg]:size-6",
+  lg: "min-h-11 self-stretch gap-2 px-3 text-sm [&_svg]:size-5",
+  md: "min-h-9 self-stretch gap-1.5 px-2.5 text-sm [&_svg]:size-5",
+  sm: "min-h-8 self-stretch gap-1.5 px-2 text-sm [&_svg]:size-5",
+  xs: "min-h-7 self-stretch gap-1 rounded px-1.5 text-xs [&_svg]:size-4",
+  "2xs": "min-h-6 self-stretch gap-1 rounded px-1.5 text-xs [&_svg]:size-3.5",
+};
+
+// The 48 px touch target at Large (§4), per size. `lg` and up are past it already
+// (2.75rem is 55 px at Large). `md` … `xs` grow their box to it. `2xs` is the action ON
+// a chip or a tab, whose box cannot grow without growing the chip: it keeps its box and
+// gets a 48 px hit area instead — an invisible `::after` centred on it, which takes the
+// taps a finger lands round the glyph.
+const ICON_BUTTON_TOUCH_LARGE: Record<IconButtonSize, string> = {
+  "2xl": "",
+  xl: "",
+  lg: "",
+  md: TOUCH_TARGET_LARGE,
+  sm: TOUCH_TARGET_LARGE,
+  xs: TOUCH_TARGET_LARGE,
+  "2xs":
+    "relative large:after:absolute large:after:inset-[calc((100%-48px)/2)] large:after:content-['']",
+};
+
 // A tone re-colours the glyph without changing what the variant draws around it.
 // Each coloured tone comes in two resting looks, picked by `quiet` (see the prop):
 // QUIET is placeholder grey until the pointer or focus arrives, then the tone's
@@ -570,32 +717,32 @@ type ColouredTone = "danger" | "warning" | "info" | "success" | "custom";
 const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
   danger: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus:ring-[var(--danger-border-strong)]",
-    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus:ring-[var(--danger-border-strong)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus-visible:ring-[var(--danger-border-strong)]",
+    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:ring-[var(--danger-border-strong)]",
   },
   warning: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus:ring-[var(--warning-border)]",
-    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus:ring-[var(--warning-border)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus-visible:ring-[var(--warning-border)]",
+    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus-visible:ring-[var(--warning-border)]",
   },
   info: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--info-bg)] hover:text-[var(--info)] focus:ring-[var(--info-border)]",
-    toned: "text-[var(--info)] hover:bg-[var(--info-bg)] focus:ring-[var(--info-border)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--info-bg)] hover:text-[var(--info)] focus-visible:ring-[var(--info-border)]",
+    toned: "text-[var(--info)] hover:bg-[var(--info-bg)] focus-visible:ring-[var(--info-border)]",
   },
   success: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] focus:ring-[var(--success-border)]",
-    toned: "text-[var(--success)] hover:bg-[var(--success-bg)] focus:ring-[var(--success-border)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] focus-visible:ring-[var(--success-border)]",
+    toned: "text-[var(--success)] hover:bg-[var(--success-bg)] focus-visible:ring-[var(--success-border)]",
   },
   // The hover fill and the ring are MIXED from the one colour, since a custom tone
   // brings no `-bg` / `-border` pair of its own. The fallback is the body colour, so a
   // `custom` tone with no colour set is the default look rather than invisible.
   custom: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+      "text-[var(--text-placeholder)] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
     toned:
-      "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+      "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
   },
 };
 
@@ -656,7 +803,7 @@ const ICON_BUTTON_PRESSED =
 // themes. The disc is the inverse at 60% (`color-mix`, so it stays a token a palette
 // can re-point); the blur keeps a busy background from breaking the glyph's edge.
 const ICON_BUTTON_OVERLAY =
-  "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-[var(--text-inverse)] backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus:ring-[var(--text-inverse)]";
+  "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-[var(--text-inverse)] backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus-visible:ring-[var(--text-inverse)]";
 
 // `variant="shutter"`: the camera's release — keksdose's camera-capture.tsx:248 draws
 // it by hand as a 64px circle with a thick white ring round a translucent fill. It sits
@@ -665,7 +812,7 @@ const ICON_BUTTON_OVERLAY =
 // `overlay` uses would give a dark ring on a dark viewfinder in dark mode. The focus ring stands off by 2px, or it would
 // merge into the ring that is part of the look.
 const ICON_BUTTON_SHUTTER =
-  "rounded-full border-4 border-[var(--media-ink)] bg-[var(--media-scrim)] text-[var(--media-ink)] backdrop-blur-sm hover:bg-[var(--media-scrim-hover)] focus:ring-[var(--media-ink)] focus:ring-offset-2 focus:ring-offset-[var(--media-scrim-hover)]";
+  "rounded-full border-4 border-[var(--media-ink)] bg-[var(--media-scrim)] text-[var(--media-ink)] backdrop-blur-sm hover:bg-[var(--media-scrim-hover)] focus-visible:ring-[var(--media-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--media-scrim-hover)]";
 
 export type IconButtonVariant = ButtonVariant | "overlay" | "shutter";
 
@@ -843,9 +990,25 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * unless `tooltipPortal` says otherwise.
    */
   label?: string;
+  /**
+   * Show `label` as visible text beside the icon at Large and Extra large (0.32,
+   * docs/text-size-harmonization.md §4, §10.8). A reader who asked for bigger type is
+   * the one an unlabelled glyph fails, and on touch the tooltip never opens. Then there
+   * is no tooltip: the words are on the button.
+   *
+   * Default `true` — except for `variant="overlay"` and `"shutter"`, which sit ON a
+   * picture, and inside {@link CompactControls} (AppShell's top bar, `RowActions`'
+   * inline icons). `false`: the icon alone at every size, for an icon on content — a
+   * receipt overlay, a map's zoom, a viewfinder, a photo thumbnail. That must be rare;
+   * a dense row's actions belong in `RowActions`, which collapses them into a "⋯" menu
+   * at Large instead (§10.8). Normal never shows it. `tooltip={false}` (a universally
+   * read glyph, a dialog's ✕) keeps the icon alone too.
+   */
+  labelVisible?: boolean;
   /** Show `label` as a tooltip. Default `true`; `false` keeps `label` as the
    *  accessible name only — for a button whose glyph is universally read (a close ✕ in
-   *  a dialog header) or that already sits under a tooltip of its own. */
+   *  a dialog header) or that already sits under a tooltip of its own. It also keeps the
+   *  label from showing as text at Large (see `labelVisible`). */
   tooltip?: boolean;
   /** Where the `label` tooltip opens. See {@link Tooltip}'s `side`. */
   tooltipSide?: TooltipSide;
@@ -899,8 +1062,13 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * bubble shows the reason in place of the label, since the glyph already says what
    * the button is and the reason is the news. Shown even with `tooltip={false}`: a
    * reason nobody can see is not one. Wins over `disabled`, as on Button.
+   *
+   * 0.32: at Large and on a touch screen the reason is a line under the button rather
+   * than a bubble — see `disabledReasonDisplay`.
    */
   disabledReason?: ReactNode;
+  /** Where `disabledReason` shows — {@link Button}'s `disabledReasonDisplay`. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** This action COMMITS — {@link Button}'s `commit`: under a locked
    *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
    *  reason. No effect without a lock. */
@@ -947,6 +1115,7 @@ export interface IconButtonLinkProps
       | "quiet"
       | "stopPropagation"
       | "label"
+      | "labelVisible"
       | "tooltip"
       | "tooltipSide"
       | "tooltipPortal"
@@ -968,9 +1137,33 @@ export interface IconButtonLinkProps
   form?: never;
   pressed?: never;
   disabledReason?: never;
+  disabledReasonDisplay?: never;
   commit?: never;
   disabledStyle?: never;
   pending?: never;
+}
+
+/**
+ * Whether an IconButton draws its `label` as text (see `labelVisible`): at Large and
+ * above, with a label to draw, not switched off by the caller, the variant (`overlay`,
+ * `shutter`), `tooltip={false}` or a {@link CompactControls} region.
+ */
+function useIconButtonText(
+  label: string | undefined,
+  labelVisible: boolean | undefined,
+  variant: IconButtonVariant,
+  tooltip: boolean,
+): boolean {
+  const large = useLargeText();
+  const compact = useContext(CompactControlsContext);
+  if (!large || label === undefined || label === "" || !tooltip) return false;
+  const visible = labelVisible ?? (!compact && variant !== "overlay" && variant !== "shutter");
+  return visible;
+}
+
+/** The visible label (see `labelVisible`). */
+function IconButtonText({ label }: { label: string }) {
+  return <span data-slot="icon-button-label">{label}</span>;
 }
 
 /**
@@ -1008,6 +1201,7 @@ function iconButtonLook({
   tone,
   quiet,
   toneColor,
+  withText = false,
 }: {
   variant: IconButtonVariant;
   size: IconButtonSize;
@@ -1017,10 +1211,18 @@ function iconButtonLook({
   tone: IconButtonTone;
   quiet: boolean | undefined;
   toneColor: IconButtonToneColor | undefined;
+  /** The label is drawn beside the glyph (see `labelVisible`). */
+  withText?: boolean;
 }) {
   return cn(
     ICON_BUTTON_BASE,
-    stretch ? ICON_BUTTON_STRETCH_SIZES[size] : ICON_BUTTON_SIZES[size],
+    withText
+      ? cn("font-medium whitespace-nowrap", stretch ? ICON_BUTTON_TEXT_STRETCH_SIZES[size] : ICON_BUTTON_TEXT_SIZES[size])
+      : stretch
+        ? ICON_BUTTON_STRETCH_SIZES[size]
+        : ICON_BUTTON_SIZES[size],
+    // With text the pill is a 48 px target at any size; the square follows its size.
+    withText ? TOUCH_TARGET_LARGE : ICON_BUTTON_TOUCH_LARGE[size],
     glyphSize !== undefined && ICON_BUTTON_GLYPH_SIZES[glyphSize],
     // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
     variant === "overlay"
@@ -1079,6 +1281,7 @@ function IconButtonLink({
   shape = "square",
   toneColor,
   label,
+  labelVisible,
   tooltip = true,
   tooltipSide,
   tooltipPortal,
@@ -1091,10 +1294,19 @@ function IconButtonLink({
   rel,
   onClick,
   onKeyDown,
-  children,
+  children: glyph,
   ref,
   ...rest
 }: IconButtonLinkProps) {
+  const withText = useIconButtonText(label, labelVisible, variant, tooltip);
+  const children = withText ? (
+    <>
+      {glyph}
+      <IconButtonText label={label!} />
+    </>
+  ) : (
+    glyph
+  );
   const kitLink = useKitLink();
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
@@ -1116,7 +1328,7 @@ function IconButtonLink({
     onKeyDown?.(e);
   };
   const cls = cn(
-    iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor }),
+    iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor, withText }),
     // BASE's `disabled:` classes never match an `<a>` — Button's disabled link look.
     disabled && "pointer-events-none cursor-not-allowed opacity-50",
     className,
@@ -1165,7 +1377,8 @@ function IconButtonLink({
     );
   }
   control = withIconButtonBadge(control, badge, stretch);
-  if (!tooltip || label === undefined || label === "") return control;
+  // The words are on the link at Large: a bubble would only repeat them.
+  if (!tooltip || withText || label === undefined || label === "") return control;
   return (
     // A fragment, as on the button: the bubble says what `aria-label` already does.
     <Tooltip
@@ -1192,11 +1405,13 @@ function IconButtonElement(
     shape = "square",
     toneColor,
     label,
+    labelVisible,
     tooltip = true,
     tooltipSide,
     tooltipPortal,
     tooltipLazy = true,
     disabledReason: ownDisabledReason,
+    disabledReasonDisplay,
     commit,
     pending,
     glyphSize,
@@ -1218,6 +1433,7 @@ function IconButtonElement(
 ) {
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
+  const withText = useIconButtonText(label, labelVisible, variant, tooltip);
   const reasonId = useId();
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
@@ -1252,7 +1468,7 @@ function IconButtonElement(
         onKeyDown?.(e);
       }}
       className={cn(
-        iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor }),
+        iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor, withText }),
         pressed && ICON_BUTTON_PRESSED,
         // The disabled look for the focusable kind of disabled, as on Button.
         locked && (keep ? "cursor-default" : "cursor-not-allowed opacity-50"),
@@ -1274,29 +1490,28 @@ function IconButtonElement(
       ) : (
         children
       )}
+      {withText && <IconButtonText label={label!} />}
     </button>
   );
   const control = withIconButtonBadge(button, badge, stretch);
   if (locked) {
     return (
-      // Button's shape: the button and the hidden reason in a FRAGMENT, so Tooltip does
-      // not add its bubble to the description as well.
-      <Tooltip
-        label={disabledReason}
+      // Button's shape: the reason as a line under it, or the bubble with a hidden copy
+      // for the description (see ReasonFrame).
+      <ReasonFrame
+        reason={disabledReason}
+        reasonId={reasonId}
+        display={disabledReasonDisplay}
         side={tooltipSide}
         portal={tooltipPortal}
         className={stretch ? "self-stretch" : undefined}
       >
-        <>
-          {control}
-          <span id={reasonId} hidden>
-            {disabledReason}
-          </span>
-        </>
-      </Tooltip>
+        {control}
+      </ReasonFrame>
     );
   }
-  if (!tooltip || label === undefined || label === "") return control;
+  // The words are on the button at Large: a bubble would only repeat them.
+  if (!tooltip || withText || label === undefined || label === "") return control;
   return (
     // A fragment, so Tooltip leaves the button's description alone: the bubble says
     // exactly what `aria-label` already does. Lazy by default — see `tooltipLazy`.
@@ -1312,8 +1527,25 @@ function IconButtonElement(
   );
 }
 
+/**
+ * The 16 px floor on touch (docs/text-size-harmonization.md §10.1). iOS zooms the page
+ * when a field under 16 px takes focus, and keksdose's `maximum-scale=1` — which stopped
+ * it — goes so pinch zoom works again (WCAG 1.4.4). A zoomed page drops the keyboard
+ * inset to 0 (§10.2), so the zoom would put a pinned editor footer behind the keyboard
+ * (keksdose #154). So on a coarse pointer a field is at least 16 px, at every text size:
+ * `max()` leaves Large and Extra large alone, where `text-sm` is already 17.5 / 21 px.
+ *
+ * In px on purpose: the threshold is the browser's, in CSS px, whatever the root size.
+ * Font size only — the line height keeps `text-sm`'s ratio. Part of {@link FIELD_BASE};
+ * add it to any other text-entry control whose type is below 16 px.
+ */
+export const FIELD_TOUCH_TEXT = "pointer-coarse:text-[length:max(0.875rem,16px)]";
+
 export const FIELD_BASE =
   "block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:ring-[var(--brand)] " +
+  // §10.1: at least 16 px on a touch screen, or iOS zooms the page on focus.
+  FIELD_TOUCH_TEXT +
+  " " +
   // A field the user cannot change has to LOOK settled. Without this, `disabled`
   // dimmed the floating label and nothing else — FIELD_BASE's own
   // `text-[var(--text-primary)]` overrides the browser's grey — so a read-only value
@@ -1375,8 +1607,12 @@ export const FIELD_INVALID =
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
-/** The phone breakpoint the display treatment below keys off — the same one the
- *  numpad sheet uses, kept in one place so the two can't drift apart. */
+/** The phone breakpoint at Normal text size, as a media query.
+ *
+ *  @deprecated since 0.32 — it does not follow the text size (§3.3): at Large the CSS
+ *  `max-md:` reaches 959 px and this still stops at 767. Use `usePhoneLayout()`, which
+ *  agrees with `max-md:` at every size, or `breakpointQuery("max-md", scale)` where a
+ *  query string is needed. Kept exported, unchanged, for the apps that import it. */
 export const PHONE_QUERY = "(max-width: 767px)";
 
 /**
@@ -1385,8 +1621,9 @@ export const PHONE_QUERY = "(max-width: 767px)";
  * about reads as the thing itself, not as another boxed row in a stack.
  *
  * Every control that takes `variant="display"` — {@link Input}, `NumberInput`,
- * `AmountInput` — means exactly the same thing by it: the treatment applies below
- * {@link PHONE_QUERY} and the field is untouched above it, so a caller never has
+ * `AmountInput` — means exactly the same thing by it: the treatment applies in the
+ * phone layout (`usePhoneLayout()`, `max-md:` at the text size in force) and the field
+ * is untouched above it, so a caller never has
  * to ask the viewport, and a form can't end up half-treated across breakpoints.
  *
  * What stays, deliberately:
@@ -1466,8 +1703,8 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
 export const FLOATING_LABEL_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
   "max-w-[calc(100%-1.5rem)] truncate",
-  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
+  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
 );
 
@@ -1485,8 +1722,8 @@ export const FLOATING_LABEL_CLASS = cn(
 const FLOATING_ROW_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 flex items-center gap-1 transition-all",
   "max-w-[calc(100%-3rem)] text-sm text-[var(--text-placeholder)]",
-  "peer-focus:top-1 peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
+  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
 );
 
@@ -1581,69 +1818,6 @@ export function FloatingField({
   );
 }
 
-/**
- * The "?" that explains a field, on the field's own label line (dev#468).
- *
- * Pass it to a labelled {@link Select} / {@link Input} as `hint`. It exists as a
- * component rather than as a snippet each form repeats because the previous
- * version was exactly that snippet — an absolutely-positioned button whose
- * `top-1.5` was one guess at where an 11px label sits — and the reporter's
- * follow-up was *"question mark is not centered. Is it part of the hoc?
- * positioning problems seem quite frequently."* It was not part of the HOC. Now
- * it is, and there is one place left where the answer can be wrong.
- *
- * A `<button>` rather than a bare icon: hover alone puts the explanation out of
- * reach of a keyboard and of every touch device, and the tooltip shows on focus
- * too. The text is also its accessible name, so a screen reader gets it without
- * the bubble ever opening.
- */
-export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {
-  /** The explanation. It is both the tooltip's text and, by default, the button's
-   *  accessible name, so a screen reader gets it without the bubble ever opening. */
-  label: string;
-  /** Default `"start"`: before the hint in the reading direction (the left in LTR, the
-   *  right in RTL). `left` / `right` stay physical. */
-  side?: TooltipSide;
-}
-
-export function FieldHint({
-  label,
-  side = "start",
-  className,
-  "aria-label": ariaLabel,
-  ...rest
-}: FieldHintProps) {
-  return (
-    // `tap="toggle"` (0.25): the "?" exists only to explain, so a tap on a phone shows
-    // the bubble and the next tap hides it — the touch rule (no bubble left behind by a
-    // tap) would otherwise make it show nothing at all.
-    <Tooltip label={label} side={side} portal tap="toggle">
-      <button
-        {...rest}
-        // `type` after the spread, not before. These render inside forms — that is the
-        // only place a field has a label line — and a hint that defaulted to `submit`
-        // because a caller spread a props object at it would save the form on a click
-        // meant to explain a field.
-        type="button"
-        // The explanation names the button unless the caller says otherwise; passing
-        // `aria-label` is how you shorten it for a screen reader without shortening
-        // what the bubble shows.
-        aria-label={ariaLabel ?? label}
-        // Nothing to activate: the tooltip opens on hover and on focus, and a
-        // click that did something as well would be a second, undiscoverable
-        // behaviour on the same target.
-        onClick={(e) => e.preventDefault()}
-        className={cn(
-          "flex text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
-          className,
-        )}
-      >
-        <HelpCircle className="size-3.5" />
-      </button>
-    </Tooltip>
-  );
-}
-
 export interface LabelProps extends ComponentPropsWithoutRef<"label"> {
   /** Draw the required mark after the text. The mark is `aria-hidden`: what a
    *  screen reader hears is the control's own `required` / `aria-required`, which
@@ -1717,7 +1891,7 @@ export function Label({ required, size = "md", disabled, className, children, ..
  * whatever is being read at the time, on every keystroke of a form that re-validates
  * as you type.
  */
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 function useFieldError(
   error: ReactNode,
@@ -1921,7 +2095,7 @@ function CharacterCount({
       <span
         aria-hidden
         className={cn(
-          "shrink-0 text-[11px] leading-tight tabular-nums",
+          "shrink-0 text-caption leading-tight tabular-nums",
           zone === "limit"
             ? "text-[var(--danger)]"
             : zone === "near"
@@ -2091,7 +2265,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
         rest.onChange?.(e);
       }
     : rest.onChange;
-  const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
+  const asDisplay = usePhoneLayout() && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
   const [revealed, setRevealed] = useState(false);
@@ -2124,7 +2298,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
       disabled={rest.disabled}
       aria-label={revealed ? passwordText.hide : passwordText.show}
       aria-pressed={revealed}
-      className="absolute inset-y-0 end-0 flex items-center rounded-e-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:cursor-default disabled:opacity-50"
+      className={cn(
+        "absolute inset-y-0 end-0 flex items-center rounded-e-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none disabled:cursor-default disabled:opacity-50",
+        FOCUS_RING,
+      )}
     >
       {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
     </button>
@@ -2346,7 +2523,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     textHint || errorEl !== null ? (
       <>
         {textHint && (
-          <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+          <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
             {hint}
           </p>
         )}
@@ -2601,9 +2778,11 @@ function labelEdge(scrollTop: number, lineHeight: number): { height: number; sol
  * on the same ATTRIBUTE selector FIELD_BASE uses, for the reason given there. Focus and
  * `invalid` change only the border and the ring, which are outside the layer, so they
  * need nothing. Both themes come with the variables. The inner corners are the field's
- * radius (`rounded-md`, 6px) less the 1px border, so the rounded border is never cut
- * into — a literal 5px rather than `var(--radius-md)`, which Tailwind emits only where
- * a utility uses it and the kit's token check refuses (token-vars-declared).
+ * radius (`rounded-md`, 0.375rem) less the 1px border, so the rounded border is never
+ * cut into — `calc(0.375rem - 1px)` rather than `var(--radius-md)`, which Tailwind emits
+ * only where a utility uses it and the kit's token check refuses (token-vars-declared).
+ * Since 0.32 in rem (§3.2): the field's own corner grows with the text, so a fixed 5px
+ * left the strip's corner square of the border's at 125 %.
  *
  * Hidden (`display: none`) until the label floats: an empty, unfocused field has
  * nothing that could scroll, and it renders exactly as it did before 0.24. Pointer
@@ -2616,7 +2795,7 @@ function labelEdge(scrollTop: number, lineHeight: number): { height: number; sol
  * is {@link TEXTAREA_LABEL_EDGE} (0.25).
  */
 const TEXTAREA_LABEL_STRIP = cn(
-  "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[5px] bg-[var(--bg-surface)]",
+  "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[calc(0.375rem-1px)] bg-[var(--bg-surface)]",
   "peer-focus:block peer-[:not(:placeholder-shown)]:block",
   "peer-disabled:bg-[var(--bg-surface-2)] peer-[[readonly]]:bg-[var(--bg-surface-2)]",
   TEXTAREA_LABEL_EDGE,
@@ -2931,10 +3110,13 @@ const CARD_PADDING: Record<NonNullable<CardProps["padding"]>, string> = {
 
 // The same padding one pixel short, for a 2px `toneStrength="strong"` frame: the
 // border grows inwards by that pixel, so the content stays where the 1px card had it.
+// `calc(rem − 1px)` (0.32, §3.2): the padding grows with the text like `p-3` / `p-4`,
+// the border does not — a fixed 11 / 15 px stopped matching them at 125 %, and toggling
+// the tone shifted the content.
 const CARD_PADDING_STRONG: Record<NonNullable<CardProps["padding"]>, string> = {
   none: "p-0",
-  sm: "p-[11px]",
-  md: "p-[15px]",
+  sm: "p-[calc(0.75rem-1px)]",
+  md: "p-[calc(1rem-1px)]",
 };
 
 // The wash as a background IMAGE over the card's opaque `--bg-surface` — see
@@ -3544,7 +3726,7 @@ export interface TabsProps<T extends string>
    * `onRemove`, `onAdd` — means exactly what it means on the horizontal strip; the
    * badge moves to the row's end.
    *
-   * **On a phone ({@link PHONE_QUERY}) it becomes the horizontal strip**, `wrap` and
+   * **On a phone (`usePhoneLayout()`) it becomes the horizontal strip**, `wrap` and
    * all, rather than staying a column. A side nav only works beside its content; on
    * a phone it has to go ABOVE it, and eight full-width rows there push the panel
    * the user picked below the fold on every visit — the two keksdose pages both
@@ -3573,7 +3755,8 @@ const TABLIST_CLASSES =
 // admin page's nav and the app's own sidebar mark "you are here" the same way.
 const TABLIST_VERTICAL_CLASSES = "flex flex-col gap-0.5";
 const TAB_VERTICAL_CLASSES =
-  "flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+  FOCUS_RING_WIDTH +
+  " flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus-visible:ring-[var(--border-strong)]";
 const TAB_VERTICAL_ACTIVE_CLASSES = "bg-[var(--bg-active)] text-[var(--text-primary)]";
 const TAB_VERTICAL_INACTIVE_CLASSES =
   "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
@@ -3586,7 +3769,8 @@ const TABLIST_WRAP_CLASSES =
 // than the strip cannot be scrolled into view — its end was simply off screen
 // (lenkbank L3). The label and detail truncate inside it instead; see `inner`.
 const TAB_CLASSES =
-  "max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+  FOCUS_RING_WIDTH +
+  " max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-[var(--border-strong)]";
 const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-[var(--text-primary)]";
 const TAB_INACTIVE_CLASSES =
   "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--border-strong)]";
@@ -3600,7 +3784,8 @@ const TAB_INACTIVE_CLASSES =
 // all ten have to stay readable; it is the FILL, not the text weight, that says
 // which one is open.
 const TAB_WRAP_CLASSES =
-  "max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
+  FOCUS_RING_WIDTH +
+  " max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
 const TAB_WRAP_ACTIVE_CLASSES =
   "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-[var(--text-primary)] md:text-[var(--text-primary)]";
 const TAB_WRAP_INACTIVE_CLASSES =
@@ -3612,7 +3797,8 @@ const TAB_WRAP_INACTIVE_CLASSES =
 const TAB_REMOVABLE_CLASSES = "pe-8 md:pe-8";
 const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-[var(--border-strong)] px-1.5";
 const TAB_ADD_CLASSES =
-  "inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
+  FOCUS_RING_WIDTH +
+  " inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
 const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
 // `relative`: the phone's visually hidden label needs a positioned ancestor (see the
 // sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
@@ -3639,7 +3825,7 @@ export function Tabs<T extends string>({
 }: TabsProps<T>) {
   const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
   // See `orientation`: a vertical strip is the horizontal one on a phone.
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   const vertical = orientation === "vertical" && !phone;
   const stripRef = useRef<HTMLDivElement>(null);
   const fade = useStripFade(stripRef);
@@ -3836,7 +4022,7 @@ export function Tabs<T extends string>({
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
                 <span
                   className={cn(
-                    "max-w-full truncate text-[11px] font-normal leading-tight text-[var(--text-muted)]",
+                    "max-w-full truncate text-caption font-normal leading-tight text-[var(--text-muted)]",
                     // On a wrapped strip's filled chip (below `md`) the muted grey
                     // was dark text on the brand fill — "loop 2" all but vanished
                     // under the one label that most needed reading. It takes the

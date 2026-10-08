@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { Button, PHONE_QUERY } from "../components/ui";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { Button } from "../components/ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { TopBar } from "../shell/top-bar";
 import type { TopBarProps } from "../shell/top-bar";
 import { TopBarBrand } from "../shell/top-bar-brand";
@@ -55,7 +55,7 @@ export interface PublicHeaderProps extends Omit<TopBarProps, "brand" | "actions"
  * | user | **Open app** (primary) |
  *
  * A demo session is not "signed in" here: it is still offered access, which is the point
- * of the demo (§5.6). On a phone (`PHONE_QUERY`) the actions take the kit's `sm` size, so
+ * of the demo (§5.6). In the phone layout (`usePhoneLayout()`) the actions take the kit's `sm` size, so
  * the brand mark, the two controls and two actions fit 390px; "Sign in" gives way below
  * `sm` as in keksdose — the sign-in page is one tap away from "Request access" anyway.
  */
@@ -75,7 +75,7 @@ export function PublicHeader({
 }: PublicHeaderProps) {
   const labels = useLandingLabels(labelsProp);
   const accessLink = useAccessAction(access, labelsProp);
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   const size = phone ? "sm" : "md";
   const home = homeHref ?? (session === "none" ? "/" : "/welcome");
 

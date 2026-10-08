@@ -384,6 +384,12 @@ export function LineItems<T>({
         variant={isConfirming ? "danger" : "ghost"}
         tone={isConfirming ? undefined : "danger"}
         label={isConfirming ? labels.confirmRemove(row) : labels.remove(row)}
+        // The icon alone at every text size (docs/text-size-harmonization.md §10.8): the
+        // row's one control, in a grid column sized for an icon, whose name becomes a
+        // sentence while it waits ("Remove row 3? Press again to confirm") — as text at
+        // Large it would push the row's fields aside and change width between the two
+        // presses. The name stays the accessible name; the red fill says "confirm".
+        labelVisible={false}
         disabled={!canRemove}
         onClick={() => void removeAt(index)}
         onBlur={() => {
@@ -588,7 +594,7 @@ export function LineItems<T>({
       )}
 
       {hasError && (
-        <p className="text-[11px] leading-tight text-[var(--danger)]">
+        <p className="text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

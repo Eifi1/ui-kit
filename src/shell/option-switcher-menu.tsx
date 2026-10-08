@@ -46,7 +46,7 @@ export function OptionSwitcherMenu<T extends string>({
       {(close) => (
         <ul className="py-1">
           {heading && (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+            <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
               {heading}
             </li>
           )}

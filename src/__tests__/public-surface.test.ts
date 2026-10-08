@@ -182,7 +182,18 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // metaContent, RootEntry, RedirectIfAuthed, the last-visited page, DemoStart,
   // DemoBanner, DemoEnded, the countdown, isDemoSession; three DEFAULT_*_LABELS.
   // 0.31.1 (+1): useSettingsLabels.
-  ["@eifi1/ui-kit", barrel, 779],
+  // 0.32.0 (+62): text size and contrast (docs/text-size-harmonization.md §8) — the
+  // stores, pre-paint, scales and inline snippet, useBreakpoint / usePhoneLayout,
+  // useAccountAppearance, TextSizeSetting / ContrastSetting, FOCUS_RING,
+  // FIELD_TOUCH_TEXT, DIALOG_GUTTER, readKeyboardInset, the Toaster offsets; billing
+  // (docs/billing-harmonization.md §7) — PlanPicker / PlanCard, SubscriptionStatusChip,
+  // BillingBanner, PlanLimitNotice, SubscriptionActions, the price and standing
+  // helpers, combineWriteLocks, isPlanLimit, isBillingError; two DEFAULT_*_LABELS.
+  // 0.32.0 (+15): the behaviours at Large — RowActions, rowActionsColumn,
+  // CompactControls, DisabledReasonLine, useDisabledReasonLine, TOUCH_TARGET_LARGE,
+  // useLargeText, useCoarsePointer, useInlineFacts, WINDOWED_ROW_INDEX, the "More"
+  // cell's labels and splitMobileBar, DEFAULT_MOBILE_BAR_MAX; two DEFAULT_*_LABELS.
+  ["@eifi1/ui-kit", barrel, 856],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -199,7 +210,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
   // last-visited page — the router-aware parts and their companions.
-  ["@eifi1/ui-kit/shell", shell, 38],
+  // 0.32.0 (+3): the phone bar's "More" — AppShellMoreLabels' defaults,
+  // DEFAULT_MOBILE_BAR_MAX, splitMobileBar.
+  ["@eifi1/ui-kit/shell", shell, 41],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
