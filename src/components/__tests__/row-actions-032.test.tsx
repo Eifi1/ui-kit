@@ -319,3 +319,83 @@ describe("rowActionsColumn", () => {
     expect(col.mobileHidden).toBe(true);
   });
 });
+
+describe("RowActions — an action that navigates (href, 0.32.1)", () => {
+  const linkActions = (onEdit = vi.fn()): RowActionList => [
+    { label: "Edit", icon: Pencil, href: "/leases/7/edit", onSelect: onEdit },
+    { label: "Write to the tenant", href: "mailto:ada@example.com" },
+    { label: "Delete", icon: Trash2, tone: "danger", onSelect: vi.fn() },
+  ];
+
+  it("is a link inline, icon or words, and onSelect still runs", () => {
+    const onEdit = vi.fn();
+    const onRow = vi.fn();
+    render(
+      <MemoryRouter>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a clickable row stand-in */}
+        <div onClick={onRow}>
+          <RowActions actions={linkActions(onEdit)} name="Ada Example" />
+        </div>
+      </MemoryRouter>,
+    );
+    const edit = screen.getByRole("link", { name: "Edit" });
+    expect(edit).toHaveAttribute("href", "/leases/7/edit");
+    expect(screen.getByRole("link", { name: "Write to the tenant" })).toHaveAttribute("href", "mailto:ada@example.com");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    fireEvent.click(edit);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    // The row doesn't open as well.
+    expect(onRow).not.toHaveBeenCalled();
+  });
+
+  it("is a link in the ⋯ menu at Large", async () => {
+    setSize("large");
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <RowActions actions={linkActions()} name="Ada Example" />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions for Ada Example" }));
+    const menu = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
+    expect(within(menu).getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/leases/7/edit");
+    expect(within(menu).getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("stays a button while refused or pending, since a link can't say why", () => {
+    render(
+      <MemoryRouter>
+        <WriteLockProvider locked reason="Your plan has ended.">
+          <RowActions
+            actions={[
+              { label: "Edit", icon: Pencil, href: "/a", commit: true },
+              { label: "Open", icon: Archive, href: "/b", disabledReason: "Archived." },
+              { label: "Copy", icon: Trash2, href: "/c", pending: true },
+            ]}
+          />
+        </WriteLockProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Edit", "Open", "Copy"]);
+  });
+});
+
+describe("RowActions — a row name that is null (0.32.1)", () => {
+  it("reads null as no name, here and in rowActionsColumn", () => {
+    setSize("large");
+    render(
+      <MemoryRouter>
+        <RowActions actions={actions()} name={null} />
+        <DataTable
+          rows={ROWS}
+          columns={[NAME, rowActionsColumn<Row>({ actions: () => actions(), name: () => null })]}
+          rowKey={(r) => r.id}
+        />
+      </MemoryRouter>,
+    );
+    // The lone RowActions and every row's menu are "Actions", never "Actions for null".
+    expect(screen.getAllByRole("button", { name: "Actions" }).length).toBeGreaterThanOrEqual(1 + ROWS.length);
+    expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
+  });
+});
