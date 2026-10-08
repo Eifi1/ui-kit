@@ -76,8 +76,9 @@ After the reviews (Marcel, 2026-10-07/08):
     (admin, manager, accountant).
 
 Still open for Marcel (they don't block the contract):
-- **The provider** among the Merchants of Record (compared in §9 for the decision);
-- **the plans, limits and prices** per app;
+- **The provider** among the Merchants of Record (compared in §9 for the decision; Paddle
+  recommended);
+- **the plans, limits and prices** per app (proposed in §13, for local review);
 - **the launch date** per app, which starts the beta users' 12 months.
 
 ## 3. The model
@@ -240,12 +241,19 @@ Also:
 | Model | Merchant of Record, B2B and B2C | Merchant of Record, aimed at software and indie sellers |
 | Tax | VAT/MWST, US sales tax, invoices | the same |
 | Hosted checkout and portal | yes | yes |
-| Fee (published, to be checked at signing) | about 5 % + 0.50 per transaction | about 5 % + 0.50 per transaction |
+| Fee (published, to be checked at signing) | about 5 % + 0.50 per transaction | about 5 % + 0.50 per transaction, plus about 1.5 % outside the US and further add-ons (third-party comparison, 2026) |
 | Switzerland and CHF | to be confirmed at signing | to be confirmed at signing |
+| Prices per currency (checked 2026-10-08) | fixed amounts per currency or country (`unit_price_overrides`); CHF is a payment currency; balances and payouts in USD, EUR, GBP, AUD or CAD, not CHF | **one store currency**, displayed converted; every customer is **charged in USD** at the mid-market rate; payouts in USD or converted |
+| Webhook | an event id and a timestamped signature | a body signature only, no event id (the kit dedupes on the body's SHA-256) |
+| Owner | independent | Stripe (since 2024) |
 
 The kit stays provider-agnostic (§5), so the choice changes a mapper and settings, not
 the contract. The fees and CHF support must be checked with the providers at signing;
 this table is not a quote.
+
+**Recommendation (2026-10-08):** Paddle. Decision 6 (prices in CHF and EUR) needs a
+fixed price per currency, which Lemon Squeezy does not offer: a Swiss customer would be
+charged a converted USD amount.
 
 ## 10. What the kits add
 
@@ -455,3 +463,71 @@ differ, this list wins.
     - a "changes refused" shape for sync replies;
     - the guest `BillingBanner` variant;
     - the "payment processing" state.
+
+## 13. Proposed plans (Marcel, 2026-10-08)
+
+Marcel: "Propose like that." Starting points, not market research. Billing stays off in
+production; the apps wire these catalogues now so the whole path can be reviewed
+locally (§13.4). Prices are gross (§12.17), the same figure in CHF and EUR, and yearly is
+ten months.
+
+### 13.1 kastlan: per company, by units
+
+Every unit counts, parking, storage and cellars included (decision 13), so a building of
+12 flats already holds about 36 units. Seats count staff only (decision 15).
+
+| Code | `units` | `seats` | `storage_gb` | Month | Year |
+|---|---|---|---|---|---|
+| `starter` | 40 | 2 | 5 | 29 | 290 |
+| `standard` | 150 | 5 | 25 | 79 | 790 |
+| `professional` | 500 | 15 | 100 | 199 | 1,990 |
+
+Above 500 units: an operator's grant at a quoted price (§3.4 "Ask for more"). This
+replaces the placeholders CHF 49 / 149 / 399 for 50 / 250 / 1,000 units. Comparable:
+ImmoSync (Switzerland) CHF 30 / 99 / 299; immocloud €39.99 up to 50 units.
+Open: kastlan sells to businesses, which usually quote before VAT; §12.17 says gross.
+
+### 13.2 keksdose: per owner, by budgets and scans
+
+Most people need one budget, so budgets alone separate only the heavy users. The scans
+are what costs Marcel money (Gemini per receipt and statement; `user_cost_service` has
+the real figures, to check before launch).
+
+| Code | `budgets` | `scans` per calendar month | Month | Year |
+|---|---|---|---|---|
+| `standard` | 3 | 50 | 5 | 49 |
+| `plus` | 10 | 300 | 9 | 89 |
+
+- `scans` counts receipt and statement extractions the owner started this calendar
+  month. A scan creates a row, so it is a creation limit (§3.4), not overage.
+- FREE goes: after the trial an account without a plan is read-only (decision 7).
+  Today's UNLIMITED becomes an operator grant (`comped`, `manual`).
+- The help assistant stays outside the plans, under its rate limit.
+- Comparable: YNAB $109, Monarch $99.99, Copilot $95 a year.
+
+### 13.3 Kurvenschmiede: per user, by curves
+
+Its running costs are close to nothing, so the price follows the value to an engineer.
+The calculator stays open to anyone, without an account.
+
+| Code | `curves` | Month | Year |
+|---|---|---|---|
+| `personal` | 10 | 9 | 90 |
+| `professional` | unlimited (`None`) | 39 | 390 |
+
+`curves` counts owned setpoint sessions (generic and steering); profiles, segments,
+gears, parts, measured tables, exports and compute don't count (its review). A copy
+counts; an admin transfer and the erasure hand-over never check a limit. Risk: firms
+usually buy for a team, by invoice; a company payer may follow.
+
+### 13.4 Local review
+
+- Billing stays **off by default** everywhere, and nothing here goes to production.
+- Each app declares the catalogue above as `PlanSpec`s and can switch billing on in a
+  local `.env` only, to review the pages, the gate, the limits and the banners.
+- Without a provider account, the tests and a local run feed **signed fixture events**
+  to the app's own webhook with a local secret: trial, checkout completed, renewal,
+  payment failed, cancelled. With a Paddle sandbox account (Marcel's), the hosted
+  checkout and portal can be tried end to end.
+- The price ids in the settings stay placeholders until the provider is chosen.
+
