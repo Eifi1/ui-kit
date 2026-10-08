@@ -5,7 +5,16 @@ import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-parts";
+import {
+  DISABLED_REASON_LINE_CLASS,
+  FIELD_CAPTION_CLASS,
+  hasContent,
+  LabelStrip,
+  useDisabledReasonLine,
+  useInlineHint,
+  type DisabledReasonDisplay,
+} from "./field-parts";
+import { FOCUS_RING_WIDTH } from "./focus-ring";
 
 export interface ToggleOption<T extends string> {
   value: T;
@@ -137,6 +146,12 @@ export interface ToggleGroupBaseProps<T extends string>
    */
   disabledReason?: ReactNode;
   /**
+   * Where `disabledReason` shows (0.32, §4 "No fact only in a tooltip"): by default, at
+   * Large and on a touch screen, as a line under the group (where its caption goes), and
+   * in the tooltip over the segments otherwise. See {@link DisabledReasonDisplay}.
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /**
    * This group COMMITS — choosing an option saves it. Under a locked
    * {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
    * reason (which wins over a `disabledReason` of its own): *"everything renders; only
@@ -150,6 +165,11 @@ export interface ToggleGroupBaseProps<T extends string>
 /**
  * The field chrome's vertical geometry — keksdose K1, the kit reintroducing feedback
  * #117 that keksdose's hand-built chrome had fixed.
+ *
+ * In px at Normal, as measured; since 0.32 every term but the two borders is rem
+ * (§3.2), so the sum stays a labelled Select's at 125 and 150 % too — the Select's own
+ * `pt-4 pb-1` and 1.25rem line grow by the same factor (52 px at Large, 62 at Extra
+ * large). The md line was `leading-[18px]` and is `leading-[1.125rem]`.
  *
  * The label is the field's static label: `top-1` and 11px in a `leading-tight` line, so
  * its line box runs from 4px to 17.75px. Until 0.22 the chrome was `pt-4` over a 20px
@@ -168,7 +188,7 @@ export interface ToggleGroupBaseProps<T extends string>
  *     md: 1 + 20 + 18 + 2 + 1 = 42        sm: 1 + 20 + 16 + 4 + 1 = 42
  */
 const CHROME_PAD: Record<"sm" | "md", string> = { md: "pt-5 pb-0.5", sm: "pt-5 pb-1" };
-const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[18px]", sm: "py-0 leading-4" };
+const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125rem]", sm: "py-0 leading-4" };
 
 /**
  * The strip placement's segments: a 26px group (1 + 2 + 20 + 2 + 1) under the 16px
@@ -185,7 +205,7 @@ const STRIP_SEGMENT: Record<"sm" | "md", string> = { md: "py-0", sm: "py-0.5" };
  * region, because a description is read when the group is entered and not again when
  * an arrow key changes the choice underneath it.
  *
- * In muted 11px text under the field (or the bare group), above an `error`.
+ * In muted caption-size text under the field (or the bare group), above an `error`.
  */
 type ToggleGroupCaption<V> = ReactNode | ((value: V) => ReactNode);
 
@@ -272,6 +292,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     hint,
     error,
     disabledReason: ownDisabledReason,
+    disabledReasonDisplay,
     commit,
     "aria-label": ariaLabelAttr,
     ...restWithMode
@@ -279,9 +300,16 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const labelId = useId();
   const errorId = useId();
   const reasonId = useId();
+  const hintCaptionId = useId();
   // The lock's reason under a locked provider (with `commit`), else the group's own.
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
+  // §4: at Large and on touch the reason is a line under the group, not a bubble.
+  const reasonLine = useDisabledReasonLine(disabledReasonDisplay) && locked;
+  // §4: likewise a FieldHint "?" on the label line becomes a caption under the group.
+  const inlineHint = useInlineHint(hint);
+  const hintAsCaption = inlineHint !== hint ? inlineHint : undefined;
+  const labelHint = hintAsCaption === undefined ? hint : undefined;
   // Locked looks disabled — the dimmed group, the not-allowed cursor, no hover offer —
   // but stays focusable; `disabled` alone also takes the segments out of the tab order.
   const dimmed = disabled || locked;
@@ -377,8 +405,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // overlaying the selected segment's boundary. Inset keeps the ring
           // inside the segment it belongs to; focus-visible keeps it for the
           // keyboard, which is the only input that needs it.
+          //
+          // The ring is the kit's focus frame (0.32, §5): `--focus-ring-width` wide.
           overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate",
-          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+          FOCUS_RING_WIDTH,
           size === "sm" && "px-2 py-1 text-xs",
           // In the field chrome: no vertical padding, and the line that makes the
           // field 42px under a strip that clears the label — see CHROME_PAD. `sm`
@@ -423,7 +454,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       aria-labelledby={labelled && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
-        [rest["aria-describedby"], hasCaption && captionId, hasError && errorId].filter(Boolean).join(" ") || undefined
+        [rest["aria-describedby"], hintAsCaption !== undefined && hintCaptionId, hasCaption && captionId, hasError && errorId]
+          .filter(Boolean)
+          .join(" ") || undefined
       }
       // `aria-disabled` on the group as well as on (or `disabled` on) each button: a
       // radio group is what the user is being refused, and a screen reader announcing
@@ -456,7 +489,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         !labelled && className,
       )}
     >
-      {locked ? (
+      {locked && !reasonLine ? (
         // The reason's bubble wraps the SEGMENTS, inside the group, not the group: a
         // wrapper outside it would become the flex or grid item in the caller's row in
         // the group's place, and a `w-full` / `md:w-auto` on the group would size the
@@ -487,16 +520,34 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       <p
         id={captionId}
         aria-live={captionIsLive ? "polite" : undefined}
-        className={cn("text-[11px] leading-snug text-[var(--text-muted)]", hasCaption && "mt-1")}
+        className={cn("text-caption leading-snug text-[var(--text-muted)]", hasCaption && "mt-1")}
       >
         {hasCaption ? captionNode : null}
       </p>
     ) : null;
   const errorEl = hasError ? (
-    <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+    <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
       {error}
     </p>
   ) : null;
+  // §4: the FieldHint's words and the lock's reason, under the group, before the caption
+  // (standing advice first) and the error (the news). The reason line IS what each
+  // segment's `aria-describedby` names.
+  const belowEl =
+    hintAsCaption !== undefined || reasonLine ? (
+      <>
+        {hintAsCaption !== undefined && (
+          <p id={hintCaptionId} className={FIELD_CAPTION_CLASS}>
+            {hintAsCaption}
+          </p>
+        )}
+        {reasonLine && (
+          <p id={reasonId} className={DISABLED_REASON_LINE_CLASS}>
+            {disabledReason}
+          </p>
+        )}
+      </>
+    ) : null;
   if (above) {
     // `relative` so a caller's `sr-only` label cannot escape (sr-only-containment).
     return (
@@ -512,10 +563,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           >
             {label}
           </Label>
-          {hint}
+          {labelHint}
         </div>
         <div className="min-w-0">
           {group}
+          {belowEl}
           {captionEl}
           {errorEl}
         </div>
@@ -524,19 +576,21 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   }
   if (strip) {
     return (
-      <LabelStrip labelId={labelId} label={label} hint={hint} disabled={dimmed} pad="field" className={className}>
+      <LabelStrip labelId={labelId} label={label} hint={labelHint} disabled={dimmed} pad="field" className={className}>
         {group}
+        {belowEl}
         {captionEl}
         {errorEl}
       </LabelStrip>
     );
   }
   if (!field) {
-    if (!captionEl) return group;
+    if (!captionEl && !belowEl) return group;
     // The group keeps its `className`, as without a caption; the wrapper only stacks.
     return (
       <div className="min-w-0">
         {group}
+        {belowEl}
         {captionEl}
       </div>
     );
@@ -549,7 +603,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         className="flex flex-1 flex-col"
         label={<span id={labelId}>{label}</span>}
         staticLabel
-        hint={hint}
+        hint={labelHint}
       >
         <div
           className={cn(
@@ -563,6 +617,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           {group}
         </div>
       </FloatingField>
+      {belowEl}
       {captionEl}
       {errorEl}
     </div>

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
@@ -106,8 +107,7 @@ export function Breadcrumbs({
       {separator ?? <ChevronRight className="size-3.5 rtl:-scale-x-100" />}
     </span>
   );
-  const linkClass =
-    "block max-w-[14rem] truncate rounded-sm hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]";
+  const linkClass = cn("block max-w-[14rem] truncate rounded-sm hover:text-[var(--text-primary)]", FOCUS_RING);
 
   return (
     <nav {...rest} aria-label={ariaLabel ?? labels.label} className={cn("min-w-0 text-sm", className)}>
@@ -150,7 +150,7 @@ export function Breadcrumbs({
                     }}
                     aria-label={labels.showAll}
                     aria-expanded={false}
-                    className="flex items-center rounded-sm px-0.5 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                    className={cn("flex items-center rounded-sm px-0.5 hover:text-[var(--text-primary)]", FOCUS_RING)}
                   >
                     <MoreHorizontal className="size-4" aria-hidden />
                   </button>

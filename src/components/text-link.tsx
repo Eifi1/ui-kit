@@ -288,7 +288,7 @@ export function TextLink({
 
   const look = cn(
     "rounded-sm underline-offset-2 transition-colors",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+    "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
     TONE[tone],
     UNDERLINE[underline],
     ariaCurrent && "font-semibold",

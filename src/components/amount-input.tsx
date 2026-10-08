@@ -274,7 +274,7 @@ function settleAmount(text: string, digits: number | undefined, min?: number, ma
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so an
 // AmountInput's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
 // not a bespoke rose/emerald pairing: a figure being typed has to wear the same
@@ -678,7 +678,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         {/* Outside the relative box, as NumberInput's caption is: the trailing
             controls are `inset-y-1` in it and would stretch down over a second line. */}
         {textHint && (
-          <p id={hintId} className="mt-1 text-[11px] leading-tight text-[var(--text-muted)]">
+          <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
             {hint}
           </p>
         )}

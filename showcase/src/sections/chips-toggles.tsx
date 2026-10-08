@@ -21,7 +21,7 @@ import { TabControls } from "./field-anatomy-demo";
  *  opinion about what a badge looks like, so the showcase has to bring its own. */
 function CountPill({ children }: { children: number }) {
   return (
-    <span className="rounded-full bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
+    <span className="rounded-full bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-caption font-medium text-[var(--text-secondary)]">
       {children}
     </span>
   );
@@ -313,7 +313,7 @@ function ChipVariants() {
       <div className="space-y-3">
         {(["soft", "outline", "solid"] as const).map((variant) => (
           <Row key={variant}>
-            <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">{variant}</span>
+            <span className="w-16 font-mono text-caption text-[var(--text-muted)]">{variant}</span>
             {CHIP_TONES.map((t) => (
               <Chip key={t} tone={t} variant={variant}>
                 {t}
@@ -322,7 +322,7 @@ function ChipVariants() {
           </Row>
         ))}
         <Row>
-          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">caps</span>
+          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">caps</span>
           {STATUS_BADGES.map((b) => (
             <Chip key={b.text} tone={b.tone} size="sm" caps>
               {b.text}
@@ -335,7 +335,7 @@ function ChipVariants() {
           ))}
         </Row>
         <Row>
-          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">square</span>
+          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">square</span>
           {["Overdue", "EUR", "Q3"].map((v) => (
             <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
               {v}
@@ -349,7 +349,7 @@ function ChipVariants() {
           </Chip>
         </Row>
         <Row>
-          <span className="w-16 font-mono text-[11px] text-[var(--text-muted)]">count</span>
+          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">count</span>
           <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
             <Bell className="size-4" aria-hidden /> Inbox
             <Chip tone="danger" variant="solid" size="sm" aria-label={`${unread} unread`}>

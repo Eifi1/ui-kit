@@ -124,7 +124,7 @@ describe("Card toneStrength (P9)", () => {
     const card = container.firstElementChild as HTMLElement;
     expect(card.className).toContain("border-2");
     expect(card.className).toContain("border-[var(--danger-border-strong)]");
-    expect(card.className).toContain("p-[15px]");
+    expect(card.className).toContain("p-[calc(1rem-1px)]");
     expect(card.className).not.toMatch(/\bp-4\b/);
     expect(card).toHaveAttribute("data-tone-strength", "strong");
   });

@@ -367,7 +367,7 @@ export function ColumnRoleTable<
                   scope="col"
                   className="min-w-36 py-2 align-top"
                 >
-                  <span className="block max-w-56 truncate pb-1 text-[11px] font-normal text-[var(--text-muted)]">
+                  <span className="block max-w-56 truncate pb-1 text-caption font-normal text-[var(--text-muted)]">
                     {name}
                   </span>
                   <Select

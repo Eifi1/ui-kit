@@ -248,7 +248,7 @@ function FilterPopoverSpecimen() {
           >
             <div className="mb-2 flex items-baseline justify-between gap-2">
               <span className="text-xs font-medium text-[var(--text-primary)]">{col.header}</span>
-              <span className="font-mono text-[11px] text-[var(--text-muted)]">
+              <span className="font-mono text-caption text-[var(--text-muted)]">
                 {filter.type}
                 {col.filterBy && !col.filter && " (via filterBy)"}
               </span>

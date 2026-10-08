@@ -35,7 +35,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  */
 
 const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "font-mono text-[11px] text-[var(--text-muted)]";
+const CAPTION = "font-mono text-caption text-[var(--text-muted)]";
 
 /** A picture to float controls over, with no image request: a "map" drawn in CSS from
  *  the palette's own chart colours, so it follows the palette switch too. */

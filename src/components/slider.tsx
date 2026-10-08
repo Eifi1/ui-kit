@@ -70,31 +70,44 @@ export function fromLogPosition(position: number, min: number, max: number, zero
 // runs the other way too. Firefox draws the fill itself with `::-moz-range-progress`,
 // which follows the direction on its own.
 //
-// The thumb's `-mt-[5px]` centres a 16px thumb on a 6px track: WebKit lays the thumb
-// out from the track's top edge, Firefox centres it, so only one carries the offset.
+// The thumb's `-mt-[0.3125rem]` centres a 1rem thumb on a 0.375rem track — half the
+// difference — in rem since 0.32 (§3.2): the thumb and track grow with the text, and the
+// 5px it was left the thumb low of the track at 125 % and further at 150 %. WebKit lays
+// the thumb out from the track's top edge, Firefox centres it, so only one carries the
+// offset.
 //
 // The focus ring goes on the THUMB, not the box: the box is the full width of the
 // row, and a ring round all of it says "this row is focused" rather than "the handle
 // you are about to move is". Offset in the surface colour, because the thumb is
-// --brand and a --brand ring touching it would be invisible.
+// --brand and a --brand ring touching it would be invisible. Its width is the kit's
+// focus frame (`--focus-ring-width`, §5) — spelt out per engine, since `FOCUS_RING`'s
+// classes cannot carry the pseudo-element.
+//
+// At Large the box is the 48 px touch target (§4) — the track stays centred in it, and
+// the marks row below is pulled up by as much (see `MARKS_LARGE`).
 const TRACK = [
-  "block h-6 w-full cursor-pointer appearance-none bg-transparent focus:outline-none disabled:cursor-not-allowed",
+  "block h-6 large:h-[48px] w-full cursor-pointer appearance-none bg-transparent focus:outline-none disabled:cursor-not-allowed",
   // WebKit / Blink
   "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full",
   "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "rtl:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_left,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
-  "[&::-webkit-slider-thumb]:-mt-[5px] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none",
+  "[&::-webkit-slider-thumb]:-mt-[0.3125rem] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none",
   "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand)] [&::-webkit-slider-thumb]:shadow",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-[var(--brand)]",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-webkit-slider-thumb]:ring-[var(--brand)]",
   "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-[var(--bg-surface)]",
   // Firefox
   "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[var(--border-strong)]",
   "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-[var(--brand)]",
   "[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0",
   "[&::-moz-range-thumb]:bg-[var(--brand)] [&::-moz-range-thumb]:shadow",
-  "focus-visible:[&::-moz-range-thumb]:ring-2 focus-visible:[&::-moz-range-thumb]:ring-[var(--brand)]",
+  "focus-visible:[&::-moz-range-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-moz-range-thumb]:ring-[var(--brand)]",
   "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-[var(--bg-surface)]",
 ].join(" ");
+
+// The marks row sits `-mt-1.5` under a 1.5rem box, tucked against the track. In the 48 px
+// box at Large the track's lower edge is `(48px + 0.375rem) / 2` down, so the row comes
+// up by `(48px − 0.375rem) / 2` less the same 0.1875rem gap: `24px − 0.375rem`.
+const MARKS_LARGE = "large:-mt-[calc(24px-0.375rem)]";
 
 /** A tick under the track. A bare number is a tick with no words. */
 export interface SliderMark {
@@ -293,7 +306,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         // without a `translate` that would need flipping for right-to-left.
         <div
           aria-hidden
-          className={cn("relative mx-2 -mt-1.5", hasMarkLabels ? "h-5" : "h-1.5")}
+          className={cn("relative mx-2 -mt-1.5", MARKS_LARGE, hasMarkLabels ? "h-5" : "h-1.5")}
         >
           {normalizedMarks.map((m) => (
             <span
@@ -303,7 +316,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
             >
               <span className="h-1.5 w-px shrink-0 bg-[var(--border-strong)]" />
               {m.label !== undefined && (
-                <span className="mt-0.5 select-none whitespace-nowrap text-[11px] leading-tight text-[var(--text-muted)]">
+                <span className="mt-0.5 select-none whitespace-nowrap text-caption leading-tight text-[var(--text-muted)]">
                   {m.label}
                 </span>
               )}

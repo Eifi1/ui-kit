@@ -242,7 +242,7 @@ const STACK_PHONE_CLASSES = cn(
   "max-sm:[&_tbody_td]:block max-sm:[&_tbody_td]:px-0 max-sm:[&_tbody_td]:py-0.5 max-sm:[&_tbody_td]:text-start",
   "max-sm:[&_tfoot_td]:block max-sm:[&_tfoot_td]:px-0 max-sm:[&_tfoot_td]:py-0.5",
   "max-sm:[&_tbody_td:first-child]:font-medium",
-  "max-sm:[&_td[data-label]]:before:block max-sm:[&_td[data-label]]:before:text-[11px] max-sm:[&_td[data-label]]:before:font-medium max-sm:[&_td[data-label]]:before:text-[var(--text-muted)] max-sm:[&_td[data-label]]:before:content-[attr(data-label)]",
+  "max-sm:[&_td[data-label]]:before:block max-sm:[&_td[data-label]]:before:text-caption max-sm:[&_td[data-label]]:before:font-medium max-sm:[&_td[data-label]]:before:text-[var(--text-muted)] max-sm:[&_td[data-label]]:before:content-[attr(data-label)]",
 );
 
 /**
@@ -353,7 +353,7 @@ export function Table({
           // rounded corners.
           framed && "rounded-md border border-[var(--border)]",
           THIN_SCROLLBAR_CLASS,
-          "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+          "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
           wrapperClassName,
         )}
       >

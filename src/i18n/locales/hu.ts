@@ -1252,6 +1252,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       outflow: "Kiadás",
       inflow: "Bevétel",
       direction: (current, next) => `Irány: ${current} – váltás erre: ${next}`,
+      switchTo: (next) => `Váltás erre: ${next}`,
     },
     columnMapper: {
       paste: "Táblázat beillesztése",
@@ -1503,6 +1504,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       contrastHelp:
         "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
       contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
+    },
+    rowActions: {
+      actions: "Műveletek",
+      actionsFor: (name) => `${name} – műveletek`,
+    },
+    appShellMore: {
+      more: "Továbbiak",
+      moreTitle: "További oldalak",
     },
   };
 }

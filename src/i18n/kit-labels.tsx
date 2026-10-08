@@ -82,6 +82,8 @@ import type { LandingLabels } from "../landing/landing-labels";
 import type { DemoLabels } from "../demo/demo-labels";
 import type { BillingLabels } from "../billing/billing-labels";
 import type { AppearanceLabels } from "../components/appearance-labels";
+import type { RowActionsLabels } from "../components/row-actions";
+import type { AppShellMoreLabels } from "../shell/app-shell";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -398,6 +400,10 @@ export interface UiKitLabels {
   billing: BillingLabels;
   /** 0.32.0: the text-size and contrast settings (docs/text-size-harmonization.md §6). */
   appearance: AppearanceLabels;
+  /** 0.32.0: a row's actions folded into a "⋯" menu at Large (text size §10.8). */
+  rowActions: RowActionsLabels;
+  /** 0.32.0: the phone bar's "More" cell and sheet (text size §10.7). */
+  appShellMore: AppShellMoreLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { lengthPx, useRemPx, type RemLength } from "../hooks/use-breakpoint";
 import { cn } from "../lib/cn";
 import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
@@ -39,7 +40,14 @@ export const DEFAULT_POPOVER_LABELS: PopoverLabels = {
 export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   trigger: (state: { open: boolean; toggle: () => void; ref: RefObject<HTMLButtonElement | null> }) => ReactNode;
   children: (close: () => void) => ReactNode;
-  width?: number;
+  /**
+   * The panel's width: `"18rem"` (the default) grows with the text size — the panel
+   * holds text, and a 288 px calendar at 150 % cut its own month off (0.32,
+   * docs/text-size-harmonization.md §3.2). A plain number is px, fixed, as before.
+   * Either way the panel is never wider than the viewport less 8 px a side: 18rem is
+   * 432 px at Extra large, more than a 360 px phone has.
+   */
+  width?: number | RemLength;
   labels?: Partial<PopoverLabels>;
   /** Id for the panel, so a trigger wearing `role="combobox"` can `aria-controls` it.
    *  Required by ARIA on that role, and the panel is rendered here rather than by the
@@ -49,7 +57,11 @@ export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   className?: string;
 }
 
-const POPOVER_WIDTH = 288;
+/** 288 px at Normal, in rem so it follows the text size (§3.2). */
+const POPOVER_WIDTH: RemLength = "18rem";
+
+/** The gap the panel keeps from either edge of the viewport, in px. */
+const EDGE = 8;
 
 /**
  * Portal-rendered popover anchored under its trigger button. The panel is fixed
@@ -124,12 +136,17 @@ export function Popover({
   // of the screen (feedback #135). It re-measures on scroll/resize.
   const placement = useAnchoredPanel(triggerRef, open);
   const rect = placement.rect;
+  // In px for the arithmetic below, at the text size in force; capped at the viewport.
+  const remPx = useRemPx();
+  const panelWidth = rect
+    ? Math.min(lengthPx(width, remPx), Math.max(0, window.innerWidth - 2 * EDGE))
+    : 0;
   const pos = rect
     ? {
         top: placement.top,
         left: Math.min(
-          Math.max(8, dir === "rtl" ? rect.left : rect.right - width),
-          window.innerWidth - width - 8,
+          Math.max(EDGE, dir === "rtl" ? rect.left : rect.right - panelWidth),
+          window.innerWidth - panelWidth - EDGE,
         ),
       }
     : null;
@@ -199,7 +216,7 @@ export function Popover({
               position: "fixed",
               top: pos.top,
               left: pos.left,
-              width,
+              width: panelWidth,
               maxHeight: placement.maxHeight,
             }}
             className={cn(

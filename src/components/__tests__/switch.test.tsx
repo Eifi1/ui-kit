@@ -107,7 +107,8 @@ describe("Switch", () => {
   it("asks for a keyboard focus ring in a token colour", () => {
     render(<Switch aria-label="S" />);
     const cls = screen.getByRole("switch").className;
-    expect(cls).toMatch(/focus-visible:ring-2/);
+    // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
+    expect(cls).toMatch(/focus-visible:ring-\[length:var\(--focus-ring-width\)\]/);
     expect(cls).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
   });
 
@@ -116,7 +117,8 @@ describe("Switch", () => {
     const thumb = container.querySelector("[role=switch] + span")!;
     expect(thumb).toHaveAttribute("aria-hidden", "true");
     const cls = thumb.getAttribute("class") ?? "";
-    expect(cls).toMatch(/peer-checked:start-\[/);
+    // In rem since 0.32 (§3.2): a spacing step, not a px offset.
+    expect(cls).toMatch(/peer-checked:start-\d/);
     expect(cls).not.toMatch(/(^|\s|:)(-?translate-x|left|right)-/);
   });
 });

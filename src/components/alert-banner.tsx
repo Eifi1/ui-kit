@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /** `info` (0.8.0) is the sky family, for news that is neither good nor bad: keksdose's
@@ -60,16 +61,21 @@ export function toneFrameClass(tone: AlertTone): string {
 
 /** Single source for the warning-callout frame (feedback #277): the tone's border
  * and surface plus this component's own radius and padding, the latter
- * compensating the 2px colored border so toggling tones never shifts layout. */
+ * compensating the 2px colored border so toggling tones never shifts layout.
+ *
+ * The compensation is `calc(<the neutral padding in rem> - 1px)`, not a px figure
+ * (0.32, docs/text-size-harmonization.md §3.2): the padding grows with the text size,
+ * the 1px it gives back to the border does not — an 11 px padding stopped matching `p-3`
+ * at 125 %, and toggling the tone shifted the layout again. */
 export function alertFrameClass(tone: AlertTone, size: AlertSize = "md"): string {
   const box =
     size === "sm"
       ? tone === "neutral"
         ? "rounded-md px-2.5 py-1.5"
-        : "rounded-md px-[9px] py-[5px]"
+        : "rounded-md px-[calc(0.625rem-1px)] py-[calc(0.375rem-1px)]"
       : tone === "neutral"
         ? "rounded-md p-3"
-        : "rounded-md p-[11px]";
+        : "rounded-md p-[calc(0.75rem-1px)]";
   return `${box} ${TONE_FRAME[tone]}`;
 }
 
@@ -293,8 +299,7 @@ export function AlertBanner({
         strip ? stripFrameClass(tone, size) : alertFrameClass(tone, size),
         elevated && cn(ELEVATED, TONE_ELEVATED[tone]),
       );
-  const focusRing =
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]";
+  const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]");
 
   const content = (
     <>
@@ -376,7 +381,7 @@ export function AlertBanner({
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
         strip ? "after:rounded-none" : "after:rounded-md",
-        "focus-visible:after:ring-2 focus-visible:after:ring-[var(--brand)]",
+        "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-[var(--brand)]",
       )
     : cn(row, !inlineRow && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
   // The div's attributes are the row element's: an `id`, a test id or an

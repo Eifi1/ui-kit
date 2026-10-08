@@ -215,12 +215,12 @@ export function CheckboxGroup<T extends string = string>({
       </RequiredStarOnLegend.Provider>
       {showHint && (
         // A `div`, not a `p`: a hint may be a node with a link in it.
-        <div id={hintId} className="mt-1.5 text-[11px] leading-tight text-[var(--text-muted)]">
+        <div id={hintId} className="mt-1.5 text-caption leading-tight text-[var(--text-muted)]">
           {hint}
         </div>
       )}
       {showError && (
-        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

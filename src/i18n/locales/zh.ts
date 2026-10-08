@@ -1203,6 +1203,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       outflow: "支出",
       inflow: "收入",
       direction: (current, next) => `方向：${current}，切换为${next}`,
+      switchTo: (next) => `切换为${next}`,
     },
     columnMapper: {
       paste: "粘贴表格",
@@ -1438,6 +1439,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       contrast: "对比度",
       contrastHelp: "增强对比度会加深浅色文字和线条，并加粗焦点框。“跟随系统”沿用此设备的设置。",
       contrastModes: { system: "跟随系统", standard: "标准", more: "增强" },
+    },
+    rowActions: {
+      actions: "操作",
+      actionsFor: (name) => `${name} 的操作`,
+    },
+    appShellMore: {
+      more: "更多",
+      moreTitle: "更多页面",
     },
   };
 }

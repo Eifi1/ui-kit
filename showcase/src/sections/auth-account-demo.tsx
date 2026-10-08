@@ -250,7 +250,7 @@ function TwoFactorOtpauthSpecimen() {
           renderQr={
             customQr
               ? (uri) => (
-                  <div className="flex size-48 items-center justify-center bg-[var(--bg-surface-2)] p-3 text-center font-mono text-[10px] break-all text-[var(--text-secondary)]">
+                  <div className="flex size-48 items-center justify-center bg-[var(--bg-surface-2)] p-3 text-center font-mono text-micro break-all text-[var(--text-secondary)]">
                     renderQr({uri.slice(0, 40)}…)
                   </div>
                 )

@@ -5,6 +5,7 @@ import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
 import { Button, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, IconButton } from "./ui";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
@@ -283,7 +284,8 @@ function MonthHeadingTrigger({
       aria-describedby={aria["aria-describedby"]}
       className={cn(
         "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-[var(--text-primary)] transition-colors",
-        "hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        "hover:bg-[var(--bg-hover)]",
+        FOCUS_RING,
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
@@ -570,7 +572,8 @@ function MonthGrid({
                   onKeyDown={onCellKeyDown}
                   className={cn(
                     "rounded px-2 py-1.5 text-sm capitalize transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+                    FOCUS_RING_WIDTH,
+                    "focus-visible:outline-none focus-visible:ring-inset",
                     // A --brand ring on a --brand fill exists only in the DOM.
                     selected && !disabled
                       ? "focus-visible:ring-[var(--brand-contrast)]"
@@ -761,7 +764,8 @@ function YearGrid({
                   onKeyDown={onCellKeyDown}
                   className={cn(
                     "rounded px-2 py-1.5 text-sm tabular-nums transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+                    FOCUS_RING_WIDTH,
+                    "focus-visible:outline-none focus-visible:ring-inset",
                     selected && !disabled
                       ? "focus-visible:ring-[var(--brand-contrast)]"
                       : "focus-visible:ring-[var(--brand)]",
@@ -935,7 +939,7 @@ export function MonthPicker(props: MonthPickerProps) {
     const Heading = headingLevel ? (`h${headingLevel}` as const) : null;
     const trigger = (
       <Popover
-        width={256}
+        width="16rem"
         panelId={panelId}
         labels={{ panel: panelLabel }}
         dir={dir}
@@ -1006,7 +1010,7 @@ export function MonthPicker(props: MonthPickerProps) {
         </span>
       )}
       <Popover
-        width={256}
+        width="16rem"
         panelId={panelId}
         labels={{ panel: panelLabel }}
         dir={dir}

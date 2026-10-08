@@ -453,9 +453,11 @@ describe("the phone card's keyboard frame (keksdose live #394)", () => {
       </MemoryRouter>,
     );
     // Clipped ancestors (SwipeableRow, the list, AppShell main) cut an OUTER ring on one
-    // side; an inset outline and no tap highlight keep the frame whole.
+    // side; an INSET frame and no tap highlight keep it whole. Since 0.32 the frame is the
+    // kit's FOCUS_RING (§5, `--focus-ring-width`), drawn inset.
     const card = document.querySelector('[role="button"].w-full, a.w-full') as HTMLElement;
-    expect(card.className).toContain("focus-visible:-outline-offset-2");
+    expect(card.className).toContain("focus-visible:ring-inset");
+    expect(card.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
     expect(card.className).toContain("[-webkit-tap-highlight-color:transparent]");
   });
 });

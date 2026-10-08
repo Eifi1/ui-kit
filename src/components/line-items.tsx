@@ -588,7 +588,7 @@ export function LineItems<T>({
       )}
 
       {hasError && (
-        <p className="text-[11px] leading-tight text-[var(--danger)]">
+        <p className="text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

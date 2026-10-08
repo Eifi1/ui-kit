@@ -500,7 +500,7 @@ function AutocompleteInner<V extends string | number = string>(
                       {startsGroup && (
                         <li
                           role="presentation"
-                          className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
                         >
                           {o.group}
                         </li>
@@ -546,7 +546,7 @@ function AutocompleteInner<V extends string | number = string>(
                               <span
                                 className={cn(
                                   "block truncate text-[var(--text-placeholder)]",
-                                  small ? "text-[11px]" : "text-xs",
+                                  small ? "text-caption" : "text-xs",
                                 )}
                               >
                                 {o.sublabel}

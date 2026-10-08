@@ -24,6 +24,10 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 const ARBITRARY_PX_MEDIA = String.raw`/(^|[\s:])(min|max)-\[[0-9.]+px\]:/`;
 const ARBITRARY_PX_MEDIA_MESSAGE =
   "An arbitrary px media variant does not follow the text size (§10.4). Use a named breakpoint (sm … 3xl) or useBreakpoint().";
+/** `text-[11px]`, `sm:text-[10px]`, `text-[length:13px]` — a px font size in a class string. */
+const PX_FONT_SIZE = String.raw`/(^|[\s:!])text-\[(length:)?[0-9.]+px\]/`;
+const PX_FONT_SIZE_MESSAGE =
+  "A px font size does not follow the text size (§3.2). Use text-micro (0.625rem), text-caption (0.6875rem) or Tailwind's text-xs … sizes; a size between them in rem.";
 
 export default tseslint.config(
   { ignores: ["dist/**", "node_modules/**", "showcase/dist/**", "coverage/**"] },
@@ -105,10 +109,16 @@ export default tseslint.config(
       // (`min-[2400px]:`, `max-[600px]:`) is the one breakpoint tokens.css cannot scale
       // with the text size, so a layout keyed to it keeps its desktop shape at 150 %.
       // Use a named breakpoint — `3xl:` is keksdose's 2400px — or `useBreakpoint`.
+      //
+      // And a px font size (§3.2): `text-[11px]` stays 11 px at 150 %, beside text that
+      // grew. The kit's 10 and 11 px are `text-micro` / `text-caption` in rem; 0 in src/
+      // and the showcase since 0.32. Class strings only — a comment may still name one.
       "no-restricted-syntax": [
         "error",
         { selector: `Literal[value=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
         { selector: `TemplateElement[value.raw=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+        { selector: `Literal[value=${PX_FONT_SIZE}]`, message: PX_FONT_SIZE_MESSAGE },
+        { selector: `TemplateElement[value.raw=${PX_FONT_SIZE}]`, message: PX_FONT_SIZE_MESSAGE },
       ],
     },
   },
@@ -120,6 +130,13 @@ export default tseslint.config(
       // Tests reach into internals and stub globals; that is their job.
       "@typescript-eslint/no-explicit-any": "off",
       "react-hooks/rules-of-hooks": "off",
+      // The media rule only: a test may name a px font size to assert it is GONE
+      // (`not.toContain("text-[11px]")`), which is the px rule's own regression test.
+      "no-restricted-syntax": [
+        "error",
+        { selector: `Literal[value=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+        { selector: `TemplateElement[value.raw=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+      ],
     },
   },
 

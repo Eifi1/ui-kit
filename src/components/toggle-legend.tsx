@@ -6,6 +6,7 @@
 // useful under a chart the consumer drew by hand as under `SeriesChart`.
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 
@@ -60,6 +61,32 @@ export function toggleHidden(hidden: ReadonlySet<string>, key: string): Readonly
   return next;
 }
 
+/**
+ * Where a legend that stands BESIDE a chart goes from Large up: UNDER it
+ * (docs/text-size-harmonization.md §4). Beside a chart, a legend column takes a third of
+ * a row whose plot needs all of it once the text is 25–50 % larger; under it, the row
+ * is the plot's and the legend wraps across the width.
+ *
+ * Pure CSS (`large:`), so a legend moves with the text size alone, whatever drew the
+ * row around it:
+ * - in a GRID it spans a row of its own (`col-span-full`) after the charts
+ *   (`order-last`) — Kurvenschmiede's facing pairs;
+ * - in a FLEX row it takes a line of its own (`basis-full`), and its row is allowed to
+ *   wrap for it (`[*:has(>&)]:flex-wrap` sets `flex-wrap` on the PARENT — the one rule
+ *   here that reaches outside the legend, because a row that may not wrap would squeeze
+ *   the chart to nothing beside a full-width legend) — Kurvenschmiede's chart rows.
+ *
+ * A caller that places its legend itself and wants it kept beside the chart at every
+ * size overrides with `large:col-auto large:basis-auto`.
+ */
+const UNDER_THE_CHART_AT_LARGE =
+  "large:order-last large:col-span-full large:basis-full large:[*:has(>&)]:flex-wrap";
+
+/** A vertical legend's entries from Large up: across, wrapping — it is under the chart
+ *  now (see {@link UNDER_THE_CHART_AT_LARGE}), where a column of entries would be a
+ *  screenful of one-word lines. */
+const VERTICAL_AT_LARGE = "large:flex-row large:flex-wrap large:items-center large:justify-start";
+
 export interface LegendEntry {
   key: string;
   label: ReactNode;
@@ -109,7 +136,10 @@ export interface ToggleLegendProps {
   onToggle: (key: string) => void;
   /** `vertical` is for a legend standing BESIDE the charts rather than under them —
    *  what a row of charts sharing one legend wants, since under two charts there is
-   *  no "under", and putting it under one says it belongs to that one. */
+   *  no "under", and putting it under one says it belongs to that one.
+   *
+   *  From Large up a vertical legend moves under the charts and lays its entries
+   *  across (0.32, docs/text-size-harmonization.md §4) — see {@link LegendColumn}. */
   orientation?: "horizontal" | "vertical";
   /**
    * Draw a legend of ONE entry rather than nothing.
@@ -157,7 +187,7 @@ export function ToggleLegend({
       className={cn(
         "flex gap-x-3 gap-y-1",
         orientation === "vertical"
-          ? "flex-col items-start justify-center"
+          ? cn("flex-col items-start justify-center", VERTICAL_AT_LARGE, UNDER_THE_CHART_AT_LARGE)
           : "mt-2 flex-wrap items-center",
         className,
       )}
@@ -173,8 +203,8 @@ export function ToggleLegend({
             aria-pressed={!off}
             onClick={() => onToggle(entry.key)}
             className={cn(
-              "flex items-center gap-1.5 rounded text-start text-[11px] text-[var(--text-secondary)] transition-opacity hover:opacity-80",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+              "flex items-center gap-1.5 rounded text-start text-caption text-[var(--text-secondary)] transition-opacity hover:opacity-80",
+              FOCUS_RING,
               off && "opacity-35",
               entry.align === "end" && "ms-auto",
             )}
@@ -246,7 +276,7 @@ export function StaticLegend({
       className={cn(
         "m-0 flex list-none gap-x-3 gap-y-1 p-0",
         orientation === "vertical"
-          ? "flex-col items-start justify-center"
+          ? cn("flex-col items-start justify-center", VERTICAL_AT_LARGE, UNDER_THE_CHART_AT_LARGE)
           : "mt-2 flex-wrap items-center",
         className,
       )}
@@ -255,7 +285,7 @@ export function StaticLegend({
         <Item
           key={entry.key}
           className={cn(
-            "flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]",
+            "flex items-center gap-1.5 text-caption text-[var(--text-secondary)]",
             entry.align === "end" && "ms-auto",
           )}
         >
@@ -273,10 +303,25 @@ export function StaticLegend({
  * that stretches it — and stacks whatever it is given, which is what a panel showing
  * two legends at once needs. The width is the caller's: how wide a legend column is
  * is a fact about that screen's layout.
+ *
+ * **From Large up it goes UNDER the charts** (0.32, docs/text-size-harmonization.md
+ * §4): a row of its own in a grid, a line of its own in a flex row (see
+ * `UNDER_THE_CHART_AT_LARGE`), with what it holds laid across and wrapping. A
+ * caller's own `max-sm:flex-row …` for the phone keeps working; the caller's width
+ * (`sm:w-40`) gives way to the full row, because a size wins over a breakpoint.
  */
 export function LegendColumn({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex h-full flex-col justify-center gap-3", className)}>{children}</div>
+    <div
+      className={cn(
+        "flex h-full flex-col justify-center gap-3",
+        UNDER_THE_CHART_AT_LARGE,
+        "large:h-auto large:flex-row large:flex-wrap large:items-start large:justify-start large:gap-x-6",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -290,7 +335,7 @@ export function LegendColumn({ children, className }: { children: ReactNode; cla
 export function LegendGroup({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-1">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+      <span className="text-micro font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         {title}
       </span>
       <div className="flex flex-col items-start gap-y-0.5">{children}</div>

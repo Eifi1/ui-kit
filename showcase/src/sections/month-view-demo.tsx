@@ -66,13 +66,13 @@ function EventLines({ iso, state }: { iso: string; state: MiniCalendarDayState }
       {shown.map((e) => (
         <span
           key={e.id}
-          className={`block truncate text-[11px] leading-tight ${state.selected ? "" : TONE_TEXT[e.tone]}`}
+          className={`block truncate text-caption leading-tight ${state.selected ? "" : TONE_TEXT[e.tone]}`}
         >
           {e.title}
         </span>
       ))}
       {events.length > 2 && (
-        <span className="block text-[10px] leading-tight text-[var(--text-muted)]">+{events.length - 2} more</span>
+        <span className="block text-micro leading-tight text-[var(--text-muted)]">+{events.length - 2} more</span>
       )}
     </span>
   );

@@ -203,9 +203,10 @@ describe("Slider — the element", () => {
   it("rings the thumb for the keyboard in a token colour", () => {
     render(<Slider aria-label="S" value={1} min={0} max={10} onChange={noop} />);
     const cls = screen.getByRole("slider").className;
-    expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-2/);
+    // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
+    expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-\[length:var\(--focus-ring-width\)\]/);
     expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-\[var\(--brand\)\]/);
-    expect(cls).toMatch(/focus-visible:\[&::-moz-range-thumb\]:ring-2/);
+    expect(cls).toMatch(/focus-visible:\[&::-moz-range-thumb\]:ring-\[length:var\(--focus-ring-width\)\]/);
   });
 
   it("forwards the ref and every attribute it does not own", () => {

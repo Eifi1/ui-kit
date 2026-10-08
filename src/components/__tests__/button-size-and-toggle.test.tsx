@@ -90,7 +90,7 @@ describe("IconButton tone=info", () => {
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-[var(--info)]");
     expect(cls).toContain("hover:bg-[var(--info-bg)]");
-    expect(cls).toContain("focus:ring-[var(--info-border)]");
+    expect(cls).toContain("focus-visible:ring-[var(--info-border)]");
   });
 });
 

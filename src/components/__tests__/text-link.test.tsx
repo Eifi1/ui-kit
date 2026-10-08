@@ -18,7 +18,7 @@ describe("TextLink", () => {
     expect(link).toHaveAttribute("href", "/units");
     expect(link.className).toContain("text-[var(--brand)]");
     expect(link.className).toContain("hover:underline");
-    expect(link.className).toContain("focus-visible:outline-2");
+    expect(link.className).toContain("focus-visible:outline-[length:var(--focus-ring-width)]");
     expect(link).not.toHaveAttribute("target");
   });
 

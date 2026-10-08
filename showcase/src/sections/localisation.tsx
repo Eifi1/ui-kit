@@ -151,7 +151,7 @@ function ShippedTranslationsExample() {
       <div className="mt-3 grid gap-4 lg:grid-cols-3">
         {variants.map((v) => (
           <div key={v.title} className="min-w-0 rounded-md border border-[var(--border)] p-3">
-            <p className="mb-2 font-mono text-[11px] text-[var(--text-muted)]">
+            <p className="mb-2 font-mono text-caption text-[var(--text-muted)]">
               {v.code} · locale=&quot;{v.locale}&quot;
             </p>
             <UiKitProvider labels={v.labels} locale={v.locale}>
@@ -165,7 +165,7 @@ function ShippedTranslationsExample() {
               <div className="mt-3">
                 <PasswordStrengthMeter value="kurz" />
               </div>
-              <p className="mt-2 font-mono text-[11px] text-[var(--text-muted)]">
+              <p className="mt-2 font-mono text-caption text-[var(--text-muted)]">
                 dialogFrame.close: {v.labels.dialogFrame.close}
                 <br />
                 file.size(1234567): {v.labels.file.size(1234567)}

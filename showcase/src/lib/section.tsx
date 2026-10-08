@@ -146,7 +146,7 @@ export function Swatch({ name, value }: { name: string; value: string }) {
       />
       <span className="min-w-0">
         <span className="block truncate text-xs font-medium text-[var(--text-primary)]">{name}</span>
-        <span className="block truncate font-mono text-[11px] text-[var(--text-muted)]">{value}</span>
+        <span className="block truncate font-mono text-caption text-[var(--text-muted)]">{value}</span>
       </span>
     </div>
   );
@@ -249,7 +249,7 @@ export function ConstList({ items }: { items: Array<[name: string, value: string
           <dt className="font-mono text-xs font-medium break-words text-[var(--text-primary)]">
             {softBreaks(name)}
           </dt>
-          <dd className="break-words font-mono text-[11px] leading-relaxed text-[var(--text-muted)]">
+          <dd className="break-words font-mono text-caption leading-relaxed text-[var(--text-muted)]">
             {softBreaks(value)}
           </dd>
         </div>

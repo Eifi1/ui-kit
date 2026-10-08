@@ -476,7 +476,7 @@ export function CommandPalette({
               isPhone ? "text-base" : cn("text-sm", FIELD_TOUCH_TEXT),
             )}
           />
-          {loading && <span className="shrink-0 text-[11px] text-[var(--text-placeholder)]">{l.loading}</span>}
+          {loading && <span className="shrink-0 text-caption text-[var(--text-placeholder)]">{l.loading}</span>}
           {fieldText !== "" && (
             <button
               type="button"
@@ -537,7 +537,7 @@ export function CommandPalette({
               <div
                 id={groupId(groupIndex)}
                 role="presentation"
-                className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]"
+                className="px-3 pb-0.5 pt-2 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]"
               >
                 {group}
               </div>
@@ -636,7 +636,7 @@ export function CommandPalette({
         </ul>
 
         {l.hint && (
-          <div className="border-t border-[var(--border)] px-3 py-1.5 text-[11px] text-[var(--text-placeholder)]">
+          <div className="border-t border-[var(--border)] px-3 py-1.5 text-caption text-[var(--text-placeholder)]">
             {l.hint}
           </div>
         )}

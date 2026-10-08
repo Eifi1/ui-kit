@@ -425,7 +425,7 @@ function MenuItemChoices() {
                 </MenuItem>
               </li>
               <li>
-                <MenuItem icon={Pencil} trailing={<kbd className="font-mono text-[11px]">E</kbd>} onClick={() => { setLog("rename"); close(); }}>
+                <MenuItem icon={Pencil} trailing={<kbd className="font-mono text-caption">E</kbd>} onClick={() => { setLog("rename"); close(); }}>
                   Rename…
                 </MenuItem>
               </li>

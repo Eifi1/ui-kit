@@ -211,7 +211,8 @@ describe("Checkbox", () => {
   it("asks for a keyboard focus ring in a token colour, offset from its own fill", () => {
     render(<Checkbox aria-label="Box" />);
     const cls = screen.getByRole("checkbox").className;
-    expect(cls).toMatch(/focus-visible:ring-2/);
+    // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
+    expect(cls).toMatch(/focus-visible:ring-\[length:var\(--focus-ring-width\)\]/);
     expect(cls).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
     expect(cls).toMatch(/focus-visible:ring-offset-\[var\(--bg-surface\)\]/);
   });

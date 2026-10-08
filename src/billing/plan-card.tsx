@@ -101,7 +101,7 @@ function SpanList({ name, items, icon }: { name: string; items: ReactNode[]; ico
     <span role="list" aria-label={name} className="block space-y-1">
       {items.map((item, i) => (
         <span role="listitem" key={i} className="flex items-start gap-1.5 text-[var(--text-secondary)]">
-          <span aria-hidden className="mt-px flex shrink-0 text-[var(--text-muted)] [&_svg]:size-3.5">
+          <span aria-hidden className="mt-[0.0625rem] flex shrink-0 text-[var(--text-muted)] [&_svg]:size-3.5">
             {icon}
           </span>
           <span className="min-w-0">
@@ -209,7 +209,7 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
           {relation === "current" && (
             <>
               {" "}
-              <Chip size="xs" tone="brand" shape="square" caps className="ms-1 align-[1px]">
+              <Chip size="xs" tone="brand" shape="square" caps className="ms-1 align-[0.0625rem]">
                 {labels.current}
               </Chip>
             </>

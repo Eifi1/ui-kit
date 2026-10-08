@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "../components/focus-ring";
 import { useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "../components/text-link";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
@@ -58,7 +59,8 @@ export function TopBarBrand({
       href={to}
       className={cn(
         // `relative` contains the sr-only name.
-        "relative flex min-w-0 items-center gap-2 rounded-md font-semibold text-[var(--text-primary)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        "relative flex min-w-0 items-center gap-2 rounded-md font-semibold text-[var(--text-primary)] hover:opacity-80",
+        FOCUS_RING,
         className,
       )}
     >

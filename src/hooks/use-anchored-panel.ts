@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 import { useAnchoredRect, type AnchorRect } from "./use-anchored-rect";
+import { useTextSize } from "../theme/text-size";
 
 /**
  * Vertical placement for a portalled, `position: fixed` panel anchored to a trigger.
@@ -80,9 +81,12 @@ export interface AnchoredPanelOptions {
   gap?: number;
   /** Space kept clear at the viewport edges. */
   margin?: number;
-  /** The height the panel would like, when there is room. */
+  /** The height the panel would like, when there is room. In px at Normal text size:
+   *  {@link useAnchoredPanel} multiplies it by the size's scale, since what a panel
+   *  holds is rows of text (0.32, docs/text-size-harmonization.md §3.2). */
   preferredHeight?: number;
-  /** Below this, the space under the trigger counts as unusable and a flip is considered. */
+  /** Below this, the space under the trigger counts as unusable and a flip is considered.
+   *  In px at Normal, scaled likewise. */
   minHeight?: number;
 }
 
@@ -207,6 +211,11 @@ export function useAnchoredPanel<T extends HTMLElement>(
 ): AnchoredPanel {
   const rect = useAnchoredRect(ref, open);
   const [viewport, setViewport] = useState<ViewportBox>(readViewport);
+  // A panel of rows wants room for the same number of rows at every text size; the gap
+  // and the edge margin are not text and stay px.
+  const { scale } = useTextSize();
+  const preferredHeight = (options.preferredHeight ?? 320) * scale;
+  const minHeight = (options.minHeight ?? 160) * scale;
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -227,7 +236,7 @@ export function useAnchoredPanel<T extends HTMLElement>(
   }, [open]);
 
   if (!rect) {
-    return { rect: null, top: 0, maxHeight: options.preferredHeight ?? 320, above: false };
+    return { rect: null, top: 0, maxHeight: preferredHeight, above: false };
   }
-  return { rect, ...anchoredPanelPlacement(rect, viewport, options) };
+  return { rect, ...anchoredPanelPlacement(rect, viewport, { ...options, preferredHeight, minHeight }) };
 }

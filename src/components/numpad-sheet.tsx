@@ -3,6 +3,7 @@ import { Delete } from "lucide-react";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useEscapeKey } from "../hooks/use-dismiss";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
 import {
@@ -88,8 +89,7 @@ const PAD_KEYS: PadKey[] = [
  *
  *  --brand rather than --border-strong: the operator keys are filled with --border, and
  *  a ring in the colour of the thing it surrounds is not an indicator. */
-const PAD_BTN =
-  "flex h-14 items-center justify-center rounded-lg text-lg font-medium transition-transform select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] active:scale-[0.97]";
+const PAD_BTN = `flex h-14 items-center justify-center rounded-lg text-lg font-medium transition-transform select-none focus:outline-none ${FOCUS_RING} focus-visible:ring-inset active:scale-[0.97]`;
 const PAD_DIGIT = "bg-[var(--bg-surface-2)] text-[var(--text-primary)] active:bg-[var(--border)]";
 const PAD_ACCENT = "bg-[var(--border)] text-[var(--text-primary)] active:bg-[var(--bg-surface-2)]";
 

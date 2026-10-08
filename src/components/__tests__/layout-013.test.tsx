@@ -71,7 +71,7 @@ describe("SectionLabel variant=band (keksdose F5)", () => {
       </SectionLabel>,
     );
     const cls = classes(screen.getByText("Yesterday"));
-    expect(cls).toContain("text-[11px]");
+    expect(cls).toContain("text-caption");
     expect(cls).toContain("px-3");
     expect(cls).not.toContain("px-4");
   });
@@ -89,7 +89,7 @@ describe("SectionLabel size=md over a chart column (lenkbank P9)", () => {
         Income
       </SectionLabel>,
     );
-    expect(classes(screen.getByText("Income"))).toEqual(expect.arrayContaining(["text-[11px]", "text-center"]));
+    expect(classes(screen.getByText("Income"))).toEqual(expect.arrayContaining(["text-caption", "text-center"]));
   });
 });
 

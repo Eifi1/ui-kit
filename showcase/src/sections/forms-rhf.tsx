@@ -51,7 +51,7 @@ type ExpenseForm = {
 function FieldReadout() {
   const { formItemId, describedBy, invalid, isDirty, error } = useFormField();
   return (
-    <p className="font-mono text-[10px] text-[var(--text-muted)]">
+    <p className="font-mono text-micro text-[var(--text-muted)]">
       useFormField() → {q({ formItemId, describedBy, invalid, isDirty, error: error?.message })}
     </p>
   );

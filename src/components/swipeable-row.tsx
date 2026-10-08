@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useRowSwipe, type SwipeStage } from "../hooks/use-row-swipe";
 import { DEFAULT_SWIPEABLE_ROW_LABELS, useKitLabels } from "../i18n/kit-labels";
 
@@ -270,7 +271,7 @@ export function SwipeableRow({
               className={cn(
                 "sr-only whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-sm",
                 "focus:not-sr-only focus:pointer-events-auto focus:inline-flex focus:items-center focus:gap-1.5",
-                "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+                FOCUS_RING,
               )}
             >
               {/* The label is the button's accessible name, so the caller's icon is

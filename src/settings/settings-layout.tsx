@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Link, useHref, useLocation } from "react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, Card, EmptyState, Tabs } from "../components/ui";
+import { FOCUS_RING } from "../components/focus-ring";
 import { Chip } from "../components/chip";
 import { List, ListItem } from "../components/list";
 import type { ListItemLinkProps } from "../components/list";
@@ -266,7 +267,7 @@ export function SettingsLayout<G extends string>({
                 e.preventDefault();
                 route.back();
               }}
-              className="-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]", FOCUS_RING)}
             >
               <ChevronLeft aria-hidden className="size-4 rtl:-scale-x-100" />
               {pageTitle}

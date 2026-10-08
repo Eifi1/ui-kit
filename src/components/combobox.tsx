@@ -673,7 +673,7 @@ export function Combobox(props: ComboboxProps) {
                   {group !== undefined && (
                     <li
                       role="presentation"
-                      className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                      className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                     >
                       {group}
                     </li>
@@ -730,7 +730,7 @@ export function Combobox(props: ComboboxProps) {
                 {group !== undefined && (
                   <li
                     role="presentation"
-                    className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                    className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
                   >
                     {group}
                   </li>
@@ -1357,7 +1357,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 {o.group && o.group !== matches[i - 1]?.group && (
                   <li
                     role="presentation"
-                    className="px-4 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                    className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                   >
                     {o.group}
                   </li>
@@ -1420,7 +1420,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               {o.group && o.group !== matches[i - 1]?.group && (
                 <li
                   role="presentation"
-                  className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                  className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
                 >
                   {o.group}
                 </li>

@@ -496,7 +496,7 @@ export function Charts() {
         <div className="grid gap-4 md:grid-cols-2">
           {(["default", "formatValue"] as const).map((mode) => (
             <div key={mode} className="min-w-0">
-              <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">
+              <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">
                 {mode === "default" ? "valueFormatter only" : "formatValue"}
               </p>
               <ChartContainer config={FORECAST_CONFIG} className="h-56">

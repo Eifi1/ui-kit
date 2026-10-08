@@ -67,7 +67,8 @@ describe("keyboard-activatable rows", () => {
     for (const r of rows) {
       expect(r.tagName).toBe("TR");
       expect(r).not.toHaveAttribute("role");
-      expect(r.className).toContain("focus-visible:outline-2");
+      // The kit's focus frame width (0.32, §5), still an outline on a <tr>.
+      expect(r.className).toContain("focus-visible:outline-[length:var(--focus-ring-width)]");
     }
   });
 

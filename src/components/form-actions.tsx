@@ -3,7 +3,8 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { useBreakpoint } from "../hooks/use-breakpoint";
+import { useBreakpoint, usePhoneLayout } from "../hooks/use-breakpoint";
+import { useLargeText } from "../hooks/use-large-text";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
 import { useWriteLock } from "./write-lock";
@@ -42,6 +43,23 @@ export type FormActionsAlign = "start" | "center" | "end" | "between";
  *    FullBleedDialog's `footer`), which already pads and rules it.
  */
 export type FormActionsPlacement = "inline" | "sticky" | "dialog";
+
+/**
+ * When the row's buttons STACK, one per line at the row's full width (0.32,
+ * docs/text-size-harmonization.md §4 "FormActions stack full width on a phone layout"):
+ *
+ *  - `"auto"` (default): on the phone layout (`usePhoneLayout()`, `max-md:` at the text
+ *    size in force) at Large and Extra large. There a phone is 312 or 260 px of text
+ *    wide, and Cancel and a "Save changes" side by side wrap into a ragged pair with
+ *    one 48 px target squeezed against the other. Normal keeps the row the apps tuned.
+ *  - `"phone"`: on the phone layout at every text size.
+ *  - `"never"`: always the row.
+ *
+ * Stacked, the order is the DOM's — the start group (the destructive action), the extra
+ * actions, Cancel, then Save at the bottom, under the thumb — so the visual order and
+ * the tab order stay one.
+ */
+export type FormActionsStack = "auto" | "phone" | "never";
 
 /**
  * A placement per breakpoint, mobile first — `{ base: "sticky", md: "inline" }` is a
@@ -294,6 +312,9 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  `form.submitShortcut` label), dimmed. Hidden on a touch-only device, which has no
    *  keyboard to press it on. Default `false`. */
   submitShortcutHint?: boolean;
+  /** When the buttons stack full width — see {@link FormActionsStack}. Default `auto`:
+   *  on the phone layout at Large and Extra large. */
+  stack?: FormActionsStack;
   /** Extra actions, placed before Cancel. */
   children?: ReactNode;
 }
@@ -358,11 +379,18 @@ export function FormActions({
   form,
   submitShortcut,
   submitShortcutHint = false,
+  stack = "auto",
   children,
   className,
   style,
   ...rest
 }: FormActionsProps) {
+  const phone = usePhoneLayout();
+  const large = useLargeText();
+  const stacked = stack !== "never" && phone && (stack === "phone" || large);
+  // Stacked, a button fills its line — also inside the reason line's wrapper, which the
+  // column stretches but which keeps its control at the control's own width.
+  const full = stacked ? "w-full" : undefined;
   const labels = useKitLabels("form", DEFAULT_FORM_ACTIONS_LABELS);
   const lock = useWriteLock();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -428,6 +456,7 @@ export function FormActions({
       disabled={destructive.disabled}
       disabledReason={destructive.disabledReason}
       commit={commit}
+      className={full}
     >
       {destructive.label}
     </Button>
@@ -465,18 +494,27 @@ export function FormActions({
             }
           : style
       }
-      className={cn("flex flex-wrap items-center gap-2", ALIGN_CLASS[justify], PLACEMENT_CLASS[placement], className)}
+      data-stacked={stacked || undefined}
+      className={cn(
+        stacked ? "flex flex-col items-stretch gap-2" : cn("flex flex-wrap items-center gap-2", ALIGN_CLASS[justify]),
+        PLACEMENT_CLASS[placement],
+        className,
+      )}
     >
       {(hasDestructive || hasStart) && (
-        <div className="me-auto flex min-w-0 flex-wrap items-center gap-2">
+        <div
+          className={
+            stacked ? "flex min-w-0 flex-col items-stretch gap-2" : "me-auto flex min-w-0 flex-wrap items-center gap-2"
+          }
+        >
           {destructiveNode}
           {hasStart && startSlot}
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={stacked ? "flex flex-col items-stretch gap-2" : "flex flex-wrap items-center gap-2"}>
         {children}
         {onCancel && (
-          <Button type="button" variant={cancelVariant} size={size} onClick={onCancel}>
+          <Button type="button" variant={cancelVariant} size={size} onClick={onCancel} className={full}>
             {cancelLabel ?? labels.cancel}
           </Button>
         )}
@@ -500,6 +538,7 @@ export function FormActions({
           // spinner would say it had not.
           commit={commit && !pending}
           aria-busy={pending || undefined}
+          className={cn(submitProps?.className, full)}
         >
           {pending ? (
             <Spinner label={null} className={glyphClass} />

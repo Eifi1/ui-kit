@@ -12,6 +12,7 @@ import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
 
 /**
@@ -210,7 +211,8 @@ export function DropdownSearchHeader({
         // FIELD_TOUCH_TEXT: a search box is a field — at least 16 px on touch, or iOS zooms
         // the page the moment a picker opens and focuses it (§10.1).
         className={cn(
-          "w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+          "w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
+          FOCUS_RING,
           FIELD_TOUCH_TEXT,
         )}
       />

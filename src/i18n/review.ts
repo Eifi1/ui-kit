@@ -267,6 +267,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "ibanInput.country": [["{{code}}"]],
   "ibanInput.length": [[20, 21]],
   "signChip.direction": [["{{current}}", "{{next}}"]],
+  "signChip.switchTo": [["{{next}}"]],
+  "rowActions.actionsFor": [["{{name}}"]],
   "columnMapper.readError": [["{{name}}"]],
   "columnMapper.summary": [
     [1, 1],

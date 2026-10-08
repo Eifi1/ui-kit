@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { Button, ToggleGroup, cn } from "@eifi1/ui-kit";
 import { useLocale, useT } from "../i18n";
 import { usePalette, useTheme } from "../stores";
+import { TEXT_SIZES, type TextSize } from "../../../src/theme/text-size";
+import { useAppearanceLabels } from "../../../src/components/appearance-labels";
 
 /**
  * The current page at the screen sizes that cover most real use — one at a time at
@@ -18,6 +20,12 @@ import { usePalette, useTheme } from "../stores";
  * The frames follow the route, theme, palette and language: they load the same URL,
  * read the same localStorage, and are remounted when any of those change. A frame never
  * offers the preview itself (see `isEmbedded`), so it cannot recurse.
+ *
+ * And the TEXT SIZE (0.32, docs/text-size-harmonization.md §8) is a second axis: every
+ * device at Normal, Large or Extra large, each frame loaded with `?text-size=` (stores.ts),
+ * so the frames can differ from each other and from the page — which is what shows that
+ * a tablet at 150 % gets the phone layout. Plus the narrowest case the kit designs for, a
+ * 360 px phone at 150 %: 240 px of layout (§3.3).
  */
 
 export const DEVICES = [
@@ -25,6 +33,10 @@ export const DEVICES = [
   { key: "tablet", width: 768, height: 1024 },
   { key: "desktop", width: 1440, height: 900 },
 ] as const;
+
+/** The worst case (§3.3): a 360 px phone at Extra large, 240 px of effective width. Its
+ *  size is part of what it is, so the size axis does not apply to it. */
+export const SMALL_PHONE = { key: "small", width: 360, height: 780, size: "xlarge" } as const;
 
 /** True inside a preview frame — the chrome hides the preview control there. */
 export function isEmbedded(): boolean {
@@ -39,7 +51,13 @@ export function isEmbedded(): boolean {
 const GAP = 24;
 
 type DeviceKey = (typeof DEVICES)[number]["key"];
-type PreviewChoice = DeviceKey | "all";
+type PreviewChoice = DeviceKey | typeof SMALL_PHONE.key | "all";
+interface Frame {
+  key: DeviceKey | typeof SMALL_PHONE.key;
+  width: number;
+  height: number;
+  size: TextSize;
+}
 
 /** The last choice, per browser, so a reader who checks every page on a phone does not
  *  pick "Phone" again on each one. Wrapped: storage can be unavailable. */
@@ -47,7 +65,7 @@ const CHOICE_KEY = "uikit-showcase-preview-device";
 function readChoice(): PreviewChoice {
   try {
     const v = localStorage.getItem(CHOICE_KEY);
-    return v === "phone" || v === "tablet" || v === "desktop" || v === "all" ? v : "phone";
+    return v === "phone" || v === "tablet" || v === "desktop" || v === "small" || v === "all" ? v : "phone";
   } catch {
     return "phone";
   }
@@ -57,6 +75,24 @@ function writeChoice(v: PreviewChoice) {
     localStorage.setItem(CHOICE_KEY, v);
   } catch {
     /* private mode: the choice just is not remembered */
+  }
+}
+
+/** The size axis' last choice, likewise. */
+const SIZE_KEY = "uikit-showcase-preview-text-size";
+function readSize(): TextSize {
+  try {
+    const v = localStorage.getItem(SIZE_KEY);
+    return v === "large" || v === "xlarge" ? v : "normal";
+  } catch {
+    return "normal";
+  }
+}
+function writeSize(v: TextSize) {
+  try {
+    localStorage.setItem(SIZE_KEY, v);
+  } catch {
+    /* as above */
   }
 }
 
@@ -71,6 +107,7 @@ function writeChoice(v: PreviewChoice) {
  */
 export function DevicePreview({ onExit }: { onExit?: () => void }) {
   const t = useT();
+  const appearance = useAppearanceLabels();
   const { code } = useLocale();
   const mode = useTheme((s) => s.mode);
   const paletteId = usePalette((s) => s.id);
@@ -81,6 +118,11 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
   const setChoice = (v: PreviewChoice) => {
     setChoiceState(v);
     writeChoice(v);
+  };
+  const [size, setSizeState] = useState<TextSize>(readSize);
+  const setSize = (v: TextSize) => {
+    setSizeState(v);
+    writeSize(v);
   };
 
   useEffect(() => {
@@ -93,25 +135,34 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
     return () => ro?.disconnect();
   }, []);
 
-  const shown: ReadonlyArray<(typeof DEVICES)[number]> =
-    choice === "all" ? DEVICES : DEVICES.filter((d) => d.key === choice);
+  const shown: readonly Frame[] =
+    choice === "small"
+      ? [SMALL_PHONE]
+      : (choice === "all" ? DEVICES : DEVICES.filter((d) => d.key === choice)).map((d) => ({ ...d, size }));
   // One factor for every frame shown, so side by side they stay comparable: a 36px
   // button reads the same size in each. A single device is at 1:1 unless the window is
   // narrower than it (the phone bezel's 2 × 10px included).
-  const bezel = (key: DeviceKey) => (key === "phone" ? 20 : 0);
+  const isPhone = (key: Frame["key"]) => key === "phone" || key === "small";
+  const bezel = (key: Frame["key"]) => (isPhone(key) ? 20 : 0);
   const total = shown.reduce<number>((sum, d) => sum + d.width + bezel(d.key), 0) + GAP * (shown.length - 1);
   const scale = Math.min(1, available / total);
 
-  // The same page the reader is on, including the section anchor.
-  const src = `${window.location.origin}${window.location.pathname}#${location.pathname}${location.hash}`;
+  // The same page the reader is on, including the section anchor, at the frame's own
+  // text size (the query string, read before the router's hash — stores.ts).
+  const src = (frameSize: TextSize) =>
+    `${window.location.origin}${window.location.pathname}?text-size=${frameSize}#${location.pathname}${location.hash}`;
   // Theme, palette and language live in localStorage, which a frame reads once, at load.
   // Keying on them remounts the frames when one changes in the top bar.
-  const key = `${src}|${mode}|${paletteId}|${code}`;
+  const key = `${location.pathname}${location.hash}|${mode}|${paletteId}|${code}`;
+  const smallLabel = `${t.chrome.phone} ${SMALL_PHONE.width} · ${appearance.textSizes[SMALL_PHONE.size]}`;
+  const nameOf = (frame: Frame) => (frame.key === "small" ? t.chrome.phone : t.chrome[frame.key]);
 
   const options: Array<{ value: PreviewChoice; label: string }> = [
     ...DEVICES.map((d) => ({ value: d.key as PreviewChoice, label: t.chrome[d.key] })),
+    { value: "small", label: smallLabel },
     { value: "all", label: t.chrome.allDevices },
   ];
+  const sizeOptions = TEXT_SIZES.map((value) => ({ value, label: appearance.textSizes[value] }));
 
   return (
     <div ref={box} className="w-full">
@@ -121,6 +172,16 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
           options={options}
           value={choice}
           onChange={setChoice}
+          className="w-auto"
+        />
+        {/* The size axis. The small phone is at Extra large by definition, so the group
+            shows that and is not a control there. */}
+        <ToggleGroup
+          aria-label={appearance.textSize}
+          options={sizeOptions}
+          value={choice === "small" ? SMALL_PHONE.size : size}
+          onChange={setSize}
+          disabled={choice === "small"}
           className="w-auto"
         />
         {onExit && (
@@ -133,14 +194,16 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
       <p className="mb-4 max-w-prose text-sm text-[var(--text-secondary)]">{t.chrome.previewHint}</p>
       <div className={cn("flex items-start", shown.length === 1 && "justify-center")} style={{ gap: GAP * scale }}>
         {shown.map((d) => {
-          const phone = d.key === "phone";
+          const phone = isPhone(d.key);
+          const sizeLabel = appearance.textSizes[d.size];
           return (
             <figure key={d.key} className="m-0 shrink-0">
               <figcaption className="mb-1.5 flex items-baseline gap-2 text-xs text-[var(--text-secondary)]">
-                <span className="font-medium text-[var(--text-primary)]">{t.chrome[d.key]}</span>
+                <span className="font-medium text-[var(--text-primary)]">{nameOf(d)}</span>
                 <span className="font-mono text-[var(--text-muted)]" dir="ltr">
                   {d.width} × {d.height}
                 </span>
+                <span>{sizeLabel}</span>
               </figcaption>
               {/* The frame keeps its REAL size and is scaled with a transform; the wrapper
                   takes the scaled size, so frames sit side by side without overlap. A
@@ -158,9 +221,9 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
                 }}
               >
                 <iframe
-                  key={key}
-                  title={`${t.chrome[d.key]} — ${d.width} × ${d.height}`}
-                  src={src}
+                  key={`${key}|${d.size}`}
+                  title={`${nameOf(d)} — ${d.width} × ${d.height} · ${sizeLabel}`}
+                  src={src(d.size)}
                   width={d.width}
                   height={d.height}
                   className="block origin-top-left border-0"

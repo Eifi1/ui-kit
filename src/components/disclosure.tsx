@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 // Read at the moment of closing, as `useCloseTransition` does: the setting can change
 // under a long-lived page.
 import { prefersReducedMotion } from "../hooks/use-close-transition";
@@ -345,10 +346,10 @@ export function Disclosure({
             // card's hover paint on the stretched area / the row, not the text box.
             cn(
               "min-w-0 flex-1 after:absolute after:inset-0 after:content-['']",
-              "focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
+              "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
               card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : !menu && "after:rounded-sm",
             )
-          : "focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+          : FOCUS_RING,
         card
           ? cn(
               "items-center justify-between rounded-lg p-4",

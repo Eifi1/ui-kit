@@ -30,7 +30,7 @@ function Badge({ option }: { option: string }) {
     >
       <span
         className={cn(
-          "shrink-0 rounded border px-1 text-[10px] uppercase tracking-wide",
+          "shrink-0 rounded border px-1 text-micro uppercase tracking-wide",
           translated
             ? "border-[var(--brand)] text-[var(--brand)]"
             : "border-[var(--border)] text-[var(--text-muted)]",
@@ -125,7 +125,7 @@ export function PickerSheetClipsDemo() {
               >
                 <span className="min-w-0 flex-1 truncate">{a.label}</span>
                 <Tooltip label={`Group: ${a.group ?? "—"} · ${a.sublabel ?? ""}`} side="start">
-                  <span className="shrink-0 rounded border border-[var(--border)] px-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
+                  <span className="shrink-0 rounded border border-[var(--border)] px-1 text-micro uppercase tracking-wide text-[var(--text-muted)]">
                     {a.group}
                   </span>
                 </Tooltip>

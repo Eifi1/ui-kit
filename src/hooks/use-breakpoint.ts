@@ -48,6 +48,38 @@ function readBrowserRemPx(): number {
 }
 
 /**
+ * How many CSS px one `rem` is at `scale` (`TEXT_SCALE` of the size in force): the
+ * browser's own default font size times the text size — what `<html>`'s computed font
+ * size is, by tokens.css. For the few lengths JS has to do arithmetic with: a popover's
+ * width against the viewport edge, a chart constant (§3.1, §3.2). 16 × `scale` outside a
+ * browser and in jsdom, which computes no default font size.
+ */
+export function remPx(scale = 1): number {
+  return readBrowserRemPx() * scale;
+}
+
+/** {@link remPx} at the text size in force, re-rendering when it changes. */
+export function useRemPx(): number {
+  const { scale } = useTextSize();
+  return remPx(scale);
+}
+
+/** A length in rem as the kit spells one in JS — `"18rem"` — where a prop also takes px
+ *  as a plain number. */
+export type RemLength = `${number}rem`;
+
+/**
+ * A `number | RemLength` in CSS px now: a number is px as given, `"18rem"` is 18 ×
+ * `rootRemPx` (see {@link remPx}). `undefined` stays `undefined`.
+ */
+export function lengthPx(length: number | RemLength, rootRemPx: number): number;
+export function lengthPx(length: number | RemLength | undefined, rootRemPx: number): number | undefined;
+export function lengthPx(length: number | RemLength | undefined, rootRemPx: number): number | undefined {
+  if (length === undefined) return undefined;
+  return typeof length === "number" ? length : Number.parseFloat(length) * rootRemPx;
+}
+
+/**
  * The media query a breakpoint variant means at `scale` (`TEXT_SCALE` of the size in
  * force). `"md"` → `(min-width: 768px)` at Normal, `(min-width: 960px)` at Large;
  * `"max-md"` → `(max-width: 767px)` at Normal. In px, scaled by the browser's own

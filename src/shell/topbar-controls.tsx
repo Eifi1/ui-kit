@@ -19,7 +19,7 @@ export const TOPBAR_MENU_ITEM_CLASS =
 /** The small uppercase heading row the top-bar menus share (`heading`). */
 function MenuHeading({ children }: { children: string }) {
   return (
-    <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
       {children}
     </li>
   );
@@ -131,7 +131,7 @@ export function PaletteMenu({
                     </span>
                     <span className="flex min-w-0 flex-col text-start">
                       <span className="truncate">{p.name}</span>
-                      <span className="truncate text-[11px] text-[var(--text-placeholder)]">
+                      <span className="truncate text-caption text-[var(--text-placeholder)]">
                         {p.blurb}
                       </span>
                     </span>
@@ -197,7 +197,7 @@ export function LanguageMenu({
             {active ? (
               <span
                 aria-hidden
-                className={`fi fi-${active.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+                className={`fi fi-${active.country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
               />
             ) : (
               <Globe className="size-5" />
@@ -224,7 +224,7 @@ export function LanguageMenu({
                   <span className="flex items-center gap-2">
                     <span
                       aria-hidden
-                      className={`fi fi-${lang.country} inline-block h-[15px] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+                      className={`fi fi-${lang.country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
                     />
                     {lang.label}
                   </span>

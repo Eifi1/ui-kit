@@ -437,7 +437,7 @@ export function useComboboxCore<V extends string | number>({
 
 /** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
  *  so a combobox's message is indistinguishable from an Input's. */
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
 
 /**
  * {@link Input}'s `error` for the combobox family: the message under the field, its
@@ -732,7 +732,7 @@ export function ComboboxPanel<V extends string | number>({
                 role="presentation"
                 className={cn(
                   "font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-                  isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-[11px] first:pt-1",
+                  isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
                 )}
               >
                 {o.group}
@@ -906,7 +906,8 @@ export function ComboboxPanel<V extends string | number>({
         top: placement.top,
         ...inline,
         width: rect.width,
-        minWidth: 220,
+        // 220 px at Normal, in rem so the panel's text keeps its room at Large (§3.2).
+        minWidth: "13.75rem",
         maxHeight: placement.maxHeight,
       }}
       className={cn(

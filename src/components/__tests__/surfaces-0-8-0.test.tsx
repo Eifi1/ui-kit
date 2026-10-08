@@ -64,7 +64,7 @@ describe("EmptyState icon and action slots", () => {
 describe("AlertBanner 0.8.0", () => {
   it("offers info and neutral tones, with frames from the one source", () => {
     expect(toneFrameClass("info")).toContain("border-[var(--info-border)]");
-    expect(alertFrameClass("info")).toContain("p-[11px]"); // 2px border, like danger/warning
+    expect(alertFrameClass("info")).toContain("p-[calc(0.75rem-1px)]"); // 2px border, like danger/warning
     expect(alertFrameClass("neutral")).toContain("p-3");
     render(
       <>
@@ -226,7 +226,7 @@ describe("Chip 0.8.0", () => {
     const chip = screen.getByTestId("c");
     expect(chip.className).toContain("uppercase");
     expect(chip.className).toContain("tracking-wider");
-    expect(chip.className).toContain("text-[10px]");
+    expect(chip.className).toContain("text-micro");
     expect(chip.className).not.toMatch(/\btext-xs\b/);
     // The text is still what the caller wrote: case is paint.
     expect(chip).toHaveTextContent("Paid");
@@ -296,7 +296,8 @@ describe("Button variant=link", () => {
     const button = screen.getByRole("button", { name: "Resend code" });
     expect(button.tagName).toBe("BUTTON");
     expect(button.className).toContain("hover:underline");
-    expect(button.className).toContain("focus:ring-2");
+    // The kit's focus frame (0.32, §5), on keyboard focus.
+    expect(button.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
     expect(button.className).toContain("p-0");
     expect(button.className).not.toMatch(/\bpx-3\b|\bpy-2\b/);
   });
@@ -322,7 +323,7 @@ describe("IconButton 0.8.0", () => {
     render(<IconButton tone="warning" aria-label="Needs review">x</IconButton>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-[var(--warning)]");
-    expect(cls).toContain("focus:ring-[var(--warning-border)]");
+    expect(cls).toContain("focus-visible:ring-[var(--warning-border)]");
   });
 
   it("variant=overlay is a round translucent disc, even at the small sizes", () => {

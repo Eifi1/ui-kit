@@ -157,7 +157,7 @@ export * from "./components/icon-picker";
 export * from "./components/choice-card";
 export * from "./components/autocomplete";
 export * from "./components/measured-grid";
-export { useWindowedRows } from "./hooks/use-windowed-rows";
+export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
 export type { WindowedRows } from "./hooks/use-windowed-rows";
 // Named, not `export *`: file-button.tsx also holds the screening helpers the
 // dropzone shares, which are internal.
@@ -772,6 +772,18 @@ export type {
   AccountAppearance,
 } from "./settings/use-account-appearance";
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
+// The behaviours at Large (§4, §10.7–10.9): a row's actions, the hooks components read.
+export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
+export type {
+  RowAction,
+  RowActionList,
+  RowActionsLabels,
+  RowActionsProps,
+  RowActionsCollapse,
+  RowActionsSize,
+  RowActionsColumnOptions,
+} from "./components/row-actions";
+export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
 export type { AppearanceLabels } from "./components/appearance-labels";
 
 // ── 0.32.0: billing — plans, standing, banners, the limit notice (docs/billing-harmonization.md §7) ──

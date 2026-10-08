@@ -105,8 +105,8 @@ export interface OneTimeCodeInputProps
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so this
 // field's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-[11px] leading-tight text-[var(--danger)]";
-const FIELD_CAPTION_CLASS = "mt-1 text-[11px] leading-tight text-[var(--text-muted)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-[var(--text-muted)]";
 
 // Equal-width digits, spaced a little apart, so a code reads — and compares against the
 // authenticator's screen — digit by digit.

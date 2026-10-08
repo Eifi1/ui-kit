@@ -1261,6 +1261,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       inflow: "Entrata",
       // "premere per…": an instruction without a tu imperative, as the kit's Italian is formal.
       direction: (current, next) => `Direzione: ${current} – premere per passare a ${next}`,
+      switchTo: (next) => `Passa a ${next}`,
     },
     columnMapper: {
       paste: "Incolla una tabella",
@@ -1515,6 +1516,14 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       contrastHelp:
         "Il contrasto aumentato scurisce i testi tenui e le linee e ispessisce i riquadri di focus. «Sistema» segue l’impostazione di questo dispositivo.",
       contrastModes: { system: "Sistema", standard: "Standard", more: "Aumentato" },
+    },
+    rowActions: {
+      actions: "Azioni",
+      actionsFor: (name) => `Azioni per ${name}`,
+    },
+    appShellMore: {
+      more: "Altro",
+      moreTitle: "Altre pagine",
     },
   };
 }

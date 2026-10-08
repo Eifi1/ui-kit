@@ -1279,6 +1279,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       outflow: "Ausgabe",
       inflow: "Einnahme",
       direction: (current, next) => `Richtung: ${current} – zu ${next} wechseln`,
+      switchTo: (next) => `Zu ${next} wechseln`,
     },
     columnMapper: {
       paste: "Tabelle einfügen",
@@ -1541,8 +1542,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       textSizes: { normal: "Normal", large: "Groß", xlarge: "Sehr groß" },
       contrast: "Kontrast",
       contrastHelp:
-        "Erhöhter Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
-      contrastModes: { system: "System", standard: "Standard", more: "Erhöht" },
+        "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
+      contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
+    },
+    rowActions: {
+      actions: "Aktionen",
+      actionsFor: (name) => `Aktionen für ${name}`,
+    },
+    appShellMore: {
+      more: "Mehr",
+      moreTitle: "Weitere Seiten",
     },
   };
 }

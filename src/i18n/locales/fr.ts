@@ -1276,6 +1276,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       outflow: "Sortie",
       inflow: "Entrée",
       direction: (current, next) => `Sens\u00a0: ${current} — passer à ${next}`,
+      switchTo: (next) => `Passer à ${next}`,
     },
     columnMapper: {
       paste: "Coller un tableau",
@@ -1531,6 +1532,14 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       contrastHelp:
         "Le contraste renforcé assombrit les textes discrets et les lignes, et épaissit les contours de focus. «\u202fSystème\u202f» suit le réglage de cet appareil.",
       contrastModes: { system: "Système", standard: "Standard", more: "Renforcé" },
+    },
+    rowActions: {
+      actions: "Actions",
+      actionsFor: (name) => `Actions pour ${name}`,
+    },
+    appShellMore: {
+      more: "Plus",
+      moreTitle: "Autres pages",
     },
   };
 }

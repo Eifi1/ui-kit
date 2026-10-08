@@ -59,7 +59,7 @@ function PageCard({ page }: { page: ShowcasePage }) {
           {page.components.map((name) => (
             <li
               key={name}
-              className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)]"
+              className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)]"
             >
               {name}
             </li>

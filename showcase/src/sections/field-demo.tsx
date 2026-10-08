@@ -14,7 +14,7 @@ const IBAN = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 /** Prints what the render prop handed the control, so the wiring is visible. */
 function Wiring({ ids }: { ids: FieldControlProps }) {
   return (
-    <span className="block font-mono text-[10px] text-[var(--text-muted)] [overflow-wrap:anywhere]">
+    <span className="block font-mono text-micro text-[var(--text-muted)] [overflow-wrap:anywhere]">
       {JSON.stringify(ids)}
     </span>
   );

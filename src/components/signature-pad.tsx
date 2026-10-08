@@ -633,7 +633,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       </div>
 
       {hasError && (
-        <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

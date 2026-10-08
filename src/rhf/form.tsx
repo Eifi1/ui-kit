@@ -287,7 +287,7 @@ export function FormDescription({ className, ...rest }: FormDescriptionProps) {
       data-slot="form-description"
       {...rest}
       id={formDescriptionId}
-      className={cn("text-[11px] leading-tight text-[var(--text-muted)]", className)}
+      className={cn("text-caption leading-tight text-[var(--text-muted)]", className)}
     />
   );
 }
@@ -315,7 +315,7 @@ export function FormMessage({ className, children, ...rest }: FormMessageProps) 
       data-slot="form-message"
       {...rest}
       id={formMessageId}
-      className={cn("text-[11px] leading-tight text-[var(--danger)]", className)}
+      className={cn("text-caption leading-tight text-[var(--danger)]", className)}
     >
       {body}
     </p>

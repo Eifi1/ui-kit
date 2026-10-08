@@ -326,7 +326,7 @@ export function TopBarActionMenu({
         const footerBody = typeof footer === "function" ? footer(close) : footer;
         const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
-          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-2 [&_a:focus-visible]:ring-[var(--brand)]";
+          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-[var(--brand)]";
         /** One action or link row — loose, or inside a heading's group. */
         const row = (entry: RowEntry) => (
           <li key={entry.key}>
@@ -374,7 +374,7 @@ export function TopBarActionMenu({
               </MenuSection>
             )}
             {heading && (
-              <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
                 {heading}
               </li>
             )}
@@ -397,7 +397,7 @@ export function TopBarActionMenu({
                     id={headingId}
                     role="presentation"
                     className={cn(
-                      "px-3 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] [overflow-wrap:anywhere]",
+                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] [overflow-wrap:anywhere]",
                       tight ? "pt-1" : "pt-2.5",
                     )}
                   >

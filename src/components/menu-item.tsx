@@ -3,6 +3,7 @@ import type { MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 
@@ -17,8 +18,7 @@ const MENU_ITEM_ROW =
 
 /** HoverMenu moves focus onto items with the arrow keys; a pointer user never sees the
  *  ring, a keyboard user always does. Inset, because the panel clips its children. */
-const MENU_ITEM_FOCUS =
-  "focus-visible:outline-none focus-visible:bg-[var(--bg-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)]";
+const MENU_ITEM_FOCUS = `${FOCUS_RING} focus-visible:bg-[var(--bg-hover)] focus-visible:ring-inset`;
 
 export type MenuItemTone = "default" | "danger";
 

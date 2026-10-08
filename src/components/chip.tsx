@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip } from "./tooltip";
@@ -196,9 +197,9 @@ const DOT_SIZE: Record<ChipSize, string> = { xs: "size-1.5", sm: "size-2", md: "
  *  capitals at body size shout and capitals untracked run together. Per size, so it
  *  replaces the size's own `text-*` through tailwind-merge. */
 const CAPS: Record<ChipSize, string> = {
-  xs: "text-[10px] font-semibold uppercase tracking-wider",
-  sm: "text-[10px] font-semibold uppercase tracking-wider",
-  md: "text-[11px] font-semibold uppercase tracking-wider",
+  xs: "text-micro font-semibold uppercase tracking-wider",
+  sm: "text-micro font-semibold uppercase tracking-wider",
+  md: "text-caption font-semibold uppercase tracking-wider",
   lg: "text-xs font-semibold uppercase tracking-wider",
 };
 
@@ -255,8 +256,8 @@ const SIZE: Record<
   { body: string; split: string; tail: string; icon: string; remove: string }
 > = {
   xs: {
-    body: "gap-1 px-1.5 py-0 text-[11px] leading-4",
-    split: "gap-1 ps-1.5 pe-0.5 py-0 text-[11px] leading-4",
+    body: "gap-1 px-1.5 py-0 text-caption leading-4",
+    split: "gap-1 ps-1.5 pe-0.5 py-0 text-caption leading-4",
     tail: "pe-1",
     icon: "size-3",
     remove: "size-2.5",
@@ -490,8 +491,7 @@ const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border trans
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
 // pointer click reads as a stuck selection.
-const CHIP_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]";
+const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]`;
 const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
 
 interface ChipBaseProps {
@@ -821,7 +821,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         // Logical margins: the × sits at the END of the pill, which is the left in RTL.
         "-me-0.5 ms-0.5 shrink-0 p-0.5 transition-colors",
         shape === "square" ? "rounded-sm" : "rounded-full",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+        FOCUS_RING,
         !locked && "hover:bg-[var(--bg-active)]",
         locked && "cursor-not-allowed",
         ((disabled && !locked) || removeDisabled) && "pointer-events-none",

@@ -71,7 +71,7 @@ const KEYS: Key[] = [
 ];
 
 const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]";
+  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-[var(--border-strong)]";
 // Two key families, two fills: digits sit on the inset surface and darken on
 // hover, operators sit a step down on `--border` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
@@ -232,7 +232,7 @@ export function CalculatorButton({
   const labels = useKitLabels("calculator", DEFAULT_CALCULATOR_LABELS, fromProps);
   return (
     <Popover
-      width={224}
+      width="14rem"
       labels={{ panel: labels.panel }}
       trigger={({ open, toggle, ref }) => (
         <button

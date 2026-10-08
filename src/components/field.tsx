@@ -177,12 +177,12 @@ export function Field({
         ? children(control, { labelId: label !== undefined ? labelId : undefined })
         : children}
       {hasHint && (
-        <p id={hintId} className="text-[11px] leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="text-caption leading-tight text-[var(--text-muted)]">
           {hint}
         </p>
       )}
       {hasError && (
-        <p id={errorId} className="text-[11px] leading-tight text-[var(--danger)]">
+        <p id={errorId} className="text-caption leading-tight text-[var(--danger)]">
           {error}
         </p>
       )}

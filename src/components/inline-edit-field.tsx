@@ -4,6 +4,7 @@ import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Input, Spinner } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
 import { Tooltip } from "./tooltip";
 import { useCommitReason } from "./write-lock";
 
@@ -467,7 +468,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           {pending && <Spinner label={null} className="size-4 shrink-0" />}
         </div>
         {failed && (
-          <p id={errorId} className="mt-1 text-[11px] leading-tight text-[var(--danger)]">
+          <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
             {failure}
           </p>
         )}
@@ -490,7 +491,8 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
             aria-describedby={reasonId}
             onClick={(e) => e.preventDefault()}
             className={cn(
-              "block w-full min-w-0 cursor-not-allowed truncate rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+              "block w-full min-w-0 cursor-not-allowed truncate rounded-sm focus:outline-none",
+              FOCUS_RING,
               alignClass,
             )}
           >
@@ -513,7 +515,8 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           {...private_}
           onClick={() => setOpen(true)}
           className={cn(
-            "block w-full min-w-0 truncate rounded-sm underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]",
+            "block w-full min-w-0 truncate rounded-sm underline-offset-2 hover:underline focus:outline-none",
+            FOCUS_RING,
             alignClass,
           )}
         >

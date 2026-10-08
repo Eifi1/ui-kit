@@ -121,7 +121,7 @@ export function FieldStrip023Demo() {
                   onSelect={(key) => key && setPattern(key)}
                   size="sm"
                   renderTile={(item) => (
-                    <span aria-hidden className={`font-mono text-[10px] ${TILE_SIZE.sm.glyph}`}>
+                    <span aria-hidden className={`font-mono text-micro ${TILE_SIZE.sm.glyph}`}>
                       {item.key === "dots" ? "∴" : item.key === "lines" ? "≡" : "#"}
                     </span>
                   )}

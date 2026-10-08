@@ -86,6 +86,8 @@ import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
 import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
+import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions";
+import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
@@ -218,6 +220,8 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   demo: DEFAULT_DEMO_LABELS,
   billing: DEFAULT_BILLING_LABELS,
   appearance: DEFAULT_APPEARANCE_LABELS,
+  rowActions: DEFAULT_ROW_ACTIONS_LABELS,
+  appShellMore: DEFAULT_APP_SHELL_MORE_LABELS,
   characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
   countrySelect: DEFAULT_COUNTRY_SELECT_LABELS,
   inlineEdit: DEFAULT_INLINE_EDIT_LABELS,

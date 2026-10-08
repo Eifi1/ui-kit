@@ -1,7 +1,5 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
-import { MoreHorizontal } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DateInput } from "../lib/format";
 import type { PersonName } from "../lib/person-name";
@@ -12,8 +10,8 @@ import type { ChipTone } from "../components/chip";
 import type { DataTableColumn } from "../components/data-table";
 import { encodeSorts } from "../components/data-table-sort";
 import type { SortState } from "../components/data-table-sort";
-import { Popover } from "../components/popover";
-import { Button, IconButton } from "../components/ui";
+import { RowActions } from "../components/row-actions";
+import type { RowAction, RowActionList } from "../components/row-actions";
 import { UserAvatar } from "../components/user-avatar";
 import { personLabel } from "./admin-parts";
 import { RoleSelect } from "./role-select";
@@ -213,27 +211,13 @@ export function UserIdentityCell({
 
 /* ── The row's actions ──────────────────────────────────────────────────────── */
 
-/** One entry of a row's action menu (§4). */
-export interface UserRowAction {
-  /** React key. Default: the label. */
-  key?: string;
-  label: string;
-  /** Runs it — usually opens `AdminActionConfirm` with the level the server states. */
-  onSelect: () => void;
-  icon?: LucideIcon;
-  /** `danger` for deactivate, transfer, erase. */
-  tone?: "default" | "danger";
-  /** Why it is not available for this row ("You can’t deactivate yourself"). The entry
-   *  stays in the menu, focusable, and says so — an action that silently vanished
-   *  would leave the admin looking for it. */
-  disabledReason?: ReactNode;
-  /** Leave it out for this row. */
-  hidden?: boolean;
-}
+/** One entry of a row's action menu (§4) — the kit's {@link RowAction} since 0.32,
+ *  which generalised it for every dense row (docs/text-size-harmonization.md §10.8). */
+export type UserRowAction = RowAction;
 
 /** What `actions(row)` may return: entries, and `false` / `null` for the ones a
  *  condition left out (`row.is_active && {…}`). */
-export type UserRowActionList = readonly (UserRowAction | false | null | undefined)[];
+export type UserRowActionList = RowActionList;
 
 export interface UserRowActionsProps {
   actions: UserRowActionList;
@@ -248,59 +232,19 @@ export interface UserRowActionsProps {
  * a phone card, and both grow with every action §2.4 adds. The menu is portalled, so a
  * table's scroller cannot clip it; Escape and an outside press close it, and focus goes
  * back to the button, which is where a confirmation dialog then returns it.
+ *
+ * Since 0.32 this is {@link RowActions} with `collapse="menu"` — the menu at every size —
+ * named by the roster's own `actionsFor`.
  */
 export function UserRowActions({ actions, name, labels: labelsProp }: UserRowActionsProps) {
   const labels = useKitLabels("userRoster", DEFAULT_USER_ROSTER_LABELS, labelsProp);
-  const entries = actions.filter((a): a is UserRowAction => Boolean(a) && !(a as UserRowAction).hidden);
-  if (entries.length === 0) return null;
-  const title = labels.actionsFor(name);
   return (
-    <Popover
-      width={240}
-      aria-label={title}
-      className="p-1"
-      trigger={({ open, toggle, ref }) => (
-        <IconButton
-          ref={ref}
-          size="xs"
-          label={title}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          stopPropagation
-          onClick={toggle}
-        >
-          <MoreHorizontal />
-        </IconButton>
-      )}
-    >
-      {(close) => (
-        <ul className="space-y-0.5">
-          {entries.map((action) => {
-            const Icon = action.icon;
-            return (
-              <li key={action.key ?? action.label}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  stretch
-                  tone={action.tone === "danger" ? "danger" : undefined}
-                  disabledReason={action.disabledReason}
-                  className="justify-start"
-                  onClick={() => {
-                    close();
-                    action.onSelect();
-                  }}
-                >
-                  {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
-                  {action.label}
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </Popover>
+    <RowActions
+      actions={actions}
+      name={name}
+      collapse="menu"
+      labels={{ actionsFor: labels.actionsFor }}
+    />
   );
 }
 
@@ -507,7 +451,8 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       column: { mobileHidden: true },
     }),
     // How long ago rather than a date — the question is "recently?" — with the exact
-    // time in a tooltip (keksdose's last-seen column, Kurvenschmiede's).
+    // time beside it (keksdose's last-seen column, Kurvenschmiede's; 0.32 §4: never only
+    // in a tooltip).
     dateColumn<T>({
       key: "last_login",
       header: labels.lastLogin,

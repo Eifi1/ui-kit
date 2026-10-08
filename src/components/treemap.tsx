@@ -15,6 +15,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { PALETTE_HEX, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
 import { dirOf, type Direction } from "../lib/direction";
+import { cn } from "../lib/cn";
+import { useTextSize } from "../theme/text-size";
+import { chartHeightProps, type ChartHeight } from "./chart-height";
 
 /**
  * One tile.
@@ -63,8 +66,10 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * host that has a currency or a locale passes this — the kit knows neither.
    */
   valueFormatter?: (value: number, share: number | undefined) => ReactNode;
-  /** Chart height in px. Default 320. */
-  height?: number;
+  /** Chart height: a CSS length (`"20rem"`, `"min(20rem, 50dvh)"`), a Tailwind class,
+   *  or px. Default `"20rem"` — 320 px at Normal, growing with the text size like the
+   *  labels in the tiles (0.32, docs/text-size-harmonization.md §10.10). */
+  height?: ChartHeight;
   /** A tile was activated — by click, or by Enter/Space on a focused tile. Setting
    *  this makes every tile a focusable `role="button"` named by its node name. */
   onNodeClick?: (id: string, name: string) => void;
@@ -165,6 +170,8 @@ function measurableFill(fill: string, tokens: readonly string[]): string | null 
 
 // ── Tile ──────────────────────────────────────────────────────────────────
 
+/** The name's size in px at Normal; a tile draws it × the text size's scale (§10.10), and
+ *  every distance below that is measured in lines grows with it. */
 const LABEL_FONT_SIZE = 12;
 /** The optional second line, a step down from the name so the tile reads name-first. */
 const NOTE_FONT_SIZE = 11;
@@ -233,6 +240,7 @@ export function TreemapCell({
 }: TreemapCellProps) {
   // Before the early return: a hook has to run on every render of the cell.
   const tokenHex = useChartTokenHex();
+  const { scale } = useTextSize();
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -251,14 +259,16 @@ export function TreemapCell({
   const halo = measured ? tileFill : "none";
   // Below ~44x20 there is no room for a readable word, so no label at all rather than
   // a one-letter stub bleeding over the tile edge.
-  const label = pw >= 44 && ph >= 20 ? fitLabel(name ?? "", pw, LABEL_FONT_SIZE) : null;
+  const labelSize = LABEL_FONT_SIZE * scale;
+  const noteSize = NOTE_FONT_SIZE * scale;
+  const label = pw >= 44 * scale && ph >= 20 * scale ? fitLabel(name ?? "", pw, labelSize) : null;
   // Only under a label that is itself drawn — a stray "+12%" on an unnamed rectangle
   // names nothing — and only where a second baseline fits: the note's baseline sits
   // 29px down and an 11px glyph hangs ~2px below it, so 36 leaves the same ~5px under
   // the note that the label keeps under itself at the 20px floor.
   const rawNote = id != null && nodeNote ? nodeNote(id) : undefined;
   const note =
-    label != null && rawNote != null && ph >= 36 ? fitLabel(rawNote, pw, NOTE_FONT_SIZE) : null;
+    label != null && rawNote != null && ph >= 36 * scale ? fitLabel(rawNote, pw, noteSize) : null;
   // The label's START edge, 6px in from the tile's. The tiles themselves are laid out
   // physically (the plot is not mirrored, see `ChartContainer`) and the chart's SVG is
   // pinned `ltr`, so the direction is set on each <text> explicitly: `start` is then
@@ -306,14 +316,14 @@ export function TreemapCell({
           // <text> exactly as it reaches a table cell.
           data-private={redactNames ? "" : undefined}
           x={textX}
-          y={py + 15}
+          y={py + 15 * scale}
           direction={dir}
           fill={ink}
           stroke={halo}
           strokeWidth={2.5}
           strokeLinejoin="round"
           paintOrder="stroke"
-          fontSize={LABEL_FONT_SIZE}
+          fontSize={labelSize}
           fontWeight={600}
           style={{ pointerEvents: "none" }}
         >
@@ -323,7 +333,7 @@ export function TreemapCell({
       {note != null && (
         <text
           x={textX}
-          y={py + 29}
+          y={py + 29 * scale}
           direction={dir}
           fill={ink}
           fillOpacity={0.85}
@@ -331,7 +341,7 @@ export function TreemapCell({
           strokeWidth={2.5}
           strokeLinejoin="round"
           paintOrder="stroke"
-          fontSize={NOTE_FONT_SIZE}
+          fontSize={noteSize}
           fontWeight={500}
           style={{ pointerEvents: "none" }}
         >
@@ -386,7 +396,7 @@ const DEFAULT_NUMBER = new Intl.NumberFormat();
 export function Treemap({
   data,
   valueFormatter,
-  height = 320,
+  height = "20rem",
   onNodeClick,
   redactNames = false,
   nodeNote,
@@ -421,6 +431,7 @@ export function Treemap({
     .filter((n) => Number.isFinite(n.size) && n.size > 0)
     .slice(0, maxTiles ?? undefined);
   if (nodes.length === 0) return null;
+  const box = chartHeightProps(height);
 
   // The share is of what is DRAWN, so it always reads as "of this picture".
   const total = nodes.reduce((acc, n) => acc + n.size, 0);
@@ -430,7 +441,13 @@ export function Treemap({
   };
   const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   return (
-    <ChartContainer {...rest} ref={rootRef} config={TREEMAP_CONFIG} style={{ ...style, height }}>
+    <ChartContainer
+      {...rest}
+      ref={rootRef}
+      config={TREEMAP_CONFIG}
+      className={cn(box.className, rest.className)}
+      style={{ ...style, ...box.style }}
+    >
       {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
           it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
       <RechartsTreemap

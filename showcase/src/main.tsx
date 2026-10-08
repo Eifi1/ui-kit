@@ -4,9 +4,9 @@ import { HashRouter } from "react-router";
 import { applyPersistedTheme, applyPersistedPalette } from "@eifi1/ui-kit";
 import { Showcase } from "./showcase";
 import { LOCALE_STORAGE_KEY, LocaleProvider, dictionaryFor } from "./i18n";
-import { applyPersistedTextSize } from "../../src/theme/text-size";
+import { applyPersistedTextSize, applyTextSize } from "../../src/theme/text-size";
 import { applyPersistedContrast } from "../../src/theme/contrast";
-import { CONTRAST_KEY, PALETTE_KEY, TEXT_SIZE_KEY, THEME_KEY } from "./stores";
+import { CONTRAST_KEY, PALETTE_KEY, TEXT_SIZE_KEY, THEME_KEY, URL_TEXT_SIZE } from "./stores";
 import "./app.css";
 // LanguageMenu's trigger and CurrencyFlag render `fi fi-xx` spans. Without this
 // stylesheet they are empty boxes — and `flag-icons` is a hard dependency of the
@@ -24,6 +24,8 @@ applyPersistedPalette(PALETTE_KEY, mode);
 // font size, so painting Normal first and then the stored size would reflow the whole
 // page. The contrast re-steps the palette's tokens just written — either order works.
 applyPersistedTextSize(TEXT_SIZE_KEY);
+// A preview frame's (or a screenshot's) own size, from `?text-size=` — never stored.
+if (URL_TEXT_SIZE) applyTextSize(URL_TEXT_SIZE);
 applyPersistedContrast(CONTRAST_KEY);
 
 // The same no-flash boot, for the language. `LocaleProvider` sets `lang`/`dir` in an

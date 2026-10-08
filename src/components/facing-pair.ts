@@ -28,7 +28,9 @@ export type FacingSide = "left" | "right";
 export const FACING_SIDES: readonly FacingSide[] = ["left", "right"];
 
 /** The whole band a facing y axis occupies: its ticks, and the strip the rotated title
- *  is drawn in — whether or not this chart is the one that spends it. */
+ *  is drawn in — whether or not this chart is the one that spends it. In px at Normal:
+ *  it is also the right axis' declared `width`, which the chart scales with the text
+ *  (see {@link facingHeadingPad} for a heading's). */
 export function facingBand(tickWidth: number = AXIS_TICK_WIDTH): number {
   return axisBandWidth(tickWidth, true);
 }
@@ -75,12 +77,17 @@ export function facingAxes({
 
 /** What a column heading is padded by to sit over the PLOT rather than the column: the
  *  axis band, on the side that column's axis stands on. Physical padding on purpose —
- *  the chart under it does not flip in RTL, so neither may the heading's offset. */
+ *  the chart under it does not flip in RTL, so neither may the heading's offset.
+ *
+ *  `scale` is the text size's (`useTextSize().scale`): the chart draws its bands that
+ *  many times wider from Large up (docs/text-size-harmonization.md §10.10), so a heading
+ *  passes the same factor to stay over its plot. Both sides by the same factor, as the
+ *  chart does. */
 export function facingHeadingPad(
   side: FacingSide,
   tickWidth: number = AXIS_TICK_WIDTH,
+  scale = 1,
 ): Pick<CSSProperties, "paddingLeft" | "paddingRight"> {
-  return side === "left"
-    ? { paddingLeft: facingBand(tickWidth) }
-    : { paddingRight: facingBand(tickWidth) };
+  const band = axisBandWidth(tickWidth, true, scale);
+  return side === "left" ? { paddingLeft: band } : { paddingRight: band };
 }

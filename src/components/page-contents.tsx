@@ -182,7 +182,7 @@ export function PageContents({
               aria-current={current ? "location" : undefined}
               onClick={() => setClicked(item.id)}
               className={cn(
-                "-ms-px block border-s-2 py-1 pe-1 text-[13px] leading-snug transition-colors duration-150",
+                "-ms-px block border-s-2 py-1 pe-1 text-[0.8125rem] leading-snug transition-colors duration-150",
                 variant === "rail" && "[overflow-wrap:anywhere]",
                 item.level === 2 ? "ps-6" : "ps-3",
                 current
@@ -222,7 +222,7 @@ export function PageContents({
 
   return (
     <nav {...rest} aria-label={l.title} className={className}>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+      <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         {l.title}
       </p>
       {list}

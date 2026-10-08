@@ -33,6 +33,8 @@ import type {
   SeriesChartTooltipPlacement,
 } from "@eifi1/ui-kit";
 import { Example, Note, OutTable } from "../lib/section";
+// 0.32: from the source until the barrel names it (the coordinator wires src/index.ts).
+import { useTextSize } from "../../../src/theme/text-size";
 
 /**
  * SeriesChart — the measurement plot, with drag-to-zoom and a legend of switches.
@@ -144,6 +146,8 @@ const SWEEP_X = {
 };
 
 export function SeriesChartDemo() {
+  // The facing pair's headings sit over the plots, whose bands grow with the text (0.32).
+  const { scale } = useTextSize();
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [hiddenAngles, setHiddenAngles] = useState<ReadonlySet<string>>(new Set(["d"]));
   const [hiddenTemp, setHiddenTemp] = useState<ReadonlySet<string>>(new Set());
@@ -256,7 +260,7 @@ export function SeriesChartDemo() {
           hidden={hiddenCurve}
           onToggle={(key) => setHiddenCurve(toggleHidden(hiddenCurve, key))}
         />
-        <p className="mt-2 font-mono text-[11px] text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-caption text-[var(--text-muted)]">
           onAxisBudget: [{budgeted.map((id) => `"${id}"`).join(", ")}]
         </p>
         <div className="mt-3">
@@ -301,7 +305,7 @@ export function SeriesChartDemo() {
         <div className="mt-3">
           <Note>
             <code className="font-mono">tooltip=&#123;&#123; placement &#125;&#125;</code>, or once for the
-            whole app with <code className="font-mono">&lt;UiKitProvider chartTooltipPlacement="auto"&gt;</code>{" "}
+            whole app with <code className="font-mono [overflow-wrap:anywhere]">&lt;UiKitProvider chartTooltipPlacement="auto"&gt;</code>{" "}
             (a chart's own prop wins; the default stays <em>cursor</em>). <em>auto</em> is the readout
             above the plot below 640 px and the floating box from there up. The row is there before the
             first tap — idle it lists the series with a dash — so the plot never jumps; hover, a tap,
@@ -403,8 +407,8 @@ export function SeriesChartDemo() {
             {FACING_SIDES.map((side) => (
               <section key={side} className="min-w-0">
                 <h4
-                  className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
-                  style={facingHeadingPad(side)}
+                  className="mb-1 text-center text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                  style={facingHeadingPad(side, undefined, scale)}
                 >
                   {side === "left" ? "Left side" : "Right side"}
                 </h4>
@@ -425,13 +429,13 @@ export function SeriesChartDemo() {
       <Example label="SeriesChart — nothing to draw" hint="the empty state keeps the chart's height, so nothing under it moves">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">empty omitted: the label</p>
+            <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">empty omitted: the label</p>
             <div className="rounded border border-dashed border-[var(--border)]">
               <SeriesChart rows={[]} series={[]} height="h-32" />
             </div>
           </div>
           <div>
-            <p className="mb-1 font-mono text-[11px] text-[var(--text-muted)]">empty=&#123;null&#125;: nothing, same height</p>
+            <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">empty=&#123;null&#125;: nothing, same height</p>
             <div className="rounded border border-dashed border-[var(--border)]">
               <SeriesChart rows={[]} series={[]} height="h-32" empty={null} />
             </div>

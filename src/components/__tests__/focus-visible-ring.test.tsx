@@ -21,7 +21,9 @@ import type { DataTableColumn } from "../data-table";
  * {@link ToggleGroup} is the shape being copied — `focus-visible`, so the ring belongs
  * to the keyboard and does not flash on every tap of a touch control.
  */
-const RING = /focus-visible:ring-2/;
+// The kit's one focus frame since 0.32 (`FOCUS_RING`, docs/text-size-harmonization.md
+// §5): its width is `--focus-ring-width`, 2 px, 3 px under More contrast.
+const RING = /focus-visible:ring-\[length:var\(--focus-ring-width\)\]/;
 const TOKEN_RING = /focus-visible:ring-\[var\(--[a-z-]+\)\]/;
 const noop = () => {};
 

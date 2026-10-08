@@ -87,7 +87,7 @@ export function MeasuredGridDemo() {
               <StateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
             </div>
             <div>
-              <p className="mb-1 text-[11px] font-medium text-[var(--text-muted)]">
+              <p className="mb-1 text-caption font-medium text-[var(--text-muted)]">
                 Copy this, click a cell, paste
               </p>
               <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-primary)]">

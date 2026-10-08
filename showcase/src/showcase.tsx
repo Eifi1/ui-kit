@@ -61,6 +61,7 @@ import {
   useSidebarStyle,
   useTextSizeStore,
   useTheme,
+  URL_TEXT_SIZE,
 } from "./stores";
 
 /**
@@ -120,7 +121,9 @@ function useTranslatedNav(): AppShellNavItem[] {
  */
 function AppearanceSwitches() {
   const labels = useAppearanceLabels();
-  const size = resolveTextSize(useTextSizeStore((s) => s.size));
+  const stored = resolveTextSize(useTextSizeStore((s) => s.size));
+  // A preview frame shows the size it was loaded at (`?text-size=`, stores.ts).
+  const size = URL_TEXT_SIZE ?? stored;
   const setSize = useTextSizeStore((s) => s.setSize);
   const contrast = resolveContrastMode(useContrastStore((s) => s.contrast));
   const setContrast = useContrastStore((s) => s.setContrast);
@@ -530,7 +533,7 @@ function ServerSideLinks({ slug }: { slug: string }) {
           key={module}
           to={to}
           dir="ltr"
-          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-[11px] text-[var(--brand)] hover:underline"
+          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-caption text-[var(--brand)] hover:underline"
         >
           {module}
         </Link>
@@ -557,7 +560,7 @@ function PagerLink({
   const { title } = usePageText(slug);
   const label = (
     <span className="min-w-0">
-      <span className="block text-[11px] text-[var(--text-muted)]">{kicker}</span>
+      <span className="block text-caption text-[var(--text-muted)]">{kicker}</span>
       {/* Two lines before an ellipsis: a title is a few words, and half a phone row is
           about fifteen characters. */}
       <span className="line-clamp-2">{title}</span>

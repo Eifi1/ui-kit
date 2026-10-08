@@ -2,7 +2,14 @@ import { forwardRef, useId } from "react";
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useLockReason } from "./field-parts";
+import {
+  DISABLED_REASON_LINE_CLASS,
+  LockedReason,
+  useDisabledReasonLine,
+  useLockReason,
+  type DisabledReasonDisplay,
+} from "./field-parts";
+import { FOCUS_RING } from "./focus-ring";
 
 /**
  * An on/off switch that is still `<input type="checkbox">`, with `role="switch"`.
@@ -14,16 +21,20 @@ import { LockedReason, useLockReason } from "./field-parts";
  * the moment it is flipped; a choice that waits for a Save button is a checkbox.
  */
 
-/** Geometry per size. The thumb sits `2px` in from each end of the track, so its
- *  checked offset is `track width − thumb − 2px`. `start-*`, never `left-*` or a
- *  `translate-x`: an inline-start offset follows the writing direction, so in a
- *  right-to-left form the thumb travels right-to-left with no `rtl:` override to
- *  keep in step. */
+/** Geometry per size. The thumb sits `start-0.5` (0.125rem, 2 px at Normal) in from
+ *  each end of the track, so its checked offset is `track width − thumb − 0.125rem`.
+ *  All of it in rem since 0.32 (docs/text-size-harmonization.md §3.2, §4): the track
+ *  and thumb already grew with the text, and a checked offset left in px (14 / 18) put
+ *  the thumb short of the end at 125 % and in the middle at 150 %. `start-*`, never
+ *  `left-*` or a `translate-x`: an inline-start offset follows the writing direction,
+ *  so in a right-to-left form the thumb travels right-to-left with no `rtl:` override
+ *  to keep in step. */
 const SIZES = {
-  // 28×16 track, 12px thumb: the dense setting rows in Kastlan's tables.
-  sm: { track: "h-4 w-7", thumb: "size-3 peer-checked:start-[14px]" },
-  // 36×20 track, 16px thumb.
-  md: { track: "h-5 w-9", thumb: "size-4 peer-checked:start-[18px]" },
+  // 1.75 × 1rem track, 0.75rem thumb (28×16 / 12 at Normal): the dense setting rows in
+  // Kastlan's tables. Checked: 1.75 − 0.75 − 0.125 = 0.875rem.
+  sm: { track: "h-4 w-7", thumb: "size-3 peer-checked:start-3.5" },
+  // 2.25 × 1.25rem track, 1rem thumb (36×20 / 16). Checked: 2.25 − 1 − 0.125 = 1.125rem.
+  md: { track: "h-5 w-9", thumb: "size-4 peer-checked:start-4.5" },
 } as const;
 
 export type SwitchSize = keyof typeof SIZES;
@@ -38,7 +49,8 @@ export type SwitchSize = keyof typeof SIZES;
 const TRACK =
   "peer block shrink-0 cursor-pointer appearance-none rounded-full bg-[var(--border-strong)] transition-colors " +
   "checked:bg-[var(--brand)] " +
-  "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] " +
+  // The kit's focus frame (§5), stood off the track so it never merges with the fill.
+  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ` +
   "disabled:cursor-not-allowed";
 
 // The thumb, laid over the input and ignoring the pointer so every click still reaches
@@ -94,6 +106,13 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
    */
   disabledReason?: ReactNode;
   /**
+   * Where `disabledReason` shows (0.32, §4 "No fact only in a tooltip"): by default, at
+   * Large and on a touch screen, as a line in the words column under the description (a
+   * bare switch: under the track), and in the tooltip otherwise. See
+   * {@link DisabledReasonDisplay}.
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /**
    * This switch COMMITS — flipping it saves. Under a locked {@link WriteLockProvider} it
    * is locked the `disabledReason` way with the lock's reason (which wins over its
    * own). No provider, or an unlocked one: no effect. Button's `commit`, for K3.
@@ -122,6 +141,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     disabled,
     required,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onClick,
     ...rest
@@ -132,6 +152,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   const inputId = id ?? generated;
   const lock = useLockReason(commit, disabledReason);
   const locked = lock.locked;
+  const reasonLine = useDisabledReasonLine(disabledReasonDisplay);
   // Locked is disabled the focusable way — the row fades and the words stop inviting a
   // click, as for `disabled`.
   const looksDisabled = Boolean(disabled) || locked;
@@ -177,21 +198,28 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     </span>
   );
   // The Tooltip goes round the track, not the row — the row is the caller's layout. A
-  // bare switch hands its `className` to the wrapper, then the outermost element.
-  const control = locked ? (
-    <LockedReason lock={lock} className={cn("shrink-0", bare && className)}>
-      {track}
-    </LockedReason>
-  ) : (
-    track
-  );
+  // bare switch hands its `className` to the wrapper, then the outermost element. With
+  // words beside it, the reason LINE goes under them instead (below), so the track
+  // stays where the row puts it.
+  const lineInWords = locked && reasonLine && !bare;
+  const control =
+    locked && !lineInWords ? (
+      <LockedReason lock={lock} line={reasonLine} className={cn("shrink-0", bare && className)}>
+        {track}
+      </LockedReason>
+    ) : (
+      track
+    );
 
   if (bare) return control;
 
-  // The switch's cell is one label line tall (text-sm, 20px) so it centres on the
+  // The switch's cell is one label line tall (text-sm, 1.25rem) so it centres on the
   // FIRST line of a label that wraps, and a description underneath does not drag it
   // down to the middle of the paragraph.
-  const cell = <span className="flex h-5 shrink-0 items-center">{control}</span>;
+  // With the reason line in the words, the row's fade moves onto its parts: the line is
+  // the one thing on the row still to be read, and at 60 % it would not be.
+  const dimParts = lineInWords;
+  const cell = <span className={cn("flex h-5 shrink-0 items-center", dimParts && "opacity-60")}>{control}</span>;
   const words = (
     <span className="min-w-0 flex-1">
       {label !== undefined && (
@@ -200,6 +228,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           className={cn(
             "block text-sm leading-5 text-[var(--text-primary)]",
             looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
+            dimParts && "opacity-60",
           )}
         >
           {label}
@@ -211,15 +240,20 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         </label>
       )}
       {showDescription && (
-        <span id={descriptionId} className="mt-0.5 block text-xs text-[var(--text-muted)]">
+        <span id={descriptionId} className={cn("mt-0.5 block text-xs text-[var(--text-muted)]", dimParts && "opacity-60")}>
           {description}
+        </span>
+      )}
+      {lineInWords && (
+        <span id={lock.reasonId} className={DISABLED_REASON_LINE_CLASS}>
+          {lock.reason}
         </span>
       )}
     </span>
   );
 
   return (
-    <div className={cn("flex items-start gap-3", looksDisabled && "opacity-60", className)}>
+    <div className={cn("flex items-start gap-3", looksDisabled && !dimParts && "opacity-60", className)}>
       {switchPosition === "end" ? (
         <>
           {words}

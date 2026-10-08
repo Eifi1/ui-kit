@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { FOCUS_RING } from "./focus-ring";
 import { Modal, ModalCloseContext } from "./modal";
 import type { ModalProps } from "./modal";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -211,7 +212,7 @@ function FrameClose({ label, onClose }: { label?: string; onClose: () => void })
       type="button"
       onClick={close}
       aria-label={labels.close}
-      className="-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+      className={cn("-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]", FOCUS_RING)}
     >
       <X aria-hidden className="size-5" />
     </button>

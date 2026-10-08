@@ -313,7 +313,7 @@ export function FeedbackCategoryBadge({
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded font-medium",
-        compact ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+        compact ? "px-1.5 py-0.5 text-caption" : "px-2 py-0.5 text-xs",
         meta.badgeBg,
         meta.badgeText,
         className,
@@ -346,7 +346,7 @@ export function FeedbackStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium",
+        "inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5 text-caption font-medium",
         meta.activeBg,
         meta.activeText,
         className,
