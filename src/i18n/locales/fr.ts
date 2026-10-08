@@ -23,6 +23,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     !seconds || seconds <= 0
       ? "Trop de tentatives. Veuillez patienter un instant, puis réessayer."
       : `Trop de tentatives. Réessayez dans ${wait(seconds)}.`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow.
+  const inDays = (days: number) =>
+    days <= 0 ? "aujourd’hui" : days === 1 ? "demain" : `dans ${n(days)} ${plural(days, "jour", "jours")}`;
 
   return {
     feedbackAttachment: {
@@ -814,6 +818,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           disclaimer: {
             title: "Responsabilité pour les contenus et les liens",
             body: "Il s’agit d’un projet privé et non commercial, proposé dans le cadre d’une bêta fermée, sans garantie. Les sites externes vers lesquels nous renvoyons relèvent de la responsabilité de leurs exploitants respectifs\u202f; nous n’avons aucun contrôle sur leur contenu.",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8).
+            // "Formule" and "abonnement" as the `billing` namespace.
+            commercial:
+              "Il s’agit d’un service commercial. Les formules payantes sont vendues par notre revendeur, qui agit en qualité de Merchant of Record\u00a0: il vend l’abonnement en son nom propre, encaisse le paiement, émet la facture et se charge de la TVA, et ses conditions de vente s’appliquent à l’achat. Nous veillons à l’exactitude du contenu de ce service, mais ne pouvons pas garantir qu’il soit complet ou à jour. Les sites externes vers lesquels nous renvoyons relèvent de la responsabilité de leurs exploitants respectifs\u202f; nous n’avons aucun contrôle sur leur contenu.",
           },
         },
         privacy: {
@@ -1442,6 +1450,87 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       endedSandbox:
         "Les données d’exemple sont réinitialisées régulièrement\u202f; ce que vous avez créé dans la démo est supprimé.",
       restart: "Lancer une nouvelle démo",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "formule" is what is
+    // bought (Free, Pro), "abonnement" the standing arrangement and the settings group;
+    // "résilier", the word for ending a contract. "Vous".
+    billing: {
+      group: "Abonnement",
+      plans: "Formules",
+      interval: "Période de facturation",
+      // Agreeing with "période".
+      yearly: "Annuelle",
+      monthly: "Mensuelle",
+      // As `currency.currency`.
+      currency: "Devise",
+      perYear: "par an",
+      perMonth: "par mois",
+      vatIncluded: "TVA incluse",
+      free: "Gratuit",
+      notOffered: "Non proposée pour cette période de facturation",
+      // As `progressBar.unlimited`.
+      unlimited: "Illimité",
+      limits: "Limites",
+      features: "Inclus",
+      current: "Formule actuelle",
+      choose: (plan) => `Choisir ${plan}`,
+      upgrade: (plan) => `Passer à ${plan}`,
+      downgrade: (plan) => `Changer pour ${plan}`,
+      isCurrent: "C’est votre formule actuelle.",
+      pickFirst: "Choisissez d’abord une formule.",
+      // Agreeing with "abonnement".
+      status: {
+        trialing: "Essai",
+        active: "Actif",
+        past_due: "Paiement en retard",
+        canceled: "Résilié",
+        expired: "Expiré",
+        comped: "Offert",
+      },
+      trialEnding: (days) =>
+        `Votre période d’essai se termine ${inDays(days)}. Vous pourrez ensuite continuer à tout consulter, mais il vous faudra une formule pour apporter des modifications.`,
+      grantEnding: (days) =>
+        `Votre accès gratuit se termine ${inDays(days)}. Vous pourrez ensuite continuer à tout consulter, mais il vous faudra une formule pour apporter des modifications.`,
+      paymentFailed:
+        "Votre dernier paiement n’a pas abouti. Mettez à jour votre moyen de paiement pour conserver votre formule.",
+      planEnded:
+        "Votre formule a pris fin. Vous pouvez encore tout consulter et exporter\u202f; choisissez une formule pour pouvoir de nouveau apporter des modifications.",
+      // Never why: the owner's payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `«\u202f${item}\u202f» est en lecture seule pour le moment\u202f; son propriétaire peut lever cette restriction.`
+          : "Ceci est en lecture seule pour le moment\u202f; son propriétaire peut lever cette restriction.",
+      processing:
+        "Votre paiement est en cours de traitement. Votre formule démarre dès qu’il est confirmé\u202f; cette page se met à jour d’elle-même.",
+      choosePlan: "Choisir une formule",
+      updatePayment: "Mettre à jour le moyen de paiement",
+      checkAgain: "Vérifier à nouveau",
+      lockReason: "Votre formule a pris fin. Choisissez une formule pour pouvoir de nouveau apporter des modifications.",
+      // As `characterCount.limitReached` ("Limite de caractères atteinte").
+      limitReached: "Limite de la formule atteinte",
+      limitUpgrade: "Pour en ajouter davantage, choisissez une formule avec une limite plus élevée.",
+      limitContact: "Pour en ajouter davantage, demandez-nous une limite plus élevée.",
+      askForMore: "Demander plus",
+      // Both figures arrive formatted; "sur", as `characterCount.count`.
+      usage: (used, limit) => `${used} sur ${limit}`,
+      contactSubject: (dimension) => `Limite de la formule\u00a0: ${dimension}`,
+      manage: "Paiement et factures",
+      cancel: "Résilier l’abonnement",
+      waitingChanges: (count) =>
+        `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
+      // "Abandonner", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "Abandonner les modifications en attente",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "Apparence" group. The steps agree with "taille", the modes with "contraste".
+    appearance: {
+      textSize: "Taille du texte",
+      textSizeHelp: "Des lettres plus grandes, et une mise en page qui leur fait de la place.",
+      textSizes: { normal: "Normale", large: "Grande", xlarge: "Très grande" },
+      contrast: "Contraste",
+      contrastHelp:
+        "Le contraste renforcé assombrit les textes discrets et les lignes, et épaissit les contours de focus. «\u202fSystème\u202f» suit le réglage de cet appareil.",
+      contrastModes: { system: "Système", standard: "Standard", more: "Renforcé" },
     },
   };
 }

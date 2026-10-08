@@ -352,4 +352,16 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
     [3, 12],
   ],
   "demo.minutesLeft": one,
+  // 0.32.0: the subscription parts (docs/billing-harmonization.md §7). A trial or a grant
+  // ending today, tomorrow and in five days; the guest's notice with and without the
+  // item's name.
+  "billing.choose": [["{{plan}}"]],
+  "billing.upgrade": [["{{plan}}"]],
+  "billing.downgrade": [["{{plan}}"]],
+  "billing.trialEnding": [[0], [1], [5]],
+  "billing.grantEnding": [[0], [1], [5]],
+  "billing.guestReadOnly": [["{{item}}"], [undefined]],
+  "billing.usage": [["{{used}}", "{{limit}}"]],
+  "billing.contactSubject": [["{{dimension}}"]],
+  "billing.waitingChanges": one,
 };

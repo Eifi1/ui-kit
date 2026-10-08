@@ -23,6 +23,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     !seconds || seconds <= 0
       ? "Troppi tentativi. Attenda un momento e riprovi."
       : `Troppi tentativi. Riprovi tra ${wait(seconds)}.`;
+  // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
+  // 0 (or less) is today, 1 tomorrow.
+  const inDays = (days: number) =>
+    days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${n(days)} ${plural(days, "giorno", "giorni")}`;
 
   return {
     feedbackAttachment: {
@@ -801,6 +805,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           disclaimer: {
             title: "Responsabilità per contenuti e link",
             body: "Questo è un progetto privato e non commerciale, offerto nell’ambito di una beta chiusa, senza garanzia. I siti esterni a cui rimandiamo sono di responsabilità dei rispettivi gestori; non abbiamo alcun controllo sui loro contenuti.",
+            // 0.32.0 — the commercial variant (docs/billing-harmonization.md §8). "Piano"
+            // and "abbonamento" as the `billing` namespace.
+            commercial:
+              "Questo è un servizio commerciale. I piani a pagamento sono venduti dal nostro rivenditore, che agisce in qualità di Merchant of Record: vende l’abbonamento in nome proprio, incassa il pagamento, emette la fattura e gestisce l’IVA, e all’acquisto si applicano le sue condizioni di vendita. Ci impegniamo affinché i contenuti di questo servizio siano corretti, ma non possiamo garantire che siano completi o aggiornati. I siti esterni a cui rimandiamo sono di responsabilità dei rispettivi gestori; non abbiamo alcun controllo sui loro contenuti.",
           },
         },
         privacy: {
@@ -1425,6 +1433,88 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       endedSandbox:
         "I dati di esempio vengono reimpostati regolarmente; quello che ha creato nella demo viene eliminato.",
       restart: "Avvia una nuova demo",
+    },
+    // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "piano" is what is bought
+    // (Free, Pro), "abbonamento" the standing arrangement and the settings group;
+    // "disdire", the word for ending a contract. "Lei" in sentences, the imperative on
+    // buttons, as everywhere in this catalogue.
+    billing: {
+      group: "Abbonamento",
+      plans: "Piani",
+      interval: "Periodo di fatturazione",
+      yearly: "Annuale",
+      monthly: "Mensile",
+      // As `currency.currency`.
+      currency: "Valuta",
+      perYear: "all’anno",
+      perMonth: "al mese",
+      vatIncluded: "IVA inclusa",
+      free: "Gratuito",
+      notOffered: "Non disponibile per questo periodo di fatturazione",
+      // As `progressBar.unlimited`.
+      unlimited: "Illimitato",
+      limits: "Limiti",
+      features: "Incluso",
+      current: "Piano attuale",
+      choose: (plan) => `Scegli ${plan}`,
+      upgrade: (plan) => `Passa a ${plan}`,
+      // "Passare a" either way: Italian has no plain verb for a downgrade.
+      downgrade: (plan) => `Passa a ${plan}`,
+      isCurrent: "Questo è il Suo piano attuale.",
+      pickFirst: "Scelga prima un piano.",
+      // Agreeing with "abbonamento"; "scaduto", as `invitations.status.expired`.
+      status: {
+        trialing: "In prova",
+        active: "Attivo",
+        past_due: "Pagamento in ritardo",
+        canceled: "Disdetto",
+        expired: "Scaduto",
+        comped: "In omaggio",
+      },
+      trialEnding: (days) =>
+        `Il Suo periodo di prova termina ${inDays(days)}. In seguito potrà ancora vedere tutto, ma per apportare modifiche servirà un piano.`,
+      grantEnding: (days) =>
+        `Il Suo accesso gratuito termina ${inDays(days)}. In seguito potrà ancora vedere tutto, ma per apportare modifiche servirà un piano.`,
+      paymentFailed:
+        "Il Suo ultimo pagamento non è andato a buon fine. Aggiorni il metodo di pagamento per mantenere il Suo piano.",
+      planEnded:
+        "Il Suo piano è terminato. Può ancora vedere ed esportare tutto; scelga un piano per apportare di nuovo modifiche.",
+      // Never why: the owner's payment status is the owner's personal data (§12.6).
+      guestReadOnly: (item) =>
+        item
+          ? `«${item}» per ora è in sola lettura; il proprietario può rimuovere questa limitazione.`
+          : "Per ora è in sola lettura; il proprietario può rimuovere questa limitazione.",
+      processing:
+        "Il Suo pagamento è in elaborazione. Il Suo piano inizia non appena viene confermato; questa pagina si aggiorna da sola.",
+      choosePlan: "Scegli un piano",
+      updatePayment: "Aggiorna il metodo di pagamento",
+      checkAgain: "Verifica di nuovo",
+      lockReason: "Il Suo piano è terminato. Scelga un piano per apportare di nuovo modifiche.",
+      // As `characterCount.limitReached` ("Limite di caratteri raggiunto").
+      limitReached: "Limite del piano raggiunto",
+      limitUpgrade: "Per aggiungerne altri, scelga un piano con un limite più alto.",
+      limitContact: "Per aggiungerne altri, ci chieda un limite più alto.",
+      askForMore: "Chiedi di più",
+      // Both figures arrive formatted; "di", as `characterCount.count`.
+      usage: (used, limit) => `${used} di ${limit}`,
+      contactSubject: (dimension) => `Limite del piano: ${dimension}`,
+      manage: "Pagamento e fatture",
+      cancel: "Disdici l’abbonamento",
+      waitingChanges: (count) =>
+        `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
+      // "Scarta", as `wizard.cancelConfirmLabel`.
+      discardWaiting: "Scarta le modifiche in attesa",
+    },
+    // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
+    // the "Aspetto" group.
+    appearance: {
+      textSize: "Dimensione del testo",
+      textSizeHelp: "Lettere più grandi e un layout che fa loro spazio.",
+      textSizes: { normal: "Normale", large: "Grande", xlarge: "Molto grande" },
+      contrast: "Contrasto",
+      contrastHelp:
+        "Il contrasto aumentato scurisce i testi tenui e le linee e ispessisce i riquadri di focus. «Sistema» segue l’impostazione di questo dispositivo.",
+      contrastModes: { system: "Sistema", standard: "Standard", more: "Aumentato" },
     },
   };
 }
