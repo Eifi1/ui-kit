@@ -119,6 +119,11 @@ export function useTextSize(): TextSizeInfo {
  *
  * `size` is one of {@link TEXT_SIZES}, or `null` / absent when this device never chose.
  * A future change adds a key; it never renames `state.size` or changes its values.
+ *
+ * A hand-written seed (a test, a screenshot script) must carry `"version":1`: the store
+ * drops a stored state of another version as a migration it doesn't know, silently
+ * (keksdose's 0.32 report). The inline snippet reads `state.size` whatever the version,
+ * so the two would disagree. In the kit's showcase, `?text-size=` needs no seed.
  */
 export interface PersistedTextSize {
   state?: { size?: TextSize | null };
@@ -189,9 +194,20 @@ export function applyPersistedTextSize(storageKey: string, options: PersistedApp
  * ```
  *
  * Paste the constant's value in place of `(function(k,a){…})`. It reads the frozen
- * {@link PersistedTextSize} format, never throws, and sets only `data-text-size`; the
- * splash itself sizes in rem so the attribute reaches it (tokens.css, or the splash's own
- * `html[data-text-size=large]{font-size:125%}` if it paints before the stylesheet).
+ * {@link PersistedTextSize} format, never throws, and sets only `data-text-size`.
+ *
+ * The splash sizes in rem, and needs the root rules inline beside it, since the app's
+ * stylesheet is a separate request and arrives after the splash paints (0.32.1,
+ * keksdose's 0.32 report: that is every app, not an edge case):
+ *
+ * ```html
+ * <style>html[data-text-size=large]{font-size:125%}html[data-text-size=xlarge]{font-size:150%}</style>
+ * ```
+ *
+ * Under a hash-based Content Security Policy (`script-src 'sha256-…'`) this is a second
+ * inline script with its own hash: add it to the policy, and recompute it whenever the
+ * storage key or the account function in the call changes (keksdose added it to both
+ * its Caddyfiles, and its guard test hashes every inline script).
  */
 export const TEXT_SIZE_INLINE_SCRIPT =
   "(function(k,a){function ok(v){return v==='normal'||v==='large'||v==='xlarge'}" +

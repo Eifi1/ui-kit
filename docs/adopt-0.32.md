@@ -58,7 +58,8 @@ Each contract's per-app section is the checklist. This note is the kits' side.
    ```
    The `account` fallback paints the account's last known choice before React renders,
    offline too. A boot splash painted from `index.html` uses `TEXT_SIZE_INLINE_SCRIPT` in
-   `<head>`; the stored format is frozen.
+   `<head>`, with the root rules inline beside it (see 0.32.1 below); the stored format is
+   frozen.
 2. **In the appearance group,** `TextSizeSetting` and `ContrastSetting` beside
    `ThemeSetting`, with catalogue entries. `useAccountAppearance({account, device,
    setDevice, save, isDemo})` applies the language's order (the device's own choice → the
@@ -214,6 +215,38 @@ wheel.
 - **`name` accepts `null`** on `RowActions` and `rowActionsColumn`: drop the `?? undefined`.
 - **`billing.notConfigured` and `billing.disabled`:** the words for `billing_not_configured`
   and `billing_disabled` in seven languages (`useBillingLabels()`). Your own can go.
+
+- **New labels and exports:** `appearance.saveFailed` (the words for a pick the account
+  couldn't keep, which `useAccountAppearance` leaves to you); the admin log's `plan`
+  action (server-kit's `AdminAction.PLAN`) in seven languages; `remPx` / `useRemPx` and
+  the `ChartHeight` / `RemLength` types.
+
+**Corrections and notes to the 0.32 adoption** (keksdose's report):
+- **Axis widths are scaled by the chart.** `SeriesChart` multiplies an `axes[].width` by
+  the text size itself. Pass your Normal width (`MONEY_AXIS_WIDTH`) and don't multiply
+  it: contract §10.10 said otherwise and is corrected.
+- **The boot splash needs the root rules inline** whenever your CSS is a separate request,
+  which is every app:
+  `<style>html[data-text-size=large]{font-size:125%}html[data-text-size=xlarge]{font-size:150%}</style>`.
+- **Under a hash-based CSP**, `TEXT_SIZE_INLINE_SCRIPT` is a second inline script with its
+  own hash. Add it, and recompute it when the key or the account function changes.
+- **`applyPersistedContrast` and `applyPersistedPalette` go in either order.**
+- **A stored text size needs `"version":1`.** A hand-written seed with another version
+  is dropped by the store, while the inline snippet still reads it.
+- **`max-*` and the breakpoint variants never match `<html>` itself**: they are scoped
+  to descendants of `[data-text-size]`. Style `html` or its scrollbar with a hand-written
+  media query.
+- **A server that doesn't store `text_size` / `contrast` yet** accepts them on `PATCH`
+  (they are on server-kit's `ProfileUpdate`), ignores them and answers `null`. The device
+  keeps the pick, and the account silently doesn't. Store them, or don't offer the account
+  write yet.
+- **Dense rows of icon actions on touch:** since 0.32 a `disabledReason` is a line under
+  its control on touch, at Normal too, so a row of locked icons grows a line each. Use
+  `RowActions`, or wrap the icons in `CompactControls`, which keeps the reason in the
+  tooltip.
+- **The top bar's name at Extra large:** `TopBarBrand` shows the logo alone below `sm`,
+  which moves with the text size, and keeps the name as the link's accessible name. A
+  hand-made brand link with `truncate` shrinks the name to nothing.
 
 **server-kit 0.6.1:**
 - **`PlanOut`** (`PlanOut.from_spec(plan)`, `plans_out(catalogue)`): a plan's wire shape for

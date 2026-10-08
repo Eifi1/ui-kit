@@ -297,7 +297,10 @@ sections above differ, this list wins.
 10. **Charts:**
     - `SeriesChart`'s height takes a CSS length (e.g. `min(20rem, 60dvh)`) rather than
       scaled px: 480 px × 1.5 would fill a phone;
-    - axis widths (keksdose `MONEY_AXIS_WIDTH`) multiply by the scale;
+    - axis widths (keksdose `MONEY_AXIS_WIDTH`) follow the scale: `SeriesChart`
+      multiplies an `axes[].width` by it itself (`axisBandWidth`), so an app passes
+      its Normal width and never multiplies it too (corrected 0.32.1, keksdose's
+      report: it would scale twice);
     - strokes, dash patterns and grid ink stay px;
     - a mirrored tick band scales both sides by the same factor;
     - an SVG whose text is in viewBox units (Kurvenschmiede's corner preview) moves its
