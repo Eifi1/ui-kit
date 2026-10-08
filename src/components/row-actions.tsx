@@ -45,6 +45,25 @@ export interface RowAction {
   /** Why it is not available for this row. It stays listed, focusable, and says so — an
    *  action that silently vanished would leave the reader looking for it. */
   disabledReason?: ReactNode;
+  /**
+   * This action COMMITS — it saves, sends, deletes: under a locked
+   * {@link WriteLockProvider} it is refused with the lock's reason, as {@link Button}'s
+   * `commit` is, inline and in the menu alike. No provider, or an unlocked one: no effect.
+   */
+  commit?: boolean;
+  /**
+   * In flight — the request it started has not answered. Inline, the icon turns into
+   * IconButton's spinner (`pending`); collapsed, the "⋯" button does, since the menu
+   * closed when the action was chosen. Either way nothing in the row can be pressed again
+   * until it settles: the "⋯" opens no menu while busy.
+   */
+  pending?: boolean;
+  /**
+   * Not available for a moment, with nothing to explain — another action of the list
+   * is in flight (an admin panel's `busy`). The plain `disabled`; a lasting refusal is a
+   * `disabledReason`, which says why.
+   */
+  disabled?: boolean;
   /** Leave it out for this row. */
   hidden?: boolean;
 }
@@ -153,6 +172,8 @@ export function RowActions({
     return large ? strip : <CompactControls>{strip}</CompactControls>;
   }
   const title = name ? labels.actionsFor(name) : labels.actions;
+  // The menu closed when the action was chosen, so what is in flight shows on "⋯".
+  const busy = entries.some((action) => action.pending);
   return (
     <Popover
       width={menuWidth}
@@ -167,6 +188,7 @@ export function RowActions({
           labelVisible={false}
           aria-haspopup="dialog"
           aria-expanded={open}
+          pending={busy}
           stopPropagation
           onClick={toggle}
           className={className}
@@ -188,6 +210,9 @@ export function RowActions({
                   stretch
                   tone={action.tone === "danger" ? "danger" : undefined}
                   disabledReason={action.disabledReason}
+                  commit={action.commit}
+                  pending={action.pending}
+                  disabled={action.disabled}
                   className="w-full justify-start text-start"
                   onClick={() => {
                     close();
@@ -220,6 +245,9 @@ function InlineAction({ action, size }: { action: RowAction; size: RowActionsSiz
         label={action.label}
         tone={action.tone === "danger" ? "danger" : undefined}
         disabledReason={action.disabledReason}
+        commit={action.commit}
+        pending={action.pending}
+        disabled={action.disabled}
         stopPropagation
         onClick={action.onSelect}
       >
@@ -234,6 +262,9 @@ function InlineAction({ action, size }: { action: RowAction; size: RowActionsSiz
       size="sm"
       tone={action.tone === "danger" ? "danger" : undefined}
       disabledReason={action.disabledReason}
+      commit={action.commit}
+      pending={action.pending}
+      disabled={action.disabled}
       onClick={(e) => {
         // A row listening for clicks must not open as well (IconButton's stopPropagation).
         e.stopPropagation();

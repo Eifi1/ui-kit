@@ -45,6 +45,11 @@ export interface ToggleGroupBaseProps<T extends string>
    * whole ("Bewegung", not "Beweg…"), at the price of a taller group on a narrow
    * screen (lenkbank L4: five signal types on a 390px control page). From the width
    * where they fit, both look the same.
+   *
+   * Since 0.32 a group in the field chrome (`label`, the default placement) with four or
+   * more options wraps at Large and Extra large under `"truncate"` too, inside its frame:
+   * the type is bigger there and the field would otherwise run past a phone's edge
+   * (docs/text-size-harmonization.md §4). The keyboard is the same either way.
    */
   overflow?: "truncate" | "wrap";
   /**
@@ -191,6 +196,30 @@ const CHROME_PAD: Record<"sm" | "md", string> = { md: "pt-5 pb-0.5", sm: "pt-5 p
 const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125rem]", sm: "py-0 leading-4" };
 
 /**
+ * A field of four or more options at Large and Extra large (0.32,
+ * docs/text-size-harmonization.md §4 "nothing truncates", §3.3): the segments flow onto a
+ * second row inside the field's frame instead of overflowing it. At 125 % a 390 px phone
+ * is 312 px of Normal type, and "Month / Quarter / Half-year / Year" in one row of the
+ * field ran 7 px past it: a one-row flex group is as wide as all its labels end to end
+ * when a grid or a stretched column asks how small it can get, however its segments
+ * truncate. Wrapped, it is as wide as its longest label.
+ *
+ * Wrap, not a stacked select-like list: a wrapped radio group is the same radio group —
+ * one Tab stop, and the arrow keys walk the options in reading order whichever row
+ * they are on (←/↑ back, →/↓ on, Home/End) — so nothing about the keyboard changes with
+ * the text size. A list in its place would be a second widget with its own keys.
+ *
+ * Only where it has to: `flex-wrap` breaks a row only when the segments do not fit, so
+ * a wide field at Large stays one row, and a segment shares out what its row leaves
+ * (`flex-1`); a label wider than the whole row still truncates as the last resort.
+ * Three or fewer options keep one row: each holds a third of the field. A `large:`
+ * class, so it costs no render and is right on the first paint. `overflow="wrap"` wraps
+ * at every size already; outside the field the group keeps its `overflow`.
+ */
+const WRAP_AT_LARGE = "large:flex-wrap";
+const WRAP_AT_LARGE_FROM = 4;
+
+/**
  * The strip placement's segments: a 26px group (1 + 2 + 20 + 2 + 1) under the 16px
  * strip — `md`'s 20px text-sm line with no padding, `sm`'s 16px line with 2px either
  * side. See `LABEL_STRIP_PAD` for why 16.
@@ -317,6 +346,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   // `field` is the chrome; a label placed above or in a strip keeps the bare group's
   // own box.
   const field = labelled && labelPlacement === "field";
+  // At Large and Extra large a FIELD of four or more options wraps (see WRAP_AT_LARGE).
+  const wrapAtLarge = field && overflow === "truncate" && options.length >= WRAP_AT_LARGE_FROM;
   const above = labelled && labelPlacement === "above";
   const strip = labelled && labelPlacement === "strip";
   const hasError = labelled && hasContent(error);
@@ -477,6 +508,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // phone does see is the focus ring — see the segment's own note below.)
         "inline-flex w-full gap-0.5 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5 shadow-sm",
         overflow === "wrap" && "flex-wrap",
+        wrapAtLarge && WRAP_AT_LARGE,
         // The whole group fades, the way every other disabled control in this
         // package does; `cursor-not-allowed` is on the buttons, which is what a
         // pointer is actually over.

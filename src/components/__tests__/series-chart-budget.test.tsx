@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { cloneElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import {
   SeriesChart,
   axisBandWidth,
@@ -9,7 +9,15 @@ import {
   type SeriesChartAxis,
   type SeriesChartSeries,
 } from "../series-chart";
-import { MIN_PLOT_WIDTH, NARROW_AXIS_BUDGET, autoAxisBudget, axisUnit, budgetedAxes } from "../series-chart-budget";
+import {
+  LEFT_AXIS_BUDGET,
+  MIN_PLOT_WIDTH,
+  NARROW_AXIS_BUDGET,
+  autoAxisBudget,
+  axisUnit,
+  budgetedAxes,
+} from "../series-chart-budget";
+import { applyTextSize } from "../../theme/text-size";
 
 /**
  * The axis budget (0.15.1): the pure rule on numbers, and the chart drawing what the
@@ -77,8 +85,40 @@ describe("autoAxisBudget", () => {
     expect(autoAxisBudget(AXES, 888, band)).toBeUndefined();
   });
 
-  it("never touches a chart with at most one axis a side, however narrow", () => {
-    expect(autoAxisBudget([AXES[0], AXES[3]], 120, band)).toBeUndefined();
+  it("never touches a chart with one axis, however narrow — each chart of a facing pair", () => {
+    expect(autoAxisBudget([AXES[0]], 120, band)).toBeUndefined();
+    expect(autoAxisBudget([{ id: "y", title: "", orientation: "right" }], 120, band)).toBeUndefined();
+  });
+
+  it("keeps one axis a side while that leaves the plot its room", () => {
+    // One a side is 2 × 64: 288 px leaves 160.
+    expect(autoAxisBudget([AXES[0], AXES[3]], 2 * 64 + MIN_PLOT_WIDTH, band)).toBeUndefined();
+  });
+
+  it("drops the right-hand axis when even one a side leaves the plot too narrow (0.32)", () => {
+    expect(autoAxisBudget([AXES[0], AXES[3]], 2 * 64 + MIN_PLOT_WIDTH - 1, band)).toBe(LEFT_AXIS_BUDGET);
+    expect(autoAxisBudget([AXES[0], AXES[3]], 120, band)).toBe(LEFT_AXIS_BUDGET);
+    expect(budgetedAxes([AXES[0], AXES[3]], LEFT_AXIS_BUDGET)).toEqual(["load"]);
+    // The four-axis plot too, past the point where one a side would do.
+    expect(autoAxisBudget(AXES, 200, band)).toBe(LEFT_AXIS_BUDGET);
+    expect(budgetedAxes(AXES, LEFT_AXIS_BUDGET)).toEqual(["pos", "acc", "load"]);
+    // Two axes on the right and none on the left: nothing is secondary to the right.
+    const right: SeriesChartAxis[] = [
+      { id: "a", title: "A", orientation: "right" },
+      { id: "b", title: "B", orientation: "right" },
+    ];
+    expect(autoAxisBudget(right, 150, band)).toBe(NARROW_AXIS_BUDGET);
+  });
+
+  it("scales the floor with the text, as the bands are (§3.2)", () => {
+    const bandXL = (axis: { width?: number; title?: string }) => axisBandWidth(axis.width, Boolean(axis.title), 1.5);
+    const two = [AXES[0], AXES[3]];
+    // 390 px at 150 %: about 300 px of chart; two 96 px bands leave 108, under 160 × 1.5.
+    expect(autoAxisBudget(two, 300, bandXL, 1.5)).toBe(LEFT_AXIS_BUDGET);
+    expect(autoAxisBudget(two, 2 * 96 + MIN_PLOT_WIDTH * 1.5 - 1, bandXL, 1.5)).toBe(LEFT_AXIS_BUDGET);
+    expect(autoAxisBudget(two, 2 * 96 + MIN_PLOT_WIDTH * 1.5, bandXL, 1.5)).toBeUndefined();
+    // The same chart at Normal keeps both.
+    expect(autoAxisBudget(two, 300, band)).toBeUndefined();
   });
 
   it("is nothing for a width nobody measured", () => {
@@ -211,5 +251,71 @@ describe("SeriesChart — the automatic budget, with a measured width", () => {
     measuredAt(324);
     render(<SeriesChart rows={ROWS} series={SERIES} axes={AXES} axisBudget="off" />);
     expect(screen.getByText("Position (mm)")).toBeInTheDocument();
+  });
+});
+
+describe("SeriesChart — an axis on each side at Extra large (0.32, §4)", () => {
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-text-size");
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  function measuredAt(width: number) {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width } as DOMRect);
+  }
+
+  const TWO_SIDES: SeriesChartAxis[] = [
+    { id: "users", title: "Users" },
+    { id: "rate", title: "Conversion (%)", orientation: "right" },
+  ];
+  const TWO_SERIES: SeriesChartSeries[] = [
+    { key: "users", label: "Users", axis: "users" },
+    { key: "rate", label: "Rate", axis: "rate" },
+  ];
+  const TWO_ROWS = [0, 1, 2, 3].map((x) => ({ x, users: 10 + x, rate: 1.5 * x }));
+
+  it("drops the right axis's ticks and title on a phone, and its series says the unit in the readout", () => {
+    act(() => applyTextSize("xlarge"));
+    measuredAt(300);
+    const report = vi.fn();
+    const { container } = render(
+      <SeriesChart
+        rows={TWO_ROWS}
+        series={TWO_SERIES}
+        axes={TWO_SIDES}
+        tooltip={{ placement: "above" }}
+        onAxisBudget={report}
+      />,
+    );
+    expect(screen.queryByText("Conversion (%)")).toBeNull();
+    expect(screen.getAllByText("Users").some((el) => el.closest("svg"))).toBe(true);
+    expect(report).toHaveBeenLastCalledWith(["rate"]);
+    expect(container.querySelector("[data-axis-budget]")?.getAttribute("data-axis-budget")).toBe("rate");
+    // Both lines are still drawn, the right one on its own scale.
+    expect(container.querySelectorAll("path.recharts-line-curve")).toHaveLength(2);
+    // The values stay readable: the readout names the series with the axis' unit.
+    const readout = container.querySelector("[data-tooltip-readout]")!;
+    expect(readout.textContent).toContain("Rate (%)");
+  });
+
+  it("keeps both axes where the plot has its room: the same chart at Normal, or wider", () => {
+    measuredAt(300);
+    render(<SeriesChart rows={TWO_ROWS} series={TWO_SERIES} axes={TWO_SIDES} />);
+    expect(screen.getByText("Conversion (%)")).toBeInTheDocument();
+  });
+
+  it("keeps both axes at Extra large on a tablet", () => {
+    act(() => applyTextSize("xlarge"));
+    measuredAt(600);
+    render(<SeriesChart rows={TWO_ROWS} series={TWO_SERIES} axes={TWO_SIDES} />);
+    expect(screen.getByText("Conversion (%)")).toBeInTheDocument();
   });
 });

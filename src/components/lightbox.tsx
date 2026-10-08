@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useAuthedSrc } from "../hooks/use-authed-src";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { IconButton, buttonClasses } from "./ui";
@@ -169,6 +170,16 @@ export function Lightbox({
   const anchorRef = useRef<HTMLSpanElement>(null);
   const dir = useAnchorDir(anchorRef, open);
 
+  // The toolbar's words (docs/text-size-harmonization.md §4, §10.8). At Large an
+  // IconButton shows its label beside the glyph; on a narrow screen the viewer's header —
+  // the counter, Zoom, Download and the dialog's close — has no room for two words at
+  // 150 % (a 390 px phone is 260 px of Normal type), so below `sm` the toolbar keeps its
+  // icons, as the plain download link hides its word there (`max-sm:sr-only`). From `sm`
+  // up, at the same breakpoint the CSS uses, the words show. Each name stays the
+  // accessible name and the tooltip either way.
+  const narrow = useBreakpoint("max-sm");
+  const toolbarLabelVisible = narrow ? false : undefined;
+
   const fetched = useAuthedSrc(item?.src, { fetcher, enabled: open });
   const kind = item ? imageItemKind(item, fetched.type) : "image";
 
@@ -236,7 +247,12 @@ export function Lightbox({
   const downloadControl =
     download && item ? (
       onDownload ? (
-        <IconButton size="sm" label={labels.download} onClick={() => onDownload(item, index)}>
+        <IconButton
+          size="sm"
+          label={labels.download}
+          labelVisible={toolbarLabelVisible}
+          onClick={() => onDownload(item, index)}
+        >
           <Download />
         </IconButton>
       ) : downloadHref ? (
@@ -264,7 +280,13 @@ export function Lightbox({
       </span>
       <span className="min-w-0 flex-1" />
       {zoomEnabled && kind === "image" && (
-        <IconButton size="sm" label={labels.zoom} pressed={zoomed} onClick={toggleZoom}>
+        <IconButton
+          size="sm"
+          label={labels.zoom}
+          labelVisible={toolbarLabelVisible}
+          pressed={zoomed}
+          onClick={toggleZoom}
+        >
           <ZoomIn />
         </IconButton>
       )}

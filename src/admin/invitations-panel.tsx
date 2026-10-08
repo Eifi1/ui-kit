@@ -14,7 +14,8 @@ import type { ChipTone } from "../components/chip";
 import { CopyButton } from "../components/copy-button";
 import { LanguageSelect } from "../components/language-select";
 import { SectionLabel, Caption } from "../components/text";
-import { Button, IconButton, Input, Select, Spinner } from "../components/ui";
+import { RowActions } from "../components/row-actions";
+import { Button, Input, Select, Spinner } from "../components/ui";
 import { useWriteLock } from "../components/write-lock";
 import { hasMessage, settle, useDayText, usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
@@ -480,35 +481,41 @@ export function InvitationsPanel<R extends string = string>({
                     </div>
                     {(link || resendable || revocable) && (
                       <div className="ms-auto flex shrink-0 items-center gap-1">
+                        {/* The copy stays its own icon: it says "Copied" where it was
+                            pressed, which a menu entry that closes cannot. */}
                         {link && open && <CopyButton size="xs" tone="muted" text={link} label={labels.copyLink} />}
-                        {resendable && (
-                          <IconButton
-                            size="xs"
-                            commit
-                            label={labels.resend(invitation.email)}
-                            pending={busy === `resend:${key}`}
-                            disabled={busy !== null}
-                            onClick={async () => {
-                              const answer = await run(`resend:${key}`, () => onResend(invitation));
-                              if (answer !== FAILED) took(answer, invitation.email, invitation.id);
-                            }}
-                          >
-                            <RefreshCw />
-                          </IconButton>
-                        )}
-                        {revocable && (
-                          <IconButton
-                            size="xs"
-                            tone="danger"
-                            commit
-                            label={labels.revoke(invitation.email)}
-                            pending={busy === `revoke:${key}`}
-                            disabled={busy !== null}
-                            onClick={() => void run(`revoke:${key}`, () => onRevoke(invitation))}
-                          >
-                            <Trash2 />
-                          </IconButton>
-                        )}
+                        {/* Resend and revoke are the row's actions (docs/text-size-
+                            harmonization.md §10.8): two icons at Normal, one "⋯" menu at
+                            Large, where both names as text ("Send … a new link") would
+                            not fit a phone's row beside the copy icon. */}
+                        <RowActions
+                          name={invitation.email}
+                          actions={[
+                            resendable && {
+                              key: "resend",
+                              label: labels.resend(invitation.email),
+                              icon: RefreshCw,
+                              commit: true,
+                              pending: busy === `resend:${key}`,
+                              disabled: busy !== null,
+                              onSelect: () =>
+                                void (async () => {
+                                  const answer = await run(`resend:${key}`, () => onResend(invitation));
+                                  if (answer !== FAILED) took(answer, invitation.email, invitation.id);
+                                })(),
+                            },
+                            revocable && {
+                              key: "revoke",
+                              label: labels.revoke(invitation.email),
+                              icon: Trash2,
+                              tone: "danger",
+                              commit: true,
+                              pending: busy === `revoke:${key}`,
+                              disabled: busy !== null,
+                              onSelect: () => void run(`revoke:${key}`, () => onRevoke(invitation)),
+                            },
+                          ]}
+                        />
                       </div>
                     )}
                   </div>

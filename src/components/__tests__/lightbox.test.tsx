@@ -225,6 +225,41 @@ describe("Lightbox", () => {
   });
 });
 
+describe("Lightbox's toolbar at Large (docs/text-size-harmonization.md §4, §10.8)", () => {
+  /** A viewport `width` px wide, its width queries evaluated as a browser would. */
+  function viewport(width: number) {
+    vi.stubGlobal("matchMedia", (query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      const max = /max-width:\s*(\d+)px/.exec(query);
+      const matches = min ? width >= Number(min[1]) : max ? width <= Number(max[1]) : false;
+      return { matches, media: query, addEventListener() {}, removeEventListener() {} };
+    });
+  }
+  const words = (name: string) =>
+    screen.getByRole("button", { name }).querySelector("[data-slot=icon-button-label]");
+
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-text-size");
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps Zoom and Download as icons on a phone at Extra large — no room beside the counter and close", () => {
+    viewport(390);
+    document.documentElement.setAttribute("data-text-size", "xlarge");
+    render(<Harness onDownload={() => {}} />);
+    expect(words("Zoom")).toBeNull();
+    expect(words("Download")).toBeNull();
+  });
+
+  it("shows their words from `sm` up at Large, as the plain download link does", () => {
+    viewport(1280);
+    document.documentElement.setAttribute("data-text-size", "large");
+    render(<Harness onDownload={() => {}} />);
+    expect(words("Zoom")).toHaveTextContent("Zoom");
+    expect(words("Download")).toHaveTextContent("Download");
+  });
+});
+
 describe("Lightbox with a fetcher", () => {
   beforeEach(() => {
     let n = 0;

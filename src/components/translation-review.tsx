@@ -743,6 +743,12 @@ export function TranslationReviewPanel({
             tone="muted"
             commit
             label={labels.approve}
+            // The icon alone at every text size (docs/text-size-harmonization.md §10.8):
+            // the row's one action, in a hugging column of a dense table beside the
+            // string under review, which "Approve" as text at Large would squeeze. A
+            // single action stays inline in `RowActions` too, so the menu would not help;
+            // the swipe and the editor say it in words.
+            labelVisible={false}
             pending={isQueued(`row:${r.id}`)}
             disabled={busy}
             onClick={(event) => {

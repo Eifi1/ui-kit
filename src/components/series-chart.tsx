@@ -594,17 +594,23 @@ export interface SeriesChartProps {
   maxVisibleAxes?: SeriesChartAxisBudget;
   /**
    * `"auto"` (the default): a chart so narrow that its axes' bands would leave the plot
-   * under 160 px (`MIN_PLOT_WIDTH`) draws ONE axis a side — lenkbank's four-axis curve
-   * plot on a phone, whose plot was 10 px wide. Measured on the chart's own box
-   * (`ResizeObserver`), and applied on top of `maxVisibleAxes`.
+   * under 160 px (`MIN_PLOT_WIDTH`, × the text size's scale) draws ONE axis a side —
+   * lenkbank's four-axis curve plot on a phone, whose plot was 10 px wide. And a chart
+   * with an axis on EACH side that one a side still leaves too narrow (0.32: at 150 % a
+   * 390 px phone's plot kept about 80 px between its two bands) drops the right-hand,
+   * secondary axis too. Measured on the chart's own box (`ResizeObserver`), and applied
+   * on top of `maxVisibleAxes`. Either way the series on an axis it hid say the axis'
+   * unit in the tooltip and the readout ("Rack load (N)"), and in a legend built by
+   * {@link seriesLegendEntries} with `onAxisBudget`'s ids.
    *
-   * On by default because it cannot touch a layout that works: it needs a side with two
-   * or more axes AND a plot that would otherwise be under 160 px — a four-axis chart
-   * below about 440 px, a two-left-axis one below about 300. A chart with at most one
-   * axis a side (every facing pair, every single-axis chart) is never budgeted, at any
-   * width. `"off"` keeps every declared axis whatever the width: for a stack of
-   * multi-axis charts that must keep identical bands, or a caller budgeting itself.
-   * Without layout (jsdom, SSR) nothing is measured and nothing is hidden.
+   * On by default because it cannot touch a layout that works: it needs a plot that
+   * would otherwise be under 160 px — a four-axis chart below about 440 px at Normal, a
+   * two-left-axis one below about 300, a one-a-side one below about 290 — and the
+   * left-hand axis always stays. A chart with one axis (each chart of a facing pair,
+   * every single-axis chart) is never budgeted, at any width. `"off"` keeps every
+   * declared axis whatever the width: for a stack of multi-axis charts that must keep
+   * identical bands, or a caller budgeting itself. Without layout (jsdom, SSR) nothing is
+   * measured and nothing is hidden.
    */
   axisBudget?: "auto" | "off";
   /**
@@ -1288,8 +1294,11 @@ function SeriesPlot({
       ? []
       : budgetedAxes(
           afterCap,
-          autoAxisBudget(afterCap, width, (axis) =>
-            axisBandWidth(axis.width, Boolean(axis.title), scale),
+          autoAxisBudget(
+            afterCap,
+            width,
+            (axis) => axisBandWidth(axis.width, Boolean(axis.title), scale),
+            scale,
           ),
         );
   const budgeted = [...capped, ...auto];

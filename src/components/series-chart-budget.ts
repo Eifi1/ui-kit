@@ -26,7 +26,8 @@ interface BudgetAxis {
 }
 
 /**
- * The narrowest the plot may get before the automatic budget steps in, in px.
+ * The narrowest the plot may get before the automatic budget steps in, in px at Normal —
+ * × the text size's scale since 0.32 (see {@link autoAxisBudget}).
  *
  * About a phone's plot with one axis a side (390 px viewport, card padding, two bands
  * of 48 + 16), where a curve's shape still reads. It is the point below which the chart
@@ -37,6 +38,12 @@ export const MIN_PLOT_WIDTH = 160;
 
 /** The budget the automatic rule applies: one axis a side. */
 export const NARROW_AXIS_BUDGET: SeriesChartAxisBudget = { left: 1, right: 1 };
+
+/**
+ * The automatic rule's second step: the left axis alone — for a chart with an axis on
+ * each side that even one a side leaves too little plot (0.32, see {@link autoAxisBudget}).
+ */
+export const LEFT_AXIS_BUDGET: SeriesChartAxisBudget = { left: 1, right: 0 };
 
 /** The plot's margin on a side no axis band covers — `SeriesPlot`'s own. */
 const BARE_SIDE_MARGIN = 10;
@@ -85,10 +92,27 @@ export function budgetedAxes(
 }
 
 /**
- * The automatic budget for a chart `width` px wide: {@link NARROW_AXIS_BUDGET} when the
- * visible axes' bands would leave the plot under {@link MIN_PLOT_WIDTH} AND some side
- * draws more than one axis — the only case one-a-side gives anything back. `undefined`
- * otherwise, and for a width that is not known (no layout, no `ResizeObserver`).
+ * The automatic budget for a chart `width` px wide, in two steps — each taken only when
+ * the plot would otherwise be narrower than {@link MIN_PLOT_WIDTH} × `scale`:
+ *
+ * 1. {@link NARROW_AXIS_BUDGET}, one axis a side, when some side draws more than one
+ *    (lenkbank's four-axis curve plot on a phone);
+ * 2. {@link LEFT_AXIS_BUDGET}, the left axis alone, when the chart has an axis on EACH
+ *    side and one a side still leaves the plot too narrow (0.32,
+ *    docs/text-size-harmonization.md §4, §10.10). At 150 % a 390 px phone's two bands
+ *    are 96 px each and the plot kept about 80 px. The right-hand axis is the secondary
+ *    one — the grid hangs its rules off the left — so it goes: its lines keep their own
+ *    scale, and its unit moves into the tooltip, the readout and the legend
+ *    ({@link axisUnit}, `seriesLegendEntries`), where its values stay readable.
+ *
+ * `scale` is the text size's (`useTextSize().scale`): the bands grow with the type
+ * (`bandWidth` is handed the scaled ones), and so does the floor (§3.2, "a chart's axis
+ * width and tick spacing are multiplied by `scale`") — the room a curve needs between
+ * labels grows with the labels.
+ *
+ * `undefined` when neither step is needed, for a single-axis chart (a facing pair's two
+ * charts each have one) and for a width that is not known (no layout, no
+ * `ResizeObserver`).
  *
  * Decided on the CHART's width and the axes as declared, never on the plot the budget
  * produced, so hiding an axis cannot widen the plot back over the line and bring it
@@ -98,15 +122,23 @@ export function autoAxisBudget(
   axes: readonly BudgetAxis[],
   width: number | undefined,
   bandWidth: (axis: BudgetAxis) => number,
+  scale = 1,
 ): SeriesChartAxisBudget | undefined {
   if (width === undefined || !(width > 0)) return undefined;
   const visible = axes.filter((axis) => !axis.hide);
   const left = visible.filter((axis) => sideOf(axis) === "left");
   const right = visible.filter((axis) => sideOf(axis) === "right");
+  const floor = MIN_PLOT_WIDTH * scale;
+  /** The plot's width with `drawn` axes drawn: what their bands and the bare sides leave. */
+  const plot = (drawn: readonly BudgetAxis[]) => {
+    const onLeft = drawn.some((axis) => sideOf(axis) === "left");
+    const onRight = drawn.some((axis) => sideOf(axis) === "right");
+    const bands = drawn.reduce((sum, axis) => sum + bandWidth(axis), 0);
+    return width - bands - (onLeft ? 0 : BARE_SIDE_MARGIN) - (onRight ? 0 : BARE_SIDE_MARGIN);
+  };
+  if (left.length && right.length && plot([left[0], right[0]]) < floor) return LEFT_AXIS_BUDGET;
   if (left.length <= 1 && right.length <= 1) return undefined;
-  const bands = visible.reduce((sum, axis) => sum + bandWidth(axis), 0);
-  const margins = (left.length ? 0 : BARE_SIDE_MARGIN) + (right.length ? 0 : BARE_SIDE_MARGIN);
-  return width - bands - margins < MIN_PLOT_WIDTH ? NARROW_AXIS_BUDGET : undefined;
+  return plot(visible) < floor ? NARROW_AXIS_BUDGET : undefined;
 }
 
 /**

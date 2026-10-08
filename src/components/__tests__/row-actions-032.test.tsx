@@ -6,6 +6,7 @@ import { Archive, Pencil, Trash2 } from "lucide-react";
 import { RowActions, rowActionsColumn, type RowActionList } from "../row-actions";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
+import { WriteLockProvider } from "../write-lock";
 
 /**
  * RowActions (docs/text-size-harmonization.md §10.8): a dense row's IconButtons are
@@ -178,6 +179,92 @@ describe("RowActions collapse", () => {
     setSize("large");
     render(<RowActions actions={actions()} name="Ada" labels={{ actionsFor: (n) => `Aktionen für ${n}` }} />);
     expect(screen.getByRole("button", { name: "Aktionen für Ada" })).toBeInTheDocument();
+  });
+});
+
+describe("RowActions — commit, pending, disabled (an admin panel's row, 0.32)", () => {
+  /** InvitationsPanel's shape: resend and revoke, each a commit, one in flight. */
+  function flight(onResend = vi.fn(), onRevoke = vi.fn()): RowActionList {
+    return [
+      { key: "resend", label: "Resend", icon: Pencil, commit: true, pending: true, disabled: true, onSelect: onResend },
+      { key: "revoke", label: "Revoke", icon: Trash2, tone: "danger", commit: true, disabled: true, onSelect: onRevoke },
+    ];
+  }
+
+  it("inline: the one in flight is busy, the rest disabled, and neither runs", () => {
+    const onResend = vi.fn();
+    const onRevoke = vi.fn();
+    render(<RowActions actions={flight(onResend, onRevoke)} name="ada@example.com" />);
+    const resend = screen.getByRole("button", { name: "Resend" });
+    expect(resend).toHaveAttribute("aria-busy", "true");
+    // Pending keeps its focus: `aria-disabled`, not `disabled`.
+    expect(resend).not.toBeDisabled();
+    fireEvent.click(resend);
+    expect(onResend).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Revoke" })).toBeDisabled();
+  });
+
+  it("collapsed: the ⋯ button is busy while one is in flight, and opens no menu", () => {
+    setSize("large");
+    render(<RowActions actions={flight()} name="ada@example.com" />);
+    const trigger = screen.getByRole("button", { name: "Actions for ada@example.com" });
+    expect(trigger).toHaveAttribute("aria-busy", "true");
+    fireEvent.click(trigger);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("commit: under a locked provider each is refused with the lock's reason, inline and in the menu", async () => {
+    const onResend = vi.fn();
+    const both: RowActionList = [
+      { label: "Resend", icon: Pencil, commit: true, onSelect: onResend },
+      { label: "Revoke", icon: Trash2, commit: true, onSelect: vi.fn() },
+    ];
+    const { unmount } = render(
+      <WriteLockProvider locked reason="Read-only demo.">
+        <RowActions actions={both} />
+      </WriteLockProvider>,
+    );
+    const inline = screen.getByRole("button", { name: "Resend" });
+    expect(inline).toHaveAttribute("aria-disabled", "true");
+    expect(inline).toHaveAccessibleDescription("Read-only demo.");
+    fireEvent.click(inline);
+    expect(onResend).not.toHaveBeenCalled();
+    unmount();
+
+    setSize("large");
+    const user = userEvent.setup();
+    render(
+      <WriteLockProvider locked reason="Read-only demo.">
+        <RowActions actions={both} name="Ada" />
+      </WriteLockProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions for Ada" }));
+    const menu = await screen.findByRole("dialog", { name: "Actions for Ada" });
+    const entry = within(menu).getByRole("button", { name: "Resend" });
+    expect(entry).toHaveAttribute("aria-disabled", "true");
+    expect(entry).toHaveAccessibleDescription("Read-only demo.");
+    await user.click(entry);
+    expect(onResend).not.toHaveBeenCalled();
+  });
+
+  it("an unlocked commit and no flight change nothing", async () => {
+    setSize("large");
+    const user = userEvent.setup();
+    const onResend = vi.fn();
+    render(
+      <RowActions
+        name="Ada"
+        actions={[
+          { label: "Resend", icon: Pencil, commit: true, pending: false, disabled: false, onSelect: onResend },
+          { label: "Revoke", icon: Trash2, commit: true, onSelect: vi.fn() },
+        ]}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Actions for Ada" });
+    expect(trigger).not.toHaveAttribute("aria-busy", "true");
+    await user.click(trigger);
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Resend" }));
+    expect(onResend).toHaveBeenCalledTimes(1);
   });
 });
 
