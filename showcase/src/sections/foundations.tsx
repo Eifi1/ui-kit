@@ -518,7 +518,7 @@ function PresetPreview() {
           {preset.name} <span className="text-[var(--text-muted)]">— {preset.blurb}</span>
         </p>
         <div className="flex flex-wrap items-end gap-3">
-          <div className="w-56">
+          <div className="w-56 max-w-full">
             <Input label="Amount" defaultValue="1,250.00" />
           </div>
           <Button variant="brand">Save</Button>

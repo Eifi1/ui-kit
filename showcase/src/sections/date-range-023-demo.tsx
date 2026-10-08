@@ -30,7 +30,7 @@ export function DateRange023Demo() {
       >
         <div className="flex flex-col gap-3">
           <Switch label="monthJump" checked={jump} onCheckedChange={setJump} />
-          <div className="grid items-start gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
             <DateRangePicker
               label="Service-charge period"
               monthJump={jump}

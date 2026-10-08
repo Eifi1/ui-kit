@@ -184,7 +184,7 @@ export function Numbers() {
               edge, because that edge is where the calculator lives — the two
               collided when it was placed there. */}
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="Interest rate"
             value={rate}
             onChange={setRate}
@@ -194,14 +194,14 @@ export function Numbers() {
             }
           />
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="Weight"
             value={weight}
             onChange={setWeight}
             suffix="kg"
           />
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="Units (required)"
             value={units}
             onChange={setUnits}
@@ -216,7 +216,7 @@ export function Numbers() {
       >
         <Stage>
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="With calculator"
             value={inline}
             onChange={setInline}
@@ -225,14 +225,14 @@ export function Numbers() {
               icon blurs the field, which tears the editor down before the popover
               can open. Typed arithmetic is unaffected. */}
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="calculator={false}"
             value={noCalc}
             onChange={setNoCalc}
             calculator={false}
           />
           <NumberInput
-            className="w-56"
+            className="w-56 max-w-full"
             label="Disabled"
             value="1000"
             onChange={() => {}}
@@ -379,7 +379,7 @@ export function Numbers() {
           <div className="space-y-4">
             <Row className="items-start">
               {TONES.map((tone) => (
-                <div key={tone} className="w-48">
+                <div key={tone} className="w-48 max-w-full">
                   <AmountInput
                     label={TONE_LABEL[tone]}
                     value={toneValues[tone]}
@@ -406,7 +406,7 @@ export function Numbers() {
         hint="a currency without onCurrencyChange is a plain aria-hidden chip, not a picker"
       >
         <Stage>
-          <div className="w-48">
+          <div className="w-48 max-w-full">
             <AmountInput
               label="Locked"
               value={locked}
@@ -415,7 +415,7 @@ export function Numbers() {
               disabled
             />
           </div>
-          <div className="w-48">
+          <div className="w-48 max-w-full">
             <AmountInput
               label="Required"
               value={missing}
@@ -425,7 +425,7 @@ export function Numbers() {
               invalid={missing.trim() === ""}
             />
           </div>
-          <div className="w-48">
+          <div className="w-48 max-w-full">
             <AmountInput label="Fee" value={fee} onChange={setFee} currency="GBP" />
           </div>
         </Stage>
@@ -471,7 +471,7 @@ export function Numbers() {
           <div className="space-y-3">
             <Row className="items-start">
               <CurrencySelect
-                className="w-48"
+                className="w-48 max-w-full"
                 label="Currency"
                 value={pickerCode}
                 onChange={setPickerCode}
@@ -480,14 +480,14 @@ export function Numbers() {
                   has no definition for — so an app can offer only the currencies its
                   budget actually holds. */}
               <CurrencySelect
-                className="w-48"
+                className="w-48 max-w-full"
                 label="Budget currencies"
                 value={budgetCode}
                 onChange={setBudgetCode}
                 options={["CHF", "EUR", "GBP"]}
               />
               <CurrencySelect
-                className="w-48"
+                className="w-48 max-w-full"
                 label="Required"
                 value={requiredCode}
                 onChange={setRequiredCode}
@@ -598,7 +598,7 @@ export function Numbers() {
       >
         <Stage>
           <div dir="rtl" className="flex flex-wrap items-start gap-4">
-            <div className="w-56">
+            <div className="w-56 max-w-full">
               <AmountInput
                 label="المبلغ"
                 value={rtlAmount}
@@ -608,7 +608,7 @@ export function Numbers() {
               />
             </div>
             <NumberInput
-              className="w-56"
+              className="w-56 max-w-full"
               label="الكمية"
               value={rtlUnits}
               onChange={setRtlUnits}

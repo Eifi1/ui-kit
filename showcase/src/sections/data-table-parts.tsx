@@ -145,7 +145,9 @@ function PaginationSpecimen() {
         <Note>
           The page strip is windowed: up to seven pages are all shown, beyond that it is
           first, last and ±2 around the current page with an ellipsis across the gap. Jump
-          to page 7 of 14 to see both ellipses at once.
+          to page 7 of 14 to see both ellipses at once. On a phone at Large it is ±1, and
+          where even that does not fit the numbers wrap between the two arrows rather than
+          run past the screen.
         </Note>
         <Note>
           <code className="font-mono">page</code> is 0-based in the props and 1-based on the

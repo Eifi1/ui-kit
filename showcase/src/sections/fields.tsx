@@ -95,20 +95,20 @@ export function Fields() {
             label strip), so centred side by side the pair sat 2px off at both edges. */}
         <Row className="items-end">
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             placeholder="Payee reference"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Account holder"
             value={holder}
             onChange={(e) => setHolder(e.target.value)}
           />
           {/* Both flags on purpose: `disabled` is the specimen, `readOnly` is what
               keeps React from warning about a value with no onChange. */}
-          <Input className="w-56" label="Closed on" disabled readOnly value="12 March 2024" />
+          <Input className="w-56 max-w-full" label="Closed on" disabled readOnly value="12 March 2024" />
         </Row>
         <p className="mt-3 text-xs text-[var(--text-muted)]">
           Clear the second field and click away: the label drops back to the centre. The float is
@@ -121,7 +121,7 @@ export function Fields() {
         {/* items-end: labelled (42px) and unlabelled (38px) fields share a baseline. */}
         <Stage className="items-end">
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Email"
             type="email"
             invalid={emailInvalid}
@@ -129,7 +129,7 @@ export function Fields() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             placeholder="Email (unlabelled)"
             type="email"
             invalid={emailInvalid}
@@ -152,14 +152,14 @@ export function Fields() {
         {/* items-end: labelled (42px) and unlabelled (38px) fields share a baseline. */}
         <Stage className="items-end">
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Passphrase"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             type="password"
             placeholder="PIN (unlabelled)"
             value={pin}
@@ -168,7 +168,7 @@ export function Fields() {
           {/* The toggle is the one string Input renders on its own behalf, so it is the
               one `passwordLabels` translates — it is the eye's accessible name. */}
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Kennwort"
             type="password"
             passwordLabels={{ show: "Kennwort anzeigen", hide: "Kennwort verbergen" }}
@@ -176,7 +176,7 @@ export function Fields() {
             onChange={(e) => setPassword(e.target.value)}
           />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Disabled — no reveal either"
             type="password"
             disabled
@@ -313,9 +313,9 @@ export function Fields() {
         hint="FIELD_WRITABLE_LOOK cancels the grey for a field that is readOnly for some other reason"
       >
         <Stage>
-          <Input className="w-56" label="IBAN" readOnly value="DE02 1203 0000 0000 2020 51" />
+          <Input className="w-56 max-w-full" label="IBAN" readOnly value="DE02 1203 0000 0000 2020 51" />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Two-factor code"
             readOnly
             inputClassName={FIELD_WRITABLE_LOOK}
@@ -337,14 +337,14 @@ export function Fields() {
       >
         <Stage>
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Value date"
             type="date"
             value={due}
             onChange={(e) => setDue(e.target.value)}
           />
           <Input
-            className="w-56"
+            className="w-56 max-w-full"
             label="Amount"
             inputMode="decimal"
             inputClassName="tabular-nums text-right"
@@ -368,7 +368,7 @@ export function Fields() {
       >
         <Stage>
           <Select
-            className="w-56"
+            className="w-56 max-w-full"
             value={kind}
             onChange={(e) => setKind(e.target.value)}
             aria-label="Entry kind"
@@ -378,7 +378,7 @@ export function Fields() {
             <option value="standing-order">Standing order</option>
           </Select>
           <Select
-            className="w-56"
+            className="w-56 max-w-full"
             label="Settlement account"
             invalid={account === ""}
             value={account}
@@ -392,7 +392,7 @@ export function Fields() {
               onChange — but it is still wired, because the specimen is about what
               the control DROPS when disabled, not about being a still. */}
           <Select
-            className="w-56"
+            className="w-56 max-w-full"
             label="Account type"
             disabled
             value={accountType}
@@ -488,7 +488,7 @@ export function Fields() {
         <Stage>
           <div className="space-y-4">
             <Select
-              className="w-64"
+              className="w-64 max-w-full"
               label="Settlement currency"
               hint={<FieldHint label="The currency the counterparty is paid in." side="right" />}
               value={currency}
@@ -505,7 +505,7 @@ export function Fields() {
                 that carry an animated label are the ones with something at the right
                 edge of the field (a calculator, a stepper) for it to collide with. */}
             <FloatingField
-              className="w-64"
+              className="w-64 max-w-full"
               htmlFor={referenceId}
               label="Payment reference"
               hint={<FieldHint label="Shown on the counterparty's statement." side="right" />}
@@ -521,7 +521,7 @@ export function Fields() {
             {/* `aria-label` shortens what a screen reader hears without shortening
                 what the bubble shows — by default the bubble text IS the name. */}
             <Select
-              className="w-64"
+              className="w-64 max-w-full"
               label="Booking date basis"
               hint={
                 <FieldHint
@@ -594,7 +594,7 @@ export function Fields() {
                 FLOATING_LABEL_CLASS compiles to `peer-*`, a sibling selector, so the
                 label has to come AFTER the input it follows — a label nested in a
                 wrapper, or placed before, simply never floats. */}
-            <div className="relative w-56">
+            <div className="relative w-56 max-w-full">
               <input
                 id={handRolledId}
                 className={FLOATING_INPUT_CLASS}
@@ -610,7 +610,7 @@ export function Fields() {
             {/* The static half. FLOATING_LABEL_STATIC on a real <label> because a
                 <select> is labelable; FieldLabel next door is the same placement as
                 a <span>, for a trigger that is a <button> and therefore is not. */}
-            <div className="relative w-56">
+            <div className="relative w-56 max-w-full">
               <select
                 id={handRolledPickId}
                 className={cn(FIELD_BASE, FIELD_FLOATING_PAD, "appearance-none pe-9")}
@@ -632,7 +632,7 @@ export function Fields() {
             {/* FloatingField with `staticLabel`: the label is always floated, for a
                 control that always has a value. `srOnlyLabel` is shown in the display
                 specimen above, `hint` in the FieldHint one. */}
-            <FloatingField className="w-56" htmlFor={staticId} label="Invoice number" staticLabel>
+            <FloatingField className="w-56 max-w-full" htmlFor={staticId} label="Invoice number" staticLabel>
               <input
                 id={staticId}
                 className={cn(FIELD_BASE, FIELD_FLOATING_PAD)}
@@ -647,7 +647,7 @@ export function Fields() {
                 instead, which FIELD_FLOATING_PAD has already pushed down — that is
                 how a labelled picker's chevron ended up sitting lower than the native
                 select's beside it. */}
-            <div className="relative w-56">
+            <div className="relative w-56 max-w-full">
               <FieldLabel>Settlement currency</FieldLabel>
               <button
                 type="button"

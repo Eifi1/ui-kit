@@ -25,6 +25,7 @@ import {
   List,
   ListItem,
   MenuItem,
+  RowActions,
   StatusDot,
   ToggleGroup,
   UserAvatar,
@@ -70,15 +71,23 @@ function RowKinds() {
           title="Invoice 2026-0412 (a button row)"
           subtitle="onClick — selects, opens, marks read"
           onClick={() => say("button row clicked")}
+          // RowActions, not two bare IconButtons: at Large each showed its label and the
+          // pair ran 269 px past a 360 px phone at Extra large (0.32.1); here they fold
+          // into one "⋯" menu, the row's documented answer (§10.8).
           actions={
-            <>
-              <IconButton size="sm" label="Copy the invoice number" onClick={() => say("copy — the row was not clicked")}>
-                <Copy />
-              </IconButton>
-              <IconButton size="sm" tone="danger" label="Delete the invoice" onClick={() => say("delete — the row was not clicked")}>
-                <Trash2 />
-              </IconButton>
-            </>
+            <RowActions
+              size="sm"
+              name="Invoice 2026-0412"
+              actions={[
+                { label: "Copy the invoice number", icon: Copy, onSelect: () => say("copy — the row was not clicked") },
+                {
+                  label: "Delete the invoice",
+                  icon: Trash2,
+                  tone: "danger",
+                  onSelect: () => say("delete — the row was not clicked"),
+                },
+              ]}
+            />
           }
         />
         <ListItem

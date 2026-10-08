@@ -31,7 +31,7 @@ function CardParts016() {
       label="Card — padded card, parts, stacked action"
       hint='padding="md" pads once; CardHeader stackAction; CardTitle as="h3"'
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card padding="md">
           <CardHeader stackAction>
             <CardTitle as="h3" className="text-[var(--text-primary)]">
@@ -67,7 +67,9 @@ function CardParts016() {
           A card with {code("padding")} (or {code("inset")} / {code("outline")}, which carry one)
           tells its parts so, and they add no {code("px-6")} / {code("pt-6")} of their own — the
           card is padded once. {code("stackAction")} puts a wide action under the title below{" "}
-          {code("sm")}; the icon action on the right stays beside its title at every width.
+          {code("sm")}; the icon action on the right stays beside its title at every width at Normal.
+          At Large, where an IconButton shows its label, an unset {code("stackAction")} stacks it below{" "}
+          {code("sm")} too, and {code("stackAction={false}")} keeps it beside the title.
         </Note>
       </div>
     </Example>
@@ -87,7 +89,7 @@ function StrongTone016() {
       label="Card toneStrength, IconButton pending"
       hint='tone="danger" toneStrength="strong": 2px --danger-border-strong; pending swaps the glyph for a spinner'
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card tone="danger" padding="md">
           <CardTitle className="text-sm">Soft (default)</CardTitle>
           <CardDescription className="mt-1 text-xs">1px --danger-border.</CardDescription>

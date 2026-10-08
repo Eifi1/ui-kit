@@ -51,7 +51,7 @@ export function ToggleGroup022Demo() {
         label="ToggleGroup as a field — the label is clear of the fill"
         hint="42px beside a labelled Select, md and sm; chromeClassName joins it flush"
       >
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Select label="Range" defaultValue="12">
             <option value="12">Last 12 months</option>
             <option value="24">Last 24 months</option>
@@ -82,7 +82,7 @@ export function ToggleGroup022Demo() {
         </Note>
       </Example>
       <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
-        <div className="grid items-start gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
           <Input label="Memo" defaultValue="Rent September" />
           <ToggleGroup
             label="Status"
@@ -144,7 +144,7 @@ export function Choices022Demo() {
   return (
     <Example label="SwatchPicker and IconPicker with a label" hint="the strip over the tiles; commit under a lock">
       <div className="flex flex-col gap-4">
-        <div className="grid items-start gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
           <Input label="Memo" defaultValue="Coffee beans" />
           <SwatchPicker
             label="Flag"
@@ -196,7 +196,7 @@ export function Dates022Demo() {
   return (
     <>
       <Example label="DatePicker hint and error" hint="the anatomy every field has: caption, message, aria-describedby">
-        <div className="grid items-start gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
           <DatePicker
             label="Booking date"
             value={due}
@@ -228,7 +228,7 @@ export function Dates022Demo() {
             <option value="fr-CH">Français (Suisse)</option>
           </Select>
           <UiKitProvider formatDate={formatDate}>
-            <div className="grid items-start gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
               <DatePicker label="Booking date" value={due} onChange={setDue} />
               <DateRangePicker
                 label="Statement period"
@@ -268,7 +268,7 @@ export function Month022Demo() {
   return (
     <>
       <Example label='MonthPicker mode="year"' hint='value and bounds are "YYYY"; a short bounded span is shown whole'>
-        <div className="grid items-start gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
           <MonthPicker
             mode="year"
             label="Tax year"
@@ -306,11 +306,21 @@ export function Month022Demo() {
       </Example>
       <Example label='MonthPicker size="sm" and error' hint="the 36px toolbar trigger between two icon buttons">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-1">
+          {/* On a phone at Large the month goes first and the two arrows share the line
+              under it: in one row they ran 25 px past a 360 px phone at Extra large, and a
+              plain wrap stranded each arrow on a line of its own (0.32.1). */}
+          <div className="flex flex-wrap items-center gap-1">
             <IconButton aria-label="Previous month" onClick={() => step(-1)}>
               <ChevronLeft className="rtl:-scale-x-100" />
             </IconButton>
-            <MonthPicker aria-label="Budget month" size="sm" currentMonth="2026-10" value={month} onChange={setMonth} />
+            <MonthPicker
+              aria-label="Budget month"
+              size="sm"
+              currentMonth="2026-10"
+              value={month}
+              onChange={setMonth}
+              className="large:max-sm:order-first"
+            />
             <IconButton aria-label="Next month" onClick={() => step(1)}>
               <ChevronRight className="rtl:-scale-x-100" />
             </IconButton>

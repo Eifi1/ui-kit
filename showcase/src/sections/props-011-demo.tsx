@@ -102,12 +102,15 @@ export function MenuItemBadgeDemo() {
       hint="the label truncates, the badge never shrinks, and both are the row's name"
     >
       <Row>
+        {/* The cap on the menu's box, the trigger held to it: on the Button itself,
+            16rem ran 70 px past a 360 px phone at Extra large (0.32.1). */}
         <HoverMenu
           aria-label="Switch budget"
           align="start"
           panelClassName="w-72"
+          className="min-w-0 max-w-64"
           trigger={({ open, toggle }) => (
-            <Button variant="secondary" onClick={toggle} aria-expanded={open} className="max-w-64">
+            <Button variant="secondary" onClick={toggle} aria-expanded={open} className="max-w-full">
               <span className="truncate">{budget}</span>
             </Button>
           )}

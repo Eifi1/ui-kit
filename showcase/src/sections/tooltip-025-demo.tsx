@@ -1,5 +1,5 @@
 import { CircleHelp, RefreshCw, Search, Settings } from "lucide-react";
-import { Button, IconButton, Tooltip } from "@eifi1/ui-kit";
+import { Button, CompactControls, IconButton, Tooltip } from "@eifi1/ui-kit";
 import { Example, Note } from "../lib/section";
 
 /**
@@ -18,18 +18,24 @@ export function TooltipTapDemo() {
       label="Tooltip — a tap leaves no bubble behind; the page edge holds"
       hint="tap on a phone: the action, no label; Tab: the label; hover: as ever"
     >
-      <div className="flex h-12 items-center justify-end gap-1 rounded-md border border-[var(--border)] px-2">
-        <span className="me-auto truncate text-sm font-medium text-[var(--text-primary)]">Example Ltd</span>
-        <IconButton label={SYNC_LABEL} tooltipSide="bottom" size="sm" shape="round" onClick={() => {}}>
-          <RefreshCw />
-        </IconButton>
-        <IconButton label="Search" tooltipSide="bottom" size="sm" onClick={() => {}}>
-          <Search />
-        </IconButton>
-        <IconButton label="Settings" tooltipSide="bottom" size="sm" onClick={() => {}}>
-          <Settings />
-        </IconButton>
-      </div>
+      {/* A top bar, so the kit's top-bar rule: CompactControls keeps the icons alone at
+          every size, as AppShell's own bar does (§4). Without it, at Large each IconButton
+          showed its label and the sentence-long sync label ran 66 px past a 360 px phone
+          at Extra large (0.32.1). */}
+      <CompactControls>
+        <div className="flex h-12 items-center justify-end gap-1 rounded-md border border-[var(--border)] px-2">
+          <span className="me-auto truncate text-sm font-medium text-[var(--text-primary)]">Example Ltd</span>
+          <IconButton label={SYNC_LABEL} tooltipSide="bottom" size="sm" shape="round" onClick={() => {}}>
+            <RefreshCw />
+          </IconButton>
+          <IconButton label="Search" tooltipSide="bottom" size="sm" onClick={() => {}}>
+            <Search />
+          </IconButton>
+          <IconButton label="Settings" tooltipSide="bottom" size="sm" onClick={() => {}}>
+            <Settings />
+          </IconButton>
+        </div>
+      </CompactControls>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button disabledReason="Read-only demo — saving is disabled." size="sm">

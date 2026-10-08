@@ -330,12 +330,14 @@ function PlacementTour() {
         </span>
       </div>
       <Row>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        {/* The select is as wide as its longest option; held to the row, it ran 73 px
+            past a 360 px phone at Extra large otherwise (0.32.1). */}
+        <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
           startIndex
           <select
             value={from}
             onChange={(e) => setFrom(Number(e.target.value))}
-            className="rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 py-0.5 text-[var(--text-primary)]"
+            className="min-w-0 max-w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 py-0.5 text-[var(--text-primary)]"
           >
             {steps.map((st, i) => (
               <option key={st.title} value={i}>

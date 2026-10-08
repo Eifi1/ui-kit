@@ -67,17 +67,20 @@ function GroupsOverContent() {
         >
           ⌖
         </div>
-        {/* joined + elevated: the frame is filled and shadowed. */}
+        {/* joined + elevated: the frame is filled and shadowed. Icons on content, so
+            `labelVisible={false}` (§10.8): at Large the three labels made the bar 461 px,
+            cut off by the map on a 360 px phone at Extra large (0.32.1). */}
         <ButtonGroup aria-label="Map tools" elevated className="absolute start-3 top-3">
-          <IconButton variant="ghost" label="Rotate" onClick={() => setRotation((r) => (r + 45) % 360)}>
+          <IconButton variant="ghost" label="Rotate" labelVisible={false} onClick={() => setRotation((r) => (r + 45) % 360)}>
             <RotateCw />
           </IconButton>
-          <IconButton variant="ghost" label="Centre on me" onClick={() => setRotation(0)}>
+          <IconButton variant="ghost" label="Centre on me" labelVisible={false} onClick={() => setRotation(0)}>
             <Crosshair />
           </IconButton>
           <IconButton
             variant="ghost"
             label="Layers"
+            labelVisible={false}
             pressed={layer}
             onClick={() => setLayer((v) => !v)}
           >

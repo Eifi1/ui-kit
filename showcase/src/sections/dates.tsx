@@ -318,7 +318,7 @@ export function Dates() {
         hint="a field-styled trigger opening a portalled single-mode calendar; the value is an ISO string"
       >
         <Stage>
-          <div className="w-56">
+          <div className="w-56 max-w-full">
             <DatePicker
               value={due}
               onChange={setDue}
@@ -377,7 +377,7 @@ export function Dates() {
         hint="formatOptions is one Intl call; formatValue is the host's own function and wins over it"
       >
         <Stage>
-          <div className="w-64">
+          <div className="w-64 max-w-full">
             <DatePicker
               value={formatted}
               onChange={setFormatted}
@@ -386,7 +386,7 @@ export function Dates() {
               formatOptions={{ dateStyle: "full" }}
             />
           </div>
-          <div className="w-64">
+          <div className="w-64 max-w-full">
             <DatePicker
               value={hostRendered}
               onChange={setHostRendered}
@@ -414,7 +414,7 @@ export function Dates() {
         hint="invalid is derived from the value here, so the ring arrives and leaves as you use it"
       >
         <Stage>
-          <div className="w-56">
+          <div className="w-56 max-w-full">
             <DatePicker
               value={required}
               onChange={setRequired}
@@ -426,7 +426,7 @@ export function Dates() {
               clearLabel="Clear"
             />
           </div>
-          <div className="w-56">
+          <div className="w-56 max-w-full">
             <DatePicker
               value={frozen}
               onChange={() => {}}
@@ -599,7 +599,7 @@ export function Dates() {
       >
         <Stage>
           <div dir="rtl" className="flex flex-wrap items-start gap-4">
-            <div className="w-60">
+            <div className="w-60 max-w-full">
               <DatePicker
                 value={rtlDay}
                 onChange={setRtlDay}

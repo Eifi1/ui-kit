@@ -76,8 +76,9 @@ export function TypedConfirm018Demo() {
         hint="keksdose keeps the question under the row, so the row being acted on stays in view"
       >
         <div className="space-y-2 rounded-lg border border-[var(--border)] p-3">
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span>ben@example.org</span>
+          {/* Wraps: at Extra large the address and "Reset password…" ran past a 360 px phone. */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="min-w-0 [overflow-wrap:anywhere]">ben@example.org</span>
             {!rowOpen && (
               <Button size="sm" variant="secondary" onClick={() => setRowOpen(true)}>
                 Reset password…

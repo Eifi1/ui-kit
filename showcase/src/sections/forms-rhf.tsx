@@ -51,7 +51,8 @@ type ExpenseForm = {
 function FieldReadout() {
   const { formItemId, describedBy, invalid, isDirty, error } = useFormField();
   return (
-    <p className="font-mono text-micro text-[var(--text-muted)]">
+    // Breaks anywhere: a JSON line of ids has no space of its own to break at.
+    <p className="font-mono text-micro text-[var(--text-muted)] [overflow-wrap:anywhere]">
       useFormField() → {q({ formItemId, describedBy, invalid, isDirty, error: error?.message })}
     </p>
   );
@@ -73,7 +74,9 @@ function RhfExample() {
         <form
           noValidate
           onSubmit={form.handleSubmit((data) => setSubmitted(data))}
-          className="grid max-w-2xl gap-4 sm:grid-cols-2"
+          // `grid-cols-1` below `sm`: an untemplated column grew to the readout's JSON line
+          // and ran 94 px past a 360 px phone at Extra large (0.32.1).
+          className="grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2"
         >
           <FormField
             control={form.control}

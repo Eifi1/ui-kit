@@ -193,7 +193,7 @@ export function TimeInputDemo() {
         hint="min/max paint out-of-range; step={1} adds seconds"
       >
         <Stage>
-          <div className="w-48">
+          <div className="w-48 max-w-full">
             <TimeInput
               label="Office opens"
               min="08:00"
@@ -203,7 +203,7 @@ export function TimeInputDemo() {
               error={office !== "" && office < "08:00" ? "Before 08:00" : undefined}
             />
           </div>
-          <div className="w-48">
+          <div className="w-48 max-w-full">
             <TimeInput label="Lap" step={1} value={lap} onValueChange={setLap} />
           </div>
         </Stage>

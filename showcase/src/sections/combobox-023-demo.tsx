@@ -61,7 +61,7 @@ export function ComboboxFamilyLock023Demo() {
       <div className="flex flex-col gap-4">
         <Switch checked={locked} onCheckedChange={setLocked} label="Read-only demo (WriteLockProvider locked)" />
         <WriteLockProvider locked={locked} reason="Read-only demo — saving is disabled.">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <InlineEntityCombobox<string>
               commit
               label="Statement account"

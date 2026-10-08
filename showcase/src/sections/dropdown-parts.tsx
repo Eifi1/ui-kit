@@ -87,7 +87,7 @@ export function DropdownParts() {
     <>
       <Example label="MultiSelect" hint="value-less means ALL — every visible string is a prop">
         <Stage>
-          <div className="w-64">
+          <div className="w-64 max-w-full">
             <MultiSelect
               label="Markets"
               options={MARKETS}
@@ -107,7 +107,7 @@ export function DropdownParts() {
               panelClassName="w-72"
             />
           </div>
-          <div className="w-64">
+          <div className="w-64 max-w-full">
             {/* Only `placeholder`: it stands in for `allLabel`, and every other string
                 (search, select all, clear, the count) comes from the provider. */}
             <MultiSelect
@@ -225,7 +225,7 @@ export function DropdownParts() {
       >
         <Stage>
           <Row>
-            <div ref={sortWrapperRef} className="relative w-56">
+            <div ref={sortWrapperRef} className="relative w-56 max-w-full">
               <button
                 // `triggerRef` is what Escape hands focus back to. Leave it off and
                 // Escape still closes the list, but the caret drops to <body>.
@@ -245,7 +245,7 @@ export function DropdownParts() {
                 // one an ancestor with `overflow` will CLIP — which is why every picker
                 // above passes an anchor instead.
                 <DropdownPanel
-                  className="w-56"
+                  className="w-56 max-w-full"
                   empty={false}
                   // Attributes for the panel's own <ul>, merged with its classes.
                   listProps={{ "aria-label": "Sort order" }}
@@ -289,7 +289,7 @@ export function DropdownParts() {
       >
         <Stage>
           <Row>
-            <div ref={storeWrapperRef} dir={storeRtl ? "rtl" : "ltr"} className="relative w-64">
+            <div ref={storeWrapperRef} dir={storeRtl ? "rtl" : "ltr"} className="relative w-64 max-w-full">
               <FieldLabel>Store</FieldLabel>
               <button
                 ref={storeTrigger}

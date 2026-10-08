@@ -152,7 +152,7 @@ function TableEmptyDensityLayout() {
       hint="the empty row spans every column by measuring the table, so an added column cannot leave it short"
     >
       <Row className="mb-3">
-        <div className="w-60">
+        <div className="w-60 max-w-full">
           <Input label="Filter the lines" value={filter} onChange={(e) => setFilter(e.target.value)} />
         </div>
         <Button variant="ghost" size="sm" onClick={() => setFilter("zzz")}>
