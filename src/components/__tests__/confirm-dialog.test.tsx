@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConfirmProvider, useConfirm } from "../confirm-dialog";
 import type { ConfirmFn } from "../confirm-dialog";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { WriteLockProvider } from "../write-lock";
 
 /**
  * `useConfirm()` replaces `window.confirm` across all three apps (keksdose 20+ calls,
@@ -276,3 +277,37 @@ function within(dialog: HTMLElement, name: string): HTMLElement {
   if (!match) throw new Error(`no "${name}" button in the dialog`);
   return match;
 }
+
+describe("useConfirm — commit (0.31.1)", () => {
+  function setupLocked(locked: boolean) {
+    let confirm!: ConfirmFn;
+    // The host sits ABOVE the lock, as in an app; the lock is read where useConfirm runs.
+    render(
+      <ConfirmProvider>
+        <WriteLockProvider locked={locked} reason="Not possible in the demo.">
+          <Capture onReady={(fn) => (confirm = fn)} />
+        </WriteLockProvider>
+      </ConfirmProvider>,
+    );
+    return () => confirm;
+  }
+
+  it("locks the confirm button with the caller's lock reason, and answers no", async () => {
+    const confirm = setupLocked(true);
+    const { answer } = await ask(confirm(), { title: "Delete the bed?", tone: "danger", commit: true });
+    const yes = screen.getByRole("button", { name: "Confirm" });
+    expect(yes).toHaveAttribute("aria-disabled", "true");
+    expect(document.body).toHaveTextContent("Not possible in the demo.");
+    fireEvent.click(yes);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await expect(answer).resolves.toBe(false);
+  });
+
+  it("does nothing without commit, or under an unlocked provider", async () => {
+    const confirm = setupLocked(true);
+    const first = await ask(confirm(), { title: "Rename the bed?" });
+    expect(screen.getByRole("button", { name: "Confirm" })).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    await expect(first.answer).resolves.toBe(true);
+  });
+});

@@ -8,7 +8,7 @@ import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
 import { Button, EmptyState } from "../components/ui";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
-import { authErrorCode } from "./auth-errors";
+import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
@@ -41,6 +41,10 @@ export interface VerifyEmailLabels {
   resent: string;
   /** Said (and shown) after a resend failed. */
   resendError: string;
+  /** 0.31.1: a resend refused as throttled — HTTP 429 (`isRateLimited`) — given the
+   *  `Retry-After` seconds, when the app's `describeError` has no words of its own
+   *  (keksdose borrowed the sign-in namespace's). */
+  rateLimited?: (seconds?: number) => string;
   /** The banner's message. */
   banner: string;
   /** The banner's ×: it defers, it does not close anything. */
@@ -62,6 +66,7 @@ export const DEFAULT_VERIFY_EMAIL_LABELS: VerifyEmailLabels = {
   resendIn: (seconds) => `Send again in ${seconds} s`,
   resent: "Confirmation email sent",
   resendError: "Could not send the confirmation email",
+  rateLimited: englishRateLimited,
   banner: "Please confirm your email address.",
   dismiss: "Not now",
 };
@@ -160,7 +165,14 @@ function ResendStatus({
   labels: VerifyEmailLabels;
   className?: string;
 }) {
-  const failed = phase === "failed" ? (describeError?.(error) ?? labels.resendError) : "";
+  // The app's words first, then the throttle's, then the kit's catch-all.
+  const failed =
+    phase === "failed"
+      ? (describeError?.(error) ??
+        (isRateLimited(error)
+          ? (labels.rateLimited ?? englishRateLimited)(retryAfterSeconds(error))
+          : labels.resendError))
+      : "";
   return (
     <span
       role="status"

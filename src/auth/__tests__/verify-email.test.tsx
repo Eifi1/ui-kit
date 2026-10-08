@@ -216,3 +216,12 @@ describe("EmailVerificationBanner — describeError (0.29.1)", () => {
     expect(await screen.findByText("Could not send the confirmation email", { selector: STATUS })).toBeInTheDocument();
   });
 });
+
+describe("EmailVerificationBanner — a throttled resend (0.31.1)", () => {
+  it("says the kit's rateLimited with the Retry-After wait when the app has no words", async () => {
+    const thrown = { status: 429, headers: new Headers({ "Retry-After": "120" }) };
+    render(<EmailVerificationBanner onResend={() => Promise.reject(thrown)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Send again" }));
+    expect(await screen.findByText("Too many attempts. Try again in 2 min.", { selector: STATUS })).toBeInTheDocument();
+  });
+});

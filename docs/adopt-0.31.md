@@ -14,6 +14,56 @@ This note is the kits' side.
 Each app adopts 0.31 after its 0.30 adoption. kastlan ships its demo backend together
 with its landing page.
 
+## 0.31.1 (with server-kit 0.5.1)
+
+A patch from the three apps' 0.30 and 0.31 adoptions. Nothing to change unless
+you want to drop a workaround.
+
+- **`useConfirm({…, commit: true})`:** the confirm button takes the write lock of the place
+  that asked. Under a locked `WriteLockProvider` it is `aria-disabled` with the lock's
+  reason, so a read-only page can't confirm a delete through a dialog. One prop per
+  confirm site, in place of locking every trigger.
+- **`LandingActions` / `Hero` / `CtaBand` `demoHref={null}`** leaves "Try the demo" out
+  for an app with no demo yet; "Request access" stands alone.
+- **`useSettingsLabels()`** reads the `settings` namespace (the core group names and help
+  lines) for an app's catalogue and page title, in one call.
+- **The core `security` group's help line** names no factor any more ("How you sign in,
+  and where you are signed in"), so an app without 2FA needn't override it.
+- **`RootEntry` / `RedirectIfAuthed` `session="loading"`** (`RoutingSession`): while an
+  app restores an in-memory session, both render `loading` (default `LoadingState`)
+  instead of showing the landing or redirecting. kastlan's own wrapper can go.
+- **server-kit 0.5.1:**
+  - `Budget.limiter()` defaults its clock to `time.monotonic`;
+  - `refuse_demo` says "Not possible for a demo account: …", which reads right when an
+    admin acts on a demo account too;
+  - `AdminActionRow.action` takes an app's own action as a string (keksdose's `plan`);
+  - `revoked` and `valid` are fact suffixes, so `api_tokens_revoked` passes the secret
+    check;
+  - a Web Push endpoint counts as a secret under any key. Plant known secrets in your
+    export test as well (README);
+  - `client_ip` logs once when `X-Forwarded-For` is shorter than `trusted_hops`. Measure
+    your hops, then check the log.
+- **Contract fixes:**
+  - **the demo's 401 rule** skips the signed-out sign-in steps, so a wrong password on
+    `/login` doesn't end a demo;
+  - **the allow-list entries** are full request paths (`/api/v1/…`);
+  - **`refuse_demo(user.is_demo, what)`**;
+  - **the email-change confirm** is anonymous and reuses `VerifyEmailStatus`;
+  - **an RLS app's deletion request** reads with the bypass.
+
+- **`AdminPerson` reads server-kit's `PersonRef` as it serialises** (`first_name` /
+  `last_name`, beside the kit's `first` / `last`). Hand the server's `invited_by` or an
+  action's actor over as it came, and drop the mapping.
+- **`ResetPasswordForm`** shows the dead-link state for a coded `token_expired` on save
+  too, not only `token_invalid`.
+- **The verification resend** (`EmailVerificationBanner`, `VerifyEmailStatus`) says "Too
+  many attempts. Try again in N s / N min." for a 429 when your `describeError` has no
+  words of its own (`verifyEmail.rateLimited`).
+- **Auth contract §10.15:** expose `Retry-After` in your CORS headers, or the forms can't
+  read the wait from a cross-origin API.
+- **Invitations keep expiring** (§10.14): the 14 days are the unused link's, and the
+  account is permanent. No migration.
+
 ## Everyone, on the bump
 
 1. Bump the kit to `^0.31.0` by hand (a caret below 1.0 locks the minor version). Take
@@ -56,7 +106,11 @@ with its landing page.
    - `listTitle={null}` leaves the panel's own heading out under a card headed
      "Invitations";
    - ADOPTING.md step 7 covers testing the confirm dialogs (`fireEvent.submit`).
-6. **server-kit 0.5 has no breaking change.** `ProfileUpdate` behaves as before until
+6. **server-kit 0.5 has no breaking change in its behaviour**, but its shapes gained
+   fields. `UserResponse` and `AdminUserRow` carry `demo_expires_at`, and
+   `TokenResponse` carries `expires_at`. An app that writes these shapes out field by
+   field (a parity test against its own schema) adds them (Kurvenschmiede's 0.31
+   adoption). `ProfileUpdate` behaves as before until
    you set `offered_locales`.
 
 ## New in the kit: settings
@@ -275,5 +329,6 @@ The contracts' §8 hold each app's list. In short:
     - the system account and the hidden "Demo" team, converged in the migrate job;
     - the sandbox; app data exports allowed;
     - the refusals;
-    - the reap on start and in the erasure job.
+    - the reap on start (no job runner: its deletion is in `operator` mode since
+      2026-10-07).
   - **Feedback:** READY in the enum.

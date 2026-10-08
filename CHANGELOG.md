@@ -20,6 +20,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.31.1](https://github.com/Eifi1/ui-kit/compare/v0.31.0...v0.31.1) (2026-10-08)
+
+### Added
+
+* **landing:** demoHref={null} leaves "Try the demo" out ([165d5de](https://github.com/Eifi1/ui-kit/commit/165d5de2571db50a1ceb3d98eec5b5d52f136059))
+* **settings:** useSettingsLabels, and a security help line without factors ([181ba40](https://github.com/Eifi1/ui-kit/commit/181ba4004a223acef5b5ad0492583c8f9c140de0))
+* **showcase:** the Server kit group shows server-kit 0.5.1 ([a95aa74](https://github.com/Eifi1/ui-kit/commit/a95aa74c73485f7273d01bef3379a4c8c9a55b75))
+* useConfirm({commit}) takes the write lock; RootEntry waits for a session ([e1e369e](https://github.com/Eifi1/ui-kit/commit/e1e369e1c8e37d0e366a662215619fc83f8e7965))
+
+### Fixed
+
+* server-kit's names in the admin parts, and two auth gaps ([c1355f6](https://github.com/Eifi1/ui-kit/commit/c1355f6544082a3d8ef44bc54dd18e9c66de8316))
+
 ## [0.31.0](https://github.com/Eifi1/ui-kit/compare/v0.30.0...v0.31.0) (2026-10-07)
 
 ### ⚠ BREAKING CHANGES

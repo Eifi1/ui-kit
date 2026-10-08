@@ -994,6 +994,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       resendIn: (seconds) => `In ${n(seconds)} s erneut senden`,
       resent: "Bestätigungs-E-Mail gesendet",
       resendError: "Bestätigungs-E-Mail konnte nicht gesendet werden",
+      rateLimited,
       banner: "Bitte bestätigen Sie Ihre E-Mail-Adresse.",
       dismiss: "Später",
     },
@@ -1398,7 +1399,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         },
         security: {
           title: "Sicherheit",
-          help: "Wie Sie sich anmelden: Passwort, Zwei-Faktor-Codes, Passkeys und Sitzungen.",
+          help: "Wie Sie sich anmelden und wo Sie angemeldet sind.",
         },
         notifications: {
           title: "Benachrichtigungen",

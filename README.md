@@ -382,16 +382,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1688 names from 253 modules** — 778 values and 910 types. _Italic_ is a type-only export.
+**1690 names from 253 modules** — 779 values and 911 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1688 |
+| `@eifi1/ui-kit` | 1690 |
 | `@eifi1/ui-kit/chart` | 104 |
-| `@eifi1/ui-kit/shell` | 71 |
+| `@eifi1/ui-kit/shell` | 72 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
@@ -711,7 +711,7 @@ re-slicing of it, never a second API.
 | `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
 | `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
 | `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
-| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
+| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
 | `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
 
 ### landing
@@ -723,7 +723,7 @@ re-slicing of it, never a second API.
 | `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
 | `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
 | `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
-| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_ |
+| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_, _`RoutingSession`_ |
 | `landing/public-header` | `PublicHeader`, _`PublicHeaderBrand`_, _`PublicHeaderProps`_ |
 
 ### demo

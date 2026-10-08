@@ -949,6 +949,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       resendIn: (seconds) => `${n(seconds)} 秒后可重新发送`,
       resent: "确认邮件已发送",
       resendError: "无法发送确认邮件",
+      rateLimited,
       banner: "请确认您的电子邮箱地址。",
       dismiss: "暂不",
     },
@@ -1308,7 +1309,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         },
         security: {
           title: "安全",
-          help: "您的登录方式：密码、双重验证码、通行密钥和会话。",
+          help: "您的登录方式，以及已在哪些设备上登录。",
         },
         notifications: {
           title: "通知",

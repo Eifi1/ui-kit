@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { Link, MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { LandingSession } from "../landing-actions";
+import type { RoutingSession } from "../routing";
 import {
   DEFAULT_LAST_VISITED_EXCLUDES,
   RedirectIfAuthed,
@@ -24,7 +24,7 @@ afterEach(() => window.localStorage.clear());
 
 /* ── RootEntry ───────────────────────────────────────────────────────────── */
 
-function root(session: LandingSession, resumePath: string | null) {
+function root(session: RoutingSession, resumePath: string | null) {
   render(
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -64,7 +64,7 @@ describe("RootEntry — §3.1", () => {
 
 /* ── RedirectIfAuthed ────────────────────────────────────────────────────── */
 
-function guarded(session: LandingSession, entry: string) {
+function guarded(session: RoutingSession, entry: string) {
   render(
     <MemoryRouter initialEntries={[entry]}>
       <Routes>
@@ -220,4 +220,20 @@ describe("safeNextPath", () => {
       expect(safeNextPath(raw)).toBeNull();
     },
   );
+});
+
+describe("a session still being restored (0.31.1)", () => {
+  it("RootEntry neither shows the landing nor resumes while loading", () => {
+    root("loading", "/beds/3");
+    expect(screen.queryByRole("heading", { name: "Landing" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("where")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
+  it("RedirectIfAuthed neither shows the page nor redirects while loading", () => {
+    guarded("loading", "/login");
+    expect(screen.queryByRole("heading", { name: "Sign-in page" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("where")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
 });

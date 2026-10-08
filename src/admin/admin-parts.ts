@@ -16,11 +16,18 @@ import { formatPersonName } from "../lib/person-name";
 export type MaybePromise<T = unknown> = void | Promise<T>;
 
 /** A person as the admin parts show one: the two name parts of the auth contract
- *  (§3.2), an older whole `name` as the fallback, and the address. */
+ *  (§3.2), an older whole `name` as the fallback, and the address. The name parts are
+ *  read in either spelling — the kit's `first` / `last`, or server-kit's `PersonRef`
+ *  as it serialises (`first_name` / `last_name`), so an app hands the server's object
+ *  over as it came (keksdose's and kastlan's 0.30 adoptions mapped one to the other). */
 export interface AdminPerson {
   id?: string | number | null;
   first?: string | null;
   last?: string | null;
+  /** server-kit `PersonRef.first_name`; `first` wins when both are given. */
+  first_name?: string | null;
+  /** server-kit `PersonRef.last_name`; `last` wins when both are given. */
+  last_name?: string | null;
   /** A whole name, for an API that still sends `display_name` only. */
   name?: string | null;
   email?: string | null;
@@ -39,7 +46,7 @@ export function hasMessage(node: ReactNode): boolean {
 export function personLabel(person: AdminPerson | null | undefined, locale: string | undefined): string {
   if (!person) return "";
   return (
-    formatPersonName({ first: person.first, last: person.last }, locale) ||
+    formatPersonName({ first: person.first ?? person.first_name, last: person.last ?? person.last_name }, locale) ||
     (person.name ?? "").trim() ||
     (person.email ?? "").trim()
   );

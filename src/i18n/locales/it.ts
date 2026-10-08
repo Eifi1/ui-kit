@@ -982,6 +982,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       resendIn: (seconds) => `Invia di nuovo tra ${n(seconds)} s`,
       resent: "Email di conferma inviata",
       resendError: "Impossibile inviare l’email di conferma",
+      rateLimited,
       banner: "Confermi il Suo indirizzo email.",
       dismiss: "Non ora",
     },
@@ -1374,7 +1375,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         },
         security: {
           title: "Sicurezza",
-          help: "Come accede: password, codici 2FA, passkey e sessioni.",
+          help: "Come accede, e su quali dispositivi la sessione è aperta.",
         },
         notifications: {
           title: "Notifiche",

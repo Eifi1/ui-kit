@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.5.0",
+  "kit_version": "0.5.1",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -343,7 +343,7 @@
           "methods": [
             {
               "name": "limiter",
-              "signature": "limiter(clock: Clock) -> SlidingWindowRateLimiter",
+              "signature": "limiter(clock: Clock = time.monotonic) -> SlidingWindowRateLimiter",
               "doc": ""
             }
           ]
@@ -993,7 +993,7 @@
         {
           "name": "FACT_SUFFIXES",
           "kind": "constant",
-          "signature": "FACT_SUFFIXES: frozenset[str] = frozenset(\n    {\"at\", \"on\", \"until\", \"date\", \"count\", \"enabled\", \"required\", \"fingerprint\", \"epoch\", \"kind\", \"type\"}\n)",
+          "signature": "FACT_SUFFIXES: frozenset[str] = frozenset(\n    {\n        \"at\",\n        \"on\",\n        \"until\",\n        \"date\",\n        \"count\",\n        \"enabled\",\n        \"required\",\n        \"fingerprint\",\n        \"epoch\",\n        \"kind\",\n        \"type\",\n        # 0.5.1 (keksdose): `api_tokens_revoked`, `sessions_valid` are facts about a secret,\n        # not the secret — keksdose had renamed them to `*_count` to get past the check.\n        \"revoked\",\n        \"valid\",\n    }\n)",
           "doc": "A key's last word that says it holds a FACT about a secret — when, whether, how many,\nwhich one — and not the secret."
         },
         {
@@ -1059,7 +1059,7 @@
         {
           "name": "SECRET_VALUE_PATTERNS",
           "kind": "constant",
-          "signature": "SECRET_VALUE_PATTERNS: tuple[re.Pattern[str], ...] = (\n    re.compile(r\"^\\$2[abxy]?\\$\\d{2}\\$\"),  # bcrypt\n    re.compile(r\"^\\$argon2(id|i|d)\\$\"),  # Argon2\n    re.compile(r\"^\\$scrypt\\$|^\\$7\\$\"),  # scrypt\n    re.compile(r\"^(\\$pbkdf2|pbkdf2[_:$])\", re.IGNORECASE),  # PBKDF2 (passlib, Django)\n    re.compile(r\"^eyJ[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]*$\"),  # a JWT\n    re.compile(r\"^[0-9a-fA-F]{64}$\"),  # a SHA-256 digest: the kit's one-time-token hash\n    re.compile(r\"[?&](token|invite|code|key)=\", re.IGNORECASE),  # a link that carries one\n)",
+          "signature": "SECRET_VALUE_PATTERNS: tuple[re.Pattern[str], ...] = (\n    re.compile(r\"^\\$2[abxy]?\\$\\d{2}\\$\"),  # bcrypt\n    re.compile(r\"^\\$argon2(id|i|d)\\$\"),  # Argon2\n    re.compile(r\"^\\$scrypt\\$|^\\$7\\$\"),  # scrypt\n    re.compile(r\"^(\\$pbkdf2|pbkdf2[_:$])\", re.IGNORECASE),  # PBKDF2 (passlib, Django)\n    re.compile(r\"^eyJ[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]*$\"),  # a JWT\n    re.compile(r\"^[0-9a-fA-F]{64}$\"),  # a SHA-256 digest: the kit's one-time-token hash\n    re.compile(r\"[?&](token|invite|code|key)=\", re.IGNORECASE),  # a link that carries one\n    # 0.5.1 (keksdose): a Web Push subscription's endpoint is a capability URL — anyone\n    # holding it can push to the device — and it may sit under a harmless key.\n    re.compile(\n        r\"^https://(fcm\\.googleapis\\.com|updates\\.push\\.services\\.mozilla\\.com\"\n        r\"|[a-z0-9.-]*\\.push\\.apple\\.com|[a-z0-9.-]*\\.notify\\.windows\\.com)/\",\n        re.IGNORECASE,\n    ),\n)",
           "doc": "Shapes no export and no audit detail holds legitimately."
         },
         {
@@ -1273,9 +1273,9 @@
             },
             {
               "name": "action",
-              "type": "AdminAction",
+              "type": "Annotated[AdminAction | str, Field(union_mode='left_to_right')]",
               "default": null,
-              "doc": ""
+              "doc": "An :class:`AdminAction`, or the app's own action as a string (keksdose's ``plan``):\n:func:`admin_action_record` takes both, so the row does too (0.5.1)."
             },
             {
               "name": "actor_id",
@@ -2193,7 +2193,7 @@
         {
           "name": "DEMO_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "DEMO_ERROR_DETAIL: Mapping[DemoErrorCode, str] = {\n    DemoErrorCode.DEMO_DISABLED: \"The demo is not available\",\n    DemoErrorCode.DEMO_RATE_LIMITED: \"Too many demos from this network\",\n    DemoErrorCode.DEMO_CAPACITY: \"The demo is full right now\",\n    DemoErrorCode.DEMO_NOT_READY: \"The demo is not ready\",\n    DemoErrorCode.DEMO_READ_ONLY: \"Not possible in the demo: it is read-only\",\n    DemoErrorCode.DEMO_REFUSED: \"Not possible in the demo\",\n}",
+          "signature": "DEMO_ERROR_DETAIL: Mapping[DemoErrorCode, str] = {\n    DemoErrorCode.DEMO_DISABLED: \"The demo is not available\",\n    DemoErrorCode.DEMO_RATE_LIMITED: \"Too many demos from this network\",\n    DemoErrorCode.DEMO_CAPACITY: \"The demo is full right now\",\n    DemoErrorCode.DEMO_NOT_READY: \"The demo is not ready\",\n    DemoErrorCode.DEMO_READ_ONLY: \"Not possible in the demo: it is read-only\",\n    DemoErrorCode.DEMO_REFUSED: \"Not possible for a demo account\",\n}",
           "doc": "The English ``detail`` of each code, for logs and API clients; the kit's pages show their\nown words for the code."
         },
         {

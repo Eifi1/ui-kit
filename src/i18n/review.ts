@@ -309,6 +309,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "register.rateLimited": [[], [30], [300]],
   "forgotPassword.rateLimited": [[], [30], [300]],
   "resetPassword.rateLimited": [[], [30], [300]],
+  "verifyEmail.rateLimited": [[], [30], [300]],
   "emailChange.emailTagUse": [["{{address}}"]],
   "emailChange.pending": [["{{newEmail}}"]],
   "emailChange.pendingHint": [["{{currentEmail}}"]],

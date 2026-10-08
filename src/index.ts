@@ -667,7 +667,7 @@ export {
   settingsHref,
 } from "./settings/settings-catalogue";
 export type { SettingsGroup, SettingsEntry, SettingsSearchEntriesOptions } from "./settings/settings-catalogue";
-export { DEFAULT_SETTINGS_LABELS } from "./settings/settings-labels";
+export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
 export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
 // Only the language follows the account (§6.2).
 export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
@@ -709,7 +709,13 @@ export {
   NEXT_PARAM,
   DEFAULT_LAST_VISITED_EXCLUDES,
 } from "./landing/routing";
-export type { RootEntryProps, RedirectIfAuthedProps, LastVisitedPageOptions, PathPattern } from "./landing/routing";
+export type {
+  RootEntryProps,
+  RedirectIfAuthedProps,
+  RoutingSession,
+  LastVisitedPageOptions,
+  PathPattern,
+} from "./landing/routing";
 export { PublicHeader } from "./landing/public-header";
 export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
 export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";

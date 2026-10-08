@@ -986,6 +986,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       resendIn: (seconds) => `Újraküldés ${n(seconds)} mp múlva`,
       resent: "Megerősítő e-mail elküldve",
       resendError: "Nem sikerült elküldeni a megerősítő e-mailt",
+      rateLimited,
       banner: "Kérjük, erősítse meg az e-mail-címét.",
       dismiss: "Most nem",
     },
@@ -1365,7 +1366,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         },
         security: {
           title: "Biztonság",
-          help: "Hogyan jelentkezik be: jelszó, ellenőrző kódok, hozzáférési kulcsok és munkamenetek.",
+          help: "Hogyan jelentkezik be, és hol van bejelentkezve.",
         },
         notifications: {
           title: "Értesítések",

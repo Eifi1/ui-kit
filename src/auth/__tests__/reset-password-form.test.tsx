@@ -207,6 +207,15 @@ describe("ResetPasswordForm — the form", () => {
     expect(await screen.findByText("This link is invalid or has expired.")).toBeInTheDocument();
   });
 
+  it("goes to the dead-link state on a coded token_expired too (0.31.1)", async () => {
+    const user = userEvent.setup();
+    const expired = vi.fn(() => Promise.reject({ response: { data: { code: "token_expired" } } }));
+    render(<ResetPasswordForm token={TOKEN} onCheck={live()} onSubmit={expired} />);
+    await fillPassword(user);
+    await user.click(screen.getByRole("button", { name: "Save password" }));
+    expect(await screen.findByText("This link is invalid or has expired.")).toBeInTheDocument();
+  });
+
   it("stays on the form with the password after any other failure, in the app's words if it has them", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn(() => Promise.reject(new Error("500")));

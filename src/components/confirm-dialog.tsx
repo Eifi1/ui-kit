@@ -6,6 +6,7 @@ import { TypedConfirmField, typedMatches } from "./danger-confirm";
 import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
 import { Button } from "./ui";
+import { useWriteLock } from "./write-lock";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -76,6 +77,14 @@ export interface ConfirmOptions {
    * keeps spaces too — for a phrase like "DELETE" whose contract is "exactly this".
    */
   typedMatch?: TypedMatch;
+  /**
+   * 0.31.1: the confirm button COMMITS, as `Button`'s `commit` does. Under a locked
+   * `WriteLockProvider` — read where `useConfirm` was called, not where the one dialog
+   * host sits — it is `aria-disabled` with the lock's reason, so a read-only page (a
+   * demo, a viewer's budget) can't confirm a delete through a dialog. One prop for the
+   * many confirm sites an app has (kastlan's 0.31 adoption counted ~23).
+   */
+  commit?: boolean;
 }
 
 export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -97,12 +106,21 @@ export function useConfirm(): ConfirmFn {
   if (!confirm) {
     throw new Error("useConfirm() must be called below a <ConfirmProvider>.");
   }
-  return confirm;
+  // The lock of the CALLER's place: the dialog host usually sits above the app's
+  // `WriteLockProvider`, so it could not read the lock itself.
+  const lock = useWriteLock();
+  return useCallback(
+    (options: ConfirmOptions) =>
+      confirm(options.commit && lock.locked ? ({ ...options, lockReason: lock.reason } as ConfirmOptions) : options),
+    [confirm, lock.locked, lock.reason],
+  );
 }
 
 interface Request extends ConfirmOptions {
   id: number;
   resolve: (answer: boolean) => void;
+  /** Set by {@link useConfirm} for a `commit` confirm under a locked provider. */
+  lockReason?: ReactNode;
 }
 
 export interface ConfirmProviderProps {
@@ -279,6 +297,7 @@ function ConfirmDialogView({
             type="button"
             variant={tone === "danger" ? "danger" : "primary"}
             disabled={!matches}
+            disabledReason={request.lockReason}
             onClick={() => {
               accepted.current = true;
               close();

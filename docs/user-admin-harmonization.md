@@ -273,14 +273,15 @@ card meanwhile. It saves through `PATCH /auth/me` and clears `name_incomplete`.
 - **Push and mail stop** for a deactivated account: every send path filters on
   `is_active` (keksdose's pushes didn't).
 - **The app's mode**, a setting:
-  - `after_days` (keksdose, Kurvenschmiede; `days = 30`). The erasure is a **Cloud
-    Scheduler → Cloud Run Job**, not code in the service: the services scale to zero, so
-    nothing in-process runs then. It is daily, idempotent, erases **one account per
+  - `after_days` (keksdose; `days = 30`). The erasure is a **Cloud Scheduler → Cloud
+    Run Job**, not code in the service: the services scale to zero, so nothing
+    in-process runs then. It is daily, idempotent, erases **one account per
     transaction** (a failure holds back no other), and writes `erase` to `admin_actions`
-    in the same transaction. keksdose adds it to its `jobs.py` registry; Kurvenschmiede
-    adds `kurvenschmiede-erase` beside its migrate job.
-  - `operator` (kastlan): no date. The operator's erasure is a **platform action**
-    (superuser, `type_email`, logged with no company), not a script.
+    in the same transaction. keksdose adds it to its `jobs.py` registry.
+  - `operator` (kastlan; **Kurvenschmiede since 2026-10-07**, Marcel's word in its
+    session): no date. The operator's erasure is an admin or platform action
+    (`type_email`, logged), not a script. Kurvenschmiede erases from `/admin`, with no
+    scheduler and no `kurvenschmiede-erase` job.
 - **Before it is allowed** (`409 {code}` otherwise):
   - the last admin can't request it (`last_admin`). In kastlan this is checked per
     company, and the answer names the companies. A **one-person company** is always its
@@ -425,7 +426,8 @@ app's scheduler or Cloud Scheduler); kastlan's platform superuser.
   - force password change and resend verification (now that verification exists);
   - its list becomes paged;
   - `admin_actions` replaces log lines;
-  - deletion in `after_days` mode, with the transfer question (§6.4);
+  - deletion in `operator` mode since 2026-10-07 (erased by an admin from `/admin`),
+    with the transfer question (§6.4);
   - the export and email change.
 
 ## 9. Settled after the reviews (2026-10-07)
@@ -504,3 +506,16 @@ Kurvenschmiede adopted next (feat/user-admin, 2026-10-07). Its notes, settled in
 9. **Tests submit the confirm dialogs' form** (`fireEvent.submit`), because their button
    submits through its `form` attribute, which jsdom doesn't follow (ADOPTING.md
    step 7).
+
+keksdose adopted last (feat/user-admin, 2026-10-08). Its notes:
+
+10. **The email-change confirm endpoint is anonymous** (`POST /auth/me/email/confirm
+    {token}`): the new mailbox may be opened on a device that isn't signed in. The token
+    is the proof. The page reuses the kit's `VerifyEmailStatus` with its own words until
+    a dedicated part exists.
+11. **In an RLS app, the deletion request's reads need the bypass.** Telling the guests
+    and the household guard's member count must read across tenants. keksdose's first
+    version failed open there (guests weren't told, and the guard counted nobody); it is
+    fixed with a Postgres test, and the rule holds for every RLS app.
+12. **App-specific actions on the audit row** (keksdose's `plan`): server-kit 0.5.1's
+    `AdminActionRow.action` takes them as strings, so no app widens the type itself.

@@ -975,6 +975,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       resendIn: (seconds) => `Enviar de nuevo en ${n(seconds)} s`,
       resent: "Correo de confirmación enviado",
       resendError: "No se pudo enviar el correo de confirmación",
+      rateLimited,
       banner: "Confirme su dirección de correo electrónico.",
       dismiss: "Ahora no",
     },
@@ -1363,7 +1364,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         },
         security: {
           title: "Seguridad",
-          help: "Cómo inicia sesión: contraseña, verificación en dos pasos, llaves de acceso y sesiones.",
+          help: "Cómo inicia sesión, y en qué dispositivos tiene la sesión abierta.",
         },
         notifications: {
           title: "Notificaciones",

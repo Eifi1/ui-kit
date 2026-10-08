@@ -144,7 +144,7 @@ export interface ResetPasswordFormProps
   forgotHref?: string;
   /** The app's words for a failed save (the device offline), or `undefined` for the
    *  kit's: `rateLimited` for a bare `429` (0.30.0), else `failed`. Not asked for
-   *  `token_invalid`, which is a state. */
+   *  `token_invalid` or `token_expired`, which are a state. */
   describeError?: (error: unknown) => ReactNode | undefined;
   /** The heading. Default `labels.title`; `null` draws none, for a page that puts it
    *  in `AuthLayout`'s `title` instead. */
@@ -299,7 +299,11 @@ export function ResetPasswordForm({
         },
         (error: unknown) => {
           setPending(false);
-          if (authErrorCode(error) === "token_invalid") {
+          // A link that died between the check and the save — used, or run out — is the
+          // dead-link state, under either code (0.31.1: keksdose mapped `token_expired`
+          // to it itself, `asDeadLink`).
+          const code = authErrorCode(error);
+          if (code === "token_invalid" || code === "token_expired") {
             setPassword("");
             setConfirm("");
             setPhase({ token, phase: { kind: "invalid" } });
