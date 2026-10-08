@@ -20,6 +20,7 @@ import { Tooltip } from "./tooltip";
 import { Button, Card, IconButton, Spinner } from "./ui";
 import { useWriteLock } from "./write-lock";
 import type { CardProps } from "./ui";
+import type { DisabledReasonDisplay } from "./field-parts";
 
 /**
  * Who holds one record, and the owner's every way of changing that — Kurvenschmiede's
@@ -225,6 +226,16 @@ function ShareRoleChip({ role }: { role: ShareRole | undefined }) {
 }
 
 /**
+ * A row's controls: the role toggle and the remove icon, or a pending grant's copy and
+ * revoke. Held to the row and wrapping inside it (0.32.1, the 360 px Extra-large sweep;
+ * docs/text-size-harmonization.md §4 "nothing overflows"): under a write lock on a touch
+ * screen or at Large the remove icon gives its reason as a line under it, up to 20rem
+ * wide, and a `shrink-0` box ran 31 px past a 390 px phone at Normal and 269 px past a
+ * 360 px one at Extra large. Where the controls fit in one row, nothing changes.
+ */
+const ROW_CONTROLS = "ms-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1";
+
+/**
  * A row's role choice saves on change, so it is a commit that cannot take `commit`:
  * under a write lock it is disabled, and the lock's reason is put in the kit Tooltip
  * around it — the same sentence the locked buttons beside it give.
@@ -278,6 +289,12 @@ export function SharePanel({
   const roleOf = (key: string | undefined) => roles.find((r) => r.key === key);
   const choosable = roles.length > 1;
   const canAdd = !readOnly && onAdd !== undefined;
+  // Under a write lock the form's Share button gives the lock's sentence as a line (on
+  // touch and at Large). A row's remove or revoke icon then keeps it in its tooltip, as
+  // the role toggle beside it does, rather than repeat the same line under every row
+  // (0.32.1, the 360 px Extra-large sweep). Without the form the rows' lines are the
+  // only place it is said, so they stay — and ROW_CONTROLS wraps them.
+  const rowReason: DisabledReasonDisplay = canAdd ? "tooltip" : "auto";
 
   const run = async (key: string, action: () => MaybePromise): Promise<boolean> => {
     setBusy(key);
@@ -457,7 +474,7 @@ export function SharePanel({
                       )}
                     </div>
                     {(changeable || (editable && onRemove)) && (
-                      <div className="ms-auto flex shrink-0 items-center gap-1">
+                      <div className={ROW_CONTROLS}>
                         {changeable && (
                           <LockedRoleChoice reason={lock.locked ? lock.reason : undefined}>
                             <ToggleGroup<string>
@@ -484,6 +501,7 @@ export function SharePanel({
                             // spinner and the write lock, which a "⋯" menu entry
                             // cannot, and its confirmation names the action in words.
                             labelVisible={false}
+                            disabledReasonDisplay={rowReason}
                             pending={busy === key}
                             disabled={busy !== null}
                             onClick={async () => {
@@ -529,7 +547,7 @@ export function SharePanel({
                       </div>
                     </div>
                     {(p.link || (!readOnly && onRevokePending)) && (
-                      <div className="ms-auto flex shrink-0 items-center gap-1">
+                      <div className={ROW_CONTROLS}>
                         {p.link && <CopyButton size="xs" tone="muted" text={p.link} label={labels.copyLink} />}
                         {!readOnly && onRevokePending && (
                           <IconButton
@@ -541,6 +559,7 @@ export function SharePanel({
                             // copy icon (which is an icon at every size), and the
                             // confirmation says it in words.
                             labelVisible={false}
+                            disabledReasonDisplay={rowReason}
                             pending={busy === key}
                             disabled={busy !== null}
                             onClick={async () => {

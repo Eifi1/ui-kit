@@ -3218,8 +3218,14 @@ export interface CardHeaderProps extends ComponentPropsWithoutRef<"div"> {
    * description instead of beside them. For an action that is wider than an icon —
    * a "Set up two-factor" button, a checkbox and a filter — which, kept in the
    * top-end column on a 390px phone, squeezed the title into a ribbon two words wide
-   * (keksdose's settings cards). Off by default: an icon action (the wizard summary's
-   * pencil) is narrow enough to stay beside the title at every width.
+   * (keksdose's settings cards). Off by default at Normal: an icon action (the wizard
+   * summary's pencil) is narrow enough to stay beside the title at every width.
+   *
+   * Unset, it stacks at Large and Extra large only (0.32.1, the 360 px Extra-large
+   * sweep; docs/text-size-harmonization.md §4): there an IconButton shows its label as
+   * text, so the "icon" action is a word-wide pill, and "Refresh sessions" beside
+   * "Sessions" ran 47 px past a 360 px phone. `false` keeps the action beside the title
+   * at every size, for an action the caller knows stays narrow (`labelVisible={false}`).
    */
   stackAction?: boolean;
 }
@@ -3239,7 +3245,18 @@ export type CardActionProps = ComponentPropsWithoutRef<"div">;
 export type CardContentProps = ComponentPropsWithoutRef<"div">;
 export type CardFooterProps = ComponentPropsWithoutRef<"div">;
 
-export function CardHeader({ className, stackAction = false, ...props }: CardHeaderProps) {
+/** {@link CardHeaderProps.stackAction}: one column under `sm`, and the action back into
+ *  the flow (DOM order, so after the description when it is written after it), at the
+ *  start edge. The descendant selector outranks CardAction's own placement classes. */
+const CARD_STACK_ACTION =
+  "max-sm:grid-cols-1 max-sm:[&>[data-slot=card-action]]:col-start-1 max-sm:[&>[data-slot=card-action]]:row-span-1 max-sm:[&>[data-slot=card-action]]:row-start-auto max-sm:[&>[data-slot=card-action]]:justify-self-start";
+/** The same at Large and Extra large only — `stackAction` unset (see its note). A
+ *  `large:` class over the scaled `max-sm`, so it costs no render and is right on the
+ *  first paint. */
+const CARD_STACK_ACTION_AT_LARGE =
+  "large:max-sm:grid-cols-1 large:max-sm:[&>[data-slot=card-action]]:col-start-1 large:max-sm:[&>[data-slot=card-action]]:row-span-1 large:max-sm:[&>[data-slot=card-action]]:row-start-auto large:max-sm:[&>[data-slot=card-action]]:justify-self-start";
+
+export function CardHeader({ className, stackAction, ...props }: CardHeaderProps) {
   const padded = useContext(CardPaddedContext);
   const compact = useContext(CardDensityContext) === "compact";
   return (
@@ -3261,11 +3278,8 @@ export function CardHeader({ className, stackAction = false, ...props }: CardHea
         "grid auto-rows-min items-start gap-1.5 [--card-header-cols:1fr] has-data-[slot=card-action]:[--card-header-cols:1fr_auto] grid-cols-[var(--card-header-cols,1fr)]",
         padded ? "px-0 pt-0" : "px-6 pt-6",
         compact && "gap-0.5",
-        // One column under `sm`, and the action back into the flow (DOM order, so
-        // after the description when it is written after it), at the start edge.
-        // The descendant selector outranks CardAction's own placement classes.
-        stackAction &&
-          "max-sm:grid-cols-1 max-sm:[&>[data-slot=card-action]]:col-start-1 max-sm:[&>[data-slot=card-action]]:row-span-1 max-sm:[&>[data-slot=card-action]]:row-start-auto max-sm:[&>[data-slot=card-action]]:justify-self-start",
+        stackAction === true && CARD_STACK_ACTION,
+        stackAction === undefined && CARD_STACK_ACTION_AT_LARGE,
         className,
       )}
       {...props}

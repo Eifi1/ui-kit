@@ -40,8 +40,10 @@ export function WizardSummary({
         <Card key={sIdx}>
           {/* CardHeader is a grid, and CardAction is the top-right column it
               reserves — the edit button has to go through it or it stacks under
-              the title instead of sitting beside it. */}
-          <CardHeader className="pb-2">
+              the title instead of sitting beside it. `stackAction={false}`: the pencil
+              is named by `aria-label` and stays an icon at Large, so it keeps its
+              place beside the title there too (0.32.1). */}
+          <CardHeader className="pb-2" stackAction={false}>
             <CardTitle className="text-base">{section.label}</CardTitle>
             {section.stepIndex !== undefined && onEditStep && (
               <CardAction>

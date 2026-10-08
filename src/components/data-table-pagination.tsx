@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { useLargeText } from "../hooks/use-large-text";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
 
@@ -32,8 +34,28 @@ interface PaginationProps {
   density?: "comfortable" | "compact";
 }
 
+/**
+ * How many page numbers flank the current one on the strip: ±2, and ±1 on a phone at
+ * Large and Extra large (0.32.1, the 360 px Extra-large sweep; docs/text-size-
+ * harmonization.md §4). At 150 % a number button is 42 px, and "‹ 1 2 3 … 494 ›" was
+ * 312 px on a 360 px phone's 262; one neighbour fewer on each side saves two buttons.
+ */
+const PAGE_WINDOW = 2;
+const PAGE_WINDOW_LARGE_PHONE = 1;
+
+/**
+ * The strip's two parts (0.32.1, same sweep, §4 "nothing overflows"). The arrows keep
+ * the ends; the numbers between them wrap, centred, when even the narrower window does
+ * not fit — a middle page of a long list ("1 … 249 250 251 … 494") at Extra large, or at
+ * Normal on a narrow phone, where the one-row strip ran past the screen. Where the
+ * strip fits it is one row, as before.
+ */
+const PAGE_STRIP = "flex min-w-0 max-w-full items-center gap-1";
+const PAGE_NUMBERS = "flex min-w-0 flex-wrap items-center justify-center gap-1";
+
 /** Footer for {@link DataTable}: range summary, page-size select, and a
- *  windowed page-number strip (first/last + ±2 around the current page). */
+ *  windowed page-number strip (first/last + ±2 around the current page, ±1 on a phone
+ *  at Large — see {@link PAGE_WINDOW}). */
 export function Pagination({
   page,
   totalPages,
@@ -57,15 +79,20 @@ export function Pagination({
   // summary is not formatted here — `pageRange` / `rowCount` take NUMBERS so the
   // translation can format them itself, alongside the words around them.
   const num = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const large = useLargeText();
+  const phone = usePhoneLayout();
+  const radius = large && phone ? PAGE_WINDOW_LARGE_PHONE : PAGE_WINDOW;
   const visible = useMemo(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i);
+    // Every page when that is no longer than the window would be (first, last, the
+    // current one, its neighbours and two ellipses).
+    if (totalPages <= 2 * radius + 3) return Array.from({ length: totalPages }, (_, i) => i);
     const set = new Set<number>([0, totalPages - 1, page]);
-    for (let d = 1; d <= 2; d++) {
+    for (let d = 1; d <= radius; d++) {
       if (page - d >= 0) set.add(page - d);
       if (page + d <= totalPages - 1) set.add(page + d);
     }
     return Array.from(set).sort((a, b) => a - b);
-  }, [page, totalPages]);
+  }, [page, totalPages, radius]);
 
   const items: (number | "ellipsis")[] = [];
   visible.forEach((p, idx) => {
@@ -108,7 +135,7 @@ export function Pagination({
         )}
       </div>
       {pageSize !== Infinity && totalPages > 1 && (
-        <div className="flex items-center gap-1">
+        <div data-slot="page-strip" className={PAGE_STRIP}>
           <button
             type="button"
             onClick={() => onPage(Math.max(0, page - 1))}
@@ -119,32 +146,34 @@ export function Pagination({
             {/* "Previous" points back along the line — left in LTR, right in RTL. */}
             <ChevronLeft className={cn("rtl:-scale-x-100", compact ? "size-3.5" : "size-4")} />
           </button>
-          {items.map((it, i) =>
-            it === "ellipsis" ? (
-              <span key={`e${i}`} className="px-1 text-[var(--text-placeholder)]">
-                …
-              </span>
-            ) : (
-              <button
-                key={it}
-                type="button"
-                onClick={() => onPage(it)}
-                // Which page you are on is carried only by a background colour
-                // otherwise, and the strip is a row of bare numbers with nothing
-                // else to tell them apart.
-                aria-current={it === page ? "page" : undefined}
-                className={cn(
-                  "rounded",
-                  compact ? "min-w-6 px-1.5 py-0" : "min-w-7 px-2 py-0.5",
-                  it === page
-                    ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                    : "hover:bg-[var(--bg-hover)]",
-                )}
-              >
-                {num.format(it + 1)}
-              </button>
-            ),
-          )}
+          <div data-slot="page-numbers" className={PAGE_NUMBERS}>
+            {items.map((it, i) =>
+              it === "ellipsis" ? (
+                <span key={`e${i}`} className="px-1 text-[var(--text-placeholder)]">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={it}
+                  type="button"
+                  onClick={() => onPage(it)}
+                  // Which page you are on is carried only by a background colour
+                  // otherwise, and the strip is a row of bare numbers with nothing
+                  // else to tell them apart.
+                  aria-current={it === page ? "page" : undefined}
+                  className={cn(
+                    "rounded",
+                    compact ? "min-w-6 px-1.5 py-0" : "min-w-7 px-2 py-0.5",
+                    it === page
+                      ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+                      : "hover:bg-[var(--bg-hover)]",
+                  )}
+                >
+                  {num.format(it + 1)}
+                </button>
+              ),
+            )}
+          </div>
           <button
             type="button"
             onClick={() => onPage(Math.min(totalPages - 1, page + 1))}

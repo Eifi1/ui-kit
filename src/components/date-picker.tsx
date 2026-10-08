@@ -207,6 +207,16 @@ function CustomTrigger({
 }
 
 /**
+ * The trigger's value wraps instead of truncating at Large and Extra large (0.32.1, the
+ * 360 px Extra-large sweep; docs/text-size-harmonization.md §4 "nothing truncates"). A
+ * range ("01/09/2026 – 30/09/2026") is 312 px at 150 %, and on a 360 px phone it read
+ * "01/09/2026 – 30/…" — its end, the half a reader needs, was the half cut off. It breaks
+ * at its spaces; a single date breaks only where it cannot fit at all. A `large:` class,
+ * so Normal keeps its one-line field.
+ */
+const VALUE_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+
+/**
  * The field-shaped button that opens the calendar.
  *
  * A component of its own rather than JSX inline in `Popover`'s `trigger` render prop,
@@ -320,7 +330,7 @@ function DateFieldTrigger({
 
   return (
     <button {...attrs}>
-      <span id={valueId} className={cn("truncate", !hasValue && "text-[var(--text-placeholder)]")}>
+      <span id={valueId} className={cn("truncate", VALUE_WRAP_AT_LARGE, !hasValue && "text-[var(--text-placeholder)]")}>
         {/* `|| " "` (a NON-BREAKING space) — triggerText is "" when there is no value and no
             placeholder was passed. An empty span has no line box, so the
             trigger collapses to its padding and sits shorter than every
@@ -557,6 +567,23 @@ function DateField({
     </div>
   );
 }
+
+/**
+ * The ‹ date › (today) row on a phone at Large and Extra large (0.32.1, the 360 px
+ * Extra-large sweep; docs/text-size-harmonization.md §4): the field takes the first line
+ * on its own, whole and with all four corners, and the buttons share the line under it
+ * as one joined strip. Three 2.5rem buttons are 180 px at 150 %, and on a 360 px phone
+ * they left the field 84 px — "Book… 0" for "Booking date 07/09/2026" — where a 360 px
+ * row would hold the date only by cutting it. `large:max-sm:`, the scaled phone width,
+ * so a tablet or a desktop at Large keeps the one row, and Normal is unchanged.
+ */
+const STEP_ROW_STACK_AT_LARGE = cn(
+  "large:max-sm:flex-wrap large:max-sm:gap-y-2",
+  "large:max-sm:[&>[data-slot=date-step-field]]:order-first large:max-sm:[&>[data-slot=date-step-field]]:basis-full",
+  "large:max-sm:[&>[data-slot=date-step-field]]:ms-0 large:max-sm:[&_[role=combobox]]:rounded-md",
+  // The buttons (each in its tooltip's wrapper) share the line under the field.
+  "large:max-sm:[&>span]:flex-1 large:max-sm:[&>span>button]:w-full",
+);
 
 /** One ‹ / › day-step button, sized to sit flush beside the field. */
 function StepButton({
@@ -1105,6 +1132,9 @@ export function DatePicker(props: DatePickerProps) {
       disabled={disabled}
       invalid={messages.isInvalid}
       className={step ? "min-w-0 flex-1" : className}
+      // Named for STEP_ROW_STACK_AT_LARGE; only in the row, so a caller's own
+      // `data-slot` on a bare field is left alone.
+      {...(wrapped ? { "data-slot": "date-step-field" } : {})}
       hasValue={Boolean(value)}
       triggerText={value ? render(value) : (placeholder ?? "")}
       onClear={() => onChange("")}
@@ -1173,6 +1203,7 @@ export function DatePicker(props: DatePickerProps) {
         // the trigger, which raising the trigger alone covered. Hover raises nothing: it
         // changes no border, and would let a hovered › cover a focused field's edge.
         "[&>*:focus-within]:z-20 [&>*:active]:z-20 [&>*:has([aria-invalid=true])]:z-10",
+        STEP_ROW_STACK_AT_LARGE,
         className,
       )}
     >
