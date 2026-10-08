@@ -12,7 +12,7 @@ import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { useEscapeKey } from "../hooks/use-dismiss";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 
@@ -201,9 +201,10 @@ function useNavHeightVar(
   // Re-run when the breakpoint flips. A ResizeObserver SKIPS an element that is not
   // being rendered, so the nav going `display:none` above `md` fires no callback and
   // would leave the last phone height published — a desktop footer would then sit 56px
-  // off the bottom after a live resize. The query is the one the nav's own `md:hidden`
-  // compiles to, so the two cannot disagree about where the boundary is.
-  const isMdUp = useMediaQuery("(min-width: 768px)", false);
+  // off the bottom after a live resize. `useBreakpoint("md")` is the nav's own `md:hidden`
+  // at the text size in force (0.32), so the two cannot disagree about where the
+  // boundary is — at Extra large both move to 72rem.
+  const isMdUp = useBreakpoint("md", false);
   useEffect(() => {
     const node = ref.current;
     const shell = shellRef.current;

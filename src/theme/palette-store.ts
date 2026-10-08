@@ -60,7 +60,12 @@ export function createPaletteStore(
   /** Apply the active preset's tokens to <html> as inline CSS custom properties,
    *  re-applying when the preset or the light/dark theme changes. Tailwind v4
    *  strips a bare root token block from the bundle, so this inline write from
-   *  the TS source of truth is what actually drives the colours. */
+   *  the TS source of truth is what actually drives the colours.
+   *
+   *  0.32: keeps More contrast. `applyTokenSet` reads `<html data-contrast>`, which the
+   *  contrast store sets, and steps the tokens itself; the contrast store re-applies
+   *  the set written here when the contrast changes (docs/text-size-harmonization.md
+   *  §10.5). Neither store needs the other. */
   function useApplyPalette(): void {
     const id = usePalette((s) => s.id);
     const mode = useTheme((s) => s.mode);

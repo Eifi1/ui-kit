@@ -4,7 +4,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ChangeEvent, Component
 import { cn } from "../lib/cn";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
@@ -1312,8 +1312,38 @@ function IconButtonElement(
   );
 }
 
+/**
+ * The 16 px floor on touch (docs/text-size-harmonization.md §10.1). iOS zooms the page
+ * when a field under 16 px takes focus, and keksdose's `maximum-scale=1` — which stopped
+ * it — goes so pinch zoom works again (WCAG 1.4.4). A zoomed page drops the keyboard
+ * inset to 0 (§10.2), so the zoom would put a pinned editor footer behind the keyboard
+ * (keksdose #154). So on a coarse pointer a field is at least 16 px, at every text size:
+ * `max()` leaves Large and Extra large alone, where `text-sm` is already 17.5 / 21 px.
+ *
+ * In px on purpose: the threshold is the browser's, in CSS px, whatever the root size.
+ * Font size only — the line height keeps `text-sm`'s ratio. Part of {@link FIELD_BASE};
+ * add it to any other text-entry control whose type is below 16 px.
+ */
+export const FIELD_TOUCH_TEXT = "pointer-coarse:text-[length:max(0.875rem,16px)]";
+
+/**
+ * The kit's focus frame (§5): a brand ring `--focus-ring-width` wide — 2 px, 3 px under
+ * More contrast (tokens.css) — on keyboard focus only. ONE frame instead of the hundred
+ * spelled-out `focus-visible:ring-2` copies, so the contrast setting can thicken all of
+ * them at once. Compose with `ring-inset` or `ring-offset-*` where a component needs it.
+ */
+export const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-[var(--brand)]";
+
+/** Just the width of {@link FOCUS_RING}, for a ring in another colour (a danger control's,
+ *  `--brand-contrast` on a filled button): `cn(FOCUS_RING_WIDTH, "focus-visible:ring-[var(--danger)]")`. */
+export const FOCUS_RING_WIDTH = "focus-visible:ring-[length:var(--focus-ring-width)]";
+
 export const FIELD_BASE =
   "block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:ring-[var(--brand)] " +
+  // §10.1: at least 16 px on a touch screen, or iOS zooms the page on focus.
+  FIELD_TOUCH_TEXT +
+  " " +
   // A field the user cannot change has to LOOK settled. Without this, `disabled`
   // dimmed the floating label and nothing else — FIELD_BASE's own
   // `text-[var(--text-primary)]` overrides the browser's grey — so a read-only value
@@ -1375,8 +1405,12 @@ export const FIELD_INVALID =
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
-/** The phone breakpoint the display treatment below keys off — the same one the
- *  numpad sheet uses, kept in one place so the two can't drift apart. */
+/** The phone breakpoint at Normal text size, as a media query.
+ *
+ *  @deprecated since 0.32 — it does not follow the text size (§3.3): at Large the CSS
+ *  `max-md:` reaches 959 px and this still stops at 767. Use `usePhoneLayout()`, which
+ *  agrees with `max-md:` at every size, or `breakpointQuery("max-md", scale)` where a
+ *  query string is needed. Kept exported, unchanged, for the apps that import it. */
 export const PHONE_QUERY = "(max-width: 767px)";
 
 /**
@@ -1385,8 +1419,9 @@ export const PHONE_QUERY = "(max-width: 767px)";
  * about reads as the thing itself, not as another boxed row in a stack.
  *
  * Every control that takes `variant="display"` — {@link Input}, `NumberInput`,
- * `AmountInput` — means exactly the same thing by it: the treatment applies below
- * {@link PHONE_QUERY} and the field is untouched above it, so a caller never has
+ * `AmountInput` — means exactly the same thing by it: the treatment applies in the
+ * phone layout (`usePhoneLayout()`, `max-md:` at the text size in force) and the field
+ * is untouched above it, so a caller never has
  * to ask the viewport, and a form can't end up half-treated across breakpoints.
  *
  * What stays, deliberately:
@@ -2091,7 +2126,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
         rest.onChange?.(e);
       }
     : rest.onChange;
-  const asDisplay = useMediaQuery(PHONE_QUERY, false) && variant === "display";
+  const asDisplay = usePhoneLayout() && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
   const [revealed, setRevealed] = useState(false);
@@ -3544,7 +3579,7 @@ export interface TabsProps<T extends string>
    * `onRemove`, `onAdd` — means exactly what it means on the horizontal strip; the
    * badge moves to the row's end.
    *
-   * **On a phone ({@link PHONE_QUERY}) it becomes the horizontal strip**, `wrap` and
+   * **On a phone (`usePhoneLayout()`) it becomes the horizontal strip**, `wrap` and
    * all, rather than staying a column. A side nav only works beside its content; on
    * a phone it has to go ABOVE it, and eight full-width rows there push the panel
    * the user picked below the fold on every visit — the two keksdose pages both
@@ -3639,7 +3674,7 @@ export function Tabs<T extends string>({
 }: TabsProps<T>) {
   const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
   // See `orientation`: a vertical strip is the horizontal one on a phone.
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   const vertical = orientation === "vertical" && !phone;
   const stripRef = useRef<HTMLDivElement>(null);
   const fade = useStripFade(stripRef);

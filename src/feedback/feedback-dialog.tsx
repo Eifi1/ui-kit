@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Button, Input, PHONE_QUERY, Select, Textarea } from "../components/ui";
+import { Button, Input, Select, Textarea } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Modal } from "../components/modal";
 import { isApplePlatform } from "../hooks/use-hotkey";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLabels } from "../i18n/kit-labels";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
@@ -262,7 +262,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   // `attachments="multiple"` only: the capture, apart from the picked/pasted files.
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
-  const isMobile = useMediaQuery(PHONE_QUERY, false);
+  const isMobile = usePhoneLayout();
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which

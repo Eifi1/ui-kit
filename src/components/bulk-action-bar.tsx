@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { OVERLAY_EXIT_MS, prefersReducedMotion } from "../hooks/use-close-transition";
 import { Button, IconButton } from "./ui";
 
@@ -38,8 +38,8 @@ export type BulkActionBarVariant = "floating" | "sticky" | "inline";
 /**
  * A variant per breakpoint, mobile first — `{ base: "floating", md: "sticky" }` is the
  * phone's floating card below 768px and the desktop's sticky bar from there up. The
- * breakpoints are Tailwind's (sm 640, md 768, lg 1024, xl 1280px), the ones the kit's
- * classes already use. keksdose's payees selection bar (payees-selection-bar.tsx)
+ * breakpoints are the ones the kit's classes use (sm 640, md 768, lg 1024, xl 1280px
+ * at Normal text size; since 0.32 they move with the text size, as `md:` does). keksdose's payees selection bar (payees-selection-bar.tsx)
  * computes exactly this with its own `useMediaQuery("(min-width: 768px)")`; every bar
  * that is a card on a phone and a strip on a desktop would repeat it.
  *
@@ -55,12 +55,9 @@ export interface ResponsiveBulkActionBarVariant {
   xl?: BulkActionBarVariant;
 }
 
-const BREAKPOINTS = [
-  ["xl", "(min-width: 1280px)"],
-  ["lg", "(min-width: 1024px)"],
-  ["md", "(min-width: 768px)"],
-  ["sm", "(min-width: 640px)"],
-] as const;
+/** Widest first: the first that matches and names a value wins. Each is the class's own
+ *  breakpoint at the text size in force (`useBreakpoint`), so `md` here is `md:` there. */
+const BREAKPOINTS = ["xl", "lg", "md", "sm"] as const;
 
 /** The variant in force: the widest breakpoint that matches AND names one, else
  *  `base`. The four queries are subscribed unconditionally — hooks cannot be skipped —
@@ -68,13 +65,13 @@ const BREAKPOINTS = [
  *  every query is false, so the bar renders its `base`, the phone's, first. */
 function useResolvedVariant(variant: BulkActionBarVariant | ResponsiveBulkActionBarVariant): BulkActionBarVariant {
   const matches = {
-    xl: useMediaQuery(BREAKPOINTS[0][1], false),
-    lg: useMediaQuery(BREAKPOINTS[1][1], false),
-    md: useMediaQuery(BREAKPOINTS[2][1], false),
-    sm: useMediaQuery(BREAKPOINTS[3][1], false),
+    xl: useBreakpoint("xl"),
+    lg: useBreakpoint("lg"),
+    md: useBreakpoint("md"),
+    sm: useBreakpoint("sm"),
   };
   if (typeof variant === "string") return variant;
-  for (const [key] of BREAKPOINTS) {
+  for (const key of BREAKPOINTS) {
     const v = variant[key];
     if (matches[key] && v !== undefined) return v;
   }

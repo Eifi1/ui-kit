@@ -22,6 +22,51 @@ export interface ViewportBox {
   height: number;
 }
 
+/**
+ * Whether the page is pinch-zoomed (docs/text-size-harmonization.md §10.2). A zoom
+ * shrinks `visualViewport.height` exactly like an on-screen keyboard does, so every
+ * reader below must tell the two apart — and while zoomed, the answer is "no keyboard":
+ * following a zoomed viewport would drag a pinned row on every pan, magnified, and the
+ * browser already scrolls a focused field into view. The epsilon absorbs a scale of
+ * 1.0000001 that some engines report at rest.
+ */
+function isZoomed(vv: VisualViewport): boolean {
+  return vv.scale > 1.001;
+}
+
+/** Below this the "keyboard" is rounding noise or a browser UI strip — `innerHeight` and
+ *  `visualViewport.height` routinely disagree by a pixel or two — and nothing should move
+ *  (keksdose's `MIN_KEYBOARD_PX`). */
+const MIN_KEYBOARD_PX = 100;
+
+export interface KeyboardInsetOptions {
+  /** The smallest inset that counts as a keyboard. Default 100 px. */
+  minimum?: number;
+}
+
+/**
+ * How many CSS px at the bottom of the LAYOUT viewport the on-screen keyboard covers, now
+ * — the one guarded reader (§10.2), so the apps' copies go (keksdose's
+ * `use-keyboard-inset.ts`):
+ *
+ * - 0 while the page is pinch-zoomed (`visualViewport.scale > 1`), where a smaller visual
+ *   viewport is the zoom, not a keyboard;
+ * - 0 below `minimum` (100 px), which is noise;
+ * - 0 without `visualViewport` (SSR, jsdom, an old browser) and under
+ *   `interactive-widget=resizes-content`, where `bottom: 0` already lands above the
+ *   keyboard.
+ *
+ * Read it on `visualViewport`'s `resize` and `scroll` events (window `resize` as the
+ * fallback); a bottom-anchored control lifts itself by the result.
+ */
+export function readKeyboardInset({ minimum = MIN_KEYBOARD_PX }: KeyboardInsetOptions = {}): number {
+  if (typeof window === "undefined") return 0;
+  const vv = window.visualViewport;
+  if (!vv || isZoomed(vv)) return 0;
+  const inset = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+  return inset >= minimum ? inset : 0;
+}
+
 function readViewport(): ViewportBox {
   if (typeof window === "undefined") return { top: 0, height: 0 };
   const vv = window.visualViewport;
@@ -118,6 +163,12 @@ export function anchoredPanelPlacement(
  * older browsers) or no keyboard taking a bite out of it. A caller then keeps its
  * static layout, which is right at every width where this does not apply — and is why
  * the desktop and the test suite see exactly the markup they saw before.
+ *
+ * Also `null` while the page is pinch-zoomed (0.32, §10.2), with the guard
+ * {@link readKeyboardInset} uses. A zoom shrinks the visual viewport like a keyboard,
+ * and following it gave PickerSheet the zoomed region's top and height but the page's
+ * full width — its close button sat off screen (kastlan, Kurvenschmiede). Zoomed, the
+ * sheet keeps its static full-screen box, which the reader can pan to like the page.
  */
 export function useVisualViewport(active: boolean): ViewportBox | null {
   const [box, setBox] = useState<ViewportBox | null>(null);
@@ -130,7 +181,9 @@ export function useVisualViewport(active: boolean): ViewportBox | null {
       // device-pixel-ratio that is not an integer (his phone reports 1.25), so a
       // strict comparison would report a "keyboard" of 0.4px on every phone and pin
       // a height where none was needed.
-      setBox(vv && vv.height < window.innerHeight - 1 ? { top: vv.offsetTop, height: vv.height } : null);
+      setBox(
+        vv && !isZoomed(vv) && vv.height < window.innerHeight - 1 ? { top: vv.offsetTop, height: vv.height } : null,
+      );
     };
     update();
     const vv = window.visualViewport;

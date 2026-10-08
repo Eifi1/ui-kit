@@ -2,10 +2,10 @@ import { forwardRef, useCallback, useId, useMemo, useRef, useState } from "react
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-select";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { cn } from "../lib/cn";
 import { currencyMinorDigits } from "../lib/format";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
@@ -332,7 +332,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
     // end padding keys off showCalc, so it tightens up automatically.
-    const isMobile = useMediaQuery(PHONE_QUERY, false);
+    const isMobile = usePhoneLayout();
     const showCalc = calculator && !disabled && !isMobile;
     const [focused, setFocused] = useState(false);
     // On mobile, focusing the field opens the numpad bottom sheet in place of the

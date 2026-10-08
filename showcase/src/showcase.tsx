@@ -2,8 +2,10 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useHref, useLocation, useParams } from "react-router";
 import {
+  ALargeSmall,
   ArrowLeft,
   ArrowRight,
+  Contrast,
   ListTree,
   MonitorSmartphone,
   PanelLeft,
@@ -21,7 +23,6 @@ import {
   LoadingState,
   OptionSwitcherMenu,
   PALETTES,
-  PHONE_QUERY,
   PageContents,
   PageContentsLayout,
   PaletteMenu,
@@ -31,10 +32,16 @@ import {
   TopBar,
   TourProvider,
   UiKitProvider,
-  useMediaQuery,
   useScrollSpy,
 } from "@eifi1/ui-kit";
 import type { AppShellNavItem, KitLinkComponent } from "@eifi1/ui-kit";
+// 0.32: from the source until the barrel names them (the coordinator wires src/index.ts).
+import { useAppearanceLabels } from "../../src/components/appearance-labels";
+import { usePhoneLayout } from "../../src/hooks/use-breakpoint";
+import { TEXT_SIZES, resolveTextSize } from "../../src/theme/text-size";
+import type { TextSize } from "../../src/theme/text-size";
+import { CONTRAST_MODES, resolveContrastMode } from "../../src/theme/contrast";
+import type { ContrastMode } from "../../src/theme/contrast";
 import { SectionBoundary } from "./lib/error-boundary";
 import { DevicePreview, isEmbedded } from "./lib/device-preview";
 import { useScrollRestoration } from "./lib/use-scroll-restoration";
@@ -44,11 +51,15 @@ import { GROUPS, HOME_SLUG, NAV, PAGES, RETIRED_SLUGS, groupOf, hasOverview } fr
 import type { ShowcasePage } from "./routes";
 import { LOCALE_OPTIONS, en, useGroupLabel, useLocale, usePageText, useT } from "./i18n";
 import {
+  useApplyContrast,
   useApplyPalette,
+  useApplyTextSize,
   useApplyTheme,
   useContentsPosition,
+  useContrastStore,
   usePalette,
   useSidebarStyle,
+  useTextSizeStore,
   useTheme,
 } from "./stores";
 
@@ -68,7 +79,7 @@ function useTranslatedNav(): AppShellNavItem[] {
   // phone") filled five lines over the content. There each pill takes the page's short
   // title instead. Above `md` the same items are the sidebar's, which has the room for
   // the full one — so the switch is by width, not a second list.
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  const phone = usePhoneLayout();
   return useMemo(
     () =>
       NAV.map((item, i) => {
@@ -101,9 +112,48 @@ function useTranslatedNav(): AppShellNavItem[] {
   );
 }
 
+/**
+ * The text size and the contrast, beside the theme and the palette (0.32,
+ * docs/text-size-harmonization.md §8): the page's own stores, so every page can be read at
+ * Large and Extra large and with More contrast. Inside the provider, so the menus speak
+ * the page's language through the kit's `appearance` labels.
+ */
+function AppearanceSwitches() {
+  const labels = useAppearanceLabels();
+  const size = resolveTextSize(useTextSizeStore((s) => s.size));
+  const setSize = useTextSizeStore((s) => s.setSize);
+  const contrast = resolveContrastMode(useContrastStore((s) => s.contrast));
+  const setContrast = useContrastStore((s) => s.setContrast);
+  return (
+    <>
+      <OptionSwitcherMenu<TextSize>
+        icon={<ALargeSmall className="size-4" />}
+        ariaLabel={labels.textSize}
+        title={labels.textSize}
+        heading={labels.textSize}
+        options={TEXT_SIZES.map((value) => ({ value, label: labels.textSizes[value] }))}
+        value={size}
+        onSelect={setSize}
+      />
+      <OptionSwitcherMenu<ContrastMode>
+        icon={<Contrast className="size-4" />}
+        ariaLabel={labels.contrast}
+        title={labels.contrast}
+        heading={labels.contrast}
+        options={CONTRAST_MODES.map((value) => ({ value, label: labels.contrastModes[value] }))}
+        value={contrast}
+        onSelect={setContrast}
+      />
+    </>
+  );
+}
+
 export function Showcase() {
   useApplyTheme();
   useApplyPalette();
+  // After the palette, so its tokens are stepped on the first effect pass too.
+  useApplyTextSize();
+  useApplyContrast();
   const mode = useTheme((s) => s.mode);
   const toggle = useTheme((s) => s.toggle);
   const paletteId = usePalette((s) => s.id);
@@ -198,6 +248,7 @@ export function Showcase() {
                 ariaLabel={t.chrome.palette}
                 heading={t.chrome.palette}
               />
+              <AppearanceSwitches />
               {/* Driven by the locale registry, so adding a dictionary to `LOCALES` adds
                   it here. Each entry is labelled with its ENDONYM — a reader looking for
                   Arabic is looking for العربية, not for the English word "Arabic" they

@@ -74,7 +74,7 @@ import {
   useKitLocale,
   type ChartTooltipPlacement,
 } from "../i18n/kit-labels";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { cn } from "../lib/cn";
 
 export interface SeriesChartSeries {
@@ -365,10 +365,6 @@ export interface SeriesChartX {
 /** Where the tooltip goes — see {@link SeriesChartTooltip.placement}. */
 export type SeriesChartTooltipPlacement = ChartTooltipPlacement;
 
-/** Below Tailwind's `sm` — where `"auto"` takes the tooltip off the plot. Narrower than
- *  the kit's `PHONE_QUERY` (767 px) on purpose: a tablet's plot is wide enough that the
- *  box beside the finger leaves the data in view; a phone's is not. */
-const TOOLTIP_READOUT_QUERY = "(max-width: 639px)";
 
 /**
  * The placement a chart actually uses: its own, else the provider's, else `"cursor"`;
@@ -1221,7 +1217,10 @@ function SeriesPlot({
   const [keyStop, setKeyStop] = useState(0);
   const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
   // Where the tooltip goes, and — off the plot — the row it is portalled into.
-  const phone = useMediaQuery(TOOLTIP_READOUT_QUERY, false);
+  // Below `sm` (`max-sm:`, at the text size in force) — where `"auto"` takes the tooltip
+  // off the plot. Narrower than the phone layout on purpose: a tablet's plot is wide
+  // enough that the box beside the finger leaves the data in view; a phone's is not.
+  const phone = useBreakpoint("max-sm", false);
   const placement = resolveTooltipPlacement(tooltip?.placement, useKitChartTooltipPlacement(), phone);
   const [readout, setReadout] = useState<HTMLDivElement | null>(null);
 

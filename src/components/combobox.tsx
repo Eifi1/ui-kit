@@ -2,12 +2,12 @@ import { Fragment, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Plus, X } from "lucide-react";
-import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useAnchorDir } from "./use-anchor-dir";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
   ComboboxFieldLabel,
@@ -339,7 +339,7 @@ export function Combobox(props: ComboboxProps) {
   // `backCloses` is the desktop half of live #309: the phone's list IS a
   // {@link PickerSheet}, which registers its own history entry, so registering a
   // second one here would cost two Back presses to dismiss one sheet.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
   const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
@@ -978,7 +978,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // See the twin above on why these hang off the generated id.
   const listboxId = `${generated}-listbox`;
   const optionId = (index: number) => `${generated}-option-${index}`;
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   // See the twin above: the phone sheet owns its own Back entry (live #309).
   const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
   const primaryOnly = usePrimaryPressOnly();

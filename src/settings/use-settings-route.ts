@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { useMediaQuery } from "../hooks/use-media-query";
-import { PHONE_QUERY } from "../components/ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { normalizeSettingsBase, visibleSettingsGroups } from "./settings-catalogue";
 import type { SettingsEntry, SettingsGroup } from "./settings-catalogue";
 
 /**
- * Which layout the settings page is in. `"auto"` follows the screen ({@link PHONE_QUERY},
+ * Which layout the settings page is in. `"auto"` follows the screen (`usePhoneLayout()`,
  * as `Tabs` does); `"desktop"` / `"phone"` pin one — for a preview of both side by side,
  * where the window is one width.
  */
@@ -187,7 +186,7 @@ export function useSettingsRoute<G extends string>(options: UseSettingsRouteOpti
   const { groups, entries, basePath, defaultGroup, aliases, layout = "auto" } = options;
   const location = useLocation();
   const navigate = useNavigate();
-  const narrow = useMediaQuery(PHONE_QUERY, false);
+  const narrow = usePhoneLayout();
   const phone = layout === "phone" || (layout === "auto" && narrow);
   const base = normalizeSettingsBase(basePath);
 

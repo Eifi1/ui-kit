@@ -13,8 +13,8 @@ import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { useMediaQuery } from "../hooks/use-media-query";
-import { FLOATING_LABEL_STATIC, PHONE_QUERY, Spinner } from "./ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { FLOATING_LABEL_STATIC, Spinner } from "./ui";
 import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
@@ -364,7 +364,7 @@ export function useComboboxCore<V extends string | number>({
   // old value, and tapping the search box or the X was equally fatal. `PickerSheet`
   // stops `mousedown` for exactly this reason, but that guard was written for
   // `useDropdown`'s listener and never covered this hook.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
   useEscapeKey(closeToTrigger, open);
 
@@ -589,7 +589,7 @@ export function ComboboxPanel<V extends string | number>({
   // The phone gets a full-screen sheet instead of an anchored panel (live #200).
   // Same core, same results, same handlers — only the container differs, so the
   // two presentations cannot drift in what they offer.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
   // Every row the keyboard can land on, the create row included — passed over, like a
   // disabled option, while a write lock holds it.
   const rows: readonly { disabled?: boolean }[] = showCreate

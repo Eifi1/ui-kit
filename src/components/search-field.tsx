@@ -2,7 +2,7 @@ import { forwardRef, useRef } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FIELD_BASE } from "./ui";
+import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./ui";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 interface SearchFieldOwnProps
@@ -62,7 +62,9 @@ interface SearchFieldOwnProps
 // itself) without even its baseline, because the header it sits in already draws
 // the line. No `text-*` size, on purpose — the input inherits the caller's.
 const SEARCH_INLINE =
-  "block w-full min-w-0 border-0 bg-transparent py-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:outline-none focus:ring-0";
+  "block w-full min-w-0 border-0 bg-transparent py-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:outline-none focus:ring-0 " +
+  // FIELD_BASE carries the 16 px touch floor (§10.1); the inline look needs it too.
+  FIELD_TOUCH_TEXT;
 
 /**
  * One of the two spellings is REQUIRED, and the union is how that survives the

@@ -1,5 +1,8 @@
 import { useCallback, useState } from "react";
 import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
+// 0.32: from the source until the barrel names them (the coordinator wires src/index.ts).
+import { createTextSizeStore } from "../../src/theme/text-size";
+import { createContrastStore } from "../../src/theme/contrast";
 
 /**
  * The showcase's own theme + palette stores.
@@ -18,6 +21,15 @@ export const PALETTE_KEY = "uikit-showcase-palette";
 export const { useTheme, useApplyTheme } = createThemeStore(THEME_KEY);
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
   createPaletteStore(PALETTE_KEY, useTheme);
+
+/** The text size and the contrast (0.32, docs/text-size-harmonization.md §6) — device
+ *  choices only: the showcase has no account, so the sizes in force are the device's
+ *  choice or the defaults (Normal, System). Pre-painted in `main.tsx` like the theme. */
+export const TEXT_SIZE_KEY = "uikit-showcase-text-size";
+export const CONTRAST_KEY = "uikit-showcase-contrast";
+
+export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore(TEXT_SIZE_KEY);
+export const { useContrastStore, useApplyContrast } = createContrastStore(CONTRAST_KEY);
 
 export const SIDEBAR_STYLE_KEY = "uikit-showcase-sidebar-style";
 

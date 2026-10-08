@@ -81,6 +81,7 @@ import type { SettingsLabels } from "../settings/settings-labels";
 import type { LandingLabels } from "../landing/landing-labels";
 import type { DemoLabels } from "../demo/demo-labels";
 import type { BillingLabels } from "../billing/billing-labels";
+import type { AppearanceLabels } from "../components/appearance-labels";
 import type { AccountStateLabels } from "../components/account-chips";
 import type { ShareCardLabels } from "../components/share-card";
 import type { ReauthDialogLabels } from "../components/reauth-dialog";
@@ -395,6 +396,8 @@ export interface UiKitLabels {
   demo: DemoLabels;
   /** 0.32.0: plans, standing, banners and the limit notice (docs/billing-harmonization.md §7). */
   billing: BillingLabels;
+  /** 0.32.0: the text-size and contrast settings (docs/text-size-harmonization.md §6). */
+  appearance: AppearanceLabels;
   /** 0.22.0: the screen-reader words of `Input` / `Textarea`'s `showCount` counter. */
   characterCount: CharacterCountLabels;
   /** 0.22.0: `CountrySelect`. Its list's "no results" and counts are `combobox`'s. */

@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
 import { useWriteLock } from "./write-lock";
@@ -46,8 +46,9 @@ export type FormActionsPlacement = "inline" | "sticky" | "dialog";
 /**
  * A placement per breakpoint, mobile first — `{ base: "sticky", md: "inline" }` is a
  * Save row stuck to the bottom of a phone's long form and in the flow under the last
- * field from 768px up, where the form fits. The breakpoints are Tailwind's (sm 640,
- * md 768, lg 1024, xl 1280px), as `BulkActionBar`'s `variant` breakpoints are, and
+ * field from 768px up, where the form fits. The breakpoints are the classes' (sm 640,
+ * md 768, lg 1024, xl 1280px at Normal text size, and 1.25 / 1.5 times that at Large /
+ * Extra large, as `md:` is since 0.32), as `BulkActionBar`'s `variant` breakpoints are, and
  * resolved the same way, in JS: the sticky row is positioned by inline style, which a
  * `md:` class cannot reach. keksdose switched `placement` on its own media query at
  * every long form for want of this. The breakpoints are the VIEWPORT's, not the
@@ -61,12 +62,9 @@ export interface ResponsiveFormActionsPlacement {
   xl?: FormActionsPlacement;
 }
 
-const BREAKPOINTS = [
-  ["xl", "(min-width: 1280px)"],
-  ["lg", "(min-width: 1024px)"],
-  ["md", "(min-width: 768px)"],
-  ["sm", "(min-width: 640px)"],
-] as const;
+/** Widest first: the first that matches and names a value wins. Each is the class's own
+ *  breakpoint at the text size in force (`useBreakpoint`), so `md` here is `md:` there. */
+const BREAKPOINTS = ["xl", "lg", "md", "sm"] as const;
 
 /** The placement in force: the widest breakpoint that matches AND names one, else
  *  `base`. The queries are subscribed unconditionally (hooks cannot be skipped); a
@@ -76,13 +74,13 @@ function useResolvedPlacement(
   placement: FormActionsPlacement | ResponsiveFormActionsPlacement,
 ): FormActionsPlacement {
   const matches = {
-    xl: useMediaQuery(BREAKPOINTS[0][1], false),
-    lg: useMediaQuery(BREAKPOINTS[1][1], false),
-    md: useMediaQuery(BREAKPOINTS[2][1], false),
-    sm: useMediaQuery(BREAKPOINTS[3][1], false),
+    xl: useBreakpoint("xl"),
+    lg: useBreakpoint("lg"),
+    md: useBreakpoint("md"),
+    sm: useBreakpoint("sm"),
   };
   if (typeof placement === "string") return placement;
-  for (const [key] of BREAKPOINTS) {
+  for (const key of BREAKPOINTS) {
     const p = placement[key];
     if (matches[key] && p !== undefined) return p;
   }

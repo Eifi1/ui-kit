@@ -15,10 +15,10 @@ import {
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID, PHONE_QUERY } from "./ui";
+import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker";
 import { Popover } from "./popover";
@@ -399,7 +399,7 @@ function DateField({
   width?: number;
   onClear: () => void;
   /** Open as a full-screen sheet instead of the popover — the picker decides when
-   *  (below {@link PHONE_QUERY}). */
+   *  (in the phone layout, `usePhoneLayout()`). */
   sheet?: boolean;
   /** The sheet's `FullBleedDialog backCloses`. */
   sheetBackCloses?: boolean;
@@ -1288,7 +1288,7 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    */
   renderTrigger?: (props: DateRangeTriggerRenderProps) => ReactNode;
   /**
-   * Below {@link PHONE_QUERY} the panel opens as a full-screen sheet (`FullBleedDialog`)
+   * In the phone layout (`usePhoneLayout()`) the panel opens as a full-screen sheet (`FullBleedDialog`)
    * with presets in a grid above the calendar and Apply pinned in the footer, instead
    * of the 440px popover that hung off a 360px screen (keksdose's report range field,
    * which hand-rolled exactly this). This is its `backCloses`: on by default, so Back
@@ -1615,7 +1615,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
       : `${a}${separator}…`
     : (placeholder ?? "");
   const hasPresets = Boolean(presets && presets.length > 0);
-  const sheet = useMediaQuery(PHONE_QUERY, false);
+  const sheet = usePhoneLayout();
   const commitRange = (f: string, t: string, presetId: string | undefined) => {
     setOwnPreset(presetId);
     // Two arguments when no preset is involved — exactly the 0.7 call, so a caller's

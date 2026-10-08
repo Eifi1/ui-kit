@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
+import { FIELD_TOUCH_TEXT } from "./ui";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -151,7 +152,7 @@ function CalculatorPanel({
         // is right-aligned in every script too — so both stay physical, pinned
         // with `dir="ltr"` rather than mirrored in a right-to-left form.
         dir="ltr"
-        className="block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]"
+        className={cn("block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]", FIELD_TOUCH_TEXT)}
       />
       <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}

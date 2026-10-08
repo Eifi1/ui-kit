@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CornerDownLeft, Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { PHONE_QUERY } from "../components/ui";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { FIELD_TOUCH_TEXT } from "../components/ui";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
@@ -191,7 +191,7 @@ interface CommandPaletteProps {
    *  which overrides it per row). Off by default. */
   redactLabels?: boolean;
   /**
-   * Below the phone breakpoint ({@link PHONE_QUERY}) the palette fills the screen:
+   * In the phone layout (`usePhoneLayout()`) the palette fills the screen:
    * no inset, no rounded panel, the field pinned at the top inside the safe areas and
    * the list scrolling under it, with a close button since there is no backdrop to tap.
    * On by default — a top-centred card at 70vh leaves little room once the keyboard is
@@ -267,7 +267,7 @@ export function CommandPalette({
     setQuery(next);
   };
   const dirty = submitMode && draft !== query;
-  const isPhone = useMediaQuery(PHONE_QUERY, false) && fullScreenOnPhone;
+  const isPhone = usePhoneLayout() && fullScreenOnPhone;
   const [results, setResults] = useState<CommandItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -471,8 +471,9 @@ export function CommandPalette({
             enterKeyHint={submitMode ? "search" : undefined}
             className={cn(
               "w-full bg-transparent py-3 outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
-              // 16px on a phone, or iOS zooms the page in on focus.
-              isPhone ? "text-base" : "text-sm",
+              // 16px on a phone, or iOS zooms the page in on focus — and on any other
+              // touch screen too (a tablet's popover), FIELD_TOUCH_TEXT (§10.1).
+              isPhone ? "text-base" : cn("text-sm", FIELD_TOUCH_TEXT),
             )}
           />
           {loading && <span className="shrink-0 text-[11px] text-[var(--text-placeholder)]">{l.loading}</span>}

@@ -4,7 +4,7 @@ import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID } from "./ui";
+import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./ui";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip } from "./tooltip";
@@ -1304,7 +1304,7 @@ export function ChipInput({
           aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
           aria-describedby={describedBy || undefined}
           aria-invalid={isInvalid || !!rejected || undefined}
-          className="min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default"
+          className={cn("min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
             them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's

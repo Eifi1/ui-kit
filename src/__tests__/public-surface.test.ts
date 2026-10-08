@@ -182,7 +182,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // metaContent, RootEntry, RedirectIfAuthed, the last-visited page, DemoStart,
   // DemoBanner, DemoEnded, the countdown, isDemoSession; three DEFAULT_*_LABELS.
   // 0.31.1 (+1): useSettingsLabels.
-  ["@eifi1/ui-kit", barrel, 779],
+  // 0.32.0 (+62): text size and contrast (docs/text-size-harmonization.md §8) — the
+  // stores, pre-paint, scales and inline snippet, useBreakpoint / usePhoneLayout,
+  // useAccountAppearance, TextSizeSetting / ContrastSetting, FOCUS_RING,
+  // FIELD_TOUCH_TEXT, DIALOG_GUTTER, readKeyboardInset, the Toaster offsets; billing
+  // (docs/billing-harmonization.md §7) — PlanPicker / PlanCard, SubscriptionStatusChip,
+  // BillingBanner, PlanLimitNotice, SubscriptionActions, the price and standing
+  // helpers, combineWriteLocks, isPlanLimit, isBillingError; two DEFAULT_*_LABELS.
+  ["@eifi1/ui-kit", barrel, 841],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

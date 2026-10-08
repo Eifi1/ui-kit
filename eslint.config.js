@@ -20,6 +20,11 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
  * If a new rule arrives with a backlog, record the count here as a `warn` and clear it
  * before the next release. Don't let warnings accumulate.
  */
+/** `min-[2400px]:`, `max-[767.5px]:` — an arbitrary px media variant in a class string. */
+const ARBITRARY_PX_MEDIA = String.raw`/(^|[\s:])(min|max)-\[[0-9.]+px\]:/`;
+const ARBITRARY_PX_MEDIA_MESSAGE =
+  "An arbitrary px media variant does not follow the text size (§10.4). Use a named breakpoint (sm … 3xl) or useBreakpoint().";
+
 export default tseslint.config(
   { ignores: ["dist/**", "node_modules/**", "showcase/dist/**", "coverage/**"] },
 
@@ -95,6 +100,16 @@ export default tseslint.config(
       "react-hooks/preserve-manual-memoization": "error",
       "react-hooks/set-state-in-effect": "error",
       "react-hooks/immutability": "error",
+
+      // 0.32 (docs/text-size-harmonization.md §10.4): an arbitrary px media variant
+      // (`min-[2400px]:`, `max-[600px]:`) is the one breakpoint tokens.css cannot scale
+      // with the text size, so a layout keyed to it keeps its desktop shape at 150 %.
+      // Use a named breakpoint — `3xl:` is keksdose's 2400px — or `useBreakpoint`.
+      "no-restricted-syntax": [
+        "error",
+        { selector: `Literal[value=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+        { selector: `TemplateElement[value.raw=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+      ],
     },
   },
 

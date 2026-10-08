@@ -19,11 +19,17 @@ export { useMediaQuery } from "./hooks/use-media-query";
 export { useBodyScrollLock } from "./hooks/use-body-scroll-lock";
 export { useAnchoredRect } from "./hooks/use-anchored-rect";
 export type { AnchorRect } from "./hooks/use-anchored-rect";
-export { useAnchoredPanel, anchoredPanelPlacement, useVisualViewport } from "./hooks/use-anchored-panel";
+export {
+  useAnchoredPanel,
+  anchoredPanelPlacement,
+  useVisualViewport,
+  readKeyboardInset,
+} from "./hooks/use-anchored-panel";
 export type {
   AnchoredPanel,
   AnchoredPanelOptions,
   ViewportBox,
+  KeyboardInsetOptions,
 } from "./hooks/use-anchored-panel";
 export { useEscapeKey, useOutsideClick } from "./hooks/use-dismiss";
 // Focus containment for an overlay, and a live region for a change that moves no focus.
@@ -260,7 +266,14 @@ export type {
 // The toast layer over sonner (an OPTIONAL peer, loaded lazily): `toast` mirrors sonner's
 // API so apps migrate by swapping the import; `<Toaster>` carries the placement, theme,
 // tones and z-index both apps had wired by hand.
-export { toast, Toaster, DEFAULT_TOAST_LABELS, TOAST_ACTION_DURATION } from "./components/toast";
+export {
+  toast,
+  Toaster,
+  DEFAULT_TOAST_LABELS,
+  TOAST_ACTION_DURATION,
+  TOASTER_OFFSET_TOP,
+  TOASTER_OFFSET_BOTTOM,
+} from "./components/toast";
 export type {
   ToastId,
   ToastAction,
@@ -670,7 +683,8 @@ export {
 export type { SettingsGroup, SettingsEntry, SettingsSearchEntriesOptions } from "./settings/settings-catalogue";
 export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
 export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
-// Only the language follows the account (§6.2).
+// The language follows the account (§6.2); since 0.32 so do the text size and the
+// contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
 export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
 export type {
   UseAccountLanguageOptions,
@@ -741,6 +755,24 @@ export type {
   LegalSectionOwner,
   LegalDisclaimerVariant,
 } from "./components/legal-page";
+
+// ── 0.32.0: text size and contrast (docs/text-size-harmonization.md) ──
+export * from "./theme/text-size";
+export * from "./theme/contrast";
+export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM } from "./hooks/use-breakpoint";
+export type { Breakpoint, BreakpointVariant } from "./hooks/use-breakpoint";
+export { useAccountAppearance, resolveAccountAppearance } from "./settings/use-account-appearance";
+export type {
+  AppearanceSource,
+  AccountAppearanceFields,
+  DeviceAppearance,
+  AccountAppearancePatch,
+  ResolvedAccountAppearance,
+  UseAccountAppearanceOptions,
+  AccountAppearance,
+} from "./settings/use-account-appearance";
+export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
+export type { AppearanceLabels } from "./components/appearance-labels";
 
 // ── 0.32.0: billing — plans, standing, banners, the limit notice (docs/billing-harmonization.md §7) ──
 export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from "./billing/billing-labels";

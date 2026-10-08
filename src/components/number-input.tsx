@@ -2,13 +2,13 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField, PHONE_QUERY } from "./ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { CURRENCIES } from "./currency-select";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLocale } from "../i18n/kit-labels";
 
 interface NumberInputProps {
@@ -302,7 +302,7 @@ export function NumberInput(props: NumberInputProps) {
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
-  const isMobile = useMediaQuery(PHONE_QUERY, false);
+  const isMobile = usePhoneLayout();
   const asDisplay = isMobile && variant === "display";
   const showCalc = calculator && !disabled && !isMobile;
   const [focused, setFocused] = useState(false);

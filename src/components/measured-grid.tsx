@@ -10,7 +10,7 @@ import { cellNumber, isCellNumber, parseRows, splitRow } from "../lib/table-text
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { useWindowedRows } from "../hooks/use-windowed-rows";
 import { ToggleGroup } from "./toggle-group";
-import { Button, FIELD_INVALID, Textarea } from "./ui";
+import { Button, FIELD_INVALID, FIELD_TOUCH_TEXT, Textarea } from "./ui";
 
 /**
  * A measured table: a fixed set of numeric columns, typed cell by cell or pasted as a
@@ -672,6 +672,8 @@ function CellGrid({
                           aria-invalid={bad || undefined}
                           className={cn(
                             "block size-full bg-transparent px-2 text-end tabular-nums text-[var(--text-primary)] outline-none",
+                            // A cell is a field: 16 px on touch, or iOS zooms on focus (§10.1).
+                            FIELD_TOUCH_TEXT,
                             // Arriving selects the text (typing replaces it); editing
                             // in place is the plain surface with a caret in it.
                             "focus:bg-[var(--brand-bg)] focus:ring-2 focus:ring-inset focus:ring-[var(--brand)]",

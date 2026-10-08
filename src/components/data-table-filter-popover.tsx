@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { FIELD_TOUCH_TEXT } from "./ui";
 import { MiniCalendar } from "./mini-calendar";
 import { dateRangePresets } from "../lib/dates";
 import { resolveFilter } from "./data-table-filters";
@@ -71,7 +72,9 @@ export function FilterPopover<T>({
   // border going from --border to --border-strong is not a location. The ring is, and it
   // is the package's brand focus colour, as on every field in ui.tsx.
   const inputBase =
-    "block w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]";
+    "block w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] " +
+    // §10.1: a filter field is a field — 16 px on touch, or iOS zooms on focus.
+    FIELD_TOUCH_TEXT;
   const buttonBase =
     "rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
 

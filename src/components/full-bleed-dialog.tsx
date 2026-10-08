@@ -11,6 +11,17 @@ import { useCloseTransition } from "../hooks/use-close-transition";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 
 /**
+ * The padding around the dialog's scrolling body, as a CSS length (0.32,
+ * docs/text-size-harmonization.md §10.11). Exported because a caller's sticky footer has
+ * to reach across it: Chrome resolves a sticky offset against the scrollport's CONTENT
+ * box, so a pinned row sits this far short of the panel's edge unless it cancels it
+ * (keksdose's editor footer). In rem, so it grows with the text size — keksdose's px
+ * copy (`SCROLLER_GUTTER_PX = 12`) was 3–6 px off at 125/150 %. Use it in `calc()`:
+ * `bottom: calc(${inset}px - ${DIALOG_GUTTER})`.
+ */
+export const DIALOG_GUTTER = "0.75rem";
+
+/**
  * Named and exported, because `ComponentProps<typeof FullBleedDialog>` was the only way
  * to say "the props of this" and five call sites across keksdose and kastlan had already
  * written one (audit §api-design).
@@ -246,12 +257,15 @@ export function FullBleedDialog({
             <X className="size-5" />
           </button>
         </div>
-        {/* px-3, not px-4: every pixel of chrome here is width the form fields lose
-            on a phone (feedback #32). The body is the only thing that scrolls, so the
-            header stays put and the page underneath cannot move at all. */}
+        {/* DIALOG_GUTTER (0.75rem, the px-3 py-3 it was), not px-4: every pixel of
+            chrome here is width the form fields lose on a phone (feedback #32). The
+            body is the only thing that scrolls, so the header stays put and the page
+            underneath cannot move at all. */}
         {/* `min-h-0` so it is the BODY that gives way to a footer, not the footer that
             is pushed off the bottom edge. */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ padding: DIALOG_GUTTER }}>
+          {children}
+        </div>
         {footer !== undefined && footer !== null && footer !== false && (
           <div
             data-full-bleed-footer=""

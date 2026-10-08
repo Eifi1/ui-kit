@@ -33,7 +33,7 @@ import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
@@ -1575,10 +1575,11 @@ export function DataTable<T>({
   const columnsCountLabel = rowActions
     ? labels.columnsCount(visibleCount - 1, totalCount - 1)
     : labels.columnsCount(visibleCount, totalCount);
-  // Match Tailwind's `md` breakpoint: we render either the table or the card
-  // list — never both — so we don't double up DOM nodes that screen readers and
-  // integration tests would have to disambiguate.
-  const isMdUp = useMediaQuery("(min-width: 768px)", true);
+  // Match the `md:` breakpoint at the text size in force: we render either the table or
+  // the card list — never both — so we don't double up DOM nodes that screen readers and
+  // integration tests would have to disambiguate. The same answer as `usePhoneLayout()`
+  // (inverted), which an app's own phone checks use (§10.4).
+  const isMdUp = useBreakpoint("md", true);
   // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
   const desktopScroller = useRef<HTMLDivElement | null>(null);
   const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
