@@ -292,8 +292,11 @@ and **`expires_at`**. The checks run in this order (kastlan's):
 
 ### 5.5 The end
 
-- At `expires_at`, or on **any 401 while the session is a demo**, the client clears the
-  session and replaces to **`/demo/ended`**, never to `/login`.
+- At `expires_at`, or on **a 401 from an authenticated request while the session is a
+  demo**, the client clears the session and replaces to **`/demo/ended`**, never to
+  `/login`. **The signed-out sign-in steps are excluded** (0.31.1, keksdose): a demo may
+  open `/login` (§5.6), and a wrong password there answers `401 invalid_credentials`,
+  which must not end the demo.
 - **`DemoEnded`** (on `AuthLayout`, noindex): "The demo has ended.", one line ("Sample
   data is reset regularly; your own work from the demo is deleted." for model S), and
   three actions: **"Start a new demo"** (`/demo`), **"Request access"**, **"Sign in"**.
@@ -367,10 +370,14 @@ The kit knows them (`DemoErrorCode`, read by `authErrorCode` / `isAuthError`).
 
 1. **At the auth dependency:** for a demo user, every method other than GET, HEAD and
    OPTIONS is a 403 `demo_read_only`, except **the app's allow-list**: kastlan
-   `POST /auth/logout`; keksdose `POST /assistant/ask` and
-   `DELETE /assistant/threads/{id}` (the per-demo assistant budget of §6.4; it has no
-   logout route). server-kit's `demo_write_allowed(method, path, allow=…)` makes the
-   decision, with an empty default; the app's `get_current_user` calls it.
+   `POST /api/v1/auth/logout`; keksdose `POST /api/v1/assistant/ask` and
+   `DELETE /api/v1/assistant/threads/{id}` (the per-demo assistant budget of §6.4; it has
+   no logout route). An app that answers a demo's crash report with 202 `stored: false`
+   instead of using the kit's crash reporter `suppress` also lists
+   `POST /api/v1/feedback/crash` (keksdose). The entries are the **full request path**,
+   prefix included, since that is what `demo_write_allowed(method, path, allow=…)`
+   matches. It makes the decision, with an empty default; the app's `get_current_user`
+   calls it.
 2. **At the database:** the demo's requests run in a read-only transaction (Postgres
    `SET TRANSACTION READ ONLY`, kept for every later transaction of the request by an
    `after_begin` listener). A write hidden in a GET then fails at the database. This is
@@ -383,7 +390,7 @@ role check misses is still refused.
 
 ### 6.4 Never for a demo user (both models)
 
-Answered with 403 `demo_refused` (`refuse_demo(user, what)`), or silently skipped where
+Answered with 403 `demo_refused` (`refuse_demo(user.is_demo, what)`), or silently skipped where
 noted. **Layer 1 of §6.3 catches only writes**, so every route below that reads by GET
 (the account export, for one) calls `refuse_demo` itself, and the app's demo test sends
 each of them.
@@ -472,7 +479,7 @@ the banner at 23 h / 50 min / 4 min, and `DemoEnded`.
   other per-IP limit. It lives in `eifi1_server_kit.limiter`, beside the limiter;
 - `demo_address(domain)`, `is_demo_address(email)`, `demo_password()`;
 - `demo_expires_at(created_at, settings)` and `stale_cutoff(now, settings)`;
-- `demo_write_allowed(method, path, allow=…)` (§6.3) and `refuse_demo(user, what)` →
+- `demo_write_allowed(method, path, allow=…)` (§6.3) and `refuse_demo(user_is_demo, what)` →
   `DemoError("demo_refused")`;
 - `DemoErrorCode`, handled by `install_contract_error_handlers`.
 

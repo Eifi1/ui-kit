@@ -506,3 +506,16 @@ Kurvenschmiede adopted next (feat/user-admin, 2026-10-07). Its notes, settled in
 9. **Tests submit the confirm dialogs' form** (`fireEvent.submit`), because their button
    submits through its `form` attribute, which jsdom doesn't follow (ADOPTING.md
    step 7).
+
+keksdose adopted last (feat/user-admin, 2026-10-08). Its notes:
+
+10. **The email-change confirm endpoint is anonymous** (`POST /auth/me/email/confirm
+    {token}`): the new mailbox may be opened on a device that isn't signed in. The token
+    is the proof. The page reuses the kit's `VerifyEmailStatus` with its own words until
+    a dedicated part exists.
+11. **In an RLS app, the deletion request's reads need the bypass.** Telling the guests
+    and the household guard's member count must read across tenants. keksdose's first
+    version failed open there (guests weren't told, and the guard counted nobody); it is
+    fixed with a Postgres test, and the rule holds for every RLS app.
+12. **App-specific actions on the audit row** (keksdose's `plan`): server-kit 0.5.1's
+    `AdminActionRow.action` takes them as strings, so no app widens the type itself.

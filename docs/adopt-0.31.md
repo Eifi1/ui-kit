@@ -16,7 +16,7 @@ with its landing page.
 
 ## 0.31.1 (with server-kit 0.5.1)
 
-A patch from keksdose's 0.30 bump and kastlan's 0.31 adoption. Nothing to change unless
+A patch from the three apps' 0.30 and 0.31 adoptions. Nothing to change unless
 you want to drop a workaround.
 
 - **`useConfirm({…, commit: true})`:** the confirm button takes the write lock of the place
@@ -35,7 +35,21 @@ you want to drop a workaround.
 - **server-kit 0.5.1:**
   - `Budget.limiter()` defaults its clock to `time.monotonic`;
   - `refuse_demo` says "Not possible for a demo account: …", which reads right when an
-    admin acts on a demo account too.
+    admin acts on a demo account too;
+  - `AdminActionRow.action` takes an app's own action as a string (keksdose's `plan`);
+  - `revoked` and `valid` are fact suffixes, so `api_tokens_revoked` passes the secret
+    check;
+  - a Web Push endpoint counts as a secret under any key. Plant known secrets in your
+    export test as well (README);
+  - `client_ip` logs once when `X-Forwarded-For` is shorter than `trusted_hops`. Measure
+    your hops, then check the log.
+- **Contract fixes:**
+  - **the demo's 401 rule** skips the signed-out sign-in steps, so a wrong password on
+    `/login` doesn't end a demo;
+  - **the allow-list entries** are full request paths (`/api/v1/…`);
+  - **`refuse_demo(user.is_demo, what)`**;
+  - **the email-change confirm** is anonymous and reuses `VerifyEmailStatus`;
+  - **an RLS app's deletion request** reads with the bypass.
 
 - **`AdminPerson` reads server-kit's `PersonRef` as it serialises** (`first_name` /
   `last_name`, beside the kit's `first` / `last`). Hand the server's `invited_by` or an
