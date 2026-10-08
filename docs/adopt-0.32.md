@@ -216,6 +216,17 @@ wheel.
 - **`billing.notConfigured` and `billing.disabled`:** the words for `billing_not_configured`
   and `billing_disabled` in seven languages (`useBillingLabels()`). Your own can go.
 
+- **`max-*` breakpoint queries are range syntax:** `useBreakpoint("max-md")` and
+  `usePhoneLayout()` now ask `(width < 768px)` (scaled with the text size), the exact
+  complement of `(min-width: 768px)`. DataTable and TranslationReviewPanel ask
+  `usePhoneLayout()`. At a fractional viewport width the old pair left a gap where
+  DataTable said phone and `usePhoneLayout` didn't. **Your tests:** a `matchMedia` stub
+  that matches the string `"max-width: 767px"`, or fakes a wide screen by answering every
+  query `true`, now flips. Answer `wide !== query.includes("width <")` instead. The
+  deprecated `PHONE_QUERY` keeps its old string.
+- **Labels wrap at Large:** StatusDot, Chip and InlineEditField's display, instead of
+  truncating. SwipeableRow's hidden keyboard buttons no longer widen the page. The dark
+  scrollbar follows the palette and More contrast.
 - **New labels and exports:** `appearance.saveFailed` (the words for a pick the account
   couldn't keep, which `useAccountAppearance` leaves to you); the admin log's `plan`
   action (server-kit's `AdminAction.PLAN`) in seven languages; `remPx` / `useRemPx` and
