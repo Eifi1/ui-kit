@@ -1,6 +1,7 @@
 # Text size and contrast — harmonisation plan
 
-Status: **2026-10-07, draft for review.** Led from ui-kit at Marcel's request. It runs in
+Status: **2026-10-07, reviewed.** All three apps answered the same day; §10 records what
+they settled, and it wins over the sections above where they differ. Led from ui-kit at Marcel's request. It runs in
 parallel with the billing round (`docs/billing-harmonization.md`), and ships as ui-kit 0.32
 or the next minor after the reviews.
 
@@ -177,8 +178,8 @@ setting is on "System".
 ## 7. Per repo (summary; the reviews refine it)
 
 - **keksdose** (first adopter, as it offered):
-  - remove `maximum-scale=1`; teach `use-keyboard-inset` to read a zoomed viewport
-    (`visualViewport.scale > 1`) and keep the bottom editor above the keyboard then;
+  - remove `maximum-scale=1` and the three outdated comments about it; the keyboard inset
+    stays 0 while zoomed (§9, §10.2), as `use-keyboard-inset` already does;
   - move its appearance card onto the settings layout (due from 0.31) with the two new
     settings;
   - its 39 px text sites, 13 JS px queries and 16 chart heights;
@@ -236,10 +237,91 @@ server-kit 0.6: the two account fields and their vocabularies (§6).
 - **Apps that bypass the tokens** don't follow the contrast setting until their
   hard-coded colours move.
 
-## 9a. Questions for the reviews
+## 10. Settled after the reviews (2026-10-07)
 
-1. Is four the right maximum for the bottom bar at Large, and which four in your app?
-2. Where would `IconButton`'s visible label break your layout, so that you need
-   `labelVisible={false}`?
-3. Do your windowed lists or canvases need anything beyond `useTextSize().scale`?
-4. Anything that must stay fixed px in your app that §3.2 would move?
+All three apps reviewed the draft (dbc957e) the same day. Where this list and the
+sections above differ, this list wins.
+
+1. **iOS zoom-on-focus** (keksdose): a field under 16 px makes iOS zoom the page on
+   focus, which `maximum-scale=1` used to suppress. Once keksdose drops it, that zoom
+   would hide the pinned editor footer behind the keyboard (keksdose #154). **The kit's
+   fields are at least 16 px on touch** (`pointer: coarse`) at every size. At Large and
+   above they are 17.5 px anyway.
+2. **A zoomed page keeps the keyboard inset at 0** (§9 stands; §7's earlier line is
+   corrected). Following a zoomed viewport would drag the pinned row on every pan. The
+   kit exports one guarded reader, `readKeyboardInset()`, and its own `useVisualViewport`
+   (PickerSheet) uses the same guard. Today a zoomed page puts PickerSheet's close
+   button off screen in kastlan and Kurvenschmiede. keksdose's local copy goes.
+3. **First paint uses the last known account value** (keksdose):
+   - `applyPersistedTextSize(key, {account})` and `applyPersistedContrast(key,
+     {account})` fall back to the account value the app persisted with its user, so a
+     device without its own choice doesn't paint Normal and then jump. This works
+     offline too;
+   - the kit exports a tiny inline `<head>` snippet for a boot splash painted from
+     `index.html`, and the stored format is frozen for it;
+   - the splash's px move to rem.
+4. **Breakpoints:** attribute-scoped media variants wrapped in `:where()`, not the body as
+   a container (fixed overlays and self-queries would break).
+   - Arbitrary px media variants (`min-[2400px]`) are linted; keksdose's four become a
+     named `3xl`.
+   - `usePhoneLayout()` is the single answer: the DataTable full-screen dialog and an
+     app's own phone checks (keksdose's sticky editor footer) use the same one.
+   - Pointer and display-mode queries stay `useMediaQuery`.
+5. **Contrast mechanics** (keksdose):
+   - `applyTokenSet` writes the text and border tokens inline on `<html>`, so the
+     contrast step is applied inside it, not by a CSS rule;
+   - "System" re-applies on a `matchMedia("(prefers-contrast: more)")` change;
+   - CSS-only derived tokens are written inline too, or tested in the built CSS: Tailwind
+     v4 strips a block that holds only custom properties.
+6. **The stored vocabularies:** `TEXT_SIZES = ("normal", "large", "xlarge")` and
+   `CONTRAST_MODES = ("system", "standard", "more")`. **"System" is a stored value**:
+   the PATCH rule refuses an explicit null, so null means only "never chosen".
+7. **The bottom bar:**
+   - `mobileBarMax` takes the app's array order. The app orders by role if it wants
+     (kastlan: manager vs accountant).
+   - The More sheet keeps each group's sub-pages.
+   - At Large: four entries plus More. At **Extra large: three plus More**: a fifth of a
+     360 px phone at 150 % holds what 48 px holds at Normal.
+   - Labels wrap to two lines instead of truncating (Kurvenschmiede).
+   - The More cell carries the hidden entries' links as tour anchors, so a tour step
+     aimed at a hidden entry points at More (keksdose's tours).
+8. **Dense row actions:**
+   - at Large, a dense row's IconButtons collapse into a "⋯" row menu (the roster's
+     `UserRowActionList` pattern), instead of showing every label (Kurvenschmiede 44,
+     kastlan 119 IconButtons);
+   - `labelVisible={false}` remains for an icon on content: receipt overlays, map zoom,
+     a viewfinder, photo thumbnails.
+9. **Windowed lists** (Kurvenschmiede): "nothing truncates" needs variable rows.
+   `useWindowedRows` takes measured heights, with `rowHeight × scale` as the estimate, and
+   MeasuredGrid follows.
+10. **Charts:**
+    - `SeriesChart`'s height takes a CSS length (e.g. `min(20rem, 60dvh)`) rather than
+      scaled px: 480 px × 1.5 would fill a phone;
+    - axis widths (keksdose `MONEY_AXIS_WIDTH`) multiply by the scale;
+    - strokes, dash patterns and grid ink stay px;
+    - a mirrored tick band scales both sides by the same factor;
+    - an SVG whose text is in viewBox units (Kurvenschmiede's corner preview) moves its
+      labels to an HTML overlay or grows the drawing.
+11. **The kit exports CSS lengths instead of px copies:** the DataTable dialog's gutter
+    (keksdose copied `py-3` as `SCROLLER_GUTTER_PX`) and the Toaster's offsets.
+    **SignaturePad's** stroke scales with the text (kastlan).
+12. **Same release as the settings rule:** keksdose ships settings §6.2 (no
+    session-start language write, `caches: []`) together with `useAccountAppearance`, so
+    one card doesn't follow two opposite rules.
+13. **Corrections to §1:**
+    - Kurvenschmiede has about 248 `text-slate-*`;
+    - keksdose has 99 lines of `text-slate-*` plus 316 slate border/background lines and
+      117 hard-coded hue text classes, all moving to tokens;
+    - kastlan has 19 px widths and heights;
+    - keksdose's "pinch zoom blocked" is really "zoom-on-focus suppressed" (iOS ignores
+      `maximum-scale` for a pinch; Android overrides it).
+14. **App notes:**
+    - keksdose renames its own "Appearance" select (Simple / Enhanced) to "Feature set";
+    - keksdose keeps PinchZoomImage for receipts;
+    - kastlan fixes its stale inline theme script;
+    - Kurvenschmiede's four bar entries need no More.
+15. **Risks added to §9:**
+    - iOS zoom-on-focus (item 1);
+    - PickerSheet on a zoomed page (item 2);
+    - tours losing nav anchors (item 7);
+    - inline contrast tokens (item 5).

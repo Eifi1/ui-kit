@@ -1,6 +1,8 @@
 # Billing, plans and payment — harmonisation plan
 
-Status: **2026-10-07, draft for review.** Led from ui-kit at Marcel's request. It runs in
+Status: **2026-10-07, reviewed.** All three apps answered the same day; §12 records what
+they settled and Marcel's decisions after the reviews, and it wins over the sections above
+where they differ. Led from ui-kit at Marcel's request. It runs in
 parallel with the text-size round (`docs/text-size-harmonization.md`), and ships as
 server-kit 0.6 and ui-kit 0.32 or the next minor after the reviews.
 
@@ -60,6 +62,18 @@ Settled by the kit in this draft; the reviews may object:
    off demo does (`demo_disabled`). kastlan's 503 moves to 404.
 10. **One provider account for the operator**, with a product and a webhook endpoint per
     app, unless the provider requires one account per seller brand.
+
+After the reviews (Marcel, 2026-10-07/08):
+
+11. **The owner's standing decides an edit** to an existing item that someone else owns (a
+    keksdose guest in a budget, a Kurvenschmiede colleague on a curve). A create follows
+    the creator's standing.
+12. **No metered overage at launch.** Plans limit what can be created (§3.4), nothing more.
+13. **kastlan counts every unit**, parking, storage and cellars included.
+14. **Leaving never depends on paying.** Before billing goes on, kastlan has a whole-company
+    export, and keksdose lets a read-only owner delete whole budgets or erase all.
+15. **kastlan gets a tenant portal, and tenants stay free.** Seats count staff only
+    (admin, manager, accountant).
 
 Still open for Marcel (they don't block the contract):
 - **The provider** among the Merchants of Record (compared in §9 for the decision);
@@ -284,11 +298,160 @@ this table is not a quote.
   - the read-only gate;
   - the settings group.
 
-## 12. Questions for the reviews
+## 12. Settled after the reviews (2026-10-07/08)
 
-1. Which writes must stay allowed while read-only in your app, beyond billing, the
-   account's settings and signing out (feedback? support?)?
-2. kastlan: which of the current Stripe parts would you keep app-side when the provider
-   hosts checkout and the portal?
-3. Your plan dimensions: what does a limit count in your app?
-4. Where do you create the payer, so the subscription row is created with it?
+All three apps reviewed the draft (dbc957e). Where this list and the sections above
+differ, this list wins.
+
+**Whose standing, and where the gate sits**
+1. **The payer's standing, not the caller's** (Marcel's decision 11):
+   - keksdose: a write into a budget follows the budget OWNER's standing (a paying guest
+     in a lapsed owner's budget is refused; a lapsed guest in a paying owner's budget
+     may write);
+   - Kurvenschmiede: the row owner's for an edit, the creator's for a create;
+   - kastlan: the acting company's (the token's `company_id`). Someone in two companies
+     can be read-only in one and not the other. Account routes aren't company-scoped and
+     always pass.
+2. **The gate is the app's choice of two equal shapes:**
+   - server-kit's `billing_write_allowed(method, path, allow, *, standing)` at the auth
+     dependency, the demo's shape, with the standing as an input; or
+   - the app's own write choke points, which already resolve the owner (keksdose
+     `require_write_access`, Kurvenschmiede `get_owner` and `access.claim`).
+   Either way, a compute-only POST (Kurvenschmiede's five previews) isn't a write.
+3. **Order of refusals:** the demo's 403 first, then billing's 402; a lapsed payer creating
+   gets `billing_read_only`, never `plan_limit`.
+4. **Scheduled jobs are outside the HTTP gate** and must skip a lapsed payer's data
+   (keksdose: recurring, bank sync, the two extract jobs, which also bill Gemini).
+
+**Offline, sync and privacy**
+5. **A 402 is not a refusal of one change.**
+   - Sync endpoints stay on the allow-list: inside them, a lapsed payer's changes are
+     refused as `billing_read_only` and not applied, and the reply still sends updates
+     and carries the refused changes (keksdose's E2EE gate is the precedent; its 409 path
+     gets the same fix).
+   - A client keeps refused changes queued as "N changes waiting for a plan" and sends
+     them after payment. Its sign-out guard offers "discard waiting changes".
+   - **A device locks in advance from the known dates** (`trial_ends_at`, `comped_until`)
+     by mirroring a per-item lock into its offline write gate, so nothing looks saved
+     that will be refused. Only `past_due` → `expired` waits for the next sync.
+6. **A guest never learns the owner's payment status.** The item carries
+   `locked: "billing" | null`, never the owner's status, and the guest's banner says
+   "This budget is read-only for now; its owner can lift that." One `WriteLockProvider`
+   combines the demo's and billing's reasons.
+
+**Rows, exceptions and grants**
+7. **No row, always in good standing:** demo users, the demo's system account, ownerless
+   items (keksdose's preview budget). They are never gated and never counted.
+8. **Not payers:**
+   - Kurvenschmiede's customers (they read) and reviewers;
+   - kastlan's tenants (decision 15);
+   - the operator's admin accounts: `comped`, `manual`, no end. keksdose's first user's
+     UNLIMITED becomes this.
+9. **A pure guest's trial starts at their first owned item**, not at registration
+   (keksdose: an invited guest owns nothing; after day 30 their first own budget would be
+   refused). The row is created at registration with `trial_ends_at` empty.
+10. **Beta by invitation date:** an invitation created before launch counts as beta even if
+    accepted after, so the last week's invitees don't get 30 days instead of 12 months.
+11. **An operator's grant beats provider events:** while `comped_until` is in the future, a
+    provider event doesn't overwrite the row; provider state applies from then on.
+12. **Every payer gets its row where it is created**, plus a migration for the existing
+    ones and a test that each payer has exactly one row:
+    - keksdose `register_user`;
+    - kastlan `_new_company`, `create_company_for`, the demo company (comped), the seed;
+    - Kurvenschmiede `auth_service.register`, the seed.
+    kastlan's GRANDFATHERED maps to `comped`/`beta`.
+
+**Allowed while read-only** (beyond billing, the account's settings and signing out)
+13. **In every app:**
+    - **feedback** with attachments and crash reports ("I paid and it's still read-only"
+      must be reportable);
+    - **removing access** (revoking a share, leaving a shared item, offboarding a member,
+      revoking sessions, API tokens, passkeys and 2FA);
+    - **taking the data and leaving** (decision 14);
+    - admin routes;
+    - receiving sync.
+    **Adding seats or guests stays blocked** (invitations, role grants).
+14. **Per app:**
+    - **keksdose:**
+      - allowed: support chat; finishing a running re-seal sweep; one's own key wraps
+        and sending a guest the household key; push and notification preferences;
+        withdrawing price-pool consent; accepting an invitation into someone else's
+        budget; switching the active budget; deleting whole budgets and erase-all;
+      - refused: E2EE enrolment and mode changes (they start a sweep); the help assistant
+        (billed AI).
+    - **kastlan:** offboarding; `POST /sync` (refusing only when changes are present).
+    - **Kurvenschmiede:**
+      - allowed: the five compute POSTs; deleting own rows; a team manager removing a
+        member; translation verdicts;
+      - refused: "Copy to my account", which is a create.
+
+**Plans, prices and money**
+15. **Dimensions:**
+    - keksdose: owned, non-deleted budgets (shared-in budgets and the preview never
+      count);
+    - Kurvenschmiede: curves (setpoint sessions owned), optionally collaborators later;
+    - kastlan: units (every unit, decision 13), seats (staff only, decision 15), storage
+      (all company files at plaintext size).
+    A copy counts; an admin transfer or an erasure hand-over never checks a limit.
+16. **Codes:** plan codes become lowercase by a data migration; reads compare case-
+    insensitively (the audit history keeps uppercase).
+    - `plan_budget_limit` → `plan_limit` over two releases: release N's frontend accepts
+      both (installed PWAs run the previous bundle), release N+1's server switches.
+    - The roster's `plan_budget_limit` field becomes `limits.budgets` in the same
+      release.
+17. **Prices are gross**, MWST/VAT included, as Swiss consumer law (PBV) wants. The
+    catalogue holds gross prices, or `PlanCard` shows the provider's localised price
+    preview. Lead with yearly prices: about 5 % + 0.50 per transaction makes a small
+    monthly price expensive.
+18. **Default currency:** the account's stored currency where the app keeps one (keksdose
+    `reporting_currency`), else the locale.
+
+**API and webhooks**
+19. `GET /billing/status` answers a demo user too, so the shell can hide the page; every
+    other billing route refuses the demo.
+20. **The webhook writes rows for any payer:** its tables sit outside tenant RLS, or the
+    handler uses the bypass explicitly. kastlan's `billing_stripe_events` becomes
+    `billing_events`.
+21. **After checkout** the page shows "payment processing" and re-polls the overview, since
+    the webhook may land after the person is back (Cloud Run scales to zero).
+22. **Trial and grant end notices** (7 days before, and at the end) are an app's daily job:
+    a cardless trial never reaches the provider.
+23. **Deletion** (user-admin §6.4): cancel at the provider when the deletion is
+    REQUESTED, or the provider keeps charging a deactivated account; the subscription
+    row goes at erasure. Guests' notices say the shared item works until the paid period
+    ends.
+
+**Labels and legal**
+24. **The settings group is "Subscription" in English** ("plan" already means keksdose's
+    monthly budget plan); German "Tarif" for the plan, "Abonnement" for the subscription.
+25. **The Merchant of Record is an independent controller** of the buyer's data, not our
+    processor:
+    - the privacy text names it as a recipient, links its notice, legal basis Art. 6(1)(b);
+    - confirm against its DPA at signing.
+26. **Consumer law in the provider's portal:** the EU withdrawal function (Directive (EU)
+    2023/2673, from 19 June 2026) and Germany's cancellation button (§312k BGB), plus a
+    visible "Cancel" link on the app's subscription page.
+27. keksdose's legal keys to change in that release are listed in its review: terms scope
+    and new sale sections, privacy data, third parties, transfers, legal basis, retention,
+    rights, the Impressum disclaimer, the JSON-LD offer and the beta notices. Its legal
+    brief question Q13 (terms without liability or governing-law clauses) comes first.
+
+**App-side notes**
+28. **kastlan:**
+    - **keeps** usage counting (EntitlementService) and the trial mail on its own job;
+    - **drops** the Stripe adapter and dependency, Elements, SetupIntent,
+      `billing_payment_methods`, the invoice mirror, `billing_plans` and the `stripe_*`
+      columns, and the overage poster with its usage snapshots;
+    - `qrbill_service` (tenants' QR bills) stays.
+29. **keksdose** moves the GCP receiver off `/billing` in three steps:
+    1. deploy with both paths;
+    2. repoint the Pub/Sub push subscription;
+    3. drop the old path the next release.
+    A 404 first would make Pub/Sub redeliver for ever. The modules are renamed with the
+    route.
+30. **Kit additions from the reviews:**
+    - `in_good_standing` exemptions (decision 7 above);
+    - the standing as an input to the gate;
+    - a "changes refused" shape for sync replies;
+    - the guest `BillingBanner` variant;
+    - the "payment processing" state.
