@@ -97,7 +97,11 @@ export function Hero({
       {...rest}
       data-slot="landing-hero"
       className={cn(
-        "mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24",
+        // `grid-cols-1` below `lg` (0.32.1, Kurvenschmiede's 0.32 report): without a
+        // template the one column is `auto` and grows to the visual's longest unwrapped
+        // line — 80 px past a 360 px phone at Extra large. `minmax(0, 1fr)` holds it to
+        // the page. The same in FeatureRow and TrustStrip.
+        "mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 py-16 sm:py-24",
         visual != null && "lg:grid-cols-2",
         className,
       )}
@@ -186,7 +190,7 @@ export function FeatureRow({
     <div
       {...rest}
       data-slot="landing-feature-row"
-      className={cn("group/feature grid items-center gap-8 py-10", visual != null && "lg:grid-cols-2 lg:gap-16", className)}
+      className={cn("group/feature grid grid-cols-1 items-center gap-8 py-10", visual != null && "lg:grid-cols-2 lg:gap-16", className)}
     >
       <div className="lg:group-even/feature:order-last">
         {(icon != null || eyebrow != null) && (
@@ -245,7 +249,7 @@ export interface TrustStripProps extends Omit<ComponentPropsWithoutRef<"section"
 export function TrustStrip({ items, headingAs: Heading = "h3", className, ...rest }: TrustStripProps) {
   return (
     <section {...rest} data-slot="landing-trust" className={cn("mx-auto max-w-6xl px-4 py-12 sm:py-16", className)}>
-      <ul className={cn("grid gap-8 sm:grid-cols-2", items.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}>
+      <ul className={cn("grid grid-cols-1 gap-8 sm:grid-cols-2", items.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}>
         {items.map((item, i) => (
           <li key={i}>
             {item.icon != null && (

@@ -162,6 +162,22 @@ describe("FeatureRows, TrustStrip and PublicFooter", () => {
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
   });
 
+  it("hero, rows and trust strip hold one column to the page below their breakpoint (0.32.1)", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Hero title="Plan the garden" visual={<div>mock</div>} session="none" access={ACCESS} demoHref={null} />
+        <FeatureRow title="Beds on a grid" visual={<div>mock</div>} />
+        <TrustStrip items={[{ title: "Passkeys", description: "No password to leak." }]} />
+      </MemoryRouter>,
+    );
+    // Without a template the single column is `auto` and grows to the visual's widest
+    // unbreakable line (Kurvenschmiede: 80 px past a 360 px phone at Extra large).
+    for (const slot of ["landing-hero", "landing-feature-row"]) {
+      expect(container.querySelector(`[data-slot=${slot}]`)!.className.split(" "), slot).toContain("grid-cols-1");
+    }
+    expect(screen.getByRole("list").className.split(" ")).toContain("grid-cols-1");
+  });
+
   it("footer: the legal links and the tagline", () => {
     render(<PublicFooter tagline="Garden planning for small plots." />);
     expect(screen.getByRole("navigation", { name: "Legal" })).toBeInTheDocument();

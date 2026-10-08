@@ -528,7 +528,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
             {required && <RequiredMark />}
           </legend>
         )}
-        <div className={cn("grid gap-2 sm:grid-cols-2", className)}>
+        <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", className)}>
           {options.map((o) => (
             <ChoiceCard
               key={o.value}

@@ -45,8 +45,12 @@ export interface ThemeSettingProps
  * one segmented control instead of a select — system, light and dark side by side, the
  * choice visible without opening anything, in every app (keksdose offered light and dark
  * only; its store already knew "system"). A {@link ToggleGroup}'s props pass through —
- * `labelPlacement`, `disabledReason`, `commit`, `size` — minus the options and the value,
- * which this owns.
+ * `labelPlacement`, `disabledReason`, `commit`, `size`, `overflow` — minus the options
+ * and the value, which this owns.
+ *
+ * The options wrap rather than truncate (`overflow="wrap"`), as in its two siblings
+ * {@link TextSizeSetting} and {@link ContrastSetting} (0.32.1, Kurvenschmiede's 0.32
+ * report: "Syst… Li… D…" in a card at Extra large on a 360 px phone).
  *
  * Bind it to the PREFERENCE (`"system"` included), never to the resolved mode: on a
  * system-dark device a control bound to the mode shows "dark" and cannot say "follow the
@@ -70,10 +74,11 @@ export interface ThemeSettingToggleProps
 
 export function ThemeSetting(props: ThemeSettingProps | ThemeSettingToggleProps) {
   if (props.variant === "toggle") {
-    const { variant: _variant, value, onChange, label, optionLabels, ...rest } = props;
+    const { variant: _variant, value, onChange, label, optionLabels, overflow = "wrap", ...rest } = props;
     return (
       <ToggleGroup<ThemePreference>
         {...rest}
+        overflow={overflow}
         label={label}
         value={value}
         onChange={onChange}

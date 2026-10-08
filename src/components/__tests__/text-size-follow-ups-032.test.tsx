@@ -337,7 +337,7 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
   });
 });
 
-describe("ToggleGroup as a field with four or more options at Large (§4)", () => {
+describe("ToggleGroup at Large (§4)", () => {
   const GRAINS = [
     { value: "month", label: "Month" },
     { value: "quarter", label: "Quarter" },
@@ -373,18 +373,22 @@ describe("ToggleGroup as a field with four or more options at Large (§4)", () =
     expect(onChange).toHaveBeenLastCalledWith("month");
   });
 
-  it("keeps one row with three options, outside the field chrome, and with overflow='wrap' (which always wraps)", () => {
+  it("wraps with three options and outside the field chrome too, but not in the strip (0.32.1)", () => {
     at312(
       <>
         <ToggleGroup label="Three" value="month" onChange={() => {}} options={GRAINS.slice(0, 3)} />
         <ToggleGroup aria-label="Bare" value="month" onChange={() => {}} options={GRAINS} />
+        <ToggleGroup label="Above" labelPlacement="above" value="month" onChange={() => {}} options={GRAINS} />
         <ToggleGroup label="Strip" labelPlacement="strip" value="month" onChange={() => {}} options={GRAINS} />
         <ToggleGroup label="Wrap" overflow="wrap" value="month" onChange={() => {}} options={GRAINS} />
       </>,
     );
-    for (const name of ["Three", "Bare", "Strip"]) {
-      expect(screen.getByRole("radiogroup", { name }).className).not.toContain("flex-wrap");
+    for (const name of ["Three", "Bare", "Above"]) {
+      expect(screen.getByRole("radiogroup", { name }).className.split(" "), name).toContain("large:flex-wrap");
     }
+    // The strip's 26 px group lines up with the 42 px fields beside it: one row.
+    expect(screen.getByRole("radiogroup", { name: "Strip" }).className).not.toContain("flex-wrap");
+    // overflow="wrap" always wraps, so it needs no Large class.
     const wrap = screen.getByRole("radiogroup", { name: "Wrap" }).className.split(" ");
     expect(wrap).toContain("flex-wrap");
     expect(wrap).not.toContain("large:flex-wrap");

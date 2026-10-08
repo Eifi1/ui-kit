@@ -196,9 +196,9 @@ const CHROME_PAD: Record<"sm" | "md", string> = { md: "pt-5 pb-0.5", sm: "pt-5 p
 const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125rem]", sm: "py-0 leading-4" };
 
 /**
- * A field of four or more options at Large and Extra large (0.32,
+ * A group at Large and Extra large (0.32,
  * docs/text-size-harmonization.md §4 "nothing truncates", §3.3): the segments flow onto a
- * second row inside the field's frame instead of overflowing it. At 125 % a 390 px phone
+ * second row inside the group's frame instead of overflowing it. At 125 % a 390 px phone
  * is 312 px of Normal type, and "Month / Quarter / Half-year / Year" in one row of the
  * field ran 7 px past it: a one-row flex group is as wide as all its labels end to end
  * when a grid or a stretched column asks how small it can get, however its segments
@@ -212,12 +212,16 @@ const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125re
  * Only where it has to: `flex-wrap` breaks a row only when the segments do not fit, so
  * a wide field at Large stays one row, and a segment shares out what its row leaves
  * (`flex-1`); a label wider than the whole row still truncates as the last resort.
- * Three or fewer options keep one row: each holds a third of the field. A `large:`
- * class, so it costs no render and is right on the first paint. `overflow="wrap"` wraps
- * at every size already; outside the field the group keeps its `overflow`.
+ * A `large:` class, so it costs no render and is right on the first paint.
+ * `overflow="wrap"` wraps at every size already.
+ *
+ * 0.32.1 (Kurvenschmiede's 0.32 report): every count and every placement but the
+ * strip, not only a field of four or more. Since a row breaks only where its labels do
+ * not fit, a wrap only ever replaces a truncation — and three options in a card at
+ * Extra large on a 360 px phone read "Syst… Li… D…". The strip keeps one row: its
+ * 26 px group is what lines it up with the 42 px fields beside it (`STRIP_SEGMENT`).
  */
 const WRAP_AT_LARGE = "large:flex-wrap";
-const WRAP_AT_LARGE_FROM = 4;
 
 /**
  * The strip placement's segments: a 26px group (1 + 2 + 20 + 2 + 1) under the 16px
@@ -346,10 +350,11 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   // `field` is the chrome; a label placed above or in a strip keeps the bare group's
   // own box.
   const field = labelled && labelPlacement === "field";
-  // At Large and Extra large a FIELD of four or more options wraps (see WRAP_AT_LARGE).
-  const wrapAtLarge = field && overflow === "truncate" && options.length >= WRAP_AT_LARGE_FROM;
   const above = labelled && labelPlacement === "above";
   const strip = labelled && labelPlacement === "strip";
+  // At Large and Extra large a truncating group wraps instead, the strip excepted (see
+  // WRAP_AT_LARGE).
+  const wrapAtLarge = overflow === "truncate" && !strip;
   const hasError = labelled && hasContent(error);
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
