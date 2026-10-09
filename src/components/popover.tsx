@@ -110,6 +110,7 @@ export function Popover({
   className,
   style,
   "aria-label": ariaLabel,
+  onKeyDown: onKeyDownProp,
   ...rest
 }: PopoverProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -169,6 +170,9 @@ export function Popover({
   });
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // A caller's own handler first (0.32.2: RowActions stops Enter / Space at the panel);
+    // it used to be dropped, overwritten by this one.
+    onKeyDownProp?.(e);
     if (e.key !== "Escape") return;
     // `useEscapeKey` above listens on the document and still covers the case where
     // focus somehow is not in here. This handler is for the case that focus IS, which

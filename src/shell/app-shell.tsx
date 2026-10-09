@@ -193,11 +193,15 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
   mobileSubNav?: boolean;
   /**
    * How the phone sub-nav lays out a group with more pages than fit on one row.
-   * `"wrap"` (default): every page in view, on as many rows as it takes — the bar
-   * grows. `"scroll"`: one row that scrolls sideways, faded at a cut edge, with the
-   * current page scrolled into view. A long group took four rows (~130px) of a 390px
-   * screen above the bottom bar (showcase audit); scrolling gives that back at the
-   * price of pages hidden past the edge, so it is the app's call, per shell.
+   * `"wrap"`: every page in view, on as many rows as it takes — the bar grows.
+   * `"scroll"`: one row that scrolls sideways, faded at a cut edge, with the current
+   * page scrolled into view. A long group took four rows (~130px) of a 390px screen
+   * above the bottom bar (showcase audit); scrolling gives that back at the price of
+   * pages hidden past the edge, so it is the app's call, per shell.
+   *
+   * Unset (0.32.2, kastlan's 0.32.1 report): `"wrap"` at Normal and `"scroll"` at Large
+   * and Extra large, where a wrapped group of eight pages took six or seven rows and
+   * covered the page — the other half of what `mobileBarMax` does for the bar.
    */
   mobileSubNavLayout?: "wrap" | "scroll";
   /**
@@ -332,7 +336,7 @@ export function AppShell({
   expandLabel,
   subNav = "flyout",
   mobileSubNav = true,
-  mobileSubNavLayout = "wrap",
+  mobileSubNavLayout: mobileSubNavLayoutProp,
   mobileBarMax,
   moreLabels,
   toggleGroupLabel,
@@ -343,6 +347,7 @@ export function AppShell({
   const embedded = useContext(AppShellNesting) || !!embeddedProp;
   const { size: textSize } = useTextSize();
   const large = textSize !== "normal";
+  const mobileSubNavLayout = mobileSubNavLayoutProp ?? (large ? "scroll" : "wrap");
   // The bottom bar's cells: every entry the phone does not reach another way, up to the
   // text size's limit; the rest go under More (§10.7).
   const barMax =

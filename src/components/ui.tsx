@@ -46,8 +46,13 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "bran
 // The ring is the kit's focus frame (§5): {@link FOCUS_RING_WIDTH} wide, on keyboard focus
 // (`focus-visible`) — a tap or a click no longer leaves a ring on the button — in each
 // variant's own colour below.
+//
+// `[&_svg]:shrink-0` (0.32.2, kastlan's 0.32.1 report): an icon beside a label keeps its
+// size when the label wraps at Large. Without it the svg was a flex item like the text,
+// and a two-line label squeezed it to a sliver ("New invoice" in a page header at 360 px
+// / Extra large).
 const BUTTON_BASE = cn(
-  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:shrink-0",
   FOCUS_RING_WIDTH,
 );
 

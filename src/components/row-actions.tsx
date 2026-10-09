@@ -214,23 +214,24 @@ export function RowActions({
           <MoreHorizontal />
         </IconButton>
       )}
+      // React carries an event out of a portal along the COMPONENT tree, so a click in
+      // the menu reached a clickable row or a DataTable `onRowClick` the menu was opened
+      // from, though the panel is nowhere near it in the page — only the "⋯" trigger
+      // stopped its own (keksdose's 0.32 report). Stopped on the PANEL itself, its padding
+      // and border included (0.32.2: 0.32.1 stopped it on an inner box, and a click on
+      // the panel's `p-1` still went through): clicks, and the Enter / Space a row also
+      // listens for. Escape goes on, to the popover's own handler that closes it.
+      onClick={stopClick}
+      onKeyDown={stopActivationKeys}
     >
       {(close) => (
-        // React carries an event out of a portal along the COMPONENT tree, so a click on
-        // an entry (or between two) reached a clickable row or a DataTable `onRowClick`
-        // the menu was opened from, though the panel is nowhere near it in the page —
-        // only the "⋯" trigger stopped its own (0.32.1, keksdose's 0.32 report). Stopped
-        // here for the whole panel: clicks, and the Enter / Space a row also listens for.
-        // Escape goes on, to the popover that closes on it.
-        <div role="presentation" onClick={stopClick} onKeyDown={stopActivationKeys}>
-          <ul data-slot="row-actions-menu" className="space-y-0.5">
-            {entries.map((action) => (
-              <li key={action.key ?? action.label}>
-                <MenuAction action={action} close={close} />
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul data-slot="row-actions-menu" className="space-y-0.5">
+          {entries.map((action) => (
+            <li key={action.key ?? action.label}>
+              <MenuAction action={action} close={close} />
+            </li>
+          ))}
+        </ul>
       )}
     </Popover>
   );

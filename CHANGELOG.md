@@ -20,6 +20,13 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.32.2](https://github.com/Eifi1/ui-kit/compare/v0.32.1...v0.32.2) (2026-10-09)
+
+### Fixed
+
+* **row-actions:** the "⋯" menu stops clicks on its panel itself ([06e7e07](https://github.com/Eifi1/ui-kit/commit/06e7e07dd881a3b1adee62e1399d70555b9e7f32))
+* **text-size:** button icons keep their size; header actions and the sub-nav at Large ([cbe0eba](https://github.com/Eifi1/ui-kit/commit/cbe0ebae3c9181fe4095bc92fba2c8337f109772))
+
 ## [0.32.1](https://github.com/Eifi1/ui-kit/compare/v0.32.0...v0.32.1) (2026-10-09)
 
 ### Added

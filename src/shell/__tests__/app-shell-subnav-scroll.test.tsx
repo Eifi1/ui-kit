@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Box, Circle, Square } from "lucide-react";
 import { AppShell, type AppShellNavItem } from "../app-shell";
+import { applyTextSize } from "../../theme/text-size";
 
 /** The phone sub-nav's opt-in single scrolling row (showcase audit). jsdom has no
  *  layout, so the scroll and the fade are pinned by classes and the default by its absence. */
@@ -26,7 +27,10 @@ function phone() {
     removeEventListener: () => {},
   }));
 }
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  document.documentElement.removeAttribute("data-text-size");
+});
 
 function shell(layout?: "wrap" | "scroll") {
   phone();
@@ -51,5 +55,15 @@ describe("AppShell mobileSubNavLayout", () => {
     const list = shell("scroll");
     expect(list.className).toContain("overflow-x-auto");
     expect(list.className).not.toContain("flex-wrap");
+  });
+
+  it("scrolls by default at Large and Extra large, where a wrapped group covered the page (0.32.2)", () => {
+    applyTextSize("large");
+    expect(shell().className).toContain("overflow-x-auto");
+  });
+
+  it("keeps an explicit layout at every size", () => {
+    applyTextSize("xlarge");
+    expect(shell("wrap").className).toContain("flex-wrap");
   });
 });
