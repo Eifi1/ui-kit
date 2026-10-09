@@ -6,8 +6,8 @@ import type { Rgb } from "@eifi1/ui-kit";
 // sub-paths `rhf`, `dates` and `table-text` (alias.ts and tsconfig.json's `paths`), so
 // the entry is reached by its file here — the code shown beside the specimen uses the
 // package name an app writes.
-import { KIT_CSS_VARIABLES, undeclaredCssVariables } from "../../../src/testing";
-import type { UndeclaredCssVariablesOptions } from "../../../src/testing";
+import { KIT_CSS_VARIABLES, undeclaredCssVariables } from "@eifi1/ui-kit/testing";
+import type { UndeclaredCssVariablesOptions } from "@eifi1/ui-kit/testing";
 import { Example, Note, OutTable } from "../lib/section";
 import { useActiveTokenSet, useTheme } from "../stores";
 
