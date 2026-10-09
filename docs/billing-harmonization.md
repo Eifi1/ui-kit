@@ -8,7 +8,9 @@ server-kit 0.6 and ui-kit 0.32 or the next minor after the reviews.
 
 **2026-10-09:** §14 adds round 0.33 (server-kit 0.7, ui-kit 0.33): the shared Paddle
 client, the checkout page and the way back, and what the 0.32 adoption left open. Marcel's
-decisions for it are §2.18–27. It goes to the three apps for review next.
+decisions for it are §2.18–27. **Reviewed by the three apps 2026-10-09:** Marcel amended
+decisions 19 and 26, §14.16 records what the reviews settled, and §12.36, §12.37 and §14
+are corrected in place.
 
 It is built from two read-only audits (the first during ui-kit 0.27, refreshed on
 2026-10-07; kept outside the repo) and Marcel's decisions in §2. It builds on:
@@ -93,6 +95,12 @@ Round 0.33 (Marcel, 2026-10-09, all as the round-033 audits recommended; §14):
     (§14.4). Each app mounts it, allows Paddle in its CSP and sets its client-side token.
     The card fields stay in Paddle's frame, so decision 8 holds. kastlan's hosted-checkout
     setting stays for the sandbox review, and for live if Paddle approves it.
+    **Amended (Marcel, 2026-10-09, after keksdose's review):** the pay page is a
+    standalone static page that ui-kit ships, and every app serves it on its own subdomain
+    `pay.<app domain>`, a separate origin approved as a domain in Paddle (§14.4). No app
+    mounts it as a route, and no app's own CSP changes. Paddle.js on an app's origin would
+    run beside keksdose's extractable data key and every app's session tokens, and a CSP
+    relaxed on one route can't help, since storage is per origin. The rest stands.
 20. **No success URL on the checkout request.** The way back is `?checkout=done` on the
     subscription page (`isCheckoutReturn()`, `checkoutReturnUrl()`), and ui-kit ships the
     processing hook: keksdose's fingerprint-based, bounded logic, router-agnostic (§14.4).
@@ -114,12 +122,22 @@ Round 0.33 (Marcel, 2026-10-09, all as the round-033 audits recommended; §14):
     invite, resend and role grants stay locked; ShareCard's role toggle stays locked,
     lowering a role included. A lock says its kind, and `commit` takes
     `{ except: kinds }` (§12.36).
+    **Amended (Marcel, 2026-10-09, after Kurvenschmiede's review):** lowering a role is
+    allowed under a billing lock, since it removes access (§12.13); Kurvenschmiede's server
+    already allows editor → viewer while lapsed (`shares_router.py:229-234`). Raising a
+    role stays locked. ShareCard's role toggle follows by itself (§12.36).
 27. **The operator's plan parts ship in ui-kit 0.33:** `planColumn` and
     `PlanChangeConfirm` (§14.12).
 
 Settled with them, not decisions: httpx comes in as server-kit's `billing` extra;
 `billing.testing` ships in the wheel (§14.9); a deletion request cancels at the period's
-end, a paused subscription at once (§12.37).
+end, a paused subscription at once, and a reactivation removes the cancellation the
+request scheduled (§12.37).
+
+After the reviews of round 0.33 (Marcel, 2026-10-09): decisions 19 and 26 are amended as
+marked above, and a Kurvenschmiede team manager adding or re-inviting a member follows the
+manager's own standing. The reviews' other points were settled as the reviewers proposed
+(§14.16).
 
 Still open for Marcel (they don't block the contract):
 - **the plans, limits and prices** per app (proposed in §13, for local review);
@@ -214,10 +232,11 @@ kastlan's `test_billing_off.py` route sweep becomes the contract test in every a
 | `GET /billing/status` | signed in (kastlan: staff) | `{billing_enabled}` |
 | `GET /billing/overview` | the payer (kastlan: a company admin) | `{plan, status, source, in_good_standing, trial_ends_at, comped_until, current_period_end, cancel_at_period_end, limits, usage, currency, at_provider}` (`at_provider`: §14.5) |
 | `GET /billing/plans` | the payer | the catalogue with this payer's currency and the prices |
-| `POST /billing/checkout {plan, interval, currency}` | the payer | `{url}`: the provider's checkout, on the app's own pay page (§14.4) |
+| `POST /billing/checkout {plan, interval, currency}` | the payer | `{url}`: the provider's checkout, on the kit's pay page at the app's pay host (§14.4) |
 | `POST /billing/portal {target?}` | the payer | `{url}`: the provider's hosted customer portal (payment method, invoices, cancel; §14.5) |
 | `POST /webhooks/<provider>` | the provider | signed events (§5) |
 | `POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}` | an admin or the operator | a manual plan or grant (§6) |
+| `GET /admin/plans` (kastlan `/platform/plans`) | an admin or the operator | the catalogue's codes, limits and sort, whatever the switch (§14.12) |
 
 **The currency:** the payer's currency is picked at checkout from the plan's prices (CHF
 or EUR, §2.6), defaulting from the account's locale or country. Money crosses the wire
@@ -345,7 +364,7 @@ Round 0.33's changes per repo, with the defects found on the way: §14.14.
 - **kastlan** (the most work):
   - the direct Stripe code (Elements, SetupIntent, invoice mirror, the overage poster) is
     replaced by the provider's checkout and portal plus the webhook (server-kit 0.7's
-    Paddle client and the app's pay page, §14);
+    Paddle client and the kit's pay page on `pay.kastlan.app`, §14);
   - usage and overage stay app-side;
   - a subscription row for every company: a migration for the existing ones as beta,
     and on company creation and in the demo company;
@@ -580,12 +599,20 @@ differ, this list wins.
        - ProfileSetting Save (`account-settings.tsx:274`);
        - CompleteNameDialog Save (`complete-name-dialog.tsx:248`);
        - TranslationReview verdicts (`translation-review.tsx:745,946,977,1093,1105`,
-         `translation-review-editor.tsx:237,247,257`; §12.13 admin routes, §12.14).
+         `translation-review-editor.tsx:237,247,257`; §12.13 admin routes, §12.14);
+       - PlanChangeConfirm (§14.12): an operator's action, an admin route of §12.13
+         (kastlan's review);
+       - ShareCard's role toggle (:480-490) for a lowering (decision 26 as amended):
+         `roles` is read narrowest first, as Kurvenschmiede lists them (viewer, editor;
+         `share-dialog.tsx:62-65`), so the options before the grantee's role take
+         `COMMIT_EXCEPT_BILLING`. The doc of `SharePanelProps.roles`, "in display order"
+         today, adds "narrowest first".
 
        These stay locked under billing (§12.13: no new seats, guests or roles):
        - ShareCard add (`share-card.tsx:423-425`, and the Enter guard :317);
-       - ShareCard's role toggle (:480-490), lowering a role included: simpler, and the
-         server refuses it anyway;
+       - ShareCard's role toggle for a raise: the options after the grantee's role, with
+         the billing reason. Kurvenschmiede's server refuses only a widening
+         (`shares_router.py:229-234`), so the toggle now matches it;
        - InvitationsPanel invite (`invitations-panel.tsx:397`) and resend (:498).
     5. **`useWriteLock(scope?)` answers the lock as a control with that scope sees it.**
        Code that must know (a toast, a swipe plan, a hand-rolled toggle) reads it. It
@@ -642,13 +669,16 @@ differ, this list wins.
       unlocked, under demo and billing locked with the demo's reason; an unknown kind is
       never exempted; an inner `locked={false}` still reopens; FormActions keeps the scope
       while not pending; each part above under a billing lock and under a demo lock
-      (ShareCard: remove and revoke live, Add, Enter-to-add and the role toggle locked with
-      the billing reason; InvitationsPanel: revoke live, invite and resend locked);
+      (ShareCard: remove, revoke and a lowering live, Add, Enter-to-add and a raise locked
+      with the billing reason, everything locked under a demo lock; InvitationsPanel:
+      revoke live, invite and resend locked; PlanChangeConfirm live under billing);
       `confirm({ commit: COMMIT_EXCEPT_BILLING })`; the new exports in the public-surface
       test.
     - **The apps** (§14.14): kastlan names the kinds on its app-wide lock, and the parts
-      above reopen by themselves; keksdose drops `useWriteLockKind`; Kurvenschmiede names
-      its kinds and drops the `locked={false}` round `ShareDialog`.
+      above reopen by themselves; its own controls of the same sort take
+      `COMMIT_EXCEPT_BILLING`; keksdose drops `useWriteLockKind`; Kurvenschmiede names its
+      kinds and replaces the `locked={false}` round `ShareDialog` with the owner's billing
+      lock.
 37. **Cancelling at a deletion request** (refines §12.23). At the period's end, so a
     guest's shared item works until then; a paused subscription at once, since Paddle
     cancels a paused subscription only immediately (the kit maps paused to `expired`).
@@ -657,6 +687,17 @@ differ, this list wins.
     failure is logged at ERROR ("cancel it by hand") and kept in the app's audit detail.
     The helper is server-kit's `cancel_for_deletion` (§14.8), lifted from keksdose, the only
     app that cancels today.
+    **After the reviews** (kastlan's and keksdose's, §14.16):
+    - **The cancellation is undone when the account comes back.** An operator's
+      reactivation, or a withdrawn request where an app has one, removes the cancellation
+      the request scheduled, through server-kit's `resume_after_withdrawal`: Paddle's
+      `PATCH /subscriptions/{id} {"scheduled_change": null}`. A subscription that was
+      cancelled at once (it was paused) or whose period has ended is not resumed: Paddle
+      can't reinstate a cancelled subscription, and the payer subscribes again.
+    - **Each outcome goes into the audit:** the request's (`cancelled` or `failed`; in
+      kastlan per flagged company) and the reactivation's.
+    - **A change for keksdose:** it skips an `expired` (paused) subscription today
+      (`billing_service.py:504`); the kit cancels it at once.
 
 ## 13. Proposed plans (Marcel, 2026-10-08)
 
@@ -725,22 +766,24 @@ usually buy for a team, by invoice; a company payer may follow.
   to the app's own webhook with a local secret: trial, checkout completed, renewal,
   payment failed, cancelled (from server-kit 0.7: `billing.testing`, §14.9). With a
   Paddle sandbox account (Marcel's), the checkout and portal can be tried end to end:
-  the app's pay page, or a hosted checkout, which every sandbox allows (§14.4).
+  the kit's pay page on a second localhost port or the app's pay host, or a hosted
+  checkout, which every sandbox allows (§14.4).
 - The price ids in the settings stay placeholders until Marcel's Paddle sandbox account
   exists (the provider is Paddle, decision 16).
 
 
 ## 14. Round 0.33 / server-kit 0.7 (2026-10-09)
 
-**Status: a draft for the apps' review.** Built from two read-only audits of round 033
-(server-kit's Paddle client; the kit's billing UI and write locks), kept outside the repo,
-and Marcel's decisions 18–27. The three apps review it next; as §12 did for 0.32, what
-their reviews settle is recorded and wins over this section. Paths are repo-relative:
-the backends are under `kastlan/`, `backend/keksdose/` and `backend/kurvenschmiede/`, the
-frontends under each repo's `frontend/src/`, server-kit's under
-`src/eifi1_server_kit/` and ui-kit's under `src/`. Line numbers are those the audits read
-(kastlan `feat/paddle` 8b36197, keksdose `feat/kit-0.32`, Kurvenschmiede `main`,
-server-kit 93ccae1).
+**Status: reviewed by the three apps 2026-10-09.** Built from two read-only audits of
+round 033 (server-kit's Paddle client; the kit's billing UI and write locks), kept outside
+the repo, and Marcel's decisions 18–27, of which 19 and 26 were amended after the
+reviews. §14.16 records what the reviews settled; the sections below are corrected in
+place. Paths are repo-relative: the backends are under `kastlan/`, `backend/keksdose/`
+and `backend/kurvenschmiede/`, the frontends under each repo's `frontend/src/`,
+server-kit's under `src/eifi1_server_kit/` and ui-kit's under `src/`. Line numbers are
+those the audits read (kastlan `feat/paddle` 8b36197, keksdose `feat/kit-0.32`,
+Kurvenschmiede `main`, server-kit 93ccae1), or the reviews' (kastlan b3adb8f, keksdose
+6a746d5f, Kurvenschmiede `main`, or its `refactor/plan-2026-10` where marked).
 
 ### 14.1 Scope
 
@@ -750,12 +793,15 @@ server-kit 93ccae1).
 - the `app` tag, for one account and three apps (§14.3);
 - the checkout return convention (§14.4), `at_provider` (§14.5) and the double-checkout
   refusal (§14.6);
-- the notice decision (§14.7), the deletion's cancellation (§14.8) and the test helpers
-  (§14.9);
+- the notice decision (§14.7), the deletion's cancellation and its undoing (§14.8) and
+  the test helpers (§14.9);
+- `PlanChangeResponse` widened for the operator's result lines (§14.12);
 - Lemon Squeezy deprecated (§14.13).
 
 **ui-kit 0.33:**
-- `PaddlePayPage` and the checkout-return helpers and hook (§14.4);
+- the pay page: a static bundle in the package with its build script, and `payPageUrl`
+  and `paddleLocale` (§14.4);
+- the checkout-return helpers and hook (§14.4);
 - `SubscriptionActions.atProvider` (§14.5);
 - the lock kinds and `commit` scopes (§12.36);
 - `usePlanLimitToast` (§14.11), `planColumn` and `PlanChangeConfirm` (§14.12);
@@ -763,8 +809,9 @@ server-kit 93ccae1).
 
 **The package:**
 - The billing package's docstring says "no request to a provider"
-  (`billing/__init__.py:4-10`). It becomes "one request each for checkout, portal and
-  cancel, through `billing.paddle`, only with the `billing` extra". Everything else stays
+  (`billing/__init__.py:4-10`). It becomes "one request each for checkout, portal, cancel
+  and undoing a cancel, through `billing.paddle`, only with the `billing` extra".
+  Everything else stays
   Layer 1: no tables, no routes.
 - httpx is the `billing` extra, `billing = ["httpx>=0.28.0"]` (the apps' floor, no
   ceiling). It is imported lazily, as `mail.ResendClient` does (`mail.py:43-44`,
@@ -795,6 +842,8 @@ class BillingProviderClient(Protocol):
         billing_not_at_provider."""
     async def cancel(self, *, subscription_id: str, immediately: bool = False) -> None:
         """At the period's end by default; immediately for a paused subscription."""
+    async def remove_scheduled_cancel(self, *, subscription_id: str) -> None:
+        """Undo a cancellation at the period's end (§14.8)."""
 
 class NoProviderClient: ...          # every call: 503 billing_not_configured
 
@@ -815,6 +864,10 @@ CancelOutcome = Literal["cancelled", "failed"]
 async def cancel_for_deletion(
     row: SubscriptionRow, client: BillingProviderClient
 ) -> CancelOutcome | None: ...                                                   # §14.8
+ResumeOutcome = Literal["resumed", "failed"]
+async def resume_after_withdrawal(
+    row: SubscriptionRow, client: BillingProviderClient
+) -> ResumeOutcome | None: ...                                                   # §14.8
 
 CHECKOUT_RETURN_PARAM = "checkout"
 CHECKOUT_RETURN_VALUE = "done"
@@ -864,6 +917,10 @@ class PaddleClient:             # a BillingProviderClient
     when Paddle gives none (a paused or cancelled subscription).
 - **`cancel`:** `POST /subscriptions/{sub}/cancel {effective_from: "next_billing_period"
   | "immediately"}`. New on the port: kastlan's client had it, and nothing called it.
+- **`remove_scheduled_cancel`** (new): `PATCH /subscriptions/{sub} {"scheduled_change":
+  null}`. Paddle's docs (build/subscriptions/cancel-subscriptions, read 2026-10-09): the
+  subscription comes back with `scheduled_change` null and stays `active`; a cancelled
+  subscription "can't be reinstated".
 - **Every call:**
   - sends `Authorization: Bearer <key>` and `Paddle-Version: 1`;
   - new: uses one injected or shared `httpx.AsyncClient` (as `ResendClient`,
@@ -915,8 +972,8 @@ class BillingSettings(BaseModel):
     #: sandbox or live. Unset → read from the API key's prefix (pdl_sdbx_apikey_ /
     #: pdl_live_apikey_); a legacy key (from before 2025-05-06) needs it set.
     billing_environment: PaddleEnvironment | None = None
-    #: The app's own pay page on an approved domain (§14.4), sent as the transaction's
-    #: checkout.url. Unset → the account's default payment link.
+    #: The kit's pay page on the app's pay host, https://pay.<app domain>/ (§14.4), sent
+    #: as the transaction's checkout.url. Unset → the account's default payment link.
     billing_checkout_page_url: str | None = None
     #: A Paddle hosted checkout's launch URL (https://pay.paddle.io/checkout/hsc_…). Wins
     #: over billing_checkout_page_url. Every sandbox; live only with Paddle's approval.
@@ -932,7 +989,8 @@ class BillingSettings(BaseModel):
 
 - **Env names:** `<APP>_BILLING_APP` (set in code), `<APP>_BILLING_ENVIRONMENT`,
   `<APP>_BILLING_CHECKOUT_PAGE_URL`, `<APP>_BILLING_HOSTED_CHECKOUT_URL` (kastlan's
-  existing name keeps working).
+  existing name keeps working). Every app's `.env.example` lists all four, `_APP` with
+  "set in code" (§14.16, item 16).
 - **The URL fields** accept `https://`, or `http://` for localhost only.
 - **Switching on** with `billing_provider = paddle` also requires `billing_app` and an
   environment that resolves and agrees with the key's prefix. Sandbox keys work only
@@ -965,26 +1023,36 @@ class BillingSettings(BaseModel):
    forget it. Paddle copies custom data from the checkout's transaction to the
    subscription.
 2. **Another app's event is dropped at parse.** `parse_webhook_event(provider, raw_body, *,
-   app: str | None = None)` answers `None` for an event whose `custom_data.app` is present
-   and differs from `app`: 200, not recorded, not dispatched. An untagged event takes
-   today's path. `NormalisedEvent.app` reads `custom_data["app"]`.
+   app: str | None = None)` answers `None` for an event whose `custom_data.app` differs
+   from `app`: 200, not recorded, not dispatched. **Once `app` is given, an untagged
+   event is dropped too**, and logged at WARNING; it is never matched by
+   `provider_customer_id` (Kurvenschmiede's review: its `payer_row_for` falls back to the
+   customer id, and one person may be one Paddle customer across the apps, so a foreign
+   untagged event would land on its row). With `app` None, today's path. No data needs
+   migrating: billing has never been on, the payer references stay `user:<id>` and
+   `company:<id>`, and every checkout from 0.7 carries the tag, which Paddle copies to
+   the subscription and its later events. `NormalisedEvent.app` reads
+   `custom_data["app"]`.
 3. **Each app** passes `app=settings.billing_app`, keeps its own notification destination
-   and secret, and sets its own pay page (`billing_checkout_page_url`), since the
+   and secret, and sets its own pay host (`billing_checkout_page_url`), since the
    account's default payment link is a single page.
 4. The tag costs nothing if the accounts are split later.
 
 **Open:** at signing, Paddle confirms that one account may sell three brands on three
 approved domains. In the sandbox: one person may be one Paddle customer across the apps,
-and the portal's overview may then list all their subscriptions.
+and the portal's overview may then list all their subscriptions; and which pay host is
+the account's default payment link, which Paddle uses for payment-method updates and in
+its subscription emails (§14.15).
 
 ### 14.4 The checkout page and the way back (decisions 19, 20)
 
 **Where the checkout opens.** Paddle's create-transaction answers a `checkout.url`: a pay
 page's URL plus `?_ptxn=<txn>`. A pay page is a page on an approved website running
-Paddle.js, which opens the checkout for that transaction. `POST /billing/checkout` still
-answers `{url}`, and it is one of two:
-- **the app's own pay page** (the baseline): ui-kit's `PaddlePayPage`, which each app
-  mounts on its approved domain. The server sends its URL as the transaction's
+Paddle.js, which opens the checkout for that transaction by itself (Paddle's docs,
+build/transactions/default-payment-link). `POST /billing/checkout` still answers `{url}`,
+and it is one of two:
+- **the kit's pay page on the app's pay host** (the baseline): a static page ui-kit ships,
+  served by each app at `pay.<app domain>`. The server sends its URL as the transaction's
   `checkout.url` (`billing_checkout_page_url`);
 - **a Paddle hosted checkout** (`billing_hosted_checkout_url`, kastlan's setting). Every
   sandbox has it, so kastlan's sandbox review works. On live it needs Paddle's approval
@@ -1005,46 +1073,193 @@ server-kit exports `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE` and
 `checkout_return_url(app_base_url, path)` for the deploy notes and the tests. The page
 drops the marker with `replace` once it has read it.
 
-**ui-kit 0.33, the pay page** (`src/billing/paddle-pay-page.tsx`; the shape is a draft for
-the reviews):
+#### The pay host (decision 19 as amended)
 
-```ts
-export type PaddleEnvironment = "sandbox" | "live";
-export interface PaddlePayPageProps {
-  /** Paddle's client-side token: the app's build setting. Public; not the API key. */
-  token: string;
-  /** The same as the server's billing_environment. */
-  environment: PaddleEnvironment;
-  /** Where Paddle.js sends the buyer after paying: checkoutReturnUrl(<subscription page>). */
-  successUrl: string;
-  /** The subscription page: the way back when the buyer closes the checkout, or when
-   *  the URL names no transaction. */
-  backHref: string;
-  /** The checkout's language. Default: the kit's locale (useKitLocale). */
-  locale?: string;
-  /** The transaction to open. Default: the page URL's `_ptxn`. */
-  transactionId?: string | null;
-  labels?: LabelOverride<BillingLabels>;
+**Why a separate origin** (keksdose's review). Paddle.js is a third-party script, always
+the latest from Paddle's CDN. On an app's own origin it would run beside what one
+injected script could take: keksdose's extractable data key in IndexedDB, and every
+app's session tokens in localStorage. A CSP relaxed only on a `/pay` route can't help:
+IndexedDB and localStorage are per origin, not per path, and keksdose's service worker
+answers every navigation from its precached shell with the strict headers anyway
+(`frontend/src/sw.ts:64-78`). On `pay.<app domain>` Paddle.js shares its origin with
+nothing: no sign-in, no app code, no storage, no service worker, no API. The hosts are
+`pay.kastlan.app`, `pay.keksdose.app` and `pay.kurvenschmiede.app`, and
+`billing_checkout_page_url` is `https://pay.<app domain>/`.
+
+**What the kit ships** (`dist/pay/`, in the npm package; no React, nothing from an app):
+- `index.html`, with no inline script or style. It loads Paddle.js from
+  `https://cdn.paddle.com/paddle/v2/paddle.js` (Paddle's rule: always from its CDN), then
+  `pay.js`;
+- `pay.js`, the one script:
+  - reads `pay-config.json` (below) from its own origin;
+  - calls `Paddle.Environment.set("sandbox")` for the sandbox, then `Paddle.Initialize({
+    token, checkout: { settings: { displayMode: "overlay", locale, successUrl, theme } }
+    })`, the theme from `prefers-color-scheme`. Paddle.js then opens the transaction that
+    `_ptxn` names, with these settings;
+  - shows its own four lines in the seven languages: `payOpening` while the checkout
+    opens, `payNothing` without `_ptxn` (or without a token), `payFailed` when Paddle.js
+    doesn't load or the configuration is wrong, and `payBack` once the buyer closes the
+    checkout;
+  - shows a footer with the app's name and its Terms and Privacy links, which Paddle's
+    domain review wants easy to find (they may live on the main domain);
+  - writes nothing to storage and sends nothing to the app's server;
+- `pay.css`;
+- `.well-known/apple-developer-merchantid-domain-association`: Paddle's file for Apple Pay
+  verification, the same for every Paddle seller, taken from Paddle's docs at the kit's
+  release;
+- the build script, a `bin` of the package, `eifi1-pay-page --out <dir> --token …
+  --environment … --return-url … --app-name … --terms-url … --privacy-url …`, which
+  copies the bundle and writes `pay-config.json`.
+
+**How an app configures it: `pay-config.json`, written at the web image's build.**
+
+```json
+{
+  "token": "live_…",
+  "environment": "live",
+  "returnUrl": "https://keksdose.app/settings/subscription",
+  "appName": "Keksdose",
+  "termsUrl": "https://keksdose.app/terms",
+  "privacyUrl": "https://keksdose.app/privacy"
 }
-/** Loads Paddle.js, initialises it with the token and environment, and opens the
- *  transaction with successUrl and locale. Sends no request to the app's server. */
-export function PaddlePayPage(props: PaddlePayPageProps): ReactElement;
-/** The `_ptxn` Paddle appends to the pay page's URL, or null. */
-export function paddleTransactionId(where: string | URLSearchParams | { search: string }): string | null;
 ```
 
-- **Labels:** new `billing.*` keys in the seven languages for the page's own lines: while
-  the checkout opens (`payOpening`), no transaction in the URL (`payNothing`), Paddle.js
-  failed to load (`payFailed`), and the way back (`payBack`).
-- **Each app:**
-  - mounts the page at a route on its approved domain (such as `/pay`) and approves that
-    domain in Paddle;
-  - allows Paddle in its CSP: `cdn.paddle.com` for Paddle.js, `buy.paddle.com` and
-    `sandbox-buy.paddle.com` for the checkout, plus whatever Paddle's CSP guidance lists;
-  - sets its client-side token and the environment as build settings.
+- The web image's build stage runs the script with the deployment's build settings:
+  Paddle's client-side token and the environment (which the app's own bundle no longer
+  needs) and the app's base URL. The Caddy stage copies the result to `/srv-pay`. The kit
+  is never rebuilt.
+- The script refuses a token whose prefix disagrees with the environment (`test_` for
+  sandbox, `live_` for live: Paddle's client-side token prefixes) and a return URL that
+  isn't `https://` (`http://` for localhost only), so a wrong pairing fails the build,
+  not a buyer. Without a token (billing off) it writes `"token": null`, and the page says
+  `payNothing`.
+- The page's `successUrl` is `checkoutReturnUrl(returnUrl)`, which adds
+  `?checkout=done`; "Back" goes to `returnUrl`.
+- **Why a file and not query parameters:**
+  - Paddle's own links carry only `_ptxn`. Paddle uses the account's default payment link
+    for payment-method updates and in its subscription emails, so configuration in the
+    query would be missing exactly there;
+  - a return URL in the query is an open redirect on an approved payment domain: anyone
+    could send a link that hands the buyer to a look-alike page after paying;
+  - the server's `checkout.url` would carry the token and the environment, and Paddle
+    doesn't document how it appends `_ptxn` to a URL that already has a query.
+- **Why not placeholders in `index.html`:** rewriting a shipped HTML file at deploy is
+  fragile, and the page served would differ from the kit's.
+- **The language is the one thing per visit.** The app sends the buyer to
+  `payPageUrl(url, locale)`, which adds `lang=<kit locale>` to a pay page link (one that
+  carries `_ptxn`) and leaves any other URL, a hosted checkout's, as it is. A missing or
+  unknown `lang` falls back to the browser's languages matched to the kit's, then to
+  English. A wrong `lang` costs nothing but the language.
 
-**ui-kit 0.33, the way back** (`src/billing/checkout-return.ts`): keksdose's
-`checkout-return.ts`, made router-agnostic.
+**The locale map** (keksdose's review), inside the page and exported for tests. Paddle's
+checkout locales (`Paddle.Checkout.open`, `settings.locale`, read 2026-10-09) are `ar`,
+`zh-Hans`, `zh-TW`, `da`, `nl`, `en`, `fr`, `de`, `it`, `ja`, `ko`, `no`, `pl`, `pt`,
+`pt-BR`, `tr`, `ru`, `es` and `sv`; left out, Paddle uses the browser's.
+
+| Kit | Paddle |
+|---|---|
+| `en` | `en` |
+| `de-CH` | `de` |
+| `fr` | `fr` |
+| `it` | `it` |
+| `es` | `es` |
+| `zh` | `zh-Hans` |
+| `hu` | `en`: Paddle has no Hungarian; English always, not Paddle's browser guess |
+
+The page's own lines stay in the kit's language, Hungarian included.
+
+```ts
+// src/billing/pay-page.ts (the main barrel)
+export type PaddleEnvironment = "sandbox" | "live";
+export const PAY_PAGE_LANG_PARAM = "lang";
+/** The kit's locale → Paddle's checkout locale (the table above). */
+export function paddleLocale(kitLocale: string): string;
+/** The checkout's {url} with the buyer's language: lang=<kit locale> on a pay page link
+ *  (it carries _ptxn); any other URL unchanged. */
+export function payPageUrl(checkoutUrl: string, locale: string): string;
+```
+
+`PaddlePayPage`, its props and `paddleTransactionId` (the draft's React part) are gone. The
+four `billing.pay*` labels stay, built into the bundle.
+
+**How it is served.** Each app's web container (Caddy on Cloud Run, the same image)
+answers the second host name with a site block of its own, so the app's headers never
+apply to it:
+
+```caddy
+http://{$PAY_HOST:pay.invalid}:{$PORT} {
+	root * /srv-pay
+	header {
+		Content-Security-Policy "default-src 'none'; script-src 'self' https://cdn.paddle.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; connect-src 'self' https://*.paddle.com; img-src 'self' data: https://*.paddle.com; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
+		Permissions-Policy `payment=(self "https://buy.paddle.com" "https://sandbox-buy.paddle.com"), camera=(), geolocation=(), microphone=(), usb=()`
+		X-Robots-Tag "noindex"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000"
+		Cache-Control "no-cache"
+	}
+	@served path / /index.html /pay.js /pay.css /pay-config.json /.well-known/apple-developer-merchantid-domain-association
+	handle @served {
+		file_server
+	}
+	handle {
+		respond 404
+	}
+}
+```
+
+- **The CSP allows only Paddle's hosts.** Paddle publishes no CSP list, so the sandbox
+  settles the exact one (§14.15). A wide Paddle entry costs little here: the origin holds
+  nothing to take.
+- **`Permissions-Policy` allows `payment` for Paddle's frame**, so Apple Pay and Google Pay
+  work in it. The app's own origin keeps what it has (keksdose's `payment=()`).
+- **No `Cross-Origin-Opener-Policy: same-origin`:** on a domain not verified for Apple Pay,
+  Paddle opens Apple Pay in a popup from a Paddle domain.
+- **The Apple Pay file** answers 200 without a redirect, as Paddle's verification requires.
+- **noindex** on every answer; no `robots.txt` Disallow, which would hide the header from
+  the crawler (keksdose's rule).
+- **Nothing else is served:** no `/api` proxy, no service worker, no cookie. None of the
+  three backends sets a cookie today (no `set_cookie`); a future one stays host-only (no
+  `Domain=`), and no CORS allow-list names the pay host.
+- **`PAY_HOST`** is set on the web service. Unset, the block answers `pay.invalid`, which
+  never matches. Caddy picks the block by host name, so the app's `:{$PORT}` block stays
+  the catch-all.
+- **Locally**, the same files on a second localhost port, which is a separate origin too:
+  Compose's Caddy (`deploy/Caddyfile` in keksdose and Kurvenschmiede) gets a second site
+  block. Paddle's sandbox approves domains at once.
+
+**One-time manual steps per app** (its deploy README):
+1. DNS: `pay` as a CNAME to `ghs.googlehosted.com`, DNS-only in Cloudflare, like the apex.
+2. `gcloud run domain-mappings create --service=<app>-web --domain=pay.<app domain>
+   --region=europe-west4` (all three run there); a subdomain inherits the domain's
+   verification. Then `PAY_HOST=pay.<app domain>` on `<app>-web`.
+3. Paddle → Checkout → Website approval: add `pay.<app domain>`. Paddle reviews every
+   domain or subdomain a checkout opens from; the sandbox approves at once. The review
+   wants the product, the prices, the terms, the refund policy and the privacy policy easy
+   to find; they may sit on the main domain, and the page's footer links them.
+4. Paddle → Website approval → Apple Pay verification: "Verify" the pay host. It is
+   optional; without it Paddle opens Apple Pay in a popup.
+5. A client-side token per app (Paddle → Developer tools → Authentication), so one can be
+   revoked alone. It goes to the web build with the environment.
+6. `<APP>_BILLING_CHECKOUT_PAGE_URL=https://pay.<app domain>/` on the backend.
+
+**Per app** (kastlan's and Kurvenschmiede's reviews):
+- **kastlan** sends no CSP (no header in `deploy/gcp/Caddyfile.cloudrun`, no meta), so its
+  review's "allow Paddle in the CSP" was a no-op; it stays one, since the app never loads
+  Paddle.js. There is no `/pay` route inside `AppLayout`'s lock (`app/routes.tsx:46-82`).
+- **keksdose** keeps its app CSP and `payment=()` as they are. The tests that read the CSP
+  from its two Caddyfiles (`frontend/src/app/__tests__/plausible-wiring.test.ts:30-38`,
+  `csp-inline-script.test.ts`) read the app's block, not the pay host's.
+- **Kurvenschmiede** needs none of its review's `/pay` route items: no `PUBLIC_PATHS` entry
+  (`client.ts:55`), no `useLastVisitedPage` exclusion (`layout.tsx:36`), no `@noindex`
+  matcher (`Caddyfile.cloudrun:48`, `deploy/Caddyfile:19`). The token and the environment
+  are the web image's build arguments for the pay page, not `VITE_` settings. It sends no
+  app CSP either.
+
+#### The way back
+
+**ui-kit 0.33** (`src/billing/checkout-return.ts`): keksdose's `checkout-return.ts`, made
+router-agnostic.
 
 ```ts
 export const CHECKOUT_RETURN_PARAM = "checkout";
@@ -1067,16 +1282,19 @@ export function noteCheckoutStarted(
   payer: string | number, overview?: CheckoutOverview, opts?: { storageKey?: string },
 ): void;
 
+/** Every mounted instance shares one module-level store per storageKey: one state, one
+ *  poll, one landing. */
 export function useCheckoutProcessing(options: {
   payer: string | number | null;
   returned: boolean;                 // isCheckoutReturn(location.search)
   onConsumed: () => void;            // setSearchParams(withoutCheckoutReturn(p), { replace: true })
-  overview: CheckoutOverview | undefined;
-  onLanded?: () => void;             // invalidate the overview, the plans, locked items
+  overview: CheckoutOverview | undefined;  // the overview query's data, judged here
+  refetch: () => unknown;            // the overview query's refetch: the hook polls with it
+  onLanded?: () => void;             // invalidate the plans, locked items; once per landing
   timeoutMs?: number;                // 600_000
   pollMs?: number;                   // 4_000
   storageKey?: string;               // "eifi1-billing-checkout"
-}): { processing: boolean; pollEvery: number | false };
+}): { processing: boolean; checkAgain: () => void };
 ```
 
 1. **"Landed" is judged against the overview at departure, not "is it active"**
@@ -1085,19 +1303,29 @@ export function useCheckoutProcessing(options: {
 2. **Processing is bounded** (10 minutes by default) and remembered across the
    whole-page return, per payer, through the kit's safe storage (a throwing storage
    doesn't break it).
-3. **The app** feeds `pollEvery` to its query's `refetchInterval` and shows
-   `BillingBanner kind="processing" onAction={refetch}`; the labels `processing` and
-   `checkAgain` exist. This is §12.21.
-4. **The kit has no router:** the app says whether the URL returned and how to drop the
+3. **One state for every instance** (keksdose's review): keksdose mounts the hook twice,
+   app-wide in its banner (`billing-banner.tsx:68`) and on the subscription page
+   (`subscription-cards.tsx:119`), sharing one zustand store today
+   (`checkout-return.ts:73-95`). The kit's store is module-level: the first instance that
+   sees the marker consumes it, one timer polls with the latest mounted `refetch`, and
+   `onLanded` runs once.
+4. **The hook polls through the app's `refetch`.** The draft's "take `overview`, return
+   `pollEvery` for that query's `refetchInterval`" was circular; keksdose owns its query
+   (`checkout-return.ts:132`). The app shows `BillingBanner kind="processing"
+   onAction={checkAgain}`; the labels `processing` and `checkAgain` exist. This is §12.21.
+   An app's `refetchOnWindowFocus` doesn't matter (Kurvenschmiede has it off,
+   `query-client.ts:7`).
+5. **The kit has no router:** the app says whether the URL returned and how to drop the
    marker.
+6. **The mark is a browser entry** on the app's origin, so an app whose privacy text lists
+   its entries names it (Kurvenschmiede passes its own `storageKey`, §14.14).
 
 kastlan's own poll (`features/billing/components/subscription-section.tsx:25-75`) waits
 60 seconds for `paidPlan`, which is `source === "provider"` and active or past_due
 (:36-41). A grant or beta payer who buys never matches it, and "processing" stays until a
 reload. The hook replaces it.
 
-**Open (sandbox):** Paddle.js `successUrl` on the pay page; the CSP the page needs; which
-of the kit's seven languages Paddle's checkout has, and what a missing one falls back to.
+**Open (sandbox):** the pay host end to end, and the CSP it needs (§14.15).
 
 ### 14.5 Whether the payer reached the provider (decision 22)
 
@@ -1118,9 +1346,14 @@ of the kit's seven languages Paddle's checkout has, and what a missing one falls
    keksdose's uncoded 404 (`adapters/api/billing_router.py:125-126`) and Kurvenschmiede's
    503 (`adapters/api/billing_router.py:107`).
 4. **`POST /billing/portal` takes an optional body** `PortalRequest {target: "overview" |
-   "cancel" | "payment_method" = "overview"}` (`extra="forbid"`). "Cancel subscription"
-   asks for `cancel` and lands on the portal's cancel link for the subscription (§12.26).
-   The link is never stored.
+   "cancel" | "payment_method" = "overview"}` (`extra="forbid"`). The link is never
+   stored. The targets (kastlan's and keksdose's reviews):
+   - "Payment and invoices": `overview`;
+   - "Cancel subscription": `cancel`, the portal's cancel link for the subscription
+     (§12.26). kastlan's `onCancel` opens the overview today
+     (`features/billing/components/subscription-section.tsx:137`);
+   - the payment-failed banner's action: `payment_method`. keksdose's opens the overview
+     today (`features/billing/billing-banner.tsx:89-90`).
 
 **ui-kit 0.33:**
 
@@ -1138,8 +1371,10 @@ export interface BillingLabels {
 ```
 
 `billing.notAtProvider` comes in all seven languages, and in `src/i18n/review.ts` if it
-lists the key. The apps' `BillingOverview` types gain `at_provider` (kastlan's
-`features/billing/types.ts:36-48` is hand-written).
+lists the key. The apps' `BillingOverview` types gain `at_provider`. Two are
+hand-written, so no mirror test catches a missing field: kastlan's
+`features/billing/types.ts:33-45` and Kurvenschmiede's `shared/types/billing.ts:15-27`,
+which its `mirror.test.ts` exempts.
 
 ### 14.6 A second checkout while subscribed (decision 21)
 
@@ -1165,8 +1400,10 @@ lists the key. The apps' `BillingOverview` types gain `at_provider` (kastlan's
 
 ### 14.7 Trial and grant end notices (decision 23, §12.22)
 
-**The kit** (`billing/notices.py`) only decides which payer is owed which notice, and
-gives the values for the mail:
+**The kit** (`billing/notices.py`) only decides which payer is owed which notice. It
+answers per row with the kind, the end and the days left, and knows no recipient, no
+address and no words (kastlan's review). The app turns (payer, kind, ends_at, days_left)
+into its own mail.
 
 ```python
 NOTICE_AHEAD = timedelta(days=7)
@@ -1182,9 +1419,9 @@ class BillingNoticeKind(enum.StrEnum):
 class BillingNotice(NamedTuple):
     kind: BillingNoticeKind
     ends_at: datetime
+    days_left: int                      # whole days to ends_at; 0 from the end on
     @property
     def key(self) -> str: ...                                   # "trial_ending:2026-11-07T09:00Z"
-    def values(self, now: datetime) -> dict[str, object]: ...   # {"ends_at", "days_left"}
 
 def billing_notice_due(
     row: SubscriptionRow, now: datetime, *, launch: datetime | None, sent: str | None,
@@ -1206,52 +1443,118 @@ def billing_notice_due(
   missed runs, Cloud Scheduler's retries and double runs.
 
 **The app's job**, wherever it runs:
-1. select the rows with `status IN NOTICE_STATUSES`, with the RLS bypass (few rows;
+1. **nothing while billing is off:** it returns at once, and a token route answers 200
+   with nothing sent, so the Scheduler job doesn't fail every day;
+2. select the rows with `status IN NOTICE_STATUSES`, with the RLS bypass (few rows;
    filter in Python);
-2. `billing_notice_due(row, now, launch=settings.billing_launch_at,
+3. **skip a payer whose account is deactivated or has a deletion request**
+   (Kurvenschmiede's and keksdose's reviews). A deletion-requested account keeps its
+   subscription row until the erasure (Kurvenschmiede `erasure_service.py:305`), and "a
+   deactivated account is sent nothing" is already each app's rule (keksdose
+   `push_notifications.py:770`, Kurvenschmiede's CLAUDE.md). kastlan skips a company
+   flagged for deletion, and a company without an active admin;
+4. `billing_notice_due(row, now, launch=settings.billing_launch_at,
    sent=row.billing_notice_sent)`;
-3. send through its `Mailer` with `kind=str(notice.kind)` and its own `MailText` per kind.
-   The words are the app's (the kit's mail precedent); the kit's docstring has an English
+5. **the recipients and the words are the app's:** keksdose and Kurvenschmiede mail the
+   user, kastlan the company's active admins, each in their own locale. Each app sends
+   through its `Mailer` with `kind=str(notice.kind)` and its own `MailText` per kind, in
+   every locale it has (kastlan and keksdose: four). The kit's docstring has an English
    reference text;
-4. set `row.billing_notice_sent = notice.key` once `send` returns True;
-5. commit per row.
+6. set `row.billing_notice_sent = notice.key` once the mail went out (`send` returned
+   True; kastlan: for at least one admin);
+7. commit per row.
 
 **The marker:** a new column on each app's subscription row, `billing_notice_sent
 VARCHAR(64) NULL`.
 
 **The trigger:**
-- **Kurvenschmiede and kastlan, in production:** one daily Cloud Scheduler HTTP job calls
-  a token-protected `POST …/ops/billing-notices` on the backend. The token is a secret
-  setting, compared in constant time (keksdose's Pub/Sub receiver's `?token=` setting is
-  the precedent).
-  - Kurvenschmiede enables the Cloud Scheduler API in its project; no Cloud Run Job.
-  - kastlan's in-process APScheduler stays for local runs only, as its hosting plan
-    already says (`docs/gcp-hosting-plan.md:149-160`: off on autoscaled, scale-to-zero
-    Cloud Run).
+- **The token goes in a header, never in the query string** (Kurvenschmiede's review):
+  Cloud Run's request logs record the URL with its query. The route reads `X-Jobs-Token`
+  and compares it in constant time with the app's `<APP>_JOBS_TOKEN` secret; a missing or
+  wrong token answers 401. Cloud Scheduler's HTTP jobs send it with `--headers`.
+  keksdose's Pub/Sub receiver keeps its `?token=`, since a push subscription can't send a
+  header.
+- **Kurvenschmiede:** `POST /api/v1/ops/billing-notices`, one daily Cloud Scheduler HTTP
+  job, the Cloud Scheduler API enabled in its project; no Cloud Run Job. Compose has no
+  scheduler, and gets none: a local run calls the job through the app's billing CLI, or
+  POSTs the route with the header.
+- **kastlan:** every daily job moves to a token route (kastlan's review), not only the
+  notices. Its in-process APScheduler runs `recurring_rent_daily`, `lease_status_daily`,
+  `invoices_overdue_daily` and `assistant_retention_daily` beside the notices
+  (`infrastructure/billing_scheduler.py:7-18`), and `main.py:150-153` starts it only
+  when billing or recurring rent is on. So:
+  - each job gets `POST /api/v1/ops/jobs/<name>` behind `X-Jobs-Token`
+    (`KASTLAN_JOBS_TOKEN`), and one daily Cloud Scheduler HTTP job;
+  - APScheduler runs only with `KASTLAN_SCHEDULER_ENABLED`, for local runs; production
+    leaves it off (its hosting plan: off on autoscaled, scale-to-zero Cloud Run);
+  - `lease_status_daily` never runs in production today, a kastlan defect (§14.14).
 - **keksdose:** a `billing_notices` `JobSpec` in `infrastructure/job_registry.py` next to
-  `notifications` (06:00 daily, :199-207), with its Cloud Scheduler job and deploy file;
-  the registry's test pins them.
+  `notifications` (06:00 daily, :199-207), a Cloud Run Job that Cloud Scheduler starts
+  through the Run API with its service account, so no token. Its deploy step and manual
+  steps are in §14.14.
+- **Cost:** Cloud Scheduler is free for three jobs per billing account and charged per job
+  and month after that; keksdose is past the free three already.
 - The kit offers no trigger helper in 0.7.
 
-### 14.8 Cancelling at a deletion request (§12.23, §12.37)
+### 14.8 Cancelling at a deletion request, and undoing it (§12.23, §12.37)
 
 ```python
 async def cancel_for_deletion(
     row: SubscriptionRow, client: BillingProviderClient
 ) -> CancelOutcome | None:
+async def resume_after_withdrawal(
+    row: SubscriptionRow, client: BillingProviderClient
+) -> ResumeOutcome | None:
 ```
 
+**`cancel_for_deletion`:**
 - Lifted from keksdose (`billing_service.cancel_for_deletion`, :492-516, called from
   `account_deletion_service.py:229-233`).
 - `None`: nothing to cancel (no `provider_subscription_id`, `canceled`, or already
   `cancel_at_period_end`).
 - `expired` (Paddle's paused) cancels immediately; anything else at the period's end.
+  **A change for keksdose** (its review): it skips `expired` today
+  (`billing_service.py:504`). The kit cancels it, so nothing is left at Paddle for an
+  account on its way to erasure.
 - It never raises (decision 14): a failure is logged at ERROR ("cancel it by hand") and
-  answered `"failed"` for the app's audit detail (keksdose's `provider_cancellation`).
+  answered `"failed"`.
 - The app calls it when the deletion is requested, not at erasure.
+- **Each outcome goes into the request's audit detail** (kastlan's review): keksdose's
+  `provider_cancellation`; kastlan's per flagged company, beside `companies_flagged`
+  (`account_service.py:183`); Kurvenschmiede's in `erasure_service.request`'s entry.
 - Paddle's side: a `past_due` subscription can be cancelled (it stays `past_due` to the
   period's end); a paused one only immediately; a cancellation at the period's end leaves
   it `active` with `scheduled_change.action = cancel`.
+
+**`resume_after_withdrawal`** (new; kastlan's and keksdose's reviews). Nothing undid the
+cancellation when an account came back: keksdose's reactivation clears the deletion
+(`account_deletion_service.cancel`, :271-277), kastlan's too
+(`admin_user_service.py:172-175`), and Kurvenschmiede's (`admin_service.py:310-313`), but
+the subscription stayed set to end.
+- **When:** an operator's reactivation that cancels a pending deletion, or a person's own
+  withdrawal where an app offers one.
+- **What:** the port's `remove_scheduled_cancel`, Paddle's `PATCH /subscriptions/{sub}
+  {"scheduled_change": null}` (§14.2). The subscription stays `active`, and the row
+  follows through the `subscription.updated` event it sends.
+- **Only the cancellation the deletion made:** the app calls it only when the request's
+  audit detail recorded `"cancelled"` for that row. A payer who had cancelled in the
+  portal before asking to leave (the request then answered `None`) isn't re-subscribed.
+- `None`: nothing to undo (no `provider_subscription_id`, `cancel_at_period_end` not
+  set, or the subscription `canceled` or `expired`). **A subscription that was cancelled
+  at once (it was paused) or whose period has ended is not resumed:** Paddle can't
+  reinstate a cancelled subscription, and the payer subscribes again through a new
+  checkout.
+- It never raises: a failure is logged at ERROR ("remove the scheduled cancellation by
+  hand") and answered `"failed"`, which goes into the reactivation's audit detail
+  (`provider_resume`).
+
+**The seam is module-level, not a FastAPI override** (keksdose's review). Both helpers run
+in the service layer (keksdose's `cancel_for_deletion` at
+`account_deletion_service.py:233`), where a request's dependency overrides don't reach.
+Each app keeps one module-level function that answers
+`billing_provider_client(get_settings())` (keksdose's seam,
+`adapters/external/billing_provider.py:64-75`), and its tests replace it with the kit's
+`FakeBillingProvider`.
 
 ### 14.9 Test helpers: `eifi1_server_kit.billing.testing`
 
@@ -1292,6 +1595,7 @@ class FakeBillingProvider:          # a BillingProviderClient without HTTP
     checkouts: list[dict[str, object]]
     portals: list[dict[str, object]]
     cancels: list[dict[str, object]]
+    resumes: list[dict[str, object]]     # remove_scheduled_cancel calls
     def __init__(self, *, fail: bool = False, checkout_url: str = "https://checkout.example/txn_test",
                  portal_url: str = "https://portal.example/ctm_test") -> None: ...
 
@@ -1371,7 +1675,10 @@ keksdose has a UI:
   shows the raw plan code with no chip, and there is no grant dialog, though `POST
   /platform/companies/{id}/plan` exists (`adapters/api/platform_router.py:105-122`);
 - Kurvenschmiede: nothing; `adminApi.changePlan` (`shared/api/endpoints.ts:237-239`) has
-  no caller.
+  no caller. Its roster rows carry no plan or status (`schemas/admin.py:30-76`;
+  `admin_router.py:115` sends only `extra.owned`), and `GET /billing/plans` answers 404
+  while billing is off (`billing_router.py:75`), though its `change_plan` works with
+  billing off (its review).
 
 ```ts
 /** The roster or list column: the plan's display name, the standing chip, and a usage line under it. */
@@ -1382,10 +1689,14 @@ export function planColumn<T>(options: {
   status?: (row: T) => SubscriptionStatus | undefined;  // left out or undefined: no chip (billing off)
   usage?: (row: T) => { used: number; limit: number | null; label: string } | undefined;  // "1/5", tooltip "1 of 5 budgets"
   filterPlans?: readonly string[];                      // a select filter over these codes
+  /** Default: by the plan code. A function: by its value (the catalogue's sort for rank
+   *  order). false: not sortable. keksdose sorts by code (users-panel.tsx:739). */
+  sortBy?: false | ((row: T) => string | number | null | undefined);
   headerText?: string;                                  // default labels.planChange.column
 }): DataTableColumn<T>;
 
-/** The grant: AdminActionConfirm at `acknowledge`, a plan Select, and the end of a free grant. */
+/** The grant: AdminActionConfirm at `acknowledge`, a plan Select, and the end of a free
+ *  grant. Its confirm is COMMIT_EXCEPT_BILLING, built in (§12.36). */
 export interface PlanChangeConfirmProps {
   target: AdminActionTarget;
   plans: readonly { code: string; name: string }[];
@@ -1393,29 +1704,73 @@ export interface PlanChangeConfirmProps {
   usage?: ReactNode;                     // "3 of 5 budgets", the app's sentence
   /** Offer "Free until" (only meaningful while billing is on). */
   grantEnd?: boolean;
+  /** comped_until: the END of the picked day in the operator's time zone, as ISO UTC. */
   onConfirm: (change: { plan: string; comped_until?: string }, values: AdminActionConfirmValues) => MaybePromise;
   onClose: (done: boolean) => void;
   describeError?: (error: unknown) => ReactNode | undefined;
   labels?: Partial<PlanChangeLabels>;
 }
-/** The sentences for a PlanChangeResponse, for the app's toast. */
+
+/** A PlanChangeResponse as the page reads it (server-kit 0.7's, below). */
+export interface PlanChangeOutcome {
+  previous_plan: string | null;                     // null: the account had no subscription
+  plan: string;
+  over_limit: boolean;
+  limits?: Readonly<Record<string, number | null>>;
+  usage?: Readonly<Record<string, number>>;         // the figures for the over-limit lines
+  kept_beta?: boolean;
+  comped_until?: string | null;
+}
+export type PlanChangeTone = "success" | "info" | "warning";
+export interface PlanChangeLine { tone: PlanChangeTone; text: string }
+/** The lines for a PlanChangeResponse, each with its tone, for the app's toast. */
 export function usePlanChangeResult(): (
-  res: { previous_plan: string; plan: string; over_limit: boolean; kept_beta?: boolean; comped_until?: string | null },
+  res: PlanChangeOutcome,
   planName: (code: string) => string,
-) => string[];
+  options?: {
+    dimensionLabels?: Readonly<Record<string, string>>;
+    formatValue?: (dimension: string, value: number) => string;
+  },
+) => PlanChangeLine[];
 ```
 
-- The confirm is held while nothing changes; "Free until" shows only with `grantEnd`;
-  `comped_until` is sent only when given; a running beta keeps its end (§12.34,
+- **The confirm** is held while nothing changes; "Free until" shows only with `grantEnd`;
+  `comped_until` is sent only when given, as the **end** of the picked day in the
+  operator's time zone (keksdose's `endOfDay`, `user-admin-confirm.tsx:44-46`, :160): a
+  grant "until 31 January" lasts through it. A running beta keeps its end (§12.34,
   `kept_beta`). A `null` limit gives no usage line.
+- **Built in `COMMIT_EXCEPT_BILLING`** (kastlan's review): an operator's plan change is an
+  admin route (§12.13), and the operator's own account or company may be lapsed.
+- **The lines and their tones** (keksdose's review): `changed(from, to)`, or `set(to)` with
+  no previous plan: success; `keptBeta`: info; `untilDone(date)`: success; `overLimit`,
+  then one `limitUsageLine` (§14.11) per dimension over the new limit, from `usage` and
+  `limits`: warning. keksdose's figures (`budgets_owned`, `budget_limit`;
+  `users-panel.tsx:533-549`) become `usage.budgets` and `limits.budgets`.
+- **server-kit 0.7's `PlanChangeResponse`** gains what the lines read:
+  `previous_plan: PlanCode | None` (keksdose's is nullable, `domain/schemas/admin.py:672`),
+  `usage: dict[str, int]`, `kept_beta: bool = False` and `comped_until: datetime | None =
+  None`. `of(…)` takes them.
+- **Kurvenschmiede's `change_plan` overwrites a running beta**, a defect (§14.14): every
+  app answers `kept_beta` as §12.34 says.
+- **The server half** (Kurvenschmiede's review, for all three apps):
+  - the roster's rows carry the plan and the status. keksdose's do (`plan`, `limits`,
+    `subscription`; `domain/schemas/admin.py:413-426`); Kurvenschmiede's `GET /admin/users`
+    gains both; kastlan's companies list carries the plan (`platform_router.py:81`) and
+    gains the status;
+  - the admin reads the plan codes whatever the switch: **`GET /admin/plans`** (kastlan
+    `GET /platform/plans`), admins and the operator only, the catalogue's codes with their
+    limits and sort and no prices. The dialog's plan list and the column's filter come
+    from it; keksdose's hard-coded `USER_PLANS` (`features/admin/user-filter-params.ts`)
+    gives way to it. `GET /billing/plans` stays the payer's and answers 404 while billing
+    is off.
 - **i18n:** a new `planChange` namespace in the seven languages: `column` "Plan", `title`
   and `confirm` "Change plan", `plan` "Plan", `current(plan)` "Current plan: {plan}",
   `keepsItems` "A smaller plan only blocks creating more; nothing is deleted.", `until`
   "Free until", `untilHint` "Leave empty for no end. A running beta keeps its own end.",
-  `needsChange` "Pick another plan or an end date.", `changed(from, to)`, `keptBeta` "The
-  beta keeps its end; only the plan changed.", `untilDone(date)`, `overLimit` "Above the
-  new plan's limit: nothing is removed, new items are blocked.", `usageOf(used, limit,
-  dimension)`.
+  `needsChange` "Pick another plan or an end date.", `changed(from, to)`, `set(to)` "Plan
+  set to {to}.", `keptBeta` "The beta keeps its end; only the plan changed.",
+  `untilDone(date)`, `overLimit` "Above the new plan's limit: nothing is removed, new
+  items are blocked.", `usageOf(used, limit, dimension)`.
 
 ### 14.13 Lemon Squeezy (decision 25)
 
@@ -1423,7 +1778,8 @@ export function usePlanChangeResult(): (
   `BillingProvider.LEMONSQUEEZY`, its mapper, statuses and signature check, `_price_ids`'
   int coercion for its variant ids (`settings.py:72-78`), and their tests.
 - kastlan's ports say "Paddle or Lemon Squeezy"; that wording goes with the ports.
-- Kurvenschmiede's `tests/api/test_billing.py:458` posts to `/webhooks/lemonsqueezy` for
+- Kurvenschmiede's `tests/api/test_billing.py:497` (on `refactor/plan-2026-10`; :458 on
+  `main`) posts to `/webhooks/lemonsqueezy` for
   its "not this deployment's provider" 404. The path is a `BillingProvider` parameter
   (`billing_router.py:112`), so in 0.8 it answers 422, and the test changes then.
 - §9's table stays as the record of the choice.
@@ -1431,20 +1787,29 @@ export function usePlanChangeResult(): (
 ### 14.14 What each app changes
 
 **All three:**
-- install `eifi1-server-kit[billing,…]` and set `billing_app` in code;
-- the provider through `billing_provider_client(settings)`; the checkout through
-  `sold_plan` (422 `billing_plan_not_sold`) and `require_new_checkout`;
+- install `eifi1-server-kit[billing,…]` and set `billing_app` in code; `.env.example` lists
+  the new settings (§14.16, item 16);
+- the provider through `billing_provider_client(settings)`, behind a module-level seam
+  (§14.8); the checkout through `sold_plan` (422 `billing_plan_not_sold`) and
+  `require_new_checkout`;
 - the portal: 409 `billing_not_at_provider` before the provider; the page reads
-  `at_provider`, and "Cancel subscription" asks for `target: "cancel"`;
+  `at_provider`; "Cancel subscription" asks for `target: "cancel"` and the payment-failed
+  banner for `target: "payment_method"` (§14.5);
 - the webhook through `settings.verify_billing_webhook(…)` and `parse_webhook_event(…,
-  app=settings.billing_app)`;
-- `cancel_for_deletion` at the deletion request (§12.37);
-- the notice column, job and trigger (§14.7);
+  app=settings.billing_app)`, which drops untagged events (§14.3);
+- `cancel_for_deletion` at the deletion request and `resume_after_withdrawal` at a
+  reactivation, each outcome in the audit (§12.37, §14.8);
+- the notice column, job and trigger, skipping deactivated and deletion-requested
+  accounts (§14.7);
 - the tests through `billing.testing`;
-- the frontend (ui-kit 0.33): `PaddlePayPage` with the CSP, the client-side token and the
-  environment; `noteCheckoutStarted`, `useCheckoutProcessing` and the processing banner;
+- the roster's plan and status, and `GET /admin/plans` (§14.12);
+- the pay host (§14.4): the second site block in the web container's Caddyfile, the build
+  step that writes `pay-config.json`, `PAY_HOST`, the one-time DNS, domain-mapping and
+  Paddle steps, and `<APP>_BILLING_CHECKOUT_PAGE_URL`;
+- the frontend (ui-kit 0.33): `payPageUrl` on the way to the checkout;
+  `noteCheckoutStarted`, `useCheckoutProcessing` and the processing banner;
   `SubscriptionActions atProvider`; the four new codes; the lock kinds (§12.36);
-  `planColumn` and `PlanChangeConfirm`.
+  `planColumn`, `PlanChangeConfirm` and `usePlanChangeResult`.
 
 **kastlan** (`[billing,images,mail]`)
 - **Defects found:**
@@ -1457,18 +1822,38 @@ export function usePlanChangeResult(): (
     ProfileSetting (`settings-page.tsx:180`) and InvitationsPanel's revoke
     (`invitations-card.tsx:46`). Fix: `kind: "demo"` and `kind: "billing"` on its sources
     at :74-77; the kit's parts then reopen by themselves.
+  - **Its own controls of the same sort are locked too** (its review):
+    - leaving a company (`features/settings/components/companies-card.tsx:26`), new 2FA
+      backup codes (`backup-codes-card.tsx:21`), and the operator's pages, admin routes of
+      §12.13 (`features/platform/pages/platform-company-detail-page.tsx:186`,
+      `platform-signup-invitations-page.tsx:72`, :119, :126). Fix: `commit=
+      {COMMIT_EXCEPT_BILLING}`;
+    - the help assistant isn't locked under billing, though its backend answers 402. Fix:
+      `{ except: ["demo"] }`;
+    - right as they are: the roles in `users-panel.tsx:487` stay locked; PlanCard and
+      SubscriptionActions don't commit.
   - **The webhook ignores the signature tolerance** (`adapters/api/billing_webhook_router.py:47`):
     a Cloud Run cold start answers 400 until Paddle's retry lands warm. Fix:
-    `verify_billing_webhook`.
-  - **No cancellation at the deletion request.** `account_service.py:154-195` flags
-    one-person companies (:170-173) and cancels nothing. Fix: `cancel_for_deletion` for
-    each flagged company's row.
+    `verify_billing_webhook`, and `app=` for `parse_webhook_event` (:49).
+  - **No cancellation at the deletion request, and nothing undoes one.**
+    `account_service.py:154-195` flags one-person companies (:171-173) and cancels
+    nothing; a reactivation clears the deletion (`admin_user_service.py:172-175`) and
+    resumes nothing. Fix: `cancel_for_deletion` for each flagged company's row, the
+    outcome per company in the audit detail beside `companies_flagged` (:183), and
+    `resume_after_withdrawal` at the reactivation.
+  - **A reactivation left the company's deletion flag** (`company.deletion_requested_at`).
+    kastlan's local `fix/deletion-and-scheduler` clears it (54fb6cb).
+  - **`lease_status_daily` never runs in production:** the in-process scheduler starts only
+    with billing or recurring rent on (`main.py:150-153`), so a lease stays active past
+    its end. kastlan's local `fix/deletion-and-scheduler` runs the sweep at every start
+    meanwhile (5960504); the token routes replace both (§14.7).
   - **An unsold plan answers 503** `billing_not_configured`
     (`domain/services/billing_service.py:213-214`); keksdose and Kurvenschmiede answer
     422. Fix: `sold_plan`, 422 `billing_plan_not_sold`.
   - **Invoices and "Cancel" are hidden under a grant:** the actions show only when
     `source === "provider"` (`features/billing/components/subscription-section.tsx:134`),
-    against §12.26. Fix: `atProvider={data.at_provider}`.
+    against §12.26, and `onCancel` (:137) opens the portal's overview. Fix:
+    `atProvider={data.at_provider}` and `target: "cancel"`.
   - **The checkout poll misses a payer who buys under a grant** (§14.4). Fix: the kit's
     hook in place of `subscription-section.tsx:25-75` and `paidPlan`.
   - **The notice job logs instead of mailing** (`infrastructure/billing_scheduler.py:38-51`,
@@ -1485,83 +1870,180 @@ export function usePlanChangeResult(): (
   - `get_billing_provider()` (`adapters/api/billing_router.py:42-53`) returns
     `billing_provider_client(settings)`;
   - `BillingService.checkout` drops `return_url`, and with it `CHECKOUT_RETURN_PATH`
-    (`billing_router.py:39`), which was never sent; the pay page's `successUrl` carries
-    `/admin/billing?checkout=done`;
+    (`billing_router.py:39`), which was never sent; the pay page's `returnUrl` is
+    `https://kastlan.app/admin/billing`;
   - `due_notices` becomes `billing_notice_due`, the `billing_notice_sent` column and the
-    mail, with the Cloud Scheduler trigger in production;
+    mail. It answered `(company_id, kind, ends_at)`; the recipients (the company's active
+    admins, each in their own locale) and the texts in its four languages are kastlan's;
+  - **every daily job on a token route** (§14.7): `recurring_rent_daily`,
+    `lease_status_daily`, `invoices_overdue_daily`, `assistant_retention_daily` and the
+    notices, each `POST /api/v1/ops/jobs/<name>` behind `X-Jobs-Token`, with a daily
+    Cloud Scheduler HTTP job; APScheduler only with `KASTLAN_SCHEDULER_ENABLED`, for
+    local runs. `docs/gcp-hosting-plan.md:149-160` still names `_snapshot_job` and
+    `_overage_job`, which are gone;
   - the platform companies page gains `planColumn` and `PlanChangeConfirm` (the company
-    is the target: `AdminActionTarget` without an email);
-  - `features/billing/types.ts:36-48` gains `at_provider`.
+    is the target: `AdminActionTarget` without an email), its list the status, and
+    `GET /platform/plans` (§14.12);
+  - `features/billing/types.ts:33-45` gains `at_provider`;
+  - **deploy** (its review): `deploy/gcp/.env.gcp.example:29`
+    `KASTLAN_BILLING_API_BASE_URL` becomes `KASTLAN_BILLING_ENVIRONMENT`;
+    `cloudbuild.yaml` gains `KASTLAN_BILLING_CHECKOUT_PAGE_URL`, the `KASTLAN_JOBS_TOKEN`
+    secret, and the Paddle client-side token and environment as the web image's build
+    arguments for the pay page; `PAY_HOST=pay.kastlan.app` on `kastlan-web`;
+  - **tests:** `_paddle` builds `PaddleClient("pdl_test")`, a key without a prefix, so the
+    kit's client needs `environment="sandbox"` there (or the test uses `PaddleApiFake`).
 - **Keep:** the company payer (`PAYER_PREFIX = "company:"`, `find_payer_row`, `apply_event`
   with naive datetimes, the RLS-bypass session in the webhook), `billing_admin`,
   `KastlanBillingStatus`, `KastlanPlanOut.current`, the `/admin/billing` path,
   `DEFAULT_CURRENCY = CHF`, `EntitlementService`, `_date_beta_grants`, and `due_notices`'
-  recipients and channel.
+  recipients and channel. It sends no CSP, and its app needs none for Paddle (§14.4).
 
 **keksdose** (`[billing,images]`)
 - **Already right:** it passes the tolerance (`adapters/api/billing_router.py:155`, with
-  `billing_signature_tolerance = 60`) and cancels at the deletion request.
+  `billing_signature_tolerance = 60`) and cancels at the deletion request. Its payer
+  reference is `user:<id>` (`billing_service.py:363-366`), so the app tag needs no data
+  migration.
+- **Found by its review:**
+  - Paddle.js can't run on its origin: the reason for the pay host (decision 19 as
+    amended, §14.4);
+  - a reactivation doesn't undo the deletion's cancellation
+    (`account_deletion_service.py:271-277`). Fix: `resume_after_withdrawal`.
 - **Delete:**
-  - `adapters/external/billing_provider.py` (the port, `NoProviderClient`, the override
-    seam :64-75);
+  - in `adapters/external/billing_provider.py`, the port and `NoProviderClient`; the seam
+    (:64-75) stays and answers the kit's client (§14.8);
   - in `billing_fixtures.py`, `STEPS` (:56-62), `_PERIOD` (:65-70), `paddle_event`
     (:73-111) and `sign_paddle` (:114-119); the CLI (:143-176) stays, shorter;
-  - `billing_service.cancel_for_deletion` (:492-516), for the kit's; the audit's
-    `provider_cancellation` detail stays;
+  - `billing_service.cancel_for_deletion` (:492-516), for the kit's, which also cancels an
+    `expired` (paused) subscription (§14.8); the audit's `provider_cancellation` detail
+    stays;
   - the test fakes `Client` (`tests/api/test_billing_webhook.py:373-384`) and `_Provider`
     (`test_billing_leaving.py:27`);
   - `LockKindContext` and `useWriteLockKind` (`features/budgets/write-lock.tsx:68`,
     :111-113);
   - its own `usePlanLimitToast` (`features/billing/plan-limit.tsx:32-43`);
-  - `PlanConfirm` and the plan column, for the kit's (the summary chips by plan stay).
+  - `PlanConfirm`, the plan column and `USER_PLANS`, for the kit's parts and
+    `GET /admin/plans` (the summary chips by plan stay).
 - **Change:**
-  - `billing_client()` becomes `billing_provider_client(get_settings())`, with a test seam
-    through a FastAPI override or the kit's fake;
+  - `billing_client()` becomes `billing_provider_client(get_settings())` behind the
+    module-level seam; tests replace it with the kit's `FakeBillingProvider` (a FastAPI
+    override can't reach `cancel_for_deletion`, which runs in the service layer);
   - the checkout drops `email` and uses `sold_plan(…, sold=SOLD)`;
   - the portal's uncoded 404 (`billing_router.py:125-126`) becomes 409
     `billing_not_at_provider`; the frontend drops its status sniff and
     `billing.no_provider_subscription` (`features/billing/subscription-cards.tsx:44-62`)
-    for `atProvider`;
-  - a `billing_notices` `JobSpec`, its Cloud Scheduler job and the deploy file;
-  - `checkout-return.ts` shrinks to calls into the kit;
+    for `atProvider`; the payment-failed banner (`billing-banner.tsx:89-90`) asks for
+    `target: "payment_method"`;
+  - **the `billing_notices` Job** (§14.7; its review):
+    - a `JobSpec` next to `notifications` (`job_registry.py:199-207`), the import-time
+      asserts (`jobs.py:164`, `scheduler.py`) and the deploy README's job table row,
+      which `tests/api/test_admin_health.py` pins;
+    - its cloudbuild step carries the mail settings (`KEKSDOSE_EMAIL_BACKEND`,
+      `KEKSDOSE_EMAIL_FROM`, the `KEKSDOSE_RESEND_API_KEY` secret,
+      `KEKSDOSE_APP_BASE_URL`) and `KEKSDOSE_BILLING_ENABLED` and
+      `KEKSDOSE_BILLING_LAUNCH_AT`, none of which the `notifications` Job carries
+      (`cloudbuild.yaml:495-514`);
+    - by hand, once: the `run.invoker` binding on the Job (without it Cloud Scheduler gets
+      PERMISSION_DENIED and nothing says so, `deploy/gcp/README.md:238-250`) and
+      `gcloud scheduler jobs create http`;
+    - mails in its four locales;
+  - `checkout-return.ts` shrinks to calls into the kit. Its two mounts
+    (`billing-banner.tsx:68`, `subscription-cards.tsx:119`) share the kit's store, and the
+    overview query (:132) hands the hook its `refetch`;
   - kinds in `BudgetWriteLock` (`write-lock.tsx:94-97`); `budgets-page.tsx:570` and
     `invoice-review.tsx:646` become `commit={COMMIT_EXCEPT_BILLING}`;
     `PasswordDangerCard.commit` (`shared/components/password-danger-card.tsx:87`) widens
     to `CommitScope`. The `locked={false}` account-card wrappers stay: they also undo the
-    demo budget's lock, which is budget-scoped, not account-scoped.
+    demo budget's lock, which is budget-scoped, not account-scoped;
+  - the pay host's site block in `deploy/gcp/Caddyfile.cloudrun` and `deploy/Caddyfile`;
+    the CSP tests read the app's block (§14.4); `KEKSDOSE_CORS_EXTRA_ORIGINS` never names
+    the pay host;
+  - the plan change's toast from `usePlanChangeResult`'s lines and tones; `planColumn`
+    with `sortBy` (`users-panel.tsx:739`).
 - **Keep:** `payer_ref`, `payer_row_for`, `EventTable`, `currency_of`, the `SOLD` filter,
-  `refused_for_demo`, and the webhook's provider check.
+  `refused_for_demo`, the webhook's provider check, and the app's CSP and
+  `Permissions-Policy`.
 
-**Kurvenschmiede** (`[billing]`)
+**Kurvenschmiede** (`[billing,mail]`: it sends through `mail.ResendClient`,
+`infrastructure/email.py:36`, :89, and gets httpx today only through its own dependency)
 - **Defects found:**
-  - **The webhook ignores the signature tolerance** (`adapters/api/billing_router.py:129`).
-    Fix: `verify_billing_webhook`.
-  - **No cancellation at the deletion request** (`erasure_service.py:285-320`). Fix:
-    `cancel_for_deletion` in `erasure_service.request`.
+  - **The webhook ignores the signature tolerance** (`adapters/api/billing_router.py:129`),
+    and `.env.example` says the tolerance of 60 takes effect, which it doesn't until :129
+    passes it. Fix: `verify_billing_webhook`, and the note corrected.
+  - **No cancellation at the deletion request** (`erasure_service.py:285-320`), and nothing
+    undoes one at a reactivation (`admin_service.py:310-313`). Fix: `cancel_for_deletion`
+    in `erasure_service.request`, `resume_after_withdrawal` at the reactivation.
   - **No provider client:** the checkout and the portal end in 503
-    (`billing_router.py:79-95`, :107; `billing_service.no_provider_client`, :268-271).
+    (`billing_router.py:79-95`, :107; `billing_service.no_provider_client`, :263-266).
   - **No way back after checkout** (`features/billing/subscription-settings.tsx:42-44`,
     :66-71).
   - **No trigger for §12.22:** it has no scheduler at all, so a cardless trial gets no mail.
   - **The kit's `ShareDialog` is wrapped in `locked={false}`**
     (`share-dialog.tsx:92-99`, :152): a lapsed owner sees Add and the role toggle live and
-    learns only from the 402 in the error line.
-- **Delete:** `billing_service.no_provider_client` and the module docstring's note that
-  the client is missing (:28-32); in `billing_fixtures.py`, `STEPS` (:59-65), `_PERIOD`
-  (:68-73), `paddle_event` (:76-114) and `sign_paddle` (:117-122); the CLI (:147-186)
-  stays.
+    learns only from the 402 in the error line. Dropping the wrapper alone leaves share
+    dialogs with no lock at all (its review): `session-page.tsx:365` mounts `ShareButton`
+    before its provider opens at :366, `projects-page.tsx:135` has none, and
+    `SharedBanner`'s "Copy to my account" (`sharing-bar.tsx`) sits outside any lock. Fix:
+    `ShareDialog` wraps its card in the owner's billing lock (`useBillingWriteLock`, kind
+    `"billing"`) in place of `locked={false}`; "Copy to my account", a create (§12.14),
+    gets the copier's.
+  - **Its lock hooks drop the kind:** `Lock` (`write-lock.tsx:26-31`) is `{locked,
+    reason}`, `useRowLock` and `useOwnerLock` return that (:54, :69, the reason
+    stringified), and `useBillingLock` (`use-billing.ts:78-82`) has no kind. Fix:
+    `useBillingLock` becomes the kit's `useBillingWriteLock`, and both hooks return the
+    combined lock with its `holds`.
+  - **F37: adding and re-inviting team members pass no billing gate**
+    (`teams_router.py:103-123`, add, which may invite; :126-146, resend), and
+    `team-card.tsx` has no lock. Fix (Marcel: the manager's own standing counts):
+    `refuse_create(session, user, …)` in both, and a billing lock on add and resend.
+  - **`change_plan` overwrites a running beta** (`billing_service.change_plan`, main
+    :213-259, the overwrite :243-244): a pre-launch change with no end turns a beta into
+    a lifetime grant, against §12.34 and server-kit's `PlanChangeRequest` docstring
+    (`schemas.py:272-282`), and with no `kept_beta` PlanChangeConfirm's "a running beta
+    keeps its own end" is false here. Fix: keep a running beta and answer `kept_beta`;
+    `shared/types/billing.ts:44-49` gains it.
+  - **F36's duplicate half:** `EventTable.record` (main :290-300) lets a raced duplicate's
+    `IntegrityError` escape (a 500, then Paddle's retry) instead of raising
+    `DuplicateEventError`. Fix: insert inside `session.begin_nested()`, catch the
+    `IntegrityError` and raise `DuplicateEventError`.
+  - **An untagged foreign event could match its row:** `payer_row_for` (main :311-329)
+    falls back to `provider_customer_id`. Fixed in the kit: once `billing_app` is set,
+    untagged events are dropped at parse (§14.3).
+- **Delete:** `billing_service.no_provider_client` (main :263-266) and the module
+  docstring's note that the client is missing (:28-32); in `billing_fixtures.py`, `STEPS`
+  (:59-65), `_PERIOD` (:68-73), `paddle_event` (:76-114) and `sign_paddle` (:117-122);
+  the CLI (:147-186) stays.
 - **Change:**
   - the checkout and the portal call the kit's client (`billing_router.py:95`, :107);
-  - `noteCheckoutStarted` before `goTo`, the hook and the banner in
-    `SubscriptionSettings`, and the return to `/settings/subscription?checkout=done`;
+    `billing_app = "kurvenschmiede"` (`settings.py:124`); `parse_webhook_event(…,
+    app=settings.billing_app)` at `billing_router.py:130`; checkouts carry
+    `checkout_custom_data_for` (main :262-265);
+  - `noteCheckoutStarted` before `goTo(payPageUrl(url, locale))`, the hook and the banner
+    in `SubscriptionSettings`, and the return to `/settings/subscription?checkout=done`.
+    `useBillingOverview` (`use-billing.ts:57-66`) hands the hook its `refetch`; its
+    comment "read again on focus" (:54-56) goes, since `refetchOnWindowFocus` is off
+    (`query-client.ts:7`). The hook's mark is a new browser entry, so Kurvenschmiede
+    passes its own `storageKey` and its privacy text lists it (`legal-pages.tsx:9-18`);
   - kinds `"access"`, `"customer"` and `"billing"` in `useRowLock` and `useOwnerLock`
-    (`features/sharing/write-lock.tsx:44-70`), and no `locked={false}` round
-    `ShareDialog`: Add and the role toggle then say the billing reason up front;
-  - `billing_notice_sent`, the token-protected notice route, its Cloud Scheduler job (and
-    the Scheduler API in its project) and its mail texts;
+    (`features/sharing/write-lock.tsx:44-70`), returning the combined lock; the owner's
+    lock in `ShareDialog`; the teams gate (above);
+  - **the notices** (§14.7; its review): migration 0049 and the model's
+    `billing_notice_sent`; `POST /api/v1/ops/billing-notices` behind `X-Jobs-Token`, with
+    `KURVENSCHMIEDE_JOBS_TOKEN` a secret in `cloudbuild.yaml:131`;
+    `cloudscheduler.googleapis.com` in the deploy README's §1; its §7 and §8 (:216-232)
+    and CLAUDE.md's "nothing runs on a schedule" rewritten; a local run through the
+    billing CLI, since Compose has no trigger;
   - `planColumn` and `PlanChangeConfirm` on the user roster, calling
-    `adminApi.changePlan`;
-  - `tests/api/test_billing.py:458` before 0.8 (§14.13).
+    `adminApi.changePlan`; `GET /admin/users` rows gain `plan` and `status`;
+    `GET /admin/plans` (§14.12);
+  - its hand-written `BillingOverview` (`shared/types/billing.ts:15-27`) gains
+    `at_provider`; `mirror.test.ts` exempts the file, so nothing fails if it is forgotten;
+  - **the pay host** (§14.4): `KURVENSCHMIEDE_BILLING_CHECKOUT_PAGE_URL` in
+    `cloudbuild.yaml:129`; the client-side token and the environment as the web image's
+    build arguments for the pay page (`deploy/gcp/Dockerfile.web`, cloudbuild); the
+    second site block in both Caddyfiles. Its review's `/pay` route items fall away;
+  - `.env.example` lists the new settings, or `tests/unit/test_docs.py:63-65` (on
+    `refactor/plan-2026-10`) fails the bump (§14.16, item 16);
+  - `tests/api/test_billing.py:497` (on `refactor/plan-2026-10`) before 0.8 (§14.13).
 - **Keep:** `payer_ref`, `payer_row_for`, `PAYER_ROLES`, `currency_of`, `not_in_the_demo`,
   `GRANTED_PLAN`, `ensure_row`.
 
@@ -1574,8 +2056,133 @@ None blocks the implementation; all come before billing goes on.
   still wanted.
 - **In the sandbox:**
   - the portal's plan switch (§14.6);
-  - Paddle.js `successUrl` on the pay page, and the CSP the page needs (§14.4);
-  - which of the kit's seven languages the checkout has (§14.4);
+  - the pay host end to end: Paddle.js opening the `_ptxn` transaction with the settings
+    given to `Paddle.Initialize` (`successUrl`, `locale`), and the hosts its CSP needs;
+    Paddle publishes no list (§14.4);
+  - Apple Pay and Google Pay in Paddle's frame under the pay host's
+    `Permissions-Policy`, and Apple Pay verification of each pay host;
+  - what Paddle.js keeps on the pay host (cookies, storage), for the privacy texts
+    (§12.25);
+  - which link Paddle's own emails and payment-method updates carry: Paddle uses the
+    account's default payment link for them, which is one app's pay host (§14.3);
+  - removing a scheduled cancellation and the `subscription.updated` it sends (§14.8);
   - whether one person is one Paddle customer across the apps, and what the portal then
     lists (§14.3);
   - recorded answers in place of `PADDLE_API_EXAMPLES` (§14.9).
+
+### 14.16 Settled after the reviews (2026-10-09)
+
+The three apps reviewed §12.36, §12.37 and §14 on 2026-10-09: kastlan at b3adb8f
+(`feat/paddle`), keksdose at 6a746d5f (`feat/kit-0.32`), Kurvenschmiede at `main` and
+`refactor/plan-2026-10`. Marcel amended decisions 19 and 26; the rest was settled as the
+reviewers proposed. The sections above are corrected in place, and this list is the
+record. **ka**, **kk** and **KS** n are the reviews' items.
+
+**The two amended decisions**
+1. **The pay page is a static page on each app's pay host** (kk 1; decision 19 amended).
+   The kit ships `dist/pay/` and a build script; each app writes `pay-config.json` at its
+   web image's build and serves the page at `pay.<app domain>` from its web container,
+   with headers of its own (§14.4).
+2. **Lowering a role is allowed under a billing lock** (KS 9; decision 26 amended). Raising
+   stays locked; ShareCard's toggle reads `roles` narrowest first (§12.36).
+
+**Locks**
+3. **PlanChangeConfirm is exempt from billing, built in** (ka 1), and kastlan's own
+   controls of that sort take `COMMIT_EXCEPT_BILLING`: leaving a company, new backup
+   codes, the operator's pages. Its assistant takes `{ except: ["demo"] }` (§14.14).
+4. **Kurvenschmiede's locks** (KS 10, 11, 12): `ShareDialog` gets the owner's billing lock
+   in place of `locked={false}`, "Copy to my account" the copier's; its hooks return the
+   combined lock with `holds`, through `useBillingWriteLock`; adding and re-inviting team
+   members follow the manager's own standing (F37; Marcel), with a lock on both (§14.14).
+
+**The portal and the deletion**
+5. **The portal's targets** (ka 4, kk 11): "Payment and invoices" `overview`, "Cancel
+   subscription" `cancel`, the payment-failed banner `payment_method` (§14.5).
+6. **A reactivation undoes the deletion's cancellation** (ka 5, kk 12):
+   `resume_after_withdrawal`, through Paddle's `PATCH /subscriptions/{id}
+   {"scheduled_change": null}`, verified in Paddle's docs. A subscription cancelled at
+   once or past its period isn't resumed; the payer subscribes again (§12.37, §14.8).
+7. **Each cancellation's outcome is audited** (ka 5), per company in kastlan, and the
+   reactivation's too (§14.8). kastlan's reactivation also left the company's deletion
+   flag, a defect its local branch fixes (§14.14).
+8. **keksdose's paused subscriptions** (kk 12): the kit cancels an `expired` (paused)
+   subscription at once, where keksdose skipped it. A behaviour change, noted (§14.8).
+9. **The provider seam is module-level, not a FastAPI override** (kk 12):
+   `cancel_for_deletion` runs in the service layer (§14.8).
+
+**Notices** (§14.7)
+10. **The kit answers per row** (ka 6): the kind, the end and the days left. Recipients,
+    addresses and texts in every app locale are the app's.
+11. **Who is skipped** (KS 17, kk 7): deactivated and deletion-requested accounts; nothing
+    runs while billing is off.
+12. **The trigger token goes in a header** (KS 17), `X-Jobs-Token`, never the query
+    string, which Cloud Run's request logs record.
+13. **kastlan moves every daily job to a token route** (ka 6), with
+    `KASTLAN_SCHEDULER_ENABLED` for local runs. Its `lease_status_daily` never runs in
+    production today, a kastlan defect (§14.14).
+14. **keksdose's Job** (kk 7) needs the mail settings, the billing switch and launch date,
+    the `run.invoker` binding and its Cloud Scheduler job (§14.14).
+15. **Kurvenschmiede's notices** (KS 17): migration, column, token secret, the Cloud
+    Scheduler API, its README and CLAUDE.md rewritten; a local run goes through the CLI
+    (§14.14).
+
+**Webhooks and settings**
+16. **Untagged events are dropped once `billing_app` is set** (KS 15), and logged; they are
+    never matched by `provider_customer_id`. No live data exists, so nothing migrates
+    (keksdose confirms, §14.3). **The new settings**, each in the app's `.env.example`
+    (Kurvenschmiede's `tests/unit/test_docs.py:63-65` requires every Settings field
+    there):
+    - all three: `<APP>_BILLING_APP` (set in code; listed as such),
+      `<APP>_BILLING_ENVIRONMENT`, `<APP>_BILLING_CHECKOUT_PAGE_URL`,
+      `<APP>_BILLING_HOSTED_CHECKOUT_URL`;
+    - kastlan: `KASTLAN_JOBS_TOKEN` and `KASTLAN_SCHEDULER_ENABLED`;
+      `KASTLAN_BILLING_API_BASE_URL` goes;
+    - Kurvenschmiede: `KURVENSCHMIEDE_JOBS_TOKEN`;
+    - keksdose: nothing more (its Job needs no token);
+    - not backend settings: the web build's Paddle client-side token and environment, and
+      the web service's `PAY_HOST` (§14.4).
+17. **Duplicate events** (KS 18): Kurvenschmiede's `EventTable.record` raises
+    `DuplicateEventError` for a raced duplicate (§14.14).
+18. **Extras** (KS 19): Kurvenschmiede installs `[billing,mail]`; keksdose
+    `[billing,images]` and kastlan `[billing,images,mail]` stand.
+
+**The frontend parts**
+19. **`useCheckoutProcessing`** (kk 8) shares one module-level store across instances and
+    takes the overview query's `refetch`; it answers `{processing, checkAgain}` (§14.4).
+20. **The pay page's locale** (kk 10): the page maps the kit's locales to Paddle's:
+    `de-CH` → `de`, `zh` → `zh-Hans`, `hu` → `en` (Paddle has no Hungarian), checked
+    against Paddle's list (§14.4).
+21. **The plan change's result** (kk 9): `previous_plan` may be null; each line carries a
+    tone (success; info for a kept beta; warning over the limit, with the figures);
+    `comped_until` is the end of the picked day; `planColumn` takes `sortBy`. server-kit's
+    `PlanChangeResponse` gains `usage`, `kept_beta` and `comped_until` (§14.12).
+22. **Kurvenschmiede's `change_plan` keeps a running beta** (KS 13) and answers
+    `kept_beta`; overwriting it is a defect (§14.14).
+23. **The roster's server half** (KS 14): rows carry the plan and the status, and
+    `GET /admin/plans` (kastlan `/platform/plans`) gives the admin the codes while billing
+    is off (§14.12).
+24. **Hand-written `BillingOverview` types** (ka 4, KS 20): kastlan's
+    `features/billing/types.ts:33-45` and Kurvenschmiede's `shared/types/billing.ts:15-27`
+    gain `at_provider` by hand (§14.5).
+
+**Per app, re-stated**
+25. **kastlan's deploy and tests** (ka 7): the environment setting in place of the base
+    URL, the checkout page URL, the jobs token, the pay page's build arguments, and the
+    test client's explicit environment (§14.14).
+26. **The CSP notes** (ka 8, KS 16): no app CSP changes. kastlan's and Kurvenschmiede's
+    send none; keksdose's stays. The pay host brings its own headers. Kurvenschmiede's
+    `/pay` route items (`PUBLIC_PATHS`, `useLastVisitedPage`, `@noindex`) fall away;
+    its checkout page URL, build arguments, the overview's `refetch`, the
+    `refetchOnWindowFocus` comment and its own `storageKey` stay (§14.4, §14.14).
+27. **Line references corrected** (ka 4, KS 21): kastlan's
+    `features/billing/types.ts:33-45`; Kurvenschmiede's `no_provider_client` at main
+    :263-266 and `tests/api/test_billing.py:497` on `refactor/plan-2026-10`; kastlan's
+    flagged companies at `account_service.py:171-173`.
+28. **Confirmed as written:** ka 2, 3, the rest of 4 and 5, and the delete list of 7;
+    kk's checks (the write-lock kinds and `COMMIT_EXCEPT_BILLING` callers, the
+    fingerprint and its bounds, `usePlanLimitToast`, the fixtures and seam lines, the
+    portal's 404, the 60-second tolerance, `provider_customer_id`, the `notifications`
+    `JobSpec`, the extras); KS's checks (no tolerance at :129, erasure cancels nothing,
+    checkout and portal 503, `share-dialog.tsx:99` and :152, the fixtures, the
+    write-lock hooks, `adminApi.changePlan` unused, the admin plan route, the share
+    gates, `/settings/subscription`).
