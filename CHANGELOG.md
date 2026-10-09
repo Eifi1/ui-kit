@@ -20,6 +20,45 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.33.0](https://github.com/Eifi1/ui-kit/compare/v0.32.2...v0.33.0) (2026-10-09)
+
+### ⚠ BREAKING CHANGES
+
+Changed token values, emitted classes and types that apps see on the bump; the migration
+is `docs/adopt-0.33.md` (§2 "Breaking and must-change, every app").
+
+* **Light `--bg-surface-2` is the page colour**, so a well on a card reads (1.02 → 1.09);
+  a well painted straight on the page no longer stands out.
+* **Light status colours are deeper** where they failed AA: `--warning`, `--success`,
+  `--hue-orange`, `--hue-teal` as text, a louder `--danger-border-strong`, a darker
+  `--status-edited`; `--brand-muted` is 62 % brand (was 70 %); Plum dark's brand moves one
+  step. `--bg-hover` is a 5.5 % ink (was 7 %).
+* **Hovers:** Button secondary/ghost and IconButton muted hover with a translucent ink;
+  a row on surface-2 hovers to the card; Button primary, calculator and numpad keys hover
+  on `--bg-active`.
+* **Fills use their `-contrast` foreground:** Chip `solid`, the FloatingAction badge,
+  toast actions and the kit's swipe panels (wash when idle, solid when armed).
+* **At Large a floating-label field's label stands above it**; the kit's wrap-at-Large
+  copies are one `truncate-until-large` utility.
+* **`commit?: boolean` is `commit?: CommitScope`** on every kit commit prop, and
+  `WriteLock` gains `kind` and `holds`. Under a billing lock the kit's remove, revoke,
+  lower-a-role, sessions, deletion, email, profile and verdict controls stay live.
+* **Exhaustive switches:** `BillingErrorCode` gains four members, `RowActionTone` three.
+* **The collapsed RowActions "⋯"** sits in a `data-slot="row-actions"` box that carries
+  `className` and the tour anchor.
+
+### Added
+
+* **billing:** the checkout's way back, at_provider, plan parts and the Paddle pay page ([f127b93](https://github.com/Eifi1/ui-kit/commit/f127b935c0e61c267da2e7b49291d639626b745b))
+* **colour-roles:** every fill names its foreground; light wells read on a card ([5c2b64f](https://github.com/Eifi1/ui-kit/commit/5c2b64f75d86ced198ab074b5f2170efd7003e1e))
+* **write-lock:** a lock says its source; row actions carry state; labels stand above at Large ([c1faeca](https://github.com/Eifi1/ui-kit/commit/c1faecaa4d1a82d852a4fb30335f049c2de25fbb))
+
+### Fixed
+
+* **colour-roles:** a pressed brand glyph hovers to brand-muted ([5534f3d](https://github.com/Eifi1/ui-kit/commit/5534f3df62742c979880b09fdf916ca1ef9efac5))
+* **colour-roles:** brand-muted clears 4.5 on the brand chip's hover ([faa9526](https://github.com/Eifi1/ui-kit/commit/faa95264999ef120c8a1bf6c0e80b14136e9a627))
+* the 0.33 follow-ups — strong warning cards, brand-muted text, revoke under billing ([874833f](https://github.com/Eifi1/ui-kit/commit/874833f4e279880b54bf7c977b1a92cfbfa55a0f))
+
 ## [0.32.2](https://github.com/Eifi1/ui-kit/compare/v0.32.1...v0.32.2) (2026-10-09)
 
 ### Fixed
