@@ -127,13 +127,13 @@ export const hu: Dictionary = {
       title: "Felhasználókezelés",
       short: "Felhasználók",
       blurb:
-        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók és a munka továbbadása.",
+        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók, a munka továbbadása, valamint a csomagoszlop és a csomag üzemeltetői módosítása.",
     },
     subscription: {
       title: "Előfizetés",
       short: "Számlázás",
       blurb:
-        "Fizetés egy alkalmazásért: a csomagválasztó két pénznemben és két időszakkal, az előfizetés állapota, a bannerek a próbaidőtől a lejáratig, a csomagkorlát-értesítés, a csak olvasható zár a demóé mellett, a szolgáltató portálja és az impresszum kereskedelmi nyilatkozata.",
+        "Fizetés egy alkalmazásért: a csomagválasztó két pénznemben és két időszakkal, az előfizetés állapota, a bannerek a próbaidőtől a lejáratig, a csomagkorlát-értesítés és -toast, a csak olvasható zár és a zárak fajtái, a szolgáltató portálja, a visszatérés a fizetésből, a fizetési oldal és az impresszum kereskedelmi nyilatkozata.",
     },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
@@ -169,6 +169,12 @@ export const hu: Dictionary = {
       short: "Tokenek",
       blurb:
         "Az aktív TokenSet minden értéke, élőben. Váltson témát vagy palettát a felső sávban, és figyelje, ahogy az oldal változik — ami nem mozdul, az be van égetve a kódba.",
+    },
+    "colour-roles": {
+      title: "Színszerepek",
+      short: "Szerepek",
+      blurb:
+        "A paletta fölötti szemantikus réteg: minden kitöltés az általa megnevezett előtérszínnel, minden tónus szövegként, halvány háttérként és vonalként, az erős vonalak, a süllyesztett felület egy kártyán, a hover szabálya, a text-[var(--…)] helyett használható szerepalapú segédosztályok, és a teszt, amely megtalálja a sehol sem deklarált változót.",
     },
     "text-size": {
       title: "Szövegméret és kontraszt",
@@ -606,6 +612,7 @@ export const hu: Dictionary = {
       "annak megmutatása, ki mit tett egy fiókkal",
       "valaki munkájának átadása egy másik felhasználónak",
       "fordítási lektor nyelveinek beállítása",
+      "felhasználó csomagjának módosítása",
     ],
     subscription: [
       "csomag választása",
@@ -618,6 +625,9 @@ export const hu: Dictionary = {
       "csak olvasható mód az előfizetés lejárta után",
       "a számlázási portál megnyitása",
       "az előfizetés lemondása",
+      "fizetés feldolgozás alatt a checkout után",
+      "a Paddle fizetési oldal kiszolgálása",
+      "csomagkorlát toast-értesítésként",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",
@@ -663,6 +673,15 @@ export const hu: Dictionary = {
       "térköz, lekerekítés és árnyék értékek",
       "szövegszínek és felületek",
       "beégetett értékek ellenőrzése",
+    ],
+    "colour-roles": [
+      "szövegszín színes kitöltésen",
+      "a megfelelő szövegszín egy figyelmeztető jelvényhez",
+      "kártyán is látható süllyesztett felület",
+      "listasor hover-színe",
+      "text-[var(--text-muted)] cseréje egy osztályra",
+      "erős figyelmeztető keret",
+      "nem deklarált CSS-változók megtalálása",
     ],
     "text-size": [
       "a szöveg nagyítása",

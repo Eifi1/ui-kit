@@ -27,6 +27,15 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Every preset, scoped to one card",
     "createThemeStore · createPaletteStore",
   ],
+  "colour-roles": [
+    "Every fill and its foreground",
+    "Each tone as text, wash and line",
+    "The strong lines",
+    "The well on a card",
+    "Hovers",
+    "Role utilities instead of text-[var(--…)]",
+    "undeclaredCssVariables — @eifi1/ui-kit/testing",
+  ],
   "text-size": [
     "The two settings, on this page",
     "A live sample",
@@ -39,6 +48,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Forms and tiles",
     "The phone bar folds into More",
     "A windowed list whose rows wrap",
+    "RowActions — pressed, expanded, tones and a tour anchor",
+    "Fields at Large — the label above the field",
   ],
   "palette": [
     "Anchors",
@@ -670,6 +681,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "swipeable-row": [
     "SwipeableRow",
     "SwipeableRow — stages, one-sided rows, actionsLabel and right-to-left",
+    "SwipeAction tone — every tone, idle and armed",
+    "SwipeAction paint — an app's documented exception",
     "useRowSwipe — the hook underneath, read live",
   ],
   "shell": [
@@ -782,6 +795,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "user-admin": [
     "User roster — useUserRosterColumns, RoleSelect, AdminActionConfirm",
     "Admin action log — AdminActionLog",
+    "The plan column and the operator's plan change — planColumn, PlanChangeConfirm",
     "Several roles — RolesEditor",
     "Invitations — InvitationsPanel",
     "AccountStateChip — deletion",
@@ -794,6 +808,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The read-only lock — the demo's and billing's in one provider",
     "SubscriptionActions — the portal, and a visible cancel",
     "The imprint's disclaimer — the commercial variant",
+    "The way back from the checkout — useCheckoutProcessing",
+    "SubscriptionActions — nothing yet, then the portal's three targets",
+    "usePlanLimitToast — the limit where a notice has no room",
+    "The pay page — dist/pay on pay.<app>",
+    "A lock says its source — kinds, holds and commit scopes",
+    "ShareCard under a billing lock — removing stays, adding does not",
   ],
   "feedback-compose": [
     "FeedbackDialog",

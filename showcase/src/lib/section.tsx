@@ -147,9 +147,12 @@ export function Swatch({ name, value }: { name: string; value: string }) {
         className="size-8 shrink-0 rounded-md border border-[var(--border)]"
         style={{ background: value }}
       />
+      {/* `truncate-until-large` (0.33): one line at Normal; at Large a token's name wraps
+          instead of losing its end ("moneyNeutral · --money-n…"), which the size sweep
+          reports as a finding. */}
       <span className="min-w-0">
-        <span className="block truncate text-xs font-medium text-[var(--text-primary)]">{name}</span>
-        <span className="block truncate font-mono text-caption text-[var(--text-muted)]">{value}</span>
+        <span className="block truncate-until-large text-xs font-medium text-primary">{name}</span>
+        <span className="block truncate-until-large font-mono text-caption text-muted">{value}</span>
       </span>
     </div>
   );

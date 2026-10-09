@@ -132,13 +132,13 @@ export const en: Dictionary = {
       title: "User administration",
       short: "Users",
       blurb:
-        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, and handing work on.",
+        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, handing work on, and the operator's plan column and plan change.",
     },
     subscription: {
       title: "Subscription",
       short: "Billing",
       blurb:
-        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice, the read-only lock beside the demo's, the provider's portal, and the imprint's commercial disclaimer.",
+        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
     },
     "auth-account": {
       title: "Sign-in & account security",
@@ -174,6 +174,12 @@ export const en: Dictionary = {
       short: "Tokens",
       blurb:
         "Every value in the active TokenSet, live. Flip the theme or the palette in the top bar and watch this page move — anything that does not move is hardcoded.",
+    },
+    "colour-roles": {
+      title: "Colour roles",
+      short: "Roles",
+      blurb:
+        "The semantic layer over the palette: every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
     },
     "text-size": {
       title: "Text size & contrast",
@@ -606,6 +612,7 @@ export const en: Dictionary = {
       "show who did what to an account",
       "hand someone's work to another user",
       "set a translation reviewer's languages",
+      "change a user's plan",
     ],
     subscription: [
       "choose a plan",
@@ -618,6 +625,9 @@ export const en: Dictionary = {
       "read-only when the subscription lapses",
       "open the billing portal",
       "cancel the subscription",
+      "payment being processed after the checkout",
+      "serve the Paddle pay page",
+      "plan limit as a toast",
     ],
     "auth-account": [
       "login page layout",
@@ -663,6 +673,15 @@ export const en: Dictionary = {
       "spacing, radius and shadow values",
       "text colours and surfaces",
       "check what is hardcoded",
+    ],
+    "colour-roles": [
+      "text colour on a coloured fill",
+      "the right text colour for a warning badge",
+      "an inset panel that shows on a card",
+      "hover colour for a list row",
+      "replace text-[var(--text-muted)] with a class",
+      "a strong warning border",
+      "find CSS variables nothing declares",
     ],
     "text-size": [
       "make the text bigger",

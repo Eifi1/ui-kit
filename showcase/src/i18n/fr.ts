@@ -124,13 +124,13 @@ export const fr: Dictionary = {
       title: "Administration des utilisateurs",
       short: "Utilisateurs",
       blurb:
-        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations et la transmission du travail.",
+        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations, la transmission du travail, ainsi que la colonne de formule et le changement de formule par l’opérateur.",
     },
     subscription: {
       title: "Abonnement",
       short: "Facturation",
       blurb:
-        "Payer une application\u00a0: le choix de la formule en deux devises et sur deux périodes, l’état de l’abonnement, les bandeaux de l’essai à l’expiration, l’avis de limite de formule, le verrou de lecture seule à côté de celui de la démo, le portail du prestataire et l’avertissement commercial des mentions légales.",
+        "Payer une application\u00a0: le choix de la formule en deux devises et sur deux périodes, l’état de l’abonnement, les bandeaux de l’essai à l’expiration, l’avis et le toast de limite de formule, le verrou de lecture seule et les sortes de verrous, le portail du prestataire, le retour depuis le paiement, la page de paiement et l’avertissement commercial des mentions légales.",
     },
     "auth-account": {
       title: "Connexion et sécurité du compte",
@@ -166,6 +166,12 @@ export const fr: Dictionary = {
       short: "Tokens",
       blurb:
         "Toutes les valeurs du TokenSet actif, en direct. Changez de thème ou de palette dans la barre du haut et regardez cette page bouger — ce qui ne bouge pas est codé en dur.",
+    },
+    "colour-roles": {
+      title: "Rôles de couleur",
+      short: "Rôles",
+      blurb:
+        "La couche sémantique au-dessus de la palette\u00a0: chaque aplat avec la couleur de premier plan qu’il nomme, chaque ton en texte, en fond doux et en trait, les traits forts, le panneau en creux sur une carte, la règle du survol, les utilitaires de rôle qui remplacent text-[var(--…)], et le test qui repère une variable que rien ne déclare.",
     },
     "text-size": {
       title: "Taille du texte et contraste",
@@ -603,6 +609,7 @@ export const fr: Dictionary = {
       "montrer qui a fait quoi sur un compte",
       "transmettre le travail de quelqu’un à un autre utilisateur",
       "définir les langues d’un relecteur de traductions",
+      "changer la formule d’un utilisateur",
     ],
     subscription: [
       "choisir une formule",
@@ -615,6 +622,9 @@ export const fr: Dictionary = {
       "lecture seule à l’expiration de l’abonnement",
       "ouvrir le portail de facturation",
       "résilier l’abonnement",
+      "paiement en cours de traitement au retour du paiement",
+      "servir la page de paiement Paddle",
+      "limite de formule sous forme de toast",
     ],
     "auth-account": [
       "mise en page de la connexion",
@@ -660,6 +670,15 @@ export const fr: Dictionary = {
       "espacements, arrondis et ombres",
       "couleurs de texte et surfaces",
       "repérer les valeurs codées en dur",
+    ],
+    "colour-roles": [
+      "couleur du texte sur un aplat coloré",
+      "la bonne couleur de texte pour un badge d’avertissement",
+      "un panneau en creux visible sur une carte",
+      "couleur de survol d’une ligne de liste",
+      "remplacer text-[var(--text-muted)] par une classe",
+      "une bordure d’avertissement forte",
+      "trouver les variables CSS que rien ne déclare",
     ],
     "text-size": [
       "agrandir le texte",

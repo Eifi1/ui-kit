@@ -121,13 +121,13 @@ export const es: Dictionary = {
       title: "Administración de usuarios",
       short: "Usuarios",
       blurb:
-        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones y el traspaso de trabajo.",
+        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones, el traspaso de trabajo, y la columna de plan y el cambio de plan del operador.",
     },
     subscription: {
       title: "Suscripción",
       short: "Facturación",
       blurb:
-        "Pagar por una aplicación: el selector de plan en dos monedas y dos periodos, el estado de la suscripción, los banners desde la prueba hasta el vencimiento, el aviso de límite del plan, el bloqueo de solo lectura junto al de la demo, el portal del proveedor y la cláusula comercial del aviso legal.",
+        "Pagar por una aplicación: el selector de plan en dos monedas y dos periodos, el estado de la suscripción, los banners desde la prueba hasta el vencimiento, el aviso y el toast de límite del plan, el bloqueo de solo lectura y los tipos de bloqueo, el portal del proveedor, la vuelta desde el pago, la página de pago y la cláusula comercial del aviso legal.",
     },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
@@ -163,6 +163,12 @@ export const es: Dictionary = {
       short: "Tokens",
       blurb:
         "Cada valor del TokenSet activo, en vivo. Cambia el tema o la paleta en la barra superior y mira cómo se mueve esta página: lo que no se mueve está fijado en el código.",
+    },
+    "colour-roles": {
+      title: "Roles de color",
+      short: "Roles",
+      blurb:
+        "La capa semántica sobre la paleta: cada relleno con el color de primer plano que nombra, cada tono como texto, fondo suave y línea, las líneas fuertes, el panel hundido sobre una tarjeta, la regla del hover, las utilidades de rol que sustituyen a text-[var(--…)] y la prueba que detecta una variable que nada declara.",
     },
     "text-size": {
       title: "Tamaño del texto y contraste",
@@ -600,6 +606,7 @@ export const es: Dictionary = {
       "mostrar quién hizo qué en una cuenta",
       "traspasar el trabajo de alguien a otro usuario",
       "definir los idiomas de un revisor de traducciones",
+      "cambiar el plan de un usuario",
     ],
     subscription: [
       "elegir un plan",
@@ -612,6 +619,9 @@ export const es: Dictionary = {
       "solo lectura al vencer la suscripción",
       "abrir el portal de facturación",
       "cancelar la suscripción",
+      "pago en proceso tras el checkout",
+      "servir la página de pago de Paddle",
+      "límite del plan como toast",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",
@@ -657,6 +667,15 @@ export const es: Dictionary = {
       "valores de espaciado, radio y sombra",
       "colores de texto y superficies",
       "comprobar qué está escrito a mano",
+    ],
+    "colour-roles": [
+      "color del texto sobre un relleno de color",
+      "el color de texto correcto para una insignia de advertencia",
+      "un panel hundido visible sobre una tarjeta",
+      "color de hover para una fila de lista",
+      "sustituir text-[var(--text-muted)] por una clase",
+      "un borde de advertencia fuerte",
+      "encontrar variables CSS que nada declara",
     ],
     "text-size": [
       "agrandar el texto",

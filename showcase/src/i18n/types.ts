@@ -30,6 +30,7 @@ export type PageSlug =
   | "overview"
   | "foundations"
   | "tokens"
+  | "colour-roles"
   | "text-size"
   | "palette"
   | "localisation"

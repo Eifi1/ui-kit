@@ -118,13 +118,13 @@ export const it: Dictionary = {
       title: "Amministrazione utenti",
       short: "Utenti",
       blurb:
-        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti e il passaggio del lavoro.",
+        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti, il passaggio del lavoro, e la colonna del piano e il cambio di piano da parte dell’operatore.",
     },
     subscription: {
       title: "Abbonamento",
       short: "Fatturazione",
       blurb:
-        "Pagare un’app: la scelta del piano in due valute e su due periodi, lo stato dell’abbonamento, i banner dalla prova alla scadenza, l’avviso di limite del piano, il blocco di sola lettura accanto a quello della demo, il portale del fornitore e l’avvertenza commerciale delle note legali.",
+        "Pagare un’app: la scelta del piano in due valute e su due periodi, lo stato dell’abbonamento, i banner dalla prova alla scadenza, l’avviso e il toast di limite del piano, il blocco di sola lettura e i tipi di blocco, il portale del fornitore, il ritorno dal checkout, la pagina di pagamento e l’avvertenza commerciale delle note legali.",
     },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
@@ -160,6 +160,12 @@ export const it: Dictionary = {
       short: "Token",
       blurb:
         "Ogni valore del TokenSet attivo, dal vivo. Cambia tema o palette nella barra in alto e guarda questa pagina cambiare: tutto ciò che resta fermo è scritto nel codice.",
+    },
+    "colour-roles": {
+      title: "Ruoli dei colori",
+      short: "Ruoli",
+      blurb:
+        "Lo strato semantico sopra la tavolozza: ogni riempimento con il colore di primo piano che indica, ogni tono come testo, sfondo tenue e linea, le linee forti, il pannello incassato su una scheda, la regola dell’hover, le utility di ruolo che sostituiscono text-[var(--…)] e il test che trova una variabile che nulla dichiara.",
     },
     "text-size": {
       title: "Dimensione del testo e contrasto",
@@ -597,6 +603,7 @@ export const it: Dictionary = {
       "mostrare chi ha fatto cosa su un account",
       "passare il lavoro di qualcuno a un altro utente",
       "impostare le lingue di un revisore delle traduzioni",
+      "cambiare il piano di un utente",
     ],
     subscription: [
       "scegliere un piano",
@@ -609,6 +616,9 @@ export const it: Dictionary = {
       "sola lettura alla scadenza dell’abbonamento",
       "aprire il portale di fatturazione",
       "disdire l’abbonamento",
+      "pagamento in elaborazione dopo il checkout",
+      "servire la pagina di pagamento Paddle",
+      "limite del piano come toast",
     ],
     "auth-account": [
       "layout della pagina di accesso",
@@ -654,6 +664,15 @@ export const it: Dictionary = {
       "valori di spaziatura, raggio e ombre",
       "colori del testo e superfici",
       "controllare cosa è scritto a mano",
+    ],
+    "colour-roles": [
+      "colore del testo su un riempimento colorato",
+      "il colore di testo giusto per un badge di avviso",
+      "un pannello incassato visibile su una scheda",
+      "colore di hover per una riga di elenco",
+      "sostituire text-[var(--text-muted)] con una classe",
+      "un bordo di avviso marcato",
+      "trovare le variabili CSS che nulla dichiara",
     ],
     "text-size": [
       "ingrandire il testo",
