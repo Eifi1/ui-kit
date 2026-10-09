@@ -30,6 +30,16 @@ const TITLE: Record<PageHeaderSize, string> = {
  */
 export type PageHeaderMobileLayout = "stacked" | "inline";
 
+/**
+ * `stacked` at Large and Extra large on a phone (0.32.2, kastlan's 0.32.1 report;
+ * docs/text-size-harmonization.md §4, as FormActions does): the actions take the full
+ * width, one under the other. Side by side in 240 px of layout, two buttons each wrapped
+ * their label onto three lines. `large:max-sm:`, the scaled phone width, so Normal and
+ * every wider screen keep their row; `inline` is for actions known to fit, and stays.
+ */
+const STACK_ACTIONS_AT_LARGE =
+  "large:max-sm:flex-col large:max-sm:items-stretch large:max-sm:[&>*]:w-full";
+
 const ROW: Record<PageHeaderMobileLayout, string> = {
   stacked: "flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
   inline: "flex-row items-center justify-between gap-2 sm:gap-4",
@@ -232,7 +242,11 @@ export function PageHeader({
         {actions != null && (
           <div
             ref={actionsRef}
-            className={cn("flex shrink-0 flex-wrap items-center gap-2", hasSecondary && "sm:order-2")}
+            className={cn(
+              "flex shrink-0 flex-wrap items-center gap-2",
+              hasSecondary && "sm:order-2",
+              mobileLayout === "stacked" && STACK_ACTIONS_AT_LARGE,
+            )}
           >
             {actions}
           </div>
