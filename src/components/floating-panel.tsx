@@ -243,7 +243,7 @@ export function FloatingActionButton({
               pressed === false &&
                 "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
               pressed === true &&
-                "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]",
+                "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted",
               "outline-none focus-visible:ring-offset-2",
               FOCUS_RING,
               className,
@@ -697,7 +697,7 @@ export function FloatingAction({
     variant === "primary"
       ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
       : pressed && !isLink && pressedStyle === "tint"
-        ? "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]"
+        ? "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted"
         : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
     className,
   );

@@ -1496,6 +1496,12 @@ corrected in place too.
       level: `auditPalette` and `tokens-css-audit.test.ts`. The token audit also holds
       the three shares equal to the stylesheet's, and the hover's 1.08 step from the
       chip.
+12. **A brand glyph on the hovered chip turns brand-muted (found in the 0.33 build).**
+    `--brand` as an icon on `--brand-bg-hover` is 2.69–2.80 in Ink, Moss, Plum and
+    Contrast dark, under an icon's 3:1. Where a pressed control hovers to that chip
+    (IconButton `pressed`, FloatingPanel's two toggles), its glyph hovers to
+    `--brand-muted`, which item 11 holds at 4.50 or more there. At rest the glyph stays
+    `--brand` on `--brand-bg`.
 
 ## A. Method
 

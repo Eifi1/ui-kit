@@ -818,9 +818,11 @@ const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-[var(--text-placeho
 
 // `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
 // "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
-// beside them. After the tone, so a pressed `muted` button is brand, not grey.
+// beside them. After the tone, so a pressed `muted` button is brand, not grey. On hover
+// the glyph turns brand-muted: `--brand` on `--brand-bg-hover` is 2.69–2.80 in four dark
+// presets, under an icon's 3:1 (colour-roles §12.12).
 const ICON_BUTTON_PRESSED =
-  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-[var(--brand)] disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
+  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
 
 // `variant="overlay"`: a round, translucent disc for a control that sits ON a photo
 // (keksdose's receipt-scan preview: close, rotate, retake over the camera image).

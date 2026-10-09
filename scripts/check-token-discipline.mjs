@@ -43,7 +43,7 @@ const BUDGET = Number(process.env.TOKEN_BUDGET ?? "2");
  * moved to the utilities; 1,576 once the rest of the round had landed (ButtonGroupLink's
  * and ActionCard's brand as text among it).
  */
-const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1576");
+const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1575");
 
 const SRC = resolve(import.meta.dirname, "..", "src");
 
