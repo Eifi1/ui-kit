@@ -416,6 +416,9 @@ describe("RowActions — the menu keeps its clicks from the row (0.32.1)", () =>
     await user.click(screen.getByRole("button", { name: "Actions for Ada Example" }));
     const menu = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
     fireEvent.keyDown(within(menu).getByRole("button", { name: "Edit" }), { key: "Enter" });
+    // The panel's own padding and border too, not only what is inside it (0.32.2).
+    fireEvent.click(menu);
+    fireEvent.keyDown(menu, { key: " " });
     await user.click(within(menu).getByRole("button", { name: "Delete" }));
     expect(remove).toHaveBeenCalledTimes(1);
     expect(onRow).not.toHaveBeenCalled();

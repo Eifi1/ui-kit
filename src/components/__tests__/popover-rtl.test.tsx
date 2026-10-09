@@ -59,3 +59,29 @@ describe("Popover direction", () => {
     expect(panel).toHaveAttribute("dir", "ltr");
   });
 });
+
+describe("Popover onKeyDown (0.32.2)", () => {
+  it("runs the caller's handler on the panel, and Escape still closes", () => {
+    const onKeyDown = vi.fn();
+    render(
+      <Popover
+        width={200}
+        onKeyDown={onKeyDown}
+        trigger={({ toggle, ref }) => (
+          <button type="button" ref={ref} onClick={toggle}>
+            Open
+          </button>
+        )}
+      >
+        {() => <p>panel</p>}
+      </Popover>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Open" }));
+    const panel = screen.getByRole("dialog");
+    fireEvent.keyDown(panel, { key: "Enter" });
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(panel, { key: "Escape" });
+    expect(onKeyDown).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
