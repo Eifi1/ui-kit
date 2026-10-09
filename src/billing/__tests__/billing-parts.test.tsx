@@ -214,4 +214,37 @@ describe("SubscriptionActions — the portal and a visible cancel (§12.26)", ()
     rerender(<SubscriptionActions />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("says 'nothing yet' in place of both before the payer reached the provider (§14.5)", () => {
+    const portal = vi.fn();
+    const { rerender } = render(<SubscriptionActions atProvider={false} onPortal={portal} onManage={portal} />);
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(DEFAULT_BILLING_LABELS.notAtProvider)).toBeInTheDocument();
+    expect(document.querySelector('[data-at-provider="false"]')).not.toBeNull();
+    // Reached it — whatever the status or source (§12.26): both show again.
+    rerender(<SubscriptionActions atProvider onPortal={portal} />);
+    expect(screen.getByRole("button", { name: "Payment and invoices" })).toBeInTheDocument();
+    expect(screen.queryByText(DEFAULT_BILLING_LABELS.notAtProvider)).toBeNull();
+    rerender(
+      <UiKitProvider labels={{ billing: { notAtProvider: "Noch nichts zu verwalten." } } as never}>
+        <SubscriptionActions atProvider={false} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Noch nichts zu verwalten.")).toBeInTheDocument();
+  });
+
+  it("asks the portal for the right target: the overview for payments, the cancel link for Cancel", async () => {
+    const user = userEvent.setup();
+    const portal = vi.fn();
+    const { rerender } = render(<SubscriptionActions onPortal={portal} />);
+    await user.click(screen.getByRole("button", { name: "Payment and invoices" }));
+    await user.click(screen.getByRole("button", { name: "Cancel subscription" }));
+    expect(portal.mock.calls).toEqual([["overview"], ["cancel"]]);
+    // The app's own callback wins over it.
+    const cancel = vi.fn();
+    rerender(<SubscriptionActions onPortal={portal} onCancel={cancel} />);
+    await user.click(screen.getByRole("button", { name: "Cancel subscription" }));
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(portal).toHaveBeenCalledTimes(2);
+  });
 });

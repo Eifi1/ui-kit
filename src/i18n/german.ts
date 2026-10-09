@@ -1525,9 +1525,22 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // Both figures arrive formatted.
       usage: (used, limit) => `${used} von ${limit}`,
       contactSubject: (dimension) => `Tariflimit: ${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12).
+      limitUsageLine: (dimension, used, limit) => `${dimension}: ${used} von ${limit}`,
       manage: "Zahlung und Rechnungen",
       // §312k BGB: the button that leads to the cancellation says exactly this (§12.26).
       cancel: "Verträge hier kündigen",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider:
+        "Noch nichts zu verwalten. Zahlungen und Rechnungen erscheinen hier, sobald Sie einen kostenpflichtigen Tarif haben.",
+      // §14.4: the pay page's lines, built into its bundle. "Bezahlvorgang", Paddle's own
+      // German for its checkout.
+      payOpening: "Der sichere Bezahlvorgang wird geöffnet…",
+      payNothing: "Hier ist nichts zu bezahlen. Um einen Tarif zu wählen, kehren Sie zur App zurück.",
+      payFailed:
+        "Der Bezahlvorgang konnte nicht geöffnet werden. Bitte kehren Sie zurück und versuchen Sie es gleich noch einmal.",
+      payBack:
+        "Der Bezahlvorgang wurde geschlossen. Sie können zurückkehren oder diese Seite neu laden, um ihn wieder zu öffnen.",
       waitingChanges: (count) =>
         count === 1
           ? `${n(count)} Änderung wartet auf einen Tarif`
@@ -1536,6 +1549,31 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       discardWaiting: "Wartende Änderungen verwerfen",
       notConfigured: "Zahlungen sind noch nicht eingerichtet. Bitte versuchen Sie es später noch einmal.",
       disabled: "Abonnements sind hier nicht verfügbar.",
+      // §14.2: server-kit 0.7's refusals. "Zahlung und Rechnungen", as `manage`.
+      providerUnavailable:
+        "Der Zahlungsanbieter ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
+      alreadySubscribed: "Sie haben bereits ein Abonnement. Ihren Tarif ändern Sie unter „Zahlung und Rechnungen“.",
+      planNotSold:
+        "Dieser Tarif ist für diesen Abrechnungszeitraum oder diese Währung nicht erhältlich. Bitte wählen Sie einen anderen.",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "Tarif" as
+    // in `billing`; keksdose's reviewed admin wording where it had one.
+    planChange: {
+      column: "Tarif",
+      title: "Tarif ändern",
+      confirm: "Tarif ändern",
+      plan: "Tarif",
+      current: (plan) => `Aktueller Tarif: ${plan}`,
+      keepsItems: "Ein kleinerer Tarif sperrt nur das Anlegen weiterer Einträge; gelöscht wird nichts.",
+      until: "Kostenlos bis",
+      untilHint: "Leer lassen für kein Ende. Eine laufende Beta behält ihr eigenes Ende.",
+      needsChange: "Wählen Sie einen anderen Tarif oder ein Enddatum.",
+      changed: (from, to) => `Tarif von ${from} auf ${to} geändert.`,
+      set: (to) => `Tarif auf ${to} gesetzt.`,
+      keptBeta: "Die Beta behält ihr Ende; nur der Tarif wurde geändert.",
+      untilDone: (date) => `Kostenlos bis ${date}.`,
+      overLimit: "Über dem Limit des neuen Tarifs: Nichts wird entfernt, neue Einträge sind gesperrt.",
+      usageOf: (used, limit, dimension) => `${used} von ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Darstellung" group.

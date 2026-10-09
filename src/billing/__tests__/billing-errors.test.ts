@@ -16,8 +16,17 @@ const generated = (body: unknown) => ({ name: "ApiError", status: 402, body });
 const LIMIT = { detail: "Plan limit reached", code: "plan_limit", dimension: "budgets", plan: "free", limit: 1, used: 1 };
 
 describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
-  it("knows the four codes in every shape", () => {
-    for (const code of ["billing_disabled", "billing_read_only", "plan_limit", "billing_not_configured"] as const) {
+  it("knows the codes in every shape, server-kit 0.7's four new ones included (§14.2)", () => {
+    for (const code of [
+      "billing_disabled",
+      "billing_read_only",
+      "plan_limit",
+      "billing_not_configured",
+      "billing_provider_unavailable",
+      "billing_not_at_provider",
+      "billing_already_subscribed",
+      "billing_plan_not_sold",
+    ] as const) {
       const body = { detail: "…", code };
       expect(authErrorCode(axios(body))).toBe(code);
       expect(authErrorCode(ofetch(body))).toBe(code);
@@ -32,6 +41,10 @@ describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
     expect(isBillingError(axios({ code: "billing_read_only" }))).toBe(true);
     expect(isBillingError(axios({ code: "billing_read_only" }), "billing_read_only")).toBe(true);
     expect(isBillingError(axios({ code: "billing_read_only" }), "plan_limit")).toBe(false);
+    expect(isBillingError(axios({ code: "billing_already_subscribed" }, 409))).toBe(true);
+    expect(isBillingError(axios({ code: "billing_not_at_provider" }, 409), "billing_not_at_provider")).toBe(true);
+    // The audits' drafts were never the wire's names (decision 22).
+    expect(isBillingError(axios({ code: "not_at_provider" }, 409))).toBe(false);
     expect(isBillingError(axios({ code: "demo_read_only" }, 403))).toBe(false);
     expect(isBillingError(axios({ code: "plan_budget_limit" }))).toBe(false);
     expect(isBillingError(new Error("network"))).toBe(false);

@@ -1425,13 +1425,46 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       // Both figures arrive formatted; written as `characterCount.count` writes them.
       usage: (used, limit) => `${used}/${limit}`,
       contactSubject: (dimension) => `套餐上限：${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12);
+      // written as `usage` writes the figures.
+      limitUsageLine: (dimension, used, limit) => `${dimension}：${used}/${limit}`,
       manage: "付款与发票",
       cancel: "取消订阅",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider: "暂无可管理的内容。开通付费套餐后，付款和发票会显示在这里。",
+      // §14.4: the pay page's lines, built into its bundle.
+      payOpening: "正在打开安全支付页面…",
+      payNothing: "这里没有需要支付的款项。如需选择套餐，请返回应用。",
+      payFailed: "无法打开支付页面。请返回后稍候再试。",
+      payBack: "支付页面已关闭。您可以返回，或重新加载此页面以再次打开。",
       waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
       // "放弃", as `wizard.cancelConfirmLabel`.
       discardWaiting: "放弃等待中的修改",
       notConfigured: "付款尚未设置，请稍后再试。",
       disabled: "此处不提供订阅。",
+      // §14.2: server-kit 0.7's refusals. "付款与发票", as `manage`.
+      providerUnavailable: "暂时无法连接支付服务商，请稍后再试。",
+      alreadySubscribed: "您已有订阅。如需更改套餐，请前往“付款与发票”。",
+      planNotSold: "该套餐不支持此计费周期或货币，请选择其他套餐。",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "套餐" as
+    // in `billing`. "测试版", as `landing.beta`.
+    planChange: {
+      column: "套餐",
+      title: "更改套餐",
+      confirm: "更改套餐",
+      plan: "套餐",
+      current: (plan) => `当前套餐：${plan}`,
+      keepsItems: "较小的套餐只会阻止新建更多内容，不会删除任何内容。",
+      until: "免费至",
+      untilHint: "留空表示没有结束日期。正在进行的测试版保留其自身的结束日期。",
+      needsChange: "请选择其他套餐或结束日期。",
+      changed: (from, to) => `套餐已从 ${from} 更改为 ${to}。`,
+      set: (to) => `套餐已设为 ${to}。`,
+      keptBeta: "测试版保留其结束日期；只更改了套餐。",
+      untilDone: (date) => `免费至 ${date}。`,
+      overLimit: "超出新套餐的上限：不会删除任何内容，但无法新建。",
+      usageOf: (used, limit, dimension) => `${used}/${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "外观" group.

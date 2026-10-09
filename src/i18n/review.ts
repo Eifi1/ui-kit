@@ -366,4 +366,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.usage": [["{{used}}", "{{limit}}"]],
   "billing.contactSubject": [["{{dimension}}"]],
   "billing.waitingChanges": one,
+  // 0.33.0: the limit's figure line (§14.11) and the operator's plan parts (§14.12).
+  "billing.limitUsageLine": [["{{dimension}}", "{{used}}", "{{limit}}"]],
+  "planChange.current": [["{{plan}}"]],
+  "planChange.changed": [["{{from}}", "{{to}}"]],
+  "planChange.set": [["{{to}}"]],
+  "planChange.untilDone": [["{{date}}"]],
+  "planChange.usageOf": [["{{used}}", "{{limit}}", "{{dimension}}"]],
 };

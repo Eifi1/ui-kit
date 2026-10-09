@@ -1500,14 +1500,49 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       // Both figures arrive formatted; "di", as `characterCount.count`.
       usage: (used, limit) => `${used} di ${limit}`,
       contactSubject: (dimension) => `Limite del piano: ${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12).
+      limitUsageLine: (dimension, used, limit) => `${dimension}: ${used} di ${limit}`,
       manage: "Pagamento e fatture",
       cancel: "Disdici l’abbonamento",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider:
+        "Ancora niente da gestire. Pagamenti e fatture compariranno qui quando avrà un piano a pagamento.",
+      // §14.4: the pay page's lines, built into its bundle. "Lei".
+      payOpening: "Apertura del pagamento sicuro…",
+      payNothing: "Qui non c’è nulla da pagare. Per scegliere un piano, torni all’app.",
+      payFailed: "Non è stato possibile aprire il pagamento. Torni indietro e riprovi tra un momento.",
+      payBack: "Il pagamento è stato chiuso. Può tornare indietro, oppure ricaricare questa pagina per riaprirlo.",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
       // "Scarta", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Scarta le modifiche in attesa",
       notConfigured: "I pagamenti non sono ancora configurati. Riprovi più tardi.",
       disabled: "Gli abbonamenti non sono disponibili qui.",
+      // §14.2: server-kit 0.7's refusals. "Pagamento e fatture", as `manage`. "Lei".
+      providerUnavailable: "Il fornitore dei pagamenti non è raggiungibile al momento. Riprovi tra un momento.",
+      alreadySubscribed: "Ha già un abbonamento. Per cambiare piano, vada su «Pagamento e fatture».",
+      planNotSold:
+        "Questo piano non è disponibile per questo periodo di fatturazione o questa valuta. Ne scelga un altro.",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "piano" as
+    // in `billing`. "Lei" in sentences, the imperative on the title and the button.
+    planChange: {
+      column: "Piano",
+      title: "Cambia piano",
+      confirm: "Cambia piano",
+      plan: "Piano",
+      current: (plan) => `Piano attuale: ${plan}`,
+      keepsItems: "Un piano più piccolo blocca solo la creazione di nuovi elementi; non viene eliminato nulla.",
+      until: "Gratuito fino al",
+      untilHint: "Lasci vuoto per nessuna scadenza. Una beta in corso mantiene la propria scadenza.",
+      needsChange: "Scelga un altro piano o una data di fine.",
+      changed: (from, to) => `Piano cambiato da ${from} a ${to}.`,
+      set: (to) => `Piano impostato su ${to}.`,
+      keptBeta: "La beta mantiene la sua scadenza; è cambiato solo il piano.",
+      untilDone: (date) => `Gratuito fino al ${date}.`,
+      overLimit: "Oltre il limite del nuovo piano: non viene rimosso nulla, i nuovi elementi sono bloccati.",
+      // Figures formatted; "di", as `billing.usage`.
+      usageOf: (used, limit, dimension) => `${used} di ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Aspetto" group.

@@ -102,8 +102,27 @@ export type DemoErrorCode =
  *   creating gets `billing_read_only` instead, never this (§12.3).
  * - `billing_not_configured` — billing is switched on but the provider's settings are
  *   missing (the secrets, a price id): the operator's mistake, not the payer's.
+ *
+ * 0.33.0 (server-kit 0.7, §14.2): the provider's refusals, with the `billing_` prefix of
+ * the others (decision 22).
+ * - `billing_provider_unavailable` — `502`: Paddle didn't answer, or refused the request.
+ *   Try again.
+ * - `billing_not_at_provider` — `409`: a portal request before the payer reached the
+ *   provider (§14.5) — a stale page; the overview's `at_provider` says it first.
+ * - `billing_already_subscribed` — `409`: a checkout while a provider subscription runs
+ *   (§14.6). Plan changes go through the portal.
+ * - `billing_plan_not_sold` — `422`: a checkout for a plan, currency or interval the
+ *   catalogue doesn't sell.
  */
-export type BillingErrorCode = "billing_disabled" | "billing_read_only" | "plan_limit" | "billing_not_configured";
+export type BillingErrorCode =
+  | "billing_disabled"
+  | "billing_read_only"
+  | "plan_limit"
+  | "billing_not_configured"
+  | "billing_provider_unavailable"
+  | "billing_not_at_provider"
+  | "billing_already_subscribed"
+  | "billing_plan_not_sold";
 
 /** Every code the kit reads: the sign-in refusals, the account ones (0.30.0), the demo's
  *  (0.31.0) and billing's (0.32.0). */
@@ -114,6 +133,10 @@ const BILLING_CODES: ReadonlySet<BillingErrorCode> = new Set<BillingErrorCode>([
   "billing_read_only",
   "plan_limit",
   "billing_not_configured",
+  "billing_provider_unavailable",
+  "billing_not_at_provider",
+  "billing_already_subscribed",
+  "billing_plan_not_sold",
 ]);
 
 const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
@@ -210,7 +233,7 @@ export function isAuthError(err: unknown, code?: KitErrorCode): boolean {
 
 /**
  * Whether `err` is one of billing's coded refusals (0.32.0, docs/billing-harmonization.md
- * §10) — any of the four, or the one named. {@link isAuthError} answers the same for a
+ * §10, §14.2) — any of them, or the one named. {@link isAuthError} answers the same for a
  * named code; this one also answers "is it billing's at all", which an app's error
  * handler asks before it decides between the write lock, a `PlanLimitNotice` and a toast.
  */

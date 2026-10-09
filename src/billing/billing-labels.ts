@@ -129,6 +129,13 @@ export interface BillingLabels {
   usage: (used: string, limit: string) => string;
   /** The subject of the `contact` mail; `dimension` is the app's name for it ("Budgets"). */
   contactSubject: (dimension: string) => string;
+  /**
+   * The figure line of the limit's toast (`usePlanLimitToast`, §14.11) and of an
+   * operator's plan change over the new limit (§14.12): "Budgets: 3 of 3". A key of its
+   * own rather than `${dimension}: ${usage}`, because French puts a space before the
+   * colon. Both figures are formatted already.
+   */
+  limitUsageLine: (dimension: string, used: string, limit: string) => string;
 
   /* ── The provider's portal (§7, §12.26) ── */
   /** The portal: payment method and invoices (§2.8, the provider hosts both). */
@@ -139,6 +146,24 @@ export interface BillingLabels {
    * as unambiguously — a translator should use exactly that.
    */
   cancel: string;
+  /**
+   * In place of both while the payer hasn't reached the provider (the overview's
+   * `at_provider` is false, §14.5): there is no customer to open a portal for yet. Also
+   * the words for `409 billing_not_at_provider`, a stale page that asked anyway.
+   */
+  notAtProvider: string;
+
+  /* ── The pay page (§14.4) ── */
+  /* Built into the static page `dist/pay/` at the kit's build: it has no React and no
+     provider, so an app's override never reaches it. */
+  /** While the checkout opens. */
+  payOpening: string;
+  /** A link without a transaction, or billing switched off: nothing to pay. */
+  payNothing: string;
+  /** Paddle's script didn't load, or the page's configuration is wrong. */
+  payFailed: string;
+  /** The buyer closed the checkout without paying. */
+  payBack: string;
 
   /* ── Offline (§12.5) ── */
   /** Changes refused as `billing_read_only` inside a sync reply, kept queued and sent
@@ -159,6 +184,16 @@ export interface BillingLabels {
   /** `billing_disabled`: billing is switched off on this server (§2.9), for a page or a
    *  link that reached it anyway. */
   disabled: string;
+  /* 0.33.0 — server-kit 0.7's refusals (§14.2). `billing_not_at_provider` is
+     {@link notAtProvider}'s: a stale page that asked for the portal anyway. */
+  /** `billing_provider_unavailable` (502): the provider didn't answer. Try again. */
+  providerUnavailable: string;
+  /** `billing_already_subscribed` (409): a second checkout while a subscription runs
+   *  (§14.6) — plan changes go through the portal. */
+  alreadySubscribed: string;
+  /** `billing_plan_not_sold` (422): the catalogue doesn't sell this plan with that
+   *  period or currency. */
+  planNotSold: string;
 }
 
 /** "today", "tomorrow", "in 5 days". */
@@ -221,9 +256,16 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   askForMore: "Ask for more",
   usage: (used, limit) => `${used} of ${limit}`,
   contactSubject: (dimension) => `Plan limit: ${dimension}`,
+  limitUsageLine: (dimension, used, limit) => `${dimension}: ${used} of ${limit}`,
 
   manage: "Payment and invoices",
   cancel: "Cancel subscription",
+  notAtProvider: "Nothing to manage yet. Payments and invoices appear here once you have a paid plan.",
+
+  payOpening: "Opening the secure checkout…",
+  payNothing: "There’s no payment to make here. To choose a plan, go back to the app.",
+  payFailed: "The checkout couldn’t be opened. Please go back and try again in a moment.",
+  payBack: "The checkout was closed. You can go back, or reload this page to open it again.",
 
   waitingChanges: (count) =>
     count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`,
@@ -231,6 +273,9 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
 
   notConfigured: "Payments aren't set up yet. Please try again later.",
   disabled: "Subscriptions aren't available here.",
+  providerUnavailable: "The payment provider can’t be reached right now. Please try again in a moment.",
+  alreadySubscribed: "You already have a subscription. To change your plan, go to “Payment and invoices”.",
+  planNotSold: "This plan isn’t offered for that billing period or currency. Please choose another.",
 };
 
 /** The `billing` namespace, resolved: English, then the provider, then `labels` — which
