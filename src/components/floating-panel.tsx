@@ -650,10 +650,12 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
   ref?: Ref<HTMLButtonElement>;
 }
 
+// Each fill under its own foreground (0.33): warning borrowed `--text-inverse`, the
+// surface colour, which was 4.24:1 on the light warning fill.
 const BADGE_TONE: Record<NonNullable<FloatingActionProps["badgeTone"]>, string> = {
-  warning: "bg-[var(--warning)] text-[var(--text-inverse)]",
-  danger: "bg-[var(--danger)] text-[var(--danger-contrast)]",
-  brand: "bg-[var(--brand)] text-[var(--brand-contrast)]",
+  warning: "bg-warning text-warning-contrast",
+  danger: "bg-danger text-danger-contrast",
+  brand: "bg-brand text-brand-contrast",
 };
 
 /**

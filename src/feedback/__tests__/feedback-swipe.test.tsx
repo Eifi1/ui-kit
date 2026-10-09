@@ -75,14 +75,18 @@ describe("feedbackSwipePlan", () => {
     expect(plan({}, "OPEN").out).toBeNull();
   });
 
-  it("writes each panel's text in its fill's contrast colour (0.26)", () => {
+  it("paints each panel by tone, which carries its fill's foreground (0.33)", () => {
+    // 0.26 wrote each fill's contrast colour into the classes; since 0.33 the panel
+    // names a tone and SwipeableRow paints it — the soft wash idle, the fill and its
+    // `-contrast` armed — so no class string is left to get the pair wrong.
     const { out } = plan({ start: ["wont_do"], end: ["advance", "done"] }, "OPEN");
     const [advance, done] = out?.end ?? [];
     const [wontDo] = out?.start ?? [];
-    expect(done.className).toContain("text-[var(--success-contrast)]");
-    expect(wontDo.className).toContain("text-[var(--danger-contrast)]");
-    expect(wontDo.armedClassName).toContain("text-[var(--danger-contrast)]");
-    expect(advance.className).toMatch(/bg-\[var\(--info\)\] text-\[var\(--info-contrast\)\]/);
+    expect([advance.tone, done.tone, wontDo.tone]).toEqual(["info", "success", "danger"]);
+    for (const panel of [advance, done, wontDo]) {
+      expect(panel.className).toBeUndefined();
+      expect(panel.armedClassName).toBeUndefined();
+    }
   });
 
   it("never throws on any status, known or not", () => {

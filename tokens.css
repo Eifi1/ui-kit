@@ -11,22 +11,25 @@
  * (relative to the importing CSS file — see README §2. An @source that resolves to
  * nothing is silent, and the app renders unstyled rather than erroring.)
  *
- * NOTE: these :root/.dark values MIRROR DEFAULT_PRESET in the palette theme module,
- * which is what actually paints them — the palette layer writes the active preset
- * tokens inline on <html> at runtime (Tailwind v4 strips a root block that holds only
- * custom properties, so this block is a documentation mirror, not the live source).
+ * NOTE: the :root/.dark values below MIRROR DEFAULT_PRESET in the palette theme module,
+ * and they are LIVE CSS. Tailwind 4.3.3 keeps a `:root` block that holds only custom
+ * properties — the built showcase CSS carries `--bg-surface-2` and `--danger`, and
+ * `check:tailwind` asserts such a block survives. (This note used to say Tailwind strips
+ * it, and the mirror was treated as documentation; that was never what 4.x did.)
+ *   - In an app WITH a palette layer (keksdose, kastlan), `applyTokenSet` writes the
+ *     active preset's values inline on <html>, and those beat these.
+ *   - In an app WITHOUT one (Kurvenschmiede), these are what paints, and More contrast
+ *     writes only its four stepped values over them (`reapplyContrastTokens`).
  *
- * Because it is inert, it drifts silently, and it did — twice. The surfaces and text
- * colour below still held the pre-#328 palette while DEFAULT_PRESET had moved to Solar
- * Dusk; they were resynced when --text-secondary/--text-muted were added. The money
- * trio and the dark brand accent were left behind that time and written off in this
- * note as "nothing reads them" — nine values, including the accent a consumer copies
- * when they want to know what the brand IS.
+ * Because it was taken for inert, it drifted silently, and it did — twice. The surfaces
+ * and text colour below still held the pre-#328 palette while DEFAULT_PRESET had moved
+ * to Solar Dusk; the money trio and the dark brand accent were left behind after that
+ * and written off as "nothing reads them" — nine values, including the accent a
+ * consumer copies when they want to know what the brand IS.
  *
- * They are resynced now, and theme/__tests__/tokens-css-mirror.test.ts compares every
- * one of these 46 values against DEFAULT_PRESET on each run, so the next drift fails a
- * test instead of earning a paragraph. The direction is one-way: the presets are the
- * source, this file follows. */
+ * theme/__tests__/tokens-css-mirror.test.ts compares every one of these 46 values against
+ * DEFAULT_PRESET on each run, so a drift fails a test. The direction is one-way: the
+ * presets are the source, this file follows. */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -172,10 +175,27 @@ html[data-text-size="xlarge"] {
 @custom-variant xlarge (&:where([data-text-size=xlarge], [data-text-size=xlarge] *));
 @custom-variant contrast (&:where([data-contrast=more], [data-contrast=more] *));
 
+/* "Truncate at Normal, wrap at Large" under one name (0.33, docs/text-size-harmonization.md
+   §10.17): `truncate` — one line and an ellipsis — and from Large up, the text wraps
+   instead, breaking a word only where nothing else fits (`overflow-wrap: anywhere`, as
+   List's copy had it). At Large and Extra large nothing may cut its text: the size sweep
+   reports a one-line ellipsis that does. Normal keeps its ellipses. It replaces the
+   hand-written `large:whitespace-normal large:…` copies, and an app's own JS switches
+   (`!large && "truncate"`) can take it too: it follows the attribute in CSS. */
+@utility truncate-until-large {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @variant large {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 :root {
   --bg-page: #ede3cf;          /* warm dim sand — low-glare light page */
   --bg-surface: #f6ecd9;       /* warm off-white card/panel (not pure white) */
-  --bg-surface-2: #f3ead6;     /* inset/well surface */
+  --bg-surface-2: #ede3cf;     /* inset/well surface: the page itself in light (0.33) */
   --border: #e2d6bd;           /* warm hairline border */
   --text-primary: #463f33;     /* warm dark grey — not pure black */
   /* The two quieter text roles. Contrast against the WORST of the three surfaces
@@ -204,9 +224,12 @@ html[data-text-size="xlarge"] {
 
      They mark a field's FRAME and an ICON at its end — non-text graphics, for which
      WCAG 1.4.11 asks 3:1 against the surface — and all four clear it on the worst of
-     the three light surfaces. `--status-edited` is amber rather than the orange-800 it
+     the three light surfaces, in every shipped preset (theme/__tests__/
+     tokens-css-audit.test.ts measures it; until 0.33 this note only claimed it, and
+     amber-600 sat at 2.45:1). `--status-edited` is amber rather than the orange-800 it
      was: beside red-700 that orange read as a second error colour, and "unsaved" has
-     to look like a caution, not an alarm. Amber is below 4.5:1, so it is not a TEXT
+     to look like a caution, not an alarm. Light, it is amber-600's hue and chroma at a
+     SOLVED lightness (3.1:1 on the worst surface). Below 4.5:1, so it is not a TEXT
      colour: `FieldSyncIndicator` prints its words in `--text-secondary` beside it.
 
      GREEN AND RED ARE THE CLASSIC CVD-UNSAFE PAIR, and the rest of this file goes out
@@ -216,7 +239,7 @@ html[data-text-size="xlarge"] {
      the only signal. Do not drop the icons.  */
   --status-synced: #166534;    /* green-800  — persisted */
   --status-pending: #1d4ed8;   /* blue-700   — in flight */
-  --status-edited: #d97706;    /* amber-600  — dirty, not yet saved */
+  --status-edited: #bf6800;    /* solved     — dirty, not yet saved */
   --status-error: #b91c1c;     /* red-700    — the save failed */
   --chart-1: #332288;
   --chart-2: #88ccee;
@@ -288,10 +311,23 @@ html[data-text-size="xlarge"] {
      value. Mixing TOWARD the surface fades it in light and in dark alike. */
   --text-placeholder: color-mix(in oklab, var(--text-muted) 65%, var(--bg-surface));
 
-  /* The wash under a hovered row, menu item or icon button. Mixing the TEXT colour
-     into the surface darkens it on a light theme and lightens it on a dark one,
-     which is the behaviour a fixed `slate-100`/`slate-800` pair was faking. */
-  --bg-hover: color-mix(in oklab, var(--text-primary) 7%, var(--bg-surface));
+  /* The wash under a hovered row, menu item or icon button ON A CARD. Mixing the TEXT
+     colour into the surface darkens it on a light theme and lightens it on a dark one,
+     which is the behaviour a fixed `slate-100`/`slate-800` pair was faking.
+
+     5.5 %, not the 7 % it was (0.33, colour-roles §12.10): text sits on a hovered row,
+     and at 7 % the status, money and muted colours fell to 4.25–4.49:1 on it. Text wins
+     over the hover's step, which is still 1.09–1.13:1 from the card. `HOVER_INK` in
+     theme/contrast-tokens.ts is this number for the deriver; the token audit holds them
+     equal.
+
+     Two hovers it is NOT for (§12.2, §12.10): a row that rests on `--bg-surface-2`
+     hovers to `--bg-surface` (in light the well is the page, and this wash sits only
+     1.04:1 from it); and a control that can sit on the page, the card or the well
+     (Button secondary/ghost, IconButton muted) hovers with a translucent ink,
+     `color-mix(in srgb, var(--text-primary) 7%, transparent)`, 1.11:1 or more on all
+     three. */
+  --bg-hover: color-mix(in oklab, var(--text-primary) 5.5%, var(--bg-surface));
   --bg-active: color-mix(in oklab, var(--text-primary) 12%, var(--bg-surface));
 
   /* A chip that inverts against the page — a selected day, a keyboard hint. These
@@ -317,6 +353,42 @@ html[data-text-size="xlarge"] {
   --brand-muted: color-mix(in oklab, var(--brand) 70%, var(--text-primary));
 }
 
+/* ── A foreground for every fill (0.33, docs/colour-roles-harmonization.md §5.1) ──
+   A fill names the ink that goes on it, `<fill>-contrast`, so a pill, a badge or an
+   armed swipe never has to guess. Guessing is what went wrong: white on a money fill
+   (k22) and white on every status fill in dark mode, where the fills are pastels and
+   white sits at 1.4–3.6:1 (k23). The status and hue pairs are with their families
+   below; these are the money and neutral ones.
+
+   Money is white in light and the PAGE in dark — `--brand-contrast`'s precedent. Both
+   hold for any token set, not only the shipped ones: the preset audit solves income,
+   expense, net and neutral to 4.5:1 against the page, which is the darkest surface in
+   dark, and white is lighter than any light page. Four names for one value, one per
+   fill, so a preset whose money colours differ in lightness has room to differ. */
+:root {
+  --money-income-contrast: #ffffff;
+  --money-expense-contrast: #ffffff;
+  --money-net-contrast: #ffffff;
+  --money-neutral-contrast: #ffffff;
+}
+.dark {
+  --money-income-contrast: var(--bg-page);
+  --money-expense-contrast: var(--bg-page);
+  --money-net-contrast: var(--bg-page);
+  --money-neutral-contrast: var(--bg-page);
+}
+
+/* "Neutral" as a fill — a step back, a state with no tone: the muted ink under the
+   surface colour, 5.1:1 and up in every preset. Not a new grey: it is the pair the
+   translation review's reset swipe improvised, made official, and it follows More
+   contrast through `--text-muted` (7.6:1 and up there). Chip `solid neutral` is a
+   different, louder thing — the inverse pair, a count pill — and keeps it. */
+:root,
+.dark {
+  --neutral: var(--text-muted);
+  --neutral-contrast: var(--text-inverse);
+}
+
 /* ── Semantic status ────────────────────────────────────────────────────────
    Destructive and cautionary UI. These are the values the components already
    painted, lifted out of the class names so a consumer can change them — the kit
@@ -327,20 +399,43 @@ html[data-text-size="xlarge"] {
    Distinct from the `--status-*` family above: those describe a FIELD's journey
    to the database, these describe an ACTION's consequence. A row can be
    `--status-error` (its last save failed) inside a form whose delete button is
-   `--danger` (it will destroy something), and they should not look identical. */
+   `--danger` (it will destroy something), and they should not look identical.
+
+   Each tone is a family: the colour (text on any surface, and a fill), `-contrast`
+   (text ON the fill), `-border` (a soft frame), `-bg` (a wash, text in the tone's
+   colour on it) and, for danger and warning, `-border-strong` (a line that has to be
+   seen: an invalid field, a loud frame, a focus ring). In dark the fills are pastels,
+   so their `-contrast` is the tone's 950, never white.
+
+   THE LIGHT VALUES ARE SOLVED, not Tailwind steps, where a 700 failed (0.33,
+   docs/colour-roles-harmonization.md §5.5): the cream and tinted grounds are darker
+   than the white those steps were made for. Each keeps its 700's OKLCH hue and chroma
+   at the lightness that clears 4.5:1 as text on the page, the card, the well, its own
+   wash and a hovered row, in every shipped preset — amber-700 managed 3.86:1, emerald
+   4.22. `--money-expense` went the same way earlier. tokens-css-audit.test.ts holds
+   every pair here to its ratio. */
 :root {
   --danger: #be123c;              /* rose-700 */
   --danger-hover: #9f1239;        /* rose-800 */
   --danger-contrast: #ffffff;
   --danger-border: #fb7185;       /* rose-400 */
   /* The error LINE: an invalid field, a failed upload, a danger banner's frame, a focus
-     ring on a destructive control. Equal to the border in light mode; in dark the tone
-     border is soft like its siblings and this one stays loud (WCAG 1.4.11's 3:1). */
-  --danger-border-strong: #fb7185; /* rose-400 */
+     ring on a destructive control — loud, WCAG 1.4.11's 3:1 against every surface.
+     Rose-600 in both modes since 0.33: light was rose-400, the soft border's value,
+     which reached only 2.07:1 while this note claimed 3:1. */
+  --danger-border-strong: #e11d48; /* rose-600 */
   --danger-bg: #fff1f2;           /* rose-50 */
 
-  --warning: #b45309;             /* amber-700 */
+  --warning: #a34800;             /* amber-700's hue, solved (was #b45309, 3.86:1) */
+  /* Text on a `--warning` fill (0.33, k24): a solid warning chip, a badge, an armed
+     swipe. White here, amber-950 on the dark theme's pastel. */
+  --warning-contrast: #ffffff;
   --warning-border: #fcd34d;      /* amber-300 */
+  /* Warning's loud line (0.33, k27), as `--danger-border-strong` is danger's: Card
+     `toneStrength="strong"`, IconButton's warning focus ring. In light the warning
+     colour itself — amber-600 would be only 2.5:1 on the cream page; in dark amber-600,
+     the step danger's line takes, 4.8:1 and up without shouting. */
+  --warning-border-strong: var(--warning);
   --warning-bg: #fffbeb;          /* amber-50 */
 
   /* Informational, and deliberately NOT the brand: a count of active filters is
@@ -357,7 +452,7 @@ html[data-text-size="xlarge"] {
      `--danger` is distinct from `--status-error`: that family describes a FIELD's
      journey to the database, this one an ACTION's outcome. Emerald rather than the
      money teal, so a "resolved" chip cannot be misread as an inflow. */
-  --success: #047857;             /* emerald-700 */
+  --success: #007152;             /* emerald-700's hue, solved (was #047857, 4.22:1) */
   /* Text on a `--success` fill (0.26: a swipe's approve panel) — white here, the
      darkest emerald in dark mode, where the fill is a pastel and white text failed. */
   --success-contrast: #ffffff;
@@ -377,7 +472,9 @@ html[data-text-size="xlarge"] {
   --danger-bg: rgba(136, 19, 55, 0.2);
 
   --warning: #fcd34d;             /* amber-300 */
+  --warning-contrast: #451a03;    /* amber-950 */
   --warning-border: rgba(180, 83, 9, 0.6);
+  --warning-border-strong: #d97706; /* amber-600 */
   --warning-bg: rgba(120, 53, 15, 0.2);
 
   --info: #7dd3fc;                /* sky-300 */
@@ -434,15 +531,16 @@ html[data-text-size="xlarge"] {
 .kit-toaster [data-sonner-toast][data-styled="true"]:not([data-type="success"], [data-type="info"], [data-type="warning"], [data-type="error"]) [data-description] {
   color: var(--text-secondary);
 }
-/* The action button in the tone's own colour rather than sonner's black pill. */
+/* The action button in the tone's own colour rather than sonner's black pill, under
+   that fill's own foreground (0.33): the surface colour on light warning was 4.3:1. */
 .kit-toaster [data-sonner-toast][data-styled="true"] [data-button]:not([data-cancel]) {
   background: var(--toast-action-bg, var(--text-primary));
-  color: var(--bg-surface);
+  color: var(--toast-action-fg, var(--bg-surface));
 }
-.kit-toaster [data-sonner-toast][data-type="success"] { --toast-action-bg: var(--success); }
-.kit-toaster [data-sonner-toast][data-type="info"] { --toast-action-bg: var(--info); }
-.kit-toaster [data-sonner-toast][data-type="warning"] { --toast-action-bg: var(--warning); }
-.kit-toaster [data-sonner-toast][data-type="error"] { --toast-action-bg: var(--danger); }
+.kit-toaster [data-sonner-toast][data-type="success"] { --toast-action-bg: var(--success); --toast-action-fg: var(--success-contrast); }
+.kit-toaster [data-sonner-toast][data-type="info"] { --toast-action-bg: var(--info); --toast-action-fg: var(--info-contrast); }
+.kit-toaster [data-sonner-toast][data-type="warning"] { --toast-action-bg: var(--warning); --toast-action-fg: var(--warning-contrast); }
+.kit-toaster [data-sonner-toast][data-type="error"] { --toast-action-bg: var(--danger); --toast-action-fg: var(--danger-contrast); }
 /* The kit's focus ring on the toast's buttons — sonner's is a black shadow that
    vanishes on the dark theme. */
 .kit-toaster [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
@@ -459,64 +557,221 @@ html[data-text-size="xlarge"] {
    orange (terminated / high urgency), teal (invoiced) and indigo (a meeting
    stage). The smallest set that covers every enum; deliberately not a ramp.
 
-   Same triple and same shades as the status family (700 text / 300 border /
+   Same family and same shades as the status family (700 text / 300 border /
    100 surface in light, 300 text / translucent 700 border / 900 wash in dark),
    so a categorical chip sits beside a semantic one at the same weight. Not in
    `TokenSet`: like `--danger`, a hue is a specific colour, not a tint of the
-   palette preset, so it lives here and nowhere else. */
+   palette preset, so it lives here and nowhere else.
+
+   `-contrast` (0.33) is the text on the hue as a fill — a solid chip: white in light,
+   the hue's 950 on the dark pastel. Teal and orange are SOLVED in light, as warning
+   and success are (§5.5): their 700s reached 4.21 and 3.98:1 on the cream page. */
 :root {
   --hue-blue: #1d4ed8;            /* blue-700 */
+  --hue-blue-contrast: #ffffff;
   --hue-blue-border: #93c5fd;     /* blue-300 */
   --hue-blue-bg: #dbeafe;         /* blue-100 */
   --hue-indigo: #4338ca;          /* indigo-700 */
+  --hue-indigo-contrast: #ffffff;
   --hue-indigo-border: #a5b4fc;   /* indigo-300 */
   --hue-indigo-bg: #e0e7ff;       /* indigo-100 */
   --hue-purple: #7e22ce;          /* purple-700 */
+  --hue-purple-contrast: #ffffff;
   --hue-purple-border: #d8b4fe;   /* purple-300 */
   --hue-purple-bg: #f3e8ff;       /* purple-100 */
-  --hue-teal: #0f766e;            /* teal-700 */
+  --hue-teal: #006f68;            /* teal-700's hue, solved */
+  --hue-teal-contrast: #ffffff;
   --hue-teal-border: #5eead4;     /* teal-300 */
   --hue-teal-bg: #ccfbf1;         /* teal-100 */
-  --hue-orange: #c2410c;          /* orange-700 */
+  --hue-orange: #b43800;          /* orange-700's hue, solved */
+  --hue-orange-contrast: #ffffff;
   --hue-orange-border: #fdba74;   /* orange-300 */
   --hue-orange-bg: #ffedd5;       /* orange-100 */
 }
 
 .dark {
   --hue-blue: #93c5fd;            /* blue-300 */
+  --hue-blue-contrast: #172554;   /* blue-950 */
   --hue-blue-border: rgba(29, 78, 216, 0.6);
   --hue-blue-bg: rgba(30, 58, 138, 0.25);
   --hue-indigo: #a5b4fc;          /* indigo-300 */
+  --hue-indigo-contrast: #1e1b4b; /* indigo-950 */
   --hue-indigo-border: rgba(67, 56, 202, 0.6);
   --hue-indigo-bg: rgba(49, 46, 129, 0.25);
   --hue-purple: #d8b4fe;          /* purple-300 */
+  --hue-purple-contrast: #3b0764; /* purple-950 */
   --hue-purple-border: rgba(126, 34, 206, 0.6);
   --hue-purple-bg: rgba(88, 28, 135, 0.25);
   --hue-teal: #5eead4;            /* teal-300 */
+  --hue-teal-contrast: #042f2e;   /* teal-950 */
   --hue-teal-border: rgba(15, 118, 110, 0.6);
   --hue-teal-bg: rgba(19, 78, 74, 0.25);
   --hue-orange: #fdba74;          /* orange-300 */
+  --hue-orange-contrast: #431407; /* orange-950 */
   --hue-orange-border: rgba(194, 65, 12, 0.6);
   --hue-orange-bg: rgba(124, 45, 18, 0.25);
 }
 
-/* Semantic colour utilities backed by the tokens above. Unlayered so they win
-   over Tailwind's layered colour utilities, and theme-aware for free (the var
-   flips under .dark) — no dark: variant needed at the call site. */
+/* ── Role utilities (0.33, docs/colour-roles-harmonization.md §7, k25) ─────────────
+ *
+ * `text-muted`, `bg-surface-2`, `border-subtle`, `ring-brand`, `fill-surface` … instead of
+ * `text-[var(--text-muted)]`. Each name is the token's name with the property's own
+ * prefix dropped (`--bg-surface` → `bg-surface`, `--danger-border` → `border-danger`); a
+ * tone's wash is `-soft` (Chip's word for it), and `--border` is `subtle`.
+ *
+ * PROPERTY-SCOPED, on purpose. `--text-color-*` makes a `text-*` utility and nothing
+ * else, `--background-color-*` only `bg-*`, `--border-color-*` only `border-*` (and
+ * `divide-*`, which falls back to it). So `bg-muted` and `text-surface` do not exist,
+ * and a name cannot be put on the wrong property by accident. Shadcn-style `--color-*`
+ * names would make every name on every property — and fight an app's own
+ * `--color-muted` / `--color-primary` (kastlan's), where these win for their property
+ * only. No `text-*` for the border roles: an SVG drawn in `currentColor` takes
+ * `stroke-subtle` / `stroke-strong` instead.
+ *
+ * `inline`: each utility reads the role variable AT THE ELEMENT (`color: var(--text-muted)`),
+ * so a local override still works, and no `--text-color-muted` is emitted on `:root` —
+ * which is why `@eifi1/ui-kit/testing` does not count these names as declared:
+ * `var(--text-color-muted)` would paint nothing. A name costs nothing until a scanned
+ * file uses it, and variants and opacity work on all of them (`hover:bg-hover`,
+ * `md:text-secondary`, `text-muted/60`).
+ *
+ * The kit's own ~1,750 `[var(--…)]` classes stay where they are (a rewrite would change
+ * hundreds of class assertions here and in the apps); `scripts/check-token-discipline.mjs`
+ * counts them wherever one of these exists and lets the number only fall. New and
+ * touched code uses these. `check:tailwind` asserts one per namespace survives a build.
+ *
+ * `text-brand`, `bg-brand` and `border-brand` were plain classes until 0.33, which
+ * Tailwind gives no variants (`hover:bg-brand` generated nothing); they are theme names
+ * now. The money classes below stay plain: `-muted` is an opacity, not a colour. */
+@theme inline {
+  /* text-* — the text roles, the tone colours as text, and every fill's foreground */
+  --text-color-primary: var(--text-primary);
+  --text-color-secondary: var(--text-secondary);
+  --text-color-muted: var(--text-muted);
+  --text-color-placeholder: var(--text-placeholder);
+  --text-color-inverse: var(--text-inverse);
+  --text-color-brand: var(--brand);
+  --text-color-brand-muted: var(--brand-muted);
+  --text-color-danger: var(--danger);
+  --text-color-warning: var(--warning);
+  --text-color-success: var(--success);
+  --text-color-info: var(--info);
+  --text-color-hue-blue: var(--hue-blue);
+  --text-color-hue-indigo: var(--hue-indigo);
+  --text-color-hue-purple: var(--hue-purple);
+  --text-color-hue-teal: var(--hue-teal);
+  --text-color-hue-orange: var(--hue-orange);
+  --text-color-brand-contrast: var(--brand-contrast);
+  --text-color-danger-contrast: var(--danger-contrast);
+  --text-color-warning-contrast: var(--warning-contrast);
+  --text-color-success-contrast: var(--success-contrast);
+  --text-color-info-contrast: var(--info-contrast);
+  --text-color-neutral-contrast: var(--neutral-contrast);
+  --text-color-money-income-contrast: var(--money-income-contrast);
+  --text-color-money-expense-contrast: var(--money-expense-contrast);
+  --text-color-money-net-contrast: var(--money-net-contrast);
+  --text-color-money-neutral-contrast: var(--money-neutral-contrast);
+  --text-color-hue-blue-contrast: var(--hue-blue-contrast);
+  --text-color-hue-indigo-contrast: var(--hue-indigo-contrast);
+  --text-color-hue-purple-contrast: var(--hue-purple-contrast);
+  --text-color-hue-teal-contrast: var(--hue-teal-contrast);
+  --text-color-hue-orange-contrast: var(--hue-orange-contrast);
+  --text-color-media-ink: var(--media-ink);
+
+  /* bg-* — the surfaces, the fills, and each tone's wash as `-soft` (Chip's word) */
+  --background-color-page: var(--bg-page);
+  --background-color-surface: var(--bg-surface);
+  --background-color-surface-2: var(--bg-surface-2);
+  --background-color-hover: var(--bg-hover);
+  --background-color-active: var(--bg-active);
+  --background-color-inverse: var(--bg-inverse);
+  --background-color-brand: var(--brand);
+  --background-color-brand-hover: var(--brand-hover);
+  --background-color-brand-soft: var(--brand-bg);
+  --background-color-brand-soft-hover: var(--brand-bg-hover);
+  --background-color-danger: var(--danger);
+  --background-color-danger-hover: var(--danger-hover);
+  --background-color-warning: var(--warning);
+  --background-color-success: var(--success);
+  --background-color-info: var(--info);
+  --background-color-neutral: var(--neutral);
+  --background-color-danger-soft: var(--danger-bg);
+  --background-color-warning-soft: var(--warning-bg);
+  --background-color-success-soft: var(--success-bg);
+  --background-color-info-soft: var(--info-bg);
+  --background-color-hue-blue: var(--hue-blue);
+  --background-color-hue-indigo: var(--hue-indigo);
+  --background-color-hue-purple: var(--hue-purple);
+  --background-color-hue-teal: var(--hue-teal);
+  --background-color-hue-orange: var(--hue-orange);
+  --background-color-hue-blue-soft: var(--hue-blue-bg);
+  --background-color-hue-indigo-soft: var(--hue-indigo-bg);
+  --background-color-hue-purple-soft: var(--hue-purple-bg);
+  --background-color-hue-teal-soft: var(--hue-teal-bg);
+  --background-color-hue-orange-soft: var(--hue-orange-bg);
+  --background-color-media-scrim: var(--media-scrim);
+  --background-color-media-scrim-hover: var(--media-scrim-hover);
+
+  /* border-* (and divide-*, which falls back to these) — `subtle` is `--border` */
+  --border-color-subtle: var(--border);
+  --border-color-strong: var(--border-strong);
+  --border-color-brand: var(--brand);
+  --border-color-danger: var(--danger-border);
+  --border-color-warning: var(--warning-border);
+  --border-color-success: var(--success-border);
+  --border-color-info: var(--info-border);
+  --border-color-danger-strong: var(--danger-border-strong);
+  --border-color-warning-strong: var(--warning-border-strong);
+  --border-color-hue-blue: var(--hue-blue-border);
+  --border-color-hue-indigo: var(--hue-indigo-border);
+  --border-color-hue-purple: var(--hue-purple-border);
+  --border-color-hue-teal: var(--hue-teal-border);
+  --border-color-hue-orange: var(--hue-orange-border);
+  --border-color-media-ink: var(--media-ink);
+
+  /* ring-* and outline-* — a focus ring, a selection frame, an inside line */
+  --ring-color-subtle: var(--border);
+  --ring-color-strong: var(--border-strong);
+  --ring-color-brand: var(--brand);
+  --ring-color-danger-strong: var(--danger-border-strong);
+  --ring-color-warning-strong: var(--warning-border-strong);
+  --outline-color-subtle: var(--border);
+  --outline-color-strong: var(--border-strong);
+  --outline-color-brand: var(--brand);
+  --outline-color-danger-strong: var(--danger-border-strong);
+  --outline-color-warning-strong: var(--warning-border-strong);
+  --ring-color-media-ink: var(--media-ink);
+
+  /* fill-* and stroke-* — for SVG: the text roles, the card, and the two lines */
+  --fill-primary: var(--text-primary);
+  --fill-secondary: var(--text-secondary);
+  --fill-muted: var(--text-muted);
+  --fill-surface: var(--bg-surface);
+  --fill-subtle: var(--border);
+  --fill-strong: var(--border-strong);
+  --stroke-primary: var(--text-primary);
+  --stroke-secondary: var(--text-secondary);
+  --stroke-muted: var(--text-muted);
+  --stroke-surface: var(--bg-surface);
+  --stroke-subtle: var(--border);
+  --stroke-strong: var(--border-strong);
+}
+
+/* Money utilities backed by the tokens above. Unlayered so they win over Tailwind's
+   layered colour utilities, and theme-aware for free (the var flips under .dark) — no
+   dark: variant needed at the call site. Plain classes, so no variants: a site that
+   needs one keeps `[var(--money-…)]` (no money theme names this round, §12.4). */
 .text-money-pos { color: var(--money-income); }
 .text-money-neg { color: var(--money-expense); }
 .text-money-net { color: var(--money-net); }
 .text-money-pos-muted { color: var(--money-income); opacity: 0.72; }
 .text-money-neg-muted { color: var(--money-expense); opacity: 0.72; }
-.text-brand { color: var(--brand); }
-.bg-brand { background-color: var(--brand); }
 .bg-money-pos { background-color: var(--money-income); }
 .bg-money-neg { background-color: var(--money-expense); }
 /* "No money has moved" — the fill for markers on rows that are not real yet
    (scheduled / future-dated). Deliberately NOT brand and NOT money-pos: those
    two mean settled, and a future row wearing one of them reads as done. */
 .bg-money-neutral { background-color: var(--money-neutral); }
-.border-brand { border-color: var(--brand); }
 
 /* Visually hidden, like Tailwind's `sr-only`, but POSITION: FIXED rather than absolute.
  *

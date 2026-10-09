@@ -130,6 +130,7 @@ describe("IconButton disabled", () => {
     render(<IconButton className="hover:bg-[var(--bg-hover)]" aria-label="x">x</IconButton>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("hover:bg-[var(--bg-hover)]");
-    expect(cls).not.toContain(" hover:bg-[var(--bg-surface-2)]");
+    // The ghost's own hover, the translucent ink since 0.33 (B′), is gone.
+    expect(cls).not.toContain("hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]");
   });
 });

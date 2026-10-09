@@ -13,6 +13,7 @@ import {
   solveLightness,
 } from "./color";
 import type { CvdType, Oklch } from "./color";
+import { hoverFill, mix } from "./contrast-tokens";
 
 /**
  * Build a whole palette from one brand colour, plus any number of colours pinned by
@@ -161,7 +162,14 @@ function placeHue(home: number, slack: number, taken: number[]): number {
 const SURFACE_L = {
   // Light: the PAGE is slightly darker than the cards on it, so a card reads as raised
   // without needing a shadow to say so. Matches the shipped presets' relationship.
-  light: { page: 0.912, surface: 0.945, surface2: 0.929 },
+  //
+  // The light WELL is the page itself (0.33, docs/colour-roles-harmonization.md §5.3,
+  // k26). Between the card and the page it sat 1.02–1.05:1 from the card it is inset
+  // in, which is no well at all; at the page's lightness it stands out from the card
+  // exactly as far as the card does from the page, and nothing re-solves, because the
+  // page is already the surface every text role is solved against. Dark keeps its
+  // well a step lighter than the card (1.11–1.13:1).
+  light: { page: 0.912, surface: 0.945, surface2: 0.912 },
   dark: { page: 0.158, surface: 0.206, surface2: 0.249 },
 } as const;
 
@@ -272,6 +280,19 @@ export function derivePalette({
   const textSecondary = solveAgainst(brand.h, textChroma, targets.secondary, worstSurface, mode);
   const textMuted = solveAgainst(brand.h, textChroma, targets.muted, worstSurface, mode);
 
+  // The darkest fill text sits on (the lightest, in dark): the worst surface, or a
+  // hovered row on the card (`--bg-hover`), which in light is a shade darker than the
+  // page. The colours that are solved exactly to 4.5:1 — money, the semantic text — are
+  // solved against this, so they hold on a hovered row too (0.33, §12.10). The text
+  // roles above keep their margin (4.6:1 and up) and need no second solve.
+  const hover = hoverFill({ textPrimary, bgSurface: surfaces.bgSurface });
+  const worstText = [worstSurface, hover].reduce((a, b) =>
+    contrast(a, mode === "light" ? "#000000" : "#ffffff") <
+    contrast(b, mode === "light" ? "#000000" : "#ffffff")
+      ? a
+      : b,
+  );
+
   // ── Brand. Keep the hue the caller asked for; move only the lightness, and only as
   // far as 3:1 against the worst surface — WCAG 1.4.11, since a brand-filled control is
   // a graphical object whose boundary has to be perceivable.
@@ -280,7 +301,7 @@ export function derivePalette({
   // NORMALISED, never the caller's raw string. `parseHex` accepts "4f46e5" and "#abc",
   // and passing either through unchanged put a value in the TokenSet that is not a CSS
   // colour — it then fails silently at paint time, three layers from here.
-  const brandHex =
+  let brandHex =
     brandRatio >= 3
       ? toHex(parseHex(anchors.brand)!)
       : solveAgainst(brand.h, brandChroma, 3, worstSurface, mode);
@@ -291,13 +312,35 @@ export function derivePalette({
         `${brandHex}; hue and chroma are unchanged.`,
     );
   }
+  // `--brand-muted` is the brand AS TEXT — a soft brand chip's label, an outline chip, a
+  // current link — and tokens.css derives it: 70 % brand into the ink. A brand solved
+  // to 3:1 left it at 4.43–4.51:1 in three dark presets (0.33, §5.5), so it gets the
+  // text floor here: the brand moves away from the surfaces, a step at a time, until its
+  // muted form clears 4.5:1 on the worst fill and on its own soft chip (`--brand-bg`).
+  const brandMutedWorst = (hex: string) =>
+    Math.min(
+      contrast(mix(hex, textPrimary, 0.7), worstText),
+      contrast(mix(hex, textPrimary, 0.7), mix(hex, surfaces.bgSurface, 0.14)),
+    );
+  for (let i = 0; i < 40 && brandMutedWorst(brandHex) < 4.5; i++) {
+    const lch = hexToOklch(brandHex)!;
+    brandHex = oklchToHex({ ...lch, l: mode === "light" ? lch.l - 0.005 : lch.l + 0.005 });
+  }
+  if (brandMutedWorst(brandHex) < 4.5) {
+    warnings.push(
+      `the brand as text (--brand-muted) reaches only ${brandMutedWorst(brandHex).toFixed(2)}:1 ` +
+        `against the ${mode} surfaces (needs 4.5:1).`,
+    );
+  }
   const brandLch = hexToOklch(brandHex)!;
+  const brandContrast = contrastOn(brandHex);
   const brandHover = oklchToHex({
     ...brandLch,
-    // Hover moves AWAY from the page in both themes: darker on light, lighter on dark.
-    l: mode === "light" ? brandLch.l - 0.06 : brandLch.l + 0.06,
+    // Hover moves AWAY from the colour of the text on it (0.33, §5.5): darker under
+    // white, lighter under a dark ink. It used to move away from the page, which in dark
+    // lightened a fill that carries WHITE text, toward its own label: 4.07:1.
+    l: brandContrast === "#ffffff" ? brandLch.l - 0.06 : brandLch.l + 0.06,
   });
-  const brandContrast = contrastOn(brandHex);
   const onBrand = contrast(brandHex, brandContrast);
   if (onBrand < 4.5) {
     warnings.push(
@@ -352,7 +395,7 @@ export function derivePalette({
     const bg = tintOn(hue, chroma, surfaces.bgSurface, mode);
     const onSurface = solveLightness(
       4.5,
-      parseHex(worstSurface)!,
+      parseHex(worstText)!,
       hue,
       chroma,
       mode === "light" ? "darker" : "lighter",
@@ -425,11 +468,19 @@ export function derivePalette({
   // red/green pair — which is why the shipped presets use teal/amber/violet. Derived
   // here at fixed hues rather than from the brand, for the same reason `--danger` is:
   // a consumer who rebrands does not thereby change what "money out" looks like.
-  const money = (hue: number, target: number) => solveAgainst(hue, 0.12, target, worstSurface, mode);
+  const money = (hue: number, target: number) => solveAgainst(hue, 0.12, target, worstText, mode);
   const moneyIncome = money(175, 4.5);
   const moneyExpense = money(70, 4.5);
   const moneyNet = money(300, 4.5);
-  const moneyNeutral = oklchToHex({ l: mode === "light" ? 0.52 : 0.72, c: 0.012, h: brand.h });
+  // "No money has moved": a quiet grey at a fixed lightness, but printed as TEXT (the
+  // numpad's sign, a future row's figure), so it gets the text floor too (0.33). The
+  // fixed lightness left it at 4.24:1 on four light pages.
+  const neutralFloor = solveLightness(4.5, parseHex(worstText)!, brand.h, 0.012, mode === "light" ? "darker" : "lighter");
+  const moneyNeutral = oklchToHex({
+    l: mode === "light" ? Math.min(0.52, neutralFloor) : Math.max(0.72, neutralFloor),
+    c: 0.012,
+    h: brand.h,
+  });
 
   const tokens: TokenSet = {
     ...surfaces,
@@ -498,6 +549,14 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
     ["bgSurface", t.bgSurface],
     ["bgSurface2", t.bgSurface2],
   ];
+  // A hovered row on the card (`--bg-hover`) carries the same text as the card, and in
+  // light it is the darkest fill that text sits on (0.33, §12.10). Text is measured on
+  // it; the brand fill and the hairline, which are not text, are not.
+  const hover = hoverFill(t);
+  const textGrounds: Array<[string, string]> = [...surfaces, ["bgHover", hover]];
+  // `--brand-muted` and `--brand-bg`, mixed as tokens.css mixes them.
+  const brandMuted = mix(t.brand, t.textPrimary, 0.7);
+  const brandBg = mix(t.brand, t.bgSurface, 0.14);
 
   const add = (pair: string, fg: string, bg: string, required: number, rule: string) => {
     const ratio = contrast(fg, bg);
@@ -505,21 +564,31 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
   };
 
   for (const [name, bg] of surfaces) {
+    add(`brand on ${name}`, t.brand, bg, 3, "WCAG 1.4.11 graphical object");
+    add(`border on ${name}`, t.border, bg, 1.1, "house rule: a hairline must be findable");
+  }
+  for (const [name, bg] of textGrounds) {
     add(`textPrimary on ${name}`, t.textPrimary, bg, 7, "WCAG 1.4.6 AAA body text");
     add(`textSecondary on ${name}`, t.textSecondary, bg, 4.5, "WCAG 1.4.3 AA body text");
     add(`textMuted on ${name}`, t.textMuted, bg, 4.5, "WCAG 1.4.3 AA body text");
-    add(`brand on ${name}`, t.brand, bg, 3, "WCAG 1.4.11 graphical object");
-    add(`border on ${name}`, t.border, bg, 1.1, "house rule: a hairline must be findable");
+    add(`brandMuted on ${name}`, brandMuted, bg, 4.5, "WCAG 1.4.3 — the brand as text");
     for (const [key, hex] of [
       ["moneyIncome", t.moneyIncome],
       ["moneyExpense", t.moneyExpense],
       ["moneyNet", t.moneyNet],
+      // Not a figure's colour but still printed as one (the numpad's sign, a future
+      // row's amount) — measured since 0.33, when it was found at 4.24:1.
+      ["moneyNeutral", t.moneyNeutral],
     ] as const) {
       add(`${key} on ${name}`, hex, bg, 4.5, "WCAG 1.4.3 — these are rendered as TEXT");
     }
   }
 
   add("brandContrast on brand", t.brandContrast, t.brand, 4.5, "WCAG 1.4.3 AA body text");
+  // A hovered brand button carries the same label (0.33): the derived dark presets
+  // lightened the hover toward their white label and left it at 4.07:1.
+  add("brandContrast on brandHover", t.brandContrast, t.brandHover, 4.5, "WCAG 1.4.3 AA body text");
+  add("brandMuted on brandBg", brandMuted, brandBg, 4.5, "WCAG 1.4.3 — a soft brand chip's label");
 
   if (semantic) {
     for (const [name, fg] of [
@@ -529,6 +598,7 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
       ["success", semantic.success],
     ] as const) {
       add(`${name} on bgSurface`, fg, t.bgSurface, 4.5, "WCAG 1.4.3 — rendered as text");
+      add(`${name} on bgHover`, fg, hover, 4.5, "WCAG 1.4.3 — rendered as text, on a hovered row");
     }
     add("danger on dangerBg", semantic.danger, semantic.dangerBg, 4.5, "WCAG 1.4.3 — badge text");
     add("warning on warningBg", semantic.warning, semantic.warningBg, 4.5, "WCAG 1.4.3 — badge text");

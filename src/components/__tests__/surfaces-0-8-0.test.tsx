@@ -197,8 +197,9 @@ describe("Chip 0.8.0", () => {
   it("variant=solid is the filled count style under contrasting text", () => {
     render(<Chip variant="solid" tone="brand" size="sm" data-testid="c">3</Chip>);
     const chip = screen.getByTestId("c");
-    expect(chip.className).toContain("bg-[var(--brand)]");
-    expect(chip.className).toContain("text-[var(--brand-contrast)]");
+    // The fill under its own foreground, as role utilities since 0.33.
+    expect(chip.className.split(" ")).toContain("bg-brand");
+    expect(chip.className.split(" ")).toContain("text-brand-contrast");
     expect(chip.className).toContain("tabular-nums");
   });
 
@@ -323,7 +324,8 @@ describe("IconButton 0.8.0", () => {
     render(<IconButton tone="warning" aria-label="Needs review">x</IconButton>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-[var(--warning)]");
-    expect(cls).toContain("focus-visible:ring-[var(--warning-border)]");
+    // Warning's loud line since 0.33: amber-300 was a 1.1:1 focus ring on the light surfaces.
+    expect(cls).toContain("focus-visible:ring-warning-strong");
   });
 
   it("variant=overlay is a round translucent disc, even at the small sizes", () => {

@@ -87,11 +87,15 @@ const PAD_KEYS: PadKey[] = [
  *  thinner than an outward ring plus the neighbour it would spill onto — inset keeps the
  *  ring inside the key it describes.
  *
- *  --brand rather than --border-strong: the operator keys are filled with --border, and
- *  a ring in the colour of the thing it surrounds is not an indicator. */
+ *  --brand rather than --border-strong: the operator keys are filled with a step of the
+ *  ink, and a ring in the colour of the thing it surrounds is not an indicator. */
 const PAD_BTN = `flex h-14 items-center justify-center rounded-lg text-lg font-medium transition-transform select-none focus:outline-none ${FOCUS_RING} focus-visible:ring-inset active:scale-[0.97]`;
-const PAD_DIGIT = "bg-[var(--bg-surface-2)] text-[var(--text-primary)] active:bg-[var(--border)]";
-const PAD_ACCENT = "bg-[var(--border)] text-[var(--text-primary)] active:bg-[var(--bg-surface-2)]";
+// Digits on the well, operators a step down on `--bg-active`, each pressing toward the
+// other. `--bg-active`, not `--border` (0.33, docs/colour-roles-harmonization.md §12.9):
+// More contrast steps the border until it is a 3:1 LINE, and as a fill under the label
+// that left 2.7–3.3:1; `--bg-active` carries the ink at 7:1 and up at both levels.
+const PAD_DIGIT = "bg-surface-2 text-primary active:bg-active";
+const PAD_ACCENT = "bg-active text-primary active:bg-surface-2";
 
 export function NumberPadSheet({
   value,
