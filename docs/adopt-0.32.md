@@ -274,3 +274,18 @@ wheel.
   (lists); a plain assignment is never validated.
 
 **Billing plans for local review:** see `docs/billing-harmonization.md` §13.
+
+## 0.32.2
+
+From kastlan's and keksdose's 0.32.1 reports. Bump to `^0.32.2`; server-kit stays 0.6.1.
+
+- **Button** keeps an icon's size when its label wraps at Large (`[&_svg]:shrink-0`).
+- **PageHeader** (`stacked`, the default) stacks its actions full width on a phone at
+  Large, as FormActions do. `inline` is unchanged.
+- **AppShell's `mobileSubNavLayout`** unset is `"wrap"` at Normal and `"scroll"` at Large
+  and Extra large, where a wrapped group of eight pages covered the page. An explicit
+  value still wins.
+- **RowActions' "⋯" menu** stops clicks on its panel itself, padding and border
+  included; 0.32.1 stopped them one box in. `Popover` now runs a caller's `onKeyDown`
+  before its own Escape handler, where it used to drop it.
+
