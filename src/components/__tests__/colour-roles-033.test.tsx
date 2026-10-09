@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Button, IconButton } from "../ui";
+import { Button, Card, IconButton } from "../ui";
 import { Chip } from "../chip";
 import { CalculatorButton } from "../calculator";
 import { NumberPadSheet } from "../numpad-sheet";
@@ -105,6 +105,20 @@ describe("every fill under its own foreground (§5.1)", () => {
     const c = cls(screen.getByTestId("brand"));
     expect(c).toContain("text-brand-muted");
     expect(c).not.toContain("text-[var(--brand)]");
+  });
+});
+
+describe("warning's loud line (§5.2)", () => {
+  it("Card toneStrength=strong draws --warning-border-strong, not the warning text colour", () => {
+    // In dark, --warning stood 13:1 off the card and shouted; amber-600 is 4.8:1 and up.
+    render(
+      <Card tone="warning" toneStrength="strong" padding="md" data-testid="card">
+        Payment overdue
+      </Card>,
+    );
+    const c = cls(screen.getByTestId("card"));
+    expect(c).toEqual(expect.arrayContaining(["border-2", "border-warning-strong"]));
+    expect(c).not.toContain("border-[var(--warning)]");
   });
 });
 

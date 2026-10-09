@@ -1455,7 +1455,16 @@ corrected in place too.
         darker status colours already lift status). Where a role can't move, lighten
         `--bg-hover` until every role clears 4.5. Text wins over the hover's step; the
         on-page hovers no longer use `--bg-hover` (above).
-      - The build records the per-preset values here.
+      - **What the build measured (ui-kit 0.33):**
+        - `--bg-hover` went from 7 % to **5.5 %** ink into the card (`tokens.css`, and
+          `HOVER_INK` in `theme/contrast-tokens.ts` for the deriver).
+        - Its step from the card is **1.09–1.13** over every preset and both modes.
+        - The worst text role on it is **4.47–4.89**. The lowest is Moss light's
+          `--money-income` at 4.47, inside the audit's 4.45 floor.
+        - B′'s translucent ink steps **1.12–1.21** from any surface: page, card or well,
+          in both modes.
+        - A danger-tone ghost button keeps the danger wash as its hover, not the ink:
+          its red text on the ink measured 4.24.
 
 ## A. Method
 

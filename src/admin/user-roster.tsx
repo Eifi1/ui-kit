@@ -175,7 +175,9 @@ export interface UserIdentityCellProps {
  * — the cell both rosters drew by hand. An account with no name yet (a migrated row
  * before `CompleteNameDialog`, an invitee) shows its address once, as the name.
  *
- * Both lines carry `data-private`, so keksdose's demo blur reaches them.
+ * Both lines carry `data-private`, so keksdose's demo blur reaches them, and both end
+ * in "…" at Normal only: from Large up they wrap (`truncate-until-large`, 0.33,
+ * docs/text-size-harmonization.md §10.17), since a cut name or address is a finding there.
  */
 export function UserIdentityCell({
   person,
@@ -194,13 +196,13 @@ export function UserIdentityCell({
       {avatar && <UserAvatar person={person} name={name} email={email} size="sm" />}
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span data-private className="truncate font-medium text-[var(--text-primary)]">
+          <span data-private className="truncate-until-large font-medium text-[var(--text-primary)]">
             {named || address}
           </span>
           {badge}
         </div>
         {named && address && (
-          <div data-private className="truncate text-xs text-[var(--text-muted)]">
+          <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
             {address}
           </div>
         )}

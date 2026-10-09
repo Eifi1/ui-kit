@@ -171,7 +171,7 @@ describe("Chip snapEdges", () => {
       </div>,
     );
     const lines = (testId: string, count: number) => {
-      const label = container.querySelector<HTMLElement>(`[data-testid=${testId}] .truncate`)!;
+      const label = container.querySelector<HTMLElement>(`[data-testid=${testId}] .truncate-until-large`)!;
       label.style.lineHeight = "16px";
       Object.defineProperty(label, "clientHeight", { configurable: true, value: 16 * count });
     };

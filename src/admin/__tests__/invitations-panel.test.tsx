@@ -1,8 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import type { RoleVocabulary } from "../../components/account-chips";
+import { WriteLockProvider } from "../../components/write-lock";
+import type { WriteLockHold } from "../../components/write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { InvitationsPanel } from "../invitations-panel";
 import type { InvitationRow } from "../invitations-panel";
@@ -191,5 +193,65 @@ describe("InvitationsPanel — 0.31.1", () => {
       />,
     );
     expect(rowOf("lou@example.com")).toHaveTextContent("Ada Example");
+  });
+});
+
+describe("InvitationsPanel under a write lock (0.33, billing §12.36)", () => {
+  const PLAN = "Your plan has ended.";
+  const DEMO = "Not possible in the demo.";
+
+  function underLock(holds: WriteLockHold[]) {
+    const calls = { onInvite: vi.fn(async () => ({ id: 9 })), onResend: vi.fn(), onRevoke: vi.fn() };
+    render(
+      <WriteLockProvider locked holds={holds}>
+        <InvitationsPanel<Role> invitations={ROWS.slice(0, 1)} roles={ROLES} {...calls} />
+      </WriteLockProvider>,
+    );
+    // An address, so the lock is the only thing that stops the invite.
+    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "pat@example.com" } });
+    return calls;
+  }
+
+  it("keeps revoking live under a lapsed plan, and refuses inviting and resending with its reason", async () => {
+    const { onInvite, onResend, onRevoke } = underLock([{ kind: "billing", reason: PLAN }]);
+    for (const name of ["Invite", "Send nina@example.com a new link"]) {
+      const button = screen.getByRole("button", { name });
+      expect(button, name).toHaveAttribute("aria-disabled", "true");
+      expect(button, name).toHaveAccessibleDescription(PLAN);
+      fireEvent.click(button);
+    }
+    // Enter in the address is a commit too.
+    fireEvent.submit(screen.getByLabelText("Email address").closest("form")!);
+    expect(onInvite).not.toHaveBeenCalled();
+    expect(onResend).not.toHaveBeenCalled();
+
+    const revoke = screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" });
+    expect(revoke).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(revoke);
+    expect(onRevoke).toHaveBeenCalledWith(ROWS[0]);
+    // The row's busy state clears once the call settles.
+    await waitFor(() => expect(screen.getByRole("button", { name: "Invite" })).not.toBeDisabled());
+  });
+
+  it("refuses all three, revoke too, under a demo lock beside it", () => {
+    const { onRevoke } = underLock([
+      { kind: "demo", reason: DEMO },
+      { kind: "billing", reason: PLAN },
+    ]);
+    const revoke = screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" });
+    expect(revoke).toHaveAttribute("aria-disabled", "true");
+    expect(revoke).toHaveAccessibleDescription(DEMO);
+    fireEvent.click(revoke);
+    expect(onRevoke).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Invite" })).toHaveAccessibleDescription(DEMO);
+  });
+});
+
+describe("InvitationsPanel at Large (0.33, text size §10.17)", () => {
+  it("truncates an address at Normal only: truncate-until-large", () => {
+    render(<InvitationsPanel<Role> invitations={ROWS.slice(0, 1)} roles={ROLES} />);
+    const address = screen.getByText("nina@example.com");
+    expect(address.className.split(" ")).toContain("truncate-until-large");
+    expect(address.className.split(" ")).not.toContain("truncate");
   });
 });

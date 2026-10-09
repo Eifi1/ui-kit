@@ -3085,14 +3085,16 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   tone?: CardTone;
   /**
    * How loud the `tone` frame is. `"strong"`: a 2px border in the tone's strong
-   * colour — `--danger-border-strong` for `danger`, the tone's own text colour
-   * (`--warning`, `--info`, `--success`) for the others, which have no
-   * `-border-strong` token of their own. For the one tile on a page that guards
-   * something destructive or security-relevant: keksdose's password / delete-account
-   * tile (shared/components/password-danger-card.tsx) wrote `toneFrameClass(tone)` over
-   * the Card by hand for the 2px rule, and `p-[15px]` under it so the content did not
-   * move. Here the extra pixel comes off the padding the same way (`padding` or the
-   * variant's own), so a strong card's content sits exactly where a soft one's does.
+   * colour — `--danger-border-strong` for `danger`, `--warning-border-strong` for
+   * `warning` (0.33: amber-600 in dark, where `--warning` stood 13:1 off the card and
+   * shouted; docs/colour-roles-harmonization.md §5.2), the tone's own text colour
+   * (`--info`, `--success`) for the two with no `-border-strong` token of their own.
+   * For the one tile on a page that guards something destructive or security-relevant:
+   * keksdose's password / delete-account tile (shared/components/password-danger-card.tsx)
+   * wrote `toneFrameClass(tone)` over the Card by hand for the 2px rule, and `p-[15px]`
+   * under it so the content did not move. Here the extra pixel comes off the padding the
+   * same way (`padding` or the variant's own), so a strong card's content sits exactly
+   * where a soft one's does.
    *
    * Default `"soft"`: the 1px `-border` it has always been. No effect without `tone`,
    * nor on `inset`, which has no border to make louder (its tone is a fill).
@@ -3180,7 +3182,7 @@ const CARD_TONE_WASH: Record<CardTone, string> = {
 };
 
 const CARD_TONES_STRONG: Record<CardTone, string> = {
-  warning: "border-2 border-[var(--warning)]",
+  warning: "border-2 border-warning-strong",
   danger: "border-2 border-[var(--danger-border-strong)]",
   info: "border-2 border-[var(--info)]",
   success: "border-2 border-[var(--success)]",

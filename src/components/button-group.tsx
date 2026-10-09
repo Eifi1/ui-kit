@@ -178,7 +178,10 @@ export interface ButtonGroupLinkProps extends Omit<ComponentPropsWithoutRef<"a">
   ref?: Ref<HTMLAnchorElement>;
 }
 
-const LINK_CURRENT = "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)]";
+// The brand AS TEXT is `--brand-muted` (0.33, docs/colour-roles-harmonization.md §5.5):
+// `--brand` itself is solved to 3:1 and read 2.97:1 on its own wash in the derived dark
+// presets; the muted form holds 4.5:1 on it in every preset.
+const LINK_CURRENT = "bg-[var(--brand-bg)] text-brand-muted hover:bg-[var(--brand-bg-hover)]";
 
 /**
  * A {@link ButtonGroup} member that navigates: a link drawn as a {@link Button}, so it

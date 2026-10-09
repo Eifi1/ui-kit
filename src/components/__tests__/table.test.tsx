@@ -89,6 +89,23 @@ describe("Table", () => {
     expect(footRow.className).not.toMatch(/even:/);
   });
 
+  it("hovers a zebra row to the card, where --bg-hover would barely move off the well (0.33)", () => {
+    // docs/colour-roles-harmonization.md §12.2: --bg-hover sits 1.00–1.02:1 from the
+    // well; the card 1.09–1.13:1, with every text role at 4.5:1 on it.
+    const { unmount } = render(<Ledger zebra hover />);
+    const bodyRow = screen.getAllByRole("row")[1];
+    expect(bodyRow.className.split(" ")).toEqual(
+      expect.arrayContaining(["even:bg-[var(--bg-surface-2)]", "hover:bg-[var(--bg-hover)]", "even:hover:bg-surface"]),
+    );
+    unmount();
+    // No zebra, no well to leave; no hover, nothing to tint.
+    for (const props of [{ hover: true }, { zebra: true }]) {
+      const { unmount: done } = render(<Ledger {...props} />);
+      expect(screen.getAllByRole("row")[1].className, JSON.stringify(props)).not.toContain("even:hover:");
+      done();
+    }
+  });
+
   it("sits in an overflow-x wrapper that is no tab stop while it fits", () => {
     const { container } = render(<Ledger />);
     const wrapper = container.firstElementChild!;

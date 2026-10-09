@@ -40,9 +40,10 @@ const BUDGET = Number(process.env.TOKEN_BUDGET ?? "2");
  * The second ratchet: `[var(--role)]` classes where a role utility exists. Lower this
  * whenever the real count drops; never raise it. Started in 0.33 at the day's count,
  * 1,580 (2026-10-09), after the swipes, Chip solid, the badge, the keypads and B′ had
- * moved to the utilities.
+ * moved to the utilities; 1,576 once the rest of the round had landed (ButtonGroupLink's
+ * and ActionCard's brand as text among it).
  */
-const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1580");
+const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1576");
 
 const SRC = resolve(import.meta.dirname, "..", "src");
 

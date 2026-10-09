@@ -384,7 +384,8 @@ export function refreshChipEdges(): void {
   for (let pass = 0; pass <= n && pending.length; pass++) {
     const reads = pending.map((el) => {
       const r = el.getBoundingClientRect();
-      const label = el.querySelector<HTMLElement>(".truncate");
+      // The text label (CHIP_LABEL_TRUNCATE; `.truncate` before 0.33).
+      const label = el.querySelector<HTMLElement>(".truncate-until-large");
       // Not laid out (a hidden ancestor, jsdom), or truncated at its container's edge,
       // where a wider chip would overflow: leave it alone. So too a label wrapped onto
       // a second line at Large (0.32.1): the chip is already as wide as its row lets it
@@ -515,16 +516,16 @@ const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
  * "…". keksdose's "Zur Prüfung zurücklegen" read "Zur Prüfung zu…" on a phone at Extra
  * large, which is a different instruction. No size has a fixed height (padding and
  * `min-h-*` only), so the pill grows with its lines; the mark before the text stays
- * centred on them, as in a pill. A `large:` class, so Normal keeps its one-line chip.
+ * centred on them, as in a pill. A `large:` rule, so Normal keeps its one-line chip.
  *
- * `break-words`, not `[overflow-wrap:anywhere]`: a status chip often sits in a table
- * cell, and `anywhere` lowers the label's min-content width to one letter, so an
- * auto-sized column can squeeze it to a letter per line (StatusDot's label did, in the
- * showcase's tone table at 360 px, Extra large). `break-word` keeps each word whole
- * wherever the width is the content's to choose, and still breaks one that cannot fit
- * the row at all.
+ * 0.33 (§10.17): the kit's one `truncate-until-large` (tokens.css) in place of this
+ * file's own `truncate` + `large:whitespace-normal large:break-words`, as StatusDot's
+ * label took it. The utility breaks with `overflow-wrap: anywhere`, which lowers the
+ * label's min-content width to one letter: a status chip in an auto-sized table column
+ * wants the column given a width at Large, or it is squeezed to a letter per line
+ * (StatusDot's label was, in the showcase's tone table at 360 px, Extra large).
  */
-const CHIP_LABEL_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const CHIP_LABEL_TRUNCATE = "truncate-until-large";
 
 /**
  * An interactive chip's touch target at Large and Extra large (docs/text-size-harmonization.md
@@ -845,7 +846,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         ) : (
           <Icon className={cn(s.icon, "shrink-0")} aria-hidden />
         ))}
-      {/* Text truncates at Normal and wraps at Large (CHIP_LABEL_WRAP_AT_LARGE). Mixed
+      {/* Text truncates at Normal and wraps at Large (CHIP_LABEL_TRUNCATE). Mixed
           children (an icon and a word) sit in a row instead: as a plain span, the svg —
           a block under Tailwind's preflight — stacked above the text (keksdose live
           #358). */}
@@ -853,7 +854,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         className={cn(
           "min-w-0",
           typeof children === "string" || typeof children === "number"
-            ? cn("truncate", CHIP_LABEL_WRAP_AT_LARGE)
+            ? CHIP_LABEL_TRUNCATE
             : "inline-flex items-center gap-1 [&>svg]:size-[1em] [&>svg]:shrink-0",
         )}
       >

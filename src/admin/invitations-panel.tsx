@@ -16,7 +16,7 @@ import { LanguageSelect } from "../components/language-select";
 import { SectionLabel, Caption } from "../components/text";
 import { RowActions } from "../components/row-actions";
 import { Button, Input, Select, Spinner } from "../components/ui";
-import { useWriteLock } from "../components/write-lock";
+import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
 import { hasMessage, settle, useDayText, usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { RoleSelect } from "./role-select";
@@ -45,6 +45,11 @@ import { RoleSelect } from "./role-select";
  *   `revoked`; the status chip simply never says it (§5).
  *
  * It never sends a request: `onInvite`, `onResend` and `onRevoke` do.
+ *
+ * Under a write lock, inviting and resending are refused; a lapsed plan's lock (`kind:
+ * "billing"`) still lets an invitation be revoked, since removing access is what a
+ * lapsed plan allows (docs/billing-harmonization.md §12.13, §12.36). A demo lock refuses
+ * all three.
  */
 
 export type InvitationStatus = "open" | "accepted" | "expired" | "revoked";
@@ -453,7 +458,7 @@ export function InvitationsPanel<R extends string = string>({
                 <li key={key} data-status={invitation.status} className="py-2 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                     <div className="min-w-0 flex-1 basis-48 space-y-1">
-                      <div data-private className="truncate text-sm font-medium text-[var(--text-primary)]">
+                      <div data-private className="truncate-until-large text-sm font-medium text-[var(--text-primary)]">
                         {invitation.email}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -509,7 +514,8 @@ export function InvitationsPanel<R extends string = string>({
                               label: labels.revoke(invitation.email),
                               icon: Trash2,
                               tone: "danger",
-                              commit: true,
+                              // Removing access stays open under a lapsed plan (§12.36).
+                              commit: COMMIT_EXCEPT_BILLING,
                               pending: busy === `revoke:${key}`,
                               disabled: busy !== null,
                               onSelect: () => void run(`revoke:${key}`, () => onRevoke(invitation)),

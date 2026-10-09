@@ -88,7 +88,7 @@ export * from "./components/search-field";
 export * from "./components/dropdown";
 export * from "./components/popover";
 export { SwipeableRow } from "./components/swipeable-row";
-export type { SwipeAction, SwipeableRowProps } from "./components/swipeable-row";
+export type { SwipeAction, SwipePaint, SwipeTone, SwipeableRowProps } from "./components/swipeable-row";
 export * from "./components/calculator";
 export * from "./components/numpad-sheet";
 export * from "./components/number-input";

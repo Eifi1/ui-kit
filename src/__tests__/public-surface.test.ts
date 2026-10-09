@@ -198,7 +198,15 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (keksdose's 0.32 report) (+2).
   // 0.33.0 (+2): `writeLockFor` and `COMMIT_EXCEPT_BILLING`, the write lock's sources
   // (docs/billing-harmonization.md §12.36).
-  ["@eifi1/ui-kit", barrel, 860],
+  // 0.33.0, billing's round (+19, docs/billing-harmonization.md §12.36, §14):
+  // `useBillingWriteLock`; the way back from a checkout, `CHECKOUT_RETURN_PARAM`,
+  // `CHECKOUT_RETURN_VALUE`, `isCheckoutReturn`, `withoutCheckoutReturn`,
+  // `checkoutReturnUrl`, and its "processing", `checkoutFingerprint`, `checkoutLanded`,
+  // `noteCheckoutStarted`, `useCheckoutProcessing`; the pay page's link,
+  // `PAY_PAGE_LANG_PARAM`, `paddleLocale`, `payPageUrl`; `usePlanLimitToast`; and the
+  // operator's plan parts, `planColumn`, `usePlanColumn`, `PlanChangeConfirm`,
+  // `usePlanChangeResult`, `DEFAULT_PLAN_CHANGE_LABELS`.
+  ["@eifi1/ui-kit", barrel, 879],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
