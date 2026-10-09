@@ -349,8 +349,13 @@ html[data-text-size="xlarge"] {
   --brand-bg: color-mix(in oklab, var(--brand) 14%, var(--bg-surface));
   --brand-bg-hover: color-mix(in oklab, var(--brand) 24%, var(--bg-surface));
   /* Brand text ON `--brand-bg` — pulled away from the surface so it keeps contrast
-     against its own tint in both themes. */
-  --brand-muted: color-mix(in oklab, var(--brand) 70%, var(--text-primary));
+     against its own tint in both themes, and against `--brand-bg-hover` under it.
+     62 %, not the 70 % it was (0.33, colour-roles §12.11): on the hovered chip 70 %
+     read 4.08–4.42:1 (Default and Moss light; Ink, Moss, Plum and Contrast dark);
+     62 % clears 4.5:1 in every preset and mode.
+     `BRAND_MUTED_SHARE` in theme/contrast-tokens.ts is this number for the deriver; the
+     token audit holds them equal. */
+  --brand-muted: color-mix(in oklab, var(--brand) 62%, var(--text-primary));
 }
 
 /* ── A foreground for every fill (0.33, docs/colour-roles-harmonization.md §5.1) ──

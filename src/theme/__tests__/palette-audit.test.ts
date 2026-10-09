@@ -129,6 +129,14 @@ describe("the 0.33 audit additions", () => {
     expect(pairs).toContain("moneyExpense on bgHover");
     expect(pairs).toContain("brandContrast on brandHover");
     expect(pairs).toContain("brandMuted on brandBg");
+    expect(pairs).toContain("brandMuted on brandBgHover");
+  });
+
+  it("fails what it measures: the brand as text on its hovered chip (§12.11)", () => {
+    // Ink's anchor as given, before the deriver lifted it off the dark surfaces.
+    const raw = { ...DERIVED_PRESETS[0].dark, brand: "#2f5fd0" };
+    const failing = auditPalette(raw).failures.map((f) => f.pair);
+    expect(failing).toContain("brandMuted on brandBgHover");
   });
 
   it("fails what it measures: the derived dark presets' old brand hover", () => {

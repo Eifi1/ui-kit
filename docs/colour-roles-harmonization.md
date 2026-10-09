@@ -1466,6 +1466,37 @@ corrected in place too.
         - A danger-tone ghost button keeps the danger wash as its hover, not the ink:
           its red text on the ink measured 4.24.
 
+11. **The brand as text on its hovered chip (found in the 0.33 build).** Item 10's rule
+    holds for the soft brand chip too. `--brand-muted` sits on `--brand-bg-hover` in
+    ButtonGroupLink's current page (`button-group.tsx:184`), DatePicker's selected day
+    (`date-picker.tsx:987`) and MiniCalendar's range (`mini-calendar.tsx:767`). No audit
+    measured that pair.
+    - **Before:** 4.08–7.83. Seven of the twelve preset × mode combinations failed:
+      Default and Imprint light 4.42 (they share their values), Moss light 4.35, Ink
+      dark 4.09, Moss dark 4.08, Plum dark 4.11, Contrast dark 4.38.
+    - **The fix:** `--brand-muted` moved from 70 % to **62 %** brand in the ink
+      (`tokens.css`, and `BRAND_MUTED_SHARE` in `theme/contrast-tokens.ts`). The text
+      moves, not the chip.
+    - **The other two ways fail:**
+      - Moving the brand (the deriver's loop) pushes Ink, Moss and Plum dark so far that
+        their label flips from white to the dark ink, at 4.50–4.58. Default light's
+        indigo-600 would have to change too.
+      - Lightening `--brand-bg-hover` clears 4.5 only at 14–15 %. That hover sits
+        1.00–1.003 from `--brand-bg`, so there is no hover left.
+    - **After:** on `--brand-bg-hover` **4.50–7.91**: Plum dark 4.50, Ink and Moss dark
+      4.51, Default light 4.59. On `--brand-bg` it goes from 4.51–9.85 to 4.96–9.95.
+      On the page, card, well and `--bg-hover` it goes from 4.56–11.66 to 5.00–11.78.
+      The hover still steps 1.10–1.26 from `--brand-bg`. More contrast changes none of
+      these, because none of their inputs step.
+    - **The deriver** now solves the brand against both chips, `--brand-bg` and
+      `--brand-bg-hover`. At 62 % it needs one step less in Plum dark, so `--brand` goes
+      from `#9354a8` to `#9153a6` and `--brand-hover` from `#814295` to `#7f4193`. No
+      other preset changes.
+    - **The audits** now measure the hovered chip in every preset × mode × contrast
+      level: `auditPalette` and `tokens-css-audit.test.ts`. The token audit also holds
+      the three shares equal to the stylesheet's, and the hover's 1.08 step from the
+      chip.
+
 ## A. Method
 
 - **Contrast:** the kit's own colour code (`color.ts`, `contrastStep` from

@@ -13,7 +13,7 @@ import {
   solveLightness,
 } from "./color";
 import type { CvdType, Oklch } from "./color";
-import { hoverFill, mix } from "./contrast-tokens";
+import { brandSoft, hoverFill } from "./contrast-tokens";
 
 /**
  * Build a whole palette from one brand colour, plus any number of colours pinned by
@@ -313,15 +313,19 @@ export function derivePalette({
     );
   }
   // `--brand-muted` is the brand AS TEXT — a soft brand chip's label, an outline chip, a
-  // current link — and tokens.css derives it: 70 % brand into the ink. A brand solved
+  // current link — and tokens.css derives it: 62 % brand into the ink. A brand solved
   // to 3:1 left it at 4.43–4.51:1 in three dark presets (0.33, §5.5), so it gets the
   // text floor here: the brand moves away from the surfaces, a step at a time, until its
-  // muted form clears 4.5:1 on the worst fill and on its own soft chip (`--brand-bg`).
-  const brandMutedWorst = (hex: string) =>
-    Math.min(
-      contrast(mix(hex, textPrimary, 0.7), worstText),
-      contrast(mix(hex, textPrimary, 0.7), mix(hex, surfaces.bgSurface, 0.14)),
+  // muted form clears 4.5:1 on the worst fill and on its own soft chip, at rest
+  // (`--brand-bg`) and hovered (`--brand-bg-hover`, the harder of the two: §12.11).
+  const brandMutedWorst = (hex: string) => {
+    const soft = brandSoft({ brand: hex, textPrimary, bgSurface: surfaces.bgSurface });
+    return Math.min(
+      contrast(soft.brandMuted, worstText),
+      contrast(soft.brandMuted, soft.brandBg),
+      contrast(soft.brandMuted, soft.brandBgHover),
     );
+  };
   for (let i = 0; i < 40 && brandMutedWorst(brandHex) < 4.5; i++) {
     const lch = hexToOklch(brandHex)!;
     brandHex = oklchToHex({ ...lch, l: mode === "light" ? lch.l - 0.005 : lch.l + 0.005 });
@@ -554,9 +558,8 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
   // it; the brand fill and the hairline, which are not text, are not.
   const hover = hoverFill(t);
   const textGrounds: Array<[string, string]> = [...surfaces, ["bgHover", hover]];
-  // `--brand-muted` and `--brand-bg`, mixed as tokens.css mixes them.
-  const brandMuted = mix(t.brand, t.textPrimary, 0.7);
-  const brandBg = mix(t.brand, t.bgSurface, 0.14);
+  // `--brand-muted`, `--brand-bg` and `--brand-bg-hover`, mixed as tokens.css mixes them.
+  const { brandMuted, brandBg, brandBgHover } = brandSoft(t);
 
   const add = (pair: string, fg: string, bg: string, required: number, rule: string) => {
     const ratio = contrast(fg, bg);
@@ -589,6 +592,10 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
   // lightened the hover toward their white label and left it at 4.07:1.
   add("brandContrast on brandHover", t.brandContrast, t.brandHover, 4.5, "WCAG 1.4.3 AA body text");
   add("brandMuted on brandBg", brandMuted, brandBg, 4.5, "WCAG 1.4.3 — a soft brand chip's label");
+  // The same label on the chip hovered (§12.11): a current link, a selected day. At 70 %
+  // brand the muted text read 4.08–4.42:1 here (Default and Moss light; Ink, Moss, Plum
+  // and Contrast dark).
+  add("brandMuted on brandBgHover", brandMuted, brandBgHover, 4.5, "WCAG 1.4.3 — a hovered soft brand chip's label");
 
   if (semantic) {
     for (const [name, fg] of [

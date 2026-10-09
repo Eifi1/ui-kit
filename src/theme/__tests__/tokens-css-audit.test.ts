@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { contrast } from "../color";
-import { HOVER_INK } from "../contrast-tokens";
+import { BRAND_BG_HOVER_SHARE, BRAND_BG_SHARE, BRAND_MUTED_SHARE, HOVER_INK } from "../contrast-tokens";
 import { PALETTES } from "../palette-presets";
 import { SWIPE_TONE } from "../../components/swipeable-row";
 import { mixSrgb, over, resolveTokens, type ResolvedTokens, type Rgba } from "../../test/tokens-css";
@@ -59,6 +59,8 @@ const ON_WASH: Array<[string, string]> = [
   ["--success", "--success-bg"],
   ["--info", "--info-bg"],
   ["--brand-muted", "--brand-bg"],
+  // …and on that chip hovered: ButtonGroupLink's current page, a selected day (§12.11).
+  ["--brand-muted", "--brand-bg-hover"],
   ...HUES.map((h): [string, string] => [`--hue-${h}`, `--hue-${h}-bg`]),
 ];
 
@@ -243,6 +245,30 @@ describe("the hover rule (§12.2, §12.10)", () => {
           pair(fail, hovered, t.color(ground), 1.08 + SLACK, `the ink against ${ground}`);
           pair(fail, t.color("--text-primary"), hovered, 4.5, `--text-primary on the ink over ${ground}`);
         }
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("the soft brand (§12.11)", () => {
+  it("mixes --brand-muted, --brand-bg and --brand-bg-hover at the shares the deriver solves with", () => {
+    const css = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+    const share = (token: string, into: string) => {
+      const value = new RegExp(`${token}:\\s*color-mix\\(in oklab, var\\(--brand\\) ([\\d.]+)%, var\\(${into}\\)\\)`).exec(css);
+      expect(value, `${token}'s formula`).not.toBeNull();
+      return Number(value![1]) / 100;
+    };
+    expect(share("--brand-muted", "--text-primary")).toBe(BRAND_MUTED_SHARE);
+    expect(share("--brand-bg", "--bg-surface")).toBe(BRAND_BG_SHARE);
+    expect(share("--brand-bg-hover", "--bg-surface")).toBe(BRAND_BG_HOVER_SHARE);
+  });
+
+  it("keeps the chip's hover a visible step: the text moved, not the hover", () => {
+    // Lightening `--brand-bg-hover` until the text cleared 4.5:1 would have left it 1.00:1
+    // from the chip it hovers, so `--brand-muted` moved toward the ink instead.
+    expect(
+      audit((t, fail) => {
+        pair(fail, onCard(t, "--brand-bg-hover"), onCard(t, "--brand-bg"), 1.08 + SLACK, "--brand-bg-hover against --brand-bg");
       }),
     ).toEqual([]);
   });
