@@ -75,9 +75,11 @@ After the reviews (Marcel, 2026-10-07/08):
 15. **kastlan gets a tenant portal, and tenants stay free.** Seats count staff only
     (admin, manager, accountant).
 
+16. **The provider is Paddle** (Marcel, 2026-10-09; compared in §9).
+17. **kastlan quotes gross prices too**, VAT included, as §12.17 says for every app
+    (Marcel, 2026-10-09). §13.1's open point is closed.
+
 Still open for Marcel (they don't block the contract):
-- **The provider** among the Merchants of Record (compared in §9 for the decision; Paddle
-  recommended);
 - **the plans, limits and prices** per app (proposed in §13, for local review);
 - **the launch date** per app, which starts the beta users' 12 months.
 
@@ -256,7 +258,7 @@ The kit stays provider-agnostic (§5), so the choice changes a mapper and settin
 the contract. The fees and CHF support must be checked with the providers at signing;
 this table is not a quote.
 
-**Recommendation (2026-10-08):** Paddle. Decision 6 (prices in CHF and EUR) needs a
+**Decided (Marcel, 2026-10-09): Paddle**, as recommended on 2026-10-08. Decision 6 (prices in CHF and EUR) needs a
 fixed price per currency, which Lemon Squeezy does not offer: a Swiss customer would be
 charged a converted USD amount.
 
@@ -517,7 +519,8 @@ Every unit counts, parking, storage and cellars included (decision 13), so a bui
 500 units: an operator's grant at a quoted price (§3.4 "Ask for more"). This
 replaces the placeholders CHF 49 / 149 / 399 for 50 / 250 / 1,000 units. Comparable:
 ImmoSync (Switzerland) CHF 30 / 99 / 299; immocloud €39.99 up to 50 units.
-Open: kastlan sells to businesses, which usually quote before VAT; §12.17 says gross.
+Gross, as §12.17 says (Marcel, 2026-10-09, decision 17), though kastlan sells to
+businesses.
 
 ### 13.2 keksdose: per owner, by budgets and scans
 
