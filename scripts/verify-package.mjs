@@ -67,6 +67,19 @@ for (const need of ["LICENSE", "tokens.css", "dist/index.js", "dist/index.d.ts"]
   if (shipped.has(need)) ok(need);
   else fail(`${need} is missing from the tarball`);
 }
+// The pay page (docs/billing-harmonization.md §14.4): the static page an app serves on its
+// pay host, Paddle's Apple Pay file under `.well-known/` (a dot-directory, which a packing
+// rule could drop silently), and the bin that copies them.
+for (const need of [
+  "dist/pay/index.html",
+  "dist/pay/pay.js",
+  "dist/pay/pay.css",
+  "dist/pay/.well-known/apple-developer-merchantid-domain-association",
+  "dist/bin/eifi1-pay-page.mjs",
+]) {
+  if (shipped.has(need)) ok(need);
+  else fail(`${need} is missing from the tarball`);
+}
 // README and ADOPTING.md both tell consumers to point Tailwind's @source at a directory
 // inside the package. Whichever directory that is, it has to be in the tarball.
 for (const dir of ["dist", "src"]) {
@@ -172,6 +185,60 @@ try {
   const expected = JSON.stringify({ rows: [[0.5, 1.25]], header: ["s", "F"], decimalComma: true, skipped: [] });
   if (parsed === expected) ok("parseTable reads a German export by package name");
   else fail(`parseTable by package name answered ${parsed}`);
+
+  log("• the pay page's bin writes an app's page, and refuses a wrong pairing");
+  const bin = join(scratch, "node_modules", ".bin", "eifi1-pay-page");
+  const payOut = join(scratch, "srv-pay");
+  const page = [
+    "--return-url", "https://app.example/settings/subscription",
+    "--app-name", "Example",
+    "--terms-url", "https://app.example/terms",
+    "--privacy-url", "https://app.example/privacy",
+  ];
+  if (!existsSync(bin)) fail("npm linked no eifi1-pay-page into node_modules/.bin");
+  else {
+    try {
+      run(bin, ["--out", payOut, "--token", "test_verify", "--environment", "sandbox", ...page], scratch);
+      const written = JSON.parse(readFileSync(join(payOut, "pay-config.json"), "utf8"));
+      const files = ["index.html", "pay.js", "pay.css", ".well-known/apple-developer-merchantid-domain-association"];
+      const missing = files.filter((f) => !existsSync(join(payOut, f)));
+      if (missing.length === 0 && written.token === "test_verify" && written.environment === "sandbox") {
+        ok("eifi1-pay-page wrote the page and its pay-config.json");
+      } else fail(`eifi1-pay-page wrote ${JSON.stringify(written)}, missing ${missing.join(", ") || "nothing"}`);
+    } catch (e) {
+      fail(`eifi1-pay-page failed: ${e.stderr || e.message}`);
+    }
+    try {
+      run(bin, ["--out", join(scratch, "srv-pay-wrong"), "--token", "test_verify", "--environment", "live", ...page], scratch);
+      fail("eifi1-pay-page accepted a sandbox token for live");
+    } catch (e) {
+      if (e.status === 1 && /sandbox token/.test(e.stderr ?? "")) ok("eifi1-pay-page refuses a sandbox token for live");
+      else fail(`eifi1-pay-page refused a wrong pairing oddly: ${e.stderr || e.message}`);
+    }
+  }
+  // Served beside Paddle.js and nothing else: one classic script that loads nothing.
+  const payJs = readFileSync(join(installed, "dist", "pay", "pay.js"), "utf8");
+  if (/^\s*import\s|\bimport\(|\brequire\(/m.test(payJs)) fail("dist/pay/pay.js loads a module");
+  else ok("dist/pay/pay.js loads nothing");
+
+  log("• testing is pure and knows the installed kit's tokens");
+  // The guard an app runs from its own suite (docs/colour-roles-harmonization.md §8.3):
+  // browser-safe, no package imports, and its token list baked from this tarball's
+  // tokens.css — `@theme inline` names and AppShell's `--app-nav-h` left out.
+  const testingDir = join(scratch, "node_modules", pkg.name, "dist", "testing");
+  const testingImports = readdirSync(testingDir)
+    .filter((f) => f.endsWith(".js"))
+    .flatMap((f) => [...readFileSync(join(testingDir, f), "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)])
+    .map((m) => m[1]);
+  if (testingImports.length === 0) ok("dist/testing imports no package");
+  else fail(`dist/testing imports ${testingImports.join(", ")}`);
+  const [guard] = runProbe(
+    `import { KIT_CSS_VARIABLES, undeclaredCssVariables } from ${JSON.stringify(specifierOf("./testing"))};\n` +
+      `const files = Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["f" + i + ".tsx", i ? "" : 'const a = "fill-[var(--surface)] bg-[var(--bg-surface)]";']));\n` +
+      `console.log(JSON.stringify([KIT_CSS_VARIABLES.has("--text-muted"), KIT_CSS_VARIABLES.has("--text-color-muted"), KIT_CSS_VARIABLES.has("--app-nav-h"), undeclaredCssVariables(files)]));`,
+  );
+  if (guard === JSON.stringify([true, false, false, ["f0.tsx:1 --surface"]])) ok("undeclaredCssVariables finds an undeclared token by package name");
+  else fail(`the testing entry by package name answered ${guard}`);
 
   log("• the CSS entry is reachable as a file");
   const css = join(scratch, "node_modules", pkg.name, "tokens.css");

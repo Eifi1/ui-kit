@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { WriteLockProvider } from "../../components/write-lock";
 import { SessionsSetting } from "../sessions-setting";
 import type { SessionItem } from "../sessions-setting";
 
@@ -133,5 +134,53 @@ describe("SessionsSetting — the device list (kastlan)", () => {
       />,
     );
     expect(screen.getByRole("listitem")).toHaveTextContent("Last active at the given time");
+  });
+});
+
+describe("SessionsSetting under a write lock (0.33, billing §12.13, §12.36)", () => {
+  const PLAN = "Your plan has ended.";
+  const DEMO = "Not possible in the demo.";
+
+  it("a lapsed plan's lock leaves signing out one device and everywhere live", async () => {
+    const user = userEvent.setup();
+    const onRevoke = vi.fn(async () => undefined);
+    const onSignOutEverywhere = vi.fn(async () => undefined);
+    render(
+      <WriteLockProvider locked kind="billing" reason={PLAN}>
+        <SessionsSetting onSignOutEverywhere={onSignOutEverywhere} sessions={SESSIONS} onRevoke={onRevoke} />
+      </WriteLockProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Sign out Safari on iPhone" }));
+    expect(onRevoke).toHaveBeenCalledWith("s2");
+    await user.click(screen.getByRole("button", { name: "Sign out everywhere…" }));
+    await user.click(screen.getByRole("button", { name: "Sign out everywhere" }));
+    expect(onSignOutEverywhere).toHaveBeenCalledTimes(1);
+  });
+
+  it("a demo's lock beside it holds both, with the demo's reason", async () => {
+    const user = userEvent.setup();
+    const onRevoke = vi.fn();
+    const onSignOutEverywhere = vi.fn();
+    render(
+      <WriteLockProvider
+        locked
+        holds={[
+          { kind: "demo", reason: DEMO },
+          { kind: "billing", reason: PLAN },
+        ]}
+      >
+        <SessionsSetting onSignOutEverywhere={onSignOutEverywhere} sessions={SESSIONS} onRevoke={onRevoke} />
+      </WriteLockProvider>,
+    );
+    const revoke = screen.getByRole("button", { name: "Sign out Safari on iPhone" });
+    expect(revoke).toHaveAccessibleDescription(DEMO);
+    await user.click(revoke);
+    // The tile is held before it arms: its arm button says the demo's reason.
+    const everywhere = screen.getByRole("button", { name: "Sign out everywhere…" });
+    expect(everywhere).toHaveAttribute("aria-disabled", "true");
+    expect(everywhere).toHaveAccessibleDescription(DEMO);
+    await user.click(everywhere);
+    expect(onRevoke).not.toHaveBeenCalled();
+    expect(onSignOutEverywhere).not.toHaveBeenCalled();
   });
 });

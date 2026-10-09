@@ -12,6 +12,7 @@ import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { mergeDescribedBy } from "./choice-parts";
 import { LockedReason, useLockReason } from "./field-parts";
+import type { CommitScope } from "./write-lock";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -122,11 +123,11 @@ const TARGET_RING = cn(FOCUS_RING, "focus-visible:ring-inset");
  * §4 "ListItem: title, subtitle and meta wrap instead of truncating" at Large and Extra
  * large (docs/text-size-harmonization.md). `large:` variants over the Normal look, so
  * a list keeps its one-height rows at Normal and costs no render to switch: a one-line
- * `truncate` wraps (and breaks a word too long for the row), a `line-clamp-2` lets go.
- * An ellipsis hides the end of a name, which is the part a reader who needs big type
- * cannot recover by squinting.
+ * line is `truncate-until-large` (tokens.css, 0.33 §10.17: `truncate`, and at Large a
+ * wrap that breaks a word too long for the row — the kit's one name for what this file
+ * spelt as `WRAP_AT_LARGE`), a `line-clamp-2` lets go. An ellipsis hides the end of a
+ * name, which is the part a reader who needs big type cannot recover by squinting.
  */
-const WRAP_AT_LARGE = "large:whitespace-normal large:[overflow-wrap:anywhere]";
 const UNCLAMP_AT_LARGE = "large:line-clamp-none";
 
 interface ListItemBaseProps {
@@ -341,7 +342,7 @@ export type ListItemProps = ListItemBaseProps &
          * the `disabledReason` way with the lock's reason (which wins over its own). No
          * provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
          */
-        commit?: boolean;
+        commit?: CommitScope;
         href?: never;
         renderLink?: never;
         external?: never;
@@ -528,7 +529,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           now-wrapping title into a column one word wide (§4, 240 px effective width). */}
       <span className={cn("flex min-w-0 flex-1 flex-col", trailing != null && "large:basis-40")}>
         {overline != null && (
-          <span className={cn("block truncate text-caption font-medium leading-snug text-[var(--text-muted)]", WRAP_AT_LARGE)}>
+          <span className="block truncate-until-large text-caption font-medium leading-snug text-[var(--text-muted)]">
             {overline}
           </span>
         )}
@@ -538,7 +539,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           className={cn(
             "block text-sm text-[var(--text-primary)]",
             titleLines === 1
-              ? cn("truncate", WRAP_AT_LARGE)
+              ? "truncate-until-large"
               : titleLines === 2
                 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE)
                 : "break-words",
@@ -553,7 +554,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           <span
             className={cn(
               "block text-xs text-[var(--text-muted)]",
-              subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : cn("truncate", WRAP_AT_LARGE),
+              subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : "truncate-until-large",
             )}
           >
             {subtitle}
@@ -563,7 +564,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           <span
             className={cn(
               "mt-0.5 text-caption leading-snug text-[var(--text-muted)]",
-              metaWrap ? "flex flex-wrap items-center gap-1" : cn("block truncate", WRAP_AT_LARGE),
+              metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate-until-large",
             )}
           >
             {meta}

@@ -18,7 +18,8 @@ import { Caption, SectionLabel } from "./text";
 import { ToggleGroup } from "./toggle-group";
 import { Tooltip } from "./tooltip";
 import { Button, Card, IconButton, Spinner } from "./ui";
-import { useWriteLock } from "./write-lock";
+import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
+import type { WriteLock } from "./write-lock";
 import type { CardProps } from "./ui";
 import type { DisabledReasonDisplay } from "./field-parts";
 
@@ -174,8 +175,11 @@ type MaybePromise = void | Promise<unknown>;
 
 export interface SharePanelProps {
   grantees: ShareGrantee[];
-  /** The role vocabulary, in display order. One role: no choice is offered and each
-   *  row shows its chip. */
+  /** The role vocabulary, in display order, NARROWEST FIRST — viewer, then editor, as
+   *  Kurvenschmiede lists them. One role: no choice is offered and each row shows its
+   *  chip. The order is what tells a lowering from a raise under a write lock: a lapsed
+   *  plan lets a grantee's role be lowered, which removes access, and never raised
+   *  (docs/billing-harmonization.md decision 26 as amended, §12.36). */
   roles: ShareRole[];
   pending?: SharePendingGrant[];
   /** Completions for the field. Left out: the field is a plain address field. */
@@ -244,6 +248,40 @@ function LockedRoleChoice({ reason, children }: { reason: ReactNode; children: R
   return reason === undefined ? children : <Tooltip label={reason}>{children}</Tooltip>;
 }
 
+/** What a grantee's role choice may do under the write lock: `group` locks the whole
+ *  choice with that reason; `raise` leaves it live for a lowering and refuses a raise
+ *  with that reason. Neither: the choice is free. */
+interface RoleChoiceLock {
+  group?: ReactNode;
+  raise?: ReactNode;
+}
+
+/**
+ * A grantee's role choice under the write lock (decision 26 as amended,
+ * docs/billing-harmonization.md §12.36). `roles` is read narrowest first, so an option
+ * before the grantee's role LOWERS it: that removes access, which a lapsed plan allows
+ * (§12.13), so it sees the lock as `COMMIT_EXCEPT_BILLING` does (`removal`). An option
+ * after it RAISES it — a role grant, which every lock refuses (`every`), billing's with
+ * its own reason. Kurvenschmiede's server refuses exactly that: a widening while lapsed,
+ * not a narrowing (`shares_router.py:229-234`).
+ *
+ * A segmented choice is locked as a whole, so per grantee: under a demo's lock nothing
+ * moves; under billing's, a grantee at the narrowest role has only raises (locked), one
+ * at the widest only lowerings (live), and one in between keeps its lowerings while its
+ * raises are dimmed and refused. A role the vocabulary does not list cannot be told
+ * either way and stays locked.
+ */
+function roleChoiceLock(index: number, count: number, every: WriteLock, removal: WriteLock): RoleChoiceLock {
+  if (removal.locked) return { group: removal.reason };
+  if (!every.locked) return {};
+  if (index <= 0) return { group: every.reason };
+  return index < count - 1 ? { raise: every.reason } : {};
+}
+
+/** The look of a raise refused while the lowerings beside it stay live — the dimmed
+ *  segment of a locked group (ToggleGroup's `dimmed`), on that segment alone. */
+const RAISE_REFUSED = "cursor-not-allowed opacity-50 hover:bg-transparent dark:hover:bg-transparent";
+
 /**
  * The body both forms share: the add form, then the list. Exported for an app that
  * frames it itself (a settings section, a sheet).
@@ -272,8 +310,12 @@ export function SharePanel({
   const labels = useKitLabels("shareCard", DEFAULT_SHARE_CARD_LABELS, labelsProp);
   const confirm = useConfirm();
   // Every commit below opts into the surrounding WriteLockProvider with `commit`; the
-  // role choices save on change, cannot take it, and read the lock themselves.
+  // role choices save on change, cannot take it, and read the lock themselves. Adding
+  // and raising a role see every lock (`lock`); removing access, withdrawing an
+  // invitation and lowering a role see it as a lapsed plan's lock allows them
+  // (`removal`, COMMIT_EXCEPT_BILLING; docs/billing-harmonization.md §12.13, §12.36).
   const lock = useWriteLock();
+  const removal = useWriteLock(COMMIT_EXCEPT_BILLING);
   const [email, setEmail] = useState("");
   // A candidate taken from the completion. Typing again lets it go: the field then
   // names an address again, and a chosen team beside free text would be two answers
@@ -454,6 +496,8 @@ export function SharePanel({
               const editable = !readOnly && !g.locked;
               const changeable = editable && onRoleChange !== undefined && choosable;
               const key = `grantee:${g.id}`;
+              const rank = roles.findIndex((r) => r.key === g.role);
+              const roleLock = roleChoiceLock(rank, roles.length, lock, removal);
               return (
                 <li key={key} className="space-y-1.5 py-2 first:pt-0 last:pb-0">
                   {/* Wraps rather than squeezes: on a phone the controls drop under
@@ -462,13 +506,13 @@ export function SharePanel({
                     <div className="min-w-0 flex-1 basis-40">
                       <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
                         {g.kind === "team" && <UsersRound className="size-4 shrink-0" aria-hidden />}
-                        <span data-private className="truncate">
+                        <span data-private className="truncate-until-large">
                           {g.name}
                         </span>
                         {!changeable && <ShareRoleChip role={roleOf(g.role)} />}
                       </div>
                       {(g.kind === "team" || g.email) && (
-                        <div data-private className="truncate text-xs text-[var(--text-muted)]">
+                        <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
                           {g.kind === "team" ? labels.team : g.email}
                         </div>
                       )}
@@ -476,15 +520,23 @@ export function SharePanel({
                     {(changeable || (editable && onRemove)) && (
                       <div className={ROW_CONTROLS}>
                         {changeable && (
-                          <LockedRoleChoice reason={lock.locked ? lock.reason : undefined}>
+                          <LockedRoleChoice reason={roleLock.group ?? roleLock.raise}>
                             <ToggleGroup<string>
                               size="sm"
                               aria-label={labels.roleOf(g.name)}
-                              options={roles.map((r) => ({ value: r.key, label: r.label }))}
+                              options={roles.map((r, i) => ({
+                                value: r.key,
+                                label: r.label,
+                                className: roleLock.raise !== undefined && i > rank ? RAISE_REFUSED : undefined,
+                              }))}
                               value={g.role}
-                              disabled={busy !== null || lock.locked}
+                              disabled={busy !== null || roleLock.group !== undefined}
                               onChange={(next) => {
-                                if (next !== g.role) void run(`role:${g.id}`, () => onRoleChange(g, next));
+                                if (next === g.role) return;
+                                // A raise under a lock that allows only lowerings: refused,
+                                // and the tooltip round the choice says why.
+                                if (roleLock.raise !== undefined && roles.findIndex((r) => r.key === next) > rank) return;
+                                void run(`role:${g.id}`, () => onRoleChange(g, next));
                               }}
                             />
                           </LockedRoleChoice>
@@ -493,7 +545,8 @@ export function SharePanel({
                           <IconButton
                             tone="danger"
                             size="xs"
-                            commit
+                            // Removing access: a lapsed plan allows it (§12.13).
+                            commit={COMMIT_EXCEPT_BILLING}
                             label={labels.remove}
                             // The icon alone at every text size (§10.8): the row's one
                             // control beside its role toggle, where "Remove access" as
@@ -533,7 +586,7 @@ export function SharePanel({
                       <div
                         data-private={p.email ? true : undefined}
                         className={cn(
-                          "truncate text-sm",
+                          "truncate-until-large text-sm",
                           p.email ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
                         )}
                       >
@@ -553,7 +606,8 @@ export function SharePanel({
                           <IconButton
                             tone="danger"
                             size="xs"
-                            commit
+                            // Withdrawing an invitation removes access too (§12.13).
+                            commit={COMMIT_EXCEPT_BILLING}
                             label={labels.revokePending}
                             // As the grantee's remove above: one action beside the
                             // copy icon (which is an icon at every size), and the

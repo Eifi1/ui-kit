@@ -5,7 +5,7 @@ import { cn } from "../lib/cn";
 import { useInlineFacts } from "../hooks/use-large-text";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip, type TooltipSide } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
 
 /**
@@ -34,12 +34,45 @@ import { hasMessage, mergeDescribedBy } from "./choice-parts";
 export const STATIC_LABEL_TYPE =
   "text-caption leading-tight text-[var(--text-muted)] peer-disabled:opacity-50";
 
+/**
+ * A field's label at Large and Extra large (0.33, docs/text-size-harmonization.md
+ * §10.17): a static label ABOVE the field — the phone card's "label above value" (§4) —
+ * not a label squeezed into the field's top strip, where a long one ended in "…". It
+ * stops being absolute, so it wraps like any text (`truncate-until-large` beside it); it
+ * takes the pointer, since nothing of the field lies under it any more; and the field
+ * no longer reserves the strip for it (`FIELD_FLOATING_PAD`). In the first row of a box
+ * that is a grid at Large ({@link LABEL_ABOVE_BOX}), wherever it sits in the DOM — a
+ * floating label FOLLOWS its input, for `peer-*`. `large:` classes, so it costs no
+ * render and is right on the first paint; Normal keeps the floating label.
+ *
+ * The placement only: a label element adds `large:block` (a `<span>` or `<label>` in
+ * flow), a label ROW keeps its `flex`.
+ */
+export const LABEL_ABOVE_AT_LARGE =
+  "large:static large:row-start-1 large:mb-1 large:max-w-none large:pointer-events-auto";
+
+/**
+ * The box a field's label is positioned in — {@link FloatingField}'s `relative` wrapper,
+ * a date or month picker's root — at Large, while it holds a label above
+ * ({@link LABEL_ABOVE_AT_LARGE}): one column, the label's row over the field's. The
+ * field's own absolute parts in the box (a chevron, a clear ×, a reveal toggle, a
+ * calculator) are placed in the second row, so their `top-1/2` and `inset-y-*` still
+ * measure the FIELD and not label and field together; the label's own elements carry
+ * `data-field-label` and stay in the first. Only on a box with a visible label: without
+ * one the second row would be empty.
+ */
+export const LABEL_ABOVE_BOX =
+  "large:grid large:grid-cols-[minmax(0,1fr)] large:[&>.absolute:not([data-field-label])]:row-start-2";
+
 // A field that always has a value (select / dropdown trigger) keeps the label
-// permanently in the floated position — small, in the top strip, value below.
+// permanently in the floated position — small, in the top strip, value below. At Large,
+// a label above the field (LABEL_ABOVE_AT_LARGE).
 export const FLOATING_LABEL_STATIC = cn(
   "pointer-events-none absolute start-3 top-1",
   STATIC_LABEL_TYPE,
-  "max-w-[calc(100%-1.5rem)] truncate",
+  "max-w-[calc(100%-1.5rem)] truncate-until-large",
+  LABEL_ABOVE_AT_LARGE,
+  "large:block",
 );
 
 /**
@@ -53,7 +86,9 @@ export interface FieldLabelProps extends ComponentPropsWithoutRef<"span"> {
 
 export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
   return (
-    <span {...rest} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
+    // `data-field-label`: a label of the box it stands in, kept in the first row at Large
+    // (LABEL_ABOVE_BOX).
+    <span data-field-label="" {...rest} className={cn(FLOATING_LABEL_STATIC, "z-10", className)}>
       {children}
     </span>
   );
@@ -207,9 +242,10 @@ export function FieldCaption({ parts, className }: { parts: FieldHintParts; clas
  * Classes that take a static floating label (`FLOATING_LABEL_STATIC`: `FieldLabel`,
  * `ComboboxFieldLabel`) out of its own absolute slot and into a {@link StaticLabelRow}.
  * `static` wins over `absolute` through `cn`'s merge; `min-w-0` lets it truncate in
- * the row.
+ * the row. At Large the ROW stands above the field, so the label inside it drops the
+ * margin a label above takes alone (`large:mb-0`), and stays level with its "?".
  */
-export const LABEL_IN_ROW = "static min-w-0";
+export const LABEL_IN_ROW = "static min-w-0 large:mb-0";
 
 /**
  * A static label and its "?" on one line, in the top strip of a field that lays out its
@@ -222,7 +258,10 @@ export const LABEL_IN_ROW = "static min-w-0";
  */
 export function StaticLabelRow({ hint, children }: { hint: ReactNode; children: ReactNode }) {
   return (
-    <div className="pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1">
+    <div
+      data-field-label=""
+      className={cn("pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}
+    >
       {children}
       <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
     </div>
@@ -270,7 +309,7 @@ export interface LockReason {
  * switch, a checkbox or a select that saves on change, a list row whose click writes.
  * The lock's reason wins over the control's own (`useCommitReason`).
  */
-export function useLockReason(commit: boolean | undefined, disabledReason: ReactNode): LockReason {
+export function useLockReason(commit: CommitScope | undefined, disabledReason: ReactNode): LockReason {
   const reason = useCommitReason(commit, disabledReason);
   const reasonId = useId();
   return { reason, locked: hasMessage(reason), reasonId };
@@ -510,9 +549,12 @@ export function FieldLabelLine({ label, hint }: { label: ReactNode; hint?: React
   if (!hasContent(hint)) return <FieldLabel>{label}</FieldLabel>;
   return (
     // `z-10` as FieldLabel has it: the trigger after it is `relative` and would paint
-    // over the row (and take the "?"'s hover) otherwise.
-    <div className="pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1">
-      <FieldLabel className="static min-w-0 max-w-full">{label}</FieldLabel>
+    // over the row (and take the "?"'s hover) otherwise. Above the field at Large.
+    <div
+      data-field-label=""
+      className={cn("pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}
+    >
+      <FieldLabel className={cn(LABEL_IN_ROW, "max-w-full")}>{label}</FieldLabel>
       <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
     </div>
   );
@@ -570,12 +612,17 @@ export function LabelStrip({
   children: ReactNode;
 }) {
   return (
-    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], className)}>
-      <div className="pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1">
+    // At Large the row is a label above the group, in flow (0.33, §10.17), and the
+    // strip's padding goes: nothing lies under it any more.
+    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], "large:pt-0", className)}>
+      <div
+        data-field-label=""
+        className={cn("pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}
+      >
         {/* `static`: FieldLabel positions itself absolutely; here the ROW is
             positioned, so the label and its "?" are centred on one line by the flex
             layout (dev#468). */}
-        <FieldLabel id={labelId} className={cn("static min-w-0 max-w-full", disabled && "opacity-50")}>
+        <FieldLabel id={labelId} className={cn(LABEL_IN_ROW, "max-w-full", disabled && "opacity-50")}>
           {label}
         </FieldLabel>
         {hasContent(hint) && <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>}

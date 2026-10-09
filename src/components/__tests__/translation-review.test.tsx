@@ -15,6 +15,8 @@ import {
   TranslationReviewPanel,
 } from "../translation-review";
 import type { TranslationReviewPanelProps } from "../translation-review";
+import { WriteLockProvider } from "../write-lock";
+import type { WriteLockHold } from "../write-lock";
 
 /**
  * keksdose's /translations page and kastlan's copy of it, as kit parts. What has to hold
@@ -336,6 +338,66 @@ describe("TranslationReviewEditor", () => {
     expect(screen.getByText("Une")).toBeInTheDocument();
     expect(screen.getByText("féminin")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+});
+
+describe("TranslationReview under a write lock (0.33, billing §12.13, §12.36)", () => {
+  const PLAN = "Your plan has ended.";
+  const DEMO = "Not possible in the demo.";
+  const BOTH: WriteLockHold[] = [
+    { kind: "demo", reason: DEMO },
+    { kind: "billing", reason: PLAN },
+  ];
+
+  it("a lapsed plan's lock leaves the verdicts live: a review is an admin route", async () => {
+    const onSave = vi.fn();
+    render(
+      <WriteLockProvider locked kind="billing" reason={PLAN}>
+        <TranslationReviewPanel rows={ROWS} localeLabel="Français" referenceLabel="English" onSave={onSave} />
+      </WriteLockProvider>,
+    );
+    const approve = within(rowOf("À attribuer")).getByRole("button", { name: "Approve" });
+    expect(approve).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(approve);
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toEqual([expect.objectContaining({ key: "budget.rta", verdict: "APPROVED" })]);
+  });
+
+  it("a demo's lock beside it holds them, with the demo's reason", () => {
+    const onSave = vi.fn();
+    render(
+      <WriteLockProvider locked holds={BOTH}>
+        <TranslationReviewPanel rows={ROWS} localeLabel="Français" referenceLabel="English" onSave={onSave} />
+      </WriteLockProvider>,
+    );
+    const approve = within(rowOf("À attribuer")).getByRole("button", { name: "Approve" });
+    expect(approve).toHaveAttribute("aria-disabled", "true");
+    expect(approve).toHaveAccessibleDescription(DEMO);
+    fireEvent.click(approve);
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("the editor's verdicts: live under billing, held under the demo", async () => {
+    const row = ROWS.find((r) => r.key === "common.items")!;
+    const onSave = vi.fn();
+    const onClear = vi.fn();
+    const { unmount } = render(
+      <WriteLockProvider locked kind="billing" reason={PLAN}>
+        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" onSave={onSave} onClear={onClear} />
+      </WriteLockProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    unmount();
+    render(
+      <WriteLockProvider locked holds={BOTH}>
+        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" onSave={onSave} onClear={onClear} />
+      </WriteLockProvider>,
+    );
+    const approve = screen.getByRole("button", { name: "Approve" });
+    expect(approve).toHaveAccessibleDescription(DEMO);
+    fireEvent.click(approve);
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 });
 

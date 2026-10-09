@@ -10,7 +10,7 @@ import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { FieldBox, FieldLabelLine, hasContent, useFieldMessages } from "./field-parts";
+import { FieldBox, FieldLabelLine, hasContent, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
 
 /**
  * Every string the month picker can speak. The month and year names are NOT here —
@@ -1005,7 +1005,13 @@ export function MonthPicker(props: MonthPickerProps) {
   const field = (
     // `w-fit` for the toolbar size: the calendar glyph is placed against this box, and a
     // full-width box would park it at the far end of the row, away from its trigger.
-    <div {...wrapperRest} ref={rootRef} className={cn("relative", small && "w-fit max-w-full", className)}>
+    // At Large a labelled box is a grid: the label above, the calendar glyph measured
+    // against the trigger's row (LABEL_ABOVE_BOX, 0.33 §10.17).
+    <div
+      {...wrapperRest}
+      ref={rootRef}
+      className={cn("relative", small && "w-fit max-w-full", label !== undefined && LABEL_ABOVE_BOX, className)}
+    >
       {label !== undefined && <FieldLabelLine label={label} hint={messages.labelHint} />}
       {/* The hidden twin the trigger is named by — see DateField. `sr-only-fixed`,
           and inside this `relative` root either way. */}

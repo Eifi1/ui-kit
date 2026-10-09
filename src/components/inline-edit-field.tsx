@@ -6,7 +6,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { Input, Spinner } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * Every string {@link InlineEditField} says on its own behalf — the `inlineEdit`
@@ -101,7 +101,7 @@ interface InlineEditFieldBaseProps<T> {
   /** This field COMMITS — under a locked {@link WriteLockProvider} it takes the
    *  `disabledReason` path with the lock's reason (which wins over its own). No
    *  provider, or an unlocked one: no effect. */
-  commit?: boolean;
+  commit?: CommitScope;
   /** The value is the user's own data: `data-private` on the display and the editor,
    *  so the app's demo-mode blur covers both. */
   redact?: boolean;
@@ -164,13 +164,13 @@ function RenderEditor<T>({ render, ...props }: InlineEditorProps<T> & { render: 
  * big type cannot recover a cut-off end by squinting. A `large:` class, so a table of
  * these keeps its one-line cells at Normal.
  *
- * `break-words`, not `[overflow-wrap:anywhere]`: these live in table cells (keksdose's
- * budget and invoice lines), and `anywhere` lowers the value's min-content width to one
- * letter, so an auto-sized column could squeeze an amount to a digit per line. With
- * `break-word` a column keeps each word whole; the button is `w-full`, so a word wider
- * than a sized cell still breaks.
+ * 0.33 (§10.17): the kit's one `truncate-until-large` (tokens.css) in place of this
+ * file's own `truncate` + `large:whitespace-normal large:break-words`. The utility
+ * breaks with `overflow-wrap: anywhere`, which lowers the value's min-content width: in
+ * an auto-sized table column (keksdose's budget and invoice lines) give the column a
+ * width, or an amount can be squeezed to a digit per line.
  */
-const VALUE_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const VALUE_TRUNCATE = "truncate-until-large";
 
 /** `onCommit`'s result, if it is a promise. */
 function asPromise(result: unknown): Promise<unknown> | null {
@@ -432,7 +432,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
   let body: ReactNode;
   if (readOnly) {
     body = (
-      <span {...private_} className={cn("block min-w-0 truncate", VALUE_WRAP_AT_LARGE, alignClass)}>
+      <span {...private_} className={cn("block min-w-0", VALUE_TRUNCATE, alignClass)}>
         {content}
       </span>
     );
@@ -508,8 +508,8 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
             aria-describedby={reasonId}
             onClick={(e) => e.preventDefault()}
             className={cn(
-              "block w-full min-w-0 cursor-not-allowed truncate rounded-sm focus:outline-none",
-              VALUE_WRAP_AT_LARGE,
+              "block w-full min-w-0 cursor-not-allowed rounded-sm focus:outline-none",
+              VALUE_TRUNCATE,
               FOCUS_RING,
               alignClass,
             )}
@@ -533,8 +533,8 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           {...private_}
           onClick={() => setOpen(true)}
           className={cn(
-            "block w-full min-w-0 truncate rounded-sm underline-offset-2 hover:underline focus:outline-none",
-            VALUE_WRAP_AT_LARGE,
+            "block w-full min-w-0 rounded-sm underline-offset-2 hover:underline focus:outline-none",
+            VALUE_TRUNCATE,
             FOCUS_RING,
             alignClass,
           )}

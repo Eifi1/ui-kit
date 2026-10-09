@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { WriteLockProvider } from "../../components/write-lock";
 import { DeleteAccountSetting } from "../delete-account-setting";
 import type { DeleteAccountSettingProps } from "../delete-account-setting";
 
@@ -223,5 +224,37 @@ describe("DeleteAccountSetting — refusals", () => {
     await arm(second.user);
     await answer(second.user);
     expect(await screen.findByRole("alert")).toHaveTextContent("Your account could not be deleted. Please try again.");
+  });
+});
+
+describe("DeleteAccountSetting under a write lock (0.33, billing decision 14, §12.36)", () => {
+  it("a lapsed plan's lock leaves the confirm live: leaving never depends on paying", async () => {
+    const onRequest = vi.fn<DeleteAccountSettingProps["onRequest"]>(async () => undefined);
+    const user = userEvent.setup();
+    render(
+      <WriteLockProvider locked kind="billing" reason="Your plan has ended.">
+        <DeleteAccountSetting email="ada@example.com" mode="after_days" onRequest={onRequest} />
+      </WriteLockProvider>,
+    );
+    await arm(user);
+    await answer(user);
+    expect(onRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("a demo's lock holds it, with the demo's reason", async () => {
+    const onRequest = vi.fn<DeleteAccountSettingProps["onRequest"]>(async () => undefined);
+    const user = userEvent.setup();
+    render(
+      <WriteLockProvider locked kind="demo" reason="Not possible in the demo.">
+        <DeleteAccountSetting email="ada@example.com" mode="after_days" onRequest={onRequest} />
+      </WriteLockProvider>,
+    );
+    // The tile is held before it arms: its arm button says the demo's reason.
+    const armButton = screen.getByRole("button", { name: "Delete account…" });
+    expect(armButton).toHaveAttribute("aria-disabled", "true");
+    expect(armButton).toHaveAccessibleDescription("Not possible in the demo.");
+    await arm(user);
+    expect(screen.queryByRole("button", { name: "Delete my account" })).not.toBeInTheDocument();
+    expect(onRequest).not.toHaveBeenCalled();
   });
 });

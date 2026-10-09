@@ -5,7 +5,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasContent, LabelStrip } from "./field-parts";
 
 export interface SwatchPickerLabels {
@@ -115,7 +115,7 @@ export interface SwatchPickerProps<T extends string>
   /** This picker COMMITS — choosing a colour saves it. Under a locked
    *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
    *  reason, as {@link Button}'s `commit` does. */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /**

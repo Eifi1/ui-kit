@@ -5,7 +5,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -444,7 +444,7 @@ export interface FileButtonProps
    * one: no effect. A picker that only fills a form the user saves later is not a
    * commit, and is left live — the form's Save carries the lock.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /** A reason that is really there — `null`, `false` and `""` are no reason. */

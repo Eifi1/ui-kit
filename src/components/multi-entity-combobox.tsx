@@ -26,7 +26,7 @@ import {
   useLockReason,
 } from "./field-parts";
 import { assignRef, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
  *  than the div's form event, so the DOM's spelling of it is omitted. */
@@ -65,7 +65,7 @@ export interface MultiEntityComboboxProps<V extends string | number>
   disabledReason?: ReactNode;
   /** This picker COMMITS — toggling saves. Locked the `disabledReason` way under a
    *  locked {@link WriteLockProvider}. See {@link EntityCombobox}'s `commit`. */
-  commit?: boolean;
+  commit?: CommitScope;
   /** When set, a "create" row appears for a non-empty query with no exact match.
    *  The panel stays open (adding the new entity to `value` is the caller's job). */
   onCreate?: (query: string) => void;
@@ -75,7 +75,7 @@ export interface MultiEntityComboboxProps<V extends string | number>
   createEmptyLabel?: string;
   /** The create row is a write while toggling is not: locked on its own under a locked
    *  {@link WriteLockProvider}. See {@link EntityCombobox}'s `createCommit`. */
-  createCommit?: boolean;
+  createCommit?: CommitScope;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
   /** What is wrong with the value, as {@link Input}'s `error`: rendered under the

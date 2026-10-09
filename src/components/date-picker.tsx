@@ -17,7 +17,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { FOCUS_RING_WIDTH } from "./focus-ring";
-import { FieldBox, FieldLabelLine, useFieldMessages } from "./field-parts";
+import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout, type RemLength } from "../hooks/use-breakpoint";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
@@ -210,11 +210,12 @@ function CustomTrigger({
  * The trigger's value wraps instead of truncating at Large and Extra large (0.32.1, the
  * 360 px Extra-large sweep; docs/text-size-harmonization.md §4 "nothing truncates"). A
  * range ("01/09/2026 – 30/09/2026") is 312 px at 150 %, and on a 360 px phone it read
- * "01/09/2026 – 30/…" — its end, the half a reader needs, was the half cut off. It breaks
- * at its spaces; a single date breaks only where it cannot fit at all. A `large:` class,
- * so Normal keeps its one-line field.
+ * "01/09/2026 – 30/…" — its end, the half a reader needs, was the half cut off. A
+ * `large:` class, so Normal keeps its one-line field: since 0.33 (§10.17) the kit's one
+ * `truncate-until-large` (tokens.css) in place of this file's own `truncate` +
+ * `large:whitespace-normal large:break-words`.
  */
-const VALUE_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const VALUE_TRUNCATE = "truncate-until-large";
 
 /**
  * The field-shaped button that opens the calendar.
@@ -330,7 +331,7 @@ function DateFieldTrigger({
 
   return (
     <button {...attrs}>
-      <span id={valueId} className={cn("truncate", VALUE_WRAP_AT_LARGE, !hasValue && "text-[var(--text-placeholder)]")}>
+      <span id={valueId} className={cn(VALUE_TRUNCATE, !hasValue && "text-[var(--text-placeholder)]")}>
         {/* `|| " "` (a NON-BREAKING space) — triggerText is "" when there is no value and no
             placeholder was passed. An empty span has no line box, so the
             trigger collapses to its padding and sits shorter than every
@@ -515,7 +516,9 @@ function DateField({
   return (
     // The caller's attributes land here, on the field's own box — the trigger inside is
     // named by `aria-labelledby` and must keep the id pair it is given.
-    <div {...wrapperRest} ref={rootRef} className={cn("relative", className)}>
+    // At Large a labelled box is a grid: the label above, the calendar glyph and the
+    // clear × measured against the trigger's row (LABEL_ABOVE_BOX, 0.33 §10.17).
+    <div {...wrapperRest} ref={rootRef} className={cn("relative", label !== undefined && LABEL_ABOVE_BOX, className)}>
       {label !== undefined && <FieldLabelLine label={label} hint={labelHint} />}
       {/* The visible FieldLabel is a plain span, not a `<label htmlFor>`, so it names
           nothing on its own — this hidden twin is what the trigger is named by.

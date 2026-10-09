@@ -34,7 +34,7 @@ import {
   useLockReason,
 } from "./field-parts";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 // One look for both combobox flavors below — the suggestion list and its rows
 // must stay pixel-identical between the free-text and the id-keyed variant (and
@@ -207,7 +207,7 @@ export interface ComboboxProps
   /** This field COMMITS. Under a locked {@link WriteLockProvider} it is locked the
    *  `disabledReason` way with the lock's reason; inside a form with its own Save, leave
    *  it off and put `commit` on the Save. No provider, or an unlocked one: no effect. */
-  commit?: boolean;
+  commit?: CommitScope;
   /** Heading an option belongs under. Supplying it makes this list read exactly
    *  like {@link InlineEntityCombobox}'s — one heading per group with its rows
    *  indented beneath — instead of a flat list (feedback #136 rework: the payee
@@ -849,7 +849,7 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    * A picker inside a form with its own Save stays editable under the lock — leave this
    * off there and put `commit` on the Save. No provider, or an unlocked one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * A last row that makes a new record from what was typed — keksdose G9, whose "Create
    * cash account" had to become a separate button because this picker had no such row.
@@ -894,7 +894,7 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    * one explanation a phone cannot show), and `onCreate` is not called. Not needed with
    * `commit`: a locked field opens no list at all.
    */
-  createCommit?: boolean;
+  createCommit?: CommitScope;
   /**
    * The `<input>` — the focusable control, the one a reader types in — as a React 19
    * ref prop (0.24, kastlan). Its account picker is this component inside an

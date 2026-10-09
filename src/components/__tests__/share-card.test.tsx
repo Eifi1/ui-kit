@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConfirmProvider } from "../confirm-dialog";
 import { ShareCard, ShareDialog } from "../share-card";
 import { WriteLockProvider } from "../write-lock";
+import type { WriteLockHold } from "../write-lock";
 import type { ShareCandidate, ShareCardProps, ShareGrantee, ShareRole } from "../share-card";
 
 /**
@@ -241,6 +242,124 @@ describe("ShareCard under a write lock", () => {
     fireEvent.change(field(), { target: { value: "new@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Share" }));
     await waitFor(() => expect(onAdd).toHaveBeenCalled());
+  });
+});
+
+describe("ShareCard under a billing lock (0.33, billing §12.36, decision 26 amended)", () => {
+  const BEN: ShareGrantee = { id: 2, name: "Ben", email: "ben@example.com", role: "editor" };
+  const PLAN = "Your plan has ended.";
+  const DEMO = "Not possible in the demo.";
+
+  function underLock(holds: WriteLockHold[], props: Partial<ShareCardProps> = {}) {
+    return render(
+      <ConfirmProvider>
+        <WriteLockProvider locked holds={holds}>
+          <ShareCard grantees={[ANNA, BEN]} roles={ROLES} pending={[{ id: 7, email: "later@example.com" }]} {...props} />
+        </WriteLockProvider>
+      </ConfirmProvider>,
+    );
+  }
+
+  it("keeps removing access live: remove and withdraw ask, and a yes goes through", async () => {
+    const onRemove = vi.fn();
+    const onRevokePending = vi.fn();
+    underLock([{ kind: "billing", reason: PLAN }], { onRemove, onRevokePending });
+    const [removeAnna] = screen.getAllByRole("button", { name: "Remove access" });
+    expect(removeAnna).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(removeAnna);
+    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Remove access" }));
+    await waitFor(() => expect(onRemove).toHaveBeenCalledWith(ANNA));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    const withdraw = screen.getByRole("button", { name: "Withdraw invitation" });
+    expect(withdraw).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(withdraw);
+    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Withdraw invitation" }));
+    await waitFor(() => expect(onRevokePending).toHaveBeenCalledWith(expect.objectContaining({ id: 7 })));
+  });
+
+  it("keeps adding locked with the plan's reason, by the button and by Enter", () => {
+    const onAdd = vi.fn();
+    underLock([{ kind: "billing", reason: PLAN }], { onAdd });
+    fireEvent.change(field(), { target: { value: "new@example.com" } });
+    const share = screen.getByRole("button", { name: "Share" });
+    expect(share).toHaveAttribute("aria-disabled", "true");
+    expect(share).toHaveAccessibleDescription(PLAN);
+    fireEvent.click(share);
+    fireEvent.keyDown(field(), { key: "Enter" });
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it("lets a role be lowered, never raised (roles narrowest first)", async () => {
+    const onRoleChange = vi.fn();
+    underLock([{ kind: "billing", reason: PLAN }], { onRoleChange });
+    // Ben is an editor: every other option lowers him, so the choice is live.
+    const ben = screen.getByRole("radiogroup", { name: "Role of Ben" });
+    expect(within(ben).getByRole("radio", { name: "Viewer" })).toBeEnabled();
+    fireEvent.click(within(ben).getByRole("radio", { name: "Viewer" }));
+    await waitFor(() => expect(onRoleChange).toHaveBeenCalledWith(BEN, "viewer"));
+    // Anna is a viewer: every other option raises her, so it is locked with the plan's reason.
+    const anna = screen.getByRole("radiogroup", { name: "Role of Anna" });
+    expect(within(anna).getByRole("radio", { name: "Editor" })).toBeDisabled();
+    fireEvent.click(within(anna).getByRole("radio", { name: "Editor" }));
+    expect(onRoleChange).toHaveBeenCalledTimes(1);
+    fireEvent.mouseEnter(anna.parentElement!);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(PLAN);
+  });
+
+  it("in between, keeps the lowerings live and refuses the raises", async () => {
+    const onRoleChange = vi.fn();
+    const roles: ShareRole[] = [
+      { key: "viewer", label: "Viewer" },
+      { key: "commenter", label: "Commenter" },
+      { key: "editor", label: "Editor" },
+    ];
+    const cleo: ShareGrantee = { id: 3, name: "Cleo", role: "commenter" };
+    underLock([{ kind: "billing", reason: PLAN }], { grantees: [cleo], roles, onRoleChange });
+    const group = screen.getByRole("radiogroup", { name: "Role of Cleo" });
+    const editor = within(group).getByRole("radio", { name: "Editor" });
+    expect(editor.className).toContain("cursor-not-allowed");
+    fireEvent.click(editor);
+    expect(onRoleChange).not.toHaveBeenCalled();
+    fireEvent.click(within(group).getByRole("radio", { name: "Viewer" }));
+    await waitFor(() => expect(onRoleChange).toHaveBeenCalledWith(cleo, "viewer"));
+  });
+
+  it("under a demo lock beside it, locks everything with the demo's reason", () => {
+    const onRemove = vi.fn();
+    const onRoleChange = vi.fn();
+    underLock(
+      [
+        { kind: "demo", reason: DEMO },
+        { kind: "billing", reason: PLAN },
+      ],
+      { onRemove, onRoleChange, onRevokePending: vi.fn(), onAdd: vi.fn() },
+    );
+    for (const button of [
+      ...screen.getAllByRole("button", { name: "Remove access" }),
+      screen.getByRole("button", { name: "Withdraw invitation" }),
+      screen.getByRole("button", { name: "Share" }),
+    ]) {
+      expect(button).toHaveAttribute("aria-disabled", "true");
+      expect(button).toHaveAccessibleDescription(DEMO);
+    }
+    for (const name of ["Role of Anna", "Role of Ben"]) {
+      for (const radio of within(screen.getByRole("radiogroup", { name })).getAllByRole("radio")) {
+        expect(radio).toBeDisabled();
+      }
+    }
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: "Role of Ben" })).getByRole("radio", { name: "Viewer" }));
+    expect(onRoleChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("ShareCard at Large (text-size §10.17)", () => {
+  it("truncates a name, an address and a pending grant at Normal only (truncate-until-large)", () => {
+    const { container } = setup({ pending: [{ id: 7, email: "later@example.com" }] });
+    const name = within(container).getByText("Anna");
+    expect(name.className).toContain("truncate-until-large");
+    expect(within(container).getByText("anna@example.com").className).toContain("truncate-until-large");
+    expect(within(container).getByText("later@example.com").className).toContain("truncate-until-large");
+    expect(name.className).not.toMatch(/(^|\s)truncate(\s|$)/);
   });
 });
 

@@ -12,7 +12,7 @@ import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react
 import { Button, IconButton, Spinner } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-button";
-import { useCommitReason } from "../components/write-lock";
+import { useCommitReason, type CommitScope } from "../components/write-lock";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
@@ -334,7 +334,7 @@ export interface FeedbackAttachmentFieldRefsProps extends FeedbackAttachmentFiel
    * with the lock's reason, which wins over one of its own. No provider, or an unlocked
    * one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * Why no file can be added or removed — the write lock's sentence, a quota, a thread
    * closed to replies. Unlike `disabled`, it SAYS so, the kit's commit-control way: the

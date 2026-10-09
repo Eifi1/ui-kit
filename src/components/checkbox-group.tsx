@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Checkbox } from "./checkbox";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 import { RequiredStarOnLegend } from "./field-parts";
 
 /** One box of a {@link CheckboxGroup}. */
@@ -76,7 +76,7 @@ export interface CheckboxGroupProps<T extends string = string> {
    * per-locale grants). Under a locked {@link WriteLockProvider} every box is locked
    * the focusable way with the lock's reason. See {@link Checkbox}'s `commit`.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** Why no box can be changed — every box gets it, and it wins over `disabled` (the
    *  boxes stay focusable to say it). See {@link Checkbox}'s `disabledReason`. */
   disabledReason?: ReactNode;

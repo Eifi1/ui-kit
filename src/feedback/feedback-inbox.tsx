@@ -20,7 +20,7 @@ import { cn } from "../lib/cn";
 import { Button, Textarea } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { Tooltip } from "../components/tooltip";
-import { useCommitReason, useWriteLock } from "../components/write-lock";
+import { useCommitReason, useWriteLock, type CommitScope } from "../components/write-lock";
 import { FeedbackAttachmentField, type FeedbackAttachmentErrorInfo } from "./feedback-attachment";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 import { useFeedbackCategoryLabels, useFeedbackStatusLabels } from "./feedback-labels";
@@ -401,7 +401,7 @@ export function FeedbackStatusTransitions({
    * every app's lock is about (keksdose's shell lock is a read-only demo BUDGET, and a
    * report is not budget data).
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** Why the statuses cannot be changed right now, the same way (a lock's own reason
    *  wins over it). Only read while `canEdit`: a read-only row is a picture of the
    *  workflow, not a refused action. */
@@ -461,7 +461,9 @@ export function FeedbackStatusTransitions({
                     "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
                     active
                       ? cn(meta.activeBg, meta.activeText, "border-transparent")
-                      : "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                      : // The translucent ink on hover (0.33, B′), as Button's secondary:
+                        // the well is the page in light, and these pills sit on either.
+                        "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]",
                   ),
               // Both stay unclickable, but only the read-only case is DIMMED: the
               // current status is the one thing in the row that has to be legible
@@ -587,7 +589,7 @@ export function FeedbackNoteEditor({
   /** Save COMMITS (0.27.0): under a locked `WriteLockProvider` it is disabled the
    *  `disabledReason` way, with the lock's reason, and Ctrl/⌘+Enter saves nothing. The
    *  text box stays editable — nothing in it reaches the server until the save. */
-  commit?: boolean;
+  commit?: CommitScope;
 }) {
   const [draft, setDraft] = useState(initial);
   const [file, setFile] = useState<File | null>(null);
@@ -607,11 +609,13 @@ export function FeedbackNoteEditor({
   // (Steering Design feedback #140).
   const root = useRef<HTMLDivElement>(null);
   const hintId = useId();
-  const lock = useWriteLock();
+  // The lock as the save button sees it, with its scope (§12.36): `commit &&
+  // lock.locked` read a `{ except }` scope as `true`.
+  const lock = useWriteLock(commit ?? false);
   const blank = required && !draft.trim();
   // The shortcut obeys what the button shows: no save while one is in flight, while the
   // note a `required` editor needs is missing, or while a `commit` save is locked.
-  const canSubmit = !pending && !blank && !(commit && lock.locked);
+  const canSubmit = !pending && !blank && !lock.locked;
   const submit = () => onSave(draft, file);
   return (
     // Not a control: a delegated Ctrl/Cmd+Enter shortcut for the textarea inside,

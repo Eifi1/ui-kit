@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ConfirmProvider, useConfirm } from "../confirm-dialog";
 import type { ConfirmFn } from "../confirm-dialog";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { WriteLockProvider } from "../write-lock";
+import { COMMIT_EXCEPT_BILLING, WriteLockProvider } from "../write-lock";
+import type { WriteLockHold } from "../write-lock";
 
 /**
  * `useConfirm()` replaces `window.confirm` across all three apps (keksdose 20+ calls,
@@ -309,5 +310,41 @@ describe("useConfirm — commit (0.31.1)", () => {
     expect(screen.getByRole("button", { name: "Confirm" })).not.toHaveAttribute("aria-disabled");
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
     await expect(first.answer).resolves.toBe(true);
+  });
+});
+
+describe("useConfirm — a commit scope (0.33, billing §12.36)", () => {
+  function setupKinds(holds: WriteLockHold[]) {
+    let confirm!: ConfirmFn;
+    render(
+      <ConfirmProvider>
+        <WriteLockProvider locked holds={holds}>
+          <Capture onReady={(fn) => (confirm = fn)} />
+        </WriteLockProvider>
+      </ConfirmProvider>,
+    );
+    return () => confirm;
+  }
+
+  it("confirm({ commit: COMMIT_EXCEPT_BILLING }) is live under a billing lock", async () => {
+    const confirm = setupKinds([{ kind: "billing", reason: "Your plan has ended." }]);
+    const { answer } = await ask(confirm(), { title: "Remove access?", commit: COMMIT_EXCEPT_BILLING });
+    const yes = screen.getByRole("button", { name: "Confirm" });
+    expect(yes).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(yes);
+    await expect(answer).resolves.toBe(true);
+  });
+
+  it("and locked with the demo's reason under the demo's lock beside it", async () => {
+    const confirm = setupKinds([
+      { kind: "demo", reason: "Not possible in the demo." },
+      { kind: "billing", reason: "Your plan has ended." },
+    ]);
+    const { answer } = await ask(confirm(), { title: "Remove access?", commit: COMMIT_EXCEPT_BILLING });
+    expect(screen.getByRole("button", { name: "Confirm" })).toHaveAttribute("aria-disabled", "true");
+    expect(document.body).toHaveTextContent("Not possible in the demo.");
+    expect(document.body).not.toHaveTextContent("Your plan has ended.");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await expect(answer).resolves.toBe(false);
   });
 });

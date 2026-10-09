@@ -8,6 +8,7 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as tableText from "../table-text";
+import * as testing from "../testing";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
 import * as i18nEs from "../i18n/locales/es";
@@ -195,7 +196,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // cell's labels and splitMobileBar, DEFAULT_MOBILE_BAR_MAX; two DEFAULT_*_LABELS.
   // 0.32.1: `remPx` and `useRemPx`, for the few lengths an app's JS does arithmetic with
   // (keksdose's 0.32 report) (+2).
-  ["@eifi1/ui-kit", barrel, 858],
+  // 0.33.0 (+2): `writeLockFor` and `COMMIT_EXCEPT_BILLING`, the write lock's sources
+  // (docs/billing-harmonization.md §12.36).
+  ["@eifi1/ui-kit", barrel, 860],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -235,6 +238,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/rhf", rhf, 29],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
+  // 0.33.0: the guard an app runs from its own suite — `undeclaredCssVariables`,
+  // `KIT_CSS_VARIABLES` and the stylesheet rule they share, `declaredCustomProperties`
+  // (docs/colour-roles-harmonization.md §8.3).
+  ["@eifi1/ui-kit/testing", testing, 3],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],
   // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts
@@ -257,6 +264,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/table-text",
+  // Test helpers, never part of an app's bundle.
+  "@eifi1/ui-kit/testing",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),
 ]);
 

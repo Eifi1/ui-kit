@@ -48,6 +48,10 @@
       "types": "./dist/table-text.d.ts",
       "import": "./dist/table-text.js"
     },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
     "./rhf": {
       "types": "./dist/rhf.d.ts",
       "import": "./dist/rhf.js"
@@ -85,7 +89,7 @@
     "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs",
+    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs && node scripts/build-pay-page.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
     "dev": "tsup --watch",
     "dev:showcase": "vite --config showcase/vite.config.ts",
@@ -170,6 +174,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "_bin": "`eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
+  "bin": {
+    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

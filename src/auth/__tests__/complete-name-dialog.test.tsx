@@ -92,4 +92,33 @@ describe("CompleteNameDialog", () => {
     expect(save).toHaveAttribute("aria-disabled", "true");
     expect(save).toHaveAccessibleDescription("Read-only demo");
   });
+
+  it("a lapsed plan's lock leaves Save live: one's own name is the account's own (0.33, billing §12.36)", async () => {
+    const { WriteLockProvider } = await import("../../components/write-lock");
+    const user = userEvent.setup();
+    const onSave = vi.fn(async () => undefined);
+    const { unmount } = render(
+      <WriteLockProvider locked kind="billing" reason="Your plan has ended.">
+        <CompleteNameDialog firstName="Ada" lastName="Example" onSave={onSave} onClose={() => {}} />
+      </WriteLockProvider>,
+    );
+    const save = await screen.findByRole("button", { name: "Save" });
+    expect(save).not.toHaveAttribute("aria-disabled");
+    await user.click(save);
+    expect(onSave).toHaveBeenCalledTimes(1);
+    unmount();
+    // A demo's lock beside it still holds it, with the demo's reason.
+    render(
+      <WriteLockProvider
+        locked
+        holds={[
+          { kind: "demo", reason: "Read-only demo" },
+          { kind: "billing", reason: "Your plan has ended." },
+        ]}
+      >
+        <CompleteNameDialog firstName="Ada" lastName="Example" onSave={onSave} onClose={() => {}} />
+      </WriteLockProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Save" })).toHaveAccessibleDescription("Read-only demo");
+  });
 });

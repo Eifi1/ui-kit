@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Size sweep fixture</title>
+    <!--
+      The fixture of scripts/screenshot-sizes.mjs's two report-only checks
+      (docs/text-size-harmonization.md §10.17, §10.22), run by
+      scripts/screenshot-sizes-fixture.test.mjs. At Large and Extra large it must give
+      exactly one TRUNCATED finding (the ellipsis that cuts) and exactly one PINNED one
+      (the sticky box of 60 % of the viewport); every other box here is a case the
+      checks must leave alone.
+    -->
+    <script>
+      // The showcase's `?text-size=`, read before the first paint.
+      const size = new URLSearchParams(location.search).get("text-size");
+      if (size && size !== "normal") document.documentElement.dataset.textSize = size;
+    </script>
+    <style>
+      body { margin: 0; font: 16px/1.4 sans-serif; }
+      section { padding: 8px 12px; }
+      .cut { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section data-slot="fixture-cut">
+        <h3>An ellipsis that cuts</h3>
+        <div class="cut" style="width: 120px">A label far too long for its box at any size</div>
+      </section>
+      <section data-slot="fixture-fits">
+        <h3>An ellipsis that fits</h3>
+        <div class="cut" style="width: 300px">Short</div>
+      </section>
+      <section data-slot="fixture-ok">
+        <h3>A deliberate one</h3>
+        <!-- A value one tap away, cut on purpose: the subtree is skipped. -->
+        <div data-truncate-ok>
+          <div class="cut" style="width: 120px">A chosen option that is one tap away</div>
+        </div>
+      </section>
+      <section data-slot="fixture-sr-only">
+        <h3>Read, not seen</h3>
+        <span class="sr-only" style="text-overflow: ellipsis">A long label only a screen reader hears</span>
+      </section>
+      <section data-slot="fixture-tall">
+        <h3>A tall sticky box</h3>
+        <div style="position: sticky; top: 0; height: 60vh; background: #eee">Pinned and too tall</div>
+      </section>
+      <section data-slot="fixture-short">
+        <h3>A short sticky box</h3>
+        <div style="position: sticky; top: 0; height: 40vh; background: #ddd">Pinned and short enough</div>
+      </section>
+      <section data-slot="fixture-column">
+        <h3>A sticky column</h3>
+        <!-- Pins sideways, not over the page: left out. -->
+        <div style="position: sticky; left: 0; height: 70vh; width: 40px; background: #ccc"></div>
+      </section>
+      <!-- A dialog covers the screen by design: left out. -->
+      <div role="dialog" aria-modal="true" aria-label="Sheet" style="position: fixed; inset: 0; pointer-events: none"></div>
+    </main>
+  </body>
+</html>

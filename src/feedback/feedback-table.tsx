@@ -31,6 +31,7 @@ import {
 import { FEEDBACK_AWAITING_STATUSES, reworkCount, type FeedbackContext, type FeedbackRecord } from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * The two feedback pages' TABLE — `/feedback` (the admin inbox) and `/my-feedback` (the
@@ -399,7 +400,7 @@ export interface FeedbackColumnsOptions {
   /** The status buttons SAVE when pressed: pass `true` to put them under the page's
    *  `WriteLockProvider` (FeedbackStatusTransitions' `commit`). Off by default — a
    *  feedback inbox is rarely what an app's lock is about. */
-  commit?: boolean;
+  commit?: CommitScope;
   labels: FeedbackPageLabels;
   statusLabels: FeedbackStatusLabels;
   categoryLabels: FeedbackCategoryLabels;
