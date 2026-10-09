@@ -88,7 +88,7 @@ export * from "./components/search-field";
 export * from "./components/dropdown";
 export * from "./components/popover";
 export { SwipeableRow } from "./components/swipeable-row";
-export type { SwipeAction, SwipeableRowProps } from "./components/swipeable-row";
+export type { SwipeAction, SwipePaint, SwipeTone, SwipeableRowProps } from "./components/swipeable-row";
 export * from "./components/calculator";
 export * from "./components/numpad-sheet";
 export * from "./components/number-input";
@@ -214,8 +214,11 @@ export * from "./components/description-list";
 export * from "./components/form-actions";
 // 0.18: lock every opted-in commit under one provider, the reason in its tooltip
 // (Kurvenschmiede 2). `useCommitReason` stays internal.
-export { WriteLockProvider, useWriteLock, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
-export type { WriteLock, WriteLockLabels, WriteLockProviderProps } from "./components/write-lock";
+// 0.33: a lock says its source, and a control can be exempt from one
+// (docs/billing-harmonization.md §12.36): the kinds, the holds, `CommitScope`,
+// `COMMIT_EXCEPT_BILLING` and the pure `writeLockFor`.
+export { WriteLockProvider, useWriteLock, writeLockFor, COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
+export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind, WriteLockHold, CommitScope } from "./components/write-lock";
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
 export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
@@ -784,6 +787,7 @@ export type {
   RowActionsCollapse,
   RowActionsSize,
   RowActionsColumnOptions,
+  RowActionTone,
 } from "./components/row-actions";
 export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
 export type { AppearanceLabels } from "./components/appearance-labels";
@@ -803,12 +807,52 @@ export { PlanLimitNotice, planLimitMailto } from "./billing/plan-limit-notice";
 export type { PlanLimitNoticeProps } from "./billing/plan-limit-notice";
 export { isPlanLimit } from "./billing/plan-limit";
 export type { PlanLimitRefusal } from "./billing/plan-limit";
-export { combineWriteLocks, useBillingLockReason } from "./billing/billing-lock";
+// 0.33.0: sources name their kind, the combined lock holds them all, and billing's is one
+// hook (docs/billing-harmonization.md §12.36).
+export { combineWriteLocks, useBillingLockReason, useBillingWriteLock } from "./billing/billing-lock";
 export type { WriteLockSource, CombinedWriteLock, BillingLockReasonOptions } from "./billing/billing-lock";
 export { billingLockAt, isBillingReadOnly, billingDaysLeft } from "./billing/billing-standing";
 export type { BillingStanding } from "./billing/billing-standing";
 export { SubscriptionActions } from "./billing/subscription-actions";
 export type { SubscriptionActionsProps } from "./billing/subscription-actions";
+// ── 0.33.0: billing's round 0.33 (docs/billing-harmonization.md §14) ──
+// The way back from a checkout and its "processing", router-agnostic (§14.4).
+export {
+  CHECKOUT_RETURN_PARAM,
+  CHECKOUT_RETURN_VALUE,
+  isCheckoutReturn,
+  withoutCheckoutReturn,
+  checkoutReturnUrl,
+} from "./billing/checkout-return";
+export { checkoutFingerprint, checkoutLanded, noteCheckoutStarted, useCheckoutProcessing } from "./billing/checkout-processing";
+export type { CheckoutOverview, CheckoutProcessingOptions } from "./billing/checkout-processing";
+// The link to the pay page and Paddle's locale (§14.4); the page itself ships as dist/pay/.
+export { PAY_PAGE_LANG_PARAM, paddleLocale, payPageUrl } from "./billing/pay-page";
+export type { PaddleEnvironment } from "./billing/pay-page";
+// The API's shapes the parts read, server-kit 0.7's (§4, §14.5), and the plan limit as
+// a toast (§14.11).
+export type { BillingOverview, SubscriptionSource, PortalTarget, PortalRequest } from "./billing/billing-overview";
+export { usePlanLimitToast } from "./billing/plan-limit-toast";
+export type { PlanLimitToastOptions } from "./billing/plan-limit-toast";
+// The operator's plan parts (§14.12).
+export {
+  planColumn,
+  usePlanColumn,
+  PlanChangeConfirm,
+  usePlanChangeResult,
+  DEFAULT_PLAN_CHANGE_LABELS,
+} from "./admin/plan-change";
+export type {
+  PlanChangeLabels,
+  PlanColumnOptions,
+  PlanColumnUsage,
+  PlanChange,
+  PlanChangeConfirmProps,
+  PlanChangeOutcome,
+  PlanChangeTone,
+  PlanChangeLine,
+  PlanChangeResultOptions,
+} from "./admin/plan-change";
 
 // ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
 export * from "./components/checkbox-group";

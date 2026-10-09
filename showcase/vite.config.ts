@@ -54,8 +54,8 @@ export default defineConfig({
         // without raising it — both are eager, so they cut no request, but they are
         // parallel downloads that change far less often than the page code:
         //   react — the vendor floor, ~220 kB of react-dom;
-        //   i18n  — the six non-English dictionaries of the chrome and the kit's
-        //           locale bundles, ~200 kB of strings. en.ts stays in the entry: it
+        //   i18n, i18n-kit — the six non-English dictionaries of the chrome, and the kit's
+        //           locale bundles: two chunks of strings. en.ts stays in the entry: it
         //           spreads DEFAULT_UI_KIT_LABELS from the barrel, and a group must not
         //           hold a module that imports back into the entry (the chunks would
         //           import each other, and the first to evaluate reads the other's
@@ -63,10 +63,9 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: "react", test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
-            {
-              name: "i18n",
-              test: /[\\/](showcase[\\/]src[\\/]i18n[\\/](de|es|fr|hu|it|zh)\.ts|src[\\/]i18n[\\/]locales[\\/])/,
-            },
+            // Two groups since 0.33: together they passed Vite's 500 kB warning.
+            { name: "i18n", test: /[\\/]showcase[\\/]src[\\/]i18n[\\/](de|es|fr|hu|it|zh)\.ts/ },
+            { name: "i18n-kit", test: /[\\/]src[\\/]i18n[\\/]locales[\\/]/ },
           ],
         },
       },

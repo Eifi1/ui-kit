@@ -7,8 +7,9 @@ import { useLargeText } from "../hooks/use-large-text";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Popover } from "./popover";
 import { Button, CompactControls, IconButton } from "./ui";
-import { useCommitReason } from "./write-lock";
-import type { IconButtonSize } from "./ui";
+import { useCommitReason, type CommitScope } from "./write-lock";
+import type { IconButtonGlyphSize, IconButtonSize } from "./ui";
+import type { TooltipSide } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
 
 /**
@@ -24,7 +25,16 @@ import type { DataTableColumn } from "./data-table";
  *
  * The data is the roster's `UserRowActionList`, generalised: entries, and `false` /
  * `null` for the ones a condition left out (`row.locked || {…}`).
+ *
+ * 0.33 (§10.16): an action carries its state at both sizes — a toggle (`pressed`), a
+ * disclosure (`expanded`, `controls`), a tone, a tour anchor (`dataTour`) — so a row
+ * with an "on" share button or a tour step no longer keeps hand-rolled IconButtons at
+ * Normal and this only at Large (keksdose k15).
  */
+
+/** An action's colour: IconButton's tone inline; in the menu the glyph takes it and the
+ *  words keep the text colour, except `danger`, whose words are the danger text. */
+export type RowActionTone = "default" | "muted" | "info" | "warning" | "danger";
 
 /** One action of a row. */
 export interface RowAction {
@@ -57,9 +67,15 @@ export interface RowAction {
    * without one is a small text button; in the menu it is the words alone.
    */
   icon?: LucideIcon | ReactElement;
-  /** `danger` for delete, revoke, erase: the quiet red of IconButton's `tone="danger"`
-   *  inline, the danger text tone in the menu. */
-  tone?: "default" | "danger";
+  /**
+   * `danger` for delete, revoke, erase: the quiet red of IconButton's `tone="danger"`
+   * inline, the danger text tone in the menu. `muted` (an open or add that should not
+   * compete), `info` (a notice-worthy, harmless action: keksdose's reconcile) and
+   * `warning` (a flag that wants attention): IconButton's tone inline; in the menu the
+   * glyph takes it and the words keep the text colour, so `muted` looks like `default`
+   * there (0.33).
+   */
+  tone?: RowActionTone;
   /** Why it is not available for this row. It stays listed, focusable, and says so — an
    *  action that silently vanished would leave the reader looking for it. */
   disabledReason?: ReactNode;
@@ -68,7 +84,7 @@ export interface RowAction {
    * {@link WriteLockProvider} it is refused with the lock's reason, as {@link Button}'s
    * `commit` is, inline and in the menu alike. No provider, or an unlocked one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * In flight — the request it started has not answered. Inline, the icon turns into
    * IconButton's spinner (`pending`); collapsed, the "⋯" button does, since the menu
@@ -84,6 +100,33 @@ export interface RowAction {
   disabled?: boolean;
   /** Leave it out for this row. */
   hidden?: boolean;
+  /**
+   * A toggle (0.33): `aria-pressed` and IconButton's "on" look inline, `aria-pressed` on
+   * the menu entry. Keep the label the same in both states ("Share budget"): the pressed
+   * state already says whether it is on. Not on an `href` action — a link is not a
+   * toggle — nor with `expanded`.
+   */
+  pressed?: boolean;
+  /**
+   * Opens or closes something IN THE PAGE (0.33) — a share card under the row, an
+   * add-category row: `aria-expanded`, inline and on the menu entry. Not with `pressed`:
+   * a disclosure says open, not on. Not on an `href` action.
+   */
+  expanded?: boolean;
+  /** The `id` of what `expanded` opens: `aria-controls`, inline and on the menu entry. */
+  controls?: string;
+  /**
+   * A tour anchor (0.33, §10.18): `data-tour` on ONE element per action at a time.
+   * Inline, on the action's own control (the IconButton, the small text button, the
+   * link). Collapsed, on an `aria-hidden` box laid over the "⋯" button — `[data-tour=x]`
+   * resolves to a box the size of the "⋯", whose `data-slot="row-actions"` box holds the
+   * button, two anchored actions in one row don't fight over one attribute, and a tap
+   * still reaches the button. Never on the entry in the open menu: the kit's tour takes
+   * the first visible match and the menu is portalled after the row, so a copy there
+   * would never be found, only make the selector match twice. The kit's name for it, as
+   * `AppShellNavItem.dataTour`.
+   */
+  dataTour?: string;
 }
 
 /** What a row's actions may be: entries, and `false` / `null` / `undefined` for the ones
@@ -130,8 +173,14 @@ export interface RowActionsProps {
   size?: RowActionsSize;
   /** The menu's width. Default `"15rem"`, in rem so it grows with the words (§3.2). */
   menuWidth?: `${number}rem`;
-  /** On the wrapper: the inline strip, or the "⋯" button's box. */
+  /** On the wrapper: the inline strip, or the box round the "⋯" button. */
   className?: string;
+  /** The inline glyphs' size, IconButton's `glyphSize` — e.g. 14 in a dense header strip
+   *  (keksdose's category group header). The "⋯" button keeps its box's own. */
+  glyphSize?: IconButtonGlyphSize;
+  /** The inline tooltips' side, IconButton's `tooltipSide` — `"start"` for a table's last
+   *  column, so a bubble does not run off the row's end. Per row: every inline action. */
+  tooltipSide?: TooltipSide;
   labels?: Partial<RowActionsLabels>;
 }
 
@@ -145,6 +194,30 @@ function glyphOf(icon: RowAction["icon"]): ReactNode {
   if (isValidElement(icon)) return icon;
   const Icon = icon as LucideIcon;
   return <Icon />;
+}
+
+/** The menu glyph's tint per tone (0.33): the words keep the text colour, so the glyph
+ *  carries `info` and `warning` — IconButton's toned colours. `danger` colours the words
+ *  through Button's tone, and `muted` is the default look in a menu. */
+const MENU_GLYPH_TONE: Partial<Record<RowActionTone, string>> = {
+  info: "text-info",
+  warning: "text-warning",
+};
+
+/** The state an action's control says, inline and in the menu alike: `aria-expanded` and
+ *  `aria-controls` for a disclosure (a toggle's `aria-pressed` goes through the button's
+ *  own `pressed`, which also draws the "on" look). */
+function stateAttrs(action: RowAction) {
+  return {
+    "aria-expanded": action.expanded,
+    "aria-controls": action.expanded === undefined ? undefined : action.controls,
+  };
+}
+
+/** An action's tone on its inline control, for a caller's CSS and a test: `data-tone`,
+ *  left off for the default look. */
+function toneAttr(tone: RowActionTone | undefined) {
+  return { "data-tone": tone === undefined || tone === "default" ? undefined : tone };
 }
 
 /**
@@ -170,6 +243,8 @@ export function RowActions({
   size = "xs",
   menuWidth = "15rem",
   className,
+  glyphSize,
+  tooltipSide,
   labels: labelsProp,
 }: RowActionsProps) {
   const labels = useKitLabels("rowActions", DEFAULT_ROW_ACTIONS_LABELS, labelsProp);
@@ -181,7 +256,13 @@ export function RowActions({
     const strip = (
       <div data-slot="row-actions" className={cn("inline-flex items-center gap-0.5", className)}>
         {entries.map((action) => (
-          <InlineAction key={action.key ?? action.label} action={action} size={size} />
+          <InlineAction
+            key={action.key ?? action.label}
+            action={action}
+            size={size}
+            glyphSize={glyphSize}
+            tooltipSide={tooltipSide}
+          />
         ))}
       </div>
     );
@@ -192,48 +273,62 @@ export function RowActions({
   const title = name ? labels.actionsFor(name) : labels.actions;
   // The menu closed when the action was chosen, so what is in flight shows on "⋯".
   const busy = entries.some((action) => action.pending);
+  const anchored = entries.filter((action) => action.dataTour);
   return (
-    <Popover
-      width={menuWidth}
-      aria-label={title}
-      className="p-1"
-      trigger={({ open, toggle, ref }) => (
-        <IconButton
-          ref={ref}
-          size={size}
-          label={title}
-          // "⋯" is read by everyone as "more actions"; the menu it opens is the words.
-          labelVisible={false}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          pending={busy}
-          stopPropagation
-          onClick={toggle}
-          className={className}
-        >
-          <MoreHorizontal />
-        </IconButton>
-      )}
-      // React carries an event out of a portal along the COMPONENT tree, so a click in
-      // the menu reached a clickable row or a DataTable `onRowClick` the menu was opened
-      // from, though the panel is nowhere near it in the page — only the "⋯" trigger
-      // stopped its own (keksdose's 0.32 report). Stopped on the PANEL itself, its padding
-      // and border included (0.32.2: 0.32.1 stopped it on an inner box, and a click on
-      // the panel's `p-1` still went through): clicks, and the Enter / Space a row also
-      // listens for. Escape goes on, to the popover's own handler that closes it.
-      onClick={stopClick}
-      onKeyDown={stopActivationKeys}
-    >
-      {(close) => (
-        <ul data-slot="row-actions-menu" className="space-y-0.5">
-          {entries.map((action) => (
-            <li key={action.key ?? action.label}>
-              <MenuAction action={action} close={close} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </Popover>
+    // The "⋯" in a box of its own, the inline strip's slot: the tour anchors of the
+    // collapsed actions lie over the button in it (see `dataTour`), and `className`
+    // places the box as it places the strip.
+    <div data-slot="row-actions" className={cn("relative inline-flex", className)}>
+      <Popover
+        width={menuWidth}
+        aria-label={title}
+        className="p-1"
+        trigger={({ open, toggle, ref }) => (
+          <IconButton
+            ref={ref}
+            size={size}
+            label={title}
+            // "⋯" is read by everyone as "more actions"; the menu it opens is the words.
+            labelVisible={false}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            pending={busy}
+            stopPropagation
+            onClick={toggle}
+          >
+            <MoreHorizontal />
+          </IconButton>
+        )}
+        // React carries an event out of a portal along the COMPONENT tree, so a click in
+        // the menu reached a clickable row or a DataTable `onRowClick` the menu was opened
+        // from, though the panel is nowhere near it in the page — only the "⋯" trigger
+        // stopped its own (keksdose's 0.32 report). Stopped on the PANEL itself, its padding
+        // and border included (0.32.2: 0.32.1 stopped it on an inner box, and a click on
+        // the panel's `p-1` still went through): clicks, and the Enter / Space a row also
+        // listens for. Escape goes on, to the popover's own handler that closes it.
+        onClick={stopClick}
+        onKeyDown={stopActivationKeys}
+      >
+        {(close) => (
+          <ul data-slot="row-actions-menu" className="space-y-0.5">
+            {entries.map((action) => (
+              <li key={action.key ?? action.label}>
+                <MenuAction action={action} close={close} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Popover>
+      {anchored.map((action) => (
+        // The More cell's TourAnchor: decoration over the button, which keeps every tap.
+        <span
+          key={action.key ?? action.label}
+          aria-hidden
+          data-tour={action.dataTour}
+          className="pointer-events-none absolute inset-0"
+        />
+      ))}
+    </div>
   );
 }
 
@@ -261,10 +356,15 @@ function useActionHref(action: RowAction): string | undefined {
 function MenuAction({ action, close }: { action: RowAction; close: () => void }) {
   const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
+  const glyphTone = action.tone === undefined ? undefined : MENU_GLYPH_TONE[action.tone];
   const words = (
     <>
       {glyph && (
-        <span aria-hidden className="flex shrink-0 [&_svg]:size-4">
+        <span
+          aria-hidden
+          data-tone={glyphTone ? action.tone : undefined}
+          className={cn("flex shrink-0 [&_svg]:size-4", glyphTone)}
+        >
           {glyph}
         </span>
       )}
@@ -295,11 +395,13 @@ function MenuAction({ action, close }: { action: RowAction; close: () => void })
   }
   return (
     <Button
+      {...stateAttrs(action)}
       type="button"
       variant="ghost"
       size="sm"
       stretch
       tone={tone}
+      pressed={action.pressed}
       disabledReason={action.disabledReason}
       commit={action.commit}
       pending={action.pending}
@@ -313,20 +415,37 @@ function MenuAction({ action, close }: { action: RowAction; close: () => void })
 }
 
 /** One inline action: an IconButton with its icon, else a small text button — each a
- *  link for an `href` (see {@link useActionHref}). */
-function InlineAction({ action, size }: { action: RowAction; size: RowActionsSize }) {
+ *  link for an `href` (see {@link useActionHref}). The control carries the action's
+ *  state, its tone and its tour anchor. */
+function InlineAction({
+  action,
+  size,
+  glyphSize,
+  tooltipSide,
+}: {
+  action: RowAction;
+  size: RowActionsSize;
+  glyphSize?: IconButtonGlyphSize;
+  tooltipSide?: TooltipSide;
+}) {
   const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
-  const tone = action.tone === "danger" ? "danger" : undefined;
+  const iconTone = action.tone === "default" ? undefined : action.tone;
+  // A text button has Button's two tones; `info` and `warning` are a glyph's colours.
+  const textTone = action.tone === "danger" || action.tone === "muted" ? action.tone : undefined;
+  const marks = { "data-tour": action.dataTour, ...toneAttr(action.tone) };
   if (glyph) {
     if (href !== undefined) {
       return (
         <IconButton
+          {...marks}
           href={href}
           external={action.external}
           size={size}
+          glyphSize={glyphSize}
           label={action.label}
-          tone={tone}
+          tooltipSide={tooltipSide}
+          tone={iconTone}
           disabled={action.disabled}
           stopPropagation
           onClick={() => action.onSelect?.()}
@@ -337,9 +456,14 @@ function InlineAction({ action, size }: { action: RowAction; size: RowActionsSiz
     }
     return (
       <IconButton
+        {...marks}
+        {...stateAttrs(action)}
         size={size}
+        glyphSize={glyphSize}
         label={action.label}
-        tone={tone}
+        tooltipSide={tooltipSide}
+        tone={iconTone}
+        pressed={action.pressed}
         disabledReason={action.disabledReason}
         commit={action.commit}
         pending={action.pending}
@@ -363,17 +487,29 @@ function InlineAction({ action, size }: { action: RowAction; size: RowActionsSiz
   };
   if (href !== undefined) {
     return (
-      <Button href={href} external={action.external} variant="ghost" size="sm" tone={tone} disabled={action.disabled} {...stop}>
+      <Button
+        {...marks}
+        href={href}
+        external={action.external}
+        variant="ghost"
+        size="sm"
+        tone={textTone}
+        disabled={action.disabled}
+        {...stop}
+      >
         {action.label}
       </Button>
     );
   }
   return (
     <Button
+      {...marks}
+      {...stateAttrs(action)}
       type="button"
       variant="ghost"
       size="sm"
-      tone={tone}
+      tone={textTone}
+      pressed={action.pressed}
       disabledReason={action.disabledReason}
       commit={action.commit}
       pending={action.pending}
@@ -402,6 +538,10 @@ export interface RowActionsColumnOptions<T> {
   collapse?: RowActionsCollapse;
   /** Default `xs`. */
   size?: RowActionsSize;
+  /** See {@link RowActionsProps.glyphSize}. */
+  glyphSize?: IconButtonGlyphSize;
+  /** See {@link RowActionsProps.tooltipSide} — `"start"` in a table's last column. */
+  tooltipSide?: TooltipSide;
   /**
    * The column's name as plain text — the column-settings checklist and the phone
    * card's label read it (`DataTableColumn.headerText`). Pass the app's own word; left
@@ -432,6 +572,8 @@ export function rowActionsColumn<T>({
   name,
   collapse,
   size,
+  glyphSize,
+  tooltipSide,
   headerText,
   labels,
   column,
@@ -441,7 +583,15 @@ export function rowActionsColumn<T>({
     header: <RowActionsHeader text={headerText} labels={labels} />,
     headerText,
     cell: (row) => (
-      <RowActions actions={actions(row)} name={name?.(row)} collapse={collapse} size={size} labels={labels} />
+      <RowActions
+        actions={actions(row)}
+        name={name?.(row)}
+        collapse={collapse}
+        size={size}
+        glyphSize={glyphSize}
+        tooltipSide={tooltipSide}
+        labels={labels}
+      />
     ),
     className: "w-px whitespace-nowrap text-end",
     headClassName: "w-px",

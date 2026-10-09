@@ -85,6 +85,7 @@ import { DEFAULT_SETTINGS_LABELS } from "../settings/settings-labels";
 import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
 import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
 import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions";
 import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell";
@@ -219,6 +220,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   landing: DEFAULT_LANDING_LABELS,
   demo: DEFAULT_DEMO_LABELS,
   billing: DEFAULT_BILLING_LABELS,
+  planChange: DEFAULT_PLAN_CHANGE_LABELS,
   appearance: DEFAULT_APPEARANCE_LABELS,
   rowActions: DEFAULT_ROW_ACTIONS_LABELS,
   appShellMore: DEFAULT_APP_SHELL_MORE_LABELS,

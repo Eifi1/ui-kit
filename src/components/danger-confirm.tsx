@@ -6,7 +6,7 @@ import { Button, Input, Label, Spinner } from "./ui";
 import type { ButtonVariant, InputProps } from "./ui";
 import { Checkbox } from "./checkbox";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * How typed text is compared with the text it has to repeat — shared by
@@ -567,7 +567,7 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
    * provider no longer threads `lockedReason={lock.locked ? lock.reason : undefined}`
    * into every tile. No provider, or an unlocked one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** Controlled armed state. The parent can then collapse the tile from a mutation's
    *  own `onSuccess` without returning a promise. */
   armed?: boolean;

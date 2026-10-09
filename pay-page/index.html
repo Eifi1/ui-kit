@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Checkout</title>
+    <link rel="stylesheet" href="pay.css" />
+    <!-- Paddle.js always from Paddle's CDN (Paddle's rule), then the page's one script.
+         Both deferred: they run in this order once the document is parsed. No inline
+         script or style anywhere, for the pay host's CSP. -->
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
+    <script src="pay.js" defer></script>
+  </head>
+  <body>
+    <main id="pay" class="pay" data-state="opening">
+      <div class="pay-spinner" aria-hidden="true"></div>
+      <p id="pay-message" class="pay-message" role="status" aria-live="polite"></p>
+      <p class="pay-actions"><a id="pay-back" class="pay-back" hidden></a></p>
+    </main>
+    <footer id="pay-footer" class="pay-footer" hidden>
+      <span id="pay-app" class="pay-app"></span>
+      <nav id="pay-legal" class="pay-legal">
+        <a id="pay-terms" hidden></a>
+        <a id="pay-privacy" hidden></a>
+      </nav>
+    </footer>
+  </body>
+</html>

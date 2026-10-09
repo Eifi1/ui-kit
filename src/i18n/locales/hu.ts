@@ -1488,14 +1488,51 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Both figures arrive formatted and stay bare, as `characterCount.count` (convention 3).
       usage: (used, limit) => `${used} / ${limit}`,
       contactSubject: (dimension) => `Csomagkorlát: ${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12);
+      // the figures bare, as `usage` (convention 3).
+      limitUsageLine: (dimension, used, limit) => `${dimension}: ${used} / ${limit}`,
       manage: "Fizetés és számlák",
       cancel: "Előfizetés lemondása",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider:
+        "Egyelőre nincs mit kezelni. A fizetések és a számlák itt jelennek meg, amint fizetős csomagja lesz.",
+      // §14.4: the pay page's lines, built into its bundle — in Hungarian, though Paddle's
+      // checkout beside them is English (it has no Hungarian).
+      payOpening: "A biztonságos fizetés megnyitása…",
+      payNothing: "Itt nincs mit kifizetni. Csomag választásához térjen vissza az alkalmazásba.",
+      payFailed: "A fizetést nem sikerült megnyitni. Kérjük, lépjen vissza, és próbálja újra egy kis idő múlva.",
+      payBack: "A fizetés bezárult. Visszaléphet, vagy a megnyitásához töltse újra ezt az oldalt.",
       // No plural after a numeral (convention 2).
       waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
       // "Elvetés", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Várakozó módosítások elvetése",
       notConfigured: "A fizetés még nincs beállítva. Kérjük, próbálja újra később.",
       disabled: "Az előfizetés itt nem érhető el.",
+      // §14.2: server-kit 0.7's refusals. "Fizetés és számlák", as `manage`.
+      providerUnavailable: "A fizetési szolgáltató jelenleg nem érhető el. Kérjük, próbálja újra egy kis idő múlva.",
+      alreadySubscribed: "Már van előfizetése. A csomag módosításához nyissa meg a „Fizetés és számlák” részt.",
+      planNotSold:
+        "Ez a csomag ehhez a számlázási időszakhoz vagy pénznemhez nem érhető el. Kérjük, válasszon másikat.",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "csomag"
+    // as in `billing`. A plan's name takes no case ending: it follows a colon or an arrow.
+    planChange: {
+      column: "Csomag",
+      title: "Csomag módosítása",
+      confirm: "Csomag módosítása",
+      plan: "Csomag",
+      current: (plan) => `Jelenlegi csomag: ${plan}`,
+      keepsItems: "A kisebb csomag csak újak létrehozását tiltja; semmi sem törlődik.",
+      until: "Ingyenes eddig",
+      untilHint: "Hagyja üresen, ha nincs vége. A futó béta megtartja a saját lejáratát.",
+      needsChange: "Válasszon másik csomagot vagy egy záró dátumot.",
+      changed: (from, to) => `Csomag módosítva: ${from} → ${to}.`,
+      set: (to) => `Beállított csomag: ${to}.`,
+      keptBeta: "A béta megtartja a lejáratát; csak a csomag változott.",
+      untilDone: (date) => `Ingyenes eddig: ${date}.`,
+      overLimit: "Az új csomag korlátja felett: semmi sem törlődik, de újak nem hozhatók létre.",
+      // The figures bare, as `billing.usage` (convention 3).
+      usageOf: (used, limit, dimension) => `${dimension}: ${used} / ${limit}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Megjelenés" group.

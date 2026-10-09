@@ -4,22 +4,20 @@ import { DEFAULT_PRESET, type TokenSet } from "../palette-presets";
 /**
  * `tokens.css` claims to mirror `DEFAULT_PRESET`. Nothing checked, and it had drifted.
  *
- * The stylesheet says so itself, at the top of the file: "these :root/.dark values
- * MIRROR DEFAULT_PRESET … this block is a documentation mirror, not the live source".
- * That is true and it is the whole problem — Tailwind v4 strips a root block holding
- * only custom properties, and the palette layer writes the real values inline on
- * <html> (`applyTokenSet`), so the stylesheet is INERT. An inert mirror cannot fail:
- * nothing renders from it, so nothing can look wrong, and it drifts one careful commit
- * at a time. Ten of these 46 values had already drifted when this test was written —
- * the light money trio and six of the dark tokens, including the brand accent — and
- * the file's own header notes the money hues "have not been touched", i.e. the drift
- * was known and written down rather than fixed, because writing it down was cheaper
- * than checking it.
- *
- * It still matters even though nothing paints it. It is what a consumer reads to learn
- * what the default appearance IS, it is what someone copies when promoting a preset to
- * the default (the presets file gives exactly that instruction), and it is the fallback
- * for anything rendered before `applyTokenSet` runs.
+ * Ten of these 46 values had drifted when this test was written — the light money trio
+ * and six of the dark tokens, including the brand accent — and the stylesheet's own
+ * header noted the money hues "have not been touched": the drift was known and written
+ * down rather than fixed, because the block was believed to be INERT. Its header said
+ * Tailwind v4 strips a root block holding only custom properties, so nothing renders
+ * from it. That was never true of Tailwind 4.x (0.33, docs/colour-roles-harmonization.md
+ * §3.1, §12.3): the block survives the build (`check:tailwind` asserts one), and
+ *   - in an app WITH a palette layer, `applyTokenSet`'s inline values beat it;
+ *   - in an app WITHOUT one — Kurvenschmiede, whose palette layer was removed — it is
+ *     exactly what paints, with only More contrast's four stepped values over it.
+ * So this test is load-bearing: a light well or a status fix that reaches
+ * `DEFAULT_PRESET` but not this block never reaches Kurvenschmiede. It is also what a
+ * consumer reads to learn what the default appearance IS, and what someone copies when
+ * promoting a preset to the default.
  *
  * The presets are owned elsewhere, so this test has a direction: `tokens.css` follows
  * `DEFAULT_PRESET`, never the reverse. A failure here is fixed in the stylesheet.
@@ -115,11 +113,39 @@ describe("tokens.css categorical hues (0.10.0)", () => {
       .filter((name) => name.startsWith("--hue-"))
       .sort();
 
-  it("declares every hue triple in both themes", () => {
+  it("declares every hue family in both themes", () => {
+    // The colour, its wash, its frame — and, since 0.33, the text on it as a fill.
     const expected = ["blue", "indigo", "purple", "teal", "orange"]
-      .flatMap((h) => [`--hue-${h}`, `--hue-${h}-bg`, `--hue-${h}-border`])
+      .flatMap((h) => [`--hue-${h}`, `--hue-${h}-bg`, `--hue-${h}-border`, `--hue-${h}-contrast`])
       .sort();
     expect(hues(":root")).toEqual(expected);
     expect(hues(".dark")).toEqual(expected);
+  });
+});
+
+describe("tokens.css's 0.33 roles (docs/colour-roles-harmonization.md §5)", () => {
+  // Like the hues, these live only in the stylesheet, and a role declared for one theme
+  // and forgotten for the other renders the light value on a dark page.
+  const declared = (selector: string) => Object.keys(declarationsUnder(selector));
+
+  it("declares every new foreground and line in both themes", () => {
+    const perTheme = [
+      "--warning-contrast",
+      "--warning-border-strong",
+      "--money-income-contrast",
+      "--money-expense-contrast",
+      "--money-net-contrast",
+      "--money-neutral-contrast",
+    ];
+    for (const selector of [":root", ".dark"]) {
+      for (const name of perTheme) expect(declared(selector), `${selector} ${name}`).toContain(name);
+    }
+  });
+
+  it("makes the light well the page, in the mirror Kurvenschmiede paints", () => {
+    const light = declarationsUnder(":root");
+    expect(light["--bg-surface-2"]).toBe(light["--bg-page"]);
+    const dark = declarationsUnder(".dark");
+    expect(dark["--bg-surface-2"]).not.toBe(dark["--bg-page"]);
   });
 });

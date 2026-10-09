@@ -79,11 +79,9 @@ function targetOf(id: string, status: FeedbackStatus): FeedbackStatus | null {
   }
 }
 
-/** One action's panel. Each fill carries its text colour (0.26): the fills turn pastel
- *  in dark mode, where SwipeableRow's default white text was unreadable. `--info` has no
- *  contrast token, so `advance` writes in the surface colour — white on sky in light
- *  mode, the dark page on the pale sky in dark (the translation list's reset does the
- *  same on its grey). */
+/** One action's panel, by tone (0.33): SwipeableRow paints the tone's soft wash idle,
+ *  and its fill under that fill's own foreground once armed — the same pairs in light
+ *  and dark, where the fills turn pastel. */
 function panel(
   id: FeedbackSwipeAction,
   target: FeedbackStatus,
@@ -97,24 +95,21 @@ function panel(
         onCommit,
         label: labels[target],
         icon: <ChevronsRight className="size-4" aria-hidden />,
-        className: "bg-[var(--info)] text-[var(--info-contrast)]",
-        armedClassName: "bg-[var(--info)] text-[var(--info-contrast)]",
+        tone: "info",
       };
     case "done":
       return {
         onCommit,
         label: labels.DONE,
         icon: <Check className="size-4" aria-hidden />,
-        className: "bg-[var(--success)] text-[var(--success-contrast)]",
-        armedClassName: "bg-[var(--success)] text-[var(--success-contrast)]",
+        tone: "success",
       };
     case "wont_do":
       return {
         onCommit,
         label: labels.WONT_DO,
         icon: <Ban className="size-4" aria-hidden />,
-        className: "bg-[var(--danger)] text-[var(--danger-contrast)]",
-        armedClassName: "bg-[var(--danger-hover)] text-[var(--danger-contrast)]",
+        tone: "danger",
       };
   }
 }

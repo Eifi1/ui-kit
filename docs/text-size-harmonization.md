@@ -3,7 +3,9 @@
 Status: **2026-10-07, reviewed.** All three apps answered the same day; §10 records what
 they settled, and it wins over the sections above where they differ. Led from ui-kit at Marcel's request. It runs in
 parallel with the billing round (`docs/billing-harmonization.md`), and ships as ui-kit 0.32
-or the next minor after the reviews.
+or the next minor after the reviews. **2026-10-09:** §10.16 and §10.17 (ui-kit 0.33),
+settled by Marcel and reviewed by the three apps the same day; §10.18–§10.22 record what
+that settled, and §10.16 and §10.17 are corrected to match.
 
 Marcel tried keksdose with his father-in-law, who reads poorly and needs larger letters:
 "Not only zoom but the whole appearance should be tailored for larger letters." keksdose
@@ -118,6 +120,8 @@ These follow from §2.3. They are kit behaviour; an app gets them by using the k
 - **IconButton shows its label** as visible text beside the icon. Inside a dense table
   row an app may keep the icon alone with `labelVisible={false}`, which must be rare.
 - **FormActions stack** full width on a phone layout.
+- **A floating label becomes a static label above its field** (§10.17), the phone card's
+  rule for fields.
 - **Switch, Slider, ToggleGroup and Checkbox** keep their proportions (their px
   arithmetic moves to rem, §3.2).
 
@@ -224,6 +228,11 @@ appearance group, `useBreakpoint` for its JS queries, and a look at its main scr
 
 server-kit 0.6: the two account fields and their vocabularies (§6).
 
+ui-kit 0.33 (§10.16, §10.17): `RowAction`'s `pressed`, `expanded`/`controls`, the
+`muted`/`info`/`warning` tones and `dataTour`; RowActions' `glyphSize` and `tooltipSide`;
+the `truncate-until-large` utility; the static label above a field at Large; the
+truncation and tall-pinned-box checks in `scripts/screenshot-sizes.mjs`.
+
 ## 9. Risks
 
 - **Breakpoints:** without §3.3, a tablet at 150 % would get the desktop shell with a
@@ -271,8 +280,9 @@ sections above differ, this list wins.
    - `applyTokenSet` writes the text and border tokens inline on `<html>`, so the
      contrast step is applied inside it, not by a CSS rule;
    - "System" re-applies on a `matchMedia("(prefers-contrast: more)")` change;
-   - CSS-only derived tokens are written inline too, or tested in the built CSS: Tailwind
-     v4 strips a block that holds only custom properties.
+   - CSS-only derived tokens are written inline too, or tested in the built CSS. (This
+     said Tailwind v4 strips a block that holds only custom properties; 4.3.3 keeps it,
+     colour-roles §3.1. The test stays: it proves the value reaches the build.)
 6. **The stored vocabularies:** `TEXT_SIZES = ("normal", "large", "xlarge")` and
    `CONTRAST_MODES = ("system", "standard", "more")`. **"System" is a stored value**:
    the PATCH rule refuses an explicit null, so null means only "never chosen".
@@ -288,7 +298,8 @@ sections above differ, this list wins.
 8. **Dense row actions:**
    - at Large, a dense row's IconButtons collapse into a "⋯" row menu (the roster's
      `UserRowActionList` pattern), instead of showing every label (Kurvenschmiede 44,
-     kastlan 119 IconButtons);
+     kastlan 119 IconButtons); a row action's state, tone and tour anchor survive the
+     collapse (item 16);
    - `labelVisible={false}` remains for an icon on content: receipt overlays, map zoom,
      a viewfinder, photo thumbnails.
 9. **Windowed lists** (Kurvenschmiede): "nothing truncates" needs variable rows.
@@ -328,3 +339,262 @@ sections above differ, this list wins.
     - PickerSheet on a zoomed page (item 2);
     - tours losing nav anchors (item 7);
     - inline contrast tokens (item 5).
+
+**Round 033 (ui-kit 0.33).** Marcel settled items 16 and 17 on 2026-10-09, both as
+recommended, from the kit's UI audit of that day (kept outside the repo). The three apps
+reviewed them the same day; items 18–22 record what that settled, and items 16 and 17
+read as corrected.
+
+16. **A row action carries its state** (keksdose k15; Marcel, 2026-10-09). keksdose keeps
+    hand-rolled IconButtons at Normal on three rows and uses RowActions only at Large,
+    because a `RowAction` can't say "on", "open", a tone other than danger, or a tour
+    anchor. From 0.33 it can, at both sizes:
+    - **A toggle** (`pressed`): inline, `aria-pressed` with IconButton's "on" look; in the
+      menu, `aria-pressed` on the entry. The label stays the same in both states.
+    - **A disclosure** (`expanded`, with `controls`): `aria-expanded` and `aria-controls`,
+      inline and on the menu entry. It is for something the action opens in the page (a
+      share card under the row, an add-category row), and is exclusive with `pressed`.
+    - **Tones `muted`, `info` and `warning`:** inline, IconButton's tone. In the menu the
+      words keep the default text colour and the glyph takes the tone; `danger` keeps its
+      danger text; `muted` and `default` look the same in a menu.
+    - **A tour anchor** (`dataTour`) goes where the reader must go, on one element per
+      action at a time (item 18):
+      - inline (Normal, a row's single action, `collapse="inline"`): `data-tour` on the
+        action's own control: the IconButton, the small text Button of an action without
+        a glyph, or the link of an `href` action;
+      - collapsed: not on the "⋯" button itself. RowActions puts the "⋯" IconButton in a
+        `relative inline-flex` box with `data-slot="row-actions"` (the inline strip's
+        slot), and in that box one aria-hidden `<span data-tour="…">` per anchored
+        action, `pointer-events-none absolute inset-0`: the More cell's `TourAnchor`
+        (item 7). So `[data-tour=x]` resolves to a box the size of the "⋯", two anchored
+        actions in one row don't fight over one attribute, and a tap still reaches the
+        button;
+      - **the entry in the open menu carries none.** The menu is portalled after the row
+        and the kit's tour takes the first visible match, so a copy there would never be
+        found while the "⋯" shows; it would only make `[data-tour=x]` match twice.
+    - **The row's glyph size and tooltip side** are RowActions props, so a header strip
+      with 14 px glyphs and a last column whose tooltips open to the start need no
+      hand-rolled icons. `rowActionsColumn` passes both through.
+
+    ```ts
+    export type RowActionTone = "default" | "muted" | "info" | "warning" | "danger";
+    export interface RowAction {
+      // …existing…
+      tone?: RowActionTone; // widened from "default" | "danger"
+      commit?: CommitScope; // widened by billing §12.36
+      /** A toggle: aria-pressed and the "on" look. The label stays the same in both states. */
+      pressed?: boolean;
+      /** Opens or closes something in the page: aria-expanded. Not with `pressed`. */
+      expanded?: boolean;
+      /** The id of what `expanded` opens: aria-controls. */
+      controls?: string;
+      /** A tour anchor: data-tour on the control; collapsed, an overlay in the "⋯" box. */
+      dataTour?: string;
+    }
+    export interface RowActionsProps {
+      // …existing…
+      /** The inline glyphs' size (IconButton's), e.g. 14 in a dense header strip. */
+      glyphSize?: IconButtonGlyphSize;
+      /** The inline tooltips' side: "start" for a table's last column. */
+      tooltipSide?: TooltipSide;
+    }
+    ```
+
+    - `glyphSize` takes IconButton's `IconButtonGlyphSize` (12, 14, 16, 20, 24 or 28), not
+      a free number.
+    - `dataTour` is the kit's existing name (`AppShellNavItem.dataTour`). A generic
+      `data-*` bag was rejected: it can't say which control carries it when collapsed.
+    - **i18n:** none; no new strings in any of the kit's seven languages.
+    - **Tests** (`row-actions-033.test.tsx`, beside `row-actions-032.test.tsx`):
+      - `pressed` gives `aria-pressed` and the on class inline, and `aria-pressed` on the
+        menu entry;
+      - `expanded` and `controls` give `aria-expanded` and `aria-controls` at both sizes;
+      - tones: inline `data-tone`; in the menu the glyph's tint, with danger text for
+        `danger`;
+      - `dataTour`: inline on the IconButton; collapsed, one overlay per anchored action,
+        `querySelector('[data-tour=x]')` resolves to a visible box whose
+        `closest('[data-slot="row-actions"]')` holds the "⋯" button, and nothing in the
+        open menu carries `data-tour`;
+      - `glyphSize` and `tooltipSide` reach the IconButton;
+      - `commit: COMMIT_EXCEPT_BILLING` under a billing lock stays live, inline and in the
+        menu.
+    - **keksdose** folds its three sites into one `<RowActions>` at every size and drops
+      its exception that keeps the icons at Normal:
+      - accounts row (`features/accounts/accounts-page.tsx:931-1040`, and the Large list
+        `accountActions`, :479-518): open and add as muted links, reconcile as `info` +
+        `dataTour="account-reconcile"`, hide as muted + `commit`, delete as danger +
+        `commit`, with `tooltipSide="start"`. The `<span data-tour>` round the "⋯" (:939)
+        and the `CompactControls`/`stopPropagation` div go: RowActions does both.
+        `tooltipSide` is per row, so open, add and reconcile open to the start too (today
+        only hide and delete do, :1006, :1032): an accepted change. Two tests follow
+        (kk 6): the tour guard's `FORWARDED` list
+        (`features/tour/__tests__/tour-anchors.test.ts:103-127`) gains
+        `/dataTour:\s*"[^"]+"/g`, or the anchor reads as orphaned once the literals at
+        :939 and :986 go; and `accounts-page.test.tsx:735`
+        (`menu.closest('[data-tour="account-reconcile"]')`, which the overlay beside the
+        button no longer satisfies) asserts instead that the anchor's
+        `closest('[data-slot="row-actions"]')` holds the "⋯" (`toContainElement(menu)`);
+      - budgets row (`features/budgets/budgets-page.tsx:380-486`): share (today `pressed`,
+        :437-445) becomes `expanded` + `controls` on its share card; rename muted +
+        `commit`; delete danger with its `disabledReason`. The in-row confirm (:466) stays
+        the app's, beside RowActions, as at Large today (:416-428);
+      - category group header (`features/budget/group-admin-actions.tsx:61-120`):
+        `size="sm" glyphSize={14}` (today on each icon, :94, :106, :118), add category as
+        `expanded` (today a hand-set `aria-expanded`, :97);
+      - its other RowActions sites need nothing new.
+    - **kastlan** (15 uses) and **Kurvenschmiede** (6: `segment-list.tsx:187`,
+      `profile-bar.tsx:150`, `segment-cards.tsx:139`, `team-card.tsx:123` and :231,
+      `projects-page.tsx:106`; item 20): nothing required; neither splits Normal and
+      Large.
+17. **Nothing truncates at Large, measured** (Marcel, 2026-10-09). §4 says text wraps at
+    Large, but the size sweep (`scripts/screenshot-sizes.mjs`) sees only a page running
+    past the screen: `measure()` (:142-188) compares the scroll widths of the document,
+    `<main>` and unclipped elements, so an ellipsis inside a box is invisible to it. A
+    `w-64` FloatingField with a hint reads "Payment r…" at Extra large
+    (`showcase/src/sections/fields.tsx:507-510`) and passes.
+    - **The rule:** at Large and Extra large, a one-line ellipsis that cuts its text is a
+      finding, as a page running past the screen is. Normal keeps its ellipses.
+    - **One name for "truncate at Normal, wrap at Large":** `@utility
+      truncate-until-large` in `tokens.css`: `truncate`, plus at `large:`
+      `white-space: normal` and `overflow-wrap: anywhere`. It replaces the five copies:
+      `WRAP_AT_LARGE` (`list.tsx:129`), `CHIP_LABEL_WRAP_AT_LARGE` (`chip.tsx:523`),
+      `LABEL_WRAP_AT_LARGE` (`status-dot.tsx:84`) and `VALUE_WRAP_AT_LARGE`
+      (`inline-edit-field.tsx:173`, `date-picker.tsx:217`). Four of them use
+      `break-words` today; the utility takes list's `overflow-wrap: anywhere`. DataTable's
+      phone card keeps its descendant rule (`CARD_NO_TRUNCATE`, `data-table.tsx:785-786`),
+      which reaches an app's own `truncate` in a cell. The sweep still measures the
+      utility, since it must not cut at Large.
+    - **The parts that truncate at every size today take the utility:** ShareCard
+      (`share-card.tsx:465`, :471, :536), UserRoster (`admin/user-roster.tsx:197`, :203),
+      InvitationsPanel (`admin/invitations-panel.tsx:456`), FileButton's picked file
+      (`file-button.tsx:631`) and the feedback attachments
+      (`feedback/feedback-attachment.tsx:481`, 665-666, 902-904, 926-927). The sweep
+      decides for the rest: Tabs' label and detail, MenuItem, Breadcrumbs, the AppShell
+      sidebar, the combobox, multi-select, country and currency values, and the DataTable
+      header label.
+    - **A deliberate truncation at Large** (a value whose full text is one tap away, such
+      as a select's chosen option in a dense table) carries `data-truncate-ok`, with the
+      reason in a code comment. The sweep skips that subtree. Never on a name or an email.
+    - **The floating label at Large is a static label above the field**: the phone card's
+      "label above value" (§4), not a two-line label in the field. It stops being
+      absolute, so it wraps like any text, and the field's top strip no longer reserves
+      its height. This covers `FLOATING_LABEL_CLASS` (`ui.tsx:1708-1714`),
+      `FLOATING_LABEL_STATIC` (`field-parts.tsx:39-43`), the row form's
+      `max-w-[calc(100%-3rem)]` (`ui.tsx:1727-1730`) and the static label
+      (`ui.tsx:1785-1787`). Normal keeps the floating label. **A visible change at Large
+      in every app:** every floating-label field shows its label above.
+    - **The sweep:**
+      - `measureTruncation()`, a second `page.evaluate` beside `measure()`, runs only
+        where `variant.size !== "normal"`. Per element:
+
+        ```js
+        const s = getComputedStyle(el);
+        const oneLine = s.textOverflow === "ellipsis" && /hidden|clip/.test(s.overflowX) && s.whiteSpace.startsWith("nowrap");
+        const clamped = s.webkitLineClamp && s.webkitLineClamp !== "none";
+        const cut = oneLine ? el.scrollWidth > el.clientWidth + 1 : clamped ? el.scrollHeight > el.clientHeight + 1 : false;
+        ```
+
+      - it skips zero-size boxes, `display:none` and `visibility:hidden`, `.sr-only`,
+        `aria-hidden` overlays, `[data-truncate-ok]` subtrees and the device-preview
+        frame;
+      - a finding names the nearest `[data-slot]` (e.g. `row-actions`), the nearest
+        showcase example heading, the full `textContent` and the visible width. It is
+        marked `data-truncation-offender=n`, and the first is screenshotted, as
+        `data-overflow-offender` is today;
+      - it prints `TRUNCATED` lines under each page and a total;
+      - flags: `--truncation` (on by default); `--no-screens`, to measure without
+        screenshots (faster, less RAM on the shared box); `--pages all`, the slugs of
+        `showcase/src/routes.tsx`; `--gate-truncation`, exit 3 on a finding (1 stays
+        overflow, 2 a script error);
+      - `DEFAULT_PAGES` gains `fields`, `files`, `auth-account`, `user-admin`,
+        `subscription`, `feedback-compose` and `lists-menus`.
+    - **The sweep's second check, tall pinned boxes** (item 22). A box pinned over the
+      page grows with the text too, and can leave no room for what it is pinned over:
+      neither an overflow nor a truncation, so neither check sees it. `measurePinned()`
+      runs in the same pass as `measureTruncation()`, at Large and Extra large only:
+      - it takes every element whose computed `position` is `fixed`, or `sticky` with a
+        `top` or `bottom` other than `auto` (a sticky column pins sideways and is left
+        out); the outermost only, so a sticky header inside a fixed sheet is one box;
+      - it skips what `measureTruncation()` skips (zero-size and hidden boxes,
+        `aria-hidden`, the device-preview frame), a dialog and what holds one
+        (`[role=dialog]`, `[role=alertdialog]`, `[aria-modal=true]`: a sheet covers the
+        screen by design), and `[data-pinned-ok]` subtrees, with the reason in a code
+        comment;
+      - **a finding:** the box's height (for `fixed`, the part inside the viewport) is
+        over 50 % of `window.innerHeight`: 390 px in the 360 × 780 variant, 422 px in
+        390 × 844. It is the height, not where the box sits now, so a sticky box counts
+        before it pins;
+      - it prints `PINNED` lines under each page, naming the nearest `[data-slot]` and
+        heading, `sticky` or `fixed`, the height in px and as a share of the viewport,
+        and the first 50 characters of its text; then a total. The box is marked
+        `data-pinned-offender=n`, and the first is screenshotted, as the other two are;
+      - `--pinned` is on by default, as `--truncation` is.
+    - **Report-only in 0.33**, both checks. From 0.34, once the parts above are fixed,
+      the release run passes `--gate-truncation`, which then exits 3 on a truncation or
+      a pinned-box finding. `scripts/check.mjs` does not run the sweep, and jsdom has no
+      layout, so unit tests only pin classes.
+    - **i18n:** none; no new strings in any of the kit's seven languages.
+    - **Tests:**
+      - the script: a fixture page with one ellipsis that cuts, one that fits, one under
+        `data-truncate-ok` and one `.sr-only` gives exactly one `TRUNCATED` finding, and
+        a sticky box of 60 % of the viewport beside one of 40 % exactly one `PINNED`
+        finding; run as `node scripts/screenshot-sizes.mjs --url file://… --pages
+        fixture`, outside `npm run check`;
+      - class pins: `truncate-until-large` on ShareCard, UserRoster, InvitationsPanel,
+        FileButton and the feedback attachment, and the static label at Large;
+      - `data-truncate-ok` never on a name or an email.
+    - **The apps** (corrected, items 19–22): the kit parts follow by themselves, and the
+      label above the field shows in every app's forms at Large. kastlan: nothing more.
+      - **keksdose, with its 0.33 adoption** (kk 13): the price Skeleton in
+        `features/accounts/holdings-panel.tsx:462-467` sits at `top-5`, worked out from
+        the floating field's top strip (border + `pt-4` + 3 px). At Large the label sits
+        above the field and wraps, so `top-5` lands on the label: the Skeleton
+        re-anchors on the input's own line, not at a fixed offset from the top.
+      - **keksdose and Kurvenschmiede may** move their own "truncate at Normal, wrap at
+        Large" to `truncate-until-large`, which then follows the attribute in CSS:
+        keksdose's JS switches (`!large && "truncate"`,
+        `features/budget/budget-mobile-list.tsx:146`, :151, :158;
+        `large ? … : "truncate"`, `features/transactions/mobile-transaction-list.tsx:477`;
+        kk 13) and Kurvenschmiede's class copies
+        (`features/setpoint/segment-cards.tsx:127`, `segment-list.tsx:173`, and
+        `features/landing/landing-visuals.tsx:163`, which lacks the `overflow-wrap`;
+        KS 23).
+      - **Kurvenschmiede, in its plan's order** (F93, F94; KS 24): the corner strip
+        (`features/corner/corner-page.tsx:344`, `sticky top-2`) holds a drawing of
+        `h-64 sm:h-72`, capped by the viewport only at `xl:` (:367). On a phone that is
+        320 px at Large and 384 px at Extra large before the strip's own header, most of
+        the screen: it needs the viewport cap at every width. DetailCard's actions
+        (`features/gear/common.tsx:279`, `flex shrink-0`) can't wrap, so its buttons
+        (share, edit…) run past the card at Large on a phone: the box wraps. (Its title
+        and subtitle truncate at every size, :276-277; the app sweep reports them.)
+      - An app's own `truncate` in fixed rows (keksdose's three-line transaction card)
+        is the next app sweep, with the same script pointed at the app's preview by
+        `--url`.
+
+**Settled after the reviews (2026-10-09).** All three apps reviewed items 16 and 17 the
+same day; kastlan had nothing to change. Each finding is settled as its reviewer proposed,
+and items 16 and 17 above are corrected in place. **kk 6**, **KS 24** and so on are the
+findings' numbers in the round's reviews (kept outside the repo).
+
+18. **Where `dataTour` lands** (kk 6): on one element per action at a time. Inline, on
+    the action's own control; collapsed, on an overlay `<span>` in the "⋯"'s
+    `data-slot="row-actions"` box, not on the button; **never on the menu entry**, which
+    item 16 first had. The kit's tour takes the first visible match and the portalled
+    menu comes after the row, so that copy was never found and only made the selector
+    match twice. keksdose's tour guard learns `dataTour:`, and its accounts test asks the
+    "⋯"'s box for the anchor instead of an ancestor of the button. A row's one
+    `tooltipSide` turns three more of keksdose's tooltips to the start: accepted.
+19. **"No code change for the apps" was wrong for keksdose** (kk 13): its price Skeleton
+    is placed from the floating field's top strip, so it follows the label above the
+    field at Large, with keksdose's 0.33 adoption. Its JS "truncate until Large" switches
+    may take `truncate-until-large`.
+20. **Kurvenschmiede has 6 RowActions sites, not 8** (KS 22); still nothing required.
+21. **Kurvenschmiede's three own "truncate at Normal, wrap at Large" copies** (KS 23),
+    one of them without `overflow-wrap`, may move to `truncate-until-large`, as
+    keksdose's may (item 19).
+22. **The sweep gains a second report-only check, tall pinned boxes** (KS 24): a `fixed`
+    or vertically `sticky` box taller than 50 % of the viewport at Large and Extra large
+    (item 17, "The sweep's second check"). Report-only in 0.33; from 0.34 it gates with
+    truncation (`--gate-truncation`, exit 3). Kurvenschmiede's corner strip is the case
+    that found it; the strip and DetailCard's actions, which can't wrap, are
+    Kurvenschmiede's fixes in its plan's order (F93, F94).

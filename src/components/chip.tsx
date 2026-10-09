@@ -10,7 +10,7 @@ import { DisabledReasonLine, useDisabledReasonLine, type DisabledReasonDisplay }
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * A chip: a compact pill carrying one value.
@@ -137,7 +137,9 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
 // outline toggle that stays an outline when on has no visible state.
 const OUTLINE: Record<ChipTone, string> = {
   neutral: "border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)]",
-  brand: "border-[var(--brand)] bg-transparent text-[var(--brand)]",
+  // The brand AS TEXT is `--brand-muted` (0.33): `--brand` itself is solved to 3:1, a
+  // fill's boundary, and as text it fell to 3.0:1 in the derived dark presets.
+  brand: "border-[var(--brand)] bg-transparent text-brand-muted",
   danger: "border-[var(--danger-border)] bg-transparent text-[var(--danger)]",
   warning: "border-[var(--warning-border)] bg-transparent text-[var(--warning)]",
   success: "border-[var(--success-border)] bg-transparent text-[var(--success)]",
@@ -151,25 +153,27 @@ const OUTLINE: Record<ChipTone, string> = {
   orange: "border-[var(--hue-orange-border)] bg-transparent text-[var(--hue-orange)]",
 };
 
-// `solid`: the fill under its contrast pair. Only brand and danger have a declared
-// `-contrast` token; the other hues are 700s in the light theme and 300s in the dark
-// one, so `--text-inverse` (the surface colour) is the side of the pair that contrasts
-// with them in both — which is what the inverse token is for. The border goes
-// transparent rather than away, so a solid chip is exactly as tall as a soft one.
+// `solid`: the fill under its own foreground, `<fill>-contrast` (0.33, colour-roles
+// §5.1): white in light, the tone's 950 (the page, for money) on the dark theme's
+// pastels. Until 0.33 only brand and danger had one and the rest borrowed
+// `--text-inverse`, the surface colour — which left light warning at 4.24:1 and orange
+// at 4.38:1. Neutral keeps the inverse pair: a count pill, louder than the neutral
+// fill. The border goes transparent rather than away, so a solid chip is exactly as
+// tall as a soft one.
 const SOLID: Record<ChipTone, string> = {
-  neutral: "border-transparent bg-[var(--bg-inverse)] text-[var(--text-inverse)]",
-  brand: "border-transparent bg-[var(--brand)] text-[var(--brand-contrast)]",
-  danger: "border-transparent bg-[var(--danger)] text-[var(--danger-contrast)]",
-  warning: "border-transparent bg-[var(--warning)] text-[var(--text-inverse)]",
-  success: "border-transparent bg-[var(--success)] text-[var(--text-inverse)]",
-  info: "border-transparent bg-[var(--info)] text-[var(--text-inverse)]",
-  income: "border-transparent bg-[var(--money-income)] text-[var(--text-inverse)]",
-  expense: "border-transparent bg-[var(--money-expense)] text-[var(--text-inverse)]",
-  blue: "border-transparent bg-[var(--hue-blue)] text-[var(--text-inverse)]",
-  indigo: "border-transparent bg-[var(--hue-indigo)] text-[var(--text-inverse)]",
-  purple: "border-transparent bg-[var(--hue-purple)] text-[var(--text-inverse)]",
-  teal: "border-transparent bg-[var(--hue-teal)] text-[var(--text-inverse)]",
-  orange: "border-transparent bg-[var(--hue-orange)] text-[var(--text-inverse)]",
+  neutral: "border-transparent bg-inverse text-inverse",
+  brand: "border-transparent bg-brand text-brand-contrast",
+  danger: "border-transparent bg-danger text-danger-contrast",
+  warning: "border-transparent bg-warning text-warning-contrast",
+  success: "border-transparent bg-success text-success-contrast",
+  info: "border-transparent bg-info text-info-contrast",
+  income: "border-transparent bg-money-pos text-money-income-contrast",
+  expense: "border-transparent bg-money-neg text-money-expense-contrast",
+  blue: "border-transparent bg-hue-blue text-hue-blue-contrast",
+  indigo: "border-transparent bg-hue-indigo text-hue-indigo-contrast",
+  purple: "border-transparent bg-hue-purple text-hue-purple-contrast",
+  teal: "border-transparent bg-hue-teal text-hue-teal-contrast",
+  orange: "border-transparent bg-hue-orange text-hue-orange-contrast",
 };
 
 /** `dot`: the fill of the dot itself — the tone's strongest colour, which is the one
@@ -380,7 +384,8 @@ export function refreshChipEdges(): void {
   for (let pass = 0; pass <= n && pending.length; pass++) {
     const reads = pending.map((el) => {
       const r = el.getBoundingClientRect();
-      const label = el.querySelector<HTMLElement>(".truncate");
+      // The text label (CHIP_LABEL_TRUNCATE; `.truncate` before 0.33).
+      const label = el.querySelector<HTMLElement>(".truncate-until-large");
       // Not laid out (a hidden ancestor, jsdom), or truncated at its container's edge,
       // where a wider chip would overflow: leave it alone. So too a label wrapped onto
       // a second line at Large (0.32.1): the chip is already as wide as its row lets it
@@ -511,16 +516,16 @@ const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
  * "…". keksdose's "Zur Prüfung zurücklegen" read "Zur Prüfung zu…" on a phone at Extra
  * large, which is a different instruction. No size has a fixed height (padding and
  * `min-h-*` only), so the pill grows with its lines; the mark before the text stays
- * centred on them, as in a pill. A `large:` class, so Normal keeps its one-line chip.
+ * centred on them, as in a pill. A `large:` rule, so Normal keeps its one-line chip.
  *
- * `break-words`, not `[overflow-wrap:anywhere]`: a status chip often sits in a table
- * cell, and `anywhere` lowers the label's min-content width to one letter, so an
- * auto-sized column can squeeze it to a letter per line (StatusDot's label did, in the
- * showcase's tone table at 360 px, Extra large). `break-word` keeps each word whole
- * wherever the width is the content's to choose, and still breaks one that cannot fit
- * the row at all.
+ * 0.33 (§10.17): the kit's one `truncate-until-large` (tokens.css) in place of this
+ * file's own `truncate` + `large:whitespace-normal large:break-words`, as StatusDot's
+ * label took it. The utility breaks with `overflow-wrap: anywhere`, which lowers the
+ * label's min-content width to one letter: a status chip in an auto-sized table column
+ * wants the column given a width at Large, or it is squeezed to a letter per line
+ * (StatusDot's label was, in the showcase's tone table at 360 px, Extra large).
  */
-const CHIP_LABEL_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const CHIP_LABEL_TRUNCATE = "truncate-until-large";
 
 /**
  * An interactive chip's touch target at Large and Extra large (docs/text-size-harmonization.md
@@ -720,7 +725,7 @@ export type ChipProps = ChipBaseProps &
         /** This chip COMMITS — pressing it saves. Under a locked
          *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
          *  reason, as {@link Button}'s `commit` does. */
-        commit?: boolean;
+        commit?: CommitScope;
       }
   );
 
@@ -841,7 +846,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         ) : (
           <Icon className={cn(s.icon, "shrink-0")} aria-hidden />
         ))}
-      {/* Text truncates at Normal and wraps at Large (CHIP_LABEL_WRAP_AT_LARGE). Mixed
+      {/* Text truncates at Normal and wraps at Large (CHIP_LABEL_TRUNCATE). Mixed
           children (an icon and a word) sit in a row instead: as a plain span, the svg —
           a block under Tailwind's preflight — stacked above the text (keksdose live
           #358). */}
@@ -849,7 +854,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         className={cn(
           "min-w-0",
           typeof children === "string" || typeof children === "number"
-            ? cn("truncate", CHIP_LABEL_WRAP_AT_LARGE)
+            ? CHIP_LABEL_TRUNCATE
             : "inline-flex items-center gap-1 [&>svg]:size-[1em] [&>svg]:shrink-0",
         )}
       >

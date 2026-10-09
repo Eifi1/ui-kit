@@ -22,6 +22,7 @@ import type {
   ProfileSettingLabels,
   TwoFactorSettingLabels,
 } from "./account-settings-labels";
+import { COMMIT_EXCEPT_BILLING } from "./write-lock";
 
 // The label types moved beside the namespace's defaults (0.12.0); re-exported here so
 // every existing `import type { ProfileSettingLabels }` keeps resolving.
@@ -115,7 +116,10 @@ export type ProfileSettingProps = ProfileSettingDisplayNameProps | ProfileSettin
  *
  * The two-field form owns its drafts, starting from the saved names and following them
  * when they change; Save waits for a change, holds — saying why — while a name is
- * blank, and is a `commit` (a {@link WriteLockProvider} locks it, keksdose's demo).
+ * blank, and is a `commit` (a {@link WriteLockProvider} locks it, keksdose's demo) —
+ * every lock but a lapsed plan's (`COMMIT_EXCEPT_BILLING`, 0.33): a profile is the
+ * account's own settings, which billing never locks (docs/billing-harmonization.md §3.3,
+ * §12.36).
  */
 export function ProfileSetting(props: ProfileSettingProps) {
   const { name, email, role, memberSince, labels: labelsProp, id } = props;
@@ -271,7 +275,7 @@ function PersonNameFields({
       </div>
       <Button
         type="submit"
-        commit
+        commit={COMMIT_EXCEPT_BILLING}
         pending={busy}
         // A blank name is a reason the person can act on; an unchanged one is not —
         // there is nothing to save, and the button is simply off.

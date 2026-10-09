@@ -6,7 +6,7 @@ import { TypedConfirmField, typedMatches } from "./danger-confirm";
 import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
 import { Button } from "./ui";
-import { useWriteLock } from "./write-lock";
+import { useWriteLock, writeLockFor, type CommitScope } from "./write-lock";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -83,8 +83,12 @@ export interface ConfirmOptions {
    * host sits — it is `aria-disabled` with the lock's reason, so a read-only page (a
    * demo, a viewer's budget) can't confirm a delete through a dialog. One prop for the
    * many confirm sites an app has (kastlan's 0.31 adoption counted ~23).
+   *
+   * 0.33: a {@link CommitScope} — `confirm({ commit: COMMIT_EXCEPT_BILLING })` for a
+   * confirm a lapsed plan still allows (removing access, the account's own settings;
+   * docs/billing-harmonization.md §12.36).
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -107,12 +111,15 @@ export function useConfirm(): ConfirmFn {
     throw new Error("useConfirm() must be called below a <ConfirmProvider>.");
   }
   // The lock of the CALLER's place: the dialog host usually sits above the app's
-  // `WriteLockProvider`, so it could not read the lock itself.
+  // `WriteLockProvider`, so it could not read the lock itself. Each call's own `commit`
+  // scope is applied to it when the call runs (`writeLockFor`, §12.36).
   const lock = useWriteLock();
   return useCallback(
-    (options: ConfirmOptions) =>
-      confirm(options.commit && lock.locked ? ({ ...options, lockReason: lock.reason } as ConfirmOptions) : options),
-    [confirm, lock.locked, lock.reason],
+    (options: ConfirmOptions) => {
+      const scoped = writeLockFor(lock, options.commit);
+      return confirm(scoped.locked ? ({ ...options, lockReason: scoped.reason } as ConfirmOptions) : options);
+    },
+    [confirm, lock],
   );
 }
 

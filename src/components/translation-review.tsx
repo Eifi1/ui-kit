@@ -44,7 +44,7 @@ import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translat
 import type { TranslationReviewLabels } from "./translation-review-labels";
 import { ReviewStatusChip, TranslationProgress } from "./translation-review-parts";
 import { Button, IconButton, Select } from "./ui";
-import { useWriteLock } from "./write-lock";
+import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 
 export {
   REVIEW_STATUS_TONES,
@@ -457,7 +457,10 @@ export function TranslationReviewPanel({
 }: TranslationReviewPanelProps) {
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
   const locale = useKitLocale();
-  const lock = useWriteLock();
+  // A verdict is an admin route, which a lapsed plan never locks
+  // (docs/billing-harmonization.md §12.13, §12.36): the buttons take
+  // COMMIT_EXCEPT_BILLING, and the swipes read the lock as they see it.
+  const lock = useWriteLock(COMMIT_EXCEPT_BILLING);
   // The phone layout DataTable switches its layout on, so "a phone" means the same here
   // as in the table, at every text size: `usePhoneLayout()` itself (§10.4; 0.32.1,
   // keksdose's 0.32 report — `!useBreakpoint("md")` could disagree with it at 767.5 px).
@@ -742,7 +745,7 @@ export function TranslationReviewPanel({
             type="button"
             size="xs"
             tone="muted"
-            commit
+            commit={COMMIT_EXCEPT_BILLING}
             label={labels.approve}
             // The icon alone at every text size (docs/text-size-harmonization.md §10.8):
             // the row's one action, in a hugging column of a dense table beside the
@@ -773,10 +776,9 @@ export function TranslationReviewPanel({
           label: labels.approve,
           icon: <Check className="size-4" aria-hidden />,
           onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
-          // Text on the fill in its own contrast colour: the fills are pastels in dark
-          // mode, where SwipeableRow's default white text was unreadable (0.26).
-          className: "bg-[var(--success)] text-[var(--success-contrast)]",
-          armedClassName: "bg-[var(--success)] text-[var(--success-contrast)]",
+          // SwipeableRow paints the tone: its soft wash idle, its fill and that fill's
+          // foreground armed (0.33).
+          tone: "success",
         };
       case "edit":
         return {
@@ -789,23 +791,17 @@ export function TranslationReviewPanel({
             setOpenId(r.id);
             setFocusId(r.id);
           },
-          className: missing
-            ? "bg-[var(--brand)] text-[var(--brand-contrast)]"
-            : "bg-[var(--danger)] text-[var(--danger-contrast)]",
-          armedClassName: missing
-            ? "bg-[var(--brand-hover)] text-[var(--brand-contrast)]"
-            : "bg-[var(--danger-hover)] text-[var(--danger-contrast)]",
+          tone: missing ? "brand" : "danger",
         };
       case "clear":
         return {
           label: labels.reset,
           icon: <RotateCcw className="size-4" aria-hidden />,
           onCommit: () => void clearRow(r),
-          // A step back, not a verdict: neither the approval's green nor the send-back's red.
-          // The surface colour as text: white on the grey in light mode, the dark page on
-          // the light grey in dark mode.
-          className: "bg-[var(--text-muted)] text-[var(--bg-surface)]",
-          armedClassName: "bg-[var(--text-secondary)] text-[var(--bg-surface)]",
+          // A step back, not a verdict: neither the approval's green nor the send-back's
+          // red. `neutral` is the pair this swipe improvised and 0.33 made a token: the
+          // muted ink as a fill under the surface colour.
+          tone: "neutral",
         };
     }
   };
@@ -943,7 +939,7 @@ export function TranslationReviewPanel({
             <Button
               variant="secondary"
               size="sm"
-              commit
+              commit={COMMIT_EXCEPT_BILLING}
               // The visible words say what; the group's name, read after them, says where.
               aria-describedby={titleId}
               pending={isQueued(key) && confirming !== g.key}
@@ -974,7 +970,7 @@ export function TranslationReviewPanel({
                     }}
                     variant="primary"
                     size="sm"
-                    commit
+                    commit={COMMIT_EXCEPT_BILLING}
                     aria-describedby={questionId}
                     pending={isQueued(key)}
                     disabled={busy}
@@ -1090,7 +1086,7 @@ export function TranslationReviewPanel({
           <Button
             variant="primary"
             size="sm"
-            commit
+            commit={COMMIT_EXCEPT_BILLING}
             pending={isQueued("bulk-approve")}
             disabled={busy || toApprove.length === 0}
             onClick={() => void approveSelected()}
@@ -1102,7 +1098,7 @@ export function TranslationReviewPanel({
             <Button
               variant="ghost"
               size="sm"
-              commit
+              commit={COMMIT_EXCEPT_BILLING}
               pending={isQueued("bulk-reset")}
               disabled={busy || toReset.length === 0}
               onClick={() => void resetSelected()}

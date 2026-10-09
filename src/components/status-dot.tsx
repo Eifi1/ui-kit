@@ -75,13 +75,13 @@ const SIZE: Record<StatusDotSize, string> = { sm: "size-2", md: "size-2.5", lg: 
  * (`1lh`, the label's own line height, which the dot inherits) leaves around it.
  * `large:` classes, so Normal keeps its one centred line.
  *
- * `break-words`, not `[overflow-wrap:anywhere]`: a legend often sits in a table, and
- * `anywhere` lowers the label's min-content width to one letter, so an auto-sized column
- * squeezed it to a letter per line (the showcase's tone table at 360 px, Extra large).
- * `break-word` keeps each word whole wherever the width is the content's to choose, and
- * still breaks one that cannot fit its line at all.
+ * 0.33 (§10.17): the kit's one `truncate-until-large` (tokens.css) in place of this
+ * file's own `truncate` + `large:whitespace-normal large:break-words`. The utility breaks
+ * with `overflow-wrap: anywhere`, which lowers the label's min-content width: a legend in
+ * an auto-sized table column (the showcase's tone table at 360 px, Extra large) wants the
+ * column given a width, or it is squeezed to a letter per line.
  */
-const LABEL_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+const LABEL_TRUNCATE = "truncate-until-large";
 const DOT_ON_FIRST_LINE: Record<StatusDotSize, string> = {
   sm: "large:mt-[calc((1lh_-_0.5rem)/2)]",
   md: "large:mt-[calc((1lh_-_0.625rem)/2)]",
@@ -155,7 +155,7 @@ export function StatusDot({
     // span is one ARIA forbids and screen readers ignore.
     <span {...rest} className={cn("inline-flex min-w-0 items-center gap-1.5 text-sm large:items-start", className)}>
       {dot}
-      <span className={cn("min-w-0 truncate", LABEL_WRAP_AT_LARGE)}>{label}</span>
+      <span className={cn("min-w-0", LABEL_TRUNCATE)}>{label}</span>
     </span>
   );
 }

@@ -73,13 +73,17 @@ const KEYS: Key[] = [
 const KEY_BASE =
   "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-[var(--border-strong)]";
 // Two key families, two fills: digits sit on the inset surface and darken on
-// hover, operators sit a step down on `--border` and lift toward that surface —
+// hover, operators sit a step down on `--bg-active` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
 // flip with the theme, so neither needs a `dark:` twin.
-const KEY_DIGIT =
-  "bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
-const KEY_ACCENT =
-  "bg-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]";
+//
+// 0.33 (docs/colour-roles-harmonization.md §12.2, §12.9): the digits hover onto
+// `--bg-active`, 1.11–1.18:1 from the key — `--bg-hover` is mixed against the card and
+// sat only 1.04:1 from the well, which in light is the page. The operators rest on
+// `--bg-active` rather than `--border`: More contrast steps the border until it is a
+// 3:1 LINE, and as a fill under the label that left 2.2–2.7:1.
+const KEY_DIGIT = "bg-surface-2 text-primary hover:bg-active";
+const KEY_ACCENT = "bg-active text-secondary hover:bg-surface-2";
 
 function seed(initial: string): string {
   const t = initial.trim();
@@ -186,7 +190,7 @@ function CalculatorPanel({
           // "C" is a convention, not a name: read aloud it is the letter.
           aria-label={labels.clear}
           onClick={clearAll}
-          className={cn(KEY_BASE, "col-span-2 bg-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]")}
+          className={cn(KEY_BASE, "col-span-2", KEY_ACCENT)}
         >
           C
         </button>

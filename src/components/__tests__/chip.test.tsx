@@ -505,7 +505,9 @@ describe("Chip 0.10.0", () => {
     expect(soft).toContain("border-[var(--hue-purple-border)]");
     expect(screen.getByTestId("outline").className).toContain("bg-transparent");
     expect(screen.getByTestId("outline").className).toContain("text-[var(--hue-teal)]");
-    expect(screen.getByTestId("solid").className).toContain("bg-[var(--hue-orange)]");
+    // The fill under its own foreground (0.33), as role utilities.
+    expect(screen.getByTestId("solid").className).toContain("bg-hue-orange");
+    expect(screen.getByTestId("solid").className).toContain("text-hue-orange-contrast");
     expect(screen.getByTestId("on").className).toContain("border-[var(--hue-indigo)]");
   });
 

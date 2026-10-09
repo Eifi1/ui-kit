@@ -33,6 +33,7 @@ import {
   useLockReason,
 } from "./field-parts";
 import { mergeDescribedBy } from "./choice-parts";
+import type { CommitScope } from "./write-lock";
 
 /**
  * `value`/`onChange` are the TEXT's, and `onSelect` is "a suggestion was taken" —
@@ -161,7 +162,7 @@ export interface AutocompleteProps<V extends string | number = string>
    * whose result is only draft state — the form's Save writes it — leaves this off and
    * stays live under the lock. No provider, or an unlocked one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 function AutocompleteInner<V extends string | number = string>(
@@ -329,8 +330,10 @@ function AutocompleteInner<V extends string | number = string>(
                   // label's first letters, which float at the same start inset. On the
                   // value line it is beside what it describes, and the label keeps the
                   // start edge every other label in the form's column shares.
+                  // At Large the label stands above the field and the strip is gone
+                  // (0.33, §10.17): the value's line is under FIELD_BASE's `py-2`.
                   hasLabel
-                    ? "top-[calc(1rem+1px)] h-5 items-center"
+                    ? "top-[calc(1rem+1px)] h-5 items-center large:top-[calc(0.5rem+1px)]"
                     : "top-1/2 -translate-y-1/2",
                 )}
               >

@@ -129,13 +129,13 @@ export const de: Dictionary = {
       title: "Benutzerverwaltung",
       short: "Benutzer",
       blurb:
-        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen und das Übergeben von Arbeit.",
+        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen, das Übergeben von Arbeit sowie die Tarifspalte und der Tarifwechsel durch den Betreiber.",
     },
     subscription: {
       title: "Abonnement",
       short: "Abrechnung",
       blurb:
-        "Für eine App bezahlen: die Tarifauswahl in zwei Währungen und zwei Abrechnungszeiträumen, der Status des Abonnements, die Banner von der Testphase bis zum Ablauf, der Hinweis auf das Tariflimit, die Nur-Lesen-Sperre neben jener der Demo, das Portal des Anbieters und der kommerzielle Hinweis im Impressum.",
+        "Für eine App bezahlen: die Tarifauswahl in zwei Währungen und zwei Abrechnungszeiträumen, der Status des Abonnements, die Banner von der Testphase bis zum Ablauf, Hinweis und Toast zum Tariflimit, die Nur-Lesen-Sperre und die Arten von Sperren, das Portal des Anbieters, der Rückweg aus dem Checkout, die Bezahlseite und der kommerzielle Hinweis im Impressum.",
     },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
@@ -171,6 +171,12 @@ export const de: Dictionary = {
       short: "Tokens",
       blurb:
         "Jeder Wert des aktiven TokenSet, live. Wechseln Sie oben in der Leiste Theme oder Palette und sehen Sie dieser Seite beim Umschalten zu — was sich nicht bewegt, ist hart kodiert.",
+    },
+    "colour-roles": {
+      title: "Farbrollen",
+      short: "Rollen",
+      blurb:
+        "Die semantische Schicht über der Palette: jede Füllfarbe mit der Vordergrundfarbe, die sie nennt, jeder Farbton als Text, Fläche und Linie, die kräftigen Linien, die eingelassene Fläche auf einer Karte, die Hover-Regel, die Rollen-Utilities, die text-[var(--…)] ersetzen, und der Test, der eine Variable findet, die nichts deklariert.",
     },
     "text-size": {
       title: "Textgrösse & Kontrast",
@@ -608,6 +614,7 @@ export const de: Dictionary = {
       "zeigen, wer was an einem Konto getan hat",
       "die Arbeit einer Person an jemand anderen übergeben",
       "die Sprachen eines Übersetzungsprüfers festlegen",
+      "den Tarif eines Benutzers ändern",
     ],
     subscription: [
       "einen Tarif wählen",
@@ -620,6 +627,9 @@ export const de: Dictionary = {
       "nur lesen nach Ablauf des Abonnements",
       "das Abrechnungsportal öffnen",
       "das Abonnement kündigen",
+      "Zahlung wird nach dem Checkout verarbeitet",
+      "die Paddle-Bezahlseite ausliefern",
+      "Tariflimit als Toast",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",
@@ -665,6 +675,15 @@ export const de: Dictionary = {
       "Abstände, Radien und Schatten",
       "Textfarben und Flächen",
       "fest eingetragene Werte finden",
+    ],
+    "colour-roles": [
+      "Textfarbe auf einer farbigen Fläche",
+      "die richtige Textfarbe für ein Warn-Badge",
+      "eingelassene Fläche, die auf einer Karte sichtbar ist",
+      "Hover-Farbe für eine Listenzeile",
+      "text-[var(--text-muted)] durch eine Klasse ersetzen",
+      "kräftiger Warnrahmen",
+      "CSS-Variablen finden, die nichts deklariert",
     ],
     "text-size": [
       "Text vergrössern",

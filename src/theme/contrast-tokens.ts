@@ -49,8 +49,9 @@ function toLab(hex: string): Lab | null {
 
 /** `color-mix(in oklab, a p, b)` as a hex — the same formula tokens.css's derived roles
  *  use, so a stepped value sits where the stylesheet would have put it. A colour that is
- *  not hex (a consumer's own token set) comes back unmixed. */
-function mix(a: string, b: string, p: number): string {
+ *  not hex (a consumer's own token set) comes back unmixed. The deriver mixes with it
+ *  too (`--bg-hover`, `--brand-muted`, `--brand-bg`, `--brand-bg-hover`). */
+export function mix(a: string, b: string, p: number): string {
   const A = toLab(a);
   const B = toLab(b);
   if (!A || !B) return a;
@@ -60,6 +61,56 @@ function mix(a: string, b: string, p: number): string {
   const c = Math.hypot(x, y);
   const h = c < 1e-6 ? 0 : ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
   return toHex(oklchToRgb({ l, c, h }));
+}
+
+/**
+ * `--bg-hover` in tokens.css: this share of `--text-primary` mixed into `--bg-surface`.
+ *
+ * 5.5 %, down from 7 % in 0.33 (docs/colour-roles-harmonization.md §12.10): a hovered row
+ * on a card is the darkest fill (in dark, the lightest) that text sits on, and at 7 % the
+ * light status colours, the money colours and Ink/Moss/Plum's muted text fell to
+ * 4.25–4.49:1 on it. The status literals are fixed, the same in every preset, so the
+ * hover moved instead: text wins over the hover's step. At 5.5 % the step from the card
+ * is still 1.09–1.13:1, above the 1.08:1 the kit's hover rule asks (§12.2). The deriver
+ * solves the money colours against this fill, and tokens-css-audit.test.ts measures
+ * every text role on it in every shipped preset, so the two cannot part.
+ */
+export const HOVER_INK = 0.055;
+
+/** The card's hover fill (`--bg-hover`) for `t`, as tokens.css mixes it. */
+export function hoverFill(t: Pick<TokenSet, "textPrimary" | "bgSurface">): string {
+  return mix(t.textPrimary, t.bgSurface, HOVER_INK);
+}
+
+/**
+ * `--brand-muted` in tokens.css: this share of `--brand` mixed into `--text-primary`.
+ *
+ * 62 %, down from 70 % in 0.33 (docs/colour-roles-harmonization.md §12.11): the brand as
+ * text sits on its soft chip HOVERED too (`--brand-bg-hover` — ButtonGroupLink's current
+ * page, a selected day), and at 70 % it read 4.08–4.42:1 there in Default and Moss light
+ * and in Ink, Moss, Plum and Contrast dark. The brand could not move instead: the dark
+ * brands would have flipped their white label to the dark ink. Nor could the chip's hover
+ * lighten: by the time the text cleared 4.5:1 the hover sat 1.00:1 from the chip it
+ * hovers. So the text moves toward the ink, as `--bg-hover` moved for its text.
+ */
+export const BRAND_MUTED_SHARE = 0.62;
+/** `--brand-bg` and `--brand-bg-hover` in tokens.css: these shares of `--brand` mixed
+ *  into `--bg-surface`. */
+export const BRAND_BG_SHARE = 0.14;
+export const BRAND_BG_HOVER_SHARE = 0.24;
+
+/** `--brand-muted`, `--brand-bg` and `--brand-bg-hover` for `t`, as tokens.css mixes them.
+ *  tokens-css-audit.test.ts holds the three shares equal to the stylesheet's. */
+export function brandSoft(t: Pick<TokenSet, "brand" | "textPrimary" | "bgSurface">): {
+  brandMuted: string;
+  brandBg: string;
+  brandBgHover: string;
+} {
+  return {
+    brandMuted: mix(t.brand, t.textPrimary, BRAND_MUTED_SHARE),
+    brandBg: mix(t.brand, t.bgSurface, BRAND_BG_SHARE),
+    brandBgHover: mix(t.brand, t.bgSurface, BRAND_BG_HOVER_SHARE),
+  };
 }
 
 /** WCAG 1.4.11 for a component's boundary. */

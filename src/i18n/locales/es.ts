@@ -1485,13 +1485,47 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       // Both figures arrive formatted; "de", as `characterCount.count`.
       usage: (used, limit) => `${used} de ${limit}`,
       contactSubject: (dimension) => `Límite del plan: ${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12).
+      limitUsageLine: (dimension, used, limit) => `${dimension}: ${used} de ${limit}`,
       manage: "Pagos y facturas",
       cancel: "Cancelar la suscripción",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider:
+        "Todavía no hay nada que gestionar. Los pagos y las facturas aparecerán aquí cuando tenga un plan de pago.",
+      // §14.4: the pay page's lines, built into its bundle. "Usted".
+      payOpening: "Abriendo el pago seguro…",
+      payNothing: "Aquí no hay nada que pagar. Para elegir un plan, vuelva a la aplicación.",
+      payFailed: "No se ha podido abrir el pago. Vuelva atrás e inténtelo de nuevo en un momento.",
+      payBack: "El pago se ha cerrado. Puede volver atrás o recargar esta página para abrirlo de nuevo.",
       waitingChanges: (count) => `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de un plan`,
       // "Descartar", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Descartar los cambios en espera",
       notConfigured: "Los pagos aún no están configurados. Inténtelo de nuevo más tarde.",
       disabled: "Las suscripciones no están disponibles aquí.",
+      // §14.2: server-kit 0.7's refusals. "Pagos y facturas", as `manage`. "Usted".
+      providerUnavailable: "El proveedor de pagos no está disponible en este momento. Inténtelo de nuevo en un momento.",
+      alreadySubscribed: "Ya tiene una suscripción. Para cambiar de plan, vaya a «Pagos y facturas».",
+      planNotSold: "Este plan no está disponible para ese periodo de facturación o esa moneda. Elija otro.",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "plan" as
+    // in `billing`. "Usted".
+    planChange: {
+      column: "Plan",
+      title: "Cambiar de plan",
+      confirm: "Cambiar de plan",
+      plan: "Plan",
+      current: (plan) => `Plan actual: ${plan}`,
+      keepsItems: "Un plan más pequeño solo impide crear más; no se elimina nada.",
+      until: "Gratis hasta el",
+      untilHint: "Déjelo vacío para que no tenga fin. Una beta en curso conserva su propio fin.",
+      needsChange: "Elija otro plan o una fecha de fin.",
+      changed: (from, to) => `Plan cambiado de ${from} a ${to}.`,
+      set: (to) => `Plan establecido en ${to}.`,
+      keptBeta: "La beta conserva su fin; solo ha cambiado el plan.",
+      untilDone: (date) => `Gratis hasta el ${date}.`,
+      overLimit: "Por encima del límite del nuevo plan: no se elimina nada, los elementos nuevos quedan bloqueados.",
+      // Figures formatted; "de", as `billing.usage`.
+      usageOf: (used, limit, dimension) => `${used} de ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Apariencia" group.

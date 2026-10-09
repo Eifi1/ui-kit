@@ -13,7 +13,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 import {
   DEFAULT_COMBOBOX_LABELS,
   DEFAULT_COMMON_LABELS,
@@ -147,7 +147,7 @@ export interface CountrySelectProps<Clearable extends boolean = false>
    * reason. A country field inside a form that has its own Save stays editable under
    * the lock — leave this off there, and put `commit` on the Save.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** The language the names are in. Default: the `<UiKitProvider locale>`, else
    *  English (see {@link countryName}). */
   locale?: string;

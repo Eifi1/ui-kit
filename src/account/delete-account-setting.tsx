@@ -19,6 +19,7 @@ import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } f
 import { useFocusWhen } from "../auth/status-parts";
 import { CARD_DESCRIPTION_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
+import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -182,6 +183,10 @@ function isConsequence(item: DeleteAccountConsequence): item is DangerConsequenc
  *
  * **After success** the card says the account is deactivated and the person is being
  * signed out — the app's to do, since the kit sends nothing (auth §8).
+ *
+ * **Under a write lock** the confirm is a `commit` exempt from billing
+ * (`COMMIT_EXCEPT_BILLING`, 0.33): leaving never depends on paying
+ * (docs/billing-harmonization.md decision 14, §12.36); a demo's lock still holds it.
  */
 export function DeleteAccountSetting({
   email,
@@ -318,7 +323,7 @@ export function DeleteAccountSetting({
       ) : (
         <>
           <DangerConfirm
-            commit
+            commit={COMMIT_EXCEPT_BILLING}
             armLabel={labels.arm}
             prompt={labels.prompt}
             consequences={lines}

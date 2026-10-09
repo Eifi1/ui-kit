@@ -14,6 +14,7 @@ import { Skeleton } from "../components/skeleton";
 import { Button, Card } from "../components/ui";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
+import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -145,6 +146,10 @@ export interface SessionsSettingProps<Id extends SessionId = SessionId>
  *
  * Both requests are the app's; a failure is said under the card's action, in the app's
  * words if `describeError` has them.
+ *
+ * **Under a write lock** both are `commit` controls exempt from billing
+ * (`COMMIT_EXCEPT_BILLING`, 0.33): a lapsed plan never keeps a person from ending their
+ * own sessions (docs/billing-harmonization.md §12.13, §12.36); a demo's lock still does.
  */
 export function SessionsSetting<Id extends SessionId = SessionId>({
   onSignOutEverywhere,
@@ -252,7 +257,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
                       type="button"
                       size="sm"
                       variant="ghost"
-                      commit
+                      commit={COMMIT_EXCEPT_BILLING}
                       pending={busyId === session.id}
                       disabled={busyId !== null && busyId !== session.id}
                       aria-label={labels.revokeItem(device)}
@@ -268,7 +273,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
         ))}
       <DangerConfirm
         tone="warning"
-        commit
+        commit={COMMIT_EXCEPT_BILLING}
         armLabel={labels.signOutEverywhere}
         prompt={labels.signOutEverywherePrompt}
         confirmLabel={labels.confirmSignOutEverywhere}

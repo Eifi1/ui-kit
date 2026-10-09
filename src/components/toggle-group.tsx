@@ -4,7 +4,7 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 import {
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
@@ -172,7 +172,7 @@ export interface ToggleGroupBaseProps<T extends string>
    * must render refused, never live-and-discarding. No provider, or an unlocked one:
    * no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /**
@@ -200,7 +200,9 @@ export interface ToggleGroupBaseProps<T extends string>
  *
  *     md: 1 + 20 + 18 + 2 + 1 = 42        sm: 1 + 20 + 16 + 4 + 1 = 42
  */
-const CHROME_PAD: Record<"sm" | "md", string> = { md: "pt-5 pb-0.5", sm: "pt-5 pb-1" };
+// At Large the chrome's label stands above it (0.33, §10.17): no strip, the same moat top
+// and bottom.
+const CHROME_PAD: Record<"sm" | "md", string> = { md: "pt-5 pb-0.5 large:pt-0.5", sm: "pt-5 pb-1 large:pt-1" };
 const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125rem]", sm: "py-0 leading-4" };
 
 /**

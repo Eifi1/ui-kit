@@ -238,7 +238,21 @@ describe("FloatingActionGroup", () => {
     );
     expect(screen.getByRole("button", { name: "Rechnungen, 2 neu" })).toBeInTheDocument();
     const inbox = screen.getByRole("button", { name: "Inbox, 5 unread" });
-    expect(inbox.querySelector("[data-badge]")!.className).toContain("bg-[var(--danger)]");
+    expect(inbox.querySelector("[data-badge]")!.className).toContain("bg-danger");
+    expect(inbox.querySelector("[data-badge]")!.className).toContain("text-danger-contrast");
+  });
+
+  it("writes a warning badge in the warning fill's own foreground (0.33)", () => {
+    // `--text-inverse`, the surface colour, sat at 4.24:1 on the light warning fill.
+    render(
+      <FloatingActionGroup aria-label="G">
+        <FloatingAction label="Review" icon="!" badge={3} badgeTone="warning" />
+      </FloatingActionGroup>,
+    );
+    const badge = screen.getByRole("button", { name: /^Review/ }).querySelector("[data-badge]")!;
+    expect(badge.className).toContain("bg-warning");
+    expect(badge.className).toContain("text-warning-contrast");
+    expect(badge.className).not.toContain("text-inverse");
   });
 
   it("renders a member through renderLink for a router", () => {

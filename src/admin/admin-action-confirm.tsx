@@ -12,6 +12,7 @@ import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
 import { hasMessage, usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * The confirmation in front of an admin action, at the level the SERVER states
@@ -153,7 +154,7 @@ export interface AdminActionConfirmProps {
   open?: boolean;
   /** The confirm COMMITS: under a locked `WriteLockProvider` it is held with the lock's
    *  reason. Off by default — an admin action is not a write to the open record. */
-  commit?: boolean;
+  commit?: CommitScope;
   labels?: Partial<AdminActionLabels>;
 }
 

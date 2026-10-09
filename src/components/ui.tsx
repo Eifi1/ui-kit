@@ -12,6 +12,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-lab
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import { useCommitReason } from "./write-lock";
+import type { CommitScope } from "./write-lock";
 import { mergeDescribedBy } from "./choice-parts";
 import {
   CompactControlsContext,
@@ -24,6 +25,8 @@ import {
   useFieldHint,
   useLockReason,
   FLOATING_LABEL_STATIC,
+  LABEL_ABOVE_AT_LARGE,
+  LABEL_ABOVE_BOX,
   STATIC_LABEL_TYPE,
   type FieldHintParts,
 } from "./field-parts";
@@ -88,6 +91,18 @@ const BUTTON_SIZES_LARGE: Record<ButtonSize, string> = {
   sm: "large:min-h-[48px] large:py-2.5",
 };
 
+/**
+ * The hover of a control that may sit on the page, a card or a well (0.33, B′ —
+ * docs/colour-roles-harmonization.md §12.1, §12.10): the body ink at 7 %, TRANSLUCENT,
+ * so it darkens (in dark, lightens) whatever is under it by the same step — 1.11:1 or
+ * more on all three surfaces, both themes, with the label at 7:1 and up. It was
+ * `--bg-surface-2`, which since 0.33 is the page itself in light: a ghost button on the
+ * page would not have moved at all. Not `--bg-hover` either, which is mixed against the
+ * CARD and stands only 1.04:1 from the page. IconButton's `custom` tone uses the same
+ * recipe at 12 %.
+ */
+const HOVER_INK = "hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]";
+
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
 // Actions default to a warm bordered look (primary = filled warm chip, secondary =
 // outline); `brand` stays the solid accent for the rare strong CTA; `danger` takes the
@@ -96,11 +111,11 @@ const BUTTON_SIZES_LARGE: Record<ButtonSize, string> = {
 // variant's own accent: brand for the four neutral ones, danger for `danger`.
 const buttonVariantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-[var(--border)] focus-visible:ring-[var(--brand)]",
-  secondary:
-    "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus-visible:ring-[var(--brand)]",
-  ghost:
-    "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] focus-visible:ring-[var(--brand)]",
+    // Hovers onto `--bg-active`, not `--border` (0.33, §12.9): More contrast steps the
+    // border until it is a 3:1 LINE, and as a fill under the label that left 2.7:1.
+    "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-active focus-visible:ring-[var(--brand)]",
+  secondary: `border border-[var(--border)] bg-transparent text-[var(--text-primary)] ${HOVER_INK} focus-visible:ring-[var(--brand)]`,
+  ghost: `bg-transparent text-[var(--text-primary)] ${HOVER_INK} focus-visible:ring-[var(--brand)]`,
   danger:
     "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus-visible:ring-[var(--danger-border-strong)]",
   brand:
@@ -158,6 +173,10 @@ const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
 // restates every colour the variant sets (border, fill, text, hover, ring) so none of
 // the neutral ones survives the merge.
 const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
+  // Not boxed, but its hover is a fill: the danger wash under the danger text, as
+  // IconButton's danger tone (0.33). On B′'s translucent ink `--danger` fell to 4.2:1
+  // over a light page.
+  ghost: "hover:bg-[var(--danger-bg)]",
   secondary:
     "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:ring-[var(--danger-border-strong)]",
   primary:
@@ -268,9 +287,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * This button COMMITS — it saves, creates, deletes. Under a locked
    * {@link WriteLockProvider} it is disabled the `disabledReason` way, with the lock's
    * reason (which wins over a `disabledReason` of its own). No provider, or an
-   * unlocked one: no effect. See {@link WriteLockProvider}.
+   * unlocked one: no effect. See {@link WriteLockProvider}; a {@link CommitScope} since
+   * 0.33 (`COMMIT_EXCEPT_BILLING`: every lock but a lapsed plan's).
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * Busy — the save is in flight: a spinner, `aria-busy`, and no second submit.
    *
@@ -727,8 +747,10 @@ const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> 
   },
   warning: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus-visible:ring-[var(--warning-border)]",
-    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus-visible:ring-[var(--warning-border)]",
+      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus-visible:ring-warning-strong",
+    // The ring is warning's loud line (0.33, k27): `--warning-border`, amber-300, was a
+    // focus ring at 1.1:1 on the light surfaces.
+    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus-visible:ring-warning-strong",
   },
   info: {
     quiet:
@@ -751,8 +773,8 @@ const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> 
   },
 };
 
-const ICON_BUTTON_MUTED =
-  "text-[var(--text-placeholder)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]";
+// The translucent ink on hover, as Button's secondary/ghost (B′, see HOVER_INK).
+const ICON_BUTTON_MUTED = `text-[var(--text-placeholder)] ${HOVER_INK} hover:text-[var(--text-primary)]`;
 
 /** Which tones sit quiet at rest when `quiet` is left out. */
 const QUIET_BY_DEFAULT: Record<ColouredTone, boolean> = {
@@ -796,9 +818,11 @@ const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-[var(--text-placeho
 
 // `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
 // "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
-// beside them. After the tone, so a pressed `muted` button is brand, not grey.
+// beside them. After the tone, so a pressed `muted` button is brand, not grey. On hover
+// the glyph turns brand-muted: `--brand` on `--brand-bg-hover` is 2.69–2.80 in four dark
+// presets, under an icon's 3:1 (colour-roles §12.12).
 const ICON_BUTTON_PRESSED =
-  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-[var(--brand)] disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
+  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
 
 // `variant="overlay"`: a round, translucent disc for a control that sits ON a photo
 // (keksdose's receipt-scan preview: close, rotate, retake over the camera image).
@@ -1076,8 +1100,8 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   disabledReasonDisplay?: DisabledReasonDisplay;
   /** This action COMMITS — {@link Button}'s `commit`: under a locked
    *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
-   *  reason. No effect without a lock. */
-  commit?: boolean;
+   *  reason. No effect without a lock. A {@link CommitScope} since 0.33. */
+  commit?: CommitScope;
   /** The `<button>` element — a prop in React 19, as on {@link Button}. */
   ref?: Ref<HTMLButtonElement>;
   /** Only on the link form — see {@link IconButtonLinkProps}. */
@@ -1584,8 +1608,9 @@ export const FIELD_WRITABLE_LOOK =
 // Extra top padding leaves room for a label that floats INSIDE the field (the
 // "filled" pattern) — the label sits in the top strip, the value below it. Used by
 // every labelled field (native + custom-dropdown triggers). twMerge lets pt/pb win
-// over FIELD_BASE's py-2.
-export const FIELD_FLOATING_PAD = "pt-4 pb-1";
+// over FIELD_BASE's py-2. At Large the label stands above the field (0.33, §10.17,
+// LABEL_ABOVE_AT_LARGE), so the strip goes and the field is FIELD_BASE's `py-2` again.
+export const FIELD_FLOATING_PAD = "pt-4 pb-1 large:py-2";
 
 // Error/required highlight for a field that is missing a value — a `--danger`
 // border and matching focus ring so the control itself shows what's wrong, not just
@@ -1705,12 +1730,22 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
 // Animated label that starts centred (as a placeholder) in an empty field and
 // floats up INSIDE the top strip on focus or once the field has a value. Sits on
 // the field's own surface, so no background chip and nothing to mismatch the card.
+//
+// At Large it is a static label ABOVE the field instead (0.33, §10.17): in flow, so it
+// wraps; always in its floated look, since there is no strip to float into and no
+// placeholder to stand in for; no transition, since it never moves.
+const LABEL_FLOATED_AT_LARGE =
+  "large:text-caption large:leading-tight large:text-secondary large:transition-none";
+
 export const FLOATING_LABEL_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
-  "max-w-[calc(100%-1.5rem)] truncate",
+  "max-w-[calc(100%-1.5rem)] truncate-until-large",
   "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
   "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
+  LABEL_ABOVE_AT_LARGE,
+  "large:block",
+  LABEL_FLOATED_AT_LARGE,
 );
 
 // The animated label again, as a ROW that the label and its "?" share — same
@@ -1723,14 +1758,21 @@ export const FLOATING_LABEL_CLASS = cn(
 // because the controls that carry an animated label are the ones with something
 // at the end edge of the field — NumberInput's calculator is the case this was
 // written for. The label truncates a little sooner; the alternative was the "?"
-// sitting on top of a button (steering-design feedback #48).
+// sitting on top of a button (steering-design feedback #48). At Large the row stands
+// above the field, as the label alone does, and nothing at the end edge is under it.
 const FLOATING_ROW_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 flex items-center gap-1 transition-all",
   "max-w-[calc(100%-3rem)] text-sm text-[var(--text-placeholder)]",
   "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
   "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
   "peer-disabled:opacity-50",
+  LABEL_ABOVE_AT_LARGE,
+  LABEL_FLOATED_AT_LARGE,
 );
+
+/** The static label's row with its "?" at the field's end, in the top strip — and at
+ *  Large above the field (LABEL_ABOVE_AT_LARGE). */
+const STATIC_ROW_CLASS = cn("pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1", LABEL_ABOVE_AT_LARGE);
 
 /**
  * The one place that assembles a labelled field: a `relative` wrapper around the
@@ -1775,16 +1817,22 @@ export function FloatingField({
 }: FloatingFieldProps) {
   const withHint = hint !== undefined && !srOnlyLabel;
   const atEnd = withHint && staticLabel;
+  // A label drawn over the field: at Large it stands above it instead (0.33, §10.17),
+  // in the first row of this box (LABEL_ABOVE_BOX), though it FOLLOWS the control in
+  // the DOM — `peer-*` reads the input before it.
+  const above = label !== undefined && !srOnlyLabel;
   const labelEl = label !== undefined && (
     <label
       htmlFor={htmlFor}
+      // In the first row at Large, out of LABEL_ABOVE_BOX's rule for the field's parts.
+      data-field-label={above && !withHint ? "" : undefined}
       className={
         srOnlyLabel
           ? "sr-only"
           : atEnd
-            ? cn("pointer-events-none min-w-0 truncate", STATIC_LABEL_TYPE)
+            ? cn("pointer-events-none min-w-0 truncate-until-large", STATIC_LABEL_TYPE)
             : withHint
-              ? "pointer-events-none min-w-0 truncate"
+              ? "pointer-events-none min-w-0 truncate-until-large"
               : staticLabel
                 ? FLOATING_LABEL_STATIC
                 : FLOATING_LABEL_CLASS
@@ -1797,8 +1845,9 @@ export function FloatingField({
     // `relative` is the whole contract of this wrapper — the floating label and every
     // control that hangs off it (a reveal toggle, a chevron) are positioned against
     // this box — so it is merged through `cn` after the spread rather than left where
-    // a caller's stray `className` or `style` could unset it.
-    <div {...rest} className={cn("relative", className)}>
+    // a caller's stray `className` or `style` could unset it. At Large, with a label
+    // above, a grid: the label's row over the field's, the field's parts in the latter.
+    <div {...rest} className={cn("relative", above && LABEL_ABOVE_BOX, className)}>
       {children}
       {withHint ? (
         // Static: `inset-x-3` rather than `start-3`, so a long label truncates at
@@ -1806,13 +1855,7 @@ export function FloatingField({
         // Animated: the row floats with the label and is only as wide as it needs
         // to be. Either way the hint keeps its width (`shrink-0`) and the label
         // is the one that gives way.
-        <div
-          className={
-            atEnd
-              ? "pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1"
-              : FLOATING_ROW_CLASS
-          }
-        >
+        <div data-field-label="" className={atEnd ? STATIC_ROW_CLASS : FLOATING_ROW_CLASS}>
           {labelEl}
           <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
         </div>
@@ -2460,9 +2503,10 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   /**
    * This select COMMITS — choosing saves. Under a locked {@link WriteLockProvider} it is
    * locked the `disabledReason` way with the lock's reason (which wins over its own).
-   * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
+   * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3; a
+   * {@link CommitScope} since 0.33.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 // The compact select: the field's colours, a toolbar button's height. `py-0` and a
@@ -2668,7 +2712,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
               // The floated label takes the top strip of a list box too, so its first
               // row starts under the label rather than behind it. No bottom padding — see
               // `dress`.
-              listBox ? "pt-5 pb-0" : FIELD_FLOATING_PAD,
+              // At Large the label stands above the field (§10.17): no strip.
+              listBox ? "pt-5 pb-0 large:pt-2" : FIELD_FLOATING_PAD,
               "peer",
               dress,
               locked && FIELD_LOCKED,
@@ -2801,7 +2846,9 @@ function labelEdge(scrollTop: number, lineHeight: number): { height: number; sol
  */
 const TEXTAREA_LABEL_STRIP = cn(
   "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[calc(0.375rem-1px)] bg-[var(--bg-surface)]",
-  "peer-focus:block peer-[:not(:placeholder-shown)]:block",
+  // Never at Large (0.33, §10.17): the label stands above the field, so there is no
+  // strip to keep scrolled text out of, and a layer here would hide the first line.
+  "not-large:peer-focus:block not-large:peer-[:not(:placeholder-shown)]:block",
   "peer-disabled:bg-[var(--bg-surface-2)] peer-[[readonly]]:bg-[var(--bg-surface-2)]",
   TEXTAREA_LABEL_EDGE,
 );
@@ -3040,14 +3087,16 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   tone?: CardTone;
   /**
    * How loud the `tone` frame is. `"strong"`: a 2px border in the tone's strong
-   * colour — `--danger-border-strong` for `danger`, the tone's own text colour
-   * (`--warning`, `--info`, `--success`) for the others, which have no
-   * `-border-strong` token of their own. For the one tile on a page that guards
-   * something destructive or security-relevant: keksdose's password / delete-account
-   * tile (shared/components/password-danger-card.tsx) wrote `toneFrameClass(tone)` over
-   * the Card by hand for the 2px rule, and `p-[15px]` under it so the content did not
-   * move. Here the extra pixel comes off the padding the same way (`padding` or the
-   * variant's own), so a strong card's content sits exactly where a soft one's does.
+   * colour — `--danger-border-strong` for `danger`, `--warning-border-strong` for
+   * `warning` (0.33: amber-600 in dark, where `--warning` stood 13:1 off the card and
+   * shouted; docs/colour-roles-harmonization.md §5.2), the tone's own text colour
+   * (`--info`, `--success`) for the two with no `-border-strong` token of their own.
+   * For the one tile on a page that guards something destructive or security-relevant:
+   * keksdose's password / delete-account tile (shared/components/password-danger-card.tsx)
+   * wrote `toneFrameClass(tone)` over the Card by hand for the 2px rule, and `p-[15px]`
+   * under it so the content did not move. Here the extra pixel comes off the padding the
+   * same way (`padding` or the variant's own), so a strong card's content sits exactly
+   * where a soft one's does.
    *
    * Default `"soft"`: the 1px `-border` it has always been. No effect without `tone`,
    * nor on `inset`, which has no border to make louder (its tone is a fill).
@@ -3135,7 +3184,7 @@ const CARD_TONE_WASH: Record<CardTone, string> = {
 };
 
 const CARD_TONES_STRONG: Record<CardTone, string> = {
-  warning: "border-2 border-[var(--warning)]",
+  warning: "border-2 border-warning-strong",
   danger: "border-2 border-[var(--danger-border-strong)]",
   info: "border-2 border-[var(--info)]",
   success: "border-2 border-[var(--success)]",

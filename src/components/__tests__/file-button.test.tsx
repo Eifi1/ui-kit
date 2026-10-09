@@ -401,6 +401,18 @@ describe("FileButton showFileName (keksdose P8)", () => {
     fireEvent.mouseEnter(name.firstElementChild!);
     expect(screen.getByRole("tooltip")).toHaveTextContent("a.pdf, b.pdf");
   });
+
+  it("ends the name in \"…\" at Normal only, and wraps it from Large up (0.33, §10.17)", () => {
+    const { container } = render(
+      <FileButton showFileName onFiles={() => {}}>
+        Attach
+      </FileButton>,
+    );
+    pick(fileInput(container), pdf("a lease with a long name for the archive.pdf"));
+    const own = screen.getByText("a lease with a long name for the archive.pdf").className.split(" ");
+    expect(own).toContain("truncate-until-large");
+    expect(own).not.toContain("truncate");
+  });
 });
 
 /** keksdose K3: a picker that commits (uploads on pick) takes the write lock. */

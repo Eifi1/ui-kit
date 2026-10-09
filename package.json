@@ -1,6 +1,6 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.32.2",
+  "version": "0.33.0",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
   "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives. Re-checked when `flag-icons` left `dependencies` and tsup started emitting a `\"use client\"` banner: neither touches this. The flag stylesheet was never imported from JS in the first place (that was the finding), and a directive prologue is a string literal every bundler lifts out before it decides whether a module is inert.",
@@ -48,6 +48,10 @@
       "types": "./dist/table-text.d.ts",
       "import": "./dist/table-text.js"
     },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
     "./rhf": {
       "types": "./dist/rhf.d.ts",
       "import": "./dist/rhf.js"
@@ -85,7 +89,7 @@
     "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs",
+    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs && node scripts/build-pay-page.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
     "dev": "tsup --watch",
     "dev:showcase": "vite --config showcase/vite.config.ts",
@@ -170,6 +174,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "_bin": "`eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
+  "bin": {
+    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

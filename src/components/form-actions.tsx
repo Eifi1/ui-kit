@@ -8,6 +8,7 @@ import { useLargeText } from "../hooks/use-large-text";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
 import { useWriteLock } from "./write-lock";
+import type { CommitScope } from "./write-lock";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
 export interface FormActionsLabels {
@@ -197,8 +198,11 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * keksdose wrote `submitDisabled={lock.locked || …}` and
    * `submitDisabledReason={lock.locked ? lock.reason : undefined}` at each form; this is
    * that pair, read from the provider.
+   *
+   * 0.33: a {@link CommitScope} — `COMMIT_EXCEPT_BILLING` for a form a lapsed plan still
+   * allows (the account's own settings, docs/billing-harmonization.md §12.36).
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** The save button's variant. Default `brand`; `danger` for a save that destroys
    *  (kastlan's `destructive` flag on its own FormActions). */
   submitVariant?: ButtonVariant;
@@ -392,7 +396,9 @@ export function FormActions({
   // column stretches but which keeps its control at the control's own width.
   const full = stacked ? "w-full" : undefined;
   const labels = useKitLabels("form", DEFAULT_FORM_ACTIONS_LABELS);
-  const lock = useWriteLock();
+  // The lock as Save sees it: with its scope, so a billing lock leaves a
+  // `COMMIT_EXCEPT_BILLING` form's shortcut live too.
+  const lock = useWriteLock(commit);
   const rootRef = useRef<HTMLDivElement>(null);
   const saveRef = useRef<HTMLButtonElement | null>(null);
   // The caller's own `submitProps.ref` still gets the element.
@@ -422,7 +428,7 @@ export function FormActions({
   }, [pending]);
   // Read by the shortcut's listener at the moment of the key press, so the listener
   // itself is attached once and never sees a stale `pending`.
-  const canSave = !pending && !submitDisabled && !(commit && lock.locked);
+  const canSave = !pending && !submitDisabled && !lock.locked;
   const canSaveRef = useRef(canSave);
   useEffect(() => {
     canSaveRef.current = canSave;
@@ -535,8 +541,9 @@ export function FormActions({
           disabled={pending || submitDisabled}
           disabledReason={pending ? undefined : submitDisabledReason}
           // Not while pending: the save already left, and the lock's look over the
-          // spinner would say it had not.
-          commit={commit && !pending}
+          // spinner would say it had not. A ternary, not `commit && !pending`, which
+          // turned a `{ except }` scope into `true` (§12.36).
+          commit={pending ? false : commit}
           aria-busy={pending || undefined}
           className={cn(submitProps?.className, full)}
         >

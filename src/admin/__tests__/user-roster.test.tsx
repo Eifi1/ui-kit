@@ -272,4 +272,13 @@ describe("UserIdentityCell", () => {
     rerender(<UserIdentityCell email="ada@example.com" avatar={false} />);
     expect(screen.getAllByText("ada@example.com")).toHaveLength(1);
   });
+
+  it("ends the name and the address in \"…\" at Normal only: truncate-until-large (0.33, §10.17)", () => {
+    render(<UserIdentityCell name="Ada Example" email="ada@example.com" />);
+    for (const text of ["Ada Example", "ada@example.com"]) {
+      const own = screen.getByText(text).className.split(" ");
+      expect(own, text).toContain("truncate-until-large");
+      expect(own, text).not.toContain("truncate");
+    }
+  });
 });

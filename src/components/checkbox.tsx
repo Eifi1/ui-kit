@@ -12,6 +12,7 @@ import {
   type DisabledReasonDisplay,
 } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
+import type { CommitScope } from "./write-lock";
 
 /**
  * A checkbox that is still `<input type="checkbox">`.
@@ -134,7 +135,7 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
    * locked the `disabledReason` way with the lock's reason (which wins over its own).
    * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /**

@@ -73,7 +73,9 @@ describe("ActionCard — link card and icon tone", () => {
   it("tints the icon with iconTone and takes iconClassName", () => {
     render(<ActionCard title="Go" icon={KeyRound} iconTone="brand" iconClassName="size-6" />);
     const icon = screen.getByRole("button").querySelector("svg")!;
-    expect(icon.getAttribute("class")).toContain("text-[var(--brand)]");
+    // The brand as text, `--brand-muted` (0.33): `--brand` is solved to 3:1 only.
+    expect(icon.getAttribute("class")).toContain("text-brand-muted");
+    expect(icon.getAttribute("class")).not.toContain("text-[var(--brand)]");
     expect(icon.getAttribute("class")).toContain("size-6");
     expect(icon.getAttribute("class")).not.toContain("text-[var(--text-secondary)]");
   });

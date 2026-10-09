@@ -128,15 +128,16 @@ describe("8: one phone answer for DataTable, TranslationReviewPanel and usePhone
 });
 
 describe("16: labels wrap at Large instead of truncating", () => {
-  // `break-words`, not `anywhere`: in a table cell `anywhere` let an auto-sized column
-  // squeeze the label to a letter per line.
-  const WRAP = ["large:whitespace-normal", "large:break-words"];
+  // 0.33 (§10.17): StatusDot's label, Chip's label and InlineEditField's value take the
+  // kit's one utility for "truncate at Normal, wrap at Large" (tokens.css), which breaks
+  // anywhere. The 0.32.1 copies (`large:whitespace-normal large:break-words`) are gone.
+  const UNTIL_LARGE = "truncate-until-large";
+  const OLD_WRAP = ["truncate", "large:whitespace-normal", "large:break-words"];
 
   it("StatusDot: the label keeps `truncate` at Normal and wraps at Large", () => {
     render(<StatusDot tone="success" label="Zur Prüfung zurücklegen" />);
     const label = screen.getByText("Zur Prüfung zurücklegen");
-    expect(classes(label)).toEqual(expect.arrayContaining(["min-w-0", "truncate", ...WRAP]));
-    expect(classes(label)).not.toContain("large:[overflow-wrap:anywhere]");
+    expect(classes(label)).toEqual(expect.arrayContaining(["min-w-0", UNTIL_LARGE]));
   });
 
   it("StatusDot: the dot sits on the label's first line at Large, at every size", () => {
@@ -157,11 +158,12 @@ describe("16: labels wrap at Large instead of truncating", () => {
     expect((container.firstElementChild!.getAttribute("class") ?? "").includes("large:mt-")).toBe(false);
   });
 
-  it("Chip: a text label keeps `truncate` at Normal and wraps at Large, at every size", () => {
+  it("Chip: a text label truncates at Normal and wraps at Large, at every size", () => {
     for (const size of ["xs", "sm", "md", "lg"] as const) {
       const { unmount } = render(<Chip size={size}>Zur Prüfung zurücklegen</Chip>);
       const label = screen.getByText("Zur Prüfung zurücklegen");
-      expect(classes(label)).toEqual(expect.arrayContaining(["truncate", ...WRAP]));
+      expect(classes(label)).toEqual(expect.arrayContaining(["min-w-0", UNTIL_LARGE]));
+      for (const old of OLD_WRAP) expect(classes(label)).not.toContain(old);
       // No fixed height anywhere up the pill, so it grows with its lines.
       for (let el: Element | null = label; el && el !== document.body; el = el.parentElement) {
         expect(classes(el).filter((c) => /^h-/.test(c))).toEqual([]);
@@ -177,26 +179,26 @@ describe("16: labels wrap at Large instead of truncating", () => {
         <Chip onRemove={() => {}}>Ada Example</Chip>
       </div>,
     );
-    expect(classes(screen.getByText("Zur Prüfung zurücklegen"))).toEqual(expect.arrayContaining(WRAP));
-    expect(classes(screen.getByText("Ada Example"))).toEqual(expect.arrayContaining(WRAP));
+    expect(classes(screen.getByText("Zur Prüfung zurücklegen"))).toContain(UNTIL_LARGE);
+    expect(classes(screen.getByText("Ada Example"))).toContain(UNTIL_LARGE);
   });
 
   it("InlineEditField: the display button, the locked button and the read-only text wrap at Large", () => {
     const value = "ada.example@example.org";
     const { unmount } = render(<InlineEditField value={value} onCommit={() => {}} label="E-mail" />);
     expect(classes(screen.getByRole("button", { name: value }))).toEqual(
-      expect.arrayContaining(["block", "w-full", "truncate", ...WRAP]),
+      expect.arrayContaining(["block", "w-full", UNTIL_LARGE]),
     );
     unmount();
 
     const locked = render(
       <InlineEditField value={value} onCommit={() => {}} label="E-mail" disabledReason="The period is closed." />,
     );
-    expect(classes(screen.getByRole("button", { name: value }))).toEqual(expect.arrayContaining(["truncate", ...WRAP]));
+    expect(classes(screen.getByRole("button", { name: value }))).toContain(UNTIL_LARGE);
     locked.unmount();
 
     render(<InlineEditField value={value} onCommit={() => {}} label="E-mail" readOnly />);
-    expect(classes(screen.getByText(value))).toEqual(expect.arrayContaining(["truncate", ...WRAP]));
+    expect(classes(screen.getByText(value))).toContain(UNTIL_LARGE);
   });
 });
 

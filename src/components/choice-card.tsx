@@ -247,13 +247,15 @@ const META_TONE: Record<ActionCardMetaTone, string> = {
 };
 
 /** The colour of {@link ActionCardProps.icon}. `default` is the secondary text colour
- *  the icon has always had; `brand` tints it (keksdose's privacy enrolment). */
+ *  the icon has always had; `brand` tints it (keksdose's privacy enrolment) with the
+ *  brand as text, `--brand-muted` (0.33, docs/colour-roles-harmonization.md §5.5):
+ *  `--brand` read 3.03:1 on the card's hover in the derived dark presets. */
 export type ActionCardIconTone = "default" | "muted" | "brand" | "warning" | "danger" | "info" | "success";
 
 const ICON_TONE: Record<ActionCardIconTone, string> = {
   default: "text-[var(--text-secondary)]",
   ...META_TONE,
-  brand: "text-[var(--brand)]",
+  brand: "text-brand-muted",
 };
 
 /** What {@link ActionCardProps.renderLink} (and the provider's `linkComponent`) is

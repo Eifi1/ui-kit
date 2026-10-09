@@ -12,7 +12,7 @@ import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react
 import { Button, IconButton, Spinner } from "../components/ui";
 import type { ButtonSize, ButtonVariant } from "../components/ui";
 import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-button";
-import { useCommitReason } from "../components/write-lock";
+import { useCommitReason, type CommitScope } from "../components/write-lock";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 
@@ -231,6 +231,10 @@ interface FeedbackAttachmentFieldBaseProps {
  * 592px, the page 614px wide). keksdose passed `className="min-w-0 max-w-full"` at both
  * its callers to stop it; here once, for every host. In normal flow — a dialog, a note
  * editor — both are no-ops.
+ *
+ * The names and sizes under it are `truncate-until-large` (0.33, docs/text-size-harmonization.md
+ * §10.17): "…" at Normal, and from Large up they wrap, breaking a long file name
+ * anywhere, so the bound above still holds and nothing is cut.
  */
 const FIELD_ROOT = "relative min-w-0 max-w-full";
 
@@ -334,7 +338,7 @@ export interface FeedbackAttachmentFieldRefsProps extends FeedbackAttachmentFiel
    * with the lock's reason, which wins over one of its own. No provider, or an unlocked
    * one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * Why no file can be added or removed — the write lock's sentence, a quota, a thread
    * closed to replies. Unlike `disabled`, it SAYS so, the kit's commit-control way: the
@@ -478,7 +482,7 @@ function SingleField({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm text-[var(--text-secondary)]">{value.name}</div>
+            <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{value.name}</div>
             <div className="text-xs text-[var(--text-muted)]">
               {fileText.size(value.size)}
             </div>
@@ -662,8 +666,8 @@ function MultipleField({
             >
               <ChipPreview file={chip.file} screenshot={chip.screenshot} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-[var(--text-secondary)]">{chip.name}</div>
-                <div className="truncate text-xs text-[var(--text-muted)]">
+                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{chip.name}</div>
+                <div className="truncate-until-large text-xs text-[var(--text-muted)]">
                   {/* The screenshot's file name moves down here: still there for the
                       reporter who wants to know what will be sent, not its title. */}
                   {chip.screenshot ? `${chip.file.name} · ${fileText.size(chip.file.size)}` : fileText.size(chip.file.size)}
@@ -899,9 +903,9 @@ function RefsField({
             >
               <RefGlyph type={ref.type} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-[var(--text-secondary)]">{ref.name}</div>
+                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{ref.name}</div>
                 {ref.size !== undefined && (
-                  <div className="truncate text-xs text-[var(--text-muted)]">{fileText.size(ref.size)}</div>
+                  <div className="truncate-until-large text-xs text-[var(--text-muted)]">{fileText.size(ref.size)}</div>
                 )}
               </div>
               <RemoveButton
@@ -923,8 +927,8 @@ function RefsField({
                 <Spinner label={null} className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-[var(--text-secondary)]">{upload.file.name}</div>
-                <div className="truncate text-xs text-[var(--text-muted)]">{uploadingLabel}</div>
+                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{upload.file.name}</div>
+                <div className="truncate-until-large text-xs text-[var(--text-muted)]">{uploadingLabel}</div>
               </div>
             </li>
           ))}

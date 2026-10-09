@@ -209,7 +209,8 @@ describe("Date and month fields at Large (0.32.1)", () => {
       <DateRangePicker label="Statement period" from="2026-09-01" to="2026-09-30" onChange={() => {}} locale="en-GB" />,
     );
     const value = screen.getByText(/2026.*2026/);
-    expect(classes(value)).toEqual(expect.arrayContaining(["truncate", "large:whitespace-normal", "large:break-words"]));
+    // 0.33 (§10.17): the kit's one utility for "truncate at Normal, wrap at Large".
+    expect(classes(value)).toContain("truncate-until-large");
   });
 
   it("the ‹ date › row stacks on a phone at Large: the field on its own line, the buttons under it", () => {

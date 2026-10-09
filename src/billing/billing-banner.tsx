@@ -48,7 +48,9 @@ interface BillingBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "
    */
   actionHref?: string;
   /** What the action does — the app's portal call (`POST /billing/portal`, then off to
-   *  its `url`). The kit sends no request. */
+   *  its `url`): for `payment-failed` with `{target: "payment_method"}`, the portal's
+   *  page for the card (§14.5); for `processing`, `useCheckoutProcessing`'s
+   *  `checkAgain`. The kit sends no request. */
   onAction?: () => void;
   /**
    * Over the kind's action words: "Choose a plan" (trial, grant, plan ended), "Update

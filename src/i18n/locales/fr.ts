@@ -1516,14 +1516,53 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // Both figures arrive formatted; "sur", as `characterCount.count`.
       usage: (used, limit) => `${used} sur ${limit}`,
       contactSubject: (dimension) => `Limite de la formule\u00a0: ${dimension}`,
+      // The toast's figure line (§14.11) and the plan change's over-limit lines (§14.12):
+      // a key of its own for the space before the colon.
+      limitUsageLine: (dimension, used, limit) => `${dimension}\u00a0: ${used} sur ${limit}`,
       manage: "Paiement et factures",
       cancel: "Résilier l’abonnement",
+      // §14.5: no customer at the provider yet, so no portal to open.
+      notAtProvider:
+        "Rien à gérer pour l’instant. Les paiements et les factures apparaîtront ici dès que vous aurez une formule payante.",
+      // §14.4: the pay page's lines, built into its bundle.
+      payOpening: "Ouverture du paiement sécurisé…",
+      payNothing: "Il n’y a rien à payer ici. Pour choisir une formule, revenez à l’application.",
+      payFailed: "Le paiement n’a pas pu s’ouvrir. Veuillez revenir en arrière et réessayer dans un instant.",
+      payBack: "Le paiement a été fermé. Vous pouvez revenir en arrière, ou recharger cette page pour le rouvrir.",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
       // "Abandonner", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Abandonner les modifications en attente",
       notConfigured: "Les paiements ne sont pas encore configurés. Veuillez réessayer plus tard.",
       disabled: "Les abonnements ne sont pas disponibles ici.",
+      // §14.2: server-kit 0.7's refusals. "Paiement et factures", as `manage`.
+      providerUnavailable:
+        "Le prestataire de paiement est injoignable pour le moment. Veuillez réessayer dans un instant.",
+      alreadySubscribed:
+        "Vous avez déjà un abonnement. Pour changer de formule, allez dans «\u202fPaiement et factures\u202f».",
+      planNotSold:
+        "Cette formule n’est pas proposée pour cette période de facturation ou cette devise. Veuillez en choisir une autre.",
+    },
+    // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "formule"
+    // as in `billing`. "Vous".
+    planChange: {
+      column: "Formule",
+      title: "Changer de formule",
+      confirm: "Changer de formule",
+      plan: "Formule",
+      current: (plan) => `Formule actuelle\u00a0: ${plan}`,
+      keepsItems: "Une formule plus petite bloque seulement les nouvelles créations\u202f; rien n’est supprimé.",
+      until: "Gratuit jusqu’au",
+      untilHint: "Laissez vide pour aucune fin. Une bêta en cours garde sa propre fin.",
+      needsChange: "Choisissez une autre formule ou une date de fin.",
+      changed: (from, to) => `Formule changée de ${from} à ${to}.`,
+      set: (to) => `Formule définie sur ${to}.`,
+      keptBeta: "La bêta garde sa fin\u202f; seule la formule a changé.",
+      untilDone: (date) => `Gratuit jusqu’au ${date}.`,
+      overLimit:
+        "Au-delà de la limite de la nouvelle formule\u00a0: rien n’est supprimé, les nouveaux éléments sont bloqués.",
+      // Figures formatted; "sur", as `billing.usage`.
+      usageOf: (used, limit, dimension) => `${used} sur ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Apparence" group. The steps agree with "taille", the modes with "contraste".

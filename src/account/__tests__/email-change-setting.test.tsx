@@ -233,3 +233,66 @@ describe("EmailChangeSetting — confirmed", () => {
     expect(screen.getByRole("button", { name: "Adresse ändern" })).toBeInTheDocument();
   });
 });
+
+describe("EmailChangeSetting under a write lock (0.33, billing §3.3, §12.36)", () => {
+  const PLAN = "Your plan has ended.";
+
+  it("a lapsed plan's lock leaves the request, the resend and the cancel live", async () => {
+    const onRequest = vi.fn(async () => undefined);
+    const onResend = vi.fn(async () => undefined);
+    const onCancel = vi.fn(async () => undefined);
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <WriteLockProvider locked kind="billing" reason={PLAN}>
+        <EmailChangeSetting currentEmail="ada@example.com" onRequest={onRequest} />
+      </WriteLockProvider>,
+    );
+    await request(user);
+    expect(onRequest).toHaveBeenCalledTimes(1);
+    rerender(
+      <WriteLockProvider locked kind="billing" reason={PLAN}>
+        <EmailChangeSetting
+          currentEmail="ada@example.com"
+          pendingEmail="ada.new@example.com"
+          onRequest={onRequest}
+          onResend={onResend}
+          onCancel={onCancel}
+        />
+      </WriteLockProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Send the link again" }));
+    expect(onResend).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "Cancel the change" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("a demo's lock beside it holds the resend and the cancel, with the demo's reason", async () => {
+    const onResend = vi.fn();
+    const onCancel = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <WriteLockProvider
+        locked
+        holds={[
+          { kind: "demo", reason: "Read-only demo" },
+          { kind: "billing", reason: PLAN },
+        ]}
+      >
+        <EmailChangeSetting
+          currentEmail="ada@example.com"
+          pendingEmail="ada.new@example.com"
+          onRequest={vi.fn()}
+          onResend={onResend}
+          onCancel={onCancel}
+        />
+      </WriteLockProvider>,
+    );
+    for (const name of ["Send the link again", "Cancel the change"]) {
+      const button = screen.getByRole("button", { name });
+      expect(button).toHaveAccessibleDescription("Read-only demo");
+      await user.click(button);
+    }
+    expect(onResend).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+});

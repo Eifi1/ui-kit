@@ -16,6 +16,7 @@ import { Caption, SectionLabel } from "./text";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
 import { Button, Textarea } from "./ui";
+import { COMMIT_EXCEPT_BILLING } from "./write-lock";
 
 /** A callback may return a promise: resolve and the editor closes, reject and it stays
  *  open with the error. */
@@ -84,6 +85,10 @@ function Then({ label, text }: { label: string; text: string }) {
  * Every action waits for its callback: the buttons hold while the promise is out, a
  * resolution closes the editor through `onClose`, and a rejection keeps it open with what
  * was typed and the error under the buttons.
+ *
+ * Each verdict is a `commit` exempt from billing (`COMMIT_EXCEPT_BILLING`, 0.33): a review
+ * is an admin route, which a lapsed plan never locks (docs/billing-harmonization.md
+ * §12.13, §12.36); a demo's lock still holds it.
  */
 export function TranslationReviewEditor({
   row,
@@ -234,7 +239,7 @@ export function TranslationReviewEditor({
             {!missing && (
               <Button
                 variant="primary"
-                commit
+                commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "approve"}
                 disabled={busy !== null}
                 onClick={() => save("APPROVED")}
@@ -244,7 +249,7 @@ export function TranslationReviewEditor({
             )}
             <Button
               variant={missing ? "primary" : "danger"}
-              commit
+              commit={COMMIT_EXCEPT_BILLING}
               pending={busy === "flag"}
               disabled={busy !== null || !canFlag}
               onClick={() => save("NEEDS_CHANGE")}
@@ -254,7 +259,7 @@ export function TranslationReviewEditor({
             {review && onClear && (
               <Button
                 variant="ghost"
-                commit
+                commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "clear"}
                 disabled={busy !== null}
                 onClick={() => void run("clear", () => onClear({ locale: row.locale, key: row.key }))}

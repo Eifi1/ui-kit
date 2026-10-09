@@ -5,7 +5,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -444,7 +444,7 @@ export interface FileButtonProps
    * one: no effect. A picker that only fills a form the user saves later is not a
    * commit, and is left live — the form's Save carries the lock.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /** A reason that is really there — `null`, `false` and `""` are no reason. */
@@ -612,7 +612,8 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   }
   return (
     // One inline row, so the name sits beside the button wherever the button sits; the
-    // name truncates rather than pushing the row wider, and the full list is in the
+    // name truncates rather than pushing the row wider (at Normal: from Large up it wraps,
+    // `truncate-until-large`, text size §10.17), and the full list is in the
     // kit's own Tooltip — not a native `title` (0.16.0 shipped one: the one-tooltip rule
     // since keksdose dev#523, and a title never opens on touch). Lazy, so the closed
     // bubble adds nothing to the read-out's text.
@@ -628,7 +629,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
         className="flex min-w-0 text-sm text-[var(--text-secondary)]"
       >
         <Tooltip label={picked.map((f) => f.name).join(", ")} lazy className="min-w-0">
-          <span className="block truncate">{pickedText}</span>
+          <span className="block truncate-until-large">{pickedText}</span>
         </Tooltip>
       </span>
       {picker.element}

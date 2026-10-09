@@ -80,9 +80,12 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
   it("shows only once the label has floated — an empty, unfocused field is as before", () => {
     render(<Textarea label="Notes" />);
     const c = classes(strip()!);
-    // `hidden` by default; shown on exactly the two conditions that float the label.
+    // `hidden` by default; shown on exactly the two conditions that float the label —
+    // and never at Large, where the label stands above the field (0.33, §10.17).
     expect(c).toContain("hidden");
-    expect(c).toEqual(expect.arrayContaining(["peer-focus:block", "peer-[:not(:placeholder-shown)]:block"]));
+    expect(c).toEqual(
+      expect.arrayContaining(["not-large:peer-focus:block", "not-large:peer-[:not(:placeholder-shown)]:block"]),
+    );
     // The float trick still has its single-space placeholder to key off.
     expect(screen.getByRole("textbox", { name: "Notes" })).toHaveAttribute("placeholder", " ");
   });

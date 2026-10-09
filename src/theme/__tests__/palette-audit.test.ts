@@ -1,5 +1,41 @@
-import { auditChartRamp, auditPalette, derivePalette } from "../palette-derive";
+import { contrast } from "../color";
+import { auditChartRamp, auditPalette, derivePalette, type SemanticTokens } from "../palette-derive";
 import { DEFAULT_PRESET, DERIVED_PRESETS, IMPRINT_PRESET, PALETTES } from "../palette-presets";
+import { hexOf, over, resolveTokens } from "../../test/tokens-css";
+
+const TOKENS_CSS = Object.values(
+  import.meta.glob<string>("../../../tokens.css", { query: "?raw", import: "default", eager: true }),
+)[0];
+
+/**
+ * tokens.css's semantic layer as one preset paints it, in `auditPalette`'s shape — the
+ * stylesheet's literals, the dark washes composited on the card (0.33: the audit used to
+ * run without it, so no status literal was ever measured against a preset surface).
+ */
+function semanticOf(preset: (typeof PALETTES)[number], mode: "light" | "dark"): SemanticTokens {
+  const t = resolveTokens(TOKENS_CSS, preset[mode], mode, false);
+  const hex = (name: string) => {
+    const c = t.color(name);
+    return hexOf(c.a < 1 ? over(c, t.color("--bg-surface")) : c);
+  };
+  return {
+    danger: hex("--danger"),
+    dangerHover: hex("--danger-hover"),
+    dangerContrast: hex("--danger-contrast"),
+    dangerBorder: hex("--danger-border"),
+    dangerBorderStrong: hex("--danger-border-strong"),
+    dangerBg: hex("--danger-bg"),
+    warning: hex("--warning"),
+    warningBorder: hex("--warning-border"),
+    warningBg: hex("--warning-bg"),
+    info: hex("--info"),
+    infoBorder: hex("--info-border"),
+    infoBg: hex("--info-bg"),
+    success: hex("--success"),
+    successBorder: hex("--success-border"),
+    successBg: hex("--success-bg"),
+  };
+}
 
 /**
  * The presets were annotated with contrast ratios that nothing computed. `tokens.css`
@@ -43,7 +79,9 @@ describe("derived presets", () => {
 describe("every shipped preset survives its own audit", () => {
   it.each(PALETTES.map((p) => [p.id, p] as const))("%s passes on both themes", (id, preset) => {
     for (const mode of ["light", "dark"] as const) {
-      const report = auditPalette(preset[mode]);
+      // With tokens.css's semantic layer (0.33): the status colours as text on the
+      // preset's card and on a hovered row, on their washes, and danger's fill pair.
+      const report = auditPalette(preset[mode], semanticOf(preset, mode));
       const failures = report.failures.map(
         (f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`,
       );
@@ -83,7 +121,49 @@ describe("the categorical chart ramp", () => {
   });
 });
 
+describe("the 0.33 audit additions", () => {
+  it("measures the money neutral, a hovered row, the brand hover and the brand as text", () => {
+    const pairs = auditPalette(DEFAULT_PRESET.light).checks.map((c) => c.pair);
+    expect(pairs).toContain("moneyNeutral on bgPage");
+    expect(pairs).toContain("textMuted on bgHover");
+    expect(pairs).toContain("moneyExpense on bgHover");
+    expect(pairs).toContain("brandContrast on brandHover");
+    expect(pairs).toContain("brandMuted on brandBg");
+    expect(pairs).toContain("brandMuted on brandBgHover");
+  });
+
+  it("fails what it measures: the brand as text on its hovered chip (§12.11)", () => {
+    // Ink's anchor as given, before the deriver lifted it off the dark surfaces.
+    const raw = { ...DERIVED_PRESETS[0].dark, brand: "#2f5fd0" };
+    const failing = auditPalette(raw).failures.map((f) => f.pair);
+    expect(failing).toContain("brandMuted on brandBgHover");
+  });
+
+  it("fails what it measures: the derived dark presets' old brand hover", () => {
+    // 0.32's Ink dark lightened the hover toward its WHITE label: 4.07:1.
+    const old = { ...DERIVED_PRESETS[0].dark, brand: "#3364d5", brandHover: "#4477ea" };
+    const failing = auditPalette(old).failures.map((f) => f.pair);
+    expect(failing).toContain("brandContrast on brandHover");
+  });
+});
+
 describe("derivePalette", () => {
+  it("makes the light well the page itself, and keeps the dark one a step lighter (k26)", () => {
+    const light = derivePalette({ anchors: { brand: "#2f5fd0" }, mode: "light" }).tokens;
+    expect(light.bgSurface2).toBe(light.bgPage);
+    const dark = derivePalette({ anchors: { brand: "#2f5fd0" }, mode: "dark" }).tokens;
+    expect(dark.bgSurface2).not.toBe(dark.bgPage);
+  });
+
+  it("moves the brand hover away from the label: darker under white, in dark mode too", () => {
+    for (const mode of ["light", "dark"] as const) {
+      const t = derivePalette({ anchors: { brand: "#2f7a52" }, mode }).tokens;
+      expect(t.brandContrast).toBe("#ffffff");
+      // Darker: further from white, so the label's contrast grows on hover.
+      expect(contrast(t.brandContrast, t.brandHover)).toBeGreaterThan(contrast(t.brandContrast, t.brand));
+    }
+  });
+
   it("passes its own audit for brands all round the hue circle", () => {
     for (let h = 0; h < 360; h += 30) {
       const brand = `#${[0, 1, 2].map(() => "80").join("")}`; // placeholder replaced below
@@ -137,3 +217,4 @@ describe("derivePalette", () => {
     ).toBeTruthy();
   });
 });
+

@@ -1,32 +1,134 @@
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
+import type { StatusDotTone } from "./status-dot";
 import { useRowSwipe, type SwipeStage } from "../hooks/use-row-swipe";
 import { DEFAULT_SWIPEABLE_ROW_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 /**
- * One armed swipe action: what it does, and how the reveal panel presents it.
- *
- * The two background classes are the idle and armed states. Before the first
- * threshold is crossed the panel previews the nearest action in its IDLE colour, so
- * the user can see what a little more drag will do; crossing the threshold flips it to
- * `armedClassName`. Passing the same value for both simply removes that feedback.
+ * What a swipe action's panel means — the vocabulary Chip, ProgressBar and StatusDot
+ * already share, so a curtain can be "the colour of the status it produces" by name:
+ * brand, neutral, success, warning, danger, info, income, expense, and the categorical
+ * hues blue, indigo, purple, teal and orange.
  */
-export interface SwipeAction {
+export type SwipeTone = StatusDotTone;
+
+/**
+ * An app's own fill for a documented exception (0.33, docs/colour-roles-harmonization.md
+ * §12.6) — a curtain that must be exactly its status pill's palette fill, or two
+ * strengths of one tone. CSS colours or `var()`s, the same in both themes unless the app
+ * passes a variable it declares per theme in its own stylesheet. The kit cannot measure
+ * these, so the app's tests pin the pair.
+ */
+export interface SwipePaint {
+  /** The armed panel's fill; idle shows a 14 % wash of it on the card. */
+  fill: string;
+  /** The text and icon colour ON `fill`, armed. Idle text is the body ink. */
+  foreground: string;
+}
+
+interface SwipeActionBase {
   onCommit: () => void;
   label: string;
   /** Rendered inside the panel. Icons stay the consumer's choice — this package
    *  ships no opinion about which icon set an app uses. */
   icon?: ReactNode;
-  /** Background utility class while the action is previewed but not yet armed. The
-   *  panel's text is white unless this sets a text colour too — and a fill that turns
-   *  light in dark mode needs one: pass the fill's contrast token
-   *  (`bg-[var(--danger)] text-[var(--danger-contrast)]`; also `--brand-contrast`,
-   *  `--success-contrast`), as the kit's own swipes do since 0.26. */
-  className: string;
-  /** Background utility class once the drag has passed this action's threshold. */
-  armedClassName: string;
+}
+
+/**
+ * One armed swipe action: what it does, and how the reveal panel presents it.
+ *
+ * The panel has two states. Before the first threshold is crossed it previews the
+ * nearest action IDLE, so the user can see what a little more drag will do; crossing
+ * the threshold ARMS it — "let go and this fires".
+ *
+ * **`tone`** (0.33) is how the kit paints it: idle, the tone's soft wash under the
+ * tone's own text colour (`bg-danger-soft text-danger`, Chip's soft look, ≥ 4.5:1);
+ * armed, the tone's solid fill under its `-contrast` foreground (≥ 5:1). The soft→solid
+ * step is the signal. It replaces a panel dimmed to 60 % at idle, whose label sat at
+ * 2.4–4.5:1 on the kit's own swipes, and a white label that was unreadable on every
+ * dark-mode pastel.
+ *
+ * **`paint`** follows the same rule for an app's documented exception (see
+ * {@link SwipePaint}). **`className` / `armedClassName`** is the old path, kept so
+ * existing call sites compile; there the label is white unless the classes set a
+ * colour, and the idle panel is still dimmed.
+ */
+export type SwipeAction = SwipeActionBase &
+  (
+    | {
+        /** The kit paints the panel: the tone's wash idle, its fill and `-contrast` armed. */
+        tone: SwipeTone;
+        paint?: never;
+        className?: never;
+        armedClassName?: never;
+      }
+    | {
+        /** A documented app exception: idle a 14 % wash of `fill` under the body ink,
+         *  armed `fill` under `foreground`. */
+        paint: SwipePaint;
+        tone?: never;
+        className?: never;
+        armedClassName?: never;
+      }
+    | {
+        tone?: never;
+        paint?: never;
+        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception. Background
+         *  utility class while the action is previewed but not yet armed; the panel is
+         *  dimmed then, and its text is white unless this sets a text colour. */
+        className: string;
+        /** @deprecated 0.33 — pass `tone`, or `paint`. Background utility class once
+         *  the drag has passed this action's threshold. */
+        armedClassName: string;
+      }
+  );
+
+/**
+ * Each tone's panel, idle and armed. Literal class strings, because Tailwind finds a
+ * class by reading the source. Idle is Chip's soft recipe for the tone (the money pair
+ * takes Chip's soft money look, the well under the money colour; neutral the active
+ * fill under the secondary ink); armed is the plain fill, not `-hover`, under the
+ * fill's own foreground. Measured in every shipped preset by
+ * theme/__tests__/tokens-css-audit.test.ts.
+ */
+export const SWIPE_TONE: Record<SwipeTone, { idle: string; armed: string }> = {
+  brand: { idle: "bg-brand-soft text-brand-muted", armed: "bg-brand text-brand-contrast" },
+  neutral: { idle: "bg-active text-secondary", armed: "bg-neutral text-neutral-contrast" },
+  success: { idle: "bg-success-soft text-success", armed: "bg-success text-success-contrast" },
+  warning: { idle: "bg-warning-soft text-warning", armed: "bg-warning text-warning-contrast" },
+  danger: { idle: "bg-danger-soft text-danger", armed: "bg-danger text-danger-contrast" },
+  info: { idle: "bg-info-soft text-info", armed: "bg-info text-info-contrast" },
+  income: { idle: "bg-surface-2 text-money-pos", armed: "bg-money-pos text-money-income-contrast" },
+  expense: { idle: "bg-surface-2 text-money-neg", armed: "bg-money-neg text-money-expense-contrast" },
+  blue: { idle: "bg-hue-blue-soft text-hue-blue", armed: "bg-hue-blue text-hue-blue-contrast" },
+  indigo: { idle: "bg-hue-indigo-soft text-hue-indigo", armed: "bg-hue-indigo text-hue-indigo-contrast" },
+  purple: { idle: "bg-hue-purple-soft text-hue-purple", armed: "bg-hue-purple text-hue-purple-contrast" },
+  teal: { idle: "bg-hue-teal-soft text-hue-teal", armed: "bg-hue-teal text-hue-teal-contrast" },
+  orange: { idle: "bg-hue-orange-soft text-hue-orange", armed: "bg-hue-orange text-hue-orange-contrast" },
+};
+
+/** `paint`'s two looks, from the two custom properties the panel carries inline. The
+ *  idle wash is `--brand-bg`'s recipe (14 % of the fill into the card). */
+const PAINT_IDLE = "bg-[color-mix(in_oklab,var(--swipe-paint-fill)_14%,var(--bg-surface))] text-primary";
+const PAINT_ARMED = "bg-[var(--swipe-paint-fill)] text-[var(--swipe-paint-fg)]";
+
+/** The panel's colour classes, inline style and dimming for one action and state. */
+function panelLook(action: SwipeAction, armed: boolean): { className: string; style?: CSSProperties; dim: boolean } {
+  if (action.tone) return { className: SWIPE_TONE[action.tone][armed ? "armed" : "idle"], dim: false };
+  if (action.paint) {
+    return {
+      className: armed ? PAINT_ARMED : PAINT_IDLE,
+      style: {
+        "--swipe-paint-fill": action.paint.fill,
+        "--swipe-paint-fg": action.paint.foreground,
+      } as CSSProperties,
+      dim: false,
+    };
+  }
+  // The deprecated path, as it was: white text under the caller's fill, dimmed idle.
+  return { className: cn("text-white", armed ? action.armedClassName : action.className), dim: !armed };
 }
 
 /**
@@ -76,8 +178,9 @@ const PEEK_PX = 40;
  * action reachable and roughly doubles the room between them.
  *
  * **Whether the action will fire is stated three ways, not one** (feedback #174): the
- * panel goes from dimmed to solid, the icon grows and gains a filled disc, and the
- * label turns bold — plus the existing haptic tick per newly armed stage. A colour
+ * panel goes from the tone's soft wash to its solid fill, the icon grows and gains a
+ * filled disc, and the label turns bold — plus the existing haptic tick per newly armed
+ * stage. A colour
  * shift alone is easy to miss mid-gesture, and it is invisible to anyone who cannot
  * distinguish the two tones.
  *
@@ -180,33 +283,41 @@ export function SwipeableRow({
     ? leftActions[Math.max(0, swipe.armedLeftIndex)]
     : rightActions[Math.max(0, swipe.armedRightIndex)];
   const armed = draggingLeft ? swipe.armedLeftIndex >= 0 : swipe.armedRightIndex >= 0;
+  const look = shown ? panelLook(shown, armed) : null;
 
   return (
     <div ref={rowRef} className={cn("relative overflow-hidden", className)}>
-      {active && shown && (
+      {/* The card under the panel. A dark theme's washes are translucent, and a tone's
+          idle pair is measured as that wash ON the card — so the card is there, whatever
+          the row happens to sit in. */}
+      {active && shown && <div aria-hidden className="pointer-events-none absolute inset-0 bg-surface" />}
+      {active && shown && look && (
         <div
           className={cn(
             "pointer-events-none absolute inset-0 flex items-center gap-2 px-4",
-            "text-xs font-medium text-white transition-all",
-            // Dimmed until the drag has actually passed a threshold: "nothing will
-            // happen yet" has to look different from "let go and this fires", and on
-            // a moving row a one-step colour change was too quiet to notice.
-            armed ? "opacity-100" : "opacity-60",
-            armed ? shown.armedClassName : shown.className,
+            "text-xs font-medium transition-all",
+            look.className,
+            // The old path only: dimmed until the drag has passed a threshold. A tone
+            // or a paint says it with the soft→solid step instead, which keeps its
+            // label readable at both ends.
+            look.dim && "opacity-60",
             // The panel is anchored to the edge the row is uncovering, so the label
             // sits where the eye already is rather than across the screen. That edge is
             // physical, while a flex row starts at the INLINE start — so in RTL the two
             // directions swap, or the label sat under the row on the covered side.
             draggingLeft ? "flex-row-reverse rtl:flex-row" : "rtl:flex-row-reverse",
           )}
+          style={look.style}
         >
           {shown.icon && (
             <span
               className={cn(
                 "flex shrink-0 items-center justify-center rounded-full transition-all",
                 // Armed, the icon gets a disc of its own and grows — a second,
-                // non-colour signal, and the one that stays readable at a glance.
-                armed ? "size-8 scale-110 bg-white/25" : "size-7 bg-white/10",
+                // non-colour signal, and the one that stays readable at a glance. In
+                // the label's own colour (0.33): a white disc vanished on a dark
+                // theme's pastel fill, and the label's colour works on every pair.
+                armed ? "size-8 scale-110 bg-current/20" : "size-7 bg-current/10",
               )}
             >
               {shown.icon}

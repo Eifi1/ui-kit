@@ -11,7 +11,9 @@ import { List, ListItem } from "../list";
  * clamp its release.
  */
 
-const WRAP = ["large:whitespace-normal", "large:[overflow-wrap:anywhere]"];
+// 0.33 (§10.17): one utility, `truncate-until-large` (tokens.css) — `truncate` at Normal,
+// a wrap that breaks a word too long for the row at Large — for what was spelt out here.
+const WRAP = ["truncate-until-large"];
 
 /** The props these tests vary — all of them valid on a button row. */
 interface Extra {
@@ -42,7 +44,7 @@ describe("ListItem wraps at Large (§4)", () => {
     row();
     for (const text of ["Kitchen tap drips", "Reported by Ada Example", "Ada's Garden Planner", "Updated 3 days ago"]) {
       const el = screen.getByText(text);
-      expect(el, text).toHaveClass("truncate", ...WRAP);
+      expect(el, text).toHaveClass(...WRAP);
     }
   });
 

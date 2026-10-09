@@ -12,6 +12,7 @@ import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } f
 import { emailParts, taggedEmail } from "../auth/email-tag";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
+import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -179,6 +180,11 @@ interface Failure {
  * **Done** (`confirmed`): "Your email address is now …" and, unless `passkeyNote` is
  * off, that a passkey keeps its old label in the device's list — the authenticator
  * stored the name it was given, and only a new passkey carries the new one.
+ *
+ * **Under a write lock** the request, "Send the link again" and "Cancel the change" are
+ * `commit` controls exempt from billing (`COMMIT_EXCEPT_BILLING`, 0.33): the address is
+ * the account's own settings, which a lapsed plan never locks
+ * (docs/billing-harmonization.md §3.3, §12.36); a demo's lock still does.
  */
 export function EmailChangeSetting({
   currentEmail,
@@ -283,7 +289,7 @@ export function EmailChangeSetting({
                 type="button"
                 variant="secondary"
                 size="sm"
-                commit
+                commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "resend"}
                 disabled={busy === "cancel"}
                 onClick={() => run("resend", onResend)}
@@ -296,7 +302,7 @@ export function EmailChangeSetting({
                 type="button"
                 variant="ghost"
                 size="sm"
-                commit
+                commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "cancel"}
                 disabled={busy === "resend"}
                 onClick={() => run("cancel", onCancel)}
@@ -445,7 +451,7 @@ export function EmailChangeSetting({
             {failure.message}
           </AlertBanner>
         )}
-        <Button type="submit" commit disabled={!working && !canSubmit} pending={working}>
+        <Button type="submit" commit={COMMIT_EXCEPT_BILLING} disabled={!working && !canSubmit} pending={working}>
           {labels.submit}
         </Button>
       </form>

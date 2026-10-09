@@ -15,7 +15,7 @@ import {
 import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
 import { useDragTarget } from "../hooks/use-file-drop";
 import { toast } from "./toast";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 /**
  * Where a refused file's message goes.
@@ -160,7 +160,7 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * reason (which wins over one of its own). No provider, or an unlocked one: no
    * effect. A zone that only stages a file for a form saved later is not a commit.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * Replace the zone's body — the icon, the text and the chosen-file list — with your
    * own, given the zone's state: keksdose's spinner-plus-"uploading", its multi-shot

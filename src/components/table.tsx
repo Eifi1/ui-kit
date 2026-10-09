@@ -162,7 +162,8 @@ export interface TableProps extends ComponentPropsWithRef<"table"> {
   /** Tint every other body row. */
   zebra?: boolean;
   /** Tint the body row under the pointer. Off by default: a static table whose rows
-   *  light up promises a click that does nothing. */
+   *  light up promises a click that does nothing. With `zebra`, a tinted row hovers to
+   *  the card colour (0.33): the hover tint is too close to the well. */
   hover?: boolean;
   /** Classes for the overflow wrapper around the `<table>` (a max-height, a border). */
   wrapperClassName?: string;
@@ -518,6 +519,12 @@ export function TableRow({ valign, variant = "row", bordered, className, ref: re
         body && (bordered ?? rowDividers) && "border-b border-[var(--border)]",
         record && zebra && "even:bg-[var(--bg-surface-2)]",
         record && hover && "transition-colors hover:bg-[var(--bg-hover)]",
+        // A zebra row rests on the well, and `--bg-hover` sits only 1.00–1.02:1 from it
+        // (0.33: the light well is the page colour): it hovers to the card instead, the
+        // one fill that both steps 1.09–1.13:1 from the well and keeps every text role at
+        // 4.5:1 (docs/colour-roles-harmonization.md §12.2). `even:hover:` outranks the
+        // row's own `hover:`.
+        record && zebra && hover && "even:hover:bg-surface",
         ROW_VARIANT[variant],
         // On the row as well, for a raw `<td>` of the caller's, which inherits it.
         valign && VALIGN[valign],

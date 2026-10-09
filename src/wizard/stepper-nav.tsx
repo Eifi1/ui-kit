@@ -10,6 +10,7 @@ import { WizardContextProvider } from "./wizard-context";
 import { DEFAULT_WIZARD_LABELS } from "./types";
 import { useKitLabels } from "../i18n/kit-labels";
 import type { UseWizardReturn, WizardLabels } from "./types";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * The chrome around a wizard: the step indicator, the step content, and the
@@ -74,7 +75,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
    * with five buttons would not say which one saves — and would read like `useWizard`'s
    * `commits`, which is a step's policy, not a lock.
    */
-  finishCommit?: boolean;
+  finishCommit?: CommitScope;
   /**
    * Why Finish is not available — {@link Button}'s `disabledReason` on the Finish button:
    * `aria-disabled` and focusable, the reason in the kit Tooltip and on the button's

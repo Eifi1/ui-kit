@@ -13,6 +13,12 @@
  * number goes UP. When you legitimately remove some, lower BUDGET in the same
  * commit — that is what makes it a ratchet rather than a ceiling.
  *
+ * A SECOND RATCHET since 0.33 (docs/colour-roles-harmonization.md §2.5, §7.4): the role
+ * utilities. `tokens.css` names every role for its own property (`text-muted`,
+ * `bg-surface-2`, `border-subtle` …), and the kit's ~1,750 `text-[var(--text-muted)]`-style
+ * classes stay — a mechanical rewrite would churn hundreds of class assertions here and
+ * in the apps — but they may only become fewer. New and touched code uses the utilities.
+ *
  * Run: `npm run check:tokens`
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -30,13 +36,26 @@ import { join, resolve } from "node:path";
  */
 const BUDGET = Number(process.env.TOKEN_BUDGET ?? "2");
 
+/**
+ * The second ratchet: `[var(--role)]` classes where a role utility exists. Lower this
+ * whenever the real count drops; never raise it. Started in 0.33 at the day's count,
+ * 1,580 (2026-10-09), after the swipes, Chip solid, the badge, the keypads and B′ had
+ * moved to the utilities; 1,576 once the rest of the round had landed (ButtonGroupLink's
+ * and ActionCard's brand as text among it).
+ */
+const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1575");
+
 const SRC = resolve(import.meta.dirname, "..", "src");
 
 // Palette-scale colour utilities, with any variant prefix (dark:, hover:, md:, …).
 // Both families: the NEUTRALS a component reaches for instead of a surface/text token,
 // and the COLOURS it reaches for instead of --brand / --danger / --warning / --info /
 // --money-* / the --chart-N ramp.
-const NEUTRAL = "slate|gray|zinc|neutral|stone|white|black";
+//
+// `neutral` is the one family that needs its shade (0.33, §7.3): `bg-neutral` and
+// `text-neutral-contrast` are the kit's own role utilities now, and Tailwind's
+// `neutral` palette is only ever used with a number.
+const NEUTRAL = "slate|gray|zinc|neutral-\\d{2,3}|stone|white|black";
 const COLOURED =
   "indigo|sky|blue|emerald|green|teal|amber|yellow|orange|rose|red|violet|purple|fuchsia|pink|cyan|lime";
 const PROP =
@@ -106,6 +125,60 @@ for (const file of walk(SRC)) {
 
 perFile.sort((a, b) => b[1] - a[1]);
 
+/* ── The role-class ratchet (0.33) ────────────────────────────────────────────────── */
+
+/**
+ * Which tokens have a utility, per property, read from `tokens.css`'s `@theme inline`
+ * block — so a role that gains a utility starts counting the day it does. `divide-*` and
+ * the side borders (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does.
+ * The money classes are plain and take no variants, so `text-[var(--money-income)]` is not
+ * counted: a site that needs `hover:` has no other way to write it (§12.4).
+ */
+const THEME = /@theme inline\s*\{([^}]*)\}/.exec(
+  readFileSync(resolve(import.meta.dirname, "..", "tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, ""),
+)?.[1];
+if (!THEME) {
+  console.error("✖ tokens.css has no @theme inline block — the role utilities are gone, or this parser is");
+  process.exit(1);
+}
+const NAMESPACE = {
+  text: "text-color",
+  bg: "background-color",
+  border: "border-color",
+  ring: "ring-color",
+  outline: "outline-color",
+  fill: "fill",
+  stroke: "stroke",
+};
+const withUtility = {};
+for (const [prop, ns] of Object.entries(NAMESPACE)) {
+  withUtility[prop] = new Set(
+    [...THEME.matchAll(new RegExp(`--${ns}-[a-z0-9-]+\\s*:\\s*var\\((--[a-z0-9-]+)\\)`, "g"))].map((m) => m[1]),
+  );
+}
+withUtility.divide = withUtility.border;
+
+// `text-[var(--text-muted)]`, `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`,
+// `focus-visible:ring-[var(--brand)]/40`. Preceded by a start, a space, a quote or a
+// variant's colon, so `ring-offset-[var(--bg-surface)]` is not read as a `ring-`.
+const ROLE_CLASS =
+  /(?:^|[\s"'`:])(text|bg|border(?:-[xytrblse])?|divide|ring|outline|fill|stroke)-\[var\((--[a-zA-Z0-9-]+)\)\]/g;
+
+const rolePerFile = [];
+let roleTotal = 0;
+for (const file of walk(SRC)) {
+  let n = 0;
+  for (const [, prop, token] of stripComments(readFileSync(file, "utf8")).matchAll(ROLE_CLASS)) {
+    if (withUtility[prop.split("-")[0]]?.has(token)) n++;
+  }
+  if (n) {
+    rolePerFile.push([file.slice(SRC.length + 1), n]);
+    roleTotal += n;
+  }
+}
+rolePerFile.sort((a, b) => b[1] - a[1]);
+
+let failed = false;
 if (total > BUDGET) {
   // The per-file tally is the lead for a failure; a passing run is one line.
   for (const [file, n] of perFile) console.error(`  ${String(n).padStart(4)}  ${file}`);
@@ -115,9 +188,28 @@ if (total > BUDGET) {
       `Use a token from tokens.css instead — --text-muted, --bg-hover, --border, --danger, …\n` +
       `If the colour genuinely has no token, add one rather than raising this budget.`,
   );
-  process.exit(1);
+  failed = true;
+} else {
+  console.log(`✓ hardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
+  if (total < BUDGET) {
+    console.log(`  Budget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
+  }
 }
-console.log(`✓ hardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
-if (total < BUDGET) {
-  console.log(`  Budget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
+
+if (roleTotal > ROLE_BUDGET) {
+  for (const [file, n] of rolePerFile.slice(0, 30)) console.error(`  ${String(n).padStart(4)}  ${file}`);
+  console.error(`\n[var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
+  console.error(
+    `\n::error::${roleTotal - ROLE_BUDGET} new [var(--role)] class${roleTotal - ROLE_BUDGET === 1 ? "" : "es"}.\n` +
+      `Use the role utility instead: text-[var(--text-muted)] → text-muted, bg-[var(--bg-surface-2)] →\n` +
+      `bg-surface-2, border-[var(--border)] → border-subtle, bg-[var(--danger-bg)] → bg-danger-soft …\n` +
+      `(tokens.css, the @theme inline block). Never raise this budget.`,
+  );
+  failed = true;
+} else {
+  console.log(`✓ [var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
+  if (roleTotal < ROLE_BUDGET) {
+    console.log(`  Budget is ${ROLE_BUDGET - roleTotal} above the real count — lower ROLE_CLASS_BUDGET to ${roleTotal}.`);
+  }
 }
+if (failed) process.exit(1);

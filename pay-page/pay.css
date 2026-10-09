@@ -1,0 +1,126 @@
+/*
+ * The pay page's look (docs/billing-harmonization.md §14.4): a quiet page behind
+ * Paddle's overlay, in the kit's neutrals, light and dark. Standalone — the pay host
+ * serves nothing of the app, tokens.css included — so the few colours are here.
+ */
+:root {
+  color-scheme: light dark;
+  --pay-bg: #f8fafc;
+  --pay-text: #0f172a;
+  --pay-muted: #475569;
+  --pay-border: #e2e8f0;
+  --pay-link: #1d4ed8;
+  --pay-spinner: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pay-bg: #0f172a;
+    --pay-text: #f1f5f9;
+    --pay-muted: #cbd5e1;
+    --pay-border: #334155;
+    --pay-link: #93c5fd;
+    --pay-spinner: #94a3b8;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--pay-bg);
+  color: var(--pay-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.pay {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.pay-message {
+  margin: 0;
+  max-width: 32rem;
+  overflow-wrap: anywhere;
+}
+
+.pay-actions {
+  margin: 0;
+}
+
+.pay-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 0.1875rem solid var(--pay-border);
+  border-top-color: var(--pay-spinner);
+  border-radius: 50%;
+  animation: pay-spin 0.9s linear infinite;
+}
+
+.pay:not([data-state="opening"]) .pay-spinner {
+  display: none;
+}
+
+@keyframes pay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pay-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+a {
+  color: var(--pay-link);
+  text-underline-offset: 0.15em;
+}
+
+a:focus-visible {
+  outline: 0.125rem solid var(--pay-link);
+  outline-offset: 0.125rem;
+  border-radius: 0.125rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.pay-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--pay-border);
+  color: var(--pay-muted);
+  font-size: 0.875rem;
+}
+
+.pay-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}

@@ -24,6 +24,7 @@ import {
   Command,
   CreditCard,
   Compass,
+  Contrast,
   Component as ComponentIcon,
   Contact,
   FileText,
@@ -331,6 +332,13 @@ const TextSizeComponents032Demo = lazySection(
   "TextSizeComponents032Demo",
 );
 const Billing032Demo = lazySection(() => import("./sections/billing-032-demo"), "Billing032Demo");
+// 0.33.0: colour roles, the checkout's way back and the pay page, the lock's kinds, row
+// actions that carry their state, and the label above the field at Large.
+const ColourRoles033Demo = lazySection(() => import("./sections/colour-roles-033-demo"), "ColourRoles033Demo");
+const RowActions033Demo = lazySection(() => import("./sections/text-size-033-demo"), "RowActions033Demo");
+const LabelAbove033Demo = lazySection(() => import("./sections/text-size-033-demo"), "LabelAbove033Demo");
+const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), "Billing033Demo");
+const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
@@ -451,6 +459,19 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: Foundations,
       },
       {
+        // 0.33: after Tokens — the semantic layer tokens.css adds on top of the TokenSet
+        // (docs/colour-roles-harmonization.md), and the guard an app runs against a
+        // variable nothing declares (`@eifi1/ui-kit/testing`, §8).
+        slug: "colour-roles",
+        title: "Colour roles",
+        short: "Roles",
+        blurb:
+          "The semantic layer over the palette: every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
+        icon: Contrast,
+        components: ["undeclaredCssVariables", "KIT_CSS_VARIABLES", "declaredCustomProperties", "Card", "contrast"],
+        Body: ColourRoles033Demo,
+      },
+      {
         // 0.32: after Tokens — the root scale is a foundation every page sits on, and the
         // breakpoints move with it.
         slug: "text-size",
@@ -459,11 +480,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
         icon: ALargeSmall,
-        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "IconButton", "AppShell", "DataTable"],
+        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "IconButton", "AppShell", "DataTable", "Input", "FieldHint"],
         Body: () => (
           <>
             <TextSize032Demo />
             <TextSizeComponents032Demo />
+            <RowActions033Demo />
+            <LabelAbove033Demo />
           </>
         ),
       },
@@ -1333,12 +1356,13 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "User administration",
         short: "Users",
         blurb:
-          "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, and handing work on.",
+          "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult"],
         Body: () => (
           <>
             <UserRoster030Demo />
+            <PlanChange033Demo />
             <RolesEditor030Demo />
             <Invitations030Demo />
             <AccountDeletionChip030Demo />
@@ -1351,10 +1375,15 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Subscription",
         short: "Billing",
         blurb:
-          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice, the read-only lock beside the demo's, the provider's portal, and the imprint's commercial disclaimer.",
+          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks"],
-        Body: Billing032Demo,
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard"],
+        Body: () => (
+          <>
+            <Billing032Demo />
+            <Billing033Demo />
+          </>
+        ),
       },
       {
         slug: "feedback-compose",

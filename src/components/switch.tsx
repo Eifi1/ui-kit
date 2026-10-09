@@ -10,6 +10,7 @@ import {
   type DisabledReasonDisplay,
 } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
+import type { CommitScope } from "./write-lock";
 
 /**
  * An on/off switch that is still `<input type="checkbox">`, with `role="switch"`.
@@ -117,7 +118,7 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
    * is locked the `disabledReason` way with the lock's reason (which wins over its
    * own). No provider, or an unlocked one: no effect. Button's `commit`, for K3.
    */
-  commit?: boolean;
+  commit?: CommitScope;
 }
 
 /**

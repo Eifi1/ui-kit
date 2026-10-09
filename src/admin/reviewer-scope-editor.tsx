@@ -10,6 +10,7 @@ import { FormActions } from "../components/form-actions";
 import { Caption } from "../components/text";
 import { hasMessage } from "./admin-parts";
 import type { MaybePromise } from "./admin-parts";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * Who may review which translations: the REVIEWER role and its scope, in one editor
@@ -107,7 +108,7 @@ export interface ReviewerScopeEditorProps {
   /** Columns for the languages from `sm` up. Default 2 (Kurvenschmiede's dialog). */
   columns?: 1 | 2 | 3 | 4;
   /** Save COMMITS: under a locked `WriteLockProvider` it is held with the lock's reason. */
-  commit?: boolean;
+  commit?: CommitScope;
   labels?: Partial<ReviewerScopeLabels>;
 }
 

@@ -81,6 +81,7 @@ import type { SettingsLabels } from "../settings/settings-labels";
 import type { LandingLabels } from "../landing/landing-labels";
 import type { DemoLabels } from "../demo/demo-labels";
 import type { BillingLabels } from "../billing/billing-labels";
+import type { PlanChangeLabels } from "../admin/plan-change";
 import type { AppearanceLabels } from "../components/appearance-labels";
 import type { RowActionsLabels } from "../components/row-actions";
 import type { AppShellMoreLabels } from "../shell/app-shell";
@@ -398,6 +399,9 @@ export interface UiKitLabels {
   demo: DemoLabels;
   /** 0.32.0: plans, standing, banners and the limit notice (docs/billing-harmonization.md §7). */
   billing: BillingLabels;
+  /** 0.33.0: the operator's plan parts — `planColumn`, `PlanChangeConfirm` and the
+   *  lines of `usePlanChangeResult` (docs/billing-harmonization.md §14.12). */
+  planChange: PlanChangeLabels;
   /** 0.32.0: the text-size and contrast settings (docs/text-size-harmonization.md §6). */
   appearance: AppearanceLabels;
   /** 0.32.0: a row's actions folded into a "⋯" menu at Large (text size §10.8). */

@@ -37,6 +37,7 @@ import {
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * One report, opened — the panel a feedback table unfolds under its row (§4.4 of
@@ -410,7 +411,7 @@ export interface FeedbackReworkSectionProps {
    *  `feedbackToast` refusals, the `feedbackAttachment` words. */
   attachment?: Partial<FeedbackNoteAttachment>;
   /** The send COMMITS — see `FeedbackNoteEditor`'s `commit`. */
-  commit?: boolean;
+  commit?: CommitScope;
   labels?: Partial<FeedbackDetailLabels>;
 }
 
@@ -569,7 +570,7 @@ export interface FeedbackRowDetailProps {
    * reaches `onUpdate`. Off by default — keksdose's shell lock is a read-only demo
    * BUDGET, and a person viewing one still owns their own reports.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /**
    * Open with the subject: the category badge and the title (feedback contract §8.1,
    * keksdose live #395). On by default; `false` for a page that already shows the title

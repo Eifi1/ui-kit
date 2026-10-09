@@ -7,6 +7,7 @@ import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
 import { Button, Input } from "../components/ui";
 import { personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
+import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 
 /** What `CompleteNameDialog` hands `onSave`: both names, trimmed, 1–120 characters —
  *  `PATCH /auth/me {first_name, last_name}` (§6.1). */
@@ -80,7 +81,10 @@ export interface CompleteNameDialogProps {
  * The promise handling is `ReauthDialog`'s: busy while `onSave` runs (the fields
  * read-only, "Later" disabled, Escape held — a request that has left cannot be called
  * back by closing the dialog), closed on resolve, kept open on reject. Save is a
- * `commit` control, so a `WriteLockProvider` above it locks it with its reason.
+ * `commit` control, so a `WriteLockProvider` above it locks it with its reason — every
+ * lock but a lapsed plan's (`COMMIT_EXCEPT_BILLING`, 0.33): one's own name is the
+ * account's own settings, which billing never locks (docs/billing-harmonization.md §3.3,
+ * §12.36).
  *
  * Focus starts in the first EMPTY field — the last name, as a rule — because filling it
  * in is the whole of what the dialog is for.
@@ -245,7 +249,7 @@ function CompleteNameActions({
       <Button type="button" variant="ghost" disabled={busy} onClick={() => close?.()}>
         {laterLabel}
       </Button>
-      <Button type="submit" form={formId} commit disabled={!busy && !canSave} pending={busy}>
+      <Button type="submit" form={formId} commit={COMMIT_EXCEPT_BILLING} disabled={!busy && !canSave} pending={busy}>
         {saveLabel}
       </Button>
     </>

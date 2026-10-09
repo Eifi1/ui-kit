@@ -204,6 +204,21 @@ describe("react-hook-form stays behind @eifi1/ui-kit/rhf", () => {
   });
 });
 
+describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
+  // The guard an app runs from its own test suite (docs/colour-roles-harmonization.md
+  // §8.3): browser-safe like the rest of the kit, so it runs under jsdom or node alike.
+  it("reaches no package at all — no React, no node:fs", () => {
+    expect([...packagesReachedFrom("src/testing/index.ts")]).toEqual([]);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./testing"]).toEqual({
+      types: "./dist/testing/index.d.ts",
+      import: "./dist/testing/index.js",
+    });
+  });
+});
+
 describe("@eifi1/ui-kit/table-text is pure", () => {
   it("reaches no package at all — no React, nothing for a script or a worker to install", () => {
     expect([...packagesReachedFrom("src/table-text.ts")]).toEqual([]);

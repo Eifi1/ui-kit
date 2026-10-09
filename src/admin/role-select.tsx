@@ -5,6 +5,7 @@ import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { Select } from "../components/ui";
 import type { SelectProps } from "../components/ui";
+import type { CommitScope } from "../components/write-lock";
 
 /**
  * The role of an account, chosen by an admin (docs/user-admin-harmonization.md §3.3,
@@ -219,7 +220,7 @@ export interface RolesEditorProps<R extends string = string> {
   error?: ReactNode;
   columns?: 1 | 2 | 3 | 4;
   /** The editor SAVES on change — the write lock's opt-in (CheckboxGroup's `commit`). */
-  commit?: boolean;
+  commit?: CommitScope;
   className?: string;
   labels?: Partial<RoleSelectLabels>;
 }

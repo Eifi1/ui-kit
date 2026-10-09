@@ -144,6 +144,9 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
     expect(a).toHaveAttribute("href", "/a");
     expect(a).toHaveAttribute("aria-current", "page");
     expect(a.className).toContain("bg-[var(--brand-bg)]");
+    // The brand as text is `--brand-muted` (0.33): 4.5:1 on its wash, where `--brand` is not.
+    expect(a.className.split(" ")).toContain("text-brand-muted");
+    expect(a.className).not.toContain("text-[var(--brand)]");
     expect(screen.getByRole("link", { name: "B" })).not.toHaveAttribute("aria-current");
   });
 

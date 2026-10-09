@@ -246,6 +246,23 @@ export interface DataTableProps<T> {
   rowHref?: (row: T) => string | undefined;
   expandedRow?: (row: T) => ReactNode | null;
   isExpanded?: (row: T) => boolean;
+  /**
+   * Extra classes for a row — the `<tr>` on desktop, the card on mobile. Merged last,
+   * so a `hover:` fill here replaces the row's own `hover:bg-[var(--bg-hover)]`.
+   *
+   * **A row you paint has to pick its own hover** (0.33, docs/colour-roles-harmonization.md
+   * §12.2): the kit cannot see your rest colour, and `--bg-hover` is mixed against the
+   * card. The rule: a hover differs from its rest by 1.08:1 or more, and every text role
+   * on it keeps 4.5:1.
+   * - A row that rests on the well (`bg-surface-2`) hovers to the CARD,
+   *   `hover:bg-surface`: in light the well is the page, and `--bg-hover` sits 1.04:1
+   *   from it.
+   * - A row whose well MARKS A STATE (selected) keeps its fill and draws a 1 px inside
+   *   line instead, since the card would read as "not selected":
+   *   `bg-surface-2 hover:bg-surface-2 hover:outline hover:-outline-offset-1 hover:outline-strong`.
+   *   An outline, not a shadow: a shadow on a `<tr>` is not painted by every engine.
+   * - Not `--bg-active` for a selected row: its muted and money text fall to 3.8–4.7:1.
+   */
   rowClassName?: (row: T) => string | undefined;
   /**
    * Extra DOM attributes for a row's container — the `<tr>` on desktop, the
@@ -1199,15 +1216,9 @@ export function DataTable<T>({
       label: a.label,
       icon: a.icon,
       onCommit: () => void runRowAction(a.action, row),
-      // Each fill's own text colour — the fills are pastels in dark mode (0.26).
-      className:
-        a.tone === "danger"
-          ? "bg-[var(--danger)] text-[var(--danger-contrast)]"
-          : "bg-[var(--brand)] text-[var(--brand-contrast)]",
-      armedClassName:
-        a.tone === "danger"
-          ? "bg-[var(--danger-hover)] text-[var(--danger-contrast)]"
-          : "bg-[var(--brand-hover)] text-[var(--brand-contrast)]",
+      // The row action's tone, painted by SwipeableRow: its soft wash idle, its fill
+      // and that fill's foreground armed (0.33).
+      tone: a.tone === "danger" ? "danger" : "brand",
     });
     return {
       start: swipes.filter((a) => a.swipe === "start").map(toSwipe),

@@ -2,8 +2,8 @@ import { render, renderHook, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Button } from "../../components/ui";
-import { WriteLockProvider } from "../../components/write-lock";
-import { combineWriteLocks, useBillingLockReason } from "../billing-lock";
+import { COMMIT_EXCEPT_BILLING, WriteLockProvider } from "../../components/write-lock";
+import { combineWriteLocks, useBillingLockReason, useBillingWriteLock } from "../billing-lock";
 import { billingDaysLeft, billingLockAt, isBillingReadOnly } from "../billing-standing";
 
 /**
@@ -44,8 +44,49 @@ describe("combineWriteLocks — one provider, the first locked reason (§12.6)",
   });
 
   it("skips null, undefined and false entries", () => {
-    expect(combineWriteLocks([null, undefined, false])).toEqual({ locked: false, reason: undefined });
-    expect(combineWriteLocks([false, { locked: true, reason: PAYER }])).toEqual({ locked: true, reason: PAYER });
+    expect(combineWriteLocks([null, undefined, false])).toEqual({ locked: false, reason: undefined, holds: [] });
+    expect(combineWriteLocks([false, { locked: true, reason: PAYER }])).toEqual({
+      locked: true,
+      reason: PAYER,
+      holds: [{ kind: undefined, reason: PAYER }],
+    });
+  });
+
+  it("holds every locked source with its kind, in order (§12.36)", () => {
+    expect(
+      combineWriteLocks([
+        { locked: true, reason: DEMO, kind: "demo" },
+        { locked: false, reason: "Shared with you to read.", kind: "access" },
+        { locked: true, reason: PAYER, kind: "billing" },
+      ]),
+    ).toEqual({
+      locked: true,
+      reason: DEMO,
+      holds: [
+        { kind: "demo", reason: DEMO },
+        { kind: "billing", reason: PAYER },
+      ],
+    });
+  });
+
+  it("lets a control exempt from billing through billing's lock, but not the demo's", () => {
+    const Remove = ({ lock }: { lock: ReturnType<typeof combineWriteLocks> }) => (
+      <WriteLockProvider {...lock}>
+        <Button commit={COMMIT_EXCEPT_BILLING}>Remove</Button>
+      </WriteLockProvider>
+    );
+    const billing = { locked: true, reason: PAYER, kind: "billing" as const };
+    const demo = { locked: true, reason: DEMO, kind: "demo" as const };
+    const removeReason = () => {
+      const remove = screen.getByRole("button", { name: "Remove" });
+      return remove.getAttribute("aria-disabled") === "true"
+        ? document.getElementById(remove.getAttribute("aria-describedby") ?? "")?.textContent
+        : null;
+    };
+    const { rerender } = render(<Remove lock={combineWriteLocks([billing])} />);
+    expect(removeReason()).toBeNull();
+    rerender(<Remove lock={combineWriteLocks([demo, billing])} />);
+    expect(removeReason()).toBe(DEMO);
   });
 
   it("does what two nested providers cannot: an unlocked billing source leaves the demo's lock on", () => {
@@ -58,6 +99,21 @@ describe("combineWriteLocks — one provider, the first locked reason (§12.6)",
       </WriteLockProvider>,
     );
     expect(reasonOf()).toBeNull();
+  });
+});
+
+describe("useBillingWriteLock — billing's lock as one source (§12.36)", () => {
+  it("is kind billing, with the payer's or the guest's sentence", () => {
+    expect(renderHook(() => useBillingWriteLock(true)).result.current).toEqual({
+      locked: true,
+      reason: PAYER,
+      kind: "billing",
+    });
+    expect(renderHook(() => useBillingWriteLock(false, { guest: true })).result.current).toEqual({
+      locked: false,
+      reason: "This is read-only for now; its owner can lift that.",
+      kind: "billing",
+    });
   });
 });
 

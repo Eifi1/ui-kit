@@ -165,6 +165,37 @@ describe("ProfileSetting — first and last name (0.30.0, §6.1)", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it("a lapsed plan's lock leaves Save live; a demo's beside it holds it (0.33, billing §12.36)", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    const { unmount } = render(
+      <WriteLockProvider locked kind="billing" reason="Your plan has ended.">
+        <Page onSave={onSave} />
+      </WriteLockProvider>,
+    );
+    await user.type(screen.getByLabelText("Last name"), "s");
+    const save = screen.getByRole("button", { name: "Save" });
+    expect(save).not.toHaveAttribute("aria-disabled");
+    await user.click(save);
+    expect(onSave).toHaveBeenCalledTimes(1);
+    unmount();
+    render(
+      <WriteLockProvider
+        locked
+        holds={[
+          { kind: "demo", reason: "Read-only demo — saving is disabled" },
+          { kind: "billing", reason: "Your plan has ended." },
+        ]}
+      >
+        <Page onSave={onSave} />
+      </WriteLockProvider>,
+    );
+    await user.type(screen.getByLabelText("Last name"), "s");
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAccessibleDescription(
+      "Read-only demo — saving is disabled",
+    );
+  });
+
   it("reads firstName / lastName from the provider's accountSettings.profile", () => {
     render(
       <UiKitProvider labels={{ accountSettings: { profile: { firstName: "Vorname", lastName: "Nachname" } } }}>

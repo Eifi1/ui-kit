@@ -102,7 +102,8 @@ describe("ListItem titleLines (kastlan 44)", () => {
         <ListItem title="Crack in the bathroom tiles" />
       </List>,
     );
-    expect(classes(title("Crack in the bathroom tiles"))).toContain("truncate");
+    // `truncate` at Normal, a wrap at Large: the kit's one utility for it (0.33, §10.17).
+    expect(classes(title("Crack in the bathroom tiles"))).toContain("truncate-until-large");
   });
 
   it("clamps at two lines with 2", () => {
@@ -114,6 +115,7 @@ describe("ListItem titleLines (kastlan 44)", () => {
     const cls = classes(title("Crack in the bathroom tiles"));
     expect(cls).toEqual(expect.arrayContaining(["line-clamp-2", "break-words"]));
     expect(cls).not.toContain("truncate");
+    expect(cls).not.toContain("truncate-until-large");
   });
 
   it("shows every line with all, and the row keeps its name", () => {

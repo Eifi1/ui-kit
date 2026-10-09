@@ -23,7 +23,7 @@ import {
   useLockReason,
 } from "./field-parts";
 import { assignRef, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason } from "./write-lock";
+import { useCommitReason, type CommitScope } from "./write-lock";
 
 export type { ComboClearValue, ComboOption } from "./combobox-core";
 
@@ -89,7 +89,7 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
    * A picker inside a form with its own Save stays editable under the lock: leave this
    * off there and put `commit` on the Save. No provider, or an unlocked one: no effect.
    */
-  commit?: boolean;
+  commit?: CommitScope;
   /** When set, a "create" row appears for a non-empty query with no exact match. */
   onCreate?: (query: string) => void;
   createLabel?: (query: string) => string;
@@ -106,7 +106,7 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
    * taken, with the lock's reason as its second line — the picker itself stays live.
    * keksdose dev#496: on the read-only demo choosing is draft state, minting is not.
    */
-  createCommit?: boolean;
+  createCommit?: CommitScope;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
   /** What is wrong with the value, as {@link Input}'s `error`: rendered under the
