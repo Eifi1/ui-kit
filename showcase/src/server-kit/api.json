@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.6.1",
+  "kit_version": "0.7.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -2522,21 +2522,32 @@
     },
     {
       "name": "eifi1_server_kit.billing",
-      "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in ``Eifi1/ui-kit``; its §12 wins over the sections above it).",
-      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables, no\nroutes, no provider SDK and no request to a provider. The subscription row and the event\ntable, the routes, the provider's API client (checkout, portal, cancellation), the read-only\ngate's allow-list and the daily notice job stay in each app. Marcel's decisions (§2): all\nthree apps charge, through a Merchant of Record — Paddle or Lemon Squeezy, behind one\ninterface — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets a\n30-day trial without a card, a beta payer 12 free months.\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets and the price ids;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, and a mapper per provider;\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plan change, and a sync\n  reply's refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.",
+      "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; its §12 wins over the sections above it, and §14.16 over the rest of §14).",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it, and §14.16 over the rest of §14).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel and undoing a cancel, through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy is deprecated in\n0.7 and goes in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), and :class:`PaddleError`;\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plan change, and a sync\n  reply's refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
       "contract": {
         "doc": "docs/billing-harmonization.md",
-        "section": "§10",
+        "section": "§10, §14",
         "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#10-what-the-kits-add",
         "links": [
           {
             "section": "§10",
             "heading": "10. What the kits add",
             "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#10-what-the-kits-add"
+          },
+          {
+            "section": "§14",
+            "heading": "14. Round 0.33 / server-kit 0.7 (2026-10-09)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#14-round-033--server-kit-07-2026-10-09"
           }
         ]
       },
       "members": [
+        {
+          "name": "APP_KEY",
+          "kind": "constant",
+          "signature": "APP_KEY = \"app\"",
+          "doc": "The key of the app's tag in a checkout's custom data (§14.3): the settings'\n``billing_app``."
+        },
         {
           "name": "BETA_FREE_MONTHS",
           "kind": "constant",
@@ -2546,14 +2557,26 @@
         {
           "name": "BILLING_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "BILLING_ERROR_DETAIL: Mapping[BillingErrorCode, str] = {\n    BillingErrorCode.BILLING_DISABLED: \"Billing is not available\",\n    BillingErrorCode.BILLING_READ_ONLY: \"Read-only for now: changes need an active plan\",\n    BillingErrorCode.BILLING_NOT_CONFIGURED: \"Billing is not configured for this\",\n    BillingErrorCode.INVALID_SIGNATURE: \"Invalid webhook signature\",\n}",
+          "signature": "BILLING_ERROR_DETAIL: Mapping[BillingErrorCode, str] = {\n    BillingErrorCode.BILLING_DISABLED: \"Billing is not available\",\n    BillingErrorCode.BILLING_READ_ONLY: \"Read-only for now: changes need an active plan\",\n    BillingErrorCode.BILLING_NOT_CONFIGURED: \"Billing is not configured for this\",\n    BillingErrorCode.INVALID_SIGNATURE: \"Invalid webhook signature\",\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: \"The payment provider is not available. Try again.\",\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: \"Nothing at the payment provider yet\",\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: \"A subscription is running: change it in the customer portal\",\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: \"This plan is not sold that way\",\n}",
           "doc": "The English ``detail`` of each code, for logs and API clients; the kit's pages show their\nown words for the code. ``billing_read_only``'s says nothing about whose plan or why\n(§12.6)."
         },
         {
           "name": "BILLING_ERROR_STATUS",
           "kind": "constant",
-          "signature": "BILLING_ERROR_STATUS: Mapping[BillingErrorCode, int] = {\n    BillingErrorCode.BILLING_DISABLED: 404,\n    BillingErrorCode.BILLING_READ_ONLY: 402,\n    BillingErrorCode.BILLING_NOT_CONFIGURED: 503,\n    BillingErrorCode.INVALID_SIGNATURE: 400,\n}",
+          "signature": "BILLING_ERROR_STATUS: Mapping[BillingErrorCode, int] = {\n    BillingErrorCode.BILLING_DISABLED: 404,\n    BillingErrorCode.BILLING_READ_ONLY: 402,\n    BillingErrorCode.BILLING_NOT_CONFIGURED: 503,\n    BillingErrorCode.INVALID_SIGNATURE: 400,\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: 502,\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: 409,\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: 409,\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: 422,\n}",
           "doc": "Each code's status."
+        },
+        {
+          "name": "CHECKOUT_RETURN_PARAM",
+          "kind": "constant",
+          "signature": "CHECKOUT_RETURN_PARAM = \"checkout\"",
+          "doc": "The query parameter that marks the return from a checkout on the app's subscription\npage (§14.4): ``?checkout=done``. ui-kit's ``isCheckoutReturn`` reads it."
+        },
+        {
+          "name": "CHECKOUT_RETURN_VALUE",
+          "kind": "constant",
+          "signature": "CHECKOUT_RETURN_VALUE = \"done\"",
+          "doc": "Its value."
         },
         {
           "name": "CURRENCY_EXPONENTS",
@@ -2565,19 +2588,49 @@
           "name": "LEMONSQUEEZY_EVENT_KINDS",
           "kind": "constant",
           "signature": "LEMONSQUEEZY_EVENT_KINDS: Mapping[str, EventKind] = {\n    \"subscription_created\": EventKind.SUBSCRIPTION_STARTED,\n    \"subscription_updated\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_resumed\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_paused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_unpaused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_cancelled\": EventKind.SUBSCRIPTION_CANCELED,\n    \"subscription_expired\": EventKind.SUBSCRIPTION_EXPIRED,\n    \"subscription_payment_failed\": EventKind.PAYMENT_FAILED,\n}",
-          "doc": "Lemon Squeezy's subscription events and their kinds; any other event is not used."
+          "doc": "Lemon Squeezy's subscription events and their kinds; any other event is not used.\nDeprecated in 0.7.0, removed in 0.8 (§14.13)."
         },
         {
           "name": "LEMONSQUEEZY_SIGNATURE_HEADER",
           "kind": "constant",
           "signature": "LEMONSQUEEZY_SIGNATURE_HEADER = \"X-Signature\"",
-          "doc": "Lemon Squeezy's signature header."
+          "doc": "Lemon Squeezy's signature header (deprecated in 0.7.0, removed in 0.8)."
         },
         {
           "name": "LEMONSQUEEZY_STATUSES",
           "kind": "constant",
           "signature": "LEMONSQUEEZY_STATUSES: Mapping[str, SubscriptionStatus] = {\n    \"on_trial\": SubscriptionStatus.TRIALING,\n    \"active\": SubscriptionStatus.ACTIVE,\n    \"past_due\": SubscriptionStatus.PAST_DUE,\n    \"unpaid\": SubscriptionStatus.EXPIRED,\n    \"paused\": SubscriptionStatus.EXPIRED,\n    \"cancelled\": SubscriptionStatus.ACTIVE,\n    \"expired\": SubscriptionStatus.EXPIRED,\n}",
-          "doc": "Lemon Squeezy's subscription statuses and the row's. ``cancelled`` is still running\nuntil ``ends_at``, so it stays ``active`` with ``cancel_at_period_end``."
+          "doc": "Lemon Squeezy's subscription statuses and the row's. ``cancelled`` is still running\nuntil ``ends_at``, so it stays ``active`` with ``cancel_at_period_end``. Deprecated in\n0.7.0, removed in 0.8 (§14.13)."
+        },
+        {
+          "name": "NOTICE_AHEAD",
+          "kind": "constant",
+          "signature": "NOTICE_AHEAD = timedelta(days=7)",
+          "doc": "How long before the end the ``…_ending`` notice is due (§12.22)."
+        },
+        {
+          "name": "NOTICE_LATE_LIMIT",
+          "kind": "constant",
+          "signature": "NOTICE_LATE_LIMIT = timedelta(days=3)",
+          "doc": "An ``…_ended`` notice no later than this after the end: a first run, or a job that was\ndown for a while, doesn't mail every long-ended trial."
+        },
+        {
+          "name": "NOTICE_STATUSES",
+          "kind": "constant",
+          "signature": "NOTICE_STATUSES = frozenset({SubscriptionStatus.TRIALING, SubscriptionStatus.COMPED})",
+          "doc": "The statuses a notice can be owed in, for the app's candidate query (``status IN …``)."
+        },
+        {
+          "name": "PADDLE_API_BASES",
+          "kind": "constant",
+          "signature": "PADDLE_API_BASES: Mapping[PaddleEnvironment, str] = types.MappingProxyType(\n    {\n        PaddleEnvironment.SANDBOX: \"https://sandbox-api.paddle.com\",\n        PaddleEnvironment.LIVE: \"https://api.paddle.com\",\n    }\n)",
+          "doc": "Paddle's API per environment. The kit's constant, never a setting (decision 24): a typo\nor another host can't be configured."
+        },
+        {
+          "name": "PADDLE_API_VERSION",
+          "kind": "constant",
+          "signature": "PADDLE_API_VERSION = \"1\"",
+          "doc": "The API version every request names, the ``Paddle-Version`` header."
         },
         {
           "name": "PADDLE_EVENT_KINDS",
@@ -2602,6 +2655,12 @@
           "kind": "constant",
           "signature": "PADDLE_STATUSES: Mapping[str, SubscriptionStatus] = {\n    \"active\": SubscriptionStatus.ACTIVE,\n    \"trialing\": SubscriptionStatus.TRIALING,\n    \"past_due\": SubscriptionStatus.PAST_DUE,\n    \"paused\": SubscriptionStatus.EXPIRED,\n    \"canceled\": SubscriptionStatus.CANCELED,\n}",
           "doc": "Paddle Billing's subscription statuses and the row's."
+        },
+        {
+          "name": "PADDLE_TIMEOUT_SECONDS",
+          "kind": "constant",
+          "signature": "PADDLE_TIMEOUT_SECONDS = 15.0",
+          "doc": "How long one call may take, in seconds (kastlan's)."
         },
         {
           "name": "PAYER_REF_KEY",
@@ -2683,6 +2742,22 @@
             {
               "name": "INVALID_SIGNATURE",
               "value": "invalid_signature"
+            },
+            {
+              "name": "BILLING_PROVIDER_UNAVAILABLE",
+              "value": "billing_provider_unavailable"
+            },
+            {
+              "name": "BILLING_NOT_AT_PROVIDER",
+              "value": "billing_not_at_provider"
+            },
+            {
+              "name": "BILLING_ALREADY_SUBSCRIBED",
+              "value": "billing_already_subscribed"
+            },
+            {
+              "name": "BILLING_PLAN_NOT_SOLD",
+              "value": "billing_plan_not_sold"
             }
           ]
         },
@@ -2699,6 +2774,63 @@
             {
               "name": "YEAR",
               "value": "year"
+            }
+          ]
+        },
+        {
+          "name": "BillingNotice",
+          "kind": "class",
+          "signature": "class BillingNotice(NamedTuple)",
+          "doc": "The notice a row is owed: its kind, the end it speaks of, and the days left.",
+          "fields": [
+            {
+              "name": "kind",
+              "type": "BillingNoticeKind",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "ends_at",
+              "type": "datetime",
+              "default": null,
+              "doc": "The trial's or the grant's end, aware, in UTC."
+            },
+            {
+              "name": "days_left",
+              "type": "int",
+              "default": null,
+              "doc": "Whole days from now to ``ends_at``, rounded down; 0 from the end on."
+            }
+          ],
+          "methods": [
+            {
+              "name": "key",
+              "signature": "@property key -> str",
+              "doc": "What the row's ``billing_notice_sent`` stores once the mail went out:\n``\"trial_ending:2026-11-07T09:00Z\"`` — the kind and the end to the minute, at most\n30 characters."
+            }
+          ]
+        },
+        {
+          "name": "BillingNoticeKind",
+          "kind": "enum",
+          "signature": "class BillingNoticeKind(enum.StrEnum)",
+          "doc": "Which notice (§12.22). A ``StrEnum``: ``str(kind)`` is the word, the ``kind`` the\napp's :class:`~eifi1_server_kit.mail.Mailer` logs.",
+          "values": [
+            {
+              "name": "TRIAL_ENDING",
+              "value": "trial_ending"
+            },
+            {
+              "name": "TRIAL_ENDED",
+              "value": "trial_ended"
+            },
+            {
+              "name": "GRANT_ENDING",
+              "value": "grant_ending"
+            },
+            {
+              "name": "GRANT_ENDED",
+              "value": "grant_ended"
             }
           ]
         },
@@ -2773,6 +2905,12 @@
               "type": "BillingCurrency",
               "default": null,
               "doc": "The payer's currency (§4, §12.18): the subscription's, else the account's stored\ncurrency (keksdose ``reporting_currency``), else the locale's."
+            },
+            {
+              "name": "at_provider",
+              "type": "bool",
+              "default": "False",
+              "doc": "The provider has a customer for this payer (§14.5): the row's\n``provider_customer_id`` is set, whatever the status or the source. False: the page\nshows a caption in place of \"Payment and invoices\" and \"Cancel subscription\", and\nnever asks for the portal (which would answer 409 ``billing_not_at_provider``).\nTrue: both show — a payer who bought under a grant keeps the way to the invoices and\nto \"Cancel\" (§12.26)."
             }
           ],
           "methods": [
@@ -2787,7 +2925,7 @@
           "name": "BillingProvider",
           "kind": "enum",
           "signature": "class BillingProvider(enum.StrEnum)",
-          "doc": "The Merchants of Record the kit speaks (§2.2, §9). Marcel has not chosen yet, so both\nsit behind one interface: choosing changes the settings, not the app.",
+          "doc": "The Merchants of Record the kit speaks (§2.2, §9). Paddle is the one Marcel chose\n(decision 16, 2026-10-09); the kit's provider client speaks Paddle only (§14.2).\n\n.. deprecated:: 0.7.0\n   ``LEMONSQUEEZY``, its event mapper and statuses, its signature check and the\n   numeric variant ids in ``billing_price_ids`` are deprecated and go in 0.8 (decision\n   25, §14.13). Nothing sells through it.",
           "values": [
             {
               "name": "PADDLE",
@@ -2796,6 +2934,34 @@
             {
               "name": "LEMONSQUEEZY",
               "value": "lemonsqueezy"
+            }
+          ]
+        },
+        {
+          "name": "BillingProviderClient",
+          "kind": "protocol",
+          "signature": "class BillingProviderClient(Protocol)",
+          "doc": "The provider's four calls (§14.2), as every app's billing service makes them.\n:class:`~eifi1_server_kit.billing.PaddleClient` is the one implementation;\n:class:`NoProviderClient` refuses, and the tests' fake records\n(:class:`~eifi1_server_kit.billing.testing.FakeBillingProvider`).\n\nA failure is a :class:`~eifi1_server_kit.billing.BillingError`: 502\n``billing_provider_unavailable`` (\"try again\"), or 503 ``billing_not_configured`` for\nthe deployment's fault — answered by the contract's error handlers as it is.",
+          "methods": [
+            {
+              "name": "checkout_url",
+              "signature": "async checkout_url(*, price_id: str, custom_data: Mapping[str, str], customer_id: str | None = None, locale: str | None = None) -> str",
+              "doc": "The provider's checkout for one price (quantity 1), carrying ``custom_data``\n(:func:`~eifi1_server_kit.billing.checkout_custom_data`; the client adds its app\ntag) and the payer's customer when known. ``locale`` reaches only a hosted\ncheckout."
+            },
+            {
+              "name": "portal_url",
+              "signature": "async portal_url(*, customer_id: str | None, subscription_id: str | None = None, target: PortalTarget = 'overview') -> str",
+              "doc": "A fresh portal session's link, never stored. ``customer_id`` ``None`` → 409\n``billing_not_at_provider``."
+            },
+            {
+              "name": "cancel",
+              "signature": "async cancel(*, subscription_id: str, immediately: bool = False) -> None",
+              "doc": "At the period's end by default; ``immediately`` for a paused subscription."
+            },
+            {
+              "name": "remove_scheduled_cancel",
+              "signature": "async remove_scheduled_cancel(*, subscription_id: str) -> None",
+              "doc": "Undo a cancellation at the period's end (§14.8)."
             }
           ]
         },
@@ -2821,7 +2987,7 @@
               "name": "billing_api_key",
               "type": "SecretStr | None",
               "default": "None",
-              "doc": "The provider API key the app's client creates checkouts and portal sessions with\n(§4: hosted checkout and portal only). The kit never sends a request; it only\nrefuses to switch on without it."
+              "doc": "The provider API key the kit's client creates checkouts, portal sessions and\ncancellations with (:func:`~eifi1_server_kit.billing.billing_provider_client`,\n§14.2). Paddle's 2025 keys (``pdl_sdbx_apikey_…``, ``pdl_live_apikey_…``) carry their\nenvironment and their permissions: transaction write, customer-portal-session write\nand subscription write."
             },
             {
               "name": "billing_webhook_secret",
@@ -2846,6 +3012,30 @@
               "type": "datetime | None",
               "default": "None",
               "doc": "When billing went on for this app (§2.4): the beta's 12 months run from it\n(:func:`~eifi1_server_kit.billing.beta_comped_until`), and an invitation created\nbefore it makes a beta payer (:func:`~eifi1_server_kit.billing.is_beta`). Unset until\nMarcel names the date, and NOT required to switch on: a beta row stored without an\nend reads as no end until it is set, then as this date plus 12 months\n(:func:`~eifi1_server_kit.billing.effective_comped_until`), so moving the date moves\nevery such row's end with it."
+            },
+            {
+              "name": "billing_app",
+              "type": "_AppTag | None",
+              "default": "None",
+              "doc": "The app's name in every checkout's custom data (``{\"app\": …, \"payer_ref\": …}``,\n§14.3): one Paddle account sells for all three apps, and every app's webhook receives\nevery app's events, so the webhook drops the others' and the untagged\n(:func:`~eifi1_server_kit.billing.parse_webhook_event`'s ``app``). Set as the DEFAULT\nin the app's ``Settings`` subclass (``billing_app: str | None = \"keksdose\"``), not per\ndeployment; ``<APP>_BILLING_APP`` exists but is listed as \"set in code\". Lowercase, a\nletter first. Required to switch on with Paddle."
+            },
+            {
+              "name": "billing_environment",
+              "type": "PaddleEnvironment | None",
+              "default": "None",
+              "doc": "Paddle's API, ``sandbox`` or ``live`` (decision 24). Unset: read from the API key's\nprefix (``pdl_sdbx_apikey_`` / ``pdl_live_apikey_``); a legacy key, from before\n2025-05-06, needs it set. Set and the key's prefix says the other: refused at start.\nThe API's address is the kit's constant\n(:data:`~eifi1_server_kit.billing.PADDLE_API_BASES`): no host can be configured."
+            },
+            {
+              "name": "billing_checkout_page_url",
+              "type": "_PageUrl | None",
+              "default": "None",
+              "doc": "The kit's pay page on the app's pay host, ``https://pay.<app domain>/`` (§14.4), sent\nas the transaction's ``checkout.url``; Paddle answers it with ``?_ptxn=<txn>``. Unset:\nthe account's default payment link — one page for the whole account, so each app\nsets its own. ``https://``, or ``http://`` for localhost only."
+            },
+            {
+              "name": "billing_hosted_checkout_url",
+              "type": "_PageUrl | None",
+              "default": "None",
+              "doc": "A Paddle hosted checkout's launch URL (``https://pay.paddle.io/checkout/hsc_…``),\nwhich wins over ``billing_checkout_page_url``: the checkout answers\n``<this>?transaction_id=<txn>&locale=<locale>``, and the dashboard sets its redirect.\nEvery sandbox has one; live only with Paddle's approval (§14.4).\n``KASTLAN_BILLING_HOSTED_CHECKOUT_URL`` keeps its name."
             }
           ],
           "methods": [
@@ -2875,6 +3065,16 @@
               "doc": "The webhook secret's value, for the signature check (§5); 503\n``billing_not_configured`` without one (only reachable with the switch off)."
             },
             {
+              "name": "billing_api_environment",
+              "signature": "billing_api_environment() -> PaddleEnvironment",
+              "doc": "Paddle's API for this deployment (§14.2): ``billing_environment`` where set, else\nthe API key's prefix. Neither, or the two disagreeing: 503\n``billing_not_configured`` — reachable only with the switch off, since switching on\nwith Paddle checks both."
+            },
+            {
+              "name": "verify_billing_webhook",
+              "signature": "verify_billing_webhook(provider: BillingProvider | str, raw_body: bytes, headers: Mapping[str, str], *, now: float | None = None) -> None",
+              "doc": ":func:`~eifi1_server_kit.billing.verify_webhook_signature` with this deployment's\nsecret AND its tolerance (§14.2), or 400 ``invalid_signature``::\n\n    settings.require_billing_enabled()                       # 404 billing_disabled\n    raw = await request.body()\n    settings.verify_billing_webhook(\"paddle\", raw, request.headers)\n\nThe right call made the easy one: kastlan and Kurvenschmiede called the signature\ncheck without ``tolerance=``, so Paddle's five seconds applied whatever\n``<APP>_BILLING_SIGNATURE_TOLERANCE`` said, and a cold start answered 400 until\nPaddle's retry landed warm. No secret: 503 ``billing_not_configured``."
+            },
+            {
               "name": "billing_standing",
               "signature": "billing_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
               "doc": ":func:`~eifi1_server_kit.billing.in_good_standing`, behind the switch: with\nbilling off everyone is in good standing (§4). The standing the read-only gate\ntakes (:func:`~eifi1_server_kit.billing.billing_write_allowed`). A beta row stored\nwithout an end ends at :attr:`billing_launch_at` plus 12 months, once that is set\n(§3.2)."
@@ -2894,6 +3094,12 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "CancelOutcome",
+          "kind": "constant",
+          "signature": "CancelOutcome = Literal[\"cancelled\", \"failed\"]",
+          "doc": "What :func:`cancel_for_deletion` did, for the deletion request's audit detail."
         },
         {
           "name": "CheckoutAnswer",
@@ -3043,6 +3249,39 @@
           "doc": "An amount in minor units: a whole, non-negative ``int``. Strict, so a float — or a\n``bool`` — is refused rather than rounded (§4)."
         },
         {
+          "name": "NoProviderClient",
+          "kind": "class",
+          "signature": "class NoProviderClient",
+          "doc": "No provider client for this deployment — no provider, no key, or an environment the\nsettings can't name: every call is 503 ``billing_not_configured``, the deployment's\nfault. Billing switched on can only reach it with a provider the kit has no client for\n(the deprecated Lemon Squeezy, §14.13); with billing off the routes answer 404 first.\n\n``reason`` is the refusal's detail, for the log; the page reads the code.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(reason: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "checkout_url",
+              "signature": "async checkout_url(*, price_id: str, custom_data: Mapping[str, str], customer_id: str | None = None, locale: str | None = None) -> str",
+              "doc": ""
+            },
+            {
+              "name": "portal_url",
+              "signature": "async portal_url(*, customer_id: str | None, subscription_id: str | None = None, target: PortalTarget = 'overview') -> str",
+              "doc": ""
+            },
+            {
+              "name": "cancel",
+              "signature": "async cancel(*, subscription_id: str, immediately: bool = False) -> None",
+              "doc": ""
+            },
+            {
+              "name": "remove_scheduled_cancel",
+              "signature": "async remove_scheduled_cancel(*, subscription_id: str) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "NormalisedEvent",
           "kind": "model",
           "signature": "class NormalisedEvent(BaseModel)",
@@ -3131,6 +3370,155 @@
               "name": "payer_ref",
               "signature": "@property payer_ref -> str | None",
               "doc": "The payer reference the app put into the checkout, or ``None``."
+            },
+            {
+              "name": "app",
+              "signature": "@property app -> str | None",
+              "doc": "The app's tag the checkout carried (§14.3), or ``None`` for an untagged event."
+            }
+          ]
+        },
+        {
+          "name": "NoticeCandidate",
+          "kind": "class",
+          "signature": "class NoticeCandidate[PayerT](NamedTuple)",
+          "doc": "One payer the app's notice job considers (§14.7): the app's own ``payer`` (a user,\na company, or whatever it mails from), the payer's subscription ``row``, and whether\nthe account is ``deactivated`` or has a ``deletion_requested`` — both are sent nothing\n(keksdose's and Kurvenschmiede's rule; kastlan's company flagged for deletion, or\nwithout an active admin). ``sent`` is the row's ``billing_notice_sent``.",
+          "fields": [
+            {
+              "name": "payer",
+              "type": "PayerT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "row",
+              "type": "SubscriptionRow",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "deactivated",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "deletion_requested",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "OwedNotice",
+          "kind": "class",
+          "signature": "class OwedNotice[PayerT](NamedTuple)",
+          "doc": "A notice owed to a payer: :class:`NoticeCandidate`'s ``payer`` and the\n:class:`BillingNotice`'s fields — the ``(payer, kind, ends_at, days_left)`` the app\nturns into its mail.",
+          "fields": [
+            {
+              "name": "payer",
+              "type": "PayerT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "kind",
+              "type": "BillingNoticeKind",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "ends_at",
+              "type": "datetime",
+              "default": null,
+              "doc": "The trial's or the grant's end, aware, in UTC."
+            },
+            {
+              "name": "days_left",
+              "type": "int",
+              "default": null,
+              "doc": "Whole days from now to ``ends_at``, rounded down; 0 from the end on."
+            }
+          ],
+          "methods": [
+            {
+              "name": "key",
+              "signature": "@property key -> str",
+              "doc": "The marker to store once the mail went out (:attr:`BillingNotice.key`)."
+            }
+          ]
+        },
+        {
+          "name": "PaddleClient",
+          "kind": "class",
+          "signature": "class PaddleClient",
+          "doc": "Paddle Billing's API, the kit's\n:class:`~eifi1_server_kit.billing.BillingProviderClient` (§14.2).\n\n* ``api_key`` — the deployment's secret, with the permissions the module names; its\n  prefix must not name the other ``environment`` (:class:`ValueError`).\n* ``environment`` — ``sandbox`` or ``live``: the API is\n  :data:`PADDLE_API_BASES`' entry, never a URL of the app's.\n* ``app`` — the settings' ``billing_app``, put into every checkout's custom data as\n  ``\"app\"`` whatever the caller passed (§14.3), so an app can't forget it.\n* ``checkout_page_url`` — the kit's pay page on the app's pay host (§14.4), sent as the\n  transaction's ``checkout.url``; unset, the account's default payment link.\n* ``hosted_checkout_url`` — a Paddle hosted checkout's launch URL; it wins over the\n  pay page: the checkout answers it with ``?transaction_id=…`` (and ``&locale=…``).\n* ``client`` — an ``httpx.AsyncClient`` the app owns and closes; without it each call\n  opens and closes its own (as :class:`~eifi1_server_kit.mail.ResendClient`).",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(api_key: str, *, environment: PaddleEnvironment | str, app: str | None = None, checkout_page_url: str | None = None, hosted_checkout_url: str | None = None, timeout: float = PADDLE_TIMEOUT_SECONDS, client: httpx.AsyncClient | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "environment",
+              "signature": "@property environment -> PaddleEnvironment",
+              "doc": "The API this client calls."
+            },
+            {
+              "name": "checkout_url",
+              "signature": "async checkout_url(*, price_id: str, custom_data: Mapping[str, str], customer_id: str | None = None, locale: str | None = None) -> str",
+              "doc": "Create the checkout's transaction — ``POST /transactions`` with one ``price_id``\n(quantity 1), ``custom_data`` plus the app's tag, the payer's ``customer_id`` when\nknown, and the pay page as ``checkout.url`` — and answer the URL that opens it:\nwith a hosted checkout, ``<hosted>?transaction_id=<txn>`` (``&locale=<locale>`` when\ngiven); otherwise the transaction's ``checkout.url``, the pay page plus\n``?_ptxn=<txn>``. A 2xx without the id or the URL is a :class:`PaddleError` (502)."
+            },
+            {
+              "name": "portal_url",
+              "signature": "async portal_url(*, customer_id: str | None, subscription_id: str | None = None, target: PortalTarget = 'overview') -> str",
+              "doc": "A fresh customer-portal session's link — ``POST\n/customers/{ctm}/portal-sessions`` with the subscription when given. Its token is\ntemporary: never store the link, and never embed the portal in a frame (Paddle).\n\n``overview`` answers ``urls.general.overview``; ``cancel`` and ``payment_method``\nthe subscription's ``cancel_subscription`` or ``update_subscription_payment_method``\nlink, or the overview where Paddle gives none (a paused or cancelled\nsubscription). No ``customer_id`` — the payer never reached Paddle — is 409\n``billing_not_at_provider`` (§14.5), without a request."
+            },
+            {
+              "name": "cancel",
+              "signature": "async cancel(*, subscription_id: str, immediately: bool = False) -> None",
+              "doc": "Cancel a subscription — ``POST /subscriptions/{sub}/cancel`` with\n``effective_from`` ``next_billing_period`` (the default: it stays ``active`` with\n``scheduled_change.action = cancel`` until its period ends) or ``immediately``\n(Paddle cancels a paused subscription only so). A ``past_due`` one can be cancelled\ntoo; it stays ``past_due`` to its period's end."
+            },
+            {
+              "name": "remove_scheduled_cancel",
+              "signature": "async remove_scheduled_cancel(*, subscription_id: str) -> None",
+              "doc": "Undo a cancellation at the period's end — ``PATCH /subscriptions/{sub}\n{\"scheduled_change\": null}`` (§14.8). The subscription stays ``active``, and Paddle\nsends ``subscription.updated``, which the row follows. A cancelled subscription\ncan't be reinstated: Paddle refuses, a :class:`PaddleError`."
+            }
+          ]
+        },
+        {
+          "name": "PaddleEnvironment",
+          "kind": "enum",
+          "signature": "class PaddleEnvironment(enum.StrEnum)",
+          "doc": "Paddle's two APIs (§14.2, decision 24): ``sandbox`` (``sandbox-api.paddle.com``) and\n``live`` (``api.paddle.com``). A sandbox key works only against the sandbox and a live\nkey only against live, so the environment is read from the key's prefix\n(:func:`~eifi1_server_kit.billing.paddle_environment_of`) unless the settings name it.",
+          "values": [
+            {
+              "name": "SANDBOX",
+              "value": "sandbox"
+            },
+            {
+              "name": "LIVE",
+              "value": "live"
+            }
+          ]
+        },
+        {
+          "name": "PaddleError",
+          "kind": "class",
+          "signature": "class PaddleError(BillingError)",
+          "doc": "A Paddle call that failed: ``billing_provider_unavailable`` (502) — no answer, a 429\nor 5xx, a request Paddle refused, a 2xx without the fields the kit reads — or\n``billing_not_configured`` (503) for a 401/403, a wrong key or one without the\npermission: the deployment's fault, not \"try again\".\n\nThe client-facing ``detail`` is the kit's (``str(error)``, what the contract's error\nhandlers answer). Paddle's own words stay on the exception, for the log and for Paddle\nsupport; never the key or the body.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(status: int, *, paddle_code: str | None = None, paddle_detail: str | None = None, request_id: str | None = None) -> None",
+              "doc": ""
             }
           ]
         },
@@ -3138,7 +3526,7 @@
           "name": "PlanChangeRequest",
           "kind": "model",
           "signature": "class PlanChangeRequest(BaseModel)",
-          "doc": "``POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}`` (§4, §6): an\noperator's plan or grant — :attr:`~eifi1_server_kit.user_admin.AdminAction.PLAN` at the\n``acknowledge`` level, checked with\n:func:`~eifi1_server_kit.user_admin.require_confirmation`. No ``confirm_email``: the\nlevel is ``acknowledge`` for every account, and offering the field would suggest a\nstronger gate (keksdose's reasoning).\n\nThe app writes it as an operator's grant (§3.2): ``comped``, ``source`` ``manual``,\nuntil ``comped_until`` or without an end; a ``comped_until`` of now ends a grant. Log it\nas ``detail {from, to, comped_until, counts}`` (§6). An admin transfer or an erasure\nhand-over never checks a limit, and neither does this (§12.15).\n\n**A running beta grant keeps its beta** (keksdose's ``kept_beta``, its 0.32 report):\ngiven no ``comped_until``, a change on a row whose ``source`` is ``beta`` and whose\ngrant holds (:func:`~eifi1_server_kit.billing.grant_holds` with the settings' launch)\nmoves ``plan_code`` only — ``status``, ``source`` and ``comped_until`` stay, so the\nbeta still ends at the launch plus 12 months\n(:func:`~eifi1_server_kit.billing.effective_comped_until`). Before the launch every\npayer is beta; writing such a move as ``manual`` without an end would make the payer\nfree for good, which nobody decided. A ``comped_until`` turns it into an operator's\ngrant until then; any other row takes the grant as above. The kit writes no row, so\nthe rule is the app's: keksdose's ``set_plan``, which reports ``kept_beta`` beside\n:class:`PlanChangeResponse`'s fields (subclass it to add the field).",
+          "doc": "``POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}`` (§4, §6): an\noperator's plan or grant — :attr:`~eifi1_server_kit.user_admin.AdminAction.PLAN` at the\n``acknowledge`` level, checked with\n:func:`~eifi1_server_kit.user_admin.require_confirmation`. No ``confirm_email``: the\nlevel is ``acknowledge`` for every account, and offering the field would suggest a\nstronger gate (keksdose's reasoning).\n\nThe app writes it as an operator's grant (§3.2): ``comped``, ``source`` ``manual``,\nuntil ``comped_until`` or without an end; a ``comped_until`` of now ends a grant. Log it\nas ``detail {from, to, comped_until, counts}`` (§6). An admin transfer or an erasure\nhand-over never checks a limit, and neither does this (§12.15).\n\n**A running beta grant keeps its beta** (keksdose's ``kept_beta``, its 0.32 report):\ngiven no ``comped_until``, a change on a row whose ``source`` is ``beta`` and whose\ngrant holds (:func:`~eifi1_server_kit.billing.grant_holds` with the settings' launch)\nmoves ``plan_code`` only — ``status``, ``source`` and ``comped_until`` stay, so the\nbeta still ends at the launch plus 12 months\n(:func:`~eifi1_server_kit.billing.effective_comped_until`). Before the launch every\npayer is beta; writing such a move as ``manual`` without an end would make the payer\nfree for good, which nobody decided. A ``comped_until`` turns it into an operator's\ngrant until then; any other row takes the grant as above. The kit writes no row, so\nthe rule is the app's (keksdose's ``set_plan``), which answers it as\n:class:`PlanChangeResponse`'s ``kept_beta``.",
           "fields": [
             {
               "name": "plan",
@@ -3164,11 +3552,11 @@
           "name": "PlanChangeResponse",
           "kind": "model",
           "signature": "class PlanChangeResponse(BaseModel)",
-          "doc": "What a plan change did (§6): ``{previous_plan, plan, limits, over_limit}``.\n\n``previous_plan`` is the point of the shape: \"the plan was changed\" without the value\nit replaced is no trail (keksdose). ``over_limit`` — a downgrade below what the payer\nhas — is not an error and nothing is cleaned up: every item stays open and writable,\nonly the next create is refused (§3.4), so the panel says it rather than let an admin\ndiscover it. Build it with :meth:`of`.",
+          "doc": "What a plan change did (§6, §14.12): ``{previous_plan, plan, limits, over_limit,\nusage, kept_beta, comped_until}`` — what ui-kit's ``usePlanChangeResult`` turns into\nthe operator's result lines.\n\n``previous_plan`` is the point of the shape: \"the plan was changed\" without the value\nit replaced is no trail (keksdose); ``None`` when the account had no subscription\n(the line then reads \"Plan set to …\"). ``over_limit`` — a downgrade below what the\npayer has — is not an error and nothing is cleaned up: every item stays open and\nwritable, only the next create is refused (§3.4), so the panel says it rather than let\nan admin discover it, with one line per dimension over the new limit from ``usage``\nand ``limits``. ``kept_beta``: a running beta kept its end and only the plan moved\n(§12.34, :class:`PlanChangeRequest`). ``comped_until``: the grant's end as written.\nBuild it with :meth:`of`.",
           "fields": [
             {
               "name": "previous_plan",
-              "type": "PlanCode",
+              "type": "PlanCode | None",
               "default": null,
               "doc": ""
             },
@@ -3189,13 +3577,31 @@
               "type": "bool",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "usage",
+              "type": "dict[str, int]",
+              "default": null,
+              "doc": "What the payer has, per dimension (§12.15): the figures for the over-limit lines."
+            },
+            {
+              "name": "kept_beta",
+              "type": "bool",
+              "default": "False",
+              "doc": "A running beta grant kept its beta (§12.34): only the plan changed."
+            },
+            {
+              "name": "comped_until",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": "The grant's end as the change wrote it; ``None``: no end, or no grant."
             }
           ],
           "methods": [
             {
               "name": "of",
-              "signature": "@classmethod of(previous_plan: str, plan: PlanSpec, usage: Mapping[str, int]) -> Self",
-              "doc": "The answer for a change from ``previous_plan`` to ``plan``, with the payer's\n``usage`` (:func:`~eifi1_server_kit.billing.dimensions_over_limit`)."
+              "signature": "@classmethod of(previous_plan: str | None, plan: PlanSpec, usage: Mapping[str, int], *, kept_beta: bool = False, comped_until: datetime | None = None) -> Self",
+              "doc": "The answer for a change from ``previous_plan`` (``None``: there was no\nsubscription) to ``plan``, with the payer's ``usage``\n(:func:`~eifi1_server_kit.billing.dimensions_over_limit`), whether a running beta\nwas kept, and the grant's end."
             }
           ]
         },
@@ -3320,6 +3726,26 @@
           "doc": "An event that can never be applied — unreadable JSON, a field missing or of the wrong\ntype, a status nobody knows. Answered 2xx and logged (§5, keksdose's Pub/Sub rule): a\n5xx would make the provider redeliver the same bytes, for days (Paddle retries 60 times\nover 3 days).\n\nThe message names the field, never a value: Lemon Squeezy's attributes carry the\nbuyer's name and address, so a log line must never quote the body."
         },
         {
+          "name": "PortalRequest",
+          "kind": "model",
+          "signature": "class PortalRequest(BaseModel)",
+          "doc": "``POST /billing/portal {target?}`` (§14.5), an optional body: where the portal link\nopens — ``overview`` (\"Payment and invoices\", the default), ``cancel`` (\"Cancel\nsubscription\", the subscription's cancel link, §12.26) or ``payment_method`` (the\npayment-failed banner). The link is never stored::\n\n    @router.post(\"/billing/portal\", response_model=CheckoutAnswer)\n    async def portal(body: PortalRequest | None = None, payer=Depends(current_payer)) -> CheckoutAnswer:\n        settings.require_billing_enabled()\n        row = await row_of(payer)\n        url = await billing_client().portal_url(\n            customer_id=row.provider_customer_id,           # None: 409 billing_not_at_provider\n            subscription_id=row.provider_subscription_id,\n            target=(body or PortalRequest()).target,\n        )\n        return CheckoutAnswer(url=url)",
+          "fields": [
+            {
+              "name": "target",
+              "type": "PortalTarget",
+              "default": "'overview'",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PortalTarget",
+          "kind": "constant",
+          "signature": "PortalTarget = Literal[\"overview\", \"cancel\", \"payment_method\"]",
+          "doc": "Where a portal link opens (§14.5): ``overview`` for \"Payment and invoices\", ``cancel``\nfor \"Cancel subscription\" (§12.26), ``payment_method`` for the payment-failed banner."
+        },
+        {
           "name": "PriceRef",
           "kind": "class",
           "signature": "class PriceRef(NamedTuple)",
@@ -3346,10 +3772,16 @@
           ]
         },
         {
+          "name": "ResumeOutcome",
+          "kind": "constant",
+          "signature": "ResumeOutcome = Literal[\"resumed\", \"failed\"]",
+          "doc": "What :func:`resume_after_withdrawal` did, for the reactivation's audit detail."
+        },
+        {
           "name": "SubscriptionRow",
           "kind": "protocol",
           "signature": "class SubscriptionRow(Protocol)",
-          "doc": "What the kit reads of the app's subscription row (§3.2). An ORM row satisfies it as\nit is; the provider's ids and ``plan_code`` are the app's columns too, read where the\nkit needs them.\n\nNaive datetimes are read as UTC, as everywhere in the kit (kastlan's columns are naive).",
+          "doc": "What the kit reads of the app's subscription row (§3.2). An ORM row satisfies it as\nit is; the provider's ids and ``plan_code`` are the app's columns too, read where the\nkit needs them: ``provider_customer_id`` for the overview's ``at_provider`` (§14.5),\n``provider_subscription_id`` for a second checkout, a deletion's cancellation and its\nundoing (§14.6, §14.8).\n\nNaive datetimes are read as UTC, as everywhere in the kit (kastlan's columns are naive).",
           "methods": [
             {
               "name": "plan_code",
@@ -3384,6 +3816,11 @@
             {
               "name": "cancel_at_period_end",
               "signature": "@property cancel_at_period_end -> bool | None",
+              "doc": ""
+            },
+            {
+              "name": "provider_customer_id",
+              "signature": "@property provider_customer_id -> str | None",
               "doc": ""
             },
             {
@@ -3507,10 +3944,34 @@
           "doc": "When a beta payer's free months end: 12 calendar months after the launch (§2.4,\n:data:`BETA_FREE_MONTHS`) — the same date for every beta payer of the app.\n\nCalendar months, not 365 days: launched on 1 March, free until 1 March. A launch on\n29 February ends on 28 February. Naive in, naive out.\n\nA beta row written before the launch date is known stores no ``comped_until``; the\nkit reads it as this date at read time (:func:`effective_comped_until`, §3.2)."
         },
         {
+          "name": "billing_notice_due",
+          "kind": "function",
+          "signature": "billing_notice_due(row: SubscriptionRow, now: datetime, *, launch: datetime | None, sent: str | None, ahead: timedelta = NOTICE_AHEAD, late_limit: timedelta = NOTICE_LATE_LIMIT) -> BillingNotice | None",
+          "doc": "The notice ``row`` is owed at ``now``, or ``None`` (§12.22, §14.7).\n\n* **The trial** is the cardless one: ``trialing``, ``source`` not ``provider``,\n  ``trial_ends_at`` set. A provider's own trial is the provider's to mail, and a pure\n  guest's row with an empty ``trial_ends_at`` (§12.9) has nothing to end.\n* **The grant** is a ``comped`` row's, ending at\n  :func:`~eifi1_server_kit.billing.effective_comped_until`: a beta row stored without\n  an end ends at ``launch`` (the settings' ``billing_launch_at``) plus 12 months, and\n  without a launch date it has no end yet — so no notice. A grant without an end (the\n  operator's own accounts) is owed none.\n* **No grant notice while the provider's paid period runs past the grant's end**\n  (``current_period_end`` later than it): that payer already pays (§12.11).\n* ``…_ending`` from ``ahead`` before the end; ``…_ended`` from the end until\n  ``late_limit`` after it. A missed ``…_ending`` is skipped, never sent after the end.\n* ``None`` when ``sent`` — the row's ``billing_notice_sent`` — is this notice's\n  :attr:`~BillingNotice.key`: it went out already.\n\nAny other status is owed nothing. Naive datetimes are read as UTC; ``ends_at`` is\naware. Pure: the switch, the skipped accounts, the mail and the marker are the app's\n(:func:`billing_notices_owed` does the first two)."
+        },
+        {
+          "name": "billing_notices_owed",
+          "kind": "function",
+          "signature": "billing_notices_owed[PayerT](candidates: Iterable[NoticeCandidate[PayerT]], now: datetime, *, settings: BillingSettings, ahead: timedelta = NOTICE_AHEAD, late_limit: timedelta = NOTICE_LATE_LIMIT) -> list[OwedNotice[PayerT]]",
+          "doc": "The notices owed at ``now`` among ``candidates``, in their order (§14.7): nothing\nwhile billing is off (``settings.billing_enabled``), no deactivated account and none\nwith a deletion request, and for the rest :func:`billing_notice_due` with the\nsettings' ``billing_launch_at`` and each candidate's ``sent`` marker. Pure: the app\nsends each mail and stores :attr:`OwedNotice.key` once it went out."
+        },
+        {
+          "name": "billing_provider_client",
+          "kind": "function",
+          "signature": "billing_provider_client(settings: BillingSettings, *, client: httpx.AsyncClient | None = None) -> BillingProviderClient",
+          "doc": "The deployment's provider client (§14.2): a\n:class:`~eifi1_server_kit.billing.PaddleClient` for provider ``paddle`` with a key —\non the API :meth:`~eifi1_server_kit.billing.BillingSettings.billing_api_environment`\nnames, tagging every checkout with ``billing_app``, opening it on\n``billing_checkout_page_url`` or ``billing_hosted_checkout_url`` — and a\n:class:`NoProviderClient` otherwise. It never raises for the settings: an environment\nnobody can name is a :class:`NoProviderClient` that says so, so a deletion's\ncancellation (:func:`cancel_for_deletion`) still goes on. The Paddle client needs the\n``billing`` extra (httpx); without it this raises :class:`ImportError`.\n\n``client`` is an ``httpx.AsyncClient`` the app owns and closes — one for the process,\nopened in its lifespan, so calls reuse connections; without one each call opens and\ncloses its own. The switch is not asked: the routes ask it first\n(:meth:`~eifi1_server_kit.billing.BillingSettings.require_billing_enabled`), and a\ndeletion's cancellation is owed even after billing was switched off."
+        },
+        {
           "name": "billing_write_allowed",
           "kind": "function",
           "signature": "billing_write_allowed(method: str, path: str, *, standing: bool, allow: Collection[str] = frozenset()) -> bool",
           "doc": "May this request go on, given the payer's ``standing``? §3.3's gate, at the auth\ndependency::\n\n    standing = settings.billing_standing(payer_row, now)\n    if not billing_write_allowed(request.method, request.url.path, standing=standing, allow=BILLING_WRITES):\n        raise BillingError(BillingErrorCode.BILLING_READ_ONLY)\n\n* A payer in good standing — or billing switched off, which\n  :meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` answers as good\n  standing — always may.\n* GET, HEAD and OPTIONS always may: reading, exporting and signing in always work.\n* Anything else only when ``allow`` names it, in the demo's syntax: ``\"METHOD /path\"``\n  with the app's prefix, ``{name}`` for one path segment\n  (:func:`~eifi1_server_kit.demo.demo_write_allowed`). The list is the app's (§12.13,\n  §12.14): billing itself, the account's own settings, signing out; feedback with\n  attachments and crash reports; removing access (revoking a share, leaving a shared\n  item, offboarding, sessions, API tokens, passkeys, 2FA); taking the data and\n  leaving; admin routes; receiving sync. **Adding seats or guests stays blocked.**\n\n**Sync endpoints go on the allow-list** (§12.5): a 402 would stop the reply that\ncarries the updates. Inside them, refuse a lapsed payer's changes one by one and say\nso in the reply (:class:`~eifi1_server_kit.billing.SyncRefusal`)."
+        },
+        {
+          "name": "cancel_for_deletion",
+          "kind": "function",
+          "signature": "async cancel_for_deletion(row: SubscriptionRow, client: BillingProviderClient) -> CancelOutcome | None",
+          "doc": "Cancel the payer's subscription at the provider when the account's deletion is\nREQUESTED (§12.23, §12.37), or the provider keeps charging a deactivated account.\nLifted from keksdose (``billing_service.cancel_for_deletion``).\n\n* ``None``: nothing to cancel — no ``provider_subscription_id`` (every payer while\n  billing is off), ``canceled``, or ``cancel_at_period_end`` already set (the payer\n  cancelled before asking to leave).\n* ``expired`` — Paddle's ``paused``, which Paddle cancels only immediately — is\n  cancelled at once, so nothing is left at the provider for an account on its way to\n  erasure (a change for keksdose, which skipped it). Anything else at the period's\n  end, so a guest's shared item works until then.\n* ``\"cancelled\"``, or ``\"failed\"``: it **never raises** (decision 14, leaving never\n  depends on paying). A failure is logged at ERROR — \"cancel it by hand\" — and the\n  deletion goes on.\n\nPut the outcome into the request's audit detail (keksdose's\n``provider_cancellation``; kastlan per flagged company): a later reactivation undoes\nonly a ``\"cancelled\"`` (:func:`resume_after_withdrawal`). The row itself goes at the\nerasure."
         },
         {
           "name": "check_limit",
@@ -3521,8 +3982,14 @@
         {
           "name": "checkout_custom_data",
           "kind": "function",
-          "signature": "checkout_custom_data(payer_ref: str) -> dict[str, str]",
-          "doc": "The custom data to put into a checkout, so its webhooks find the payer:\n``{\"payer_ref\": \"user:42\"}`` (or ``\"company:7\"``).\n\nPaddle keeps a checkout's ``custom_data`` on the transaction and copies it to the\nsubscription it creates, so every subscription event carries it; Lemon Squeezy sends a\ncheckout's ``checkout_data.custom`` as ``meta.custom_data`` with every subscription\nevent. The reference is the app's own and opaque to the provider — never an address.\nFlat, because Paddle's dashboard shows nested custom data badly."
+          "signature": "checkout_custom_data(payer_ref: str, *, app: str | None = None) -> dict[str, str]",
+          "doc": "The custom data to put into a checkout, so its webhooks find the payer and the app:\n``{\"payer_ref\": \"user:42\", \"app\": \"keksdose\"}`` (or ``\"company:7\"``, ``\"kastlan\"``).\n\nPaddle keeps a checkout's ``custom_data`` on the transaction and copies it to the\nsubscription it creates, so every subscription event carries it; Lemon Squeezy sends a\ncheckout's ``checkout_data.custom`` as ``meta.custom_data`` with every subscription\nevent. The reference is the app's own and opaque to the provider — never an address.\nFlat, because Paddle's dashboard shows nested custom data badly.\n\n``app`` is the settings' ``billing_app`` (§14.3): on one Paddle account every app's\nwebhook receives every app's events, and the tag is how each keeps only its own\n(:func:`parse_webhook_event`). The kit's client adds its own tag whatever is passed\nhere (:class:`~eifi1_server_kit.billing.PaddleClient`), so an app can't forget it."
+        },
+        {
+          "name": "checkout_return_url",
+          "kind": "function",
+          "signature": "checkout_return_url(app_base_url: str, path: str) -> str",
+          "doc": "Where a checkout returns to (§14.4): the app's subscription page with\n``?checkout=done`` — ``checkout_return_url(\"https://kastlan.app\", \"/admin/billing\")``\nis ``\"https://kastlan.app/admin/billing?checkout=done\"``. For the deploy notes, the\npay page's ``returnUrl`` and the tests; the request carries no URL (an open redirect,\nand Paddle's transaction takes none). A query or a fragment on ``path`` is kept, and\nan existing ``checkout`` parameter replaced."
         },
         {
           "name": "dimensions_over_limit",
@@ -3564,7 +4031,7 @@
           "name": "map_lemonsqueezy_event",
           "kind": "function",
           "signature": "map_lemonsqueezy_event(raw_body: bytes) -> NormalisedEvent | None",
-          "doc": "A Lemon Squeezy webhook as a :class:`NormalisedEvent`; ``None`` for an event billing\ndoesn't use; :class:`PoisonEventError` for a body it cannot read.\n\nThe body is JSON:API: ``{meta: {event_name, custom_data?}, data: {type, id,\nattributes}}``. A subscription's attributes carry ``status``, ``customer_id``,\n``variant_id``, ``cancelled``, ``renews_at``, ``ends_at`` and ``updated_at``;\n``subscription_payment_failed`` sends a ``subscription-invoices`` object instead, with\n``subscription_id`` and ``customer_id`` but no status.\n\nThe event id is the body's SHA-256: Lemon Squeezy documents no event id, and a retry\n(it retries three times, after 5, 25 and 125 seconds) resends the event."
+          "doc": "A Lemon Squeezy webhook as a :class:`NormalisedEvent`; ``None`` for an event billing\ndoesn't use; :class:`PoisonEventError` for a body it cannot read.\n\n.. deprecated:: 0.7.0\n   Removed in 0.8 with the rest of Lemon Squeezy (§14.13).\n\nThe body is JSON:API: ``{meta: {event_name, custom_data?}, data: {type, id,\nattributes}}``. A subscription's attributes carry ``status``, ``customer_id``,\n``variant_id``, ``cancelled``, ``renews_at``, ``ends_at`` and ``updated_at``;\n``subscription_payment_failed`` sends a ``subscription-invoices`` object instead, with\n``subscription_id`` and ``customer_id`` but no status.\n\nThe event id is the body's SHA-256: Lemon Squeezy documents no event id, and a retry\n(it retries three times, after 5, 25 and 125 seconds) resends the event."
         },
         {
           "name": "map_paddle_event",
@@ -3585,10 +4052,16 @@
           "doc": "A plan code as stored and sent: trimmed and lowercase (§3.1, §12.16).\n\nCodes become lowercase by a data migration, and **reads compare case-insensitively**:\nkeksdose's ``admin_actions`` history keeps its uppercase ``FREE`` / ``PRO``, and this\nreads them as ``free`` / ``pro``. Not a code — empty, too long (32), or anything but\nletters, digits, ``_`` and ``-`` after a letter — is a :class:`ValueError`, so inside a\nPydantic model it is a 422. Whether the code is one of the app's plans is the\ncatalogue's question (:func:`plan_catalogue`), not this one's."
         },
         {
+          "name": "paddle_environment_of",
+          "kind": "function",
+          "signature": "paddle_environment_of(api_key: str) -> PaddleEnvironment | None",
+          "doc": "The environment a Paddle API key's prefix names — ``pdl_sdbx_apikey_…`` is the\nsandbox, ``pdl_live_apikey_…`` live — or ``None`` for a key without one: a legacy key\n(from before 2025-05-06, 50 random characters), which needs ``billing_environment``\nset."
+        },
+        {
           "name": "parse_webhook_event",
           "kind": "function",
-          "signature": "parse_webhook_event(provider: BillingProvider | str, raw_body: bytes) -> NormalisedEvent | None",
-          "doc": "The raw body of ``provider``'s webhook as a :class:`NormalisedEvent` — after its\nsignature passed — or ``None`` for an event billing doesn't use (answer 2xx). A body\nthat cannot be read is a :class:`PoisonEventError` (answer 2xx and log)."
+          "signature": "parse_webhook_event(provider: BillingProvider | str, raw_body: bytes, *, app: str | None = None) -> NormalisedEvent | None",
+          "doc": "The raw body of ``provider``'s webhook as a :class:`NormalisedEvent` — after its\nsignature passed — or ``None`` for an event billing doesn't use (answer 2xx). A body\nthat cannot be read is a :class:`PoisonEventError` (answer 2xx and log).\n\n``app`` is the settings' ``billing_app`` (§14.3); pass it::\n\n    event = parse_webhook_event(\"paddle\", raw, app=settings.billing_app)\n\nGiven, it keeps this app's events only: **another app's event** (``custom_data.app``\ndiffers) **and an untagged one are ``None``** — answered 200, never recorded or\ndispatched, and logged (the untagged at WARNING; the other apps' at INFO, since on one\naccount they are two thirds of the traffic). An untagged event is never matched by the\nprovider's customer id: one person may be one Paddle customer across the apps, and the\npayer references (``user:<id>``) repeat between keksdose and Kurvenschmiede. Every\ncheckout from 0.7 on carries the tag, which Paddle copies to the subscription and its\nlater events. ``None``: every event, as before 0.7."
         },
         {
           "name": "plan_catalogue",
@@ -3609,10 +4082,28 @@
           "doc": "Refuse a write at the app's own choke point while the payer is not in good standing:\n402 ``billing_read_only``, naming ``what`` for the log (§3.3, §12.2)::\n\n    refuse_billing_read_only(settings.billing_standing(owner_row, now), \"a new budget\")\n\nThe detail never names the payer's status or the payer (§12.6): a guest in a lapsed\nowner's budget reads it too, and learns only that the budget is read-only for now."
         },
         {
+          "name": "require_new_checkout",
+          "kind": "function",
+          "signature": "require_new_checkout(row: SubscriptionRow, now: datetime) -> None",
+          "doc": "Refuse a checkout while a provider subscription runs (§14.6): 409\n``billing_already_subscribed``. A second checkout would be a second subscription,\ncharged twice; plan changes go through the provider's customer portal, and the page\nthat gets the 409 points there. Call it in ``POST /billing/checkout`` before the\ntransaction is created.\n\nA subscription runs when the row has the provider's subscription id and it isn't set\nto cancel at its period's end, and:\n\n* the row's ``source`` is ``provider``: its status is ``active``, ``trialing`` or\n  ``past_due``;\n* any other source — a payer who bought while a grant held (§12.11): the webhook\n  wrote the subscription's link, period end and cancellation but kept the grant's\n  ``comped`` status and source, so the provider's period running past ``now`` is what\n  says it runs.\n\nA subscription already set to cancel at its period's end never blocks: the payer may\nsubscribe again, to another plan."
+        },
+        {
+          "name": "resume_after_withdrawal",
+          "kind": "function",
+          "signature": "async resume_after_withdrawal(row: SubscriptionRow, client: BillingProviderClient) -> ResumeOutcome | None",
+          "doc": "Undo the cancellation a deletion request scheduled, when the account comes back\n(§12.37, §14.8): an operator's reactivation that cancels a pending deletion, or a\nperson's own withdrawal where the app has one. The provider's\n:meth:`~BillingProviderClient.remove_scheduled_cancel` — Paddle's ``PATCH\n/subscriptions/{id} {\"scheduled_change\": null}``: the subscription stays ``active``,\nand the row follows through the ``subscription.updated`` event it sends.\n\n**Only the cancellation the deletion made:** call it only when the request's audit\ndetail recorded ``\"cancelled\"`` for this row (:func:`cancel_for_deletion`). A payer who\nhad cancelled in the portal before asking to leave (the request answered ``None``)\nisn't subscribed again.\n\n* ``None``: nothing to undo — no ``provider_subscription_id``, ``cancel_at_period_end``\n  not set, the subscription ``canceled`` or ``expired``, or its period over. A\n  subscription cancelled at once (it was paused) or past its period can't be\n  reinstated (Paddle: a cancelled subscription \"can't be reinstated\"); the payer\n  subscribes again through a new checkout.\n* ``\"resumed\"``, or ``\"failed\"``: it **never raises**. A failure is logged at ERROR —\n  \"remove the scheduled cancellation by hand\" — and goes into the reactivation's audit\n  detail (``provider_resume``)."
+        },
+        {
           "name": "row_changes",
           "kind": "function",
           "signature": "row_changes(event: NormalisedEvent, *, grant_holds: bool = False, plan_code: str | None = None) -> dict[str, object]",
           "doc": "The columns of the payer's row (§3.2) that ``event`` sets, by name — what\n:func:`dispatch` hands the app's ``apply``::\n\n    for name, value in changes.items():\n        setattr(row, name, value)\n\n* Always ``provider``, and the provider's ``provider_customer_id`` and\n  ``provider_subscription_id`` where the event names them — the link the portal and a\n  deletion's cancellation need (§12.23).\n* A snapshot also sets ``current_period_end`` and ``cancel_at_period_end`` where it\n  carries them, and ``updated_from_event_at`` (the ordering guard's mark).\n* Unless a grant holds, a snapshot then sets ``status``, ``source`` (``provider``) and,\n  given ``plan_code``, the plan. While a grant holds those stay as the grant set them,\n  and :func:`~eifi1_server_kit.billing.in_good_standing` reads the provider's paid\n  period once the grant ends (§12.11).\n\nDatetimes are aware, in UTC: an app with naive columns (kastlan) strips the zone.\n``status``, ``source`` and ``provider`` are the kit's ``StrEnum`` members\n(:class:`~eifi1_server_kit.billing.SubscriptionStatus`,\n:class:`~eifi1_server_kit.billing.SubscriptionSource`,\n:class:`~eifi1_server_kit.billing.BillingProvider`), not plain strings: a ``str``\nsubclass, so they compare equal to their string values and a string column stores\nthem as those values — an app that writes ``.value`` instead sees no difference."
+        },
+        {
+          "name": "sold_plan",
+          "kind": "function",
+          "signature": "sold_plan(catalogue: Mapping[str, PlanSpec], request: CheckoutRequest, *, sold: Collection[str] | None = None) -> PlanSpec",
+          "doc": "The plan a checkout asks for (§14.2), or 422 ``billing_plan_not_sold``: a plan the\ncatalogue doesn't have, one outside ``sold`` (keksdose's ``SOLD``: the plans on sale,\nwhere the catalogue keeps retired ones for the rows still on them), or a currency and\ninterval the plan has no price for (a free plan has none). kastlan answered 503 here;\nthe price id missing from the settings for a combination that IS sold stays 503\n``billing_not_configured`` (:meth:`~eifi1_server_kit.billing.BillingSettings.billing_price_id`)."
         },
         {
           "name": "trial_ends_at",
@@ -3624,7 +4115,7 @@
           "name": "verify_lemonsqueezy_signature",
           "kind": "function",
           "signature": "verify_lemonsqueezy_signature(raw_body: bytes, header: str | None, secret: str) -> None",
-          "doc": "Check a Lemon Squeezy webhook's ``X-Signature`` — the hex HMAC-SHA256 of the raw\nbody — or raise 400 ``invalid_signature``."
+          "doc": "Check a Lemon Squeezy webhook's ``X-Signature`` — the hex HMAC-SHA256 of the raw\nbody — or raise 400 ``invalid_signature``.\n\n.. deprecated:: 0.7.0\n   Removed in 0.8 with the rest of Lemon Squeezy (§14.13)."
         },
         {
           "name": "verify_paddle_signature",
@@ -3636,7 +4127,7 @@
           "name": "verify_webhook_signature",
           "kind": "function",
           "signature": "verify_webhook_signature(provider: BillingProvider | str, raw_body: bytes, headers: Mapping[str, str], secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
-          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(\n        BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key(),\n        tolerance=settings.billing_signature_tolerance,\n    )\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); pass the\nsettings' ``billing_signature_tolerance``, so a deployment widens it in its\nenvironment. Lemon Squeezy's signature has no timestamp. An unknown provider is a\n:class:`ValueError`."
+          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(\n        BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key(),\n        tolerance=settings.billing_signature_tolerance,\n    )\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); pass the\nsettings' ``billing_signature_tolerance``, so a deployment widens it in its\nenvironment — or call\n:meth:`~eifi1_server_kit.billing.BillingSettings.verify_billing_webhook`, which does\n(§14.2). Lemon Squeezy's signature has no timestamp. An unknown provider is a\n:class:`ValueError`."
         },
         {
           "name": "webhook_answer",
@@ -5165,7 +5656,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",

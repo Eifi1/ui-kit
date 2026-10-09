@@ -912,7 +912,7 @@ None blocks adopting 0.33.
   uv add "eifi1-server-kit[billing,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.0/eifi1_server_kit-0.7.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<sha256 at release>`
+  sha256: `4b19684898401175a5fdd52a77fbdbb240c5969b6f00b1f20a3c2af4fdb4f47d`
 
 ## Where the build differs from the contracts
 
