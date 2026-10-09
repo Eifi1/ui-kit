@@ -13,7 +13,11 @@ export function WizardStepper({
 }) {
   const currentIndex = steps.findIndex((s) => s.key === current);
   return (
-    <ol className="flex items-center gap-1 text-xs" aria-label={ariaLabel}>
+    // `flex-wrap`: the steps flow onto a second line rather than past the screen
+    // (0.32.1, the 360 px Extra-large sweep; docs/text-size-harmonization.md §4).
+    // "Upload — Map columns — Confirm" ran 22 px past a 360 px phone at Extra large.
+    // Where the steps fit, they stay one row.
+    <ol className="flex flex-wrap items-center gap-1 text-xs" aria-label={ariaLabel}>
       {steps.map((step, i) => (
         <li key={step.key} className="flex items-center gap-1">
           {i > 0 && <span className="w-4 border-t border-[var(--border)]" />}

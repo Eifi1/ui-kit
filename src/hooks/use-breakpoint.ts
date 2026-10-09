@@ -82,21 +82,32 @@ export function lengthPx(length: number | RemLength | undefined, rootRemPx: numb
 /**
  * The media query a breakpoint variant means at `scale` (`TEXT_SCALE` of the size in
  * force). `"md"` → `(min-width: 768px)` at Normal, `(min-width: 960px)` at Large;
- * `"max-md"` → `(max-width: 767px)` at Normal. In px, scaled by the browser's own
- * default font size as well, so a person who set 20 px in the browser gets 960 px for
- * `md` at Normal — as the CSS does.
+ * `"max-md"` → `(width < 768px)` at Normal. In px, scaled by the browser's own default
+ * font size as well, so a person who set 20 px in the browser gets 960 px for `md` at
+ * Normal — as the CSS does.
  *
- * At Normal these are, character for character, the strings the kit queried before
- * (`PHONE_QUERY`, DataTable's `isMdUp`), so a test's `matchMedia` stub keeps working.
- * Like those, the pair is exact at whole-pixel widths; on a fractional viewport width
- * between the two (767.2 px at a 1.25 device-pixel ratio) neither matches, where the
- * CSS's `width < 48rem` says phone. Verified in Chromium at 700–1300 px × three sizes.
+ * `max-*` is written in range syntax, `(width < N)`, against the same `N` its `min-*`
+ * twin starts at, so the two are exact complements at EVERY width: exactly one of
+ * `md` and `max-md` matches, as with tokens.css's `width >= 48rem` / `width < 48rem`
+ * (and Tailwind's own `max-*`). Until 0.32.1 it was `(max-width: 767px)`, which left a
+ * gap: on a fractional viewport width (767.5 px under zoom or at some Android
+ * device-pixel ratios) neither query matched, so DataTable, asking `!md`, said phone
+ * while `usePhoneLayout()`, asking `max-md`, said not (0.32.1, keksdose's 0.32 report;
+ * docs/text-size-harmonization.md §3.3: "the CSS and JS answers always agree").
+ *
+ * Range syntax in media queries is Chrome / Edge 104, Firefox 63, Safari 16.4. That is
+ * inside the floor the kit already sets: tokens.css's breakpoint variants are written in
+ * it, and Tailwind v4 itself needs Safari 16.4, Chrome 111 and Firefox 128.
+ *
+ * A test's `matchMedia` stub that keyed on the old string (`"max-width: 767px"`, the
+ * deprecated `PHONE_QUERY`) has to answer `(width < 768px)` now. `min-*` is unchanged,
+ * character for character.
  */
 export function breakpointQuery(variant: BreakpointVariant, scale = 1, remPx: number = readBrowserRemPx()): string {
   const max = variant.startsWith("max-");
   const name = (max ? variant.slice(4) : variant) as Breakpoint;
   const px = Math.round(BREAKPOINT_REM[name] * remPx * scale);
-  return max ? `(max-width: ${px - 1}px)` : `(min-width: ${px}px)`;
+  return max ? `(width < ${px}px)` : `(min-width: ${px}px)`;
 }
 
 /**

@@ -288,7 +288,7 @@ function RtlWeekStart() {
         <span className="text-xs text-[var(--text-muted)]">weekStartsOn</span>
         <ToggleGroup<string> aria-label="Week starts on" size="sm" value={start} onChange={setStart} options={WEEK_STARTS} />
       </Row>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div dir="rtl">
           <CalendarHeatmap
             data={DATA}

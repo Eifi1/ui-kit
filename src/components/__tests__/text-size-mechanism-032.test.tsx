@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { FIELD_BASE, FIELD_TOUCH_TEXT, FOCUS_RING, FOCUS_RING_WIDTH, Input } from "../ui";
 import { DropdownSearchHeader } from "../dropdown";
-import { ContrastSetting, TextSizeSetting } from "../settings-fields";
+import { ContrastSetting, TextSizeSetting, ThemeSetting } from "../settings-fields";
 import { DEFAULT_APPEARANCE_LABELS } from "../appearance-labels";
 import { DIALOG_GUTTER, FullBleedDialog } from "../full-bleed-dialog";
 import { TOASTER_OFFSET_BOTTOM, TOASTER_OFFSET_TOP } from "../toast";
@@ -74,6 +74,51 @@ describe("TextSizeSetting / ContrastSetting (§6)", () => {
     expect(screen.getByRole("radiogroup", { name: "Letters" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Kontrast" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Mehr" })).toBeChecked();
+  });
+
+  it("puts a text hint under the group, never on the label line (0.32.1)", () => {
+    render(
+      <TextSizeSetting
+        value="normal"
+        onChange={() => {}}
+        label="Text size"
+        labelPlacement="above"
+        hint="Changes the text across the app."
+      />,
+    );
+    const group = screen.getByRole("radiogroup", { name: "Text size" });
+    const hint = screen.getByText("Changes the text across the app.");
+    // A caption under the group, describing it — not a sibling of the label.
+    expect(hint.tagName).toBe("P");
+    expect(group.parentElement!.contains(hint)).toBe(true);
+    expect(screen.getByText("Text size", { selector: "label" }).parentElement!.contains(hint)).toBe(false);
+    expect(group.getAttribute("aria-describedby")).toContain(hint.id);
+  });
+
+  it("wraps its options by default, and so does ThemeSetting's toggle beside it (0.32.1)", () => {
+    const optionLabels = { system: "System", light: "Light", dark: "Dark" };
+    render(
+      <>
+        <TextSizeSetting value="normal" onChange={() => {}} />
+        <ContrastSetting value="system" onChange={() => {}} />
+        <ThemeSetting variant="toggle" value="system" onChange={() => {}} aria-label="Theme" optionLabels={optionLabels} />
+        <ThemeSetting
+          variant="toggle"
+          overflow="truncate"
+          value="system"
+          onChange={() => {}}
+          aria-label="Theme, truncating"
+          optionLabels={optionLabels}
+        />
+      </>,
+    );
+    for (const name of ["Text size", "Contrast", "Theme"]) {
+      expect(screen.getByRole("radiogroup", { name }).className.split(" "), name).toContain("flex-wrap");
+    }
+    // A caller can still ask for one row; it then wraps only at Large (ToggleGroup's rule).
+    const truncating = screen.getByRole("radiogroup", { name: "Theme, truncating" }).className.split(" ");
+    expect(truncating).not.toContain("flex-wrap");
+    expect(truncating).toContain("large:flex-wrap");
   });
 });
 

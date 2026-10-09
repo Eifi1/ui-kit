@@ -1178,6 +1178,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deletion_request: "Törlés kérelmezve",
         deletion_cancel: "Törlés visszavonva",
         erase: "Fiók véglegesen törölve",
+        plan: "Csomag módosítva",
       },
     },
     transferOwnership: {
@@ -1493,6 +1494,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
       // "Elvetés", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Várakozó módosítások elvetése",
+      notConfigured: "A fizetés még nincs beállítva. Kérjük, próbálja újra később.",
+      disabled: "Az előfizetés itt nem érhető el.",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Megjelenés" group.
@@ -1504,6 +1507,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       contrastHelp:
         "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
       contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
+      saveFailed: "Nem sikerült menteni a fiókjába. Ezen az eszközön ettől még érvényes.",
     },
     rowActions: {
       actions: "Műveletek",

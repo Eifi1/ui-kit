@@ -17,3 +17,10 @@
 .demo-mode [data-private] {
   filter: blur(0.35rem);
 }
+
+/* Inline code in the pages' prose breaks anywhere when it has to: a prop like
+   `chromeClassName="md:rounded-s-none"` has no break of its own and ran 10 px past a
+   360 px phone at Extra large (0.32.1). A `<pre>` keeps its lines; it scrolls. */
+code {
+  overflow-wrap: anywhere;
+}

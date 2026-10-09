@@ -76,8 +76,9 @@ After the reviews (Marcel, 2026-10-07/08):
     (admin, manager, accountant).
 
 Still open for Marcel (they don't block the contract):
-- **The provider** among the Merchants of Record (compared in §9 for the decision);
-- **the plans, limits and prices** per app;
+- **The provider** among the Merchants of Record (compared in §9 for the decision; Paddle
+  recommended);
+- **the plans, limits and prices** per app (proposed in §13, for local review);
 - **the launch date** per app, which starts the beta users' 12 months.
 
 ## 3. The model
@@ -113,7 +114,12 @@ company's creation, and by a migration for those that exist. "No row" never happ
 - **A new payer** starts as `trialing`, `source = trial`, `trial_ends_at = now + 30 days`
   (§2.7).
 - **A beta user or company** (one that exists when billing goes on) gets `comped`,
-  `source = beta`, `comped_until = launch + 12 months` (§2.4).
+  `source = beta`, `comped_until = launch + 12 months` (§2.4). A row written before the
+  launch date is known (the beta migration, a registration before launch) stores
+  `comped_until = null`; the kit reads `source = beta` with a null end as launch + 12
+  months, from the settings' launch date, at read time (server-kit 0.6.1
+  `effective_comped_until`, the `launch` argument of `in_good_standing` and `grant_holds`;
+  Kurvenschmiede's 0.32 report). A moved launch date then needs no data change.
 - **An operator's grant** is `comped`, `source = manual`, with or without an end date.
 
 ### 3.3 Good standing and read-only (§2.3, §2.7)
@@ -240,12 +246,19 @@ Also:
 | Model | Merchant of Record, B2B and B2C | Merchant of Record, aimed at software and indie sellers |
 | Tax | VAT/MWST, US sales tax, invoices | the same |
 | Hosted checkout and portal | yes | yes |
-| Fee (published, to be checked at signing) | about 5 % + 0.50 per transaction | about 5 % + 0.50 per transaction |
+| Fee (published, to be checked at signing) | about 5 % + 0.50 per transaction | about 5 % + 0.50 per transaction, plus about 1.5 % outside the US and further add-ons (third-party comparison, 2026) |
 | Switzerland and CHF | to be confirmed at signing | to be confirmed at signing |
+| Prices per currency (checked 2026-10-08) | fixed amounts per currency or country (`unit_price_overrides`); CHF is a payment currency; balances and payouts in USD, EUR, GBP, AUD or CAD, not CHF | **one store currency**, displayed converted; every customer is **charged in USD** at the mid-market rate; payouts in USD or converted |
+| Webhook | an event id and a timestamped signature | a body signature only, no event id (the kit dedupes on the body's SHA-256) |
+| Owner | independent | Stripe (since 2024) |
 
 The kit stays provider-agnostic (§5), so the choice changes a mapper and settings, not
 the contract. The fees and CHF support must be checked with the providers at signing;
 this table is not a quote.
+
+**Recommendation (2026-10-08):** Paddle. Decision 6 (prices in CHF and EUR) needs a
+fixed price per currency, which Lemon Squeezy does not offer: a Swiss customer would be
+charged a converted USD amount.
 
 ## 10. What the kits add
 
@@ -321,7 +334,9 @@ differ, this list wins.
 3. **Order of refusals:** the demo's 403 first, then billing's 402; a lapsed payer creating
    gets `billing_read_only`, never `plan_limit`.
 4. **Scheduled jobs are outside the HTTP gate** and must skip a lapsed payer's data
-   (keksdose: recurring, bank sync, the two extract jobs, which also bill Gemini).
+   (keksdose: recurring, bank sync, the two extract jobs, which also bill Gemini;
+   kastlan: recurring rent, which is off by default — its lease-status sweep only follows
+   the dates and keeps running).
 
 **Offline, sync and privacy**
 5. **A 402 is not a refusal of one change.**
@@ -455,3 +470,96 @@ differ, this list wins.
     - a "changes refused" shape for sync replies;
     - the guest `BillingBanner` variant;
     - the "payment processing" state.
+
+**After the 0.32 / 0.6 adoption** (the three apps' reports, 2026-10-08/09)
+31. **Installed old clients and sync refusals (§12.5).** A client from before this round
+    reads a 2xx sync reply as "delivered" and drops what was refused. So the
+    refusals-in-the-reply shape is **opt-in per request**: the client sends
+    `refusals: true` on its sync request (keksdose's flag); without it, a lapsed payer's
+    push is refused whole (402 `billing_read_only`, or the app's existing 409), as before.
+    The same exposure exists in kastlan and Kurvenschmiede.
+32. **`SyncRefusal.change_ids` are row ids.** Two queued changes to one row can't be told
+    apart, which holds while a push is refused whole per row (keksdose's server does). An
+    app that ever applies part of a row's changes needs per-change ids first.
+33. **No row is not good standing by accident.** `in_good_standing(None)` is True ("not
+    billing's business"). An app with row-level security on its subscription table reads
+    the payer's row with the RLS bypass: a guest reading the owner's row would otherwise
+    get nothing back, and the gate would fail open (keksdose pins it with a Postgres
+    test).
+34. **An operator's plan change before launch keeps the beta** (keksdose's `kept_beta`):
+    a running beta grant given no new end keeps `source = beta` and its end; only the
+    plan changes. Otherwise every pre-launch move would become a lifetime grant.
+35. **Removing access under a billing lock (§12.13).** ShareCard's remove-grantee and
+    revoke-invitation are `commit` controls, so a billing lock blocks them, though
+    §12.13 allows them. Kit fix in the next round: a lock says its source (demo, billing)
+    and a control can be exempt from one. Until then an app keeps its own share card or
+    passes the actions unlocked. keksdose has its own; Kurvenschmiede uses the kit's.
+
+## 13. Proposed plans (Marcel, 2026-10-08)
+
+Marcel: "Propose like that." Starting points, not market research. Billing stays off in
+production; the apps wire these catalogues now so the whole path can be reviewed
+locally (§13.4). Prices are gross (§12.17), the same figure in CHF and EUR, and yearly is
+ten months.
+
+### 13.1 kastlan: per company, by units
+
+Every unit counts, parking, storage and cellars included (decision 13), so a building of
+12 flats already holds about 36 units. Seats count staff only (decision 15).
+
+| Code | `units` | `seats` | `storage` | Month | Year |
+|---|---|---|---|---|---|
+| `starter` | 40 | 2 | 5 GB | 29 | 290 |
+| `standard` | 150 | 5 | 25 GB | 79 | 790 |
+| `professional` | 500 | 15 | 100 GB | 199 | 1,990 |
+
+`storage` is in bytes, as server-kit's `PlanSpec` documents (5 GB = 5 × 1024³). Above
+500 units: an operator's grant at a quoted price (§3.4 "Ask for more"). This
+replaces the placeholders CHF 49 / 149 / 399 for 50 / 250 / 1,000 units. Comparable:
+ImmoSync (Switzerland) CHF 30 / 99 / 299; immocloud €39.99 up to 50 units.
+Open: kastlan sells to businesses, which usually quote before VAT; §12.17 says gross.
+
+### 13.2 keksdose: per owner, by budgets and scans
+
+Most people need one budget, so budgets alone separate only the heavy users. The scans
+are what costs Marcel money (Gemini per receipt and statement; `user_cost_service` has
+the real figures, to check before launch).
+
+| Code | `budgets` | `scans` per calendar month | Month | Year |
+|---|---|---|---|---|
+| `standard` | 3 | 50 | 5 | 49 |
+| `plus` | 10 | 300 | 9 | 89 |
+
+- `scans` counts receipt and statement extractions the owner started this calendar
+  month. A scan creates a row, so it is a creation limit (§3.4), not overage.
+- FREE goes: after the trial an account without a plan is read-only (decision 7).
+  Today's UNLIMITED becomes an operator grant (`comped`, `manual`).
+- The help assistant stays outside the plans, under its rate limit.
+- Comparable: YNAB $109, Monarch $99.99, Copilot $95 a year.
+
+### 13.3 Kurvenschmiede: per user, by curves
+
+Its running costs are close to nothing, so the price follows the value to an engineer.
+The calculator stays open to anyone, without an account.
+
+| Code | `curves` | Month | Year |
+|---|---|---|---|
+| `personal` | 10 | 9 | 90 |
+| `professional` | unlimited (`None`) | 39 | 390 |
+
+`curves` counts owned setpoint sessions (generic and steering); profiles, segments,
+gears, parts, measured tables, exports and compute don't count (its review). A copy
+counts; an admin transfer and the erasure hand-over never check a limit. Risk: firms
+usually buy for a team, by invoice; a company payer may follow.
+
+### 13.4 Local review
+
+- Billing stays **off by default** everywhere, and nothing here goes to production.
+- Each app declares the catalogue above as `PlanSpec`s and can switch billing on in a
+  local `.env` only, to review the pages, the gate, the limits and the banners.
+- Without a provider account, the tests and a local run feed **signed fixture events**
+  to the app's own webhook with a local secret: trial, checkout completed, renewal,
+  payment failed, cancelled. With a Paddle sandbox account (Marcel's), the hosted
+  checkout and portal can be tried end to end.
+- The price ids in the settings stay placeholders until the provider is chosen.
+

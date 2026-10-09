@@ -206,7 +206,16 @@ async function main() {
       const page = await context.newPage();
       for (const slug of pages) {
         const name = `${slug}--${variant.width}-${variant.size}`;
-        await page.goto(`${base}?text-size=${variant.size}#/${slug}`, { waitUntil: "networkidle" });
+        // A fresh document per page: a hash change alone keeps the last page's state.
+        // `networkidle` with a fallback: /server-feedback never goes quiet for 500 ms in
+        // a row, and its 30 s timeout used to end the whole run there (0.32.1 sweep).
+        await page.goto("about:blank");
+        try {
+          await page.goto(`${base}?text-size=${variant.size}#/${slug}`, { waitUntil: "networkidle", timeout: 15_000 });
+        } catch (error) {
+          if (error?.name !== "TimeoutError") throw error;
+          await page.waitForTimeout(1500);
+        }
         // The lazy section, its fonts and the first effects.
         await page.waitForTimeout(600);
         const applied = await page.evaluate(() => document.documentElement.dataset.textSize ?? "normal");

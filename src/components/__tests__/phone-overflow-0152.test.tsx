@@ -16,10 +16,12 @@ describe("no tab outgrows its strip (L3)", () => {
 
 describe("ToggleGroup overflow (L4)", () => {
   const options = ["Sprung", "Rampe", "Sinus", "Sweep", "Bewegung"].map((v) => ({ value: v, label: v }));
-  it("truncates by default", () => {
+  it("truncates by default at Normal, and wraps from Large up (0.32.1)", () => {
     render(<ToggleGroup aria-label="Signal" options={options} value="Sinus" onChange={() => {}} />);
     expect(screen.getByRole("radio", { name: "Bewegung" }).className).toContain("truncate");
-    expect(screen.getByRole("radiogroup").className).not.toContain("flex-wrap");
+    const group = screen.getByRole("radiogroup").className.split(" ");
+    expect(group).not.toContain("flex-wrap");
+    expect(group).toContain("large:flex-wrap");
   });
 
   it("wraps with overflow=\"wrap\" and never truncates a label", () => {

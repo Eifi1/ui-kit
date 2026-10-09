@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.6.0",
+  "kit_version": "0.6.1",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -2523,7 +2523,7 @@
     {
       "name": "eifi1_server_kit.billing",
       "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in ``Eifi1/ui-kit``; its §12 wins over the sections above it).",
-      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables, no\nroutes, no provider SDK and no request to a provider. The subscription row and the event\ntable, the routes, the provider's API client (checkout, portal, cancellation), the read-only\ngate's allow-list and the daily notice job stay in each app. Marcel's decisions (§2): all\nthree apps charge, through a Merchant of Record — Paddle or Lemon Squeezy, behind one\ninterface — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets a\n30-day trial without a card, a beta payer 12 free months.\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets and the price ids;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates;\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, and a mapper per provider;\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, checkout,\n  the operator's plan change, and a sync reply's refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables, no\nroutes, no provider SDK and no request to a provider. The subscription row and the event\ntable, the routes, the provider's API client (checkout, portal, cancellation), the read-only\ngate's allow-list and the daily notice job stay in each app. Marcel's decisions (§2): all\nthree apps charge, through a Merchant of Record — Paddle or Lemon Squeezy, behind one\ninterface — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets a\n30-day trial without a card, a beta payer 12 free months.\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets and the price ids;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, and a mapper per provider;\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plan change, and a sync\n  reply's refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.",
       "contract": {
         "doc": "docs/billing-harmonization.md",
         "section": "§10",
@@ -2595,7 +2595,7 @@
           "name": "PADDLE_SIGNATURE_TOLERANCE",
           "kind": "constant",
           "signature": "PADDLE_SIGNATURE_TOLERANCE = 5.0",
-          "doc": "How far, in seconds, Paddle's ``ts`` may be from now: Paddle's own default (its docs:\n\"The default tolerance between the timestamp and the current time is five seconds\").\nChecked both ways, so a clock running ahead is no loophole either. An app on a\nscale-to-zero host (Cloud Run at min-instances 0) may pass a wider ``tolerance``: a cold\nstart can outlast five seconds — Paddle's retry would pass, a little later."
+          "doc": "How far, in seconds, Paddle's signature timestamp ``ts`` may be from now: Paddle's own\ndefault (its docs: \"Our SDKs have a default tolerance of five seconds between the\ntimestamp and the current time\"). Checked both ways, so a clock running ahead is no\nloophole either. The default of\n:attr:`BillingSettings.billing_signature_tolerance`; exported by\n:mod:`~eifi1_server_kit.billing.signatures`."
         },
         {
           "name": "PADDLE_STATUSES",
@@ -2742,7 +2742,7 @@
               "name": "comped_until",
               "type": "UtcDateTime | None",
               "default": "None",
-              "doc": ""
+              "doc": "When the free grant ends (:func:`~eifi1_server_kit.billing.effective_comped_until`):\na beta row stored without an end shows the launch plus 12 months, the banner's\n\"free until …\" (§3.2); ``None`` is no end."
             },
             {
               "name": "current_period_end",
@@ -2778,8 +2778,8 @@
           "methods": [
             {
               "name": "from_row",
-              "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None) -> Self",
-              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``."
+              "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None, launch: datetime | None = None) -> Self",
+              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``.\n\nPass ``launch=settings.billing_launch_at``: a beta row stored before the launch\ndate was known has no ``comped_until``, and both the standing and the\n``comped_until`` shown read it as the launch plus 12 months (§3.2)."
             }
           ]
         },
@@ -2803,7 +2803,7 @@
           "name": "BillingSettings",
           "kind": "model",
           "signature": "class BillingSettings(BaseModel)",
-          "doc": "Billing's settings (§4, §10), named for ``<APP>_BILLING_*``.\n\nMeant to be INHERITED by the app's settings::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KEKSDOSE_\")\n\nAn app that keeps its own fields builds one from them instead:\n``BillingSettings.model_validate(settings, from_attributes=True)``.\n\n``billing_price_ids`` is plan → currency → interval → the provider's price id (§3.1;\nPaddle's ``pri_…``, Lemon Squeezy's variant id), JSON in the environment::\n\n    KEKSDOSE_BILLING_PRICE_IDS='{\"pro\": {\"CHF\": {\"year\": \"pri_01h…\", \"month\": \"pri_01j…\"}}}'\n\nA combination may hold a LIST instead: the current id first — what a new checkout uses\n— then retired ids whose subscriptions still run, so their webhooks still find the plan\n(``[\"pri_new\", \"pri_old\"]``). An id may stand for one combination only.",
+          "doc": "Billing's settings (§4, §10), named for ``<APP>_BILLING_*``.\n\nMeant to be INHERITED by the app's settings::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KEKSDOSE_\")\n\nAn app that keeps its own fields builds one from them instead:\n``BillingSettings.model_validate(settings, from_attributes=True)``.\n\n``billing_price_ids`` is plan → currency → interval → the provider's price id (§3.1;\nPaddle's ``pri_…``, Lemon Squeezy's variant id), JSON in the environment::\n\n    KEKSDOSE_BILLING_PRICE_IDS='{\"pro\": {\"CHF\": {\"year\": \"pri_01h…\", \"month\": \"pri_01j…\"}}}'\n\nA combination may hold a LIST instead: the current id first — what a new checkout uses\n— then retired ids whose subscriptions still run, so their webhooks still find the plan\n(``[\"pri_new\", \"pri_old\"]``). An id may stand for one combination only.\n\nThe one id becoming a list, the keys' normalisation and that check are the field's\nVALIDATION: they run when the settings are built or validated, not on assignment (no\n``validate_assignment``). A test that monkeypatches ``billing_price_ids`` passes the\nparsed shape — ``{\"pro\": {\"CHF\": {\"year\": [\"pri_test\"]}}}`` — or a bare string is read\ncharacter by character (:meth:`billing_price_id` answers ``\"p\"``).",
           "fields": [
             {
               "name": "billing_enabled",
@@ -2830,8 +2830,14 @@
               "doc": "The webhook's signing secret (§5): Paddle's endpoint secret key (``pdl_ntfset_…``),\nLemon Squeezy's signing secret."
             },
             {
+              "name": "billing_signature_tolerance",
+              "type": "float",
+              "default": "5.0",
+              "doc": "How far, in seconds, Paddle's signature timestamp may be from now (§5): the\n``tolerance`` the app passes to\n:func:`~eifi1_server_kit.billing.verify_webhook_signature`. Paddle's default, five\nseconds (:data:`PADDLE_SIGNATURE_TOLERANCE`), unless the deployment widens it: on a\nscale-to-zero host (Cloud Run at min-instances 0) a cold start can eat the five\nseconds, and every first delivery after a quiet spell answers 400 until Paddle's\nretry lands warm. keksdose runs 60 (``KEKSDOSE_BILLING_SIGNATURE_TOLERANCE=60``). A\nreplay inside the window is still a duplicate to the event store (§5). Lemon\nSqueezy signs no timestamp, so it ignores this."
+            },
+            {
               "name": "billing_price_ids",
-              "type": "dict[PlanCode, dict[Currency, dict[Interval, _PriceIds]]]",
+              "type": "Annotated[dict[PlanCode, dict[Currency, dict[Interval, _PriceIds]]], _no_json_decoding(), BeforeValidator(_json_text)]",
               "default": "dict()",
               "doc": "Plan → currency → interval → price id(s); see the class docstring."
             },
@@ -2839,7 +2845,7 @@
               "name": "billing_launch_at",
               "type": "datetime | None",
               "default": "None",
-              "doc": "When billing went on for this app (§2.4): the beta's 12 months run from it\n(:func:`~eifi1_server_kit.billing.beta_comped_until`), and an invitation created\nbefore it makes a beta payer (:func:`~eifi1_server_kit.billing.is_beta`). Unset until\nMarcel names the date."
+              "doc": "When billing went on for this app (§2.4): the beta's 12 months run from it\n(:func:`~eifi1_server_kit.billing.beta_comped_until`), and an invitation created\nbefore it makes a beta payer (:func:`~eifi1_server_kit.billing.is_beta`). Unset until\nMarcel names the date, and NOT required to switch on: a beta row stored without an\nend reads as no end until it is set, then as this date plus 12 months\n(:func:`~eifi1_server_kit.billing.effective_comped_until`), so moving the date moves\nevery such row's end with it."
             }
           ],
           "methods": [
@@ -2871,7 +2877,7 @@
             {
               "name": "billing_standing",
               "signature": "billing_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
-              "doc": ":func:`~eifi1_server_kit.billing.in_good_standing`, behind the switch: with\nbilling off everyone is in good standing (§4). The standing the read-only gate\ntakes (:func:`~eifi1_server_kit.billing.billing_write_allowed`)."
+              "doc": ":func:`~eifi1_server_kit.billing.in_good_standing`, behind the switch: with\nbilling off everyone is in good standing (§4). The standing the read-only gate\ntakes (:func:`~eifi1_server_kit.billing.billing_write_allowed`). A beta row stored\nwithout an end ends at :attr:`billing_launch_at` plus 12 months, once that is set\n(§3.2)."
             }
           ]
         },
@@ -2968,6 +2974,12 @@
           ]
         },
         {
+          "name": "DuplicateEventError",
+          "kind": "class",
+          "signature": "class DuplicateEventError(Exception)",
+          "doc": "Raised by :meth:`EventStore.record` when the event is in the table already: the\ninsert hit the unique ``(provider, event_id)`` — a second delivery that raced the first\npast :meth:`~EventStore.seen` (§5). :func:`dispatch` answers it as\n:attr:`DispatchOutcome.DUPLICATE`, and :func:`webhook_answer` as a 200 wherever it is\nraised.\n\nIt replaces the savepoint recipe as the kit's way: a nested transaction is what lets\nthe outer one go on after the failed insert, and SQLite's driver in the apps' tests\ncan't nest one, so each app worked around it (keksdose's 0.32 report). The store\ncatches the database's unique violation, undoes the failed insert — a savepoint where\nthe driver nests them, else a rollback of the session: nothing :func:`dispatch` did\nbefore ``record`` needs keeping, since ``seen`` only reads — and raises this."
+        },
+        {
           "name": "EventKind",
           "kind": "enum",
           "signature": "class EventKind(enum.StrEnum)",
@@ -3009,7 +3021,7 @@
             {
               "name": "record",
               "signature": "async record(event: NormalisedEvent, *, received_at: datetime) -> None",
-              "doc": "Insert the event: ``provider``, ``event_id``, ``type`` (``event.provider_type``),\n``occurred_at`` and ``received_at``; ``processed_at`` empty."
+              "doc": "Insert the event: ``provider``, ``event_id``, ``type`` (``event.provider_type``),\n``occurred_at`` and ``received_at``; ``processed_at`` empty.\n\nFlush it here, so a unique violation surfaces here and not at the commit, and raise\n:class:`DuplicateEventError` for one: the event is in the table already."
             },
             {
               "name": "mark_processed",
@@ -3126,7 +3138,7 @@
           "name": "PlanChangeRequest",
           "kind": "model",
           "signature": "class PlanChangeRequest(BaseModel)",
-          "doc": "``POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}`` (§4, §6): an\noperator's plan or grant — :attr:`~eifi1_server_kit.user_admin.AdminAction.PLAN` at the\n``acknowledge`` level, checked with\n:func:`~eifi1_server_kit.user_admin.require_confirmation`. No ``confirm_email``: the\nlevel is ``acknowledge`` for every account, and offering the field would suggest a\nstronger gate (keksdose's reasoning).\n\nThe app writes it as an operator's grant (§3.2): ``comped``, ``source`` ``manual``,\nuntil ``comped_until`` or without an end; a ``comped_until`` of now ends a grant. Log it\nas ``detail {from, to, comped_until, counts}`` (§6). An admin transfer or an erasure\nhand-over never checks a limit, and neither does this (§12.15).",
+          "doc": "``POST /admin/…/{id}/plan {plan, comped_until?, acknowledged}`` (§4, §6): an\noperator's plan or grant — :attr:`~eifi1_server_kit.user_admin.AdminAction.PLAN` at the\n``acknowledge`` level, checked with\n:func:`~eifi1_server_kit.user_admin.require_confirmation`. No ``confirm_email``: the\nlevel is ``acknowledge`` for every account, and offering the field would suggest a\nstronger gate (keksdose's reasoning).\n\nThe app writes it as an operator's grant (§3.2): ``comped``, ``source`` ``manual``,\nuntil ``comped_until`` or without an end; a ``comped_until`` of now ends a grant. Log it\nas ``detail {from, to, comped_until, counts}`` (§6). An admin transfer or an erasure\nhand-over never checks a limit, and neither does this (§12.15).\n\n**A running beta grant keeps its beta** (keksdose's ``kept_beta``, its 0.32 report):\ngiven no ``comped_until``, a change on a row whose ``source`` is ``beta`` and whose\ngrant holds (:func:`~eifi1_server_kit.billing.grant_holds` with the settings' launch)\nmoves ``plan_code`` only — ``status``, ``source`` and ``comped_until`` stay, so the\nbeta still ends at the launch plus 12 months\n(:func:`~eifi1_server_kit.billing.effective_comped_until`). Before the launch every\npayer is beta; writing such a move as ``manual`` without an end would make the payer\nfree for good, which nobody decided. A ``comped_until`` turns it into an operator's\ngrant until then; any other row takes the grant as above. The kit writes no row, so\nthe rule is the app's: keksdose's ``set_plan``, which reports ``kept_beta`` beside\n:class:`PlanChangeResponse`'s fields (subclass it to add the field).",
           "fields": [
             {
               "name": "plan",
@@ -3194,6 +3206,12 @@
           "doc": "A plan code, normalised on the way in (:func:`normalize_plan`)."
         },
         {
+          "name": "PlanIntervalPrices",
+          "kind": "class",
+          "signature": "@with_config(ConfigDict(extra='forbid')) class PlanIntervalPrices(TypedDict, total=False)",
+          "doc": "One currency's prices on the wire: ``{month?, year?}``, GROSS minor units (§4,\n§12.17). A period the plan isn't sold for is ABSENT, never ``0`` or ``null``.\n\nA ``TypedDict`` with a key per :class:`~eifi1_server_kit.billing.BillingInterval`, not\na ``dict`` keyed by the enum: OpenAPI's ``propertyNames`` is dropped by\nopenapi-typescript (7.13), which then generates ``{[key: string]: number}`` — not\nassignable to ui-kit's ``PlanIntervalPrices`` without a cast (keksdose's 0.32 report).\nNamed keys generate ``{month?: number; year?: number}``, ui-kit's type as it is."
+        },
+        {
           "name": "PlanLimitError",
           "kind": "class",
           "signature": "class PlanLimitError(ValueError)",
@@ -3205,6 +3223,51 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "PlanOut",
+          "kind": "model",
+          "signature": "class PlanOut(BaseModel)",
+          "doc": "One plan of ``GET /billing/plans`` (§4): ``{code, prices, limits, sort}``, the\ncatalogue's :class:`~eifi1_server_kit.billing.PlanSpec` as JSON can carry it. Build the\nlist with :func:`plans_out`.\n\n**``prices`` is nested, currency → interval → GROSS minor units** (§4, §12.17)::\n\n    {\"code\": \"standard\",\n     \"prices\": {\"CHF\": {\"month\": 7900, \"year\": 79000}, \"EUR\": {\"month\": 7900, \"year\": 79000}},\n     \"limits\": {\"units\": 150, \"seats\": 5, \"storage\": 26843545600},\n     \"sort\": 1}\n\n``PlanSpec.prices`` is keyed by ``(currency, interval)``, and a tuple is no JSON key, so\neach app invented its own list and converted it in the page (kastlan's ``[{currency,\ninterval, amount}]``, its 0.32 report). This is ui-kit's ``PlanPrices``\n(:class:`PlanPrices`, with named keys so the generated TypeScript is that type too), so\n``BillingPlan.prices`` takes it as it is. A combination the plan doesn't sell is\nABSENT, never ``0``: the page reads ``0`` — and a plan with no prices at all, ``{}`` —\nas free. ``limits`` is the plan's, ``null`` for unlimited (kastlan's ``storage`` in\nbytes, §13.1); ``sort`` the catalogue's order, cheapest first, which decides the page's\nupgrade and downgrade.\n\n**No name, description or feature lines**: those are the app's i18n, never the\nprovider's or the server's (§3.1). The page maps ``code`` to its own words and builds\nui-kit's ``BillingPlan`` from both.\n\nA RETIRED PRICE needs nothing here: its id stays findable in the settings for the\nsubscriptions still on it (:class:`~eifi1_server_kit.billing.BillingSettings`), and\nthis shape carries amounts, not price ids. A plan sold no more stays in the catalogue\nfor the rows on it — its limits still gate creation (§3.4) — and the page marks it\n``disabled`` or the route leaves it out; it is the app's word, not the catalogue's.",
+          "fields": [
+            {
+              "name": "code",
+              "type": "PlanCode",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "prices",
+              "type": "PlanPrices",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "limits",
+              "type": "dict[str, int | None]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "from_spec",
+              "signature": "@classmethod from_spec(plan: PlanSpec) -> Self",
+              "doc": "``plan`` on the wire: its prices nested, CHF before EUR and month before year\nwhatever order the spec lists them in (:class:`PlanPrices`' order), so the JSON is\nthe same on every run."
+            }
+          ]
+        },
+        {
+          "name": "PlanPrices",
+          "kind": "class",
+          "signature": "@with_config(ConfigDict(extra='forbid')) class PlanPrices(TypedDict, total=False)",
+          "doc": "A plan's prices on the wire: ``{CHF?, EUR?}``, each a :class:`PlanIntervalPrices`\n— ui-kit's ``PlanPrices``, which ``BillingPlan.prices`` takes as it is (§3.1, §4). A\ncurrency the plan isn't sold in is ABSENT; a plan sold in none is ``{}``, which the\npage reads as free. A key per\n:class:`~eifi1_server_kit.billing.BillingCurrency`, for the reason\n:class:`PlanIntervalPrices` gives; any other key is refused."
         },
         {
           "name": "PlanSpec",
@@ -3441,7 +3504,7 @@
           "name": "beta_comped_until",
           "kind": "function",
           "signature": "beta_comped_until(launch: datetime) -> datetime",
-          "doc": "When a beta payer's free months end: 12 calendar months after the launch (§2.4,\n:data:`BETA_FREE_MONTHS`) — the same date for every beta payer of the app.\n\nCalendar months, not 365 days: launched on 1 March, free until 1 March. A launch on\n29 February ends on 28 February. Naive in, naive out."
+          "doc": "When a beta payer's free months end: 12 calendar months after the launch (§2.4,\n:data:`BETA_FREE_MONTHS`) — the same date for every beta payer of the app.\n\nCalendar months, not 365 days: launched on 1 March, free until 1 March. A launch on\n29 February ends on 28 February. Naive in, naive out.\n\nA beta row written before the launch date is known stores no ``comped_until``; the\nkit reads it as this date at read time (:func:`effective_comped_until`, §3.2)."
         },
         {
           "name": "billing_write_allowed",
@@ -3470,20 +3533,26 @@
         {
           "name": "dispatch",
           "kind": "function",
-          "signature": "async dispatch[RowT: SubscriptionRow](event: NormalisedEvent, store: EventStore, apply: Callable[[NormalisedEvent, RowT, dict[str, object]], Awaitable[None]], *, load: Callable[[NormalisedEvent], Awaitable[RowT | None]], plan_for_price: Callable[[str], str | None], now: datetime | None = None) -> DispatchOutcome",
-          "doc": "Record ``event`` and apply it to the payer's row, through the app's ports (§5).\n\nPure but for its callbacks, which it awaits in order and never concurrently:\n\n1. **seen** → :attr:`DispatchOutcome.DUPLICATE`; nothing else happens;\n2. **record** it (``received_at`` = ``now``);\n3. **load** the payer's row — by ``event.payer_ref`` first (the checkout's custom data,\n   :func:`~eifi1_server_kit.billing.checkout_custom_data`), else by the provider's\n   subscription or customer id. None → :attr:`~DispatchOutcome.NO_PAYER`;\n4. **the ordering guard** (§5): a snapshot older than the row's\n   ``updated_from_event_at`` → :attr:`~DispatchOutcome.STALE`. A notice never moves\n   the mark, so a late notice cannot hide a newer state;\n5. **another subscription** that would not keep the payer in good standing →\n   :attr:`~DispatchOutcome.OTHER_SUBSCRIPTION`; one that would (the payer subscribed\n   again) takes the row's link;\n6. **a free grant** (§12.11, :func:`~eifi1_server_kit.billing.grant_holds`) → apply only\n   the link and the dates, :attr:`~DispatchOutcome.GRANT_HOLDS`;\n7. otherwise **apply** :func:`row_changes`, with the plan from ``plan_for_price``\n   (:meth:`~eifi1_server_kit.billing.BillingSettings.billing_plan_for_price`). A price\n   the settings don't know is 503 ``billing_not_configured``: nothing is kept, and the\n   provider's retry applies the event once the setting is there;\n8. **mark processed**, except for ``NO_PAYER``.\n\n``apply(event, row, changes)`` writes the changes — and may send the app's notice for\nthe kind. It raises :class:`~eifi1_server_kit.billing.PoisonEventError` for an event it\ncan never apply (answered 2xx and logged); any other exception rolls the transaction\nback and answers 5xx, so the provider retries (:func:`webhook_answer`)."
+          "signature": "async dispatch[RowT: SubscriptionRow](event: NormalisedEvent, store: EventStore, apply: Callable[[NormalisedEvent, RowT, dict[str, object]], Awaitable[None]], *, load: Callable[[NormalisedEvent], Awaitable[RowT | None]], plan_for_price: Callable[[str], str | None], now: datetime | None = None, launch: datetime | None = None) -> DispatchOutcome",
+          "doc": "Record ``event`` and apply it to the payer's row, through the app's ports (§5).\n\nPure but for its callbacks, which it awaits in order and never concurrently:\n\n1. **seen** → :attr:`DispatchOutcome.DUPLICATE`; nothing else happens;\n2. **record** it (``received_at`` = ``now``); a :class:`DuplicateEventError` from it —\n   a delivery that raced this one past ``seen`` — is\n   :attr:`~DispatchOutcome.DUPLICATE` too, and nothing else happens;\n3. **load** the payer's row — by ``event.payer_ref`` first (the checkout's custom data,\n   :func:`~eifi1_server_kit.billing.checkout_custom_data`), else by the provider's\n   subscription or customer id. None → :attr:`~DispatchOutcome.NO_PAYER`;\n4. **the ordering guard** (§5): a snapshot older than the row's\n   ``updated_from_event_at`` → :attr:`~DispatchOutcome.STALE`. A notice never moves\n   the mark, so a late notice cannot hide a newer state;\n5. **another subscription** that would not keep the payer in good standing →\n   :attr:`~DispatchOutcome.OTHER_SUBSCRIPTION`; one that would (the payer subscribed\n   again) takes the row's link;\n6. **a free grant** (§12.11, :func:`~eifi1_server_kit.billing.grant_holds`) → apply only\n   the link and the dates, :attr:`~DispatchOutcome.GRANT_HOLDS`. Pass ``launch`` — the\n   settings' ``billing_launch_at`` — so a beta row stored without an end stops\n   holding at the launch plus 12 months (§3.2); without it such a row holds for good,\n   as in 0.6.0;\n7. otherwise **apply** :func:`row_changes`, with the plan from ``plan_for_price``\n   (:meth:`~eifi1_server_kit.billing.BillingSettings.billing_plan_for_price`). A price\n   the settings don't know is 503 ``billing_not_configured``: nothing is kept, and the\n   provider's retry applies the event once the setting is there;\n8. **mark processed**, except for ``NO_PAYER``.\n\n``apply(event, row, changes)`` writes the changes — and may send the app's notice for\nthe kind. It raises :class:`~eifi1_server_kit.billing.PoisonEventError` for an event it\ncan never apply (answered 2xx and logged); any other exception rolls the transaction\nback and answers 5xx, so the provider retries (:func:`webhook_answer`)."
+        },
+        {
+          "name": "effective_comped_until",
+          "kind": "function",
+          "signature": "effective_comped_until(row: SubscriptionRow, launch: datetime | None) -> datetime | None",
+          "doc": "When the row's free grant ends, as the kit reads it (§3.2, §2.4): what a banner's\n\"free until …\" and the overview show, and what :func:`grant_holds` and\n:func:`in_good_standing` compare with.\n\n* The row's ``comped_until`` where it has one: an explicit end always wins, over the\n  launch too.\n* A BETA row (``source`` ``beta``) without one: :func:`beta_comped_until` of\n  ``launch``, the settings' ``billing_launch_at``. The apps' beta migrations and every\n  registration before Marcel names the launch date write the row without that date;\n  read as \"no end\", it would be free for good. The kit resolves it at READ time\n  instead of having the app write it back, because the launch date may still move: a\n  moved date then needs no data change (Kurvenschmiede's 0.32 report).\n* Otherwise ``None``, no end: an operator's grant without one (``source`` ``manual``,\n  the operator's own admin accounts, §12.8) — and a beta row while ``launch`` is\n  ``None``, as in 0.6.0.\n\n``launch`` is a required argument that may be ``None``:\n:class:`~eifi1_server_kit.billing.BillingSettings` switches on with the provider and\nits two secrets, NOT the launch date, so a deployment with billing on may still lack\none. Pass ``settings.billing_launch_at`` as it is. Naive in, naive out, like\n:func:`beta_comped_until`."
         },
         {
           "name": "grant_holds",
           "kind": "function",
-          "signature": "grant_holds(row: SubscriptionRow, now: datetime) -> bool",
-          "doc": "Is a free grant running — ``comped`` before ``comped_until``, or without one?\n\nWhile it is, a provider event does not overwrite the row (§12.11): an operator's grant\n— or the beta's — beats the provider, and the provider's state applies from\n``comped_until`` on (:func:`in_good_standing`)."
+          "signature": "grant_holds(row: SubscriptionRow, now: datetime, *, launch: datetime | None = None) -> bool",
+          "doc": "Is a free grant running — ``comped`` before its end, or without one?\n\nWhile it is, a provider event does not overwrite the row (§12.11): an operator's grant\n— or the beta's — beats the provider, and the provider's state applies from the\ngrant's end on (:func:`in_good_standing`). The end is\n:func:`effective_comped_until`: ``comped_until``, else for a beta row the launch plus\n12 months — given ``launch``, the settings' ``billing_launch_at``. Without ``launch`` a\nbeta row stored without an end holds without one, as in 0.6.0."
         },
         {
           "name": "in_good_standing",
           "kind": "function",
-          "signature": "in_good_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
-          "doc": "May the payer's data change at ``now``? §3.3, with §12.7 and §12.11.\n\n* **No row: always** (§12.7) — demo users, the demo's system account, ownerless items\n  such as keksdose's preview budget. They are never gated and never counted. Every real\n  payer has a row (§12.12), so ``None`` means one of these, never \"forgotten\".\n* ``active`` — yes; but a subscription set to cancel at its period's end is out once\n  that end has passed, even before the provider's final event arrives (it may be late;\n  a cancelled period cannot renew).\n* ``trialing`` — the cardless trial (``source`` ``trial``) before ``trial_ends_at``, or\n  while it is empty: a pure guest's row waits for their first owned item to start it\n  (§12.9). A provider's own trial counts as ``active``.\n* ``comped`` — before ``comped_until``, or without one; after it, while the provider's\n  paid period runs (``current_period_end``): a payer who subscribed during the grant\n  — whose provider events left the grant in place (§12.11) — is in good standing from\n  the grant's end on, as the provider says.\n* ``past_due`` — yes: the provider retries, and moves it on when it gives up (Paddle to\n  ``canceled`` or ``paused``, Lemon Squeezy after 4 retries over 2 weeks to ``unpaid``).\n  With ``retry_grace``, also no later than ``current_period_end`` plus the grace — a\n  backstop for a provider event that never arrived.\n* ``canceled``, ``expired`` — no.\n\nBilling switched off means everyone is in good standing (§4):\n:meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` asks the switch\nfirst. An unknown ``status`` is a :class:`ValueError`."
+          "signature": "in_good_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None, launch: datetime | None = None) -> bool",
+          "doc": "May the payer's data change at ``now``? §3.3, with §12.7 and §12.11.\n\n* **No row: always** (§12.7) — demo users, the demo's system account, ownerless items\n  such as keksdose's preview budget. They are never gated and never counted. Every real\n  payer has a row (§12.12), so ``None`` means one of these, never \"forgotten\".\n\n  **This FAILS OPEN when the row is there but hidden.** With row-level security on the\n  subscription table, a guest's request — keksdose's guest in the owner's budget,\n  kastlan's staff of another company — reads the PAYER's row back as nothing, and a\n  lapsed owner's data stays writable through every guest (keksdose's 0.32 report).\n  Read the payer's row with the RLS bypass, as the webhook does (§12.20), or, where a\n  row must exist — any payer, §12.12 — treat a missing one as an error rather than\n  pass ``None`` here.\n* ``active`` — yes; but a subscription set to cancel at its period's end is out once\n  that end has passed, even before the provider's final event arrives (it may be late;\n  a cancelled period cannot renew).\n* ``trialing`` — the cardless trial (``source`` ``trial``) before ``trial_ends_at``, or\n  while it is empty: a pure guest's row waits for their first owned item to start it\n  (§12.9). A provider's own trial counts as ``active``.\n* ``comped`` — before its end, or without one; after it, while the provider's paid\n  period runs (``current_period_end``): a payer who subscribed during the grant —\n  whose provider events left the grant in place (§12.11) — is in good standing from\n  the grant's end on, as the provider says. The end is\n  :func:`effective_comped_until`: ``comped_until``, else for a beta row stored without\n  one the launch plus 12 months, given ``launch`` (the settings'\n  ``billing_launch_at``); without ``launch`` such a row has no end, as in 0.6.0.\n* ``past_due`` — yes: the provider retries, and moves it on when it gives up (Paddle to\n  ``canceled`` or ``paused``, Lemon Squeezy after 4 retries over 2 weeks to ``unpaid``).\n  With ``retry_grace``, also no later than ``current_period_end`` plus the grace — a\n  backstop for a provider event that never arrived.\n* ``canceled``, ``expired`` — no.\n\nBilling switched off means everyone is in good standing (§4):\n:meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` asks the switch\nfirst, and passes its ``billing_launch_at`` as ``launch``. An unknown ``status`` is a\n:class:`ValueError`."
         },
         {
           "name": "is_beta",
@@ -3528,6 +3597,12 @@
           "doc": "The app's plans as one read-only mapping, code → plan, in ``sort`` order (§3.1).\n\nLook a plan up with the code normalised: ``PLANS.get(normalize_plan(code))``. Refused,\nas :class:`ValueError`, on the first import: no plans, two plans with one code, and\nplans that name different dimensions — a ``budget`` beside a ``budgets`` would leave\none plan without a limit there."
         },
         {
+          "name": "plans_out",
+          "kind": "function",
+          "signature": "plans_out(catalogue: Mapping[str, PlanSpec]) -> list[PlanOut]",
+          "doc": "The answer to ``GET /billing/plans`` (§4): every plan of ``catalogue`` as\n:class:`PlanOut`, in ``sort`` order (then by code, as\n:func:`~eifi1_server_kit.billing.plan_catalogue` orders them — sorted again here, so a\nmapping built by hand comes out the same)::\n\n    @router.get(\"/billing/plans\", response_model=list[PlanOut])\n    def billing_plans(payer: Payer = Depends(current_payer)) -> list[PlanOut]:\n        settings.require_billing_enabled()  # 404 billing_disabled\n        return plans_out(PLANS)\n\nEvery currency the plans are sold in: the page picks the payer's — the overview's\n``currency`` (§12.18) — and offers the switch where a plan has more than one."
+        },
+        {
           "name": "refuse_billing_read_only",
           "kind": "function",
           "signature": "refuse_billing_read_only(in_good_standing: bool, what: str) -> None",
@@ -3537,7 +3612,7 @@
           "name": "row_changes",
           "kind": "function",
           "signature": "row_changes(event: NormalisedEvent, *, grant_holds: bool = False, plan_code: str | None = None) -> dict[str, object]",
-          "doc": "The columns of the payer's row (§3.2) that ``event`` sets, by name — what\n:func:`dispatch` hands the app's ``apply``::\n\n    for name, value in changes.items():\n        setattr(row, name, value)\n\n* Always ``provider``, and the provider's ``provider_customer_id`` and\n  ``provider_subscription_id`` where the event names them — the link the portal and a\n  deletion's cancellation need (§12.23).\n* A snapshot also sets ``current_period_end`` and ``cancel_at_period_end`` where it\n  carries them, and ``updated_from_event_at`` (the ordering guard's mark).\n* Unless a grant holds, a snapshot then sets ``status``, ``source`` (``provider``) and,\n  given ``plan_code``, the plan. While a grant holds those stay as the grant set them,\n  and :func:`~eifi1_server_kit.billing.in_good_standing` reads the provider's paid\n  period once the grant ends (§12.11).\n\nDatetimes are aware, in UTC: an app with naive columns (kastlan) strips the zone."
+          "doc": "The columns of the payer's row (§3.2) that ``event`` sets, by name — what\n:func:`dispatch` hands the app's ``apply``::\n\n    for name, value in changes.items():\n        setattr(row, name, value)\n\n* Always ``provider``, and the provider's ``provider_customer_id`` and\n  ``provider_subscription_id`` where the event names them — the link the portal and a\n  deletion's cancellation need (§12.23).\n* A snapshot also sets ``current_period_end`` and ``cancel_at_period_end`` where it\n  carries them, and ``updated_from_event_at`` (the ordering guard's mark).\n* Unless a grant holds, a snapshot then sets ``status``, ``source`` (``provider``) and,\n  given ``plan_code``, the plan. While a grant holds those stay as the grant set them,\n  and :func:`~eifi1_server_kit.billing.in_good_standing` reads the provider's paid\n  period once the grant ends (§12.11).\n\nDatetimes are aware, in UTC: an app with naive columns (kastlan) strips the zone.\n``status``, ``source`` and ``provider`` are the kit's ``StrEnum`` members\n(:class:`~eifi1_server_kit.billing.SubscriptionStatus`,\n:class:`~eifi1_server_kit.billing.SubscriptionSource`,\n:class:`~eifi1_server_kit.billing.BillingProvider`), not plain strings: a ``str``\nsubclass, so they compare equal to their string values and a string column stores\nthem as those values — an app that writes ``.value`` instead sees no difference."
         },
         {
           "name": "trial_ends_at",
@@ -3561,13 +3636,13 @@
           "name": "verify_webhook_signature",
           "kind": "function",
           "signature": "verify_webhook_signature(provider: BillingProvider | str, raw_body: bytes, headers: Mapping[str, str], secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
-          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key())\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); Lemon\nSqueezy's signature has no timestamp. An unknown provider is a :class:`ValueError`."
+          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(\n        BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key(),\n        tolerance=settings.billing_signature_tolerance,\n    )\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); pass the\nsettings' ``billing_signature_tolerance``, so a deployment widens it in its\nenvironment. Lemon Squeezy's signature has no timestamp. An unknown provider is a\n:class:`ValueError`."
         },
         {
           "name": "webhook_answer",
           "kind": "function",
           "signature": "webhook_answer(result: DispatchOutcome | BaseException | None) -> WebhookAnswer",
-          "doc": "The answer policy (§5): what the webhook route answers for what happened.\n\n* ``None`` — an event billing doesn't use — and every :class:`DispatchOutcome`: 200.\n  Paddle and Lemon Squeezy both ask for a 200; anything else is retried.\n* :attr:`DispatchOutcome.NO_PAYER` and a\n  :class:`~eifi1_server_kit.billing.PoisonEventError`: 200 and logged — a retry would\n  bring the same bytes (keksdose's Pub/Sub rule).\n* A :class:`~eifi1_server_kit.billing.BillingError`: its own status — 400 for a bad\n  signature, 404 with billing off, 503 for a missing setting (retried) — logged, but\n  for the 404.\n* Anything else is transient: 500 and logged, so the provider retries (Paddle 60 times\n  over 3 days, Lemon Squeezy 3 times within minutes).\n\nLog the result's type and message, never the body: it carries the buyer's details."
+          "doc": "The answer policy (§5): what the webhook route answers for what happened.\n\n* ``None`` — an event billing doesn't use — and every :class:`DispatchOutcome`: 200.\n  Paddle and Lemon Squeezy both ask for a 200; anything else is retried. So is a\n  :class:`DuplicateEventError` that reaches the route (a store that raises it at the\n  commit): the event is in the table, a retry would only find it there.\n* :attr:`DispatchOutcome.NO_PAYER` and a\n  :class:`~eifi1_server_kit.billing.PoisonEventError`: 200 and logged — a retry would\n  bring the same bytes (keksdose's Pub/Sub rule).\n* A :class:`~eifi1_server_kit.billing.BillingError`: its own status — 400 for a bad\n  signature, 404 with billing off, 503 for a missing setting (retried) — logged, but\n  for the 404.\n* Anything else is transient: 500 and logged, so the provider retries (Paddle 60 times\n  over 3 days, Lemon Squeezy 3 times within minutes).\n\nLog the result's type and message, never the body: it carries the buyer's details."
         }
       ]
     },

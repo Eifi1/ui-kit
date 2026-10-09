@@ -173,6 +173,8 @@ export type {
 } from "./components/file-button";
 export * from "./components/treemap";
 export * from "./components/series-chart";
+// 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
+export type { ChartHeight } from "./components/chart-height";
 export * from "./components/chart-zoom";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";
@@ -759,8 +761,8 @@ export type {
 // ── 0.32.0: text size and contrast (docs/text-size-harmonization.md) ──
 export * from "./theme/text-size";
 export * from "./theme/contrast";
-export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM } from "./hooks/use-breakpoint";
-export type { Breakpoint, BreakpointVariant } from "./hooks/use-breakpoint";
+export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM, remPx, useRemPx } from "./hooks/use-breakpoint";
+export type { Breakpoint, BreakpointVariant, RemLength } from "./hooks/use-breakpoint";
 export { useAccountAppearance, resolveAccountAppearance } from "./settings/use-account-appearance";
 export type {
   AppearanceSource,

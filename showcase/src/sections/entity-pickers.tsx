@@ -376,7 +376,7 @@ export function EntityPickers() {
 
       <Example label="EntityCombobox — right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
         <Stage>
-          <div dir="rtl" className="w-64">
+          <div dir="rtl" className="w-64 max-w-full">
             <EntityCombobox
               label="الفئة"
               value={rtlCategory}

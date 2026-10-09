@@ -14,30 +14,43 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** A `matchMedia` that evaluates `(min-width: Npx)` / `(max-width: Npx)` against a fixed
- *  viewport width, as a browser would. */
+/** A `matchMedia` that evaluates `(min-width: Npx)`, `(max-width: Npx)` and
+ *  `(width < Npx)` against a fixed viewport width — fractional too, as a zoomed page or
+ *  an Android device-pixel ratio gives one — as a browser would. */
 function viewport(width: number) {
   vi.stubGlobal("matchMedia", (query: string) => {
-    const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /max-width:\s*(\d+)px/.exec(query);
-    const matches = min ? width >= Number(min[1]) : max ? width <= Number(max[1]) : false;
+    const min = /min-width:\s*([\d.]+)px/.exec(query);
+    const maxWidth = /max-width:\s*([\d.]+)px/.exec(query);
+    const below = /width\s*<\s*([\d.]+)px/.exec(query);
+    const matches = min
+      ? width >= Number(min[1])
+      : maxWidth
+        ? width <= Number(maxWidth[1])
+        : below
+          ? width < Number(below[1])
+          : false;
     return { matches, media: query, addEventListener() {}, removeEventListener() {} };
   });
 }
 
 describe("breakpointQuery", () => {
-  it("keeps the kit's px queries at Normal, character for character", () => {
-    expect(breakpointQuery("max-md", 1, 16)).toBe("(max-width: 767px)");
+  it("keeps the kit's min-width queries at Normal, character for character", () => {
     expect(breakpointQuery("md", 1, 16)).toBe("(min-width: 768px)");
-    expect(breakpointQuery("max-sm", 1, 16)).toBe("(max-width: 639px)");
     expect(breakpointQuery("xl", 1, 16)).toBe("(min-width: 1280px)");
     expect(breakpointQuery("3xl", 1, 16)).toBe("(min-width: 2400px)");
+  });
+
+  it("writes max-* in range syntax, below the px its min-* twin starts at (0.32.1)", () => {
+    expect(breakpointQuery("max-md", 1, 16)).toBe("(width < 768px)");
+    expect(breakpointQuery("max-sm", 1, 16)).toBe("(width < 640px)");
+    expect(breakpointQuery("max-3xl", 1, 16)).toBe("(width < 2400px)");
   });
 
   it("scales with the text size", () => {
     expect(breakpointQuery("md", TEXT_SCALE.large, 16)).toBe("(min-width: 960px)");
     expect(breakpointQuery("md", TEXT_SCALE.xlarge, 16)).toBe("(min-width: 1152px)");
-    expect(breakpointQuery("max-md", TEXT_SCALE.xlarge, 16)).toBe("(max-width: 1151px)");
+    expect(breakpointQuery("max-md", TEXT_SCALE.large, 16)).toBe("(width < 960px)");
+    expect(breakpointQuery("max-md", TEXT_SCALE.xlarge, 16)).toBe("(width < 1152px)");
   });
 
   it("follows a browser default other than 16 px, as a media query's rem does", () => {
@@ -67,6 +80,29 @@ describe("useBreakpoint / usePhoneLayout follow the text size", () => {
     expect(result.current).toBe(false);
     act(() => applyTextSize("large"));
     expect(result.current).toBe(true);
+  });
+
+  // keksdose's 0.32 report (0.32.1): `(max-width: 767px)` and `(min-width: 768px)` both
+  // missed a viewport 767.5 px wide, so DataTable (`!md`) said phone and
+  // `usePhoneLayout()` (`max-md`) said not. Range syntax closes the gap.
+  for (const size of TEXT_SIZES) {
+    const edge = BREAKPOINT_REM.md * 16 * TEXT_SCALE[size];
+    for (const width of [edge - 1, edge - 0.5, edge - 0.25, edge - 0.01, edge, edge + 0.5]) {
+      it(`md and max-md are exact complements at ${width} px at ${size}`, () => {
+        viewport(width);
+        if (size !== "normal") applyTextSize(size);
+        const { result } = renderHook(() => ({ md: useBreakpoint("md"), phone: usePhoneLayout() }));
+        expect(result.current.md).toBe(!result.current.phone);
+        expect(result.current.phone).toBe(width < edge);
+      });
+    }
+  }
+
+  it("the old (max-width: 767px) pair was not: 767.5 px matched neither", () => {
+    viewport(767.5);
+    expect(matchMedia("(min-width: 768px)").matches).toBe(false);
+    expect(matchMedia("(max-width: 767px)").matches).toBe(false);
+    expect(matchMedia(breakpointQuery("max-md", 1, 16)).matches).toBe(true);
   });
 
   it("answers the fallback without matchMedia", () => {

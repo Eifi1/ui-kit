@@ -1,5 +1,5 @@
 import { isValidElement } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -7,6 +7,7 @@ import { useLargeText } from "../hooks/use-large-text";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Popover } from "./popover";
 import { Button, CompactControls, IconButton } from "./ui";
+import { useCommitReason } from "./write-lock";
 import type { IconButtonSize } from "./ui";
 import type { DataTableColumn } from "./data-table";
 
@@ -31,8 +32,25 @@ export interface RowAction {
   key?: string;
   /** The action's name: the inline icon's name and tooltip, the menu entry's words. */
   label: string;
-  /** Runs it. The kit sends nothing — the app opens its confirmation or calls its API. */
-  onSelect: () => void;
+  /**
+   * Runs it. The kit sends nothing — the app opens its confirmation or calls its API.
+   * Optional only beside `href`; an action has one or the other (or both: `onSelect`
+   * then runs as the link is followed).
+   */
+  onSelect?: () => void;
+  /**
+   * The action NAVIGATES — an edit page, a mail to compose (0.32.1, kastlan's 0.32
+   * report): a real link inline and in the menu, so open in a new tab, a middle click
+   * and the URL on hover work, which `onSelect` + `navigate` lost. The kit's link rule
+   * applies ({@link Button}'s `href`): in-app through the provider's `linkComponent`, an
+   * external or `#anchor` one a plain `<a>`, `mailto:` included.
+   *
+   * A link cannot carry a reason or a spinner, so an action with a `disabledReason`
+   * (or under a write lock, with `commit`) or `pending` stays a button and says why.
+   */
+  href?: string;
+  /** With `href`: leaves the app — a new tab, and a screen reader is told so. */
+  external?: boolean;
   /**
    * The glyph: a Lucide icon (`Pencil`), or an element (`<Pencil />`, an app's own
    * svg) — DataTable's `rowActions` hand their `icon` node through. Inline, an action
@@ -104,8 +122,8 @@ export type RowActionsSize = Extract<IconButtonSize, "md" | "sm" | "xs" | "2xs">
 export interface RowActionsProps {
   actions: RowActionList;
   /** The row's name, for the menu button's name — "Actions for Ada Example". Without it
-   *  the button is "Actions". */
-  name?: string;
+   *  (or `null`, as API fields often are) the button is "Actions". */
+  name?: string | null;
   /** When the actions collapse into the menu — see {@link RowActionsCollapse}. */
   collapse?: RowActionsCollapse;
   /** The inline icons' and the "⋯" button's size. Default `xs`, a list row's action. */
@@ -198,61 +216,80 @@ export function RowActions({
       )}
     >
       {(close) => (
-        <ul data-slot="row-actions-menu" className="space-y-0.5">
-          {entries.map((action) => {
-            const glyph = glyphOf(action.icon);
-            return (
+        // React carries an event out of a portal along the COMPONENT tree, so a click on
+        // an entry (or between two) reached a clickable row or a DataTable `onRowClick`
+        // the menu was opened from, though the panel is nowhere near it in the page —
+        // only the "⋯" trigger stopped its own (0.32.1, keksdose's 0.32 report). Stopped
+        // here for the whole panel: clicks, and the Enter / Space a row also listens for.
+        // Escape goes on, to the popover that closes on it.
+        <div role="presentation" onClick={stopClick} onKeyDown={stopActivationKeys}>
+          <ul data-slot="row-actions-menu" className="space-y-0.5">
+            {entries.map((action) => (
               <li key={action.key ?? action.label}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  stretch
-                  tone={action.tone === "danger" ? "danger" : undefined}
-                  disabledReason={action.disabledReason}
-                  commit={action.commit}
-                  pending={action.pending}
-                  disabled={action.disabled}
-                  className="w-full justify-start text-start"
-                  onClick={() => {
-                    close();
-                    action.onSelect();
-                  }}
-                >
-                  {glyph && (
-                    <span aria-hidden className="flex shrink-0 [&_svg]:size-4">
-                      {glyph}
-                    </span>
-                  )}
-                  {action.label}
-                </Button>
+                <MenuAction action={action} close={close} />
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        </div>
       )}
     </Popover>
   );
 }
 
-/** One inline action: an IconButton with its icon, else a small text button. */
-function InlineAction({ action, size }: { action: RowAction; size: RowActionsSize }) {
+function stopClick(e: MouseEvent) {
+  e.stopPropagation();
+}
+
+function stopActivationKeys(e: KeyboardEvent) {
+  if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+}
+
+/**
+ * The `href` an action renders as a link with, or `undefined` for a button: a link
+ * cannot carry a reason or a spinner (Button's link form has neither), so a refused
+ * action — its own `disabledReason`, or a write lock on a `commit` — and a pending one
+ * stay buttons and say so.
+ */
+function useActionHref(action: RowAction): string | undefined {
+  const reason = useCommitReason(action.commit, action.disabledReason);
+  const refused = reason !== undefined && reason !== null && reason !== false && reason !== "";
+  return action.href !== undefined && !action.pending && !refused ? action.href : undefined;
+}
+
+/** One entry of the "⋯" menu: the words, as a link for an `href`, else a button. */
+function MenuAction({ action, close }: { action: RowAction; close: () => void }) {
+  const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
-  if (glyph) {
+  const words = (
+    <>
+      {glyph && (
+        <span aria-hidden className="flex shrink-0 [&_svg]:size-4">
+          {glyph}
+        </span>
+      )}
+      {action.label}
+    </>
+  );
+  const tone = action.tone === "danger" ? "danger" : undefined;
+  const select = () => {
+    close();
+    action.onSelect?.();
+  };
+  if (href !== undefined) {
     return (
-      <IconButton
-        size={size}
-        label={action.label}
-        tone={action.tone === "danger" ? "danger" : undefined}
-        disabledReason={action.disabledReason}
-        commit={action.commit}
-        pending={action.pending}
+      <Button
+        href={href}
+        external={action.external}
+        variant="ghost"
+        size="sm"
+        stretch
+        tone={tone}
         disabled={action.disabled}
-        stopPropagation
-        onClick={action.onSelect}
+        className="w-full justify-start text-start"
+        onClick={select}
       >
-        {glyph}
-      </IconButton>
+        {words}
+      </Button>
     );
   }
   return (
@@ -260,19 +297,87 @@ function InlineAction({ action, size }: { action: RowAction; size: RowActionsSiz
       type="button"
       variant="ghost"
       size="sm"
-      tone={action.tone === "danger" ? "danger" : undefined}
+      stretch
+      tone={tone}
       disabledReason={action.disabledReason}
       commit={action.commit}
       pending={action.pending}
       disabled={action.disabled}
-      onClick={(e) => {
-        // A row listening for clicks must not open as well (IconButton's stopPropagation).
-        e.stopPropagation();
-        action.onSelect();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") e.stopPropagation();
-      }}
+      className="w-full justify-start text-start"
+      onClick={select}
+    >
+      {words}
+    </Button>
+  );
+}
+
+/** One inline action: an IconButton with its icon, else a small text button — each a
+ *  link for an `href` (see {@link useActionHref}). */
+function InlineAction({ action, size }: { action: RowAction; size: RowActionsSize }) {
+  const href = useActionHref(action);
+  const glyph = glyphOf(action.icon);
+  const tone = action.tone === "danger" ? "danger" : undefined;
+  if (glyph) {
+    if (href !== undefined) {
+      return (
+        <IconButton
+          href={href}
+          external={action.external}
+          size={size}
+          label={action.label}
+          tone={tone}
+          disabled={action.disabled}
+          stopPropagation
+          onClick={() => action.onSelect?.()}
+        >
+          {glyph}
+        </IconButton>
+      );
+    }
+    return (
+      <IconButton
+        size={size}
+        label={action.label}
+        tone={tone}
+        disabledReason={action.disabledReason}
+        commit={action.commit}
+        pending={action.pending}
+        disabled={action.disabled}
+        stopPropagation
+        onClick={() => action.onSelect?.()}
+      >
+        {glyph}
+      </IconButton>
+    );
+  }
+  // A row listening for clicks must not open as well (IconButton's stopPropagation).
+  const stop = {
+    onClick: (e: MouseEvent) => {
+      e.stopPropagation();
+      action.onSelect?.();
+    },
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+    },
+  };
+  if (href !== undefined) {
+    return (
+      <Button href={href} external={action.external} variant="ghost" size="sm" tone={tone} disabled={action.disabled} {...stop}>
+        {action.label}
+      </Button>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      tone={tone}
+      disabledReason={action.disabledReason}
+      commit={action.commit}
+      pending={action.pending}
+      disabled={action.disabled}
+      {...stop}
     >
       {action.label}
     </Button>
@@ -290,8 +395,9 @@ export interface RowActionsColumnOptions<T> {
   key?: string;
   /** The row's actions — `false` / `null` for the ones a condition leaves out. */
   actions: (row: T) => RowActionList;
-  /** The row's name, for the "⋯" button's name ("Actions for Ada Example"). */
-  name?: (row: T) => string | undefined;
+  /** The row's name, for the "⋯" button's name ("Actions for Ada Example"). `null` and
+   *  `undefined` both mean "Actions". */
+  name?: (row: T) => string | null | undefined;
   collapse?: RowActionsCollapse;
   /** Default `xs`. */
   size?: RowActionsSize;

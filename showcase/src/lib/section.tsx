@@ -63,7 +63,10 @@ export function Example({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <h3 id={id} className="scroll-mt-6 text-sm font-medium text-[var(--text-primary)]">
+        {/* `overflow-wrap: anywhere` for a label that is an identifier with no break of
+            its own: "selectableFeedbackStatuses(current)" ran 16 px past a 360 px phone
+            at Extra large (0.32.1). Words still break only at their spaces. */}
+        <h3 id={id} className="min-w-0 scroll-mt-6 text-sm font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
           {label}
         </h3>
         {hint && <span className="text-xs text-[var(--text-muted)]">{inlineCode(hint)}</span>}

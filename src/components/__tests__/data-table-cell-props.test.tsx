@@ -87,7 +87,7 @@ describe("DataTable cellProps", () => {
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       value: (query: string) => ({
-        matches: false,
+        matches: query.includes("width <"), // the phone layout's `(width < 768px)`
         media: query,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),

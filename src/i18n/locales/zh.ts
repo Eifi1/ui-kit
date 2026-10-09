@@ -1131,6 +1131,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         deletion_request: "已申请删除",
         deletion_cancel: "已取消删除",
         erase: "账户已永久删除",
+        plan: "套餐已更改",
       },
     },
     transferOwnership: {
@@ -1429,6 +1430,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
       // "放弃", as `wizard.cancelConfirmLabel`.
       discardWaiting: "放弃等待中的修改",
+      notConfigured: "付款尚未设置，请稍后再试。",
+      disabled: "此处不提供订阅。",
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "外观" group.
@@ -1439,6 +1442,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       contrast: "对比度",
       contrastHelp: "增强对比度会加深浅色文字和线条，并加粗焦点框。“跟随系统”沿用此设备的设置。",
       contrastModes: { system: "跟随系统", standard: "标准", more: "增强" },
+      saveFailed: "无法保存到您的账户。此设备上仍然生效。",
     },
     rowActions: {
       actions: "操作",

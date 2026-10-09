@@ -962,7 +962,12 @@ export function MonthPicker(props: MonthPickerProps) {
       </Popover>
     );
     return (
-      <div {...wrapperRest} ref={rootRef} className={cn("flex min-w-0 items-center gap-2", className)}>
+      // `flex-wrap`: where the heading and the buttons do not fit one row, the buttons
+      // take the next line, at the end (0.32.1, the 360 px Extra-large sweep;
+      // docs/text-size-harmonization.md §4). In one row at 150 % "Today ‹ ›" left the
+      // heading 30 px on a 360 px phone, and "October 2026" was drawn under "Today".
+      // Where they fit, nothing changes.
+      <div {...wrapperRest} ref={rootRef} className={cn("flex min-w-0 flex-wrap items-center gap-2", className)}>
         {Heading ? <Heading className="m-0 min-w-0 text-lg font-semibold">{trigger}</Heading> : trigger}
         <div className="ms-auto flex shrink-0 items-center gap-1">
           {showToday && (

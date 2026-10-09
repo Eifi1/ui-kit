@@ -16,7 +16,7 @@ export function Surfaces017Demo() {
       label="Card density, toneFill"
       hint='density="compact": text-sm title, text-xs description, gap-0.5; toneFill: the tone wash over the surface'
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card padding="md">
           <CardHeader>
             <CardTitle as="h3">Notifications (comfortable)</CardTitle>

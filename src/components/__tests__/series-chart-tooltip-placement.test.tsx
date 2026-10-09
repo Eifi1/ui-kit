@@ -19,10 +19,10 @@ vi.mock("recharts", async (importOriginal) => {
   };
 });
 
-/** jsdom has no matchMedia; `phone` answers the readout's `max-width` query. */
+/** jsdom has no matchMedia; `phone` answers the readout's phone query, `(width < N)`. */
 function stubPhone(phone: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: phone && query.includes("max-width"),
+    matches: phone && query.includes("width <"),
     media: query,
     onchange: null,
     addEventListener: vi.fn(),

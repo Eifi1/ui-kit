@@ -538,15 +538,15 @@ function ToneFrames() {
       <div className="space-y-3">
         {BANNER_TONES.map((tone) => (
           <div key={tone} className={`${alertFrameClass(tone)} text-sm text-[var(--text-primary)]`}>
-            <span className="font-mono">alertFrameClass(&quot;{tone}&quot;)</span> — radius and
+            <code className="font-mono">alertFrameClass(&quot;{tone}&quot;)</code> — radius and
             padding included.
           </div>
         ))}
         <div
           className={`${toneFrameClass("warning")} rounded-xl px-5 py-4 text-sm text-[var(--text-primary)]`}
         >
-          <span className="font-mono">toneFrameClass(&quot;warning&quot;)</span> on a box that
-          brought its own <span className="font-mono">rounded-xl px-5 py-4</span>.
+          <code className="font-mono">toneFrameClass(&quot;warning&quot;)</code> on a box that
+          brought its own <code className="font-mono">rounded-xl px-5 py-4</code>.
         </div>
       </div>
       <div className="mt-4">

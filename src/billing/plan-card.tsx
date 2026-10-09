@@ -420,7 +420,7 @@ export function PlanPicker({
             {legend}
           </legend>
         )}
-        <div className={cn("grid gap-2 sm:grid-cols-2 lg:grid-cols-3", gridClassName)}>
+        <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3", gridClassName)}>
           {plans.map((plan) => (
             <PlanCard
               key={plan.code}

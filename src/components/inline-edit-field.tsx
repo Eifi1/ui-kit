@@ -155,6 +155,23 @@ function RenderEditor<T>({ render, ...props }: InlineEditorProps<T> & { render: 
   return render(props);
 }
 
+/**
+ * The value at Large and Extra large (0.32.1, keksdose's 0.32 report;
+ * docs/text-size-harmonization.md §4 "nothing truncates"): the display button, the
+ * locked one and the read-only text wrap instead of ending in "…", and break a word too
+ * long for the cell, so an IBAN or an e-mail address shows to its last character. The
+ * value IS the button's accessible name and the thing being edited: a reader who needs
+ * big type cannot recover a cut-off end by squinting. A `large:` class, so a table of
+ * these keeps its one-line cells at Normal.
+ *
+ * `break-words`, not `[overflow-wrap:anywhere]`: these live in table cells (keksdose's
+ * budget and invoice lines), and `anywhere` lowers the value's min-content width to one
+ * letter, so an auto-sized column could squeeze an amount to a digit per line. With
+ * `break-word` a column keeps each word whole; the button is `w-full`, so a word wider
+ * than a sized cell still breaks.
+ */
+const VALUE_WRAP_AT_LARGE = "large:whitespace-normal large:break-words";
+
 /** `onCommit`'s result, if it is a promise. */
 function asPromise(result: unknown): Promise<unknown> | null {
   return result && typeof (result as Promise<unknown>).then === "function" ? (result as Promise<unknown>) : null;
@@ -415,7 +432,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
   let body: ReactNode;
   if (readOnly) {
     body = (
-      <span {...private_} className={cn("block min-w-0 truncate", alignClass)}>
+      <span {...private_} className={cn("block min-w-0 truncate", VALUE_WRAP_AT_LARGE, alignClass)}>
         {content}
       </span>
     );
@@ -492,6 +509,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
             onClick={(e) => e.preventDefault()}
             className={cn(
               "block w-full min-w-0 cursor-not-allowed truncate rounded-sm focus:outline-none",
+              VALUE_WRAP_AT_LARGE,
               FOCUS_RING,
               alignClass,
             )}
@@ -516,6 +534,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           onClick={() => setOpen(true)}
           className={cn(
             "block w-full min-w-0 truncate rounded-sm underline-offset-2 hover:underline focus:outline-none",
+            VALUE_WRAP_AT_LARGE,
             FOCUS_RING,
             alignClass,
           )}

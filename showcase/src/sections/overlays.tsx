@@ -1049,7 +1049,8 @@ function HoverMenuClamp() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
+      {/* Wraps: at Extra large the two triggers ran past a 360 px phone (0.32.1). */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <HoverMenu
           // The DOM spelling; the deprecated `ariaLabel` (above) loses to it when both
           // are given. `className` is the WRAPPER's, `panelClassName` the panel's.

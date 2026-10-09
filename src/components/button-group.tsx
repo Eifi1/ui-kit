@@ -26,6 +26,26 @@ const JOINED_COMMON = cn(
   "[&>*]:relative [&>*:focus-within]:z-10",
 );
 
+/**
+ * A joined row at Large and Extra large wraps rather than run past its container (0.32.1,
+ * the 360 px Extra-large sweep; docs/text-size-harmonization.md §4 "nothing
+ * overflows"): "Buttons | Chips | Feedback" was 329 px at 150 %, 67 px past a 360 px
+ * phone's card. A wrapped row cannot keep one frame with dividers between members — the
+ * second line's first member would carry a divider against the frame and no line would
+ * part the rows — so at Large the frame is drawn by the members: each its own 1px
+ * border, overlapping its neighbours by a pixel on both axes (the container's `ps-px
+ * pt-px` takes the overlap back at the edges). On one row that draws the same frame and
+ * dividers as Normal; wrapped, every line and every member is parted by one hairline,
+ * and the members share out each line (`grow`), so the lines make one block. A group
+ * that fits is only as wide as its members, so nothing grows there. A `large:` class,
+ * so Normal keeps the frame it has, and it costs no render.
+ */
+const JOINED_WRAP_AT_LARGE = cn(
+  "large:max-w-full large:flex-wrap large:border-0 large:ps-px large:pt-px",
+  "large:[&>*]:border large:[&>*]:-ms-px large:[&>*]:-mt-px",
+  "large:[&>*]:grow large:[&>*>button]:grow large:[&>*>a]:grow",
+);
+
 const JOINED: Record<"horizontal" | "vertical", string> = {
   // Logical edges and corners throughout (`border-s`, `rounded-s-*`), so in RTL the
   // first member sits on the right with the right-hand corners rounded — the physical
@@ -37,6 +57,7 @@ const JOINED: Record<"horizontal" | "vertical", string> = {
     "[&>:first-child]:rounded-s-md [&>:last-child]:rounded-e-md",
     "[&>:first-child>button]:rounded-s-md [&>:last-child>button]:rounded-e-md",
     "[&>:first-child>a]:rounded-s-md [&>:last-child>a]:rounded-e-md",
+    JOINED_WRAP_AT_LARGE,
   ),
   // The block axis is top-to-bottom in both reading directions, so top/bottom are
   // already the logical edges here.

@@ -242,7 +242,12 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
       role={named ? "group" : undefined}
       aria-label={named ? label : undefined}
     >
-      <div className="flex items-stretch gap-2">
+      {/* On a phone at Large the number takes a line of its own under the country (0.32.1,
+          the 360 px Extra-large sweep; docs/text-size-harmonization.md §4 "nothing
+          truncates"): the 7rem select is 168 px at 150 %, and on a 360 px phone it left
+          the number 82 px — "Ph…" over "021 (". `large:max-sm:`, the scaled phone width,
+          so a wider screen at Large and Normal keep the one row. */}
+      <div className="flex items-stretch gap-2 large:max-sm:flex-wrap">
         <Select
           aria-label={text.countryCode}
           value={country}
@@ -261,7 +266,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
           <option value="other">{text.other}</option>
         </Select>
         {/* Its own flex item, so nothing Input wraps itself in can take the sizing. */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 large:max-sm:basis-full">
           <Input
             ref={ref}
             {...rest}

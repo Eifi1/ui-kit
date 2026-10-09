@@ -45,7 +45,7 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
     // matchMedia is undefined by default in jsdom (the desktop fallback), so the
     // sheet branch never runs otherwise.
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: true, // (max-width: 767px) matches → phone
+      matches: true, // (width < 768px) matches → phone
       media: query,
       onchange: null,
       addListener: vi.fn(),

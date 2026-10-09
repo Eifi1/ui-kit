@@ -435,7 +435,7 @@ export function ServerKitOverview({ group }: { group: ShowcaseGroup }) {
         <p className="text-xs font-medium text-[var(--text-muted)]">Install</p>
         <InstallLine />
       </div>
-      <ul className="grid gap-4 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {group.pages.map((page) => (
           <li key={page.slug} className="contents">
             <ServerPageCard page={page} />
@@ -470,7 +470,7 @@ function ServerPageCard({ page }: { page: ShowcasePage }) {
         {modules.map((mod) => (
           <li
             key={mod.name}
-            className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)]"
+            className="max-w-full rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)] [overflow-wrap:anywhere]"
           >
             {mod.name}
             <span className="text-[var(--text-muted)]">

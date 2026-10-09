@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.6.0";
+export const SERVER_KIT_VERSION = "0.6.1";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -268,6 +268,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["CheckoutRequest", "model"],
       ["Currency", "constant"],
       ["DispatchOutcome", "enum"],
+      ["DuplicateEventError", "class"],
       ["EventKind", "enum"],
       ["EventStore", "protocol"],
       ["Interval", "constant"],
@@ -276,7 +277,10 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PlanChangeRequest", "model"],
       ["PlanChangeResponse", "model"],
       ["PlanCode", "constant"],
+      ["PlanIntervalPrices", "class"],
       ["PlanLimitError", "class"],
+      ["PlanOut", "model"],
+      ["PlanPrices", "class"],
       ["PlanSpec", "model"],
       ["PoisonEventError", "class"],
       ["PriceRef", "class"],
@@ -291,6 +295,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["checkout_custom_data", "function"],
       ["dimensions_over_limit", "function"],
       ["dispatch", "function"],
+      ["effective_comped_until", "function"],
       ["grant_holds", "function"],
       ["in_good_standing", "function"],
       ["is_beta", "function"],
@@ -300,6 +305,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["normalize_plan", "function"],
       ["parse_webhook_event", "function"],
       ["plan_catalogue", "function"],
+      ["plans_out", "function"],
       ["refuse_billing_read_only", "function"],
       ["row_changes", "function"],
       ["trial_ends_at", "function"],

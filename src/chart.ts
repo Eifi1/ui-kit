@@ -16,6 +16,8 @@ export * from "./components/treemap";
 // lenkbank's zoomable series chart, its synced x-zoom, the toggle legend and the
 // mirrored-pair axis geometry — moved here so the apps derive them from the package.
 export * from "./components/series-chart";
+// 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
+export type { ChartHeight } from "./components/chart-height";
 export * from "./components/chart-zoom";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";

@@ -25,7 +25,9 @@ import { useGroupLabel, usePageText } from "../i18n";
  */
 export function GroupOverview({ group }: { group: ShowcaseGroup }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2">
+    // `grid-cols-1` below `sm`: an untemplated column grew to the widest export name and
+    // ran 41 px past a 360 px phone at Extra large (0.32.1); the names break as a last resort.
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {group.pages.map((page) => (
         <li key={page.slug} className="contents">
           <PageCard page={page} />
@@ -59,7 +61,7 @@ function PageCard({ page }: { page: ShowcasePage }) {
           {page.components.map((name) => (
             <li
               key={name}
-              className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)]"
+              className="max-w-full rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)] [overflow-wrap:anywhere]"
             >
               {name}
             </li>

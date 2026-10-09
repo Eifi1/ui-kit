@@ -47,7 +47,10 @@ export type AdminActionKind =
   | "transfer"
   | "deletion_request"
   | "deletion_cancel"
-  | "erase";
+  | "erase"
+  // 0.32.1 (keksdose's 0.32 report): server-kit 0.6's `AdminAction.PLAN`, an operator's
+  // plan change or grant (docs/billing-harmonization.md §6).
+  | "plan";
 
 /** Every {@link AdminActionKind}, in the contract's order. */
 export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
@@ -67,6 +70,7 @@ export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
   "deletion_request",
   "deletion_cancel",
   "erase",
+  "plan",
 ];
 
 /** One logged action — the app's `admin_actions` row with the people joined in. */
@@ -142,6 +146,7 @@ export const DEFAULT_ADMIN_ACTION_LOG_LABELS: AdminActionLogLabels = {
     deletion_request: "Deletion requested",
     deletion_cancel: "Deletion cancelled",
     erase: "Account erased",
+    plan: "Plan changed",
   },
 };
 

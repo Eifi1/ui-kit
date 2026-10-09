@@ -336,11 +336,15 @@ export function AlertBanner({
   ) : null;
 
   // `relative z-10` so it stays clickable over a whole-row banner's stretched target.
+  // `max-w-full flex-wrap`: on a line of its own, two actions side by side ran 57 px
+  // past a 360 px phone at Extra large (the demo strip's "Request access" and "Sign in",
+  // 0.32.1); held to the line, they wrap there instead. Where they fit in one row,
+  // nothing changes.
   const trailing =
     action !== undefined && action !== null ? (
       <div
         className={cn(
-          "relative z-10 flex shrink-0 items-center gap-2",
+          "relative z-10 flex max-w-full shrink-0 flex-wrap items-center gap-2",
           !strip && !inlineRow && "self-center",
           strip && "ms-auto",
           // Last, on a line of its own, lined up with the message (past the glyph).

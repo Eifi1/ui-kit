@@ -706,7 +706,8 @@ function DropOnCard() {
           isOver && "border-[var(--brand)] bg-[var(--bg-hover)] ring-2 ring-[var(--brand)]",
         )}
       >
-        <div className="mb-2 flex items-center justify-between gap-2">
+        {/* Wraps: at Extra large "Attach…" beside the heading ran past a 360 px phone. */}
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-[var(--text-primary)]">Booking documents</h4>
           <Button variant="secondary" onClick={open}>
             <Paperclip className="size-4" aria-hidden /> Attach…
@@ -716,7 +717,7 @@ function DropOnCard() {
           {docs.map((d, i) => (
             <li key={`${d.name}-${i}`} className="flex items-center gap-2 py-2 text-[var(--text-secondary)]">
               <FileText className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
-              <span className="min-w-0 flex-1 truncate">{d.name}</span>
+              <span className="min-w-0 flex-1 truncate large:whitespace-normal large:[overflow-wrap:anywhere]">{d.name}</span>
               <span className="shrink-0 text-xs tabular-nums text-[var(--text-muted)]">{formatFileSize(d.size, "en-GB")}</span>
             </li>
           ))}

@@ -150,7 +150,7 @@ export function TranslationReviewEditor({
     <div className={cn("min-w-0 space-y-3 text-sm", className)}>
       <code className="block break-all text-xs text-[var(--text-muted)]">{row.key}</code>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="min-w-0">
           <SectionLabel as="span" size="xs">
             {referenceLabel}
