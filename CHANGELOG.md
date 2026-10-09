@@ -20,6 +20,23 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.32.1](https://github.com/Eifi1/ui-kit/compare/v0.32.0...v0.32.1) (2026-10-09)
+
+### Added
+
+* **billing:** words for billing_not_configured and billing_disabled ([8cf9a4f](https://github.com/Eifi1/ui-kit/commit/8cf9a4f461e3358c1553f36ad1b5145e2399d364))
+* **row-actions:** an action that navigates is a link; a row name may be null ([57980bf](https://github.com/Eifi1/ui-kit/commit/57980bffd133df82aac166716ce332afb125d1e3))
+* the plan action in the admin log, appearance.saveFailed, chart and rem exports ([50b33c1](https://github.com/Eifi1/ui-kit/commit/50b33c1bd67fff09d2fe4f34af97ec13782fd6cd))
+
+### Fixed
+
+* a toggle group's text hint is a caption; the row-actions menu keeps its clicks ([460081a](https://github.com/Eifi1/ui-kit/commit/460081a9631407863eced36cb8fa00092d81bc1b))
+* **showcase:** demos hold to a 360 px phone at Extra large ([f640130](https://github.com/Eifi1/ui-kit/commit/f640130f1cca04543745e4b7e8c8b1e88bfef0d1))
+* **text-size:** banner actions wrap on a line of their own; showcase code breaks ([139c294](https://github.com/Eifi1/ui-kit/commit/139c29439448b4cda67aaf37d2161daff91a8026))
+* **text-size:** max-* queries complement min-*; labels wrap at Large; quieter hidden buttons ([9c1c382](https://github.com/Eifi1/ui-kit/commit/9c1c38202da54a14efcdddc79c6fbc3f95b3c053))
+* **text-size:** nothing runs past a 360 px phone at Extra large ([f867485](https://github.com/Eifi1/ui-kit/commit/f867485906d9a74ca44df731de97da3dbe3c3138))
+* **text-size:** toggle groups wrap at Large, landing and card grids hold one column ([f54f3d5](https://github.com/Eifi1/ui-kit/commit/f54f3d5d3653234b5eb298d0f1a42f924393b013))
+
 ## [0.32.0](https://github.com/Eifi1/ui-kit/compare/v0.31.1...v0.32.0) (2026-10-08)
 
 ### ⚠ BREAKING CHANGES
