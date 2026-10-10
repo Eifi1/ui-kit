@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 
 /**
@@ -14,7 +14,15 @@ export const SKELETON_CLASS = "animate-pulse rounded bg-[var(--bg-active)] motio
 
 export type SkeletonShape = "line" | "block" | "circle";
 
-export interface SkeletonProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+/**
+ * A `div`'s props, `ref` included (0.33.1, keksdose): they were spread onto the
+ * placeholder all along, but `ComponentPropsWithoutRef` kept `ref` out of the type, so an
+ * app could not hold the element (to measure it, or scroll it into view) without a
+ * wrapper. The ref is the placeholder's — with `lines`, the box round the lines; with
+ * `label`, still the placeholder, not the `role="status"` region round it — where
+ * `className` goes too.
+ */
+export interface SkeletonProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** `line` (default): a bar the height of a line of small text. `block`: an area
    *  (an image, a chart, a card body). `circle`: an avatar. Size any of them with
    *  `className` (`w-32`, `h-40`, `size-8`). */

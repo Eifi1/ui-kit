@@ -15,6 +15,96 @@ host, the notice jobs and their manual steps (§4) are for the release that turn
 on. Until then the pay page says there is nothing to pay, and a notice route answers 200
 with nothing sent.
 
+## 0.33.1 and server-kit 0.7.1
+
+From kastlan's and keksdose's 0.33 reports and Kurvenschmiede's ask. Bump to `^0.33.1` and
+take the server-kit 0.7.1 wheel (§6's lines with `v0.7.1`, its sha256 pinned in `uv.lock`).
+The sections below are corrected in place; the corrections are listed at the end of this
+one.
+
+**Changes you will see:**
+- **planChange's usage line moves the app's word in German and Hungarian.** German heads
+  the line, "Budgets: 1 von 5": after "von" the word wants a dative plural ("von 5
+  Objekten") that no app's form carries. Hungarian puts it after the figures, "1 / 5
+  költségvetés", as `dataTable.filterResults` does. An app that overrides `usageOf`
+  (keksdose) sees no change.
+
+**New:**
+- **`commit` on `ChatComposer` / `FeedbackComposer`** (ka 3). Under a lock in scope, Send
+  is locked the focusable way with the lock's reason, and neither Enter nor Ctrl/⌘+Enter
+  sends. The box and its draft stay, unlike `disabledReason`, which replaces the box.
+  kastlan's assistant passes `commit={{ except: ["demo"] }}` in place of its
+  `useWriteLock({ except: ["demo"] })` and the hand-fed `canSend` and reason.
+- **`commit` and `disabledReason` on `NumberInput`**, and so on `NumberField`,
+  `IntegerField` and their `Rhf` twins (Kurvenschmiede). Locked, the field stays in the
+  tab order and shows its value, `readOnly` and `aria-disabled`, with the reason in the
+  tooltip and its description (the Combobox family's lock). The step keys, the
+  calculator and the phone's numpad are off, Enter submits nothing, and neither
+  `onChange` / `onValueChange` nor `onCommit` fires. Kurvenschmiede's `CommitInput` can
+  go when it adopts. `MoneyField` and `AmountInput` are another path and don't take it
+  yet.
+- **`Skeleton` takes a `ref`** (kk 12): `SkeletonProps` is `ComponentPropsWithRef<"div">`.
+  The ref is the placeholder's, where `className` goes.
+- **`truncate-until-large-words`** (kk 13), in `tokens.css`: `truncate` at Normal, and at
+  Large a wrap at spaces only (`overflow-wrap: normal`), so an amount never splits
+  mid-number. Use it for figures (an amount, a date, a count with its unit), and
+  `truncate-until-large` for prose. Give a figure's cell room for the widest one
+  (`shrink-0`): a figure wider than its box is cut at its end.
+- **`planColumn`'s usage word takes its plural forms** (kk 14). Pass `label: { one:
+  "budget", other: "budgets" }`, your catalogue's `_one` / `_other` (any CLDR category;
+  a missing one reads `other`). The tooltip takes the form for the limit in the
+  provider's locale: "1 of 1 budget", "1 of 5 budgets". A plain string works as before,
+  and a `usageOf` override still gets `(used, limit, word)`. The type is `PluralForms`.
+  keksdose: pass the word as it reads after a number, not the heading "Budgets", and the
+  override for "1 of 5 budgets" can go.
+- **`payPageUrl(url, locale)` and `paddleLocale` take `undefined`** (kk 15), so
+  `useKitLocale()` passes straight in. With no locale the link carries no `lang`, and the
+  page speaks the browser's language, else English. `noteCheckoutStarted` takes no
+  locale; nothing changes there.
+- **`planColumn`'s `sortBy` sorts on the client only** (kk 16). A DataTable with
+  `serverPagination` sorts nothing itself: with `onSortsChange` it reports the column's
+  `key` (`"plan"`), and your server orders the rows.
+
+**Corrections to the 0.33 adoption** (made in place):
+- **kastlan item 25** no longer keeps `due_notices`' recipients and channel. Item 20
+  replaces `due_notices`, which had none (ka 1).
+- **kastlan item 8's shadcn table** consumed the separator: `(^|[^-a-z0-9])X([^-a-z0-9]|$)`
+  with `/g` left the second of two identical adjacent classes (`bg-muted bg-muted` →
+  `bg-surface-2 bg-muted`). It is a `perl` table with look-around now (ka 4). Rerun it.
+- **`billing_app`** (§2 server-kit, keksdose 13, kastlan 15, Kurvenschmiede 16): the
+  redeclared `billing_app: str | None = "keksdose"` replaced the mixin's field and its
+  pattern, so `"Not Valid!"` passed. Write
+  `billing_app: str | None = Field(default="keksdose", pattern=r"^[a-z][a-z0-9_-]{0,63}$")`.
+  server-kit 0.7.1 also checks it in a mixin validator that a subclass can't shadow
+  (kk 1).
+- **§4, the pay host** (kk 2, 3, 4):
+  - the build runs `npx --no -- eifi1-pay-page …`;
+  - `{$PAY_HOST:…}`'s default holds only while `PAY_HOST` is unset. Pass it only with a
+    value, set it with `--update-env-vars` or the deploy's own variables, and keep the
+    pay block after the app's block;
+  - a Caddy with automatic HTTPS (Compose, a VPS) defaults to `http://pay.invalid`.
+- **§2 Tests:** SwipeableRow's backdrop is a markup change (kk 11).
+- **keksdose item 11:** the figures take `truncate-until-large-words` (kk 13).
+
+**server-kit 0.7.1** (its changelog has the detail):
+- **`resume_after_withdrawal`** undoes the deletion's cancellation before Paddle's webhook
+  lands, and with billing off. It used to wait for `cancel_at_period_end`, which only the
+  webhook sets. It takes `now=` like `require_new_checkout` (kk 5).
+- **The provider and the environment compare by value**, so settings holding the plain
+  text `"paddle"` or `"sandbox"` (a test's `monkeypatch.setattr`, `model_construct`)
+  behave as the enum (ka 2).
+- **`billing_app`'s pattern holds** where the subclass redeclares the field (kk 1).
+- **A hosted checkout's `locale` is Paddle's:** `paddle_locale(kit_locale)`, ui-kit's
+  map, is applied (kk 10).
+- **French plain-text mails** set a no-break space before the link line's colon (kk 6).
+- **New:** `OwedNotice.row`, so the job marks the row without carrying it in `payer`
+  (kk 7); `AdminPlan` and `admin_plans_out(catalogue)` for `GET /admin/plans` (kk 8).
+  `PlanChangeResponse.comped_until` is required but nullable, so the generated
+  TypeScript no longer makes it optional (kk 9).
+- **What an app may notice:** an `OwedNotice` built by hand (a test's expected value)
+  needs `row`, and one unpacked into four names breaks. A `PlanChangeResponse(…)` built
+  directly needs `comped_until`; `of()` fills it.
+
 ## 1. What's new
 
 **Colour roles.** Every fill names its foreground: `-contrast` tokens for warning, the
@@ -78,7 +168,8 @@ and the field no longer reserves its top strip. Normal keeps the floating label.
 **`truncate-until-large`** utility truncates at Normal and wraps
 (`overflow-wrap: anywhere`) at Large. The kit's five copies use it, and ShareCard,
 UserRoster, InvitationsPanel, FileButton and the feedback attachments now wrap at Large
-instead of cutting.
+instead of cutting. It may break a word, which splits a number: a figure takes
+`truncate-until-large-words` (0.33.1), which wraps at spaces only.
 
 **The size sweep sees what is cut.** At Large and Extra large,
 `scripts/screenshot-sizes.mjs` reports `TRUNCATED` (a one-line ellipsis or a line clamp
@@ -330,8 +421,11 @@ it("reads no CSS variable that nothing declares", () => {
 
 **server-kit 0.7** (the changelog's ⚠ BREAKING CHANGES):
 - **Switching on with Paddle needs more.** `billing_provider = paddle` with billing
-  enabled also needs `billing_app` (set in code: `billing_app: str | None = "keksdose"`,
-  matching `^[a-z][a-z0-9_-]{0,63}$`). It also needs an API environment that resolves and
+  enabled also needs `billing_app`, set in code with its pattern:
+  `billing_app: str | None = Field(default="keksdose", pattern=r"^[a-z][a-z0-9_-]{0,63}$")`.
+  A plain `str | None = "keksdose"` redeclares the field and drops the mixin's pattern,
+  so `"Not Valid!"` passed (corrected in 0.33.1; server-kit 0.7.1 also checks it in a
+  mixin validator a subclass can't shadow). It also needs an API environment that resolves and
   agrees with the key's prefix (`pdl_sdbx_apikey_` / `pdl_live_apikey_`). A key without a
   prefix needs `billing_environment`, and a mismatch fails at start.
 - **The `SubscriptionRow` protocol reads `provider_customer_id`** (for `at_provider`).
@@ -355,7 +449,10 @@ it("reads no CSS variable that nothing declares", () => {
     `primary` with `hover:bg-active`;
   - the swipe panels carry the tone classes, and the disc is `bg-current/20` / `/10`;
   - the collapsed "⋯" sits in a `data-slot="row-actions"` box, and `[data-tour=x]`
-    resolves to the overlay beside the button, not to an ancestor of it.
+    resolves to the overlay beside the button, not to an ancestor of it;
+  - while a row is swiped, SwipeableRow puts an `aria-hidden` `bg-surface` backdrop
+    `<div>` under the painted panel (the card a dark wash is measured on), so the row's
+    first child, or a count of its children, moves by one (added in 0.33.1).
 - **A pinned token literal moves:** light `--bg-surface-2`, `--warning` (#a34800),
   `--success` (#007152), `--hue-orange`, `--hue-teal`, `--danger-border-strong` and
   `--status-edited`.
@@ -463,9 +560,12 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
     - the holdings Skeleton (`features/accounts/holdings-panel.tsx:462-467`, at `top-5`
       from the floating strip) re-anchors on the input's own line, since the label sits
       above at Large;
-    - optional: move the JS switches to `truncate-until-large`
-      (`features/budget/budget-mobile-list.tsx:146,151,158`;
-      `features/transactions/mobile-transaction-list.tsx:477`).
+    - optional: move the JS switches to the utilities. The amounts in
+      `features/budget/budget-mobile-list.tsx:146,151,158` take
+      `truncate-until-large-words`, which never splits a number;
+      `truncate-until-large` breaks anywhere and suits text only
+      (`features/transactions/mobile-transaction-list.tsx:477`, unless it is a figure
+      too). Corrected in 0.33.1.
 12. **Billing UI:**
     - **the plan-limit toast:** your `usePlanLimitToast` (`features/billing/plan-limit.tsx:32-43`)
       → the kit's;
@@ -490,7 +590,9 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
 
 **Backend** (`eifi1-server-kit[billing,images]`)
 
-13. `billing_app: str | None = "keksdose"`, and `.env.example` lists the four settings.
+13. `billing_app: str | None = Field(default="keksdose", pattern=r"^[a-z][a-z0-9_-]{0,63}$")`
+    (a plain `= "keksdose"` drops the mixin's pattern; corrected in 0.33.1), and
+    `.env.example` lists the four settings.
 14. **The provider:**
     - in `adapters/external/billing_provider.py`, the port and `NoProviderClient` go;
     - the seam (:64-75) answers `billing_provider_client(get_settings())`;
@@ -569,7 +671,8 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
      `platform-signup-invitations-page.tsx:72`, :119, :126).
 
    The help assistant takes `{ except: ["demo"] }`, since its backend answers 402 under
-   billing. The roles in `users-panel.tsx:487` stay locked.
+   billing; from 0.33.1 as the composer's own `commit={{ except: ["demo"] }}`. The roles
+   in `users-panel.tsx:487` stay locked.
 4. **Defect: invoices and "Cancel" are hidden under a grant**
    (`features/billing/components/subscription-section.tsx:134`, `source === "provider"`).
    - use `atProvider={data.at_provider}`;
@@ -589,14 +692,25 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
      `bg-[var(--text-primary)]` → `bg-inverse` (`landing-visuals.tsx:67`);
    - the shadcn names `text-muted-foreground` (108) → `text-muted`, `text-foreground` (6)
      → `text-primary`, `bg-muted` (6) → `bg-surface-2`, and `border-border` (5) →
-     `border-subtle` (or kept):
+     `border-subtle` (or kept). The edges are look-around, which `sed` lacks, so this
+     table is `perl`. 0.33.0's `sed` form, `(^|[^-a-z0-9])X([^-a-z0-9]|$)`, consumed the
+     space between two classes, so the second of `bg-muted bg-muted` stayed: rerun this
+     one (corrected in 0.33.1).
 
      ```sh
-     s/(^|[^-a-z0-9])text-muted-foreground([^-a-z0-9]|$)/\1text-muted\2/g
-     s/(^|[^-a-z0-9])text-foreground([^-a-z0-9]|$)/\1text-primary\2/g
-     s/(^|[^-a-z0-9])bg-muted([^-a-z0-9]|$)/\1bg-surface-2\2/g
-     s/(^|[^-a-z0-9])border-border([^-a-z0-9]|$)/\1border-subtle\2/g
+     # shadcn.pl
+     s/(?<![-a-z0-9])text-muted-foreground(?![-a-z0-9])/text-muted/g;
+     s/(?<![-a-z0-9])text-foreground(?![-a-z0-9])/text-primary/g;
+     s/(?<![-a-z0-9])bg-muted(?![-a-z0-9])/bg-surface-2/g;
+     s/(?<![-a-z0-9])border-border(?![-a-z0-9])/border-subtle/g;
      ```
+
+     ```sh
+     git ls-files 'src/*.ts' 'src/*.tsx' | grep -v -e '__tests__/' -e '\.test\.' | xargs perl -pi shadcn.pl
+     ```
+
+     It leaves variants and opacity on (`hover:bg-muted` → `hover:bg-surface-2`,
+     `bg-muted/50` → `bg-surface-2/50`) and longer names alone (`bg-muted-2`).
 
    - keep the shadcn `@theme` for the Radix pieces. Note that **`text-primary` now means
      ink**, not brand, and `text-secondary`/`text-muted` are text roles: the kit's
@@ -621,8 +735,8 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
 
 **Backend** (`eifi1-server-kit[billing,images,mail]`)
 
-15. `billing_app = "kastlan"`; `.env.example` lists the new settings and drops
-    `KASTLAN_BILLING_API_BASE_URL`.
+15. `billing_app = "kastlan"`, as `Field(default="kastlan", pattern=…)` (§2); `.env.example`
+    lists the new settings and drops `KASTLAN_BILLING_API_BASE_URL`.
 16. **Delete:**
     - `kastlan/adapters/billing/` and `domain/ports/billing_provider.py`;
     - `tests/unit/test_paddle_client.py`;
@@ -687,8 +801,10 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
     - the RLS-bypass session in the webhook;
     - `billing_admin`, `KastlanBillingStatus` and `KastlanPlanOut.current`;
     - the `/admin/billing` path and `DEFAULT_CURRENCY = CHF`;
-    - `EntitlementService` and `_date_beta_grants`;
-    - `due_notices`' recipients and channel.
+    - `EntitlementService` and `_date_beta_grants`.
+
+    0.33.0 also kept `due_notices`' recipients and channel. It has none (it logs), and
+    item 20 replaces it (corrected in 0.33.1).
 
 ### Kurvenschmiede (read at `main`; `refactor/plan-2026-10` where marked)
 
@@ -763,7 +879,8 @@ fix belongs in this adoption. The contracts hold the reasoning behind each line.
 
 **Backend** (`eifi1-server-kit[billing,mail]`: you send through `mail.ResendClient`)
 
-16. `billing_app = "kurvenschmiede"` (`settings.py:124`). **`.env.example` lists the new
+16. `billing_app = "kurvenschmiede"` (`settings.py:124`), as `Field(default=…, pattern=…)`
+    (§2). **`.env.example` lists the new
     settings, or `tests/unit/test_docs.py:63-65` (on `refactor/plan-2026-10`) fails the
     bump.**
 17. **No provider client today**, so the checkout and the portal end in 503:
@@ -831,22 +948,36 @@ earlier for the sandbox review.
    ```dockerfile
    ARG PADDLE_CLIENT_TOKEN=""
    ARG PADDLE_ENVIRONMENT=""
-   RUN npx eifi1-pay-page --out /pay \
+   RUN npx --no -- eifi1-pay-page --out /pay \
          --token "$PADDLE_CLIENT_TOKEN" --environment "$PADDLE_ENVIRONMENT" \
          --return-url https://<app domain><subscription page> --app-name <App> \
          --terms-url <terms URL> --privacy-url <privacy URL>
    ```
 
    In the Caddy stage, `COPY --from=<build> /pay /srv-pay`. An empty token builds a page
-   that says there is nothing to pay.
+   that says there is nothing to pay. `--no` stops `npx` from installing a package it
+   doesn't find (a build has no terminal to ask, so it would fetch one unasked), and `--`
+   keeps npm 11 from reading the bin's flags as its own (corrected in 0.33.1).
 2. **Caddy:** a second site block, `http://{$PAY_HOST:pay.invalid}:{$PORT}`, with its own
-   headers (§14.4 has it to copy). Unset, it answers `pay.invalid`, which never matches.
-   Locally, it is a second port in Compose's Caddy.
+   headers (§14.4 has it to copy), AFTER the app's block. Unset, it answers
+   `pay.invalid`, which never matches. Locally, it is a second port in Compose's Caddy.
+   Corrected in 0.33.1:
+   - **the default holds only while `PAY_HOST` is unset.** Set but empty, the address is
+     `http://:{$PORT}`, a second catch-all, and the order of the blocks decides which
+     one answers the app's domain. Pass `PAY_HOST` only when it has a value (keksdose
+     passes `_PAY_HOST` only when non-empty), keep the pay block after the app's, and
+     pin that order in a test (keksdose's CSP test does);
+   - **with automatic HTTPS** (Compose's Caddy, a VPS), write the default as
+     `{$PAY_HOST:http://pay.invalid}`: a bare `pay.invalid` makes Caddy ask for a
+     certificate for it at every start. Cloud Run's `http://` blocks don't.
 3. **DNS:** `pay` as a CNAME to `ghs.googlehosted.com`, DNS-only in Cloudflare, like the
    apex.
 4. **The domain mapping:** `gcloud run domain-mappings create --service=<app>-web
    --domain=pay.<app domain> --region=europe-west4`. Then set
-   `PAY_HOST=pay.<app domain>` on `<app>-web`.
+   `PAY_HOST=pay.<app domain>` on `<app>-web`, where the next deploy keeps it: in the
+   deploy's own variables (a cloudbuild substitution, passed only when non-empty), or
+   with `gcloud run services update --update-env-vars`. A deploy with `--set-env-vars`
+   replaces every variable and drops one set by hand (corrected in 0.33.1).
 5. **Paddle → Checkout → Website approval:** add `pay.<app domain>`. The sandbox
    approves at once; live is reviewed, and wants the product, prices, terms, refund
    policy and privacy policy easy to find (the page's footer links them).
@@ -938,6 +1069,7 @@ The build wins. None of these needs a decision.
   `kept_beta` / `comped_until` as keywords.
 - **`PaddleClient` without an injected `httpx.AsyncClient` opens one per call.** Pass one
   from your lifespan for connection reuse.
-- **`billing_app` is checked** against `^[a-z][a-z0-9_-]{0,63}$`.
+- **`billing_app` is checked** against `^[a-z][a-z0-9_-]{0,63}$` — from 0.7.1 also where
+  the app's subclass redeclares the field.
 - **The Lemon Squeezy deprecation has no runtime warning** (the apps run with
   `error::DeprecationWarning`); it is in the docstrings and the changelog.

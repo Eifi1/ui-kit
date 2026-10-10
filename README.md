@@ -382,14 +382,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1876 names from 278 modules** — 879 values and 997 types. _Italic_ is a type-only export.
+**1877 names from 278 modules** — 879 values and 998 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1876 |
+| `@eifi1/ui-kit` | 1877 |
 | `@eifi1/ui-kit/chart` | 105 |
 | `@eifi1/ui-kit/shell` | 76 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -499,7 +499,7 @@ re-slicing of it, never a second API.
 | `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
-| `i18n/plurals` | `withAllPlurals` |
+| `i18n/plurals` | `withAllPlurals`, _`PluralForms`_ |
 
 ### billing
 

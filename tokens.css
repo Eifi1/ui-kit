@@ -192,6 +192,24 @@ html[data-text-size="xlarge"] {
   }
 }
 
+/* The same for FIGURES — an amount, a date, a count with its unit (0.33.1, keksdose):
+   `truncate` at Normal, and from Large up a wrap at spaces only (`overflow-wrap: normal`).
+   `truncate-until-large` breaks anywhere, so at Large it split an amount mid-number
+   ("CHF 1’2" over "34.50"), which reads as two numbers. Here "CHF" and "1’234.50" may
+   take two lines, but a number never splits: one wider than its box is cut at its end
+   instead, so give a figure's cell the room for it (`shrink-0`). Prose — a name, a
+   title, a sentence — keeps `truncate-until-large`, where breaking a long word is what
+   keeps the line on the screen. */
+@utility truncate-until-large-words {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @variant large {
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+}
+
 :root {
   --bg-page: #ede3cf;          /* warm dim sand — low-glare light page */
   --bg-surface: #f6ecd9;       /* warm off-white card/panel (not pure white) */

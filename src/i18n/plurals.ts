@@ -52,3 +52,32 @@ function pluralCategories(locale: string, type: Intl.PluralRuleType): readonly s
     return [];
   }
 }
+
+/**
+ * A word in the plural forms a count can ask for, `other` required: an app's
+ * `key_one` / `key_other` pair, or any of CLDR's categories (`zero`, `one`, `two`, `few`,
+ * `many`). A category left out reads `other`, the stand-in {@link withAllPlurals} fills
+ * a catalogue with — so English's two forms serve every language, as in the apps'
+ * catalogues.
+ *
+ *     { one: t("planUsage.budget_one"), other: t("planUsage.budget_other") }
+ */
+export type PluralForms = { other: string } & Partial<Record<Intl.LDMLPluralRule, string>>;
+
+/**
+ * The form of `forms` that `count` takes in `locale` — CLDR's cardinal category for it,
+ * through `Intl.PluralRules`, else `other`. A locale `Intl` cannot read reads as the
+ * runtime's, as everywhere the kit formats (and `undefined` is the runtime's). For the
+ * kit's own parts that put an app's word after a count: `planColumn`'s usage.
+ */
+export function pluralForm(count: number, forms: PluralForms, locale?: string): string {
+  return forms[pluralCategory(count, locale)] ?? forms.other;
+}
+
+function pluralCategory(count: number, locale: string | undefined): Intl.LDMLPluralRule {
+  try {
+    return new Intl.PluralRules(locale).select(count);
+  } catch {
+    return new Intl.PluralRules().select(count);
+  }
+}

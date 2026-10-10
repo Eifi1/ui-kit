@@ -1531,8 +1531,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       keptBeta: "A béta megtartja a lejáratát; csak a csomag változott.",
       untilDone: (date) => `Ingyenes eddig: ${date}.`,
       overLimit: "Az új csomag korlátja felett: semmi sem törlődik, de újak nem hozhatók létre.",
-      // The figures bare, as `billing.usage` (convention 3).
-      usageOf: (used, limit, dimension) => `${dimension}: ${used} / ${limit}`,
+      // The figures bare, as `billing.usage` (convention 3), and the app's word after
+      // them, as `dataTable.filterResults` ("1 / 5 költségvetés"): since 0.33.1 it is the
+      // word as it reads after a number, which stays singular here (convention 2).
+      usageOf: (used, limit, dimension) => `${used} / ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Megjelenés" group.

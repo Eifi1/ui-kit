@@ -1464,6 +1464,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       keptBeta: "测试版保留其结束日期；只更改了套餐。",
       untilDone: (date) => `免费至 ${date}。`,
       overLimit: "超出新套餐的上限：不会删除任何内容，但无法新建。",
+      // No plural: the app's word reads the same after any number (0.33.1).
       usageOf: (used, limit, dimension) => `${used}/${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in

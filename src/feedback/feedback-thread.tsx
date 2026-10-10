@@ -7,6 +7,8 @@ import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
 import type { CharacterCountLabels } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
+import { useWriteLock } from "../components/write-lock";
+import type { CommitScope } from "../components/write-lock";
 import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
@@ -565,6 +567,18 @@ export interface FeedbackComposerProps {
   /** Rendered INSTEAD of the composer — the thread is closed, or read-only for this
    *  reader. */
   disabledReason?: ReactNode;
+  /**
+   * Send COMMITS (0.33.1, kastlan's assistant): under a locked {@link WriteLockProvider}
+   * Send is disabled the `disabledReason` way — focusable, the lock's reason in its
+   * tooltip and description, as on {@link Button}'s `commit` — and neither Enter nor
+   * Ctrl/⌘+Enter sends. The box stays editable and the draft stays: nothing in it
+   * reaches the server until Send, and the lock may lift. No provider, or an unlocked
+   * one: no effect. A {@link CommitScope}: kastlan's assistant answers under the demo
+   * and not under a lapsed plan (its backend's 402), so it passes
+   * `commit={{ except: ["demo"] }}` where it read `useWriteLock` and fed `canSend` and a
+   * reason by hand. Not the prop above: that one replaces the box, this one keeps it.
+   */
+  commit?: CommitScope;
   rows?: number;
   /**
    * The longest draft the box takes, in UTF-16 code units as the browser counts — the
@@ -671,6 +685,7 @@ export function FeedbackComposer({
   canSend: canSendProp,
   sendOn = "mod-enter",
   disabledReason,
+  commit,
   rows = 3,
   maxLength,
   showCount,
@@ -686,6 +701,9 @@ export function FeedbackComposer({
   ...rest
 }: FeedbackComposerProps) {
   const labels = useKitLabels("feedbackComposer", DEFAULT_FEEDBACK_COMPOSER_LABELS, labelsProp);
+  // The lock as Send sees it, with its scope (§12.36). Send's Button reads the same
+  // through its own `commit`; this holds the keyboard's send back with it.
+  const lock = useWriteLock(commit ?? false);
   const rootAttributes = { id, ...dataAttributes(rest) };
   const hintId = useId();
   const [ownDraft, setOwnDraft] = useState("");
@@ -752,7 +770,7 @@ export function FeedbackComposer({
   // Longer than `maxLength` only through `insertText` or a controlled value (typing
   // stops at it): the server would refuse it, so it does not go.
   const tooLong = maxLength !== undefined && draft.length > maxLength;
-  const canSend = (canSendProp ?? draft.trim().length > 0) && !pending && !tooLong;
+  const canSend = (canSendProp ?? draft.trim().length > 0) && !pending && !tooLong && !lock.locked;
   const send = () => {
     if (!canSend) return;
     const sentDraft = draft;
@@ -844,6 +862,7 @@ export function FeedbackComposer({
           <Button
             onClick={send}
             disabled={!canSend}
+            commit={commit}
             aria-busy={pending || undefined}
             size={size === "sm" ? "sm" : undefined}
           >

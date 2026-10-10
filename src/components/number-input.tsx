@@ -5,7 +5,8 @@ import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { CURRENCIES } from "./currency-select";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { useInlineHint } from "./field-parts";
+import { LockedReason, useInlineHint, useLockReason } from "./field-parts";
+import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
@@ -135,6 +136,32 @@ interface NumberInputProps {
    *  numeric field that clamps what is typed as well. */
   min?: number;
   max?: number;
+  /**
+   * Why the value cannot be changed — {@link Button}'s `disabledReason`, for a number
+   * that SAVES itself: a setting committed on blur, a figure in a row editor
+   * (Kurvenschmiede's session page, 0.33.1). `disabled` takes the field out of the tab
+   * order, so the reason never reached a keyboard, and Kurvenschmiede wrote its own
+   * `CommitInput` to keep it in.
+   *
+   * With a reason the field stays in the tab order and shows its value, `readOnly` (the
+   * settled grey FIELD_BASE gives a `[readonly]` field) and `aria-disabled`, as the
+   * Combobox family's lock is. Nothing changes the value: the step keys do nothing, the
+   * calculator and the phone's numpad are not offered, and neither blur nor Enter
+   * commits — so `onChange` and `onCommit` are never called. Enter is swallowed, so the
+   * field does not submit the form around it. The reason is in the kit {@link Tooltip}
+   * and on the input's `aria-describedby`, between the caption and the error. Wins over
+   * `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This field COMMITS — {@link Button}'s `commit`: under a locked
+   * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
+   * (which wins over its own). A field whose value only reaches the server through the
+   * form's Save leaves this off and stays editable under the lock; the Save takes
+   * `commit`. No provider, or an unlocked one: no effect. {@link NumberField} and
+   * {@link IntegerField} pass it on.
+   */
+  commit?: CommitScope;
 }
 
 /** Decimal places of `n` as written ("0.25" → 2, "1e-7" → 7), for decimal-exact
@@ -289,11 +316,18 @@ export function NumberInput(props: NumberInputProps) {
     step,
     min,
     max,
+    disabledReason,
+    commit: commitScope,
   } = props;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const hintId = useId();
   const errorId = useId();
+  // The lock: focusable, `readOnly`, nothing changes or commits — see `disabledReason`.
+  const lock = useLockReason(commitScope, disabledReason);
+  const locked = lock.locked;
+  // Locked wins over `disabled`: the point of a reason is a field a keyboard reaches.
+  const off = Boolean(disabled) && !locked;
   // §4 "No fact only in a tooltip" (docs/text-size-harmonization.md): at Large and on a
   // touch screen a FieldHint is its words, so it takes the caption's path below — the
   // other kit fields do the same through `useFieldHint`.
@@ -303,15 +337,17 @@ export function NumberInput(props: NumberInputProps) {
   const hasError = hasMessage(error);
   // Passed at all — even as `undefined` — the field keeps its box; see `error`.
   const reserve = "error" in props || "hint" in props;
-  // The standing advice first, the news second: the caller's ids, the caption, the error.
-  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
+  // The standing advice first, the news second: the caller's ids, the caption, the
+  // error — a lock's reason between the last two, as on Select.
+  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, locked && lock.reasonId, hasError && errorId);
   const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
   const labelled = label !== undefined;
   // On phones we suppress the OS keyboard (inputMode="none" below) for our own
   // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
   const isMobile = usePhoneLayout();
   const asDisplay = isMobile && variant === "display";
-  const showCalc = calculator && !disabled && !isMobile;
+  // A locked field offers no calculator: its result would be a value.
+  const showCalc = calculator && !disabled && !locked && !isMobile;
   const [focused, setFocused] = useState(false);
   // The unit and the calculator's measured width, reserved as the field's end padding.
   const endRef = useRef<HTMLDivElement>(null);
@@ -338,7 +374,7 @@ export function NumberInput(props: NumberInputProps) {
   }, [hasEnd]);
   // On mobile, focusing opens the numpad bottom sheet instead of the native
   // keyboard (#334); the ref lets its "Done" blur → commit + close.
-  const showNumpad = isMobile && !disabled && focused;
+  const showNumpad = isMobile && !disabled && !locked && focused;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // The mark is the locale's; see the component's note. `derived` is the value in that
@@ -395,6 +431,12 @@ export function NumberInput(props: NumberInputProps) {
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    // Locked: Enter submits no form and commits nothing, and no key steps the value.
+    // The arrows and Home/End stay the caret's, for a long value someone is reading.
+    if (locked) {
+      if (e.key === "Enter") e.preventDefault();
+      return;
+    }
     if (e.key === "Enter") return commit();
     // A zero, negative or non-finite step is no step: the keys stay the caret's.
     if (!step || !(step > 0) || !Number.isFinite(step) || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -406,9 +448,12 @@ export function NumberInput(props: NumberInputProps) {
     stepBy(count);
   };
 
+  // While locked the field sits in the reason's Tooltip, which becomes its outermost
+  // box — so `className` (a width, a flex or grid cell) moves onto that, and the form
+  // keeps its layout, as on Select.
   const field = (
     <FloatingField
-      className={cn("w-full", className)}
+      className={cn("w-full", !locked && className)}
       htmlFor={fieldId}
       label={label}
       srOnlyLabel={asDisplay}
@@ -425,16 +470,23 @@ export function NumberInput(props: NumberInputProps) {
         autoComplete="off"
         // eslint-disable-next-line jsx-a11y/no-autofocus -- a documented prop the caller opts into (off by default); the field never takes focus on its own.
         autoFocus={autoFocus}
-        disabled={disabled}
+        disabled={off}
+        // Locked: focusable, `readOnly`, `aria-disabled` — see `disabledReason`.
+        readOnly={locked || undefined}
+        aria-disabled={locked || undefined}
         // Display mode has no floating label to feed the blank-placeholder trick,
         // and an empty borderless figure shows nothing — so it keeps whatever
         // placeholder the caller gave, falling back to a zero to aim at.
         placeholder={asDisplay ? (placeholder ?? "0") : labelled ? " " : placeholder}
         value={display}
-        onChange={(e) => typed(e.target.value)}
+        onChange={(e) => {
+          if (!locked) typed(e.target.value);
+        }}
         onFocus={() => setFocused(true)}
         onBlur={() => {
-          commit();
+          // Nothing commits under the lock — not even a draft typed before it arrived,
+          // which stays in the field for when it lifts.
+          if (!locked) commit();
           setFocused(false);
         }}
         onKeyDown={onKeyDown}
@@ -455,6 +507,7 @@ export function NumberInput(props: NumberInputProps) {
           inputClassName,
           showCalc && suffix !== undefined ? "pe-16" : showCalc ? "pe-9" : suffix !== undefined ? "pe-8" : undefined,
           invalid && FIELD_INVALID,
+          locked && "cursor-not-allowed",
         )}
         // The classes above are the fallback; once the end controls are measured the
         // field reserves exactly their width (+4px). A fixed pe-8 for any unit left a
@@ -511,13 +564,20 @@ export function NumberInput(props: NumberInputProps) {
       )}
     </FloatingField>
   );
-  if (!textHint && !hasError && !reserve) return field;
+  const box = locked ? (
+    <LockedReason lock={lock} className={cn("block w-full", className)}>
+      {field}
+    </LockedReason>
+  ) : (
+    field
+  );
+  if (!textHint && !hasError && !reserve) return box;
   // Outside the field's own `relative` box, as Select's caption is: the calculator
   // and the unit are `inset-y-0` in it and would stretch down over a second line.
   // `className` stays on the field, so adding a caption cannot change what it styles.
   return (
     <div>
-      {field}
+      {box}
       {textHint && (
         <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
           {hint}

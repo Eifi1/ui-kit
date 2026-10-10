@@ -121,6 +121,8 @@ const NAMESPACES = [
   ["hover:bg-brand (a variant on a former plain class)", /\.hover\\:bg-brand:hover\s*\{\s*background-color:\s*var\(--brand\);/],
   ["text-muted/60 (an opacity)", /color-mix\(in oklab, var\(--text-muted\) 60%, transparent\)/],
   ["truncate-until-large (text-size §10.17)", /\.truncate-until-large\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/],
+  // 0.33.1: the figures' sibling wraps at spaces only, so an amount never splits.
+  ["truncate-until-large-words (figures, 0.33.1)", /\.truncate-until-large-words\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*normal;/],
 ];
 const NOT_NAMES = ["bg-muted", "text-surface", "text-subtle", "fill-brand"];
 const probe = compiler.build([...NAMESPACES.map(([cls]) => cls.split(" ")[0]), ...NOT_NAMES]);

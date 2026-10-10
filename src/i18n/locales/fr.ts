@@ -1561,7 +1561,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       untilDone: (date) => `Gratuit jusqu’au ${date}.`,
       overLimit:
         "Au-delà de la limite de la nouvelle formule\u00a0: rien n’est supprimé, les nouveaux éléments sont bloqués.",
-      // Figures formatted; "sur", as `billing.usage`.
+      // Figures formatted; "sur", as `billing.usage`. The app's word follows the limit,
+      // in its form (0.33.1): "1 sur 1 budget", "1 sur 5 budgets" — and French reads 0
+      // as singular, which the forms' `one` covers.
       usageOf: (used, limit, dimension) => `${used} sur ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
