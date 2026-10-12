@@ -93,9 +93,9 @@ Decision 1 below asks whether they should.
 ## Wave 0 — into 0.34, before the release — DONE 2026-10-12
 
 Built and committed on `feat/0.34.0`, each bug with a regression test seen failing first.
-The commits: `6574ed9` (BUG-1, BUG-4, BUG-7b, BUG-2, BUG-14), `5e5ea3f` (DUP-3, API-1,
-BUG-6, BUG-11), `080e173` (BUG-3, BUG-13, TST-5, TST-6, decision 2's CI sweep), `12071e8`
-(TST-7), `e00cceb` (DOC-2's user-admin part), `64c914b` (DOC-3's Lemon Squeezy part).
+The commits: `4a096a8` (BUG-1, BUG-4, BUG-7b, BUG-2, BUG-14), `2d37551` (DUP-3, API-1,
+BUG-6, BUG-11), `82db9b3` (BUG-3, BUG-13, TST-5, TST-6, decision 2's CI sweep), `566bbff`
+(TST-7), `987a1ab` (DOC-2's user-admin part), `fc761ce` (DOC-3's Lemon Squeezy part).
 
 Each item is independent, internal, S or XS, and gets its regression test written
 failing-first.
@@ -449,3 +449,37 @@ removes a class of drift.
 - **Performance at runtime** (render counts, long lists) was looked at only where a finding
   touched it: `useAnchoredPanel`'s viewport update has no equality guard. That is noted in
   BUG.md, not filed.
+
+## Commit ids
+
+On 2026-10-12, before the branch was first pushed, two commit headers over 100 characters
+were reworded (`git filter-branch --msg-filter`; no tree changed). That gave every
+`feat/0.34.0` commit after `origin/main` a new id. The audit reports quote the old ids:
+
+| before | after | commit |
+|---|---|---|
+| `05309f6` | `05309f6` | docs(contracts): session refresh and groups in the audit, drafts for r… |
+| `b636b92` | `b636b92` | feat: HelpPopover for long help, write locks on text and money fields,… |
+| `cddebdd` | `56eb4f2` | feat: Modal 2xl, one table storage prefix, saveBlob, settings window t… |
+| `c1aff8d` | `82fce48` | docs(contracts): session refresh and groups in the audit, settled afte… |
+| `7cd486c` | `0bf08ee` | feat: SeriesChart maxRows, the truncation sweep gates releases, wrap-a… |
+| `c8b553c` | `435992a` | fix: the last five texts the truncation sweep cut at Large |
+| `7dade18` | `f6b8521` | feat(admin)!: groups in the audit log — five words, group targets, the… |
+| `116d2b6` | `7ee9fb5` | feat(auth): attachSessionRefresh — one refresh per tab, a definitive e… |
+| `9037748` | `843762d` | feat!: the English catalogue in one chunk; aliases deprecated in 0.32 … |
+| `e553d7e` | `3f8806e` | docs(billing): a manual grant clears trial_ends_at (§14.17) |
+| `67c1bfa` | `f7f37ea` | feat(admin): PlanChangeConfirm's usage takes planColumn's shape, so it… |
+| `d6212d6` | `0b34633` | refactor: the kit's own markup on the role utilities; the role-class b… |
+| `e88f3d4` | `91c64c4` | docs: what round 0.34 changed in the contracts and in CONTRIBUTING |
+| `c013290` | `eebdb30` | docs: adopt-0.34.md, the apps' list for ui-kit 0.34 and server-kit 0.8 |
+| `efbd207` | `6eb9da4` | docs: the 2026-10 refactor plan, from a six-area audit of feat/0.34.0 |
+| `557bce2` | `a200e06` | fix: a strip's label clears its group's border; the stepper's focus li… |
+| `a580384` | `56e1256` | docs(refactor-plan): Marcel's decisions; the K5 follow-up for every fi… |
+| `e00cceb` | `987a1ab` | docs(user-admin): §4 names the 0.33/0.34 audit words and group columns… |
+| `64c914b` | `fc761ce` | docs(showcase): the billing page names Paddle's webhooks alone; server… |
+| `080e173` | `82db9b3` | fix: a reopened photo shows no revoked URL; React >=19.2; the release'… |
+| `6574ed9` | `4a096a8` | fix: Escape closes only a picker's list in a dialog; tabbable traps; t… |
+| `5e5ea3f` | `2d37551` | fix: one lock-reason frame with its line on phones; aria-label on 16 m… |
+| `12071e8` | `566bbff` | build: check:build fails on a stale README export inventory; the barre… |
+| `79c6c3a` | `bfe6297` | docs: adopt-0.34 gains Wave 0 and keksdose's run 78; the refactor plan… |
+| `c26deaa` | `4426662` | fix(showcase): the series-chart and user-admin page blurbs in all seve… |
