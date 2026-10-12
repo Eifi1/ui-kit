@@ -47,7 +47,7 @@ import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
  * items — had a latent bug of its own: its subject cell carries the environment and
  * rework chips "so a second attempt is marked on every surface at once" (:760), but the
  * phone card is a `mobileCard`, and `DataTable` never renders the `mobilePrimary` cell
- * when `mobileCard` is set (data-table.tsx, `cardInner`). Its phone cards showed neither
+ * when `mobileCard` is set (data-table-mobile.tsx, `cardInner`). Its phone cards showed neither
  * chip. {@link FeedbackMobileCard} draws both itself, from the same
  * {@link FeedbackSubject} the column uses, so the two surfaces cannot part again.
  *

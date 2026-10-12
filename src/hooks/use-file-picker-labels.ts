@@ -1,8 +1,9 @@
-// The English words of ./file-button, in a module with no component code: the English
-// catalogue (src/i18n/defaults.ts) imports them without the component, so `en` loads as one
-// chunk like the other languages (0.34, KS U8). ./file-button re-exports them.
+// The English words of the file pickers (./use-file-picker), in a module with no component
+// code: the English catalogue (src/i18n/defaults.ts) imports them without the component, so
+// `en` loads as one chunk like the other languages (0.34, KS U8). In hooks/ beside the hook
+// since 0.34 (MOD-8); components/file-button re-exports them.
 
-import type { FilePickerLabels } from "./file-button";
+import type { FilePickerLabels } from "./use-file-picker";
 
 export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
   rejectedType: (name) => `“${name}” is not a supported file type`,

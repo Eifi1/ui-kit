@@ -200,12 +200,19 @@ describe("the required-and-empty highlight, on every field control", () => {
   it("would notice a control that forgot the prop", () => {
     // The list above is hand-written, so it can go stale. This reads the directory
     // instead: a module that renders the field look takes `invalid`. Excluded by
-    // name rather than by cleverness, and the one exclusion has a reason.
+    // name rather than by cleverness, and each exclusion has a reason.
     const EXEMPT = [
       // A field-styled SHELL for a filter box: it narrows a list that is already on
       // screen, it cannot be left unanswered, and nothing submits it. There is no
       // state for "invalid" to describe.
       "search-field.tsx",
+      // A re-export shim since 0.34 (MOD-2): it names FIELD_BASE only to pass it on and
+      // renders nothing. The fields it re-exports are swept in their own modules.
+      "components/ui.tsx",
+      // The list parts Combobox and InlineEntityCombobox share since 0.34 (MOD-9): it names
+      // FIELD_BASE only in a comment and renders no field. The two fields are swept in
+      // their own modules.
+      "components/combobox-suggestions.tsx",
     ];
     const offenders = Object.entries(SOURCES)
       .filter(([path]) => !EXEMPT.some((name) => path.endsWith(name)))

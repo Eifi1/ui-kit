@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS, PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account-settings";
 import type { ProfileNameValues } from "../account-settings";
-import { WriteLockProvider } from "../write-lock";
+import { WriteLockProvider } from "../../components/write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 

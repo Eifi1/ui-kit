@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { Autocomplete } from "../autocomplete";
-import { ChipInput } from "../chip";
+import { ChipInput } from "../chip-input";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiSelect } from "../multi-select";

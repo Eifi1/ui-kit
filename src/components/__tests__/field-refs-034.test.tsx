@@ -7,7 +7,7 @@ import { DatePicker, DateRangePicker } from "../date-picker";
 import { MonthPicker } from "../month-picker";
 import { ToggleGroup } from "../toggle-group";
 import { CurrencySelect } from "../currency-select";
-import { ChipInput } from "../chip";
+import { ChipInput } from "../chip-input";
 
 /**
  * API-3 (refactor audit 2026-10, round 0.34 Wave 3): ten focusable fields took no `ref`

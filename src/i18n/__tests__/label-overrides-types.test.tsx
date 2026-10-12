@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { UiKitProvider, useKitLabels, type UiKitLabelOverrides } from "../kit-labels";
-import { PasskeysSetting } from "../../components/passkeys-setting";
+import { PasskeysSetting } from "../../account/passkeys-setting";
 import { DEFAULT_DATA_TABLE_LABELS } from "../../components/data-table-labels";
 
 describe("UiKitLabelOverrides (deep partial)", () => {

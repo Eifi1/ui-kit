@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ThemeSetting } from "../../components/settings-fields";
-import { TwoFactorSetting } from "../../components/account-settings";
+import { TwoFactorSetting } from "../../account/account-settings";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**

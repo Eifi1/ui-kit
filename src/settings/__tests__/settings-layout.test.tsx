@@ -10,7 +10,7 @@ import { useSettingsLayout } from "../settings-context";
 import { settingsSearchEntries, type SettingsEntry, type SettingsGroup } from "../settings-catalogue";
 import { SETTINGS_FOCUS_RING } from "../use-settings-focus";
 import { ListItem } from "../../components/list";
-import { PasswordSetting, TwoFactorSetting } from "../../components/account-settings";
+import { PasswordSetting, TwoFactorSetting } from "../../account/account-settings";
 
 /**
  * SettingsLayout (docs/settings-harmonization.md §3.2–§3.5, §3.7): the search threshold

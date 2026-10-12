@@ -52,7 +52,7 @@ import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
 import type { FeedbackContextLabels } from "../feedback/feedback-context";
 import type { FeedbackPageLabels } from "../feedback/feedback-table";
 import type { FeedbackDetailLabels } from "../feedback/feedback-row-detail";
-import type { AccountSettingsLabels } from "../components/account-settings-labels";
+import type { AccountSettingsLabels } from "../account/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
 import type { CopyButtonLabels } from "../components/copy-button";

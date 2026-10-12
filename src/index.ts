@@ -166,8 +166,8 @@ export * from "./components/autocomplete";
 export * from "./components/measured-grid";
 export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
 export type { WindowedRows } from "./hooks/use-windowed-rows";
-// Named, not `export *`: file-button.tsx also holds the screening helpers the
-// dropzone shares, which are internal.
+// Named, not `export *`: file-button.tsx also re-exports the screening helpers the
+// dropzone shares (hooks/use-file-picker since 0.34, MOD-8), which are internal.
 export { FileButton, useFilePicker, matchesAccept, DEFAULT_FILE_PICKER_LABELS } from "./components/file-button";
 export type {
   FileButtonProps,
@@ -188,10 +188,11 @@ export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";
 export * from "./components/pie-chart";
 export * from "./components/pie-chart-labels";
-export * from "./components/account-settings";
+// In account/ since 0.34, beside the other account cards (MOD-8, refactor audit 2026-10).
+export * from "./account/account-settings";
 // 0.12.0: the fourth account section, and the QR code TwoFactorSetting draws its
 // otpauth URI with (encoder in lib/qr-encode.ts — no dependency, see there).
-export * from "./components/passkeys-setting";
+export * from "./account/passkeys-setting";
 export * from "./components/qr-code";
 export { encodeQr } from "./lib/qr-encode";
 export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
@@ -203,6 +204,8 @@ export * from "./components/nav-pills";
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".
 export * from "./components/chip";
+// ChipInput's own module since MOD-9: it renders Chip, so chip.tsx re-exports only its types.
+export * from "./components/chip-input";
 export * from "./components/wizard-stepper";
 export * from "./components/hover-menu";
 export * from "./components/modal";

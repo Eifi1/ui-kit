@@ -25,7 +25,7 @@ import { DEFAULT_DANGER_CONFIRM_LABELS } from "../components/danger-confirm-labe
 import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker-labels";
 import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker-labels";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame-labels";
-import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button-labels";
+import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
 import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid-labels";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog-labels";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel-labels";
@@ -44,7 +44,7 @@ import { DEFAULT_FEEDBACK_MENU_LABELS } from "../feedback/feedback-menu-labels";
 import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "../feedback/feedback-context-labels";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "../feedback/feedback-table-labels";
 import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "../feedback/feedback-row-detail-labels";
-import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../components/account-settings-labels";
+import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../account/account-settings-labels";
 import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button-labels";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar-labels";
 import { DEFAULT_LIST_LABELS } from "../components/list-labels";

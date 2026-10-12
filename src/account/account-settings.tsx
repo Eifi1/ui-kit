@@ -1,20 +1,22 @@
 import { useId, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, KeyboardEvent, ReactNode, RefObject } from "react";
-import { Button, Card, Input } from "./ui";
-import { UserAvatar } from "./user-avatar";
-import { CopyButton } from "./copy-button";
-import { QrCode } from "./qr-code";
-import { OneTimeCodeInput } from "./one-time-code-input";
-import { usePromisePending } from "./danger-confirm";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { Input } from "../components/input";
+import { UserAvatar } from "../components/user-avatar";
+import { CopyButton } from "../components/copy-button";
+import { QrCode } from "../components/qr-code";
+import { OneTimeCodeInput } from "../components/one-time-code-input";
+import { usePromisePending } from "../components/danger-confirm";
 import { personNameOk, PERSON_NAME_MAX_LENGTH } from "../auth/form-rules";
 import {
   DEFAULT_PASSWORD_STRENGTH_LABELS,
   passwordByteLength,
   PasswordStrengthMeter,
-} from "./password-strength";
-import type { PasswordStrengthMeterProps } from "./password-strength";
+} from "../components/password-strength";
+import type { PasswordStrengthMeterProps } from "../components/password-strength";
 import { useKitLabelOverrides, useKitLabels } from "../i18n/kit-labels";
-import { Chip } from "./chip";
+import { Chip } from "../components/chip";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import type {
@@ -22,8 +24,8 @@ import type {
   ProfileSettingLabels,
   TwoFactorSettingLabels,
 } from "./account-settings-labels";
-import { COMMIT_EXCEPT_BILLING } from "./write-lock";
-import { AlertBanner } from "./alert-banner";
+import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { authErrorCode } from "../auth/auth-errors";
 

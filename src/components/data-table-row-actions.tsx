@@ -1,0 +1,152 @@
+import { isValidElement, useCallback, useMemo } from "react";
+import type { ReactNode } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { RowActions, type RowAction } from "./row-actions";
+import type { SwipeAction } from "./swipeable-row";
+import type { DataTableLabels } from "./data-table-labels";
+import type {
+  DataTableColumn,
+  DataTableDensity,
+  DataTableProps,
+  DataTableRowAction,
+  MobileSwipeActions,
+} from "./data-table";
+
+// DataTable's per-row actions (`rowActions`): the actions column on a wide screen and
+// the swipes on a phone card. Moved out of data-table.tsx whole (refactor audit
+// 2026-10, MOD-3 step 1); internal — the public types stay in data-table.tsx.
+
+/** The actions column's key. Not a column a caller declares, so it is kept out of the
+ *  column-settings panel. */
+export const ROW_ACTIONS_KEY = "__rowActions";
+
+interface ResolvedRowAction<T> {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  tone: "default" | "danger";
+  swipe: "start" | "end" | false;
+  action: DataTableRowAction<T>;
+}
+
+function resolveRowAction<T>(
+  action: DataTableRowAction<T>,
+  index: number,
+  labels: DataTableLabels,
+): ResolvedRowAction<T> {
+  const tone = action.tone ?? (action.kind === "delete" ? "danger" : "default");
+  return {
+    key: action.kind ?? `${index}:${action.label ?? ""}`,
+    label: action.label ?? (action.kind === "edit" ? labels.edit : action.kind === "delete" ? labels.delete : ""),
+    icon:
+      action.icon ??
+      (action.kind === "edit" ? <Pencil /> : action.kind === "delete" ? <Trash2 /> : null),
+    tone,
+    swipe: action.swipe ?? (tone === "danger" ? "start" : "end"),
+    action,
+  };
+}
+
+/** Ask, then act. */
+async function runRowAction<T>(action: DataTableRowAction<T>, row: T): Promise<void> {
+  if (action.confirm && !(await action.confirm(row))) return;
+  action.onAction(row);
+}
+
+/** A resolved row action as {@link RowActions} takes it. Its `icon` is any node; a
+ *  non-element one (a string glyph) is wrapped, since RowAction wants an element. */
+function toRowAction<T>(a: ResolvedRowAction<T>, row: T): RowAction {
+  return {
+    key: a.key,
+    label: a.label,
+    icon: isValidElement(a.icon) ? a.icon : a.icon != null && a.icon !== false ? <>{a.icon}</> : undefined,
+    tone: a.tone,
+    disabledReason: a.action.disabledReason?.(row),
+    onSelect: () => void runRowAction(a.action, row),
+  };
+}
+
+/**
+ * The caller's columns with the actions column appended, and the same actions as a
+ * phone card's swipes (`swipesFromActions`; DataTable uses it unless the caller passes
+ * `mobileSwipeActions`). Without `rowActions` the columns come back as given.
+ *
+ * The actions column is appended to the caller's columns rather than drawn as a
+ * second special case beside the selection column: it then gets the cell padding,
+ * the widths and the phone rules (`mobileHidden`) every other column gets.
+ */
+export function useRowActionColumn<T>({
+  columns: columnsProp,
+  rowActions,
+  rowName,
+  labels,
+  density,
+}: {
+  columns: DataTableColumn<T>[];
+  rowActions: DataTableProps<T>["rowActions"];
+  rowName: DataTableProps<T>["rowName"];
+  labels: DataTableLabels;
+  density: DataTableDensity;
+}): {
+  columns: DataTableColumn<T>[];
+  swipesFromActions: (row: T) => MobileSwipeActions | null;
+} {
+  const rowActionsFor = useCallback(
+    (row: T): ResolvedRowAction<T>[] =>
+      rowActions
+        ? (typeof rowActions === "function" ? rowActions(row) : rowActions)
+            .filter((a) => !a.hidden?.(row))
+            .map((a, i) => resolveRowAction(a, i, labels))
+        : [],
+    [rowActions, labels],
+  );
+  const columns = useMemo<DataTableColumn<T>[]>(
+    () =>
+      rowActions
+        ? [
+            ...columnsProp,
+            {
+              key: ROW_ACTIONS_KEY,
+              header: <span className="sr-only">{labels.actions}</span>,
+              // Through RowActions (0.32, §10.8): the icons inline at Normal, one "⋯"
+              // menu at Large once there are two — every label at once does not fit a
+              // row. Each control stops its own click: the row's handler already skips
+              // its controls, and this is for the caller who wraps the table in a
+              // clickable element of their own.
+              cell: (row) => (
+                <RowActions
+                  actions={rowActionsFor(row).map((a) => toRowAction(a, row))}
+                  name={rowName?.(row)}
+                  size={density === "compact" ? "2xs" : "xs"}
+                  labels={{ actions: labels.actions }}
+                  className="justify-end"
+                />
+              ),
+              className: "w-px whitespace-nowrap text-end",
+              headClassName: "w-px",
+              // On a phone the same actions are the card's swipes.
+              mobileHidden: true,
+              noRowLink: true,
+            },
+          ]
+        : columnsProp,
+    [columnsProp, rowActions, rowActionsFor, rowName, labels.actions, density],
+  );
+  const swipesFromActions = (row: T): MobileSwipeActions | null => {
+    const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
+    if (!swipes.length) return null;
+    const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
+      label: a.label,
+      icon: a.icon,
+      onCommit: () => void runRowAction(a.action, row),
+      // The row action's tone, painted by SwipeableRow: its soft wash idle, its fill
+      // and that fill's foreground armed (0.33).
+      tone: a.tone === "danger" ? "danger" : "brand",
+    });
+    return {
+      start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
+      end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
+    };
+  };
+  return { columns, swipesFromActions };
+}

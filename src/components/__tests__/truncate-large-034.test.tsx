@@ -118,11 +118,24 @@ const BARE = /(?<![\w.-])truncate(?![\w-])/;
 
 describe("no part of group 4 truncates at Large", () => {
   const GROUP_4 = [
-    "components/ui.tsx",
+    // ui.tsx's ten controls, one module each since 0.34 (MOD-2); ui.tsx is a re-export shim.
+    "components/button.tsx",
+    "components/icon-button.tsx",
+    "components/field-base.tsx",
+    "components/input.tsx",
+    "components/select.tsx",
+    "components/textarea.tsx",
+    "components/card.tsx",
+    "components/spinner.tsx",
+    "components/empty-state.tsx",
+    "components/tabs.tsx",
     "components/menu-item.tsx",
     "components/breadcrumbs.tsx",
     "shell/app-shell.tsx",
     "components/combobox.tsx",
+    // InlineEntityCombobox and the list both typed comboboxes share (MOD-9).
+    "components/inline-entity-combobox.tsx",
+    "components/combobox-suggestions.tsx",
     "components/combobox-core.tsx",
     "components/entity-combobox.tsx",
     "components/multi-entity-combobox.tsx",
@@ -130,6 +143,13 @@ describe("no part of group 4 truncates at Large", () => {
     "components/country-select.tsx",
     "components/currency-select.tsx",
     "components/data-table.tsx",
+    // DataTable's header, column panel, phone layout and shared row parts, one module
+    // each since 0.34 (MOD-3).
+    "components/data-table-head.tsx",
+    "components/data-table-column-settings.tsx",
+    "components/data-table-mobile.tsx",
+    "components/data-table-shared.tsx",
+    "components/data-table-row-actions.tsx",
   ];
 
   it.each(GROUP_4)("%s has no bare `truncate` class", (file) => {
@@ -139,7 +159,7 @@ describe("no part of group 4 truncates at Large", () => {
   });
 
   it("the DataTable column chooser's label wraps, and its checkbox keeps its size", () => {
-    const source = SOURCES["/src/components/data-table.tsx"];
+    const source = SOURCES["/src/components/data-table-column-settings.tsx"];
     expect(source).toMatch(/<span className="min-w-0 truncate-until-large">\{headerLabel\}<\/span>/);
     expect(source).toMatch(/className="size-3\.5 shrink-0"/);
   });

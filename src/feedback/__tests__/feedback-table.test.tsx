@@ -34,7 +34,7 @@ import {
 /**
  * §4.3 of the feedback contract: the two pages' table as kit parts — keksdose's nine
  * columns (feedback-page.tsx:711–963), its phone card with the chips it lost to
- * `mobileCard` (data-table.tsx `cardInner`), the awaiting toggle, the §7.13 empty state.
+ * `mobileCard` (data-table-mobile.tsx `cardInner`), the awaiting toggle, the §7.13 empty state.
  * Synthetic rows only.
  */
 

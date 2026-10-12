@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Autocomplete } from "../autocomplete";
-import { ChipInput } from "../chip";
+import { ChipInput } from "../chip-input";
 import { DatePicker } from "../date-picker";
 import { EntityCombobox } from "../entity-combobox";
 import { FullBleedDialog } from "../full-bleed-dialog";

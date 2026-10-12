@@ -119,8 +119,8 @@ for (const file of graph.keys()) {
 // every module free of side effects (package.json `sideEffects`), packages external, so
 // the number is the kit's own code, minified. The shell set is what the three apps' layout
 // and top bar import (2026-10). Each ceiling is the size last measured plus ~10 %; MOD-1
-// (a lazy feedback dialog) and MOD-2 (the ui.tsx split) are expected to bring the numbers
-// down further, and the ceilings come down with them.
+// (a lazy feedback dialog) is expected to bring the shell set down further, and its
+// ceiling comes down with it.
 const SHELL_SET = [
   "AppShell",
   "TopBar",
@@ -142,11 +142,20 @@ const SHELL_SET = [
 // kept Input, Select, Textarea, IconButton and Tooltip alive through ui.tsx's two side
 // effects — and the shell set 125,393 (41,602). A forwardRef or a displayName line at
 // module scope brings that back: it is a call Rollup must keep, with all it references.
+//
+// Re-measured 2026-10-12 after MOD-2 (ui.tsx split into one module per control, ui.tsx a
+// re-export shim): Button 18,010 (6,821), Spinner 1,562 (864), cn 171 (151), the shell set
+// 121,177 (39,961). Spinner and Button fell because ui.tsx's module-scope `cn(…)` class
+// constants (BUTTON_BASE, ICON_BUTTON_BASE, FIELD_TRIGGER, the floating label's, the
+// textarea strip's) are calls Rollup keeps whenever their module is in at all; now each
+// rides only with its own control. The shell set barely moved: it does use Button,
+// IconButton, Input, Select and Textarea (the feedback dialog), and Tabs had already
+// stopped riding in with Button at MOD-4.
 const BUDGETS = [
-  { label: "{ Button }", names: ["Button"], max: 22_400 },
-  { label: "{ Spinner }", names: ["Spinner"], max: 4_800 },
+  { label: "{ Button }", names: ["Button"], max: 19_800 },
+  { label: "{ Spinner }", names: ["Spinner"], max: 1_720 },
   { label: "{ cn }", names: ["cn"], max: 190 },
-  { label: "the shell set", names: SHELL_SET, max: 133_400 },
+  { label: "the shell set", names: SHELL_SET, max: 133_300 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

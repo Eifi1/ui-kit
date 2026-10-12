@@ -1,13 +1,13 @@
-import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, DragEvent, ReactElement, ReactNode, Ref } from "react";
+import { useId, useState } from "react";
+import type { ComponentPropsWithoutRef, DragEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
-import { useAnnounce } from "../hooks/use-announce";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { DEFAULT_FILE_PICKER_LABELS } from "./file-button-labels";
+import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
+import { useFilePicker, type UseFilePickerOptions } from "../hooks/use-file-picker";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -35,355 +35,28 @@ import { DEFAULT_FILE_PICKER_LABELS } from "./file-button-labels";
  * else's control (a card's "Add" action, a menu item, a second button for the camera).
  */
 
-/* ── Labels ──────────────────────────────────────────────────────────────── */
-
-/** Every string the file pickers ({@link FileButton}, `FileDropzone`) render or speak.
- *  Messages are functions of the file name so a translation can put it anywhere. */
-export interface FilePickerLabels {
-  /** The file's type is not in `accept`, when no `accept` is known to name (see
-   *  `rejectedTypeOnly`). */
-  rejectedType: (name: string) => string;
-  /** The file's type is not in `accept`, naming what IS accepted: `accept`'s tokens,
-   *  lower-cased and joined with ", " (`".csv"` => "Only .csv files"). Used whenever
-   *  `accept` is set — kastlan kept a custom `isValid` + `invalidMessage` per form only
-   *  to say this, and `accept` already knows it. */
-  rejectedTypeOnly: (accept: string, name: string) => string;
-  /** The file is larger than `maxSize`; `maxSize` arrives formatted ("5 MB"). */
-  rejectedSize: (name: string, maxSize: string) => string;
-  /** The file was one too many for `maxFiles`. */
-  rejectedCount: (name: string, maxFiles: number) => string;
-  /** `isValid` said no and the caller gave no `invalidMessage`. */
-  rejectedInvalid: (name: string) => string;
-  /** Spoken instead of the per-file message when more than one file was refused. */
-  rejectedMany: (count: number) => string;
-  /** Spoken (and shown, on a dropzone) when `onPick` refused the WHOLE pick.
-   *  Receives the number of files in it. */
-  rejectedPick: (count: number) => string;
-  /** Spoken after a pick the component itself echoes (the dropzone). */
-  selected: (count: number, firstName: string) => string;
-  /** The dropzone's remove button for one file. */
-  remove: (name: string) => string;
-  /** The dropzone's remove-everything button in `multiple` mode. */
-  clearAll: string;
-  /** Spoken after a remove / clear, since the button that was pressed is gone. */
-  removed: (name: string) => string;
-  cleared: string;
-  /** The dropzone's accessible name, when the host passes no `dropLabel`. */
-  dropzone: string;
-  /** The dropzone's Browse button, when the host passes no `browseLabel`. */
-  browse: string;
-  /** What an empty single-file dropzone says (no `emptyLabel` given). */
-  empty: string;
-  /** …and an empty `multiple` one. */
-  emptyMultiple: string;
-  /** The dropzone's second line (no `hint` given). Receives `accept` as a person
-   *  reads it (`".pdf, image/png"`), or `""` when anything goes. */
-  hint: (accept: string) => string;
-  /** What a `busy` dropzone says in place of its body ("Uploading…"). */
-  busy: string;
-}
-
-// Defined in ./file-button-labels, which holds no component code (0.34, KS U8).
+// The picker's words, its screening and `useFilePicker` live in hooks/use-file-picker
+// since 0.34 (MOD-8, refactor audit 2026-10): useFileDrop is built on the hook, and a hook
+// importing a component module was a folder-level back-edge. Re-exported here, so every
+// import of them from this module keeps working.
 export { DEFAULT_FILE_PICKER_LABELS };
-
-/* ── Screening ───────────────────────────────────────────────────────────── */
-
-export type FileRejectionReason = "type" | "size" | "count" | "invalid";
-
-/** One file the picker refused, and why. `message` is already translated (see
- *  {@link FilePickerLabels}, or the caller's `invalidMessage`), so a host that just
- *  wants to show it can render `rejections[0].message` as is. */
-export interface FileRejection {
-  file: File;
-  reason: FileRejectionReason;
-  message: string;
-}
-
-/**
- * Does `file` satisfy an `accept` string, the way the browser's dialog reads it?
- * Comma-separated tokens: `.ext` (case-insensitive suffix of the name), `type/*`
- * (a MIME family) or an exact MIME type. An empty or absent `accept` takes anything.
- *
- * A file with no `type` — common for `.step`, `.dat`, anything the OS has no MIME
- * mapping for — can only match by extension, which is why lenkbank lists `.stp` AND
- * `model/step`: that is how `accept` has to be written for the dialog anyway.
- */
-export function matchesAccept(file: File, accept: string | undefined): boolean {
-  const tokens = (accept ?? "")
-    .split(",")
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean);
-  if (tokens.length === 0) return true;
-  const name = file.name.toLowerCase();
-  // An EMPTY type is the browser saying "I don't know", not "it's something else": HEIC
-  // photos on Windows without the codec arrive with `type === ""`. Refusing them
-  // (0.6.0) refused iPhone photos the picker itself had just offered (keksdose). So a
-  // missing type is inferred from the extension where that is unambiguous, and a file
-  // whose type cannot be known at all is given the benefit of the doubt — nothing here
-  // proves it does not match, and the server validates what it receives anyway.
-  const type = (file.type || typeFromExtension(name) || "").toLowerCase();
-  if (!type && !tokens.every((t) => t.startsWith("."))) return true;
-  return tokens.some((token) => {
-    if (token.startsWith(".")) return name.endsWith(token);
-    if (!type) return false;
-    if (token.endsWith("/*")) return type.startsWith(token.slice(0, -1));
-    return type === token;
-  });
-}
-
-/** MIME types for the extensions a browser most often leaves untyped. */
-const EXTENSION_TYPES: Record<string, string> = {
-  heic: "image/heic",
-  heif: "image/heif",
-  avif: "image/avif",
-  webp: "image/webp",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  pdf: "application/pdf",
-  csv: "text/csv",
-  txt: "text/plain",
-};
-
-function typeFromExtension(name: string): string | undefined {
-  const dot = name.lastIndexOf(".");
-  return dot === -1 ? undefined : EXTENSION_TYPES[name.slice(dot + 1)];
-}
-
-/** @internal `" .PDF, image/png ,"` => `".pdf, image/png"` — `accept` as a person reads
- *  it. Also the dropzone's default hint. */
-export function formatAccept(accept: string): string {
-  return accept
-    .split(",")
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean)
-    .join(", ");
-}
-
-/** What the pickers screen a pick with. All optional; nothing set accepts everything. */
-export interface FileScreenOptions {
-  accept?: string;
-  /** Bytes. Larger files are refused with reason `"size"`. */
-  maxSize?: number;
-  /** How many files one pick may deliver. The rest are refused with reason `"count"`
-   *  — first come, first kept. For a running cap ("at most 5 attachments") pass what
-   *  is LEFT: `maxFiles={5 - attachments.length}`. */
-  maxFiles?: number;
-  /** The caller's own check, after `accept` and `maxSize`. */
-  isValid?: (file: File) => boolean;
-  /** The message for an `isValid` refusal; `labels.rejectedInvalid` otherwise. */
-  invalidMessage?: string;
-}
-
-/** @internal Split a pick into the files that pass and the ones that do not. */
-export function screenFiles(
-  files: readonly File[],
-  opts: FileScreenOptions,
-  labels: FilePickerLabels,
-  formatSize: (bytes: number) => string,
-): { accepted: File[]; rejected: FileRejection[] } {
-  const accepted: File[] = [];
-  const rejected: FileRejection[] = [];
-  // Name what `accept` takes ("Only .csv files") — unless the host translated
-  // `rejectedType` but not yet `rejectedTypeOnly`: its own sentence beats an English one.
-  const acceptText = opts.accept ? formatAccept(opts.accept) : "";
-  const useOnly =
-    acceptText !== "" &&
-    (labels.rejectedTypeOnly !== DEFAULT_FILE_PICKER_LABELS.rejectedTypeOnly ||
-      labels.rejectedType === DEFAULT_FILE_PICKER_LABELS.rejectedType);
-  const typeMessage = (name: string) =>
-    useOnly ? labels.rejectedTypeOnly(acceptText, name) : labels.rejectedType(name);
-  for (const file of files) {
-    let reason: FileRejectionReason | null = null;
-    if (!matchesAccept(file, opts.accept)) reason = "type";
-    else if (opts.maxSize !== undefined && file.size > opts.maxSize) reason = "size";
-    else if (opts.isValid && !opts.isValid(file)) reason = "invalid";
-    // Count last, and only against files that passed everything else: a refused
-    // file should not use up one of the slots a good one could have had.
-    else if (opts.maxFiles !== undefined && accepted.length >= opts.maxFiles) reason = "count";
-    if (reason === null) {
-      accepted.push(file);
-      continue;
-    }
-    const message =
-      reason === "type"
-        ? typeMessage(file.name)
-        : reason === "size"
-          ? labels.rejectedSize(file.name, formatSize(opts.maxSize ?? 0))
-          : reason === "count"
-            ? labels.rejectedCount(file.name, Math.max(0, opts.maxFiles ?? 0))
-            : (opts.invalidMessage ?? labels.rejectedInvalid(file.name));
-    rejected.push({ file, reason, message });
-  }
-  return { accepted, rejected };
-}
-
-/**
- * Judges a pick as a whole — keksdose's "refuse the pick if any file is bad", which
- * with `onFiles` + `onReject` alone had to be rebuilt from two calls in a microtask.
- *
- * Called ONCE per pick, after screening and before `onFiles` / `onReject`, with both
- * halves (either may be empty). Return `false` to refuse the whole pick: the accepted
- * files are not delivered, `onReject` still receives what screening refused, and one
- * sentence (`labels.rejectedPick`) is spoken for the pick instead of a per-file one.
- * Return nothing to let the pick through as usual.
- *
- * ```tsx
- * onPick={(ok, bad) => bad.length === 0 || false}  // all or nothing
- * ```
- */
-export type FilePickHandler = (accepted: File[], rejected: FileRejection[]) => boolean | void;
-
-/** @internal The shared tail of both pickers: run `onPick`, and say whether the pick
- *  stands. A pick with nothing accepted has nothing to refuse, so `false` there is
- *  treated as no verdict and the usual per-file messages are kept. */
-export function judgePick(
-  onPick: FilePickHandler | undefined,
-  accepted: File[],
-  rejected: FileRejection[],
-): boolean {
-  if (!onPick) return true;
-  return onPick(accepted, rejected) !== false || accepted.length === 0;
-}
-
-/** One sentence for a whole batch of refusals: the file's own message for one, a
- *  count for several — reading out five sentences in a row helps nobody. */
-export function summariseRejections(rejected: readonly FileRejection[], labels: FilePickerLabels): string {
-  if (rejected.length === 0) return "";
-  if (rejected.length === 1) return rejected[0].message;
-  return labels.rejectedMany(rejected.length);
-}
-
-/* ── useFilePicker ───────────────────────────────────────────────────────── */
-
-export interface UseFilePickerOptions extends FileScreenOptions {
-  /** Let one pick deliver several files. Without it a drop of several keeps the first. */
-  multiple?: boolean;
-  /**
-   * Ask a phone for its camera instead of the file chooser: `"environment"` is the
-   * back camera, `"user"` the front. A HINT — desktop browsers ignore it, and Chrome
-   * drops it when `multiple` is also set (a camera cannot deliver a list), which is why
-   * keksdose's camera input has no `multiple`. Pass one or the other.
-   */
-  capture?: boolean | "user" | "environment";
-  /** The files that passed, in pick order. Never called with an empty array.
-   *  Optional since 0.7 for a caller that takes the pick through `onPick` alone. */
-  onFiles?: (files: File[]) => void;
-  /** See {@link FilePickHandler}: the whole pick at once, with the power to refuse it. */
-  onPick?: FilePickHandler;
-  /** The files that did not, with a translated message each. The refusals are also
-   *  spoken through a live region, so this is for SHOWING them, not for a11y. */
-  onReject?: (rejections: FileRejection[]) => void;
-  /** `open()` and `take()` do nothing while set. */
-  disabled?: boolean;
-  /** Per-instance overrides of the `filePicker` label namespace. */
-  labels?: Partial<FilePickerLabels>;
-}
-
-export interface UseFilePickerReturn {
-  /** Open the system picker. Call it from a click handler — browsers only open a file
-   *  dialog in response to a user gesture. */
-  open: () => void;
-  /** Screen and deliver files that arrived some other way — a drop, a paste. Honours
-   *  `multiple` (only the first file without it) and every check. */
-  take: (files: ArrayLike<File> | null | undefined) => void;
-  /** The hidden input and the live region. Render it once, anywhere — it takes no
-   *  space and needs no positioned ancestor. */
-  element: ReactElement;
-}
-
-/**
- * The headless half of {@link FileButton}: a hidden file input you can open from any
- * control, with the reset, the screening and the announcement built in.
- *
- * ```tsx
- * const picker = useFilePicker({ accept: ".pdf", onFiles: ([f]) => upload(f) });
- * return <>{picker.element}<DetailTableCard onAdd={picker.open} … /></>;
- * ```
- */
-export function useFilePicker({
-  accept,
-  multiple,
-  capture,
-  maxSize,
-  maxFiles,
-  isValid,
-  invalidMessage,
-  onFiles,
-  onPick,
-  onReject,
-  disabled,
-  labels: labelsProp,
-}: UseFilePickerOptions): UseFilePickerReturn {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const labels = useKitLabels("filePicker", DEFAULT_FILE_PICKER_LABELS, labelsProp);
-  const fileText = useKitFileLabels();
-  // Assertive: a refusal is a failure the user has to hear before they move on, and
-  // it is the only thing this region ever says.
-  const { announce, regionProps } = useAnnounce({ politeness: "assertive" });
-
-  const take = (list: ArrayLike<File> | null | undefined) => {
-    if (disabled || !list || list.length === 0) return;
-    const all = Array.from(list);
-    const files = multiple ? all : all.slice(0, 1);
-    const { accepted, rejected } = screenFiles(
-      files,
-      // A single-file picker holds one file by definition; `maxFiles` is a multi-mode
-      // cap and would only ever say "0" there if a caller passed it by mistake.
-      { accept, maxSize, maxFiles: multiple ? maxFiles : undefined, isValid, invalidMessage },
-      labels,
-      fileText.size,
-    );
-    if (!judgePick(onPick, accepted, rejected)) {
-      if (rejected.length > 0) onReject?.(rejected);
-      announce(labels.rejectedPick(files.length));
-      return;
-    }
-    if (accepted.length > 0) onFiles?.(accepted);
-    if (rejected.length > 0) {
-      onReject?.(rejected);
-      announce(summariseRejections(rejected, labels));
-    }
-  };
-
-  const element = (
-    <>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        multiple={multiple}
-        capture={capture}
-        disabled={disabled}
-        // `hidden` (display: none), not `sr-only`: the control a user reaches is the
-        // button, and a second, nameless tab stop for the same action is noise. A
-        // display:none file input still opens on `.click()` in every current browser —
-        // and, unlike `sr-only`, it cannot escape to the initial containing block and
-        // stretch the page (see the note in `file-dropzone.tsx`).
-        className="hidden"
-        tabIndex={-1}
-        aria-hidden
-        onChange={(e) => {
-          // Copy BEFORE the reset: `files` is a live view of the input's value, and
-          // clearing the value empties it.
-          const picked = Array.from(e.currentTarget.files ?? []);
-          e.currentTarget.value = "";
-          take(picked);
-        }}
-      />
-      <span {...regionProps} />
-    </>
-  );
-
-  return {
-    open: () => {
-      if (!disabled) inputRef.current?.click();
-    },
-    take,
-    element,
-  };
-}
+export {
+  formatAccept,
+  judgePick,
+  matchesAccept,
+  screenFiles,
+  summariseRejections,
+  useFilePicker,
+} from "../hooks/use-file-picker";
+export type {
+  FilePickHandler,
+  FilePickerLabels,
+  FileRejection,
+  FileRejectionReason,
+  FileScreenOptions,
+  UseFilePickerOptions,
+  UseFilePickerReturn,
+} from "../hooks/use-file-picker";
 
 /* ── FileButton ──────────────────────────────────────────────────────────── */
 

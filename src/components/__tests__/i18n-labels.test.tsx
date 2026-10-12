@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AmountInput } from "../amount-input";
 import { CurrencySelect } from "../currency-select";
-import { TwoFactorSetting, type TwoFactorSettingLabels } from "../account-settings";
+import { TwoFactorSetting, type TwoFactorSettingLabels } from "../../account/account-settings";
 import {
   DEFAULT_DATA_TABLE_LABELS,
   missingDataTableLabels,

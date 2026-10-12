@@ -500,7 +500,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1896 names from 282 modules** — 888 values and 1008 types. _Italic_ is a type-only export.
+**1896 names from 299 modules** — 888 values and 1008 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
@@ -510,7 +510,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit` | 1896 |
 | `@eifi1/ui-kit/chart` | 105 |
 | `@eifi1/ui-kit/shell` | 77 |
-| `@eifi1/ui-kit/data-table` | 51 |
+| `@eifi1/ui-kit/data-table` | 53 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
 | `@eifi1/ui-kit/feedback` | 165 |
@@ -545,6 +545,7 @@ re-slicing of it, never a second API.
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
+| `lib/chip-edge-snap` | `refreshChipEdges` |
 
 ### hooks
 
@@ -570,6 +571,7 @@ re-slicing of it, never a second API.
 | `hooks/use-windowed-rows` | `useWindowedRows`, `WINDOWED_ROW_INDEX`, _`WindowedRows`_ |
 | `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
 | `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
+| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 
 ### theme, palettes, colour
 
@@ -588,7 +590,6 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `IconButton`, `Input`, `Label`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_, _`CharacterCountLabels`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
 | `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
@@ -601,7 +602,7 @@ re-slicing of it, never a second API.
 | `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyFlagProps`_, _`CurrencyOption`_, _`CurrencySelectProps`_ |
 | `components/amount-input` | `AmountInput` |
 | `components/money-field` | `MoneyField`, _`MoneyFieldProps`_ |
-| `components/combobox` | `Combobox`, `InlineEntityCombobox`, _`ComboboxProps`_, _`InlineEntityComboboxProps`_ |
+| `components/combobox` | `Combobox`, _`ComboboxProps`_ |
 | `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS`, _`PickerSheetProps`_ |
 | `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
 | `components/multi-entity-combobox` | `MultiEntityCombobox`, _`MultiEntityComboboxProps`_ |
@@ -633,9 +634,9 @@ re-slicing of it, never a second API.
 | `components/choice-card` | `ActionCard`, `ChoiceCard`, `ChoiceCardGroup`, _`ActionCardIconTone`_, _`ActionCardLinkProps`_, _`ActionCardMetaTone`_, _`ActionCardProps`_, _`ChoiceCardGroupProps`_, _`ChoiceCardMultipleProps`_, _`ChoiceCardOption`_, _`ChoiceCardProps`_, _`ChoiceCardSingleProps`_, _`ChoiceCardType`_ |
 | `components/autocomplete` | `Autocomplete`, _`AutocompleteProps`_ |
 | `components/measured-grid` | `DEFAULT_MEASURED_GRID_LABELS`, `MeasuredGrid`, `useMeasuredRows`, _`MeasuredGridColumn`_, _`MeasuredGridLabels`_, _`MeasuredGridProps`_, _`MeasuredGridView`_, _`MeasuredRows`_, _`UseMeasuredRowsOptions`_ |
-| `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
+| `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapNode`_, _`TreemapProps`_ |
-| `components/series-chart` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `resolveTooltipPlacement`, `SeriesChart`, `seriesKey`, `seriesLegendEntries`, `soleSeriesColor`, `StaticSeriesChart`, `visibleSeries`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_, _`SeriesSource`_ |
+| `components/series-chart` | `resolveTooltipPlacement`, `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
 | `components/chart-height` | _`ChartHeight`_ |
 | `components/chart-zoom` | `axisExtent`, `DEFAULT_Y_AXIS`, `defaultZoomAxes`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `SharedXZoom`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
 | `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
@@ -643,13 +644,12 @@ re-slicing of it, never a second API.
 | `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/pie-chart` | `PieChart`, _`PieChartProps`_, _`PieChartSlice`_ |
 | `components/pie-chart-labels` | `DEFAULT_PIE_CHART_LABELS`, _`PieChartLabels`_ |
-| `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
-| `components/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
-| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `refreshChipEdges`, `resolveChipInputLabels`, _`ChipHue`_, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
+| `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
+| `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_ |
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
@@ -658,7 +658,7 @@ re-slicing of it, never a second API.
 | `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_, _`FileDropzoneState`_ |
 | `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarDayState`_, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
 | `components/calendar-heatmap` | `CalendarHeatmap`, `DEFAULT_CALENDAR_HEATMAP_LABELS`, `heatmapLevel`, `heatmapWindowEnd`, _`CalendarHeatmapDatum`_, _`CalendarHeatmapDay`_, _`CalendarHeatmapLabels`_, _`CalendarHeatmapProps`_ |
-| `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangeCommit`_, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_, _`DateTriggerAttributes`_ |
+| `components/date-picker` | `DatePicker`, _`DatePickerProps`_ |
 | `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
@@ -716,12 +716,38 @@ re-slicing of it, never a second API.
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
+| `components/button-look` | `buttonClasses`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_ |
+| `components/field-base` | `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `Label`, `resolvePasswordRevealLabels`, _`CharacterCountLabels`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`LabelProps`_, _`PasswordRevealLabels`_ |
 | `components/field-parts` | `CompactControls`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_ |
 | `components/focus-ring` | `FOCUS_RING`, `FOCUS_RING_WIDTH` |
+| `components/button` | `Button`, _`ButtonLinkProps`_, _`ButtonProps`_ |
+| `components/icon-button` | `IconButton`, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_ |
+| `components/input` | `Input`, _`InputProps`_ |
+| `components/select` | `Select`, _`SelectProps`_ |
+| `components/textarea` | `Textarea`, _`TextareaProps`_ |
+| `components/card` | `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_ |
+| `components/spinner` | `Spinner`, _`SpinnerProps`_ |
+| `components/empty-state` | `EmptyState`, _`EmptyStateProps`_ |
+| `components/tabs` | `DEFAULT_TABS_LABELS`, `Tabs`, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_ |
+| `components/inline-entity-combobox` | `InlineEntityCombobox`, _`InlineEntityComboboxProps`_ |
 | `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
 | `components/series-chart-ticks` | _`TimeTickUnit`_ |
 | `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
-| `components/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
+| `components/series-chart-axes` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `seriesKey`, `soleSeriesColor`, `visibleSeries`, _`SeriesSource`_ |
+| `components/date-field` | _`DateTriggerAttributes`_ |
+| `components/date-range-picker` | `DateRangePicker`, _`DateRangeCommit`_, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_ |
+
+### account
+
+| Module | Exports |
+|---|---|
+| `account/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
+| `account/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
+| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
+| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
+| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
+| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
+| `account/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
 
 ### shell
 
@@ -808,15 +834,6 @@ re-slicing of it, never a second API.
 | `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
 | `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
 | `auth/status-parts` | _`AuthHeadingLevel`_ |
-
-### account
-
-| Module | Exports |
-|---|---|
-| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
-| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
-| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
-| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
 
 ### admin
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { MouseEvent } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { Chip, ChipInput } from "../chip";
+import { Chip } from "../chip";
+import { ChipInput } from "../chip-input";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkComponent } from "../../i18n/kit-labels";
 

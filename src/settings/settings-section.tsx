@@ -2,7 +2,7 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Card } from "../components/ui";
 import type { CardTone } from "../components/ui";
 import { cn } from "../lib/cn";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "../account/account-parts";
+import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "./settings-card-classes";
 import { SettingsHeading, useSettingsHeadingLevel } from "./settings-heading";
 import { useSettingsLayout } from "./settings-context";
 

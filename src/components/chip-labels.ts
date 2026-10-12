@@ -1,6 +1,6 @@
 // The English words of ./chip, in a module with no component code: the English catalogue
 // (src/i18n/defaults.ts) imports them without the component, so `en` loads as one chunk
-// like the other languages (0.34, KS U8). ./chip re-exports them.
+// like the other languages (0.34, KS U8). ./chip-input re-exports them.
 
 import type { ChipInputLabels } from "./chip";
 
