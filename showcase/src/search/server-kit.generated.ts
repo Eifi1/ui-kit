@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.7.0";
+export const SERVER_KIT_VERSION = "0.7.1";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -265,6 +265,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["SIGNATURE_HEADERS", "constant"],
       ["TRIAL_LENGTH", "constant"],
       ["WEBHOOK_MAPPERS", "constant"],
+      ["AdminPlan", "model"],
       ["BillingCurrency", "enum"],
       ["BillingError", "class"],
       ["BillingErrorCode", "enum"],
@@ -311,6 +312,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["SubscriptionStatus", "enum"],
       ["SyncRefusal", "model"],
       ["WebhookAnswer", "class"],
+      ["admin_plans_out", "function"],
       ["beta_comped_until", "function"],
       ["billing_notice_due", "function"],
       ["billing_notices_owed", "function"],
@@ -331,6 +333,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["minor_to_decimal", "function"],
       ["normalize_plan", "function"],
       ["paddle_environment_of", "function"],
+      ["paddle_locale", "function"],
       ["parse_webhook_event", "function"],
       ["plan_catalogue", "function"],
       ["plans_out", "function"],

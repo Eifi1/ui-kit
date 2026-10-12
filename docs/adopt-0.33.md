@@ -1033,17 +1033,18 @@ None blocks adopting 0.33.
 
 ## 6. Versions
 
-- **`@eifi1/ui-kit` `^0.33.0`.** Bump by hand: a caret below 1.0 locks the minor version.
-- **`eifi1-server-kit` 0.7.0**, the release wheel by URL, with the extras each app needs
+- **`@eifi1/ui-kit` `^0.33.1`.** Bump by hand: a caret below 1.0 locks the minor version.
+- **`eifi1-server-kit` 0.7.1**, the release wheel by URL, with the extras each app needs
   and the sha256 pinned in `uv.lock`:
 
   ```sh
-  uv add "eifi1-server-kit[billing,images,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.0/eifi1_server_kit-0.7.0-py3-none-any.whl"   # kastlan
-  uv add "eifi1-server-kit[billing,images] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.0/eifi1_server_kit-0.7.0-py3-none-any.whl"        # keksdose
-  uv add "eifi1-server-kit[billing,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.0/eifi1_server_kit-0.7.0-py3-none-any.whl"          # Kurvenschmiede
+  uv add "eifi1-server-kit[billing,images,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.1/eifi1_server_kit-0.7.1-py3-none-any.whl"   # kastlan
+  uv add "eifi1-server-kit[billing,images] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.1/eifi1_server_kit-0.7.1-py3-none-any.whl"        # keksdose
+  uv add "eifi1-server-kit[billing,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.7.1/eifi1_server_kit-0.7.1-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `4b19684898401175a5fdd52a77fbdbb240c5969b6f00b1f20a3c2af4fdb4f47d`
+  sha256: `9b9d3f1a17b8883a1714541fdf64672e412974b7ed003ff2c93f6d2ae0fb2c83`
+  (0.7.0's was `4b19684898401175a5fdd52a77fbdbb240c5969b6f00b1f20a3c2af4fdb4f47d`)
 
 ## Where the build differs from the contracts
 
