@@ -449,6 +449,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Toasts — redact, and where they appear on a phone",
     "Toaster — dismissOnMiddleClick",
     "ServerWakeNotice — cold start",
+    "attachSessionRefresh — one refresh, two kinds of failure",
     "LoadingState — sizes, inline and a label of its own",
     "Skeleton — label announces the load once",
     "ErrorBoundary — Retry, details and a fallback of your own",
@@ -797,6 +798,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "user-admin": [
     "User roster — useUserRosterColumns, RoleSelect, AdminActionConfirm",
     "Admin action log — AdminActionLog",
+    "Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm",
     "The plan column and the operator's plan change — planColumn, PlanChangeConfirm",
     "Several roles — RolesEditor",
     "Invitations — InvitationsPanel",

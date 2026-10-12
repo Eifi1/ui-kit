@@ -211,6 +211,7 @@ const Chips016Demo = lazySection(() => import("./sections/harmonise-016-demo"), 
 const ChipSnapEdges018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ChipSnapEdges018Demo");
 const ToastMiddleClick018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ToastMiddleClick018Demo");
 const ServerWake018Demo = lazySection(() => import("./sections/server-wake-018-demo"), "ServerWake018Demo");
+const SessionRefresh034Demo = lazySection(() => import("./sections/session-refresh-034-demo"), "SessionRefresh034Demo");
 const HotkeyDemo = lazySection(() => import("./sections/states-012-demo"), "HotkeyDemo");
 const StatesDemo = lazySection(() => import("./sections/states-012-demo"), "StatesDemo");
 const ErrorBoundary013Demo = lazySection(() => import("./sections/error-boundary-013-demo"), "ErrorBoundary013Demo");
@@ -340,6 +341,7 @@ const RowActions033Demo = lazySection(() => import("./sections/text-size-033-dem
 const LabelAbove033Demo = lazySection(() => import("./sections/text-size-033-demo"), "LabelAbove033Demo");
 const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), "Billing033Demo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
+const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
@@ -897,6 +899,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ToastsDemo />
             <ToastMiddleClick018Demo />
             <ServerWake018Demo />
+            <SessionRefresh034Demo />
             <StatesDemo />
             <LoadingState016Demo />
             <ErrorBoundary013Demo />
@@ -1358,12 +1361,13 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "User administration",
         short: "Users",
         blurb:
-          "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, handing work on, and the operator's plan column and plan change.",
+          "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
         components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult"],
         Body: () => (
           <>
             <UserRoster030Demo />
+            <GroupActions034Demo />
             <PlanChange033Demo />
             <RolesEditor030Demo />
             <Invitations030Demo />

@@ -474,7 +474,7 @@ re-slicing of it, never a second API.
 | `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
 | `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
 | `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
-| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_ |
+| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_, _`AdminGroupNoun`_, _`AdminGroupTarget`_, _`AdminOtherTarget`_ |
 | `admin/admin-parts` | _`AdminPerson`_ |
 
 ### shell

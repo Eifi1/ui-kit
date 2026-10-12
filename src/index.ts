@@ -235,6 +235,10 @@ export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetc
 export type { ServerWakeStage, ServerWakeFilter, ServerWakeOptions, ServerWakeRequest, ServerWakeWatcher, ServerWakeAxiosConfig, AxiosLikeInstance } from "./lib/server-wake";
 export { ServerWakeNotice, useServerWakeStage, DEFAULT_SERVER_WAKE_LABELS } from "./components/server-wake";
 export type { ServerWakeLabels, ServerWakeNoticeProps } from "./components/server-wake";
+// 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
+// per tab, a definitive failure ends the session once, a transient one keeps it.
+export { createSessionRefresh, attachSessionRefresh, isTransientRefreshFailure, isSignedOutStep } from "./lib/session-refresh";
+export type { SessionRefresh, SessionRefreshOptions, SessionRenewal, SessionRefreshOutcome } from "./lib/session-refresh";
 // 0.18: sharing — grantees, roles, pending grants, candidates (Kurvenschmiede 1).
 export { ShareCard, ShareDialog, SharePanel, DEFAULT_SHARE_CARD_LABELS } from "./components/share-card";
 export type { ShareCardProps, ShareDialogProps, SharePanelProps, ShareCardLabels, ShareRole, ShareGrantee, SharePendingGrant, ShareCandidate, ShareAddRequest } from "./components/share-card";
@@ -641,6 +645,11 @@ export type {
   AdminActionLogLabels,
   AdminActionLogPaging,
   AdminActionLogProps,
+  // 0.34 (docs/user-admin-harmonization.md §11): a log target that is not a person, and
+  // the app's noun for its groups.
+  AdminGroupTarget,
+  AdminOtherTarget,
+  AdminGroupNoun,
 } from "./admin/admin-action-log";
 export { TransferOwnershipDialog, DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./admin/transfer-ownership-dialog";
 export type {

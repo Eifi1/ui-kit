@@ -22,6 +22,10 @@
  *   account gets `invalid_credentials`, because a separate answer after a correct
  *   password would confirm a leaked one. It stays in the union only for a future server
  *   step that is past the password (an admin view, a signed-in refresh) and may say so.
+ * - `session_ended` — 0.34.0 (§11.2, decision 7; server-kit 0.8): every definitive
+ *   refusal of `POST /auth/refresh`, a `401`. No form shows it, so it has no label: the
+ *   kit's `attachSessionRefresh` decides by the STATUS, so an app whose server has not
+ *   switched yet keeps working.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -33,7 +37,8 @@ export type AuthErrorCode =
   /** 0.29.1: a link that WAS valid and ran out (verification, reset) — keksdose's step-3
    *  refusals tell it from `token_invalid`, so a page can say "expired, ask for a new one". */
   | "token_expired"
-  | "account_inactive";
+  | "account_inactive"
+  | "session_ended";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -148,6 +153,7 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "token_invalid",
   "token_expired",
   "account_inactive",
+  "session_ended",
   "last_admin",
   "self_action",
   "other_companies",
