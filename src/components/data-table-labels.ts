@@ -1,7 +1,7 @@
 // All user-facing strings for the DataTable system — the `dataTable` namespace of
-// `<UiKitProvider labels>`, and per table the `labels` prop over that. The package
-// ships no translations; the English defaults below make the table usable with no
-// wiring.
+// `<UiKitProvider labels>`, and per table the `labels` prop over that. The kit's seven
+// catalogues carry the translations; the English defaults below make the table usable
+// with no wiring.
 
 // A type-only import: erased at build time, so this module stays free of the table
 // itself (and of react-router), which `i18n/defaults` relies on.

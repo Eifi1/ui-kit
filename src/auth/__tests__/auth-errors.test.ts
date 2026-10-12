@@ -49,7 +49,7 @@ describe("authErrorCode", () => {
   });
 });
 
-describe("authErrorCode — token_expired (0.29.1)", () => {
+describe("authErrorCode — token_expired (0.30.0)", () => {
   it("is a known code", () => {
     expect(authErrorCode({ response: { data: { code: "token_expired" } } })).toBe("token_expired");
   });

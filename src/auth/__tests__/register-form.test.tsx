@@ -91,7 +91,7 @@ describe("RegisterForm — gating", () => {
   });
 });
 
-describe("RegisterForm — defaultEmail (0.29.1)", () => {
+describe("RegisterForm — defaultEmail (0.30.0)", () => {
   it("starts with the address, editable, and still offers the tag", async () => {
     const { user } = setup({ defaultEmail: "ada@example.com", emailTag: "exampleapp" });
     const email = screen.getByLabelText("Email");

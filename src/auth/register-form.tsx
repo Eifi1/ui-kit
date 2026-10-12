@@ -106,7 +106,7 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">,
    */
   invitedEmail?: string;
   /**
-   * 0.29.1: an address to start with that stays EDITABLE, with the `+tag` suggestion still
+   * 0.30.0: an address to start with that stays EDITABLE, with the `+tag` suggestion still
    * offered — for a link anyone can build (keksdose's token-free `/register?email=…`
    * beta link, kept while an app moves to invitations). Unlike `invitedEmail` it proves
    * nothing, so it locks nothing. `invitedEmail` wins when both are given.

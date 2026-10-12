@@ -73,7 +73,7 @@ type ResendPhase = "idle" | "sending" | "sent" | "failed";
  */
 function useResend(onResend: (() => Promise<unknown> | void) | undefined, cooldown: number) {
   const [phase, setPhase] = useState<ResendPhase>("idle");
-  // The refusal itself, for `describeError` (0.29.1): the server's own sentence — keksdose's
+  // The refusal itself, for `describeError` (0.30.0): the server's own sentence — keksdose's
   // per-address throttle, "try again in N minutes" — beats a fixed "could not send".
   const [error, setError] = useState<unknown>(undefined);
   const [remaining, setRemaining] = useState(0);
@@ -191,7 +191,7 @@ export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"d
   /** Which dead end a rejection is. Default: `invalid` for everything — §5.2's servers
    *  answer one `token_invalid`; an app whose server tells expiry apart maps it here. */
   classifyError?: (error: unknown) => VerifyEmailFailure;
-  /** 0.29.1: the words for a refused resend — the server's own sentence (a throttle's
+  /** 0.30.0: the words for a refused resend — the server's own sentence (a throttle's
    *  "try again in N minutes"), else the kit's `resendError`. */
   describeError?: (error: unknown) => string | undefined;
   /** Someone is signed in on this device: "Continue" goes into the app, and a dead link
@@ -256,7 +256,7 @@ export function VerifyEmailStatus({
   const resend = useResend(onResend, cooldown);
 
   useOncePerKey(token === "" ? null : token, onVerify, (key, result) => {
-    // Without a classifier, the coded refusal decides (0.29.1): `token_expired` is
+    // Without a classifier, the coded refusal decides (0.30.0): `token_expired` is
     // "expired", anything else "invalid".
     const next: VerifyOutcome = result.ok
       ? "verified"
@@ -342,7 +342,7 @@ export interface EmailVerificationBannerProps {
   /** Send a new confirmation mail (`POST /auth/verify-email/resend`). Resolve when it
    *  went out; reject and the banner says it could not. */
   onResend: () => Promise<unknown> | void;
-  /** 0.29.1: the words for a refused resend — the server's own sentence, else the kit's. */
+  /** 0.30.0: the words for a refused resend — the server's own sentence, else the kit's. */
   describeError?: (error: unknown) => string | undefined;
   /** Seconds "Send again" waits after a mail went out. Default 60; `0` never waits. */
   cooldown?: number;

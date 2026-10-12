@@ -145,8 +145,8 @@ export const FEEDBACK_PICKABLE_CATEGORIES: readonly FeedbackCategory[] = Object.
 /**
  * The statuses a report can be sent back for **rework** from (§3.4): everything the team
  * has answered — `IN_EVALUATION`, `NEEDS_LIVE_TEST`, `POSTPONED`, `DONE`, `WONT_DO`. On
- * these the server reopens the row when the body grows by a rework block; on `OPEN` /
- * `IN_PROGRESS` there is nothing to send back yet.
+ * these the server reopens the row when the body grows by a rework block; on `OPEN`,
+ * `READY` and `IN_PROGRESS` there is nothing to send back yet.
  */
 export const FEEDBACK_REWORKABLE_STATUSES: readonly FeedbackStatus[] = Object.freeze([
   "IN_EVALUATION",

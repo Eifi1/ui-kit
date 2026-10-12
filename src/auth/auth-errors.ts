@@ -34,7 +34,7 @@ export type AuthErrorCode =
   | "invitation_invalid"
   | "invitation_expired"
   | "token_invalid"
-  /** 0.29.1: a link that WAS valid and ran out (verification, reset) — keksdose's step-3
+  /** 0.30.0: a link that WAS valid and ran out (verification, reset) — keksdose's step-3
    *  refusals tell it from `token_invalid`, so a page can say "expired, ask for a new one". */
   | "token_expired"
   | "account_inactive"

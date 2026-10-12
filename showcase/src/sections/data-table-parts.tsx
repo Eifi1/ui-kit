@@ -325,7 +325,7 @@ function LabelsSpecimen() {
   return (
     <Example
       label="DEFAULT_DATA_TABLE_LABELS / resolveDataTableLabels"
-      hint="the package ships no i18n — every string is a prop, with English defaults"
+      hint="every string has an English default; the provider's catalogue or a labels prop replaces it"
     >
       <OutTable
         rows={[

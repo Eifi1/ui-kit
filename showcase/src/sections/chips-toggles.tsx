@@ -758,7 +758,7 @@ function ChipStates() {
 function ChipInputDemo() {
   // The translated label bundle, threaded into the component exactly as a consuming app
   // has to do it. The page frame being French while the components stayed English was the
-  // gap this closes: the kit ships no catalogue, so the app owns every string it shows.
+  // gap this closes: the kit renders only labels, and the app decides the language.
   const t = useT();
   const [tags, setTags] = useState(["invoices", "2026"]);
   const [emails, setEmails] = useState<string[]>([]);
