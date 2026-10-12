@@ -13,7 +13,7 @@ import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { paletteFor } from "../theme/chart-palette";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import { DEFAULT_PIE_CHART_LABELS, type PieChartLabels } from "./pie-chart-labels";
@@ -99,7 +99,7 @@ export interface PieChartProps extends Omit<ComponentPropsWithRef<"div">, "child
   empty?: ReactNode;
   /** BCP 47 tag for the numbers and percentages. Default: the provider's. */
   locale?: string;
-  labels?: Partial<PieChartLabels>;
+  labels?: LabelOverride<PieChartLabels>;
 }
 
 /** A slice as drawn: only the ones with a positive value, in `data` order. */

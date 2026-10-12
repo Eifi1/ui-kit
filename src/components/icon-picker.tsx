@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import type { ComponentPropsWithRef, ComponentType, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
@@ -83,7 +83,7 @@ export interface IconPickerProps<T extends string>
    */
   tileClassName?: string;
   disabled?: boolean;
-  labels?: Partial<IconPickerLabels>;
+  labels?: LabelOverride<IconPickerLabels>;
   /**
    * An 11px static label in a strip over the picker, naming the grid — keksdose K2,
    * {@link SwatchPickerProps.label}'s twin: a symbol picker standing in a form row

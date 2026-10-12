@@ -2,7 +2,7 @@ import { ArrowUpDown, Minus, Plus } from "lucide-react";
 import { Chip } from "./chip";
 import { Tooltip } from "./tooltip";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
 import { DEFAULT_SIGN_CHIP_LABELS } from "./sign-chip-labels";
 
@@ -38,7 +38,7 @@ export interface SignChipProps {
   onNegativeChange: (negative: boolean) => void;
   disabled?: boolean;
   /** Per-chip overrides of the `signChip` namespace. */
-  labels?: Partial<SignChipLabels>;
+  labels?: LabelOverride<SignChipLabels>;
   /** On the chip. Place it in its row from here — keksdose's form passes `self-end`
    *  to sit it on the display figure's baseline strip. */
   className?: string;

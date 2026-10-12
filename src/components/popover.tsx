@@ -8,7 +8,7 @@ import { lengthPx, useRemPx, type RemLength } from "../hooks/use-breakpoint";
 import { cn } from "../lib/cn";
 import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
 import { mergeRefs } from "./field-parts";
 
@@ -44,7 +44,7 @@ export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * 432 px at Extra large, more than a 360 px phone has.
    */
   width?: number | RemLength;
-  labels?: Partial<PopoverLabels>;
+  labels?: LabelOverride<PopoverLabels>;
   /** Id for the panel, so a trigger wearing `role="combobox"` can `aria-controls` it.
    *  Required by ARIA on that role, and the panel is rendered here rather than by the
    *  caller, so the id has to come in from outside. */

@@ -15,7 +15,7 @@ import {
   PasswordStrengthMeter,
 } from "../components/password-strength";
 import type { PasswordStrengthMeterProps } from "../components/password-strength";
-import { useKitLabelOverrides, useKitLabels } from "../i18n/kit-labels";
+import { useKitLabelOverrides, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Chip } from "../components/chip";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import { SettingsCardTitle } from "../settings/settings-heading";
@@ -66,7 +66,7 @@ interface ProfileSettingCommonProps {
   memberSince?: ReactNode;
   saving?: boolean;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { profile } }}>` > English. */
-  labels?: Partial<ProfileSettingLabels>;
+  labels?: LabelOverride<ProfileSettingLabels>;
   /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
   id?: string;
 }
@@ -371,7 +371,7 @@ export function PasswordSetting({
    */
   describeError?: (error: unknown) => ReactNode | undefined;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { password } }}>` > English. */
-  labels?: Partial<PasswordSettingLabels>;
+  labels?: LabelOverride<PasswordSettingLabels>;
   /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
   id?: string;
 }) {
@@ -570,7 +570,7 @@ export function TwoFactorSetting({
    *  `otpauthUri`; the kit's own {@link QrCode} otherwise. Unused with `qrSvg`. */
   renderQr?: (otpauthUri: string) => ReactNode;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { twoFactor } }}>` > English. */
-  labels?: Partial<TwoFactorSettingLabels>;
+  labels?: LabelOverride<TwoFactorSettingLabels>;
   /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
   id?: string;
 }) {

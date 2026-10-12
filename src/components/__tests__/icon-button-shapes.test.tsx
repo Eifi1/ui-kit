@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { IconButton } from "../ui";
+import { IconButton } from "../icon-button";
 
 describe("IconButton 0.11 additions", () => {
   it("size xl is a 48px box with a 24px glyph", () => {

@@ -5,8 +5,9 @@ import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
 import { claimEscape } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Input, Spinner } from "./ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Input } from "./input";
+import { Spinner } from "./spinner";
 import { FIELD_ERROR_CLASS } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip } from "./tooltip";
@@ -119,7 +120,7 @@ interface InlineEditFieldBaseProps<T> {
   inputProps?: Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "defaultValue" | "onChange" | "type">;
   /** Classes for the root. */
   className?: string;
-  labels?: Partial<InlineEditLabels>;
+  labels?: LabelOverride<InlineEditLabels>;
 }
 
 type EditorRender<T> = (props: InlineEditorProps<T>) => ReactNode;

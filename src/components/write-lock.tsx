@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
 import { DEFAULT_WRITE_LOCK_LABELS } from "./write-lock-labels";
 
@@ -97,7 +97,7 @@ export interface WriteLockProviderProps {
    * `labels.reason`.
    */
   holds?: readonly WriteLockHold[];
-  labels?: Partial<WriteLockLabels>;
+  labels?: LabelOverride<WriteLockLabels>;
   children?: ReactNode;
 }
 

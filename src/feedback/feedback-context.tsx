@@ -1,5 +1,5 @@
 import { Checkbox } from "../components/checkbox";
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import type { FeedbackContext, FeedbackEnvironment } from "./feedback-record";
 import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "./feedback-context-labels";
@@ -141,7 +141,7 @@ export interface FeedbackContextBoxProps {
   attachUrl: boolean;
   onAttachUrlChange: (next: boolean) => void;
   /** Prop > `<UiKitProvider labels={{ feedbackContext }}>` > English. */
-  labels?: Partial<FeedbackContextLabels>;
+  labels?: LabelOverride<FeedbackContextLabels>;
   className?: string;
 }
 

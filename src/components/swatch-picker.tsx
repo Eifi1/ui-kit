@@ -1,7 +1,7 @@
 import { useId, useMemo } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
@@ -90,7 +90,7 @@ export interface SwatchPickerProps<T extends string>
    */
   tileClassName?: string;
   disabled?: boolean;
-  labels?: Partial<SwatchPickerLabels>;
+  labels?: LabelOverride<SwatchPickerLabels>;
   /**
    * An 11px static label in a strip over the swatches, named by it (keksdose K2): the
    * transaction row's flag picker stands between labelled fields and hand-builds this

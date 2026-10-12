@@ -4,7 +4,7 @@ import { cn } from "../lib/cn";
 import { addDaysIso } from "../lib/dates";
 import { useKitLocale } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
-import { FIELD_BASE } from "./ui";
+import { FIELD_BASE } from "./field-base";
 import { FieldBox, useFieldMessages } from "./field-parts";
 import { Tooltip } from "./tooltip";
 import {

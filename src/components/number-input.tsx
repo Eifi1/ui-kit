@@ -2,7 +2,13 @@ import { useEffect, useId, useMemo, useRef } from "react";
 import type { KeyboardEvent, ReactNode, Ref } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
+import {
+  FIELD_BASE,
+  FIELD_DISPLAY,
+  FIELD_INVALID,
+  FLOATING_INPUT_CLASS,
+  FloatingField,
+} from "./field-base";
 import { CURRENCIES } from "./currency-select";
 import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
@@ -10,7 +16,9 @@ import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
 
-interface NumberInputProps {
+/** {@link NumberInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
+ *  wrapper typed itself off `ComponentProps<typeof NumberInput>` until then. */
+export interface NumberInputProps {
   /** The text, DOT-decimal ("1234.5", or a calculation being typed: "12+5"), as
    *  `onChange` reports it — so a caller's `Number(value)` reads it. The field SHOWS it
    *  in the locale's mark (see `locale`). A comma here is read as the decimal mark too,

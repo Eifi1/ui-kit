@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, MailWarning, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
@@ -212,7 +213,7 @@ export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithRef<"div"
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<VerifyEmailLabels>;
+  labels?: LabelOverride<VerifyEmailLabels>;
 }
 
 type VerifyOutcome = "verified" | VerifyEmailFailure;
@@ -356,7 +357,7 @@ export interface EmailVerificationBannerProps {
    *  budget with you directly." */
   children?: ReactNode;
   className?: string;
-  labels?: Partial<VerifyEmailLabels>;
+  labels?: LabelOverride<VerifyEmailLabels>;
 }
 
 /**

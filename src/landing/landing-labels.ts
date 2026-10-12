@@ -1,4 +1,4 @@
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The kit's words on the public landing page (docs/landing-demo-harmonization.md §4.1,
@@ -54,6 +54,6 @@ export const DEFAULT_LANDING_LABELS: LandingLabels = {
 };
 
 /** The `landing` namespace, resolved: English, then the provider, then `labels`. */
-export function useLandingLabels(labels?: Partial<LandingLabels>): LandingLabels {
+export function useLandingLabels(labels?: LabelOverride<LandingLabels>): LandingLabels {
   return useKitLabels("landing", DEFAULT_LANDING_LABELS, labels);
 }

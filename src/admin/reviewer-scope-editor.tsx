@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { AlertBanner } from "../components/alert-banner";
@@ -103,7 +103,7 @@ export interface ReviewerScopeEditorProps {
   columns?: 1 | 2 | 3 | 4;
   /** Save COMMITS: under a locked `WriteLockProvider` it is held with the lock's reason. */
   commit?: CommitScope;
-  labels?: Partial<ReviewerScopeLabels>;
+  labels?: LabelOverride<ReviewerScopeLabels>;
 }
 
 function languageOptions(languages: ReviewerScopeEditorProps["languages"]): CheckboxGroupOption[] {

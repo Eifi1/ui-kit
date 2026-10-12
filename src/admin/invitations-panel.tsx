@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DateInput } from "../lib/format";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { RoleChip } from "../components/account-chips";
@@ -15,7 +15,10 @@ import { CopyButton } from "../components/copy-button";
 import { LanguageSelect } from "../components/language-select";
 import { SectionLabel, Caption } from "../components/text";
 import { RowActions } from "../components/row-actions";
-import { Button, Input, Select, Spinner } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { Select } from "../components/select";
+import { Spinner } from "../components/spinner";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
 import { settle, useDayText, usePersonLabel } from "./admin-parts";
 import { hasContent } from "../lib/presence";
@@ -197,7 +200,7 @@ export interface InvitationsPanelProps<R extends string = string> {
    *  adoption); the list keeps the label as its accessible name either way. */
   listTitle?: ReactNode | null;
   className?: string;
-  labels?: Partial<InvitationsLabels>;
+  labels?: LabelOverride<InvitationsLabels>;
 }
 
 // Shape only — whether the address may be invited is the server's question.

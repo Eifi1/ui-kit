@@ -4,11 +4,12 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { OVERLAY_EXIT_MS, skipsExitAnimation } from "../hooks/use-close-transition";
-import { Button, IconButton } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "./bulk-action-bar-labels";
 
 export interface BulkActionBarLabels {
@@ -122,7 +123,7 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithRef<"div">, "
    */
   panel?: ReactNode;
   /** Default: `bulkActionBar` from the {@link UiKitProvider}, else English. */
-  labels?: Partial<BulkActionBarLabels>;
+  labels?: LabelOverride<BulkActionBarLabels>;
 }
 
 /** Where the floating bar sits: clear of the phone nav and of the home indicator,

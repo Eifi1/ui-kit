@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 
 /**
@@ -151,7 +151,7 @@ export interface ToggleLegendProps {
   showSingle?: boolean;
   className?: string;
   /** Per-instance strings over `<UiKitProvider labels={{ seriesChart }}>`. */
-  labels?: Partial<SeriesChartLabels>;
+  labels?: LabelOverride<SeriesChartLabels>;
 }
 
 /**
@@ -237,7 +237,7 @@ export interface StaticLegendProps {
   as?: "ul" | "div";
   className?: string;
   /** Per-instance strings over `<UiKitProvider labels={{ seriesChart }}>`. */
-  labels?: Partial<SeriesChartLabels>;
+  labels?: LabelOverride<SeriesChartLabels>;
 }
 
 /**

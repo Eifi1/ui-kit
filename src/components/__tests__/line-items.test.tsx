@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { LineItems, type LineItemsColumn, type LineItemsProps } from "../line-items";
-import { Input } from "../ui";
+import { Input } from "../input";
 
 interface Line {
   id: string;

@@ -2,7 +2,13 @@ import { useId, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { EndHintRow, FieldCaption, useFieldError, useFieldHint } from "./field-parts";
-import { FIELD_BASE, FIELD_INVALID, FIELD_WRITABLE_LOOK, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
+import {
+  FIELD_BASE,
+  FIELD_INVALID,
+  FIELD_WRITABLE_LOOK,
+  FLOATING_INPUT_CLASS,
+  FloatingField,
+} from "./field-base";
 
 /**
  * The field for a verification code — the six digits an authenticator app shows, or the
@@ -153,7 +159,7 @@ export function OneTimeCodeInput(props: OneTimeCodeInputProps) {
   } = useFieldError(error, invalidProp, hintParts.describedBy, ariaInvalid);
   // Passed at all — even as `undefined` — the field keeps its box, so the `<input>` is
   // never re-parented (and never loses focus) when a message comes or goes. See
-  // `FieldGroup` in ui.tsx.
+  // `FieldGroup` in field-base.tsx.
   const reserve = "error" in props || "hint" in props;
   const labelled = label !== undefined;
 

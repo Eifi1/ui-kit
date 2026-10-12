@@ -2,9 +2,10 @@ import { createContext, isValidElement, useContext, useId, useLayoutEffect, useS
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
-import { Card, FieldHint } from "./ui";
+import { Card } from "./card";
+import { FieldHint } from "./field-parts";
 import { useInlineFacts, useLargeText } from "../hooks/use-large-text";
 import { Sparkline } from "./sparkline";
 import { Tooltip } from "./tooltip";
@@ -246,7 +247,7 @@ export interface StatTileProps
   renderLink?: (props: StatTileLinkProps) => ReactElement;
   /** Makes the tile a button (ignored when `href` is given). */
   onClick?: () => void;
-  labels?: Partial<StatTileLabels>;
+  labels?: LabelOverride<StatTileLabels>;
 }
 
 // One formatter per option set: a metrics wall is twenty of these.
@@ -666,7 +667,7 @@ export interface StatTileGridProps extends ComponentPropsWithRef<"div"> {
    */
   loading?: boolean;
   /** The grid's one sentence — `loading` from {@link StatTileLabels}. */
-  labels?: Partial<Pick<StatTileLabels, "loading">>;
+  labels?: LabelOverride<Pick<StatTileLabels, "loading">>;
 }
 
 /** Set by a loading {@link StatTileGrid}; read by each tile in it. */

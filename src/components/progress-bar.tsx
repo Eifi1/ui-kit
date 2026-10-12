@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { DEFAULT_PROGRESS_BAR_LABELS } from "./progress-bar-labels";
@@ -203,7 +203,7 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * The `aria-valuetext` is not touched: a screen reader is not a screen-share.
    */
   sensitive?: boolean;
-  labels?: Partial<ProgressBarLabels>;
+  labels?: LabelOverride<ProgressBarLabels>;
   /** The element the rest of the props go on — the `progressbar` (or `meter`) itself,
    *  the box round the figure for an unlimited one — a `div` or a `span` as `as` says,
    *  hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */

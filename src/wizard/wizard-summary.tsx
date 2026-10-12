@@ -1,9 +1,10 @@
 import { Pencil } from "lucide-react";
-import { Card, CardAction, CardContent, CardHeader, CardTitle, IconButton } from "../components/ui";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "../components/card";
+import { IconButton } from "../components/icon-button";
 import { Tooltip } from "../components/tooltip";
 import type { SummarySection, WizardLabels } from "./types";
 import { DEFAULT_WIZARD_LABELS } from "./types";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The review step: one card per section, each row a label/value pair, each card
@@ -29,7 +30,7 @@ export function WizardSummary({
   onEditStep?: (stepIndex: number) => void;
   /** Disable every edit button (e.g. `wizard.isSubmitting`). */
   disabled?: boolean;
-  labels?: Partial<WizardLabels>;
+  labels?: LabelOverride<WizardLabels>;
 }) {
   const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
 

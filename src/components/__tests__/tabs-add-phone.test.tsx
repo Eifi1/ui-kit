@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 
 /** Below md the add button is a lone "+": the label is visually hidden but still its name. */
 describe("Tabs add button on phones", () => {

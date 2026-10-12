@@ -5,7 +5,7 @@ import { ToggleGroup } from "../toggle-group";
 import { Delta } from "../signed-amount";
 import { StaticLegend, ToggleLegend, type LegendEntry } from "../toggle-legend";
 import { BulkActionBar } from "../bulk-action-bar";
-import { Button } from "../ui";
+import { Button } from "../button";
 
 const OPTIONS = [
   { value: "list", label: "List" },

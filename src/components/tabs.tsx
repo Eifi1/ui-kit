@@ -6,7 +6,7 @@ import { FOCUS_RING_WIDTH } from "./focus-ring";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { mergeRefs } from "./field-parts";
 import { DEFAULT_TABS_LABELS } from "./ui-labels";
 import { IconButton } from "./icon-button";
@@ -161,7 +161,7 @@ export interface TabsProps<T extends string>
    *  more than "Add". Default: `tabs.add` from the {@link UiKitProvider}. */
   addLabel?: string;
   /** Overrides for this strip's strings. See {@link TabsLabels}. */
-  labels?: Partial<TabsLabels>;
+  labels?: LabelOverride<TabsLabels>;
   /** An add or a remove is in flight: the × and the add button are disabled and
    *  Delete is ignored, so a double click cannot remove two tabs. Nothing moves. */
   busy?: boolean;

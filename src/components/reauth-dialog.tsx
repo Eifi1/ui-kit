@@ -1,11 +1,12 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { CurrentPasswordInput, usePromisePending } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
 import { ModalCloseContext } from "./modal";
-import { Button, Spinner } from "./ui";
+import { Button } from "./button";
+import { Spinner } from "./spinner";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "./reauth-dialog-labels";
 
 /**
@@ -70,7 +71,7 @@ export interface ReauthDialogProps {
    *  flip to `false` animates it out and wipes the password. */
   open?: boolean;
   /** User-facing strings; see {@link ReauthDialogLabels}. */
-  labels?: Partial<ReauthDialogLabels>;
+  labels?: LabelOverride<ReauthDialogLabels>;
 }
 
 /**

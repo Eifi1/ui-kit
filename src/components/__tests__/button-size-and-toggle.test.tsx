@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Button, IconButton, buttonClasses } from "../ui";
-import type { ButtonVariant } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
+import { buttonClasses } from "../button-look";
+import type { ButtonVariant } from "../button-look";
 
 /**
  * keksdose's 0.8.0 asks of the two buttons (B14, B15): a compact text button, and an

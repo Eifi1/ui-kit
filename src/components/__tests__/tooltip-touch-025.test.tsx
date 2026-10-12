@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Tooltip, type TooltipTap } from "../tooltip";
-import { IconButton } from "../ui";
+import { IconButton } from "../icon-button";
 
 /**
  * keksdose run 72, live #379: on a phone a tap on any Tooltip-wrapped IconButton — the

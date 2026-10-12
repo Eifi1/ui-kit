@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   PHONE_COUNTRIES,
@@ -12,7 +12,8 @@ import {
 } from "../lib/phone";
 import type { ParsedPhone, PhoneCountry, PhoneCountryCode } from "../lib/phone";
 import { useFieldMessages } from "./field-parts";
-import { Input, Select, type InputProps } from "./ui";
+import { Input, type InputProps } from "./input";
+import { Select } from "./select";
 import { DEFAULT_PHONE_INPUT_LABELS } from "./phone-input-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
@@ -90,7 +91,7 @@ export interface PhoneInputProps extends Omit<InputProps, "type" | "value" | "de
    *  left out still shows under its own code. */
   countries?: readonly PhoneCountryCode[];
   /** See {@link PhoneInputLabels}. */
-  labels?: Partial<PhoneInputLabels>;
+  labels?: LabelOverride<PhoneInputLabels>;
   /** Classes for the whole field — the select, the input and the lines under them.
    *  `inputClassName` reaches the `<input>`. */
   className?: string;

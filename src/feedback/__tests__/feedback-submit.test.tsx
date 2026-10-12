@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { useEffect } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "../../components/toast";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
 import type { FeedbackCategory } from "../feedback-inbox";
@@ -45,7 +45,12 @@ function Host(props: Partial<UseFeedbackSubmitOptions<{ id: number }>>) {
   return <>{feedback.dialog}</>;
 }
 
-const open = (category?: FeedbackCategory) => act(() => handle.current!.open(category));
+/** Open, and wait for the dialog: its module loads on the first open (0.34, MOD-1), so it
+ *  is found with `findBy…` — as an app's test finds it — not `getBy…`. */
+const open = async (category?: FeedbackCategory) => {
+  act(() => handle.current!.open(category));
+  return screen.findByRole("dialog");
+};
 const close = () => act(() => handle.current!.close());
 const subject = (value: string) => fireEvent.change(screen.getByLabelText("Subject"), { target: { value } });
 const send = () => act(async () => fireEvent.click(screen.getByRole("button", { name: "Send" })));
@@ -55,6 +60,11 @@ const clipboard = (...files: File[]) => ({
   clipboardData: { items: files.map((file) => ({ kind: "file", type: file.type, getAsFile: () => file })) },
 });
 
+// Loaded once up front so the first test's `findBy` does not spend its second compiling
+// the dialog's modules; React.lazy still resolves it a render later, so the waits stay.
+beforeAll(async () => {
+  await import("../feedback-submit-dialog");
+});
 beforeEach(() => {
   vi.mocked(toast.success).mockClear();
   vi.mocked(toast.error).mockClear();
@@ -66,11 +76,10 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("useFeedbackSubmit — the dialog", () => {
-  it("is closed until opened, then opens on the row's category with the canon words", () => {
+  it("is closed until opened, then opens on the row's category with the canon words", async () => {
     render(<Host />);
     expect(screen.queryByRole("dialog")).toBeNull();
-    open("BUG");
-    const dialog = screen.getByRole("dialog");
+    const dialog = await open("BUG");
     expect(within(dialog).getByRole("heading", { name: "Send feedback" })).toBeInTheDocument();
     const category = within(dialog).getByLabelText("Category") as HTMLSelectElement;
     expect(category.value).toBe("BUG");
@@ -87,13 +96,13 @@ describe("useFeedbackSubmit — the dialog", () => {
     expect(box).toHaveAccessibleDescription(window.location.href);
   });
 
-  it("opens on Other without a category, and never on Crash", () => {
+  it("opens on Other without a category, and never on Crash", async () => {
     render(<Host />);
-    open();
+    await open();
     expect((screen.getByLabelText("Category") as HTMLSelectElement).value).toBe("OTHER");
     close();
     expect(screen.queryByRole("dialog")).toBeNull();
-    open("CRASH");
+    await open("CRASH");
     expect((screen.getByLabelText("Category") as HTMLSelectElement).value).toBe("OTHER");
   });
 
@@ -102,7 +111,7 @@ describe("useFeedbackSubmit — the dialog", () => {
     const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 412 }));
     const onSubmitted = vi.fn();
     render(<Host upload={upload} create={create} onSubmitted={onSubmitted} />);
-    open("IDEA");
+    await open("IDEA");
     const href = window.location.href;
     subject("  Chart jumps on save  ");
     fireEvent.change(screen.getByLabelText("What happened? (optional)"), { target: { value: "   " } });
@@ -145,7 +154,7 @@ describe("useFeedbackSubmit — the dialog", () => {
     });
     const shot = png("screenshot.webp");
     render(<Host upload={upload} create={create} capture={async () => shot} />);
-    open("BUG");
+    await open("BUG");
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
     pick([new File(["%PDF"], "log.pdf", { type: "application/pdf" }), new File(["t"], "trace.txt", { type: "text/plain" })]);
     fireEvent.paste(document, clipboard(png("image.png")));
@@ -165,7 +174,7 @@ describe("useFeedbackSubmit — the dialog", () => {
   it("withholds url and route when the box is unticked", async () => {
     const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
     render(<Host create={create} />);
-    open("BUG");
+    await open("BUG");
     fireEvent.click(screen.getByRole("checkbox", { name: "Attach current page URL" }));
     expect(screen.getByText(window.location.href)).toHaveClass("line-through");
     subject("Broken");
@@ -180,7 +189,7 @@ describe("useFeedbackSubmit — the dialog", () => {
       (error as typeof failure).response?.data?.detail ?? fallback,
     );
     render(<Host upload={() => Promise.reject(failure)} create={create} errorMessage={errorMessage} />);
-    open("BUG");
+    await open("BUG");
     fireEvent.paste(document, clipboard(png("image.png")));
     subject("Broken");
     await send();
@@ -195,7 +204,7 @@ describe("useFeedbackSubmit — the dialog", () => {
 
   it("says 'Could not submit feedback' without an errorMessage", async () => {
     render(<Host create={() => Promise.reject(new Error("500"))} />);
-    open("BUG");
+    await open("BUG");
     subject("Broken");
     await send();
     expect(toast.error).toHaveBeenCalledWith("Could not submit feedback");
@@ -205,7 +214,7 @@ describe("useFeedbackSubmit — the dialog", () => {
     let resolve: (v: { id: number }) => void = () => {};
     const create = vi.fn(() => new Promise<{ id: number }>((r) => (resolve = r)));
     render(<Host create={create} />);
-    open("BUG");
+    await open("BUG");
     subject("Broken");
     await send();
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
@@ -218,11 +227,11 @@ describe("useFeedbackSubmit — the dialog", () => {
   it("does not close a dialog opened again while the last send was running", async () => {
     let resolve: (v: { id: number }) => void = () => {};
     render(<Host create={() => new Promise((r) => (resolve = r))} />);
-    open("BUG");
+    await open("BUG");
     subject("First");
     await send();
     close();
-    open("IDEA");
+    await open("IDEA");
     subject("Second");
     await act(async () => resolve({ id: 1 }));
     expect(toast.success).toHaveBeenCalledWith("Thanks for the feedback!");
@@ -231,9 +240,9 @@ describe("useFeedbackSubmit — the dialog", () => {
 });
 
 describe("useFeedbackSubmit — files and capture", () => {
-  it("toasts a refused file's type, size and count in the contract's words", () => {
+  it("toasts a refused file's type, size and count in the contract's words", async () => {
     render(<Host />);
-    open("BUG");
+    await open("BUG");
     pick([new File(["x"], "page.html", { type: "text/html" })]);
     expect(toast.error).toHaveBeenLastCalledWith("Only images, PDF or text files are allowed");
     pick([png("huge.png", 10 * 1024 * 1024 + 1)]);
@@ -246,22 +255,22 @@ describe("useFeedbackSubmit — files and capture", () => {
     document.body.insertAdjacentHTML("afterbegin", '<div id="root"></div>');
     domToBlob.mockResolvedValue(new Blob(["x"], { type: "image/webp" }));
     render(<Host />);
-    open("BUG");
+    await open("BUG");
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
     expect(domToBlob).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "Remove Screenshot" })).toBeInTheDocument();
     close();
     domToBlob.mockRejectedValue(new Error("tainted"));
-    open("BUG");
+    await open("BUG");
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
     expect(toast.error).toHaveBeenCalledWith("Could not capture a screenshot");
     expect(screen.queryByRole("button", { name: "Remove Screenshot" })).toBeNull();
     document.getElementById("root")?.remove();
   });
 
-  it("offers no capture with capture={false}", () => {
+  it("offers no capture with capture={false}", async () => {
     render(<Host capture={false} />);
-    open("BUG");
+    await open("BUG");
     expect(screen.queryByRole("button", { name: /Capture screenshot/ })).toBeNull();
     expect(screen.getByRole("button", { name: /Add attachment/ })).toBeInTheDocument();
   });
@@ -278,7 +287,7 @@ describe("useFeedbackSubmit — files and capture", () => {
         <Host />
       </UiKitProvider>,
     );
-    open("QUESTION");
+    await open("QUESTION");
     expect(screen.getByRole("heading", { name: "Feedback senden" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Frage" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Aktuelle Seiten-URL anhängen" })).toBeInTheDocument();

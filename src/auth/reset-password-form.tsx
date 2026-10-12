@@ -2,10 +2,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { newPasswordProblem } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
@@ -135,7 +136,7 @@ export interface ResetPasswordFormProps
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<ResetPasswordLabels>;
+  labels?: LabelOverride<ResetPasswordLabels>;
 }
 
 /**

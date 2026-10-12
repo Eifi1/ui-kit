@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
 import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   DEFAULT_TRANSLATION_REVIEW_FILTER,
@@ -43,7 +43,9 @@ import { TranslationReviewEditor } from "./translation-review-editor";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
 import { ReviewStatusChip, TranslationProgress } from "./translation-review-parts";
-import { Button, IconButton, Select } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import { Select } from "./select";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 
 export {
@@ -299,7 +301,7 @@ export interface TranslationReviewPanelProps {
    *  the page's `h1`. */
   groupHeadingAs?: "h2" | "h3" | "h4";
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 

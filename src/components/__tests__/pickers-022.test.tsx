@@ -8,7 +8,8 @@ import { Chip } from "../chip";
 import { DatePicker, DateRangePicker } from "../date-picker";
 import { MonthPicker } from "../month-picker";
 import { DateMark } from "../account-chips";
-import { FieldHint, FIELD_INVALID } from "../ui";
+import { FieldHint } from "../field-parts";
+import { FIELD_INVALID } from "../field-base";
 import { WriteLockProvider } from "../write-lock";
 import { UiKitProvider, type KitDateFormatter } from "../../i18n/kit-labels";
 

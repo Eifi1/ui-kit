@@ -10,8 +10,8 @@ import {
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button } from "../components/ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "../components/button";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
@@ -142,7 +142,7 @@ export function TourProvider({
   labels,
 }: {
   children: ReactNode;
-  labels?: Partial<TourLabels>;
+  labels?: LabelOverride<TourLabels>;
 }) {
   // `labels` over the provider's `tour` over English. Resolved once here and handed
   // down: the step card is portalled, but context crosses portals anyway — this is

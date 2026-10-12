@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Button } from "../ui";
+import { Button } from "../button";
 import { TextLink, isExternalHref, isInPageAnchor, isRoutableHref } from "../text-link";
 import { Breadcrumbs } from "../breadcrumbs";
 import { NavPills } from "../nav-pills";

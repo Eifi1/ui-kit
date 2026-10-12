@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Check, Cloud } from "lucide-react";
-import { Button, Card, CardTitle, IconButton, Spinner, buttonClasses } from "../ui";
+import { Button } from "../button";
+import { Card, CardTitle } from "../card";
+import { IconButton } from "../icon-button";
+import { Spinner } from "../spinner";
+import { buttonClasses } from "../button-look";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkProps } from "../../i18n/kit-labels";
 

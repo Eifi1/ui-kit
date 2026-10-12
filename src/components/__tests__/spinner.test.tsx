@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Spinner } from "../ui";
+import { Spinner } from "../spinner";
 
 /**
  * The two ways 0.5.0's Spinner misfired in the consuming apps — both found by their own

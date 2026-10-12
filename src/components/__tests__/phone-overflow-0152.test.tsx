@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 import { ToggleGroup } from "../toggle-group";
 
 /** lenkbank's 390px pass (L3, L4). Classes only: jsdom has no layout. */

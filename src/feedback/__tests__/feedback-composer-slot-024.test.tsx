@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { ChatComposer, FeedbackComposer } from "../feedback-thread";
+import { ChatComposer } from "../feedback-thread";
 import type { ChatComposerSlotContext } from "../feedback-thread";
 import { FeedbackAttachmentField, type FeedbackAttachmentRef } from "../feedback-attachment";
 
@@ -84,12 +84,12 @@ describe("ChatComposer attachmentSlot as a function", () => {
       refs.push(ctx.root);
       return <Probe root={ctx.root} />;
     });
-    const { rerender } = render(<FeedbackComposer data-testid="composer" onSend={vi.fn()} attachmentSlot={slot} />);
+    const { rerender } = render(<ChatComposer data-testid="composer" onSend={vi.fn()} attachmentSlot={slot} />);
     // No second render to bring an element in: the first effect already sees it.
     expect(slot).toHaveBeenCalledTimes(1);
     expect(seen).toEqual([screen.getByTestId("composer")]);
 
-    rerender(<FeedbackComposer data-testid="composer" onSend={vi.fn()} attachmentSlot={slot} pending />);
+    rerender(<ChatComposer data-testid="composer" onSend={vi.fn()} attachmentSlot={slot} pending />);
     expect(slot).toHaveBeenCalledTimes(2);
     expect(slot.mock.calls[1][0].pending).toBe(true);
     // The same ref object, so an effect keyed on it (the field's paste listener) does
@@ -107,25 +107,25 @@ describe("ChatComposer attachmentSlot as a function", () => {
 
   it("is not called while disabledReason stands in for the composer", () => {
     const slot = vi.fn(() => <span>picker</span>);
-    render(<FeedbackComposer onSend={vi.fn()} disabledReason="Closed." attachmentSlot={slot} />);
+    render(<ChatComposer onSend={vi.fn()} disabledReason="Closed." attachmentSlot={slot} />);
     expect(slot).not.toHaveBeenCalled();
     expect(screen.queryByText("picker")).not.toBeInTheDocument();
   });
 
   it("keeps the plain-node form as it was", () => {
-    render(<FeedbackComposer onSend={vi.fn()} attachmentSlot={<button type="button">Host picker</button>} />);
+    render(<ChatComposer onSend={vi.fn()} attachmentSlot={<button type="button">Host picker</button>} />);
     expect(screen.getByRole("button", { name: "Host picker" })).toBeInTheDocument();
   });
 });
 
-describe("FeedbackComposer attachment button look", () => {
+describe("ChatComposer attachment button look", () => {
   it("hands buttonVariant / buttonSize to the built-in field; default as before", () => {
-    const { unmount } = render(<FeedbackComposer onSend={vi.fn()} attachment />);
+    const { unmount } = render(<ChatComposer onSend={vi.fn()} attachment />);
     const md = screen.getByRole("button", { name: /Add attachment/ });
     expect(md).toHaveClass("border", "px-3");
     unmount();
 
-    render(<FeedbackComposer onSend={vi.fn()} attachment={{ buttonVariant: "ghost", buttonSize: "sm" }} />);
+    render(<ChatComposer onSend={vi.fn()} attachment={{ buttonVariant: "ghost", buttonSize: "sm" }} />);
     const sm = screen.getByRole("button", { name: /Add attachment/ });
     expect(sm).toHaveClass("px-2", "py-1", "text-xs");
     expect(sm).not.toHaveClass("border");

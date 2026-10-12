@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { WriteLockProvider } from "../../components/write-lock";
-import { ChatComposer, FeedbackComposer } from "../feedback-thread";
+import { ChatComposer } from "../feedback-thread";
 
 /**
  * kastlan's 0.33 report (ka 3): its assistant read `useWriteLock({ except: ["demo"] })`
@@ -17,7 +17,7 @@ function type(text: string) {
   fireEvent.change(screen.getByRole("textbox"), { target: { value: text } });
 }
 
-describe("FeedbackComposer `commit` (0.33.1)", () => {
+describe("ChatComposer `commit` (0.33.1)", () => {
   it("locks Send under a lock — focusable, described, refusing the click and both keys", () => {
     const onSend = vi.fn();
     render(
@@ -43,7 +43,7 @@ describe("FeedbackComposer `commit` (0.33.1)", () => {
   it("keeps the box, unlike `disabledReason`, which replaces it", () => {
     render(
       <WriteLockProvider locked reason="Read-only demo">
-        <FeedbackComposer onSend={() => {}} commit />
+        <ChatComposer onSend={() => {}} commit />
       </WriteLockProvider>,
     );
     expect(screen.getByRole("textbox")).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("FeedbackComposer `commit` (0.33.1)", () => {
     const onSend = vi.fn();
     const { unmount } = render(
       <WriteLockProvider locked reason="Read-only demo">
-        <FeedbackComposer onSend={onSend} />
+        <ChatComposer onSend={onSend} />
       </WriteLockProvider>,
     );
     type("A note");
@@ -102,7 +102,7 @@ describe("FeedbackComposer `commit` (0.33.1)", () => {
     expect(onSend).toHaveBeenCalledTimes(1);
     unmount();
 
-    render(<FeedbackComposer onSend={onSend} commit />);
+    render(<ChatComposer onSend={onSend} commit />);
     type("Another");
     expect(send()).not.toHaveAttribute("aria-disabled");
     fireEvent.click(send());

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_PAGE_CONTENTS_LABELS } from "./page-contents-labels";
 
 /**
@@ -112,7 +112,7 @@ export interface PageContentsProps extends Omit<ComponentPropsWithRef<"nav">, "c
   /** `rail` — a list beside the page. `disclosure` — collapsed under a summary line,
    *  for narrow screens where a rail has no room. */
   variant?: "rail" | "disclosure";
-  labels?: Partial<PageContentsLabels>;
+  labels?: LabelOverride<PageContentsLabels>;
 }
 
 /**

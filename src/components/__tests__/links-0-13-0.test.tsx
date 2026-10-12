@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Pencil } from "lucide-react";
-import { Button, IconButton } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
 import { TextLink } from "../text-link";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkProps } from "../../i18n/kit-labels";

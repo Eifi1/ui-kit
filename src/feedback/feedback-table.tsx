@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { cn } from "../lib/cn";
 import { toLocalIso } from "../lib/dates";
 import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkProps } from "../i18n/kit-labels";
 import { Chip } from "../components/chip";
 import { FloatingAction, FloatingActionGroup } from "../components/floating-panel";
@@ -125,7 +125,7 @@ export { DEFAULT_FEEDBACK_PAGE_LABELS };
 
 /** `feedbackPage` resolved: English, then `<UiKitProvider labels>`, then `labels`. The
  *  page's title comes from here too: `mine ? labels.myTitle : labels.title`. */
-export function useFeedbackPageLabels(labels?: Partial<FeedbackPageLabels>): FeedbackPageLabels {
+export function useFeedbackPageLabels(labels?: LabelOverride<FeedbackPageLabels>): FeedbackPageLabels {
   return useKitLabels("feedbackPage", DEFAULT_FEEDBACK_PAGE_LABELS, labels);
 }
 
@@ -265,7 +265,7 @@ export interface FeedbackSubjectProps {
    */
   wrap?: boolean;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
   className?: string;
 }
 
@@ -563,7 +563,7 @@ export interface UseFeedbackColumnsOptions
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. Keep it stable (module scope or memoised): it is
    *  a dependency of the memo. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -616,7 +616,7 @@ export interface FeedbackMobileCardProps {
    *  headers'. Default: the kit's ({@link useFeedbackRenderDate}). */
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -669,7 +669,7 @@ export interface FeedbackAwaitingToggleProps {
    *  filter, the same question asked where there is room for it. */
   className?: string;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -721,7 +721,7 @@ export function FeedbackAwaitingToggle({
 
 export interface FeedbackEmptyStateProps {
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**

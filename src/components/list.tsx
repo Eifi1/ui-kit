@@ -3,7 +3,8 @@ import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FOCUS_RING, Spinner } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
+import { Spinner } from "./spinner";
 import { StatusDot } from "./status-dot";
 import { Collapse } from "./disclosure";
 import { toneTextClass } from "./signed-amount";

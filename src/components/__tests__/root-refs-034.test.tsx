@@ -11,12 +11,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  EmptyState,
-  FloatingField,
-  Label,
-  Spinner,
-  Tabs,
-} from "../ui";
+} from "../card";
+import { EmptyState } from "../empty-state";
+import { FloatingField, Label } from "../field-base";
+import { Spinner } from "../spinner";
+import { Tabs } from "../tabs";
 import { LoadingState } from "../loading-state";
 import { DescriptionItem, DescriptionList } from "../description-list";
 import { PageHeader } from "../page-header";

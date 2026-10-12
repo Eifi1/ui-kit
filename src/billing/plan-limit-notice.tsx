@@ -6,7 +6,7 @@ import { formatNumber } from "../lib/format";
 import { AlertBanner } from "../components/alert-banner";
 import type { AlertTone } from "../components/alert-banner";
 import { ProgressBar } from "../components/progress-bar";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 

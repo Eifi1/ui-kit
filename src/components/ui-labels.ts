@@ -2,7 +2,8 @@
 // (src/i18n/defaults.ts) imports them without the component, so `en` loads as one chunk
 // like the other languages (0.34, KS U8). ./ui re-exports them.
 
-import type { CharacterCountLabels, PasswordRevealLabels, TabsLabels } from "./ui";
+import type { CharacterCountLabels, PasswordRevealLabels } from "./field-base";
+import type { TabsLabels } from "./tabs";
 
 export const DEFAULT_PASSWORD_REVEAL_LABELS: PasswordRevealLabels = {
   show: "Show password",

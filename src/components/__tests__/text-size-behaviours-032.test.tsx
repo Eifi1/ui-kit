@@ -1,17 +1,13 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Trash2 } from "lucide-react";
-import {
-  Button,
-  Card,
-  CompactControls,
-  FieldHint,
-  FOCUS_RING,
-  FOCUS_RING_WIDTH,
-  IconButton,
-  Input,
-  TOUCH_TARGET_LARGE,
-} from "../ui";
+import { Button } from "../button";
+import { Card } from "../card";
+import { CompactControls, FieldHint } from "../field-parts";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "../focus-ring";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { TOUCH_TARGET_LARGE } from "../button-look";
 import { Switch } from "../switch";
 import { Checkbox } from "../checkbox";
 import { Slider } from "../slider";

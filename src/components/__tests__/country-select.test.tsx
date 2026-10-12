@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { CountrySelect, DEFAULT_COUNTRY_SELECT_LABELS, type CountrySelectProps } from "../country-select";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 import { WriteLockProvider } from "../write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
 

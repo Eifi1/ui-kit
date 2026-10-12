@@ -5,7 +5,7 @@ import { FieldStrip } from "../field-strip";
 import { ToggleGroup } from "../toggle-group";
 import { SwatchPicker } from "../swatch-picker";
 import { IconPicker } from "../icon-picker";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /**
  * 0.23.0, keksdose G8: the label strip the kit's groups wear (0.22, K2), public for

@@ -11,7 +11,7 @@ import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
-import { CompactControls } from "../components/ui";
+import { CompactControls } from "../components/field-parts";
 import { mergeRefs } from "../components/field-parts";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { anchoredInline } from "../hooks/use-anchored-panel";
@@ -19,7 +19,7 @@ import { useDismissLayer } from "../hooks/use-dismiss";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import type { TextSize } from "../theme/text-size";
-import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { DEFAULT_APP_SHELL_MORE_LABELS } from "./app-shell-labels";
 
@@ -767,7 +767,7 @@ function MobileMoreCell({
   labels: labelsProp,
 }: {
   hidden: AppShellNavItem[];
-  labels?: Partial<AppShellMoreLabels>;
+  labels?: LabelOverride<AppShellMoreLabels>;
 }) {
   const labels: AppShellMoreLabels = useKitLabels("appShellMore", DEFAULT_APP_SHELL_MORE_LABELS, labelsProp);
   const { pathname } = useLocation();

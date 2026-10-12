@@ -3,7 +3,8 @@ import type { ComponentPropsWithoutRef, DragEvent, ReactNode, Ref } from "react"
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { useKitLabels } from "../i18n/kit-labels";
-import { Button, Spinner } from "./ui";
+import { Button } from "./button";
+import { Spinner } from "./spinner";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { FieldHint, Input, Textarea } from "../ui";
+import { FieldHint } from "../field-parts";
+import { Input } from "../input";
+import { Textarea } from "../textarea";
 import { TimeInput } from "../time-input";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";

@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { Link } from "react-router";
 import { cn } from "../lib/cn";
-import { HoverMenu } from "../components/hover-menu";
+import { HoverMenu, type HoverMenuProps } from "../components/hover-menu";
 import { MenuItem } from "../components/menu-item";
 import type { MenuItemTone } from "../components/menu-item";
 import { StatusDot } from "../components/status-dot";
@@ -283,8 +283,9 @@ export function TopBarActionMenu({
   footer?: ReactNode | ((close: () => void) => ReactNode);
   /** Wraps the footer in a `<nav>` with this name ("Legal"). Without it, a plain block. */
   footerLabel?: string;
-  /** Which edge of the trigger the panel lines up with (see `HoverMenu`). Default `end`. */
-  align?: "start" | "end" | "left" | "right";
+  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
+   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  align?: HoverMenuProps["align"];
   panelClassName?: string;
 } & RequiredMenuName) {
   // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.

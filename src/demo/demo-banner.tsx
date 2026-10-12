@@ -5,7 +5,8 @@ import { ChevronDown, ChevronUp, Timer } from "lucide-react";
 import { cn } from "../lib/cn";
 import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
 import { AlertBanner } from "../components/alert-banner";
-import { Button, IconButton } from "../components/ui";
+import { Button } from "../components/button";
+import { IconButton } from "../components/icon-button";
 import { useAccessAction } from "../landing/access";
 import type { AccessChoice } from "../landing/access";
 import { useLandingLabels } from "../landing/landing-labels";
@@ -15,6 +16,7 @@ import type { DemoCountdown, DemoExpiry } from "./demo-countdown";
 import { useDemoLabels } from "./demo-labels";
 import type { DemoLabels } from "./demo-labels";
 import type { DemoModel } from "./demo-session";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /** The default `sessionStorage` key of the collapsed state. */
 const COLLAPSE_KEY = "kit.demoBanner.collapsed";
@@ -46,7 +48,7 @@ export interface DemoBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "
   collapseKey?: string;
   /** The clock, for tests and previews. Default `Date.now`. Keep it stable. */
   now?: () => number;
-  labels?: Partial<DemoLabels>;
+  labels?: LabelOverride<DemoLabels>;
   /** The access words (`landing` namespace) for this instance. */
   landingLabels?: Partial<LandingLabels>;
 }

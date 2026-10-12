@@ -372,10 +372,8 @@ function ThemeAndPalette() {
         <code className="font-mono">PaletteMenu</code> indexes each preset by{" "}
         <code className="font-mono">mode</code> to draw its swatches, so the menu's own colours
         change when you flip the theme.{" "}
-        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets;{" "}
-        <code className="font-mono">ALTERNATIVE_PRESETS</code> is exported separately and is not
-        in it, so passing <code className="font-mono">PALETTES</code> is a choice about which
-        presets an app offers, not the whole catalogue.
+        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets, and passing it
+        is a choice about which presets an app offers: a list of its own works the same.
       </Note>
     </div>
   );

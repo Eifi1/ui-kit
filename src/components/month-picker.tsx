@@ -4,12 +4,14 @@ import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
-import { Button, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, IconButton } from "./ui";
+import { Button } from "./button";
+import { FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./field-base";
+import { IconButton } from "./icon-button";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
 import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages } from "./field-parts";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
@@ -138,7 +140,7 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
    */
   currentMonth?: string;
   /** User-facing strings; see {@link MonthPickerLabels}. */
-  labels?: Partial<MonthPickerLabels>;
+  labels?: LabelOverride<MonthPickerLabels>;
   /** Extra classes for the field's root. */
   className?: string;
   /** Extra classes for the trigger button — e.g. a compact `h-9 w-auto` trigger

@@ -2,10 +2,11 @@ import { useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, LogIn, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
 import { authErrorCode } from "./auth-errors";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, useOncePerKey } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
@@ -89,7 +90,7 @@ export interface AcceptInvitationProps extends Omit<ComponentPropsWithRef<"div">
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<AcceptInvitationLabels>;
+  labels?: LabelOverride<AcceptInvitationLabels>;
 }
 
 /**

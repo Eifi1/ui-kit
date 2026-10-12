@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Textarea } from "../ui";
+import { Textarea } from "../textarea";
 
 /**
  * 0.25, Kurvenschmiede: under the 0.24 label strip, a line scrolled most of the way under

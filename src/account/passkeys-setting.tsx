@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { KeyRound } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLocale } from "../i18n/kit-labels";
+import { useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { EmptyState } from "../components/empty-state";
@@ -93,7 +93,7 @@ export interface PasskeysSettingProps<Id extends PasskeyId = PasskeyId> extends 
   /** Overrides the provider's locale for the default date format. */
   locale?: string;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { passkeys } }}>` > English. */
-  labels?: Partial<PasskeysSettingLabels>;
+  labels?: LabelOverride<PasskeysSettingLabels>;
   className?: string;
   /** On the card (0.16.0), for an in-page link (`#passkeys`) or a test hook. `data-*`
    *  attributes go there too. */

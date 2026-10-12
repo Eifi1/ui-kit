@@ -1,6 +1,6 @@
 import type { ReactNode, Ref } from "react";
 import { PasswordStrengthMeter } from "../components/password-strength";
-import { Input } from "../components/ui";
+import { Input } from "../components/input";
 import { PASSWORD_MAX_BYTES, PASSWORD_MIN_LENGTH } from "./form-rules";
 
 /** @internal The words the fields show — the host form's own labels. */

@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { MonitorSmartphone } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { formatRelativeTime, toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
@@ -11,7 +11,8 @@ import { Chip } from "../components/chip";
 import { hasContent } from "../lib/presence";
 import { DangerConfirm } from "../components/danger-confirm";
 import { Skeleton } from "../components/skeleton";
-import { Button, Card } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
@@ -109,7 +110,7 @@ export interface SessionsSettingProps<Id extends SessionId = SessionId>
   formatLastActive?: (date: Date) => string;
   /** Overrides the provider's locale for the default format. */
   locale?: string;
-  labels?: Partial<SessionsLabels>;
+  labels?: LabelOverride<SessionsLabels>;
 }
 
 /**

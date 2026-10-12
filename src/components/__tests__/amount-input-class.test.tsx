@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
-import { FIELD_INVALID } from "../ui";
+import { FIELD_INVALID } from "../field-base";
 
 /**
  * keksdose G7 (0.23): a VAT cell right-aligns its figure. `className` is the wrapper's,

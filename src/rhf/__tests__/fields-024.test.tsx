@@ -4,7 +4,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Form } from "../form";
 import { RhfCombobox, RhfInlineEntityCombobox, RhfTextCombobox } from "../fields";
-import { FieldHint } from "../../components/ui";
+import { FieldHint } from "../../components/field-parts";
 
 /**
  * 0.24 — kastlan: `RhfInlineEntityCombobox`. Its account picker is an

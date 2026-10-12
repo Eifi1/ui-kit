@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Button, IconButton } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
 
 describe("Button tone (keksdose's quiet links)", () => {
   it("draws a muted link in secondary text that darkens on hover", () => {

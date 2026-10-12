@@ -1,8 +1,11 @@
 import { Inbox, MessageSquare } from "lucide-react";
 import type { UserAvatarBadge } from "../components/user-avatar";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { TopBarActionMenu, type TopBarMenuEntry } from "../shell/topbar-action-menu";
-import { FEEDBACK_CATEGORY_META, type FeedbackCategory } from "./feedback-inbox";
+import type { HoverMenuProps } from "../components/hover-menu";
+// The vocabulary module, not the inbox: this menu is in every app's top bar, the inbox
+// is a page (MOD-1).
+import { FEEDBACK_CATEGORY_META, type FeedbackCategory } from "./feedback-vocabulary";
 import { useFeedbackCategoryLabels } from "./feedback-labels";
 import { FEEDBACK_PICKABLE_CATEGORIES } from "./feedback-record";
 import { DEFAULT_FEEDBACK_MENU_LABELS } from "./feedback-menu-labels";
@@ -52,9 +55,10 @@ export interface FeedbackMenuProps {
    *  `label` joins the trigger's name ("Send feedback 2 unread"). The words are the app's. */
   iconBadge?: UserAvatarBadge | null;
   /** Prop > `<UiKitProvider labels={{ feedbackMenu }}>` > English. */
-  labels?: Partial<FeedbackMenuLabels>;
-  /** Which edge of the trigger the panel lines up with. Default `end`. */
-  align?: "start" | "end" | "left" | "right";
+  labels?: LabelOverride<FeedbackMenuLabels>;
+  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
+   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  align?: HoverMenuProps["align"];
 }
 
 /**

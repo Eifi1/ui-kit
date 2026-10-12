@@ -1,4 +1,4 @@
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The demo's words (docs/landing-demo-harmonization.md §5) — the `demo` namespace of
@@ -73,6 +73,6 @@ export const DEFAULT_DEMO_LABELS: DemoLabels = {
 
 /** The `demo` namespace, resolved: English, then the provider, then `labels`. The app
  *  reads `writeLocked` from here for its `WriteLockProvider`. */
-export function useDemoLabels(labels?: Partial<DemoLabels>): DemoLabels {
+export function useDemoLabels(labels?: LabelOverride<DemoLabels>): DemoLabels {
   return useKitLabels("demo", DEFAULT_DEMO_LABELS, labels);
 }

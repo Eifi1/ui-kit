@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
 
@@ -25,7 +25,7 @@ interface PaginationProps {
    *  the select is then not rendered at all, rather than rendered and inert. */
   onPageSize?: (n: number) => void;
   /** Over `dataTable` from `<UiKitProvider labels>`, over the English defaults. */
-  labels?: Partial<DataTableLabels>;
+  labels?: LabelOverride<DataTableLabels>;
   /** For the page numbers and page-size options; falls back to the provider's. */
   locale?: string;
   /** `"compact"` for a pager under a compact {@link DataTable} (lenkbank's in-card

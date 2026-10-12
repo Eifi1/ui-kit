@@ -1,6 +1,7 @@
 import { useCallback, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
+import { FieldChevron, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./field-base";
+import { FieldLabel } from "./field-parts";
 import { assignRef, EndHintRow, useFieldMessages } from "./field-parts";
 import { cn } from "../lib/cn";
 import { useComboboxCore } from "./combobox-core";

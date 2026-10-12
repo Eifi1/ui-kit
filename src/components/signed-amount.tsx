@@ -2,7 +2,7 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatMoney, formatNumber, formatPercent } from "../lib/format";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile";
 import type { StatTileLabels } from "./stat-tile";
 import { DEFAULT_SIGNED_AMOUNT_LABELS } from "./signed-amount-labels";
@@ -190,7 +190,7 @@ export interface SignedAmountProps
   arrow?: boolean;
   /** Tag the figure `data-private`, for the host's demo-mode blur. */
   sensitive?: boolean;
-  labels?: Partial<SignedAmountLabels>;
+  labels?: LabelOverride<SignedAmountLabels>;
 }
 
 /**
@@ -274,7 +274,7 @@ export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithRe
   arrow?: boolean;
   sensitive?: boolean;
   /** The `statTile` namespace's direction words — a delta says the same as a tile's. */
-  labels?: Partial<Pick<StatTileLabels, "increase" | "decrease" | "unchanged" | "better" | "worse">>;
+  labels?: LabelOverride<Pick<StatTileLabels, "increase" | "decrease" | "unchanged" | "better" | "worse">>;
 }
 
 /**

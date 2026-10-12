@@ -2,9 +2,13 @@ import { Children, useCallback, useEffect, useId, useRef, useState } from "react
 import type { ChangeEvent, ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button, Input, Label, Spinner } from "./ui";
-import type { ButtonVariant, InputProps } from "./ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Label } from "./field-base";
+import { Spinner } from "./spinner";
+import type { ButtonVariant } from "./button-look";
+import type { InputProps } from "./input";
 import { Checkbox } from "./checkbox";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -103,7 +107,7 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
    */
   busy?: boolean;
   /** Per-instance override of `dangerConfirm.password`. */
-  labels?: Partial<CurrentPasswordInputLabels>;
+  labels?: LabelOverride<CurrentPasswordInputLabels>;
 }
 
 /**
@@ -193,7 +197,7 @@ export interface TypedConfirmFieldProps
   /** The guarded action is running: the field turns `readOnly` (not `disabled`, which
    *  would drop the focus Enter left in it). */
   busy?: boolean;
-  labels?: Partial<TypedConfirmFieldLabels>;
+  labels?: LabelOverride<TypedConfirmFieldLabels>;
 }
 
 /**
@@ -562,7 +566,7 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "
   /** Called with the next armed state — on arm, cancel, and a resolved `onConfirm`. */
   onArmedChange?: (armed: boolean) => void;
   /** User-facing strings; see {@link DangerConfirmLabels}. */
-  labels?: Partial<DangerConfirmLabels>;
+  labels?: LabelOverride<DangerConfirmLabels>;
 }
 
 /** What counts as a FIELD among the caller's `children` — what arming focuses. Not

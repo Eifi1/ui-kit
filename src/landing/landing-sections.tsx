@@ -8,6 +8,7 @@ import { LandingActions } from "./landing-actions";
 import type { LandingActionsProps } from "./landing-actions";
 import { useLandingLabels } from "./landing-labels";
 import type { LandingLabels } from "./landing-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The sections of the public landing page (docs/landing-demo-harmonization.md §4.1),
@@ -57,7 +58,7 @@ export interface HeroProps extends Omit<ComponentPropsWithRef<"section">, "title
   actions?: ReactNode;
   /** Default `h1`; lower where the hero is embedded in another page. */
   headingAs?: HeadingLevel;
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**
@@ -276,7 +277,7 @@ export interface CtaBandProps extends Omit<ComponentPropsWithRef<"section">, "ti
   actions?: ReactNode;
   /** Default `h2`. */
   headingAs?: HeadingLevel;
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmptyState, IconButton } from "../ui";
+import { EmptyState } from "../empty-state";
+import { IconButton } from "../icon-button";
 
 describe("EmptyState — headingAs and node slots", () => {
   it("keeps a <div> title by default", () => {

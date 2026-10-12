@@ -12,7 +12,7 @@
  * module that DECLARES it, in the order the barrel first reaches that module.
  *
  * The declarations are tsc's, one `.d.ts` per module (scripts/build-dts.mjs, TST-3), so
- * the barrel is mostly `export * from "./components/ui.js"`, and a module may re-export
+ * the barrel is mostly `export * from "./components/button.js"`, and a module may re-export
  * another's names. Following that by hand is what TypeScript's checker does: it answers
  * which names an entry exports, where each is declared, and whether it is a value or a
  * type (a `type`-only re-export counts as a type). Until 0.34 the declarations were
@@ -134,18 +134,24 @@ function describe(checker, symbol) {
 
 /**
  * The barrel, as `[{ id, names: [{ name, isType }] }]`. Modules come in the order the
- * barrel names them (its curated order); a module it reaches only through another
- * module's re-export comes after those.
+ * barrel names them (its curated order). A subpath entry it re-exports whole
+ * (`export * from "./chart.js"`, since 0.34, MOD-5) is read in place, its modules in the
+ * order that entry names them. A module it reaches only through another module's
+ * re-export comes after those.
  */
 function inventory({ program, checker, exportsOf }) {
   const indexFile = join(DIST, "index.d.ts");
-  const statements = program.getSourceFile(indexFile).statements.filter(ts.isExportDeclaration);
   const modules = new Map();
-  for (const statement of statements) {
-    const target = statement.moduleSpecifier && checker.getSymbolAtLocation(statement.moduleSpecifier);
-    const file = target?.declarations?.[0]?.getSourceFile().fileName;
-    if (file && !isEntryPoint(moduleId(file))) modules.set(moduleId(file), []);
-  }
+  const nameModules = (fileName) => {
+    for (const statement of program.getSourceFile(fileName).statements.filter(ts.isExportDeclaration)) {
+      const target = statement.moduleSpecifier && checker.getSymbolAtLocation(statement.moduleSpecifier);
+      const file = target?.declarations?.[0]?.getSourceFile().fileName;
+      if (!file) continue;
+      if (isEntryPoint(moduleId(file))) nameModules(file);
+      else if (!modules.has(moduleId(file))) modules.set(moduleId(file), []);
+    }
+  };
+  nameModules(indexFile);
   for (const symbol of exportsOf(indexFile)) {
     const { id, isType } = describe(checker, symbol);
     if (!modules.has(id)) modules.set(id, []);

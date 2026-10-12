@@ -78,11 +78,14 @@ function deprecations(): Deprecation[] {
         /^\s*(?:export\s+)?(?:declare\s+)?(?:readonly\s+)?(?:(?:async\s+)?function\*?\s+|const\s+|let\s+|type\s+|interface\s+|class\s+)?["']?([A-Za-z_$][\w$-]*)/.exec(
           lines[next] ?? "",
         )?.[1] ?? "?";
-      const owner = lines
-        .slice(0, i)
-        .reverse()
-        .map((l) => /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)/.exec(l)?.[1])
-        .find(Boolean);
+      // Only a member (an indented declaration) has an owner; a top-level name is its own.
+      const owner = /^\s+/.test(lines[next] ?? "")
+        ? lines
+            .slice(0, i)
+            .reverse()
+            .map((l) => /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)/.exec(l)?.[1])
+            .find(Boolean)
+        : undefined;
       const since = /^(\d+\.\d+)\b/.exec(text)?.[1];
       const removal = /\bremoved in (\d+\.\d+)\b/.exec(text)?.[1];
       found.push({

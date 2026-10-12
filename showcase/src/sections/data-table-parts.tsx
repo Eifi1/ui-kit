@@ -14,13 +14,14 @@ import {
   encodeFilterValue,
   encodeSorts,
   isFilterActive,
-  missingDataTableLabels,
+  missingKitLabels,
   nextSorts,
   normalizeSorts,
-  resolveDataTableLabels,
   resolveFilter,
   rowMatches,
   UiKitProvider,
+  DEFAULT_UI_KIT_LABELS,
+  useKitLabels,
 } from "@eifi1/ui-kit";
 import type {
   ColumnFilter,
@@ -198,7 +199,8 @@ function FilterPopoverSpecimen() {
   // focused input into view — fine in a popover, wrong for a panel that is simply on
   // the page. The four panels below pass `autoFocus={false}` for exactly that reason.
   const [focusDemo, setFocusDemo] = useState(false);
-  const labels = resolveDataTableLabels({ filterPlaceholder: "Type to narrow…" });
+  // The popover takes a COMPLETE set: one changed string is spread over the defaults.
+  const labels = { ...DEFAULT_DATA_TABLE_LABELS, filterPlaceholder: "Type to narrow…" };
 
   const encoded: Array<[string, ReactNode]> = FILTERABLE.map(({ col, filter }) => {
     const value = state[col.key] ?? defaultFilterState(filter);
@@ -290,9 +292,10 @@ function FilterPopoverSpecimen() {
           provider), while <code className="font-mono">DataTable</code> and{" "}
           <code className="font-mono">Pagination</code> take a{" "}
           <code className="font-mono">Partial</code> and merge it for you. Handing the popover
-          one changed string means calling{" "}
-          <code className="font-mono">resolveDataTableLabels(yourOverrides)</code> first —
-          which is what this specimen does to change the text placeholder.
+          one changed string means spreading it over{" "}
+          <code className="font-mono">DEFAULT_DATA_TABLE_LABELS</code> — which is what this
+          specimen does to change the text placeholder — or leaving the popover none, under a
+          provider whose <code className="font-mono">dataTable</code> has it.
         </Note>
         <Note>
           Ticking <em>Absolute value</em> on Amount with no min and no max marks the column
@@ -316,38 +319,38 @@ const LABEL_ITEMS: Array<[string, string]> = Object.entries(DEFAULT_DATA_TABLE_L
 
 const PRESET_ITEMS: Array<[string, string]> = Object.entries(DEFAULT_DATA_TABLE_LABELS.presets);
 
-const MERGED = resolveDataTableLabels({
-  columns: "Spalten",
-  presets: { today: "Heute" },
-});
+/** One changed column word and one preset, as an app's catalogue would carry them. */
+const DE_TABLE = { columns: "Spalten", presets: { today: "Heute" } };
+
+/** The provider's merge, read back the way a kit component reads its namespace. */
+function MergedRows() {
+  const merged = useKitLabels("dataTable", DEFAULT_DATA_TABLE_LABELS);
+  const missing = missingKitLabels({ dataTable: DE_TABLE }, DEFAULT_UI_KIT_LABELS).filter((key) =>
+    key.startsWith("dataTable."),
+  );
+  return (
+    <OutTable
+      rows={[
+        ['labels={{ dataTable: { columns: "Spalten" } }} → columns', merged.columns],
+        ["…and an untouched key", merged.filter],
+        ['…presets: { today: "Heute" } → presets.today', merged.presets.today],
+        ["…presets.last_week (merged, not replaced)", merged.presets.last_week],
+        ["missingKitLabels(…) under dataTable — how many", String(missing.length)],
+        ["…first three", j(missing.slice(0, 3))],
+      ]}
+    />
+  );
+}
 
 function LabelsSpecimen() {
   return (
     <Example
-      label="DEFAULT_DATA_TABLE_LABELS / resolveDataTableLabels"
+      label="DEFAULT_DATA_TABLE_LABELS"
       hint="every string has an English default; the provider's catalogue or a labels prop replaces it"
     >
-      <OutTable
-        rows={[
-          [
-            "resolveDataTableLabels() === DEFAULT_DATA_TABLE_LABELS",
-            String(resolveDataTableLabels() === DEFAULT_DATA_TABLE_LABELS),
-          ],
-          ['resolveDataTableLabels({ columns: "Spalten" }).columns', MERGED.columns],
-          ["…and an untouched key", MERGED.filter],
-          ['…presets: { today: "Heute" } → presets.today', MERGED.presets.today],
-          ["…presets.last_week (merged, not replaced)", MERGED.presets.last_week],
-          ["missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS)", j(missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS))],
-          [
-            'missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).length',
-            String(missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).length),
-          ],
-          [
-            "…first three",
-            j(missingDataTableLabels({ columns: "Spalten", presets: { today: "Heute" } }).slice(0, 3)),
-          ],
-        ]}
-      />
+      <UiKitProvider labels={{ dataTable: DE_TABLE }}>
+        <MergedRows />
+      </UiKitProvider>
       <div className="mt-4 grid gap-6 md:grid-cols-2">
         <div>
           <div className="mb-2 text-xs font-medium text-primary">
@@ -365,17 +368,18 @@ function LabelsSpecimen() {
       </div>
       <div className="mt-3">
         <Note>
-          Passing no argument returns the default object <em>itself</em>, not a copy — the
-          merge only happens when there is something to merge, so the common case allocates
-          nothing. Nested <code className="font-mono">presets</code> are merged key by key,
-          so translating one preset does not blank the other ten.
+          Nested <code className="font-mono">presets</code> are merged key by key, so
+          translating one preset does not blank the other ten — in the provider and in a
+          table&apos;s own <code className="font-mono">labels</code> prop alike.
         </Note>
         <Note>
-          <code className="font-mono">missingDataTableLabels</code> is the other half of that
+          <code className="font-mono">missingKitLabels</code> is the other half of that
           lenient merge: it lists every key that would fall back to English (presets one by
           one), so a translated app can assert <code className="font-mono">toEqual([])</code>{" "}
-          in its own test. A translated <code className="font-mono">columns</code> counts for{" "}
-          <code className="font-mono">columnsCount</code> too.
+          in its own test. The table&apos;s own pair,{" "}
+          <code className="font-mono">resolveDataTableLabels</code> and{" "}
+          <code className="font-mono">missingDataTableLabels</code>, is deprecated in 0.34 and
+          goes in 0.35.
         </Note>
       </div>
     </Example>

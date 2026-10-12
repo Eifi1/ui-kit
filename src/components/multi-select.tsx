@@ -1,6 +1,7 @@
 import { useCallback, useId, useMemo } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
+import { FieldChevron, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./field-base";
+import { FieldLabel } from "./field-parts";
 import { cn } from "../lib/cn";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
 import {
@@ -19,6 +20,7 @@ import {
   DEFAULT_MULTI_SELECT_LABELS,
   useKitLabels,
   type MultiSelectLabels,
+  type LabelOverride,
 } from "../i18n/kit-labels";
 
 /**
@@ -75,7 +77,7 @@ export interface MultiSelectProps<V extends string | number = string | number>
    * when nothing is picked: `labels.all`, then `allLabel`, then `placeholder`, then the
    * provider's.
    */
-  labels?: Partial<MultiSelectLabels>;
+  labels?: LabelOverride<MultiSelectLabels>;
   /**
    * Extra classes for the open PANEL. The panel is portalled now (dev#548) and sizes
    * itself: as wide as the trigger and at least 16rem, growing with its rows up to 32rem

@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
 import type { RoleVocabulary } from "../components/account-chips";
 import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
-import { Select } from "../components/ui";
-import type { SelectProps } from "../components/ui";
+import { Select } from "../components/select";
+import type { SelectProps } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_ROLE_SELECT_LABELS } from "./role-select-labels";
 
@@ -116,7 +116,7 @@ export interface RoleSelectProps<R extends string = string>
   /** The account's name, for the select's accessible name in a roster row ("Role of
    *  Ada Example") where no `label` is drawn. */
   name?: string;
-  labels?: Partial<RoleSelectLabels>;
+  labels?: LabelOverride<RoleSelectLabels>;
 }
 
 /**
@@ -212,7 +212,7 @@ export interface RolesEditorProps<R extends string = string> {
   /** The editor SAVES on change — the write lock's opt-in (CheckboxGroup's `commit`). */
   commit?: CommitScope;
   className?: string;
-  labels?: Partial<RoleSelectLabels>;
+  labels?: LabelOverride<RoleSelectLabels>;
 }
 
 /**

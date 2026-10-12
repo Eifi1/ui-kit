@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Select } from "../components/ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Select } from "../components/select";
 import { Caption } from "../components/text";
 import { AdminActionConfirm } from "./admin-action-confirm";
 import type { AdminActionTarget, AdminConfirmLevel } from "./admin-action-confirm";
@@ -89,7 +89,7 @@ export interface TransferOwnershipDialogProps {
   describeError?: (error: unknown) => ReactNode | undefined;
   /** Kept-mounted mode. */
   open?: boolean;
-  labels?: Partial<TransferOwnershipLabels>;
+  labels?: LabelOverride<TransferOwnershipLabels>;
 }
 
 export function TransferOwnershipDialog({

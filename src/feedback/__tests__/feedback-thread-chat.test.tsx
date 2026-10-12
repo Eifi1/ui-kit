@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { FeedbackComposer, FeedbackThread } from "../feedback-thread";
+import { ChatComposer, FeedbackThread } from "../feedback-thread";
 import type { FeedbackThreadItem } from "../feedback-thread";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
-// keksdose G4/G5: the support chat on FeedbackThread + FeedbackComposer. Times are
+// keksdose G4/G5: the support chat on FeedbackThread + ChatComposer. Times are
 // local (vitest pins TZ=Europe/Berlin), so the calendar days below are Berlin's.
 const NOW = new Date(2026, 8, 26, 12, 0);
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 8, day, hour, minute);
@@ -73,12 +73,12 @@ describe("FeedbackThread — chat rows (keksdose G4)", () => {
   });
 });
 
-describe("FeedbackComposer — chat sending (keksdose G5)", () => {
+describe("ChatComposer — chat sending (keksdose G5)", () => {
   const box = () => screen.getByRole("textbox", { name: "Write a comment" });
 
   it("keeps Ctrl/⌘+Enter as the default: plain Enter does not send", () => {
     const onSend = vi.fn();
-    render(<FeedbackComposer onSend={onSend} />);
+    render(<ChatComposer onSend={onSend} />);
     fireEvent.change(box(), { target: { value: "hello" } });
     fireEvent.keyDown(box(), { key: "Enter" });
     expect(onSend).not.toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe("FeedbackComposer — chat sending (keksdose G5)", () => {
 
   it('sendOn="enter": Enter sends, Shift+Enter does not, nor an Enter ending an IME composition', () => {
     const onSend = vi.fn();
-    render(<FeedbackComposer onSend={onSend} sendOn="enter" />);
+    render(<ChatComposer onSend={onSend} sendOn="enter" />);
     fireEvent.change(box(), { target: { value: "你好" } });
 
     fireEvent.keyDown(box(), { key: "Enter", shiftKey: true });
@@ -108,7 +108,7 @@ describe("FeedbackComposer — chat sending (keksdose G5)", () => {
   it("translates the Enter hint", () => {
     render(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
-        <FeedbackComposer onSend={() => {}} sendOn="enter" />
+        <ChatComposer onSend={() => {}} sendOn="enter" />
       </UiKitProvider>,
     );
     expect(screen.getByText("Enter zum Senden, Umschalt + Enter für neue Zeile")).toBeInTheDocument();
@@ -117,32 +117,32 @@ describe("FeedbackComposer — chat sending (keksdose G5)", () => {
   it("renders the host's attachment slot beside Send and lets canSend decide", () => {
     const onSend = vi.fn();
     const { rerender } = render(
-      <FeedbackComposer onSend={onSend} attachmentSlot={<button type="button">Attach files</button>} />,
+      <ChatComposer onSend={onSend} attachmentSlot={<button type="button">Attach files</button>} />,
     );
     expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
     const send = () => screen.getByRole("button", { name: "Send" });
     expect(send()).toBeDisabled();
 
     // Files ready, no text: an attachments-only message.
-    rerender(<FeedbackComposer onSend={onSend} canSend attachmentSlot={<span>2 files</span>} />);
+    rerender(<ChatComposer onSend={onSend} canSend attachmentSlot={<span>2 files</span>} />);
     expect(send()).toBeEnabled();
     fireEvent.click(send());
     expect(onSend).toHaveBeenCalledWith("", null);
 
     // An upload still running holds a written reply back.
-    rerender(<FeedbackComposer onSend={onSend} canSend={false} attachmentSlot={<span>uploading…</span>} />);
+    rerender(<ChatComposer onSend={onSend} canSend={false} attachmentSlot={<span>uploading…</span>} />);
     fireEvent.change(box(), { target: { value: "see attached" } });
     expect(send()).toBeDisabled();
     fireEvent.keyDown(box(), { key: "Enter", ctrlKey: true });
     expect(onSend).toHaveBeenCalledTimes(1);
 
     // pending blocks either way.
-    rerender(<FeedbackComposer onSend={onSend} canSend pending />);
+    rerender(<ChatComposer onSend={onSend} canSend pending />);
     expect(send()).toBeDisabled();
   });
 
   it("keeps the built-in single picture beside the slot", () => {
-    render(<FeedbackComposer onSend={() => {}} attachment attachmentSlot={<span>refs</span>} />);
+    render(<ChatComposer onSend={() => {}} attachment attachmentSlot={<span>refs</span>} />);
     expect(screen.getByText("refs")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /attach/i })).toBeInTheDocument();
   });

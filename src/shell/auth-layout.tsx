@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { Card } from "../components/ui";
+import { Card } from "../components/card";
 
 /**
  * `extends ComponentPropsWithRef<"div">` because this is the page's outermost element

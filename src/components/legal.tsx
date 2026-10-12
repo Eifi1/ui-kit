@@ -245,7 +245,7 @@ export { DEFAULT_LEGAL_LABELS };
 /** The `legal` namespace, resolved: defaults < provider < `labels` prop. The prop may be
  *  partial at every depth (`{ titles: { terms: "…" } }`), as the provider's is. */
 export function useLegalLabels(labels?: LabelOverride<LegalLabels>): LegalLabels {
-  return useKitLabels("legal", DEFAULT_LEGAL_LABELS, labels as Partial<LegalLabels> | undefined);
+  return useKitLabels("legal", DEFAULT_LEGAL_LABELS, labels);
 }
 
 // ── What a LegalPage tells the sections inside it ─────────────────────────────

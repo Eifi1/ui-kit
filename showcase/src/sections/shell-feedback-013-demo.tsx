@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Chip, FeedbackComposer, TopBarActionMenu, UserAvatar } from "@eifi1/ui-kit";
+import { ChatComposer, Chip, TopBarActionMenu, UserAvatar } from "@eifi1/ui-kit";
 import type { FeedbackComposerHandle } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
 
@@ -77,7 +77,7 @@ export function ComposerCannedRepliesDemo() {
   const [sent, setSent] = useState<string[]>([]);
   return (
     <Example
-      label="FeedbackComposer — canned replies and a custom placeholder"
+      label="ChatComposer — canned replies and a custom placeholder"
       hint="ref.insertText(text) at the caret; value / onValueChange for a draft the host keeps"
     >
       <Row className="mb-2">
@@ -87,7 +87,7 @@ export function ComposerCannedRepliesDemo() {
           </Chip>
         ))}
       </Row>
-      <FeedbackComposer
+      <ChatComposer
         ref={composer}
         placeholder="Reply to Jana…"
         value={draft}

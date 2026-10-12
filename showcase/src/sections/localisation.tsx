@@ -45,12 +45,7 @@ import {
   ToggleGroup,
   UiKitProvider,
   formatFileSize,
-  missingDataTableLabels,
   missingKitLabels,
-  resolveChipInputLabels,
-  resolveDataTableLabels,
-  resolveFieldSyncLabels,
-  resolvePasswordRevealLabels,
   useKitFileLabels,
   useKitLabelOverrides,
   useKitLabels,
@@ -490,7 +485,7 @@ const NAMESPACE_CONSTANTS: Array<[string, keyof UiKitLabels, unknown]> = [
 function NamespaceConstantsExample() {
   return (
     <Example
-      label="One DEFAULT_*_LABELS per namespace, and the resolvers"
+      label="One DEFAULT_*_LABELS per namespace"
       hint="the English defaults under their own names — what a component-level fallback imports"
     >
       <OutTable
@@ -499,25 +494,17 @@ function NamespaceConstantsExample() {
           String(value === DEFAULT_UI_KIT_LABELS[ns]),
         ])}
       />
-      <div className="mt-4">
-        <OutTable
-          rows={[
-            ['resolveChipInputLabels({ remove: "Entfernen" }).remove', resolveChipInputLabels({ remove: "Entfernen" }).remove],
-            ['resolveChipInputLabels().added("tax")', resolveChipInputLabels().added("tax")],
-            ['resolveFieldSyncLabels({ pending: "Speichert…" }).pending', resolveFieldSyncLabels({ pending: "Speichert…" }).pending],
-            ["resolveFieldSyncLabels().error", resolveFieldSyncLabels().error],
-            ['resolvePasswordRevealLabels({ show: "Zeigen" }).hide', resolvePasswordRevealLabels({ show: "Zeigen" }).hide],
-            ["resolveDataTableLabels() === DEFAULT_DATA_TABLE_LABELS", String(resolveDataTableLabels() === DEFAULT_DATA_TABLE_LABELS)],
-            ["missingDataTableLabels({}).length", String(missingDataTableLabels({}).length)],
-            ["missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS)", JSON.stringify(missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS))],
-          ]}
-        />
-      </div>
       <Note>
-        The resolvers are the per-component half of the precedence: a partial{" "}
-        <code className="font-mono">labels</code> prop merged over the English default. Inside a
-        provider the kit uses <code className="font-mono">useKitLabels</code> instead, which
-        puts the provider between the two.
+        The English default under its own name is the per-component half of the precedence:{" "}
+        <code className="font-mono">useKitLabels(ns, DEFAULT_X_LABELS, labels)</code> merges a
+        component&apos;s partial <code className="font-mono">labels</code> over the provider over
+        it. The resolvers from before the provider — <code className="font-mono">resolveChipInputLabels</code>,{" "}
+        <code className="font-mono">resolveFieldSyncLabels</code>,{" "}
+        <code className="font-mono">resolvePasswordRevealLabels</code>,{" "}
+        <code className="font-mono">resolveWizardLabels</code>,{" "}
+        <code className="font-mono">resolveDataTableLabels</code> — and{" "}
+        <code className="font-mono">missingDataTableLabels</code> are deprecated in 0.34 and go in
+        0.35; <code className="font-mono">missingKitLabels</code> checks every namespace at once.
       </Note>
     </Example>
   );

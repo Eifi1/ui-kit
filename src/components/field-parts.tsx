@@ -13,15 +13,15 @@ import { useCommitReason, type CommitScope } from "./write-lock";
  * (caption or "?"), the caption and the error under a field, the label strip over a
  * bare group, the write lock on a control that saves itself, and the wiring under them
  * (`aria-describedby`, refs). Private to the package — not re-exported from the barrel,
- * except `FieldLabel` and `FLOATING_LABEL_STATIC`, which ui.tsx re-exports as it always
- * has.
+ * except `FieldLabel` and `FLOATING_LABEL_STATIC`, which the barrel names (ui.tsx did until
+ * 0.34 split it).
  *
  * One file since 0.23: until then the pickers' half (`field-anatomy.tsx`: the date and
  * month pickers, whose trigger is a button in a wrapper of their own, and the groups
  * with no field box) sat beside this one with its own copies of `isTextHint` and the
  * caption class (keksdose K4: "uniform field anatomy … today it is a patchwork").
  *
- * Nothing here imports `ui.tsx`: `ui.tsx` imports this, and so do the combobox family,
+ * Nothing here imports a field module: field-base, input, select and textarea import this, and so do the combobox family,
  * the pickers and the native choice controls — the lint's no-cycle rule holds it.
  */
 
@@ -633,7 +633,7 @@ export function useFieldMessages({
 }
 
 /**
- * The field and what is under it, as one box — `FieldGroup` in ui.tsx, for the same
+ * The field and what is under it, as one box — `FieldGroup` in field-base.tsx, for the same
  * reasons written there. Nothing of its own while there is nothing under the field and
  * the caller passed no `error` key (the DOM is exactly what it was before these props);
  * once `error` is passed the box is kept even with no message, so the trigger is never

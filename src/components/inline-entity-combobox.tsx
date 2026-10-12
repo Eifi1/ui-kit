@@ -3,7 +3,7 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { ChevronDown, Plus, X } from "lucide-react";
-import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
@@ -63,7 +63,8 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    *  string. See {@link EntityCombobox}'s `clearValue`. */
   clearValue?: C;
   options: ComboOption<V>[];
-  label?: string;
+  /** The visible label — see {@link Combobox}'s `label` (a ReactNode since 0.34, API-9). */
+  label?: ReactNode;
   id?: string;
   placeholder?: string;
   className?: string;

@@ -13,7 +13,7 @@ import { anchoredInline, useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
-import { FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_TOUCH_TEXT } from "./field-base";
 import { mergeRefs } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
@@ -278,14 +278,22 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
   /** Which of the panel's edges lines up with the trigger's, room permitting.
    *  `start`/`end` follow the trigger's reading direction — `end` is the right edge
    *  in a left-to-right form and the left one in a right-to-left form — and are what
-   *  the kit's own pickers pass; `left`/`right` stay physical. Default `end`, which
-   *  is the old `right` in a left-to-right page. */
-  align?: "left" | "right" | "start" | "end";
+   *  the kit's own pickers pass; `left`/`right` are physical and deprecated
+   *  ({@link PhysicalAlign}). Default `end`, which is the old `right` in a
+   *  left-to-right page. */
+  align?: "start" | "end" | PhysicalAlign;
   children: ReactNode;
   /** The panel, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
    *  merged with `panelRef`, so the outside-click still sees it. */
   ref?: Ref<HTMLDivElement>;
 }
+
+/**
+ * @deprecated 0.34 — `"start"` / `"end"`, which follow the reading direction: `"right"`
+ * is `"end"` in a left-to-right page, the default; removed in 0.35 (refactor audit
+ * 2026-10, API-6e). The physical edges DropdownPanel's `align` still takes.
+ */
+type PhysicalAlign = "left" | "right";
 
 /**
  * The floating popover surface for the searchable dropdowns: bordered/shadowed

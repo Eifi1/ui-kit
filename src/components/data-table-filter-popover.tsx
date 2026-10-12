@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
-import { FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_TOUCH_TEXT } from "./field-base";
 import { FOCUS_RING } from "./focus-ring";
 import { MiniCalendar } from "./mini-calendar";
 import { dateRangePresets } from "../lib/dates";
@@ -76,7 +76,7 @@ export function FilterPopover<T>({
   // `focus:outline-none` with only a 1px border tint to replace it is the same finding
   // the audit records against the numpad's keys: on a panel of four identical fields a
   // border going from --border to --border-strong is not a location. The ring is, and it
-  // is the package's brand focus colour, as on every field in ui.tsx.
+  // is the package's brand focus colour, as on every field (field-base.tsx).
   const inputBase =
     "block w-full rounded border border-subtle bg-surface px-2 py-1.5 text-sm text-secondary placeholder:text-placeholder focus:border-strong focus:outline-none " +
     FOCUS_RING +

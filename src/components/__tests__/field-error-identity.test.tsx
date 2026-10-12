@@ -4,7 +4,9 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { Input, Select, Textarea } from "../ui";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { NumberField } from "../number-field";
 
 /**

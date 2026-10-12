@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 import { WriteLockProvider } from "../write-lock";
 
 /**

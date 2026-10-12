@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
-import { FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_TOUCH_TEXT } from "./field-base";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,

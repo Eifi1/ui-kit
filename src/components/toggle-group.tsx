@@ -2,7 +2,7 @@ import { useCallback, useId } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID, FloatingField, Label } from "./ui";
+import { FIELD_INVALID, FloatingField, Label } from "./field-base";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";

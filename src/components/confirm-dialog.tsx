@@ -5,7 +5,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { TypedConfirmField, typedMatches } from "./danger-confirm";
 import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
-import { Button } from "./ui";
+import { Button } from "./button";
 import { useWriteLock, writeLockFor, type CommitScope } from "./write-lock";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "./confirm-dialog-labels";
 

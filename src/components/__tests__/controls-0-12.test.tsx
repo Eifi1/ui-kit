@@ -4,7 +4,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Field } from "../field";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { ToggleGroup } from "../toggle-group";
-import { Button, Card } from "../ui";
+import { Button } from "../button";
+import { Card } from "../card";
 import { List, ListItem } from "../list";
 import { NumberField } from "../number-field";
 

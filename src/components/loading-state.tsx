@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { Spinner } from "./ui";
+import { Spinner } from "./spinner";
 
 export type LoadingStateSize = "sm" | "md" | "lg";
 

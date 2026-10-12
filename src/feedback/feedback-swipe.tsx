@@ -1,7 +1,7 @@
 import { Ban, Check, ChevronsRight } from "lucide-react";
 import type { SwipeAction } from "../components/swipeable-row";
 import type { MobileSwipeActions } from "../components/data-table";
-import { nextFeedbackStatus, type FeedbackStatus } from "./feedback-inbox";
+import { nextFeedbackStatus, type FeedbackStatus } from "./feedback-vocabulary";
 import type { FeedbackStatusLabels } from "./feedback-labels";
 import type { FeedbackStatusChange, FeedbackStatusRow } from "./feedback-status-undo";
 

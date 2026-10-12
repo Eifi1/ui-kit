@@ -2,7 +2,7 @@ import type { ComponentPropsWithRef } from "react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import type { PortalTarget } from "./billing-overview";

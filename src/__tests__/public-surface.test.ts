@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import ts from "typescript";
 import * as barrel from "../index";
 import * as chart from "../chart";
 import * as dataTable from "../data-table";
@@ -57,7 +60,10 @@ import * as i18nZh from "../i18n/locales/zh";
  * `StatTile` / `StatTileGrid`, and lenkbank's `SeriesChart` with its zoom
  * (`withChartZoom`, `SharedXZoom` and the pure zoom maths), `ToggleLegend` and the
  * facing-pair axis geometry. The chart pieces are on both entries, like the rest
- * of the chart kit; the zoom maths is exported because Kurvenschmiede's (then lenkbank's) own tests use it.
+ * of the chart kit. The zoom maths was exported because Kurvenschmiede's (then
+ * lenkbank's) own tests used it; no app's code or tests name it any more, and 0.34
+ * deprecates it with `withChartZoom` for removal in 0.35 (refactor audit 2026-10,
+ * API-6b) — `SharedXZoom` stays.
  *
  * 298 -> 302: `PageContents`, `PageContentsLayout`, `useScrollSpy` and
  * `DEFAULT_PAGE_CONTENTS_LABELS` — the "On this page" rail, as a kit component.
@@ -322,5 +328,89 @@ describe("standalone entries", () => {
       const both = Object.keys(mod).filter((k) => inBarrel.has(k));
       expect(both, `${name} re-uses barrel names: ${both.join(", ")}`).toEqual([]);
     }
+  });
+});
+
+/**
+ * The slices and the barrel, types included (refactor audit 2026-10, MOD-5).
+ *
+ * `Object.keys` sees only what exists at run time, so the checks above are blind to
+ * types — and the drift the audit found was type-only: the barrel typed out its own copy
+ * of `/data-table`'s list and had `DataTableCellProps` and `DataTableHeadProps`, which
+ * `/data-table` did not. Since 0.34 the barrel re-exports each slice whole
+ * (`export * from "./data-table"`); these hold that shape. Read from the source, the way
+ * a bundler reads it — no type checker, which would load the whole kit for a list of names.
+ */
+const SRC = join(process.cwd(), "src");
+const SLICES = ["chart", "data-table", "feedback", "search", "shell", "tour", "wizard"];
+
+const sourceOf = (base: string) =>
+  [".ts", ".tsx", "/index.ts", "/index.tsx"].map((ext) => base + ext).find((f) => existsSync(f));
+
+/** The modules `file`'s own `export … from` statements name, resolved to source files. */
+function reExported(file: string): string[] {
+  const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest);
+  return sf.statements
+    .filter((st): st is ts.ExportDeclaration => ts.isExportDeclaration(st) && !!st.moduleSpecifier)
+    .map((st) => {
+      const spec = (st.moduleSpecifier as ts.StringLiteral).text;
+      const target = sourceOf(resolve(file, "..", spec));
+      if (!target) throw new Error(`${file}: cannot resolve ${spec}`);
+      return target;
+    });
+}
+
+/** Every name `file` exports, value or type: its own declarations, the names it re-exports,
+ *  and, through `export *`, every name of the modules it re-exports whole. */
+function exportedNames(file: string, seen = new Set<string>()): Set<string> {
+  const names = new Set<string>();
+  if (seen.has(file)) return names;
+  seen.add(file);
+  const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest);
+  for (const st of sf.statements) {
+    if (ts.isExportDeclaration(st)) {
+      if (st.exportClause && ts.isNamedExports(st.exportClause)) {
+        for (const el of st.exportClause.elements) names.add(el.name.text);
+      } else if (st.exportClause) {
+        names.add(st.exportClause.name.text);
+      } else {
+        const target = sourceOf(resolve(file, "..", (st.moduleSpecifier as ts.StringLiteral).text));
+        for (const name of exportedNames(target!, seen)) if (name !== "default") names.add(name);
+      }
+    } else if (ts.canHaveModifiers(st) && ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) {
+      if (ts.isVariableStatement(st)) {
+        for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name)) names.add(d.name.text);
+      } else if ("name" in st && st.name && ts.isIdentifier(st.name as ts.Node)) {
+        names.add((st.name as ts.Identifier).text);
+      }
+    }
+  }
+  return names;
+}
+
+describe("the slices are the barrel's, types included (MOD-5)", () => {
+  it("the barrel names a slice's modules only through that slice", () => {
+    // A second, hand-typed copy of a slice's list in the barrel is how the two drifted.
+    const barrelModules = new Set(reExported(join(SRC, "index.ts")));
+    for (const slice of SLICES) {
+      const copied = reExported(join(SRC, `${slice}.ts`)).filter((m) => barrelModules.has(m));
+      expect(copied, `src/index.ts names /${slice}'s modules itself; use \`export * from "./${slice}"\``).toEqual([]);
+    }
+  });
+
+  it("every name a slice exports, types included, is the barrel's too", () => {
+    const inBarrel = exportedNames(join(SRC, "index.ts"));
+    for (const slice of SLICES) {
+      const missing = [...exportedNames(join(SRC, `${slice}.ts`))].filter((name) => !inBarrel.has(name));
+      expect(missing, `/${slice} exports names the barrel does not: ${missing.join(", ")}`).toEqual([]);
+    }
+  });
+
+  it("is not vacuous: it reads the types, and the slices' modules", () => {
+    const names = exportedNames(join(SRC, "data-table.ts"));
+    // Type-only names, which `Object.keys` cannot see; the two the audit found missing.
+    expect(names.has("DataTableCellProps") && names.has("DataTableHeadProps")).toBe(true);
+    expect(names.size).toBeGreaterThan(Object.keys(dataTable).length);
+    expect(reExported(join(SRC, "chart.ts")).length).toBeGreaterThan(5);
   });
 });

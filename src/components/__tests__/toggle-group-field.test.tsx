@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ToggleGroup } from "../toggle-group";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 const OPTIONS = [
   { value: "a", label: "Any" },

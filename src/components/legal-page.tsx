@@ -36,7 +36,7 @@ import type {
   LegalTextSectionLabels,
 } from "./legal";
 import { TextLink } from "./text-link";
-import { Button } from "./ui";
+import { Button } from "./button";
 
 /**
  * The legal pages' frame and the kit's own sections — docs/legal-harmonization.md §3

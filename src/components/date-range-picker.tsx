@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLocale, type DatePickerLabels } from "../i18n/kit-labels";
-import { Button } from "./ui";
+import { Button } from "./button";
 import { FieldBox, useFieldMessages } from "./field-parts";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import {

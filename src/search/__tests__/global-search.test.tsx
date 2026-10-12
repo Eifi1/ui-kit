@@ -18,6 +18,12 @@ import { clickLeftToBrowser } from "../../test/browser-click";
 
 const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
 const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
+// The palette loads on the first open (0.34, MOD-1). Loaded once up front so the first
+// test's `findBy` does not spend its second compiling it under a full parallel run;
+// React.lazy still resolves it a render later, so the waits stay.
+beforeAll(async () => {
+  await import("../command-palette");
+});
 beforeAll(() => {
   if (!JSDOM_HAS_IT) PROTO.scrollIntoView = () => {};
 });

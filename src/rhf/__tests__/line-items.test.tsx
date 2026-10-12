@@ -5,7 +5,7 @@ import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { Form } from "../form";
 import { RhfField, RhfTextField } from "../fields";
-import { Input } from "../../components/ui";
+import { Input } from "../../components/input";
 import { RhfLineItems } from "../line-items";
 
 interface Values {

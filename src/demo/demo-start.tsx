@@ -3,7 +3,8 @@ import type { ComponentPropsWithRef } from "react";
 
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { Button, Spinner } from "../components/ui";
+import { Button } from "../components/button";
+import { Spinner } from "../components/spinner";
 import { useNoIndex } from "../hooks/use-noindex";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useOncePerKey } from "../auth/status-parts";
@@ -12,6 +13,7 @@ import type { AccessChoice } from "../landing/access";
 import type { LandingLabels } from "../landing/landing-labels";
 import { useDemoLabels } from "./demo-labels";
 import type { DemoLabels } from "./demo-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /** Why a start was refused, in the page's terms (§5.2). */
 type Refusal =
@@ -70,7 +72,7 @@ export interface DemoStartProps<T> extends Omit<ComponentPropsWithRef<"div">, "c
   /** `false` adds no `noindex` — for a preview. Default `true`: `/demo` is never indexed
    *  (§4.3). */
   noIndex?: boolean;
-  labels?: Partial<DemoLabels>;
+  labels?: LabelOverride<DemoLabels>;
   /** The access words (`landing` namespace) for this instance. */
   landingLabels?: Partial<LandingLabels>;
 }

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BarChart3, Banknote, Cog, Home, Layers, ListChecks, Tags, Wallet } from "lucide-react";
 import { AppShell, DEFAULT_MOBILE_BAR_MAX, splitMobileBar } from "../app-shell";
 import type { AppShellNavItem } from "../app-shell";
-import { IconButton } from "../../components/ui";
+import { IconButton } from "../../components/icon-button";
 import { applyTextSize } from "../../theme/text-size";
 
 /**

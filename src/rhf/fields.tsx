@@ -20,7 +20,7 @@
  * ```
  *
  * Each folds the `FormField → FormItem → FormLabel → FormControl → field →
- * FormDescription → FormMessage` scaffold (see ./form) into one element, the way
+ * FormDescription → FormMessage` scaffold (see ./form-core) into one element, the way
  * kastlan's shared/components/form/fields.tsx does for its forms — with what that file
  * left out:
  *
@@ -57,15 +57,10 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form";
-import {
-  Input,
-  Select,
-  Textarea,
-  type InputProps,
-  type SelectProps,
-  type TextareaProps,
-} from "../components/ui";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form-core";
+import { Input, type InputProps } from "../components/input";
+import { Select, type SelectProps } from "../components/select";
+import { Textarea, type TextareaProps } from "../components/textarea";
 import { NumberField, type NumberFieldProps } from "../components/number-field";
 import { AmountInput } from "../components/amount-input";
 import type { MoneyFieldProps } from "../components/money-field";

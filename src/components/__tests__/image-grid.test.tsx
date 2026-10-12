@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 
 import { ImageGrid } from "../image-grid";
 import { AuthedImage } from "../authed-image";
-import { IconButton } from "../ui";
+import { IconButton } from "../icon-button";
 import type { ImageItem } from "../lightbox";
 
 const ITEMS: ImageItem[] = [

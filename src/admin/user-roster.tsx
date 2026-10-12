@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import type { DateInput } from "../lib/format";
 import type { PersonName } from "../lib/person-name";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { AccountStateChip, RoleChip, dateColumn } from "../components/account-chips";
 import type { AccountState, RoleVocabulary } from "../components/account-chips";
 import type { ChipTone } from "../components/chip";
@@ -217,7 +217,7 @@ export interface UserRowActionsProps {
   actions: UserRowActionList;
   /** The account's name, for the menu's name — "Actions for Ada Example". */
   name: string;
-  labels?: Partial<UserRosterLabels>;
+  labels?: LabelOverride<UserRosterLabels>;
 }
 
 /**
@@ -281,7 +281,7 @@ export interface UserRosterColumnsOptions<T extends UserRosterRow, R extends str
   emailColumn?: boolean;
   /** The words, already resolved. Default English; {@link useUserRosterColumns} reads
    *  the provider's `userRoster` namespace. */
-  labels?: Partial<UserRosterLabels>;
+  labels?: LabelOverride<UserRosterLabels>;
 }
 
 function rolesOf<T extends UserRosterRow, R extends string>(

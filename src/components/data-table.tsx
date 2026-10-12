@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
-import { Card, Spinner } from "./ui";
+import { Card } from "./card";
+import { Spinner } from "./spinner";
 import { ROW_ACTIONS_KEY, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
@@ -20,7 +21,7 @@ import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
-import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
+import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix, type LabelOverride } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
 
@@ -324,7 +325,7 @@ export interface DataTableProps<T> {
   /** User-facing strings (English defaults); pass translated overrides. Merged over
    *  `dataTable` from `<UiKitProvider labels>`, so a call site only states what
    *  differs for THIS table — typically `table`, its accessible name. */
-  labels?: Partial<DataTableLabels>;
+  labels?: LabelOverride<DataTableLabels>;
   /** BCP-47 locale for the date filter's calendar and the pager's numbers. Falls
    *  back to `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;

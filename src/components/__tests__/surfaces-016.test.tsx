@@ -8,10 +8,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  FieldHint,
-  IconButton,
-  Select,
-} from "../ui";
+} from "../card";
+import { FieldHint } from "../field-parts";
+import { IconButton } from "../icon-button";
+import { Select } from "../select";
 import { StatTile, StatTileGrid } from "../stat-tile";
 
 /**

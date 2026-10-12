@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useState } from "react";
 import type { ChangeEvent, DragEvent, HTMLAttributes, ReactNode } from "react";
 import { Upload } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   assignColumnRole,
@@ -31,7 +31,8 @@ import {
   TableHeaderCell,
   TableRow,
 } from "./table";
-import { Select, Textarea } from "./ui";
+import { Select } from "./select";
+import { Textarea } from "./textarea";
 import { DEFAULT_COLUMN_MAPPER_LABELS, markedShort } from "./column-mapper-labels";
 
 /**
@@ -223,7 +224,7 @@ export interface ColumnRoleTableProps<
    * to protect; a `className` is added after its classes.
    */
   rowProps?: (row: readonly string[], index: number) => ColumnRoleTableRowProps | undefined;
-  labels?: Partial<ColumnMapperLabels>;
+  labels?: LabelOverride<ColumnMapperLabels>;
   className?: string;
 }
 
@@ -461,7 +462,7 @@ export interface ColumnMapperProps<R extends string> {
   /** One preview row's `<tr>` attributes — {@link ColumnRoleTableProps.rowProps}
    *  (0.24). `row` is the row as read, `index` its place in the preview. */
   rowProps?: (row: readonly string[], index: number) => ColumnRoleTableRowProps | undefined;
-  labels?: Partial<ColumnMapperLabels>;
+  labels?: LabelOverride<ColumnMapperLabels>;
   className?: string;
 }
 

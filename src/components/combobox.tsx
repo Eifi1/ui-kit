@@ -1,7 +1,7 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { ChevronDown } from "lucide-react";
-import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
@@ -43,7 +43,10 @@ export interface ComboboxProps
   onChange: (v: string) => void;
   /** Suggestion pool (e.g. existing payee names). */
   options: string[];
-  label?: string;
+  /** The visible label, a `<label for>` above the field: a ReactNode, as on every kit
+   *  field (a string until 0.34, refactor audit 2026-10, API-9). Without one, name the
+   *  field with `aria-label`. */
+  label?: ReactNode;
   id?: string;
   placeholder?: string;
   className?: string;

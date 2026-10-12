@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { FieldHint, Input, Select, Textarea } from "../ui";
+import { FieldHint } from "../field-parts";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 
 /**
  * 0.24, Kurvenschmiede: the floated label of a labelled Textarea sat ON the first

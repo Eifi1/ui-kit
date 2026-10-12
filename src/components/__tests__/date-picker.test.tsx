@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DatePicker, DateRangePicker } from "../date-picker";
 import { formatIsoDate } from "../../lib/dates";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /**
  * `formatValue` — the host's own rendering of the trigger text (Keksdose dev#546

@@ -5,9 +5,9 @@ import { AuthedImage } from "../components/authed-image";
 import { CopyButton } from "../components/copy-button";
 import { TextLink } from "../components/text-link";
 import { toast } from "../components/toast";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { filenameFromDisposition, saveBlob } from "../lib/download";
 import { formatDate } from "../lib/format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
@@ -152,7 +152,7 @@ export interface FeedbackDetailLabels {
 export { DEFAULT_FEEDBACK_DETAIL_LABELS };
 
 /** `feedbackDetail` resolved: English, then `<UiKitProvider labels>`, then `labels`. */
-export function useFeedbackDetailLabels(labels?: Partial<FeedbackDetailLabels>): FeedbackDetailLabels {
+export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLabels>): FeedbackDetailLabels {
   return useKitLabels("feedbackDetail", DEFAULT_FEEDBACK_DETAIL_LABELS, labels);
 }
 
@@ -395,7 +395,7 @@ export interface FeedbackReworkSectionProps {
   attachment?: Partial<FeedbackNoteAttachment>;
   /** The send COMMITS — see `FeedbackNoteEditor`'s `commit`. */
   commit?: CommitScope;
-  labels?: Partial<FeedbackDetailLabels>;
+  labels?: LabelOverride<FeedbackDetailLabels>;
 }
 
 /**
@@ -560,7 +560,7 @@ export interface FeedbackRowDetailProps {
    * beside the detail.
    */
   showSubject?: boolean;
-  labels?: Partial<FeedbackDetailLabels>;
+  labels?: LabelOverride<FeedbackDetailLabels>;
   className?: string;
 }
 

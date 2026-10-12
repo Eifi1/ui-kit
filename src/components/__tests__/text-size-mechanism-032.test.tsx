@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { FIELD_BASE, FIELD_TOUCH_TEXT, FOCUS_RING, FOCUS_RING_WIDTH, Input } from "../ui";
+import { FIELD_BASE, FIELD_TOUCH_TEXT } from "../field-base";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "../focus-ring";
+import { Input } from "../input";
 import { DropdownSearchHeader } from "../dropdown";
 import { ContrastSetting, TextSizeSetting, ThemeSetting } from "../settings-fields";
 import { DEFAULT_APPEARANCE_LABELS } from "../appearance-labels";

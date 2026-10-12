@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } f
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
-import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { lerpHex, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
 import { Tooltip } from "./tooltip";
@@ -143,7 +143,7 @@ export interface CalendarHeatmapProps extends Omit<ComponentPropsWithRef<"div">,
   locale?: string;
   /** `0` = Sunday … `6` = Saturday. Default: the provider's, else the locale's. */
   weekStartsOn?: WeekDay;
-  labels?: Partial<CalendarHeatmapLabels>;
+  labels?: LabelOverride<CalendarHeatmapLabels>;
   className?: string;
 }
 

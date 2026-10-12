@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Download } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { clickDownload } from "../lib/download";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { TextLink } from "../components/text-link";
-import { Button, Card } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
 import { isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
@@ -67,7 +68,7 @@ export interface DataExportSettingProps extends Omit<ComponentPropsWithRef<"div"
   filename?: string;
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<DataExportLabels>;
+  labels?: LabelOverride<DataExportLabels>;
 }
 
 interface Saved {

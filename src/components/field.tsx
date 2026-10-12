@@ -35,13 +35,13 @@
  * `@eifi1/ui-kit/rhf` do the same job with the ids taken from the form.)
  *
  * The error is NOT `role="alert"`, for the reason the kit's `error` prop gives (see
- * `useFieldError` in components/ui.tsx): it is read when focus reaches the control.
+ * `useFieldError` in components/field-parts.tsx): it is read when focus reaches the control.
  */
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { useInlineHint } from "./field-parts";
-import { Label } from "./ui";
+import { Label } from "./field-base";
 
 /** What a `Field` hands its render-prop children, to spread on the control. */
 export interface FieldControlProps {

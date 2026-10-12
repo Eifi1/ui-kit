@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
-import { Card } from "../components/ui";
-import type { CardTone } from "../components/ui";
+import { Card } from "../components/card";
+import type { CardTone } from "../components/card";
 import { cn } from "../lib/cn";
 import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "./settings-card-classes";
 import { SettingsHeading, useSettingsHeadingLevel } from "./settings-heading";

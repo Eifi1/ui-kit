@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CloudOff } from "lucide-react";
-import { Button, Input } from "../../../src/components/ui";
+import { Button } from "../../../src/components/button";
+import { Input } from "../../../src/components/input";
 import { Field } from "../../../src/components/field";
 import { FloatingActionButton } from "../../../src/components/floating-panel";
 import { ServerWakeNotice, useServerWakeStage } from "../../../src/components/server-wake";

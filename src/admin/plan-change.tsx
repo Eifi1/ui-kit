@@ -1,7 +1,7 @@
 import { isValidElement, useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { pluralForm } from "../i18n/plurals";
 import type { PluralForms } from "../i18n/plurals";
 import { formatNumber, EMPTY_FORMATTED_VALUE } from "../lib/format";
@@ -9,7 +9,7 @@ import { toLocalIso } from "../lib/dates";
 import type { DataTableColumn } from "../components/data-table";
 import { DatePicker } from "../components/date-picker";
 import { Tooltip } from "../components/tooltip";
-import { Select } from "../components/ui";
+import { Select } from "../components/select";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { useBillingLabels } from "../billing/billing-labels";
 import type { SubscriptionStatus } from "../billing/billing-labels";
@@ -136,7 +136,7 @@ export interface PlanColumnOptions<T> {
   headerText?: string;
   /** The words, already resolved. Default English; {@link usePlanColumn} reads the
    *  provider's `planChange` namespace. */
-  labels?: Partial<PlanChangeLabels>;
+  labels?: LabelOverride<PlanChangeLabels>;
 }
 
 /**
@@ -301,7 +301,7 @@ export interface PlanChangeConfirmProps {
   onClose: (done: boolean) => void;
   /** The app's words for a failure the kit has no code for. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<PlanChangeLabels>;
+  labels?: LabelOverride<PlanChangeLabels>;
 }
 
 /** The column's usage shape, told from a node: a plain object with the three fields. */

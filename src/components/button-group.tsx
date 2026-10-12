@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { buttonClasses, type ButtonSize, type ButtonVariant } from "./ui";
+import { buttonClasses, type ButtonSize, type ButtonVariant } from "./button-look";
 import { useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 

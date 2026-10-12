@@ -2,7 +2,7 @@ import { createRef } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { ChatComposer, FeedbackComposer } from "../feedback-thread";
+import { ChatComposer } from "../feedback-thread";
 import type { FeedbackComposerHandle } from "../feedback-thread";
 
 /**
@@ -20,9 +20,9 @@ const descriptions = (el: HTMLElement) =>
     .filter(Boolean)
     .map((id) => document.getElementById(id)?.textContent);
 
-describe("FeedbackComposer maxLength / showCount", () => {
+describe("ChatComposer maxLength / showCount", () => {
   it("caps the box and counts under it, the count in the box's description", () => {
-    render(<FeedbackComposer onSend={vi.fn()} maxLength={80} showCount />);
+    render(<ChatComposer onSend={vi.fn()} maxLength={80} showCount />);
     expect(box()).toHaveAttribute("maxlength", "80");
     expect(screen.getByText("0/80")).toHaveAttribute("aria-hidden", "true");
     fireEvent.change(box(), { target: { value: "Hello" } });
@@ -31,14 +31,14 @@ describe("FeedbackComposer maxLength / showCount", () => {
   });
 
   it("sm: the hidden send hint stays the description, the count after it", () => {
-    render(<FeedbackComposer onSend={vi.fn()} sendOn="enter" size="sm" maxLength={80} showCount />);
+    render(<ChatComposer onSend={vi.fn()} sendOn="enter" size="sm" maxLength={80} showCount />);
     expect(screen.getByText("Enter to send, Shift + Enter for a new line")).toHaveClass("sr-only");
     expect(descriptions(box())).toEqual(["Enter to send, Shift + Enter for a new line", "0 of 80 characters"]);
     expect(screen.getByText("0/80")).toBeInTheDocument();
   });
 
   it("speaks only on entering the last stretch and at the limit — Textarea's live region", () => {
-    render(<FeedbackComposer onSend={vi.fn()} maxLength={20} showCount />);
+    render(<ChatComposer onSend={vi.fn()} maxLength={20} showCount />);
     const live = screen.getByRole("status");
     fireEvent.change(box(), { target: { value: "a".repeat(5) } });
     expect(live).toBeEmptyDOMElement();
@@ -47,19 +47,19 @@ describe("FeedbackComposer maxLength / showCount", () => {
   });
 
   it("maxLength alone caps without a counter; neither keeps the DOM it had", () => {
-    const { container, rerender } = render(<FeedbackComposer onSend={vi.fn()} maxLength={80} />);
+    const { container, rerender } = render(<ChatComposer onSend={vi.fn()} maxLength={80} />);
     expect(box()).toHaveAttribute("maxlength", "80");
     expect(screen.queryByText("0/80")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
     // The textarea is still the root's own child — no field wrapper appeared.
     expect(box().parentElement).toBe(container.firstElementChild);
-    rerender(<FeedbackComposer onSend={vi.fn()} />);
+    rerender(<ChatComposer onSend={vi.fn()} />);
     expect(box()).not.toHaveAttribute("maxlength");
     expect(box().parentElement).toBe(container.firstElementChild);
   });
 
   it("showCount without maxLength is ignored, as on Textarea", () => {
-    render(<FeedbackComposer onSend={vi.fn()} showCount />);
+    render(<ChatComposer onSend={vi.fn()} showCount />);
     expect(screen.queryByRole("status")).toBeNull();
     expect(box()).not.toHaveAttribute("aria-describedby");
   });
@@ -67,7 +67,7 @@ describe("FeedbackComposer maxLength / showCount", () => {
   it("a canned reply that runs past the limit is kept whole, and holds Send back until trimmed", () => {
     const ref = createRef<FeedbackComposerHandle>();
     const onSend = vi.fn();
-    render(<FeedbackComposer ref={ref} onSend={onSend} maxLength={10} showCount canSend />);
+    render(<ChatComposer ref={ref} onSend={onSend} maxLength={10} showCount canSend />);
     act(() => ref.current!.insertText("Thanks, fixed in the next release"));
     expect(box()).toHaveValue("Thanks, fixed in the next release");
     expect(screen.getByText("33/10")).toHaveClass("text-danger");
@@ -84,7 +84,7 @@ describe("FeedbackComposer maxLength / showCount", () => {
   it("reads the counter's words from `characterCount` and from `countLabels`", () => {
     const { unmount } = render(
       <UiKitProvider labels={{ characterCount: { count: (used, max) => `${used} von ${max} Zeichen` } }}>
-        <FeedbackComposer onSend={vi.fn()} maxLength={80} showCount />
+        <ChatComposer onSend={vi.fn()} maxLength={80} showCount />
       </UiKitProvider>,
     );
     expect(descriptions(box())).toEqual(["0 von 80 Zeichen"]);

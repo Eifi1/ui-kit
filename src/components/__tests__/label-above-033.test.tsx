@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { FieldLabel, Input, Select, Textarea } from "../ui";
+import { FieldLabel } from "../field-parts";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { DatePicker } from "../date-picker";
 import { FieldStrip } from "../field-strip";
 

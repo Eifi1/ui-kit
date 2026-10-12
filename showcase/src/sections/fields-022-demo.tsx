@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Bell } from "lucide-react";
-import { FieldHint, Input, Select, Textarea } from "../../../src/components/ui";
+import { FieldHint } from "../../../src/components/field-parts";
+import { Input } from "../../../src/components/input";
+import { Select } from "../../../src/components/select";
+import { Textarea } from "../../../src/components/textarea";
 import { TimeInput } from "../../../src/components/time-input";
 import { Combobox, InlineEntityCombobox } from "../../../src/components/combobox";
 import { EntityCombobox } from "../../../src/components/entity-combobox";

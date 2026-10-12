@@ -4,7 +4,10 @@ import { MapPin } from "lucide-react";
 import { Autocomplete } from "../autocomplete";
 import { NumberInput } from "../number-input";
 import { EntityCombobox } from "../entity-combobox";
-import { FIELD_TRIGGER, FieldHint, Select, Tabs } from "../ui";
+import { FIELD_TRIGGER } from "../field-base";
+import { FieldHint } from "../field-parts";
+import { Select } from "../select";
+import { Tabs } from "../tabs";
 
 /**
  * Layout defects the showcase caught on a phone, pinned at the class/attribute level

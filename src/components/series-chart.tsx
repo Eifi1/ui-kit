@@ -64,7 +64,7 @@ import {
   type ZoomAxesSetting,
   type ZoomBinding,
   type ZoomFitSource,
-} from "./chart-zoom";
+} from "./chart-zoom-core";
 import { STEP_DASH, strokeDash, type LegendEntry } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 import { categoryTicks, integerTicks, niceTicks, tickTarget, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
@@ -111,6 +111,7 @@ import {
   useKitLabels,
   useKitLocale,
   type ChartTooltipPlacement,
+  type LabelOverride,
 } from "../i18n/kit-labels";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
@@ -661,7 +662,7 @@ export interface SeriesChartProps {
   /** Supplied by `withChartZoom` and by nothing else. */
   zoom?: ZoomBinding;
   /** Per-chart strings over `<UiKitProvider labels={{ seriesChart }}>`. */
-  labels?: Partial<SeriesChartLabels>;
+  labels?: LabelOverride<SeriesChartLabels>;
   /** BCP 47 tag for the default number formats. Default: the provider's. */
   locale?: string;
   /** Onto the chart's root (`ChartContainer`) — e.g. an app's own grid ink. */

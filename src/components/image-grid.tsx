@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { FileText } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { AuthedImage } from "./authed-image";
 import { Lightbox, imageItemKind } from "./lightbox";
@@ -57,9 +57,9 @@ export interface ImageGridProps extends Omit<ComponentPropsWithRef<"ul">, "child
     zoom?: boolean;
     download?: boolean;
     onDownload?: (item: ImageItem, index: number) => void;
-    labels?: Partial<LightboxLabels>;
+    labels?: LabelOverride<LightboxLabels>;
   };
-  labels?: Partial<ImageGridLabels>;
+  labels?: LabelOverride<ImageGridLabels>;
 }
 
 const ASPECT_CLASS = {

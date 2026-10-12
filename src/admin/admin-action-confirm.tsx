@@ -1,13 +1,13 @@
 import { Children, useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { Checkbox } from "../components/checkbox";
 import { DEFAULT_DANGER_CONFIRM_LABELS, TypedConfirmField, typedMatches } from "../components/danger-confirm";
 import type { DangerConsequence } from "../components/danger-confirm";
 import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
 import { usePersonLabel } from "./admin-parts";
@@ -169,7 +169,7 @@ interface AdminActionConfirmCommonProps {
   /** The confirm COMMITS: under a locked `WriteLockProvider` it is held with the lock's
    *  reason. Off by default — an admin action is not a write to the open record. */
   commit?: CommitScope;
-  labels?: Partial<AdminActionLabels>;
+  labels?: LabelOverride<AdminActionLabels>;
 }
 
 /** A type since 0.34 (an interface before): a person at any level, or a group at `none`

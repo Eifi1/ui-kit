@@ -1,12 +1,12 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { IBAN_LENGTHS, compactIban, formatIban, ibanProblem } from "../lib/iban";
 import type { IbanKind, IbanProblem } from "../lib/iban";
 import { hasContent } from "../lib/presence";
 import { assignRef } from "./field-parts";
-import { Input, type InputProps } from "./ui";
+import { Input, type InputProps } from "./input";
 import { DEFAULT_IBAN_INPUT_LABELS } from "./iban-input-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export interface IbanInputProps extends Omit<InputProps, "type" | "value" | "def
    *  {@link IbanKind} — and why the difference matters, {@link isQrIban}. */
   kind?: IbanKind;
   /** The messages, per field. See {@link IbanInputLabels}. */
-  labels?: Partial<IbanInputLabels>;
+  labels?: LabelOverride<IbanInputLabels>;
   /** The caller's own message, shown INSTEAD of the built-in one while it is set (a
    *  server's "this account is already on file"). `null`, `false` and `""` are no
    *  message, so `touched && errors.iban` can be passed as it is. */

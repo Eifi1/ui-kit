@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
 import { MultiSelect } from "../multi-select";
 import { Field } from "../field";
-import { Form, FormField, FormItem } from "../../rhf/form";
+import { Form, FormField, FormItem } from "../../rhf/form-core";
 
 /** Two findings of the 2026-09-27 showcase audit, pinned by their classes (jsdom has no layout). */
 describe("showcase audit layout fixes", () => {

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 
 /**
  * The tab strip's keyboard: the ARIA tabs pattern, pressed rather than read.

@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Trash2, UserPlus, UsersRound } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { foldForSearch } from "../lib/text-match";
 import { AlertBanner } from "./alert-banner";
@@ -18,10 +18,13 @@ import type { DialogFrameProps } from "./dialog-frame";
 import { Caption, SectionLabel } from "./text";
 import { ToggleGroup } from "./toggle-group";
 import { Tooltip } from "./tooltip";
-import { Button, Card, IconButton, Spinner } from "./ui";
+import { Button } from "./button";
+import { Card } from "./card";
+import { IconButton } from "./icon-button";
+import { Spinner } from "./spinner";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 import type { WriteLock } from "./write-lock";
-import type { CardProps } from "./ui";
+import type { CardProps } from "./card";
 import type { DisabledReasonDisplay } from "./field-parts";
 import { DEFAULT_SHARE_CARD_LABELS } from "./share-card-labels";
 
@@ -194,7 +197,7 @@ export interface SharePanelProps {
   readOnly?: boolean;
   /** Focus the field on mount — a dialog that exists to add somebody. */
   autoFocus?: boolean;
-  labels?: Partial<ShareCardLabels>;
+  labels?: LabelOverride<ShareCardLabels>;
 }
 
 // Shape only. Whether the address exists, is allowed, or is the sharer's own is the

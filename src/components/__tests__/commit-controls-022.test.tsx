@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Select } from "../ui";
+import { Select } from "../select";
 import { Checkbox } from "../checkbox";
 import { Switch } from "../switch";
 import { List, ListItem } from "../list";

@@ -3,7 +3,13 @@ import { ChevronDown } from "lucide-react";
 import type { ReactNode, Ref } from "react";
 import { CurrencyOptionList, getCurrency } from "./currency-option-list";
 import { useComboboxCore } from "./combobox-core";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
+import {
+  FIELD_BASE,
+  FIELD_DISPLAY,
+  FIELD_INVALID,
+  FLOATING_INPUT_CLASS,
+  FloatingField,
+} from "./field-base";
 import { cn } from "../lib/cn";
 import { currencyMinorDigits } from "../lib/format";
 import { roundHalfAway } from "../lib/round";
@@ -35,7 +41,9 @@ import {
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 
-interface AmountInputProps {
+/** {@link AmountInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
+ *  wrapper typed itself off `ComponentProps<typeof AmountInput>` until then. */
+export interface AmountInputProps {
   value: string;
   onChange: (value: string) => void;
   currency?: string;

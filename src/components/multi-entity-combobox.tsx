@@ -1,7 +1,8 @@
 import { useCallback, useId, useMemo, type ComponentPropsWithoutRef, type ReactNode, type Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FieldChevron, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
+import { FieldLabel } from "./field-parts";
 import {
   ComboboxPanel,
   endHintRowProps,

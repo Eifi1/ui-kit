@@ -18,7 +18,7 @@
 // Only the geometry is here. The grid the pair stands in — column widths, where the
 // legend goes, the chart height — is a screen's layout, and stays with the screen.
 import type { CSSProperties } from "react";
-import { DEFAULT_Y_AXIS } from "./chart-zoom";
+import { DEFAULT_Y_AXIS } from "./chart-zoom-core";
 import { AXIS_TICK_WIDTH, axisBandWidth, type SeriesChartAxis } from "./series-chart";
 
 /** Which chart of a facing pair. Physical, like the axes: charts do not mirror in RTL. */

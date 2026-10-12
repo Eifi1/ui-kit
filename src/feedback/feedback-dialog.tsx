@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Button, Input, Select, Textarea } from "../components/ui";
-import type { ButtonSize, ButtonVariant } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { Select } from "../components/select";
+import { Textarea } from "../components/textarea";
+import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { Modal } from "../components/modal";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
@@ -126,7 +129,7 @@ interface FeedbackDialogBaseProps {
   onCategoryChange: (value: string) => void;
   /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
    *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
-  labels?: Partial<FeedbackDialogLabels>;
+  labels?: LabelOverride<FeedbackDialogLabels>;
   submitting?: boolean;
   contextSlot?: ReactNode;
   attachmentAccept?: string[];

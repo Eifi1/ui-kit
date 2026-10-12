@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { FieldHint } from "./ui";
+import { FieldHint } from "./field-parts";
 import { useInlineHint } from "./field-parts";
 import { DEFAULT_DESCRIPTION_LIST_LABELS } from "./description-list-labels";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 
 /**
  * Keksdose live #262, round 3: *"I would rather keep the tabs but have multirow tabs

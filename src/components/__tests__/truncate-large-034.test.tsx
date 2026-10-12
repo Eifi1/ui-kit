@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 import { MenuItem } from "../menu-item";
 import { Breadcrumbs } from "../breadcrumbs";
 import { MultiSelect } from "../multi-select";

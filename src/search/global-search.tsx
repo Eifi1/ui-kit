@@ -1,16 +1,29 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useHref, useInRouterContext, useNavigate } from "react-router";
 import { AlertCircle, Loader2, Search } from "lucide-react";
 import { Tooltip } from "../components/tooltip";
 import { TOPBAR_TRIGGER_CLASS } from "../shell/topbar-controls";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
-import { CommandPalette, DEFAULT_COMMAND_PALETTE_LABELS, useCommandKey } from "./command-palette";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+// Types only from ./command-palette, gone from the built module: the palette loads late.
 import type { CommandItem, CommandPaletteDensity, CommandPaletteLabels } from "./command-palette";
+import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
+import { useCommandKey } from "./use-command-key";
 import { createSearchIndex } from "./search-index";
 import type { SearchEntry, SearchIndexOptions } from "./search-index";
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "./global-search-labels";
+
+/**
+ * The palette, loaded when the search is first opened rather than with the top bar
+ * (0.34, MOD-1 of the refactor audit 2026-10): ~5.5 kB gzip of keksdose's and kastlan's
+ * entry chunks, for a dialog drawn only once somebody searches. A LITERAL relative
+ * `import()`, as the catalogue loaders are (i18n/languages.ts), so the library build keeps
+ * the module its own and an app's bundler splits it off.
+ */
+const LazyCommandPalette = lazy(() =>
+  import("./command-palette").then((module) => ({ default: module.CommandPalette })),
+);
 
 export interface GlobalSearchLabels {
   /** The trigger's accessible name, and the dialog's. */
@@ -172,7 +185,7 @@ export interface GlobalSearchProps {
   triggerName?: "plain" | "withShortcut";
   /** The palette's row height — `CommandPalette`'s `density`. Default `"compact"`. */
   density?: CommandPaletteDensity;
-  labels?: Partial<GlobalSearchLabels>;
+  labels?: LabelOverride<GlobalSearchLabels>;
   /** Passed through to the palette (`empty`, `loading`, `error`, `hint`, …). */
   paletteLabels?: Partial<CommandPaletteLabels>;
 }
@@ -230,6 +243,9 @@ interface SourceResult {
  *
  * Inside a react-router tree it navigates with the router and builds its links with it;
  * outside one, pass `navigate` (or accept full page loads).
+ *
+ * Since 0.34 the palette's module loads on the first open (MOD-1), so the dialog appears a
+ * moment after the trigger or ⌘K: a test finds it with `await screen.findBy…`.
  */
 export function GlobalSearch(props: GlobalSearchProps) {
   // Two components rather than a conditional hook: `useNavigate` throws outside a
@@ -307,6 +323,13 @@ function GlobalSearchImpl({
     setWasOpen(open);
     if (open && !queryControlled) setOwnQuery("");
   }
+
+  // The palette mounts on the first open — its module loads then — and stays mounted
+  // after, closed, as it always was (MOD-1): a closed palette keeps the last results, and
+  // a reopen over an owner-held query shows them at once, where a palette mounted anew
+  // would say "No results" through its debounce first.
+  const [paletteMounted, setPaletteMounted] = useState(open);
+  if (open && !paletteMounted) setPaletteMounted(true);
 
   const openSearch = useCallback(() => setOpen(true), [setOpen]);
   const noop = useCallback(() => {}, []);
@@ -554,19 +577,26 @@ function GlobalSearchImpl({
               </button>
             </Tooltip>
           )}
-      <CommandPalette
-        open={open}
-        onClose={() => setOpen(false)}
-        search={provider}
-        revision={items}
-        query={query}
-        onQueryChange={setQuery}
-        searchOn={searchOn}
-        redactLabels={redactLabels}
-        fullScreenOnPhone={fullScreenOnPhone}
-        density={density}
-        labels={resolvedPaletteLabels}
-      />
+      {/* Nothing is drawn while the palette's module is on its way (a few milliseconds,
+          once per page load). A failed load is a chunk-load error for the app's error
+          boundary, as a lazy route's is. */}
+      {paletteMounted && (
+        <Suspense fallback={null}>
+          <LazyCommandPalette
+            open={open}
+            onClose={() => setOpen(false)}
+            search={provider}
+            revision={items}
+            query={query}
+            onQueryChange={setQuery}
+            searchOn={searchOn}
+            redactLabels={redactLabels}
+            fullScreenOnPhone={fullScreenOnPhone}
+            density={density}
+            labels={resolvedPaletteLabels}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

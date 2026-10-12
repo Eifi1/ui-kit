@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FeedbackComposer, FeedbackThread, Switch, ToggleGroup } from "@eifi1/ui-kit";
+import { ChatComposer, FeedbackThread, Switch, ToggleGroup } from "@eifi1/ui-kit";
 import type { FeedbackThreadAttachment, FeedbackThreadMessage } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
 
 /**
- * The conversation under a report (0.12): FeedbackThread draws it, FeedbackComposer
+ * The conversation under a report (0.12): FeedbackThread draws it, ChatComposer
  * answers it. The kit owns the look and the behaviour; the showcase owns the data —
  * here an array in state that the composer appends to.
  */
@@ -145,7 +145,7 @@ export function FeedbackThreadDemo() {
       </Example>
 
       <Example
-        label="FeedbackComposer — pending, Ctrl/⌘+Enter and an attachment"
+        label="ChatComposer — pending, Ctrl/⌘+Enter and an attachment"
         hint="appends to the thread above; plain Enter is a new line"
       >
         <Row>
@@ -154,7 +154,7 @@ export function FeedbackThreadDemo() {
           <Switch label="disabledReason" description="The thread is closed" checked={closed} onCheckedChange={setClosed} />
         </Row>
         <div className="mt-4 max-w-2xl">
-          <FeedbackComposer
+          <ChatComposer
             onSend={onSend}
             pending={pending}
             attachment={attachment}

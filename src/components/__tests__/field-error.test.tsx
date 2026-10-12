@@ -1,6 +1,9 @@
 import { createRef } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { DEFAULT_PASSWORD_REVEAL_LABELS, Input, Select, Textarea } from "../ui";
+import { DEFAULT_PASSWORD_REVEAL_LABELS } from "../field-base";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 
 /**
  * Audit 2026-09-22, §Accessibility: *"`invalid` sets aria-invalid but the package has

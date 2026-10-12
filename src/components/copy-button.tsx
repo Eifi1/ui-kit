@@ -1,12 +1,14 @@
 import type { ButtonHTMLAttributes } from "react";
 import { Check, Copy, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import type { CopyState } from "../hooks/use-copy-to-clipboard";
-import { Button, IconButton } from "./ui";
-import type { ButtonSize, ButtonTone, ButtonVariant, IconButtonSize, IconButtonTone } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
+import type { IconButtonSize, IconButtonTone } from "./icon-button";
 import { Tooltip } from "./tooltip";
 import type { TooltipSide } from "./tooltip";
 import { DEFAULT_COPY_BUTTON_LABELS } from "./copy-button-labels";
@@ -59,7 +61,7 @@ export interface CopyButtonProps
   resetAfter?: number;
   /** Called with the real outcome once the copy settles. */
   onCopied?: (ok: boolean) => void;
-  labels?: Partial<CopyButtonLabels>;
+  labels?: LabelOverride<CopyButtonLabels>;
 }
 
 const ICONS: Record<CopyState, typeof Copy> = { idle: Copy, copied: Check, failed: X };

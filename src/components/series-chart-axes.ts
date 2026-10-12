@@ -1,6 +1,6 @@
 // The series chart's pure half: the axis bands, the padded and anchored domains, the
 // series keys and colours, and the abscissa reduced to a number line. No React, no
-// recharts and no JSX here (chart-zoom lends the one name `DEFAULT_Y_AXIS`) —
+// recharts and no JSX here (chart-zoom-core lends the one name `DEFAULT_Y_AXIS`) —
 // arithmetic over rows and axes, which is why apps import some of it in
 // files that draw no chart (Kurvenschmiede's curve-chart-model.ts builds its series
 // keys with `seriesKey`).
@@ -9,7 +9,7 @@
 // names are still exported from series-chart.tsx, so `/chart` and the barrel are
 // unchanged; this module is not an entry of its own. The names below that series-chart
 // does not re-export (the tick-band constants, `xModel`, `finite`, …) stay internal.
-import { DEFAULT_Y_AXIS } from "./chart-zoom";
+import { DEFAULT_Y_AXIS } from "./chart-zoom-core";
 import type { TimeTickUnit } from "./series-chart-ticks";
 import { paletteFor } from "../theme/chart-palette";
 import type {

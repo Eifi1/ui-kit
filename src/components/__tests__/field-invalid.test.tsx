@@ -9,7 +9,10 @@ import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { MultiSelect } from "../multi-select";
 import { NumberInput } from "../number-input";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, Input, Select, Textarea } from "../ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID } from "../field-base";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 
 /**
  * One `invalid`, on every control that is shaped like a field.
@@ -206,9 +209,6 @@ describe("the required-and-empty highlight, on every field control", () => {
       // screen, it cannot be left unanswered, and nothing submits it. There is no
       // state for "invalid" to describe.
       "search-field.tsx",
-      // A re-export shim since 0.34 (MOD-2): it names FIELD_BASE only to pass it on and
-      // renders nothing. The fields it re-exports are swept in their own modules.
-      "components/ui.tsx",
       // The list parts Combobox and InlineEntityCombobox share since 0.34 (MOD-9): it names
       // FIELD_BASE only in a comment and renders no field. The two fields are swept in
       // their own modules.
@@ -255,7 +255,9 @@ describe("an unset invalid leaves the attribute off entirely", () => {
 describe("aria-invalid from a form library paints the field (0.6.0)", () => {
   it("Input, Select and Textarea turn invalid from aria-invalid alone", async () => {
     const { render, screen } = await import("@testing-library/react");
-    const { Input, Select, Textarea } = await import("../ui");
+    const { Input } = await import("../input");
+    const { Select } = await import("../select");
+    const { Textarea } = await import("../textarea");
     render(
       <>
         <Input aria-label="a" aria-invalid="true" />

@@ -2,14 +2,15 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { KeyRound } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
 import { OneTimeCodeInput } from "../components/one-time-code-input";
 import { TextLink } from "../components/text-link";
-import { Button, Input } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
 import { accessAction } from "../landing/access";
 import type { AccessChoice } from "../landing/access";
 import { useLandingLabels } from "../landing/landing-labels";
@@ -289,7 +290,7 @@ export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onS
   /** The level of the second and third step's heading. Default `h2`, under the page's
    *  `h1`; one level under `AuthLayout`'s `headingAs` where that is embedded lower. */
   headingAs?: "h2" | "h3" | "h4" | "h5" | "h6";
-  labels?: Partial<SignInLabels>;
+  labels?: LabelOverride<SignInLabels>;
 }
 
 /* ── Parts ───────────────────────────────────────────────────────────────── */

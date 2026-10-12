@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { Download } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { saveBlob } from "../lib/download";
 import { useKitFormat } from "../lib/format";
 import { summariseRows, translationCorrections } from "../lib/translation-review";
@@ -18,7 +18,8 @@ import { ProgressBar } from "./progress-bar";
 import type { ProgressBarSegment } from "./progress-bar";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
-import { Button, Tabs } from "./ui";
+import { Button } from "./button";
+import { Tabs } from "./tabs";
 
 /**
  * The small parts of the translation review, each usable on its own: the status
@@ -53,7 +54,7 @@ export interface ReviewStatusChipProps {
   caps?: boolean;
   className?: string;
   /** Prop > `<UiKitProvider labels={{ translationReview }}>` > English. */
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
   [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
@@ -96,7 +97,7 @@ export interface TranslationProgressProps {
   /** The list under the bar naming each part with its count. Default true. */
   legend?: boolean;
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 /**
@@ -164,7 +165,7 @@ export interface TranslationLocaleTabsProps {
   active: string;
   onChange: (locale: string) => void;
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 /**
@@ -215,7 +216,7 @@ export interface TranslationExportButtonProps {
    */
   onExport?: (corrections: TranslationCorrection[], file: Blob) => void;
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 /**

@@ -31,7 +31,9 @@ import {
   type RhfTimeInputProps,
   type RhfToggleGroupProps,
 } from "../fields";
-import type { InputProps, SelectProps, TextareaProps } from "../../components/ui";
+import type { InputProps } from "../../components/input";
+import type { SelectProps } from "../../components/select";
+import type { TextareaProps } from "../../components/textarea";
 import type { NumberFieldProps } from "../../components/number-field";
 import type { MoneyFieldProps } from "../../components/money-field";
 import type { CheckboxProps } from "../../components/checkbox";

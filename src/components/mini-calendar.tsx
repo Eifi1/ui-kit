@@ -14,7 +14,7 @@ import {
   sameYmd,
   toLocalIso,
 } from "../lib/dates";
-import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
 
 /**
@@ -112,7 +112,7 @@ export interface MiniCalendarProps extends Omit<ComponentPropsWithRef<"div">, "o
   min?: string;
   max?: string;
   /** User-facing strings; see {@link MiniCalendarLabels}. */
-  labels?: Partial<MiniCalendarLabels>;
+  labels?: LabelOverride<MiniCalendarLabels>;
   /**
    * Take focus to the day the grid opens on — the selected one, or today — when this
    * calendar mounts. For a panel that opened BECAUSE the user asked to pick a date:

@@ -2,12 +2,14 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
-import { Button, Card, Input } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { Input } from "../components/input";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { emailParts, taggedEmail } from "../auth/email-tag";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
@@ -124,7 +126,7 @@ export interface EmailChangeSettingProps extends Omit<ComponentPropsWithRef<"div
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first, for
    *  every failure (a demo account's 403, the device offline). */
   describeError?: (error: unknown, action: EmailChangeAction) => ReactNode | undefined;
-  labels?: Partial<EmailChangeLabels>;
+  labels?: LabelOverride<EmailChangeLabels>;
 }
 
 interface Failure {

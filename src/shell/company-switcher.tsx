@@ -2,9 +2,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Building2 } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
-import { Spinner } from "../components/ui";
+import { Spinner } from "../components/spinner";
 import { OptionSwitcherMenu } from "./option-switcher-menu";
 import { TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
 import { DEFAULT_COMPANY_SWITCHER_LABELS } from "./company-switcher-labels";
@@ -49,7 +49,7 @@ export interface CompanySwitcherProps<Id extends string | number> {
   onSwitch: (id: Id) => Promise<unknown> | void;
   /** The trigger's glyph. Default a building; keksdose's budgets would pass a wallet. */
   icon?: ReactNode;
-  labels?: Partial<CompanySwitcherLabels>;
+  labels?: LabelOverride<CompanySwitcherLabels>;
 }
 
 /**

@@ -1,8 +1,9 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button, EmptyState } from "./ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "./button";
+import { EmptyState } from "./empty-state";
 import { CopyButton } from "./copy-button";
 import { Disclosure } from "./disclosure";
 import { documentNavigation } from "../lib/document-navigation";
@@ -365,7 +366,7 @@ export interface ErrorBoundaryProps {
   headingAs?: "h2" | "h3" | "h4" | "h5" | "h6";
   /** Classes for the default fallback's box (`m-8 min-h-[400px]`, kastlan). */
   className?: string;
-  labels?: Partial<ErrorBoundaryLabels>;
+  labels?: LabelOverride<ErrorBoundaryLabels>;
 }
 
 type FilingState = "none" | "pending" | "filed" | "failed";
@@ -588,7 +589,7 @@ function ErrorFallback({
   actions?: ReactNode;
   headingAs: NonNullable<ErrorBoundaryProps["headingAs"]>;
   className?: string;
-  labels?: Partial<ErrorBoundaryLabels>;
+  labels?: LabelOverride<ErrorBoundaryLabels>;
 }) {
   const text = useKitLabels("errorBoundary", DEFAULT_ERROR_BOUNDARY_LABELS, labels);
   const chunk = isChunkLoadError(details);

@@ -3,14 +3,14 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CornerDownLeft, Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FIELD_TOUCH_TEXT } from "../components/ui";
+import { FIELD_TOUCH_TEXT } from "../components/field-base";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 
 export interface CommandItem {
@@ -195,22 +195,12 @@ interface CommandPaletteProps {
   fullScreenOnPhone?: boolean;
   /** Row height — see {@link CommandPaletteDensity}. Default `"compact"`. */
   density?: CommandPaletteDensity;
-  labels?: Partial<CommandPaletteLabels>;
+  labels?: LabelOverride<CommandPaletteLabels>;
 }
 
-/** Registers a global ⌘K / Ctrl-K shortcut that calls `onOpen`. */
-export function useCommandKey(onOpen: () => void): void {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        onOpen();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onOpen]);
-}
+// Defined in ./use-command-key, so `GlobalSearch` can listen for ⌘K without loading the
+// palette before it is opened (0.34, MOD-1).
+export { useCommandKey } from "./use-command-key";
 
 /**
  * A ⌘K-style command palette: a top-centred modal with a search field and a

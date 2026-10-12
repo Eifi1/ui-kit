@@ -3,8 +3,9 @@ import type { ComponentPropsWithRef, CSSProperties, HTMLAttributes, KeyboardEven
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button, IconButton } from "./ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
 import { DEFAULT_LINE_ITEMS_LABELS } from "./line-items-labels";
 
 /** The words {@link LineItems} renders on its own behalf. Row numbers are 1-based. */
@@ -189,7 +190,7 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithRef<"div">, "c
    * Ctrl/⌘+Enter "add a row" (call `preventDefault()` to keep that from happening).
    */
   rowProps?: (item: T, index: number) => LineItemsRowProps | undefined;
-  labels?: Partial<LineItemsLabels>;
+  labels?: LabelOverride<LineItemsLabels>;
 }
 
 const REMOVE_TRACK = "2.25rem";

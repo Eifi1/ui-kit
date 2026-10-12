@@ -3,7 +3,7 @@ import { createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { OneTimeCodeInput } from "../one-time-code-input";
 import type { OneTimeCodeInputProps } from "../one-time-code-input";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /** A controlled field, as an app holds it; `onChange` / `onComplete` spies optional. */
 function Harness({

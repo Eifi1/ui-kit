@@ -8,7 +8,7 @@ import { MoneyField } from "../money-field";
 import { NumberField } from "../number-field";
 import { NumberInput } from "../number-input";
 import { SignChip } from "../sign-chip";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**

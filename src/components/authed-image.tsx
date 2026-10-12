@@ -3,7 +3,7 @@ import type { ImgHTMLAttributes, ReactNode } from "react";
 import { ImageOff } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { SKELETON_CLASS } from "./skeleton";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import type { AuthedFetcher, UseAuthedSrcResult } from "../hooks/use-authed-src";
@@ -54,7 +54,7 @@ export interface AuthedImageProps
    * of also running the row's action. As TextLink's and IconButton's `stopPropagation`.
    */
   stopPropagation?: boolean;
-  labels?: Partial<AuthedImageLabels>;
+  labels?: LabelOverride<AuthedImageLabels>;
 }
 
 /**

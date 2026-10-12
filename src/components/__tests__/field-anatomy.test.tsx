@@ -3,8 +3,12 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { IconButton, Input, Label, Select, Tabs } from "../ui";
-import type { TabItem } from "../ui";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { Label } from "../field-base";
+import { Select } from "../select";
+import { Tabs } from "../tabs";
+import type { TabItem } from "../tabs";
 import { SearchField } from "../search-field";
 import { UiKitProvider } from "../../i18n/kit-labels";
 

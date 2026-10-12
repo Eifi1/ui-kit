@@ -10,7 +10,7 @@ import { ChoiceCard } from "../components/choice-card";
 import type { ChoiceCardProps } from "../components/choice-card";
 import { Chip } from "../components/chip";
 import { ToggleGroup } from "../components/toggle-group";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import { BILLING_INTERVALS, billingCurrencyFor, formatPlanPrice, planPrice } from "./plan-price";

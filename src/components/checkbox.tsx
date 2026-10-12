@@ -64,7 +64,7 @@ const LABEL_TOUCH_LARGE =
 const BOX_MIXED = "border-brand bg-brand";
 
 // The same geometry as FIELD_INVALID — a border plus a 1px ring, so the highlight
-// survives fractional display scaling on every edge (see the note in ui.tsx). The
+// survives fractional display scaling on every edge (see the note on FIELD_BASE in field-base.tsx). The
 // focus ring turns danger too, so focusing a wrong box does not repaint it as fine.
 const BOX_INVALID =
   "border-danger-strong ring-1 ring-danger-strong checked:border-danger-strong focus-visible:ring-[var(--danger)]";

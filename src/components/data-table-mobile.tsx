@@ -1,7 +1,9 @@
 import { Fragment, useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
-import { FOCUS_RING, IconButton, Select } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
+import { IconButton } from "./icon-button";
+import { Select } from "./select";
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
 import { defaultFilterState, isFilterActive, resolveFilter } from "./data-table-filters";

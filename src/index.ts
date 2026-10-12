@@ -2,6 +2,12 @@
 //
 // Domain-free UI + theme surface shared across apps (lead app: Keksdose). Consumers import
 // components/theme from "@eifi1/ui-kit" and the token stylesheet from "@eifi1/ui-kit/tokens.css".
+//
+// Grouped by folder. A subpath entry (chart, data-table, shell, feedback, wizard, tour,
+// search) is re-exported whole — `export * from "./chart"` — instead of its list typed out a
+// second time here: the two copies had drifted (refactor audit 2026-10, MOD-5). A name that
+// arrives twice that way is the same binding from the same module, which ESM does not count
+// as a clash.
 
 // ── lib ────────────────────────────────────────────────────────────────────
 export * from "./lib/calc";
@@ -16,6 +22,106 @@ export { readStored, writeStored } from "./lib/safe-storage";
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
 // Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
+// One fold and one ranking for every list's search box (DUP-5), for an app's own lists.
+export { foldForSearch, rankMatch } from "./lib/text-match";
+export type { MatchRank } from "./lib/text-match";
+// 0.12.0: the QR encoder QrCode draws with — no dependency, see lib/qr-encode.ts.
+export { encodeQr } from "./lib/qr-encode";
+export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
+// 0.18: the cold-start notice keksdose built (#199), for every app: the framework-free
+// watchdog over the app's requests (the corner notice is components/server-wake).
+export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
+export type { ServerWakeStage, ServerWakeFilter, ServerWakeOptions, ServerWakeRequest, ServerWakeWatcher, ServerWakeAxiosConfig, AxiosLikeInstance } from "./lib/server-wake";
+// 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
+// per tab, a definitive failure ends the session once, a transient one keeps it.
+export { createSessionRefresh, attachSessionRefresh, isTransientRefreshFailure, isSignedOutStep } from "./lib/session-refresh";
+export type { SessionRefresh, SessionRefreshOptions, SessionRenewal, SessionRefreshOutcome } from "./lib/session-refresh";
+// 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
+export { formatPersonName, personInitials } from "./lib/person-name";
+export type { PersonName } from "./lib/person-name";
+// Translation review (0.19): one contract for kastlan's and keksdose's review pages — the
+// pure rows/status/placeholder logic here, the presentational page parts under components.
+export {
+  REVIEW_STATUSES,
+  fromApiReview,
+  toApiWrite,
+  flattenStrings,
+  keyNamespace,
+  placeholderTokens,
+  placeholderMismatch,
+  reviewStatus,
+  keyInArea,
+  keyInAreas,
+  // 0.28: the area a key is grouped under — `kit.legal.*` in `legal` (legal round §7.5).
+  reviewAreaOf,
+  translationRows,
+  summariseRows,
+  DEFAULT_TRANSLATION_REVIEW_FILTER,
+  filterTranslationRows,
+  reviewWrite,
+  mergeReviews,
+  dropReviews,
+  translationCorrections,
+  // 0.25: grouping and the approvals' Undo (keksdose live #377).
+  groupTranslationRows,
+  unreviewedRows,
+  reviewUndo,
+  // 0.26: swipe bindings for an app's Settings → Interaction (keksdose #377 rework).
+  TRANSLATION_REVIEW_SWIPE_ACTIONS,
+  DEFAULT_TRANSLATION_REVIEW_SWIPE,
+  translationReviewSwipePlan,
+} from "./lib/translation-review";
+export type {
+  TranslationVerdict,
+  TranslationReview,
+  TranslationReviewWrite,
+  TranslationReviewKey,
+  ReviewStatus,
+  TranslationRow,
+  ApiTranslationReview,
+  ApiTranslationReviewWrite,
+  TranslationRowsInput,
+  TranslationSummary,
+  TranslationReviewFilter,
+  TranslationCorrection,
+  TranslationRowGroup,
+  TranslationReviewUndo,
+  TranslationReviewSwipeAction,
+  TranslationReviewSwipeBinding,
+} from "./lib/translation-review";
+// 0.22.0, the inputs round: the country list and the IBAN, ISIN and phone helpers that
+// CountrySelect, IbanInput and PhoneInput are built on.
+export { COUNTRY_CODES, countryName } from "./lib/countries";
+export {
+  IBAN_LENGTHS,
+  compactIban,
+  formatIban,
+  ibanCheckDigits,
+  ibanProblem,
+  isValidIban,
+  isQrIban,
+} from "./lib/iban";
+export type { IbanKind, IbanProblem } from "./lib/iban";
+export { formatIsin, isinCheckDigit, isValidIsin } from "./lib/isin";
+export {
+  PHONE_DIAL_CODES,
+  PHONE_COUNTRIES,
+  parsePhone,
+  formatNationalPhone,
+  formatPhone,
+  isE164,
+} from "./lib/phone";
+export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
+// 0.23.0: ColumnMapper's pure half (Kurvenschmiede's columns input, keksdose's import map).
+export {
+  assignColumnRole,
+  guessMapping,
+  missingRoles,
+  readMappedTable,
+  readTextFile,
+  roleOfColumn,
+} from "./lib/column-mapping";
+export type { ColumnMapperResult, ColumnMapping, ColumnRole } from "./lib/column-mapping";
 
 // ── hooks ────────────────────────────────────────────────────────────────────
 export { useMediaQuery } from "./hooks/use-media-query";
@@ -70,9 +176,17 @@ export type { Hotkey, ParsedHotkey, UseHotkeyOptions } from "./hooks/use-hotkey"
 // A protected file as an object URL, fetched with the app's own auth (kastlan's AuthedImage).
 export { useAuthedSrc } from "./hooks/use-authed-src";
 export type { AuthedFetcher, AuthedSrcStatus, UseAuthedSrcOptions, UseAuthedSrcResult } from "./hooks/use-authed-src";
+// Row windowing for a long list (0.7.0, lenkbank's measured grid is built on it).
+export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
+export type { WindowedRows } from "./hooks/use-windowed-rows";
+// 0.32.0 (docs/text-size-harmonization.md): the breakpoints, and the hooks components read
+// the behaviours at Large from (§4, §10.7–10.9).
+export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM, remPx, useRemPx } from "./hooks/use-breakpoint";
+export type { Breakpoint, BreakpointVariant, RemLength } from "./hooks/use-breakpoint";
+export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
 
 // ── theme / palettes ─────────────────────────────────────────────────────────
-export * from "./theme/chart-palette";
+// The chart palette (theme/chart-palette) comes with the chart kit, `./chart` below.
 // Colour maths (sRGB ↔ OKLCH, WCAG contrast, CVD simulation) and the palette deriver
 // that builds a whole, contrast-solved palette from one brand colour plus any colours
 // pinned by hand. `auditPalette` / `auditChartRamp` measure a palette rather than
@@ -82,9 +196,86 @@ export * from "./theme/palette-derive";
 export * from "./theme/palette-presets";
 export * from "./theme/theme-store";
 export * from "./theme/palette-store";
+// 0.32.0: text size and contrast (docs/text-size-harmonization.md).
+export * from "./theme/text-size";
+export * from "./theme/contrast";
+
+// ── i18n: one label tree, one optional provider ──────────────────────────────
+// `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`
+// hands a translation to every component below it. Precedence: a component's own
+// prop > the provider > the English default. See src/i18n/kit-labels.tsx.
+export * from "./i18n/kit-labels";
+export * from "./i18n/defaults";
+// The kit's words as `key → text` rows for an app's translation review (keksdose).
+export { kitLabelStrings } from "./i18n/review";
+export type { KitLabelStringsOptions } from "./i18n/review";
+// The seven languages, how an app resolves one, and the kit catalogue loader for it.
+export * from "./i18n/languages";
+// CLDR plural categories for an app's i18next catalogue, filled from `_other`; and the
+// forms of an app's word a kit part picks from by count (0.33.1, `PlanColumnUsage.label`).
+export { withAllPlurals } from "./i18n/plurals";
+export type { PluralForms } from "./i18n/plurals";
 
 // ── components ───────────────────────────────────────────────────────────────
-export * from "./components/ui";
+// The kit's core controls, one module each since 0.34 (MOD-2, refactor audit 2026-10):
+// Button, IconButton, the field base, Input, Select, Textarea, Card, Spinner, EmptyState
+// and Tabs. Named, not `*`, for `button-look` and `field-base`: they also hold parts the
+// controls share, which are internal. The others are public whole.
+export * from "./components/button";
+export {
+  buttonClasses,
+  TOUCH_TARGET_LARGE,
+  type ButtonClassesOptions,
+  type ButtonSize,
+  type ButtonTone,
+  type ButtonVariant,
+} from "./components/button-look";
+export * from "./components/icon-button";
+export {
+  FIELD_TOUCH_TEXT,
+  FIELD_BASE,
+  FIELD_WRITABLE_LOOK,
+  FIELD_FLOATING_PAD,
+  FIELD_INVALID,
+  FLOATING_INPUT_CLASS,
+  FIELD_DISPLAY,
+  FIELD_TRIGGER,
+  FieldChevron,
+  FLOATING_LABEL_CLASS,
+  FloatingField,
+  Label,
+  DEFAULT_PASSWORD_REVEAL_LABELS,
+  resolvePasswordRevealLabels,
+  DEFAULT_CHARACTER_COUNT_LABELS,
+  type FieldChevronProps,
+  type FloatingFieldProps,
+  type LabelProps,
+  type PasswordRevealLabels,
+  type CharacterCountLabels,
+} from "./components/field-base";
+export * from "./components/input";
+export * from "./components/select";
+export * from "./components/textarea";
+export * from "./components/card";
+export * from "./components/spinner";
+export * from "./components/empty-state";
+export * from "./components/tabs";
+// The static label lives in field-parts since 0.23 (it is what the field anatomy there
+// draws, and field-parts must not import the controls).
+export { FieldLabel, FLOATING_LABEL_STATIC, FieldHint } from "./components/field-parts";
+export type { FieldLabelProps, FieldHintProps } from "./components/field-parts";
+// The kit's focus frame (§5), in its own module so the parts the controls import
+// (field-parts, the choice controls) can draw it too.
+export { FOCUS_RING, FOCUS_RING_WIDTH } from "./components/focus-ring";
+// No fact only in a tooltip (§4): the reason line and the compact region live in
+// field-parts, where the self-saving controls (Switch, Checkbox) reach them too.
+export {
+  CompactControls,
+  DisabledReasonLine,
+  DISABLED_REASON_LINE_CLASS,
+  useDisabledReasonLine,
+} from "./components/field-parts";
+export type { DisabledReasonDisplay } from "./components/field-parts";
 // The label-ABOVE field group (label, hint, error, required), inside wizards or out.
 export * from "./components/field";
 export * from "./components/search-field";
@@ -164,8 +355,6 @@ export * from "./components/icon-picker";
 export * from "./components/choice-card";
 export * from "./components/autocomplete";
 export * from "./components/measured-grid";
-export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
-export type { WindowedRows } from "./hooks/use-windowed-rows";
 // Named, not `export *`: file-button.tsx also re-exports the screening helpers the
 // dropzone shares (hooks/use-file-picker since 0.34, MOD-8), which are internal.
 export { FileButton, useFilePicker, matchesAccept, DEFAULT_FILE_PICKER_LABELS } from "./components/file-button";
@@ -178,24 +367,13 @@ export type {
   FileRejectionReason,
   FileScreenOptions,
 } from "./components/file-button";
-export * from "./components/treemap";
-export * from "./components/series-chart";
-// 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
-export type { ChartHeight } from "./components/chart-height";
-export * from "./components/chart-zoom";
-export * from "./components/toggle-legend";
-export * from "./components/facing-pair";
-export * from "./components/series-chart-labels";
-export * from "./components/pie-chart";
-export * from "./components/pie-chart-labels";
-// In account/ since 0.34, beside the other account cards (MOD-8, refactor audit 2026-10).
-export * from "./account/account-settings";
-// 0.12.0: the fourth account section, and the QR code TwoFactorSetting draws its
-// otpauth URI with (encoder in lib/qr-encode.ts — no dependency, see there).
-export * from "./account/passkeys-setting";
+// The chart kit, whole, from its subpath (`@eifi1/ui-kit/chart`, which names its parts):
+// the chart shell and its palette, the treemap, the series chart with its zoom, legend,
+// labels and facing-pair axes, the height every chart takes, and the pie chart.
+export * from "./chart";
+// 0.12.0: the QR code TwoFactorSetting draws its otpauth URI with (encoder in
+// lib/qr-encode.ts — no dependency, see there).
 export * from "./components/qr-code";
-export { encodeQr } from "./lib/qr-encode";
-export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
@@ -216,7 +394,6 @@ export * from "./components/mini-calendar";
 export * from "./components/calendar-heatmap";
 export * from "./components/date-picker";
 export * from "./components/tree-view";
-export * from "./components/chart";
 // 0.8.0 layout and feedback primitives the apps hand-rolled or took from shadcn/Radix.
 export * from "./components/description-list";
 // The Save / Cancel row forms and dialogs end in, and the editable line-item repeater
@@ -232,16 +409,10 @@ export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind,
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
 export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
-// 0.18: the cold-start notice keksdose built (#199), for every app: a framework-free
-// watchdog over the app's requests and the corner notice that explains the wait.
-export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
-export type { ServerWakeStage, ServerWakeFilter, ServerWakeOptions, ServerWakeRequest, ServerWakeWatcher, ServerWakeAxiosConfig, AxiosLikeInstance } from "./lib/server-wake";
+// 0.18: the cold-start notice keksdose built (#199), for every app: the corner notice
+// that explains the wait (its framework-free watchdog is lib/server-wake).
 export { ServerWakeNotice, useServerWakeStage, DEFAULT_SERVER_WAKE_LABELS } from "./components/server-wake";
 export type { ServerWakeLabels, ServerWakeNoticeProps } from "./components/server-wake";
-// 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
-// per tab, a definitive failure ends the session once, a transient one keeps it.
-export { createSessionRefresh, attachSessionRefresh, isTransientRefreshFailure, isSignedOutStep } from "./lib/session-refresh";
-export type { SessionRefresh, SessionRefreshOptions, SessionRenewal, SessionRefreshOutcome } from "./lib/session-refresh";
 // 0.18: sharing — grantees, roles, pending grants, candidates (Kurvenschmiede 1).
 export { ShareCard, ShareDialog, SharePanel, DEFAULT_SHARE_CARD_LABELS } from "./components/share-card";
 export type { ShareCardProps, ShareDialogProps, SharePanelProps, ShareCardLabels, ShareRole, ShareGrantee, SharePendingGrant, ShareCandidate, ShareAddRequest } from "./components/share-card";
@@ -306,173 +477,8 @@ export type {
   ToasterOffset,
   ToasterProps,
 } from "./components/toast";
-
-// ── data-table suite ─────────────────────────────────────────────────────────
-export * from "./components/data-table-labels";
-export * from "./components/data-table-sort";
-export * from "./components/data-table-filters";
-export * from "./components/data-table-pagination";
-export { FilterPopover } from "./components/data-table-filter-popover";
-// data-table re-exports SortState internally; export the rest explicitly to
-// avoid a duplicate SortState star-export (it comes from data-table-sort).
-export { DataTable, DEFAULT_DATA_TABLE_SORT_LABELS } from "./components/data-table";
-export type {
-  DataTableSortLabels,
-  DataTableColumn,
-  DataTableCellProps,
-  DataTableHeadProps,
-  DataTableProps,
-  ServerPagination,
-  FilterState,
-  MobileSwipeActions,
-  DataTableDensity,
-  DataTableChrome,
-  DataTableRowAction,
-} from "./components/data-table";
-// 0.12.0: the yes/no cell, and a server table's state held by its owner, URL-synced.
-export * from "./components/data-table-cells";
-export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
-export type {
-  TableUrlState,
-  TableUrlSync,
-  TableUrlStateProps,
-  UseTableUrlStateOptions,
-  UseTableUrlStateReturn,
-} from "./components/use-table-state";
-
-// ── shell (composable app chrome) ────────────────────────────────────────────
-export * from "./shell/topbar-controls";
-export * from "./shell/top-bar";
-export * from "./shell/app-shell";
-export * from "./shell/option-switcher-menu";
-export * from "./shell/role-switcher";
-export * from "./shell/topbar-action-menu";
-export * from "./shell/top-bar-brand";
-export * from "./shell/auth-layout";
-
-// ── feedback ─────────────────────────────────────────────────────────────────
-// The form somebody files a report with, and the parts an inbox is built from:
-// the status vocabulary both apps share value for value, the policy about what a
-// row may move to from where it stands, and the look of a status control, a
-// category badge and an opened report. The app still wires its own API, columns
-// and strings — see the note at the top of `feedback-inbox.tsx` for what is
-// deliberately left to it.
-export * from "./feedback/feedback-attachment";
-export * from "./feedback/feedback-dialog";
-export * from "./feedback/feedback-inbox";
-export * from "./feedback/feedback-thread";
-// 0.27.0: the feedback harmonization (docs/feedback-harmonization.md) — one record,
-// one menu, dialog, table, detail and crash reporter for keksdose, kastlan, Kurvenschmiede.
-export * from "./feedback/feedback-record";
-export * from "./feedback/feedback-labels";
-export * from "./feedback/feedback-status-undo";
-export * from "./feedback/feedback-swipe";
-export * from "./feedback/feedback-menu";
-export * from "./feedback/feedback-context";
-export * from "./feedback/feedback-capture";
-export * from "./feedback/feedback-submit";
-export * from "./feedback/feedback-table";
-export * from "./feedback/feedback-row-detail";
-export * from "./feedback/feedback-crash";
-
-// ── multi-step wizard ────────────────────────────────────────────────────────
-// The engine (step machine, validators, collected data), the chrome around it
-// (indicator + nav bar + cancel confirm) and the review step it ends on.
-// `components/wizard-stepper` next door is a different, much smaller thing: a bare
-// step indicator for a two-step import flow, with no engine.
-//
-// `wizard-field` was removed here rather than kept as stock: it held a
-// `WizardField`/`WizardSelectField` pair that had never been rendered in any app — a
-// field group nothing was built from, which this comment used to advertise. A design
-// system may carry stock; untested stock nothing has ever rendered is not stock, it is
-// a liability with an export. The react-hook-form bridge to the Next gate
-// (`useRhfWizardStep`) is NOT here either: it left the barrel in 0.4.x so the barrel
-// imports no react-hook-form, and came back in 0.11 under `@eifi1/ui-kit/rhf`
-// (src/rhf.ts), where the optional peer is that subpath's alone.
-export * from "./wizard/types";
-export * from "./wizard/use-wizard";
-export * from "./wizard/wizard-context";
-export * from "./wizard/validation";
-export * from "./wizard/wizard-step";
-export * from "./wizard/wizard-summary";
-export * from "./wizard/stepper-nav";
-
-// ── guided tours ─────────────────────────────────────────────────────────────
-export * from "./tour/tour";
-
-// ── command palette / global search ──────────────────────────────────────────
-export * from "./search/command-palette";
-export * from "./search/search-index";
-export * from "./search/global-search";
-// One fold and one ranking for every list's search box (DUP-5), for an app's own lists.
-export { foldForSearch, rankMatch } from "./lib/text-match";
-export type { MatchRank } from "./lib/text-match";
-
-// ── i18n: one label tree, one optional provider ──────────────────────────────
-// `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`
-// hands a translation to every component below it. Precedence: a component's own
-// prop > the provider > the English default. See src/i18n/kit-labels.tsx.
-export * from "./i18n/kit-labels";
-export * from "./i18n/defaults";
-// The kit's words as `key → text` rows for an app's translation review (keksdose).
-export { kitLabelStrings } from "./i18n/review";
-export type { KitLabelStringsOptions } from "./i18n/review";
-// The seven languages, how an app resolves one, and the kit catalogue loader for it.
-export * from "./i18n/languages";
-// CLDR plural categories for an app's i18next catalogue, filled from `_other`; and the
-// forms of an app's word a kit part picks from by count (0.33.1, `PlanColumnUsage.label`).
-export { withAllPlurals } from "./i18n/plurals";
-export type { PluralForms } from "./i18n/plurals";
-// Translation review (0.19): one contract for kastlan's and keksdose's review pages —
-// the pure rows/status/placeholder logic and the presentational page parts.
-export {
-  REVIEW_STATUSES,
-  fromApiReview,
-  toApiWrite,
-  flattenStrings,
-  keyNamespace,
-  placeholderTokens,
-  placeholderMismatch,
-  reviewStatus,
-  keyInArea,
-  keyInAreas,
-  // 0.28: the area a key is grouped under — `kit.legal.*` in `legal` (legal round §7.5).
-  reviewAreaOf,
-  translationRows,
-  summariseRows,
-  DEFAULT_TRANSLATION_REVIEW_FILTER,
-  filterTranslationRows,
-  reviewWrite,
-  mergeReviews,
-  dropReviews,
-  translationCorrections,
-  // 0.25: grouping and the approvals' Undo (keksdose live #377).
-  groupTranslationRows,
-  unreviewedRows,
-  reviewUndo,
-  // 0.26: swipe bindings for an app's Settings → Interaction (keksdose #377 rework).
-  TRANSLATION_REVIEW_SWIPE_ACTIONS,
-  DEFAULT_TRANSLATION_REVIEW_SWIPE,
-  translationReviewSwipePlan,
-} from "./lib/translation-review";
-export type {
-  TranslationVerdict,
-  TranslationReview,
-  TranslationReviewWrite,
-  TranslationReviewKey,
-  ReviewStatus,
-  TranslationRow,
-  ApiTranslationReview,
-  ApiTranslationReviewWrite,
-  TranslationRowsInput,
-  TranslationSummary,
-  TranslationReviewFilter,
-  TranslationCorrection,
-  TranslationRowGroup,
-  TranslationReviewUndo,
-  TranslationReviewSwipeAction,
-  TranslationReviewSwipeBinding,
-} from "./lib/translation-review";
+// Translation review (0.19): the presentational page parts (the pure logic is
+// lib/translation-review).
 export {
   TranslationReviewPanel,
   TranslationReviewEditor,
@@ -525,10 +531,103 @@ export type {
   LegalDisclaimerSectionLabels,
 } from "./components/legal";
 export { LegalPage, LegalKitSection, LegalAcceptCheckbox, LEGAL_SKELETON } from "./components/legal-page";
+export type {
+  LegalPageProps,
+  LegalKitSectionProps,
+  LegalKitSectionKey,
+  LegalAcceptCheckboxProps,
+  LegalSkeletonEntry,
+  LegalSkeletonPage,
+  LegalSectionOwner,
+  LegalDisclaimerVariant,
+} from "./components/legal-page";
+// 0.32.0 (docs/text-size-harmonization.md): the appearance settings' words, and a row's
+// actions, one of the behaviours at Large (§4, §10.7–10.9).
+export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
+export type { AppearanceLabels } from "./components/appearance-labels";
+export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
+export type {
+  RowAction,
+  RowActionList,
+  RowActionsLabels,
+  RowActionsProps,
+  RowActionsCollapse,
+  RowActionsSize,
+  RowActionsColumnOptions,
+  RowActionTone,
+} from "./components/row-actions";
+// 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits).
+export * from "./components/checkbox-group";
+export * from "./components/one-time-code-input";
+export * from "./components/language-select";
+export * from "./components/tile-radio";
+export * from "./components/inline-edit-field";
+export * from "./components/sign-chip";
+export * from "./components/country-select";
+export * from "./components/iban-input";
+export * from "./components/phone-input";
+// 0.23.0, the apps' 0.22 adoption round: the label strip over custom content (keksdose G8).
+export * from "./components/field-strip";
+// Paste or drop a table, give each column a role (Kurvenschmiede's columns input,
+// keksdose's import map step). The lexer itself stays in `@eifi1/ui-kit/table-text`.
+export * from "./components/column-mapper";
 
+// ── data-table suite ─────────────────────────────────────────────────────────
+// Whole, from its subpath (`@eifi1/ui-kit/data-table`, which names its parts): DataTable,
+// its sort, filters, pagination and cells, and a server table's state held by its owner,
+// URL-synced.
+export * from "./data-table";
+
+// ── shell (composable app chrome) ────────────────────────────────────────────
+// Whole, from `@eifi1/ui-kit/shell`: the top bar and its controls, AppShell, the switchers
+// and AuthLayout, and (0.31.0) the router-aware parts of settings and landing —
+// SettingsLayout with its route, focus, section, context, heading and catalogue;
+// PublicHeader, RootEntry, RedirectIfAuthed and the last-visited page.
+export * from "./shell";
+// 0.29.0 (docs/auth-harmonization.md): kastlan's company switcher.
+export { CompanySwitcher, DEFAULT_COMPANY_SWITCHER_LABELS } from "./shell/company-switcher";
+export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompany } from "./shell/company-switcher";
+
+// ── feedback ─────────────────────────────────────────────────────────────────
+// The form somebody files a report with, and the parts an inbox is built from:
+// the status vocabulary both apps share value for value, the policy about what a
+// row may move to from where it stands, and the look of a status control, a
+// category badge and an opened report. The app still wires its own API, columns
+// and strings — see the note at the top of `feedback-inbox.tsx` for what is
+// deliberately left to it. Whole, from `@eifi1/ui-kit/feedback`, which also has 0.27.0's
+// harmonization (docs/feedback-harmonization.md): the record, menu, table, detail and
+// crash reporter.
+export * from "./feedback";
+
+// ── multi-step wizard ────────────────────────────────────────────────────────
+// The engine (step machine, validators, collected data), the chrome around it
+// (indicator + nav bar + cancel confirm) and the review step it ends on.
+// `components/wizard-stepper` next door is a different, much smaller thing: a bare
+// step indicator for a two-step import flow, with no engine.
+//
+// `wizard-field` was removed here rather than kept as stock: it held a
+// `WizardField`/`WizardSelectField` pair that had never been rendered in any app — a
+// field group nothing was built from, which this comment used to advertise. A design
+// system may carry stock; untested stock nothing has ever rendered is not stock, it is
+// a liability with an export. The react-hook-form bridge to the Next gate
+// (`useRhfWizardStep`) is NOT here either: it left the barrel in 0.4.x so the barrel
+// imports no react-hook-form, and came back in 0.11 under `@eifi1/ui-kit/rhf`
+// (src/rhf.ts), where the optional peer is that subpath's alone.
+// Whole, from `@eifi1/ui-kit/wizard`.
+export * from "./wizard";
+
+// ── guided tours ─────────────────────────────────────────────────────────────
+export * from "./tour";
+
+// ── command palette / global search ──────────────────────────────────────────
+// The palette, its pure matcher and the ⌘K search on it. The list fold every search box
+// shares is lib/text-match, above.
+export * from "./search";
+
+// ── auth ─────────────────────────────────────────────────────────────────────
 // 0.29.0 (docs/auth-harmonization.md): sign-in, sign-up and the signed-out pages — forms
-// that take callbacks and never send a request themselves — the person-name order of each
-// language, and kastlan's company switcher.
+// that take callbacks and never send a request themselves. The person-name order of each
+// language is lib/person-name, kastlan's company switcher is in the shell section.
 export { SignInForm, DEFAULT_SIGN_IN_LABELS } from "./auth/sign-in-form";
 export type {
   SignInFormProps,
@@ -574,16 +673,19 @@ export type {
   AcceptInvitationFailure,
 } from "./auth/accept-invitation";
 export type { AuthHeadingLevel } from "./auth/status-parts";
-export { formatPersonName, personInitials } from "./lib/person-name";
-export type { PersonName } from "./lib/person-name";
-export { CompanySwitcher, DEFAULT_COMPANY_SWITCHER_LABELS } from "./shell/company-switcher";
-export type { CompanySwitcherProps, CompanySwitcherLabels, CompanySwitcherCompany } from "./shell/company-switcher";
-
-// 0.30.0 (docs/user-admin-harmonization.md): the admin user list and its actions, the
-// invitations panel, and the account's own settings — email change, sessions, deletion,
-// export. Callbacks only; the confirmation level is the server's.
+// 0.30.0: a rate limit and its wait, and the codes the account, billing and demo calls
+// answer with.
 export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
 export type { AccountErrorCode, BillingErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
+
+// ── account ──────────────────────────────────────────────────────────────────
+// In account/ since 0.34, beside the other account cards (MOD-8, refactor audit 2026-10):
+// the profile, password and two-factor cards, and (0.12.0) the fourth account section,
+// the passkeys.
+export * from "./account/account-settings";
+export * from "./account/passkeys-setting";
+// 0.30.0 (docs/user-admin-harmonization.md): the account's own settings — email change,
+// sessions, deletion, export. Callbacks only; the confirmation level is the server's.
 export { EmailChangeSetting, DEFAULT_EMAIL_CHANGE_LABELS } from "./account/email-change-setting";
 export type {
   EmailChangeSettingProps,
@@ -603,6 +705,10 @@ export type {
 } from "./account/delete-account-setting";
 export { DataExportSetting, DEFAULT_DATA_EXPORT_LABELS } from "./account/data-export-setting";
 export type { DataExportSettingProps, DataExportLabels, DataExportFile } from "./account/data-export-setting";
+
+// ── admin ────────────────────────────────────────────────────────────────────
+// 0.30.0 (docs/user-admin-harmonization.md): the admin user list and its actions, and the
+// invitations panel. Callbacks only; the confirmation level is the server's.
 export {
   userRosterColumns,
   useUserRosterColumns,
@@ -676,147 +782,28 @@ export type {
   InvitationsPanelProps,
 } from "./admin/invitations-panel";
 export type { AdminPerson } from "./admin/admin-parts";
-
-// ── 0.31.0: the settings page and the admin page on one shell (docs/settings-harmonization.md) ──
-// Router-aware: the layout, its route and focus hooks (also in `@eifi1/ui-kit/shell`).
-export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
-export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";
+// 0.33.0: the operator's plan parts (docs/billing-harmonization.md §14.12).
 export {
-  useSettingsRoute,
-  resolveSettingsLocation,
-  settingsFromListState,
-  SETTINGS_FROM_LIST_STATE,
-} from "./settings/use-settings-route";
+  planColumn,
+  usePlanColumn,
+  PlanChangeConfirm,
+  usePlanChangeResult,
+  DEFAULT_PLAN_CHANGE_LABELS,
+} from "./admin/plan-change";
 export type {
-  UseSettingsRouteOptions,
-  SettingsRoute,
-  SettingsLayoutMode,
-  SettingsLocation,
-  SettingsLocationRules,
-  SettingsLocationResult,
-} from "./settings/use-settings-route";
-export { useSettingsFocus, SETTINGS_FOCUS_RING, SETTINGS_FOCUS_MS } from "./settings/use-settings-focus";
-// The router-free companions: a card, the context, the heading level, the catalogue.
-export { SettingsSection } from "./settings/settings-section";
-export type { SettingsSectionProps } from "./settings/settings-section";
-export { useSettingsLayout } from "./settings/settings-context";
-export type { SettingsLayoutContextValue } from "./settings/settings-context";
-export { SettingsHeadingLevel, useSettingsHeadingLevel } from "./settings/settings-heading";
-export type { SettingsHeadingLevelProps, SettingsHeadingTag } from "./settings/settings-heading";
-export {
-  settingsSearchEntries,
-  visibleSettingsGroups,
-  visibleSettingsEntries,
-  settingsHref,
-} from "./settings/settings-catalogue";
-export type { SettingsGroup, SettingsEntry, SettingsSearchEntriesOptions } from "./settings/settings-catalogue";
-export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
-export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
-// The language follows the account (§6.2); since 0.32 so do the text size and the
-// contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
-export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
-export type {
-  UseAccountLanguageOptions,
-  AccountLanguage,
-  AccountLanguageSource,
-  ResolveAccountLanguageInput,
-  ResolvedAccountLanguage,
-} from "./settings/use-account-language";
+  PlanChangeLabels,
+  PlanColumnOptions,
+  PlanColumnUsage,
+  PlanChange,
+  PlanChangeConfirmProps,
+  PlanChangeOutcome,
+  PlanChangeTone,
+  PlanChangeLine,
+  PlanChangeResultOptions,
+} from "./admin/plan-change";
 
-// ── 0.31.0: the public landing page and the demo (docs/landing-demo-harmonization.md) ──
-export { DEFAULT_LANDING_LABELS, useLandingLabels } from "./landing/landing-labels";
-export type { LandingLabels } from "./landing/landing-labels";
-export { accessAction, useAccessAction } from "./landing/access";
-export type { AccessChoice, AccessLink, AccessLabels } from "./landing/access";
-export { LandingActions } from "./landing/landing-actions";
-export type { LandingActionsProps, LandingSession } from "./landing/landing-actions";
-export { Hero, FeatureRows, FeatureRow, TrustStrip, CtaBand, PublicFooter } from "./landing/landing-sections";
-export type {
-  HeroProps,
-  FeatureRowsProps,
-  FeatureRowProps,
-  TrustItem,
-  TrustStripProps,
-  CtaBandProps,
-  PublicFooterProps,
-} from "./landing/landing-sections";
-export { usePageSeo, seoCopyProblems, metaContent } from "./landing/page-seo";
-export type { SeoCopy, SeoCopyLimits, SeoCopyProblem, SeoCopyProblemCode } from "./landing/page-seo";
-// Router-aware (also in `@eifi1/ui-kit/shell`): the header and the resume.
-export {
-  RootEntry,
-  RedirectIfAuthed,
-  useLastVisitedPage,
-  readLastVisitedPage,
-  clearLastVisitedPage,
-  safeNextPath,
-  NEXT_PARAM,
-  DEFAULT_LAST_VISITED_EXCLUDES,
-} from "./landing/routing";
-export type {
-  RootEntryProps,
-  RedirectIfAuthedProps,
-  RoutingSession,
-  LastVisitedPageOptions,
-  PathPattern,
-} from "./landing/routing";
-export { PublicHeader } from "./landing/public-header";
-export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
-export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";
-export type { DemoLabels } from "./demo/demo-labels";
-export { isDemoSession } from "./demo/demo-session";
-export type { DemoModel, DemoSessionUser } from "./demo/demo-session";
-export { useDemoCountdown, demoCountdown, DEMO_WARNING_MINUTES, DEMO_MINUTES_ONLY } from "./demo/demo-countdown";
-export type { DemoCountdown, DemoCountdownOptions, DemoExpiry } from "./demo/demo-countdown";
-export { DemoStart } from "./demo/demo-start";
-export type { DemoStartProps } from "./demo/demo-start";
-export { DemoBanner } from "./demo/demo-banner";
-export type { DemoBannerProps } from "./demo/demo-banner";
-export { DemoEnded } from "./demo/demo-ended";
-export type { DemoEndedProps } from "./demo/demo-ended";
-export type {
-  LegalPageProps,
-  LegalKitSectionProps,
-  LegalKitSectionKey,
-  LegalAcceptCheckboxProps,
-  LegalSkeletonEntry,
-  LegalSkeletonPage,
-  LegalSectionOwner,
-  LegalDisclaimerVariant,
-} from "./components/legal-page";
-
-// ── 0.32.0: text size and contrast (docs/text-size-harmonization.md) ──
-export * from "./theme/text-size";
-export * from "./theme/contrast";
-export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM, remPx, useRemPx } from "./hooks/use-breakpoint";
-export type { Breakpoint, BreakpointVariant, RemLength } from "./hooks/use-breakpoint";
-export { useAccountAppearance, resolveAccountAppearance } from "./settings/use-account-appearance";
-export type {
-  AppearanceSource,
-  AccountAppearanceFields,
-  DeviceAppearance,
-  AccountAppearancePatch,
-  ResolvedAccountAppearance,
-  UseAccountAppearanceOptions,
-  AccountAppearance,
-} from "./settings/use-account-appearance";
-export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
-// The behaviours at Large (§4, §10.7–10.9): a row's actions, the hooks components read.
-export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
-export type {
-  RowAction,
-  RowActionList,
-  RowActionsLabels,
-  RowActionsProps,
-  RowActionsCollapse,
-  RowActionsSize,
-  RowActionsColumnOptions,
-  RowActionTone,
-} from "./components/row-actions";
-export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
-export type { AppearanceLabels } from "./components/appearance-labels";
-
-// ── 0.32.0: billing — plans, standing, banners, the limit notice (docs/billing-harmonization.md §7) ──
+// ── billing ──────────────────────────────────────────────────────────────────
+// 0.32.0: plans, standing, banners, the limit notice (docs/billing-harmonization.md §7).
 export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from "./billing/billing-labels";
 export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
 export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
@@ -839,8 +826,8 @@ export { billingLockAt, isBillingReadOnly, billingDaysLeft } from "./billing/bil
 export type { BillingStanding } from "./billing/billing-standing";
 export { SubscriptionActions } from "./billing/subscription-actions";
 export type { SubscriptionActionsProps } from "./billing/subscription-actions";
-// ── 0.33.0: billing's round 0.33 (docs/billing-harmonization.md §14) ──
-// The way back from a checkout and its "processing", router-agnostic (§14.4).
+// 0.33.0, billing's round 0.33 (docs/billing-harmonization.md §14):
+// the way back from a checkout and its "processing", router-agnostic (§14.4).
 export {
   CHECKOUT_RETURN_PARAM,
   CHECKOUT_RETURN_VALUE,
@@ -858,70 +845,69 @@ export type { PaddleEnvironment } from "./billing/pay-page";
 export type { BillingOverview, SubscriptionSource, PortalTarget, PortalRequest } from "./billing/billing-overview";
 export { usePlanLimitToast } from "./billing/plan-limit-toast";
 export type { PlanLimitToastOptions } from "./billing/plan-limit-toast";
-// The operator's plan parts (§14.12).
-export {
-  planColumn,
-  usePlanColumn,
-  PlanChangeConfirm,
-  usePlanChangeResult,
-  DEFAULT_PLAN_CHANGE_LABELS,
-} from "./admin/plan-change";
+// The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
+
+// ── settings ─────────────────────────────────────────────────────────────────
+// 0.31.0 (docs/settings-harmonization.md): the settings page and the admin page on one
+// shell. The router-aware layout with its
+// route and focus hooks, and the router-free section, context, heading level and catalogue,
+// come with `./shell` above (also `@eifi1/ui-kit/shell`).
+export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
+export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
+// The language follows the account (§6.2); since 0.32 so do the text size and the
+// contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
+export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
 export type {
-  PlanChangeLabels,
-  PlanColumnOptions,
-  PlanColumnUsage,
-  PlanChange,
-  PlanChangeConfirmProps,
-  PlanChangeOutcome,
-  PlanChangeTone,
-  PlanChangeLine,
-  PlanChangeResultOptions,
-} from "./admin/plan-change";
+  UseAccountLanguageOptions,
+  AccountLanguage,
+  AccountLanguageSource,
+  ResolveAccountLanguageInput,
+  ResolvedAccountLanguage,
+} from "./settings/use-account-language";
+export { useAccountAppearance, resolveAccountAppearance } from "./settings/use-account-appearance";
+export type {
+  AppearanceSource,
+  AccountAppearanceFields,
+  DeviceAppearance,
+  AccountAppearancePatch,
+  ResolvedAccountAppearance,
+  UseAccountAppearanceOptions,
+  AccountAppearance,
+} from "./settings/use-account-appearance";
 
-// ── 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits) ──
-export * from "./components/checkbox-group";
-export * from "./components/one-time-code-input";
-export * from "./components/language-select";
-export * from "./components/tile-radio";
-export * from "./components/inline-edit-field";
-export * from "./components/sign-chip";
-export * from "./components/country-select";
-export { COUNTRY_CODES, countryName } from "./lib/countries";
-export * from "./components/iban-input";
-export {
-  IBAN_LENGTHS,
-  compactIban,
-  formatIban,
-  ibanCheckDigits,
-  ibanProblem,
-  isValidIban,
-  isQrIban,
-} from "./lib/iban";
-export type { IbanKind, IbanProblem } from "./lib/iban";
-export { formatIsin, isinCheckDigit, isValidIsin } from "./lib/isin";
-export * from "./components/phone-input";
-export {
-  PHONE_DIAL_CODES,
-  PHONE_COUNTRIES,
-  parsePhone,
-  formatNationalPhone,
-  formatPhone,
-  isE164,
-} from "./lib/phone";
-export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
+// ── landing ──────────────────────────────────────────────────────────────────
+// 0.31.0 (docs/landing-demo-harmonization.md): the public landing page. Its router-aware parts — the header and the resume (RootEntry,
+// RedirectIfAuthed, the last-visited page) — come with `./shell` above.
+export { DEFAULT_LANDING_LABELS, useLandingLabels } from "./landing/landing-labels";
+export type { LandingLabels } from "./landing/landing-labels";
+export { accessAction, useAccessAction } from "./landing/access";
+export type { AccessChoice, AccessLink, AccessLabels } from "./landing/access";
+export { LandingActions } from "./landing/landing-actions";
+export type { LandingActionsProps, LandingSession } from "./landing/landing-actions";
+export { Hero, FeatureRows, FeatureRow, TrustStrip, CtaBand, PublicFooter } from "./landing/landing-sections";
+export type {
+  HeroProps,
+  FeatureRowsProps,
+  FeatureRowProps,
+  TrustItem,
+  TrustStripProps,
+  CtaBandProps,
+  PublicFooterProps,
+} from "./landing/landing-sections";
+export { usePageSeo, seoCopyProblems, metaContent } from "./landing/page-seo";
+export type { SeoCopy, SeoCopyLimits, SeoCopyProblem, SeoCopyProblemCode } from "./landing/page-seo";
 
-// ── 0.23.0: the apps' 0.22 adoption round (kastlan, keksdose, Kurvenschmiede) ──
-// The label strip over custom content (keksdose G8).
-export * from "./components/field-strip";
-// Paste or drop a table, give each column a role (Kurvenschmiede's columns input,
-// keksdose's import map step). The lexer itself stays in `@eifi1/ui-kit/table-text`.
-export * from "./components/column-mapper";
-export {
-  assignColumnRole,
-  guessMapping,
-  missingRoles,
-  readMappedTable,
-  readTextFile,
-  roleOfColumn,
-} from "./lib/column-mapping";
-export type { ColumnMapperResult, ColumnMapping, ColumnRole } from "./lib/column-mapping";
+// ── demo ─────────────────────────────────────────────────────────────────────
+// 0.31.0 (docs/landing-demo-harmonization.md): the demo's start, banner, countdown and end.
+export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";
+export type { DemoLabels } from "./demo/demo-labels";
+export { isDemoSession } from "./demo/demo-session";
+export type { DemoModel, DemoSessionUser } from "./demo/demo-session";
+export { useDemoCountdown, demoCountdown, DEMO_WARNING_MINUTES, DEMO_MINUTES_ONLY } from "./demo/demo-countdown";
+export type { DemoCountdown, DemoCountdownOptions, DemoExpiry } from "./demo/demo-countdown";
+export { DemoStart } from "./demo/demo-start";
+export type { DemoStartProps } from "./demo/demo-start";
+export { DemoBanner } from "./demo/demo-banner";
+export type { DemoBannerProps } from "./demo/demo-banner";
+export { DemoEnded } from "./demo/demo-ended";
+export type { DemoEndedProps } from "./demo/demo-ended";

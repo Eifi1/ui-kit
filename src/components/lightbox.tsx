@@ -4,12 +4,13 @@ import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, ZoomIn } f
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { FullBleedDialog } from "./full-bleed-dialog";
-import { IconButton, buttonClasses } from "./ui";
+import { IconButton } from "./icon-button";
+import { buttonClasses } from "./button-look";
 import { ImageStates, DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image";
 import { useAnchorDir } from "./use-anchor-dir";
 import { DEFAULT_LIGHTBOX_LABELS } from "./lightbox-labels";
@@ -107,7 +108,7 @@ export interface LightboxProps {
   /** Push a history entry so Back closes the viewer. Default `true`; see
    *  `FullBleedDialog`'s `backCloses` for when to turn it off. */
   backCloses?: boolean;
-  labels?: Partial<LightboxLabels>;
+  labels?: LabelOverride<LightboxLabels>;
 }
 
 /** Swipes shorter than this are taps, and a drag that is mostly vertical is a scroll. */

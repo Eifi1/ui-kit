@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { serverWake } from "../lib/server-wake";
 import type { ServerWakeStage, ServerWakeWatcher } from "../lib/server-wake";
 import { AlertBanner } from "./alert-banner";
-import { Spinner } from "./ui";
+import { Spinner } from "./spinner";
 import { DEFAULT_SERVER_WAKE_LABELS } from "./server-wake-labels";
 
 /**
@@ -68,7 +68,7 @@ export interface ServerWakeNoticeProps {
   /** Named in the `waking` sentence ("…when nobody is using Keksdose…"). Default: the
    *  label says "the app". */
   appName?: string;
-  labels?: Partial<ServerWakeLabels>;
+  labels?: LabelOverride<ServerWakeLabels>;
   /**
    * @deprecated 0.34 — drop it; removed in 0.35. The notice sits at the TOP of the
    * screen since 0.34, so there is no bottom nav to clear and this does nothing. It was

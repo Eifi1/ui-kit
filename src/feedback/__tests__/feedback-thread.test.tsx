@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { FeedbackComposer, FeedbackThread } from "../feedback-thread";
+import { ChatComposer, FeedbackThread } from "../feedback-thread";
 import type { FeedbackThreadMessage } from "../feedback-thread";
 import { FeedbackDialog } from "../feedback-dialog";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -119,11 +119,11 @@ describe("FeedbackThread", () => {
   });
 });
 
-describe("FeedbackComposer", () => {
+describe("ChatComposer", () => {
   it("sends the trimmed body with Ctrl/Cmd+Enter and clears once the send resolves", async () => {
     let resolve!: () => void;
     const onSend = vi.fn(() => new Promise<void>((r) => (resolve = r)));
-    render(<FeedbackComposer onSend={onSend} />);
+    render(<ChatComposer onSend={onSend} />);
     const box = screen.getByRole("textbox", { name: "Write a comment" });
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
 
@@ -140,7 +140,7 @@ describe("FeedbackComposer", () => {
   it("keeps text typed while the send was in flight, and everything on a rejection", async () => {
     let resolve!: () => void;
     const onSend = vi.fn(() => new Promise<void>((r) => (resolve = r)));
-    const { rerender } = render(<FeedbackComposer onSend={onSend} />);
+    const { rerender } = render(<ChatComposer onSend={onSend} />);
     const box = screen.getByRole("textbox", { name: "Write a comment" });
     fireEvent.change(box, { target: { value: "one" } });
     fireEvent.keyDown(box, { key: "Enter", ctrlKey: true });
@@ -149,7 +149,7 @@ describe("FeedbackComposer", () => {
     expect(box).toHaveValue("one and two");
 
     const failing = vi.fn(() => Promise.reject(new Error("offline")));
-    rerender(<FeedbackComposer onSend={failing} />);
+    rerender(<ChatComposer onSend={failing} />);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send" })));
     expect(failing).toHaveBeenCalled();
     expect(box).toHaveValue("one and two");
@@ -157,7 +157,7 @@ describe("FeedbackComposer", () => {
 
   it("is busy while pending and sends nothing more", () => {
     const onSend = vi.fn();
-    render(<FeedbackComposer onSend={onSend} pending />);
+    render(<ChatComposer onSend={onSend} pending />);
     const box = screen.getByRole("textbox", { name: "Write a comment" });
     fireEvent.change(box, { target: { value: "hi" } });
     const button = screen.getByRole("button", { name: "Send" });
@@ -168,11 +168,11 @@ describe("FeedbackComposer", () => {
   });
 
   it("offers the attachment field only when asked, and a reason instead of the box", () => {
-    const { rerender } = render(<FeedbackComposer onSend={vi.fn()} />);
+    const { rerender } = render(<ChatComposer onSend={vi.fn()} />);
     expect(screen.queryByRole("button", { name: /Add attachment/ })).toBeNull();
-    rerender(<FeedbackComposer onSend={vi.fn()} attachment />);
+    rerender(<ChatComposer onSend={vi.fn()} attachment />);
     expect(screen.getByRole("button", { name: /Add attachment/ })).toBeInTheDocument();
-    rerender(<FeedbackComposer onSend={vi.fn()} disabledReason="This report is closed." />);
+    rerender(<ChatComposer onSend={vi.fn()} disabledReason="This report is closed." />);
     expect(screen.getByText("This report is closed.")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
   });
@@ -180,7 +180,7 @@ describe("FeedbackComposer", () => {
   it("names the shortcut with the platform's modifier, translated", () => {
     render(
       <UiKitProvider labels={{ feedbackComposer: UI_KIT_LABELS_DE_CH.feedbackComposer }}>
-        <FeedbackComposer onSend={vi.fn()} />
+        <ChatComposer onSend={vi.fn()} />
       </UiKitProvider>,
     );
     // jsdom is not a Mac, so the modifier is Ctrl — which German keyboards call Strg.

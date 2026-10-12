@@ -8,9 +8,9 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { isImeEnter } from "../lib/ime";
 import { claimEscape } from "../hooks/use-dismiss";
-import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./field-base";
 import { FIELD_ERROR_CLASS, mergeRefs } from "./field-parts";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_CHIP_INPUT_LABELS } from "./chip-labels";
 import { Chip, type ChipSize, type ChipTone } from "./chip";
 
@@ -32,6 +32,9 @@ export interface ChipInputLabels {
 // Defined in ./chip-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_CHIP_INPUT_LABELS };
 
+/** @deprecated 0.34 — `useKitLabels("chipInput", DEFAULT_CHIP_INPUT_LABELS, labels)`, which
+ *  the provider reaches too, or ChipInput's own `labels`; removed in 0.35 (refactor audit
+ *  2026-10, API-6a). A merge from before the provider, which no kit component calls. */
 export function resolveChipInputLabels(labels?: Partial<ChipInputLabels>): ChipInputLabels {
   return labels ? { ...DEFAULT_CHIP_INPUT_LABELS, ...labels } : DEFAULT_CHIP_INPUT_LABELS;
 }
@@ -46,9 +49,10 @@ export interface ChipInputProps
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
-  /** Visible label, rendered above the field. Without one, name the field with
+  /** Visible label, rendered above the field: a ReactNode, as on every kit field (a
+   *  string until 0.34, refactor audit 2026-10, API-9). Without one, name the field with
    *  `aria-label`. */
-  label?: string;
+  label?: ReactNode;
   /** Reject or rewrite a value on commit. Return a string to reject WITH that message. */
   validate?: (raw: string) => string | null;
   /** Characters that commit the current text, besides Enter. Default: comma. */
@@ -61,7 +65,7 @@ export interface ChipInputProps
   invalid?: boolean;
   /** Error text. Wires `aria-describedby` and implies `invalid`. */
   error?: ReactNode;
-  labels?: Partial<ChipInputLabels>;
+  labels?: LabelOverride<ChipInputLabels>;
   className?: string;
   /** The `<input>` the next value is typed into — the element that takes focus, which
    *  react-hook-form's focus-on-error calls `focus()` on (API-3, refactor audit 2026-10).
@@ -108,8 +112,7 @@ export function ChipInput({
   ref,
   ...rest
 }: ChipInputProps) {
-  // `labels` over the provider's `chipInput` over English — the same order
-  // `resolveChipInputLabels` gives outside a provider.
+  // `labels` over the provider's `chipInput` over English.
   const text = useKitLabels("chipInput", DEFAULT_CHIP_INPUT_LABELS, labels);
   // A batch of pasted values is announced as one list, joined the way the language
   // joins a list in a sentence ("a, b and c added") — hence the long conjunction,

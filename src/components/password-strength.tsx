@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "./password-strength-labels";
 
 /**
@@ -153,7 +153,7 @@ export interface PasswordStrengthMeterProps extends ComponentPropsWithRef<"div">
    */
   maxBytes?: number;
   /** User-facing strings; see {@link PasswordStrengthLabels}. */
-  labels?: Partial<PasswordStrengthLabels>;
+  labels?: LabelOverride<PasswordStrengthLabels>;
 }
 
 /**

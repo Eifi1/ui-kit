@@ -18,7 +18,7 @@ import {
 } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { assignRef, FieldLabelLine, LABEL_ABOVE_BOX } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import type { RemLength } from "../hooks/use-breakpoint";

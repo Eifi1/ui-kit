@@ -6,6 +6,7 @@
 // A type-only import: erased at build time, so this module stays free of the table
 // itself (and of react-router), which `i18n/defaults` relies on.
 import type { DataTableSortLabels } from "./data-table";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /** The phone sort control's four keys (`sortBy`, `sortDefault`, `sortAscending`,
  *  `sortDescending`, 0.22.0) are {@link DataTableSortLabels}', declared beside the
@@ -169,23 +170,27 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
 };
 
 /**
- * Merge caller overrides onto the English defaults (presets merged too).
+ * Merge caller overrides onto the English defaults (presets merged too, key by key, as
+ * the provider merges them — so the parameter is a {@link LabelOverride}).
  *
- * The parameter is `Partial` on purpose — a table with no labels at all still
+ * The parameter is lenient on purpose — a table with no labels at all still
  * renders — but that is also how a translated app ends up half English and never
  * hears about it: lenkbank ships nineteen of these keys in English in a German UI
  * today, because every one of them is backfilled silently. The kit will not start
  * throwing over it (three apps depend on the lenient merge), so
  * {@link missingDataTableLabels} is the other half: it answers which keys fell back,
  * and an app asserts on that in its OWN test, where the answer is actionable.
+ *
+ * @deprecated 0.34 — pass `labels` to DataTable, or the provider's `dataTable`, which this
+ * merge serves; removed in 0.35 from the public surface, where DataTable keeps it as its
+ * own (refactor audit 2026-10, API-6a). One app test calls it.
  */
-export function resolveDataTableLabels(partial?: Partial<DataTableLabels>): DataTableLabels {
+export function resolveDataTableLabels(partial?: LabelOverride<DataTableLabels>): DataTableLabels {
   if (!partial) return DEFAULT_DATA_TABLE_LABELS;
-  const merged: DataTableLabels = {
-    ...DEFAULT_DATA_TABLE_LABELS,
-    ...partial,
-    presets: { ...DEFAULT_DATA_TABLE_LABELS.presets, ...(partial.presets ?? {}) },
-  };
+  // An `undefined` preset is skipped, as the provider skips it, rather than blanking one.
+  const presets = { ...DEFAULT_DATA_TABLE_LABELS.presets };
+  for (const [key, text] of Object.entries(partial.presets ?? {})) if (text !== undefined) presets[key] = text;
+  const merged: DataTableLabels = { ...DEFAULT_DATA_TABLE_LABELS, ...partial, presets };
   // `columnsCount` was split out of `columns` + a template literal. Consumers have
   // been translating `columns` since 0.1, and backfilling the English default over
   // that would hand them "Columns (4/9)" back for having translated the key that
@@ -221,6 +226,10 @@ export function resolveDataTableLabels(partial?: Partial<DataTableLabels>): Data
  * Preset labels are reported one at a time (`presets.yesterday`), because `presets`
  * is a `Record` merged key by key: answering `"presets"` would say nothing about
  * which of the eleven are still English.
+ *
+ * @deprecated 0.34 — `missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)`, which checks every
+ * namespace, the table's among them, and which all three apps' tests already call;
+ * removed in 0.35 (refactor audit 2026-10, API-6a).
  */
 export function missingDataTableLabels(labels?: Partial<DataTableLabels>): string[] {
   const missing: string[] = [];

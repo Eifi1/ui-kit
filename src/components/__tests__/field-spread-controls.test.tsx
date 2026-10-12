@@ -8,7 +8,7 @@ import { DatePicker, DateRangePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
 import { MultiSelect } from "../multi-select";
 import { Autocomplete } from "../autocomplete";
-import { FIELD_INVALID } from "../ui";
+import { FIELD_INVALID } from "../field-base";
 
 /**
  * `Field`'s render-prop hands `{ id, aria-describedby, aria-invalid, aria-required }`

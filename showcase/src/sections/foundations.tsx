@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  ALTERNATIVE_PRESETS,
   AlertBanner,
   Button,
   CHART_COLORS,
@@ -490,22 +489,20 @@ export function Foundations() {
 function sourceOf(p: PalettePreset): string {
   if (p === DEFAULT_PRESET) return "DEFAULT_PRESET";
   if (p === IMPRINT_PRESET) return "IMPRINT_PRESET";
-  if (DERIVED_PRESETS.includes(p)) return "DERIVED_PRESETS";
-  return "ALTERNATIVE_PRESETS";
+  return "DERIVED_PRESETS";
 }
 
-const ALL_PRESETS: PalettePreset[] = [...PALETTES, ...ALTERNATIVE_PRESETS];
-
 /**
- * Any preset — including the five in `ALTERNATIVE_PRESETS`, which are a reference bank
- * and not in `PALETTES` — written onto one element. `applyTokenSet` takes any element,
- * and the custom properties it writes cascade to the kit components inside.
+ * Any preset in `PALETTES` written onto one element. `applyTokenSet` takes any element,
+ * and the custom properties it writes cascade to the kit components inside. (The five
+ * `ALTERNATIVE_PRESETS` this also showed are deprecated in 0.34: a reference bank that
+ * `presetById` never resolved, refactor audit 2026-10, API-6c.)
  */
 function PresetPreview() {
   const mode = useTheme((s) => s.mode);
-  const [id, setId] = useState(ALTERNATIVE_PRESETS[0].id);
+  const [id, setId] = useState(DERIVED_PRESETS[0].id);
   const card = useRef<HTMLDivElement>(null);
-  const preset = ALL_PRESETS.find((p) => p.id === id) ?? DEFAULT_PRESET;
+  const preset = PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;
 
   // In an effect: the write goes to the DOM, and re-runs when the theme flips.
   useEffect(() => {
@@ -516,7 +513,7 @@ function PresetPreview() {
     <div className="space-y-4">
       <div className="max-w-xs">
         <Select label="Preset" value={id} onChange={(e) => setId(e.target.value)}>
-          {ALL_PRESETS.map((p) => (
+          {PALETTES.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name} — {sourceOf(p)}
             </option>
@@ -554,13 +551,12 @@ function PresetPreview() {
           ["DEFAULT_PRESET.id", DEFAULT_PRESET.id],
           ["IMPRINT_PRESET.id", IMPRINT_PRESET.id],
           ["DERIVED_PRESETS.map(p => p.id)", DERIVED_PRESETS.map((p) => p.id).join(", ")],
-          ["ALTERNATIVE_PRESETS.map(p => p.id)", ALTERNATIVE_PRESETS.map((p) => p.id).join(", ")],
           ["PALETTES.map(p => p.id)", PALETTES.map((p) => p.id).join(", ")],
           ['presetById("ink").id', presetById("ink").id],
           [
-            `presetById("${ALTERNATIVE_PRESETS[0].id}").id`,
+            'presetById("warm-paper").id',
             <>
-              {presetById(ALTERNATIVE_PRESETS[0].id).id}{" "}
+              {presetById("warm-paper").id}{" "}
               <span className="font-sans font-normal text-muted">
                 — not in PALETTES, so the default
               </span>
@@ -571,9 +567,9 @@ function PresetPreview() {
       <Note>
         Only the semantic layer comes from <code className="font-mono">tokens.css</code> (danger,
         warning, info…), so those do not change with the preset here — the same is true of the
-        page itself. The palette store only knows <code className="font-mono">PALETTES</code>: an
-        alternative preset is something an app copies into its own list, not an id it can
-        persist.
+        page itself. The palette store only knows <code className="font-mono">PALETTES</code>: a
+        preset of the app&apos;s own (<code className="font-mono">derivePalette</code>) is
+        something it adds to its own list, not an id it can persist.
       </Note>
     </div>
   );

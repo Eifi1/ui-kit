@@ -2,7 +2,10 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ReactElement, ReactNode } from "react";
 import { Link, useHref, useLocation } from "react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button, Card, EmptyState, Tabs } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { EmptyState } from "../components/empty-state";
+import { Tabs } from "../components/tabs";
 import { FOCUS_RING } from "../components/focus-ring";
 import { Chip } from "../components/chip";
 import { List, ListItem } from "../components/list";
@@ -10,7 +13,7 @@ import type { ListItemLinkProps } from "../components/list";
 import { PageHeader } from "../components/page-header";
 import { SearchField } from "../components/search-field";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { createSearchIndex } from "../search/search-index";
 import type { SearchEntry } from "../search/search-index";
 import {
@@ -70,7 +73,7 @@ export interface SettingsLayoutProps<G extends string> {
    */
   phoneFooter?: ReactNode;
   /** Prop > `<UiKitProvider labels={{ settings }}>` > English. */
-  labels?: Partial<SettingsLabels>;
+  labels?: LabelOverride<SettingsLabels>;
   /** See {@link SettingsLayoutMode}. Default `"auto"`: the screen decides. */
   layout?: SettingsLayoutMode;
   /**

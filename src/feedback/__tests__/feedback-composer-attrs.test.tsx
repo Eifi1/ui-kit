@@ -9,10 +9,10 @@ import { ChatComposer, FeedbackComposer, type ChatComposerProps } from "../feedb
  * root; and a chat should not have to import something called "Feedback".
  */
 
-describe("FeedbackComposer root attributes (keksdose K17)", () => {
+describe("ChatComposer root attributes (keksdose K17)", () => {
   it("puts id and data-* on its root", () => {
     const { container } = render(
-      <FeedbackComposer onSend={() => {}} id="ask" data-tour="assistant-ask" data-testid="composer" />,
+      <ChatComposer onSend={() => {}} id="ask" data-tour="assistant-ask" data-testid="composer" />,
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveAttribute("id", "ask");
@@ -23,7 +23,7 @@ describe("FeedbackComposer root attributes (keksdose K17)", () => {
   });
 
   it("keeps them on the line that replaces the box when the thread is closed", () => {
-    render(<FeedbackComposer onSend={() => {}} disabledReason="Closed." data-tour="assistant-ask" id="ask" />);
+    render(<ChatComposer onSend={() => {}} disabledReason="Closed." data-tour="assistant-ask" id="ask" />);
     const line = screen.getByText("Closed.");
     expect(line).toHaveAttribute("data-tour", "assistant-ask");
     expect(line).toHaveAttribute("id", "ask");
@@ -34,7 +34,7 @@ describe("FeedbackComposer root attributes (keksdose K17)", () => {
   // with an empty line. The kit's one presence rule: `""` says nothing.
   it("keeps the box for an empty reason, as every other `disabledReason` does", () => {
     for (const nothing of ["", null, false, undefined]) {
-      const { unmount } = render(<FeedbackComposer onSend={() => {}} disabledReason={nothing} />);
+      const { unmount } = render(<ChatComposer onSend={() => {}} disabledReason={nothing} />);
       expect(screen.getByRole("textbox")).toBeInTheDocument();
       unmount();
     }
@@ -42,7 +42,7 @@ describe("FeedbackComposer root attributes (keksdose K17)", () => {
 
   it("passes on data-* only, nothing else a caller spreads in", () => {
     const props = { onSend: () => {}, "data-x": "1", onClick: vi.fn() } as unknown as ChatComposerProps;
-    const { container } = render(<FeedbackComposer {...props} />);
+    const { container } = render(<ChatComposer {...props} />);
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveAttribute("data-x", "1");
     fireEvent.click(root);
@@ -51,8 +51,8 @@ describe("FeedbackComposer root attributes (keksdose K17)", () => {
 });
 
 describe("ChatComposer", () => {
-  it("is FeedbackComposer under a neutral name", () => {
-    expect(ChatComposer).toBe(FeedbackComposer);
+  it("is the same function as FeedbackComposer, its old name (deprecated 0.34, removed in 0.35)", () => {
+    expect(FeedbackComposer).toBe(ChatComposer);
     const onSend = vi.fn();
     render(<ChatComposer onSend={onSend} sendOn="enter" data-tour="assistant-ask" />);
     const box = screen.getByRole("textbox");

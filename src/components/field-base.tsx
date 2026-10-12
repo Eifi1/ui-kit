@@ -457,8 +457,10 @@ export interface PasswordRevealLabels {
 // Defined in ./ui-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_PASSWORD_REVEAL_LABELS };
 
-/** Caller's labels over the English defaults — the same shape as
- *  `resolveDataTableLabels`, so a consumer translates every kit string one way. */
+/** @deprecated 0.34 — `useKitLabels("passwordReveal", DEFAULT_PASSWORD_REVEAL_LABELS, labels)`,
+ *  which the provider reaches too, or Input's own `passwordLabels`; removed in 0.35
+ *  (refactor audit 2026-10, API-6a). A merge from before the provider, which no kit
+ *  component calls. */
 export function resolvePasswordRevealLabels(
   partial?: Partial<PasswordRevealLabels>,
 ): PasswordRevealLabels {

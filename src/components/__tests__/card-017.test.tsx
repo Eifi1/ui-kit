@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../card";
 
 /**
  * keksdose Q3: Card `density="compact"` (the small settings card's three hand-written

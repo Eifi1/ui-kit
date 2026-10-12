@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { DEFAULT_LANDING_LABELS, useLandingLabels } from "./landing-labels";
 import type { LandingLabels } from "./landing-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /**
  * How a visitor gets an account (docs/landing-demo-harmonization.md §2.2, §4.2).
@@ -79,7 +80,7 @@ export function accessAction(access: AccessChoice, labels: Partial<AccessLabels>
 }
 
 /** {@link accessAction} with the `landing` words of the nearest provider (then `labels`). */
-export function useAccessAction(access: AccessChoice, labels?: Partial<LandingLabels>): AccessLink {
+export function useAccessAction(access: AccessChoice, labels?: LabelOverride<LandingLabels>): AccessLink {
   const words = useLandingLabels(labels);
   // `access` is usually an inline object; its fields are what the link depends on.
   const kind = access.kind;

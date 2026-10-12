@@ -21,7 +21,8 @@ import type { CalendarHeatmapLabels } from "../components/calendar-heatmap";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
 import type { FieldSyncLabels } from "../components/field-sync";
-import type { CharacterCountLabels, PasswordRevealLabels, TabsLabels } from "../components/ui";
+import type { CharacterCountLabels, PasswordRevealLabels } from "../components/field-base";
+import type { TabsLabels } from "../components/tabs";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { CommandPaletteLabels } from "../search/command-palette";
@@ -711,12 +712,15 @@ export function useKitLabelOverrides<K extends keyof UiKitLabels>(
 
 /**
  * One namespace, resolved: `defaults`, then the provider, then the component's own
- * `prop`. Record-valued keys are merged key by key at each step.
+ * `prop`. Record-valued keys are merged key by key at each step — so `prop` is a
+ * {@link LabelOverride}, partial at every depth as the provider's labels are, and a
+ * component's `labels` prop, typed the same, is handed over without a cast (refactor
+ * audit 2026-10, API-9).
  */
 export function useKitLabels<K extends keyof UiKitLabels>(
   ns: K,
   defaults: UiKitLabels[K],
-  prop?: Partial<UiKitLabels[K]>,
+  prop?: LabelOverride<UiKitLabels[K]>,
 ): UiKitLabels[K] {
   const fromProvider = useKitLabelOverrides(ns);
   return useMemo(

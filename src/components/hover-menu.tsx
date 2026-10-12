@@ -22,10 +22,10 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   /**
    * Which edge of the trigger the panel lines up with. `start`/`end` follow the
    * reading direction (`end` is the right edge in LTR, the left in RTL); `left`/`right`
-   * are physical and kept for existing callers. Default `end` — the same right-aligned
-   * panel as before in LTR, mirrored in RTL.
+   * are physical and deprecated ({@link PhysicalAlign}). Default `end` — the same
+   * right-aligned panel as before in LTR, mirrored in RTL.
    */
-  align?: "start" | "end" | "left" | "right";
+  align?: "start" | "end" | PhysicalAlign;
   panelClassName?: string;
   /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
   className?: string;
@@ -33,6 +33,14 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
    *  merged with its own ref, which the outside click and the hover are measured on. */
   ref?: Ref<HTMLDivElement>;
 }
+
+/**
+ * @deprecated 0.34 — `"start"` / `"end"`, which follow the reading direction: `"right"`
+ * is `"end"` in a left-to-right page, the default; removed in 0.35 (refactor audit
+ * 2026-10, API-6e). The physical edges HoverMenu's `align` — and TopBarActionMenu's and
+ * FeedbackMenu's, which hand it on — still take.
+ */
+type PhysicalAlign = "left" | "right";
 
 // Hovering waits briefly before opening so sweeping the cursor across a row of
 // triggers doesn't flash menus; closing waits so the cursor can travel from

@@ -191,6 +191,39 @@ renders inside consumer markup**, where there is no wrapper you can make `relati
 Adding an optional prop is fine. Renaming or removing one is not, and neither is changing
 what an existing prop means.
 
+**A new component follows the kit's prop conventions**, so the next one does not decide
+them again (refactor audit 2026-10, API-5). The checklist:
+
+- [ ] **The value is `value` + `onChange(value)`** — the value itself, not an event. A
+      component that extends an `<input>`'s attributes keeps the DOM `onChange` (the
+      event) and adds `onValueChange(value)` beside it (TimeInput, IbanInput, PhoneInput).
+- [ ] **Field values are controlled**: `value` and `onChange`, no `defaultValue`. Open or
+      expanded state is dual: `open` / `defaultOpen` / `onOpenChange`.
+- [ ] **Its words are one `labels` object**: `labels?: LabelOverride<XLabels>`, resolved
+      with `useKitLabels("x", DEFAULT_X_LABELS, labels)` — a namespace in the provider,
+      in all seven catalogues (rule 1). Not single chrome-string props (`closeLabel`,
+      `clearLabel`, …).
+- [ ] **`label` is the visible label, a `ReactNode`.** The accessible name of a control
+      with no visible label is `aria-label`, a string — never a prop called `label`.
+- [ ] **`className` goes on the root**, `inputClassName` (or `selectClassName`) on the
+      control inside it.
+- [ ] **Its props are exported** as `<Name>Props`, the type the component is called with
+      (a union where it takes two shapes, like `ThemeSettingProps`).
+
+Where the kit stands, so a reviewer knows which outliers are known (refactor audit
+2026-10, API.md, API-5). They are renamed only additively — an alias beside the old
+name, then rule 4's deprecation — when the component is touched anyway; a big-bang
+rename costs the apps more than it returns.
+
+| Convention | Majority | Known outliers |
+|---|---|---|
+| Selected value | `value` + `onChange(value)`: 40 components | Tabs `active`; NavPills `current` / `onSelect`; TileRadioGroup `checked` / `onSelect`; GroupedPicker `selected` / `onSelect(group, item)`; MultiSelect `values` (deprecated 0.34 for `value`) |
+| Change callback | Extends an `<input>`: DOM `onChange` kept, `onValueChange` added (TimeInput, IbanInput, PhoneInput, TypedConfirmField) | SearchField re-types `onChange` to a string; NumberField / IntegerField, PlanPicker and ChatComposer take `onValueChange` with no DOM `onChange` to keep |
+| Kit strings | `labels`: 146 components | ~30 take single-string chrome props: `closeLabel` (Combobox, DialogFrame, FullBleedDialog, PickerSheet, FloatingPanel, the entity comboboxes), `clearLabel`, `todayLabel`, `dismissLabel`, `collapseLabel` / `expandLabel` (AppShell), `removeLabel` (Chip), `toggleLabel` (TreeRow) |
+| `label` | The visible label, a `ReactNode` (Combobox, InlineEntityCombobox and ChipInput since 0.34) | `label` is the accessible name on ScrollArea and QrCode |
+| Controlled vs uncontrolled | Field values controlled-only (40 / 40); open state dual (Disclosure, FloatingPanel, TreeView, ListItem) | — |
+| Slot classNames | `className` on the root, `inputClassName` (32) / `selectClassName` (6) on the control | the `Rhf*` fields' `comboClassName` |
+
 An export is **deprecated for one minor before removal**, then removed in the next minor:
 
 - marked in TSDoc as `@deprecated 0.NN — <the replacement>; removed in 0.MM`;

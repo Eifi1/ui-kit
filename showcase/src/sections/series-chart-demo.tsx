@@ -24,7 +24,6 @@ import {
   strokeDash,
   toggleHidden,
   visibleSeries,
-  zoomAxesFor,
 } from "@eifi1/ui-kit";
 import type {
   LegendEntry,
@@ -548,9 +547,6 @@ export function SeriesChartDemo() {
             ["strokeDash(3)", show(strokeDash(3))],
             ["strokeDash(5)  // wraps", show(strokeDash(5))],
             ["STEP_DASH", show(STEP_DASH)],
-            ["zoomAxesFor(150, 40, 300, 100)", show(zoomAxesFor(150, 40, 300, 100))],
-            ["zoomAxesFor(240, 10, 300, 100)", show(zoomAxesFor(240, 10, 300, 100))],
-            ["zoomAxesFor(3, 1, 300, 100)", show(zoomAxesFor(3, 1, 300, 100))],
           ]}
         />
       </Example>

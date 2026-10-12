@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { Input, type InputProps } from "./ui";
+import { Input, type InputProps } from "./input";
 import { cn } from "../lib/cn";
 
 /**

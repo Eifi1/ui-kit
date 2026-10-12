@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "../components/toast";
-import type { FeedbackStatus } from "./feedback-inbox";
+import type { FeedbackStatus } from "./feedback-vocabulary";
 import {
   useFeedbackStatusLabels,
   useFeedbackToastLabels,
@@ -8,6 +8,7 @@ import {
   type FeedbackToastLabels,
 } from "./feedback-labels";
 import type { FeedbackRecord } from "./feedback-record";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /**
  * A status change that can be taken back — §4.5 of the feedback contract, lifted from
@@ -50,7 +51,7 @@ export type FeedbackStatusChange = (row: FeedbackStatusRow, status: FeedbackStat
 
 export interface FeedbackStatusUndoOptions {
   /** Over the `feedbackToast` namespace (the toast's words). */
-  labels?: Partial<FeedbackToastLabels>;
+  labels?: LabelOverride<FeedbackToastLabels>;
   /** Over the `feedbackStatus` namespace (the status names inside them). */
   statusLabels?: Partial<FeedbackStatusLabels>;
 }

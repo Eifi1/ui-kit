@@ -7,7 +7,8 @@ import { DateMark } from "../components/account-chips";
 import { Chip } from "../components/chip";
 import { Pagination } from "../components/data-table-pagination";
 import { Caption } from "../components/text";
-import { Button, Spinner } from "../components/ui";
+import { Button } from "../components/button";
+import { Spinner } from "../components/spinner";
 import { usePersonLabel } from "./admin-parts";
 import type { AdminPerson } from "./admin-parts";
 import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "./admin-action-log-labels";
@@ -295,11 +296,7 @@ export function AdminActionLog({
   labels: labelsProp,
 }: AdminActionLogProps) {
   // Merged key by key at every depth, so a deep override is what `useKitLabels` takes.
-  const labels = useKitLabels(
-    "adminActionLog",
-    DEFAULT_ADMIN_ACTION_LOG_LABELS,
-    labelsProp as Partial<AdminActionLogLabels> | undefined,
-  );
+  const labels = useKitLabels("adminActionLog", DEFAULT_ADMIN_ACTION_LOG_LABELS, labelsProp);
   const nameOf = usePersonLabel();
   const filtered = target !== undefined && target !== null && !scrubbed(target);
   // A noun the type doesn't know (an app in plain JS) says the neutral word.

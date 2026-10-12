@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime, toDate, EMPTY_FORMATTED_VALUE } from "../lib/format";
 import type { DateInput, FormatDateStyle, FormatRelativeTimeOptions } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
@@ -187,7 +187,7 @@ export interface AccountStateChipProps extends AccountChipLook {
   /** Over the label, for an app whose word for the state is its own ("Deactivated"). */
   children?: ReactNode;
   /** Prop > `<UiKitProvider labels={{ accountState }}>` > English. */
-  labels?: Partial<AccountStateLabels>;
+  labels?: LabelOverride<AccountStateLabels>;
 }
 
 /**

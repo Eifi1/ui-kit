@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Chip, refreshChipEdges } from "../../../src/components/chip";
 import type { ChipTone } from "../../../src/components/chip";
 import { toast } from "../../../src/components/toast";
-import { Button } from "../../../src/components/ui";
+import { Button } from "../../../src/components/button";
 import { Switch } from "../../../src/components/switch";
 import { Example, Note, Row } from "../lib/section";
 

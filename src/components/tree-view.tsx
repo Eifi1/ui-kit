@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, KeyboardEvent, MouseEvent, ReactNode } from
 import { ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { Spinner } from "./ui";
+import { Spinner } from "./spinner";
 import { FOCUS_RING } from "./focus-ring";
 
 /**

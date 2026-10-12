@@ -128,6 +128,12 @@ export const DEFAULT_PRESET: PalettePreset = {
 };
 
 // Vetted alternatives to preview (CVD-safe, WCAG-AA on both themes).
+/**
+ * @deprecated 0.34 — `PALETTES`, the presets `presetById` and the palette store know, or
+ * `derivePalette` for a palette of the app's own; removed in 0.35 (refactor audit 2026-10,
+ * API-6c). A reference bank only: `presetById` resolves none of these ids, and no app
+ * imports it (deferred since the 2026-09-22 audit).
+ */
 export const ALTERNATIVE_PRESETS: PalettePreset[] = [
   {
     id: "warm-paper",

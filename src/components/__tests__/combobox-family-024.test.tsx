@@ -5,7 +5,7 @@ import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { Autocomplete } from "../autocomplete";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /**
  * The Combobox family in 0.24:

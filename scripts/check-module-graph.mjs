@@ -118,9 +118,9 @@ for (const file of graph.keys()) {
 // What an import costs, measured as an app's build sees the package: Rollup over dist/,
 // every module free of side effects (package.json `sideEffects`), packages external, so
 // the number is the kit's own code, minified. The shell set is what the three apps' layout
-// and top bar import (2026-10). Each ceiling is the size last measured plus ~10 %; MOD-1
-// (a lazy feedback dialog) is expected to bring the shell set down further, and its
-// ceiling comes down with it.
+// and top bar import (2026-10). Each ceiling is the size last measured plus ~10 %. The cost
+// is what an app's first load carries: chunks a dynamic `import()` splits off (the feedback
+// dialog, MOD-1) load when first used and are not counted.
 const SHELL_SET = [
   "AppShell",
   "TopBar",
@@ -151,11 +151,19 @@ const SHELL_SET = [
 // rides only with its own control. The shell set barely moved: it does use Button,
 // IconButton, Input, Select and Textarea (the feedback dialog), and Tabs had already
 // stopped riding in with Button at MOD-4.
+//
+// Re-measured 2026-10-12 after MOD-1 (useFeedbackSubmit's dialog loaded by a literal
+// `import()` of feedback/feedback-submit-dialog.js on its first open; the menu's one
+// constant from a vocabulary module instead of the inbox; the attachment defaults in
+// feedback-record): the shell set 73,888 (26,020) at once, from 121,177 (39,961) — 47 kB
+// minified, 14 kB gzip off every app's entry chunk. The dialog's own chunk is ~49 kB
+// (16 kB gzip). Anything the top bar imports that USES the dialog, the attachment field
+// or the context box statically puts it back over this ceiling.
 const BUDGETS = [
   { label: "{ Button }", names: ["Button"], max: 19_800 },
   { label: "{ Spinner }", names: ["Spinner"], max: 1_720 },
   { label: "{ cn }", names: ["cn"], max: 190 },
-  { label: "the shell set", names: SHELL_SET, max: 133_300 },
+  { label: "the shell set", names: SHELL_SET, max: 81_300 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
@@ -170,8 +178,30 @@ async function importCost(names) {
   });
   const { output } = await bundle.generate({ format: "es" });
   await bundle.close();
-  const min = (await transform(output[0].code, { minify: true, loader: "js" })).code;
-  return { min: Buffer.byteLength(min), gzip: gzipSync(min).length, packages: output[0].imports };
+  // What loads at once: the entry chunk and every chunk it imports statically. A literal
+  // `import()` (the feedback dialog since MOD-1) is a chunk of its own, loaded on first
+  // use, and not counted. Once there is one, Rollup also moves the entry's code into a
+  // shared chunk and leaves the entry a facade of re-exports, so the entry alone would
+  // measure a few hundred bytes. Each chunk is minified and gzipped on its own, as served.
+  const chunks = new Map(output.filter((file) => file.type === "chunk").map((chunk) => [chunk.fileName, chunk]));
+  const eager = new Set();
+  const load = (name) => {
+    if (eager.has(name)) return;
+    eager.add(name);
+    for (const next of chunks.get(name).imports) if (chunks.has(next)) load(next);
+  };
+  load(output.find((file) => file.type === "chunk" && file.isEntry).fileName);
+  let min = 0;
+  let gzip = 0;
+  const packages = new Set();
+  for (const name of eager) {
+    const chunk = chunks.get(name);
+    const code = (await transform(chunk.code, { minify: true, loader: "js" })).code;
+    min += Buffer.byteLength(code);
+    gzip += gzipSync(code).length;
+    for (const id of chunk.imports) if (!chunks.has(id)) packages.add(id);
+  }
+  return { min, gzip, packages: [...packages] };
 }
 const size = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(1)} kB`);
 const costs = [];

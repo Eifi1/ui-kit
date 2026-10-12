@@ -2,7 +2,7 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Hourglass } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useNoIndex } from "../hooks/use-noindex";
 import type { AuthHeadingLevel } from "../auth/status-parts";
 import { useAccessAction } from "../landing/access";
@@ -12,6 +12,7 @@ import type { LandingLabels } from "../landing/landing-labels";
 import { useDemoLabels } from "./demo-labels";
 import type { DemoLabels } from "./demo-labels";
 import type { DemoModel } from "./demo-session";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 export interface DemoEndedProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** Which line the page says about the data (§2.3). */
@@ -29,7 +30,7 @@ export interface DemoEndedProps extends Omit<ComponentPropsWithRef<"div">, "chil
   noIndex?: boolean;
   /** Default `h2`, under `AuthLayout`'s `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<DemoLabels>;
+  labels?: LabelOverride<DemoLabels>;
   /** The access words (`landing` namespace) for this instance. */
   landingLabels?: Partial<LandingLabels>;
 }

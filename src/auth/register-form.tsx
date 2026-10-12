@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { cn } from "../lib/cn";
@@ -10,7 +10,8 @@ import { hasContent } from "../lib/presence";
 import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
 import { TextLink } from "../components/text-link";
-import { Button, Input } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { emailParts, taggedEmail } from "./email-tag";
 import { newPasswordProblem, personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
@@ -155,7 +156,7 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithRef<"div">, "o
    *  throttle with its wait), or `undefined` for the kit's. Asked first, for every
    *  failure; a bare `429` needs none since 0.30.0 — the kit says `rateLimited`. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<RegisterLabels>;
+  labels?: LabelOverride<RegisterLabels>;
 }
 
 const ALL_CODES: readonly KitLanguageCode[] = KIT_LANGUAGES.map((language) => language.code);

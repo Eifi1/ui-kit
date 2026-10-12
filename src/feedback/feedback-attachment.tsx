@@ -10,20 +10,20 @@ import {
   type RefObject,
 } from "react";
 import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
-import { Button, IconButton, Spinner } from "../components/ui";
-import type { ButtonSize, ButtonVariant } from "../components/ui";
+import { Button } from "../components/button";
+import { IconButton } from "../components/icon-button";
+import { Spinner } from "../components/spinner";
+import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-button";
 import { useCommitReason, type CommitScope } from "../components/write-lock";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
 import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "./feedback-attachment-labels";
+import { DEFAULT_ATTACHMENT_ACCEPT, DEFAULT_MAX_ATTACHMENT_BYTES, DEFAULT_MAX_ATTACHMENTS } from "./feedback-record";
 
-export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-/** How many files `<FeedbackAttachmentField multiple>` takes when `max` is not given
- *  (0.15.5). Five photos of one problem is already a lot to look through; a report
- *  that needs more is a conversation, which the thread is for. */
-export const DEFAULT_MAX_ATTACHMENTS = 5;
+// Defined in ./feedback-record since 0.34, which a top bar can import without this
+// field (MOD-1); still exported from here, where they always were.
+export { DEFAULT_ATTACHMENT_ACCEPT, DEFAULT_MAX_ATTACHMENT_BYTES, DEFAULT_MAX_ATTACHMENTS };
 
 /**
  * The field's own strings — the `feedbackAttachment` namespace of `<UiKitProvider
@@ -148,7 +148,7 @@ export interface FeedbackAttachmentRef {
 interface FeedbackAttachmentFieldBaseProps {
   /** Prop > `<UiKitProvider labels={{ feedbackAttachment }}>` > English. Optional
    *  since 0.7.0; `attachment` (the heading) is only ever read from here. */
-  labels?: Partial<FeedbackAttachmentLabels> &
+  labels?: LabelOverride<FeedbackAttachmentLabels> &
     Pick<Partial<FeedbackAttachmentFieldLabels>, "attachmentUploading" | "attachmentUploadFailed">;
   accept?: string[];
   maxBytes?: number;

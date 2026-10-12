@@ -1,7 +1,9 @@
 import { render } from "@testing-library/react";
 import { createRef, type ComponentProps, type ComponentType } from "react";
 import { describe, expect, it } from "vitest";
-import { Input, Select, Textarea } from "../ui";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { Chip } from "../chip";
 import { SearchField } from "../search-field";
 import { Switch } from "../switch";

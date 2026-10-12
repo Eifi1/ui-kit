@@ -1,7 +1,11 @@
 import { createRef, useRef, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { Button, IconButton, Input, Select, Textarea } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { MultiSelect } from "../multi-select";
 import { CurrencySelect } from "../currency-select";
 import { EntityCombobox } from "../entity-combobox";

@@ -274,8 +274,9 @@ export function ChatComposer022Demo() {
         />
       </div>
       <Note>
-        {code("ChatComposer")} is {code("FeedbackComposer")} — the same function, so the two cannot drift — for a chat
-        that is not a report. Both put {code("id")} and any {code("data-*")} on their root (the box, or the{" "}
+        {code("ChatComposer")} is the composer under a name that is not about feedback, for a chat that is
+        not a report ({code("FeedbackComposer")}, the old name, is deprecated in 0.34 and goes in 0.35). It
+        puts {code("id")} and any {code("data-*")} on its root (the box, or the{" "}
         {code("disabledReason")} line in its place): keksdose&apos;s assistant tour points at{" "}
         {code('[data-tour="assistant-ask"]')}. keksdose K17.
       </Note>

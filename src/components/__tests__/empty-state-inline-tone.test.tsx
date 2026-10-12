@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmptyState } from "../ui";
+import { EmptyState } from "../empty-state";
 
 describe("EmptyState variant=inline (keksdose's hand-written muted lines)", () => {
   it("is one quiet row with no dashed box", () => {

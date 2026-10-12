@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import type { InputHTMLAttributes, Ref } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./field-base";
 import { mergeRefs } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 

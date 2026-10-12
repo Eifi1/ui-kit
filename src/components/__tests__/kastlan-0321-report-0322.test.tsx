@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Plus } from "lucide-react";
-import { Button } from "../ui";
+import { Button } from "../button";
 import { PageHeader } from "../page-header";
 
 /**

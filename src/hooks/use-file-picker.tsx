@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { ReactElement } from "react";
 import { useAnnounce } from "./use-announce";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_FILE_PICKER_LABELS } from "./use-file-picker-labels";
 
 /**
@@ -255,7 +255,7 @@ export interface UseFilePickerOptions extends FileScreenOptions {
   /** `open()` and `take()` do nothing while set. */
   disabled?: boolean;
   /** Per-instance overrides of the `filePicker` label namespace. */
-  labels?: Partial<FilePickerLabels>;
+  labels?: LabelOverride<FilePickerLabels>;
 }
 
 export interface UseFilePickerReturn {

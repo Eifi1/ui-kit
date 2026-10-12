@@ -4,7 +4,13 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
 import { rankMatch } from "../lib/text-match";
-import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./ui";
+import {
+  FieldChevron,
+  FIELD_FLOATING_PAD,
+  FIELD_INVALID,
+  FIELD_TRIGGER,
+  FloatingField,
+} from "./field-base";
 import {
   assignRef,
   EndHintRow,
@@ -22,6 +28,7 @@ import {
   DEFAULT_COMMON_LABELS,
   useKitLabels,
   useKitLocale,
+  type LabelOverride,
 } from "../i18n/kit-labels";
 import { DEFAULT_COUNTRY_SELECT_LABELS } from "./country-select-labels";
 
@@ -158,7 +165,7 @@ export interface CountrySelectProps<Clearable extends boolean = false>
   locale?: string;
   /** Per-instance overrides of {@link CountrySelectLabels}, over the provider's
    *  `countrySelect` namespace, over English. */
-  labels?: Partial<CountrySelectLabels>;
+  labels?: LabelOverride<CountrySelectLabels>;
   /**
    * Name the trigger by an element of the caller's — a form's own label above the
    * field, which is how `RhfCountrySelect` names it. The trigger is then named by

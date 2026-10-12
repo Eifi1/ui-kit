@@ -3,7 +3,7 @@ import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "re
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { TOUCH_TARGET_LARGE } from "./ui";
+import { TOUCH_TARGET_LARGE } from "./button-look";
 import { FOCUS_RING } from "./focus-ring";
 import { assignRef, LockedReason, type DisabledReasonDisplay } from "./field-parts";
 import { hasContent } from "../lib/presence";

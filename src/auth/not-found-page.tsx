@@ -1,8 +1,8 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import type { AuthHeadingLevel } from "./status-parts";
 import { DEFAULT_NOT_FOUND_LABELS } from "./not-found-page-labels";
 
@@ -40,7 +40,7 @@ export interface NotFoundPageProps extends Omit<ComponentPropsWithRef<"div">, "c
   /** The heading's level. Default `h2`, under `AuthLayout`'s `h1`; `h1` where the page
    *  stands alone (inside the app shell). */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<NotFoundLabels>;
+  labels?: LabelOverride<NotFoundLabels>;
 }
 
 /**

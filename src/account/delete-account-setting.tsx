@@ -2,7 +2,7 @@ import { isValidElement, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { UserX } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
@@ -14,7 +14,7 @@ import {
   typedMatches,
 } from "../components/danger-confirm";
 import type { DangerConsequence } from "../components/danger-confirm";
-import { Card } from "../components/ui";
+import { Card } from "../components/card";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useFocusWhen } from "../auth/status-parts";
 import { CARD_DESCRIPTION_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
@@ -122,7 +122,7 @@ export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithRef<"d
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first, for
    *  every failure — kastlan's `last_admin` names the companies. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<DeleteAccountLabels>;
+  labels?: LabelOverride<DeleteAccountLabels>;
 }
 
 /** Whether an item is a `{ text }` line rather than a node — a React element is an

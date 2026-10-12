@@ -4,9 +4,11 @@ import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
-import { Button, FIELD_INVALID, Input } from "./ui";
+import { Button } from "./button";
+import { FIELD_INVALID } from "./field-base";
+import { Input } from "./input";
 import { FIELD_ERROR_CLASS } from "./field-parts";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "./signature-pad-labels";
 
@@ -139,7 +141,7 @@ export interface SignaturePadProps extends Omit<ComponentPropsWithoutRef<"div">,
   /** Classes for the canvas — its height, chiefly (default `h-40`). */
   canvasClassName?: string;
   /** User-facing strings; see {@link SignaturePadLabels}. */
-  labels?: Partial<SignaturePadLabels>;
+  labels?: LabelOverride<SignaturePadLabels>;
   /** The {@link SignaturePadHandle}, not an element. A React 19 ref prop since 0.34
    *  (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
   ref?: Ref<SignaturePadHandle>;
@@ -656,7 +658,7 @@ export interface SignatureViewProps extends ComponentPropsWithRef<"figure"> {
   /** Classes for the frame — its height, chiefly (default `h-40`, the pad's). */
   frameClassName?: string;
   /** User-facing strings; see {@link SignaturePadLabels} (`view*`). */
-  labels?: Partial<SignaturePadLabels>;
+  labels?: LabelOverride<SignaturePadLabels>;
 }
 
 /**

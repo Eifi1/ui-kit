@@ -13,7 +13,6 @@ import {
   WizardStepper,
   WizardSummary,
   requiredFieldsValidator,
-  resolveWizardLabels,
   useWizard,
   useWizardContext,
 } from "@eifi1/ui-kit";
@@ -67,7 +66,7 @@ const SIZE_OPTIONS = [
   { value: "roomy" as const, label: "Roomy" },
 ];
 
-/** Partial, because `resolveWizardLabels` fills the rest — the point of the prop
+/** Partial, because the kit merges it over the defaults — the point of the prop
  *  is that a monolingual app overrides the two strings it cares about rather than
  *  restating fifteen English defaults. */
 const LABELS: Partial<WizardLabels> = {
@@ -217,30 +216,6 @@ export function Wizard() {
             ["missingRequired (optional key)", DEFAULT_WIZARD_LABELS.missingRequired],
             ["genericError (optional key)", DEFAULT_WIZARD_LABELS.genericError],
             ["done (optional key)", DEFAULT_WIZARD_LABELS.done ?? ""],
-          ]}
-        />
-      </Example>
-
-      <Example label="resolveWizardLabels" hint="what StepperNav and WizardSummary both call on their `labels` prop">
-        <OutTable
-          rows={[
-            ["resolveWizardLabels().next", resolveWizardLabels().next],
-            ['resolveWizardLabels({ next: "Weiter" }).next', resolveWizardLabels({ next: "Weiter" }).next],
-            [
-              // The merge is shallow and total: one override never drops the rest.
-              'resolveWizardLabels({ next: "Weiter" }).back',
-              resolveWizardLabels({ next: "Weiter" }).back,
-            ],
-            [
-              // Worth knowing before you mutate what you got back: with no argument
-              // the function hands out the shared constant itself, not a copy.
-              "resolveWizardLabels() === DEFAULT_WIZARD_LABELS",
-              String(resolveWizardLabels() === DEFAULT_WIZARD_LABELS),
-            ],
-            [
-              "resolveWizardLabels({}) === DEFAULT_WIZARD_LABELS",
-              String(resolveWizardLabels({}) === DEFAULT_WIZARD_LABELS),
-            ],
           ]}
         />
       </Example>

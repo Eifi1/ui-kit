@@ -4,7 +4,7 @@ import { AlertCircle, Check, Loader2, Pencil, PencilLine } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Tooltip } from "./tooltip";
 import { FOCUS_RING } from "./focus-ring";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
 import { DEFAULT_FIELD_SYNC_LABELS } from "./field-sync-labels";
 
@@ -38,6 +38,9 @@ export interface FieldSyncLabels {
 // Defined in ./field-sync-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_FIELD_SYNC_LABELS };
 
+/** @deprecated 0.34 — `useKitLabels("fieldSync", DEFAULT_FIELD_SYNC_LABELS, labels)`, which
+ *  the provider reaches too, or the field's own `labels`; removed in 0.35 (refactor audit
+ *  2026-10, API-6a). A merge from before the provider, which no kit component calls. */
 export function resolveFieldSyncLabels(labels?: Partial<FieldSyncLabels>): FieldSyncLabels {
   return labels ? { ...DEFAULT_FIELD_SYNC_LABELS, ...labels } : DEFAULT_FIELD_SYNC_LABELS;
 }
@@ -249,7 +252,7 @@ export interface FieldSyncIndicatorProps {
   /** The failure. Its message becomes the tooltip when `state === "error"`. */
   error?: Error | null;
   /** Override any of the five English defaults. */
-  labels?: Partial<FieldSyncLabels>;
+  labels?: LabelOverride<FieldSyncLabels>;
   /** Render the label beside the icon instead of only in the tooltip. Always on at
    *  Large and Extra large (0.32, docs/text-size-harmonization.md §4 "No fact only in a
    *  tooltip"): the reader who asked for bigger type gets the words, not a 14 px glyph

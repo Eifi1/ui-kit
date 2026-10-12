@@ -1,11 +1,12 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { usePromisePending } from "../components/danger-confirm";
 import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
-import { Button, Input } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
 import { personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { DEFAULT_COMPLETE_NAME_LABELS } from "./complete-name-dialog-labels";
@@ -58,7 +59,7 @@ export interface CompleteNameDialogProps {
   error?: ReactNode;
   /** Kept-mounted mode, as on `Modal`: left out, the dialog is open while mounted. */
   open?: boolean;
-  labels?: Partial<CompleteNameLabels>;
+  labels?: LabelOverride<CompleteNameLabels>;
 }
 
 /**

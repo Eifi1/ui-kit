@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Field } from "../field";
-import { Input } from "../ui";
+import { Input } from "../input";
 
 describe("Field", () => {
   it("names the render-prop control with the label above it, star kept out of the name", async () => {

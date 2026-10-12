@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { useKitFormat } from "../lib/format";
 import { placeholderTokens, reviewWrite } from "../lib/translation-review";
@@ -15,7 +15,8 @@ import { AlertBanner } from "./alert-banner";
 import { Caption, SectionLabel } from "./text";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
-import { Button, Textarea } from "./ui";
+import { Button } from "./button";
+import { Textarea } from "./textarea";
 import { COMMIT_EXCEPT_BILLING } from "./write-lock";
 
 /** A callback may return a promise: resolve and the editor closes, reject and it stays
@@ -53,7 +54,7 @@ export interface TranslationReviewEditorProps {
   /** Turns a rejection into words. Default {@link TranslationReviewLabels.failed}. */
   formatError?: (error: unknown) => ReactNode;
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 /** The wording a verdict was given on, under the line that says it changed. */

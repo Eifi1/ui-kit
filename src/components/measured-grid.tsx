@@ -10,10 +10,13 @@ import { decimalMark } from "../lib/decimal-marks";
 // always a decimal mark; `splitRow` and `parseRows` read a pasted table, where it may
 // be either and the line decides. See the three named rules at the top of table-text.
 import { cellNumber, isCellNumber, parseRows, splitRow } from "../lib/table-text";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { useWindowedRows, WINDOWED_ROW_INDEX } from "../hooks/use-windowed-rows";
 import { ToggleGroup } from "./toggle-group";
-import { Button, FIELD_INVALID, FIELD_TOUCH_TEXT, FOCUS_RING, Textarea } from "./ui";
+import { Button } from "./button";
+import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./field-base";
+import { FOCUS_RING } from "./focus-ring";
+import { Textarea } from "./textarea";
 import { DEFAULT_MEASURED_GRID_LABELS } from "./measured-grid-labels";
 
 /**
@@ -201,7 +204,7 @@ export interface MeasuredGridProps
   /** BCP 47 tag for the decimal mark of cells written by a paste or the text view,
    *  and for the row numbers; else the `<UiKitProvider locale>`. */
   locale?: string;
-  labels?: Partial<MeasuredGridLabels>;
+  labels?: LabelOverride<MeasuredGridLabels>;
 }
 
 /**

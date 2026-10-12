@@ -995,7 +995,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "What the table is assembled from, usable on its own: the pager, the filter popover, the label tree, and the pure sort, filter and URL helpers.",
         icon: Wrench,
-        components: ["Pagination", "FilterPopover", "DEFAULT_DATA_TABLE_LABELS", "resolveDataTableLabels", "nextSorts", "rowMatches"],
+        components: ["Pagination", "FilterPopover", "DEFAULT_DATA_TABLE_LABELS", "nextSorts", "rowMatches"],
         Body: DataTablePartsSection,
       },
       {
@@ -1080,7 +1080,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
         icon: ChartBar,
-        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries", "defaultZoomAxes"],
+        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries"],
         Body: () => (
           <>
             <SeriesChartMarks />

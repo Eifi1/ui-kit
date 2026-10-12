@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Select } from "./ui";
-import type { SelectProps } from "./ui";
+import { Select } from "./select";
+import type { SelectProps } from "./select";
 import { ToggleGroup } from "./toggle-group";
 import type { ToggleGroupBaseProps } from "./toggle-group";
 import type { ThemePreference } from "../theme/theme-store";
@@ -10,6 +10,9 @@ import { CONTRAST_MODES } from "../theme/contrast";
 import type { ContrastMode } from "../theme/contrast";
 import { useAppearanceLabels } from "./appearance-labels";
 import type { AppearanceLabels } from "./appearance-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
+import { LanguageSelect } from "./language-select";
+import type { KitLanguageCode } from "../i18n/languages";
 
 /**
  * App-agnostic settings-field components (feedback #333): the language + theme
@@ -27,8 +30,11 @@ import type { AppearanceLabels } from "./appearance-labels";
  * itself because no caller of this wants the event. The rest — `disabled`, `required`,
  * `invalid`, `error`, a `data-tour` anchor — passes straight through, which is what makes
  * this a settings FIELD rather than a fixed widget.
+ *
+ * The `Select` half of {@link ThemeSettingProps}; until 0.34 it carried that name, which
+ * left the toggle out of the type the component is documented by (API-9).
  */
-export interface ThemeSettingProps
+export interface ThemeSettingSelectProps
   extends Omit<SelectProps, "value" | "onChange" | "children"> {
   /** The `Select` (default). See {@link ThemeSettingToggleProps} for `"toggle"`. */
   variant?: "select";
@@ -72,7 +78,14 @@ export interface ThemeSettingToggleProps
   id?: string;
 }
 
-export function ThemeSetting(props: ThemeSettingProps | ThemeSettingToggleProps) {
+/**
+ * What {@link ThemeSetting} takes: the select ({@link ThemeSettingSelectProps}, the
+ * default) or the segmented control ({@link ThemeSettingToggleProps}, `variant="toggle"`)
+ * — the union, as {@link ProfileSettingProps} is (API-9).
+ */
+export type ThemeSettingProps = ThemeSettingSelectProps | ThemeSettingToggleProps;
+
+export function ThemeSetting(props: ThemeSettingProps) {
   if (props.variant === "toggle") {
     const { variant: _variant, value, onChange, label, optionLabels, overflow = "wrap", ...rest } = props;
     return (
@@ -106,26 +119,42 @@ export function ThemeSetting(props: ThemeSettingProps | ThemeSettingToggleProps)
   );
 }
 
-/** See {@link ThemeSettingProps}: a `Select`'s props with the value and the change
+/** See {@link ThemeSettingSelectProps}: a `Select`'s props with the value and the change
  *  handler re-typed to the language CODE the caller stores. */
 export interface LanguageSettingProps
-  extends Omit<SelectProps, "value" | "onChange" | "children"> {
+  extends Omit<SelectProps, "value" | "onChange" | "children" | "multiple"> {
+  /** The reader's language: one of the rows' codes — or any tag, shown as the row it
+   *  resolves to ({@link LanguageSelect}'s rule). */
   value: string;
   onChange: (code: string) => void;
   label: ReactNode;
+  /**
+   * The languages to offer, in order, and each one's text: {@link languageOptions}' rows
+   * as they come (the registry's names), or the app's own words for a code — keksdose's
+   * "Deutsch (Schweiz)". The text is the language's name in itself, as on every
+   * switcher, and each option carries that language's `lang`. A code the kit's registry
+   * does not know is not listed: the registry is where its `lang` comes from.
+   */
   options: { code: string; label: string }[];
   id?: string;
 }
 
-export function LanguageSetting({ value, onChange, label, options, id, ...rest }: LanguageSettingProps) {
+/**
+ * The settings row for the reader's own language: a {@link LanguageSelect} over the rows
+ * the app hands in (0.34, refactor audit 2026-10, API-7). It was a bare `Select` over the
+ * same rows, so the three apps' language pickers lacked what LanguageSelect gives every
+ * option — its `lang`, by which a screen reader says "Français" in French — and showed a
+ * stored `de-AT` as nothing in particular rather than as the one German.
+ */
+export function LanguageSetting({ options, ...rest }: LanguageSettingProps) {
+  const text = new Map(options.map((option) => [option.code, option.label]));
   return (
-    <Select {...rest} id={id} label={label} value={value} onChange={(e) => onChange(e.target.value)}>
-      {options.map((o) => (
-        <option key={o.code} value={o.code}>
-          {o.label}
-        </option>
-      ))}
-    </Select>
+    <LanguageSelect
+      {...rest}
+      codes={options.map((option) => option.code as KitLanguageCode)}
+      optionLabel={(language) => text.get(language.code) ?? language.nativeName}
+      optionLang="own"
+    />
   );
 }
 
@@ -144,7 +173,7 @@ type AppearanceToggleProps<T extends string> = Omit<ToggleGroupBaseProps<T>, "op
    */
   label?: ReactNode;
   /** The `appearance` namespace, for this instance. */
-  labels?: Partial<AppearanceLabels>;
+  labels?: LabelOverride<AppearanceLabels>;
 };
 
 export type TextSizeSettingProps = AppearanceToggleProps<TextSize>;

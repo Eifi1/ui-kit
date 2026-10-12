@@ -4,13 +4,16 @@ import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
 import { hasContent } from "../lib/presence";
-import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
-import type { CharacterCountLabels } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
+import { Spinner } from "../components/spinner";
+import { Textarea } from "../components/textarea";
+import type { CharacterCountLabels } from "../components/field-base";
 import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
 import { useWriteLock } from "../components/write-lock";
 import type { CommitScope } from "../components/write-lock";
-import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
@@ -177,7 +180,7 @@ export interface FeedbackThreadProps {
   now?: Date | number;
   /** Overrides the provider's locale for the times. */
   locale?: string;
-  labels?: Partial<FeedbackThreadLabels>;
+  labels?: LabelOverride<FeedbackThreadLabels>;
   className?: string;
 }
 
@@ -469,7 +472,7 @@ function toDate(value: Date | string | number): Date | null {
  *  0.24.0 also the field's `buttonVariant` / `buttonSize`, for a composer whose row
  *  wants smaller or quieter attach buttons than the bordered `md` default. */
 export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" | "onError"> & {
-  labels?: Partial<FeedbackAttachmentLabels>;
+  labels?: LabelOverride<FeedbackAttachmentLabels>;
   onError?: FeedbackAttachmentFieldSingleProps["onError"];
 } & Pick<FeedbackAttachmentFieldSingleProps, "buttonVariant" | "buttonSize">;
 
@@ -621,7 +624,7 @@ export interface FeedbackComposerProps {
   /** {@link FeedbackComposerHandle}: put text into the draft from outside (canned-reply
    *  chips) or focus the box. */
   ref?: Ref<FeedbackComposerHandle>;
-  labels?: Partial<FeedbackComposerLabels>;
+  labels?: LabelOverride<FeedbackComposerLabels>;
   className?: string;
   /**
    * `"sm"` for a narrow host — keksdose's assistant launcher, a small floating panel
@@ -672,8 +675,13 @@ const isApple = () =>
  * and Send — Ctrl/⌘+Enter sends, the shortcut the report dialog and the note editor
  * use, so the habit carries across the feature. Plain Enter is a new line: feedback is
  * written in paragraphs, unlike a chat — which `sendOn="enter"` is for (keksdose G5).
+ *
+ * Named for what it is since 0.22 (keksdose K17): the component was never
+ * feedback-specific — a textarea, an optional picture or a host's upload slot, Send,
+ * `sendOn="enter"` for the chat way — and keksdose's assistant and support chat are
+ * chats, not reports. `FeedbackComposer` is its old name, deprecated in 0.34.
  */
-export function FeedbackComposer({
+export function ChatComposer({
   onSend,
   pending = false,
   attachment,
@@ -885,15 +893,11 @@ function dataAttributes(props: object): Record<string, unknown> {
 }
 
 /**
- * {@link FeedbackComposer} under a name that is not about feedback (keksdose K17).
- *
- * The component was never feedback-specific: a textarea, an optional picture or a
- * host's upload slot, Send, `sendOn="enter"` for the chat way. keksdose's assistant
- * and support chat are chats, not reports, and an import of `FeedbackComposer` there
- * reads as a mistake to the next person. The same function, not a wrapper, so the
- * two names cannot drift.
+ * @deprecated 0.34 — `ChatComposer`, the same function under the name that is not about
+ * feedback; removed in 0.35 (refactor audit 2026-10, API-6d). keksdose's support thread
+ * is the one app site.
  */
-export const ChatComposer = FeedbackComposer;
+export const FeedbackComposer = ChatComposer;
 /** {@link FeedbackComposerProps}, for {@link ChatComposer}. */
 export type ChatComposerProps = FeedbackComposerProps;
 /** {@link FeedbackComposerHandle}, for {@link ChatComposer}. */

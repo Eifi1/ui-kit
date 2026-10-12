@@ -2,7 +2,7 @@ import type { FormEvent, ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Input } from "../ui";
+import { Input } from "../input";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { WriteLockProvider } from "../write-lock";

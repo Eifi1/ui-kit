@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Download, Save, Trash2 } from "lucide-react";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, IconButton, Input } from "../../../src/components/ui";
+import { Button } from "../../../src/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../src/components/card";
+import { IconButton } from "../../../src/components/icon-button";
+import { Input } from "../../../src/components/input";
 import { Field } from "../../../src/components/field";
 import { Switch } from "../../../src/components/switch";
 import { FormActions } from "../../../src/components/form-actions";

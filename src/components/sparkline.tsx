@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
 import { DEFAULT_SPARKLINE_LABELS } from "./sparkline-labels";
 
@@ -102,7 +102,7 @@ export interface SparklineProps
    *  kit's locale, at most two decimals. */
   formatValue?: (value: number) => string;
   locale?: string;
-  labels?: Partial<SparklineLabels>;
+  labels?: LabelOverride<SparklineLabels>;
 }
 
 const DEFAULT_WIDTH = 72;

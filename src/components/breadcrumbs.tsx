@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 import { DEFAULT_BREADCRUMBS_LABELS } from "./breadcrumbs-labels";
 
@@ -56,7 +56,7 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "ch
    *  parent by default (2), because "up one level" is what a phone user reaches for. */
   keepEnd?: number;
   /** Overrides the {@link UiKitProvider}'s `breadcrumbs` labels. */
-  labels?: Partial<BreadcrumbsLabels>;
+  labels?: LabelOverride<BreadcrumbsLabels>;
 }
 
 /**

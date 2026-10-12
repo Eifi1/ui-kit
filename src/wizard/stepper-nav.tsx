@@ -2,13 +2,14 @@ import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "../lib/cn";
-import { Button, Spinner } from "../components/ui";
-import type { ButtonVariant } from "../components/ui";
+import { Button } from "../components/button";
+import { Spinner } from "../components/spinner";
+import type { ButtonVariant } from "../components/button-look";
 import { Modal } from "../components/modal";
 import { alertFrameClass } from "../components/alert-banner";
 import { WizardContextProvider } from "./wizard-context";
 import { DEFAULT_WIZARD_LABELS } from "./types";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { UseWizardReturn, WizardLabels } from "./types";
 import type { CommitScope } from "../components/write-lock";
 
@@ -53,7 +54,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
   title?: ReactNode;
   description?: ReactNode;
   className?: string;
-  labels?: Partial<WizardLabels>;
+  labels?: LabelOverride<WizardLabels>;
   /** The Finish button's variant — `"danger"` for a destructive commit (an import
    *  that replaces what is there). Default `"brand"`. Next keeps `"brand"`. */
   finishVariant?: ButtonVariant;

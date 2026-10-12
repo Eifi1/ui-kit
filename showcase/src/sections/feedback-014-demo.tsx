@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Button, Chip, FeedbackComposer, FeedbackThread } from "@eifi1/ui-kit";
+import { Button, ChatComposer, Chip, FeedbackThread } from "@eifi1/ui-kit";
 import type { FeedbackThreadAttachment, FeedbackThreadItem } from "@eifi1/ui-kit";
 import { Paperclip } from "lucide-react";
 import { Example, Note, Row } from "../lib/section";
 
 /**
  * The 0.14 follow-ups from keksdose G4/G5: its support chat on FeedbackThread +
- * FeedbackComposer — event lines, day lines and clock times in the thread; Enter to
+ * ChatComposer — event lines, day lines and clock times in the thread; Enter to
  * send and files uploaded ahead of the send in the composer.
  */
 
@@ -59,13 +59,13 @@ export function Feedback014Demo() {
 
   return (
     <Example
-      label="FeedbackThread + FeedbackComposer — a support chat"
+      label="FeedbackThread + ChatComposer — a support chat"
       hint='kind: "event", daySeparators, timeFormat="clock"; sendOn="enter", attachmentSlot, canSend'
     >
       <div className="rounded-md border border-subtle p-3">
         <FeedbackThread messages={items} now={NOW} daySeparators timeFormat="clock" redact={false} />
       </div>
-      <FeedbackComposer
+      <ChatComposer
         className="mt-3"
         sendOn="enter"
         rows={2}

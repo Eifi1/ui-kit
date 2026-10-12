@@ -4,7 +4,6 @@ import {
   SeriesChart,
   ToggleGroup,
   ToggleLegend,
-  defaultZoomAxes,
   seriesLegendEntries,
   toggleHidden,
   visibleSeries,
@@ -325,14 +324,12 @@ function ZoomAxesDemo() {
         onPointClick={(hit) => setClicked(`${String(hit.x)}${hit.key ? ` (${hit.key})` : ""}`)}
         height="h-56"
       />
-      <OutTable
-        rows={[
-          ['defaultZoomAxes([{ type: "line" }])', defaultZoomAxes([{ type: "line" }])],
-          ['defaultZoomAxes([{ type: "area" }])', defaultZoomAxes([{ type: "area" }])],
-          ['defaultZoomAxes([{ type: "bar" }, { type: "area" }])', defaultZoomAxes([{ type: "bar" }, { type: "area" }])],
-        ]}
-      />
       <div className="mt-3">
+        <Note>
+          Left out, <code className="font-mono">zoomAxes</code> follows what the series are:{" "}
+          <code className="font-mono">both</code> for lines only, <code className="font-mono">x</code>{" "}
+          with an area among them, <code className="font-mono">none</code> with a bar.
+        </Note>
         <Note>
           With <code className="font-mono">zoomAxes=&quot;x&quot;</code> a drag across the bars picks a
           stretch of days — the axis ticks whole slots and the bars at the edge are clipped — and a

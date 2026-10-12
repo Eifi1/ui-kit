@@ -2,7 +2,8 @@ import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguageSelect } from "../language-select";
-import type { KitLanguageCode } from "../../i18n/languages";
+import { LanguageSetting } from "../settings-fields";
+import { languageOptions, type KitLanguageCode } from "../../i18n/languages";
 
 describe("LanguageSelect", () => {
   it("lists the offered codes by their own names, in the order given, each in its language", () => {
@@ -94,5 +95,60 @@ describe("LanguageSelect", () => {
     expect(select).toHaveAttribute("aria-invalid", "true");
     expect(select).toBeRequired();
     expect(select).toHaveAttribute("name", "locale");
+  });
+});
+
+describe("LanguageSetting, built on LanguageSelect (refactor audit 2026-10, API-7)", () => {
+  it("marks each option with its language and keeps the app's own row text (keksdose's 'Deutsch (Schweiz)')", () => {
+    render(
+      <LanguageSetting
+        label="Language"
+        value="de-CH"
+        onChange={() => {}}
+        options={[
+          { code: "de-CH", label: "Deutsch (Schweiz)" },
+          { code: "en", label: "English" },
+          { code: "fr", label: "Français" },
+        ]}
+      />,
+    );
+    const options = Array.from(screen.getByLabelText("Language").querySelectorAll("option"));
+    expect(options.map((o) => [o.value, o.textContent, o.getAttribute("lang")])).toEqual([
+      ["de-CH", "Deutsch (Schweiz)", "de-CH"],
+      ["en", "English", "en-GB"],
+      ["fr", "Français", "fr-FR"],
+    ]);
+  });
+
+  it("takes languageOptions' rows as they come (kastlan, Kurvenschmiede): the registry's names, each in its language", () => {
+    render(<LanguageSetting label="Language" value="hu" onChange={() => {}} options={languageOptions(["it", "hu"])} />);
+    const options = screen.getAllByRole("option");
+    expect(options.map((o) => [o.textContent, o.getAttribute("lang")])).toEqual([
+      ["Italiano", "it-IT"],
+      ["Magyar", "hu-HU"],
+    ]);
+  });
+
+  it("shows the row a stored tag resolves to, as LanguageSelect does, and hands back the picked code", async () => {
+    const onChange = vi.fn();
+    render(<LanguageSetting label="Language" value="de-AT" onChange={onChange} options={languageOptions(["en", "de-CH"])} />);
+    const select = screen.getByLabelText("Language");
+    expect(select).toHaveValue("de-CH");
+    await userEvent.selectOptions(select, "English");
+    expect(onChange).toHaveBeenCalledWith("en");
+  });
+
+  it("LanguageSelect: optionLang=\"own\" marks an app's own names that are still in each language", () => {
+    render(
+      <LanguageSelect
+        label="Language"
+        codes={["de-CH", "fr"]}
+        value="fr"
+        onChange={() => {}}
+        optionLabel={(language) => (language.code === "de-CH" ? "Deutsch (Schweiz)" : language.nativeName)}
+        optionLang="own"
+      />,
+    );
+    expect(screen.getAllByRole("option").map((o) => o.getAttribute("lang"))).toEqual(["de-CH", "fr-FR"]);
   });
 });

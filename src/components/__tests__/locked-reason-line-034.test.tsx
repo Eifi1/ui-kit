@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Input, Select } from "../ui";
+import { Input } from "../input";
+import { Select } from "../select";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { NumberInput } from "../number-input";

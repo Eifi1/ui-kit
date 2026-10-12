@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { DEFAULT_TOAST_LABELS } from "./toast-labels";
 
@@ -313,7 +313,7 @@ export interface ToasterProps {
   /** Default: follows the `.dark` class the kit's theme store (`useApplyTheme`) puts
    *  on `<html>` — whichever store the app built, with nothing passed. */
   theme?: "light" | "dark" | "system";
-  labels?: Partial<ToastLabels>;
+  labels?: LabelOverride<ToastLabels>;
   /** Default 4s (8s for a toast with an action). */
   duration?: number;
   visibleToasts?: number;

@@ -1,20 +1,19 @@
 import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, MouseEvent, ReactNode } from "react";
 import { Upload, X } from "lucide-react";
-import { Button, IconButton, Spinner } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import { Spinner } from "./spinner";
 import { FIELD_ERROR_CLASS } from "./field-parts";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
-import {
-  DEFAULT_FILE_PICKER_LABELS,
-  formatAccept,
-  judgePick,
-  screenFiles,
-  summariseRejections,
-} from "./file-button";
-import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
+import { useKitFileLabels, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+// The picker's words and screening from their own modules, not through FileButton's
+// re-export (MOD-8): the dropzone renders no FileButton.
+import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
+import { formatAccept, judgePick, screenFiles, summariseRejections } from "../hooks/use-file-picker";
+import type { FilePickHandler, FilePickerLabels, FileRejection } from "../hooks/use-file-picker";
 import { useDragTarget } from "../hooks/use-file-drop";
 import { toast } from "./toast";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -121,7 +120,7 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithRef<"div">, "o
    *  `onInvalid` nor `onReject` is given, `"none"` when one is. */
   rejectionFeedback?: FileDropzoneRejectionFeedback;
   /** Per-instance overrides of the `filePicker` label namespace. */
-  labels?: Partial<FilePickerLabels>;
+  labels?: LabelOverride<FilePickerLabels>;
   /** The dropzone's accessible name. A caller's own `aria-label` wins over it — see
    *  the root element below. Optional since 0.8, like the three below: each falls back
    *  to its `filePicker` string from `<UiKitProvider labels>`, then to English. They
