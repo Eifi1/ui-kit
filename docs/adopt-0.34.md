@@ -10,6 +10,12 @@ settled after all three apps reviewed them:
 One rule was added to the billing contract: **a manual grant clears `trial_ends_at`**
 (§14.17). The contracts' per-app sections are the checklists; this note is the kits' side.
 
+**The refactor audit is in 0.34 too.** Six auditors filed 69 findings on the 0.34 branch
+(`docs/refactor-plan-2026-10.md`, evidence in `docs/refactor-audit-2026-10/`). Wave 0 fixed the
+live and serious bugs; on Marcel's word ("Wire all waves also into 0.34") Waves 1–5 followed:
+shared behaviour, structure and refs, the public API, styling, docs and tests. Most of it is
+invisible to an app; what an app sees is in §1–§3 below. Deprecations it adds are due in 0.35.
+
 **Nothing has to be switched on to adopt 0.34**, and billing stays off. The Paddle sandbox
 checks (billing §14.15) come after Marcel's sandbox run, in a later round.
 
@@ -101,6 +107,46 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
 - **The DatePicker's stepper keeps a full-strength focus line at 125 %** (keksdose live
   #394): an inset 1 px ring beside the 1 px border.
 
+**The refactor waves** (`docs/refactor-plan-2026-10.md`):
+- **One Escape stack:** Escape closes only the topmost layer — a tooltip, menu, numpad or
+  palette inside a dialog, a picker in a Popover in a dialog. A field's bare `preventDefault`
+  no longer holds a Modal open (FullBleedDialog's rule). Escape outside a dialog's panel closes
+  the topmost dialog.
+- **Pickers on one foundation:** CurrencySelect, MultiSelect and GroupedPicker run on the
+  combobox core — the phone sheet, portal anchoring, the live result count; the phone sheet
+  takes arrows and Enter; a composing (IME) Enter never picks or submits. One search fold
+  everywhere: "zurich" finds Zürich in every list and the DataTable text filter
+  (`foldForSearch`, `rankMatch` exported).
+- **MultiSelect is generic** (`MultiSelect<V>`, no casts), takes `value`, `labels`,
+  `disabledReason` / `commit` and a `ref`.
+- **Fields share their plumbing:** every field turns a FieldHint into its caption on touch and
+  at Large (Slider, CountrySelect, CurrencySelect, OneTimeCodeInput, PhoneInput, SwatchPicker,
+  IconPicker, DescriptionItem and every Rhf twin too); one error wiring (Autocomplete paints
+  `aria-invalid`, MultiSelect puts a Field spread on its trigger); NumberInput and AmountInput
+  share one engine (AmountInput takes `locale`); RhfSelect, RhfCheckbox and RhfMoneyField take
+  `commit`; every field's focus keeps a full-strength line at 125 %.
+- **Every component takes a `ref`:** React 19 ref-as-prop across the kit — Card, EmptyState,
+  PageHeader, every field and picker; Rhf focus-on-error reaches every twin.
+- **Lighter entry chunks:** the feedback dialog and the search palette load on first open; the
+  shell every app loads at once falls from 121 to 74 kB minified (40 → 26 kB gzip).
+  `{ Button }` alone costs 6.8 kB gzip (was 11.3), `{ Spinner }` 0.9 (was 10.1).
+- **DataTable:** the closed Columns drawer leaves the tab order; filter buttons are named per
+  column ("Filter Amount", new label `dataTable.filterColumn`); the number filter reads the
+  locale's decimal mark and ignores a bad URL bound.
+- **Types:** every `labels` prop takes a deep partial; `AmountInputProps`, `NumberInputProps`
+  and `ThemeSettingSelectProps` are exported; LanguageSetting's options carry their `lang`.
+- **Styling:** utilities with variants for the focus width (`ring-focus`, `outline-focus`), ring
+  offsets (`ring-offset-surface` / `-page`), the ring on brand (`ring-brand-contrast`) and money
+  (`text-` / `bg-money-{income,expense,net,neutral}`).
+- **i18n:** counts carry thousands separators in all seven languages ("1’234 Punkte").
+- **Colour presets** (Ink, Moss, Plum, Contrast) move about one hex step: every derived pair now
+  meets its contrast on the hex it ships.
+- **`@eifi1/ui-kit/testing`** ships `stubViewportWidth`, `viewportMatchMedia` and
+  `stubResizeObserver`; StatusDot, Chip and AlertBanner carry `data-tone`.
+- **Docs:** the contracts say what the code does, in their bodies (history in `docs/archive/`);
+  README and ADOPTING describe today's kit, with a generated Styling section; `docs/README.md`
+  indexes everything. The published `.d.ts` are one file per module (same names).
+
 ### server-kit 0.8
 
 - **Lemon Squeezy is gone** (billing §14.13; deprecated in 0.7).
@@ -165,6 +211,40 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   the token synchronously where `currentToken` reads it. The server answers every refusal of
   a refresh with `AuthError(AuthErrorCode.SESSION_ENDED)` and takes the kit's
   `RefreshRequest`.
+- **From the refactor waves — what app tests may notice:**
+  - Escape closes only the topmost layer: a test that presses Escape once with a tooltip
+    showing in a dialog needs a second press; hold Escape in a Modal in the dialog's own
+    `onKeyDown`, not by a field's `preventDefault`.
+  - Picker rows are `role="option"` and pick on mousedown (CurrencySelect, the AmountInput
+    chip, GroupedPicker, MultiSelect): use `getByRole("option")` with `user.click` or
+    `fireEvent.mouseDown` — `fireEvent.click` no longer picks. GroupedPicker's trigger is a
+    combobox. DataTable's number bounds are textboxes, its filter buttons "Filter <column>".
+  - The feedback dialog and the search palette appear a render after opening: `await findBy…`.
+  - A FieldHint on the fields above prints as words at Large and on touch, not a "?".
+  - Kit class names: `FIELD_BASE` focus = `focus:border-brand focus:ring-1 focus:ring-inset
+    focus:ring-brand`; `FIELD_DISPLAY` adds `focus:shadow-[inset_0_-1px_0_var(--brand)]`;
+    ChipInput / FileDropzone errors = `text-caption leading-tight text-danger`;
+    `ring-[length:var(--focus-ring-width)]` → `ring-focus`, `outline-[length:…]` →
+    `outline-focus`, `ring-offset-[var(--bg-surface)]` → `ring-offset-surface`,
+    `ring-offset-[var(--bg-page)]` → `ring-offset-page`, `ring-[var(--brand-contrast)]` →
+    `ring-brand-contrast`, `text-[var(--money-…)]` → `text-money-…`, `bg-[var(--money-…)]` →
+    `bg-money-…`. `FOCUS_RING`, `FOCUS_RING_WIDTH`, `SETTINGS_FOCUS_RING` and
+    `toneTextClass()` change value. `.text-money-net` and `.bg-money-neutral` are layered theme
+    utilities now; the other `.text-money-pos`-style statics stay.
+  - Preset hex values move about one step (a test that pins a preset's hex updates it).
+  - Types: `ThemeSettingProps` is the union; `LanguageSettingProps` drops `multiple`; 25
+    components are function components, not `ForwardRefExoticComponent` (JSX,
+    `ComponentProps` and `ComponentRef` work as before; `X.displayName` is gone).
+- **Deprecated in 0.34, removed in 0.35** (besides `ariaLabel`): MultiSelect `values` →
+  `value`, `allLabel` / `searchLabel` / `selectAllLabel` / `clearLabel` → `labels`;
+  `resolveChipInputLabels`, `resolveFieldSyncLabels`, `resolveWizardLabels`,
+  `resolvePasswordRevealLabels`, `resolveDataTableLabels`, `missingDataTableLabels`
+  (→ `missingKitLabels`); the 13 chart-zoom maths exports; `ALTERNATIVE_PRESETS`;
+  `FeedbackComposer` → `ChatComposer`; `align: "left" | "right"` → the logical values;
+  /rhf's `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`,
+  `FormMessage`, `useFormField`; ServerWakeNotice `navOffset`, FieldStrip `pad` and SwipeAction
+  `className` / `armedClassName` (0.33). `npx vitest run src/__tests__/deprecations.test.ts
+  --silent=false` in the kit prints the list.
 
 ## 3. Per app
 
@@ -224,6 +304,17 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   transaction-fields.tsx:753, budget-cells.tsx:501; TopBarActionMenu account-menu.tsx:365,
   tour-menu.tsx:80; RoleSwitcher top-bar.tsx:94, :117; WizardStepper
   file-import-panel.tsx:72), plus 15 in tests.
+- **Refactor waves:** MultiSelect at price-shop-picker.tsx:403 drops `next.map(String)`,
+  `values` → `value`, `allLabel` → `labels.all` (its `panelClassName` can go) and at
+  reports-filters.tsx:216 drops `as string[]`; CurrencySelect (×6) and GroupedPicker (×2) get
+  the phone sheet; `FeedbackComposer` → `ChatComposer` (support-thread.tsx:9, :222);
+  data-table-pagination.test.tsx:4, :14 `resolveDataTableLabels({…})` →
+  `{ ...DEFAULT_DATA_TABLE_LABELS, … }`; `admin-actions-panel.tsx:129`'s wrapper div can go
+  (`<Card ref={card}>`); kit-markup money asserts → `text-money-expense` / `text-money-income`
+  (report-amount-tones.test's KIT_EXPENSE / KIT_INCOME, investment-history-panel:98,
+  reports-page:286-287, food-groups-and-level:247, tax-tab:193, :197, investments-tab:218),
+  and its own 39 `[var(--money-…)]` can move to the money utilities; the 41 hand-written
+  matchMedia stubs can use `stubViewportWidth` from `@eifi1/ui-kit/testing`.
 
 ### kastlan
 
@@ -254,6 +345,9 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   `JobsSettings` (same 401 and detail); the ports' "Paddle or Lemon Squeezy" wording goes.
 - **Removed aliases:** none used. **`ariaLabel` → `aria-label`** (by 0.35): 23 sites
   (NumberField ×4, RhfNumberField ×3, AmountInput ×5, top-bar.tsx:112, :114, :149, …).
+- **Refactor waves:** RhfMoneyField, RhfSelect and RhfCheckbox take `commit`; the 49 Rhf
+  number and date sites get real focus-on-error (and `setFocus(name, { shouldSelect: true })`
+  selects the figure); `align="right"` at top-bar.tsx:149 can go (the default `end` is the same).
 
 ### Kurvenschmiede
 
@@ -297,6 +391,10 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   kit's `require_jobs_token(lambda: get_settings().jobs_token)` (the 401's detail becomes "A
   valid X-Jobs-Token is required").
 - **`ariaLabel` → `aria-label`** (by 0.35): 1 site (chrome-controls.tsx:31).
+- **Refactor waves:** MultiSelect at hysteresis-compare.tsx:112, kinematics-compare.tsx:109
+  and transmission-compare.tsx:250 drops `as number[]`, `values` → `value`, and passes
+  `labels={{ search, selectAll, clear, all }}` instead of the string props; slider-field's
+  FieldHints print on phones; `align="right"` at account-menu.tsx:138 can go.
 
 ## 4. Versions
 
