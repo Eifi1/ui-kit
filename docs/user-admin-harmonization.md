@@ -1,9 +1,9 @@
 # User administration and the account's own settings — harmonisation plan
 
 Status: **2026-10-07, reviewed.** All three apps answered the same day; §9 records what
-they settled, and §2 has Marcel's decisions. §11 (groups in the audit, round 0.34) is a
-draft of 2026-10-12, for the apps' review. Led from ui-kit at Marcel's
-request. It is the second part of the user-management round. The first part, sign-in,
+they settled, and §2 has Marcel's decisions. §11 (groups in the audit, round 0.34) is
+**settled, 2026-10-12**: the three apps reviewed it that day, §11.9 records what they
+settled, and §11 is corrected in place. Led from ui-kit at Marcel's request. It is the second part of the user-management round. The first part, sign-in,
 sign-up and the account core, is `docs/auth-harmonization.md`, shipped as ui-kit 0.29.0
 and server-kit 0.3.0, and this plan builds on it: names, invitations, coded refusals,
 `sessions_invalid_before`, `/auth/me`.
@@ -521,12 +521,16 @@ keksdose adopted last (feat/user-admin, 2026-10-08). Its notes:
 12. **App-specific actions on the audit row** (keksdose's `plan`): server-kit 0.5.1's
     `AdminActionRow.action` takes them as strings, so no app widens the type itself.
 
-## 11. Groups in the audit (round 0.34; draft, 2026-10-12)
+## 11. Groups in the audit (round 0.34; settled 2026-10-12)
 
-**A draft for the three apps' review.** §4.3's audit has words only for what is done to
-an account. Kurvenschmiede audits its team operations through the kits' vocabulary
-(Marcel, 2026-10-09; its asks S1 and U11; round 0.34 C11). This adds words for what is
-done to a group of accounts and to who is in it, and a log target that is not a person.
+§4.3's audit has words only for what is done to an account. Kurvenschmiede audits its
+team operations through the kits' vocabulary (Marcel, 2026-10-09; its asks S1 and U11;
+round 0.34 C11). This adds words for what is done to a group of accounts and to who is in
+it, and a log target that is not a person.
+
+**Settled 2026-10-12.** The three apps reviewed the draft (`05309f6`) the same day and
+agreed with both of its open decisions (4 and 5). §11.9 records what became of each
+finding; the sections below are corrected in place. Nothing is open.
 
 ### 11.1 Where each one stands
 
@@ -534,52 +538,98 @@ Read at KS `de88be6` (`refactor/plan-2026-10`), ka `e3985c9`, kk `c6bf6f70`.
 
 - **Kurvenschmiede** logs six team operations as lines with ids and roles only
   (`backend/kurvenschmiede/domain/services/team_service.py`): create :197, rename :209,
-  delete (the team's grants go with it by cascade) :216, add, or re-add with another
-  role, :282, a member's role :303, remove :317; the comment at :37-46 says they wait for
-  this. An invitation into a team is already an `invite` row with `team_id` in its detail
-  (`invitation_service.py:334-340`). The activity panel maps rows onto the kit's log
-  (`frontend/src/features/admin/activity-panel.tsx:70-80`).
+  delete :216, add, or re-add with another role, :282, a member's role :303, remove :317;
+  the comment at :37-46 says they wait for this. The activity panel maps rows onto the
+  kit's log (`frontend/src/features/admin/activity-panel.tsx:70-80`).
+  - **Deleting a team** takes its grants (`team.py:3-10`, `team_service.py:15-17`) and
+    its pending invitations (`invitation.py:60`) with it, by cascade. **Removing a
+    member** takes only the membership (`team_service.py:314`): the grants stay with the
+    team.
+  - **Re-adding with the same role** changes nothing and still logs a line
+    (`team_service.py:267-282`).
+  - **Invitations:** one into a team is already an `invite` row with `team_id` in its
+    detail (`invitation_service.py:334-340`), and so are its `invite_resend` and
+    `invite_revoke` (:350-367). Accepting one puts the invitee in the team, at
+    registration or at `/auth/invitations/accept`, with no row
+    (`invitation_service.py:441-462`).
+  - **Team names** are plaintext by decision and never erased (`team.py:20-26`).
 - **kastlan** has `membership_remove` (§4.1; `kastlan/domain/services/admin_user_service.py:352`).
   The operator's plan change is a row of the company with **no person in it**
   (`kastlan/adapters/api/platform_router.py:124-136`: `company_id` set, both target
   columns empty). The company admin's log maps it to `target: null`
   (`frontend/src/features/settings/components/admin-actions-card.tsx:11-19`), so it reads
   **"Plan changed · an erased account"** today.
-- **keksdose:** no admin acts on a household; each has one member (§6.4).
+  - Both rows carry `company_id`, and a company's rows go with it
+    (`ON DELETE CASCADE`, `kastlan/domain/models/admin_action.py:35-37`).
+  - `admin_actions` has forced row-level security (`kastlan/infrastructure/rls.py:57`,
+    :78-81), which binds the owner that migrations run as.
+  - It logs none of the five new words: founding a company (`POST /auth/companies`),
+    renaming it (`PATCH /companies/settings`), accepting an invitation
+    (`invitation_service.py:231-262`) and leaving one are not logged.
+- **keksdose:** its groups with members are **budgets**. A budget's owner shares it with
+  guests (owner and guest, `models/budget_share.py`; `remove_guest`,
+  `budget_share_service.py:698`). The owner does that, not an admin, and nothing is
+  logged. A household has one member (§6.4), so `household` would never be drawn.
 - **The kits:** server-kit's `AdminAction` (`user_admin/actions.py:25-59`) and ui-kit's
   `AdminActionKind` (`src/admin/admin-action-log.tsx:33-74`) have no word for a group.
   An entry's target is a person or nothing, and nothing reads "an erased account"
   (`scrubbed` :182-184, :214). The kit's `membership_remove` label carries kastlan's noun
-  in all seven languages: "Removed from the company".
+  in all seven languages: "Removed from the company". server-kit's `require_confirmation`
+  requires `target_email: str` (`user_admin/rules.py:79-85`); kastlan's plan change passes
+  `""` (`platform_router.py:120`).
 
 ### 11.2 Decisions
 
 Taken (Marcel, 2026-10-12): **one vocabulary for both kits; the generic word "group" in
 the kinds and codes; each app's own noun only in the labels** (KS team, kastlan company,
-keksdose household).
+keksdose household). keksdose's noun is `budget`: its groups are budgets, not households
+(kk 8).
 
-Settled by this draft; the reviews may object:
+Settled by the draft, and agreed by the reviews with the changes noted:
 
 1. **Five new words** beside `membership_remove` (§11.3). `role` stays the account's role,
    kastlan's roles in a company included (§4.1); `membership_role` is a role inside a
    group that is not the account's (KS's team manager and member).
 2. **The group is a column, `target_group_id`**, not a key in `detail` as KS's ask had it.
-   The log joins its name as it joins a person's, an app can filter by it, and kastlan's
-   plan rows get a target. One nullable column where an app logs groups; none elsewhere.
+   The log joins its name as it joins a person's, and kastlan's plan rows get a target.
+   The column goes where an app logs groups its rows don't already name:
+   Kurvenschmiede's. kastlan's `company_id` already names the company on every such row,
+   so kastlan fills `target_group_id` from it when it reads a row, with no column of its
+   own (§11.7; kastlan 12). The group is not a filter in 0.34: `?target=` stays a
+   person's, and KS's `/admin/actions` filters on `target` and `target_email` only
+   (`admin_router.py:372-373`; KS 18).
 3. **A log target is a person, a group or something else**, and only a missing person
    reads "an erased account" (§11.4).
 
-Open, with a recommendation:
+Open in the draft, settled as recommended (all three apps agree):
 
-4. **Where the noun's words live. Recommended: in the kit, whole phrases per noun**
-   (`group`, `team`, `company`, `household`), picked with `groupNoun` (§11.5). A noun
-   dropped into one phrase breaks in fr and it (the participle agrees with its gender) and
-   hu (the noun takes a suffix). Noun-free words with the noun as a tag ("Created · Team
-   Alpha") would save 17 strings a language and read worse.
-5. **The level of `group_delete`. Recommended: `acknowledge`**, a tick under "N members
-   and M grants go with it": the cascade is what nobody can see afterwards. KS asks a
-   plain confirm in the page today (`frontend/src/features/teams/team-card.tsx:139-153`).
-   The other four new words are `none`.
+4. **Where the noun's words live: in the kit, whole phrases per noun** (`group`, `team`,
+   `company`, `budget`), picked with `groupNoun` (§11.5). A noun dropped into one phrase
+   breaks in fr and it (the participle agrees with its gender) and hu (the noun takes a
+   suffix), and German needs whole phrases too: "aus dem Team" against "aus dem
+   Unternehmen" (kastlan). The `company` set keeps today's strings exactly (kastlan); the
+   `team` set uses KS's own nouns (KS). Noun-free words with the noun as a tag ("Created
+   · Team Alpha") would save strings and read worse.
+5. **The level of `group_delete`: `acknowledge`**, a tick under the app's sentence of what
+   goes with it (KS: "N members, M grants and K invitations go with it"): the cascade is
+   what nobody can see afterwards. KS asks a plain confirm in the page today
+   (`frontend/src/features/teams/team-card.tsx:139-153`). The other four new words are
+   `none`. KS agrees given its points 10–12 (§11.7, §11.8); kastlan can't delete a
+   company.
+
+Settled after the reviews:
+
+6. **A deleted group keeps its name on its `group_delete` row** (KS 16): a
+   `target_group_name` column, written on that row only, with the name the group had,
+   outside `detail`. When the log is read, a group that no longer exists takes its name
+   from its `group_delete` row, and "a deleted team" shows only where there is none.
+   - Without it the one row that records a deletion could never say which team went,
+     and after the deletion every row of that team reads "a deleted team".
+   - It is a stamp "as written", the precedent `target_email` sets (§4.3), and it keeps
+     the log append-only: no old row is rewritten at the deletion.
+   - It adds no personal data: KS keeps team names in plaintext by decision and never
+     erases them (`team.py:20-26`), so the stamp keeps nothing the live row didn't hold.
+     An erasure scrubs people, not groups.
 
 ### 11.3 The words
 
@@ -587,18 +637,28 @@ Open, with a recommendation:
 |---|---|---|---|---|---|
 | `group_create` | a group is created | the group | the group | `{}` | `none` |
 | `group_rename` | it is renamed | the group | the group | `{}`: never a name, old or new | `none` |
-| `group_delete` | it is deleted, with what goes with it | the group | the group | `{members, grants}`, the app's counts | `acknowledge` |
-| `membership_add` | an account is put in a group | the person | the group | `{role}` | `none` |
+| `group_delete` | it is deleted, with what goes with it | the group | the group, and `target_group_name` (decision 6) | the app's counts of what goes with it (KS: `{members, grants, invitations}`) | `acknowledge` |
+| `membership_add` | an account is put in a group, or accepts an invitation into one | the person | the group | `{role}` | `none` |
 | `membership_role` | a member's role in the group changes | the person | the group | `{from, to}` | `none` |
-| `membership_remove` (§4.1) | an account is taken out | the person | the group (new) | `{role}`, plus counts of what went (KS: `grants`) | `none` |
+| `membership_remove` (§4.1) | an account is taken out | the person | the group (new) | `{role}` where the app has one (kastlan's carries none) | `none` |
 
-- **Re-adding a member with another role** (KS `:282`) logs `membership_role`.
+- **Re-adding a member with another role** (KS `:282`) logs `membership_role`. **A change
+  that changes nothing writes no row**: re-adding with the same role, setting the role a
+  member already has (KS 17).
 - **A group's manager may act too** (KS's team manager adds and removes members); the
   actor column says who, as for an admin.
-- **An `invite` into a group** may carry `target_group_id`, and the log names the group
-  beside the address. KS's `team_id` in the invite's detail moves there.
-- **No name is written**, the group's or a person's: `audit_detail` refuses a string with
-  a space. The log joins names when it is read.
+- **Accepting an invitation into a group** is a `membership_add` whose actor is the
+  invitee, as a `deletion_request` names the user themselves (KS 14). In KS that is at
+  registration and at `/auth/invitations/accept`. A demo's memberships (KS's
+  `demo_service` and its system team) are not logged.
+- **An invitation into a group** (`invite`, `invite_resend`, `invite_revoke`) carries
+  `target_group_id`, and the log names the group beside the address. KS's `team_id` in
+  their detail moves there (KS 15; the migration is in §11.7).
+- **No name goes in `detail`**, the group's or a person's: `detail` never holds content
+  (§4.3), and that is the app's rule to keep. `audit_detail` refusing a string with a
+  space doesn't keep it ("Fahrwerk" passes, server-kit `audit.py:72`, :82-88; KS 16). The
+  log joins names when it is read; a deleted group's name is the one stamp, in its own
+  column (decision 6).
 
 ### 11.4 The target
 
@@ -606,7 +666,7 @@ The kit's `AdminActionLogEntry` from 0.34:
 
 ```ts
 target?: AdminPerson | AdminGroupTarget | AdminOtherTarget | null;
-/** The group a membership_* row (or an invite) happened in. */
+/** The group a membership_* or invitation row happened in. */
 group?: AdminGroupTarget | null;
 
 interface AdminGroupTarget { kind: "group"; id?: string | number | null; name?: string | null }
@@ -616,23 +676,26 @@ interface AdminOtherTarget { kind: "other"; label: string }
 | Target | Drawn as |
 |---|---|
 | a person (no `kind`, as today) | name and address; `null`, or a person with nothing left in it, is "an erased account" |
-| `kind: "group"` | the group's name; without one (the group was deleted) the noun's "a deleted team" |
+| `kind: "group"` | the group's name, live or stamped (decision 6); without one, the noun's "a deleted team" |
 | `kind: "other"` | its `label`, for an app's own action on something that is neither (a demo dataset, a setting) |
 | left out | nothing. Until 0.34 it read as erased; the three apps always pass a person or `null` |
 
 - A membership row draws the person, then the group's name on its own, muted. No
   preposition goes before the name, so no language has to inflect it.
 - A group never reads "by the user themselves" and is not a filter button in 0.34
-  (`?target=` stays a person's). An app maps the row's `target_group` onto `target` for
-  `group_*` and onto `group` for `membership_*`.
+  (`?target=` stays a person's).
+- **An app maps the row's `target_group`** (kastlan 11):
+  - onto `target` for a row about the group itself: `group_*`, and kastlan's `plan`;
+  - onto `group` for a row about a person in it: `membership_*`, `invite`,
+    `invite_resend`, `invite_revoke`.
 
 ### 11.5 Labels
 
-`AdminActionLog groupNoun="team" | "company" | "household" | "group"` (default `group`)
+`AdminActionLog groupNoun="team" | "company" | "budget" | "group"` (default `group`)
 picks one set of phrases; an app's own `labels.actions[kind]` still wins. New keys in the
 `adminActionLog` namespace, in all seven languages (28 each):
 
-| Key, for `<noun>` = `group`, `team`, `company`, `household` | English, for `team` |
+| Key, for `<noun>` = `group`, `team`, `company`, `budget` | English, for `team` |
 |---|---|
 | `groupActions.<noun>.group_create` | Team created |
 | `groupActions.<noun>.group_rename` | Team renamed |
@@ -645,6 +708,19 @@ picks one set of phrases; an app's own `labels.actions[kind]` still wins. New ke
 `actions.membership_remove` leaves the `actions` defaults, where a catalogue's value would
 outrank the noun's set; its seven translations become `groupActions.company.membership_remove`.
 
+**The nouns, per language:**
+- **`team`** takes Kurvenschmiede's own words (KS, decision 4): de-CH "Team" (neuter: "aus
+  dem Team"), fr "équipe" (feminine), it "team" (masculine, "il team"; never "squadra",
+  as KS's `it.json` `teams.delete_confirm` has it), es "equipo", hu "csapat" ("a
+  csapatból"), zh "团队".
+- **`company`** keeps today's `membership_remove` strings exactly (kastlan, decision 4):
+  en "Removed from the company", de-CH "Aus dem Unternehmen entfernt", fr "Retiré de
+  l’entreprise", it "Rimosso dall’azienda", es "Quitada de la empresa", hu "Eltávolítva a
+  cégből", zh "已从公司移除". The set's other phrases use the same nouns.
+- **`budget`** takes keksdose's word where it has one: "Budget" in de-CH, "budget" in fr
+  and it (its catalogue). In the other three languages the kit's translators choose.
+- **`group`** is the neutral word.
+
 ### 11.6 Growing the union
 
 `AdminActionKind` and `ADMIN_ACTION_KINDS` (ui-kit) and `AdminAction` (server-kit) gain
@@ -653,9 +729,10 @@ The line for `docs/adopt-0.34.md`: "A `switch` over `AdminActionKind` that ends 
 exhaustiveness check, or a `Record<AdminActionKind, …>`, adds the five (or a `default`);
 code that reads `entry.target.email` narrows first (`!("kind" in target)`)."
 
-No app breaks: kk's `detailOf` (`frontend/src/features/admin/admin-actions-panel.tsx:34-59`)
-and KS's `useDetail` (`activity-panel.tsx:26-42`) end in `default`, and kastlan has no
-switch. KS's list answer builds `levels` from every `CONFIRMATION_LEVELS` entry
+No app breaks: kk's `detailOf` (`frontend/src/features/admin/admin-actions-panel.tsx:34-59`,
+its `default` at :57-58) and KS's `useDetail` (`activity-panel.tsx:26-42`) end in
+`default`; kastlan has no switch, and no app reads `target.email` (kk 9). KS's list
+answer builds `levels` from every `CONFIRMATION_LEVELS` entry
 (`backend/kurvenschmiede/adapters/api/admin_router.py:159`), so it grows by five;
 kastlan's `roster_levels` names its own (`kastlan/domain/schemas/user_admin.py:38-53`).
 The changelog lists the union under "Exhaustive switches", as it did `BillingErrorCode`
@@ -663,41 +740,180 @@ in 0.33.
 
 ### 11.7 Per app
 
-- **Kurvenschmiede:** the six log lines become rows through `audit_service.record`, in the
-  operation's transaction. A migration adds `target_group_id`; `AdminActionOut`
-  (`domain/schemas/admin.py:247-267`) gains the two fields, and its copy test follows.
-  Its `action: AdminAction` refuses the new words until the pin moves, so no group row is
-  written before. Deleting a team takes `acknowledged` (decision 5) and its confirm becomes
-  `AdminActionConfirm`. The panel maps the group and passes `groupNoun="team"`;
-  `useDetail` adds the delete's counts and the role's from → to.
-- **kastlan:** `groupNoun="company"` keeps "Removed from the company". A migration adds
-  `target_group_id` and fills it: `UPDATE admin_actions SET target_group_id = company_id
-  WHERE action IN ('plan', 'membership_remove')`. `record()`
-  (`admin_user_service.py:80-103`) writes it for those two, and `logEntry` maps the group,
-  so the plan row names the company.
-- **keksdose:** nothing to write today, and no migration: the record leaves the key out.
-  `groupNoun="household"` once it logs a household action.
+**Kurvenschmiede:**
+- **The rows.** The six log lines become rows through `audit_service.record`, in the
+  operation's transaction, and an accepted team invitation adds a `membership_add` by
+  the invitee (KS 14).
+  - `membership_remove` writes `{role}`; no grants go with a member (KS 13).
+  - `group_delete` writes `{members, grants, invitations}` and `target_group_name`
+    (KS 12, decision 6).
+  - Re-adding with the same role writes nothing (KS 17).
+- **The migration** adds `target_group_id` and `target_group_name`, both nullable and
+  with no foreign key. It also moves the invitations' team out of `detail` (KS 15):
+
+  ```sql
+  UPDATE admin_actions
+     SET target_group_id = (detail->>'team_id')::int,
+         detail = detail - 'team_id'
+   WHERE action IN ('invite', 'invite_resend', 'invite_revoke')
+     AND detail->'team_id' IS NOT NULL;
+  ```
+
+  `detail` is JSONB, and an invitation with no team just loses its `null` key. New
+  invitation rows write the column only.
+- **Reading.** `AdminActionOut` (`domain/schemas/admin.py:247-267`) gains
+  `target_group_id` and `target_group`, and its copy test follows. Its `/admin/actions`
+  join takes the group's name from the live team, else from that team's `group_delete`
+  row.
+- **The pin.** No group row is written before the server-kit pin moves. The reason is the
+  read (KS 19). `AdminActionOut.action: AdminAction` (:261) refuses a word it doesn't
+  know when a row is read, while `admin_action_record` writes any string (server-kit
+  `audit.py:166-169`). So a group row written first would make `GET /admin/actions`
+  answer 500.
+- **Deleting a team** (KS 11):
+  - `acknowledged` (decision 5) travels in the `DELETE /admin/teams/{id}` JSON body
+    (`admin_router.py:543-551`; `endpoints.ts:293`), as every action body carries it
+    (§4.2). A proxy that drops the body gets `409 confirmation_required`, so the
+    deletion fails closed.
+  - The admin's team list, a bare `list[TeamOut]` today (`admin_router.py:510-515`,
+    `teams-panel.tsx:32`), answers `{teams, levels}`, as the user list answers `levels`
+    (§10.1). The levels come only with the roster today (`admin_router.py:159`,
+    `users-panel.tsx:239`).
+  - Each team in it gains `grant_count`, for the tick's sentence: `TeamOut` lists
+    members and invitations, not grants (`teams_router.py:47-84`).
+  - The confirm becomes `AdminActionConfirm`, its sentence in KS's own words: "N members,
+    M grants and K invitations go with it" (KS 12).
+- **The panel** maps the group (§11.4) and passes `groupNoun="team"`; `useDetail` adds
+  the delete's counts and the role's from → to.
+
+**kastlan:**
+- **No column and no migration** (kastlan 12).
+  - Every row of kastlan's about a company carries `company_id`: the plan change
+    (`platform_router.py:124-128`) and `membership_remove` (`admin_user_service.py:352`).
+  - A company's rows go with it (`admin_action.py:35-37`), so a copy of its id would add
+    nothing, and "a deleted company" never shows.
+  - Without a migration, the forced-RLS backfill that would have changed no row without
+    a word (kastlan 10) goes too.
+- `action_row` (`domain/schemas/user_admin.py:108-121`) fills `target_group_id` from
+  `company_id`, and `target_group` with the company's name, for `plan` and
+  `membership_remove`.
+- `logEntry` (`admin-actions-card.tsx:11-19`) maps it as §11.4: the plan row's `target`,
+  the removal's `group`. The plan row then reads "Plan changed · <company>". The card's
+  comment at :21-24 ("the platform operator's actions are not here") is stale, since plan
+  rows show; it is corrected.
+- `groupNoun="company"` keeps "Removed from the company".
+- The operator's role rows keep the company in `detail.company`
+  (`platform_service.py:310-332`): they are about a person, and stay as they are in 0.34.
+- **None of the five new words in 0.34** (kastlan 13). If kastlan logs founding,
+  renaming, joining or leaving a company later, those rows take their group from
+  `company_id` the same way, and an accepted invitation is a `membership_add` by the
+  invitee (§11.3).
+- **A later backfill of `admin_actions`** in a migration first runs
+  `SET LOCAL app.bypass_rls = 'on'`, as `b4d6f8a0c2e4_feedback_fold_comments.py:43`
+  does. The table's forced RLS binds the owner a migration runs as, so without it an
+  `UPDATE` changes nothing and says nothing (kastlan 10).
+
+**keksdose:** nothing to write today, and no migration: the record leaves the keys out.
+`groupNoun="budget"` once it logs a budget's sharing (kk 8).
 
 ### 11.8 Build
 
 **ui-kit 0.34:**
-- the five kinds; new exported types `AdminGroupTarget` and `AdminOtherTarget`;
-  `AdminActionLogEntry.target` widens and gains `group`; `AdminActionLog` takes
+- the five kinds;
+- new exported types `AdminGroupTarget`, `AdminOtherTarget` and `AdminGroupNoun`
+  (`"group" | "team" | "company" | "budget"`);
+- `AdminActionLogEntry.target` widens and gains `group`; `AdminActionLog` takes
   `groupNoun`; drawing as §11.4, and `samePerson` never matches a group;
-- the 28 keys of §11.5 in seven languages; `actions.membership_remove` leaves `actions`;
-- `AdminActionConfirm.target` takes a group at `none` and `acknowledge` (a group has no
-  address to type; `type_email` stays a person's);
-- tests: each target kind; a deleted group; left out against `null`; `groupNoun` picks
-  the set; `labels.actions` still wins.
+- the 28 keys of §11.5 in seven languages, with §11.5's nouns, the `company` set's
+  `membership_remove` exactly today's string; `actions.membership_remove` leaves
+  `actions`;
+- `AdminActionConfirm.target` takes a group at `none` and `acknowledge`, drawn by its
+  name. A group has no address to type, so the props' types allow a group only at those
+  two levels; `type_email` stays a person's;
+- tests: each target kind; a deleted group with a name and without one; left out against
+  `null`; `groupNoun` picks each of the four sets; `labels.actions` still wins; the
+  `company` set's `membership_remove` equals today's string in seven languages; a group
+  at `acknowledge` in `AdminActionConfirm`.
 
 **server-kit 0.8, the audit row:**
 - `AdminAction` and `CONFIRMATION_LEVELS` gain the five (§11.3);
-- the app's table gains `target_group_id`: an integer, nullable, **with no foreign key**,
-  so a deleted group keeps its rows, as an erased person does;
-- `admin_action_record(…, target_group_id=None)` puts the key in only when it is given,
-  as it does `company_id` (§4.3), so a table without the column takes the record as is;
-- `AdminActionRow` gains `target_group_id` and `target_group: GroupRef | None`; `GroupRef`
-  (`{id, name}`) is new, joined by the app as `actor` is;
-- kastlan's `company_id` stays the row's scope under RLS; the erasure scrub is unchanged,
-  since a group id names no person;
-- tests: the record leaves the key out when it isn't given; the row reads both; the levels.
+- the app's table, where it logs groups (Kurvenschmiede), gains `target_group_id`, an
+  integer, and `target_group_name`, a string (only on `group_delete`). Both are nullable,
+  with **no foreign key**, so a deleted group keeps its rows, as an erased person does;
+- `admin_action_record(…, target_group_id=None, target_group_name=None)` puts each key in
+  only when it is given, as it does `company_id` (§4.3), so a table without the columns
+  takes the record as is;
+- `AdminActionRow` gains `target_group_id` and `target_group: GroupRef | None`. `GroupRef`
+  (`{id, name}`) is new, joined by the app as `actor` is: from the live group, else the
+  `group_delete` row's stamp (kastlan: from `company_id`);
+- `require_confirmation(…, target_email: str | None)` (KS 10). With `None`, a group:
+  - `none` passes;
+  - `acknowledge` passes on `acknowledged` alone, since no typed address can match;
+  - `type_email` raises `ValueError`. That is a programming error: no level table gives
+    a group's action `type_email`;
+- kastlan's `company_id` stays the row's scope under RLS. The erasure scrub is unchanged:
+  it scrubs people, not groups, and it already reaches a membership row through its
+  person (KS 20);
+- tests: the record leaves both keys out when they aren't given; the row reads both; the
+  levels; `require_confirmation` with `None` at each level.
+
+**For `docs/adopt-0.34.md`**, beside §11.6's line:
+- Kurvenschmiede: the migration and its backfill, the team list's `{teams, levels}` and
+  `grant_count`, `acknowledged` in the delete's body, and no group row before the pin;
+- kastlan: `action_row` fills the group from `company_id`, and `logEntry` maps it;
+- keksdose: nothing.
+
+### 11.9 Settled after the reviews (2026-10-12)
+
+The three apps reviewed §11 on 2026-10-12: keksdose at `c6bf6f70` (**kk** 8–9), kastlan
+(**ka** 10–13) and Kurvenschmiede at `de88be6` (**KS** 10–20). The reviews are kept
+outside the repo (`audits/round-034/reviews.md`); kk 1–7, ka 1–9 and KS 1–9 are auth
+§11.7's. The sections above are corrected in place, and this list is the record.
+
+**Decisions 4 and 5** are settled as recommended: all three agree. kastlan adds that
+German needs whole phrases too, and that the `company` set must keep today's strings
+exactly. KS adds that the `team` set takes its nouns (§11.5), and agrees to decision 5
+given its points 10–12. kastlan can't delete a company, and keksdose has no stake in
+decision 5.
+
+**keksdose**
+- kk 8, taken: `budget` replaces `household` in the noun set (§11.2, §11.5); keksdose
+  still writes nothing and needs no migration.
+- kk 9, confirmed: `detailOf` ends in `default`, and nothing has a
+  `Record<AdminActionKind, …>`, an exhaustive switch or a `target.email` read (§11.6).
+
+**kastlan**
+- ka 10, moot and recorded: with no migration (ka 12) there is no backfill; the
+  forced-RLS rule for a later one is in §11.7.
+- ka 11, taken: the mapping rule covers both a row about the group (`group_*`, `plan` →
+  `target`) and one about a person in it (→ `group`) (§11.4).
+- ka 12, taken: kastlan needs no column and no migration; `action_row` fills the group
+  from `company_id` (decision 2, §11.7).
+- ka 13, taken: none of the five words in 0.34 for kastlan, and the stale card comment is
+  corrected (§11.7).
+
+**Kurvenschmiede**
+- KS 10, taken: `require_confirmation` takes `target_email: str | None`, and `type_email`
+  raises for a group (§11.8).
+- KS 11, taken: `acknowledged` goes in the `DELETE` body, which fails closed; the team
+  list answers `{teams, levels}` and each team its `grant_count` (§11.7).
+- KS 12, taken: `group_delete`'s detail is `{members, grants, invitations}`, and the
+  sentence names the invitations.
+- KS 13, taken: KS's `membership_remove` is `{role}`; the draft's "counts of what went"
+  is struck.
+- KS 14, taken: an accepted invitation into a group is a `membership_add` by the invitee;
+  a demo's memberships stay out.
+- KS 15, taken: all three invitation words carry `target_group_id`, and the migration
+  moves `team_id` out of `detail` (the key goes).
+- KS 16, taken: `target_group_name` on the `group_delete` row (decision 6). The draft's
+  `audit_detail` argument is struck: names stay out of `detail` by the app's rule.
+- KS 17, taken: a change that changes nothing writes no row.
+- KS 18, taken: decision 2's "an app can filter by it" is struck; the group is not a
+  filter in 0.34.
+- KS 19, taken: the reason is now the read, where `AdminActionOut.action` refuses a new
+  word and `GET /admin/actions` would answer 500; the conclusion stands.
+- KS 20, confirmed: the erasure scrubs membership rows (`audit_service.py:47`,
+  `erasure_service.py:399-401`), only an admin deletes a team, and today's confirmation
+  names the consequence (`en.json:1795`).
+
+Nothing is open. Next: ui-kit 0.34 and server-kit 0.8 (§11.8).

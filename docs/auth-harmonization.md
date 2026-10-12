@@ -3,7 +3,8 @@
 Status: **2026-10-05, reviewed.** Led from ui-kit at Marcel's request. All three apps
 reviewed the draft the same day; §10 records what they settled, and §2 has Marcel's
 decisions, including those that followed the reviews. §11 (session refresh, round 0.34)
-is a draft of 2026-10-12, for the apps' review.
+is **settled, 2026-10-12**: the three apps reviewed it that day, §11.7 records what they
+settled, and §11 is corrected in place.
 It is built from a read-only audit of the three apps (keksdose `cd0c5954`, kastlan
 `1674ad6` plus its local `feat/auth-pages`, Kurvenschmiede `628af3e`). The
 full audit is kept outside the repo; the facts this plan rests on are quoted here.
@@ -617,12 +618,15 @@ Each signed-out page is on `AuthLayout`, with `LegalFooter` and `useNoIndex`.
 Nothing is open. Next: server-kit 0.3.0 and ui-kit 0.29.0 (§8), after 0.28.0 and 0.2.1
 are released. kastlan's tenant lock (§9 kastlan 1) goes first, on its own.
 
-## 11. Session refresh (round 0.34; draft, 2026-10-12)
+## 11. Session refresh (round 0.34; settled 2026-10-12)
 
-**A draft for the three apps' review.** ui-kit 0.34 gains the client half of renewing a
-session, `attachSessionRefresh` (KS's U6, round 0.34 C7), and server-kit 0.8 the refresh's
-coded refusal. It ends kastlan's sign-out over a network blip (B3). It builds on §6.2–6.3
-and landing-demo §5.5.
+ui-kit 0.34 gains the client half of renewing a session, `attachSessionRefresh` (KS's U6,
+round 0.34 C7), and server-kit 0.8 the refresh's coded refusal. It ends kastlan's sign-out
+over a network blip (B3). It builds on §6.2–6.3 and landing-demo §5.5.
+
+**Settled 2026-10-12.** The three apps reviewed the draft (`05309f6`) the same day and
+agreed with both of its open decisions (8 and 9). §11.7 records what became of each
+finding; the sections below are corrected in place. Nothing is open.
 
 ### 11.1 Where each one stands
 
@@ -640,149 +644,441 @@ path is given.
 | A sign-in step's 401 | ignored for a demo only (`SIGN_IN_STEP` :46-49, used at :182) | ignored for every session (`UNAUTHENTICATED_PATHS` :175-189, :196, :207-214) | ignored for every session :60-69, :124 |
 | A demo's 401 | `endDemoSession()` :175-182 | `endDemo()` :99-104, :199-202 | `/demo/ended` :135-140 |
 | After a definitive one | `clear({wipeMirror: false})`, `/login` unless already on `/login` or `/register` :183-192; a sync request (`x-hb-sync`) only rejects :153-158 | `clearTokens()`, `/login` :239-240 | `clear()`, `/login` only from a page that needs a session (`needsSession` :54-58) :137-145 |
-| Token store | `localStorage`, written by the refresh; an answer without a refresh token keeps the old one :70-71 | access token in memory, refresh token in `localStorage` (`setTokens` :67-81; an answer without one drops it); the user goes to a listener :233 | the store's `renewSession(…, user)` :98 |
+| Token store | `localStorage` only, written by the refresh; an answer without a refresh token keeps the old one :70-71. The answer's `user` is dropped, and the store's `token` (`shared/state/auth-store.ts:80`) stays the old one | access token in memory, refresh token in `localStorage` (`setTokens` :67-81, where a `null` refresh token marks a demo and drops the real one); the user goes to a listener :233 | the store's `renewSession(…, user)` :98 |
+| A refresh that lands after the session changed | written all the same :70-71 | written all the same :232 | written all the same (`renewSession`, `auth-store.ts:58-62`) |
 
 The servers already agree: every definitive refusal of `POST /auth/refresh` is a 401 with
-a detail string, never a 403 (kk `backend/keksdose/adapters/api/auth_router.py:857-891`,
+a detail string, never a 403 (kk `backend/keksdose/adapters/api/auth_router.py:860-884`,
 KS `backend/kurvenschmiede/adapters/api/auth_router.py:197-206`, ka
 `kastlan/adapters/api/auth_router.py:178-198`). No app's refresh invalidates the token it
-replaces (kk and KS are stateless, ka keeps the `sid`), so today the single flight is
-about load and order, and it keeps the kit right for an app that makes them single-use.
+replaces (kk and KS are stateless, ka keeps the `sid`: `session_service.py:81-95`), so
+today the single flight is about load and order, and it keeps the kit right for an app
+that makes them single-use.
+
+Two other 401s meet a signed-in client. kastlan's `POST /auth/2fa/disable` answers 401 for
+a wrong password or code (`kastlan/domain/services/two_factor_service.py:145-148`; its
+settings page relies on it, `settings-page.tsx:242-244`). keksdose's translation-review
+token (`translations_router.py:59`) is the kit showcase's Bearer (`kdr_…`), with no
+refresh token. §11.5 deals with both.
 
 ### 11.2 Decisions
 
-Settled by this draft; the reviews may object:
+Settled by the draft, and agreed by the reviews:
 
 1. **The kit owns the rule; the app owns the call.** The kit decides when to refresh, who
-   waits, what a failure means and when the session ends. The app keeps its endpoint, its
-   token storage, its sign-out and where it navigates (§11.4).
+   waits, what a failure means, when the session ends and whether a renewal may still be
+   stored. The app keeps its endpoint, its token storage, its sign-out and where it
+   navigates (§11.4).
 2. **One flight per tab.** Every 401 that arrives while a refresh runs waits for it, and
    so does a refresh the app starts itself (kastlan's boot).
 3. **Definitive: the session is over.** The device holds no refresh token; or
    `/auth/refresh` answers **401 or 403** (expired, revoked by the cut-off or the session
    row, a deactivated account, a required password change: §6.2, §6.3); or the request,
-   replayed with the fresh token, gets a 401 again. Only then does the app sign out.
+   replayed with the fresh token, gets a 401 again. Only then does the app sign out, and
+   only while that session is still the app's (§11.3).
 4. **Transient: everything else.** No answer (offline, DNS, CORS), a timeout, 408, 429,
-   any 5xx, and also a 400, 404 or 422 from the refresh: a client or deploy fault that a
-   sign-out would not mend. The session stays. Nothing is signed out, no token or cache is
-   touched, nothing redirects, and the kit shows nothing.
-5. **Backoff inside the flight:** up to three attempts, 1 s and then 3 s apart, each cut
-   off after 15 s; no further attempt while the browser reports itself offline. Then the
-   waiting requests reject, and the next 401 starts a new flight.
+   any 5xx, and also any other answer from the refresh that is not a 401 or 403, such as
+   a 400, 404 or 422: a client or deploy fault that a sign-out would not mend. The
+   session stays. Nothing is signed out, no token or cache is touched, nothing
+   redirects, and the kit shows nothing.
+5. **Retry only where waiting helps.** No answer, a timeout, 408, 429 and any 5xx get up
+   to three attempts, 1 s and then 3 s apart, each cut off after 15 s; no further attempt
+   while the browser reports itself offline. Any other transient answer (a 400, 404, 422)
+   and anything else the app's `refresh` throws ends the flight at the first attempt:
+   asking again would get the same answer (KS 7). Then the waiting requests reject, and
+   the next 401 starts a new flight.
 6. **landing-demo §5.5 holds for every session:** a signed-out step's 401 (§11.3) never
    refreshes and ends nothing; a demo's 401 ends the demo at `/demo/ended`, with no
-   refresh tried. kk applies the first to a demo only today.
+   refresh tried, once however many of its requests 401 (KS 8). kk applies the first to a
+   demo only today.
 7. **server-kit names the refusal:** `AuthErrorCode.SESSION_ENDED`, 401, for every
    definitive refusal of `/auth/refresh` (§5.2: every refusal carries a code). The client
    still decides by status, so an app that has not switched yet keeps working.
 
-Open, with a recommendation:
+Open in the draft, settled as recommended (all three apps agree):
 
-8. **What a request rejects with after a transient failure.** kk and KS reject with the
-   request's own 401. **Recommended: keep the 401, marked as transient**
-   (`isTransientRefreshFailure(error)`), so an app's message can say "can't reach the
-   server" instead of "not signed in". Rejecting with the refresh's own error would name
-   the cause too, but its config carries the refresh token in its body, into any log or
-   crash report that keeps the error.
-9. **kk's sync opt-out** (`x-hb-sync`: a definitive failure found by a sync request only
-   rejects). **Recommended: drop it.** A definitive failure means the session is over,
-   whichever request found it, and kk's sign-out already keeps the mirror and the outbox
-   (`wipeMirror: false`), so nothing unsynced is lost. Keeping it needs a per-request hook
-   in the kit.
+8. **After a transient failure, a request rejects with its own 401, marked.** The marker
+   is a property on that very axios error (a `Symbol.for` key set to `true`), not a
+   wrapper, so `err.response?.status` and every check an app already has keep working,
+   and a log that serialises the error doesn't print it (kk 2).
+   `isTransientRefreshFailure(error)` reads it, so an app's message can say "can't reach
+   the server" instead of "not signed in". Rejecting with the refresh's own error would
+   name the cause too, but its config carries the refresh token in its body, into any log
+   or crash report that keeps the error. The request's own 401 carries only the access
+   token it was sent with, as it does today (KS's note). Each app has a place that must read the
+   marker (§11.5): kk's sync chip, kastlan's handover sync, KS's `apiErrorMessage`.
+9. **kk's sync opt-out goes** (`x-hb-sync`: a definitive failure found by a sync request
+   only rejected). A definitive failure means the session is over, whichever request
+   found it. keksdose verified that nothing unsynced is lost: `clear({wipeMirror: false})`
+   (`shared/state/auth-store.ts:85-121`) keeps the mirror, the outbox and
+   `MIRROR_USER_ID`, and `setSession` (:63-70) wipes the mirror only for a different user.
+   Two consequences, named (kk 1):
+   - **the timing changes:** sync polls every 30 s per tab (`sync-client.ts:1054-1058`),
+     so a definitive end now reaches `/login` within one poll, even on an idle page.
+     Unsaved input there is caught only by the app's `beforeunload` guard (kk feedback
+     #48);
+   - **the E2EE keys:** `clear` also drops the unlocked keys (`lockKeys`,
+     `auth-store.ts:94`), as every 401 sign-out does today. Unchanged.
 
 ### 11.3 The flow
+
+**Every request is stamped when it goes out** with the app's `currentToken()`: a key on
+the config, as `attachServerWake` keeps `_serverWake`, never a header. A request was sent
+with an **older token** when its stamp is no longer the app's `currentToken()`. That holds
+however the token changed:
+- a refresh;
+- another tab (kk and KS keep their tokens in `localStorage`, shared across tabs);
+- kastlan's company or role switch;
+- a password change, which stores a fresh pair (KS `account-cards.tsx:87-92`);
+- a sign-in, a demo start, a sign-out.
 
 On a 401 from the instance, in this order:
 
 1. **A signed-out step** → reject, nothing else. The kit's default list is every `/auth/`
    call made without a session, the union of the three apps' lists: `login` (with its
    `2fa` and `set-password` steps), `passkey/login`, `register`, `demo-session`,
-   `password-reset`, `verify-email`, `resend-verification`, `invitations/check`,
-   `me/email/confirm` and `refresh`. `isSignedOutStep` replaces it.
-2. **Already replayed once** → definitive (decision 3).
+   `password-reset`, `verify-email`, `invitations/check`, `me/email/confirm` and
+   `refresh`.
+   - **Whole steps only** (KS 2). The part of the URL's path after its `auth/` segment,
+     without the query string, is the entry itself or starts with the entry and a `/`
+     (`login/2fa` is `login`'s). So `register`
+     never catches `/auth/passkey/register/begin` or `…/finish` (adding a passkey, which
+     needs a session in KS), `invitations/check` never `/auth/invitations/accept` (which
+     needs a session in kk and KS), and `me/email/confirm` never `/auth/me/email`.
+   - **`resend-verification` is not on it** (KS 1). In kk and KS it needs a session; in
+     kastlan it is public and never answers 401.
+   - `isSignedOutStep` replaces the list.
+2. **Sent with an older token** → if the app holds a token now, the request is replayed
+   with it, with no refresh, once for this reason; a 401 to that replay goes through
+   these steps again, now with a current stamp. Otherwise it rejects with its 401 and
+   nothing else happens: the session it was sent for is gone, and whatever ended it has
+   already done what follows (kastlan 3, KS 3, KS 4).
 3. **A demo** (`isDemo()`) → `onEnded({ demo: true })`, reject.
-4. **Sent with an older token than the last refresh returned** → replayed with the new
-   one, with no second refresh.
-5. **Otherwise** it joins the flight, or starts it:
-   - a new token → the request is replayed once, its `Authorization` set to the token;
-   - definitive → `onEnded({ demo: false })`, **once per flight** however many requests
-     waited; each rejects with its 401;
-   - transient → each rejects (decision 8); nothing else happens.
+4. **Already replayed after a refresh** → definitive (decision 3):
+   `onEnded({ demo: false })`, reject. A replay for an older token (step 2) doesn't count
+   here: the app's current token may simply have expired too, and that needs a refresh,
+   not a sign-out.
+5. **Otherwise** it joins the flight, or starts it. A flight notes `currentToken()` when it
+   starts: the session it renews. When the answer comes:
+   - **the session changed meanwhile** (`currentToken()` is no longer the noted one) →
+     the kit stores nothing and ends nothing, whatever the answer. Each waiting request
+     goes through step 2: replayed with the app's token, or rejected. So a late refresh
+     never writes the old session back over a sign-out, a demo start or a password change,
+     and the old session's refusal never signs out someone who has just changed their
+     password (KS 3);
+   - **a renewal** → `store(renewal)`, then each waiting request is replayed once, its
+     `Authorization` set to `renewal.token`. A renewal with `replay: false` is stored, and
+     each waiting request rejects with its 401 instead, unmarked (kastlan 3: the refresh
+     landed in another company);
+   - **definitive** → `onEnded({ demo: false })`, and each rejects with its 401;
+   - **transient** → each rejects with its own 401, marked (decision 8); nothing else
+     happens.
 
-Any other status passes through untouched. That is why a wrong current password answers
-`400 password_incorrect` and never a 401 (user-admin §6.2).
+**`onEnded` is called once per session.** The kit keeps the token it ended, and a later
+401 about the same session (another waiter, a demo's other requests, the next flight)
+rejects without a second call (KS 8). Once the app has dropped the token, step 2 rejects
+those anyway.
 
-- **Order:** attach it after `attachServerWake`, which asks to be first
-  (`src/lib/server-wake.ts:235-238`), and after any logging interceptor.
-- **The refresh answer:** a missing `refresh_token` keeps the stored one (kk's rule). The
-  user in the answer goes to the app's store, so a role changed on the server shows
-  without a new sign-in (KS's `renewSession`, kastlan's listener).
+**Any other status passes through untouched**, and a signed-in request answers 401 only
+about its session. A wrong current password answers `400 password_incorrect` (user-admin
+§6.2), and so does any other wrong input: a replayed request that 401s again is
+definitive, so an endpoint that answers 401 for a wrong input would sign its user out.
+kastlan's `POST /auth/2fa/disable` does today; it moves to 400 before kastlan adopts
+(§11.5; kastlan 2).
+
+- **Order:** the kit's response interceptor goes last. It comes after `attachServerWake`,
+  which asks to be first (`src/lib/server-wake.ts:235-238`), and after the app's own
+  (logging, a watchdog of its own). Axios runs response interceptors in the order they
+  were added, and each must see the 401 settle before the refresh is awaited.
+  keksdose's cold-start watchdog decrements inside its own response interceptor
+  (`client.ts:100-105`, :111, :130), so it registers its interceptors before
+  `attachSessionRefresh` (kk 4). The request side's order does not matter: the stamp
+  reads `currentToken()`, the same source the app's request interceptor reads.
+- **The refresh answer:** the app's `store` writes it.
+  - A missing `refresh_token` keeps the stored one (kk's rule).
+  - The user in the answer goes to the app's store, so a role changed on the server
+    shows without a new sign-in (KS's `renewSession`, kastlan's listener, and keksdose's
+    from now on: kk 3).
 - **Tabs:** there is no lock across tabs. That is safe while no app's refresh token is
   single-use; an app that makes it single-use adds one (`navigator.locks`) first.
+  Another tab's refresh is caught by step 2 and by the flight's check.
 
 ### 11.4 What it calls back into
 
-`createSessionRefresh(options)` makes the flight; `attachSessionRefresh(instance,
-session)` hooks it to an axios instance and returns a function that detaches it. It is
-the `createServerWake` / `attachServerWake` pair again, typed structurally, so the kit
-does not depend on axios.
+`createSessionRefresh(options)` makes the flight. `attachSessionRefresh(instance,
+session)` hooks it to an axios instance: a request interceptor for the stamp and a
+response interceptor for the 401. It returns a function that detaches both. It is the
+`createServerWake` / `attachServerWake` pair again, typed structurally, so the kit does
+not depend on axios.
+
+```ts
+/** What the app's `refresh` resolves: the new access token, plus whatever its `store`
+ *  needs (its refresh token, the user). */
+interface SessionRenewal { token: string; replay?: false }
+
+function createSessionRefresh<R extends SessionRenewal>(
+  options: SessionRefreshOptions<R>,
+): SessionRefresh<R>;
+```
 
 | Option | What the app gives | kk | ka | KS |
 |---|---|---|---|---|
-| `refresh(signal)` | its own `POST /auth/refresh` on a bare client, never the instance; stores both tokens and the user; resolves the new access token, or `null` when the device holds no refresh token; throws on failure, and the kit classifies the throw | `localStorage` :62-72 | `setTokens` + the listener | `renewSession` :85-99 |
+| `refresh(signal)` | its own `POST /auth/refresh` on a bare client, never the instance. It **writes nothing**. It resolves the answer as a renewal, or `null` when the device holds no refresh token; it throws on failure, and the kit classifies the throw. `replay: false` in the renewal stores it but replays nothing | its bare call :62-72, the `user` kept | its bare call through `serverWake.track`; `replay: false` when the answer's company is not the store's | its bare call :85-97 |
+| `store(renewal)` | writes the tokens and the user. The kit calls it only while the session the flight renews is still the app's (§11.3) | `localStorage` :70-71, then `useAuth.setState({ token, user })` | `setTokens(token, refreshToken ?? getRefreshToken())`, then the user (§11.5) | `renewSession(token, refreshToken, user)` :98 |
+| `currentToken()` | the access token the app sends now, read where its request interceptor reads it; `null` when there is none | `localStorage` `auth_token` :89 | `getAccessToken()` | `localStorage`'s access token :114 |
 | `isDemo()` | whether the session is a demo | `isDemoSession(user)` | no refresh token and `hasDemoSession()` | `isDemoSession(user)` |
-| `onEnded({ demo })` | drop the tokens and the user, then navigate: `/demo/ended` for a demo, else `/login` with the page it came from (§5.2) | `endDemoSession()`; `clear({wipeMirror: false})` | `endDemo()`; `clearTokens()` | `clear()`; `/login` only where `needsSession` |
+| `onEnded({ demo })` | drop the tokens and the user, then navigate: `/demo/ended` for a demo, else `/login` with the page it came from (§5.2) | `endDemoSession()`; `clear({wipeMirror: false})` | `endDemo()`; `logout()` and `queryClient.clear()` | `clear()`; `/login?next=` only where `needsSession` |
 | `isSignedOutStep(url)` | optional; replaces the default list | | | |
 | `attempts`, `backoffMs`, `timeoutMs` | optional; 3, `[1000, 3000]`, 15 000 | | | |
 
-`session.refresh()` is the same flight for a caller outside the interceptor. It resolves
-`{ ok: true, token } | { ok: false, definitive }` and never calls `onEnded`: the caller
-decides (kastlan's boot, §11.5).
+**How the kit classifies a throw:** a 401 or 403 is definitive. No answer, the kit's own
+timeout, 408, 429 and 5xx are transient and retried. Any other answer, and anything that
+is not an HTTP error (a bug in the app's `refresh`), is transient and not retried.
+
+`session.refresh()` is the same flight for a caller outside the interceptor, kastlan's
+boot. It never calls `onEnded`: the caller decides. It resolves a
+`SessionRefreshOutcome<R>`, by `result`:
+
+| `result` | When | What the kit has done |
+|---|---|---|
+| `"renewed"`, with `renewal` | a renewal while the session was unchanged | `store(renewal)` |
+| `"ended"` | definitive | nothing; if requests waited on the same flight, `onEnded` for them |
+| `"transient"` | transient | nothing |
+| `"changed"` | the session changed while it ran | nothing; the caller reads the app's own state |
 
 ### 11.5 Per app
 
-- **keksdose:** `client.ts:46-86` and its 401 branch `:151-193` move onto the kit.
-  `refresh` is its bare call with the two `localStorage` writes; `onEnded` is today's two
-  branches. It gains the signed-out-step rule for every session, the backoff and timeout,
-  and the stale-token replay; decision 9 removes the `x-hb-sync` branch. Its
-  `client.test.ts` reaches into the handler indexes (the comment at `:100-104`): the
-  kit's interceptor shifts them, and the refresh cases move to the kit's tests.
-- **kastlan (B3):** `client.ts:175-245` moves onto the kit; the flag, the queue and
-  `processQueue` go.
-  - The boot `rehydrate` (`auth-store.ts:82-113`) calls `session.refresh()`, so it and
-    the interceptor share one flight. Definitive: it clears, as today. **Transient: the
-    stored refresh token stays**, and the app shows "Can't reach the server" with "Try
-    again" instead of the sign-in. This refresh is the first request after a break, so
-    it is the one the cold-start notice should watch (`serverWake`, `client.ts:17-20`).
-  - `setTokens` keeps the stored refresh token when the answer has none (§11.3).
-  - The `/auth/refresh` branch at `:207-213` goes: the refresh never passes the instance.
-- **Kurvenschmiede:** `client.ts:60-148` moves onto the kit, as its U6 asked.
-  `needsSession` stays the app's, inside `onEnded`; its `SIGN_IN_STEP` is part of the
+**keksdose:**
+- `client.ts:46-86` and its 401 branch `:151-193` move onto the kit. It registers its own
+  interceptors first (the log and the cold-start watchdog, `:100-105`, :111, :130), then
+  `attachSessionRefresh` (kk 4).
+- `refresh` is its bare call without the writes, resolving `{ token, refreshToken, user }`.
+- `store` writes the two `localStorage` keys (`:70-71`) and calls
+  `useAuth.setState({ token, user })`. Not `setSession`, which would also run the mirror
+  check and the analytics (`shared/state/auth-store.ts:63-82`). Today the answer's user
+  is dropped and the store's token goes stale (kk 3).
+- `currentToken` reads `localStorage` `auth_token`, as its request interceptor does
+  (`:89`). `onEnded` is today's two branches.
+- Decision 9 removes the `x-hb-sync` branch (`client.ts:153-158`) and the header
+  (`sync-client.ts:907`, :1073, and the comment at :1059-1060). The sync chip, red on any
+  refusal today (`sync-client.ts:1083-1095`), shows "offline" for
+  `isTransientRefreshFailure` (kk 2).
+- It gains the signed-out-step rule for every session, the backoff and timeout, the
+  stale-token replay and the late-refresh guard.
+- Its `client.test.ts` reaches into the handler indexes (`handlers[0]` at `:36`, 46, 58,
+  77, 97; the comment at `client.ts:100-104` says why the watchdog sits inside the
+  existing interceptors). The kit's interceptors shift them, and the refresh cases move
+  to the kit's tests (kk 5).
+
+**kastlan (B3):**
+- **Before adopting:** `POST /auth/2fa/disable` answers 400 for a wrong password or code,
+  not 401 (`two_factor_service.py:145-148`; the comment at `settings-page.tsx:242-244`
+  follows). Otherwise the replay's second 401 signs the user out (kastlan 2).
+- `client.ts:175-245` moves onto the kit. The flag, the queue, `processQueue` and the
+  `/auth/refresh` branch at `:207-213` go: the refresh never passes the instance.
+- `refresh` is its bare call, through `serverWake.track`, so the cold-start notice watches
+  it; the filter (`client.ts:18`) adds `refresh` (kastlan 9). It resolves
+  `{ token, refreshToken, user }`, with **`replay: false` when the answer's
+  `current_company_id` is not the store's** (kastlan 3).
+  - A refresh can land in another company: it opens the company sign-in would
+    (`company_to_open`, `auth_router.py:183-186`, `auth_helpers.py:101`). A member removed
+    from the company gets a 401 (`dependencies.py:104-105`, :131-132) and refreshes into
+    another one; another tab may have moved `last_company_id` (`auth_router.py:252`).
+  - A waiting write, such as the handover's `POST /sync` (`sync.ts:142`), must not be
+    replayed into that company.
+- `store` calls `setTokens(token, refreshToken ?? getRefreshToken())`.
+  - `setTokens` itself stays as it is: its `null` means a demo and drops the real token
+    (`client.ts:65-77`). A real session's refresh always answers one
+    (`auth_helpers.py:110`), so the fallback only guards (kastlan 7).
+  - While signed out (the boot) it calls `signIn`, which also sends the crash reports
+    that waited and applies the account's language (`auth-store.ts:53-57`). While signed
+    in it replaces the user, as the listener does today (kastlan 6).
+  - With `replay: false` it then clears the query cache and goes to `/dashboard`, as a
+    company switch does (`top-bar.tsx:83-89`).
+- `currentToken` is `getAccessToken()`.
+- `onEnded`: `endDemo()` for a demo; else the store's `logout()` and `queryClient.clear()`,
+  then `/login`. Not `clearTokens()`: `logout()` also forgets the offline handover copy
+  (`db.ts:88-96`), the account's language and its last page (`auth-store.ts:62-75`)
+  (kastlan 5).
+- The boot `rehydrate` (`auth-store.ts:82-113`) calls `session.refresh()`, so it and the
+  interceptor share one flight.
+  - `renewed`: `store` has signed in, user included.
+  - `ended`: it clears, as today.
+  - `transient`: **the stored refresh token stays**, and the app shows "Can't reach the
+    server" with "Try again" instead of the sign-in.
+  - `changed`: it reads the store.
+- `restoreDemo` (`auth-store.ts:128-130`) ends a demo only on a 401; a transient failure
+  keeps its token. It runs from the landing routes too (`use-landing-session.ts:28`), and
+  a PWA started offline must still reach its offline handover copy (`db.ts:78-79`;
+  `vite.config.ts:37-38` promises it) (kastlan 8).
+- The handover sync (`features/handover/offline/sync.ts`) counts
+  `isTransientRefreshFailure` as offline, beside no answer (`:66-68`). No 401 marks a
+  change or a photo rejected (`:196-210`): `discardRejected` (`:233-236`) would delete it
+  (kastlan 4).
+
+**Kurvenschmiede:**
+- `client.ts:60-148` moves onto the kit, as its U6 asked; the wrong comment at `:72-74`
+  goes with it (KS 9).
+- `refresh` is its bare call without the write (`:85-97`), resolving
+  `{ token, refreshToken, user }`. `store` is `renewSession(token, refreshToken, user)`
+  (`:98`). `currentToken` reads `localStorage`'s access token, as its request interceptor
+  does (`:114`).
+- `onEnded`: `clear()`, then `/demo/ended` for a demo, else `/login?next=<the page>`,
+  only where `needsSession`. The `next` is built as `ProtectedRoute` builds it
+  (`protected-route.tsx:24-25`). This is new work: today it goes to a bare `/login`
+  (`client.ts:144`), and `clear()` forgets the last page (`auth-store.ts:15-18`, :73)
+  (KS 6).
+- `apiErrorMessage` checks `isTransientRefreshFailure` first and says offline or timed
+  out. Today it shows the 401's detail (`client.ts:307-313`): the server's English "This
+  session has ended…" or "Invalid token" (KS 5).
+- `needsSession` stays the app's, inside `onEnded`; its `SIGN_IN_STEP` is part of the
   kit's default.
-- **Every server:** each definitive refusal of `/auth/refresh` answers
-  `401 {code: "session_ended"}`, and nothing else there answers 401 or 403 (a database
-  error stays a 5xx). The detail strings may stay, for logs. kk's five refusals, KS's
-  `TokenRefusedError` and kastlan's token and session checks switch together.
+
+**The kit showcase**, if it adopts: its Bearer against keksdose is a translation-review
+token with no refresh token, so its `refresh` resolves `null` and a 401 is definitive. Its
+`onEnded` goes to its own sign-in, never an app's `/login` (kk 7).
+
+**Every server:** each definitive refusal of `/auth/refresh` answers
+`401 {code: "session_ended"}`, and nothing else there answers 401 or 403 (a database
+error stays a 5xx). The detail strings may stay, for logs. kk's five refusals, KS's
+`TokenRefusedError` (its `TokenRefusal.ENDED` already has `SESSION_ENDED`'s English,
+`auth_service.py:187`) and kastlan's token and session checks switch together. Elsewhere,
+a signed-in endpoint answers 401 only about the session (§11.3).
 
 ### 11.6 Build
 
 **ui-kit 0.34**, `src/lib/session-refresh.ts` beside `server-wake.ts` (no labels):
 - exports: `createSessionRefresh`, `attachSessionRefresh`, `isTransientRefreshFailure`
-  (decision 8 as recommended), `isSignedOutStep(url)` (the default list, exported for an
-  app's tests), and the types `SessionRefresh`, `SessionRefreshOptions`,
-  `SessionRefreshOutcome`;
-- the structural instance type gains `request(config)` for the replay;
+  (decision 8), `isSignedOutStep(url)` (the default list with whole-step matching,
+  exported for an app's tests), and the types `SessionRefresh`, `SessionRefreshOptions`,
+  `SessionRenewal`, `SessionRefreshOutcome`;
+- the options of §11.4: `refresh(signal)`, `store(renewal)`, `currentToken()`, `isDemo()`,
+  `onEnded({ demo })`, and the optional `isSignedOutStep`, `attempts`, `backoffMs`,
+  `timeoutMs`;
+- `attachSessionRefresh` adds a request interceptor (the stamp) and a response
+  interceptor, and its return detaches both; the structural instance type gains
+  `request(config)` for the replay;
+- the marker is a `Symbol.for` key on the rejected axios error itself, set only after a
+  transient failure;
 - `AuthErrorCode` gains `session_ended`, with no label: no form shows it. Migration line:
   an exhaustive `switch` over `AuthErrorCode` adds it;
-- tests: N concurrent 401s make one `refresh` call; definitive → `onEnded` once;
-  transient → no `onEnded`, attempts at 0, 1 s and 4 s (fake timers), none while
-  offline, the timeout aborts through the signal; a signed-out step and a demo never
-  refresh; one replay at most; a stale token replays without a refresh;
-  `session.refresh()` joins a running flight.
+- tests:
+  - N concurrent 401s make one `refresh` call and one `store`; definitive → `onEnded`
+    once however many waited, and once for a demo's N requests;
+  - transient → no `onEnded`, nothing stored; each rejection is the request's own error,
+    `response.status` 401, with the marker;
+  - attempts at 0, 1 s and 4 s (fake timers) for no answer, 408, 429 and 5xx; one attempt
+    for a 400, 404 or 422 and for a non-HTTP throw; none while offline; the timeout
+    aborts through the signal;
+  - a signed-out step and a demo never refresh; `register` does not match
+    `/auth/passkey/register/begin`, nor `invitations/check` `/auth/invitations/accept`,
+    nor `me/email/confirm` `/auth/me/email`; `resend-verification` refreshes;
+  - at most one replay after a refresh, and at most one for an older token;
+  - a request stamped with an older token replays with `currentToken()` and no refresh,
+    and rejects without a call when `currentToken()` is `null`; if that replay 401s, it
+    refreshes rather than ends the session;
+  - the session changes while the flight runs (a sign-out, a new token from elsewhere):
+    no `store` and no `onEnded`, whether the answer is a renewal or definitive; the
+    waiters replay with the current token or reject;
+  - `replay: false`: stored, the waiters reject unmarked, no `onEnded`;
+  - `session.refresh()` joins a running flight, never calls `onEnded`, and resolves each
+    of its four results.
 
 **server-kit 0.8:**
 - `AuthErrorCode.SESSION_ENDED` (`"session_ended"`, 401, "This session has ended. Please
   sign in again."), in `AUTH_ERROR_STATUS` and `AUTH_ERROR_DETAIL`;
 - `RefreshRequest {refresh_token}` in `auth.schemas` (each app defines its own today);
-- the rule in the `auth.tokens` docstring: what is definitive, and that the endpoint never
-  turns its own failure into a 401.
+- the rule in the `auth.tokens` docstring: what is definitive; that the endpoint never
+  turns its own failure into a 401; and that a signed-in endpoint answers 401 only about
+  the session, never for a wrong input (kastlan 2).
+
+**For `docs/adopt-0.34.md`**, per app as §11.5. In short:
+- kastlan first moves `/auth/2fa/disable` to 400, then `onEnded` is `logout()` and
+  `queryClient.clear()`, its `store` keeps the stored refresh token and signs in at boot,
+  and its handover sync reads `isTransientRefreshFailure` as offline;
+- keksdose registers its interceptors before the kit's, its `store` sets the store's
+  token and user, and `x-hb-sync` goes;
+- Kurvenschmiede's `onEnded` keeps `?next=`, and `apiErrorMessage` reads
+  `isTransientRefreshFailure` first;
+- the showcase's `onEnded` goes to its own sign-in.
+
+### 11.7 Settled after the reviews (2026-10-12)
+
+The three apps reviewed §11 on 2026-10-12: keksdose at `c6bf6f70` (**kk** 1–7), kastlan
+(**ka** 1–9) and Kurvenschmiede at `de88be6` (**KS** 1–9). The reviews are kept outside
+the repo (`audits/round-034/reviews.md`); kk 8–9, ka 10–13 and KS 10–20 are user-admin
+§11.9's. The sections above are corrected in place, and this list is the record.
+
+**Decisions 8 and 9** are settled as recommended: all three agree. kk needs decision 8 for
+its sync chip, kastlan for its handover sync, KS for its messages. On decision 9 kastlan
+adds no opt-out header of its own, and its sign-out keeps the outbox (ka 5).
+
+**One rule set for a stale session** (ka 3, KS 3, KS 4), chosen by ui-kit:
+- every request is stamped with `currentToken()` when it goes out, and every flight
+  notes it when it starts;
+- both are compared with `currentToken()` when the 401 or the answer comes;
+- the app's `refresh` writes nothing, and the kit calls `store` only while the session is
+  unchanged;
+- a renewal may say `replay: false`.
+
+Why this way:
+- **The current token, not a counter.** The apps change tokens outside the kit: other
+  tabs, a company or role switch, a password change, a sign-in or sign-out. Only the
+  app's own current token sees all of them. A counter would need every one of those
+  places to bump it.
+- **The access token as the session's identity**, not the refresh token. Every change
+  in the three apps replaces it. The one case it cannot tell apart, kastlan's boot
+  refresh running with no access token yet, has nothing to sign out of. A sign-in during
+  that refresh still shows as a change.
+- **The write in the kit.** The guard is then written and tested once, in the kit, rather
+  than in each app's callback.
+
+**keksdose**
+- kk 1, taken: decision 9's two consequences (the 30 s poll, the E2EE keys) and the
+  header lines to remove are named (§11.2, §11.5).
+- kk 2, taken: the marker is a `Symbol.for` key on the axios error itself; kk's sync chip
+  reads it as offline.
+- kk 3, taken: the §11.1 and §11.4 cells are corrected; kk's `store` writes `localStorage`
+  and `useAuth.setState({ token, user })`, never `setSession`.
+- kk 4, taken, as a general rule: the kit's response interceptor goes after the app's own,
+  and keksdose registers its interceptors first (§11.3).
+- kk 5, taken: the citations are `client.ts:100-104` and `client.test.ts:36, 46, 58, 77,
+  97` (§11.5).
+- kk 6, confirmed: the narrower list stands (`invitations/check`, never `accept`), and
+  whole-step matching keeps it so.
+- kk 7, confirmed, and a line added: every refresh refusal is a 401; the showcase's
+  review token ends at the showcase's own sign-in (§11.5).
+
+**kastlan**
+- ka 1, confirmed: kastlan's facts, its 401 refusals and its reusable refresh token.
+- ka 2, taken (blocking): "a signed-in endpoint answers 401 only about its session" is the
+  rule (§11.3, server-kit's docstring); kastlan moves `/auth/2fa/disable` to 400 before
+  adopting.
+- ka 3, taken, with the token in place of the counter: `replay: false` as asked, and
+  "older" judged by the stamp against `currentToken()` (the rule set above).
+- ka 4, taken: the handover sync reads the marker as offline, and no 401 rejects a change
+  or a photo.
+- ka 5, taken: kastlan's `onEnded` is `logout()` and `queryClient.clear()`.
+- ka 6, taken differently: the boot's user arrives through `store`, which the kit calls
+  before `session.refresh()` resolves; `renewed` also carries the renewal.
+- ka 7, taken: §11.5 is corrected; kastlan's `store` keeps the stored refresh token, and
+  `setTokens` is unchanged.
+- ka 8, taken: `restoreDemo` ends a demo only on a 401.
+- ka 9, confirmed: the refresh goes through `serverWake.track`, and kastlan's filter adds
+  `refresh`.
+
+**Kurvenschmiede**
+- KS 1, taken: `resend-verification` leaves the default list.
+- KS 2, taken: entries match whole steps after `/auth/`.
+- KS 3, taken: both guards, in the kit; no `store` and no `onEnded` once the session has
+  changed.
+- KS 4, taken: the `currentToken()` option.
+- KS 5, taken: KS's `apiErrorMessage` reads the marker first (§11.5).
+- KS 6, taken: KS's `onEnded` builds `?next=` (§11.5).
+- KS 7, taken: retries only on no answer, 408, 429 and 5xx; any other transient answer
+  ends the flight at once (decision 5).
+- KS 8, taken: `onEnded` is called once per session, a demo's too.
+- KS 9, confirmed: KS's refusals and its demo match the contract, and the comment at
+  `client.ts:72-74` goes with the code.
+
+Nothing is open. Next: ui-kit 0.34 and server-kit 0.8 (§11.6).
