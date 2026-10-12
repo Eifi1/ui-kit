@@ -30,19 +30,19 @@ with its own Tailwind config.
 | | |
 |---|---|
 | [ADOPTING.md](https://github.com/Eifi1/ui-kit/blob/main/ADOPTING.md) | The brief for a new consuming app — hand it to that repo's agent |
-| [MIGRATING.md](https://github.com/Eifi1/ui-kit/blob/main/MIGRATING.md) | Moving an app off the old `@hb/ui` submodule onto the npm package |
 | [CHANGELOG.md](https://github.com/Eifi1/ui-kit/blob/main/CHANGELOG.md) | Every release, and the semver contract this package keeps below 1.0 |
-| [CONTRIBUTING.md](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md) | Repo layout, the house rules, the gates, how to cut a release |
+| [docs/](https://github.com/Eifi1/ui-kit/blob/main/docs/README.md) | The contracts the three apps build to, each release's adoption notes, the audits and plans |
+| [CONTRIBUTING.md](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md) | Repo layout, the house rules, the tests, the showcase, the gates, how to cut a release |
+| [Showcase](https://eifi1.github.io/ui-kit/) | The kit rendered page by page, deployed after every green CI run on `main` (see [Showcase](#showcase)) |
 | [Issues](https://github.com/Eifi1/ui-kit/issues) | Bugs and requests |
 
 The links are absolute because only this README is in the npm tarball — `files` ships
 `dist`, `src`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none
 of the others on disk and a relative link would be a 404.
 
-A rendered catalogue of every component, with the theme, palette and language switchers
-live, deploys to <https://eifi1.github.io/ui-kit/> on every push to `main`. It needs one
-manual repo setting to go live, named at the top of `.github/workflows/pages.yml`; until
-then, `npm run dev:showcase` from a checkout is the same page.
+Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
+formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that cite
+its feedback ("lenkbank L2", "Lenkbank feedback #93") keep the name they were written with.
 
 ## Install
 
@@ -60,10 +60,12 @@ when it chooses. To work on the design system and an app together, use
 |---|---|---|
 | `react`, `react-dom` | peer, `>=19.2` | The kit is components and hooks; two copies of React break hooks and context. 19.2 for `useEffectEvent`. |
 | `react-router` | peer, `>=7` | Imported unconditionally by `DataTable`, `useTableState`, `AppShell` and `useWizard`. A Router has to be mounted even with `urlSync` off. |
-| `recharts` | peer, `>=3` | `@eifi1/ui-kit/chart` imports it statically. Only that subpath needs it — the main barrel no longer reaches it. |
-| `lucide-react` | peer, `>=0.400.0 <2` | Icons, in 33 modules. **Yours to version.** |
-| `sonner` | peer, `>=2`, **optional** | `FileDropzone` and the wizard's "fill in the required fields" toast, reached only through `await import()`. Pass `onValidationFailed` to route it elsewhere. |
-| `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the theme and palette stores are singletons. |
+| `recharts` | peer, `>=3.8` | The chart kit imports it statically, and the main barrel re-exports the chart kit, so `import { Button } from "@eifi1/ui-kit"` needs it installed too (required since 0.5.0). `@eifi1/ui-kit/chart` is about chunk size, not about avoiding the peer. 3.8 for `useXAxisInverseScale` (the zoom). |
+| `lucide-react` | peer, `>=0.400.0 <2` | Icons, imported by name throughout the kit. **Yours to version.** |
+| `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
+| `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
+| `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
+| `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
 **`lucide-react` is a peer from 0.5.0, not a dependency.** All three consumers already
@@ -133,44 +135,65 @@ v0.5.0 the tarball also ships `src`, so `@source ".../@eifi1/ui-kit/src"` works 
 scans the original TSX rather than transpiled output — but it is not present in
 v0.4.x, and an `@source` pointing at a directory that does not exist fails silently.
 
-### 3. Theme + palette stores (own persistence keys)
+### 3. Appearance stores (own persistence keys)
 
-The stores are factories so each app namespaces its own `localStorage`:
+The stores are factories so each app namespaces its own `localStorage`: theme, palette,
+text size and contrast.
 
 ```ts
-import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
+import { createContrastStore, createPaletteStore, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
 export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
   createPaletteStore("myapp-palette", useTheme);
+export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore("myapp-text-size");
+export const { useContrastStore, useApplyContrast } = createContrastStore("myapp-contrast");
 ```
 
-Call `useApplyTheme()` + `useApplyPalette()` once near the root. For a no-flash
-first paint, apply the persisted theme class + token set **before** hydration —
-`applyPersistedTheme(key)` resolves the stored preference, toggles `.dark` and
-returns the mode, which `applyPersistedPalette(key, mode)` then uses:
+Call `useApplyTheme()`, `useApplyPalette()`, `useApplyTextSize({ account })` and
+`useApplyContrast({ account })` once near the root; `account` is the signed-in user's
+saved value, which applies while this device has no choice of its own. For a no-flash
+first paint, apply all four **before** hydration — `applyPersistedTheme(key)` resolves the
+stored preference, toggles `.dark` and returns the mode, which
+`applyPersistedPalette(key, mode)` then uses:
 
 ```ts
-// main.tsx, at module scope, before createRoot
+// main.tsx, at module scope, before createRoot (readPersistedUser is the app's own)
 const mode = applyPersistedTheme("myapp-theme");
 applyPersistedPalette("myapp-palette", mode);
+applyPersistedTextSize("myapp-text-size", { account: () => readPersistedUser()?.text_size });
+applyPersistedContrast("myapp-contrast", { account: () => readPersistedUser()?.contrast });
 ```
 
-Worked example: [`showcase/src/main.tsx`](showcase/src/main.tsx).
+Contrast and palette go in either order. A boot splash painted from `index.html` before any
+module runs needs the text size even earlier: see "Before the first paint" under
+[Styling](#styling). Worked example:
+[`showcase/src/main.tsx`](https://github.com/Eifi1/ui-kit/blob/main/showcase/src/main.tsx).
+
+### 4. Labels — one provider, the shipped catalogues
+
+Load the kit's words with `await loadUiKitLabels(code)` before the first render and hand
+them to ONE `<UiKitProvider labels={labels} locale={formatLocaleOf(code)}>` at the root;
+every kit component then speaks the app's language. See [i18n](#i18n).
 
 ## Tokens
 
 Everything the components paint with comes from `tokens.css`, so a consuming app
-re-skins the kit by changing values rather than by forking components. Three layers:
+re-skins the kit by changing values rather than by forking components. The families:
 
-| Layer | Tokens | Set by |
+| Family | Tokens | Set by |
 |---|---|---|
-| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` |
-| **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted` | `color-mix()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
-| **Semantic** | `--danger*` `--warning*` `--info*`, and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them) |
+| **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted`, and `--neutral` (`--text-muted` as a fill) | `color-mix()` or `var()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
+| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+| **Categorical hues** | `--hue-blue` `--hue-indigo` `--hue-purple` `--hue-teal` `--hue-orange`, each with `-contrast`, `-border` and `-bg` | literals in `tokens.css`, per theme — values that mean only "a different value" (a status enum), at the semantic family's weight |
+| **Fill foregrounds** | `<fill>-contrast`: the text ON a fill — `--brand-contrast`, `--money-income-contrast` … `--money-neutral-contrast`, `--neutral-contrast`, and each tone's and hue's `-contrast` | with their family; money is white in light and the page in dark |
+| **Media** | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the SAME in both themes: controls drawn on a photo or a camera picture, whose background is the picture, not the page |
+| **Size and focus** | `--focus-ring-width` (2px, 3px at More contrast), `--text-micro` `--text-caption`, `--z-toast` | `tokens.css`; see [Styling](#styling) |
 
-The semantic layer is deliberately **not** part of `TokenSet`: a destructive action and a
-failed save are fixed meanings, and they should not change because somebody picked a
-different appearance preset. Everything else does follow the preset.
+The semantic, hue and media families are deliberately **not** part of `TokenSet`: a
+destructive action and a failed save are fixed meanings, and they should not change because
+somebody picked a different appearance preset. The palette and what is derived from it
+follow the preset.
 
 To re-skin, override the tokens after importing the stylesheet:
 
@@ -185,8 +208,172 @@ To re-skin, override the tokens after importing the stylesheet:
 soft brand chips (an active filter, a selected day) follow that override automatically.
 
 `npm run check:tokens` fails if a component reaches for a raw Tailwind palette colour
-instead of a token. It is a ratchet: when the count drops, lower the budget in the same
-commit.
+instead of a token, or spells `[var(--role)]` where the role has a utility. How an app
+writes a token is the next section.
+
+## Styling
+
+### How to write a colour
+
+**Write the role utility: `text-muted`, not `text-[var(--text-muted)]`, and never
+`text-slate-500`.** `tokens.css` turns the colour tokens into Tailwind utilities through an
+`@theme inline` block, so a role is a class like any other, and variants and opacity work
+on it: `hover:bg-hover`, `md:text-secondary`, `text-muted/60`. The name is the token's
+name with the property's own prefix dropped (`--bg-surface` → `bg-surface`,
+`--danger-border` → `border-danger`); a tone's wash is `-soft` (`bg-danger-soft`), and
+`--border` is `subtle`.
+
+The names are **property-scoped**: a text role makes a `text-*` utility and nothing else,
+so `bg-muted` does not exist and a role cannot land on the wrong property by accident. An
+app's own `--color-*` names (shadcn-style) do not collide with them. Keep `[var(--…)]` for a
+role with no utility: the chart colours, `--status-*`, a ring offset, and a money colour
+that needs a variant (the money classes below are plain and take none). The kit's own
+markup follows this rule with no exceptions: `check:tokens` allows no `[var(--role)]` where
+a utility exists.
+
+An app guards the other direction — a `var(--x)` that nothing declares paints nothing — with
+`undeclaredCssVariables` from `@eifi1/ui-kit/testing`; ADOPTING.md has the test.
+
+<!-- BEGIN GENERATED: styling — node scripts/gen-styling-inventory.mjs -->
+
+**102 role utilities over 67 tokens.** Find the token, then take the utility in
+the column of the property you set. An empty cell is deliberate: the namespaces are
+property-scoped, so `bg-muted` and `text-surface` do not exist.
+
+Generated from `tokens.css` (its `@theme inline` block, variants and utilities) by
+`node scripts/gen-styling-inventory.mjs`; `--check` fails on a stale block. Do not edit
+between the markers.
+
+| Token | `text-*` | `bg-*` | `border-*` `divide-*` | `ring-*` | `outline-*` | `fill-*` | `stroke-*` |
+|---|---|---|---|---|---|---|---|
+| `--bg-page` |  | `bg-page` |  |  |  |  |  |
+| `--bg-surface` |  | `bg-surface` |  |  |  | `fill-surface` | `stroke-surface` |
+| `--bg-surface-2` |  | `bg-surface-2` |  |  |  |  |  |
+| `--border` |  |  | `border-subtle` | `ring-subtle` | `outline-subtle` | `fill-subtle` | `stroke-subtle` |
+| `--text-primary` | `text-primary` |  |  |  |  | `fill-primary` | `stroke-primary` |
+| `--text-secondary` | `text-secondary` |  |  |  |  | `fill-secondary` | `stroke-secondary` |
+| `--text-muted` | `text-muted` |  |  |  |  | `fill-muted` | `stroke-muted` |
+| `--brand` | `text-brand` | `bg-brand` | `border-brand` | `ring-brand` | `outline-brand` |  |  |
+| `--brand-hover` |  | `bg-brand-hover` |  |  |  |  |  |
+| `--brand-contrast` | `text-brand-contrast` |  |  |  |  |  |  |
+| `--text-placeholder` | `text-placeholder` |  |  |  |  |  |  |
+| `--bg-hover` |  | `bg-hover` |  |  |  |  |  |
+| `--bg-active` |  | `bg-active` |  |  |  |  |  |
+| `--bg-inverse` |  | `bg-inverse` |  |  |  |  |  |
+| `--text-inverse` | `text-inverse` |  |  |  |  |  |  |
+| `--border-strong` |  |  | `border-strong` | `ring-strong` | `outline-strong` | `fill-strong` | `stroke-strong` |
+| `--brand-bg` |  | `bg-brand-soft` |  |  |  |  |  |
+| `--brand-bg-hover` |  | `bg-brand-soft-hover` |  |  |  |  |  |
+| `--brand-muted` | `text-brand-muted` |  |  |  |  |  |  |
+| `--money-income-contrast` | `text-money-income-contrast` |  |  |  |  |  |  |
+| `--money-expense-contrast` | `text-money-expense-contrast` |  |  |  |  |  |  |
+| `--money-net-contrast` | `text-money-net-contrast` |  |  |  |  |  |  |
+| `--money-neutral-contrast` | `text-money-neutral-contrast` |  |  |  |  |  |  |
+| `--neutral` |  | `bg-neutral` |  |  |  |  |  |
+| `--neutral-contrast` | `text-neutral-contrast` |  |  |  |  |  |  |
+| `--danger` | `text-danger` | `bg-danger` |  |  |  |  |  |
+| `--danger-hover` |  | `bg-danger-hover` |  |  |  |  |  |
+| `--danger-contrast` | `text-danger-contrast` |  |  |  |  |  |  |
+| `--danger-border` |  |  | `border-danger` |  |  |  |  |
+| `--danger-border-strong` |  |  | `border-danger-strong` | `ring-danger-strong` | `outline-danger-strong` |  |  |
+| `--danger-bg` |  | `bg-danger-soft` |  |  |  |  |  |
+| `--warning` | `text-warning` | `bg-warning` |  |  |  |  |  |
+| `--warning-contrast` | `text-warning-contrast` |  |  |  |  |  |  |
+| `--warning-border` |  |  | `border-warning` |  |  |  |  |
+| `--warning-border-strong` |  |  | `border-warning-strong` | `ring-warning-strong` | `outline-warning-strong` |  |  |
+| `--warning-bg` |  | `bg-warning-soft` |  |  |  |  |  |
+| `--info` | `text-info` | `bg-info` |  |  |  |  |  |
+| `--info-contrast` | `text-info-contrast` |  |  |  |  |  |  |
+| `--info-border` |  |  | `border-info` |  |  |  |  |
+| `--info-bg` |  | `bg-info-soft` |  |  |  |  |  |
+| `--success` | `text-success` | `bg-success` |  |  |  |  |  |
+| `--success-contrast` | `text-success-contrast` |  |  |  |  |  |  |
+| `--success-border` |  |  | `border-success` |  |  |  |  |
+| `--success-bg` |  | `bg-success-soft` |  |  |  |  |  |
+| `--media-ink` | `text-media-ink` |  | `border-media-ink` | `ring-media-ink` |  |  |  |
+| `--media-scrim` |  | `bg-media-scrim` |  |  |  |  |  |
+| `--media-scrim-hover` |  | `bg-media-scrim-hover` |  |  |  |  |  |
+| `--hue-blue` | `text-hue-blue` | `bg-hue-blue` |  |  |  |  |  |
+| `--hue-blue-contrast` | `text-hue-blue-contrast` |  |  |  |  |  |  |
+| `--hue-blue-border` |  |  | `border-hue-blue` |  |  |  |  |
+| `--hue-blue-bg` |  | `bg-hue-blue-soft` |  |  |  |  |  |
+| `--hue-indigo` | `text-hue-indigo` | `bg-hue-indigo` |  |  |  |  |  |
+| `--hue-indigo-contrast` | `text-hue-indigo-contrast` |  |  |  |  |  |  |
+| `--hue-indigo-border` |  |  | `border-hue-indigo` |  |  |  |  |
+| `--hue-indigo-bg` |  | `bg-hue-indigo-soft` |  |  |  |  |  |
+| `--hue-purple` | `text-hue-purple` | `bg-hue-purple` |  |  |  |  |  |
+| `--hue-purple-contrast` | `text-hue-purple-contrast` |  |  |  |  |  |  |
+| `--hue-purple-border` |  |  | `border-hue-purple` |  |  |  |  |
+| `--hue-purple-bg` |  | `bg-hue-purple-soft` |  |  |  |  |  |
+| `--hue-teal` | `text-hue-teal` | `bg-hue-teal` |  |  |  |  |  |
+| `--hue-teal-contrast` | `text-hue-teal-contrast` |  |  |  |  |  |  |
+| `--hue-teal-border` |  |  | `border-hue-teal` |  |  |  |  |
+| `--hue-teal-bg` |  | `bg-hue-teal-soft` |  |  |  |  |  |
+| `--hue-orange` | `text-hue-orange` | `bg-hue-orange` |  |  |  |  |  |
+| `--hue-orange-contrast` | `text-hue-orange-contrast` |  |  |  |  |  |  |
+| `--hue-orange-border` |  |  | `border-hue-orange` |  |  |  |  |
+| `--hue-orange-bg` |  | `bg-hue-orange-soft` |  |  |  |  |  |
+
+Plain classes (unlayered, so they win over Tailwind's colour utilities and take **no** variants): `text-money-pos` (`--money-income`), `text-money-neg` (`--money-expense`), `text-money-net` (`--money-net`), `text-money-pos-muted` (`--money-income`, opacity 0.72), `text-money-neg-muted` (`--money-expense`, opacity 0.72), `bg-money-pos` (`--money-income`), `bg-money-neg` (`--money-expense`), `bg-money-neutral` (`--money-neutral`).
+
+Variants: `dark:` `sm:` `md:` `lg:` `xl:` `2xl:` `3xl:` `max-3xl:` `max-2xl:` `max-xl:` `max-lg:` `max-md:` `max-sm:` `large:` `xlarge:` `contrast:`.
+
+Utilities: `truncate-until-large`, `truncate-until-large-words`.
+
+Theme values: `text-micro` (font size 0.625rem), `text-caption` (font size 0.6875rem), `3xl:` (breakpoint, 150rem at Normal).
+
+<!-- END GENERATED: styling -->
+
+### Text size and More contrast
+
+ONE scale on `<html>`: `data-text-size="normal" | "large" | "xlarge"` is 100 / 125 / 150 %
+of the browser's own font size, so Normal keeps whatever the reader set in the browser,
+and everything sized in rem (Tailwind's spacing and type) grows with it.
+`data-contrast="more"` is More contrast, from the setting or from `prefers-contrast: more`
+on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. The
+stores in [Wiring](#wiring) put both attributes there; the attribute names are frozen.
+
+- **`large:`** applies at Large AND Extra large, **`xlarge:`** only at Extra large, and
+  **`contrast:`** under More contrast. Like `dark:`, they add no specificity, so
+  `large:text-base` beats `text-sm` by order alone, and a size wins over a breakpoint:
+  `max-sm:grid-cols-2 large:grid-cols-1` is one column on a phone at Large.
+- **The breakpoints follow the text size.** A media query's rem is the browser's default,
+  never `<html>`'s, so `tokens.css` redefines `sm` … `2xl` (and adds `3xl`, 150rem) as three
+  queries each, scaled × 1, 1.25 and 1.5: `md:` is 48rem at Normal, 60rem at Large and 72rem
+  at Extra large, so a tablet at Extra large gets the layout below `md:` instead of keeping
+  the desktop shell. The `max-*` variants scale the same way. Arbitrary `min-[…]` /
+  `max-[…]` media variants do **not** scale: use a name. `useBreakpoint` and
+  `usePhoneLayout` answer the same questions in JavaScript, with the same numbers.
+- **`truncate-until-large`** is `truncate` at Normal and wraps from Large up, breaking a
+  word only where nothing else fits — for prose: a name, a title. At Large and Extra large
+  nothing may cut its text. **`truncate-until-large-words`** is the same for a figure (an
+  amount, a date, a count with its unit): it wraps only at spaces, so a number is never
+  split in two; give its cell the room (`shrink-0`).
+- `text-micro` and `text-caption` (0.625 and 0.6875 rem) are the two small sizes, in place
+  of `text-[10px]` / `text-[11px]`, which did not grow with anything.
+
+### Before the first paint
+
+`applyPersistedTextSize` and `applyPersistedContrast` (Wiring, step 3) run before
+`createRoot`, so the first frame has the right size. A boot splash painted from
+`index.html` paints before any module runs, so it takes the inline form:
+`TEXT_SIZE_INLINE_SCRIPT` is the same pre-paint as a function expression. Paste the
+constant's value in place of `(function(k,a){…})`, with the root rules beside it, because
+the app's stylesheet arrives after the splash paints:
+
+```html
+<style>html[data-text-size=large]{font-size:125%}html[data-text-size=xlarge]{font-size:150%}</style>
+<script>
+  (function(k,a){…})("myapp-text-size", function () {
+    return JSON.parse(localStorage.getItem("myapp-auth")).state.user.text_size;
+  });
+</script>
+```
+
+It reads the frozen persisted format, never throws, and sets only `data-text-size`. Under
+a hash-based Content Security Policy (`script-src 'sha256-…'`) it is a second inline
+script with its own hash: add it to the policy, and recompute it whenever the storage key
+or the account function changes.
 
 ## Colour
 
@@ -289,85 +476,16 @@ derived from a formula.
 
 ## Showcase
 
-Every component in the package, rendered on one page, with the theme and palette
-switchers live:
-
-```bash
-npm run dev:showcase
-```
-
-and open **http://localhost:4170**.
-
-The port is harmonised with the sibling apps rather than left on Vite's default, so the
-showcase can run next to whatever you are testing it against:
-
-| Port | What |
-|---|---|
-| **4170** | **this showcase** (`dev:showcase`) |
-| **4171** | this showcase, built (`preview:showcase`) |
-| 4173 | keksdose frontend (backend 8000) |
-| 4175 | Kurvenschmiede frontend (backend 8001) |
-| 5173 | kastlan frontend (Vite's default) |
-
-Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
-formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that
-cite its feedback ("lenkbank L2", "Lenkbank feedback #93") keep the name they were
-written with.
-
-`strictPort` is on: a collision fails loudly instead of silently moving to another port
-and printing a URL that is not the one documented here. For a throwaway instance that
-must not take the port your editor's build task wants:
-
-```bash
-SHOWCASE_PORT=4199 npm run dev:showcase
-```
-
-It renders **`src/`, not `dist/`** — no build step first, and an edit to a component
-is on screen on save. It is also the package's broadest test: `npm test` mounts the
-whole page under jsdom, so a component that throws on mount fails CI, and `tsc`
-covers it, so an export renamed out of the barrel is a compile error rather than a
-demo that quietly disappears.
-
-```
-showcase/
-  index.html
-  vite.config.ts        # root; aliases @eifi1/ui-kit → ../src
-  alias.ts              # that alias, shared with the root vitest.config.ts
-  src/
-    main.tsx            # the pre-hydration no-flash boot, as a worked example
-    app.css             # tailwind + tokens.css + the @source scan
-    stores.ts           # createThemeStore / createPaletteStore, showcase keys
-    showcase.tsx        # the AppShell frame + the SECTIONS registry
-    sections/*.tsx      # one file per section
-```
-
-Adding a component to the kit means adding it to a section — that is how the page
-stays true. `npm run build:showcase` produces a static site; CI builds it on every
-push and asserts the emitted CSS actually contains the kit's utility classes, which
-is the only automated check that the documented Tailwind `@source` step works.
+The kit rendered page by page, one component family per page and grouped by layer, with the
+theme, palette, text-size, contrast and language switchers live: <https://eifi1.github.io/ui-kit/>,
+or `npm run dev:showcase` (http://localhost:4170) from a checkout. How it is built and
+tested: [CONTRIBUTING.md → The showcase](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md#the-showcase).
 
 ## Tests
 
-```bash
-npm test          # vitest run
-npm run test:watch
-npm run typecheck
-npm run check     # everything CI runs; the pre-push hook runs it and blocks on failure
-```
-
-Local first: `npm run check` is the full gate, on your machine, before anything is pushed;
-CI calls the same script and only confirms. See CONTRIBUTING.md → "The gates".
-
-Vitest + jsdom, configured as a copy of the lead consumer's setup rather than a new
-dialect — so a test can move between this package and an app unchanged. The suite pins
-`TZ=Europe/Berlin`, which is load-bearing for `lib/dates.ts`: those helpers answer with
-the LOCAL calendar day, and on a UTC runner a broken UTC implementation and a correct
-local one agree.
-
-Start where the return on a line of test is highest and no DOM is needed — `lib/`,
-`theme/`, and the data-table's pure helpers. The house rule for a fix is that its
-regression test is **run against the old code first and observed to fail there**;
-a test written after the fix proves only that the fix is self-consistent.
+`npm run check` runs every gate locally (the pre-push hook) and CI runs the same script;
+`npm test` is the suite alone (Vitest + jsdom, `TZ=Europe/Berlin`). The house rules, the
+gates and failing-first: [CONTRIBUTING.md → Tests](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md#tests).
 
 ## What's exported
 
@@ -834,14 +952,19 @@ empty cells held open as holes.
 
 ## i18n
 
-**The kit resolves no strings.** It carries no translation catalogue, no locale detection
-and no `t()`. Every string it renders is a key in one typed tree, `UiKitLabels`, with an
-English default — and the app hands its translation to every component at once:
+**The kit renders only labels; it ships seven catalogues; the app decides the language.**
+Every string the kit renders is a key in one typed tree, `UiKitLabels`, with an English
+default. The kit's own words come translated into seven languages (see "Shipped
+catalogues" below). What it does not do is choose: there is no locale detection and no
+`t()` for the app's own words. The app picks the language and hands the kit's words to
+every component at once:
 
 ```tsx
-import { UiKitProvider } from "@eifi1/ui-kit";
+import { formatLocaleOf, loadUiKitLabels, UiKitProvider } from "@eifi1/ui-kit";
 
-<UiKitProvider labels={de} locale="de-DE">   {/* de: UiKitLabels, or any part of it */}
+const labels = await loadUiKitLabels("de-CH"); // a shipped catalogue — or your own UiKitLabels, or any part of one
+
+<UiKitProvider labels={labels} locale={formatLocaleOf("de-CH")}>
   <App />
 </UiKitProvider>
 ```
@@ -959,21 +1082,28 @@ the flag CSS) and `LanguageSetting` (a native select: names only).
 `showcase/src/i18n/` runs the whole showcase in seven locales — English, German, French,
 Italian, Spanish, Hungarian and Chinese — and it is deliberately **not** an i18n library: a
 dictionary in context, a hook to read it, and ONE `<UiKitProvider labels={dict.kit}
-locale={dict.tag}>` at the root. Each dictionary's `kit` is typed as the full
-`UiKitLabels`, so a translation with a hole does not compile; the Localisation page shows
-the tree and the per-language completeness live. The long explanatory prose on each page is
-*not* translated: it is developer documentation about the kit's internals. The chrome, the
-navigation and every component label are.
+locale={dict.tag}>` at the root. Each dictionary's `kit` is the shipped catalogue,
+imported the way an app imports it (`@eifi1/ui-kit/i18n/de-CH`), and typed as the full
+`UiKitLabels`; the Localisation page shows the tree and the per-language completeness
+live. The long explanatory prose on each page is *not* translated: it is developer
+documentation about the kit's internals. The chrome, the navigation and every component
+label are.
 
-### Right-to-left is partial
+### Right-to-left
 
-Newer components (the sidebar's inline groups, the date range band, the month picker, the
-checkbox, switch and slider) use logical properties (`ms-*`, `pe-*`, `text-start`) and
-flip correctly under `dir="rtl"`. The older ones still carry roughly 130 physical-direction
-utilities plus pointer maths (column resize, row swipe) that assume left-to-right —
-`docs/module-audit-2026-09-22.md` §10 has the site-by-site detail. None of the showcase's
-seven locales is right-to-left, so nothing exercises it today; plan around that before
-shipping Arabic or Hebrew.
+The kit lays itself out right-to-left since 0.7.0. Components use logical utilities
+(`ms-*`, `pe-*`, `end-*`, `text-start`) and `rtl:` where a glyph or a reversed row has to
+flip, so they follow `dir="rtl"` on any ancestor with no prop. What CSS cannot do is done
+in JavaScript, from the nearest `[dir]`: arrow keys (← is "next" in RTL), the data
+table's column resize, a row's swipe panel, tooltips and portalled panels (which take
+their anchor's direction), the treemap's and the chart's labels. About forty physical
+classes remain, several of them deliberate: a calculator's right-aligned digits, a tooltip
+side that JavaScript has already resolved for the direction. Two things to know:
+
+- Since 0.7.0 the kit emits logical classes, so an app's physical override (`pr-4` on a
+  field) ADDS a side instead of replacing one: override with the logical name (`pe-4`).
+- None of the showcase's seven locales is right-to-left; the kit's RTL tests run in jsdom.
+  Check an Arabic or Hebrew screen in a browser before shipping one.
 
 ## Wizard
 
@@ -1008,11 +1138,10 @@ A step gates forward navigation two ways, and `goNext` runs both: its `validate`
 in the config above, and `useWizardStepValidate(fn)` for a step that checks by
 hand. `useWizardNextGate(blocked)` disables Next/Skip outright.
 
-Like the rest of the package it resolves **no strings**: a step carries a `label`
-node, and the chrome takes a `labels` object (`WizardLabels`, every key optional
-over an English default) — the same split `DataTable` and `TourProvider` use. An
-app with i18n wraps `useWizard`/`StepperNav`/`WizardSummary` once and maps its
-own keys; see Kastlan's `shared/components/wizard/app-wizard.tsx`.
+Like the rest of the package, its words are labels: a step carries a `label` node (the
+app's own words), and the chrome reads `wizard.*` from `UiKitProvider` — so a shipped
+catalogue translates it — with a `labels` prop (`WizardLabels`, every key optional) to
+override a few, the same split `DataTable` and `TourProvider` use.
 
 **Peers.** `react-router` backs the `?step=` sync in `useWizard` — and is imported
 unconditionally, so a wizard needs a Router mounted even if you never read the

@@ -24,19 +24,21 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * FEEDBACK — INBOX.
  *
  * The module's own header says what the split is, and it is the thing to hold on to
- * while reading this section: the kit owns the VOCABULARY (seven statuses, five
- * categories, shared value for value across both consuming apps), the POLICY about
- * what a row may move to from where it stands, and the LOOK of a status control, a
- * category badge and an opened report. The app owns the data, the API, the columns,
- * the permissions and every string.
+ * while reading this section: the kit owns the VOCABULARY (eight statuses, five
+ * categories, shared value for value across the three apps), the POLICY about what a
+ * row may move to from where it stands, the LOOK of a status control, a category badge
+ * and an opened report, and their WORDS — `feedbackStatus`, `feedbackCategory`,
+ * `feedbackDetail` … in all seven shipped catalogues. The app owns the data, the API,
+ * the columns, the permissions and the language.
  *
  * So there is no `Feedback` type to import and nothing below takes one. Every
  * component here takes the values it draws — which is why this page can fabricate a
  * report out of a plain object and get a real detail panel out of it.
  *
  * Two consequences worth expecting before you scroll:
- *   • Every label on this page is the SHOWCASE'S. The kit ships no strings, not even
- *     English ones, because both apps translate.
+ *   • The status and category names below are the SHOWCASE'S own `Record`s, written
+ *     out to show the shape; an app takes the kit's (the catalogue it hands
+ *     `UiKitProvider` carries them) and overrides only the words it wants different.
  *   • The colours are the kit's semantic tokens (warning, info, success, danger…),
  *     so they follow the palette switch in the top bar like everything else.
  */

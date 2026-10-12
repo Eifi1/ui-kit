@@ -1,15 +1,15 @@
 /**
  * The showcase's own translation layer.
  *
- * It exists to prove the kit's central i18n claim. `@eifi1/ui-kit` ships no catalogue and
- * resolves no strings: every string it renders is a key of `UiKitLabels` with an English
- * default, and an app hands its translation to every component at once through
- * `<UiKitProvider labels locale>`.
+ * It exists to prove the kit's central i18n claim: the kit renders only labels; it ships
+ * seven catalogues; the app decides the language. Every string the kit renders is a key of
+ * `UiKitLabels` with an English default, and an app hands the words to every component at
+ * once through `<UiKitProvider labels locale>`.
  *
  * So this is a demonstration, not a product: the showcase translates its own chrome AND
- * supplies the kit's complete label tree in every language, which is exactly what a
- * consuming app has to do. `kit` is typed as the FULL `UiKitLabels`, not a partial, so a
- * dictionary with one kit key missing does not compile.
+ * hands the kit its complete label tree in every language — the shipped catalogue,
+ * imported as an app imports it (`@eifi1/ui-kit/i18n/<code>`). `kit` is typed as the FULL
+ * `UiKitLabels`, not a partial, so a dictionary with one kit key missing does not compile.
  *
  * NOT translated: the long explanatory prose on each page. That is developer
  * documentation about the kit's internals — several thousand lines of it — and

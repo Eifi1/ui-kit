@@ -67,7 +67,8 @@ export function FieldSync() {
 const ALL_STATES: FieldSyncState[] = ["synced", "pending", "edited", "error"];
 
 function StatesExample() {
-  // Threaded exactly as a consuming app must: the kit ships no catalogue.
+  // `labels` by hand shows the per-component prop. An app needs none of it: the provider
+  // at the root already hands FieldSyncRow the same shipped catalogue.
   const t = useT();
   return (
     <Example
@@ -177,7 +178,8 @@ function CompactIndicatorExample() {
 /* ── A real field, wired end to end ──────────────────────────────────────── */
 
 function LiveFieldExample() {
-  // Threaded exactly as a consuming app must: the kit ships no catalogue.
+  // `labels` by hand shows the per-component prop. An app needs none of it: the provider
+  // at the root already hands FieldSyncRow the same shipped catalogue.
   const t = useT();
   const [behaviour, setBehaviour] = useState<Behaviour>("ok");
   const [serverValue, setServerValue] = useState("Amelia Fournier");
@@ -263,7 +265,8 @@ function LiveFieldExample() {
 /* ── The transition that is easy to get wrong ────────────────────────────── */
 
 function RaceExample() {
-  // Threaded exactly as a consuming app must: the kit ships no catalogue.
+  // `labels` by hand shows the per-component prop. An app needs none of it: the provider
+  // at the root already hands FieldSyncRow the same shipped catalogue.
   const t = useT();
   const [log, setLog] = useState<string[]>([]);
   const [serverValue, setServerValue] = useState("start");

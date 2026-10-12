@@ -5,7 +5,9 @@
 // is a 31KB chunk, where the same lazy import through the barrel pulls 221KB, because
 // a dynamic import of the barrel cannot be tree-shaken down to one of its members.
 //
-// This is also the only entry point in the package that requires `recharts`.
+// It is about chunk size, not about the peer: `recharts` is a REQUIRED peer (since 0.5.0),
+// because the main barrel re-exports everything here too, so `import { Button } from
+// "@eifi1/ui-kit"` reaches recharts as well (packaging-contract.test.ts asserts it).
 export * from "./components/chart";
 export * from "./theme/chart-palette";
 

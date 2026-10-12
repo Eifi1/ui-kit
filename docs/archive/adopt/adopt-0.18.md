@@ -125,4 +125,4 @@ only while a message showed. None of the three apps has such a field.
 
 ## Afterwards
 
-The fixes once queued as 0.18.1 shipped in 0.19.0 — see `docs/adopt-0.19.md`.
+The fixes once queued as 0.18.1 shipped in 0.19.0 — see `docs/archive/adopt/adopt-0.19.md`.

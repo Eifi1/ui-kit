@@ -378,14 +378,14 @@ export * from "./feedback/feedback-crash";
 // `components/wizard-stepper` next door is a different, much smaller thing: a bare
 // step indicator for a two-step import flow, with no engine.
 //
-// Two modules were removed here rather than kept as stock. `wizard-field` held a
-// `WizardField`/`WizardSelectField` pair that had never been rendered in any app —
-// a field group nothing was built from, which this comment used to advertise. And
-// `use-rhf-wizard-step` was the only thing in the package that touched
-// react-hook-form, for a hook neither consumer called: keeping it meant an optional
-// peer, a dev dependency and a type import in every consumer's typecheck, bought
-// for nobody. A design system may carry stock; untested stock nothing has ever
-// rendered is not stock, it is a liability with an export.
+// `wizard-field` was removed here rather than kept as stock: it held a
+// `WizardField`/`WizardSelectField` pair that had never been rendered in any app — a
+// field group nothing was built from, which this comment used to advertise. A design
+// system may carry stock; untested stock nothing has ever rendered is not stock, it is
+// a liability with an export. The react-hook-form bridge to the Next gate
+// (`useRhfWizardStep`) is NOT here either: it left the barrel in 0.4.x so the barrel
+// imports no react-hook-form, and came back in 0.11 under `@eifi1/ui-kit/rhf`
+// (src/rhf.ts), where the optional peer is that subpath's alone.
 export * from "./wizard/types";
 export * from "./wizard/use-wizard";
 export * from "./wizard/wizard-context";

@@ -1,5 +1,10 @@
 # Migrating from `@hb/ui` to `@eifi1/ui-kit`
 
+> **Archived in 0.34.** Every app has long since migrated (keksdose, kastlan and
+> Kurvenschmiede all install the npm package), so this is history: the per-repo table
+> below is the state of 2026-09-24, and the version numbers are those of the move. A new
+> app starts from [ADOPTING.md](../../ADOPTING.md) instead.
+
 The design system moved from a git submodule consumed over a `file:` path to a
 published npm package.
 

@@ -658,10 +658,13 @@ html[data-text-size="xlarge"] {
  * file uses it, and variants and opacity work on all of them (`hover:bg-hover`,
  * `md:text-secondary`, `text-muted/60`).
  *
- * The kit's own ~1,750 `[var(--…)]` classes stay where they are (a rewrite would change
- * hundreds of class assertions here and in the apps); `scripts/check-token-discipline.mjs`
- * counts them wherever one of these exists and lets the number only fall. New and
- * touched code uses these. `check:tailwind` asserts one per namespace survives a build.
+ * The kit's own markup uses these wherever one exists (0.34 moved its ~1,750
+ * `[var(--…)]` classes over): `scripts/check-token-discipline.mjs` counts a `[var(--role)]`
+ * class for any role that has a utility here and allows none (`ROLE_BUDGET` 0). What
+ * stays `[var()]` has no utility: the chart colours, `--status-*`, ring offsets, and a
+ * money colour that needs a variant. `check:tailwind` asserts one per namespace survives
+ * a build, and the README's "Styling" table is generated from this block
+ * (`scripts/gen-styling-inventory.mjs`).
  *
  * `text-brand`, `bg-brand` and `border-brand` were plain classes until 0.33, which
  * Tailwind gives no variants (`hover:bg-brand` generated nothing); they are theme names
