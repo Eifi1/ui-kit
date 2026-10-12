@@ -1189,7 +1189,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         deactivate: "Désactivé",
         reactivate: "Réactivé",
         role: "Rôle modifié",
-        membership_remove: "Retiré de l’entreprise",
         password_change_require: "Nouveau mot de passe exigé",
         password_change_withdraw: "Exigence de mot de passe retirée",
         mail_verification: "E-mail de confirmation envoyé",
@@ -1203,6 +1202,48 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         deletion_cancel: "Suppression annulée",
         erase: "Compte effacé",
         plan: "Formule modifiée",
+      },
+      // 0.34 (§11.5): whole phrases per noun. The group's own agree with the noun
+      // ("Équipe créée", Kurvenschmiede's feminine "équipe"), a member's with "compte",
+      // as `actions` do. `budget` is keksdose's; `company` keeps
+      // `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "Groupe créé",
+          group_rename: "Groupe renommé",
+          group_delete: "Groupe supprimé",
+          membership_add: "Ajouté au groupe",
+          membership_role: "Rôle dans le groupe modifié",
+          membership_remove: "Retiré du groupe",
+          deleted: "un groupe supprimé",
+        },
+        team: {
+          group_create: "Équipe créée",
+          group_rename: "Équipe renommée",
+          group_delete: "Équipe supprimée",
+          membership_add: "Ajouté à l’équipe",
+          membership_role: "Rôle dans l’équipe modifié",
+          membership_remove: "Retiré de l’équipe",
+          deleted: "une équipe supprimée",
+        },
+        company: {
+          group_create: "Entreprise créée",
+          group_rename: "Entreprise renommée",
+          group_delete: "Entreprise supprimée",
+          membership_add: "Ajouté à l’entreprise",
+          membership_role: "Rôle dans l’entreprise modifié",
+          membership_remove: "Retiré de l’entreprise",
+          deleted: "une entreprise supprimée",
+        },
+        budget: {
+          group_create: "Budget créé",
+          group_rename: "Budget renommé",
+          group_delete: "Budget supprimé",
+          membership_add: "Ajouté au budget",
+          membership_role: "Rôle dans le budget modifié",
+          membership_remove: "Retiré du budget",
+          deleted: "un budget supprimé",
+        },
       },
     },
     transferOwnership: {

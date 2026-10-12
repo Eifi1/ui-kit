@@ -1166,7 +1166,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deactivate: "Inaktiválva",
         reactivate: "Újraaktiválva",
         role: "Szerepkör módosítva",
-        membership_remove: "Eltávolítva a cégből",
         password_change_require: "Új jelszó előírva",
         password_change_withdraw: "Jelszócsere-előírás visszavonva",
         mail_verification: "Megerősítő e-mail elküldve",
@@ -1180,6 +1179,47 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deletion_cancel: "Törlés visszavonva",
         erase: "Fiók véglegesen törölve",
         plan: "Csomag módosítva",
+      },
+      // 0.34 (§11.5): whole phrases per noun, each noun with its own suffix ("a
+      // csapatból", "a cégből"). `team` is Kurvenschmiede's "csapat"; `company` keeps
+      // `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "Csoport létrehozva",
+          group_rename: "Csoport átnevezve",
+          group_delete: "Csoport törölve",
+          membership_add: "Hozzáadva a csoporthoz",
+          membership_role: "Szerepkör a csoportban módosítva",
+          membership_remove: "Eltávolítva a csoportból",
+          deleted: "egy törölt csoport",
+        },
+        team: {
+          group_create: "Csapat létrehozva",
+          group_rename: "Csapat átnevezve",
+          group_delete: "Csapat törölve",
+          membership_add: "Hozzáadva a csapathoz",
+          membership_role: "Szerepkör a csapatban módosítva",
+          membership_remove: "Eltávolítva a csapatból",
+          deleted: "egy törölt csapat",
+        },
+        company: {
+          group_create: "Cég létrehozva",
+          group_rename: "Cég átnevezve",
+          group_delete: "Cég törölve",
+          membership_add: "Hozzáadva a céghez",
+          membership_role: "Szerepkör a cégben módosítva",
+          membership_remove: "Eltávolítva a cégből",
+          deleted: "egy törölt cég",
+        },
+        budget: {
+          group_create: "Költségvetés létrehozva",
+          group_rename: "Költségvetés átnevezve",
+          group_delete: "Költségvetés törölve",
+          membership_add: "Hozzáadva a költségvetéshez",
+          membership_role: "Szerepkör a költségvetésben módosítva",
+          membership_remove: "Eltávolítva a költségvetésből",
+          deleted: "egy törölt költségvetés",
+        },
       },
     },
     transferOwnership: {

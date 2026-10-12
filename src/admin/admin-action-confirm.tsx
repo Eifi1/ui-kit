@@ -12,6 +12,8 @@ import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
 import { hasMessage, usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
+import { isGroupTarget } from "./admin-action-log";
+import type { AdminGroupTarget } from "./admin-action-log";
 import type { CommitScope } from "../components/write-lock";
 
 /**
@@ -21,8 +23,15 @@ import type { CommitScope } from "../components/write-lock";
  * | level | what it asks | actions |
  * |---|---|---|
  * | `none` | nothing: it confirms at once and renders nothing | resend a mail, reactivate, the reviewer scope… |
- * | `acknowledge` | a tick under the consequence | force a password change, change a role |
+ * | `acknowledge` | a tick under the consequence | force a password change, change a role, delete a group |
  * | `type_email` | the target's address, typed | deactivate, erase now, transfer |
+ *
+ * A GROUP (round 0.34, §11.8) is a target at `none` and `acknowledge` only, said by its
+ * name: it has no address to type, and no level table gives a group's action
+ * `type_email` (server-kit's `require_confirmation` raises for one). The props' types
+ * say so. Deleting one (`group_delete`) is `acknowledge` — a tick under the app's own
+ * sentence of what goes with it, Kurvenschmiede's "3 members, 2 grants and 1 invitation
+ * go with it" (decision 5): the cascade is what nobody can see afterwards.
  *
  * keksdose decides the level per action and per account on the server
  * (`admin_user_actions_service`) and Kurvenschmiede asks for the typed address on its
@@ -63,7 +72,7 @@ export interface AdminActionConfirmValues {
   acknowledged?: true;
 }
 
-/** The account the action is about. */
+/** The account the action is about. A group is an {@link AdminGroupTarget}. */
 export type AdminActionTarget = AdminPerson & { email: string };
 
 /** The `adminAction` namespace. The tick, the typed field and their held-button reasons
@@ -102,11 +111,24 @@ export const DEFAULT_ADMIN_ACTION_LABELS: AdminActionLabels = {
   failed: "That didn’t work. Please try again.",
 };
 
-export interface AdminActionConfirmProps {
-  /** The level the server states for this action on this account (§4.2). */
-  level: AdminConfirmLevel;
-  /** Whom it is about: the address (typed at `type_email`) and the name parts. */
-  target: AdminActionTarget;
+/** What the action is about, and the level the server states for it. A union, so a group
+ *  can't be given `type_email` (§11.8). */
+type AdminActionConfirmTarget =
+  | {
+      /** The level the server states for this action on this account (§4.2). */
+      level: AdminConfirmLevel;
+      /** Whom it is about: the address (typed at `type_email`) and the name parts. */
+      target: AdminActionTarget;
+    }
+  | {
+      /** A group's action: `none`, or `acknowledge` for `group_delete` (decision 5). */
+      level: Exclude<AdminConfirmLevel, "type_email">;
+      /** The group it is about, said by its name (0.34, §11.8). */
+      target: AdminGroupTarget;
+    };
+
+/** The props whatever the target. */
+interface AdminActionConfirmCommonProps {
   /** The confirm button — "Deactivate". Also the title when no `title` is given. */
   confirmLabel?: ReactNode;
   /** The dialog's heading — "Deactivate Ada Example?". Default `confirmLabel`. */
@@ -157,6 +179,10 @@ export interface AdminActionConfirmProps {
   commit?: CommitScope;
   labels?: Partial<AdminActionLabels>;
 }
+
+/** A type since 0.34 (an interface before): a person at any level, or a group at `none`
+ *  and `acknowledge`. */
+export type AdminActionConfirmProps = AdminActionConfirmCommonProps & AdminActionConfirmTarget;
 
 /** Whether a callback answered a promise. */
 function isThenable(value: unknown): value is PromiseLike<unknown> {
@@ -319,10 +345,13 @@ export function AdminActionConfirm({
   const refusal = refusalOf(failure ? failure.error : errorProp, hasRefusal, describeError, labels);
   const offerRemoval = refusal?.code === "other_companies" && onRemoveFromCompany !== undefined;
 
-  const name = nameOf(target);
-  const identity = (
-    <span data-private>{name && name !== target.email ? `${name} · ${target.email}` : target.email}</span>
-  );
+  // A group has no address: it is said by its name, and nothing is typed for it — not
+  // even when a caller outside the types passes `type_email` (the server refuses that).
+  const group = isGroupTarget(target);
+  const email = group ? "" : target.email;
+  const name = group ? (target.name ?? "").trim() : nameOf(target);
+  const said = !name || name === email ? email : email ? `${name} · ${email}` : name;
+  const identity = <span data-private>{said}</span>;
   const heading = title ?? confirmLabel ?? labels.confirm;
 
   const refusalBanner = refusal && (
@@ -370,8 +399,8 @@ export function AdminActionConfirm({
   }
 
   const tone = toneProp ?? (level === "type_email" ? "danger" : "warning");
-  const askTyped = level === "type_email";
-  const typedOk = !askTyped || typedMatches(typed, target.email, "caseless");
+  const askTyped = level === "type_email" && !group;
+  const typedOk = !askTyped || typedMatches(typed, email, "caseless");
   const tickOk = askTyped || ticked;
   const guardReason: ReactNode = hasMessage(confirmDisabledReason)
     ? confirmDisabledReason
@@ -379,7 +408,7 @@ export function AdminActionConfirm({
       ? guardLabels.needsAcknowledge
       : !typedOk
         ? typeof guardLabels.needsPhrase === "function"
-          ? guardLabels.needsPhrase(target.email)
+          ? guardLabels.needsPhrase(email)
           : guardLabels.needsPhrase
         : undefined;
 
@@ -458,7 +487,7 @@ export function AdminActionConfirm({
         {askTyped ? (
           <TypedConfirmField
             ref={guardRef}
-            target={target.email}
+            target={email}
             match="caseless"
             value={typed}
             onValueChange={setTyped}

@@ -1191,7 +1191,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         deactivate: "Deaktiviert",
         reactivate: "Reaktiviert",
         role: "Rolle geändert",
-        membership_remove: "Aus dem Unternehmen entfernt",
         password_change_require: "Neues Passwort verlangt",
         password_change_withdraw: "Passwortforderung zurückgenommen",
         mail_verification: "Bestätigungsmail gesendet",
@@ -1205,6 +1204,47 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         deletion_cancel: "Löschung aufgehoben",
         erase: "Konto endgültig gelöscht",
         plan: "Tarif geändert",
+      },
+      // 0.34 (§11.5): whole phrases per noun. `team` in Kurvenschmiede's own words ("Team
+      // angelegt", "aufnehmen"), `budget` in keksdose's, `company` with the string
+      // `actions.membership_remove` held until 0.34.
+      groupActions: {
+        group: {
+          group_create: "Gruppe erstellt",
+          group_rename: "Gruppe umbenannt",
+          group_delete: "Gruppe gelöscht",
+          membership_add: "Zur Gruppe hinzugefügt",
+          membership_role: "Rolle in der Gruppe geändert",
+          membership_remove: "Aus der Gruppe entfernt",
+          deleted: "eine gelöschte Gruppe",
+        },
+        team: {
+          group_create: "Team angelegt",
+          group_rename: "Team umbenannt",
+          group_delete: "Team gelöscht",
+          membership_add: "Ins Team aufgenommen",
+          membership_role: "Rolle im Team geändert",
+          membership_remove: "Aus dem Team entfernt",
+          deleted: "ein gelöschtes Team",
+        },
+        company: {
+          group_create: "Unternehmen erstellt",
+          group_rename: "Unternehmen umbenannt",
+          group_delete: "Unternehmen gelöscht",
+          membership_add: "Zum Unternehmen hinzugefügt",
+          membership_role: "Rolle im Unternehmen geändert",
+          membership_remove: "Aus dem Unternehmen entfernt",
+          deleted: "ein gelöschtes Unternehmen",
+        },
+        budget: {
+          group_create: "Budget erstellt",
+          group_rename: "Budget umbenannt",
+          group_delete: "Budget gelöscht",
+          membership_add: "Zum Budget hinzugefügt",
+          membership_role: "Rolle im Budget geändert",
+          membership_remove: "Aus dem Budget entfernt",
+          deleted: "ein gelöschtes Budget",
+        },
       },
     },
     transferOwnership: {

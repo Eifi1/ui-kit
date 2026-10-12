@@ -1163,7 +1163,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         deactivate: "Desactivada",
         reactivate: "Reactivada",
         role: "Rol cambiado",
-        membership_remove: "Quitada de la empresa",
         password_change_require: "Nueva contraseña exigida",
         password_change_withdraw: "Exigencia de contraseña retirada",
         mail_verification: "Correo de confirmación enviado",
@@ -1177,6 +1176,47 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         deletion_cancel: "Eliminación cancelada",
         erase: "Cuenta borrada",
         plan: "Plan cambiado",
+      },
+      // 0.34 (§11.5): whole phrases per noun. The group's own agree with the noun
+      // ("Empresa creada"), a member's with "cuenta", as `actions` do. `team` is
+      // Kurvenschmiede's "equipo"; `company` keeps `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "Grupo creado",
+          group_rename: "Grupo renombrado",
+          group_delete: "Grupo eliminado",
+          membership_add: "Añadida al grupo",
+          membership_role: "Rol en el grupo cambiado",
+          membership_remove: "Quitada del grupo",
+          deleted: "un grupo eliminado",
+        },
+        team: {
+          group_create: "Equipo creado",
+          group_rename: "Equipo renombrado",
+          group_delete: "Equipo eliminado",
+          membership_add: "Añadida al equipo",
+          membership_role: "Rol en el equipo cambiado",
+          membership_remove: "Quitada del equipo",
+          deleted: "un equipo eliminado",
+        },
+        company: {
+          group_create: "Empresa creada",
+          group_rename: "Empresa renombrada",
+          group_delete: "Empresa eliminada",
+          membership_add: "Añadida a la empresa",
+          membership_role: "Rol en la empresa cambiado",
+          membership_remove: "Quitada de la empresa",
+          deleted: "una empresa eliminada",
+        },
+        budget: {
+          group_create: "Presupuesto creado",
+          group_rename: "Presupuesto renombrado",
+          group_delete: "Presupuesto eliminado",
+          membership_add: "Añadida al presupuesto",
+          membership_role: "Rol en el presupuesto cambiado",
+          membership_remove: "Quitada del presupuesto",
+          deleted: "un presupuesto eliminado",
+        },
       },
     },
     transferOwnership: {
