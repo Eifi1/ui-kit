@@ -258,7 +258,7 @@ export function SwatchPicker<T extends string>({
   );
   if (!labelled) return group;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} pad="clear" className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} className={className}>
       {group}
     </LabelStrip>
   );

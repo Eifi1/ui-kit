@@ -102,9 +102,11 @@ export interface ToggleGroupBaseProps<T extends string>
    * `"strip"`: the 11px static label (and `hint`) in a strip OVER the bare group, for a
    * group that stands in a row of fields but is not one (keksdose K2 — the transaction
    * row's cleared-status picker, live #288 / #431 / dev#468). No field border: the group
-   * keeps its own box, and its segments drop their vertical padding so a 16px strip
-   * plus the 26px group is exactly a labelled {@link Input}'s 42px, the label on the
-   * same line as theirs. `error` and `caption` go under the group, as in the other two.
+   * keeps its own box, and its segments drop their vertical padding and set a 16px line,
+   * so the 20px strip plus the 22px group is exactly a labelled {@link Input}'s 42px,
+   * the label on the same line as theirs and clear of the group's border (keksdose
+   * dev#593 — see `STRIP_SEGMENT`). `error` and `caption` go under the group, as in the
+   * other two.
    *
    * Inside a `Field`, pass no `label` at all and spread the render-prop instead —
    * `{(ids, { labelId }) => <ToggleGroup {...ids} aria-labelledby={labelId} … />}` —
@@ -234,11 +236,34 @@ const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125re
 const WRAP_AT_LARGE = "large:flex-wrap";
 
 /**
- * The strip placement's segments: a 26px group (1 + 2 + 20 + 2 + 1) under the 16px
- * strip — `md`'s 20px text-sm line with no padding, `sm`'s 16px line with 2px either
- * side. See `LABEL_STRIP_PAD` for why 16.
+ * The strip placement's segments (keksdose dev#593, kk K4): a 22px group under the 20px
+ * strip, which is a labelled Input's 42px at Normal —
+ *
+ *     strip 20 + group (1 + 2 + 16 + 2 + 1) 22 = 42 = Input (1 + 16 + 20 + 4 + 1)
+ *
+ * — both sizes setting their text in a 16px line with no padding (`md`'s 14px, `sm`'s
+ * 12px). Until 0.34 the strip was 16px over a 26px group (a 20px line), and the label
+ * row, which ends 18px down, crossed the group's top border by 2px; see
+ * `LABEL_STRIP_PAD` in field-parts.tsx for the label row's sum. keksdose had the same
+ * fix locally: `pt-5` and `@3xl:leading-4`.
+ *
+ * At Large and Extra large the label stands above the group and there is no strip to
+ * share out, so the segments keep the line they had: `md` its text-sm line
+ * (`large:leading-5` — a label that wraps there, WRAP_AT_LARGE, needs it), `sm` its 2px
+ * either side.
  */
-const STRIP_SEGMENT: Record<"sm" | "md", string> = { md: "py-0", sm: "py-0.5" };
+const STRIP_SEGMENT: Record<"sm" | "md", string> = {
+  md: "py-0 leading-4 large:leading-5",
+  sm: "py-0 leading-4 large:py-0.5",
+};
+
+/**
+ * The strip placement's group is BLOCK-level (keksdose dev#593). Drawn `inline-flex`, it
+ * sat on a line box of the strip's own line height, and a 22px box on a taller line
+ * gained a pixel of leading above and below — 44px, not 42. Block-level, the group is
+ * exactly its box. keksdose wrote it as `[&>[role=radiogroup]]:flex` on the strip.
+ */
+const STRIP_GROUP = "flex";
 
 /**
  * A line under the group saying what the CHOSEN option means — lenkbank's ToggleField
@@ -466,7 +491,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // field 42px under a strip that clears the label — see CHROME_PAD. `sm`
           // keeps its 12px type here (it used to be overridden to the md line).
           field && CHROME_SEGMENT[size],
-          // In the strip placement: a 26px group under a 16px strip — STRIP_SEGMENT.
+          // In the strip placement: a 22px group under a 20px strip — STRIP_SEGMENT.
           strip && STRIP_SEGMENT[size],
           active
             ? "bg-inverse text-inverse"
@@ -525,6 +550,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
         "inline-flex w-full gap-0.5 rounded-md border border-strong bg-surface p-0.5 shadow-sm",
+        // Block-level under the strip, so it adds no line box's leading — STRIP_GROUP.
+        strip && STRIP_GROUP,
         overflow === "wrap" && "flex-wrap",
         wrapAtLarge && WRAP_AT_LARGE,
         // The whole group fades, the way every other disabled control in this
@@ -626,7 +653,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   }
   if (strip) {
     return (
-      <LabelStrip labelId={labelId} label={label} hint={labelHint} disabled={dimmed} pad="field" className={className}>
+      <LabelStrip labelId={labelId} label={label} hint={labelHint} disabled={dimmed} className={className}>
         {group}
         {belowEl}
         {captionEl}

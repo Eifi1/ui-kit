@@ -571,23 +571,31 @@ export function FieldLabelLine({ label, hint }: { label: ReactNode; hint?: React
 }
 
 /**
- * How tall the strip over a bare group is — the values {@link FieldStrip}'s `pad` takes,
- * public since 0.23 (keksdose G8), so the names say what the CONTENT needs rather than
- * which kit group first needed it (until 0.23 they were `toggle` and `tiles`).
+ * How tall the strip over a bare group is: 20px at Normal, for every group the kit
+ * draws one over — ToggleGroup's `labelPlacement="strip"`, SwatchPicker, IconPicker
+ * and {@link FieldStrip} (whose `pad` named two heights until 0.34).
  *
- *  - `"field"` — 16px. keksdose's `ClearedStatusPicker` (live #288 rework, #431,
- *    measured): *"16px of label strip plus a 26px group is exactly a labelled Input"*,
- *    so a status group in a row of 42px fields ends where they end. The label's line
- *    box runs into the group's top hairline, but the ACTIVE fill — the thing feedback
- *    #117 was about — starts at 19px, below the label's 17.75px. For content with a
- *    border and an inset of its own; ToggleGroup's `labelPlacement="strip"`.
- *  - `"clear"` — 20px, keksdose's `FlagPicker` and location field (`pt-5`). A tile has
- *    no inset fill: its selection IS its frame, a 2px dark border-and-ring from the
- *    tile's top edge, so the tile has to start below the whole label line — and so does
- *    anything else with no inset: a map, a row of buttons, a line of text. SwatchPicker,
- *    IconPicker, and FieldStrip's default.
+ * The label ROW, not the label, is what has to fit (keksdose dev#593, kk K4, measured in
+ * headless Chromium): it sits `top-1` (4px) and is as tall as the taller of the label
+ * (11px `text-caption` in a `leading-tight` line, 13.75px) and its "?" (a 14px icon,
+ * `size-3.5`) — so it ends 18px down. The strip has to be at least that:
+ *
+ *     label row: 4 + max(13.75, 14) = 18   ≤   strip: 20   (2px clear of the content)
+ *
+ * Until 0.34 a 16px strip (`"field"`) stood over the segmented group so that 16 + its
+ * 26px box made a labelled Input's 42px (keksdose's `ClearedStatusPicker`, live #288 /
+ * #431). The label and its "?" then crossed the group's top border by 2px — *"the
+ * question mark even interferes with it"* (at 125 %: label row 424–438, border at 436).
+ * The 4px come out of the group's segments instead (`STRIP_SEGMENT` in
+ * toggle-group.tsx): 20 + 22 = 42. A tile, a map, a row of buttons — content with no
+ * inset — needed the 20px already (keksdose's `FlagPicker` and location field, `pt-5`).
+ *
+ * Every term is rem, so the sum holds at any browser font size. At Large and Extra large
+ * there is no strip: the label row stands above the content, in flow
+ * ({@link LABEL_ABOVE_AT_LARGE}), and the padding goes (`large:pt-0` in
+ * {@link LabelStrip}), so nothing lies under the label to cross.
  */
-export const LABEL_STRIP_PAD = { field: "pt-4", clear: "pt-5" } as const;
+export const LABEL_STRIP_PAD = "pt-5";
 
 /**
  * The 11px label (and its `FieldHint`) over a group that is NOT a field — keksdose K2:
@@ -608,7 +616,6 @@ export function LabelStrip({
   label,
   hint,
   disabled,
-  pad,
   className,
   children,
   ...rest
@@ -618,13 +625,12 @@ export function LabelStrip({
   hint?: ReactNode;
   /** Dim the label with its group, as `peer-disabled:` dims a field's own. */
   disabled?: boolean;
-  pad: keyof typeof LABEL_STRIP_PAD;
   children: ReactNode;
 }) {
   return (
     // At Large the row is a label above the group, in flow (0.33, §10.17), and the
     // strip's padding goes: nothing lies under it any more.
-    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], "large:pt-0", className)}>
+    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD, "large:pt-0", className)}>
       <div
         data-field-label=""
         className={cn("pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}

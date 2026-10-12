@@ -224,7 +224,7 @@ export function IconPicker<T extends string>({
   );
   if (!labelled) return picker;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} pad="clear" className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} className={className}>
       {picker}
     </LabelStrip>
   );

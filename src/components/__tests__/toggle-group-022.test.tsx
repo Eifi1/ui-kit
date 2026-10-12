@@ -103,7 +103,7 @@ describe("ToggleGroup field chrome geometry (keksdose K1, feedback #117 rework)"
 });
 
 describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', () => {
-  it("is named by an 11px static label over the bare group, 16px strip + 26px group = 42px", () => {
+  it("is named by an 11px static label over the bare group, 20px strip + 22px group = 42px", () => {
     const { container } = render(
       <ToggleGroup
         label="Status"
@@ -127,20 +127,60 @@ describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', (
     expect(label.parentElement!.className).toContain("inset-x-3");
     const active = screen.getByRole("radio", { name: "Any" });
     const strip = px(wrapper, "pt-");
-    // The group: border + p-0.5 moat + a 20px text-sm line + moat + border.
-    const groupHeight = 1 + 2 + px(active, "py-") * 2 + 20 + 2 + 1;
-    expect(strip).toBe(16);
-    expect(groupHeight).toBe(26);
+    // The group (keksdose dev#593): border + p-0.5 moat + a 16px line + moat + border.
+    const groupHeight = 1 + 2 + px(active, "py-") * 2 + px(active, "leading-") + 2 + 1;
+    expect(strip).toBe(20);
+    expect(groupHeight).toBe(22);
     expect(strip + groupHeight).toBe(FIELD_HEIGHT);
-    // The fill (border + moat below the strip) still starts below the label's line box.
-    expect(strip + 1 + 2).toBeGreaterThan(px(label.parentElement!, "top-") + LABEL_FONT * LEADING_TIGHT);
+    // The group's border starts below the label's whole line box.
+    expect(strip).toBeGreaterThanOrEqual(px(label.parentElement!, "top-") + LABEL_FONT * LEADING_TIGHT);
   });
 
-  it("keeps sm at 26px: 12px type, 2px either side", () => {
+  it("keeps sm at 22px: 12px type in the same 16px line", () => {
     render(<ToggleGroup label="Status" labelPlacement="strip" size="sm" value="a" onChange={vi.fn()} options={OPTIONS} />);
     const active = screen.getByRole("radio", { name: "Any" });
     expect(active.className).toContain("text-xs");
-    expect(1 + 2 + px(active, "py-") * 2 + 16 + 2 + 1).toBe(26);
+    expect(1 + 2 + px(active, "py-") * 2 + px(active, "leading-") + 2 + 1).toBe(22);
+  });
+
+  // keksdose dev#593 (kk K4): the label row — the label AND its 14px "?" — ended 18px
+  // down, inside a 16px strip, so both crossed the group's top border by 2px; and the
+  // group, `inline-flex` on a line box, measured 44px with a 22px box. jsdom lays out
+  // nothing, so the geometry is pinned through the classes that make it.
+  it('keeps the label row and its "?" inside the strip, and the group block-level (dev#593)', () => {
+    const { container } = render(
+      <ToggleGroup
+        label="Status"
+        labelPlacement="strip"
+        hint={<FieldHint label="What the bank says" />}
+        value="a"
+        onChange={vi.fn()}
+        options={OPTIONS}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    const row = screen.getByText("Status").parentElement!;
+    const hint = screen.getByRole("button", { name: "What the bank says" });
+    expect(row.contains(hint)).toBe(true);
+    // The "?" is a 14px icon (`size-3.5`), a hair taller than the 13.75px label line.
+    expect(hint.querySelector("svg")!.getAttribute("class")).toContain("size-3.5");
+    const rowBottom = px(row, "top-") + Math.max(LABEL_FONT * LEADING_TIGHT, 14);
+    expect(rowBottom).toBe(18);
+    expect(px(wrapper, "pt-") - rowBottom).toBeGreaterThanOrEqual(2);
+    // Block-level: the group is exactly its box, no line box's leading round it.
+    const groupTokens = screen.getByRole("radiogroup").className.split(/\s+/);
+    expect(groupTokens).toContain("flex");
+    expect(groupTokens).not.toContain("inline-flex");
+    // At Large the label stands above the group in flow and the strip goes, so nothing
+    // lies under it; the segments keep their text-sm line there (a wrapped label needs it).
+    expect(wrapper.className.split(/\s+/)).toContain("large:pt-0");
+    expect(row.className.split(/\s+/)).toContain("large:static");
+    expect(screen.getByRole("radio", { name: "Any" }).className.split(/\s+/)).toContain("large:leading-5");
+  });
+
+  it("is block-level in the strip only: a bare group stays inline-flex", () => {
+    render(<ToggleGroup aria-label="Bare" value="a" onChange={vi.fn()} options={OPTIONS} />);
+    expect(screen.getByRole("radiogroup", { name: "Bare" }).className.split(/\s+/)).toContain("inline-flex");
   });
 
   it("carries a hint on the label line, an error under the group, and a caption", () => {

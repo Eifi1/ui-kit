@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DatePicker, DateRangePicker } from "../date-picker";
 import { formatIsoDate } from "../../lib/dates";
+import { FieldHint } from "../ui";
 
 /**
  * `formatValue` — the host's own rendering of the trigger text (Keksdose dev#546
@@ -156,5 +157,44 @@ describe("the step row's focus frame (keksdose live #394)", () => {
     for (const name of ["Previous day", "Next day", "Today"]) {
       expect(screen.getByRole("button", { name }).className).not.toMatch(/(hover|focus-visible):z-10/);
     }
+  });
+
+  // Fourth round (kk K5): at 125 % a 1px border on a fractional pixel is two half-strength
+  // device pixels — ‹'s left side and the field's right read grey. An inset 1px ring in
+  // the focus colour beside the border keeps one full pixel on every side.
+  it("frames the focused part 2px wide: an inset 1px ring in the brand colour beside its border", () => {
+    render(
+      <DatePicker
+        label="Booking date"
+        hint={<FieldHint label="The day the bank booked it" />}
+        value="2026-09-14"
+        onChange={() => {}}
+        step
+        today="2026-09-20"
+        stepLabels={{ prev: "Previous day", next: "Next day" }}
+        todayLabel="Today"
+      />,
+    );
+    for (const name of ["Previous day", "Next day", "Today"]) {
+      const tokens = screen.getByRole("button", { name }).className.split(/\s+/);
+      expect(tokens, name).toEqual(
+        expect.arrayContaining(["focus:border-brand", "focus:ring-brand", "focus:ring-1", "focus:ring-inset"]),
+      );
+      // A box-shadow, inset: nothing outside the part moves.
+      expect(tokens, name).not.toContain("focus:ring-2");
+      expect(tokens, name).not.toContain("focus:border-2");
+    }
+    // The trigger sits inside DateField; the row reaches it, as it squares its corners.
+    const trigger = screen.getByRole("combobox");
+    const row = trigger.closest<HTMLElement>(".items-stretch")!.className.split(/\s+/);
+    expect(row).toEqual(
+      expect.arrayContaining(["[&_[role=combobox]:focus]:ring-1", "[&_[role=combobox]:focus]:ring-inset"]),
+    );
+    expect(trigger.className.split(/\s+/)).toEqual(expect.arrayContaining(["focus:border-brand", "focus:ring-brand"]));
+    // Not every button in the row: the label's "?" keeps its own 2px focus frame.
+    expect(row.some((t) => t.includes("[&_button"))).toBe(false);
+    const hint = screen.getByRole("button", { name: "The day the bank booked it" });
+    expect(hint.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(hint.className).not.toContain("ring-inset");
   });
 });

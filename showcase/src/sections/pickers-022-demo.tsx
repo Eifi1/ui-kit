@@ -95,8 +95,10 @@ export function ToggleGroup022Demo() {
           <Input label="Amount" defaultValue="1,250.00" />
         </div>
         <Note>
-          16px of strip plus a 26px group: exactly the 42px of the inputs beside it, the label on their line
-          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431).
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line
+          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431), and the label and its
+          &ldquo;?&rdquo; clear of the group&apos;s border (dev#593: over the 16px strip it had, they crossed it by
+          2px).
         </Note>
       </Example>
       <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">

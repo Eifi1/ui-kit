@@ -4,10 +4,7 @@ import { LabelStrip, useFieldMessages } from "./field-parts";
 
 /**
  * How far down the content starts, under the 11px label — see {@link FieldStripProps.pad}.
- *
- *  - `"clear"` (default) — 20px: the content starts below the label's whole line box.
- *  - `"field"` — 16px: the strip plus a 26px bordered control is exactly a labelled
- *    {@link Input}'s 42px.
+ * Since 0.34 both are the one 20px strip.
  */
 export type FieldStripPad = "clear" | "field";
 
@@ -41,21 +38,17 @@ export interface FieldStripProps extends Omit<ComponentPropsWithoutRef<"div">, "
    */
   disabled?: boolean;
   /**
-   * How tall the strip is — what the content needs, measured in keksdose (`pt-5` /
-   * `pt-4`, the 0.22 `LABEL_STRIP_PAD`):
+   * @deprecated Since 0.34 both values are the same 20px strip, and the prop does
+   * nothing; it stays so a caller that passes it still compiles.
    *
-   *  - `"clear"` (default) — 20px. The content starts below the label's whole line box
-   *    (4px down, 13.75px tall). For content with no inset of its own: a map, a row of
-   *    buttons, a pill, a line of text, a row of tiles whose selection is their frame
-   *    (SwatchPicker, IconPicker).
-   *  - `"field"` — 16px. The strip plus a 26px bordered control (1 + 2 + 20 + 2 + 1) is
-   *    exactly a labelled Input's 42px, so the row's bottom edges line up. The label's
-   *    line box runs 1.75px into the control's top hairline, so only content with an
-   *    inset of its own keeps clear of it — the segmented group's 2px moat
-   *    (ToggleGroup's `labelPlacement="strip"`).
+   * It chose between `"clear"` (20px) and `"field"` (16px: the strip plus a 26px
+   * bordered control made a labelled Input's 42px). The label row — the label and its
+   * "?" — ends 18px down, so over a 16px strip it crossed the content's top border by
+   * 2px (keksdose dev#593; the arithmetic is on `LABEL_STRIP_PAD` in field-parts.tsx).
+   * For a row of 42px fields, make the content 22px tall: 20 + 22 = 42, the shape
+   * ToggleGroup's `labelPlacement="strip"` has since 0.34.
    *
-   * A responsive strip is a `className`: it merges after the pad, so keksdose's status
-   * cell writes `className="pt-5 @3xl:pt-4"` (20px on a phone, 16px in the desktop row).
+   * A `className` still merges after the strip's padding.
    */
   pad?: FieldStripPad;
   /**
@@ -97,8 +90,9 @@ export interface FieldStripProps extends Omit<ComponentPropsWithoutRef<"div">, "
  * ```
  *
  * The label sits where a field's static label sits (`top-1`, `inset-x-3`, 11px in a
- * `leading-tight` line); the content starts `pad` down, full width. `className` styles
- * the wrapper — the grid or flex item in the caller's row — and merges after the pad.
+ * `leading-tight` line); the content starts 20px down, full width, clear of the label
+ * and its "?". `className` styles the wrapper — the grid or flex item in the caller's
+ * row — and merges after the strip's padding.
  *
  * Not a {@link Field}: that one sets a 14px label ABOVE its control, in flow, for a form
  * that labels its fields that way. This is for a row whose fields float their labels
@@ -109,7 +103,8 @@ export function FieldStrip({
   hint,
   error,
   disabled = false,
-  pad = "clear",
+  // Taken off so it never reaches the DOM; see `pad` (deprecated, one strip since 0.34).
+  pad: _pad,
   group = true,
   className,
   children,
@@ -139,7 +134,6 @@ export function FieldStrip({
       label={label}
       hint={messages.labelHint}
       disabled={disabled}
-      pad={pad}
       className={className}
     >
       {content}
