@@ -162,7 +162,9 @@ const SHELL_SET = [
 const BUDGETS = [
   { label: "{ Button }", names: ["Button"], max: 19_800 },
   { label: "{ Spinner }", names: ["Spinner"], max: 1_720 },
-  { label: "{ cn }", names: ["cn"], max: 190 },
+  // 247 B since 0.34 (DOC-7): cn registers `ring-focus` / `outline-focus` as widths with
+  // tailwind-merge (the merger itself is a dependency, outside this count).
+  { label: "{ cn }", names: ["cn"], max: 272 },
   { label: "the shell set", names: SHELL_SET, max: 81_300 },
 ];
 const ENTRY = "\0import-cost";
