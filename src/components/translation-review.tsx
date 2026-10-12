@@ -410,7 +410,7 @@ function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: Transla
   return row.text === "" ? (
     <span className="italic text-[var(--text-muted)]">{labels.missingText}</span>
   ) : (
-    <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3")}>
+    <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3 large:line-clamp-none")}>
       {row.text}
     </span>
   );

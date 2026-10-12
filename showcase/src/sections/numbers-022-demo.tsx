@@ -105,14 +105,14 @@ function InlineCell() {
   return (
     <Example label="AmountInput / MoneyField calculator={false}" hint="for an inline editor that closes on blur">
       <div className="flex max-w-md flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0 truncate text-sm text-[var(--text-secondary)]">Groceries — assigned</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="min-w-0 truncate-until-large text-sm text-[var(--text-secondary)]">Groceries — assigned</span>
           <div className="w-36 shrink-0">
             <MoneyField ariaLabel="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
           </div>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0 truncate text-sm text-[var(--text-secondary)]">With the calculator (default)</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="min-w-0 truncate-until-large text-sm text-[var(--text-secondary)]">With the calculator (default)</span>
           <div className="w-36 shrink-0">
             <MoneyField ariaLabel="VAT" currency="EUR" value={vat} onCommit={setVat} />
           </div>

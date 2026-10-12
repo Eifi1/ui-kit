@@ -141,7 +141,7 @@ export function ProfileSetting(props: ProfileSettingProps) {
           {/* A heading inside a SettingsLayout (0.31, docs/settings-harmonization.md
               §3.7), the plain div it always was outside one. */}
           <SettingsCardTitle>{labels.title}</SettingsCardTitle>
-          <div className="truncate font-mono text-xs text-[var(--text-muted)]">
+          <div className="truncate-until-large font-mono text-xs text-[var(--text-muted)]">
             {/* `email` was a required key that nothing rendered; it names the address
                 for a screen reader, which otherwise hears a bare string under a title. */}
             <span className="sr-only">{labels.email}: </span>

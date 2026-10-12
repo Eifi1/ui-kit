@@ -109,7 +109,7 @@ function AddressBar({ links }: { links: [label: string, to: string][] }) {
       <Button size="sm" variant="ghost" onClick={() => void navigate(-1)}>
         ‹ Back
       </Button>
-      <code className="min-w-0 flex-1 truncate font-mono text-[var(--text-secondary)]" data-private>
+      <code className="min-w-0 flex-1 truncate-until-large font-mono text-[var(--text-secondary)]" data-private>
         {location.pathname}
         {location.search}
         {location.hash}

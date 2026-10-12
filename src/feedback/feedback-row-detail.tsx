@@ -317,7 +317,7 @@ function AttachmentDownload({
       className="max-w-full"
     >
       <FileText className="size-3.5 shrink-0" aria-hidden />
-      <span className="min-w-0 max-w-[14rem] truncate">{name}</span>
+      <span className="min-w-0 max-w-[14rem] truncate-until-large">{name}</span>
       <Download className="size-3.5 shrink-0" aria-hidden />
     </Button>
   );
