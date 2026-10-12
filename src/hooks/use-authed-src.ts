@@ -68,6 +68,8 @@ interface State {
   type: string | undefined;
 }
 
+const NO_STATE: State = { key: null, src: null, status: "idle", error: undefined, type: undefined };
+
 async function toBlob(res: Blob | Response): Promise<Blob> {
   if (typeof Response !== "undefined" && res instanceof Response) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -99,13 +101,17 @@ export function useAuthedSrc(
   const hasFetcher = !!fetcher;
   const [attempt, setAttempt] = useState(0);
   const key = url && enabled && hasFetcher ? `${attempt}|${url}` : null;
-  const [state, setState] = useState<State>({
-    key: null,
-    src: null,
-    status: "idle",
-    error: undefined,
-    type: undefined,
-  });
+  const [state, setState] = useState<State>(NO_STATE);
+  // The state answers one key, and only while that key is current. Once the key moves
+  // on, that request's effect is cleaned up and its object URL revoked, and a key can
+  // come back: Lightbox passes `enabled: open`, so closing and reopening a photo goes
+  // K → null → K, and paging back before the next picture loaded goes A → B → A. Kept,
+  // the state would answer the returning key with the revoked `blob:` as "ready" (or
+  // with the old error) until the refetch lands (BUG-3, refactor audit 2026-10).
+  // Dropped here, while rendering, rather than in the cleanup: a setState from a
+  // cleanup lands at a lower priority than the click that reopens, so that render
+  // could still see the old state.
+  if (state.key !== null && state.key !== key) setState(NO_STATE);
 
   useEffect(() => {
     const fetchFn = fetcherRef.current;

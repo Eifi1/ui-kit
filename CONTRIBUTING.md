@@ -275,6 +275,23 @@ inline and nothing `continue-on-error`, so the two cannot drift. Locally a full 
 about 2¾ minutes (it was ~5 run one after another). Lint and typecheck keep caches in
 `node_modules/.cache`, so a repeat run only rechecks what changed; CI always starts cold.
 
+**One gate runs in CI first: the truncation sweep** (`npm run check:sweep`; text-size
+§10.17–§10.22). It drives Chromium over every showcase page at four text sizes and fails on a
+TRUNCATED or PINNED finding (`--gate-truncation`) or an overflow. It gates a release, so CI's
+`Truncation sweep (release)` job runs it only on a release PR: a PR into `main` that changes
+`package.json`'s version. That keeps Chromium off the shared machine (refactor plan 2026-10,
+decision 2). It is not in `npm run check`, the pre-push hook or `npm run release`. To run it
+by hand:
+
+1. Once per machine, and after a `playwright-core` bump:
+   `npx playwright-core install chromium-headless-shell`. That is the browser the pinned
+   `playwright-core` devDependency expects; the script names this command when it is missing.
+   `CHROMIUM=<executable>` runs another browser, unsupported by that client.
+2. `npm run check:sweep`. It runs its own fixture test first
+   (`scripts/screenshot-sizes-fixture.test.mjs`, seconds), then builds the showcase and
+   sweeps. The four sizes run at once in one browser; on a machine short of memory, run the
+   script itself with `--serial` (its header lists the options).
+
 | Script | What it is actually defending |
 |---|---|
 | `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since tsup's declaration build reads it). |
@@ -341,19 +358,18 @@ just the symptom, because a reader upgrading needs to know whether it could have
 
 ### Cutting a release
 
-1. On the release branch: `npm run check` — clean. Close what else eats memory first: the
-   release step below also builds the showcase and runs Chromium.
+1. On the release branch: `npm run check` — clean.
 2. `npm run build && node scripts/gen-export-inventory.mjs` — the README inventory is
    current.
-3. `npm run release:dry` to read the version and the entry; then `npm run release`. It first
-   runs `npm run check:sweep` (the showcase build and the truncation sweep with
-   `--gate-truncation`, Chromium, about 25 minutes here; text-size §10.17–§10.22) and stops on
-   a TRUNCATED or PINNED finding; then it bumps
+3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
    `npm run release -- --release-as minor` when the commits under-state it.
 4. Push (the pre-push hook runs `npm run check`), open the PR, and merge it once CI
-   confirms. Pushes wait until the work is done and go out in one batch.
+   confirms. Pushes wait until the work is done and go out in one batch. The version bump
+   makes it a release PR, so CI also runs the truncation sweep (`Truncation sweep (release)`,
+   see [The gates](#the-gates)); a TRUNCATED or PINNED finding fails it and stops the
+   release. To know the verdict before you push, run `npm run check:sweep` yourself.
 5. Tag the MERGE commit on main:
    `git tag -a vX.Y.Z -m "@eifi1/ui-kit X.Y.Z" <sha> && git push origin vX.Y.Z`.
 
@@ -365,11 +381,13 @@ run uploads `npm-package` (the tarball packed from the dist `check:build` verifi
 `main` its tree is exactly the one the PR's green run tested. CI on `main` then skips the
 checks and re-uploads that run's artifacts (its `reuse` job compares the recorded tree with
 the merge commit's), so Release and Pages start within a minute. A branch behind `main`, a
-direct push or a missing green run gets the full check. So: update the branch before merging
+direct push or a missing green run gets the full check. A release merge reuses the PR's run
+only if its sweep passed; otherwise the full run on `main` sweeps too, so no release reaches
+npm unswept. So: update the branch before merging
 a release PR, and the release does not wait for a second full run. `pages.yml` deploys the showcase
 only after that CI run is green, and `release.yml` stages exactly that tarball, so nothing is
 rebuilt. Tag the MERGE commit: the release looks up the CI run of the tagged commit on
-`main`, waits up to 20 minutes for it, and refuses a red one.
+`main`, waits up to 45 minutes for it, and refuses a red one.
 
 Pushing a `v*` tag triggers `.github/workflows/release.yml`, which STAGES the version on npm
 through trusted publishing (OIDC, no token) with provenance. A maintainer approves it with

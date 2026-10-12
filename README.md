@@ -58,7 +58,7 @@ when it chooses. To work on the design system and an app together, use
 
 | Package | Declared as | Why |
 |---|---|---|
-| `react`, `react-dom` | peer, `>=19` | The kit is components and hooks; two copies of React break hooks and context. |
+| `react`, `react-dom` | peer, `>=19.2` | The kit is components and hooks; two copies of React break hooks and context. 19.2 for `useEffectEvent`. |
 | `react-router` | peer, `>=7` | Imported unconditionally by `DataTable`, `useTableState`, `AppShell` and `useWizard`. A Router has to be mounted even with `urlSync` off. |
 | `recharts` | peer, `>=3` | `@eifi1/ui-kit/chart` imports it statically. Only that subpath needs it — the main barrel no longer reaches it. |
 | `lucide-react` | peer, `>=0.400.0 <2` | Icons, in 33 modules. **Yours to version.** |

@@ -166,6 +166,36 @@ describe("packaging contract", () => {
     expect(pkg.peerDependencies["flag-icons"]).toBeUndefined();
     expect(pkg.devDependencies["flag-icons"]).toBeDefined();
   });
+
+  it("asks for a React that has every React API src imports", () => {
+    // BUG-13 (refactor audit 2026-10): five modules import `useEffectEvent`, stable only
+    // from React 19.2, while the peers said `>=19`. On 19.0 or 19.1 the build refuses the
+    // import, or the sign-in page throws "useEffectEvent is not a function". An API newer
+    // than 19.0 goes in this table with its first version, and the floor follows it.
+    const SINCE: Record<string, [major: number, minor: number]> = { useEffectEvent: [19, 2] };
+    const NAMED_FROM_REACT = /^\s*import\s*\{([^}]*)\}\s*from\s*["']react["']/gm;
+    const used = new Set<string>();
+    for (const file of shippedSources(join(ROOT, "src"))) {
+      for (const [, names] of stripComments(readFileSync(file, "utf8")).matchAll(NAMED_FROM_REACT)) {
+        for (const name of names.split(",")) used.add(name.trim().replace(/^type\s+/, ""));
+      }
+    }
+    // Not vacuous: the scan must see the hook that made this test.
+    expect(used).toContain("useEffectEvent");
+    const need = [...used]
+      .map((name) => SINCE[name])
+      .filter(Boolean)
+      .reduce<[number, number]>((a, b) => (b[0] > a[0] || (b[0] === a[0] && b[1] > a[1]) ? b : a), [19, 0]);
+    for (const peer of ["react", "react-dom"]) {
+      const floor = /^>=\s*(\d+)(?:\.(\d+))?/.exec(pkg.peerDependencies[peer] ?? "");
+      expect(floor, `${peer}'s peer range starts with >=`).not.toBeNull();
+      const [major, minor] = [Number(floor![1]), Number(floor![2] ?? 0)];
+      expect(
+        major > need[0] || (major === need[0] && minor >= need[1]),
+        `${peer} peer ${pkg.peerDependencies[peer]} is below ${need.join(".")}`,
+      ).toBe(true);
+    }
+  });
 });
 
 /**

@@ -126,6 +126,79 @@ describe("useAuthedSrc", () => {
     await waitFor(() => expect(result.current.status).toBe("ready"));
   });
 
+  // BUG-3 (refactor audit 2026-10): Lightbox passes `enabled: open`, so closing and
+  // reopening the same photo repeats the key. Its first open's blob was revoked on
+  // close; the reopen must not hand it back as "ready", not even for one render.
+  it("reopening the same URL (enabled false → true) never returns the revoked object URL", async () => {
+    const fetcher: AuthedFetcher = async () => png();
+    const seen: { status: string; src: string | null }[] = [];
+    const { result, rerender } = renderHook(
+      ({ enabled }) => {
+        const r = useAuthedSrc("/photos/7", { fetcher, enabled });
+        seen.push({ status: r.status, src: r.src });
+        return r;
+      },
+      { initialProps: { enabled: true } },
+    );
+    await waitFor(() => expect(result.current.src).toBe("blob:test/1"));
+    rerender({ enabled: false });
+    expect(result.current.status).toBe("idle");
+    expect(revoked).toEqual(["blob:test/1"]);
+    seen.length = 0;
+    rerender({ enabled: true });
+    // The reopen's first render: loading, with nothing to show yet.
+    expect(seen[0]).toEqual({ status: "loading", src: null });
+    await waitFor(() => expect(result.current.src).toBe("blob:test/2"));
+    expect(seen.some((s) => s.src !== null && revoked.includes(s.src))).toBe(false);
+  });
+
+  // The same repeat through paging: A is on screen, B is still loading, and the user
+  // pages back to A. A's blob went with the move to B.
+  it("paging back to a URL before the next one loaded never returns its revoked object URL", async () => {
+    let releaseB!: (b: Blob) => void;
+    const fetcher: AuthedFetcher = (url) =>
+      url === "/b.png" ? new Promise<Blob>((r) => (releaseB = r)) : Promise.resolve(png());
+    const seen: (string | null)[] = [];
+    const { result, rerender } = renderHook(
+      ({ url }) => {
+        const r = useAuthedSrc(url, { fetcher });
+        seen.push(r.src);
+        return r;
+      },
+      { initialProps: { url: "/a.png" } },
+    );
+    await waitFor(() => expect(result.current.src).toBe("blob:test/1"));
+    rerender({ url: "/b.png" });
+    expect(revoked).toEqual(["blob:test/1"]);
+    seen.length = 0;
+    rerender({ url: "/a.png" });
+    expect(result.current).toMatchObject({ status: "loading", src: null });
+    await waitFor(() => expect(result.current.src).toBe("blob:test/2"));
+    expect(seen).not.toContain("blob:test/1");
+    // B's late answer is discarded, as before.
+    await act(async () => releaseB(png()));
+    expect(result.current.src).toBe("blob:test/2");
+  });
+
+  // The other half of the same repeat: an error from the first open is not the
+  // reopen's answer either — the reopen fetches again, and says so.
+  it("reopening after an error reports loading, not the old error", async () => {
+    let fail = true;
+    const fetcher: AuthedFetcher = async () => {
+      if (fail) throw new Error("offline");
+      return png();
+    };
+    const { result, rerender } = renderHook(({ enabled }) => useAuthedSrc("/a.png", { fetcher, enabled }), {
+      initialProps: { enabled: true },
+    });
+    await waitFor(() => expect(result.current.status).toBe("error"));
+    rerender({ enabled: false });
+    fail = false;
+    rerender({ enabled: true });
+    expect(result.current.status).toBe("loading");
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+  });
+
   it("without a fetcher the URL is used as it is; without a URL (or disabled) it is idle", () => {
     expect(renderHook(() => useAuthedSrc("/public.png")).result.current).toMatchObject({
       src: "/public.png",

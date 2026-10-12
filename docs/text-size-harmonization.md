@@ -534,11 +534,11 @@ read as corrected.
       - `--pinned` is on by default, as `--truncation` is.
     - **Report-only in 0.33**, both checks. **The release gate since 0.34** (round 0.34
       T1): `npm run check:sweep` builds the showcase and runs every page with
-      `--pages all --no-screens --gate-truncation`, and `npm run release` runs it before
-      it bumps anything, so a truncation or a pinned-box finding (exit 3), or an overflow
-      (exit 1), stops the release. Local only: `scripts/check.mjs` and CI do not run it
-      (a browser per run costs Actions minutes), and jsdom has no layout, so unit tests
-      only pin classes. Group 4 above took `truncate-until-large` — Tabs' label and
+      `--pages all --no-screens --gate-truncation`, and CI runs it on the release PR
+      (refactor plan 2026-10, decision 2), so a truncation or a pinned-box finding
+      (exit 3), or an overflow (exit 1), stops the release. `scripts/check.mjs` does not
+      run it (by hand: `npm run check:sweep`, CONTRIBUTING "The gates"), and jsdom has no
+      layout, so unit tests only pin classes. Group 4 above took `truncate-until-large` — Tabs' label and
       detail, MenuItem, Breadcrumbs, the AppShell sidebar's labels, the combobox family's
       options and values, MultiSelect, Country/CurrencySelect and the DataTable column
       chooser — and so did what the sweep then measured in the rest of the kit. The phone

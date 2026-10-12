@@ -8,12 +8,12 @@
 // left at its default. Naming it, even as the default "conventionalcommits", skipped
 // both: that is how kastlan went from v0.9.3 plus one breaking commit to v1.0.0.
 //
-// The size sweep gates the release (0.34, docs/text-size-harmonization.md §10.17), but
-// from package.json's `release` script — `npm run check:sweep && commit-and-tag-version`
-// — not from `scripts.prerelease` here: a lifecycle script runs under `exec`, which holds
-// its output until it ends and prints only stderr, so a sweep of several minutes would
-// run silent and fail without its TRUNCATED lines. `npm run release:dry` stays a quick,
-// read-only preview and does not sweep.
+// The size sweep gates the release (0.34, docs/text-size-harmonization.md §10.17) in CI,
+// on the release PR (ci.yml's `sweep` job; refactor plan 2026-10, decision 2), not here
+// and not in `npm run release`, which is plain commit-and-tag-version again. Not from
+// `scripts.prerelease` either, if it ever comes back local: a lifecycle script runs
+// under `exec`, which holds its output until it ends and prints only stderr, so a sweep
+// of several minutes would run silent and fail without its TRUNCATED lines.
 //
 // `.cjs` because this package is `"type": "module"`.
 module.exports = {
