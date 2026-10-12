@@ -206,7 +206,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `PAY_PAGE_LANG_PARAM`, `paddleLocale`, `payPageUrl`; `usePlanLimitToast`; and the
   // operator's plan parts, `planColumn`, `usePlanColumn`, `PlanChangeConfirm`,
   // `usePlanChangeResult`, `DEFAULT_PLAN_CHANGE_LABELS`.
-  ["@eifi1/ui-kit", barrel, 879],
+  // 0.34.0 (+8 −1): `HelpPopover`; `saveBlob`, `filenameFromDisposition`;
+  // `useKitTableStorageKeyPrefix`; session refresh, `createSessionRefresh`,
+  // `attachSessionRefresh`, `isTransientRefreshFailure`, `isSignedOutStep`; and
+  // `PHONE_QUERY` removed (deprecated since 0.32).
+  ["@eifi1/ui-kit", barrel, 886],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

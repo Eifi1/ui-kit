@@ -89,7 +89,8 @@ maintained by hand:
 npm run build && node scripts/gen-export-inventory.mjs
 ```
 
-`--check` exits non-zero and names every export the README does not mention. The
+`--check` exits non-zero and names every export the README does not mention; `check:build`
+runs it, so a stale inventory fails `npm run check` and CI (since 0.34). The
 hand-maintained version it replaced named 93 of 263 exports and had been advertising five
 deleted wizard exports since 0.4.0, on the npm landing page.
 
@@ -359,8 +360,8 @@ just the symptom, because a reader upgrading needs to know whether it could have
 ### Cutting a release
 
 1. On the release branch: `npm run check` — clean.
-2. `npm run build && node scripts/gen-export-inventory.mjs` — the README inventory is
-   current.
+2. The README inventory is current: `check:build` fails when it is not, and
+   `npm run build && node scripts/gen-export-inventory.mjs` regenerates it.
 3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
