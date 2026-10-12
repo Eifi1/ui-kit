@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, MouseEvent, ReactElement, ReactNode, Ref } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { buttonClasses, type ButtonSize, type ButtonVariant } from "./ui";
 import { useKitLink } from "../i18n/kit-labels";
@@ -89,7 +89,7 @@ const ELEVATED_JOINED = "bg-surface shadow-lg";
 const ELEVATED_GAPPED =
   "[&>button]:shadow-md [&>a]:shadow-md [&>*>button]:shadow-md [&>*>a]:shadow-md";
 
-export interface ButtonGroupProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
+export interface ButtonGroupProps extends Omit<ComponentPropsWithRef<"div">, "role"> {
   /** `horizontal` (default): side by side, in reading order. `vertical`: stacked —
    *  the map's zoom + over −. */
   orientation?: "horizontal" | "vertical";

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { foldForSearch } from "../lib/text-match";
 import { ComboboxPanel, type ComboboxCore, type ComboOption } from "./combobox-core";
@@ -47,7 +47,7 @@ export const CURRENCIES: CurrencyOption[] = [
   { code: "AED", name: "UAE Dirham", symbol: "د.إ", country: "ae" },
 ];
 
-export interface CurrencyFlagProps extends ComponentPropsWithoutRef<"span"> {
+export interface CurrencyFlagProps extends ComponentPropsWithRef<"span"> {
   /** ISO 3166-1 alpha-2, lowercase — the class flag-icons keys its sprite by. */
   country: string;
 }

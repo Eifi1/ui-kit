@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, MailWarning, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -177,7 +177,7 @@ function defaultVerifyFailure(error: unknown): VerifyEmailFailure {
   return authErrorCode(error) === "token_expired" ? "expired" : "invalid";
 }
 
-export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** The link's token — the app's `?token=`. Empty: the link was cut short, and the
    *  page says so without asking anyone. */
   token: string;

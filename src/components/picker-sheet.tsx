@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
@@ -45,6 +46,9 @@ export interface PickerSheetProps
   /** The option the arrow keys are on, for the search box's `aria-activedescendant`. */
   activeId?: string;
   children: ReactNode;
+  /** The sheet, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with the sheet's own ref, which its focus trap holds. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -87,6 +91,7 @@ export function PickerSheet({
   "aria-label": ariaLabel,
   className,
   style,
+  ref,
   ...rest
 }: PickerSheetProps) {
   // Every picker in the kit opens one of these on a phone, and most of them pass
@@ -125,6 +130,7 @@ export function PickerSheet({
   const searchRef = inputRef ?? ownRef;
 
   const sheetRef = useRef<HTMLDivElement>(null);
+  const setSheet = useMemo(() => mergeRefs(sheetRef, ref), [ref]);
   /**
    * The sheet said `aria-modal="true"` and then left focus on the field behind it, so
    * a screen reader was told to hide the page the user's cursor was still standing in
@@ -182,7 +188,7 @@ export function PickerSheet({
       // MERGED rather than won outright (see below), which is the one case where a
       // caller has something to add.
       {...rest}
-      ref={sheetRef}
+      ref={setSheet}
       role="dialog"
       aria-modal="true"
       // Without it the container cannot take focus, and `useFocusTrap` has nothing to

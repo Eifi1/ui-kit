@@ -1,5 +1,5 @@
-import { forwardRef, useId } from "react";
-import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
+import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import {
@@ -120,6 +120,9 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
    * own). No provider, or an unlocked one: no effect. Button's `commit`, for K3.
    */
   commit?: CommitScope;
+  /** The `<input type="checkbox" role="switch">`. A React 19 ref prop since 0.34 (MOD-4,
+   *  refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -129,27 +132,25 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
  * `onChange`/`onCheckedChange`), uncontrolled (`defaultChecked`) and in a plain
  * `<form>` (`name`, `value`).
  */
-export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
-  {
-    size = "md",
-    label,
-    description,
-    switchPosition = "end",
-    onCheckedChange,
-    onChange,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    required,
-    disabledReason,
-    disabledReasonDisplay,
-    commit,
-    onClick,
-    ...rest
-  },
+export function Switch({
   ref,
-) {
+  size = "md",
+  label,
+  description,
+  switchPosition = "end",
+  onCheckedChange,
+  onChange,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  required,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
+  onClick,
+  ...rest
+}: SwitchProps) {
   const generated = useId();
   const inputId = id ?? generated;
   const lock = useLockReason(commit, disabledReason);
@@ -269,5 +270,4 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
       )}
     </div>
   );
-});
-Switch.displayName = "Switch";
+}

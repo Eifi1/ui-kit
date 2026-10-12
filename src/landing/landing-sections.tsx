@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import { Chip } from "../components/chip";
@@ -40,7 +40,7 @@ type ActionProps = Pick<LandingActionsProps, "session" | "access" | "demoHref" |
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 
-export interface HeroProps extends Omit<ComponentPropsWithoutRef<"section">, "title" | "children">, ActionProps {
+export interface HeroProps extends Omit<ComponentPropsWithRef<"section">, "title" | "children">, ActionProps {
   /** The page's `h1`: what the app does, in a line. */
   title: ReactNode;
   /** Under it: for whom, and why. */
@@ -132,7 +132,7 @@ export function Hero({
 
 /* ── Feature rows ────────────────────────────────────────────────────────── */
 
-export type FeatureRowsProps = ComponentPropsWithoutRef<"section">;
+export type FeatureRowsProps = ComponentPropsWithRef<"section">;
 
 /**
  * The band that holds the feature rows (§4.1.3): two to four {@link FeatureRow}s on the
@@ -152,7 +152,7 @@ export function FeatureRows({ className, children, ...rest }: FeatureRowsProps) 
   );
 }
 
-export interface FeatureRowProps extends Omit<ComponentPropsWithoutRef<"div">, "title" | "children"> {
+export interface FeatureRowProps extends Omit<ComponentPropsWithRef<"div">, "title" | "children"> {
   /** A lucide icon (or any SVG) before the eyebrow. Decorative. */
   icon?: ReactNode;
   /** The small uppercase line above the heading: "Capture", "Plan". */
@@ -234,7 +234,7 @@ export interface TrustItem {
   description: ReactNode;
 }
 
-export interface TrustStripProps extends Omit<ComponentPropsWithoutRef<"section">, "children"> {
+export interface TrustStripProps extends Omit<ComponentPropsWithRef<"section">, "children"> {
   /** Three or four (§4.1.4): hosting, security, data ownership, sharing. */
   items: readonly TrustItem[];
   /** The items' heading level. Default `h3`. */
@@ -268,7 +268,7 @@ export function TrustStrip({ items, headingAs: Heading = "h3", className, ...res
 
 /* ── CTA band ────────────────────────────────────────────────────────────── */
 
-export interface CtaBandProps extends Omit<ComponentPropsWithoutRef<"section">, "title" | "children">, ActionProps {
+export interface CtaBandProps extends Omit<ComponentPropsWithRef<"section">, "title" | "children">, ActionProps {
   /** The band's `h2`: the last ask. */
   title: ReactNode;
   subtitle?: ReactNode;

@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import type { MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -65,6 +64,9 @@ interface MenuItemBaseProps {
   id?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
   [key: `data-${string}`]: unknown;
+  /** The row — the `<button>`, or the `<a>` with `href`. A React 19 ref prop since 0.34
+   *  (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -131,26 +133,24 @@ export type MenuItemProps = MenuItemBaseProps &
  * with the rest. Render it inside an `<li>` like the shell's own rows; `HoverMenu`
  * turns the list markup into `role="none"`.
  */
-export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem(
-  {
-    children,
-    icon: Icon,
-    leading,
-    badge,
-    trailing,
-    tone = "default",
-    disabled = false,
-    className,
-    href,
-    renderLink,
-    onClick,
-    checked,
-    checkable,
-    current,
-    ...rest
-  },
+export function MenuItem({
   ref,
-) {
+  children,
+  icon: Icon,
+  leading,
+  badge,
+  trailing,
+  tone = "default",
+  disabled = false,
+  className,
+  href,
+  renderLink,
+  onClick,
+  checked,
+  checkable,
+  current,
+  ...rest
+}: MenuItemProps) {
   const kitLink = useKitLink();
   const on = href !== undefined ? !!current : !!checked;
   const look = cn(
@@ -233,7 +233,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {body}
     </button>
   );
-});
+}
 
 function RenderedLink({
   render,

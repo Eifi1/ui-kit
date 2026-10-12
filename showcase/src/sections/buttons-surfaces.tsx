@@ -265,8 +265,8 @@ function IconButtons() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">IconButton</code> is a{" "}
-          <code className="font-mono">forwardRef</code> — the button above is focused by a real
+          <code className="font-mono">IconButton</code> takes its{" "}
+          <code className="font-mono">ref</code> as a prop (React 19) — the button above is focused by a real
           ref, not by a query selector. It carries no label of its own, so every specimen here
           needs an <code className="font-mono">aria-label</code>; the box is 36px at{" "}
           <code className="font-mono">md</code> (matching the top bar) and 32px at{" "}

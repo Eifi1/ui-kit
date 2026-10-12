@@ -1,4 +1,4 @@
-import { forwardRef, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, DragEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -427,6 +427,9 @@ export interface FileButtonProps
    * commit, and is left live — the form's Save carries the lock.
    */
   commit?: CommitScope;
+  /** The `<button>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 
@@ -442,36 +445,34 @@ export interface FileButtonProps
  * </FileButton>
  * ```
  */
-export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(function FileButton(
-  {
-    accept,
-    multiple,
-    capture,
-    maxSize,
-    maxFiles,
-    isValid,
-    invalidMessage,
-    onFiles,
-    onPick,
-    onReject,
-    labels,
-    pending,
-    droppable,
-    showFileName = false,
-    disabled,
-    disabledReason: ownDisabledReason,
-    commit,
-    children,
-    className,
-    onClick,
-    onDragEnter,
-    onDragOver,
-    onDragLeave,
-    onDrop,
-    ...rest
-  },
+export function FileButton({
   ref,
-) {
+  accept,
+  multiple,
+  capture,
+  maxSize,
+  maxFiles,
+  isValid,
+  invalidMessage,
+  onFiles,
+  onPick,
+  onReject,
+  labels,
+  pending,
+  droppable,
+  showFileName = false,
+  disabled,
+  disabledReason: ownDisabledReason,
+  commit,
+  children,
+  className,
+  onClick,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  ...rest
+}: FileButtonProps) {
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   const inert = Boolean(disabled || pending);
@@ -613,5 +614,4 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
       {picker.element}
     </span>
   );
-});
-FileButton.displayName = "FileButton";
+}

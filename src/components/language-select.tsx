@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import { KIT_LANGUAGES, languageOptions, resolveLanguage } from "../i18n/languages";
 import type { KitLanguage, KitLanguageCode } from "../i18n/languages";
 import { Select } from "./ui";
@@ -57,13 +56,12 @@ export interface LanguageSelectProps extends Omit<SelectProps, "value" | "onChan
 
 const ALL_CODES: readonly KitLanguageCode[] = KIT_LANGUAGES.map((language) => language.code);
 
-export const LanguageSelect = forwardRef<HTMLSelectElement, LanguageSelectProps>(function LanguageSelect(
-  { value, onChange, codes = ALL_CODES, optionLabel, ...rest },
-  ref,
-) {
+// `ref` (the `<select>`) rides `rest` onto the Select: a React 19 ref prop since 0.34
+// (MOD-4, refactor audit 2026-10), where this was `forwardRef`.
+export function LanguageSelect({ value, onChange, codes = ALL_CODES, optionLabel, ...rest }: LanguageSelectProps) {
   const shown = resolveLanguage([value], codes);
   return (
-    <Select {...rest} ref={ref} value={shown} onChange={(e) => onChange(e.target.value as KitLanguageCode)}>
+    <Select {...rest} value={shown} onChange={(e) => onChange(e.target.value as KitLanguageCode)}>
       {languageOptions(codes).map((option) => {
         const language = KIT_LANGUAGES.find((entry) => entry.code === option.code)!;
         return (
@@ -74,5 +72,4 @@ export const LanguageSelect = forwardRef<HTMLSelectElement, LanguageSelectProps>
       })}
     </Select>
   );
-});
-LanguageSelect.displayName = "LanguageSelect";
+}

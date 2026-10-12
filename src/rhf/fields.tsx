@@ -28,10 +28,11 @@
  *    field PAINTS as well as announces. kastlan's number, money, date and entity fields
  *    passed only `aria-invalid` through `FormControl`, or nothing, and `Input`, `Select`
  *    and `Textarea` paint only from the prop (see the note in ./form).
- *  - **Focus on error.** `field.ref` reaches the focusable element — the element itself
- *    where the kit field forwards a ref, a focus handle on it where it does not (the
- *    number field, the pickers) — so `handleSubmit` and `trigger(…, { shouldFocus })`
- *    land the caret on the first field in error.
+ *  - **Focus on error.** `field.ref` reaches the focusable element itself — the input,
+ *    a picker's trigger, a toggle group whose `focus()` lands on its option (since 0.34
+ *    every kit field takes a ref; the number field and the pickers were reached by an id
+ *    lookup before, API-3) — so `handleSubmit` and `trigger(…, { shouldFocus })` land the
+ *    caret on the first field in error, and `setFocus`'s `shouldSelect` selects.
  *  - **`control` is optional**: under `<Form {...form}>` the fields find the form
  *    through react-hook-form's context. Pass it for the field's value types
  *    (`control={form.control}` checks `name` against the form's values).
@@ -47,7 +48,7 @@
  * {@link RhfField} is the shell they are all built on, for a control the kit does not
  * ship (an address autocomplete): it takes a `render` and wires the rest.
  */
-import { useLayoutEffect, useRef, type FocusEvent, type ReactElement, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, type FocusEvent, type ReactElement, type ReactNode } from "react";
 import {
   useController,
   type ControllerFieldState,
@@ -95,7 +96,7 @@ import {
   type InlineEntityComboboxProps,
 } from "../components/combobox";
 import type { ComboClearValue } from "../components/combobox-core";
-import { useInlineHint } from "../components/field-parts";
+import { mergeRefs, useInlineHint } from "../components/field-parts";
 import { useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { decimalMark, readTyped } from "../lib/decimal-marks";
@@ -267,21 +268,6 @@ export function RhfField<
       )}
     />
   );
-}
-
-/**
- * Hands react-hook-form a focus handle for a control that forwards no ref: its
- * `shouldFocusError` calls `focus()` on whatever `field.ref` was given. `find` runs at
- * focus time, so it sees the element as it is then.
- */
-function useFocusHandle(ref: ControllerRenderProps["ref"], find: () => HTMLElement | null | undefined) {
-  const findRef = useRef(find);
-  useLayoutEffect(() => {
-    findRef.current = find;
-  });
-  useLayoutEffect(() => {
-    ref({ focus: () => findRef.current()?.focus() });
-  }, [ref]);
 }
 
 // ── text ─────────────────────────────────────────────────────────────────────
@@ -470,6 +456,7 @@ export function RhfNumberField<
         // `aria-invalid`, which NumberControl hands on to the field.
         <NumberControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           required={required}
           id={id}
@@ -484,6 +471,7 @@ export function RhfNumberField<
 
 function NumberControl({
   field,
+  focusRef,
   invalid,
   required,
   id,
@@ -493,6 +481,8 @@ function NumberControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   required?: boolean;
   id: string;
@@ -502,14 +492,14 @@ function NumberControl({
   "aria-describedby"?: string;
   "aria-invalid"?: NumberFieldProps["aria-invalid"];
 }) {
-  // NumberField forwards no ref; it routes `id` to its <input>, where the handle
-  // finds it.
-  useFocusHandle(field.ref, () => document.getElementById(id));
   // The field's own mark, for a stored text written the way it is typed.
   const mark = decimalMark(useKitLocale(numberProps.locale));
   return (
     <NumberField
       {...numberProps}
+      // The <input> itself (API-3, refactor audit 2026-10): focus on error, and
+      // `setFocus`'s `shouldSelect`, which an id-found stand-in had no `select()` for.
+      ref={focusRef}
       aria-describedby={aria["aria-describedby"]}
       aria-invalid={aria["aria-invalid"]}
       aria-required={required || undefined}
@@ -705,6 +695,7 @@ export type RhfDateFieldProps<
 
 function DateControl({
   field,
+  focusRef,
   invalid,
   required,
   id,
@@ -714,6 +705,8 @@ function DateControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   required?: boolean;
   id: string;
@@ -723,12 +716,13 @@ function DateControl({
   "aria-describedby"?: string;
   "aria-invalid"?: DatePickerProps["aria-invalid"];
 }) {
-  useFocusHandle(field.ref, () => document.getElementById(id));
   const value: unknown = field.value;
   return (
     <DatePicker
       {...pickerProps}
       {...aria}
+      // The trigger itself (API-3, refactor audit 2026-10), not an id lookup.
+      ref={focusRef}
       aria-required={required || undefined}
       id={id}
       value={typeof value === "string" ? value : ""}
@@ -770,6 +764,7 @@ export function RhfDateField<
         // which DateControl hands on to the picker's trigger.
         <DateControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           required={required}
           id={id}
@@ -936,10 +931,9 @@ function RangeBody({
   const { id, formItemId, formMessageId, describedBy } = useFormField();
   // RhfField's rule: a FieldHint is its words at Large and on touch (DUP-2).
   const shownHint = useInlineHint(hint);
-  // The trigger forwards no ref; both fields focus it, so `shouldFocusError` lands
-  // there whichever of the two is first in error.
-  useFocusHandle(from.ref, () => document.getElementById(formItemId));
-  useFocusHandle(to.ref, () => document.getElementById(formItemId));
+  // Both fields' refs go to the one trigger (API-3, refactor audit 2026-10), so
+  // `shouldFocusError` lands there whichever of the two is first in error.
+  const triggerRef = useMemo(() => mergeRefs(from.ref, to.ref), [from.ref, to.ref]);
   const invalid = fromState.invalid || toState.invalid;
   const messages = [fromState.error?.message, toState.error?.message].filter(
     (m, i, all): m is string => typeof m === "string" && m !== "" && all.indexOf(m) === i,
@@ -958,6 +952,7 @@ function RangeBody({
       )}
       <DateRangePicker
         {...pickerProps}
+        ref={triggerRef}
         id={formItemId}
         // Merged, never replaced — a caller's own reference first, as FormControl does.
         aria-describedby={
@@ -1338,6 +1333,7 @@ export type RhfMonthPickerProps<
 
 function MonthControl({
   field,
+  focusRef,
   invalid,
   id,
   valueAsNumber,
@@ -1348,6 +1344,8 @@ function MonthControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   id: string;
   valueAsNumber?: boolean;
@@ -1358,14 +1356,13 @@ function MonthControl({
   "aria-describedby"?: string;
   "aria-invalid"?: MonthPickerProps["aria-invalid"];
 }) {
-  // MonthPicker forwards no ref; it routes `id` to its trigger, where the handle finds
-  // it — RhfDateField's way.
-  useFocusHandle(field.ref, () => document.getElementById(id));
   const value: unknown = field.value;
   return (
     <MonthPicker
       {...pickerProps}
       {...aria}
+      // The trigger itself (API-3, refactor audit 2026-10) — RhfDateField's way.
+      ref={focusRef}
       // MonthPicker routes `aria-required` to its trigger since 0.23.0.
       aria-required={required || undefined}
       id={id}
@@ -1391,10 +1388,10 @@ function MonthControl({
  * out, `invalid` by hand — and a failed submit could not focus it, because the picker
  * forwards no ref.
  *
- * Bound as {@link RhfDateField} is: a focus handle finds the trigger by its id, so
- * focus-on-error lands there; the form's error paints the trigger and is the shell's
- * message; the hint is the shell's description; neither is handed to the picker, so
- * its box never changes. Picking marks the field touched.
+ * Bound as {@link RhfDateField} is: `field.ref` is the picker's `ref`, its trigger (an id
+ * lookup until 0.34, API-3), so focus-on-error lands there; the form's error paints the
+ * trigger and is the shell's message; the hint is the shell's description; neither is
+ * handed to the picker, so its box never changes. Picking marks the field touched.
  *
  * ```tsx
  * <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber
@@ -1428,6 +1425,7 @@ export function RhfMonthPicker<
         // which MonthControl hands on to the picker's trigger.
         <MonthControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           id={id}
           mode={mode}
@@ -1697,15 +1695,6 @@ function ToggleControl<T extends string>({
   groupProps: Omit<RhfToggleGroupProps<FieldValues, string, T>, keyof RhfFieldBaseProps>;
 }) {
   const { groupClassName, emptyValue, allowEmpty, semantics, caption, ...rest } = groupProps;
-  // ToggleGroup forwards no ref. Its options are buttons: the radio shape's one tab
-  // stop (`tabindex="0"`), or in the pressed shape the pressed one — else the first.
-  useFocusHandle(field.ref, () => {
-    const group = document.getElementById(id);
-    return (
-      group?.querySelector<HTMLElement>('button[tabindex="0"], button[aria-pressed="true"]') ??
-      group?.querySelector<HTMLElement>("button")
-    );
-  });
   // React's onBlur is focusout: it fires on every move between options as well, and
   // only leaving the group is a blur of the FIELD.
   const onBlur = (e: FocusEvent<HTMLDivElement>) => {
@@ -1715,6 +1704,10 @@ function ToggleControl<T extends string>({
   const value = raw === null || raw === undefined || raw === "" ? null : (String(raw) as T);
   const common = {
     ...rest,
+    // The group (API-3, refactor audit 2026-10): its `focus()` lands on the radio shape's
+    // tab stop, or the pressed shape's pressed option — the rule this adapter carried
+    // as an id lookup until ToggleGroup took a ref.
+    ref: field.ref,
     id,
     className: groupClassName,
     "aria-labelledby": labelledBy,

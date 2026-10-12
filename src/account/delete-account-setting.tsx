@@ -1,5 +1,5 @@
 import { isValidElement, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { UserX } from "lucide-react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
@@ -89,7 +89,7 @@ export interface DeleteAccountValues {
  *  for a key of its own and the `severe` mark. */
 export type DeleteAccountConsequence = ReactNode | DangerConsequence;
 
-export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** The account's address — the text to type. */
   email: string;
   /** `"after_days"` (keksdose, Kurvenschmiede: erased by a scheduled job) or

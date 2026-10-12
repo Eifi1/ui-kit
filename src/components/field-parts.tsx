@@ -1,5 +1,5 @@
 import { createContext, isValidElement, useContext, useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, Ref, RefCallback } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref, RefCallback } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -115,7 +115,7 @@ export const FLOATING_LABEL_STATIC = cn(
  * button not a labelable input). Same placement as {@link FloatingField}'s static label,
  * so every labelled field lines up. Render inside a `relative` wrapper, before the trigger.
  */
-export interface FieldLabelProps extends ComponentPropsWithoutRef<"span"> {
+export interface FieldLabelProps extends ComponentPropsWithRef<"span"> {
   children: ReactNode;
 }
 
@@ -152,7 +152,7 @@ export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
  * usable without belongs in a `HelpPopover` instead (0.34, §10.23), which opens on a tap
  * and stays a "?" at every size.
  */
-export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {
+export interface FieldHintProps extends Omit<ComponentPropsWithRef<"button">, "children"> {
   /** The explanation. It is both the tooltip's text and, by default, the button's
    *  accessible name, so a screen reader gets it without the bubble ever opening. */
   label: string;

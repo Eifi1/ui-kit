@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useContext, useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -49,6 +49,9 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
   density?: ListDensity;
   /** Default `gap`. */
   separator?: ListSeparator;
+  /** The `<ul>` (or `<ol>`). A React 19 ref prop since 0.34 (MOD-4, refactor audit
+   *  2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLUListElement>;
 }
 
 /**
@@ -58,10 +61,15 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
  * bullets are styled away, and "list, 7 items" is exactly what a screen-reader user
  * wants to hear before the first row.
  */
-export const List = forwardRef<HTMLUListElement, ListProps>(function List(
-  { as = "ul", density = "default", separator = "gap", className, children, ...rest },
+export function List({
   ref,
-) {
+  as = "ul",
+  density = "default",
+  separator = "gap",
+  className,
+  children,
+  ...rest
+}: ListProps) {
   const Tag = as;
   return (
     <ListContext.Provider value={{ density, separator }}>
@@ -79,7 +87,7 @@ export const List = forwardRef<HTMLUListElement, ListProps>(function List(
       </Tag>
     </ListContext.Provider>
   );
-});
+}
 
 /* ── ListItem ─────────────────────────────────────────────────────────────── */
 
@@ -311,6 +319,9 @@ interface ListItemBaseProps {
   id?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
   [key: `data-${string}`]: unknown;
+  /** The main target — the row's `<a>`, `<button>` or `<div>`, where `id` goes. A React
+   *  19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -442,53 +453,51 @@ interface NotExpandable {
  * details that are easy to get wrong — which of them truncate, whether the actions
  * are nested in the button, whether a link row is a link at all.
  */
-export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem(
-  {
-    title,
-    titleLines = 1,
-    overline,
-    subtitle,
-    subtitleLines = 1,
-    meta,
-    metaWrap = false,
-    content,
-    icon: Icon,
-    leading,
-    trailing,
-    trailingTone = "muted",
-    actions,
-    leadingActions,
-    unread = false,
-    status,
-    selected = false,
-    disabled = false,
-    loading = false,
-    density: densityProp,
-    align = "center",
-    className,
-    targetClassName,
-    targetProps,
-    bordered = false,
-    as = "li",
-    renderRow,
-    children,
-    bodyClassName,
-    href,
-    renderLink,
-    external = false,
-    onClick,
-    onAuxClick,
-    disabledReason,
-    disabledReasonDisplay,
-    commit,
-    expandedContent,
-    expanded: expandedProp,
-    defaultExpanded = false,
-    onExpandedChange,
-    ...rest
-  },
+export function ListItem({
   ref,
-) {
+  title,
+  titleLines = 1,
+  overline,
+  subtitle,
+  subtitleLines = 1,
+  meta,
+  metaWrap = false,
+  content,
+  icon: Icon,
+  leading,
+  trailing,
+  trailingTone = "muted",
+  actions,
+  leadingActions,
+  unread = false,
+  status,
+  selected = false,
+  disabled = false,
+  loading = false,
+  density: densityProp,
+  align = "center",
+  className,
+  targetClassName,
+  targetProps,
+  bordered = false,
+  as = "li",
+  renderRow,
+  children,
+  bodyClassName,
+  href,
+  renderLink,
+  external = false,
+  onClick,
+  onAuxClick,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
+  expandedContent,
+  expanded: expandedProp,
+  defaultExpanded = false,
+  onExpandedChange,
+  ...rest
+}: ListItemProps) {
   const list = useContext(ListContext);
   const labels = useKitLabels("list", DEFAULT_LIST_LABELS);
   const kitLink = useKitLink();
@@ -787,7 +796,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       {renderRow ? renderRow(row) : row}
     </Tag>
   );
-});
+}
 
 function RenderedLink({
   render,

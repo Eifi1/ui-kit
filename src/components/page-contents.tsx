@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -102,7 +102,7 @@ export function useScrollSpy(ids: readonly string[], options: UseScrollSpyOption
   return current;
 }
 
-export interface PageContentsProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface PageContentsProps extends Omit<ComponentPropsWithRef<"nav">, "children"> {
   items: PageContentsItem[];
   /** The current entry — typically `useScrollSpy(items.map(i => i.id), …)`. */
   activeId?: string | null;
@@ -230,7 +230,7 @@ export function PageContents({
   );
 }
 
-export interface PageContentsLayoutProps extends ComponentPropsWithoutRef<"div"> {
+export interface PageContentsLayoutProps extends ComponentPropsWithRef<"div"> {
   /** What goes in the rail — typically a `<PageContents variant="rail">`. */
   contents: ReactNode;
   /**

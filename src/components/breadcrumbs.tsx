@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
@@ -34,7 +34,7 @@ export interface BreadcrumbLinkProps {
   children: ReactNode;
 }
 
-export interface BreadcrumbsProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "children"> {
   items: BreadcrumbItem[];
   /** Your router's link. Default: the `<UiKitProvider linkComponent>` (for an in-app
    *  `href`), then `<a>`. The API `Chip`, `StatTile` and `ListItem` share. */

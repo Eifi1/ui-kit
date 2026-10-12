@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 
 /* ── SectionLabel ─────────────────────────────────────────────────────────── */
@@ -87,6 +87,8 @@ export interface SectionLabelProps extends ComponentPropsWithoutRef<"h3"> {
    *  header. See {@link SectionLabelVariant}. */
   variant?: SectionLabelVariant;
   children: ReactNode;
+  /** The element `as` names — hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -130,6 +132,8 @@ export interface CaptionProps extends ComponentPropsWithoutRef<"p"> {
   /** Default `p`; `span` for a caption inside a line of other content. */
   as?: "p" | "span" | "div";
   children: ReactNode;
+  /** The element `as` names — hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**

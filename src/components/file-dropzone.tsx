@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, MouseEvent, ReactNode } from "react";
 import { Upload, X } from "lucide-react";
 import { Button, IconButton, Spinner } from "./ui";
 import { FIELD_ERROR_CLASS } from "./field-parts";
@@ -67,7 +67,7 @@ export interface FileDropzoneState {
  * `FileDropzoneProps` stays an interface a caller can extend; a single-mode pick also
  * reaches `onFilesSelected` as a one-element array, so one handler can serve both.
  */
-export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">, "onInvalid"> {
+export interface FileDropzoneProps extends Omit<ComponentPropsWithRef<"div">, "onInvalid"> {
   /** Single mode: the chosen file, echoed with its size. */
   file?: File | null;
   /** Single mode: called with the accepted file. */

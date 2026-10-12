@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
@@ -196,6 +196,13 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
    *  {@link UiKitProvider}, else "Dismiss". */
   dismissLabel?: string;
   children: ReactNode;
+  /**
+   * The banner's frame — where the rest of the props go (0.34, API-2, refactor audit
+   * 2026-10). Which element that is depends on the mode: the `<div>`; with `href` or
+   * `onClick` the `<a>` or `<button>` that IS the row; with an × or an `action` beside
+   * that row, the `<div>` holding the two. Hence `HTMLElement`.
+   */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -243,6 +250,7 @@ export function AlertBanner({
   className,
   children,
   role,
+  ref,
   ...rest
 }: AlertBannerProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { dismiss: dismissLabel });
@@ -363,6 +371,7 @@ export function AlertBanner({
         // through `cn` rather than spread so a caller's `className` refines the box
         // instead of replacing it.
         {...rest}
+        ref={ref as Ref<HTMLDivElement>}
         role={resolvedRole}
         className={cn(row, frame, TONE_TEXT[tone], className)}
       >
@@ -392,11 +401,14 @@ export function AlertBanner({
   // `aria-describedby` belongs on the thing that takes focus. The live-region role is
   // NOT carried over — a button or a link that is also a `status` is neither.
   const actionRest = split ? {} : rest;
+  // The `ref` goes with the rest: to the row element when it is the frame.
+  const rowRef = split ? undefined : ref;
 
   const rowAction =
     href !== undefined ? (
       <a
         {...(actionRest as ComponentPropsWithoutRef<"a">)}
+        ref={rowRef as Ref<HTMLAnchorElement> | undefined}
         href={href}
         className={actionClass}
       >
@@ -405,6 +417,7 @@ export function AlertBanner({
     ) : (
       <button
         {...(actionRest as ComponentPropsWithoutRef<"button">)}
+        ref={rowRef as Ref<HTMLButtonElement> | undefined}
         type="button"
         onClick={onClick}
         className={actionClass}
@@ -417,6 +430,7 @@ export function AlertBanner({
   return (
     <div
       {...rest}
+      ref={ref as Ref<HTMLDivElement>}
       role={resolvedRole}
       className={cn("relative", row, frame, TONE_TEXT[tone], hover, className)}
     >

@@ -1,5 +1,5 @@
-import { useId } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode } from "react";
+import { useCallback, useId } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
@@ -7,6 +7,7 @@ import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";
 import {
+  assignRef,
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
   FIELD_ERROR_CLASS,
@@ -170,6 +171,15 @@ export interface ToggleGroupBaseProps<T extends string>
    * no effect.
    */
   commit?: CommitScope;
+  /**
+   * The group — the `radiogroup` (or the pressed shape's `group`) the rest of the props go
+   * on — as a React 19 ref prop (0.34, API-3, refactor audit 2026-10). The group itself
+   * takes no focus, so its `focus()` lands where a keyboard would: the radio shape's one
+   * tab stop (the checked option, else the first), or in the pressed shape the pressed
+   * button, else the first. That is react-hook-form's focus-on-error, which /rhf's
+   * adapter reached by an id lookup carrying this same rule until now.
+   */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -265,6 +275,18 @@ const STRIP_SEGMENT: Record<"sm" | "md", string> = {
  * exactly its box. keksdose wrote it as `[&>[role=radiogroup]]:flex` on the strip.
  */
 const STRIP_GROUP = "flex";
+
+/**
+ * Where the group's `focus()` lands (see {@link ToggleGroupBaseProps.ref}): the radio
+ * shape's one tab stop, or the pressed shape's pressed button — else the first option a
+ * keyboard can reach. The rule /rhf's ToggleGroup adapter applied by id until 0.34.
+ */
+function groupFocusTarget(group: HTMLElement): HTMLElement | null {
+  return (
+    group.querySelector<HTMLElement>('button[tabindex="0"], button[aria-pressed="true"]') ??
+    group.querySelector<HTMLElement>("button:not(:disabled)")
+  );
+}
 
 /**
  * A line under the group saying what the CHOSEN option means — lenkbank's ToggleField
@@ -363,12 +385,22 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     disabledReasonDisplay,
     commit,
     "aria-label": ariaLabelAttr,
+    ref,
     ...restWithMode
   } = props;
   const labelId = useId();
   const errorId = useId();
   const reasonId = useId();
   const hintCaptionId = useId();
+  // The group's `focus()` is a no-op on a div with no tabindex; the caller's ref gets one
+  // that lands where the keyboard would (see `ref`).
+  const setGroup = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el) el.focus = (options?: FocusOptions) => groupFocusTarget(el)?.focus(options);
+      assignRef(ref, el);
+    },
+    [ref],
+  );
   // The lock's reason under a locked provider (with `commit`), else the group's own.
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
@@ -524,6 +556,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // radiogroup role or the disabled state by accident. `className` is destructured
       // out entirely and merged through `cn`, so it is never in here.
       {...rest}
+      ref={setGroup}
       role={pressed ? "group" : "radiogroup"}
       aria-label={ariaLabelAttr}
       aria-labelledby={labelled && ariaLabelAttr === undefined ? labelId : rest["aria-labelledby"]}

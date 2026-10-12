@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { MonitorSmartphone } from "lucide-react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
@@ -83,7 +83,7 @@ export interface SessionItem<Id extends SessionId = SessionId> {
 export type SessionsAction = "sign-out-everywhere" | "revoke";
 
 export interface SessionsSettingProps<Id extends SessionId = SessionId>
-  extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /**
    * End every session (`POST /auth/logout`, auth §6.3) — this one included. Asked
    * first; resolve once the server answered, then sign this page out: the card says

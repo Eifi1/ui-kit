@@ -1,4 +1,4 @@
-import { forwardRef, isValidElement, useCallback, useId, useLayoutEffect, useRef, useState } from "react";
+import { isValidElement, useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -8,7 +8,7 @@ import { isImeEnter } from "../lib/ime";
 import { claimEscape } from "../hooks/use-dismiss";
 import { FIELD_INVALID, FIELD_TOUCH_TEXT, TOUCH_TARGET_LARGE } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
-import { assignRef, FIELD_ERROR_CLASS, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { assignRef, FIELD_ERROR_CLASS, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
 import { hasContent } from "../lib/presence";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
@@ -642,6 +642,9 @@ interface ChipBaseProps {
    * nothing to snap.
    */
   snapEdges?: boolean;
+  /** The interactive element — the pill, or a split pill's body. A React 19 ref prop
+   *  since 0.34 (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -735,37 +738,35 @@ export type ChipProps = ChipBaseProps &
  * focus ring is drawn on the body alone, and `ref`, `id` and the ARIA props still reach
  * the body — the interactive element.
  */
-export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
-  {
-    children,
-    tone = "neutral",
-    size = "md",
-    variant = "soft",
-    shape = "pill",
-    caps = false,
-    icon: Icon,
-    selected,
-    checkbox = false,
-    href,
-    renderLink,
-    onClick,
-    onRemove,
-    removeLabel,
-    removeDisabled = false,
-    disabled = false,
-    className,
-    tabIndex,
-    role,
-    onKeyDown,
-    onFocus,
-    snapEdges = false,
-    disabledReason: ownDisabledReason,
-    disabledReasonDisplay,
-    commit,
-    ...rest
-  },
+export function Chip({
   ref,
-) {
+  children,
+  tone = "neutral",
+  size = "md",
+  variant = "soft",
+  shape = "pill",
+  caps = false,
+  icon: Icon,
+  selected,
+  checkbox = false,
+  href,
+  renderLink,
+  onClick,
+  onRemove,
+  removeLabel,
+  removeDisabled = false,
+  disabled = false,
+  className,
+  tabIndex,
+  role,
+  onKeyDown,
+  onFocus,
+  snapEdges = false,
+  disabledReason: ownDisabledReason,
+  disabledReasonDisplay,
+  commit,
+  ...rest
+}: ChipProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
   const reasonId = useId();
   const disabledReason = useCommitReason(commit, ownDisabledReason);
@@ -1027,7 +1028,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       {remove}
     </span>
   );
-});
+}
 
 /** Calls a chip's `renderLink` with the props it was given — see its call site. */
 function RenderedLink({
@@ -1086,6 +1087,10 @@ export interface ChipInputProps
   error?: ReactNode;
   labels?: Partial<ChipInputLabels>;
   className?: string;
+  /** The `<input>` the next value is typed into — the element that takes focus, which
+   *  react-hook-form's focus-on-error calls `focus()` on (API-3, refactor audit 2026-10).
+   *  Not the wrapper, which takes the rest of the props. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -1124,6 +1129,7 @@ export function ChipInput({
   labels,
   className,
   "aria-label": ariaLabelAttr,
+  ref,
   ...rest
 }: ChipInputProps) {
   // `labels` over the provider's `chipInput` over English — the same order
@@ -1141,6 +1147,8 @@ export function ChipInput({
   const [rejected, setRejected] = useState<string | null>(null);
   const [focusedChip, setFocusedChip] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The field's own handle on its input (focus after a chip goes) and the caller's `ref`.
+  const setInput = useMemo(() => mergeRefs(inputRef, ref), [ref]);
   const chipRefs = useRef<Array<HTMLElement | null>>([]);
   const id = useId();
   const listId = `${id}-list`;
@@ -1333,7 +1341,7 @@ export function ChipInput({
         </ul>
         <input
           id={`${id}-input`}
-          ref={inputRef}
+          ref={setInput}
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);

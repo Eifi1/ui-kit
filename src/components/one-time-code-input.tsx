@@ -1,5 +1,5 @@
-import { forwardRef, useId, useState } from "react";
-import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode } from "react";
+import { useId, useState } from "react";
+import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { EndHintRow, FieldCaption, useFieldError, useFieldHint } from "./field-parts";
 import { FIELD_BASE, FIELD_INVALID, FIELD_WRITABLE_LOOK, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
@@ -101,6 +101,9 @@ export interface OneTimeCodeInputProps
    * a saved login actually lands in the field.
    */
   readOnlyUntilFocus?: boolean;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 // Equal-width digits, spaced a little apart, so a code reads — and compares against the
@@ -112,155 +115,153 @@ function digitsOf(text: string): string {
   return text.normalize("NFKC").replace(/\D/g, "");
 }
 
-export const OneTimeCodeInput = forwardRef<HTMLInputElement, OneTimeCodeInputProps>(
-  function OneTimeCodeInput(props, ref) {
-    const {
-      value,
-      onChange,
-      length = 6,
-      onComplete,
-      label,
-      hint,
-      error,
-      invalid: invalidProp,
-      className,
-      inputClassName,
-      readOnlyUntilFocus = false,
-      readOnly,
-      id,
-      placeholder,
-      onFocus,
-      onPaste,
-      "aria-describedby": ariaDescribedBy,
-      "aria-invalid": ariaInvalid,
-      ...rest
-    } = props;
-    // A length below one is no code at all; a fractional one is a typo.
-    const size = Math.max(1, Math.floor(length) || 1);
-    const generatedId = useId();
-    const fieldId = id ?? generatedId;
-    // Text is a caption under the field; a FieldHint rides the label line, and is that
-    // caption at Large and on touch (§4). See `hint`. Through useFieldHint and
-    // useFieldError since 0.34, not copies of their rules (DUP-2, DUP-8).
-    const hintParts = useFieldHint(hint, ariaDescribedBy);
-    const {
-      isInvalid: invalid,
-      describedBy,
-      errorEl,
-    } = useFieldError(error, invalidProp, hintParts.describedBy, ariaInvalid);
-    // Passed at all — even as `undefined` — the field keeps its box, so the `<input>` is
-    // never re-parented (and never loses focus) when a message comes or goes. See
-    // `FieldGroup` in ui.tsx.
-    const reserve = "error" in props || "hint" in props;
-    const labelled = label !== undefined;
+export function OneTimeCodeInput(props: OneTimeCodeInputProps) {
+  const {
+    ref,
+    value,
+    onChange,
+    length = 6,
+    onComplete,
+    label,
+    hint,
+    error,
+    invalid: invalidProp,
+    className,
+    inputClassName,
+    readOnlyUntilFocus = false,
+    readOnly,
+    id,
+    placeholder,
+    onFocus,
+    onPaste,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    ...rest
+  } = props;
+  // A length below one is no code at all; a fractional one is a typo.
+  const size = Math.max(1, Math.floor(length) || 1);
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
+  // Text is a caption under the field; a FieldHint rides the label line, and is that
+  // caption at Large and on touch (§4). See `hint`. Through useFieldHint and
+  // useFieldError since 0.34, not copies of their rules (DUP-2, DUP-8).
+  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const {
+    isInvalid: invalid,
+    describedBy,
+    errorEl,
+  } = useFieldError(error, invalidProp, hintParts.describedBy, ariaInvalid);
+  // Passed at all — even as `undefined` — the field keeps its box, so the `<input>` is
+  // never re-parented (and never loses focus) when a message comes or goes. See
+  // `FieldGroup` in ui.tsx.
+  const reserve = "error" in props || "hint" in props;
+  const labelled = label !== undefined;
 
-    // Focused once = in use; the guard is down for good from then on (see the prop).
-    const [focusedOnce, setFocusedOnce] = useState(false);
-    const guarding = readOnlyUntilFocus && !focusedOnce;
+  // Focused once = in use; the guard is down for good from then on (see the prop).
+  const [focusedOnce, setFocusedOnce] = useState(false);
+  const guarding = readOnlyUntilFocus && !focusedOnce;
 
-    const commit = (next: string) => {
-      if (next === value) return;
-      onChange(next);
-      if (next.length === size) onComplete?.(next);
-    };
+  const commit = (next: string) => {
+    if (next === value) return;
+    onChange(next);
+    if (next.length === size) onComplete?.(next);
+  };
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-      const input = e.currentTarget;
-      const raw = input.value;
-      const cleaned = digitsOf(raw);
-      // Past the length: a full field refuses the digit (what `maxLength` does), a
-      // partial one keeps the first `size` — a paste longer than the room left.
-      const refused = cleaned.length > size && value.length >= size;
-      const next = refused ? value : cleaned.slice(0, size);
-      if (next !== raw) {
-        // Write the cleaned text back NOW, with the caret where the typist left it.
-        // React would otherwise put its value back after this handler, and setting an
-        // input's value moves the caret to the end — so a space typed mid-code threw
-        // the caret to the last digit. React finds the DOM already agreeing and leaves
-        // it alone.
-        const caret = input.selectionStart ?? raw.length;
-        const at = refused
-          ? Math.max(0, caret - (raw.length - value.length))
-          : Math.min(digitsOf(raw.slice(0, caret)).length, next.length);
-        input.value = next;
-        try {
-          input.setSelectionRange(at, at);
-        } catch {
-          /* not every input type has a selection; a text field does */
-        }
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const raw = input.value;
+    const cleaned = digitsOf(raw);
+    // Past the length: a full field refuses the digit (what `maxLength` does), a
+    // partial one keeps the first `size` — a paste longer than the room left.
+    const refused = cleaned.length > size && value.length >= size;
+    const next = refused ? value : cleaned.slice(0, size);
+    if (next !== raw) {
+      // Write the cleaned text back NOW, with the caret where the typist left it.
+      // React would otherwise put its value back after this handler, and setting an
+      // input's value moves the caret to the end — so a space typed mid-code threw
+      // the caret to the last digit. React finds the DOM already agreeing and leaves
+      // it alone.
+      const caret = input.selectionStart ?? raw.length;
+      const at = refused
+        ? Math.max(0, caret - (raw.length - value.length))
+        : Math.min(digitsOf(raw.slice(0, caret)).length, next.length);
+      input.value = next;
+      try {
+        input.setSelectionRange(at, at);
+      } catch {
+        /* not every input type has a selection; a text field does */
       }
-      commit(next);
-    };
+    }
+    commit(next);
+  };
 
-    const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-      onPaste?.(e);
-      // A read-only field still receives the event; it must not take the code.
-      if (e.defaultPrevented || readOnly || guarding || rest.disabled) return;
-      const pasted = digitsOf(e.clipboardData.getData("text"));
-      // Anything else — a few digits into a partial code — is an ordinary insertion,
-      // and the change handler cleans it.
-      if (pasted.length !== size) return;
-      e.preventDefault();
-      commit(pasted);
-    };
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    onPaste?.(e);
+    // A read-only field still receives the event; it must not take the code.
+    if (e.defaultPrevented || readOnly || guarding || rest.disabled) return;
+    const pasted = digitsOf(e.clipboardData.getData("text"));
+    // Anything else — a few digits into a partial code — is an ordinary insertion,
+    // and the change handler cleans it.
+    if (pasted.length !== size) return;
+    e.preventDefault();
+    commit(pasted);
+  };
 
-    const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
-      if (guarding) setFocusedOnce(true);
-      onFocus?.(e);
-    };
+  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    if (guarding) setFocusedOnce(true);
+    onFocus?.(e);
+  };
 
-    const input = (
-      <input
-        ref={ref}
-        id={labelled ? fieldId : id}
-        {...rest}
-        type="text"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        // The numeric keypad's older cue, for the browsers that predate `inputMode`.
-        // The value is digits only, so it can never fail the pattern.
-        pattern="[0-9]*"
-        // A labelled field's placeholder is a single space: it drives the floating
-        // label's `placeholder-shown` trick. Unlabelled, the caller's ("000000") shows.
-        placeholder={labelled ? " " : placeholder}
-        value={value}
-        readOnly={readOnly || guarding}
-        onChange={handleChange}
-        onPaste={handlePaste}
-        onFocus={handleFocus}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        className={cn(
-          labelled ? FLOATING_INPUT_CLASS : FIELD_BASE,
-          CODE_TYPE,
-          // Read-only for the guard's sake only: keep the editable look. A caller's
-          // own `readOnly` keeps FIELD_BASE's settled grey, as everywhere else.
-          guarding && !readOnly && FIELD_WRITABLE_LOOK,
-          !labelled && className,
-          inputClassName,
-          invalid && FIELD_INVALID,
-        )}
-      />
-    );
+  const input = (
+    <input
+      ref={ref}
+      id={labelled ? fieldId : id}
+      {...rest}
+      type="text"
+      inputMode="numeric"
+      autoComplete="one-time-code"
+      // The numeric keypad's older cue, for the browsers that predate `inputMode`.
+      // The value is digits only, so it can never fail the pattern.
+      pattern="[0-9]*"
+      // A labelled field's placeholder is a single space: it drives the floating
+      // label's `placeholder-shown` trick. Unlabelled, the caller's ("000000") shows.
+      placeholder={labelled ? " " : placeholder}
+      value={value}
+      readOnly={readOnly || guarding}
+      onChange={handleChange}
+      onPaste={handlePaste}
+      onFocus={handleFocus}
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
+      className={cn(
+        labelled ? FLOATING_INPUT_CLASS : FIELD_BASE,
+        CODE_TYPE,
+        // Read-only for the guard's sake only: keep the editable look. A caller's
+        // own `readOnly` keeps FIELD_BASE's settled grey, as everywhere else.
+        guarding && !readOnly && FIELD_WRITABLE_LOOK,
+        !labelled && className,
+        inputClassName,
+        invalid && FIELD_INVALID,
+      )}
+    />
+  );
 
-    const field: ReactNode = labelled ? (
-      <FloatingField className={className} htmlFor={fieldId} label={label} hint={hintParts.labelHint}>
-        {input}
-      </FloatingField>
-    ) : (
-      // No label line to ride: a "?" goes at the field's end edge, outside the box —
-      // where an unlabelled Select puts it.
-      <EndHintRow hint={hintParts.labelHint}>{input}</EndHintRow>
-    );
+  const field: ReactNode = labelled ? (
+    <FloatingField className={className} htmlFor={fieldId} label={label} hint={hintParts.labelHint}>
+      {input}
+    </FloatingField>
+  ) : (
+    // No label line to ride: a "?" goes at the field's end edge, outside the box —
+    // where an unlabelled Select puts it.
+    <EndHintRow hint={hintParts.labelHint}>{input}</EndHintRow>
+  );
 
-    if (hintParts.captionText === undefined && errorEl === null && !reserve) return field;
-    return (
-      <div>
-        {field}
-        <FieldCaption parts={hintParts} />
-        {errorEl}
-      </div>
-    );
-  },
-);
-OneTimeCodeInput.displayName = "OneTimeCodeInput";
+  if (hintParts.captionText === undefined && errorEl === null && !reserve) return field;
+  return (
+    <div>
+      {field}
+      <FieldCaption parts={hintParts} />
+      {errorEl}
+    </div>
+  );
+}

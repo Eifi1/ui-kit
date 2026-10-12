@@ -1,5 +1,5 @@
-import { forwardRef, useId } from "react";
-import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
+import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useFieldMessages } from "./field-parts";
 
@@ -177,6 +177,9 @@ export interface SliderProps
   marks?: ReadonlyArray<number | SliderMark>;
   /** Classes for the `<input>`. `className` styles the outer wrapper. */
   inputClassName?: string;
+  /** The `<input type="range">`. A React 19 ref prop since 0.34 (MOD-4, refactor audit
+   *  2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -186,29 +189,27 @@ export interface SliderProps
  * Every other prop reaches the `<input>` — `name`, `id`, `aria-*`, `data-*`, `onBlur`,
  * `onPointerUp` for commit-on-release — and `disabled` also fades the label line.
  */
-export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
-  {
-    value,
-    onChange,
-    min,
-    max,
-    step,
-    scale = "linear",
-    zeroStop = true,
-    formatValue,
-    label,
-    hint,
-    readout,
-    marks,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    style,
-    ...rest
-  },
+export function Slider({
   ref,
-) {
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  scale = "linear",
+  zeroStop = true,
+  formatValue,
+  label,
+  hint,
+  readout,
+  marks,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  style,
+  ...rest
+}: SliderProps) {
   const generated = useId();
   const inputId = id ?? generated;
   const log = scale === "log" && min > 0 && max > min;
@@ -338,5 +339,4 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
       {messages.below}
     </div>
   );
-});
-Slider.displayName = "Slider";
+}

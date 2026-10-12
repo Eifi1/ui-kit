@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -80,7 +80,7 @@ const DAY_NAME_FORMAT: Intl.DateTimeFormatOptions = {
  * passes through to the root, so a tour anchor or a test id can find the calendar —
  * before this, a closed prop list dropped both (audit §api-design).
  */
-export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
+export interface MiniCalendarProps extends Omit<ComponentPropsWithRef<"div">, "onSelect"> {
   /** The selection's start as "YYYY-MM-DD"; `""` (the default) for none. */
   from?: string;
   /** The selection's end; `""` (the default) for none. */

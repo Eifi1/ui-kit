@@ -1,5 +1,5 @@
 import { isValidElement, useEffect, useMemo, useRef } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -320,6 +320,10 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   stack?: FormActionsStack;
   /** Extra actions, placed before Cancel. */
   children?: ReactNode;
+  /** The row, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with its own ref, which `submitShortcut` finds its form from. It rode the
+   *  rest props before, after the row's own, and a caller's ref took the shortcut's. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 
@@ -381,6 +385,7 @@ export function FormActions({
   children,
   className,
   style,
+  ref,
   ...rest
 }: FormActionsProps) {
   const phone = usePhoneLayout();
@@ -394,6 +399,7 @@ export function FormActions({
   // `COMMIT_EXCEPT_BILLING` form's shortcut live too.
   const lock = useWriteLock(commit);
   const rootRef = useRef<HTMLDivElement>(null);
+  const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
   const saveRef = useRef<HTMLButtonElement | null>(null);
   // The caller's own `submitProps.ref` still gets the element.
   const callerSaveRef = submitProps?.ref;
@@ -464,7 +470,7 @@ export function FormActions({
 
   return (
     <div
-      ref={rootRef}
+      ref={setRoot}
       data-slot="form-actions"
       data-placement={placement}
       data-sticky-within={placement === "sticky" ? stickyWithin : undefined}

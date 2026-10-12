@@ -1,11 +1,5 @@
-import { Fragment, forwardRef, useId, useRef, useState } from "react";
-import type {
-  ComponentPropsWithoutRef,
-  ForwardedRef,
-  ReactElement,
-  ReactNode,
-  RefAttributes,
-} from "react";
+import { Fragment, useId, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
@@ -171,13 +165,45 @@ export interface AutocompleteProps<V extends string | number = string>
   /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
    *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
   disabledReasonDisplay?: DisabledReasonDisplay;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10): it was
+   *  `forwardRef`, cast back to a generic function, with a `displayName` line beside it. */
+  ref?: Ref<HTMLInputElement>;
 }
 
-function AutocompleteInner<V extends string | number = string>(
-  props: AutocompleteProps<V>,
-  ref: ForwardedRef<HTMLInputElement>,
-) {
+/**
+ * An inline, async-capable text field with a suggestion list under it — the
+ * WAI-ARIA APG "editable combobox with list autocomplete".
+ *
+ * Two jobs, one control:
+ *  - **free text** (kastlan's address field): the text is the value, the list only
+ *    offers completions, and taking one fills the field (`fillOnSelect`, default);
+ *  - **search-then-act** (keksdose's address search): the text is a query, taking a
+ *    row calls `onSelect` and nothing is held (`fillOnSelect={false}`).
+ *
+ * How it differs from its siblings: {@link Combobox} is free text over a STATIC
+ * string pool and opens on focus; {@link EntityCombobox} is a trigger holding an id.
+ * This one keeps no value of its own, never resets the text, asks nothing below
+ * `minChars`, and reports a failed lookup instead of showing stale rows.
+ *
+ * Focus never leaves the `<input>`: `aria-activedescendant` names the highlighted
+ * row, `aria-controls` the list, and a polite live region says what the list now
+ * holds. Keyboard: ↓/↑ move (↓ opens) over every row but a `disabled` one, Enter
+ * takes the highlighted row (with none,
+ * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
+ * with the caret. An Escape that closes an open list is consumed and never reaches the
+ * caller; with the list closed it does. For every other key a caller's `onKeyDown`
+ * runs first and may `preventDefault()` to
+ * keep a key for itself.
+ *
+ * The list is portalled and anchored under the field on every screen size: the
+ * field already carries the keyboard, and `useAnchoredPanel` keeps the list clear
+ * of it on a phone. There is no full-screen sheet as {@link Combobox} has.
+ *
+ * Generic over the option value (`ComboOption<V>`); the ref is the `<input>`'s.
+ */
+export function Autocomplete<V extends string | number = string>(props: AutocompleteProps<V>) {
   const {
+    ref,
     value,
     onChange,
     options,
@@ -597,41 +623,3 @@ function AutocompleteInner<V extends string | number = string>(
     </div>
   );
 }
-
-const AutocompleteBase = forwardRef(AutocompleteInner);
-AutocompleteBase.displayName = "Autocomplete";
-
-/**
- * An inline, async-capable text field with a suggestion list under it — the
- * WAI-ARIA APG "editable combobox with list autocomplete".
- *
- * Two jobs, one control:
- *  - **free text** (kastlan's address field): the text is the value, the list only
- *    offers completions, and taking one fills the field (`fillOnSelect`, default);
- *  - **search-then-act** (keksdose's address search): the text is a query, taking a
- *    row calls `onSelect` and nothing is held (`fillOnSelect={false}`).
- *
- * How it differs from its siblings: {@link Combobox} is free text over a STATIC
- * string pool and opens on focus; {@link EntityCombobox} is a trigger holding an id.
- * This one keeps no value of its own, never resets the text, asks nothing below
- * `minChars`, and reports a failed lookup instead of showing stale rows.
- *
- * Focus never leaves the `<input>`: `aria-activedescendant` names the highlighted
- * row, `aria-controls` the list, and a polite live region says what the list now
- * holds. Keyboard: ↓/↑ move (↓ opens) over every row but a `disabled` one, Enter
- * takes the highlighted row (with none,
- * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
- * with the caret. An Escape that closes an open list is consumed and never reaches the
- * caller; with the list closed it does. For every other key a caller's `onKeyDown`
- * runs first and may `preventDefault()` to
- * keep a key for itself.
- *
- * The list is portalled and anchored under the field on every screen size: the
- * field already carries the keyboard, and `useAnchoredPanel` keeps the list clear
- * of it on a phone. There is no full-screen sheet as {@link Combobox} has.
-
- * Generic over the option value (`ComboOption<V>`); the ref is the `<input>`'s.
- */
-export const Autocomplete = AutocompleteBase as <V extends string | number = string>(
-  props: AutocompleteProps<V> & RefAttributes<HTMLInputElement>,
-) => ReactElement | null;

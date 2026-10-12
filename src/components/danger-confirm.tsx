@@ -1,5 +1,5 @@
-import { Children, forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
-import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import { Children, useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ChangeEvent, ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -129,29 +129,35 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
  *   busy={isSubmitting} {...register("password")} />
  * ```
  */
-export const CurrentPasswordInput = forwardRef<HTMLInputElement, CurrentPasswordInputProps>(
-  function CurrentPasswordInput({ label, onValueChange, onChange, busy, readOnly, labels: labelsProp, ...rest }, ref) {
-    const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
-    const namedOtherwise = rest["aria-label"] !== undefined || rest["aria-labelledby"] !== undefined;
-    return (
-      <Input
-        {...rest}
-        ref={ref}
-        // After the spread: a props object spread at the field must not turn it into a
-        // text field, or into one the password manager offers a new password for.
-        type="password"
-        autoComplete="current-password"
-        label={label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined}
-        readOnly={Boolean(busy) || readOnly}
-        onChange={(e) => {
-          onChange?.(e);
-          onValueChange?.(e.target.value);
-        }}
-      />
-    );
-  },
-);
-CurrentPasswordInput.displayName = "CurrentPasswordInput";
+export function CurrentPasswordInput({
+  label,
+  onValueChange,
+  onChange,
+  busy,
+  readOnly,
+  labels: labelsProp,
+  ...rest
+}: CurrentPasswordInputProps) {
+  const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
+  const namedOtherwise = rest["aria-label"] !== undefined || rest["aria-labelledby"] !== undefined;
+  return (
+    <Input
+      // `ref` (the `<input>`) rides along: a React 19 ref prop since 0.34 (MOD-4, refactor
+      // audit 2026-10), where this was `forwardRef`.
+      {...rest}
+      // After the spread: a props object spread at the field must not turn it into a
+      // text field, or into one the password manager offers a new password for.
+      type="password"
+      autoComplete="current-password"
+      label={label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined}
+      readOnly={Boolean(busy) || readOnly}
+      onChange={(e) => {
+        onChange?.(e);
+        onValueChange?.(e.target.value);
+      }}
+    />
+  );
+}
 
 /** The words {@link TypedConfirmField} says on its own behalf — the `dangerConfirm`
  *  namespace's `phrase` and `phrasePlaceholder`, shared with DangerConfirm's own field,
@@ -216,26 +222,24 @@ export interface TypedConfirmFieldProps
  * {ok && <KeyDoorsForm … />}
  * ```
  */
-export const TypedConfirmField = forwardRef<HTMLInputElement, TypedConfirmFieldProps>(function TypedConfirmField(
-  {
-    target,
-    match = "trim",
-    value: valueProp,
-    defaultValue = "",
-    onValueChange,
-    onMatchedChange,
-    onChange,
-    label: labelProp,
-    placeholder: placeholderProp,
-    busy,
-    readOnly,
-    labels: labelsProp,
-    id,
-    className,
-    ...rest
-  },
+export function TypedConfirmField({
   ref,
-) {
+  target,
+  match = "trim",
+  value: valueProp,
+  defaultValue = "",
+  onValueChange,
+  onMatchedChange,
+  onChange,
+  label: labelProp,
+  placeholder: placeholderProp,
+  busy,
+  readOnly,
+  labels: labelsProp,
+  id,
+  className,
+  ...rest
+}: TypedConfirmFieldProps) {
   const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
   const [own, setOwn] = useState(defaultValue);
   const value = valueProp ?? own;
@@ -287,8 +291,7 @@ export const TypedConfirmField = forwardRef<HTMLInputElement, TypedConfirmFieldP
     );
   }
   return <Input {...fieldProps} label={label} className={className} />;
-});
-TypedConfirmField.displayName = "TypedConfirmField";
+}
 
 /**
  * Every string the tile renders — the `dangerConfirm` namespace of
@@ -374,7 +377,7 @@ export interface DangerConsequence {
   severe?: boolean;
 }
 
-export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "onChange"> {
   /**
    * Runs the action, with the entered password when `requirePassword` is on.
    *

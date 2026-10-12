@@ -1,6 +1,6 @@
-import { createContext, forwardRef, useContext, useId, useLayoutEffect, useRef, useState } from "react";
+import { createContext, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, Plus, X } from "lucide-react";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ChangeEvent, ComponentPropsWithoutRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ChangeEvent, ComponentPropsWithoutRef, ComponentPropsWithRef, CSSProperties, InputHTMLAttributes, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
@@ -20,6 +20,7 @@ import {
   FieldCaption,
   LockedReason,
   mergeDescribedBy,
+  mergeRefs,
   type DisabledReasonDisplay,
   useFieldError,
   useFieldHint,
@@ -1243,7 +1244,6 @@ export function IconButton(props: IconButtonProps | IconButtonLinkProps): ReactE
   if (props.href !== undefined) return <IconButtonLink {...(props as IconButtonLinkProps)} />;
   return <IconButtonElement {...(props as IconButtonProps)} />;
 }
-IconButton.displayName = "IconButton";
 
 function IconButtonLink({
   href,
@@ -1650,7 +1650,7 @@ export const FIELD_TRIGGER = cn(
 /** An alias rather than an interface: the chevron adds nothing of its own to an
  *  `<svg>`'s props, and an interface declaring no members is the same type wearing a
  *  name that suggests otherwise. */
-export type FieldChevronProps = Omit<ComponentPropsWithoutRef<"svg">, "children">;
+export type FieldChevronProps = Omit<ComponentPropsWithRef<"svg">, "children">;
 
 /** The dropdown chevron, shared by the native {@link Select} and every custom
  * {@link FIELD_TRIGGER} control.
@@ -1734,7 +1734,7 @@ const STATIC_ROW_CLASS = cn("pointer-events-none absolute inset-x-3 top-1 flex i
  * dropdown controls that need a ref + menu keep their own wrapper but the same label
  * (via {@link FieldLabel}) and trigger ({@link FIELD_TRIGGER}) styles.
  */
-export interface FloatingFieldProps extends ComponentPropsWithoutRef<"div"> {
+export interface FloatingFieldProps extends ComponentPropsWithRef<"div"> {
   htmlFor?: string;
   label?: ReactNode;
   staticLabel?: boolean;
@@ -1818,7 +1818,7 @@ export function FloatingField({
   );
 }
 
-export interface LabelProps extends ComponentPropsWithoutRef<"label"> {
+export interface LabelProps extends ComponentPropsWithRef<"label"> {
   /** Draw the required mark after the text. The mark is `aria-hidden`: what a
    *  screen reader hears is the control's own `required` / `aria-required`, which
    *  the caller still sets — a "star" read out as the last word of every name is
@@ -2180,6 +2180,10 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
    * `commit`. No provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10): as
+   *  `forwardRef`, with a `displayName` line beside it, this module could not drop an
+   *  unused component, and `{ Spinner }` brought Input, Select and Textarea along. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /** What a locked {@link Input} swallows of a key: Enter, which would submit the form. */
@@ -2199,8 +2203,9 @@ function useCharacterCountLabels(prop: Partial<CharacterCountLabels> | undefined
   return useKitLabels("characterCount", DEFAULT_CHARACTER_COUNT_LABELS, prop);
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
+export function Input(props: InputProps) {
   const {
+    ref,
     className,
     inputClassName,
     label,
@@ -2432,8 +2437,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
       )}
     </FieldGroup>
   );
-});
-Input.displayName = "Input";
+}
 
 export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   label?: ReactNode;
@@ -2497,6 +2501,8 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    * {@link CommitScope} since 0.33.
    */
   commit?: CommitScope;
+  /** The `<select>`. A React 19 ref prop since 0.34 — see {@link InputProps.ref}. */
+  ref?: Ref<HTMLSelectElement>;
 }
 
 // The compact select: the field's colours, a toolbar button's height. `py-0` and a
@@ -2512,8 +2518,9 @@ const LOCKED_SELECT_KEYS = new Set(["Tab", "Escape", "Shift"]);
  *  (the `:disabled` variants cannot match it). */
 const FIELD_LOCKED = "cursor-not-allowed bg-surface-2 text-muted";
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
+export function Select(props: SelectProps) {
   const {
+    ref,
     className,
     label,
     id,
@@ -2711,8 +2718,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       )}
     </FieldGroup>
   );
-});
-Select.displayName = "Select";
+}
 
 /**
  * The lower edge of {@link TEXTAREA_LABEL_STRIP} (0.25, Kurvenschmiede).
@@ -2932,10 +2938,12 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   showCount?: boolean;
   /** The counter's words. See {@link CharacterCountLabels}. */
   countLabels?: Partial<CharacterCountLabels>;
+  /** The `<textarea>`. A React 19 ref prop since 0.34 — see {@link InputProps.ref}. */
+  ref?: Ref<HTMLTextAreaElement>;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
-  const { className, label, id, placeholder, invalid, error, hint, showCount, countLabels, ...rest } = props;
+export function Textarea(props: TextareaProps) {
+  const { ref, className, label, id, placeholder, invalid, error, hint, showCount, countLabels, ...rest } = props;
   // See Input's `reserve`.
   const reserve = "error" in props || "hint" in props || "showCount" in props;
   const generated = useId();
@@ -3015,10 +3023,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       </FloatingField>
     </FieldGroup>
   );
-});
-Textarea.displayName = "Textarea";
+}
 
-export interface CardProps extends ComponentPropsWithoutRef<"div"> {
+/**
+ * A `div`'s props, `ref` included since 0.34 — and the same for every Card part (API-2,
+ * refactor audit 2026-10, Skeleton's 0.33.1 change). They always reached the element;
+ * `ComponentPropsWithoutRef` only kept `ref` out of the type, so keksdose wrapped a Card in
+ * a `<div ref>` to scroll it into view (admin-actions-panel).
+ */
+export interface CardProps extends ComponentPropsWithRef<"div"> {
   children: ReactNode;
   /**
    * When true, drop the card chrome (border, rounded corners, shadow) on mobile so the
@@ -3249,7 +3262,7 @@ export function Card({
  *  `data-slot` and a padding rhythm — so most names are aliases rather than an empty
  *  interface pretending to be more. They exist so a consumer's own wrapper can say
  *  `CardHeaderProps` instead of `ComponentProps<typeof CardHeader>`. */
-export interface CardHeaderProps extends ComponentPropsWithoutRef<"div"> {
+export interface CardHeaderProps extends ComponentPropsWithRef<"div"> {
   /**
    * Below the `sm` breakpoint, put the {@link CardAction} UNDER the title and
    * description instead of beside them. For an action that is wider than an icon —
@@ -3276,11 +3289,13 @@ export interface CardTitleProps extends ComponentPropsWithoutRef<"div"> {
    * weight), so only the outline changes.
    */
   as?: CardTitleLevel;
+  /** The title's element — a `div` or the heading `as` names, hence `HTMLElement`. */
+  ref?: Ref<HTMLElement>;
 }
-export type CardDescriptionProps = ComponentPropsWithoutRef<"div">;
-export type CardActionProps = ComponentPropsWithoutRef<"div">;
-export type CardContentProps = ComponentPropsWithoutRef<"div">;
-export type CardFooterProps = ComponentPropsWithoutRef<"div">;
+export type CardDescriptionProps = ComponentPropsWithRef<"div">;
+export type CardActionProps = ComponentPropsWithRef<"div">;
+export type CardContentProps = ComponentPropsWithRef<"div">;
+export type CardFooterProps = ComponentPropsWithRef<"div">;
 
 /** {@link CardHeaderProps.stackAction}: one column under `sm`, and the action back into
  *  the flow (DOM order, so after the description when it is written after it), at the
@@ -3324,10 +3339,11 @@ export function CardHeader({ className, stackAction, ...props }: CardHeaderProps
   );
 }
 
-export function CardTitle({ className, as: Tag = "div", ...props }: CardTitleProps) {
+export function CardTitle({ className, as: Tag = "div", ref, ...props }: CardTitleProps) {
   const compact = useContext(CardDensityContext) === "compact";
   return (
     <Tag
+      ref={ref as Ref<HTMLDivElement & HTMLHeadingElement>}
       data-slot="card-title"
       // Compact is `leading-snug`, not `leading-none`: there the title sits on a
       // 12px description `gap-0.5` below, and a line box exactly the cap height left
@@ -3389,7 +3405,7 @@ export function CardFooter({ className, ...props }: CardFooterProps) {
 
 /** A `<span>`'s props plus the words a reader hears — see {@link CardHeaderProps}.
  *  The ring is drawn with a border, so there is nothing inside it to put children in. */
-export interface SpinnerProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface SpinnerProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   /**
    * What the spinner means, for a screen reader. Default: `common.loading` from the
    * {@link UiKitProvider}, else "Loading…".
@@ -3465,7 +3481,7 @@ export function Spinner({ className, label, showLabel, labelPosition = "end", ..
   );
 }
 
-export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface EmptyStateProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** The box renders `title` and `hint` in its own two-line rhythm, which is what makes
    *  every empty state in three apps look like the same thing — so there is no
    *  `children` slot to put arbitrary content in. The two slots below are the only
@@ -3774,6 +3790,10 @@ export interface TabsProps<T extends string>
    * the same breakpoint (`md:grid-cols-[14rem_1fr]`).
    */
   orientation?: "horizontal" | "vertical";
+  /** The `role="tablist"` strip, where the rest of the props go (0.34, API-2, refactor
+   *  audit 2026-10). Merged with the strip's own ref, which scrolls the open tab into
+   *  view and measures the fade, so neither loses the element. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 // The two shapes are written out as whole strings rather than as one base plus a
@@ -3857,6 +3877,7 @@ export function Tabs<T extends string>({
   busy = false,
   orientation = "horizontal",
   "aria-label": ariaLabel,
+  ref,
   ...rest
 }: TabsProps<T>) {
   const text = useKitLabels("tabs", DEFAULT_TABS_LABELS, labels);
@@ -3864,6 +3885,7 @@ export function Tabs<T extends string>({
   const phone = usePhoneLayout();
   const vertical = orientation === "vertical" && !phone;
   const stripRef = useRef<HTMLDivElement>(null);
+  const setStrip = useMemo(() => mergeRefs(stripRef, ref), [ref]);
   const fade = useStripFade(stripRef);
   // The OPEN tab is scrolled into the strip whenever it changes — on mount too, for a
   // deep link to the seventh report. A selection behind the cut edge was the worst
@@ -3971,7 +3993,7 @@ export function Tabs<T extends string>({
       // strip, but a `role` or an `aria-label` arriving through a spread props object
       // must not be able to unmake the tablist the tabs below are registered against.
       {...rest}
-      ref={stripRef}
+      ref={setStrip}
       role="tablist"
       // Names the GROUP — every tab carries its own text — so a strip under a visible
       // heading that already says it can leave it unset.

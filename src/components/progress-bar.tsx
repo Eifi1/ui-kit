@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { toneTextClass } from "./signed-amount";
@@ -204,6 +204,10 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    */
   sensitive?: boolean;
   labels?: Partial<ProgressBarLabels>;
+  /** The element the rest of the props go on — the `progressbar` (or `meter`) itself,
+   *  the box round the figure for an unlimited one — a `div` or a `span` as `as` says,
+   *  hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -247,12 +251,15 @@ export function ProgressBar({
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
+  ref,
   ...rest
 }: ProgressBarProps) {
   // `as="span"`: the same bar from phrasing elements only, so it is valid inside a
   // <button> or <a> — ListItem's `content` puts a budget bar inside the row's target
   // (keksdose P2). Every span is made a block except those already laid out as flex.
   const Tag = as;
+  // Either element's ref, as List types its `ul`/`ol` one.
+  const tagRef = ref as Ref<HTMLDivElement & HTMLSpanElement> | undefined;
   const inlineClass = as === "span" ? "block [&_span:not(.flex):not(.inline-flex)]:block" : undefined;
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const text = useKitLabels("progressBar", DEFAULT_PROGRESS_BAR_LABELS, labels);
@@ -277,7 +284,7 @@ export function ProgressBar({
           ? formatValue(value, Infinity, min)
           : new Intl.NumberFormat(kitLocale).format(value);
     return (
-      <Tag {...rest} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
+      <Tag {...rest} ref={tagRef} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
         <Tag className="flex items-baseline gap-2 text-sm">
           {label != null && (
             <span id={labelId} className="min-w-0 text-secondary">
@@ -378,6 +385,7 @@ export function ProgressBar({
       )}
       <Tag
         {...rest}
+        ref={tagRef}
         role={meter ? "meter" : "progressbar"}
         aria-label={name}
         aria-labelledby={labelledBy}

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { Spinner } from "./ui";
@@ -8,7 +8,7 @@ export type LoadingStateSize = "sm" | "md" | "lg";
 /** Whether {@link LoadingStateProps.label} shows, or is only read out. */
 export type LoadingStateLabelVisibility = "visible" | "sr-only";
 
-export interface LoadingStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
+export interface LoadingStateProps extends Omit<ComponentPropsWithRef<"div">, "children" | "role"> {
   /** The visible words under the spinner, and what the status region announces.
    *  Default: `common.loading` ("Loading…"). `null` (or `""`) hides the words — the
    *  same as `labelVisibility="sr-only"` with the default text, so the region still

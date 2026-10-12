@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
@@ -82,7 +82,7 @@ export interface EmailChangeValues {
  *  argument. */
 export type EmailChangeAction = "request" | "resend" | "cancel";
 
-export interface EmailChangeSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onSubmit"> {
+export interface EmailChangeSettingProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onSubmit"> {
   /** The account's address now. */
   currentEmail: string;
   /**

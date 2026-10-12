@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { anchoredInline, useAnchoredPanel, viewportSize } from "../hooks/use-anchored-panel";
 import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
@@ -10,6 +10,7 @@ import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
+import { mergeRefs } from "./field-parts";
 
 /** The panel's accessible name. A `role="dialog"` with no name announces as "dialog"
  *  and nothing else, which is worse than the unlabelled div it replaced — so it is a
@@ -50,6 +51,10 @@ export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   panelId?: string;
   /** Extra classes for the PANEL. The trigger is the caller's own element. */
   className?: string;
+  /** The PANEL, while it is open — where the rest of the props go (0.34, API-2, refactor
+   *  audit 2026-10). Merged with the panel's own ref (focus trap, outside click), so
+   *  neither loses it. The trigger is the caller's own element, ref and all. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /** 288 px at Normal, in rem so it follows the text size (§3.2). */
@@ -106,10 +111,12 @@ export function Popover({
   style,
   "aria-label": ariaLabel,
   onKeyDown: onKeyDownProp,
+  ref,
   ...rest
 }: PopoverProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const setPanel = useMemo(() => mergeRefs(panelRef, ref), [ref]);
   const [open, setOpen] = useState(false);
   // The trigger's reading direction, read when it is pressed. The panel is portalled to
   // <body>, out of any `dir="rtl"` subtree the trigger sits in, so without carrying it
@@ -192,7 +199,7 @@ export function Popover({
             // a popover, and a caller reaching for a `data-tour` anchor must not be able
             // to remove one of them by accident.
             {...rest}
-            ref={panelRef}
+            ref={setPanel}
             role="dialog"
             id={panelId}
             // The caller's own `aria-label` wins over {@link PopoverLabels.panel}, which

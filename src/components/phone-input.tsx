@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -134,27 +134,25 @@ export interface PhoneInputProps extends Omit<InputProps, "type" | "value" | "de
  * the number with `aria-describedby`. The select is named by `labels.countryCode`, and
  * the pair is a group named by a string `label`.
  */
-export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function PhoneInput(
-  {
-    value,
-    onValueChange,
-    onChange,
-    onBlur,
-    defaultCountry = "CH",
-    countries = PHONE_COUNTRIES,
-    labels,
-    className,
-    inputClassName,
-    label,
-    hint,
-    error,
-    invalid,
-    disabled,
-    "aria-describedby": ariaDescribedBy,
-    ...rest
-  },
+export function PhoneInput({
   ref,
-) {
+  value,
+  onValueChange,
+  onChange,
+  onBlur,
+  defaultCountry = "CH",
+  countries = PHONE_COUNTRIES,
+  labels,
+  className,
+  inputClassName,
+  label,
+  hint,
+  error,
+  invalid,
+  disabled,
+  "aria-describedby": ariaDescribedBy,
+  ...rest
+}: PhoneInputProps) {
   const text = usePhoneInputLabels(labels);
   const [country, setCountry] = useState<PhoneCountry>(() => countryOf(value) ?? defaultCountry);
   // What was typed, shown for as long as it still reads as the value (AmountInput's
@@ -287,5 +285,4 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
       {messages.below}
     </div>
   );
-});
-PhoneInput.displayName = "PhoneInput";
+}

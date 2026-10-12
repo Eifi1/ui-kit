@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { FieldHint } from "./ui";
@@ -74,7 +74,7 @@ const CARD_GAP: Record<DescriptionListDensity, { cls: string; len: string }> = {
   tight: { cls: "gap-1", len: "0.25rem" },
 };
 
-export interface DescriptionListProps extends ComponentPropsWithoutRef<"dl"> {
+export interface DescriptionListProps extends ComponentPropsWithRef<"dl"> {
   /**
    * `rows` (default): term beside detail, a two-column list that stacks the pair
    * when the LIST is narrower than 24rem — a container query, so a detail panel
@@ -210,7 +210,7 @@ export function DescriptionList({
   );
 }
 
-export interface DescriptionItemProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DescriptionItemProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** What is described: "Opened", "IBAN", "Net rent". */
   term: ReactNode;
   /** The description itself. */

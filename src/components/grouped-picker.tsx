@@ -1,9 +1,10 @@
-import { useId, useMemo } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useCallback, useId, useMemo } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
 import { foldForSearch } from "../lib/text-match";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
+import { assignRef } from "./field-parts";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
 export interface PickerGroup {
@@ -33,6 +34,10 @@ export interface GroupedPickerProps extends Omit<ComponentPropsWithoutRef<"div">
   /** The filter box's prompt, and its accessible name. Default: `combobox.search` from
    *  the {@link UiKitProvider}, else "Search". */
   filterPlaceholder?: string;
+  /** The TRIGGER — the focusable `<button>` — as on every picker of the kit (MultiSelect,
+   *  CountrySelect, CurrencySelect), not the wrapper the rest of the props go on (0.34,
+   *  API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /** An item's value in the list: the group's key and the item's, which together are
@@ -60,6 +65,7 @@ export function GroupedPicker({
   "aria-label": ariaLabel,
   filterPlaceholder,
   className,
+  ref,
   ...rest
 }: GroupedPickerProps) {
   // `filter: false`: the filter below keeps a whole group when its name matches, so the
@@ -69,6 +75,15 @@ export function GroupedPicker({
   // `useDropdown`.
   const core = useComboboxCore<string>({ filter: false, backCloses: true });
   const { open, setOpen, triggerRef, closeToTrigger, query } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both, as on MultiSelect.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
   const comboText = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS);
 
   // Folded as every kit list folds (DUP-5): the locale's case (the Turkish "İ" that
@@ -115,7 +130,7 @@ export function GroupedPicker({
     // incident behind it, cannot be clobbered from outside.
     <div {...rest} className={cn("relative", className)}>
       <button
-        ref={triggerRef}
+        ref={setTrigger}
         type="button"
         // A closed choice that expands into the list below — the role every trigger
         // picker in the kit wears. It said `aria-haspopup="dialog"` over a panel that was

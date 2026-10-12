@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, ReactNode } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -141,10 +141,21 @@ export interface IbanInputProps extends Omit<InputProps, "type" | "value" | "def
  * an invalid IBAN checks {@link isValidIban} / {@link ibanProblem} itself — the field
  * shows the problem but does not own the submit.
  */
-export const IbanInput = forwardRef<HTMLInputElement, IbanInputProps>(function IbanInput(
-  { value, onValueChange, onChange, onFocus, onBlur, kind = "any", labels, error, inputClassName, ...rest },
+export function IbanInput({
+  // The `<input>` (InputProps'): a React 19 ref prop since 0.34 (MOD-4, refactor audit
+  // 2026-10), where this was `forwardRef`.
   ref,
-) {
+  value,
+  onValueChange,
+  onChange,
+  onFocus,
+  onBlur,
+  kind = "any",
+  labels,
+  error,
+  inputClassName,
+  ...rest
+}: IbanInputProps) {
   const text = useIbanInputLabels(labels);
   const compact = compactIban(value);
   const shown = formatIban(compact);
@@ -222,5 +233,4 @@ export const IbanInput = forwardRef<HTMLInputElement, IbanInputProps>(function I
       inputClassName={cn("tabular-nums", inputClassName)}
     />
   );
-});
-IbanInput.displayName = "IbanInput";
+}

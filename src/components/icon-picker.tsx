@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentType, ReactNode } from "react";
+import type { ComponentPropsWithRef, ComponentType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { SearchField } from "./search-field";
@@ -52,7 +52,7 @@ export interface IconOption<T extends string> {
 }
 
 export interface IconPickerProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue"> {
   options: IconOption<T>[];
   /** The chosen icon, or `null` for none. */
   value: T | null;

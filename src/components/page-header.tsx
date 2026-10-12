@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentPropsWithRef, ElementType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { SECTION_LABEL_CLASS } from "./text";
 
@@ -64,7 +64,7 @@ const ROW_ALIGN: Record<PageHeaderMobileLayout, Record<PageHeaderActionsAlign, s
   inline: { start: "items-start", center: "items-center", end: "items-end" },
 };
 
-export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface PageHeaderProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   title: ReactNode;
   /** A sentence under the title. */
   description?: ReactNode;

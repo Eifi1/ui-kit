@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
@@ -82,7 +82,7 @@ export interface RegisterLabels {
 // Defined in ./register-form-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_REGISTER_LABELS };
 
-export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children"> {
+export interface RegisterFormProps extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children"> {
   /**
    * The form was submitted with everything filled in. Send it (`POST /auth/register`,
    * §4.2) and resolve once the user is signed in, or reject with the client's error:

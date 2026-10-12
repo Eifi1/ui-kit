@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
@@ -11,7 +11,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
-import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
+import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages } from "./field-parts";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**
@@ -160,6 +160,13 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   headingLevel?: 1 | 2 | 3 | 4 | 5 | 6 | false;
   /** `variant="stepper"`: draw the Today button. Default `true`. */
   showToday?: boolean;
+  /**
+   * The TRIGGER — the field's button, or the stepper's heading button — as a React 19
+   * ref prop (0.34, API-3, refactor audit 2026-10). The picker took none, so
+   * react-hook-form's focus-on-error reached it only through /rhf's id lookup. Not the
+   * wrapper, which takes the rest of the props.
+   */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 // ── Month keys ────────────────────────────────────────────────────────────
@@ -230,6 +237,11 @@ function useFocusBackOnClose(open: boolean, triggerRef: RefObject<HTMLButtonElem
   }, [open, triggerRef]);
 }
 
+/** The Popover's handle on the trigger and the picker's own `ref` prop (API-3), as one. */
+function useTriggerRef(triggerRef: RefObject<HTMLButtonElement | null>, fieldRef: Ref<HTMLButtonElement> | undefined) {
+  return useMemo(() => mergeRefs(triggerRef, fieldRef), [triggerRef, fieldRef]);
+}
+
 /**
  * The stepper's trigger: the month as a heading-sized button that opens the grid.
  *
@@ -243,6 +255,7 @@ function MonthHeadingTrigger({
   open,
   toggle,
   triggerRef,
+  fieldRef,
   text,
   panelId,
   disabled,
@@ -251,15 +264,17 @@ function MonthHeadingTrigger({
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  fieldRef?: Ref<HTMLButtonElement>;
   text: string;
   panelId: string;
   disabled?: boolean;
   aria: TriggerAria;
 }) {
   useFocusBackOnClose(open, triggerRef);
+  const setTrigger = useTriggerRef(triggerRef, fieldRef);
   return (
     <button
-      ref={triggerRef}
+      ref={setTrigger}
       type="button"
       disabled={disabled}
       onClick={toggle}
@@ -295,6 +310,7 @@ function MonthFieldTrigger({
   open,
   toggle,
   triggerRef,
+  fieldRef,
   triggerText,
   hasValue,
   labelledBy,
@@ -310,6 +326,7 @@ function MonthFieldTrigger({
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  fieldRef?: Ref<HTMLButtonElement>;
   triggerText: string;
   hasValue: boolean;
   labelledBy: string;
@@ -325,10 +342,11 @@ function MonthFieldTrigger({
   className?: string;
 }) {
   useFocusBackOnClose(open, triggerRef);
+  const setTrigger = useTriggerRef(triggerRef, fieldRef);
 
   return (
     <button
-      ref={triggerRef}
+      ref={setTrigger}
       type="button"
       disabled={disabled}
       onClick={toggle}
@@ -821,6 +839,8 @@ export function MonthPicker(props: MonthPickerProps) {
     variant = "field",
     headingLevel = 2,
     showToday = true,
+    // The trigger's (API-3); named apart from the Popover trigger's own `ref` below.
+    ref: fieldRef,
     ...rest
   } = props;
   const labels = useMonthPickerLabels(labelsProp);
@@ -941,6 +961,7 @@ export function MonthPicker(props: MonthPickerProps) {
               toggle();
             }}
             triggerRef={ref}
+            fieldRef={fieldRef}
             text={triggerText}
             panelId={panelId}
             disabled={disabled}
@@ -1023,6 +1044,7 @@ export function MonthPicker(props: MonthPickerProps) {
               toggle();
             }}
             triggerRef={ref}
+            fieldRef={fieldRef}
             triggerText={triggerText}
             hasValue={shownKey !== null}
             // As DatePicker: a caller's reference first; an `id` without a label of our

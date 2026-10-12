@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import { useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, PointerEvent as ReactPointerEvent, ReactNode, Ref } from "react";
 import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -140,6 +140,9 @@ export interface SignaturePadProps extends Omit<ComponentPropsWithoutRef<"div">,
   canvasClassName?: string;
   /** User-facing strings; see {@link SignaturePadLabels}. */
   labels?: Partial<SignaturePadLabels>;
+  /** The {@link SignaturePadHandle}, not an element. A React 19 ref prop since 0.34
+   *  (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<SignaturePadHandle>;
 }
 
 /* ── Drawing ─────────────────────────────────────────────────────────────── */
@@ -225,26 +228,24 @@ function drawName(ctx: CanvasRenderingContext2D, name: string, w: number, h: num
 
 /* ── The component ───────────────────────────────────────────────────────── */
 
-export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(function SignaturePad(
-  {
-    label,
-    description,
-    onChange,
-    onSave,
-    disabled,
-    invalid,
-    error,
-    allowTypedName,
-    exportInk = DEFAULT_EXPORT_INK,
-    exportBackground,
-    lineWidth = 2.5,
-    canvasClassName,
-    labels: labelsProp,
-    className,
-    ...rest
-  },
+export function SignaturePad({
   ref,
-) {
+  label,
+  description,
+  onChange,
+  onSave,
+  disabled,
+  invalid,
+  error,
+  allowTypedName,
+  exportInk = DEFAULT_EXPORT_INK,
+  exportBackground,
+  lineWidth = 2.5,
+  canvasClassName,
+  labels: labelsProp,
+  className,
+  ...rest
+}: SignaturePadProps) {
   // Prop > <UiKitProvider> > English, like every labelled component in the kit.
   const labels = useKitLabels("signaturePad", DEFAULT_SIGNATURE_PAD_LABELS, labelsProp);
   const { announce, regionProps } = useAnnounce();
@@ -628,12 +629,11 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       <div {...regionProps} />
     </div>
   );
-});
-SignaturePad.displayName = "SignaturePad";
+}
 
 /* ── Read-only ───────────────────────────────────────────────────────────── */
 
-export interface SignatureViewProps extends ComponentPropsWithoutRef<"figure"> {
+export interface SignatureViewProps extends ComponentPropsWithRef<"figure"> {
   /** The saved PNG — what `SignaturePad` handed to `onChange`/`onSave`, as stored. */
   value?: string | null;
   /**

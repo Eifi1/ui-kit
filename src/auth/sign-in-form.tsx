@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { KeyRound } from "lucide-react";
 
 import { useKitLabels } from "../i18n/kit-labels";
@@ -185,7 +185,7 @@ export { DEFAULT_SIGN_IN_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
-export interface SignInFormProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children"> {
+export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children"> {
   /**
    * The credentials step was submitted. Send them, and resolve with the answer
    * ({@link SignInAnswer}) or reject with the client's error. The form never sends a

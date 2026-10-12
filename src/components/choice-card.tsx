@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef } from "react";
 import type {
   ButtonHTMLAttributes,
   ChangeEvent,
@@ -68,6 +68,9 @@ export interface ChoiceCardProps extends Omit<InputHTMLAttributes<HTMLInputEleme
    * {@link ChoiceCardGroup} the star goes on the legend instead, once.
    */
   required?: boolean;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /** Set by {@link ChoiceCardGroup}: its legend carries the one required mark, so the
@@ -117,26 +120,24 @@ const CHECKBOX = "rounded checked:bg-brand";
 // dot.
 const RADIO = "rounded-full checked:border-[0.3125rem]";
 
-export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function ChoiceCard(
-  {
-    type = "checkbox",
-    title,
-    description,
-    icon: Icon,
-    indeterminate = false,
-    invalid,
-    error,
-    onCheckedChange,
-    onChange,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    required,
-    ...rest
-  },
+export function ChoiceCard({
   ref,
-) {
+  type = "checkbox",
+  title,
+  description,
+  icon: Icon,
+  indeterminate = false,
+  invalid,
+  error,
+  onCheckedChange,
+  onChange,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  required,
+  ...rest
+}: ChoiceCardProps) {
   const inGroup = useContext(InGroupContext);
   const generated = useId();
   const inputId = id ?? generated;
@@ -231,8 +232,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
       </span>
     </label>
   );
-});
-ChoiceCard.displayName = "ChoiceCard";
+}
 
 /* ── ActionCard ──────────────────────────────────────────────────────────── */
 
@@ -304,6 +304,9 @@ export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
   /** Your router's link for an in-app `href`. Default: the `<UiKitProvider
    *  linkComponent>`, then a plain `<a>`. Ignored without `href`. */
   renderLink?: (props: ActionCardLinkProps) => ReactElement;
+  /** The `<button>` — or, with `href`, the `<a>`. A React 19 ref prop since 0.34 (MOD-4,
+   *  refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -319,24 +322,22 @@ export interface ActionCardProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
  * Named by the title alone and described by the rest, so a screen reader hears
  * "Keep the key yourself, button" and then the explanation, not one long name.
  */
-export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(function ActionCard(
-  {
-    title,
-    description,
-    meta,
-    metaTone = "muted",
-    icon: Icon,
-    iconTone = "default",
-    iconClassName,
-    href,
-    renderLink,
-    className,
-    id,
-    type = "button",
-    ...rest
-  },
+export function ActionCard({
   ref,
-) {
+  title,
+  description,
+  meta,
+  metaTone = "muted",
+  icon: Icon,
+  iconTone = "default",
+  iconClassName,
+  href,
+  renderLink,
+  className,
+  id,
+  type = "button",
+  ...rest
+}: ActionCardProps) {
   const kitLink = useKitLink();
   const generated = useId();
   const baseId = id ?? generated;
@@ -422,8 +423,7 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
       {body}
     </button>
   );
-});
-ActionCard.displayName = "ActionCard";
+}
 
 /** Calls the link renderer as a component, so a router link's hooks are its own. */
 function RenderedActionLink({

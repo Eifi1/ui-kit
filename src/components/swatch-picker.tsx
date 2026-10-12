@@ -1,5 +1,5 @@
 import { useId, useMemo } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
@@ -62,7 +62,7 @@ export interface SwatchOption<T extends string> {
  * is omitted rather than shadowed, as on {@link ToggleGroup}.
  */
 export interface SwatchPickerProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue"> {
   options: SwatchOption<T>[];
   /** The chosen colour, or `null` for none. */
   value: T | null;

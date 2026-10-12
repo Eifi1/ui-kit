@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
@@ -70,7 +70,7 @@ const signedClass = (v: number) => (v < 0 ? TONE_CLASS.expense : TONE_CLASS.inco
 /** `children` is the marks and `width`/`height` are numbers here (or `fluid`), so
  *  those three are the sparkline's own; everything else lands on the `<svg>`. */
 export interface SparklineProps
-  extends Omit<ComponentPropsWithoutRef<"svg">, "children" | "width" | "height"> {
+  extends Omit<ComponentPropsWithRef<"svg">, "children" | "width" | "height"> {
   /** The series, oldest first. `null`/`undefined`/`NaN` is a GAP — the line breaks
    *  there rather than drawing a zero or bridging across the missing point. */
   data: ReadonlyArray<number | null | undefined>;

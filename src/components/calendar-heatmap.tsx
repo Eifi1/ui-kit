@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
@@ -61,7 +61,7 @@ export interface CalendarHeatmapDay {
  * `onSelect` is omitted from the `<div>` attributes for the reason `MiniCalendar` gives:
  * the DOM event of that name is a text-selection event, and this one answers with a date.
  */
-export interface CalendarHeatmapProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
+export interface CalendarHeatmapProps extends Omit<ComponentPropsWithRef<"div">, "onSelect"> {
   data: readonly CalendarHeatmapDatum[];
   /** The window, inclusive, as "YYYY-MM-DD". */
   from: string;

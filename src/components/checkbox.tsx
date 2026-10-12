@@ -1,6 +1,6 @@
-import { forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
+import { useCallback, useContext, useEffect, useId, useRef } from "react";
 import { Check, Minus } from "lucide-react";
-import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import {
@@ -137,6 +137,9 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
    * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
    */
   commit?: CommitScope;
+  /** The `<input type="checkbox">`. A React 19 ref prop since 0.34 (MOD-4, refactor
+   *  audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -149,28 +152,26 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  * (`checked`, `defaultChecked`, `name`, `required`, `data-*`, `aria-*`), so it works
  * controlled, uncontrolled, and inside a plain `<form>`.
  */
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  {
-    label,
-    description,
-    indeterminate = false,
-    invalid,
-    error,
-    onCheckedChange,
-    onChange,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    required,
-    disabledReason,
-    disabledReasonDisplay,
-    commit,
-    onClick,
-    ...rest
-  },
+export function Checkbox({
   ref,
-) {
+  label,
+  description,
+  indeterminate = false,
+  invalid,
+  error,
+  onCheckedChange,
+  onChange,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  required,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
+  onClick,
+  ...rest
+}: CheckboxProps) {
   const generated = useId();
   const inputId = id ?? generated;
   const lock = useLockReason(commit, disabledReason);
@@ -342,5 +343,4 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       </span>
     </div>
   );
-});
-Checkbox.displayName = "Checkbox";
+}

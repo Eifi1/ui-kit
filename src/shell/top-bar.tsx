@@ -1,14 +1,15 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 
 /**
- * `extends ComponentPropsWithoutRef<"header">` because this IS the `<header>`, and it is
+ * `extends ComponentPropsWithRef<"header">` because this IS the `<header>`, and it is
  * the `sticky top-0` element itself: a consumer cannot wrap it to add an attribute
  * without the sticking moving to the wrapper. The one that matters most is `aria-label`
  * — a `<header>` is a `banner` landmark, and a landmark with no name is how two of them
- * become indistinguishable in a screen reader's landmark list.
+ * become indistinguishable in a screen reader's landmark list. The `ref` too since 0.34
+ * (API-2, refactor audit 2026-10).
  */
-export interface TopBarProps extends ComponentPropsWithoutRef<"header"> {
+export interface TopBarProps extends ComponentPropsWithRef<"header"> {
   brand: ReactNode;
   actions?: ReactNode;
   className?: string;

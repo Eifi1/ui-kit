@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -16,7 +16,7 @@ const COLLAPSE_MS = 200;
  * `extends` the div's props so an `id` (what a trigger's `aria-controls` points at), a
  * `data-tour` anchor or a test id reaches the element that folds.
  */
-export interface CollapseProps extends ComponentPropsWithoutRef<"div"> {
+export interface CollapseProps extends ComponentPropsWithRef<"div"> {
   open: boolean;
   /**
    * Keep the children mounted while shut (hidden and `inert`) instead of unmounting
@@ -113,7 +113,7 @@ export type DisclosureTriggerProps = Omit<
  * name: here it is the header's content (and a ReactNode), not the browser's tooltip.
  * Everything else reaches the outer element.
  */
-export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface DisclosureProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   /** What the header says. A node, so a status chip or a count can sit in it. */
   title: ReactNode;
   /** The smaller line under the title — what is inside, for a reader deciding whether

@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -45,7 +45,7 @@ export { DEFAULT_FORGOT_PASSWORD_LABELS };
 /* ── The form ────────────────────────────────────────────────────────────── */
 
 export interface ForgotPasswordFormProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children" | "title"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /**
    * The address was submitted, trimmed: send `POST /auth/password-reset/request`.
    * Resolve when the server answered — whatever it answered: it is `204` whether or not

@@ -8,7 +8,7 @@
 // ramp (`paletteFor`), so it re-skins with the palette like every other chart, and the
 // kit's own legends (`ToggleLegend`, `StaticLegend`).
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentProps, ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
@@ -44,7 +44,7 @@ export interface PieChartSlice {
  * Everything a `<div>` takes reaches the chart's root, so a test id or a `data-tour`
  * anchor can find it. `children` is the chart's own.
  */
-export interface PieChartProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface PieChartProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   data: readonly PieChartSlice[];
   /** `"donut"` (default) leaves a hole with the total in it; `"pie"` is the full disc. */
   variant?: "donut" | "pie";

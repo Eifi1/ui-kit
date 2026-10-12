@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   ComponentPropsWithoutRef,
+  ComponentPropsWithRef,
   KeyboardEvent as ReactKeyboardEvent,
   ReactNode,
+  Ref,
   RefObject,
 } from "react";
 import { createPortal } from "react-dom";
@@ -12,6 +14,7 @@ import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./ui";
+import { mergeRefs } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
 
@@ -166,7 +169,7 @@ export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
  *  where the focus is (see the note above), so the div's own handler signature is
  *  omitted in favour of it. */
 export interface DropdownSearchHeaderProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onKeyDown"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onKeyDown"> {
   query: string;
   onQueryChange: (v: string) => void;
   inputRef: RefObject<HTMLInputElement | null>;
@@ -279,6 +282,9 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
    *  is the old `right` in a left-to-right page. */
   align?: "left" | "right" | "start" | "end";
   children: ReactNode;
+  /** The panel, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with `panelRef`, so the outside-click still sees it. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -321,8 +327,10 @@ export function DropdownPanel({
   children,
   style,
   onKeyDown,
+  ref,
   ...rest
 }: DropdownPanelProps) {
+  const setPanel = useMemo(() => mergeRefs(panelRef, ref), [panelRef, ref]);
   const anchored = useAnchoredPanel(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
   const dir = useAnchorDir(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
   // A row the keyboard reached by Tab holds focus too, and its Escape has to close the
@@ -357,7 +365,7 @@ export function DropdownPanel({
       <div
         {...rest}
         style={style}
-        ref={panelRef}
+        ref={setPanel}
         onKeyDown={handleKeyDown}
         className={cn(
           "absolute z-30 mt-1 rounded-md border border-subtle bg-surface shadow-lg",
@@ -382,7 +390,7 @@ export function DropdownPanel({
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused itself: it catches Escape bubbling from the search box or a row inside it.
     <div
       {...rest}
-      ref={panelRef}
+      ref={setPanel}
       dir={dir}
       onKeyDown={handleKeyDown}
       // The caller's `style` is kept underneath, but the placement is measured rather

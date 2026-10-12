@@ -1,5 +1,5 @@
-import { forwardRef, useMemo, useRef } from "react";
-import type { InputHTMLAttributes } from "react";
+import { useMemo, useRef } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./ui";
@@ -64,7 +64,12 @@ const SEARCH_INLINE =
  * the moment someone types, i.e. exactly when a screen-reader user is working in the
  * field. The `label` spelling it also took from 0.5 was removed in 0.34.
  */
-export type SearchFieldProps = SearchFieldOwnProps & { "aria-label": string };
+export type SearchFieldProps = SearchFieldOwnProps & {
+  "aria-label": string;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
+};
 
 /**
  * The page-level filter box: a search icon, a `type="search"` input, and a clear
@@ -95,21 +100,19 @@ export type SearchFieldProps = SearchFieldOwnProps & { "aria-label": string };
  * and matches the app's other icon buttons, and it returns focus to the input so
  * the next query can be typed straight away.
  */
-export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
-  {
-    value,
-    onChange,
-    clearLabel: clearLabelProp,
-    clearable = true,
-    className,
-    inputClassName,
-    placeholder,
-    variant = "field",
-    "aria-label": ariaLabel,
-    ...rest
-  },
+export function SearchField({
   ref,
-) {
+  value,
+  onChange,
+  clearLabel: clearLabelProp,
+  clearable = true,
+  className,
+  inputClassName,
+  placeholder,
+  variant = "field",
+  "aria-label": ariaLabel,
+  ...rest
+}: SearchFieldProps) {
   const innerRef = useRef<HTMLInputElement>(null);
   const setRef = useMemo(() => mergeRefs(innerRef, ref), [ref]);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
@@ -187,5 +190,4 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
       )}
     </div>
   );
-});
-SearchField.displayName = "SearchField";
+}

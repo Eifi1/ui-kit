@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, matchPath, useHref, useLocation } from "react-router";
 import { ChevronRight, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -12,6 +12,7 @@ import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
 import { CompactControls } from "../components/ui";
+import { mergeRefs } from "../components/field-parts";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { anchoredInline } from "../hooks/use-anchored-panel";
 import { useDismissLayer } from "../hooks/use-dismiss";
@@ -232,6 +233,9 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    * the outer one over it, and remove it on unmount from under the outer app.
    */
   embedded?: boolean;
+  /** The shell's root, where the rest of the props go (0.34, API-2, refactor audit
+   *  2026-10) — merged with its own ref, which `--app-nav-h` is published on. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /** True below an AppShell — how a nested shell knows it is one. */
@@ -342,6 +346,7 @@ export function AppShell({
   toggleGroupLabel,
   embedded: embeddedProp,
   className,
+  ref,
   ...rest
 }: AppShellProps) {
   const embedded = useContext(AppShellNesting) || !!embeddedProp;
@@ -384,6 +389,7 @@ export function AppShell({
   // Publishes `--app-nav-h` for anything that has to sit on the bottom bar.
   const navRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
   useNavHeightVar(navRef, rootRef, embedded);
   useEffect(() => {
     if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
@@ -402,7 +408,7 @@ export function AppShell({
     <AppShellNesting.Provider value={true}>
       <div
         {...rest}
-        ref={rootRef}
+        ref={setRoot}
         data-app-shell=""
         className={cn(
           "relative flex flex-col",

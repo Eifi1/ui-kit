@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Download } from "lucide-react";
 
 import { useKitLabels } from "../i18n/kit-labels";
@@ -49,7 +49,7 @@ export { DEFAULT_DATA_EXPORT_LABELS };
  */
 export type DataExportFile = Blob | { url: string; filename?: string };
 
-export interface DataExportSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DataExportSettingProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /**
    * Fetch the export (`GET /auth/me/export`, §6.5). Resolve with the file — the card
    * saves it under `filename` — or reject with the client's error: a 429 (the export is

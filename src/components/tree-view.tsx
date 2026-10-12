@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
@@ -68,7 +68,7 @@ export interface TreeItemState {
 
 /* ── TreeRow ─────────────────────────────────────────────────────────────── */
 
-export interface TreeRowProps extends ComponentPropsWithoutRef<"div"> {
+export interface TreeRowProps extends ComponentPropsWithRef<"div"> {
   /** 1 for a top-level row. Sets the indent and the number of guides. */
   level: number;
   /** `true`/`false` for a row that can fold; leave it `undefined` for a leaf, which
@@ -216,7 +216,7 @@ export function TreeRow({
 /* ── TreeView ────────────────────────────────────────────────────────────── */
 
 export interface TreeViewProps<T = unknown>
-  extends Omit<ComponentPropsWithoutRef<"ul">, "onSelect" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"ul">, "onSelect" | "children" | "defaultValue"> {
   items: readonly TreeNode<T>[];
   /** Open nodes, controlled. */
   expanded?: readonly string[];

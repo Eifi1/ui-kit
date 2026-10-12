@@ -1,10 +1,10 @@
-import { useEffect, useId, useRef } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
+import type { KeyboardEvent, ReactNode, Ref } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { CURRENCIES } from "./currency-select";
-import { FieldCaption, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
@@ -171,6 +171,13 @@ interface NumberInputProps {
    * {@link IntegerField} pass it on.
    */
   commit?: CommitScope;
+  /**
+   * The `<input>`, as a React 19 ref prop (0.34, API-3, refactor audit 2026-10): the one
+   * focusable field of its family with no ref at all, so react-hook-form's focus-on-error
+   * could reach it only through /rhf's id lookup, and an app not at all.
+   * {@link NumberField} and {@link IntegerField} pass it on.
+   */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /** Decimal places of `n` as written ("0.25" → 2, "1e-7" → 7), for decimal-exact
@@ -299,6 +306,7 @@ function devWarnings(): boolean {
  */
 export function NumberInput(props: NumberInputProps) {
   const {
+    ref,
     value,
     onChange,
     onCommit,
@@ -345,8 +353,10 @@ export function NumberInput(props: NumberInputProps) {
   const estimatedEnd =
     suffixChars !== null ? `calc(${suffixChars}ch + 0.75rem${showCalc ? " + 2.25rem" : ""})` : undefined;
   // On mobile, focusing opens the numpad bottom sheet instead of the native
-  // keyboard (#334); the ref lets its "Done" blur → commit + close.
+  // keyboard (#334); the ref lets its "Done" blur → commit + close. The caller's `ref`
+  // gets the same element.
   const inputRef = useRef<HTMLInputElement>(null);
+  const setInput = useMemo(() => mergeRefs(inputRef, ref), [ref]);
 
   // `derived` is the value in the locale's mark — one character for one, no grouping —
   // and the draft the typist's own text, shown only while it still says what the value
@@ -425,7 +435,7 @@ export function NumberInput(props: NumberInputProps) {
       hint={numeric.hint.labelHint}
     >
       <input
-        ref={inputRef}
+        ref={setInput}
         id={fieldId}
         aria-label={ariaLabel}
         type="text"

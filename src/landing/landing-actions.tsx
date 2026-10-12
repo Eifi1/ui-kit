@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui";
@@ -19,7 +19,7 @@ export type LandingSession = "none" | "demo" | "user";
  *  largest actions. */
 const LARGE = "px-5 py-2.5";
 
-export interface LandingActionsProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface LandingActionsProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   session: LandingSession;
   access: AccessChoice;
   /** "Try the demo" without a session, "Continue the demo" with a demo one. Default

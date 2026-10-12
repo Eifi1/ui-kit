@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
@@ -22,7 +22,7 @@ export interface NotFoundLabels {
 // Defined in ./not-found-page-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_NOT_FOUND_LABELS };
 
-export interface NotFoundPageProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface NotFoundPageProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** "Go to the start page". Default `/`, which takes a signed-in user into the app and
    *  anyone else to sign-in in all three apps. */
   homeHref?: string;

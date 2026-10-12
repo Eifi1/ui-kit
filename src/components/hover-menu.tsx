@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { anchoredInline } from "../hooks/use-anchored-panel";
 import { dirOf } from "../lib/direction";
@@ -28,6 +29,9 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   panelClassName?: string;
   /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
   className?: string;
+  /** The WRAPPER, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with its own ref, which the outside click and the hover are measured on. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 // Hovering waits briefly before opening so sweeping the cursor across a row of
@@ -86,9 +90,11 @@ export function HoverMenu({
   panelClassName,
   className,
   "aria-label": ariaLabel,
+  ref,
   ...rest
 }: HoverMenuProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const setWrapper = useMemo(() => mergeRefs(wrapperRef, ref), [ref]);
   const [phase, setPhase] = useState<Phase>("closed");
   const open = phase === "open" || phase === "closing";
 
@@ -279,7 +285,7 @@ export function HoverMenu({
       // `...rest` first: the hover handlers below are the whole component, and a caller
       // passing one of its own must not silently replace them.
       {...rest}
-      ref={wrapperRef}
+      ref={setWrapper}
       className={cn("relative", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

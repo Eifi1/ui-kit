@@ -1,7 +1,7 @@
-import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useCallback, useId } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
-import { EndHintRow, useFieldMessages } from "./field-parts";
+import { assignRef, EndHintRow, useFieldMessages } from "./field-parts";
 import { cn } from "../lib/cn";
 import { useComboboxCore } from "./combobox-core";
 import {
@@ -89,6 +89,10 @@ export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div"
    * filter that only matches the hidden English name is worse than no filter.
    */
   currencyNames?: Record<string, string>;
+  /** The TRIGGER — the focusable `<button>` — as a React 19 ref prop, as on
+   *  {@link MultiSelect} and {@link CountrySelect}: react-hook-form's focus-on-error
+   *  calls `focus()` on it (0.34, API-3, refactor audit 2026-10). Not the wrapper. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function CurrencySelect({
@@ -106,6 +110,7 @@ export function CurrencySelect({
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  ref,
   ...rest
 }: CurrencySelectProps) {
   // The picker family's foundation (round 0.34 Wave 2, DUP-4): open state, the query,
@@ -114,6 +119,15 @@ export function CurrencySelect({
   // the list's own currency filter hands the panel its rows.
   const core = useComboboxCore<string>({ filter: false, backCloses: true });
   const { open, setOpen, triggerRef, closeToTrigger } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both, as on MultiSelect.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
   // `labels` > `currency` from the provider > English.
   const text = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, labels);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
@@ -142,7 +156,7 @@ export function CurrencySelect({
   const trigger = (
     <button
       // Where Escape on the open list hands focus back to (round 0.34 BUG-1).
-      ref={triggerRef}
+      ref={setTrigger}
       type="button"
       aria-label={name}
       onClick={() => setOpen((v) => !v)}

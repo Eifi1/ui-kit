@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { FileText } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -22,7 +22,7 @@ export interface ImageGridLabels {
 // Defined in ./image-grid-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_IMAGE_GRID_LABELS };
 
-export interface ImageGridProps extends Omit<ComponentPropsWithoutRef<"ul">, "children"> {
+export interface ImageGridProps extends Omit<ComponentPropsWithRef<"ul">, "children"> {
   items: readonly ImageItem[];
   /** The app's authenticated GET — thumbnails and the lightbox fetch through it. Only
    *  images are fetched for the grid; a file (PDF) tile shows its icon and name. */

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -136,7 +136,7 @@ const FILL: Record<PasswordStrengthScore, string> = {
   4: "bg-success",
 };
 
-export interface PasswordStrengthMeterProps extends ComponentPropsWithoutRef<"div"> {
+export interface PasswordStrengthMeterProps extends ComponentPropsWithRef<"div"> {
   /** The secret being chosen. Nothing visible renders while it is empty. */
   value: string;
   /** Replace the built-in scorer (e.g. with zxcvbn's `score`). Must be pure. */

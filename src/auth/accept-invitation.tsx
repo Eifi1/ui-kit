@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, LogIn, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -60,7 +60,7 @@ export type AcceptInvitationFailure = "invalid" | "expired" | "signIn";
 
 type Outcome = "accepted" | AcceptInvitationFailure;
 
-export interface AcceptInvitationProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface AcceptInvitationProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** The invitation's token — the app's `?invite=` / `?token=`. Empty: the link was cut
    *  short, and the page says so without asking anyone. */
   token: string;

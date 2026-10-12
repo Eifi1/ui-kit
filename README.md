@@ -500,14 +500,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1893 names from 281 modules** — 886 values and 1007 types. _Italic_ is a type-only export.
+**1896 names from 282 modules** — 888 values and 1008 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1893 |
+| `@eifi1/ui-kit` | 1896 |
 | `@eifi1/ui-kit/chart` | 105 |
 | `@eifi1/ui-kit/shell` | 77 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -536,6 +536,7 @@ re-slicing of it, never a second API.
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
 | `lib/session-refresh` | `attachSessionRefresh`, `createSessionRefresh`, `isSignedOutStep`, `isTransientRefreshFailure`, _`SessionRefresh`_, _`SessionRefreshOptions`_, _`SessionRefreshOutcome`_, _`SessionRenewal`_ |
+| `lib/text-match` | `foldForSearch`, `rankMatch`, _`MatchRank`_ |
 | `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/person-name` | `formatPersonName`, `personInitials`, _`PersonName`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
@@ -893,11 +894,15 @@ re-slicing of it, never a second API.
 
 ## Forms / refs
 
-`Input`, `Select`, `Textarea` and `AmountInput` forward their `ref` to the
-underlying DOM element, so they work directly with react-hook-form:
+Every field takes a `ref` — a React 19 ref prop, no `forwardRef` (since 0.34) — to the
+element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`,
+`ChipInput`…, the trigger button of a picker (`DatePicker`, `MonthPicker`, `MultiSelect`,
+`CurrencySelect`, `CountrySelect`), and for `ToggleGroup` the group, whose `focus()` lands
+on its checked option. So they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
-focus-and-scroll-to-error for free. For the full `FormField`/`FormControl` scaffolding,
-see `@eifi1/ui-kit/rhf` below.
+focus-and-scroll-to-error for free. A component that spreads its props onto an element
+(`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For the full
+`FormField`/`FormControl` scaffolding, see `@eifi1/ui-kit/rhf` below.
 
 ### react-hook-form — `@eifi1/ui-kit/rhf` (optional)
 

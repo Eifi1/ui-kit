@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -98,7 +98,7 @@ type Phase =
   | { kind: "done"; result: ResetPasswordResult };
 
 export interface ResetPasswordFormProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children" | "title"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /** The link's token — the app's `?token=` (keksdose, kastlan: `/reset-password?token=…`).
    *  Empty: the link was cut short, and the page says so without asking anyone. */
   token: string;

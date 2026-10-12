@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -76,7 +76,7 @@ function useResolvedVariant(variant: BulkActionBarVariant | ResponsiveBulkAction
   return variant.base;
 }
 
-export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "children"> {
+export interface BulkActionBarProps extends Omit<ComponentPropsWithRef<"div">, "role" | "children"> {
   /** How many items are selected. The bar shows only while this is above zero —
    *  unless {@link open} says otherwise. */
   count: number;

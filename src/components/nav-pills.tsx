@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
@@ -49,6 +49,9 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
   landmark?: boolean;
   /** Classes for every pill. */
   itemClassName?: string;
+  /** The `<nav>` (or the `<div role="group">`) — hence `HTMLElement` (0.34, API-2,
+   *  refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 // The pill is a ToggleGroup segment's (`rounded`, `px-3 py-1.5`, the inverse fill for
@@ -85,12 +88,18 @@ export function NavPills<T extends string>({
   landmark = true,
   itemClassName,
   className,
+  ref,
   ...rest
 }: NavPillsProps<T>) {
   const kitLink = useKitLink();
   const Root = landmark ? "nav" : "div";
   return (
-    <Root {...rest} role={landmark ? undefined : "group"} className={cn("min-w-0", className)}>
+    <Root
+      {...rest}
+      ref={ref as Ref<HTMLDivElement> | undefined}
+      role={landmark ? undefined : "group"}
+      className={cn("min-w-0", className)}
+    >
       <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
         {items.map((item) => {
           const isCurrent = item.value === current;

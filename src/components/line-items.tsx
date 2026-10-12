@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, KeyboardEvent, Key, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, HTMLAttributes, KeyboardEvent, Key, ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -117,7 +117,7 @@ export type LineItemsRowProps = Omit<HTMLAttributes<HTMLDivElement>, "children" 
   [key: `data-${string}`]: string | number | boolean | undefined;
 };
 
-export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface LineItemsProps<T> extends Omit<ComponentPropsWithRef<"div">, "children"> {
   items: readonly T[];
   columns: readonly LineItemsColumn<T>[];
   /** The row's React key. Default: the item's `id` (react-hook-form's `useFieldArray`

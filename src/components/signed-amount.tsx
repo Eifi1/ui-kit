@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatMoney, formatNumber, formatPercent } from "../lib/format";
@@ -53,7 +53,7 @@ export function toneTextClass(tone: TextTone): string {
   return TEXT_TONE[tone];
 }
 
-export interface ToneProps extends ComponentPropsWithoutRef<"span"> {
+export interface ToneProps extends ComponentPropsWithRef<"span"> {
   tone: TextTone;
 }
 
@@ -168,7 +168,7 @@ const ARROW = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
 
 export interface SignedAmountProps
   extends SignedFormatProps,
-    Omit<ComponentPropsWithoutRef<"span">, "children"> {
+    Omit<ComponentPropsWithRef<"span">, "children"> {
   value: number;
   /** See {@link SignedAmountTone}. Default `signed`, or `verdict` with `goodDirection`. */
   tone?: SignedAmountTone;
@@ -255,7 +255,7 @@ export function SignedAmount({
   );
 }
 
-export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithRef<"span">, "children"> {
   /** The change. Above zero is "up". */
   value: number;
   /** Which way is good news. Unset, the change is stated and not judged (muted); set,

@@ -1,13 +1,14 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Card } from "../components/ui";
 
 /**
- * `extends ComponentPropsWithoutRef<"div">` because this is the page's outermost element
+ * `extends ComponentPropsWithRef<"div">` because this is the page's outermost element
  * — the one that owns `min-h-dvh` and the safe-area padding — so there is nothing a
- * consumer could wrap it in to add an id or a `data-*` hook without breaking that.
+ * consumer could wrap it in to add an id or a `data-*` hook without breaking that. The
+ * `ref` too since 0.34 (API-2, refactor audit 2026-10).
  */
-export interface AuthLayoutProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface AuthLayoutProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   /** The brand mark (an SVG), drawn in a brand-coloured tile above the title. */
   logo?: ReactNode;
   /** `false` draws `logo` as it is, without the tile — for a full-colour logo image. */

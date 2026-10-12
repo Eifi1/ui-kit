@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 import { encodeQr } from "../lib/qr-encode";
 import type { QrErrorCorrection } from "../lib/qr-encode";
 
-export interface QrCodeProps extends Omit<ComponentPropsWithoutRef<"svg">, "children" | "viewBox"> {
+export interface QrCodeProps extends Omit<ComponentPropsWithRef<"svg">, "children" | "viewBox"> {
   /** The text to encode (UTF-8) — an `otpauth://` URI, a URL, a pairing code. */
   value: string;
   /** The accessible name. Without it the code is decorative (`aria-hidden`): say what

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Hourglass } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -13,7 +13,7 @@ import { useDemoLabels } from "./demo-labels";
 import type { DemoLabels } from "./demo-labels";
 import type { DemoModel } from "./demo-session";
 
-export interface DemoEndedProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface DemoEndedProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** Which line the page says about the data (§2.3). */
   model: DemoModel;
   /** "Request access". */

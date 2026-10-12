@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, Gauge } from "lucide-react";
 
@@ -125,22 +125,22 @@ function SpanList({ name, items, icon }: { name: string; items: ReactNode[]; ico
  * and owns the choice. Everything else a `ChoiceCard` takes goes to it — `checked`,
  * `onCheckedChange`, `name`, `className`. Carries `data-plan` and `data-relation`.
  */
-export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function PlanCard(
-  {
-    plan,
-    relation,
-    pricePreview,
-    currency,
-    interval,
-    dimensionLabels,
-    formatLimit,
-    locale: localeProp,
-    labels: labelsProp,
-    disabled,
-    ...rest
-  },
+export function PlanCard({
+  // The radio `<input>` (ChoiceCard's): a React 19 ref prop since 0.34 (MOD-4, refactor
+  // audit 2026-10), where this was `forwardRef`.
   ref,
-) {
+  plan,
+  relation,
+  pricePreview,
+  currency,
+  interval,
+  dimensionLabels,
+  formatLimit,
+  locale: localeProp,
+  labels: labelsProp,
+  disabled,
+  ...rest
+}: PlanCardProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
@@ -219,8 +219,7 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
       description={body}
     />
   );
-});
-PlanCard.displayName = "PlanCard";
+}
 
 /** What {@link PlanPickerProps.onChoose} is handed: everything `POST /billing/checkout`
  *  takes (§4). */

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import type { ProgressBarTone } from "./progress-bar";
 import type { ChipHue } from "./chip";
@@ -88,7 +88,7 @@ const DOT_ON_FIRST_LINE: Record<StatusDotSize, string> = {
   lg: "large:mt-[calc((1lh_-_0.75rem)/2)]",
 };
 
-export interface StatusDotProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   tone?: StatusDotTone;
   size?: StatusDotSize;
   /**

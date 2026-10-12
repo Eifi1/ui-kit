@@ -118,9 +118,9 @@ for (const file of graph.keys()) {
 // What an import costs, measured as an app's build sees the package: Rollup over dist/,
 // every module free of side effects (package.json `sideEffects`), packages external, so
 // the number is the kit's own code, minified. The shell set is what the three apps' layout
-// and top bar import (2026-10). Each ceiling is the size measured on 2026-10-12 plus ~10 %;
-// MOD-1 (a lazy feedback dialog), MOD-4 (ref-as-prop) and MOD-2 (the ui.tsx split) are
-// expected to bring the numbers down, and the ceilings come down with them.
+// and top bar import (2026-10). Each ceiling is the size last measured plus ~10 %; MOD-1
+// (a lazy feedback dialog) and MOD-2 (the ui.tsx split) are expected to bring the numbers
+// down further, and the ceilings come down with them.
 const SHELL_SET = [
   "AppShell",
   "TopBar",
@@ -135,14 +135,18 @@ const SHELL_SET = [
   "LegalLinks",
   "UiKitProvider",
 ];
-// Measured 2026-10-12, minified (gzip): Button 31,993 (11,131), Spinner 27,844 (9,830) —
-// Spinner keeps Input, Select, Textarea, IconButton and Tooltip alive through ui.tsx's
-// forwardRef and displayName lines (MOD-4) —, cn 171 (151), the shell set 124,329 (41,103).
+// Measured 2026-10-12, minified (gzip), after MOD-4 (round 0.34 Wave 3: the 25 module-scope
+// `forwardRef(...)` calls and 23 `X.displayName = …` lines became ref-as-prop function
+// components): Button 20,308 (7,364), Spinner 4,363 (1,688), cn 171 (151), the shell set
+// 121,184 (40,045). Before it: Button 32,536 (11,340), Spinner 28,387 (10,051) — Spinner
+// kept Input, Select, Textarea, IconButton and Tooltip alive through ui.tsx's two side
+// effects — and the shell set 125,393 (41,602). A forwardRef or a displayName line at
+// module scope brings that back: it is a call Rollup must keep, with all it references.
 const BUDGETS = [
-  { label: "{ Button }", names: ["Button"], max: 35_200 },
-  { label: "{ Spinner }", names: ["Spinner"], max: 30_600 },
+  { label: "{ Button }", names: ["Button"], max: 22_400 },
+  { label: "{ Spinner }", names: ["Spinner"], max: 4_800 },
   { label: "{ cn }", names: ["cn"], max: 190 },
-  { label: "the shell set", names: SHELL_SET, max: 136_800 },
+  { label: "the shell set", names: SHELL_SET, max: 133_400 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

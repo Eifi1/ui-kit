@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { ClipboardPaste, Eraser, Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
@@ -179,7 +179,7 @@ export function useMeasuredRows(
 }
 
 export interface MeasuredGridProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onChange"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
   /** What the table is — shown above it, and the grid's accessible name. */
   label: string;
   /** A note under the table (which columns a layout expects, say). Also the grid's

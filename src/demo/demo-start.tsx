@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
@@ -53,7 +53,7 @@ function messageOf(refusal: Refusal, labels: DemoLabels): string {
 /** The one start a mount makes. */
 const ONCE = "demo";
 
-export interface DemoStartProps<T> extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DemoStartProps<T> extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /**
    * Create the demo: the app's `POST /auth/demo-session {locale}`. Resolve with what it
    * answered (the `TokenResponse`, `refresh_token: null`, `expires_at`); reject with the

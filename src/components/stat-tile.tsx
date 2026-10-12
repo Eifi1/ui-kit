@@ -1,5 +1,5 @@
 import { createContext, isValidElement, useContext, useId, useLayoutEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
@@ -644,7 +644,7 @@ function useIsTruncated(el: HTMLElement | null): boolean {
   return cut;
 }
 
-export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {
+export interface StatTileGridProps extends ComponentPropsWithRef<"div"> {
   /** The narrowest a tile may get before the grid drops a column. The default fits
    *  two tiles on a 320px phone. */
   minTileWidth?: string;

@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import type { ChangeEvent } from "react";
 import { Input, type InputProps } from "./ui";
 import { cn } from "../lib/cn";
@@ -83,10 +82,20 @@ export function isTimeInRange(value: string, min?: string, max?: string): boolea
   return (lo === undefined || v >= lo) && (hi === undefined || v <= hi);
 }
 
-export const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInput(
-  { value, onValueChange, onChange, min, max, step, invalid, inputClassName, ...rest },
+// `ref` (the `<input>`, InputProps') is a React 19 ref prop since 0.34 (MOD-4, refactor
+// audit 2026-10), where this was `forwardRef`.
+export function TimeInput({
   ref,
-) {
+  value,
+  onValueChange,
+  onChange,
+  min,
+  max,
+  step,
+  invalid,
+  inputClassName,
+  ...rest
+}: TimeInputProps) {
   const seconds = withSeconds(step);
   const outOfRange = !isTimeInRange(value, min, max);
   return (
@@ -110,5 +119,4 @@ export const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function T
       inputClassName={cn("tabular-nums", inputClassName)}
     />
   );
-});
-TimeInput.displayName = "TimeInput";
+}

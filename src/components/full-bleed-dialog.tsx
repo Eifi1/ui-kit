@@ -1,9 +1,10 @@
-import { useId, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
@@ -83,6 +84,9 @@ export interface FullBleedDialogProps extends Omit<ComponentPropsWithoutRef<"div
    * last field); padded for the home indicator, since it is the panel's bottom edge.
    */
   footer?: ReactNode;
+  /** The `role="dialog"` element, where the rest of the props go (0.34, API-2, refactor
+   *  audit 2026-10) — merged with its own ref, which the focus trap holds. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -129,6 +133,7 @@ export function FullBleedDialog({
   onMouseDown,
   onMouseUp,
   onKeyDown,
+  ref,
   ...rest
 }: FullBleedDialogProps) {
   // Every way OUT goes through `requestClose`, so the panel lowers itself before the
@@ -141,6 +146,7 @@ export function FullBleedDialog({
   useOverlayHistory(open && backCloses, requestClose);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  const setDialog = useMemo(() => mergeRefs(dialogRef, ref), [ref]);
   const titleId = useId();
   const hasTitle = title !== undefined && title !== null && title !== false;
   const hasHeader = header !== undefined && header !== null && header !== false;
@@ -214,7 +220,7 @@ export function FullBleedDialog({
       // `tabIndex={-1}` is what makes the line above more than a claim: without it the
       // container cannot take focus and `useFocusTrap` silently does nothing.
       tabIndex={-1}
-      ref={dialogRef}
+      ref={setDialog}
       onKeyDown={handleKeyDown}
       // COMPOSED with the backdrop's, not overridden by them. These two used to ride
       // `...rest` and then lose to `{...backdropClose}` spread after it, silently —

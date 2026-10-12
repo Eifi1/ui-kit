@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentType, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ComponentType, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { Calendar, CalendarClock, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
@@ -17,7 +17,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { Button, FIELD_BASE, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { FOCUS_RING_WIDTH } from "./focus-ring";
-import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
+import { assignRef, FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout, type RemLength } from "../hooks/use-breakpoint";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
@@ -127,6 +127,13 @@ interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onC
    * range across a single month boundary.
    */
   monthJump?: boolean;
+  /**
+   * The TRIGGER — the focusable button that opens the calendar, a `renderTrigger` one
+   * too — as a React 19 ref prop (0.34, API-3, refactor audit 2026-10). The field took
+   * none, so react-hook-form's focus-on-error reached it only through /rhf's id lookup,
+   * and an app not at all. Not the wrapper, which takes the rest of the props.
+   */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -234,6 +241,7 @@ function DateFieldTrigger({
   panelId,
   aria,
   renderTrigger,
+  fieldRef,
 }: {
   /** The caller's naming/description attributes, routed here from the field. */
   aria: TriggerAria;
@@ -242,6 +250,8 @@ function DateFieldTrigger({
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  /** The picker's own `ref` prop (API-3) — the same element as `triggerRef`. */
+  fieldRef?: Ref<HTMLButtonElement>;
   /** The panel's id — `role="combobox"` requires `aria-controls`. */
   panelId: string;
   triggerText: string;
@@ -274,6 +284,15 @@ function DateFieldTrigger({
     // button does not focus it, so "whatever held focus" is the page. The requirement
     // is this trigger, every time, however the panel was opened.
   }, [open, triggerRef]);
+  // The caller's `ref` (API-3, refactor audit 2026-10) is handed the trigger once it is
+  // mounted, rather than merged into `attrs.ref`: that one is a `RefObject` by contract
+  // (`DateTriggerAttributes`), which a `renderTrigger` button may read, and this way a
+  // caller's own trigger is covered as well as the kit's.
+  useLayoutEffect(() => {
+    if (!fieldRef) return;
+    assignRef(fieldRef, triggerRef.current);
+    return () => assignRef(fieldRef, null);
+  }, [fieldRef, triggerRef]);
 
   // One attribute object, worn either by the kit's own button below or by a caller's
   // (`renderTrigger`) — so a custom trigger cannot quietly fall out of step with the
@@ -387,8 +406,11 @@ function DateField({
   // pair, and a required date read as optional while it sat on the role-less div.
   // Taken here rather than in `splitTriggerAria`, which MonthPicker shares.
   "aria-required": ariaRequired,
+  fieldRef,
   ...rest
 }: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
+  /** The picker's `ref` prop: the trigger (API-3). */
+  fieldRef?: Ref<HTMLButtonElement>;
   triggerText: string;
   hasValue: boolean;
   label?: ReactNode;
@@ -506,6 +528,7 @@ function DateField({
       invalid={invalid}
       required={ariaRequired}
       renderTrigger={renderTrigger}
+      fieldRef={fieldRef}
     />
   );
   return (
@@ -1120,6 +1143,8 @@ export function DatePicker(props: DatePickerProps) {
     // Named so it reaches the field (and so its trigger) when a step/today row is the
     // root and takes the rest of the caller's props.
     "aria-required": ariaRequired,
+    // The trigger's, wherever the rest go (API-3).
+    ref,
     ...rest
   } = props;
   const locale = useKitLocale(localeProp);
@@ -1145,6 +1170,7 @@ export function DatePicker(props: DatePickerProps) {
       // With step/today buttons the flex row is the root and takes the caller's props —
       // except the ones that name the field, which still belong on its trigger.
       {...(wrapped ? triggerAria : rest)}
+      fieldRef={ref}
       aria-describedby={messages.describedBy}
       aria-required={ariaRequired}
       label={label}
@@ -1649,6 +1675,8 @@ export function DateRangePicker(props: DateRangePickerProps) {
     invalid,
     hint,
     error,
+    // The trigger's (API-3).
+    ref,
     ...rest
   } = props;
   const locale = useKitLocale(localeProp);
@@ -1685,6 +1713,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const field = (
     <DateField
       {...rest}
+      fieldRef={ref}
       aria-describedby={messages.describedBy}
       label={label}
       labelHint={messages.labelHint}

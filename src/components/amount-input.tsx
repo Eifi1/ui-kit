@@ -1,6 +1,6 @@
-import { forwardRef, useId, useMemo, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import { ChevronDown } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { CurrencyOptionList, getCurrency } from "./currency-option-list";
 import { useComboboxCore } from "./combobox-core";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
@@ -304,6 +304,9 @@ interface AmountInputProps {
    * provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 
@@ -370,377 +373,374 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
   return n !== null && settle(formatResult(n)) === text.trim();
 }
 
-export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) => {
-    const { value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, currencyOptions, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
-    const generatedId = useId();
-    const fieldId = id ?? generatedId;
-    // The sign is DISPLAYED, not stored (live #201 rework). `value` is the
-    // magnitude; the minus is glued on here and taken off again in handleText, so
-    // the two can never disagree and the caller can never double-apply it. Only in
-    // front of a bare amount: an expression being typed ("12-30") owns its own
-    // minus and has to survive keystroke-for-keystroke.
-    const signOwned = onNegativeChange !== undefined;
-    // The sign is DRAWN whenever `negative` says so, handler or not (keksdose live #366):
-    // a read-only or disabled total ("−5.18") used to need a dummy `onNegativeChange`
-    // just to show its minus. Without the handler there is nothing to toggle — a typed
-    // minus simply stays in the text, as in any field without a direction control.
-    const shown = negative && isBareAmount(value) ? `-${value}` : value;
-    // What the user SEES is `shown` with the locale's decimal mark (kastlan 40: a
-    // fr-CH user typed "1,5" and watched it turn into "1.5" under their fingers). Display only — `value`, `onChange`, the sign split and the settle all
-    // stay dot-decimal, because that string is the contract: RhfMoneyField's
-    // `parseAmount`, every app's `Number(value)` and the calculator's evaluator read
-    // it. The way back is free: {@link sanitizeLive} already folds a typed "," into
-    // ".", so a comma typed, pasted or tapped on the numpad lands as a dot.
-    //
-    // One character for one character, and no digit grouping: the caret stays where
-    // the typist put it, and "1.000" cannot be read back as a thousand in one locale
-    // and as one in the other. de-CH and it-CH are "." — CLDR says so, and this
-    // follows `Intl` rather than a guess about a country. The field's own `locale`,
-    // else the provider's (0.34, DUP-10).
-    const locale = useKitLocale(props.locale);
-    // Decimals the figure settles to: `digits`, else the currency's minor unit.
-    const digits = digitsProp ?? currencyMinorDigits(currency);
-    const settle = (text: string) => settleAmount(text, digits, min, max);
-    // The engine NumberInput shares (DUP-10): the lock (focusable, `readOnly`, nothing
-    // changes or settles — see `disabledReason`), the hint — a FieldHint is its words at
-    // Large and on touch, §4 — the error, the description's order, the typist's draft
-    // in the locale's mark, the calculator and the numpad. On a phone the OS keyboard
-    // is suppressed for the numpad sheet (feedback #334), and the display shape keys off
-    // the SAME phone layout, so the two can never drift apart on the breakpoint.
-    //
-    // A value the HOST set (not one typed here) is shown at the currency's minor unit
-    // while the field is not being edited: an FX estimate of 93.4213 showed four
-    // decimals (keksdose live #356). Display only — `value` is the host's, untouched.
-    const numeric = useNumericField(props, {
-      settle,
-      display: (focused) => (focused ? shown : settleAmount(shown, digits)),
-    });
-    const { lock, locked, off, isMobile, asDisplay, showCalc, showNumpad, setFocused, mark, draft, setDraft, derived } =
-      numeric;
-    const invalid = numeric.isInvalid;
-    // A locked chip is a read-out: picking a currency is a change too.
-    const editable = !!onCurrencyChange && !locked;
-    // Room for the trailing controls — the calculator and the currency chip — once
-    // measured, as NumberInput reserves its own (keksdose live #367, DUP-10): their
-    // width, the track's `end-1` inset in the boxed shape, and NumberInput's 4px gap.
-    // Before that (the first paint, and wherever there is no layout) the classes below
-    // stand in. showCalc is always false on a phone, so the display shape only has to
-    // clear the chip, by its own width rather than the boxed shape's room (feedback #430
-    // rework: on a 375px screen 16px decide between a readable figure and a clipped one).
-    const hasEnd = showCalc || Boolean(currency);
-    const [endRef, endWidth] = useEndWidth(hasEnd);
-    const trailingRoom = asDisplay
-      ? currency ? (editable ? "pe-16" : "pe-12") : undefined
-      : showCalc
-        ? currency ? (editable ? "pe-24" : "pe-16") : "pe-10"
-        : currency ? (editable ? "pe-20" : "pe-14") : undefined;
-    const innerRef = useRef<HTMLInputElement>(null);
-    const setRefs = useMemo(() => mergeRefs(innerRef, ref), [ref]);
-    // While the typist is typing, the field shows THEIR text ("1.234,5" stays exactly
-    // that), not the value re-spelt: re-spelling turned a grouping "." into a "," under
-    // their fingers, after which no rule could tell the two apart (keksdose G1). The
-    // draft only while it says what the field holds AND holds nothing the live
-    // sanitising would drop — a letter, a second decimal point (see `showsTyped`); a
-    // value set from outside, a calculator result or a commit shows the derived spelling.
-    const display =
-      draft === null
-        ? derived
-        : (numeric.typedFor(shown) ??
-          // The caller owns the sign: the typed "12" is shown as the "-12" it is.
-          (signOwned && negative && shown.startsWith("-") && numeric.typedFor(shown.slice(1)) !== null
-            ? `-${draft}`
-            : derived));
-    // Every route into the field — typing, the numpad sheet, the desktop
-    // calculator, the blur/Enter commit — funnels through here, so the split is
-    // written once and the four entry paths cannot drift.
-    //
-    // `previous` is the text this one REPLACES, and it is what says whether a bare
-    // figure arriving here is an answer or a magnitude. For the three paths that
-    // edit the field's own text that is simply what the field was showing; the
-    // desktop calculator keeps its expression in a popover the field never sees,
-    // so it passes it in (see `CalculatorButton`'s `onChange`).
-    const handleText = (raw: string, previous: string = shown) => {
-      const text = sanitizeLive(raw);
-      if (!signOwned) {
-        onChange(text);
-        return;
-      }
-      const { sign, rest } = splitLeadingSign(text);
-      if (sign) {
-        // SET, not flip: re-reporting the same sign on every keystroke is a no-op.
-        onNegativeChange(sign === "-");
-      } else if (looksLikeExpression(previous) && isBareAmount(text) && isResultOf(previous, text, settle)) {
-        // A calculation that just RESOLVED states its sign in both directions. The
-        // figure it ran on is the SIGNED one the user could see — "-12+30" is +18 —
-        // so a positive result has to move the chip too, or the field would answer
-        // that sum with "-18" and contradict the arithmetic it just showed.
-        //
-        // Only when it really resolved, though: see {@link isResultOf}. A bare figure
-        // arriving on top of an expression is far more often a replacement than an
-        // answer, and reading it as an answer flips the direction of money.
-        onNegativeChange(false);
-      }
-      onChange(sign ? rest : text);
-    };
-    const commit = () => {
-      setDraft(null);
-      const settled = settle(commitExpression(shown));
-      handleText(settled);
-      onCommit?.(settled);
-    };
-    const typed = (raw: string) => handleText(numeric.read(raw));
-    // The currency list is CurrencySelect's (round 0.34 Wave 2, DUP-4) on the picker
-    // family's core: the chip was a hand copy of it and had drifted (no wrap at Large, no
-    // `options` subset, no check mark, no listbox id, no #308 width), and both were plain
-    // buttons under a listbox promise. `filter: false`: the list filters its own rows.
-    const core = useComboboxCore<string>({ filter: false, backCloses: true });
-    // `chipRef`: the chip the currency list hangs off (Keksdose dev#548: portalled, so the
-    // panel needs a real trigger rect rather than a relative parent). It is also where
-    // Escape and a pick hand focus back (round 0.34 BUG-1): Safari does not focus a
-    // clicked button, so "whatever held focus" is not the chip.
-    const { open, setOpen, closeToTrigger, triggerRef: chipRef } = core;
-    const listboxId = `${generatedId}-currencies`;
-    // A lock arriving while the list is up closes it, as on CountrySelect — adjusted
-    // while rendering, so no frame shows a list that can no longer be used.
-    if (!editable && open) setOpen(false);
+export function AmountInput(props: AmountInputProps) {
+  const { ref, value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, currencyOptions, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
+  // The sign is DISPLAYED, not stored (live #201 rework). `value` is the
+  // magnitude; the minus is glued on here and taken off again in handleText, so
+  // the two can never disagree and the caller can never double-apply it. Only in
+  // front of a bare amount: an expression being typed ("12-30") owns its own
+  // minus and has to survive keystroke-for-keystroke.
+  const signOwned = onNegativeChange !== undefined;
+  // The sign is DRAWN whenever `negative` says so, handler or not (keksdose live #366):
+  // a read-only or disabled total ("−5.18") used to need a dummy `onNegativeChange`
+  // just to show its minus. Without the handler there is nothing to toggle — a typed
+  // minus simply stays in the text, as in any field without a direction control.
+  const shown = negative && isBareAmount(value) ? `-${value}` : value;
+  // What the user SEES is `shown` with the locale's decimal mark (kastlan 40: a
+  // fr-CH user typed "1,5" and watched it turn into "1.5" under their fingers). Display only — `value`, `onChange`, the sign split and the settle all
+  // stay dot-decimal, because that string is the contract: RhfMoneyField's
+  // `parseAmount`, every app's `Number(value)` and the calculator's evaluator read
+  // it. The way back is free: {@link sanitizeLive} already folds a typed "," into
+  // ".", so a comma typed, pasted or tapped on the numpad lands as a dot.
+  //
+  // One character for one character, and no digit grouping: the caret stays where
+  // the typist put it, and "1.000" cannot be read back as a thousand in one locale
+  // and as one in the other. de-CH and it-CH are "." — CLDR says so, and this
+  // follows `Intl` rather than a guess about a country. The field's own `locale`,
+  // else the provider's (0.34, DUP-10).
+  const locale = useKitLocale(props.locale);
+  // Decimals the figure settles to: `digits`, else the currency's minor unit.
+  const digits = digitsProp ?? currencyMinorDigits(currency);
+  const settle = (text: string) => settleAmount(text, digits, min, max);
+  // The engine NumberInput shares (DUP-10): the lock (focusable, `readOnly`, nothing
+  // changes or settles — see `disabledReason`), the hint — a FieldHint is its words at
+  // Large and on touch, §4 — the error, the description's order, the typist's draft
+  // in the locale's mark, the calculator and the numpad. On a phone the OS keyboard
+  // is suppressed for the numpad sheet (feedback #334), and the display shape keys off
+  // the SAME phone layout, so the two can never drift apart on the breakpoint.
+  //
+  // A value the HOST set (not one typed here) is shown at the currency's minor unit
+  // while the field is not being edited: an FX estimate of 93.4213 showed four
+  // decimals (keksdose live #356). Display only — `value` is the host's, untouched.
+  const numeric = useNumericField(props, {
+    settle,
+    display: (focused) => (focused ? shown : settleAmount(shown, digits)),
+  });
+  const { lock, locked, off, isMobile, asDisplay, showCalc, showNumpad, setFocused, mark, draft, setDraft, derived } =
+    numeric;
+  const invalid = numeric.isInvalid;
+  // A locked chip is a read-out: picking a currency is a change too.
+  const editable = !!onCurrencyChange && !locked;
+  // Room for the trailing controls — the calculator and the currency chip — once
+  // measured, as NumberInput reserves its own (keksdose live #367, DUP-10): their
+  // width, the track's `end-1` inset in the boxed shape, and NumberInput's 4px gap.
+  // Before that (the first paint, and wherever there is no layout) the classes below
+  // stand in. showCalc is always false on a phone, so the display shape only has to
+  // clear the chip, by its own width rather than the boxed shape's room (feedback #430
+  // rework: on a 375px screen 16px decide between a readable figure and a clipped one).
+  const hasEnd = showCalc || Boolean(currency);
+  const [endRef, endWidth] = useEndWidth(hasEnd);
+  const trailingRoom = asDisplay
+    ? currency ? (editable ? "pe-16" : "pe-12") : undefined
+    : showCalc
+      ? currency ? (editable ? "pe-24" : "pe-16") : "pe-10"
+      : currency ? (editable ? "pe-20" : "pe-14") : undefined;
+  const innerRef = useRef<HTMLInputElement>(null);
+  const setRefs = useMemo(() => mergeRefs(innerRef, ref), [ref]);
+  // While the typist is typing, the field shows THEIR text ("1.234,5" stays exactly
+  // that), not the value re-spelt: re-spelling turned a grouping "." into a "," under
+  // their fingers, after which no rule could tell the two apart (keksdose G1). The
+  // draft only while it says what the field holds AND holds nothing the live
+  // sanitising would drop — a letter, a second decimal point (see `showsTyped`); a
+  // value set from outside, a calculator result or a commit shows the derived spelling.
+  const display =
+    draft === null
+      ? derived
+      : (numeric.typedFor(shown) ??
+        // The caller owns the sign: the typed "12" is shown as the "-12" it is.
+        (signOwned && negative && shown.startsWith("-") && numeric.typedFor(shown.slice(1)) !== null
+          ? `-${draft}`
+          : derived));
+  // Every route into the field — typing, the numpad sheet, the desktop
+  // calculator, the blur/Enter commit — funnels through here, so the split is
+  // written once and the four entry paths cannot drift.
+  //
+  // `previous` is the text this one REPLACES, and it is what says whether a bare
+  // figure arriving here is an answer or a magnitude. For the three paths that
+  // edit the field's own text that is simply what the field was showing; the
+  // desktop calculator keeps its expression in a popover the field never sees,
+  // so it passes it in (see `CalculatorButton`'s `onChange`).
+  const handleText = (raw: string, previous: string = shown) => {
+    const text = sanitizeLive(raw);
+    if (!signOwned) {
+      onChange(text);
+      return;
+    }
+    const { sign, rest } = splitLeadingSign(text);
+    if (sign) {
+      // SET, not flip: re-reporting the same sign on every keystroke is a no-op.
+      onNegativeChange(sign === "-");
+    } else if (looksLikeExpression(previous) && isBareAmount(text) && isResultOf(previous, text, settle)) {
+      // A calculation that just RESOLVED states its sign in both directions. The
+      // figure it ran on is the SIGNED one the user could see — "-12+30" is +18 —
+      // so a positive result has to move the chip too, or the field would answer
+      // that sum with "-18" and contradict the arithmetic it just showed.
+      //
+      // Only when it really resolved, though: see {@link isResultOf}. A bare figure
+      // arriving on top of an expression is far more often a replacement than an
+      // answer, and reading it as an answer flips the direction of money.
+      onNegativeChange(false);
+    }
+    onChange(sign ? rest : text);
+  };
+  const commit = () => {
+    setDraft(null);
+    const settled = settle(commitExpression(shown));
+    handleText(settled);
+    onCommit?.(settled);
+  };
+  const typed = (raw: string) => handleText(numeric.read(raw));
+  // The currency list is CurrencySelect's (round 0.34 Wave 2, DUP-4) on the picker
+  // family's core: the chip was a hand copy of it and had drifted (no wrap at Large, no
+  // `options` subset, no check mark, no listbox id, no #308 width), and both were plain
+  // buttons under a listbox promise. `filter: false`: the list filters its own rows.
+  const core = useComboboxCore<string>({ filter: false, backCloses: true });
+  // `chipRef`: the chip the currency list hangs off (Keksdose dev#548: portalled, so the
+  // panel needs a real trigger rect rather than a relative parent). It is also where
+  // Escape and a pick hand focus back (round 0.34 BUG-1): Safari does not focus a
+  // clicked button, so "whatever held focus" is not the chip.
+  const { open, setOpen, closeToTrigger, triggerRef: chipRef } = core;
+  const listboxId = `${generatedId}-currencies`;
+  // A lock arriving while the list is up closes it, as on CountrySelect — adjusted
+  // while rendering, so no frame shows a list that can no longer be used.
+  if (!editable && open) setOpen(false);
 
-    // The currency chip's strings are the `currency` namespace — the same two
-    // `CurrencySelect` resolves, under this component's older key names. The
-    // calculator and the numpad resolve `calculator` themselves; `labels.calculator`
-    // and `labels.pad` are handed straight through to them as overrides.
-    // The two strings read out first, so the memo depends on them and not on the
-    // caller's `labels` object (a new one every render) — what the React Compiler infers.
-    const currencyLabel = labels?.currency;
-    const currencySearchLabel = labels?.currencySearch;
-    const currencyOverrides = useMemo(() => {
-      const out: Partial<CurrencyLabels> = {};
-      if (currencyLabel !== undefined) out.currency = currencyLabel;
-      if (currencySearchLabel !== undefined) out.search = currencySearchLabel;
-      return out;
-    }, [currencyLabel, currencySearchLabel]);
-    const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
-    const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  // The currency chip's strings are the `currency` namespace — the same two
+  // `CurrencySelect` resolves, under this component's older key names. The
+  // calculator and the numpad resolve `calculator` themselves; `labels.calculator`
+  // and `labels.pad` are handed straight through to them as overrides.
+  // The two strings read out first, so the memo depends on them and not on the
+  // caller's `labels` object (a new one every render) — what the React Compiler infers.
+  const currencyLabel = labels?.currency;
+  const currencySearchLabel = labels?.currencySearch;
+  const currencyOverrides = useMemo(() => {
+    const out: Partial<CurrencyLabels> = {};
+    if (currencyLabel !== undefined) out.currency = currencyLabel;
+    if (currencySearchLabel !== undefined) out.search = currencySearchLabel;
+    return out;
+  }, [currencyLabel, currencySearchLabel]);
+  const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
 
-    const selected = getCurrency(currency);
+  const selected = getCurrency(currency);
 
-    return (
-      <div className={cn("w-full", className)}>
-        {/* Inner relative box holds the input + its absolutely-positioned
-            trailing controls (calculator / currency), so those stay anchored to
-            the INPUT even when the mobile math bar is rendered below (#334). It is
-            the kit's FloatingField, which draws the label — floating, or sr-only in
-            the display shape — and puts a FieldHint on the label's line, as it does
-            for NumberInput. */}
-        {/* Locked, the field sits in the reason's frame (LockedReason: the line, or the
-            Tooltip), as NumberInput does; the root above keeps `className`, so nothing
-            reflows. */}
-        <LockedOrNot lock={lock} display={disabledReasonDisplay}>
-        <FloatingField
-          className="w-full"
-          htmlFor={fieldId}
-          label={label}
-          srOnlyLabel={asDisplay}
-          hint={numeric.hint.labelHint}
-        >
-        <input
-          ref={setRefs}
-          id={fieldId}
-          // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
-          aria-label={ariaLabelAttr ?? ariaLabelProp}
-          type="text"
-          // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in per call site (feedback #70)
-          autoFocus={autoFocus}
-          // On mobile suppress the OS keyboard so our numpad sheet owns entry; the
-          // field keeps focus/caret. Desktop keeps the native decimal keypad.
-          inputMode={isMobile ? "none" : "decimal"}
-          autoComplete="off"
-          disabled={off}
-          // Locked: focusable, `readOnly`, `aria-disabled` — see `disabledReason`.
-          readOnly={locked || undefined}
-          aria-disabled={locked || undefined}
-          // The floating-label pattern needs a blank placeholder for its
-          // peer-placeholder-shown trick. The display shape has no floating label,
-          // so it spends the placeholder on what an empty borderless form actually
-          // needs: a zero to aim at, at full size. The caller supplies it because
-          // only the app knows the locale's decimal separator.
-          placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
-          value={display}
-          onChange={(e) => {
-            if (!locked) typed(e.target.value);
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => {
-            // Nothing settles under the lock — not even a draft typed before it arrived,
-            // which stays in the field for when it lifts.
-            if (!locked) commit();
-            setFocused(false);
-          }}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter") return;
-            // Locked: Enter submits no form and settles nothing.
-            if (locked) e.preventDefault();
-            else commit();
-          }}
-          className={cn(
-            // With a label, use the floating-input padding (pt-4 pb-1) like every
-            // other labelled field so the value sits BELOW the floated label rather
-            // than vertically centred where it overlaps the resting label
-            // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
-            // transparent-placeholder bits.
-            asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
-            // The plain end padding, with nothing trailing: cosmetic, so the caller's
-            // to change (keksdose 0.24 — a symmetric `px-2` in a budget cell).
-            !trailingRoom && (asDisplay ? "pe-0" : "pe-3"),
-            // Centred display shape: centre in what is LEFT of the currency chip.
-            // `text-center` alone would centre the figure in the whole box, i.e.
-            // partly underneath the chip; the padding below is what takes the chip
-            // out of the centring, and nothing is added at the start because a
-            // mirrored reservation would spend the width twice (see `align`).
-            asDisplay && align === "center" && "text-center",
-            // Over the base class's own text colour.
-            TONE_CLASS[tone],
-            // The caller's, over all of the above — base, plain padding, alignment and
-            // tone — and under only what the field needs to work (see `inputClassName`).
-            inputClassName,
-            // Room for the trailing controls, after the caller's so a `px-2` cannot run
-            // the digits under the chip (NumberInput's order, which reserves its unit
-            // and calculator the same way).
-            trailingRoom,
-            invalid && FIELD_INVALID,
-            locked && "cursor-not-allowed",
-          )}
-          // The classes above are the fallback; once measured the field reserves exactly
-          // its trailing controls' width, inline so it wins over every class (see
-          // `trailingRoom`).
-          style={hasEnd && endWidth != null ? { paddingInlineEnd: endWidth + (asDisplay ? 4 : 8) } : undefined}
-          aria-invalid={invalid || undefined}
-          aria-describedby={numeric.describedBy}
-          aria-required={ariaRequired}
-        />
-        {/* The label is FloatingField's, after these children (the floating trick
-            reads the input through `peer-*`). The display shape drops it VISUALLY,
-            not from the accessibility tree: a 36px tinted figure at the top of a
-            transaction form is legibly the amount, but a screen reader still needs
-            the name, and callers that pass `label` without `aria-label` would
-            otherwise be left with none. */}
-        {/* Trailing controls share one flex track so the calculator icon and the
-            currency suffix/picker sit side by side without overlapping. */}
-        {/* The display shape has no box to inset from, so the controls align to the
-            figure's own end edge and its baseline strip (`bottom-1`, matching the
-            input's pb-1) instead of floating inside a field. */}
-        <div
-          // Measured for the input's end padding (see `trailingRoom`).
-          ref={endRef}
-          className={cn(
-            "absolute flex items-center gap-0.5",
-            // Logical `end-*`: the chip and the calculator are the figure's trailing
-            // controls, so a right-to-left form carries them on the left.
-            asDisplay ? "bottom-1 end-0" : "inset-y-1 end-1",
-          )}
-        >
-          {showCalc && (
-            <CalculatorButton
-              // The mark the field shows but not the typist's grouping: the evaluator
-              // reads either mark, and "1.234,5" is two of them. The result comes back
-              // dot-decimal.
-              value={derived}
-              onChange={(result, expression) => {
-                setDraft(null);
-                const settled = settle(result);
-                handleText(settled, expression);
-                onCommit?.(settled);
-              }}
-              className="px-1.5"
-              aria-label={labels?.calculatorTrigger}
-              labels={labels?.calculator}
-            />
-          )}
-          {currency && !editable && (
-            <span
-              aria-hidden
-              className={cn(
-                "pointer-events-none px-1 font-medium text-muted",
-                // A text-xs chip next to a 36px figure reads as a stray footnote.
-                asDisplay ? "text-sm" : "text-xs",
-              )}
-            >
-              {currency}
-            </span>
-          )}
-          {currency && editable && (
-            <button
-              ref={chipRef}
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              // A button that opens a listbox, and says so: the chip is a control inside
-              // a text field, not a field of its own, so not a combobox.
-              aria-haspopup="listbox"
-              aria-expanded={open}
-              aria-controls={listboxId}
-              aria-label={
-                // "Currency: EUR" through `common.fieldValue`, not a template literal:
-                // the colon-and-space is punctuation a translation has to own.
-                selected ? common.fieldValue(currencyText.currency, selected.code) : currencyText.currency
-              }
-              className={cn(
-                "flex items-center gap-1 rounded px-2 py-1 font-medium text-secondary hover:bg-hover",
-                asDisplay ? "text-sm" : "text-xs",
-              )}
-            >
-              {currency}
-              <ChevronDown className="size-3" />
-            </button>
-          )}
-        </div>
-        {editable && (
-          <CurrencyOptionList
-            core={core}
-            listboxId={listboxId}
-            value={currency}
-            codes={currencyOptions}
-            currencyNames={currencyNames}
-            locale={locale}
-            searchPlaceholder={currencyText.search}
-            // The phone sheet's title: what the chip is for.
-            sheetTitle={currencyText.currency}
-            onChoose={(code) => {
-              onCurrencyChange?.(code);
-              closeToTrigger();
-            }}
-          />
+  return (
+    <div className={cn("w-full", className)}>
+      {/* Inner relative box holds the input + its absolutely-positioned
+          trailing controls (calculator / currency), so those stay anchored to
+          the INPUT even when the mobile math bar is rendered below (#334). It is
+          the kit's FloatingField, which draws the label — floating, or sr-only in
+          the display shape — and puts a FieldHint on the label's line, as it does
+          for NumberInput. */}
+      {/* Locked, the field sits in the reason's frame (LockedReason: the line, or the
+          Tooltip), as NumberInput does; the root above keeps `className`, so nothing
+          reflows. */}
+      <LockedOrNot lock={lock} display={disabledReasonDisplay}>
+      <FloatingField
+        className="w-full"
+        htmlFor={fieldId}
+        label={label}
+        srOnlyLabel={asDisplay}
+        hint={numeric.hint.labelHint}
+      >
+      <input
+        ref={setRefs}
+        id={fieldId}
+        // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+        aria-label={ariaLabelAttr ?? ariaLabelProp}
+        type="text"
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in per call site (feedback #70)
+        autoFocus={autoFocus}
+        // On mobile suppress the OS keyboard so our numpad sheet owns entry; the
+        // field keeps focus/caret. Desktop keeps the native decimal keypad.
+        inputMode={isMobile ? "none" : "decimal"}
+        autoComplete="off"
+        disabled={off}
+        // Locked: focusable, `readOnly`, `aria-disabled` — see `disabledReason`.
+        readOnly={locked || undefined}
+        aria-disabled={locked || undefined}
+        // The floating-label pattern needs a blank placeholder for its
+        // peer-placeholder-shown trick. The display shape has no floating label,
+        // so it spends the placeholder on what an empty borderless form actually
+        // needs: a zero to aim at, at full size. The caller supplies it because
+        // only the app knows the locale's decimal separator.
+        placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
+        value={display}
+        onChange={(e) => {
+          if (!locked) typed(e.target.value);
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          // Nothing settles under the lock — not even a draft typed before it arrived,
+          // which stays in the field for when it lifts.
+          if (!locked) commit();
+          setFocused(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter") return;
+          // Locked: Enter submits no form and settles nothing.
+          if (locked) e.preventDefault();
+          else commit();
+        }}
+        className={cn(
+          // With a label, use the floating-input padding (pt-4 pb-1) like every
+          // other labelled field so the value sits BELOW the floated label rather
+          // than vertically centred where it overlaps the resting label
+          // (feedback #314). FLOATING_INPUT_CLASS already bundles the peer +
+          // transparent-placeholder bits.
+          asDisplay ? DISPLAY_INPUT_CLASS : label !== undefined ? FLOATING_INPUT_CLASS : FIELD_BASE,
+          // The plain end padding, with nothing trailing: cosmetic, so the caller's
+          // to change (keksdose 0.24 — a symmetric `px-2` in a budget cell).
+          !trailingRoom && (asDisplay ? "pe-0" : "pe-3"),
+          // Centred display shape: centre in what is LEFT of the currency chip.
+          // `text-center` alone would centre the figure in the whole box, i.e.
+          // partly underneath the chip; the padding below is what takes the chip
+          // out of the centring, and nothing is added at the start because a
+          // mirrored reservation would spend the width twice (see `align`).
+          asDisplay && align === "center" && "text-center",
+          // Over the base class's own text colour.
+          TONE_CLASS[tone],
+          // The caller's, over all of the above — base, plain padding, alignment and
+          // tone — and under only what the field needs to work (see `inputClassName`).
+          inputClassName,
+          // Room for the trailing controls, after the caller's so a `px-2` cannot run
+          // the digits under the chip (NumberInput's order, which reserves its unit
+          // and calculator the same way).
+          trailingRoom,
+          invalid && FIELD_INVALID,
+          locked && "cursor-not-allowed",
         )}
-        </FloatingField>
-        </LockedOrNot>
-        {/* Outside the relative box, as NumberInput's caption is: the trailing
-            controls are `inset-y-1` in it and would stretch down over a second line. */}
-        <FieldCaption parts={numeric.hint} />
-        {/* The news after the standing advice, as Select orders them. The root is
-            already a steady box, so the message coming and going remounts nothing. */}
-        {numeric.errorEl}
-        {showNumpad && (
-          <NumberPadSheet
-            // Localised like the field it mirrors. Keys are typing, read by the
-            // locale's marks like the keyboard's; "=" is a result, dot-decimal.
-            value={display}
-            onChange={typed}
-            onResult={(result) => {
+        // The classes above are the fallback; once measured the field reserves exactly
+        // its trailing controls' width, inline so it wins over every class (see
+        // `trailingRoom`).
+        style={hasEnd && endWidth != null ? { paddingInlineEnd: endWidth + (asDisplay ? 4 : 8) } : undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={numeric.describedBy}
+        aria-required={ariaRequired}
+      />
+      {/* The label is FloatingField's, after these children (the floating trick
+          reads the input through `peer-*`). The display shape drops it VISUALLY,
+          not from the accessibility tree: a 36px tinted figure at the top of a
+          transaction form is legibly the amount, but a screen reader still needs
+          the name, and callers that pass `label` without `aria-label` would
+          otherwise be left with none. */}
+      {/* Trailing controls share one flex track so the calculator icon and the
+          currency suffix/picker sit side by side without overlapping. */}
+      {/* The display shape has no box to inset from, so the controls align to the
+          figure's own end edge and its baseline strip (`bottom-1`, matching the
+          input's pb-1) instead of floating inside a field. */}
+      <div
+        // Measured for the input's end padding (see `trailingRoom`).
+        ref={endRef}
+        className={cn(
+          "absolute flex items-center gap-0.5",
+          // Logical `end-*`: the chip and the calculator are the figure's trailing
+          // controls, so a right-to-left form carries them on the left.
+          asDisplay ? "bottom-1 end-0" : "inset-y-1 end-1",
+        )}
+      >
+        {showCalc && (
+          <CalculatorButton
+            // The mark the field shows but not the typist's grouping: the evaluator
+            // reads either mark, and "1.234,5" is two of them. The result comes back
+            // dot-decimal.
+            value={derived}
+            onChange={(result, expression) => {
               setDraft(null);
               const settled = settle(result);
-              handleText(settled);
+              handleText(settled, expression);
               onCommit?.(settled);
             }}
-            onDone={() => innerRef.current?.blur()}
-            label={label}
-            labels={labels?.pad}
-            decimalMark={mark}
+            className="px-1.5"
+            aria-label={labels?.calculatorTrigger}
+            labels={labels?.calculator}
           />
         )}
+        {currency && !editable && (
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none px-1 font-medium text-muted",
+              // A text-xs chip next to a 36px figure reads as a stray footnote.
+              asDisplay ? "text-sm" : "text-xs",
+            )}
+          >
+            {currency}
+          </span>
+        )}
+        {currency && editable && (
+          <button
+            ref={chipRef}
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            // A button that opens a listbox, and says so: the chip is a control inside
+            // a text field, not a field of its own, so not a combobox.
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-label={
+              // "Currency: EUR" through `common.fieldValue`, not a template literal:
+              // the colon-and-space is punctuation a translation has to own.
+              selected ? common.fieldValue(currencyText.currency, selected.code) : currencyText.currency
+            }
+            className={cn(
+              "flex items-center gap-1 rounded px-2 py-1 font-medium text-secondary hover:bg-hover",
+              asDisplay ? "text-sm" : "text-xs",
+            )}
+          >
+            {currency}
+            <ChevronDown className="size-3" />
+          </button>
+        )}
       </div>
-    );
-  },
-);
-
-AmountInput.displayName = "AmountInput";
+      {editable && (
+        <CurrencyOptionList
+          core={core}
+          listboxId={listboxId}
+          value={currency}
+          codes={currencyOptions}
+          currencyNames={currencyNames}
+          locale={locale}
+          searchPlaceholder={currencyText.search}
+          // The phone sheet's title: what the chip is for.
+          sheetTitle={currencyText.currency}
+          onChoose={(code) => {
+            onCurrencyChange?.(code);
+            closeToTrigger();
+          }}
+        />
+      )}
+      </FloatingField>
+      </LockedOrNot>
+      {/* Outside the relative box, as NumberInput's caption is: the trailing
+          controls are `inset-y-1` in it and would stretch down over a second line. */}
+      <FieldCaption parts={numeric.hint} />
+      {/* The news after the standing advice, as Select orders them. The root is
+          already a steady box, so the message coming and going remounts nothing. */}
+      {numeric.errorEl}
+      {showNumpad && (
+        <NumberPadSheet
+          // Localised like the field it mirrors. Keys are typing, read by the
+          // locale's marks like the keyboard's; "=" is a result, dot-decimal.
+          value={display}
+          onChange={typed}
+          onResult={(result) => {
+            setDraft(null);
+            const settled = settle(result);
+            handleText(settled);
+            onCommit?.(settled);
+          }}
+          onDone={() => innerRef.current?.blur()}
+          label={label}
+          labels={labels?.pad}
+          decimalMark={mark}
+        />
+      )}
+    </div>
+  );
+}
 
 /** The field in its lock's {@link LockedReason} while locked, as it is otherwise. A
  *  component rather than a ternary so the field's JSX is written once. `block w-full`:
