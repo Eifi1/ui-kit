@@ -237,8 +237,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       keyboardHint:
         "A nyílbillentyűk a cellák között mozognak. Gépeléssel felülírja a cellát, F2-vel szerkeszti, Escape-pel visszavonja a szerkesztést. Az Enter lefelé lép, és a végén új sort ad hozzá.",
       lineError: (line) => `A(z) ${line}. sor nem olvasható`,
-      points: (count) => `${count} pont`,
-      problems: (count) => `${count} cella nem szám`,
+      points: (count) => `${n(count)} pont`,
+      problems: (count) => `${n(count)} cella nem szám`,
     },
     pageContents: { title: "Ezen az oldalon" },
     common: {
@@ -489,7 +489,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       rejectedPick: (count) =>
         count === 1
           ? "A fájl nem lett hozzáadva"
-          : `A(z) ${count} fájl közül egy sem lett hozzáadva`,
+          : `A(z) ${n(count)} fájl közül egy sem lett hozzáadva`,
       // Each message opens with the quoted name, so no a/az has to agree with it, and
       // keeps numerals and the formatted size bare (convention 3).
       rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,
@@ -595,7 +595,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       strong: "Erős",
       announcement: (level) => `Jelszó erőssége: ${level}`,
       // Unformatted, as in the English default; no plural after a number.
-      ruleLength: (minLength) => `Legalább ${minLength} karakter`,
+      ruleLength: (minLength) => `Legalább ${n(minLength)} karakter`,
       ruleCase: "Kis- és nagybetűk",
       ruleDigit: "Számjegy",
       ruleSymbol: "Speciális karakter",
@@ -603,7 +603,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       met: "Teljesül:",
       notMet: "Nem teljesül:",
       tooLong: (maxBytes) =>
-        `Legfeljebb ${maxBytes} karakter (az ékezetes betűk és az emojik egynél többnek számítanak).`,
+        `Legfeljebb ${n(maxBytes)} karakter (az ékezetes betűk és az emojik egynél többnek számítanak).`,
     },
     seriesChart: {
       resetZoom: "Nagyítás visszaállítása",

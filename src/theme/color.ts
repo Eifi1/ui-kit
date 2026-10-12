@@ -195,10 +195,16 @@ export function solveLightness(
   const bgL = rgbToOklch(against).l;
   let lo = direction === "darker" ? 0 : bgL;
   let hi = direction === "darker" ? bgL : 1;
+  // Measured on the HEX both colours are painted as, never on the float (round 0.34
+  // BUG-8): a solve that stopped on the float colour rounded to a hex just under the
+  // target — brand #000000's light income figure solved to 4.5000 and shipped at 4.49:1.
+  // Rounding keeps contrast monotonic in each half, so the bisection still holds, and
+  // the side it returns is the side whose hex clears the target.
+  const bg = toHex(against);
 
   for (let i = 0; i < 24; i++) {
     const mid = (lo + hi) / 2;
-    const got = contrast(oklchToRgb({ l: mid, c, h }), against);
+    const got = contrast(toHex(oklchToRgb({ l: mid, c, h })), bg);
     // Moving AWAY from the background raises contrast; which way that is depends on
     // whether we are going lighter or darker.
     if (got < target) {

@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_UI_KIT_LABELS } from "../defaults";
 import { DEFAULT_COLUMN_MAPPER_LABELS } from "../../components/column-mapper";
 import { DEFAULT_POPOVER_LABELS } from "../../components/popover";
+import { DEFAULT_WIZARD_LABELS, resolveWizardLabels } from "../../wizard/types";
+import { DEFAULT_COMMON_LABELS, DEFAULT_FILE_LABELS } from "../kit-labels";
 
 /**
  * The English catalogue is words, as the other six are (0.34, KS U8).
@@ -20,14 +22,15 @@ import { DEFAULT_POPOVER_LABELS } from "../../components/popover";
 
 const SRC = join(process.cwd(), "src");
 /** Keep in step with `WORDS` in scripts/flatten-en.mjs. `kit-labels` is the provider:
- *  shared with every component rather than copied, but no component code either. */
+ *  shared with every component rather than copied, but no component code either. It is
+ *  reached for its hooks (`useKitLabels` in a few `*-labels.ts`), never for words: since
+ *  0.34 it holds no `DEFAULT_*` (see the last test). `wizard/types` left the list then. */
 const WORDS = [
   /\/src\/i18n\/locales\/en\.ts$/,
   /\/src\/i18n\/defaults\.ts$/,
   /\/src\/i18n\/kit-labels\.tsx$/,
   /-labels\.ts$/,
   /\/src\/auth\/auth-errors\.ts$/,
-  /\/src\/wizard\/types\.ts$/,
 ];
 
 const sourceOf = (base: string) =>
@@ -59,16 +62,21 @@ function runtimeImports(file: string): string[] {
     });
 }
 
+/** Every module `locales/en.ts` loads at run time → the import chain that reaches it. */
+function reachedFromEnglish(): Map<string, string[]> {
+  const reached = new Map<string, string[]>();
+  const walk = (file: string, chain: string[]) => {
+    if (reached.has(file)) return;
+    reached.set(file, chain);
+    for (const next of runtimeImports(file)) walk(next, [...chain, relative(SRC, next)]);
+  };
+  walk(join(SRC, "i18n", "locales", "en.ts"), ["i18n/locales/en.ts"]);
+  return reached;
+}
+
 describe("the English catalogue's module graph", () => {
   it("reaches words and nothing else", () => {
-    const reached = new Map<string, string[]>();
-    const walk = (file: string, chain: string[]) => {
-      if (reached.has(file)) return;
-      reached.set(file, chain);
-      for (const next of runtimeImports(file)) walk(next, [...chain, relative(SRC, next)]);
-    };
-    const entry = join(SRC, "i18n", "locales", "en.ts");
-    walk(entry, ["i18n/locales/en.ts"]);
+    const reached = reachedFromEnglish();
 
     const strays = [...reached]
       .filter(([file]) => !WORDS.some((re) => re.test(file.replaceAll("\\", "/"))))
@@ -84,5 +92,24 @@ describe("the English catalogue's module graph", () => {
     expect(DEFAULT_UI_KIT_LABELS.columnMapper).toBe(DEFAULT_COLUMN_MAPPER_LABELS);
     // A helper that moved with its defaults keeps working from them.
     expect(DEFAULT_COLUMN_MAPPER_LABELS.requiredRoleShort?.("Date")).toBe("Date *");
+    // The provider's eleven and the wizard's moved too, and kept their names (round 0.34).
+    expect(DEFAULT_UI_KIT_LABELS.common).toBe(DEFAULT_COMMON_LABELS);
+    expect(DEFAULT_UI_KIT_LABELS.file).toBe(DEFAULT_FILE_LABELS);
+    expect(DEFAULT_UI_KIT_LABELS.wizard).toBe(DEFAULT_WIZARD_LABELS);
+    expect(resolveWizardLabels().next).toBe("Next");
+  });
+
+  it("keeps every DEFAULT_* in a *-labels.ts: the modules allowed for other reasons hold none", () => {
+    // CONTRIBUTING's label-module rule had twelve exceptions until 0.34: eleven defaults
+    // in the provider and one in wizard/types (round 0.34, DOC-6's sev-1 note).
+    const holders = [...reachedFromEnglish().keys()]
+      .filter((file) => !/-labels\.ts$/.test(file))
+      .flatMap((file) =>
+        [...readFileSync(file, "utf8").matchAll(/^export const (DEFAULT_\w+)/gm)]
+          .map((m) => m[1])
+          .filter((name) => name !== "DEFAULT_UI_KIT_LABELS") // the registry itself
+          .map((name) => `${relative(SRC, file)}: ${name}`),
+      );
+    expect(holders).toEqual([]);
   });
 });

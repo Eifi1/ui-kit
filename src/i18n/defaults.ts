@@ -11,7 +11,7 @@ import {
   DEFAULT_PASSWORD_REVEAL_LABELS,
   DEFAULT_TABS_LABELS,
 } from "../components/ui-labels";
-import { DEFAULT_WIZARD_LABELS } from "../wizard/types";
+import { DEFAULT_WIZARD_LABELS } from "../wizard/wizard-labels";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour-labels";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette-labels";
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search-labels";
@@ -112,7 +112,7 @@ import {
   DEFAULT_PICKER_SHEET_LABELS,
   DEFAULT_SWIPEABLE_ROW_LABELS,
   DEFAULT_TOP_BAR_LABELS,
-} from "./kit-labels";
+} from "./shared-labels";
 import type { UiKitLabels } from "./kit-labels";
 
 /**
@@ -124,7 +124,8 @@ import type { UiKitLabels } from "./kit-labels";
  * import cycle through every component in the kit.
  *
  * Every import here is a module of WORDS — a `*-labels.ts` beside its component, which
- * the component re-exports, or `kit-labels` and `wizard/types` — never a component. The
+ * the component re-exports (`shared-labels` for the namespaces the provider types
+ * itself, which `kit-labels` re-exports) — never a component. The
  * English catalogue (`locales/en.ts`) is built on this object, so a component imported
  * here rides along with English: in 0.33 that was 79 of them, and an app fetching `en`
  * lazily fetched ~40 chunks of component code with it, where every other language is one

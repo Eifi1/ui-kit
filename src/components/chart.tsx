@@ -367,7 +367,7 @@ export function ChartTooltipContent({
     // or a bar with a per-cell colour, IS the colour the reader is pointing at,
     // while `item.color` is the series-wide one — every tile's swatch came out
     // `--chart-1` whatever colour the tile was.
-    const color = paintedColor(cfgKey, series) ?? fill ?? item.color ?? "#64748b";
+    const color = paintedColor(cfgKey, series) ?? fill ?? item.color ?? "var(--text-muted)";
     const name = series?.label ?? nm ?? cfgKey;
     const raw = tooltipValue(item.value);
     let text: ReactNode;
@@ -504,7 +504,7 @@ export function ChartLegendContent({
         const vv = item.value != null ? String(item.value) : undefined;
         const cfgKey = dk && config[dk] ? dk : vv && config[vv] ? vv : (dk ?? vv ?? String(i));
         const series = config[cfgKey];
-        const color = paintedColor(cfgKey, series) ?? item.color ?? "#64748b";
+        const color = paintedColor(cfgKey, series) ?? item.color ?? "var(--text-muted)";
         const label = series?.label ?? vv ?? cfgKey;
         const off = hidden?.has(cfgKey) ?? false;
         const dimmed = off || (activeKey != null && activeKey !== cfgKey);

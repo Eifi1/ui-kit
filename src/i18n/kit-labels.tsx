@@ -1,4 +1,18 @@
 import { createContext, useContext, useMemo } from "react";
+import {
+  DEFAULT_APP_SHELL_LABELS,
+  DEFAULT_CALCULATOR_LABELS,
+  DEFAULT_COMBOBOX_LABELS,
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  DEFAULT_DATE_PICKER_LABELS,
+  DEFAULT_FILE_LABELS,
+  DEFAULT_MULTI_SELECT_LABELS,
+  DEFAULT_PICKER_SHEET_LABELS,
+  DEFAULT_SWIPEABLE_ROW_LABELS,
+  DEFAULT_TOP_BAR_LABELS,
+  formatFileSize,
+} from "./shared-labels";
 import type { AnchorHTMLAttributes, ReactElement, Ref } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
@@ -101,8 +115,9 @@ import type { ColumnMapperLabels } from "../components/column-mapper";
  * EVERY string the kit renders, as one typed tree — and an optional provider that
  * hands it to every component at once.
  *
- * WHY THIS EXISTS. The kit ships no catalogue and resolves no strings, and that stays
- * true: the app supplies every word. What was wrong was HOW it had to supply them —
+ * WHY THIS EXISTS. The kit renders only labels; it ships seven catalogues (since 0.7.0,
+ * `@eifi1/ui-kit/i18n/<code>`); the app decides the language and hands the words in.
+ * What was wrong was HOW it had to hand them in —
  * one `labels` prop per component instance, under a different prop name per
  * component (`labels`, `calendarLabels`, `passwordLabels`, `clearLabel`,
  * `searchPlaceholder`, `ariaLabel` …). A translated app therefore rendered English
@@ -114,8 +129,9 @@ import type { ColumnMapperLabels } from "../components/column-mapper";
  *
  *     the component's own prop   >   <UiKitProvider labels>   >   English default
  *
- * A consumer writes its translation ONCE, as a `UiKitLabels` (or a partial of it),
- * mounts `<UiKitProvider labels={…} locale={…}>` at the root, and every kit component
+ * A consumer loads a shipped catalogue (`loadUiKitLabels(code)`) or writes its own
+ * `UiKitLabels` (or a partial of one), mounts `<UiKitProvider labels={…} locale={…}>`
+ * at the root, and every kit component
  * below speaks that language — including the ones nested inside other kit components
  * (the calendar inside the data table's date filter, the popover inside the date
  * picker), which no prop at the outer call site could reach before.
@@ -447,117 +463,23 @@ export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: LabelOverride<UiK
 
 /* ── English defaults for the namespaces defined here ────────────────────── */
 
-export const DEFAULT_COMMON_LABELS: CommonLabels = {
-  close: "Close",
-  clear: "Clear",
-  search: "Search",
-  done: "Done",
-  cancel: "Cancel",
-  save: "Save",
-  back: "Back",
-  next: "Next",
-  remove: "Remove",
-  loading: "Loading…",
-  noResults: "No results",
-  fieldValue: (field, value) => `${field}: ${value}`,
-  dismiss: "Dismiss",
-  opensInNewTab: "opens in a new tab",
+// They live in ./shared-labels, a module of words, as every component's defaults live in
+// its `*-labels.ts` (round 0.34). Imported and exported as this module's own, as each
+// component does with its defaults: the names, and where the README lists them, stay.
+export {
+  DEFAULT_APP_SHELL_LABELS,
+  DEFAULT_CALCULATOR_LABELS,
+  DEFAULT_COMBOBOX_LABELS,
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  DEFAULT_DATE_PICKER_LABELS,
+  DEFAULT_FILE_LABELS,
+  DEFAULT_MULTI_SELECT_LABELS,
+  DEFAULT_PICKER_SHEET_LABELS,
+  DEFAULT_SWIPEABLE_ROW_LABELS,
+  DEFAULT_TOP_BAR_LABELS,
+  formatFileSize,
 };
-
-export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {
-  panel: "Choose a date",
-  rangePanel: "Choose a date range",
-  clear: "Clear",
-  previousDay: "Previous day",
-  nextDay: "Next day",
-  today: "Today",
-  apply: "Apply",
-  cancel: "Cancel",
-  presets: "Quick ranges",
-};
-
-export const DEFAULT_COMBOBOX_LABELS: ComboboxLabels = {
-  search: "Search",
-  noResults: "No results",
-  clear: "Clear",
-  loading: "Loading…",
-  create: (query) => `Create “${query}”`,
-  selectedCount: (count) => `${count} selected`,
-  loadError: "Couldn’t load results",
-  resultCount: (count) => (count === 1 ? "1 result" : `${count} results`),
-  minChars: (count) =>
-    count === 1 ? "Type at least 1 character" : `Type at least ${count} characters`,
-};
-
-export const DEFAULT_MULTI_SELECT_LABELS: MultiSelectLabels = {
-  search: "Search",
-  selectAll: "Select all",
-  clear: "Clear",
-  all: "All",
-  selectedCount: (count) => String(count),
-};
-
-export const DEFAULT_CALCULATOR_LABELS: CalculatorLabels = {
-  open: "Open calculator",
-  panel: "Calculator",
-  calculation: "Calculation",
-  backspace: "Backspace",
-  clear: "Clear",
-  equals: "Equals",
-  done: "Done",
-  plus: "Plus",
-  minus: "Minus",
-  times: "Times",
-  divide: "Divide",
-  decimal: "Decimal point",
-};
-
-export const DEFAULT_CURRENCY_LABELS: CurrencyLabels = {
-  currency: "Currency",
-  search: "Search currency",
-};
-
-export const DEFAULT_APP_SHELL_LABELS: AppShellLabels = {
-  collapse: "Collapse sidebar",
-  expand: "Expand sidebar",
-  toggleGroup: (groupLabel) => `${groupLabel}: pages`,
-};
-
-export const DEFAULT_TOP_BAR_LABELS: TopBarLabels = {
-  theme: "Toggle theme",
-  palette: "Appearance preset",
-  language: "Language",
-  switchRole: "Switch role",
-  role: (value) => `Role: ${value}`,
-};
-
-export const DEFAULT_PICKER_SHEET_LABELS: PickerSheetLabels = { close: "Close" };
-
-export const DEFAULT_SWIPEABLE_ROW_LABELS: SwipeableRowLabels = { actions: "Row actions" };
-
-/** Formats with the locale the provider was given (see {@link useKitFileLabels}).
- *  This static default has no locale to hand and falls back to the runtime's. */
-export const DEFAULT_FILE_LABELS: FileLabels = {
-  size: (bytes) => formatFileSize(bytes),
-};
-
-/** "12 kB", "3.4 MB" — `Intl`'s unit formatting, so the digits, the decimal mark and
- *  the unit's spelling all follow `locale`. */
-export function formatFileSize(bytes: number, locale?: string): string {
-  const units = ["byte", "kilobyte", "megabyte", "gigabyte"] as const;
-  let value = bytes;
-  let i = 0;
-  while (value >= 1000 && i < units.length - 1) {
-    value /= 1000;
-    i += 1;
-  }
-  return new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit: units[i],
-    unitDisplay: i === 0 ? "long" : "short",
-    maximumFractionDigits: value < 10 && i > 0 ? 1 : 0,
-  }).format(value);
-}
 
 /* ── The provider ────────────────────────────────────────────────────────── */
 

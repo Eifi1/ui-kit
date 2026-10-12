@@ -109,6 +109,30 @@ describe("solveLightness", () => {
     expect(l).toBeGreaterThanOrEqual(0);
     expect(l).toBeLessThanOrEqual(1);
   });
+
+  it("clears the target on the HEX it lands on, not only on the float before rounding (round 0.34 BUG-8)", () => {
+    // The solve used to stop on the float colour and the hex rounded below it: brand
+    // #000000's light income figure solved to 4.5000 and shipped as #00725e, 4.49:1.
+    const misses: string[] = [];
+    for (const [bg, direction] of [
+      ["#eddde1", "darker"],
+      ["#f6ecd9", "darker"],
+      ["#ffffff", "darker"],
+      ["#181a2c", "lighter"],
+      ["#0b0d12", "lighter"],
+    ] as const) {
+      for (let h = 0; h < 360; h += 15) {
+        for (const c of [0.014, 0.06, 0.12]) {
+          for (const target of [1.5, 3, 4.5, 7]) {
+            const hex = oklchToHex({ l: solveLightness(target, parseHex(bg)!, h, c, direction), c, h });
+            const got = contrast(hex, bg);
+            if (got < target) misses.push(`${hex} on ${bg} ${got.toFixed(4)} < ${target}`);
+          }
+        }
+      }
+    }
+    expect(misses).toEqual([]);
+  });
 });
 
 describe("colour-vision deficiency", () => {

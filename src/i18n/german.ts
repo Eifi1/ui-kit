@@ -247,9 +247,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       keyboardHint:
         "Pfeiltasten wechseln zwischen Zellen. Tippen ersetzt eine Zelle, F2 bearbeitet sie, Escape macht die Bearbeitung rückgängig. Enter geht nach unten und fügt am Ende eine Zeile hinzu.",
       lineError: (line) => `Zeile ${line} konnte nicht gelesen werden`,
-      points: (count) => (count === 1 ? "1 Punkt" : `${count} Punkte`),
+      points: (count) => (count === 1 ? "1 Punkt" : `${n(count)} Punkte`),
       problems: (count) =>
-        count === 1 ? "1 Zelle ist keine Zahl" : `${count} Zellen sind keine Zahlen`,
+        count === 1 ? "1 Zelle ist keine Zahl" : `${n(count)} Zellen sind keine Zahlen`,
     },
     pageContents: { title: "Auf dieser Seite" },
     common: {
@@ -504,7 +504,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       rejectedPick: (count) =>
         count === 1
           ? "Die Datei wurde nicht hinzugefügt"
-          : `Keine der ${count} Dateien wurde hinzugefügt`,
+          : `Keine der ${n(count)} Dateien wurde hinzugefügt`,
       rejectedType: (name) => `„${name}“ hat einen nicht unterstützten Dateityp`,
       rejectedTypeOnly: (accept) => `Nur ${accept}-Dateien`,
       rejectedSize: (name, maxSize) => `„${name}“ ist größer als ${maxSize}`,
@@ -611,7 +611,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       announcement: (level) => `Passwortstärke: ${level}`,
       // "Zeichen" is the same in singular and plural. The English default does not
       // format these counts, so neither does this file.
-      ruleLength: (minLength) => `Mindestens ${minLength} Zeichen`,
+      ruleLength: (minLength) => `Mindestens ${n(minLength)} Zeichen`,
       ruleCase: "Groß- und Kleinbuchstaben",
       ruleDigit: "Eine Ziffer",
       ruleSymbol: "Ein Sonderzeichen",
@@ -619,7 +619,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       met: "Erfüllt:",
       notMet: "Nicht erfüllt:",
       tooLong: (maxBytes) =>
-        `Höchstens ${maxBytes} Zeichen (Buchstaben mit Akzent und Emojis zählen mehrfach).`,
+        `Höchstens ${n(maxBytes)} Zeichen (Buchstaben mit Akzent und Emojis zählen mehrfach).`,
     },
     seriesChart: {
       resetZoom: "Zoom zurücksetzen",

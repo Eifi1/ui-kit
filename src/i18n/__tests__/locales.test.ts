@@ -3,6 +3,7 @@ import { DEFAULT_UI_KIT_LABELS } from "../defaults";
 import { missingKitLabels } from "../kit-labels";
 import { germanLabels } from "../german";
 import { UI_KIT_LABELS_DE_CH, uiKitLabelsDeCh } from "../locales/de-CH";
+import { uiKitLabelsEn } from "../locales/en";
 import { UI_KIT_LABELS_ES } from "../locales/es";
 import { UI_KIT_LABELS_FR } from "../locales/fr";
 import { UI_KIT_LABELS_HU } from "../locales/hu";
@@ -91,5 +92,44 @@ describe("de-CH", () => {
       UI_KIT_LABELS_DE_CH.dataTable.pageChanged(1, 2),
     );
     expect(leaves(germanDigits).map(([, v]) => v).join(" ")).not.toMatch(/ß/);
+  });
+});
+
+/** Every function label, called once per parameter with 12345 there and 2 elsewhere:
+ *  "path#parameter" → what it prints. A label that throws on a number (one that works on
+ *  text) is left out. */
+function countProbes(tree: unknown, path = "", out = new Map<string, string>()) {
+  if (typeof tree === "function") {
+    const fn = tree as (...a: unknown[]) => unknown;
+    const arity = Math.max(1, fn.length);
+    for (let at = 0; at < arity; at++) {
+      try {
+        const text = fn(...Array.from({ length: arity }, (_, i) => (i === at ? 12345 : 2)));
+        if (typeof text === "string") out.set(`${path}#${at}`, text);
+      } catch {
+        // A text parameter: there is no number to format.
+      }
+    }
+  } else if (tree && typeof tree === "object") {
+    for (const [k, v] of Object.entries(tree)) countProbes(v, path ? `${path}.${k}` : k, out);
+  }
+  return out;
+}
+
+describe("thousands formatting is the same in every catalogue (round 0.34 DOC-6)", () => {
+  it("a count one catalogue formats is printed raw by none", () => {
+    // English is its formatting factory, not the defaults, which print raw since 0.1.
+    const catalogues = { en: uiKitLabelsEn(), ...LOCALES };
+    const probes = Object.entries(catalogues).map(([code, l]) => [code, countProbes(l)] as const);
+    // "12,345", "12’345", "12 345", "12.345": the digits split by one separator.
+    const formatted = /12[^\d]345/;
+    const keys = new Set(probes.flatMap(([, p]) => [...p.keys()]));
+    const raw: string[] = [];
+    for (const key of keys) {
+      // A position or an id (`lineItems.row`) is printed raw everywhere, and that is fine.
+      if (!probes.some(([, p]) => formatted.test(p.get(key) ?? ""))) continue;
+      for (const [code, p] of probes) if (p.get(key)?.includes("12345")) raw.push(`${code} ${key}`);
+    }
+    expect(raw).toEqual([]);
   });
 });

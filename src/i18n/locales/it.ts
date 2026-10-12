@@ -240,9 +240,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       keyboardHint:
         "I tasti freccia spostano tra le celle. Digiti per sostituire una cella, F2 per modificarla, Esc per annullare la modifica. Invio scende e aggiunge una riga alla fine.",
       lineError: (line) => `Impossibile leggere la riga ${line}`,
-      points: (count) => (count === 1 ? "1 punto" : `${count} punti`),
+      points: (count) => (count === 1 ? "1 punto" : `${n(count)} punti`),
       problems: (count) =>
-        count === 1 ? "1 cella non è un numero" : `${count} celle non sono numeri`,
+        count === 1 ? "1 cella non è un numero" : `${n(count)} celle non sono numeri`,
     },
     pageContents: { title: "In questa pagina" },
     common: {
@@ -492,7 +492,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       hint: (accept) => (accept ? `Accettati: ${accept}` : "Qualsiasi tipo di file"),
       busy: "Caricamento…",
       rejectedPick: (count) =>
-        count === 1 ? "Il file non è stato aggiunto" : `Nessuno dei ${count} file è stato aggiunto`,
+        count === 1 ? "Il file non è stato aggiunto" : `Nessuno dei ${n(count)} file è stato aggiunto`,
       // "file" is invariable in Italian ("1 file", "3 file"); only the verb agrees.
       rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
       rejectedTypeOnly: (accept) => `Solo file ${accept}`,
@@ -598,7 +598,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       announcement: (level) => `Sicurezza della password: ${level}`,
       // Unformatted, as in the English default.
       ruleLength: (minLength) =>
-        `Almeno ${minLength} ${plural(minLength, "carattere", "caratteri")}`,
+        `Almeno ${n(minLength)} ${plural(minLength, "carattere", "caratteri")}`,
       ruleCase: "Maiuscole e minuscole",
       ruleDigit: "Un numero",
       ruleSymbol: "Un simbolo",
@@ -606,7 +606,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       met: "Soddisfatto:",
       notMet: "Non soddisfatto:",
       tooLong: (maxBytes) =>
-        `Al massimo ${maxBytes} ${plural(maxBytes, "carattere", "caratteri")} (le lettere accentate e le emoji contano più di uno).`,
+        `Al massimo ${n(maxBytes)} ${plural(maxBytes, "carattere", "caratteri")} (le lettere accentate e le emoji contano più di uno).`,
     },
     seriesChart: {
       resetZoom: "Reimposta zoom",

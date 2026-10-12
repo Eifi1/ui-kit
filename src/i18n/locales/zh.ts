@@ -228,8 +228,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       keyboardHint:
         "方向键在单元格之间移动。直接输入替换单元格内容，F2 编辑，Esc 撤销编辑。回车向下移动，并在末尾添加一行。",
       lineError: (line) => `无法读取第 ${line} 行`,
-      points: (count) => `${count} 个点`,
-      problems: (count) => `${count} 个单元格不是数字`,
+      points: (count) => `${n(count)} 个点`,
+      problems: (count) => `${n(count)} 个单元格不是数字`,
     },
     pageContents: { title: "本页目录" },
     common: {
@@ -474,7 +474,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       emptyMultiple: "将文件拖放到此处",
       hint: (accept) => (accept ? `支持：${accept}` : "任意文件类型"),
       busy: "正在上传…",
-      rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${count} 个文件均未添加`),
+      rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${n(count)} 个文件均未添加`),
       rejectedType: (name) => `“${name}”的文件类型不受支持`,
       rejectedTypeOnly: (accept) => `仅限 ${accept} 文件`,
       rejectedSize: (name, maxSize) => `“${name}”超过 ${maxSize}`,
@@ -576,14 +576,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       strong: "强",
       announcement: (level) => `密码强度：${level}`,
       // Unformatted, as in the English default.
-      ruleLength: (minLength) => `至少 ${minLength} 个字符`,
+      ruleLength: (minLength) => `至少 ${n(minLength)} 个字符`,
       ruleCase: "包含大写和小写字母",
       ruleDigit: "包含数字",
       ruleSymbol: "包含符号",
       optional: (rule) => `${rule}（可选）`,
       met: "已满足：",
       notMet: "未满足：",
-      tooLong: (maxBytes) => `最多 ${maxBytes} 个字符（带重音的字母和表情符号按多个字符计算）。`,
+      tooLong: (maxBytes) => `最多 ${n(maxBytes)} 个字符（带重音的字母和表情符号按多个字符计算）。`,
     },
     seriesChart: {
       resetZoom: "重置缩放",

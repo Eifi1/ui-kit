@@ -238,9 +238,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       keyboardHint:
         "Las flechas mueven entre celdas. Escriba para reemplazar una celda, F2 para editarla, Escape para deshacer la edición. Intro baja y añade una fila al final.",
       lineError: (line) => `No se pudo leer la línea ${line}`,
-      points: (count) => (count === 1 ? "1 punto" : `${count} puntos`),
+      points: (count) => (count === 1 ? "1 punto" : `${n(count)} puntos`),
       problems: (count) =>
-        count === 1 ? "1 celda no es un número" : `${count} celdas no son números`,
+        count === 1 ? "1 celda no es un número" : `${n(count)} celdas no son números`,
     },
     pageContents: { title: "En esta página" },
     common: {
@@ -489,7 +489,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       hint: (accept) => (accept ? `Aceptados: ${accept}` : "Cualquier tipo de archivo"),
       busy: "Subiendo…",
       rejectedPick: (count) =>
-        count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${count} archivos`,
+        count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${n(count)} archivos`,
       rejectedType: (name) => `El tipo de archivo de «${name}» no es compatible`,
       rejectedTypeOnly: (accept) => `Solo archivos ${accept}`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
@@ -594,7 +594,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       announcement: (level) => `Seguridad de la contraseña: ${level}`,
       // Unformatted, as in the English default.
       ruleLength: (minLength) =>
-        `Al menos ${minLength} ${plural(minLength, "carácter", "caracteres")}`,
+        `Al menos ${n(minLength)} ${plural(minLength, "carácter", "caracteres")}`,
       ruleCase: "Mayúsculas y minúsculas",
       ruleDigit: "Un número",
       ruleSymbol: "Un símbolo",
@@ -602,7 +602,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       met: "Cumplido:",
       notMet: "No cumplido:",
       tooLong: (maxBytes) =>
-        `Como máximo ${maxBytes} ${plural(maxBytes, "carácter", "caracteres")} (las letras con tilde y los emojis cuentan como más de uno).`,
+        `Como máximo ${n(maxBytes)} ${plural(maxBytes, "carácter", "caracteres")} (las letras con tilde y los emojis cuentan como más de uno).`,
     },
     seriesChart: {
       resetZoom: "Restablecer zoom",

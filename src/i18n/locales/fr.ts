@@ -241,11 +241,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       keyboardHint:
         "Les flèches passent d\u2019une cellule à l\u2019autre. Tapez pour remplacer une cellule, F2 pour la modifier, Échap pour annuler la modification. Entrée descend et ajoute une ligne à la fin.",
       lineError: (line) => `La ligne ${line} n\u2019a pas pu être lue`,
-      points: (count) => (count < 2 ? `${count} point` : `${count} points`),
+      points: (count) => (count < 2 ? `${n(count)} point` : `${n(count)} points`),
       problems: (count) =>
         count < 2
-          ? `${count} cellule n\u2019est pas un nombre`
-          : `${count} cellules ne sont pas des nombres`,
+          ? `${n(count)} cellule n\u2019est pas un nombre`
+          : `${n(count)} cellules ne sont pas des nombres`,
     },
     pageContents: { title: "Sur cette page" },
     common: {
@@ -499,7 +499,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       rejectedPick: (count) =>
         count < 2
           ? "Le fichier n\u2019a pas été ajouté"
-          : `Aucun des ${count} fichiers n\u2019a été ajouté`,
+          : `Aucun des ${n(count)} fichiers n\u2019a été ajouté`,
       rejectedType: (name) => `Le type du fichier «\u202f${name}\u202f» n’est pas pris en charge`,
       rejectedTypeOnly: (accept) => `Uniquement des fichiers ${accept}`,
       rejectedSize: (name, maxSize) => `«\u202f${name}\u202f» dépasse ${maxSize}`,
@@ -610,7 +610,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       announcement: (level) => `Robustesse du mot de passe\u00a0: ${level}`,
       // Unformatted, as in the English default.
       ruleLength: (minLength) =>
-        `Au moins ${minLength} ${plural(minLength, "caractère", "caractères")}`,
+        `Au moins ${n(minLength)} ${plural(minLength, "caractère", "caractères")}`,
       ruleCase: "Majuscules et minuscules",
       ruleDigit: "Un chiffre",
       ruleSymbol: "Un caractère spécial",
@@ -618,7 +618,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       met: "Respecté\u00a0:",
       notMet: "Non respecté\u00a0:",
       tooLong: (maxBytes) =>
-        `Au plus ${maxBytes} ${plural(maxBytes, "caractère", "caractères")} (les lettres accentuées et les emoji comptent pour plus d’un).`,
+        `Au plus ${n(maxBytes)} ${plural(maxBytes, "caractère", "caractères")} (les lettres accentuées et les emoji comptent pour plus d’un).`,
     },
     seriesChart: {
       resetZoom: "Réinitialiser le zoom",
