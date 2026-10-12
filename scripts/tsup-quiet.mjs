@@ -3,15 +3,18 @@
  * `tsup`, minus its inventory.
  *
  * With `bundle: false` tsup emits one file per source module, and it lists them: a
- * "Building entry:" line naming every source file, then a size line per emitted .js,
- * .js.map and .d.ts — ~590 lines per build, in which a warning is one line somewhere in
- * the middle. That inventory is all this drops. Everything else passes through
- * untouched: the "Build success" lines, esbuild's and the declaration build's warnings,
- * every error (tsup writes those to stderr, which is not filtered at all), and the exit
- * code.
+ * "Building entry:" line naming every source file, then a size line per emitted .js and
+ * .js.map — ~400 lines per build, in which a warning is one line somewhere in the middle.
+ * That inventory is all this drops. Everything else passes through untouched: the "Build
+ * success" line, esbuild's warnings, every error (tsup writes those to stderr, which is
+ * not filtered at all), and the exit code.
  *
  * tsup has no log level to ask for this instead: its `silent` also swallows the
- * declaration build's warnings, and it has nothing between that and everything.
+ * warnings, and it has nothing between that and everything.
+ *
+ * The declarations are not tsup's any more (`dts: false`): scripts/build-dts.mjs runs
+ * `tsc` after this. So the 6 GB heap this script set for tsup's DTS worker (5.2 GB
+ * resident, OOM-killed on 2026-10-12) is gone; the JS build takes about a second.
  *
  * `npx tsup` still prints the full listing when you want to see what was emitted.
  * Arguments are passed on: `node scripts/tsup-quiet.mjs --watch`.
@@ -35,17 +38,10 @@ const INVENTORY = [
 // eslint-disable-next-line no-control-regex -- matching the colour codes is the point
 const ANSI = /\x1b\[[0-9;]*m/g;
 
-// The declaration build (tsup's DTS worker, rollup-plugin-dts over ~400 unbundled
-// entries) outgrew Node's default heap in 0.32: it died with ERR_WORKER_OUT_OF_MEMORY on
-// this machine and would on a 16 GB CI runner too. It peaks at about 5.2 GB resident with
-// this ceiling. A caller's own --max-old-space-size wins: it comes later in NODE_OPTIONS.
-const HEAP = "--max-old-space-size=6144";
-const env = { ...process.env, NODE_OPTIONS: [HEAP, process.env.NODE_OPTIONS].filter(Boolean).join(" ") };
-
 const child = spawn(process.execPath, [cli, ...process.argv.slice(2)], {
   stdio: ["inherit", "pipe", "inherit"],
   // Piped, tsup would drop its colours; keep them when the caller is a terminal.
-  env: process.stdout.isTTY ? { FORCE_COLOR: "1", ...env } : env,
+  env: process.stdout.isTTY ? { FORCE_COLOR: "1", ...process.env } : process.env,
 });
 
 createInterface({ input: child.stdout }).on("line", (line) => {

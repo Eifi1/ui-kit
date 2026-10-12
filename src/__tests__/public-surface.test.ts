@@ -8,6 +8,7 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as tableText from "../table-text";
+import * as dates from "../lib/dates";
 import * as testing from "../testing";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
@@ -250,6 +251,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/rhf", rhf, 29],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
+  // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
+  // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
+  ["@eifi1/ui-kit/dates", dates, 20],
   // 0.33.0: the guard an app runs from its own suite — `undeclaredCssVariables`,
   // `KIT_CSS_VARIABLES` and the stylesheet rule they share, `declaredCustomProperties`
   // (docs/colour-roles-harmonization.md §8.3).
@@ -276,6 +280,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/table-text",
+  "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.
   "@eifi1/ui-kit/testing",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),

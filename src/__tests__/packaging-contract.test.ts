@@ -262,6 +262,97 @@ describe("@eifi1/ui-kit/table-text is pure", () => {
   });
 });
 
+describe("@eifi1/ui-kit/dates is pure (MOD-6)", () => {
+  // kastlan imports it on 8 lines, keksdose on 2; until 0.34 nothing pinned it.
+  it("reaches no package at all — date strings need no React", () => {
+    expect([...packagesReachedFrom("src/lib/dates.ts")]).toEqual([]);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./dates"]).toEqual({
+      types: "./dist/lib/dates.d.ts",
+      import: "./dist/lib/dates.js",
+    });
+  });
+});
+
+/**
+ * recharts is ~433 KB, and keeping it out of every app's entry chunk is why the build is
+ * unbundled at all (tsup.config.ts). The barrel re-exports the chart kit, so it does reach
+ * recharts (asserted above) — but only through the chart kit's own modules. A component
+ * outside it that imports recharts (a tooltip borrowing a chart helper, say) would put it
+ * behind every Button, and no check saw that until 0.34 (MOD-6, refactor audit 2026-10).
+ * The same rule as react-hook-form's: a peer belongs to the modules of its entry.
+ */
+describe("recharts stays inside the chart kit (MOD-6)", () => {
+  it("is imported only by modules @eifi1/ui-kit/chart exports", () => {
+    const entry = join(ROOT, "src/chart.ts");
+    const chartModules = new Set(
+      specifiersOf(entry)
+        .filter(isRelative)
+        .map((specifier) => resolveRelative(entry, specifier))
+        .filter((file): file is string => file !== null)
+        .map((file) => file.slice(ROOT.length + 1)),
+    );
+    const importers = importedPackages().get("recharts") ?? [];
+    // Not vacuous: the chart itself must be seen importing it, and be on the entry.
+    expect(importers).toContain("src/components/chart.tsx");
+    expect(chartModules).toContain("src/components/chart.tsx");
+    const outside = importers.filter((file) => !chartModules.has(file));
+    expect(outside, "recharts imported by a module src/chart.ts does not export").toEqual([]);
+  });
+});
+
+/**
+ * README's "What you install alongside it" table, against the manifest (DOC-3, refactor
+ * audit 2026-10). CONTRIBUTING calls the table load-bearing: it is what an app installs
+ * from. It had drifted twice over — `recharts >=3` against a declared `>=3.8`, and the
+ * optional `modern-screenshot` missing — because nothing compared the two.
+ */
+describe("README's install table says what package.json declares (DOC-3)", () => {
+  const lines = readFileSync(join(ROOT, "README.md"), "utf8").split("\n");
+  const heading = lines.indexOf("### What you install alongside it");
+  const start = lines.findIndex((line, i) => i > heading && line.startsWith("| Package"));
+  const end = lines.findIndex((line, i) => i > start && !line.startsWith("|"));
+  /** Package → its row's "Declared as" cell; a row may name several packages. */
+  const table = new Map<string, string>();
+  for (const line of lines.slice(start + 2, end)) {
+    const [, packages = "", declared = ""] = line.split("|").map((cell) => cell.trim());
+    for (const [, name] of packages.matchAll(/`([^`]+)`/g)) table.set(name, declared);
+  }
+  const peerRow = (declared: string) => ({
+    peer: declared.startsWith("peer"),
+    range: /`([^`]+)`/.exec(declared)?.[1],
+    optional: /\*\*optional\*\*/.test(declared),
+  });
+
+  it("finds the table", () => {
+    expect(heading).toBeGreaterThan(-1);
+    expect(table.size).toBeGreaterThan(5);
+  });
+
+  it("lists every peer with its range, and says which are optional", () => {
+    const rows = Object.keys(pkg.peerDependencies).map((name) => [name, peerRow(table.get(name) ?? "")]);
+    const declared = Object.entries(pkg.peerDependencies).map(([name, range]) => [
+      name,
+      { peer: true, range, optional: pkg.peerDependenciesMeta?.[name]?.optional === true },
+    ]);
+    expect(rows).toEqual(declared);
+  });
+
+  it("names no peer the manifest does not declare", () => {
+    const extra = [...table]
+      .filter(([name, declared]) => peerRow(declared).peer && !(name in pkg.peerDependencies))
+      .map(([name]) => name);
+    expect(extra).toEqual([]);
+  });
+
+  it("lists exactly the runtime dependencies", () => {
+    const listed = [...table].filter(([, declared]) => declared === "dependency").map(([name]) => name);
+    expect(listed.sort()).toEqual(Object.keys(pkg.dependencies).sort());
+  });
+});
+
 /**
  * Every module this package emits is a component, a hook, or a helper those call, so
  * the RSC boundary is the package edge. Without the directive a consumer on a server-

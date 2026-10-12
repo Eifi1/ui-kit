@@ -5,10 +5,24 @@
  * drop what it does not use — the regression that dragged all ~433KB of recharts into
  * Keksdose's entry chunk. Assert the graph, not a string.
  *
+ * Since 0.34 (MOD-6, refactor audit 2026-10) it also guards what that regression costs,
+ * rather than only its shape:
+ *   - every source module has its own dist/ module (the floor was "more than 50" against
+ *     ~400, so a partial bundling would have passed);
+ *   - no runtime import cycle among the dist/ modules (there are none; a cycle is where
+ *     load order starts to matter, and where a bundler stops splitting cleanly);
+ *   - an import-cost budget: Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the
+ *     shell set from dist/, the way an app's build does, and fails above the ceiling.
+ * Which modules may import recharts at all is packaging-contract.test.ts's rule.
+ *
  * Run after `npm run build`. Part of `npm run check`, which CI calls as it is.
  */
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
+import { gzipSync } from "node:zlib";
+// Both come with tsup (Rollup was its declaration bundler; esbuild its compiler).
+import { transform } from "esbuild";
+import { rollup } from "rollup";
 
 const fail = (msg) => {
   console.error(`✖ ${msg}`);
@@ -21,14 +35,25 @@ if (!readFileSync(chart, "utf8").includes('from "recharts"')) {
   fail(`${chart} no longer imports recharts itself — the build bundled it`);
 }
 
-// One file per source module, not a bundle: a bundling build collapses these.
-const count = (dir) =>
-  readdirSync(dir).reduce((n, name) => {
-    const path = join(dir, name);
-    return statSync(path).isDirectory() ? n + count(path) : n + (name.endsWith(".js") ? 1 : 0);
-  }, 0);
-const files = count("dist");
-if (files <= 50) fail(`dist has ${files} .js files — expected one per source module`);
+// One file per source module, not a bundle: a bundling build collapses these. The floor
+// is the source tree itself (tests, the test harness and ambient .d.ts excepted).
+const sourceModules = (dir, out = []) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name !== "__tests__" && path !== join("src", "test")) sourceModules(path, out);
+    } else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith(".d.ts") && !/\.test\./.test(entry.name)) {
+      out.push(relative("src", path).replace(/\\/g, "/").replace(/\.tsx?$/, ""));
+    }
+  }
+  return out;
+};
+const sources = sourceModules("src");
+const unbuilt = sources.filter((id) => !existsSync(join("dist", `${id}.js`)));
+if (unbuilt.length) {
+  fail(`${unbuilt.length} of ${sources.length} source modules have no dist/ module of their own: ${unbuilt.slice(0, 5).join(", ")}`);
+}
+const files = sources.length;
 
 // A catalogue is words. An app fetches the reader's language lazily (`loadUiKitLabels`),
 // and whatever a catalogue imports comes along in that wave: the English one imported
@@ -58,7 +83,98 @@ for (const name of catalogues) {
   walk(join(LOCALES, name), [join(LOCALES, name)]);
 }
 
+// No runtime import cycle among the modules: static imports only, since a type import is
+// gone from the .js and a dynamic `import()` runs after its importer has loaded. The pay
+// page and the bin are bundles of their own.
+const jsModules = (dir, out = []) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (path !== join("dist", "pay") && path !== join("dist", "bin")) jsModules(path, out);
+    } else if (entry.name.endsWith(".js")) out.push(path);
+  }
+  return out;
+};
+const graph = new Map(jsModules("dist").map((file) => [file, staticImports(file)]));
+const visiting = new Set();
+const done = new Set();
+const cycleFrom = (file, chain) => {
+  if (visiting.has(file)) return [...chain.slice(chain.indexOf(file)), file];
+  if (done.has(file)) return null;
+  visiting.add(file);
+  for (const next of graph.get(file) ?? []) {
+    const cycle = cycleFrom(next, [...chain, file]);
+    if (cycle) return cycle;
+  }
+  visiting.delete(file);
+  done.add(file);
+  return null;
+};
+for (const file of graph.keys()) {
+  const cycle = cycleFrom(file, []);
+  if (cycle) fail(`runtime import cycle: ${cycle.join(" → ")}`);
+}
+
+// What an import costs, measured as an app's build sees the package: Rollup over dist/,
+// every module free of side effects (package.json `sideEffects`), packages external, so
+// the number is the kit's own code, minified. The shell set is what the three apps' layout
+// and top bar import (2026-10). Each ceiling is the size measured on 2026-10-12 plus ~10 %;
+// MOD-1 (a lazy feedback dialog), MOD-4 (ref-as-prop) and MOD-2 (the ui.tsx split) are
+// expected to bring the numbers down, and the ceilings come down with them.
+const SHELL_SET = [
+  "AppShell",
+  "TopBar",
+  "TopBarBrand",
+  "TopBarActionMenu",
+  "ThemeToggle",
+  "LanguageMenu",
+  "CompanySwitcher",
+  "RoleSwitcher",
+  "FeedbackMenu",
+  "useFeedbackSubmit",
+  "LegalLinks",
+  "UiKitProvider",
+];
+// Measured 2026-10-12, minified (gzip): Button 31,993 (11,131), Spinner 27,844 (9,830) —
+// Spinner keeps Input, Select, Textarea, IconButton and Tooltip alive through ui.tsx's
+// forwardRef and displayName lines (MOD-4) —, cn 171 (151), the shell set 124,329 (41,103).
+const BUDGETS = [
+  { label: "{ Button }", names: ["Button"], max: 35_200 },
+  { label: "{ Spinner }", names: ["Spinner"], max: 30_600 },
+  { label: "{ cn }", names: ["cn"], max: 190 },
+  { label: "the shell set", names: SHELL_SET, max: 136_800 },
+];
+const ENTRY = "\0import-cost";
+async function importCost(names) {
+  const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve("dist/index.js"))};`;
+  const bundle = await rollup({
+    input: ENTRY,
+    plugins: [{ name: "import-cost", resolveId: (id) => (id === ENTRY ? id : null), load: (id) => (id === ENTRY ? source : null) }],
+    external: (id) => id !== ENTRY && !id.startsWith(".") && !isAbsolute(id),
+    treeshake: { moduleSideEffects: false },
+    // The per-module "use client" banners, which Rollup reports as it drops them.
+    onwarn: () => {},
+  });
+  const { output } = await bundle.generate({ format: "es" });
+  await bundle.close();
+  const min = (await transform(output[0].code, { minify: true, loader: "js" })).code;
+  return { min: Buffer.byteLength(min), gzip: gzipSync(min).length, packages: output[0].imports };
+}
+const size = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(1)} kB`);
+const costs = [];
+for (const { label, names, max } of BUDGETS) {
+  const { min, gzip, packages } = await importCost(names);
+  if (packages.includes("recharts")) fail(`${label} reaches recharts — only the chart kit may (packaging-contract.test.ts)`);
+  if (min > max) {
+    fail(
+      `${label} costs ${min} B minified (${gzip} B gzip), over its ceiling of ${max} B. Something it ` +
+        "imports now drags in more of the kit; if the growth is meant, raise the ceiling in scripts/check-module-graph.mjs.",
+    );
+  }
+  costs.push(`${label} ${size(min)} (gzip ${size(gzip)}; ceiling ${size(max)})`);
+}
+
 console.log(
-  `✓ module graph preserved: ${files} modules, chart keeps its own recharts import, ` +
-    `${catalogues.length} catalogues reach nothing outside i18n/`,
+  `✓ module graph preserved: ${files} modules, no import cycle, chart keeps its own recharts import, ` +
+    `${catalogues.length} catalogues reach nothing outside i18n/\n  import cost, minified: ${costs.join(" · ")}`,
 );

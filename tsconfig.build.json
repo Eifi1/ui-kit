@@ -1,0 +1,21 @@
+{
+  // The declaration build: one `.d.ts` per source module, beside the `.js` tsup emits
+  // (TST-3, refactor audit 2026-10). scripts/build-dts.mjs runs it with `--outDir` and
+  // `--tsBuildInfoFile` pointing into node_modules/.cache/dts/ and copies the result into
+  // dist/; see its header for why tsc does not write into dist/ itself.
+  //
+  // Everything else comes from tsconfig.json, so the declarations are compiled exactly as
+  // `npm run typecheck` checks the package. `types: []` keeps vitest's and Node's globals
+  // out: the shipped declarations are browser code and must not reference either.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "incremental": true,
+    "rootDir": "src",
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/**/__tests__", "src/**/*.test.*", "src/test"]
+}
