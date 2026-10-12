@@ -370,7 +370,7 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
 | ink | #dce2ef (#e1e8f5) | **1.10** (1.05) | 4.59 | 1.00 |
 | moss | #d8e6dd (#deece3) | **1.11** (1.05) | 4.61 | 1.00 |
 | plum | #e7dfea (#ece4ef) | **1.10** (1.05) | 4.62 | 1.00 |
-| contrast | #e0e2e5 (#e6e8ea) | **1.11** (1.05) | 5.52 | 1.00 |
+| contrast | #e1e2e3 (#e6e8ea) | **1.11** (1.05) | 5.52 | 1.00 |
 
 - A well on a card stands out from the card by exactly as much as the card stands out
   from the page. Dark keeps 1.11–1.13.
@@ -474,9 +474,11 @@ read as two surfaces. Text wins over the hover's step.
 - **A row or item on a card hovers to `--bg-hover`**: 5.5 % ink into the card (it was
   7 %; `HOVER_INK` in `src/theme/contrast-tokens.ts` is the same number for the deriver,
   and the token audit holds the two equal). It steps 1.09–1.13 from the card over every
-  preset and both modes, and the worst text role on it is 4.47–4.89 (Moss light's
-  `--money-income` at 4.47). The deriver solves money and the semantic text against it
-  as well as against the page (§5.1).
+  preset and both modes, and the worst text role on it is 4.50–4.89 (Moss light's
+  `--money-income` at 4.50). The deriver solves money and the semantic text against it
+  as well as against the page (§5.1), measured on the hex it ships (0.34: it used to solve
+  the float colour and round after, landing just under; the audit's 0.05 slack now covers
+  only pairs with a `color-mix` side — `--bg-hover`, `--brand-muted`, `--brand-bg*`).
 - **A row that rests on the well hovers to the card: `hover:bg-surface`.** In light the
   well is the page, and `--bg-hover` sits only 1.04–1.05 from it; in dark the two are
   1.00–1.02 apart. The card is the only fill that clears both halves of the rule in
@@ -566,7 +568,7 @@ The classes per tone are `SWIPE_TONE` in `src/components/swipeable-row.tsx`:
 | info | `--info-bg` / `--info` | `--info` / `--info-contrast` | 5.17 · 5.93 | 9.15 · 8.32 |
 | brand | `--brand-bg` / `--brand-muted` | `--brand` / `--brand-contrast` | ≥ 4.96 · 5.22 | ≥ 4.96 · 5.22 |
 | neutral | `--bg-active` / `--text-secondary` | `--neutral` / `--neutral-contrast` | 6.04 · 5.06 | 6.07 · 5.12 |
-| income / expense | `--bg-surface-2` / `--money-*` (Chip's soft money recipe) | `--money-*` / `--money-*-contrast` | 4.47 (inside the audit's 4.45 floor) · 5.78 | 4.49 · 5.43 |
+| income / expense | `--bg-surface-2` / `--money-*` (Chip's soft money recipe) | `--money-*` / `--money-*-contrast` | 4.52 · 5.78 | 4.50 · 5.43 |
 | blue, indigo, purple, teal, orange | `--hue-*-bg` / `--hue-*` | `--hue-*` / `--hue-*-contrast` | 4.52 (orange) – 6.41 · 5.18–7.90 | 7.94–10.82 · 8.02–9.78 |
 
 All values are the minimum over the presets, measured when the round was drafted; the
