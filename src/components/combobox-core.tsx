@@ -899,11 +899,14 @@ export function ComboboxPanel<V extends string | number>({
       onKeyDown={onKeyDown}
       // `placement` keeps the panel inside the region actually on screen: on a phone
       // the search box below pulls up the keyboard, and a panel pinned under a
-      // low trigger would otherwise sit entirely behind it (feedback #135).
+      // low trigger would otherwise sit entirely behind it (feedback #135). Flipped
+      // above, it hangs from its bottom edge, so a list shorter than its cap still meets
+      // the trigger (keksdose K1); the edge not in use is cleared, a caller's included.
       style={{
         ...style,
         position: "fixed",
-        top: placement.top,
+        top: placement.above ? undefined : placement.top,
+        bottom: placement.above ? placement.bottom : undefined,
         ...inline,
         width: rect.width,
         // 220 px at Normal, in rem so the panel's text keeps its room at Large (§3.2).

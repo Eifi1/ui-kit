@@ -144,7 +144,10 @@ export function Popover({
     : 0;
   const pos = rect
     ? {
-        top: placement.top,
+        // Flipped above, the panel hangs from its bottom edge, so one shorter than its
+        // cap still meets the trigger (keksdose K1); the edge not in use is cleared.
+        top: placement.above ? undefined : placement.top,
+        bottom: placement.above ? placement.bottom : undefined,
         left: Math.min(
           Math.max(EDGE, dir === "rtl" ? rect.left : rect.right - panelWidth),
           window.innerWidth - panelWidth - EDGE,
@@ -213,12 +216,13 @@ export function Popover({
             tabIndex={-1}
             onKeyDown={handleKeyDown}
             style={{
-              // Merged over the caller's, never replaced by it: these four are measured
+              // Merged over the caller's, never replaced by it: these are measured
               // against the trigger every scroll and resize, and a panel that dropped
               // them would paint at the top-left of the viewport.
               ...style,
               position: "fixed",
               top: pos.top,
+              bottom: pos.bottom,
               left: pos.left,
               width: panelWidth,
               maxHeight: placement.maxHeight,

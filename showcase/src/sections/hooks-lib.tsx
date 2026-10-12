@@ -200,7 +200,18 @@ function AnchoredPanelSpecimen() {
       <OutTable
         rows={[
           ["panel.rect", rect ? `{ top: ${px(rect.top)}, bottom: ${px(rect.bottom)} }` : "null"],
-          ["panel.top", px(panel.top)],
+          [
+            "panel.top",
+            <>
+              {px(panel.top)} <Aside>— applied while below</Aside>
+            </>,
+          ],
+          [
+            "panel.bottom",
+            <>
+              {px(panel.bottom)} <Aside>— applied once flipped above</Aside>
+            </>,
+          ],
           [
             "panel.maxHeight",
             <>
@@ -225,10 +236,12 @@ function AnchoredPanelSpecimen() {
             // caller's on purpose — the kit's pickers align to the trigger's left
             // edge and its popovers to the right — so `left`/`width` are computed
             // here from the same rect, and `maxHeight` is paired with an internal
-            // `overflow-y` exactly as the hook's docblock requires.
+            // `overflow-y` exactly as the hook's docblock requires. Flipped above, the
+            // panel is placed by `bottom`: it is only as tall as its rows, and `top`
+            // is where a full-height one would start.
             style={{
               position: "fixed",
-              top: panel.top,
+              ...(panel.above ? { bottom: panel.bottom } : { top: panel.top }),
               left: rect.left,
               width: Math.max(rect.width, 240),
               maxHeight: panel.maxHeight,
@@ -282,7 +295,7 @@ function PlacementMath() {
     return [
       `anchoredPanelPlacement({top:${rect.top},bottom:${rect.bottom}}, {top:${view.top},height:${view.height}})`,
       <>
-        {`{ top: ${out.top}, maxHeight: ${out.maxHeight}, above: ${out.above} }`}{" "}
+        {`{ top: ${out.top}, bottom: ${out.bottom}, maxHeight: ${out.maxHeight}, above: ${out.above} }`}{" "}
         <Aside>— {note}</Aside>
       </>,
     ];
@@ -812,7 +825,12 @@ export function HooksLib() {
           The returned <code className="font-mono">maxHeight</code> is what makes the flip
           sufficient rather than merely different: a tall panel placed above without a cap just
           runs off the top instead of the bottom. Apply it together with an internal{" "}
-          <code className="font-mono">overflow-y</code>, as the portal above does.
+          <code className="font-mono">overflow-y</code>, as the portal above does. Once{" "}
+          <code className="font-mono">above</code> is true, place the panel by{" "}
+          <code className="font-mono">bottom</code> and not <code className="font-mono">top</code>:
+          the panel is only as tall as its content, and <code className="font-mono">top</code> is
+          where a full-height one would start, so three rows under a 256px cap hung far above
+          their field.
         </Note>
       </Example>
 
