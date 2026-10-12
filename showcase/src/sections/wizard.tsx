@@ -708,7 +708,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             <ToggleGroup<"succeed" | "fail" | "opaque">
               value={outcome}
               onChange={setOutcome}
-              ariaLabel="Submit outcome"
+              aria-label="Submit outcome"
               className="w-full sm:w-auto"
               // Short option words, the detail in the caption: the full sentences were each
               // cut to "onComplet…" / "rejects wit…" on a phone, two of them identically.
@@ -833,7 +833,7 @@ function SizeStep({
           value={size}
           onChange={(value) => onChange({ size: value })}
           options={SIZE_OPTIONS}
-          ariaLabel="Size"
+          aria-label="Size"
         />
       </div>
       <Textarea

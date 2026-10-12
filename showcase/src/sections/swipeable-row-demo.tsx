@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Archive, BellOff, CircleSlash, Trash2, Undo2 } from "lucide-react";
-import { Button, PHONE_QUERY, Select, SwipeableRow, cn, useMediaQuery, useRowSwipe } from "@eifi1/ui-kit";
+import { Button, Select, SwipeableRow, cn, usePhoneLayout, useRowSwipe } from "@eifi1/ui-kit";
 import type { SwipeAction, SwipePaint, SwipeTone } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
@@ -68,7 +68,7 @@ export function SwipeableRowDemo() {
 function SwipeDemo() {
   const [log, setLog] = useState<string[]>([]);
   const [enabled, setEnabled] = useState(true);
-  const belowPhone = useMediaQuery(PHONE_QUERY, false);
+  const belowPhone = usePhoneLayout();
 
   const record = (what: string) => setLog((l) => [what, ...l].slice(0, 4));
 
@@ -136,7 +136,7 @@ function SwipeDemo() {
           Clear log
         </Button>
         <span className={READOUT}>
-          below {PHONE_QUERY}: {String(belowPhone)}
+          usePhoneLayout(): {String(belowPhone)}
         </span>
       </Row>
 

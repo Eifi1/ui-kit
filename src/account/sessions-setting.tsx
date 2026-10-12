@@ -15,6 +15,7 @@ import { Button, Card } from "../components/ui";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_SESSIONS_LABELS } from "./sessions-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -55,24 +56,8 @@ export interface SessionsLabels {
   failed: string;
 }
 
-export const DEFAULT_SESSIONS_LABELS: SessionsLabels = {
-  title: "Sessions",
-  description: "Signed in on a device you no longer use, or don’t trust? Sign out everywhere.",
-  signOutEverywhere: "Sign out everywhere…",
-  signOutEverywherePrompt:
-    "This ends every session, including this one: you will be signed out on this device too, and sign in again from here.",
-  confirmSignOutEverywhere: "Sign out everywhere",
-  list: "Where you’re signed in",
-  loading: "Loading sessions…",
-  empty: "No sessions to show.",
-  current: "This device",
-  unknownDevice: "Unknown device",
-  lastActive: (when) => `Last active ${when}`,
-  ip: (address) => `IP ${address}`,
-  revoke: "Sign out",
-  revokeItem: (device) => `Sign out ${device}`,
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./sessions-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SESSIONS_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 

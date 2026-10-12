@@ -1060,7 +1060,7 @@ export function TranslationReviewPanel({
         </div>
         <SearchField
           className="min-w-0 md:flex-1"
-          label={labels.search}
+          aria-label={labels.search}
           value={filter.query}
           onChange={(next) => setFilter({ query: next })}
         />

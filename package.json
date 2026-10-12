@@ -89,7 +89,7 @@
     "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs && node scripts/build-pay-page.mjs",
+    "build": "node scripts/tsup-quiet.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
     "dev": "tsup --watch",
     "dev:showcase": "vite --config showcase/vite.config.ts",

@@ -277,7 +277,7 @@ export function TopBarActionMenu({
   const uid = useId();
   return (
     <HoverMenu
-      ariaLabel={ariaLabel}
+      aria-label={ariaLabel}
       align={align}
       trigger={({ open, toggle, close }) => {
         // One element for both kinds: the router's link when `href` is set, else the

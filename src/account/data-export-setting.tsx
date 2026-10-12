@@ -9,9 +9,10 @@ import { AlertBanner } from "../components/alert-banner";
 import { hasMessage } from "../components/choice-parts";
 import { TextLink } from "../components/text-link";
 import { Button, Card } from "../components/ui";
-import { englishWait, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
+import { isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
+import { DEFAULT_DATA_EXPORT_LABELS } from "./data-export-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -36,18 +37,8 @@ export interface DataExportLabels {
   failed: string;
 }
 
-export const DEFAULT_DATA_EXPORT_LABELS: DataExportLabels = {
-  title: "Export your data",
-  description: "Download a copy of your account’s data as a JSON file.",
-  download: "Download my data",
-  started: "Your download has started.",
-  saveAgain: "Didn’t start? Save the file",
-  rateLimited: (seconds) =>
-    seconds && seconds > 0
-      ? `You exported your data a moment ago. Try again in ${englishWait(seconds)}.`
-      : "You exported your data a moment ago. Please try again in a minute.",
-  failed: "The export failed. Please try again.",
-};
+// Defined in ./data-export-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DATA_EXPORT_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 

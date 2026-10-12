@@ -4,6 +4,7 @@ import { Tooltip } from "./tooltip";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
+import { DEFAULT_SIGN_CHIP_LABELS } from "./sign-chip-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -24,12 +25,8 @@ export interface SignChipLabels {
   switchTo: (next: string) => string;
 }
 
-export const DEFAULT_SIGN_CHIP_LABELS: SignChipLabels = {
-  outflow: "Outflow",
-  inflow: "Inflow",
-  direction: (current, next) => `Direction: ${current} — switch to ${next}`,
-  switchTo: (next) => `Switch to ${next}`,
-};
+// Defined in ./sign-chip-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGN_CHIP_LABELS };
 
 export interface SignChipProps {
   /** The figure is negative (an outflow) — the same flag {@link AmountInput}'s

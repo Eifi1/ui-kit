@@ -34,7 +34,7 @@ export function OptionSwitcherMenu<T extends string>({
 }) {
   return (
     <HoverMenu
-      ariaLabel={ariaLabel}
+      aria-label={ariaLabel}
       trigger={({ toggle }) => (
         <Tooltip label={title} portal>
           <button type="button" onClick={toggle} aria-label={ariaLabel} className={TOPBAR_TRIGGER_CLASS}>

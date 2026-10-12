@@ -12,6 +12,7 @@ import { FullBleedDialog } from "./full-bleed-dialog";
 import { IconButton, buttonClasses } from "./ui";
 import { ImageStates, DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image";
 import { useAnchorDir } from "./use-anchor-dir";
+import { DEFAULT_LIGHTBOX_LABELS } from "./lightbox-labels";
 
 /* ── The item both the grid and the lightbox show ────────────────────────── */
 
@@ -73,18 +74,8 @@ export interface LightboxLabels {
   openInNewTab: string;
 }
 
-export const DEFAULT_LIGHTBOX_LABELS: LightboxLabels = {
-  dialog: "Image viewer",
-  close: "Close",
-  previous: "Previous image",
-  next: "Next image",
-  counter: (index, count) => `${index} / ${count}`,
-  position: (index, count) => `Image ${index} of ${count}`,
-  download: "Download",
-  zoom: "Zoom",
-  noPreview: "No preview available for this file",
-  openInNewTab: "Open in new tab",
-};
+// Defined in ./lightbox-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_LIGHTBOX_LABELS };
 
 /* ── The component ───────────────────────────────────────────────────────── */
 

@@ -142,7 +142,6 @@ export function DropdownParts() {
             buttonLabel={pickedLabel}
             selected={picked}
             onSelect={(group, item) => setPicked({ group, item })}
-            // `aria-label`, the DOM spelling; the older `ariaLabel` prop is deprecated.
             aria-label="Category"
             filterPlaceholder="Filter categories"
           />

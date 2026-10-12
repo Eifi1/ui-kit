@@ -1,105 +1,105 @@
 import { DEFAULT_DATA_TABLE_LABELS } from "../components/data-table-labels";
-import { DEFAULT_MINI_CALENDAR_LABELS } from "../components/mini-calendar";
-import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "../components/calendar-heatmap";
-import { DEFAULT_MONTH_PICKER_LABELS } from "../components/month-picker";
-import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents";
-import { DEFAULT_POPOVER_LABELS } from "../components/popover";
-import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip";
-import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync";
+import { DEFAULT_MINI_CALENDAR_LABELS } from "../components/mini-calendar-labels";
+import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "../components/calendar-heatmap-labels";
+import { DEFAULT_MONTH_PICKER_LABELS } from "../components/month-picker-labels";
+import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents-labels";
+import { DEFAULT_POPOVER_LABELS } from "../components/popover-labels";
+import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip-labels";
+import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync-labels";
 import {
   DEFAULT_CHARACTER_COUNT_LABELS,
   DEFAULT_PASSWORD_REVEAL_LABELS,
   DEFAULT_TABS_LABELS,
-} from "../components/ui";
+} from "../components/ui-labels";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/types";
-import { DEFAULT_TOUR_LABELS } from "../tour/tour";
-import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette";
-import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search";
+import { DEFAULT_TOUR_LABELS } from "../tour/tour-labels";
+import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette-labels";
+import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search-labels";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
 import { DEFAULT_PIE_CHART_LABELS } from "../components/pie-chart-labels";
-import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline";
-import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile";
-import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad";
-import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "../components/password-strength";
-import { DEFAULT_DANGER_CONFIRM_LABELS } from "../components/danger-confirm";
-import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker";
-import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker";
-import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame";
-import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button";
-import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid";
-import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog";
-import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel";
-import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment";
-import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "../feedback/feedback-dialog";
+import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline-labels";
+import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile-labels";
+import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad-labels";
+import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "../components/password-strength-labels";
+import { DEFAULT_DANGER_CONFIRM_LABELS } from "../components/danger-confirm-labels";
+import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker-labels";
+import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker-labels";
+import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame-labels";
+import { DEFAULT_FILE_PICKER_LABELS } from "../components/file-button-labels";
+import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid-labels";
+import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog-labels";
+import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel-labels";
+import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment-labels";
+import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "../feedback/feedback-dialog-labels";
 import {
   DEFAULT_FEEDBACK_COMPOSER_LABELS,
   DEFAULT_FEEDBACK_THREAD_LABELS,
-} from "../feedback/feedback-thread";
+} from "../feedback/feedback-thread-labels";
 import {
   DEFAULT_FEEDBACK_CATEGORY_LABELS,
   DEFAULT_FEEDBACK_STATUS_LABELS,
   DEFAULT_FEEDBACK_TOAST_LABELS,
 } from "../feedback/feedback-labels";
-import { DEFAULT_FEEDBACK_MENU_LABELS } from "../feedback/feedback-menu";
-import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "../feedback/feedback-context";
-import { DEFAULT_FEEDBACK_PAGE_LABELS } from "../feedback/feedback-table";
-import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "../feedback/feedback-row-detail";
+import { DEFAULT_FEEDBACK_MENU_LABELS } from "../feedback/feedback-menu-labels";
+import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "../feedback/feedback-context-labels";
+import { DEFAULT_FEEDBACK_PAGE_LABELS } from "../feedback/feedback-table-labels";
+import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "../feedback/feedback-row-detail-labels";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../components/account-settings-labels";
-import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button";
-import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar";
-import { DEFAULT_LIST_LABELS } from "../components/list";
-import { DEFAULT_BREADCRUMBS_LABELS } from "../components/breadcrumbs";
-import { DEFAULT_TOAST_LABELS } from "../components/toast";
-import { DEFAULT_FORM_ACTIONS_LABELS } from "../components/form-actions";
-import { DEFAULT_DESCRIPTION_LIST_LABELS } from "../components/description-list";
-import { DEFAULT_LINE_ITEMS_LABELS } from "../components/line-items";
-import { DEFAULT_PROGRESS_BAR_LABELS } from "../components/progress-bar";
-import { DEFAULT_SIGNED_AMOUNT_LABELS } from "../components/signed-amount";
-import { DEFAULT_ERROR_BOUNDARY_LABELS } from "../components/error-boundary";
-import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image";
-import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid";
-import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox";
-import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock";
-import { DEFAULT_LEGAL_LABELS } from "../components/legal";
-import { DEFAULT_SIGN_IN_LABELS } from "../auth/sign-in-form";
-import { DEFAULT_REGISTER_LABELS } from "../auth/register-form";
-import { DEFAULT_COMPLETE_NAME_LABELS } from "../auth/complete-name-dialog";
-import { DEFAULT_FORGOT_PASSWORD_LABELS } from "../auth/forgot-password-form";
-import { DEFAULT_RESET_PASSWORD_LABELS } from "../auth/reset-password-form";
-import { DEFAULT_VERIFY_EMAIL_LABELS } from "../auth/verify-email";
-import { DEFAULT_NOT_FOUND_LABELS } from "../auth/not-found-page";
-import { DEFAULT_ACCEPT_INVITATION_LABELS } from "../auth/accept-invitation";
-import { DEFAULT_COMPANY_SWITCHER_LABELS } from "../shell/company-switcher";
-import { DEFAULT_EMAIL_CHANGE_LABELS } from "../account/email-change-setting";
-import { DEFAULT_SESSIONS_LABELS } from "../account/sessions-setting";
-import { DEFAULT_DELETE_ACCOUNT_LABELS } from "../account/delete-account-setting";
-import { DEFAULT_DATA_EXPORT_LABELS } from "../account/data-export-setting";
-import { DEFAULT_USER_ROSTER_LABELS } from "../admin/user-roster";
-import { DEFAULT_ROLE_SELECT_LABELS } from "../admin/role-select";
-import { DEFAULT_REVIEWER_SCOPE_LABELS } from "../admin/reviewer-scope-editor";
-import { DEFAULT_ADMIN_ACTION_LABELS } from "../admin/admin-action-confirm";
-import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "../admin/admin-action-log";
-import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "../admin/transfer-ownership-dialog";
-import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel";
+import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button-labels";
+import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar-labels";
+import { DEFAULT_LIST_LABELS } from "../components/list-labels";
+import { DEFAULT_BREADCRUMBS_LABELS } from "../components/breadcrumbs-labels";
+import { DEFAULT_TOAST_LABELS } from "../components/toast-labels";
+import { DEFAULT_FORM_ACTIONS_LABELS } from "../components/form-actions-labels";
+import { DEFAULT_DESCRIPTION_LIST_LABELS } from "../components/description-list-labels";
+import { DEFAULT_LINE_ITEMS_LABELS } from "../components/line-items-labels";
+import { DEFAULT_PROGRESS_BAR_LABELS } from "../components/progress-bar-labels";
+import { DEFAULT_SIGNED_AMOUNT_LABELS } from "../components/signed-amount-labels";
+import { DEFAULT_ERROR_BOUNDARY_LABELS } from "../components/error-boundary-labels";
+import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image-labels";
+import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid-labels";
+import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox-labels";
+import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock-labels";
+import { DEFAULT_LEGAL_LABELS } from "../components/legal-labels";
+import { DEFAULT_SIGN_IN_LABELS } from "../auth/sign-in-form-labels";
+import { DEFAULT_REGISTER_LABELS } from "../auth/register-form-labels";
+import { DEFAULT_COMPLETE_NAME_LABELS } from "../auth/complete-name-dialog-labels";
+import { DEFAULT_FORGOT_PASSWORD_LABELS } from "../auth/forgot-password-form-labels";
+import { DEFAULT_RESET_PASSWORD_LABELS } from "../auth/reset-password-form-labels";
+import { DEFAULT_VERIFY_EMAIL_LABELS } from "../auth/verify-email-labels";
+import { DEFAULT_NOT_FOUND_LABELS } from "../auth/not-found-page-labels";
+import { DEFAULT_ACCEPT_INVITATION_LABELS } from "../auth/accept-invitation-labels";
+import { DEFAULT_COMPANY_SWITCHER_LABELS } from "../shell/company-switcher-labels";
+import { DEFAULT_EMAIL_CHANGE_LABELS } from "../account/email-change-setting-labels";
+import { DEFAULT_SESSIONS_LABELS } from "../account/sessions-setting-labels";
+import { DEFAULT_DELETE_ACCOUNT_LABELS } from "../account/delete-account-setting-labels";
+import { DEFAULT_DATA_EXPORT_LABELS } from "../account/data-export-setting-labels";
+import { DEFAULT_USER_ROSTER_LABELS } from "../admin/user-roster-labels";
+import { DEFAULT_ROLE_SELECT_LABELS } from "../admin/role-select-labels";
+import { DEFAULT_REVIEWER_SCOPE_LABELS } from "../admin/reviewer-scope-editor-labels";
+import { DEFAULT_ADMIN_ACTION_LABELS } from "../admin/admin-action-confirm-labels";
+import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "../admin/admin-action-log-labels";
+import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "../admin/transfer-ownership-dialog-labels";
+import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel-labels";
 import { DEFAULT_SETTINGS_LABELS } from "../settings/settings-labels";
 import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
 import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
-import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change-labels";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
-import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions";
-import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell";
-import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips";
-import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card";
-import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog";
-import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake";
+import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions-labels";
+import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell-labels";
+import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips-labels";
+import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
+import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
+import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake-labels";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "../components/translation-review-labels";
-import { DEFAULT_COUNTRY_SELECT_LABELS } from "../components/country-select";
-import { DEFAULT_INLINE_EDIT_LABELS } from "../components/inline-edit-field";
-import { DEFAULT_IBAN_INPUT_LABELS } from "../components/iban-input";
-import { DEFAULT_PHONE_INPUT_LABELS } from "../components/phone-input";
-import { DEFAULT_SIGN_CHIP_LABELS } from "../components/sign-chip";
-import { DEFAULT_COLUMN_MAPPER_LABELS } from "../components/column-mapper";
+import { DEFAULT_COUNTRY_SELECT_LABELS } from "../components/country-select-labels";
+import { DEFAULT_INLINE_EDIT_LABELS } from "../components/inline-edit-field-labels";
+import { DEFAULT_IBAN_INPUT_LABELS } from "../components/iban-input-labels";
+import { DEFAULT_PHONE_INPUT_LABELS } from "../components/phone-input-labels";
+import { DEFAULT_SIGN_CHIP_LABELS } from "../components/sign-chip-labels";
+import { DEFAULT_COLUMN_MAPPER_LABELS } from "../components/column-mapper-labels";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -122,6 +122,14 @@ import type { UiKitLabels } from "./kit-labels";
  * A separate module from the provider on purpose. Components import the provider's
  * hooks; this file imports the components' defaults. Kept together they would be an
  * import cycle through every component in the kit.
+ *
+ * Every import here is a module of WORDS — a `*-labels.ts` beside its component, which
+ * the component re-exports, or `kit-labels` and `wizard/types` — never a component. The
+ * English catalogue (`locales/en.ts`) is built on this object, so a component imported
+ * here rides along with English: in 0.33 that was 79 of them, and an app fetching `en`
+ * lazily fetched ~40 chunks of component code with it, where every other language is one
+ * (0.34, KS U8). `__tests__/english-catalogue-graph.test.ts` holds the line, and the
+ * build makes `dist/i18n/locales/en.js` one file (scripts/flatten-en.mjs).
  */
 export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   common: DEFAULT_COMMON_LABELS,

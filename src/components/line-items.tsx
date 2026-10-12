@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, IconButton } from "./ui";
+import { DEFAULT_LINE_ITEMS_LABELS } from "./line-items-labels";
 
 /** The words {@link LineItems} renders on its own behalf. Row numbers are 1-based. */
 export interface LineItemsLabels {
@@ -21,14 +22,8 @@ export interface LineItemsLabels {
   totals: string;
 }
 
-export const DEFAULT_LINE_ITEMS_LABELS: LineItemsLabels = {
-  add: "Add row",
-  remove: (row) => `Remove row ${row}`,
-  confirmRemove: (row) => `Remove row ${row}? Press again to confirm`,
-  row: (row) => `Row ${row}`,
-  cell: (column, row) => `${column}, row ${row}`,
-  totals: "Total",
-};
+// Defined in ./line-items-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_LINE_ITEMS_LABELS };
 
 /** What a column's `render` receives for one row. */
 export interface LineItemCellContext<T> {

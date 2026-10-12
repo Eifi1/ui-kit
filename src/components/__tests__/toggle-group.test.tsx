@@ -45,7 +45,7 @@ describe("ToggleGroup", () => {
         value="a"
         onChange={onChange}
         options={OPTIONS}
-        ariaLabel="Status"
+        aria-label="Status"
         disabled
       />,
     );
@@ -65,7 +65,7 @@ describe("ToggleGroup", () => {
   it("says nothing about being disabled when it is not", () => {
     // `aria-disabled="false"` is a claim of its own and screen readers announce it;
     // an ordinary group should carry no such attribute at all.
-    render(<ToggleGroup value="a" onChange={vi.fn()} options={OPTIONS} ariaLabel="Status" />);
+    render(<ToggleGroup value="a" onChange={vi.fn()} options={OPTIONS} aria-label="Status" />);
     expect(screen.getByRole("radiogroup", { name: "Status" })).not.toHaveAttribute(
       "aria-disabled",
     );

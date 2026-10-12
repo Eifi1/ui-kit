@@ -5,6 +5,7 @@ import { TopBarActionMenu, type TopBarMenuEntry } from "../shell/topbar-action-m
 import { FEEDBACK_CATEGORY_META, type FeedbackCategory } from "./feedback-inbox";
 import { useFeedbackCategoryLabels } from "./feedback-labels";
 import { FEEDBACK_PICKABLE_CATEGORIES } from "./feedback-record";
+import { DEFAULT_FEEDBACK_MENU_LABELS } from "./feedback-menu-labels";
 
 /**
  * `feedbackMenu` — the top-bar feedback menu's own words (0.27.0). The four category rows
@@ -23,11 +24,8 @@ export interface FeedbackMenuLabels {
   viewFeedback: string;
 }
 
-export const DEFAULT_FEEDBACK_MENU_LABELS: FeedbackMenuLabels = {
-  trigger: "Send feedback",
-  myFeedback: "My feedback",
-  viewFeedback: "View feedback",
-};
+// Defined in ./feedback-menu-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_MENU_LABELS };
 
 export interface FeedbackMenuProps {
   /** A category row was chosen — open the submit dialog on it (`useFeedbackSubmit`'s

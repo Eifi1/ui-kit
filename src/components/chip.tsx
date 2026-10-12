@@ -11,6 +11,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from ".
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_CHIP_INPUT_LABELS } from "./chip-labels";
 
 /**
  * A chip: a compact pill carrying one value.
@@ -1101,13 +1102,8 @@ export interface ChipInputLabels {
   duplicate: (value: string) => string;
 }
 
-export const DEFAULT_CHIP_INPUT_LABELS: ChipInputLabels = {
-  added: (v) => `${v} added`,
-  removed: (v) => `${v} removed`,
-  remove: "Remove",
-  atLimit: (max) => `Limit of ${max} reached`,
-  duplicate: (v) => `${v} is already in the list`,
-};
+// Defined in ./chip-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_CHIP_INPUT_LABELS };
 
 export function resolveChipInputLabels(labels?: Partial<ChipInputLabels>): ChipInputLabels {
   return labels ? { ...DEFAULT_CHIP_INPUT_LABELS, ...labels } : DEFAULT_CHIP_INPUT_LABELS;
@@ -1126,11 +1122,6 @@ export interface ChipInputProps
   /** Visible label, rendered above the field. Without one, name the field with
    *  `aria-label`. */
   label?: string;
-  /**
-   * @deprecated Pass `aria-label` instead — the DOM spelling the rest of this kit
-   * now uses. Still honoured, and still second to `aria-label` when both are given.
-   */
-  ariaLabel?: string;
   /** Reject or rewrite a value on commit. Return a string to reject WITH that message. */
   validate?: (raw: string) => string | null;
   /** Characters that commit the current text, besides Enter. Default: comma. */
@@ -1171,7 +1162,6 @@ export function ChipInput({
   onChange,
   placeholder,
   label,
-  ariaLabel,
   validate,
   separators = [","],
   allowDuplicates = false,
@@ -1410,9 +1400,8 @@ export function ChipInput({
           placeholder={value.length ? undefined : placeholder}
           disabled={disabled}
           // A visible `label` is already wired through `htmlFor`, so adding a name
-          // here would give the field two. Failing that, the DOM spelling wins and
-          // the deprecated `ariaLabel` is the fallback.
-          aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
+          // here would give the field two.
+          aria-label={label ? undefined : ariaLabelAttr}
           aria-describedby={describedBy || undefined}
           aria-invalid={isInvalid || !!rejected || undefined}
           // `w-0` with flex-1: without a width the browser's default input size (20

@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { DEFAULT_TOAST_LABELS } from "./toast-labels";
 
 /**
  * The kit's toast layer: a `toast` API and a `<Toaster>`, over sonner.
@@ -75,12 +76,8 @@ export interface ToastLabels {
   redo: string;
 }
 
-export const DEFAULT_TOAST_LABELS: ToastLabels = {
-  close: "Close notification",
-  notifications: "Notifications",
-  undo: "Undo",
-  redo: "Redo",
-};
+// Defined in ./toast-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TOAST_LABELS };
 
 /** What the mounted `<Toaster>` resolved from `<UiKitProvider>` — so `toast.undo()`,
  *  which is called from mutation callbacks and not from a component, still says

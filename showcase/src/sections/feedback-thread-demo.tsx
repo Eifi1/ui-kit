@@ -102,7 +102,7 @@ export function FeedbackThreadDemo() {
       >
         <Row>
           <ToggleGroup<ThreadState>
-            ariaLabel="thread state"
+            aria-label="thread state"
             value={state}
             onChange={setState}
             options={[

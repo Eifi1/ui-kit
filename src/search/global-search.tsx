@@ -10,6 +10,7 @@ import { CommandPalette, DEFAULT_COMMAND_PALETTE_LABELS, useCommandKey } from ".
 import type { CommandItem, CommandPaletteDensity, CommandPaletteLabels } from "./command-palette";
 import { createSearchIndex } from "./search-index";
 import type { SearchEntry, SearchIndexOptions } from "./search-index";
+import { DEFAULT_GLOBAL_SEARCH_LABELS } from "./global-search-labels";
 
 export interface GlobalSearchLabels {
   /** The trigger's accessible name, and the dialog's. */
@@ -25,13 +26,8 @@ export interface GlobalSearchLabels {
   results: string;
 }
 
-export const DEFAULT_GLOBAL_SEARCH_LABELS: GlobalSearchLabels = {
-  trigger: "Search",
-  placeholder: "Search or jump to…",
-  shortcut: (keys) => `Search (${keys})`,
-  suggestions: "Try",
-  results: "Results",
-};
+// Defined in ./global-search-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_GLOBAL_SEARCH_LABELS };
 
 /**
  * A place results come from that is not the static index — a server search, a

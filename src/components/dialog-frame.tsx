@@ -7,13 +7,15 @@ import { FOCUS_RING } from "./focus-ring";
 import { Modal, ModalCloseContext } from "./modal";
 import type { ModalProps } from "./modal";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_DIALOG_FRAME_LABELS } from "./dialog-frame-labels";
 
 export interface DialogFrameLabels {
   /** Accessible name of the header's X, when {@link DialogFrameProps.closeButton} shows it. */
   close: string;
 }
 
-export const DEFAULT_DIALOG_FRAME_LABELS: DialogFrameLabels = { close: "Close" };
+// Defined in ./dialog-frame-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DIALOG_FRAME_LABELS };
 
 /**
  * `ModalProps` minus the three this component owns: the NAME (`labelledBy` — the

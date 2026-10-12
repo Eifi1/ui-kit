@@ -8,6 +8,7 @@ import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
 import type { DataTableColumn } from "./data-table";
+import { DEFAULT_ACCOUNT_STATE_LABELS } from "./account-chips-labels";
 
 /**
  * The parts an admin roster repeats (0.18.0) — and only those.
@@ -152,16 +153,8 @@ export interface AccountStateLabels extends Record<Exclude<AccountState, "deleti
   deletionOn?: (date: string) => string;
 }
 
-export const DEFAULT_ACCOUNT_STATE_LABELS = {
-  active: "Active",
-  inactive: "Inactive",
-  invited: "Invited",
-  registered: "Registered",
-  unverified: "Unverified",
-  passwordChange: "Must change password",
-  deletion: "Deletion requested",
-  deletionOn: (date: string) => `Deletion on ${date}`,
-} satisfies Required<AccountStateLabels>;
+// Defined in ./account-chips-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ACCOUNT_STATE_LABELS };
 
 /** The default tone of each state: green for the normal case, red for switched off
  *  (and for going, `deletion`), amber for something the user still has to do, blue for

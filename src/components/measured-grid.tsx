@@ -11,6 +11,7 @@ import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { useWindowedRows, WINDOWED_ROW_INDEX } from "../hooks/use-windowed-rows";
 import { ToggleGroup } from "./toggle-group";
 import { Button, FIELD_INVALID, FIELD_TOUCH_TEXT, FOCUS_RING, Textarea } from "./ui";
+import { DEFAULT_MEASURED_GRID_LABELS } from "./measured-grid-labels";
 
 /**
  * A measured table: a fixed set of numeric columns, typed cell by cell or pasted as a
@@ -66,25 +67,8 @@ export interface MeasuredGridLabels {
   problems: (count: number) => string;
 }
 
-/** English defaults. Exported as the `measuredGrid` namespace of `UiKitLabels`
- *  (src/i18n), the complete reference a translation is written against. */
-export const DEFAULT_MEASURED_GRID_LABELS: MeasuredGridLabels = {
-  view: "Table view",
-  cellsView: "Cells",
-  textView: "Text",
-  addRow: "Add row",
-  removeRow: (row) => `Remove row ${row}`,
-  clear: "Clear table",
-  pasteHint: "Paste a block from a spreadsheet into any cell",
-  cell: (column, row) => `${column}, row ${row}`,
-  rowNumber: "Row",
-  rowActions: "Row actions",
-  keyboardHint:
-    "Arrow keys move between cells. Type to replace a cell, F2 to edit it, Escape to undo the edit. Enter moves down and adds a row at the end.",
-  lineError: (line) => `Line ${line} could not be read`,
-  points: (count) => (count === 1 ? "1 point" : `${count} points`),
-  problems: (count) => (count === 1 ? "1 cell is not a number" : `${count} cells are not numbers`),
-};
+// Defined in ./measured-grid-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MEASURED_GRID_LABELS };
 
 /** One column of a measured table: what it holds and what it is measured in. The unit
  *  is separate from the name because the header shows it small and underneath, and

@@ -2,6 +2,7 @@ import { Checkbox } from "../components/checkbox";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import type { FeedbackContext, FeedbackEnvironment } from "./feedback-record";
+import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "./feedback-context-labels";
 
 /**
  * The reporter context of a feedback report: the box the submit dialog shows, and the
@@ -128,10 +129,8 @@ export interface FeedbackContextLabels {
   attachUrl: string;
 }
 
-export const DEFAULT_FEEDBACK_CONTEXT_LABELS: FeedbackContextLabels = {
-  user: "User",
-  attachUrl: "Attach current page URL",
-};
+// Defined in ./feedback-context-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_CONTEXT_LABELS };
 
 export interface FeedbackContextBoxProps {
   /** Who is filing — the same value handed to {@link feedbackContext}. */

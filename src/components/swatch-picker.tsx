@@ -7,6 +7,7 @@ import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasContent, LabelStrip } from "./field-parts";
+import { DEFAULT_SWATCH_PICKER_LABELS } from "./swatch-picker-labels";
 
 export interface SwatchPickerLabels {
   /** The "no colour" tile's name, when `allowNone` is set. */
@@ -15,10 +16,8 @@ export interface SwatchPickerLabels {
   mixed: string;
 }
 
-export const DEFAULT_SWATCH_PICKER_LABELS: SwatchPickerLabels = {
-  none: "No colour",
-  mixed: "Mixed: the selected items have different colours",
-};
+// Defined in ./swatch-picker-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SWATCH_PICKER_LABELS };
 
 export interface SwatchOption<T extends string> {
   value: T;

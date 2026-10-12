@@ -14,6 +14,10 @@ import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import {
+  DEFAULT_FEEDBACK_COMPOSER_LABELS,
+  DEFAULT_FEEDBACK_THREAD_LABELS,
+} from "./feedback-thread-labels";
 
 /**
  * The conversation under a report: who said what, when, with what attached — and the
@@ -64,14 +68,8 @@ export interface FeedbackThreadLabels {
   attachments: string;
 }
 
-export const DEFAULT_FEEDBACK_THREAD_LABELS: FeedbackThreadLabels = {
-  thread: "Comments",
-  empty: "No comments yet",
-  loading: "Loading comments…",
-  you: "You",
-  staff: "Staff",
-  attachments: "Attachments",
-};
+// Defined in ./feedback-thread-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_THREAD_LABELS };
 
 /** The `feedbackComposer` namespace of `<UiKitProvider labels>`. The attach buttons'
  *  words are `feedbackAttachment`'s, shared with the dialog and the note editor. */
@@ -87,13 +85,8 @@ export interface FeedbackComposerLabels {
   sendHintEnter: string;
 }
 
-export const DEFAULT_FEEDBACK_COMPOSER_LABELS: FeedbackComposerLabels = {
-  field: "Write a comment",
-  placeholder: "Write a comment…",
-  send: "Send",
-  sendHint: (modifier) => `${modifier} + Enter to send`,
-  sendHintEnter: "Enter to send, Shift + Enter for a new line",
-};
+// Defined in ./feedback-thread-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_COMPOSER_LABELS };
 
 /* ── Thread ───────────────────────────────────────────────────────────────── */
 

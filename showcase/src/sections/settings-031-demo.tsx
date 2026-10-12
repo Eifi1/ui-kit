@@ -377,7 +377,7 @@ export function SettingsDesktop031Demo() {
 export function SettingsPhone031Demo() {
   const account = useGardenAccount();
   return (
-    <Example label="SettingsLayout — phone" hint={`layout="phone" pins it here; "auto" follows PHONE_QUERY`}>
+    <Example label="SettingsLayout — phone" hint={`layout="phone" pins it here; "auto" follows usePhoneLayout()`}>
       <Frame initial="/settings" links={SETTINGS_LINKS.slice(1)} className="mx-auto max-w-[390px]">
         <GardenSettings layout="phone" demo={false} account={account} />
       </Frame>

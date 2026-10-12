@@ -81,7 +81,7 @@ export function PaletteMenu({
   const activeName = palettes.find((p) => p.id === activeId)?.name ?? activeId;
   return (
     <HoverMenu
-      ariaLabel={labels.palette}
+      aria-label={labels.palette}
       trigger={({ toggle }) => (
         <Tooltip label={activeName} portal>
           <button
@@ -185,7 +185,7 @@ export function LanguageMenu({
   const active = options.find((o) => o.code === current);
   return (
     <HoverMenu
-      ariaLabel={labels.language}
+      aria-label={labels.language}
       trigger={({ toggle }) => (
         <Tooltip label={active?.label ?? labels.language} portal>
           <button

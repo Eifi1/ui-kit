@@ -9,6 +9,7 @@ import { Button, EmptyState } from "../components/ui";
 import { authErrorCode } from "./auth-errors";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, useOncePerKey } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_ACCEPT_INVITATION_LABELS } from "./accept-invitation-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -41,21 +42,8 @@ export interface AcceptInvitationLabels {
   register: string;
 }
 
-export const DEFAULT_ACCEPT_INVITATION_LABELS: AcceptInvitationLabels = {
-  title: "Accept invitation",
-  accepting: "Joining…",
-  accepted: "Invitation accepted.",
-  joined: (name) => `You’ve joined ${name}.`,
-  continue: "Continue",
-  invalid: "Could not join with this link",
-  expired: "This invitation has expired",
-  noToken: "This link is missing its invite token.",
-  askAgain: "Ask the person who invited you to send a new invitation.",
-  signInFirst: "Sign in to accept this invitation",
-  signInHint: "Use the account the invitation was sent to.",
-  signIn: "Sign in",
-  register: "Create account",
-};
+// Defined in ./accept-invitation-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ACCEPT_INVITATION_LABELS };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 

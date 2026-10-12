@@ -13,11 +13,12 @@ import { Button, Input } from "../components/ui";
 import { accessAction } from "../landing/access";
 import type { AccessChoice } from "../landing/access";
 import { useLandingLabels } from "../landing/landing-labels";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { KitErrorCode } from "./auth-errors";
 import { taggedEmail } from "./email-tag";
 import { newPasswordProblem } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
+import { DEFAULT_SIGN_IN_LABELS } from "./sign-in-form-labels";
 
 /* ── The answers (§5.1) ──────────────────────────────────────────────────── */
 
@@ -179,43 +180,8 @@ export interface SignInLabels {
   requestAccess?: string;
 }
 
-/** `Required`: every key, the 0.30 ones included, has its English here. */
-export const DEFAULT_SIGN_IN_LABELS: Required<SignInLabels> = {
-  email: "Email",
-  password: "Password",
-  submit: "Sign in",
-  passkey: "Sign in with a passkey",
-  forgotPassword: "Forgot your password?",
-  noAccount: "No account yet?",
-  register: "Create account",
-  invalidCredentials: "The email or password is incorrect.",
-  failed: "Sign-in failed. Please try again.",
-  passkeyFailed: "Passkey sign-in failed.",
-  deactivatedHint: "Account deactivated? Write to {contact}.",
-  tagHint: (taggedAddress) => `Signed up with ${taggedAddress}? Use that address.`,
-  twoFactorTitle: "Two-factor authentication",
-  twoFactorIntro: "Enter the code your authenticator app shows.",
-  code: "2FA code",
-  verify: "Verify",
-  codeInvalid: "Invalid 2FA code.",
-  setPasswordTitle: "Choose a new password",
-  setPasswordIntro: "A new password was requested for this account. Choose one and you are straight back in.",
-  newPassword: "New password",
-  confirmPassword: "Repeat new password",
-  passwordMismatch: "The passwords don't match.",
-  setPasswordSubmit: "Set password and sign in",
-  setPasswordFailed: "The password could not be set.",
-  expired: "This sign-in has expired. Please sign in again.",
-  backToSignIn: "Back to sign in",
-  useRecoveryCode: "Use a backup code",
-  useAuthenticatorCode: "Use your authenticator app",
-  recoveryCode: "Backup code",
-  recoveryIntro: "Enter one of the backup codes you saved when you turned on two-factor authentication.",
-  recoveryCodeHint: (length) => `${length} letters and digits. Dashes and spaces don’t matter.`,
-  recoveryCodeInvalid: "This backup code is not valid, or it has been used already.",
-  rateLimited: englishRateLimited,
-  requestAccess: "Request access",
-};
+// Defined in ./sign-in-form-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGN_IN_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 

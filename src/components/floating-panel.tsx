@@ -21,6 +21,7 @@ import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { assignRef } from "./choice-parts";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
+import { DEFAULT_FLOATING_PANEL_LABELS } from "./floating-panel-labels";
 
 export interface FloatingPanelLabels {
   /** Accessible name of the panel header's X. */
@@ -33,10 +34,8 @@ export interface FloatingPanelLabels {
   badge: (count: number) => string;
 }
 
-export const DEFAULT_FLOATING_PANEL_LABELS: FloatingPanelLabels = {
-  close: "Close",
-  badge: (count) => `${count} new`,
-};
+// Defined in ./floating-panel-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FLOATING_PANEL_LABELS };
 
 /** A LOGICAL corner: `bottom-end` is bottom-right in LTR and bottom-left in RTL. */
 export type FloatingCorner = "bottom-end" | "bottom-start";

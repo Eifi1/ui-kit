@@ -5,6 +5,7 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
+import { DEFAULT_BREADCRUMBS_LABELS } from "./breadcrumbs-labels";
 
 export interface BreadcrumbsLabels {
   /** The `nav` landmark's name — what a screen reader lists it as. */
@@ -13,10 +14,8 @@ export interface BreadcrumbsLabels {
   showAll: string;
 }
 
-export const DEFAULT_BREADCRUMBS_LABELS: BreadcrumbsLabels = {
-  label: "Breadcrumb",
-  showAll: "Show full path",
-};
+// Defined in ./breadcrumbs-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_BREADCRUMBS_LABELS };
 
 export interface BreadcrumbItem {
   label: ReactNode;

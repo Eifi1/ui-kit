@@ -20,6 +20,7 @@ import {
   useKitLabels,
   useKitLocale,
 } from "../i18n/kit-labels";
+import { DEFAULT_COUNTRY_SELECT_LABELS } from "./country-select-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -38,11 +39,8 @@ export interface CountrySelectLabels {
   others: string;
 }
 
-export const DEFAULT_COUNTRY_SELECT_LABELS: CountrySelectLabels = {
-  country: "Country",
-  search: "Search country",
-  others: "Other countries",
-};
+// Defined in ./country-select-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COUNTRY_SELECT_LABELS };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

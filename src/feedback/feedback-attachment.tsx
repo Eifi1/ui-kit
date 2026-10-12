@@ -15,6 +15,7 @@ import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-but
 import { useCommitReason, type CommitScope } from "../components/write-lock";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "./feedback-attachment-labels";
 
 export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -65,35 +66,8 @@ export interface FeedbackAttachmentFieldLabels {
   attachmentUploadFailed?: (name: string) => string;
 }
 
-/**
- * English, in the feedback contract's wording since 0.27.0 (docs/feedback-harmonization.md
- * §4.2: keksdose's `feedback.*` keys are the canon, and the kit owns them now). Three
- * strings moved with it:
- *
- * - `attachmentAdd` "Attach image" → **"Add attachment"**: the field takes a PDF or a text
- *   log as well wherever the app passes `FEEDBACK_ATTACHMENT_ACCEPT` (keksdose feedback
- *   #87), and a button that says "image" over a picker that offers a PDF is wrong in one
- *   of the two places.
- * - `attachmentPaste` → keksdose's longer line, which says WHY one would paste — a region
- *   snip shows one corner rather than the whole page (Steering Design feedback #39).
- * - `attachmentLimit` for one: "remove **it**", as keksdose's `attachments_full_one`;
- *   "remove one" of a single file read oddly.
- */
-export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels = {
-  attachmentAdd: "Add attachment",
-  attachmentCapture: "Capture screenshot",
-  attachmentPaste: "…or paste a screenshot straight from the clipboard, so you can show one corner rather than the whole page.",
-  attachmentRemove: "Remove attachment",
-  attachmentList: "Attachments",
-  attachmentScreenshot: "Screenshot",
-  attachmentRemoveFile: (name) => `Remove ${name}`,
-  attachmentLimit: (max) =>
-    max === 1
-      ? "Up to 1 attachment — remove it to add another."
-      : `Up to ${max} attachments — remove one to add another.`,
-  attachmentUploading: "Uploading…",
-  attachmentUploadFailed: (name) => `“${name}” could not be uploaded`,
-};
+// Defined in ./feedback-attachment-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_ATTACHMENT_LABELS };
 
 /** Why a file was turned away. `"count"` only ever comes from `multiple` (and `refs`)
  *  mode: more files arrived at once than `max` left room for, and the surplus was

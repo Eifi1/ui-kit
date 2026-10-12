@@ -8,6 +8,7 @@ import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { AuthedImage } from "./authed-image";
 import { Lightbox, imageItemKind } from "./lightbox";
 import type { ImageItem, LightboxLabels } from "./lightbox";
+import { DEFAULT_IMAGE_GRID_LABELS } from "./image-grid-labels";
 
 export interface ImageGridLabels {
   /** The list's accessible name. */
@@ -18,11 +19,8 @@ export interface ImageGridLabels {
   actions: (name: string) => string;
 }
 
-export const DEFAULT_IMAGE_GRID_LABELS: ImageGridLabels = {
-  list: "Images",
-  item: (index, count) => `Image ${index} of ${count}`,
-  actions: (name) => `Actions for ${name}`,
-};
+// Defined in ./image-grid-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_IMAGE_GRID_LABELS };
 
 export interface ImageGridProps extends Omit<ComponentPropsWithoutRef<"ul">, "children"> {
   items: readonly ImageItem[];

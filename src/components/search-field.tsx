@@ -15,15 +15,6 @@ interface SearchFieldOwnProps
    *  four this replaced wanted the string, and one of them held it in a URL param
    *  rather than in state. */
   onChange: (value: string) => void;
-  /**
-   * The field's accessible name.
-   *
-   * @deprecated Pass `aria-label` instead — the DOM spelling this kit standardised on
-   * when it found three names for one idea (`ariaLabel`, `aria-label`, and this).
-   * Unchanged and still supported; it names the field only when `aria-label` is
-   * absent, so a consumer can migrate one call site at a time.
-   */
-  label?: string;
   /** Names the clear button. Default: the catalogue's `common.clear`, in the
    *  provider's language. */
   clearLabel?: string;
@@ -67,15 +58,12 @@ const SEARCH_INLINE =
   FIELD_TOUCH_TEXT;
 
 /**
- * One of the two spellings is REQUIRED, and the union is how that survives the
- * deprecation. Making `label` merely optional would have been the easy change and the
- * wrong one: the whole reason this component exists is that two of the four boxes it
- * replaced were named by nothing but their placeholder — which disappears the moment
- * someone types, i.e. exactly when a screen-reader user is working in the field. A
- * caller now has a choice of spelling; it still has no option to pass neither.
+ * `aria-label` is REQUIRED: the whole reason this component exists is that two of the
+ * four boxes it replaced were named by nothing but their placeholder — which disappears
+ * the moment someone types, i.e. exactly when a screen-reader user is working in the
+ * field. The `label` spelling it also took from 0.5 was removed in 0.34.
  */
-export type SearchFieldProps = SearchFieldOwnProps &
-  ({ "aria-label": string; label?: string } | { label: string; "aria-label"?: string });
+export type SearchFieldProps = SearchFieldOwnProps & { "aria-label": string };
 
 /**
  * The page-level filter box: a search icon, a `type="search"` input, and a clear
@@ -110,7 +98,6 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
   {
     value,
     onChange,
-    label,
     clearLabel: clearLabelProp,
     clearable = true,
     className,
@@ -125,10 +112,9 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
   const innerRef = useRef<HTMLInputElement>(null);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const clearLabel = clearable ? (clearLabelProp ?? common.clear) : undefined;
-  // Whichever spelling the caller used. It is the accessible name AND the placeholder
-  // fallback, so a box named only by `aria-label` still says what it is before anyone
-  // has typed in it — the same deal `label` has always had.
-  const name = ariaLabel ?? label;
+  // The accessible name AND the placeholder fallback, so the box says what it is
+  // before anyone has typed in it.
+  const name = ariaLabel;
   const inline = variant === "inline";
   return (
     <div className={cn("relative", className)}>

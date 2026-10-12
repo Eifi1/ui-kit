@@ -113,7 +113,7 @@ describe("Tabs", () => {
     });
 
     it("gives the tablist an accessible name and keeps the roles", () => {
-      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap label="Report" />);
+      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap aria-label="Report" />);
       expect(screen.getByRole("tablist", { name: "Report" })).toBeInTheDocument();
       expect(screen.getAllByRole("tab")).toHaveLength(3);
       expect(screen.getByRole("tab", { name: "One" })).toHaveAttribute("aria-selected", "true");
@@ -163,7 +163,7 @@ describe("Tabs", () => {
 
     it("walks the strip with the arrow keys, wrapping at both ends", () => {
       const onChange = vi.fn();
-      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap label="Report" />);
+      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap aria-label="Report" />);
       const [one, two, three] = screen.getAllByRole("tab");
       one.focus();
       arrow("ArrowRight");

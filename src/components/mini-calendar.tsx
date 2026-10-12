@@ -14,6 +14,7 @@ import {
   toLocalIso,
 } from "../lib/dates";
 import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
 
 /**
  * Every string this calendar can speak — the `miniCalendar` namespace of
@@ -56,17 +57,8 @@ export interface MiniCalendarLabels {
   rangeSelected: (from: string, to: string) => string;
 }
 
-/** English defaults. Exported as the `miniCalendar` namespace of `UiKitLabels`
- *  (src/i18n), the complete reference a translation is written against. */
-export const DEFAULT_MINI_CALENDAR_LABELS: MiniCalendarLabels = {
-  previousMonth: "Previous month",
-  nextMonth: "Next month",
-  day: (date) => date,
-  chooseStart: "Choose a start date",
-  chooseEnd: "Choose an end date",
-  startSelected: (date) => `${date} selected as the start. Choose an end date.`,
-  rangeSelected: (from, to) => `${from} to ${to} selected. Choose a start date to begin again.`,
-};
+// Defined in ./mini-calendar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MINI_CALENDAR_LABELS };
 
 /**
  * How a day is spoken. The weekday is in there on purpose: picking a date is very

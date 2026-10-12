@@ -10,6 +10,7 @@ import { Button, EmptyState } from "../components/ui";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_VERIFY_EMAIL_LABELS } from "./verify-email-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -51,25 +52,8 @@ export interface VerifyEmailLabels {
   dismiss: string;
 }
 
-export const DEFAULT_VERIFY_EMAIL_LABELS: VerifyEmailLabels = {
-  title: "Confirm your email address",
-  verifying: "Confirming…",
-  verified: "Your email address is confirmed.",
-  continue: "Continue",
-  invalid: "This confirmation link is not valid",
-  expired: "This confirmation link has expired",
-  noToken: "This link is missing its confirmation token.",
-  invalidHint: "The link may have expired or already been used.",
-  requestInApp: "You can request a new one from inside the app.",
-  requestHere: "You can request a new one here.",
-  resend: "Send again",
-  resendIn: (seconds) => `Send again in ${seconds} s`,
-  resent: "Confirmation email sent",
-  resendError: "Could not send the confirmation email",
-  rateLimited: englishRateLimited,
-  banner: "Please confirm your email address.",
-  dismiss: "Not now",
-};
+// Defined in ./verify-email-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_VERIFY_EMAIL_LABELS };
 
 /** A minute: long enough that an impatient second click does not mail twice, short
  *  enough that a mail lost to a spam filter can be re-sent without leaving the page. The

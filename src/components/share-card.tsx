@@ -22,6 +22,7 @@ import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 import type { WriteLock } from "./write-lock";
 import type { CardProps } from "./ui";
 import type { DisabledReasonDisplay } from "./field-parts";
+import { DEFAULT_SHARE_CARD_LABELS } from "./share-card-labels";
 
 /**
  * Who holds one record, and the owner's every way of changing that — Kurvenschmiede's
@@ -80,30 +81,8 @@ export interface ShareCardLabels {
   loading: string;
 }
 
-export const DEFAULT_SHARE_CARD_LABELS: ShareCardLabels = {
-  dialogTitle: "Share",
-  close: "Close",
-  email: "Email address",
-  emailOptional: "Email address (optional)",
-  emailPlaceholder: "name@example.com",
-  invalidEmail: "Enter a complete email address.",
-  role: "Role",
-  roleOf: (name) => `Role of ${name}`,
-  add: "Share",
-  whoHasAccess: "Who has access",
-  nobodyYet: "Nobody else has access yet.",
-  pending: "Pending",
-  openInvite: "Open invite link",
-  copyLink: "Copy link",
-  team: "Team",
-  teamHint: (name) => `Everyone in ${name} gets access.`,
-  remove: "Remove access",
-  removeConfirm: (name) => `Remove access for ${name}?`,
-  revokePending: "Withdraw invitation",
-  revokePendingConfirm: (name) => `Withdraw the invitation for ${name}?`,
-  failed: "That did not work. Please try again.",
-  loading: "Loading…",
-};
+// Defined in ./share-card-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SHARE_CARD_LABELS };
 
 // ── Data shapes ───────────────────────────────────────────────────────────────
 

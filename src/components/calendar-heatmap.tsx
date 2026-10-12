@@ -8,6 +8,7 @@ import { lerpHex, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
 import { Tooltip } from "./tooltip";
 import type { WeekDay } from "./mini-calendar";
+import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "./calendar-heatmap-labels";
 
 /**
  * Every string the heatmap speaks — the `calendarHeatmap` namespace of
@@ -31,15 +32,8 @@ export interface CalendarHeatmapLabels {
   truncated: (count: number) => string;
 }
 
-/** English defaults, exported as the `calendarHeatmap` namespace of `UiKitLabels`. */
-export const DEFAULT_CALENDAR_HEATMAP_LABELS: CalendarHeatmapLabels = {
-  grid: "Daily values",
-  day: (date, value) => `${date}: ${value}`,
-  less: "Less",
-  more: "More",
-  truncated: (count) =>
-    `Showing the most recent days; ${count} earlier ${count === 1 ? "day is" : "days are"} not shown.`,
-};
+// Defined in ./calendar-heatmap-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_CALENDAR_HEATMAP_LABELS };
 
 /** One day's figure. Several entries for one date are added up. */
 export interface CalendarHeatmapDatum {

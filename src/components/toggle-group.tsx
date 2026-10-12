@@ -54,12 +54,6 @@ export interface ToggleGroupBaseProps<T extends string>
    */
   overflow?: "truncate" | "wrap";
   /**
-   * @deprecated Pass `aria-label` instead — the DOM spelling, which every other
-   * control in this kit now answers to. Kept working because three applications ship
-   * this one today; it names the group only when `aria-label` is absent.
-   */
-  ariaLabel?: string;
-  /**
    * Show, refuse the change (Keksdose live #288: a payment dated in the future has no
    * state to set).
    *
@@ -332,7 +326,6 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     className,
     optionClassName,
     overflow = "truncate",
-    ariaLabel,
     disabled = false,
     size = "md",
     label,
@@ -506,10 +499,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // out entirely and merged through `cn`, so it is never in here.
       {...rest}
       role={pressed ? "group" : "radiogroup"}
-      // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
-      // have not moved yet.
-      aria-label={ariaLabelAttr ?? ariaLabel}
-      aria-labelledby={labelled && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
+      aria-label={ariaLabelAttr}
+      aria-labelledby={labelled && ariaLabelAttr === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
         [rest["aria-describedby"], hintAsCaption !== undefined && hintCaptionId, hasCaption && captionId, hasError && errorId]

@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "./password-strength-labels";
 
 /**
  * The bar, the word and the advisory checklist under a field where someone is
@@ -117,23 +118,8 @@ export interface PasswordStrengthLabels {
   tooLong: (maxBytes: number) => string;
 }
 
-export const DEFAULT_PASSWORD_STRENGTH_LABELS: PasswordStrengthLabels = {
-  tooShort: "Too short",
-  weak: "Weak",
-  fair: "Fair",
-  good: "Good",
-  strong: "Strong",
-  announcement: (level) => `Password strength: ${level}`,
-  ruleLength: (minLength) => `At least ${minLength} characters`,
-  ruleCase: "Upper and lower case",
-  ruleDigit: "A number",
-  ruleSymbol: "A symbol",
-  optional: (rule) => `${rule} (optional)`,
-  met: "Met:",
-  notMet: "Not met:",
-  tooLong: (maxBytes) =>
-    `At most ${maxBytes} characters (accents and emoji count for more than one).`,
-};
+// Defined in ./password-strength-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PASSWORD_STRENGTH_LABELS };
 
 const LEVEL_KEYS = ["tooShort", "weak", "fair", "good", "strong"] as const;
 

@@ -28,12 +28,6 @@ export interface GroupedPickerProps extends Omit<ComponentPropsWithoutRef<"div">
   /** Keys of the current selection, if any. */
   selected: { group: string; item: string } | null;
   onSelect: (groupKey: string, itemKey: string) => void;
-  /**
-   * @deprecated Use `aria-label`, the DOM spelling every control in the kit now
-   * takes. Kept working — three apps pass it — and it applies only when
-   * `aria-label` is absent; it goes in a later minor.
-   */
-  ariaLabel?: string;
   filterPlaceholder?: string;
 }
 
@@ -47,8 +41,7 @@ export function GroupedPicker({
   buttonLabel,
   selected,
   onSelect,
-  ariaLabel,
-  "aria-label": ariaLabelAttr,
+  "aria-label": ariaLabel,
   filterPlaceholder,
   className,
   ...rest
@@ -92,7 +85,7 @@ export function GroupedPicker({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={ariaLabelAttr ?? ariaLabel}
+        aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
       >

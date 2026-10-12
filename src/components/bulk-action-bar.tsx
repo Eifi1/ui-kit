@@ -9,6 +9,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { OVERLAY_EXIT_MS, prefersReducedMotion } from "../hooks/use-close-transition";
 import { Button, IconButton } from "./ui";
+import { DEFAULT_BULK_ACTION_BAR_LABELS } from "./bulk-action-bar-labels";
 
 export interface BulkActionBarLabels {
   /** The count, shown in the bar, spoken by its live region and used as the toolbar's
@@ -21,11 +22,8 @@ export interface BulkActionBarLabels {
   cleared: string;
 }
 
-export const DEFAULT_BULK_ACTION_BAR_LABELS: BulkActionBarLabels = {
-  selected: (count) => `${count} selected`,
-  clear: "Clear selection",
-  cleared: "Selection cleared",
-};
+// Defined in ./bulk-action-bar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_BULK_ACTION_BAR_LABELS };
 
 /**
  * `floating` — the phone's: fixed above `AppShell`'s bottom nav (`--app-nav-h`) and the

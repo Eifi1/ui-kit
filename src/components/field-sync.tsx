@@ -6,6 +6,7 @@ import { Tooltip } from "./tooltip";
 import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
+import { DEFAULT_FIELD_SYNC_LABELS } from "./field-sync-labels";
 
 /**
  * Sync state for a field backed by a database row.
@@ -34,13 +35,8 @@ export interface FieldSyncLabels {
   retry: string;
 }
 
-export const DEFAULT_FIELD_SYNC_LABELS: FieldSyncLabels = {
-  synced: "Saved",
-  edited: "Unsaved changes",
-  pending: "Saving…",
-  error: "Could not save",
-  retry: "Retry",
-};
+// Defined in ./field-sync-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FIELD_SYNC_LABELS };
 
 export function resolveFieldSyncLabels(labels?: Partial<FieldSyncLabels>): FieldSyncLabels {
   return labels ? { ...DEFAULT_FIELD_SYNC_LABELS, ...labels } : DEFAULT_FIELD_SYNC_LABELS;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_WRITE_LOCK_LABELS } from "./write-lock-labels";
 
 /** The words {@link WriteLockProvider} renders on its own behalf. */
 export interface WriteLockLabels {
@@ -8,9 +9,8 @@ export interface WriteLockLabels {
   reason: string;
 }
 
-export const DEFAULT_WRITE_LOCK_LABELS: WriteLockLabels = {
-  reason: "You can view this but not change it.",
-};
+// Defined in ./write-lock-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_WRITE_LOCK_LABELS };
 
 /**
  * What kind of lock a source is (docs/billing-harmonization.md §12.36, ui-kit 0.33).

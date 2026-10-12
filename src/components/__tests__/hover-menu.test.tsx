@@ -16,7 +16,6 @@ function Menu({
 }: {
   align?: "start" | "end" | "left" | "right";
   onPick?: (what: string) => void;
-  ariaLabel?: string;
   "aria-label"?: string;
 }) {
   return (
@@ -80,7 +79,7 @@ describe("HoverMenu semantics", () => {
   });
 
   it("names the menu, not the role-less wrapper", () => {
-    const { container } = render(<Menu ariaLabel="Guided tours" />);
+    const { container } = render(<Menu aria-label="Guided tours" />);
     // The wrapper used to carry it, where no screen reader reads a name.
     expect(container.firstElementChild).not.toHaveAttribute("aria-label");
     fireEvent.click(trigger());

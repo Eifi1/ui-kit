@@ -993,7 +993,7 @@ function HoverMenus() {
         <HoverMenu
           key={align}
           align={align}
-          ariaLabel={`Example actions, ${align}-aligned`}
+          aria-label={`Example actions, ${align}-aligned`}
           // Only one of the two, so the difference between the default width and a set
           // one is visible side by side rather than described.
           panelClassName={align === "end" ? "w-56" : undefined}
@@ -1055,8 +1055,7 @@ function HoverMenuClamp() {
       {/* Wraps: at Extra large the two triggers ran past a 360 px phone (0.32.1). */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <HoverMenu
-          // The DOM spelling; the deprecated `ariaLabel` (above) loses to it when both
-          // are given. `className` is the WRAPPER's, `panelClassName` the panel's.
+          // `className` is the WRAPPER's, `panelClassName` the panel's.
           aria-label="Sort options"
           className="rounded-md ring-1 ring-[var(--border)]"
           data-testid="showcase-sort-menu"

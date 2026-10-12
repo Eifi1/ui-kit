@@ -9,6 +9,7 @@ import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 
 export interface CommandItem {
   id: string;
@@ -92,16 +93,8 @@ export interface CommandPaletteLabels {
   close?: string;
 }
 
-export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
-  placeholder: "Search…",
-  empty: "No results",
-  loading: "Searching…",
-  dialog: "Search",
-  error: "Search failed. Try again.",
-  clear: "Clear search",
-  submit: "Search",
-  close: "Close",
-};
+// Defined in ./command-palette-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COMMAND_PALETTE_LABELS };
 
 /**
  * How tall the palette's rows are. `"compact"` (the default) is the desktop list the

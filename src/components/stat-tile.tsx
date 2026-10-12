@@ -12,6 +12,7 @@ import { Tooltip } from "./tooltip";
 // shimmer as one surface — and both stop under `prefers-reduced-motion`, which this
 // tile's private copy of the string did not.
 import { SKELETON_CLASS } from "./skeleton";
+import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile-labels";
 
 /**
  * The words a stat tile speaks. The delta's arrow is an icon, and an icon is not a
@@ -33,15 +34,8 @@ export interface StatTileLabels {
   loading: string;
 }
 
-export const DEFAULT_STAT_TILE_LABELS: StatTileLabels = {
-  increase: (amount) => `Up ${amount}`,
-  decrease: (amount) => `Down ${amount}`,
-  unchanged: "No change",
-  better: (change) => `${change} (better)`,
-  worse: (change) => `${change} (worse)`,
-  noValue: "No data",
-  loading: "Loading…",
-};
+// Defined in ./stat-tile-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_STAT_TILE_LABELS };
 
 /**
  * What colours a figure. Token-backed like everything else in the kit.

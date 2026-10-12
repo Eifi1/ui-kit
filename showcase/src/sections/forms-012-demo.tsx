@@ -177,7 +177,7 @@ export function RhfFieldsDemo() {
                 className={invalid ? "rounded-md ring-1 ring-[var(--danger)]" : undefined}
               >
                 <ToggleGroup
-                  ariaLabel="Colour tag"
+                  aria-label="Colour tag"
                   allowEmpty
                   options={COLOURS}
                   value={(field.value as string) || null}
@@ -456,7 +456,7 @@ function LineItemsDemo() {
     >
       <Row className="mb-3">
         <ToggleGroup
-          ariaLabel="Remove confirmation"
+          aria-label="Remove confirmation"
           // The prop name lives in the caption, not in both options: repeated there it was
           // all a phone showed of either, cut to "confirmRem…" twice.
           options={[

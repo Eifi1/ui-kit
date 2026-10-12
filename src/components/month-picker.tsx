@@ -11,6 +11,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { FieldBox, FieldLabelLine, hasContent, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
+import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**
  * Every string the month picker can speak. The month and year names are NOT here —
@@ -45,22 +46,8 @@ export interface MonthPickerLabels {
   thisYear: string;
 }
 
-/** The English starting point every override is merged onto. Exported (unlike the
- *  calendar's) because it is asked for by name: a host building its own translation
- *  table can spread it rather than re-typing four keys to change one. */
-export const DEFAULT_MONTH_PICKER_LABELS: MonthPickerLabels = {
-  previousYear: "Previous year",
-  nextYear: "Next year",
-  panel: "Choose a month",
-  month: (monthYear) => monthYear,
-  previousMonth: "Previous month",
-  nextMonth: "Next month",
-  today: "Today",
-  yearPanel: "Choose a year",
-  earlierYears: "Earlier years",
-  laterYears: "Later years",
-  thisYear: "This year",
-};
+// Defined in ./month-picker-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MONTH_PICKER_LABELS };
 
 /** Merge caller overrides onto the English defaults. */
 function useMonthPickerLabels(partial?: Partial<MonthPickerLabels>): MonthPickerLabels {

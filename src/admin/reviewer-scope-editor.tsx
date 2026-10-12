@@ -11,6 +11,7 @@ import { Caption } from "../components/text";
 import { hasMessage } from "./admin-parts";
 import type { MaybePromise } from "./admin-parts";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_REVIEWER_SCOPE_LABELS } from "./reviewer-scope-editor-labels";
 
 /**
  * Who may review which translations: the REVIEWER role and its scope, in one editor
@@ -71,15 +72,8 @@ export interface ReviewerScopeLabels {
   failed: string;
 }
 
-export const DEFAULT_REVIEWER_SCOPE_LABELS: ReviewerScopeLabels = {
-  languages: "Languages",
-  hint: "Tick the languages this person reviews.",
-  none: "No language: saving takes the reviewer role away.",
-  areas: "Limit to",
-  legalOnly: "Only the legal pages",
-  legalOnlyHint: "Imprint, Privacy Policy and Terms — for a lawyer rather than a native speaker.",
-  failed: "The reviewer scope couldn’t be saved. Please try again.",
-};
+// Defined in ./reviewer-scope-editor-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_REVIEWER_SCOPE_LABELS };
 
 export interface ReviewerScopeEditorProps {
   /** The scope the server has — the draft starts from it. Key the editor by the

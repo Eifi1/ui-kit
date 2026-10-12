@@ -15,11 +15,12 @@ import {
 } from "../components/danger-confirm";
 import type { DangerConsequence } from "../components/danger-confirm";
 import { Card } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useFocusWhen } from "../auth/status-parts";
 import { CARD_DESCRIPTION_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_DELETE_ACCOUNT_LABELS } from "./delete-account-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -66,31 +67,8 @@ export interface DeleteAccountLabels {
   failed: string;
 }
 
-export const DEFAULT_DELETE_ACCOUNT_LABELS: DeleteAccountLabels = {
-  title: "Delete account",
-  afterDays: (days) =>
-    days === 1
-      ? "Your account is deactivated at once and erased for good 1 day later."
-      : `Your account is deactivated at once and erased for good ${days} days later.`,
-  operator: "Your account is deactivated at once, and an operator will erase it for good.",
-  arm: "Delete account…",
-  prompt: "You will be signed out on every device, and your account can no longer be used.",
-  handOver: (count) =>
-    count === 1
-      ? "1 item others can see will pass to an administrator."
-      : `${count} items others can see will pass to an administrator.`,
-  confirm: "Delete my account",
-  done: "Your account is deactivated. You are being signed out.",
-  wrongPassword: "The password is incorrect.",
-  confirmationMismatch: "This is not your account’s address.",
-  lastAdmin: "You are the last administrator. Make someone else an administrator first.",
-  lastAdminOf: (companies) =>
-    `You are the last administrator of ${companies}. Make someone else an administrator there first.`,
-  householdHasMembers:
-    "Your household has other members, so the account can’t be deleted here. Please write to the operator.",
-  rateLimited: englishRateLimited,
-  failed: "Your account could not be deleted. Please try again.",
-};
+// Defined in ./delete-account-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DELETE_ACCOUNT_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 

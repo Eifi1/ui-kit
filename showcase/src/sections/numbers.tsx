@@ -9,7 +9,6 @@ import {
   FieldHint,
   NumberInput,
   NumberPadSheet,
-  PHONE_QUERY,
   commitExpression,
   evaluateExpression,
   formatResult,
@@ -18,7 +17,7 @@ import {
   looksLikeExpression,
   sanitizeLive,
   splitLeadingSign,
-  useMediaQuery,
+  usePhoneLayout,
 } from "@eifi1/ui-kit";
 import { NumberFieldDemo } from "./number-time-demo";
 import { Example, Note, OutTable, Row, Swatch, Stage } from "../lib/section";
@@ -129,7 +128,7 @@ export function Numbers() {
 
   // The same query the kit gates its phone shapes on, read here only to TELL the
   // reader which half of the page they are looking at. Nothing below branches on it.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
 
   const outflow = direction === "outflow";
   const selected = getCurrency(pickerCode);
@@ -138,8 +137,8 @@ export function Numbers() {
     <>
       <Note>
         Several affordances in this section are phone-only, gated on{" "}
-        <code className="font-mono">PHONE_QUERY</code> (
-        <code className="font-mono">max-width: 767px</code>): the <strong>number pad sheet</strong>{" "}
+        <code className="font-mono">usePhoneLayout()</code> (below{" "}
+        <code className="font-mono">md</code> at the text size in force): the <strong>number pad sheet</strong>{" "}
         that replaces the OS keyboard, and <code className="font-mono">variant="display"</code> on
         both fields. Above that width they are deliberately inert — the desktop calculator popover
         appears instead, and the display variant renders as an ordinary bordered field. Narrow the
@@ -247,7 +246,7 @@ export function Numbers() {
       >
         <Stage>
           {/* The goal-target shape: one number a dialog is about, at display size
-              with the chrome dropped — below PHONE_QUERY only. */}
+              with the chrome dropped — in the phone layout only. */}
           <NumberInput
             label="Savings goal"
             value={goal}
@@ -438,7 +437,7 @@ export function Numbers() {
         <Stage>
           <div data-stage="wide" className="grid gap-4 sm:grid-cols-2">
             {/* Same input, same numpad, same commit contract — only the chrome is
-                dropped, and only below PHONE_QUERY. `align="center"` centres in what
+                dropped, and only in the phone layout. `align="center"` centres in what
                 is LEFT of the currency chip, not in the whole box, so the last digits
                 never end up behind it. */}
             <AmountInput
@@ -636,8 +635,8 @@ export function Numbers() {
             <Note>
               In an app this sheet is never rendered by hand: focusing a{" "}
               <code className="font-mono">NumberInput</code> or{" "}
-              <code className="font-mono">AmountInput</code> below{" "}
-              <code className="font-mono">PHONE_QUERY</code> opens it, with the field's
+              <code className="font-mono">AmountInput</code> in the phone layout{" "}
+              (<code className="font-mono">usePhoneLayout()</code>) opens it, with the field's
               <code className="font-mono"> inputMode="none"</code> suppressing the OS keyboard in
               its place. The button below mounts it explicitly so a desktop reader can see it at
               all. It portals to <code className="font-mono">document.body</code> and is fixed to

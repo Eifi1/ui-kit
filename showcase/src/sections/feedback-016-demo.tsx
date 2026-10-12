@@ -98,8 +98,7 @@ export function FeedbackAttachment016Demo() {
         label) with the file name beneath it. Two pastes in one tick both land — the field
         builds on what it already handed to {code("onChange")}, not on a {code("value")} the
         parent has not re-rendered yet. {code("<FeedbackDialog attachments=\"multiple\">")}{" "}
-        heads the list with {code("attachmentList")}; {code("feedbackDialog.attachments")} is a
-        deprecated alias.
+        heads the list with {code("attachmentList")}.
       </Note>
     </Example>
   );

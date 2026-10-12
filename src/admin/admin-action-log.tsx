@@ -10,6 +10,7 @@ import { Caption } from "../components/text";
 import { Button, Spinner } from "../components/ui";
 import { usePersonLabel } from "./admin-parts";
 import type { AdminPerson } from "./admin-parts";
+import { DEFAULT_ADMIN_ACTION_LOG_LABELS } from "./admin-action-log-labels";
 
 /**
  * The admin actions, as the audit table records them (docs/user-admin-harmonization.md
@@ -233,74 +234,8 @@ interface AdminGroupActionLabels {
   deleted: string;
 }
 
-export const DEFAULT_ADMIN_ACTION_LOG_LABELS: AdminActionLogLabels = {
-  title: "Admin actions",
-  empty: "No admin actions yet.",
-  loading: "Loading…",
-  by: (actor) => `by ${actor}`,
-  bySelf: "by the user themselves",
-  automatic: "automatically",
-  erased: "an erased account",
-  filteredTo: (target) => `Only ${target}`,
-  showAll: "Show all actions",
-  filterBy: (target) => `Show only the actions on ${target}`,
-  actions: {
-    deactivate: "Deactivated",
-    reactivate: "Reactivated",
-    role: "Role changed",
-    password_change_require: "New password required",
-    password_change_withdraw: "Password requirement withdrawn",
-    mail_verification: "Verification mail sent",
-    mail_reset: "Password reset mail sent",
-    reviewer: "Reviewer scope changed",
-    invite: "Invited",
-    invite_resend: "Invitation resent",
-    invite_revoke: "Invitation revoked",
-    transfer: "Work transferred",
-    deletion_request: "Deletion requested",
-    deletion_cancel: "Deletion cancelled",
-    erase: "Account erased",
-    plan: "Plan changed",
-  },
-  groupActions: {
-    group: {
-      group_create: "Group created",
-      group_rename: "Group renamed",
-      group_delete: "Group deleted",
-      membership_add: "Added to the group",
-      membership_role: "Role in the group changed",
-      membership_remove: "Removed from the group",
-      deleted: "a deleted group",
-    },
-    team: {
-      group_create: "Team created",
-      group_rename: "Team renamed",
-      group_delete: "Team deleted",
-      membership_add: "Added to the team",
-      membership_role: "Role in the team changed",
-      membership_remove: "Removed from the team",
-      deleted: "a deleted team",
-    },
-    company: {
-      group_create: "Company created",
-      group_rename: "Company renamed",
-      group_delete: "Company deleted",
-      membership_add: "Added to the company",
-      membership_role: "Role in the company changed",
-      membership_remove: "Removed from the company",
-      deleted: "a deleted company",
-    },
-    budget: {
-      group_create: "Budget created",
-      group_rename: "Budget renamed",
-      group_delete: "Budget deleted",
-      membership_add: "Added to the budget",
-      membership_role: "Role in the budget changed",
-      membership_remove: "Removed from the budget",
-      deleted: "a deleted budget",
-    },
-  },
-};
+// Defined in ./admin-action-log-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ADMIN_ACTION_LOG_LABELS };
 
 /** The paging of `GET /admin/actions` — DataTable's `ServerPagination`, which the
  *  footer is. */

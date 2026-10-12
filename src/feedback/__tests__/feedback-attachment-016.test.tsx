@@ -8,7 +8,7 @@ import { FeedbackDialog } from "../feedback-dialog";
 /**
  * 0.16.0 (keksdose): two adds in one tick both land; the screenshot chip is titled
  * "Screenshot", not its file name; and the multiple dialog's heading is ONE key,
- * `attachmentList`, with `feedbackDialog.attachments` kept as a deprecated alias.
+ * `attachmentList` (`feedbackDialog.attachments`, its deprecated alias, went in 0.34).
  */
 
 const png = (name: string) => new File(["x"], name, { type: "image/png" });
@@ -129,14 +129,12 @@ describe("FeedbackDialog multiple: one key for the heading", () => {
     expect(screen.getByRole("list", { name: "Belege" })).toBeInTheDocument();
   });
 
-  it("still honours the deprecated attachments key, below an attachmentList prop", async () => {
-    const { rerender } = render(<FeedbackDialog {...base} labels={{ attachments: "Evidence" }} />);
+  it("takes the heading from an attachmentList prop; the old attachments key went in 0.34", async () => {
+    render(<FeedbackDialog {...base} labels={{ attachmentList: "Files" }} />);
     await withChip();
-    expect(screen.getByText("Evidence")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Evidence" })).toBeInTheDocument();
-    rerender(<FeedbackDialog {...base} labels={{ attachments: "Evidence", attachmentList: "Files" }} />);
     expect(screen.getByRole("list", { name: "Files" })).toBeInTheDocument();
-    expect(screen.queryByText("Evidence")).not.toBeInTheDocument();
+    // @ts-expect-error — `feedbackDialog.attachments` is gone: it is `attachmentList`.
+    void (<FeedbackDialog {...base} labels={{ attachments: "Evidence" }} />);
   });
 
   it("defaults to English", async () => {

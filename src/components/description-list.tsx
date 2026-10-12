@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { FieldHint } from "./ui";
+import { DEFAULT_DESCRIPTION_LIST_LABELS } from "./description-list-labels";
 
 /** The words a {@link DescriptionList} renders on its own behalf. */
 export interface DescriptionListLabels {
@@ -11,9 +12,8 @@ export interface DescriptionListLabels {
   empty: string;
 }
 
-export const DEFAULT_DESCRIPTION_LIST_LABELS: DescriptionListLabels = {
-  empty: "—",
-};
+// Defined in ./description-list-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DESCRIPTION_LIST_LABELS };
 
 export type DescriptionListLayout = "rows" | "cards" | "stacked";
 export type DescriptionListDensity = "comfortable" | "compact" | "tight";

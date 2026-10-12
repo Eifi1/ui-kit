@@ -6,6 +6,7 @@ import { Button, EmptyState } from "./ui";
 import { CopyButton } from "./copy-button";
 import { Disclosure } from "./disclosure";
 import { documentNavigation } from "../lib/document-navigation";
+import { DEFAULT_ERROR_BOUNDARY_LABELS } from "./error-boundary-labels";
 
 /** The words of the default fallback. */
 export interface ErrorBoundaryLabels {
@@ -35,20 +36,8 @@ export interface ErrorBoundaryLabels {
   reportedAs: (reference: string) => string;
 }
 
-export const DEFAULT_ERROR_BOUNDARY_LABELS: ErrorBoundaryLabels = {
-  title: "Something went wrong",
-  message: "This part of the page could not be shown. Try again, or reload the page.",
-  retry: "Try again",
-  details: "Error details",
-  reload: "Reload",
-  updateTitle: "A new version is available",
-  updateMessage: "Part of the app has changed since this page was loaded. Reload to get the new version.",
-  offlineTitle: "You’re offline",
-  offlineMessage: "This page could not be loaded without a connection. Reconnect, then reload the page.",
-  copyReport: "Copy error report",
-  reported: "This error has been reported automatically.",
-  reportedAs: (reference) => `Reported as ${reference}`,
-};
+// Defined in ./error-boundary-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ERROR_BOUNDARY_LABELS };
 
 /**
  * What was thrown, as flat strings, read ONCE when it arrives.

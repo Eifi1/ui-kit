@@ -15,6 +15,7 @@ import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { isGroupTarget } from "./admin-action-log";
 import type { AdminGroupTarget } from "./admin-action-log";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_ADMIN_ACTION_LABELS } from "./admin-action-confirm-labels";
 
 /**
  * The confirmation in front of an admin action, at the level the SERVER states
@@ -98,18 +99,8 @@ export interface AdminActionLabels {
   failed: string;
 }
 
-export const DEFAULT_ADMIN_ACTION_LABELS: AdminActionLabels = {
-  confirm: "Confirm",
-  cancel: "Cancel",
-  close: "Close",
-  lastAdmin: "This is the last active administrator. Make someone else an administrator first.",
-  self: "You can’t do this to your own account.",
-  confirmationMismatch: "The address doesn’t match this account. Check which account you are on.",
-  otherCompanies:
-    "This account also belongs to other companies, so only the platform operator can do this. You can remove it from this company instead.",
-  removeFromCompany: "Remove from company",
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./admin-action-confirm-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ADMIN_ACTION_LABELS };
 
 /** What the action is about, and the level the server states for it. A union, so a group
  *  can't be given `type_email` (§11.8). */

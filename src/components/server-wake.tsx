@@ -6,6 +6,7 @@ import { serverWake } from "../lib/server-wake";
 import type { ServerWakeStage, ServerWakeWatcher } from "../lib/server-wake";
 import { AlertBanner } from "./alert-banner";
 import { Spinner } from "./ui";
+import { DEFAULT_SERVER_WAKE_LABELS } from "./server-wake-labels";
 
 /**
  * The visible half of the cold-start watchdog (`lib/server-wake.ts`), keksdose's
@@ -46,11 +47,8 @@ export interface ServerWakeLabels {
   waking: (appName?: string) => string;
 }
 
-export const DEFAULT_SERVER_WAKE_LABELS: ServerWakeLabels = {
-  slow: "Still loading — this is taking longer than usual.",
-  waking: (appName) =>
-    `The server goes to sleep when nobody is using ${appName ?? "the app"}, so the first request after a break has to start it again. That can take a moment — nothing is lost, the page fills in by itself.`,
-};
+// Defined in ./server-wake-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SERVER_WAKE_LABELS };
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 

@@ -5,8 +5,8 @@ import { create } from "zustand";
 import {
   Button,
   OVERLAY_EXIT_MS,
-  PHONE_QUERY,
   anchoredPanelPlacement,
+  breakpointQuery,
   buttonClasses,
   cn,
   filenameFromDisposition,
@@ -104,7 +104,10 @@ function useLiveWidth(): number {
 /* ── useMediaQuery ──────────────────────────────────────────────────────────── */
 
 function MediaQueryReadout() {
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  // The phone query at the text size in force is `usePhoneLayout()`; this spells it out
+  // to show the hook underneath (PHONE_QUERY, the fixed-px string, went in 0.34).
+  const phoneQuery = breakpointQuery("max-md");
+  const phone = useMediaQuery(phoneQuery, false);
   const coarse = useMediaQuery("(pointer: coarse)", false);
   const dark = useMediaQuery("(prefers-color-scheme: dark)", false);
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)", false);
@@ -114,8 +117,8 @@ function MediaQueryReadout() {
     <OutTable
       rows={[
         ["window.innerWidth", px(width)],
-        ["PHONE_QUERY", `"${PHONE_QUERY}"`],
-        ["useMediaQuery(PHONE_QUERY, false)", <Bool value={phone} />],
+        ['breakpointQuery("max-md")', `"${phoneQuery}"`],
+        ['useMediaQuery(breakpointQuery("max-md"), false)', <Bool value={phone} />],
         ["useMediaQuery('(pointer: coarse)', false)", <Bool value={coarse} />],
         [
           "useMediaQuery('(prefers-color-scheme: dark)', false)",
@@ -825,7 +828,7 @@ export function HooksLib() {
           a real moment when there is no answer: SSR, and any environment without{" "}
           <code className="font-mono">matchMedia</code>. Every phone branch in the kit —
           the sheet pickers, the numpad, the mobile feedback dialog — reads{" "}
-          <code className="font-mono">PHONE_QUERY</code> through this hook with{" "}
+          <code className="font-mono">usePhoneLayout()</code>, which asks this hook with{" "}
           <code className="font-mono">false</code>, so &ldquo;not known yet&rdquo; renders the
           desktop path rather than flashing a sheet.
         </Note>

@@ -7,6 +7,7 @@ import { Input, Spinner } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_INLINE_EDIT_LABELS } from "./inline-edit-field-labels";
 
 /**
  * Every string {@link InlineEditField} says on its own behalf — the `inlineEdit`
@@ -22,11 +23,8 @@ export interface InlineEditLabels {
   empty: string;
 }
 
-export const DEFAULT_INLINE_EDIT_LABELS: InlineEditLabels = {
-  edit: (label) => `Edit ${label}`,
-  failed: "The change could not be saved.",
-  empty: "Empty",
-};
+// Defined in ./inline-edit-field-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_INLINE_EDIT_LABELS };
 
 /** What an `editor` render prop is handed: the draft and the means to end the edit. */
 export interface InlineEditorProps<T> {

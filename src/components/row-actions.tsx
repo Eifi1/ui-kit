@@ -11,6 +11,7 @@ import { useCommitReason, type CommitScope } from "./write-lock";
 import type { IconButtonGlyphSize, IconButtonSize } from "./ui";
 import type { TooltipSide } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
+import { DEFAULT_ROW_ACTIONS_LABELS } from "./row-actions-labels";
 
 /**
  * A row's actions — inline icons at Normal, one "⋯" menu at Large and above
@@ -141,10 +142,8 @@ export interface RowActionsLabels {
   actionsFor: (name: string) => string;
 }
 
-export const DEFAULT_ROW_ACTIONS_LABELS: RowActionsLabels = {
-  actions: "Actions",
-  actionsFor: (name) => `Actions for ${name}`,
-};
+// Defined in ./row-actions-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ROW_ACTIONS_LABELS };
 
 /**
  * - `"auto"` (default): the icons inline at Normal; the "⋯" menu at Large and Extra

@@ -94,7 +94,7 @@ export function MailPreview({ variants }: { variants: readonly ApiMail[] }) {
           <div className="w-full sm:w-auto sm:min-w-44">
             <ToggleGroup
               size="sm"
-              ariaLabel={`Language of “${mail.title}”`}
+              aria-label={`Language of “${mail.title}”`}
               options={variants.map((v) => ({ value: v.locale, label: v.locale }))}
               value={locale}
               onChange={setLocale}

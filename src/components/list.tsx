@@ -13,6 +13,7 @@ import { pickLinkRenderer } from "./text-link";
 import { mergeDescribedBy } from "./choice-parts";
 import { LockedReason, useLockReason } from "./field-parts";
 import type { CommitScope } from "./write-lock";
+import { DEFAULT_LIST_LABELS } from "./list-labels";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -23,10 +24,8 @@ export interface ListLabels {
   opensInNewTab: string;
 }
 
-export const DEFAULT_LIST_LABELS: ListLabels = {
-  unread: "Unread",
-  opensInNewTab: "opens in a new tab",
-};
+// Defined in ./list-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_LIST_LABELS };
 
 /* ── List ─────────────────────────────────────────────────────────────────── */
 

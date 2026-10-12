@@ -83,7 +83,7 @@ function AuthLayoutSpecimen() {
         <div className="space-y-1">
           <span className="text-xs text-[var(--text-muted)]">screen</span>
           <ToggleGroup<"sign-in" | "imprint">
-            ariaLabel="screen"
+            aria-label="screen"
             value={screen}
             onChange={setScreen}
             options={[
@@ -318,7 +318,7 @@ function PasskeysSpecimen() {
     >
       <Row>
         <ToggleGroup<PasskeyState>
-          ariaLabel="state"
+          aria-label="state"
           value={state}
           onChange={setState}
           options={[
@@ -423,7 +423,7 @@ function AccountLabelsSpecimen() {
       hint="every labels prop is optional since 0.12: prop > provider > English"
     >
       <ToggleGroup<"page" | "house" | "de">
-        ariaLabel="label source"
+        aria-label="label source"
         value={source}
         onChange={setSource}
         // Short option words, the detail in the caption: at phone width three long labels

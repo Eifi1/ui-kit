@@ -727,7 +727,7 @@ function AppShellPlayground() {
         <div className="space-y-1">
           <span className="text-xs text-[var(--text-muted)]">subNav</span>
           <ToggleGroup<"flyout" | "inline">
-            ariaLabel="subNav"
+            aria-label="subNav"
             value={subNav}
             onChange={setSubNav}
             options={[
@@ -950,7 +950,7 @@ function PageContentsExample() {
     >
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <ToggleGroup<"start" | "end">
-          ariaLabel="position"
+          aria-label="position"
           value={position}
           onChange={setPosition}
           options={[
@@ -959,7 +959,7 @@ function PageContentsExample() {
           ]}
         />
         <ToggleGroup<"rail" | "disclosure">
-          ariaLabel="variant"
+          aria-label="variant"
           value={variant}
           onChange={setVariant}
           options={[

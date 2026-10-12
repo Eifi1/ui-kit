@@ -6,6 +6,7 @@ import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_FILE_PICKER_LABELS } from "./file-button-labels";
 
 /**
  * A button that opens the file picker — the shape all three apps kept writing by hand
@@ -81,28 +82,8 @@ export interface FilePickerLabels {
   busy: string;
 }
 
-export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
-  rejectedType: (name) => `“${name}” is not a supported file type`,
-  rejectedTypeOnly: (accept) => `Only ${accept} files`,
-  rejectedSize: (name, maxSize) => `“${name}” is larger than ${maxSize}`,
-  rejectedCount: (name, maxFiles) =>
-    `“${name}” was not added: at most ${maxFiles} ${maxFiles === 1 ? "file" : "files"}`,
-  rejectedInvalid: (name) => `“${name}” cannot be used here`,
-  rejectedMany: (count) => `${count} files were not added`,
-  rejectedPick: (count) =>
-    count === 1 ? "The file was not added" : `None of the ${count} files were added`,
-  selected: (count, firstName) => (count === 1 ? `“${firstName}” selected` : `${count} files selected`),
-  remove: (name) => `Remove “${name}”`,
-  clearAll: "Remove all files",
-  removed: (name) => `“${name}” removed`,
-  cleared: "All files removed",
-  dropzone: "File upload",
-  browse: "Browse",
-  empty: "Drop a file here",
-  emptyMultiple: "Drop files here",
-  hint: (accept) => (accept ? `Accepted: ${accept}` : "Any file type"),
-  busy: "Uploading…",
-};
+// Defined in ./file-button-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FILE_PICKER_LABELS };
 
 /* ── Screening ───────────────────────────────────────────────────────────── */
 

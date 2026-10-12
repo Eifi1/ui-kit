@@ -13,6 +13,7 @@ import {
 import type { ParsedPhone, PhoneCountry, PhoneCountryCode } from "../lib/phone";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
 import { Input, Select, type InputProps } from "./ui";
+import { DEFAULT_PHONE_INPUT_LABELS } from "./phone-input-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -25,10 +26,8 @@ export interface PhoneInputLabels {
   other: string;
 }
 
-export const DEFAULT_PHONE_INPUT_LABELS: PhoneInputLabels = {
-  countryCode: "Country code",
-  other: "Other",
-};
+// Defined in ./phone-input-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PHONE_INPUT_LABELS };
 
 /**
  * The `phoneInput` namespace: prop > `<UiKitProvider labels>` > English (0.22.0).

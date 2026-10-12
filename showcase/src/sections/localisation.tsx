@@ -364,13 +364,13 @@ function NestingExample() {
     >
       <div className="mb-4 flex flex-wrap gap-3">
         <ToggleGroup<InnerLocale>
-          ariaLabel="Inner locale"
+          aria-label="Inner locale"
           value={locale}
           onChange={setLocale}
           options={INNER_LOCALES.map((l) => ({ value: l, label: l }))}
         />
         <ToggleGroup<"0" | "1">
-          ariaLabel="Inner weekStartsOn"
+          aria-label="Inner weekStartsOn"
           value={monday}
           onChange={setMonday}
           options={[

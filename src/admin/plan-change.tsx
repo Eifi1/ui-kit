@@ -18,6 +18,7 @@ import { AdminActionConfirm } from "./admin-action-confirm";
 import type { AdminActionConfirmValues } from "./admin-action-confirm";
 import { personLabel, useDayText } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
 
 /**
  * The operator's plan parts (docs/billing-harmonization.md §14.12, decision 27):
@@ -74,23 +75,8 @@ export interface PlanChangeLabels {
   usageOf: (used: string, limit: string, dimension: string) => string;
 }
 
-export const DEFAULT_PLAN_CHANGE_LABELS: PlanChangeLabels = {
-  column: "Plan",
-  title: "Change plan",
-  confirm: "Change plan",
-  plan: "Plan",
-  current: (plan) => `Current plan: ${plan}`,
-  keepsItems: "A smaller plan only blocks creating more; nothing is deleted.",
-  until: "Free until",
-  untilHint: "Leave empty for no end. A running beta keeps its own end.",
-  needsChange: "Pick another plan or an end date.",
-  changed: (from, to) => `Plan changed from ${from} to ${to}.`,
-  set: (to) => `Plan set to ${to}.`,
-  keptBeta: "The beta keeps its end; only the plan changed.",
-  untilDone: (date) => `Free until ${date}.`,
-  overLimit: "Above the new plan’s limit: nothing is removed, new items are blocked.",
-  usageOf: (used, limit, dimension) => `${used} of ${limit} ${dimension}`,
-};
+// Defined in ./plan-change-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PLAN_CHANGE_LABELS };
 
 /** A plan code as the parts compare it: lowercase (§12.16 — an older row's "FREE" is
  *  the same plan as "free"), and no code at all as null. */

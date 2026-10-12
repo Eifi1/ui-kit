@@ -99,9 +99,9 @@ export function lengthPx(length: number | RemLength | undefined, rootRemPx: numb
  * inside the floor the kit already sets: tokens.css's breakpoint variants are written in
  * it, and Tailwind v4 itself needs Safari 16.4, Chrome 111 and Firefox 128.
  *
- * A test's `matchMedia` stub that keyed on the old string (`"max-width: 767px"`, the
- * deprecated `PHONE_QUERY`) has to answer `(width < 768px)` now. `min-*` is unchanged,
- * character for character.
+ * A test's `matchMedia` stub that keyed on the old string (`"max-width: 767px"`,
+ * `PHONE_QUERY`'s, which went in 0.34) has to answer `(width < 768px)` now. `min-*` is
+ * unchanged, character for character.
  */
 export function breakpointQuery(variant: BreakpointVariant, scale = 1, remPx: number = readBrowserRemPx()): string {
   const max = variant.startsWith("max-");
@@ -125,7 +125,8 @@ export function useBreakpoint(variant: BreakpointVariant, fallback = false): boo
  * The phone layout: below `md` at the text size in force — `max-md:` in CSS. The single
  * answer for "is this the phone layout" (§10.4): the kit's own sheets and cards use it,
  * and an app's phone checks must too, so a tablet at 150 % gets every phone treatment
- * at once or none of them. Replaces `useMediaQuery(PHONE_QUERY)`.
+ * at once or none of them. Replaced `useMediaQuery(PHONE_QUERY)` in 0.32; that string
+ * went in 0.34.
  */
 export function usePhoneLayout(fallback = false): boolean {
   return useBreakpoint("max-md", fallback);

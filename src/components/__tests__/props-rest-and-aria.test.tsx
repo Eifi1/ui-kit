@@ -182,7 +182,7 @@ describe("every component passes an arbitrary attribute to its root element", ()
 
   it("SearchField", () => {
     expect(
-      reaches(<SearchField value="" onChange={vi.fn()} label="Find" data-tour="anchor" />),
+      reaches(<SearchField value="" onChange={vi.fn()} aria-label="Find" data-tour="anchor" />),
     ).toBe(true);
   });
 
@@ -229,36 +229,16 @@ describe("every component passes an arbitrary attribute to its root element", ()
 });
 
 /**
- * The deprecated spellings still name the control, and the DOM spelling wins when both
- * are given — which is the whole migration path: a consumer moves one call site at a
- * time and the two spellings coexist on the way.
+ * The accessible name is the DOM spelling, `aria-label`. The kit had three spellings for
+ * one idea until 0.5 (`ariaLabel`, `aria-label`, `label`) and kept the other two as
+ * deprecated aliases until 0.34, which removed them.
  */
-describe("the accessible-name prop is the DOM spelling, with the old one still working", () => {
+describe("the accessible-name prop is the DOM spelling", () => {
   it("ToggleGroup takes aria-label", () => {
     render(
       <ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} aria-label="Status" />,
     );
     expect(screen.getByRole("radiogroup", { name: "Status" })).toBeInTheDocument();
-  });
-
-  it("ToggleGroup still takes the deprecated ariaLabel", () => {
-    render(
-      <ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} ariaLabel="Status" />,
-    );
-    expect(screen.getByRole("radiogroup", { name: "Status" })).toBeInTheDocument();
-  });
-
-  it("ToggleGroup lets aria-label win over ariaLabel", () => {
-    render(
-      <ToggleGroup
-        value="a"
-        onChange={vi.fn()}
-        options={TOGGLE_OPTIONS}
-        ariaLabel="Old"
-        aria-label="New"
-      />,
-    );
-    expect(screen.getByRole("radiogroup", { name: "New" })).toBeInTheDocument();
   });
 
   it("ChipInput takes aria-label, names the FIELD and not the wrapper", () => {
@@ -269,47 +249,31 @@ describe("the accessible-name prop is the DOM spelling, with the old one still w
     expect(screen.getByRole("textbox", { name: "Tags" })).toBeInTheDocument();
   });
 
-  it("ChipInput still takes the deprecated ariaLabel", () => {
-    render(<ChipInput value={[]} onChange={vi.fn()} ariaLabel="Tags" />);
-    expect(screen.getByRole("textbox", { name: "Tags" })).toBeInTheDocument();
-  });
-
-  it("ChipInput lets aria-label win over ariaLabel", () => {
-    render(<ChipInput value={[]} onChange={vi.fn()} ariaLabel="Old" aria-label="New" />);
-    expect(screen.getByRole("textbox", { name: "New" })).toBeInTheDocument();
-  });
-
   it("Tabs takes aria-label", () => {
     render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} aria-label="Reports" />);
     expect(screen.getByRole("tablist", { name: "Reports" })).toBeInTheDocument();
   });
 
-  it("Tabs still takes the deprecated label", () => {
-    render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} label="Reports" />);
-    expect(screen.getByRole("tablist", { name: "Reports" })).toBeInTheDocument();
-  });
-
-  it("Tabs lets aria-label win over label", () => {
-    render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} label="Old" aria-label="New" />);
-    expect(screen.getByRole("tablist", { name: "New" })).toBeInTheDocument();
-  });
-
   it("SearchField takes aria-label with no label at all", () => {
     render(<SearchField value="" onChange={vi.fn()} aria-label="Find a setting" />);
     const box = screen.getByRole("searchbox", { name: "Find a setting" });
-    // The placeholder falls back to whichever spelling named the field, so a box named
-    // only by `aria-label` still says what it is before anyone types in it.
+    // The placeholder falls back to the name, so the box still says what it is before
+    // anyone types in it.
     expect(box).toHaveAttribute("placeholder", "Find a setting");
   });
 
-  it("SearchField still takes the deprecated label", () => {
-    render(<SearchField value="" onChange={vi.fn()} label="Find a setting" />);
-    expect(screen.getByRole("searchbox", { name: "Find a setting" })).toBeInTheDocument();
-  });
-
-  it("SearchField lets aria-label win over label", () => {
-    render(<SearchField value="" onChange={vi.fn()} label="Old" aria-label="New" />);
-    expect(screen.getByRole("searchbox", { name: "New" })).toBeInTheDocument();
+  it("the old spellings are gone (0.34): a compile error, not a second name", () => {
+    // Deprecated since 0.5 and removed in 0.34 with HoverMenu's and GroupedPicker's
+    // `ariaLabel`; `tsc --noEmit` is what runs these. Each would otherwise fall into the
+    // rest props and land on the DOM as an attribute that names nothing.
+    // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+    void (<ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} ariaLabel="Status" />);
+    // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+    void (<ChipInput value={[]} onChange={vi.fn()} ariaLabel="Tags" />);
+    // @ts-expect-error — `label` is gone: pass `aria-label`.
+    void (<Tabs tabs={TABS} active="one" onChange={vi.fn()} label="Reports" />);
+    // @ts-expect-error — `label` is gone, and `aria-label` is required.
+    void (<SearchField value="" onChange={vi.fn()} label="Find a setting" />);
   });
 });
 
@@ -348,7 +312,7 @@ describe("every component exports a props type named after it", () => {
     };
     const alert: AlertBannerProps = { tone: "warning", children: "Careful" };
     const avatar: UserAvatarProps = { name: "Marcel Eifert", size: "lg" };
-    const searchField: SearchFieldProps = { value: "", onChange: () => {}, label: "Find" };
+    const searchField: SearchFieldProps = { value: "", onChange: () => {}, "aria-label": "Find" };
     const theme: ThemeSettingProps = {
       value: "dark",
       onChange: () => {},

@@ -11,10 +11,11 @@ import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
 import { TextLink } from "../components/text-link";
 import { Button, Input } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { emailParts, taggedEmail } from "./email-tag";
 import { newPasswordProblem, personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
+import { DEFAULT_REGISTER_LABELS } from "./register-form-labels";
 
 /** What `RegisterForm` hands `onSubmit` — the core of `POST /auth/register` (§4.2). The
  *  app adds its own fields (kastlan's company, keksdose's currency) and the
@@ -78,30 +79,8 @@ export interface RegisterLabels {
   rateLimited?: (seconds?: number) => string;
 }
 
-/** `Required`: every key, the 0.30 one included, has its English here. */
-export const DEFAULT_REGISTER_LABELS: Required<RegisterLabels> = {
-  firstName: "First name",
-  lastName: "Last name",
-  email: "Email",
-  emailTagUse: (address) => `Use ${address}`,
-  emailTagHint:
-    "Many providers deliver name+tag@… to the same inbox, so mail from this app is easy to filter and trace. Check yours does before you rely on it: you would sign in with the tagged address.",
-  invitedEmailHint: "The address your invitation was sent to.",
-  invitedTagNote: "The tagged address gets a confirmation mail of its own.",
-  password: "Password",
-  confirmPassword: "Repeat password",
-  passwordMismatch: "The passwords don't match.",
-  language: "Language",
-  submit: "Create account",
-  haveAccount: "Already have an account?",
-  signIn: "Sign in",
-  emailTaken: "An account with this email address already exists.",
-  registrationClosed: "New accounts are by invitation only. Ask the operator to invite your email address.",
-  invitationInvalid: "This invitation link is not valid.",
-  invitationExpired: "This invitation has expired. Ask for a new one.",
-  failed: "Registration failed. Please try again.",
-  rateLimited: englishRateLimited,
-};
+// Defined in ./register-form-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_REGISTER_LABELS };
 
 export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children"> {
   /**

@@ -39,6 +39,7 @@ import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
 
 /**
  * One report, opened — the panel a feedback table unfolds under its row (§4.4 of
@@ -147,31 +148,8 @@ export interface FeedbackDetailLabels {
   status: string;
 }
 
-export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
-  subject: "Subject",
-  body: "Description",
-  edit: "Edit",
-  editDescription: "Edit description",
-  save: "Save",
-  cancel: "Cancel",
-  url: "URL",
-  copyUrl: "Copy URL",
-  attachment: "Attachment",
-  download: (name) => `Download ${name}`,
-  downloadFailed: "The attachment could not be downloaded.",
-  outcome: "Outcome",
-  resolvedAt: (date) => `Resolved: ${date}`,
-  outcomeAdd: "Add outcome",
-  outcomeUpdate: "Update",
-  outcomePlaceholder: "What was done, decided, or why this won't be addressed.",
-  rework: "Rework",
-  openPage: "Open page",
-  reworkTitle: "Send for rework",
-  reworkSend: "Send rework",
-  reworkPlaceholder: "What still needs refinement? Any new constraints or change of direction.",
-  reworkUploadFailed: "The file could not be uploaded. The rework was not sent.",
-  status: "Status",
-};
+// Defined in ./feedback-row-detail-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_DETAIL_LABELS };
 
 /** `feedbackDetail` resolved: English, then `<UiKitProvider labels>`, then `labels`. */
 export function useFeedbackDetailLabels(labels?: Partial<FeedbackDetailLabels>): FeedbackDetailLabels {

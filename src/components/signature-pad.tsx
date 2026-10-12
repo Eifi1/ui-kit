@@ -6,6 +6,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
 import { Button, FIELD_INVALID, Input } from "./ui";
+import { DEFAULT_SIGNATURE_PAD_LABELS } from "./signature-pad-labels";
 
 /**
  * A drawn signature, captured on a canvas and handed back as a PNG data URL.
@@ -81,24 +82,8 @@ export interface SignaturePadLabels {
   viewTyped: (name: string) => string;
 }
 
-export const DEFAULT_SIGNATURE_PAD_LABELS: SignaturePadLabels = {
-  label: "Signature",
-  instructions: "Sign in the box with a mouse, your finger or a pen.",
-  typedFallbackHint: "If you cannot draw, type your name instead.",
-  empty: "Nothing drawn yet",
-  signed: "Signature drawn",
-  undo: "Undo last stroke",
-  clear: "Clear",
-  save: "Save signature",
-  useTyped: "Type name instead",
-  useDrawn: "Draw instead",
-  typedName: "Full name",
-  cleared: "Signature cleared",
-  undone: "Last stroke removed",
-  viewEmpty: "Not signed",
-  viewDrawn: "Handwritten signature",
-  viewTyped: (name) => `Signed with the typed name ${name}`,
-};
+// Defined in ./signature-pad-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGNATURE_PAD_LABELS };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 

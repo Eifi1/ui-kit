@@ -57,7 +57,7 @@ export interface ThemeSettingProps
  * system" (keksdose's control, §8).
  */
 export interface ThemeSettingToggleProps
-  extends Omit<ToggleGroupBaseProps<ThemePreference>, "options" | "label" | "ariaLabel"> {
+  extends Omit<ToggleGroupBaseProps<ThemePreference>, "options" | "label"> {
   variant: "toggle";
   value: ThemePreference;
   onChange: (value: ThemePreference) => void;
@@ -134,7 +134,7 @@ export function LanguageSetting({ value, onChange, label, options, id, ...rest }
  * props — `labelPlacement`, `disabledReason`, `commit`, `size`, `overflow` — minus the
  * options and the value, which they own, as {@link ThemeSettingToggleProps} does.
  */
-type AppearanceToggleProps<T extends string> = Omit<ToggleGroupBaseProps<T>, "options" | "label" | "ariaLabel"> & {
+type AppearanceToggleProps<T extends string> = Omit<ToggleGroupBaseProps<T>, "options" | "label"> & {
   value: T;
   onChange: (value: T) => void;
   /**

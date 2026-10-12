@@ -9,6 +9,7 @@ import { Button, IconButton } from "./ui";
 import type { ButtonSize, ButtonTone, ButtonVariant, IconButtonSize, IconButtonTone } from "./ui";
 import { Tooltip } from "./tooltip";
 import type { TooltipSide } from "./tooltip";
+import { DEFAULT_COPY_BUTTON_LABELS } from "./copy-button-labels";
 
 /** The words a copy button says. The visible three are short on purpose (they
  *  replace the button's own text in the `label` variant); the two announcements
@@ -21,13 +22,8 @@ export interface CopyButtonLabels {
   failedAnnouncement: string;
 }
 
-export const DEFAULT_COPY_BUTTON_LABELS: CopyButtonLabels = {
-  copy: "Copy",
-  copied: "Copied",
-  failed: "Couldn’t copy",
-  copiedAnnouncement: "Copied to clipboard",
-  failedAnnouncement: "Couldn’t copy to the clipboard",
-};
+// Defined in ./copy-button-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COPY_BUTTON_LABELS };
 
 export interface CopyButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onClick"> {

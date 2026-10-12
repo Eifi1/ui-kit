@@ -175,7 +175,7 @@ export function LineItemsSplit017Demo() {
     >
       <Row className="mb-3">
         <ToggleGroup
-          ariaLabel="Total"
+          aria-label="Total"
           options={[
             { value: "known", label: "total known" },
             { value: "unknown", label: "no total yet" },
@@ -185,7 +185,7 @@ export function LineItemsSplit017Demo() {
           onChange={(v) => setTotal(v === "known" ? -120 : null)}
         />
         <ToggleGroup
-          ariaLabel="Remove placement"
+          aria-label="Remove placement"
           options={[
             { value: "inline", label: "inline" },
             { value: "row", label: "row" },
@@ -195,7 +195,7 @@ export function LineItemsSplit017Demo() {
           onChange={setPlacement}
         />
         <ToggleGroup
-          ariaLabel="Remove alignment"
+          aria-label="Remove alignment"
           options={[
             { value: "auto", label: "auto" },
             { value: "start", label: "start" },

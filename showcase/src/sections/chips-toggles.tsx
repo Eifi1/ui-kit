@@ -37,7 +37,7 @@ function TabStrip() {
       hint="underline strip; the last tab is a real <a> you can ⌘/middle-click"
     >
       <Tabs<PlainTab>
-        label="Workspace sections"
+        aria-label="Workspace sections"
         active={active}
         onChange={setActive}
         tabs={[
@@ -94,7 +94,7 @@ function WrappedTabStrip() {
     >
       <Tabs<ReportTab>
         wrap
-        label="Report queues"
+        aria-label="Report queues"
         active={active}
         onChange={setActive}
         tabs={REPORT_TABS.map((tab) => ({
@@ -511,7 +511,7 @@ function VerticalTabs() {
       <div className="grid gap-4 md:grid-cols-[14rem_1fr]">
         <Tabs<SettingsTab>
           orientation="vertical"
-          label="Settings sections"
+          aria-label="Settings sections"
           active={active}
           onChange={setActive}
           tabs={[

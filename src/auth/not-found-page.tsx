@@ -4,6 +4,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
 import { Button } from "../components/ui";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_NOT_FOUND_LABELS } from "./not-found-page-labels";
 
 /** Every string the page renders — the `notFound` namespace. keksdose's words
  *  (`error.not_found_*`), which kastlan took over. */
@@ -18,12 +19,8 @@ export interface NotFoundLabels {
   app: string;
 }
 
-export const DEFAULT_NOT_FOUND_LABELS: NotFoundLabels = {
-  title: "Page not found",
-  body: "This address doesn’t exist (any more). It may be a typo, or the page has moved.",
-  home: "Go to the start page",
-  app: "Back to the app",
-};
+// Defined in ./not-found-page-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_NOT_FOUND_LABELS };
 
 export interface NotFoundPageProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
   /** "Go to the start page". Default `/`, which takes a signed-in user into the app and

@@ -6,6 +6,7 @@ import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { Select } from "../components/ui";
 import type { SelectProps } from "../components/ui";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_ROLE_SELECT_LABELS } from "./role-select-labels";
 
 /**
  * The role of an account, chosen by an admin (docs/user-admin-harmonization.md §3.3,
@@ -58,16 +59,8 @@ export interface RoleSelectLabels {
   unavailable: (role: string, reason: string) => string;
 }
 
-export const DEFAULT_ROLE_SELECT_LABELS: RoleSelectLabels = {
-  label: "Role",
-  rolesLegend: "Roles",
-  roleOf: (name) => `Role of ${name}`,
-  lockedLastAdmin: "The last active administrator keeps this role.",
-  lockedSelf: "You can’t change your own role.",
-  notForLastAdmin: "not for the last administrator",
-  notForSelf: "not for your own account",
-  unavailable: (role, reason) => `${role} (${reason})`,
-};
+// Defined in ./role-select-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ROLE_SELECT_LABELS };
 
 /** The whole-control reason, the kit's codes in the kit's words. */
 function lockText(reason: RoleLock, labels: RoleSelectLabels): ReactNode {

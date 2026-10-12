@@ -26,12 +26,6 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   panelClassName?: string;
   /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
   className?: string;
-  /**
-   * @deprecated Use the DOM spelling `aria-label`, which names the `role="menu"` panel. Kept working because keksdose, kastlan and lenkbank all pass
-   * this today and a rename to save one line of resolution is not a patch release; it
-   * loses to `aria-label` wherever both are given. Removal is a later minor.
-   */
-  ariaLabel?: string;
 }
 
 // Hovering waits briefly before opening so sweeping the cursor across a row of
@@ -89,8 +83,7 @@ export function HoverMenu({
   align = "end",
   panelClassName,
   className,
-  ariaLabel,
-  "aria-label": ariaLabelAttr,
+  "aria-label": ariaLabel,
   ...rest
 }: HoverMenuProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -306,10 +299,8 @@ export function HoverMenu({
             ref={menuRef}
             role="menu"
             // On the element with the role. It used to sit on the role-less wrapper,
-            // where no screen reader reads a name. The DOM spelling wins;
-            // {@link HoverMenuProps.ariaLabel} is the deprecated alias three apps still
-            // pass, so it stays as the fallback rather than as the answer.
-            aria-label={ariaLabelAttr ?? ariaLabel}
+            // where no screen reader reads a name.
+            aria-label={ariaLabel}
             className={cn(
               "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
               panelClassName,

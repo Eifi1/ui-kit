@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_PAGE_CONTENTS_LABELS } from "./page-contents-labels";
 
 /**
  * "On this page": a page's own table of contents, with the section being read marked.
@@ -33,9 +34,8 @@ export interface PageContentsLabels {
   title: string;
 }
 
-export const DEFAULT_PAGE_CONTENTS_LABELS: PageContentsLabels = {
-  title: "On this page",
-};
+// Defined in ./page-contents-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PAGE_CONTENTS_LABELS };
 
 export interface UseScrollSpyOptions {
   /** The element that scrolls. Defaults to the viewport. In `AppShell`, pass its

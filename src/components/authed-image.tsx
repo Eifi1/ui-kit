@@ -7,6 +7,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { SKELETON_CLASS } from "./skeleton";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import type { AuthedFetcher, UseAuthedSrcResult } from "../hooks/use-authed-src";
+import { DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image-labels";
 
 /** The two states an image can be in besides "there". */
 export interface AuthedImageLabels {
@@ -18,11 +19,8 @@ export interface AuthedImageLabels {
   failedImage: (alt: string) => string;
 }
 
-export const DEFAULT_AUTHED_IMAGE_LABELS: AuthedImageLabels = {
-  loading: "Loading image…",
-  loadError: "Image couldn’t be loaded",
-  failedImage: (alt) => `${alt}: image couldn’t be loaded`,
-};
+// Defined in ./authed-image-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_AUTHED_IMAGE_LABELS };
 
 export interface AuthedImageProps
   extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "children"> {

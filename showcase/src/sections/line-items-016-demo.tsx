@@ -88,7 +88,7 @@ export function LineItems016Demo() {
     >
       <Row className="mb-3">
         <ToggleGroup
-          ariaLabel="Field labels"
+          aria-label="Field labels"
           options={[
             { value: "floating", label: "floating" },
             { value: "aria", label: "aria" },

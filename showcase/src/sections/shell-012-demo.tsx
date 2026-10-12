@@ -52,7 +52,7 @@ function TopBarBrandSpecimen() {
       <Row>
         <span className="text-xs text-[var(--text-muted)]">collapseBelow</span>
         <ToggleGroup<Collapse>
-          ariaLabel="collapseBelow"
+          aria-label="collapseBelow"
           value={collapse}
           onChange={setCollapse}
           options={[
@@ -144,7 +144,7 @@ function IconBadgeSpecimen() {
           panelClassName="w-56"
         />
         <ToggleGroup<StatusDotTone>
-          ariaLabel="tone"
+          aria-label="tone"
           value={tone}
           onChange={setTone}
           options={[

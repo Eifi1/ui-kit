@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
+import { DEFAULT_SPARKLINE_LABELS } from "./sparkline-labels";
 
 /**
  * The words a sparkline speaks. It has no axes, no tooltip and no legend, so its
@@ -24,14 +25,8 @@ export interface SparklineLabels {
   named: (name: string, summary: string) => string;
 }
 
-export const DEFAULT_SPARKLINE_LABELS: SparklineLabels = {
-  rising: (first, last) => `Rising from ${first} to ${last}`,
-  falling: (first, last) => `Falling from ${first} to ${last}`,
-  flat: (value) => `Unchanged at ${value}`,
-  single: (value) => `One value: ${value}`,
-  noData: "No data",
-  named: (name, summary) => `${name}: ${summary}`,
-};
+// Defined in ./sparkline-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SPARKLINE_LABELS };
 
 /**
  * What colours the marks. Token names, not colours: every one resolves to a variable

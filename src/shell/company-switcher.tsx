@@ -7,6 +7,7 @@ import { useAnnounce } from "../hooks/use-announce";
 import { Spinner } from "../components/ui";
 import { OptionSwitcherMenu } from "./option-switcher-menu";
 import { TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
+import { DEFAULT_COMPANY_SWITCHER_LABELS } from "./company-switcher-labels";
 
 /** Every string the switcher renders or speaks — the `companySwitcher` namespace. A
  *  different context (keksdose's budgets) renames them all. */
@@ -23,13 +24,8 @@ export interface CompanySwitcherLabels {
   switching: string;
 }
 
-export const DEFAULT_COMPANY_SWITCHER_LABELS: CompanySwitcherLabels = {
-  switchCompany: "Switch company",
-  heading: "Companies",
-  current: (name) => `Company: ${name}`,
-  currentMark: "(current)",
-  switching: "Switching company…",
-};
+// Defined in ./company-switcher-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COMPANY_SWITCHER_LABELS };
 
 /** One company the user belongs to — kastlan's `/auth/me` `companies[]` (§5.3). */
 export interface CompanySwitcherCompany<Id extends string | number = string | number> {

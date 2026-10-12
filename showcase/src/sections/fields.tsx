@@ -10,7 +10,7 @@ import {
   SearchField,
   Select,
   Textarea,
-  useMediaQuery,
+  usePhoneLayout,
   FIELD_BASE,
   FIELD_DISPLAY,
   FIELD_FLOATING_PAD,
@@ -20,7 +20,6 @@ import {
   FLOATING_INPUT_CLASS,
   FLOATING_LABEL_CLASS,
   FLOATING_LABEL_STATIC,
-  PHONE_QUERY,
 } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, Row, Stage } from "../lib/section";
 
@@ -79,7 +78,7 @@ export function Fields() {
 
   // The display treatment is not a style you choose, it is a style the VIEWPORT
   // chooses — so the specimen says out loud whether it is switched on right now.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
 
   const emailInvalid = email.trim() !== "" && !email.includes("@");
   const reasonInvalid = reason.length > 80;
@@ -277,7 +276,7 @@ export function Fields() {
 
       <Example
         label='Input — variant="display"'
-        hint={`applies only below 768px; PHONE_QUERY matches right now: ${String(isPhone)}`}
+        hint={`applies only in the phone layout; usePhoneLayout() says ${String(isPhone)} right now`}
       >
         <Stage>
           <div className="space-y-4">
@@ -763,13 +762,6 @@ export function Fields() {
               clearLabel="Clear filter"
               disabled
             />
-            {/* The deprecated spelling still works, and names the field only when
-                `aria-label` is absent. */}
-            <SearchField
-              value={plainQuery}
-              onChange={setPlainQuery}
-              label="Deprecated label= spelling"
-            />
             <div dir="rtl">
               <SearchField
                 value={rtlQuery}
@@ -784,8 +776,7 @@ export function Fields() {
           </div>
         </Stage>
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          A name is required — <code className="font-mono">aria-label</code>, or the deprecated{" "}
-          <code className="font-mono">label</code> — and the placeholder falls back to it, never the
+          A name is required — <code className="font-mono">aria-label</code> — and the placeholder falls back to it, never the
           other way round — a placeholder vanishes the moment someone types, so a field named only
           by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}
           <code className="font-mono">clearLabel</code> removes the clear button entirely, and the
@@ -846,7 +837,6 @@ export function FieldClassConstants() {
             ["FLOATING_INPUT_CLASS", FLOATING_INPUT_CLASS],
             ["FLOATING_LABEL_CLASS", FLOATING_LABEL_CLASS],
             ["FLOATING_LABEL_STATIC", FLOATING_LABEL_STATIC],
-            ["PHONE_QUERY", PHONE_QUERY],
           ]}
         />
       </Example>

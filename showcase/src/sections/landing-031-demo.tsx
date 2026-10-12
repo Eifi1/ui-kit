@@ -141,9 +141,9 @@ export function SampleLanding031Demo() {
       hint="PublicHeader · Hero · FeatureRows / FeatureRow · TrustStrip · CtaBand · PublicFooter"
     >
       <div className="mb-3 flex flex-wrap gap-3">
-        <ToggleGroup<LandingSession> ariaLabel="session" value={session} onChange={setSession} options={SESSIONS} />
+        <ToggleGroup<LandingSession> aria-label="session" value={session} onChange={setSession} options={SESSIONS} />
         <ToggleGroup<AccessChoice["kind"]>
-          ariaLabel="access"
+          aria-label="access"
           value={kind}
           onChange={setKind}
           options={[
@@ -276,7 +276,7 @@ export function DemoStart031Demo() {
     <Example label="DemoStart — starting, and each refusal" hint="start() once, StrictMode included; §5.2">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <ToggleGroup<StartAnswer>
-          ariaLabel="server answer"
+          aria-label="server answer"
           value={answer}
           onChange={(value) => {
             setAnswer(value);
@@ -345,7 +345,7 @@ export function DemoBanner031Demo() {
     <Example label="DemoBanner — at 23 h, 50 min and 4 min" hint="AlertBanner strip; useDemoCountdown; §5.4">
       <div className="mb-3">
         <ToggleGroup<DemoModel>
-          ariaLabel="model"
+          aria-label="model"
           value={model}
           onChange={setModel}
           options={[
@@ -412,7 +412,7 @@ export function DemoEnded031Demo() {
     <Example label="DemoEnded — on AuthLayout" hint="/demo/ended, noindex; §5.5">
       <div className="mb-3">
         <ToggleGroup<DemoModel>
-          ariaLabel="model"
+          aria-label="model"
           value={model}
           onChange={setModel}
           options={[

@@ -9,6 +9,7 @@ import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
 import { useWriteLock } from "./write-lock";
 import type { CommitScope } from "./write-lock";
+import { DEFAULT_FORM_ACTIONS_LABELS } from "./form-actions-labels";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
 export interface FormActionsLabels {
@@ -23,11 +24,8 @@ export interface FormActionsLabels {
   submitShortcut: (apple: boolean) => string;
 }
 
-export const DEFAULT_FORM_ACTIONS_LABELS: FormActionsLabels = {
-  save: "Save",
-  cancel: "Cancel",
-  submitShortcut: (apple) => (apple ? "⌘ Enter" : "Ctrl+Enter"),
-};
+// Defined in ./form-actions-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FORM_ACTIONS_LABELS };
 
 /** See {@link FormActionsProps.submitShortcut}. */
 export type FormActionsSubmitShortcut = "mod-enter";

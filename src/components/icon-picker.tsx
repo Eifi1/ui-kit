@@ -6,6 +6,7 @@ import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { hasContent, LabelStrip } from "./field-parts";
+import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
 export interface IconPickerLabels {
   /** The "no icon" tile's name, when `allowNone` is set. */
@@ -20,13 +21,8 @@ export interface IconPickerLabels {
   resultCount: (count: number) => string;
 }
 
-export const DEFAULT_ICON_PICKER_LABELS: IconPickerLabels = {
-  none: "No icon",
-  mixed: "Mixed: the selected items have different icons",
-  search: "Search icons",
-  noResults: "No icons match",
-  resultCount: (count) => (count === 1 ? "1 icon" : `${count} icons`),
-};
+// Defined in ./icon-picker-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ICON_PICKER_LABELS };
 
 export interface IconOption<T extends string> {
   value: T;

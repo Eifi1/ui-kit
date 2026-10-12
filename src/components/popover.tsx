@@ -9,6 +9,7 @@ import { cn } from "../lib/cn";
 import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
 
 /** The panel's accessible name. A `role="dialog"` with no name announces as "dialog"
  *  and nothing else, which is worse than the unlabelled div it replaced — so it is a
@@ -19,14 +20,8 @@ export interface PopoverLabels {
   panel: string;
 }
 
-// Exported since the kit grew one label tree (`UiKitLabels`, src/i18n): the complete
-// English reference a translator works from has to be able to name every namespace.
-export const DEFAULT_POPOVER_LABELS: PopoverLabels = {
-  // "Pop-up", not "Popover": the panel's accessible name is read to USERS, and
-  // "popover" is a developer's word for it (reported by keksdose, 0.5.0). Only a
-  // bare Popover falls back to this — the kit's own pickers name their panels.
-  panel: "Pop-up",
-};
+// Defined in ./popover-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_POPOVER_LABELS };
 
 /**
  * Exported, and extending the `<div>` attributes, so a consumer wrapping this — which is

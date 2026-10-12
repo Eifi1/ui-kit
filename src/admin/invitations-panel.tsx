@@ -20,6 +20,7 @@ import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
 import { hasMessage, settle, useDayText, usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { RoleSelect } from "./role-select";
+import { DEFAULT_INVITATIONS_LABELS } from "./invitations-panel-labels";
 
 /**
  * Who is invited, and the form that invites (docs/user-admin-harmonization.md §5; auth
@@ -144,31 +145,8 @@ export interface InvitationsLabels {
   failed: string;
 }
 
-export const DEFAULT_INVITATIONS_LABELS: InvitationsLabels = {
-  email: "Email address",
-  invalidEmail: "Enter a complete email address.",
-  role: "Role",
-  scope: "Scope",
-  scopeNone: "None",
-  language: "Language of the invitation",
-  note: "Note",
-  invite: "Invite",
-  listTitle: "Invitations",
-  empty: "Nobody has been invited yet.",
-  loading: "Loading…",
-  status: { open: "Open", accepted: "Accepted", expired: "Expired", revoked: "Revoked" },
-  sent: (date) => `Sent ${date}`,
-  expires: (date) => `Expires ${date}`,
-  invitedBy: (name) => `by ${name}`,
-  resend: (email) => `Send ${email} a new link`,
-  copyLink: "Copy invitation link",
-  revoke: (email) => `Revoke the invitation for ${email}`,
-  consoleHint:
-    "Mail isn’t sent on this server — it is written to the server log. Copy each invitation link from here and pass it on yourself: it is shown only once.",
-  linkReady: (email) => `The invitation link for ${email}, shown only this once:`,
-  notSent: (email) => `${email} is invited, but the mail couldn’t be sent. Resend it.`,
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./invitations-panel-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_INVITATIONS_LABELS };
 
 /** The tone of each status. */
 const STATUS_TONES: Readonly<Record<InvitationStatus, ChipTone>> = {

@@ -31,6 +31,11 @@ import {
   STATIC_LABEL_TYPE,
   type FieldHintParts,
 } from "./field-parts";
+import {
+  DEFAULT_CHARACTER_COUNT_LABELS,
+  DEFAULT_PASSWORD_REVEAL_LABELS,
+  DEFAULT_TABS_LABELS,
+} from "./ui-labels";
 
 // The static label lives in field-parts since 0.23 (it is what the field anatomy
 // there draws, and field-parts must not import this file); public from here as before.
@@ -1638,14 +1643,6 @@ export const FIELD_INVALID =
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
-/** The phone breakpoint at Normal text size, as a media query.
- *
- *  @deprecated since 0.32 — it does not follow the text size (§3.3): at Large the CSS
- *  `max-md:` reaches 959 px and this still stops at 767. Use `usePhoneLayout()`, which
- *  agrees with `max-md:` at every size, or `breakpointQuery("max-md", scale)` where a
- *  query string is needed. Kept exported, unchanged, for the apps that import it. */
-export const PHONE_QUERY = "(max-width: 767px)";
-
 /**
  * The PHONE display treatment (Keksdose feedback #176, carried across the entry
  * forms by #179): the field chrome removed so the ONE input a form is actually
@@ -2035,10 +2032,8 @@ export interface PasswordRevealLabels {
   hide: string;
 }
 
-export const DEFAULT_PASSWORD_REVEAL_LABELS: PasswordRevealLabels = {
-  show: "Show password",
-  hide: "Hide password",
-};
+// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PASSWORD_REVEAL_LABELS };
 
 /** Caller's labels over the English defaults — the same shape as
  *  `resolveDataTableLabels`, so a consumer translates every kit string one way. */
@@ -2065,11 +2060,8 @@ export interface CharacterCountLabels {
   limitReached: string;
 }
 
-export const DEFAULT_CHARACTER_COUNT_LABELS: CharacterCountLabels = {
-  count: (used, max) => `${used} of ${max} characters`,
-  remaining: (left) => (left === 1 ? "1 character left" : `${left} characters left`),
-  limitReached: "Character limit reached",
-};
+// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_CHARACTER_COUNT_LABELS };
 
 /** The length the browser's own `maxLength` counts — UTF-16 code units — so the counter
  *  and the limit can never disagree about whether a field is full. */
@@ -3737,10 +3729,8 @@ export interface TabsLabels {
   remove: (tab: string) => string;
 }
 
-export const DEFAULT_TABS_LABELS: TabsLabels = {
-  add: "Add tab",
-  remove: (tab) => `Remove ${tab}`,
-};
+// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TABS_LABELS };
 
 /**
  * The strip's own props sit on a `<div>`: the tablist IS the root element, so anything
@@ -3786,18 +3776,6 @@ export interface TabsProps<T extends string>
    *  already fit a phone row, and turning those into chips would be an unrequested
    *  redesign of three other pages. */
   wrap?: boolean;
-  /**
-   * Accessible name for the `role="tablist"` container. Every tab carries its own
-   * text, so this names the GROUP, not the tabs; leave it unset where a visible
-   * heading immediately above already does that job.
-   *
-   * @deprecated Pass `aria-label` instead. This kit had three spellings for one idea
-   * — `ariaLabel`, `aria-label` and this `label` — and settled on the DOM one, which
-   * is also the one that arrives for free now that the strip spreads its rest props.
-   * `label` still works and is unchanged; it names the strip only when `aria-label`
-   * is absent.
-   */
-  label?: string;
   /**
    * `id` of the element the caller renders the open tab's content into — the missing
    * half of `role="tab"`. A tab that controls nothing is a tab in name only: a screen
@@ -3961,7 +3939,6 @@ export function Tabs<T extends string>({
   onChange,
   className,
   wrap = false,
-  label,
   panelId,
   onRemove,
   removeOn = "every",
@@ -4087,8 +4064,9 @@ export function Tabs<T extends string>({
       {...rest}
       ref={stripRef}
       role="tablist"
-      // The DOM spelling wins over the deprecated `label`; see {@link TabsProps}.
-      aria-label={ariaLabel ?? label}
+      // Names the GROUP — every tab carries its own text — so a strip under a visible
+      // heading that already says it can leave it unset.
+      aria-label={ariaLabel}
       // Only when vertical: `horizontal` is the tablist's implicit value, and the
       // attribute on every existing strip would be noise in every snapshot of them.
       aria-orientation={vertical ? "vertical" : undefined}

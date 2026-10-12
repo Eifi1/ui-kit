@@ -20,7 +20,7 @@ function Harness({ clearLabel }: { clearLabel?: string }) {
     <SearchField
       value={value}
       onChange={setValue}
-      label="Find a setting"
+      aria-label="Find a setting"
       placeholder="Search settings"
       clearLabel={clearLabel}
     />
@@ -41,7 +41,7 @@ describe("SearchField", () => {
 
   it("emits the string, not the event", () => {
     const onChange = vi.fn();
-    render(<SearchField value="" onChange={onChange} label="Find" />);
+    render(<SearchField value="" onChange={onChange} aria-label="Find" />);
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "x" } });
     expect(onChange).toHaveBeenCalledWith("x");
   });
@@ -102,7 +102,7 @@ describe("SearchField", () => {
   it("falls back to the name when no placeholder is given", () => {
     // The bank picker had a placeholder and nothing else; a caller with only a label
     // should still get a box that says what it is before it is typed in.
-    render(<SearchField value="" onChange={vi.fn()} label="Find a bank" />);
+    render(<SearchField value="" onChange={vi.fn()} aria-label="Find a bank" />);
     expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Find a bank");
   });
 });
@@ -120,7 +120,7 @@ describe("SearchField", () => {
  */
 describe("the filter box is not part of anyone's autofill profile (live #333)", () => {
   it("names itself and opts out of autofill", () => {
-    render(<SearchField value="" onChange={() => {}} label="Filter" />);
+    render(<SearchField value="" onChange={() => {}} aria-label="Filter" />);
     const input = screen.getByRole("searchbox");
     expect(input).toHaveAttribute("name", "search");
     expect(input).toHaveAttribute("autocomplete", "off");
@@ -133,7 +133,7 @@ describe("the filter box is not part of anyone's autofill profile (live #333)", 
   it("still lets a caller override the defaults", () => {
     // They are declared before the prop spread on purpose — a search box inside a
     // real search FORM may well want its own name.
-    render(<SearchField value="" onChange={() => {}} label="Filter" name="q" />);
+    render(<SearchField value="" onChange={() => {}} aria-label="Filter" name="q" />);
     expect(screen.getByRole("searchbox")).toHaveAttribute("name", "q");
   });
 });

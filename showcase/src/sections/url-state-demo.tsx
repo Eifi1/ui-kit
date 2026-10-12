@@ -119,7 +119,7 @@ function TabParamDemo() {
   return (
     <Example label="useTabParam — the open tab in ?tab" hint="replaces the entry; an unknown tab reads as the default">
       <Tabs<Tab>
-        label="Unit sections"
+        aria-label="Unit sections"
         active={tab}
         onChange={setTab}
         panelId={panelId}

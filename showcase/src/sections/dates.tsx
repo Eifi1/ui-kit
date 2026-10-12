@@ -249,7 +249,7 @@ export function Dates() {
               value={loc}
               onChange={setLoc}
               options={LOCALE_OPTIONS}
-              ariaLabel="Calendar locale"
+              aria-label="Calendar locale"
             />
             <div className="max-w-xs">
               <MiniCalendar
@@ -819,8 +819,8 @@ function RangeSheetExample() {
       </StateLine>
       <div className="mt-3">
         <Note>
-          On a desktop this is the 440px popover. Below the phone breakpoint (
-          <code className="font-mono">PHONE_QUERY</code>, 767px) the same field opens a full-screen sheet
+          On a desktop this is the 440px popover. In the phone layout (
+          <code className="font-mono">usePhoneLayout()</code>) the same field opens a full-screen sheet
           instead — use the screen-size preview in the top bar, or a phone-width window: the presets
           become a two-column grid of 44px rows ABOVE the calendar, and Cancel / Apply sit pinned in the
           sheet&apos;s footer as two thumb-wide halves. The sheet wears the popover&apos;s id, so the

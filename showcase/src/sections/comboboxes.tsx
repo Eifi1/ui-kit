@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Combobox, InlineEntityCombobox, PHONE_QUERY, useMediaQuery } from "@eifi1/ui-kit";
+import { Button, Combobox, InlineEntityCombobox, usePhoneLayout } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 import { ACCOUNTS, Current, PAYEES, PAYEE_GROUPS, RECURRING } from "./dropdown-fixtures";
 
@@ -13,7 +13,7 @@ export function Comboboxes() {
   // The same query the components ask themselves. Rendering the answer turns "the
   // panel looks different on my phone" from a claim into something the reader can
   // check by dragging the window edge.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
 
   const [payee, setPayee] = useState("");
 
@@ -26,7 +26,7 @@ export function Comboboxes() {
   return (
     <>
       <Note>
-        <strong>Every combobox and entity picker changes shape below {PHONE_QUERY}.</strong>{" "}
+        <strong>Every combobox and entity picker changes shape in the phone layout.</strong>{" "}
         <code className="font-mono">Combobox</code>,{" "}
         <code className="font-mono">InlineEntityCombobox</code>,{" "}
         <code className="font-mono">EntityCombobox</code> and{" "}

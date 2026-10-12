@@ -7,6 +7,7 @@ import type { ButtonVariant, InputProps } from "./ui";
 import { Checkbox } from "./checkbox";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_DANGER_CONFIRM_LABELS } from "./danger-confirm-labels";
 
 /**
  * How typed text is compared with the text it has to repeat — shared by
@@ -338,20 +339,8 @@ export interface DangerConfirmLabels {
   needsPassword: string;
 }
 
-/** `satisfies` rather than a type annotation, so `DEFAULT_DANGER_CONFIRM_LABELS.phrase`
- *  stays callable for a caller that composes its own label from it. */
-export const DEFAULT_DANGER_CONFIRM_LABELS = {
-  arm: "Delete…",
-  confirm: "Delete",
-  cancel: "Cancel",
-  prompt: "This cannot be undone.",
-  password: "Password",
-  phrase: (phrase: string) => `Type “${phrase}” to confirm`,
-  acknowledge: "I have read what this does and want to continue.",
-  needsPhrase: (phrase: string) => `Type “${phrase}” to confirm`,
-  needsAcknowledge: "Tick the box to confirm",
-  needsPassword: "Enter your password to confirm",
-} satisfies DangerConfirmLabels;
+// Defined in ./danger-confirm-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DANGER_CONFIRM_LABELS };
 
 /**
  * What the guards were answered with — the second argument of

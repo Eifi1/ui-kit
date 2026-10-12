@@ -116,7 +116,7 @@ function ImageGridSpecimen() {
         <div className="space-y-1">
           <span className="text-xs text-[var(--text-muted)]">aspect</span>
           <ToggleGroup<"square" | "video" | "auto">
-            ariaLabel="aspect"
+            aria-label="aspect"
             value={aspect}
             onChange={setAspect}
             options={[
@@ -378,7 +378,7 @@ function AuthedImageSpecimen() {
     >
       <Row>
         <span className="text-xs text-[var(--text-muted)]">delay</span>
-        <ToggleGroup ariaLabel="delay" value={delay} onChange={setDelay} options={DELAYS} />
+        <ToggleGroup aria-label="delay" value={delay} onChange={setDelay} options={DELAYS} />
         <Button variant="secondary" size="sm" onClick={() => setRound((r) => r + 1)}>
           <RotateCcw className="size-4" aria-hidden /> Fetch again
         </Button>
@@ -446,7 +446,7 @@ function UseAuthedSrcSpecimen() {
     >
       <Row>
         <ToggleGroup<string>
-          ariaLabel="url"
+          aria-label="url"
           value={url ?? "null"}
           onChange={(v) => setUrl(v === "null" ? null : v)}
           options={[

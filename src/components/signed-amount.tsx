@@ -5,6 +5,7 @@ import { formatMoney, formatNumber, formatPercent } from "../lib/format";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile";
 import type { StatTileLabels } from "./stat-tile";
+import { DEFAULT_SIGNED_AMOUNT_LABELS } from "./signed-amount-labels";
 
 /**
  * The text colours a figure can carry, token-backed — `StatTile`'s tones, as a class
@@ -98,10 +99,8 @@ export interface SignedAmountLabels {
   negative: (amount: string) => string;
 }
 
-export const DEFAULT_SIGNED_AMOUNT_LABELS: SignedAmountLabels = {
-  positive: (amount) => `plus ${amount}`,
-  negative: (amount) => `minus ${amount}`,
-};
+// Defined in ./signed-amount-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGNED_AMOUNT_LABELS };
 
 interface SignedFormatProps {
   /** ISO 4217 code: format as money. */

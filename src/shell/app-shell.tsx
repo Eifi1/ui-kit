@@ -19,6 +19,7 @@ import { useTextSize } from "../theme/text-size";
 import type { TextSize } from "../theme/text-size";
 import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
+import { DEFAULT_APP_SHELL_MORE_LABELS } from "./app-shell-labels";
 
 export interface AppShellSubItem {
   to: string;
@@ -111,10 +112,8 @@ export interface AppShellMoreLabels {
   moreTitle: string;
 }
 
-export const DEFAULT_APP_SHELL_MORE_LABELS: AppShellMoreLabels = {
-  more: "More",
-  moreTitle: "More pages",
-};
+// Defined in ./app-shell-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_APP_SHELL_MORE_LABELS };
 
 /**
  * The most entries the phone bar shows before the rest go under "More", per text size

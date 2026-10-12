@@ -4,6 +4,7 @@ import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
+import { DEFAULT_PROGRESS_BAR_LABELS } from "./progress-bar-labels";
 
 /** The words a progress bar adds of its own. */
 export interface ProgressBarLabels {
@@ -13,10 +14,8 @@ export interface ProgressBarLabels {
   overLimit: (amount: string) => string;
 }
 
-export const DEFAULT_PROGRESS_BAR_LABELS: ProgressBarLabels = {
-  unlimited: "Unlimited",
-  overLimit: (amount) => `${amount} over the limit`,
-};
+// Defined in ./progress-bar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PROGRESS_BAR_LABELS };
 
 /**
  * `income` / `expense` are the money pair (`--money-income` / `--money-expense`), the

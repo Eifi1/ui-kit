@@ -32,6 +32,7 @@ import { FEEDBACK_AWAITING_STATUSES, reworkCount, type FeedbackContext, type Fee
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
 
 /**
  * The two feedback pages' TABLE — `/feedback` (the admin inbox) and `/my-feedback` (the
@@ -119,27 +120,8 @@ export interface FeedbackPageLabels {
   phoneActions: string;
 }
 
-export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
-  title: "Feedback",
-  myTitle: "My feedback",
-  columnId: "#",
-  columnDate: "Date",
-  columnCategory: "Category",
-  columnSubject: "Subject",
-  columnUser: "User",
-  columnEmail: "Email",
-  columnUrl: "URL",
-  columnStatus: "Status",
-  columnResolved: "Resolved",
-  openPage: "Open page",
-  empty: "None",
-  deletedUser: "<deleted user>",
-  userFallback: (id) => `user #${id}`,
-  environment: (environment) => String(environment ?? "").toUpperCase(),
-  reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${count}`),
-  awaitingFilter: "Only what is waiting for you",
-  phoneActions: "Feedback actions",
-};
+// Defined in ./feedback-table-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_PAGE_LABELS };
 
 /** `feedbackPage` resolved: English, then `<UiKitProvider labels>`, then `labels`. The
  *  page's title comes from here too: `mine ? labels.myTitle : labels.title`. */

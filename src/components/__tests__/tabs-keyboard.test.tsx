@@ -38,7 +38,7 @@ function Harness({ onChange, wrap = false }: { onChange?: (id: string) => void; 
         tabs={TABS}
         active={active}
         wrap={wrap}
-        label="Reports"
+        aria-label="Reports"
         onChange={(id) => {
           setActive(id);
           onChange?.(id);

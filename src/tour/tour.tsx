@@ -15,6 +15,7 @@ import { Button } from "../components/ui";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
+import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -60,14 +61,8 @@ export interface TourLabels {
   step: (current: number, total: number) => string;
 }
 
-export const DEFAULT_TOUR_LABELS: TourLabels = {
-  next: "Next",
-  back: "Back",
-  skip: "Skip",
-  done: "Done",
-  awaitClickHint: "Click the highlighted element to continue",
-  step: (c, t) => `${c} / ${t}`,
-};
+// Defined in ./tour-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TOUR_LABELS };
 
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to

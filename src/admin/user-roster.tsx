@@ -16,6 +16,7 @@ import { UserAvatar } from "../components/user-avatar";
 import { personLabel } from "./admin-parts";
 import { RoleSelect } from "./role-select";
 import type { RoleLock } from "./role-select";
+import { DEFAULT_USER_ROSTER_LABELS } from "./user-roster-labels";
 
 /**
  * The admin's user list (docs/user-admin-harmonization.md §3): a column preset for the
@@ -140,17 +141,8 @@ export interface UserRosterLabels {
   actionsFor: (name: string) => string;
 }
 
-export const DEFAULT_USER_ROSTER_LABELS: UserRosterLabels = {
-  name: "Name",
-  email: "Email",
-  role: "Role",
-  state: "State",
-  created: "Created",
-  lastLogin: "Last login",
-  never: "Never",
-  actions: "Actions",
-  actionsFor: (name) => `Actions for ${name}`,
-};
+// Defined in ./user-roster-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_USER_ROSTER_LABELS };
 
 /* ── UserIdentityCell ───────────────────────────────────────────────────────── */
 

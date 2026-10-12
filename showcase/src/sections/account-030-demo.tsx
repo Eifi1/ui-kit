@@ -203,7 +203,7 @@ export function DeleteAccount030Demo() {
     <Example label="DeleteAccountSetting — deactivated now, erased later" hint="typed address + password; coded refusals">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <ToggleGroup<DeletionMode>
-          ariaLabel="mode"
+          aria-label="mode"
           value={mode}
           onChange={setMode}
           options={[
